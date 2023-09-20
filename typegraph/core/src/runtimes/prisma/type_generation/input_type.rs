@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::Result;
-use crate::global_store::with_store;
 use crate::runtimes::prisma::type_utils::RuntimeConfig;
 use crate::runtimes::prisma::{relationship::Cardinality, type_generation::where_::Where};
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
@@ -69,41 +68,37 @@ impl TypeGen for InputType {
 
         let mut props = vec![];
 
-        with_store(|s| -> Result<_> {
-            for (k, type_id) in self.model_id.as_struct(s).unwrap().data.props.iter() {
-                let rel = context.registry.find_relationship_on(self.model_id, k);
+        for (k, type_id) in self.model_id.as_struct().unwrap().iter_props() {
+            let rel = context.registry.find_relationship_on(self.model_id, k);
 
-                if let Some(rel) = rel {
-                    if self.skip_rel.contains(&rel.name) {
-                        continue;
-                    }
+            if let Some(rel) = rel {
+                if self.skip_rel.contains(&rel.name) {
+                    continue;
+                }
 
-                    let entry = rel.get(rel.side_of_type(type_id.into()).unwrap());
-                    props.push(Prop {
+                let entry = rel.get(rel.side_of_type(type_id).unwrap());
+                props.push(Prop {
+                    key: k.to_string(),
+                    typ: PropType::Model {
+                        model_id: entry.model_type,
+                        cardinality: entry.cardinality,
+                        rel_name: rel.name.clone(),
+                    },
+                });
+            } else {
+                let attrs = type_id.attrs()?;
+                match attrs.concrete_type.as_type()? {
+                    Type::Func(_) => continue,
+                    typ => props.push(Prop {
                         key: k.to_string(),
-                        typ: PropType::Model {
-                            model_id: entry.model_type,
-                            cardinality: entry.cardinality,
-                            rel_name: rel.name.clone(),
+                        typ: PropType::Scalar {
+                            type_id,
+                            auto: RuntimeConfig::try_from(&typ)?.get("auto")?.unwrap_or(false),
                         },
-                    });
-                } else {
-                    let attrs = s.get_attributes(type_id.into())?;
-                    match attrs.concrete_type.as_type(s)? {
-                        Type::Func(_) => continue,
-                        typ => props.push(Prop {
-                            key: k.to_string(),
-                            typ: PropType::Scalar {
-                                type_id: type_id.into(),
-                                auto: RuntimeConfig::try_from(typ)?.get("auto")?.unwrap_or(false),
-                            },
-                        }),
-                    }
+                    }),
                 }
             }
-
-            Ok(())
-        })?;
+        }
 
         let mut builder = t::struct_();
 

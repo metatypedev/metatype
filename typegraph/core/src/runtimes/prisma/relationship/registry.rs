@@ -1,9 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-// use super::errors;
 use crate::errors::Result;
-use crate::global_store::with_store;
 use crate::runtimes::prisma::type_utils::get_id_field;
 use crate::types::TypeId;
 #[cfg(test)]
@@ -122,10 +120,10 @@ impl RelationshipRegistry {
         if self.complete_registrations.contains(&model_id) {
             Ok(())
         } else {
-            let related_models = with_store(|s| -> Result<_> {
+            let related_models = {
                 let mut related_models = vec![];
 
-                let model = s.type_as_struct(model_id)?;
+                let model = model_id.as_struct()?;
 
                 if let Entry::Vacant(e) = self.models.entry(model_id) {
                     e.insert(RegisteredModel {
@@ -139,7 +137,7 @@ impl RelationshipRegistry {
                     });
                 }
 
-                for pair in scan_model(model, self)?.into_iter() {
+                for pair in scan_model(&model, self)?.into_iter() {
                     let related = pair.get_related(model_id)?;
                     if self.register_pair(pair)? {
                         if let Some(related) = related {
@@ -148,8 +146,8 @@ impl RelationshipRegistry {
                     }
                 }
 
-                Ok(related_models)
-            })?;
+                related_models
+            };
 
             self.complete_registrations.insert(model_id);
 

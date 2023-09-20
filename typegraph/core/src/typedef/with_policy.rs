@@ -4,7 +4,7 @@
 use crate::{
     conversion::types::TypeConversion,
     errors::Result,
-    global_store::{with_store, Store},
+    global_store::with_store,
     typegraph::TypegraphContext,
     types::{TypeData, TypeId, WithPolicy, WrapperTypeData},
     wit::core::{PolicySpec, TypePolicy},
@@ -13,13 +13,11 @@ use common::typegraph::TypeNode;
 
 impl TypeConversion for WithPolicy {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
-        with_store(|s| -> Result<_> {
-            let tpe = s.get_type(self.data.tpe.into())?;
-            let mut type_node = tpe.convert(ctx, runtime_id)?;
-            let base = type_node.base_mut();
-            base.policies = ctx.register_policy_chain(&self.data.chain)?;
-            Ok(type_node)
-        })
+        let tpe = TypeId(self.data.tpe).as_type()?;
+        let mut type_node = tpe.convert(ctx, runtime_id)?;
+        let base = type_node.base_mut();
+        base.policies = ctx.register_policy_chain(&self.data.chain)?;
+        Ok(type_node)
     }
 }
 
@@ -61,7 +59,7 @@ impl TypeData for TypePolicy {
 }
 
 impl WrapperTypeData for TypePolicy {
-    fn resolve(&self, _store: &Store) -> Option<TypeId> {
+    fn resolve(&self) -> Option<TypeId> {
         Some(self.tpe.into())
     }
 }

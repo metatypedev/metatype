@@ -3,7 +3,6 @@
 
 use crate::{
     errors::Result,
-    global_store::with_store,
     t::{self, ConcreteTypeBuilder, TypeBuilder},
     types::{Type, TypeId},
 };
@@ -22,16 +21,15 @@ impl CountOutput {
 
 impl TypeGen for CountOutput {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let keys = with_store(|s| {
-            self.model_id
-                .as_struct(s)
-                .unwrap()
-                .data
-                .props
-                .iter()
-                .map(|(k, _)| k.clone())
-                .collect::<Vec<_>>()
-        });
+        let keys = self
+            .model_id
+            .as_struct()
+            .unwrap()
+            .data
+            .props
+            .iter()
+            .map(|(k, _)| k.clone())
+            .collect::<Vec<_>>();
 
         let mut builder = t::struct_();
         let opt_int = t::optional(t::integer().build()?).build()?;
@@ -68,41 +66,38 @@ impl TypeGen for NumberAggregateOutput {
             Float,
         }
 
-        let props = with_store(|s| {
-            self.model_id
-                .as_struct(s)
-                .unwrap()
-                .data
-                .props
-                .iter()
-                .filter_map(|(k, type_id)| {
-                    let typ = s.get_type(type_id.into()).unwrap();
-                    let typ = match typ {
-                        Type::Optional(inner) => s.get_type(inner.data.of.into()).unwrap(),
-                        _ => typ,
-                    };
-                    match typ {
-                        Type::Optional(_) => {
-                            Some(Err("optional of optional is not allowed".to_owned()))
-                        }
-                        Type::Integer(_) => Some(Ok((k.clone(), PropType::Int))),
-                        Type::Float(_) => Some(Ok((k.clone(), PropType::Float))),
-                        _ => None,
+        let props = self
+            .model_id
+            .as_struct()
+            .unwrap()
+            .iter_props()
+            .filter_map(|(k, type_id)| {
+                let typ = type_id.as_type().unwrap();
+                let typ = match typ {
+                    Type::Optional(inner) => inner.item().as_type().unwrap(),
+                    _ => typ,
+                };
+                match typ {
+                    Type::Optional(_) => {
+                        Some(Err("optional of optional is not allowed".to_owned()))
                     }
-                })
-                .collect::<Result<Vec<_>>>()
-        })?;
+                    Type::Integer(_) => Some(Ok((k.to_string(), PropType::Int))),
+                    Type::Float(_) => Some(Ok((k.to_string(), PropType::Float))),
+                    _ => None,
+                }
+            })
+            .collect::<Result<Vec<_>>>()?;
 
         let mut builder = t::struct_();
         if self.avg {
             let opt_float = t::optional(t::float().build()?).build()?;
-            for (key, _) in &props {
+            for (key, _) in props.into_iter() {
                 builder.prop(key, opt_float);
             }
         } else {
             let opt_int = t::optional(t::integer().build()?).build()?;
             let opt_float = t::optional(t::float().build()?).build()?;
-            for (key, prop_type) in &props {
+            for (key, prop_type) in props.into_iter() {
                 builder.prop(
                     key,
                     match prop_type {

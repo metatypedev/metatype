@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-use crate::{errors::Result, global_store::with_store, types::TypeId};
+use crate::{errors::Result, types::TypeId};
 
 use super::{TypeGen, TypeGenContext};
 
@@ -34,14 +34,12 @@ pub struct Distinct(pub TypeId);
 
 impl TypeGen for Distinct {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let cols = with_store(|s| {
-            self.0.as_struct(s).map(|typ| {
-                typ.data
-                    .props
-                    .iter()
-                    .map(|(k, _)| k.clone())
-                    .collect::<Vec<_>>()
-            })
+        let cols = self.0.as_struct().map(|typ| {
+            typ.data
+                .props
+                .iter()
+                .map(|(k, _)| k.clone())
+                .collect::<Vec<_>>()
         })?;
 
         t::array(t::string().enum_(cols).build()?)

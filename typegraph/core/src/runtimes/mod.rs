@@ -9,7 +9,7 @@ pub mod random;
 pub mod wasi;
 
 use crate::conversion::runtimes::MaterializerConverter;
-use crate::global_store::{with_store, with_store_mut, Store};
+use crate::global_store::{with_store_mut, Store};
 use crate::runtimes::prisma::with_prisma_runtime;
 use crate::t;
 use crate::wit::core::{RuntimeId, TypeId as CoreTypeId};
@@ -129,11 +129,9 @@ macro_rules! prisma_op {
         let types = with_prisma_runtime($rt, |ctx| ctx.$fn($model.into()))?;
 
         let mat = PrismaMaterializer {
-            table: with_store(|s| -> Result<_> {
-                Ok(s.get_type_name($model.into())?
-                    .map(|n| n.to_string())
-                    .unwrap_or_else(|| "prisma model must be named".to_string()))
-            })?,
+            table: $crate::types::TypeId($model)
+                .type_name()?
+                .ok_or_else(|| "prisma model must be named".to_string())?,
             operation: $name.to_string(),
         };
 

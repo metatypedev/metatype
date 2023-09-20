@@ -1,12 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{
-    errors::Result,
-    global_store::{with_store, Store},
-    t::{self, ConcreteTypeBuilder, TypeBuilder},
-    types::{Type, TypeFun, TypeId},
-};
+use crate::errors::Result;
+use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+use crate::types::{Type, TypeFun, TypeId};
 
 use super::{TypeGen, TypeGenContext};
 
@@ -53,72 +50,68 @@ impl TypeGen for WithFilters {
 
         let mut props = vec![];
 
-        with_store(|s| -> Result<_> {
-            for (k, id) in self.type_id.as_struct(s).unwrap().data.props.iter() {
-                let mut id: TypeId = (*id).into();
-                let mut ty = s.get_type(id)?;
-                if let Type::Optional(opt) = ty {
-                    id = opt.data.of.into();
-                    ty = s.get_type(id)?;
-                }
+        for (k, id) in self.type_id.as_struct().unwrap().iter_props() {
+            let mut id = id;
+            let mut ty = id.as_type()?;
+            if let Type::Optional(opt) = ty {
+                id = opt.item();
+                ty = id.as_type()?;
+            }
 
-                // TODO relationship
-                let rel = context.registry.find_relationship_on(self.model_id, k);
-                if let Some(rel) = rel {
-                    if self.skip_rel {
-                        continue;
-                    }
-
-                    let target_model = rel.get_opposite_of(self.model_id, k).unwrap();
-                    props.push(Prop {
-                        key: k.to_string(),
-                        prop_type: PropType::Model(target_model.model_type),
-                    });
+            let rel = context.registry.find_relationship_on(self.model_id, k);
+            if let Some(rel) = rel {
+                if self.skip_rel {
                     continue;
                 }
 
-                match ty {
-                    Type::Optional(_) => return Err("optional of optional!?".to_string()),
-                    Type::Boolean(_) => {
-                        props.push(Prop {
-                            key: k.to_string(),
-                            prop_type: PropType::Boolean,
-                        });
-                    }
-                    Type::Integer(_) => {
-                        props.push(Prop {
-                            key: k.to_string(),
-                            prop_type: PropType::Number(NumberType::Integer),
-                        });
-                    }
-                    Type::Float(_) => {
-                        props.push(Prop {
-                            key: k.to_string(),
-                            prop_type: PropType::Number(NumberType::Float),
-                        });
-                    }
-                    Type::String(_) => {
-                        props.push(Prop {
-                            key: k.to_string(),
-                            prop_type: PropType::String,
-                        });
-                    }
-                    Type::Array(inner) => {
-                        props.push(Prop {
-                            key: k.to_string(),
-                            prop_type: PropType::Array(inner.data.of.into()),
-                        });
-                    }
-                    _ => {
-                        return Err(format!(
-                            "type '{}' not supported by prisma",
-                            ty.get_data().variant_name()
-                        ));
-                    }
+                let target_model = rel.get_opposite_of(self.model_id, k).unwrap();
+                props.push(Prop {
+                    key: k.to_string(),
+                    prop_type: PropType::Model(target_model.model_type),
+                });
+                continue;
+            }
+
+            match ty {
+                Type::Optional(_) => return Err("optional of optional!?".to_string()),
+                Type::Boolean(_) => {
+                    props.push(Prop {
+                        key: k.to_string(),
+                        prop_type: PropType::Boolean,
+                    });
+                }
+                Type::Integer(_) => {
+                    props.push(Prop {
+                        key: k.to_string(),
+                        prop_type: PropType::Number(NumberType::Integer),
+                    });
+                }
+                Type::Float(_) => {
+                    props.push(Prop {
+                        key: k.to_string(),
+                        prop_type: PropType::Number(NumberType::Float),
+                    });
+                }
+                Type::String(_) => {
+                    props.push(Prop {
+                        key: k.to_string(),
+                        prop_type: PropType::String,
+                    });
+                }
+                Type::Array(inner) => {
+                    props.push(Prop {
+                        key: k.to_string(),
+                        prop_type: PropType::Array(inner.data.of.into()),
+                    });
+                }
+                _ => {
+                    return Err(format!(
+                        "type '{}' not supported by prisma",
+                        ty.get_data().variant_name()
+                    ));
                 }
             }
-            Ok(())
-        })?;
+        }
 
         let mut builder = t::struct_();
         builder.named(self.name(context));
@@ -307,12 +300,9 @@ struct ScalarListFilter(TypeId);
 
 impl TypeGen for ScalarListFilter {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        with_store(|s| -> Result<()> {
-            match self.0.as_type(s)? {
-                Type::Optional(_) => Err("array of optional not supported".to_owned()), // TODO
-                _ => Ok(()),
-            }
-        })?;
+        if let Type::Optional(_) = self.0.as_type()? {
+            return Err("array of optional not supported".to_owned());
+        }
 
         // we can use union here instead of either since the structs do not have
         // overlapping fields.
@@ -363,16 +353,15 @@ impl TypeGen for WithAggregateFilters {
 
     fn name(&self, _context: &TypeGenContext) -> String {
         // TODO model id??
-        let name = with_store(|s| {
-            self.model_id
-                .as_type(s)
-                .unwrap()
-                .get_base()
-                .unwrap()
-                .name
-                .clone()
-                .unwrap()
-        });
+        let name = self
+            .model_id
+            .as_type()
+            .unwrap()
+            .get_base()
+            .unwrap()
+            .name
+            .clone()
+            .unwrap();
         format!("{name}_with_aggregate_filters")
     }
 }
@@ -389,7 +378,12 @@ impl CountFilter {
 
 impl TypeGen for CountFilter {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let keys = get_props(self.model_id, |_s, k, _type_id| Some(k.to_string()));
+        let keys = self
+            .model_id
+            .as_struct()?
+            .iter_props()
+            .map(|(k, _)| k.to_string())
+            .collect();
 
         gen_aggregate_filter(
             context,
@@ -423,17 +417,23 @@ impl AvgFilter {
 
 impl TypeGen for AvgFilter {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let keys = get_props(self.model_id, |s, k, type_id| {
-            let typ = s.get_type(type_id).unwrap();
-            let non_opt_type = match typ {
-                Type::Optional(inner) => s.get_type(inner.data.of.into()).unwrap(),
-                _ => typ,
-            };
-            match non_opt_type {
-                Type::Integer(_) | Type::Float(_) => Some(k.to_string()),
-                _ => None,
-            }
-        });
+        let keys = self
+            .model_id
+            .as_struct()
+            .unwrap()
+            .iter_props()
+            .filter_map(|(k, type_id)| {
+                let typ = type_id.as_type().unwrap();
+                let non_opt_type = match typ {
+                    Type::Optional(inner) => inner.item().as_type().unwrap(),
+                    _ => typ,
+                };
+                match non_opt_type {
+                    Type::Integer(_) | Type::Float(_) => Some(k.to_string()),
+                    _ => None,
+                }
+            })
+            .collect();
 
         gen_aggregate_filter(
             context,
@@ -467,18 +467,24 @@ impl SumFilter {
 
 impl TypeGen for SumFilter {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let props = get_props(self.model_id, |s, k, type_id| {
-            let typ = s.get_type(type_id).unwrap();
-            let non_opt_type = match typ {
-                Type::Optional(inner) => s.get_type(inner.data.of.into()).unwrap(),
-                _ => typ,
-            };
-            match non_opt_type {
-                Type::Integer(_) => Some((k.to_string(), NumberType::Integer)),
-                Type::Float(_) => Some((k.to_string(), NumberType::Float)),
-                _ => None,
-            }
-        });
+        let props = self
+            .model_id
+            .as_struct()
+            .unwrap()
+            .iter_props()
+            .filter_map(|(k, type_id)| {
+                let typ = type_id.as_type().unwrap();
+                let non_opt_type = match typ {
+                    Type::Optional(inner) => inner.item().as_type().unwrap(),
+                    _ => typ,
+                };
+                match non_opt_type {
+                    Type::Integer(_) => Some((k.to_string(), NumberType::Integer)),
+                    Type::Float(_) => Some((k.to_string(), NumberType::Float)),
+                    _ => None,
+                }
+            })
+            .collect();
 
         gen_aggregate_filter(context, props, |(key, typ)| (key, typ), self.name(context))
     }
@@ -495,18 +501,18 @@ impl TypeGen for SumFilter {
     }
 }
 
-fn get_props<P, F: Fn(&Store, &str, TypeId) -> Option<P>>(model_id: TypeId, filter: F) -> Vec<P> {
-    with_store(|s| {
-        model_id
-            .as_struct(s)
-            .unwrap()
-            .data
-            .props
-            .iter()
-            .filter_map(|(k, type_id)| filter(s, k, type_id.into()))
-            .collect::<Vec<_>>()
-    })
-}
+// fn get_props<P, F: Fn(&Store, &str, TypeId) -> Option<P>>(model_id: TypeId, filter: F) -> Vec<P> {
+//     with_store(|s| {
+//         model_id
+//             .as_struct()
+//             .unwrap()
+//             .data
+//             .props
+//             .iter()
+//             .filter_map(|(k, type_id)| filter(s, k, type_id.into()))
+//             .collect::<Vec<_>>()
+//     })
+// }
 
 fn gen_aggregate_filter<P, F: Fn(P) -> (String, NumberType)>(
     context: &mut TypeGenContext,

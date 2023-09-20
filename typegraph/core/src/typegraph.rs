@@ -3,10 +3,11 @@
 
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::{gen_base, TypeConversion};
-use crate::global_store::{with_store, with_store_mut};
+use crate::global_store::with_store;
 use crate::host::abi;
-use crate::types::{Type, TypeFun, TypeId, WithPolicy};
+use crate::types::{Type, TypeFun, TypeId};
 use crate::validation::validate_name;
+use crate::Lib;
 use crate::{
     errors::{self, Result},
     global_store::Store,
@@ -25,7 +26,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use crate::wit::core::{
-    Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypePolicy,
+    Core, Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypePolicy,
     TypegraphInitParams,
 };
 
@@ -186,56 +187,38 @@ pub fn expose(
     namespace: Vec<String>,
     default_policy: Option<Vec<PolicySpec>>,
 ) -> Result<()> {
-    let fns = with_store_mut(move |s| {
-        fns.into_iter()
-            .map(|(name, fn_id)| -> Result<_> {
-                let fn_id = s.resolve_proxy(fn_id)?;
+    let fns = fns
+        .into_iter()
+        .map(|(name, fn_id)| -> Result<_> {
+            let fn_id = fn_id.resolve_proxy()?;
 
-                let has_policy = {
-                    let tpe = s.get_type(fn_id)?;
-                    match tpe {
-                        Type::WithPolicy(typ) => {
-                            let tpe = s.get_type(typ.data.tpe.into())?;
-                            match tpe {
-                                Type::Func(_) => {}
-                                _ => {
-                                    return Err(errors::invalid_export_type(
-                                        &name,
-                                        &tpe.to_string(),
-                                    ))
-                                }
-                            }
-                            true
+            let has_policy = {
+                let tpe = fn_id.as_type()?;
+                match tpe {
+                    Type::WithPolicy(inner) => {
+                        let tpe = TypeId(inner.data.tpe).as_type()?;
+                        if !matches!(tpe, Type::Func(_)) {
+                            return Err(errors::invalid_export_type(&name, &tpe.to_string()));
                         }
-                        Type::Func(_) => false,
-                        _ => return Err(errors::invalid_export_type(&name, &tpe.to_string())),
+                        true
                     }
-                };
+                    Type::Func(_) => false,
+                    _ => return Err(errors::invalid_export_type(&name, &tpe.to_string())),
+                }
+            };
 
-                Ok((
-                    name,
-                    default_policy
-                        .as_ref()
-                        .filter(|_| !has_policy)
-                        .map(|p| {
-                            s.add_type(|id| {
-                                Type::WithPolicy(
-                                    WithPolicy {
-                                        id,
-                                        data: TypePolicy {
-                                            tpe: fn_id.into(),
-                                            chain: p.clone(),
-                                        },
-                                    }
-                                    .into(),
-                                )
-                            })
-                        })
-                        .unwrap_or(fn_id),
-                ))
-            })
-            .collect::<Result<Vec<_>>>()
-    })?;
+            let fn_id: TypeId = match (has_policy, default_policy.as_ref()) {
+                (true, Some(default_policy)) => Lib::with_policy(TypePolicy {
+                    tpe: fn_id.into(),
+                    chain: default_policy.to_vec(),
+                })?
+                .into(),
+                _ => fn_id,
+            };
+
+            Ok((name, fn_id))
+        })
+        .collect::<Result<Vec<_>>>()?;
 
     with_tg_mut(|ctx| -> Result<()> {
         if !namespace.is_empty() {
@@ -264,8 +247,8 @@ impl TypegraphContext {
             if !validate_name(&name) {
                 return Err(errors::invalid_export_name(&name));
             }
-            let type_id = s.resolve_proxy(type_id)?;
-            let tpe = s.get_attributes(type_id)?.concrete_type.as_type(s)?;
+            let type_id = type_id.resolve_proxy()?;
+            let tpe = type_id.attrs()?.concrete_type.as_type()?;
             if !matches!(tpe, Type::Func(_)) {
                 return Err(errors::invalid_export_type(&name, &tpe.to_string()));
             }
@@ -299,7 +282,7 @@ impl TypegraphContext {
                 e.insert(idx as u32);
                 self.types.push(None);
 
-                let tpe = store.get_type(id)?;
+                let tpe = id.as_type()?;
 
                 let type_node = tpe.convert(self, runtime_id)?;
 

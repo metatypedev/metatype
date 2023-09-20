@@ -3,7 +3,6 @@
 
 use crate::{
     errors::Result,
-    global_store::with_store,
     runtimes::prisma::type_generation::{
         where_::Where,
         with_filters::{NumberType, WithFilters},
@@ -26,39 +25,36 @@ impl GroupingFields {
 
 impl TypeGen for GroupingFields {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let fields = with_store(|s| {
-            self.model_id
-                .as_struct(s)
-                .unwrap()
-                .data
-                .props
-                .iter()
-                .filter_map(|(k, type_id)| {
-                    if context
-                        .registry
-                        .find_relationship_on(self.model_id, k)
-                        .is_some()
-                    {
-                        return None;
-                    }
+        let fields = self
+            .model_id
+            .as_struct()
+            .unwrap()
+            .iter_props()
+            .filter_map(|(k, type_id)| {
+                if context
+                    .registry
+                    .find_relationship_on(self.model_id, k)
+                    .is_some()
+                {
+                    return None;
+                }
 
-                    let typ = s.get_type(type_id.into()).unwrap();
-                    let typ = match typ {
-                        Type::Optional(inner) => s.get_type(inner.data.of.into()).unwrap(),
-                        _ => typ,
-                    };
+                let typ = type_id.as_type().unwrap();
+                let typ = match typ {
+                    Type::Optional(inner) => TypeId(inner.data.of).as_type().unwrap(),
+                    _ => typ,
+                };
 
-                    match typ {
-                        Type::Boolean(_)
-                        | Type::Integer(_)
-                        | Type::Float(_)
-                        | Type::String(_)
-                        | Type::Array(_) => Some(k.clone()),
-                        _ => None,
-                    }
-                })
-                .collect::<Vec<_>>()
-        });
+                match typ {
+                    Type::Boolean(_)
+                    | Type::Integer(_)
+                    | Type::Float(_)
+                    | Type::String(_)
+                    | Type::Array(_) => Some(k.to_string()),
+                    _ => None,
+                }
+            })
+            .collect::<Vec<_>>();
 
         t::array(t::string().enum_(fields).build()?)
             .named(self.name(context))
@@ -174,26 +170,22 @@ impl SelectNumbers {
 
 impl TypeGen for SelectNumbers {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let props = with_store(|s| {
-            self.model_id.as_struct(s).map(|typ| {
-                typ.data
-                    .props
-                    .iter()
-                    .filter_map(|(k, type_id)| {
-                        let typ = s.get_type(type_id.into()).unwrap();
-                        let typ = match typ {
-                            Type::Optional(inner) => s.get_type(inner.data.of.into()).unwrap(),
-                            _ => typ,
-                        };
+        let props = self.model_id.as_struct().map(|typ| {
+            typ.iter_props()
+                .filter_map(|(k, type_id)| {
+                    let typ = type_id.as_type().unwrap();
+                    let typ = match typ {
+                        Type::Optional(inner) => inner.item().as_type().unwrap(),
+                        _ => typ,
+                    };
 
-                        match typ {
-                            Type::Integer(_) => Some((k.clone(), NumberType::Integer)),
-                            Type::Float(_) => Some((k.clone(), NumberType::Float)),
-                            _ => None,
-                        }
-                    })
-                    .collect::<Vec<_>>()
-            })
+                    match typ {
+                        Type::Integer(_) => Some((k.to_string(), NumberType::Integer)),
+                        Type::Float(_) => Some((k.to_string(), NumberType::Float)),
+                        _ => None,
+                    }
+                })
+                .collect::<Vec<_>>()
         })?;
 
         let mut builder = t::struct_();

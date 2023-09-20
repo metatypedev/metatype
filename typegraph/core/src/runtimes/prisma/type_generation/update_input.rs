@@ -3,8 +3,8 @@
 
 use crate::errors::Result;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+use crate::types::TypeId;
 use crate::types::{Type, TypeFun};
-use crate::{global_store::with_store, types::TypeId};
 
 use super::TypeGen;
 
@@ -40,48 +40,45 @@ impl TypeGen for UpdateInput {
 
         let mut props = vec![];
 
-        with_store(|s| -> Result<_> {
-            for (k, type_id) in self.model_id.as_struct(s).unwrap().data.props.iter() {
-                let attrs = s.get_attributes(type_id.into())?;
-                // TODO check injection
-                let typ = attrs.concrete_type.as_type(s)?;
-                let (typ, _nullable) = match typ {
-                    Type::Optional(ty) => (s.get_type(ty.data.of.into())?, true),
-                    _ => (typ, false),
-                };
+        for (k, type_id) in self.model_id.as_struct().unwrap().iter_props() {
+            let attrs = type_id.attrs()?;
+            // TODO check injection
+            let typ = attrs.concrete_type.as_type()?;
+            let (typ, _nullable) = match typ {
+                Type::Optional(inner) => (TypeId(inner.data.of).as_type()?, true),
+                _ => (typ, false),
+            };
 
-                // TODO array of scalar support?
-                let prop_type = match typ {
-                    Type::Optional(_) => return Err("".to_owned()),
-                    Type::Boolean(_) => Some(PropType::Boolean),
-                    Type::Integer(_) => Some(PropType::Integer),
-                    Type::Float(_) => Some(PropType::Float),
-                    Type::String(_) => Some(PropType::String),
-                    Type::Array(inner) => {
-                        if context
-                            .registry
-                            .find_relationship_on(self.model_id, k)
-                            .is_some()
-                        {
-                            None // relationship
-                        } else {
-                            Some(PropType::Array(inner.data.of.into())) // scalar list
-                        }
+            // TODO array of scalar support?
+            let prop_type = match &typ {
+                Type::Optional(_) => return Err("".to_owned()),
+                Type::Boolean(_) => Some(PropType::Boolean),
+                Type::Integer(_) => Some(PropType::Integer),
+                Type::Float(_) => Some(PropType::Float),
+                Type::String(_) => Some(PropType::String),
+                Type::Array(inner) => {
+                    if context
+                        .registry
+                        .find_relationship_on(self.model_id, k)
+                        .is_some()
+                    {
+                        None // relationship
+                    } else {
+                        Some(PropType::Array(inner.data.of.into())) // scalar list
                     }
-                    _ => None,
-                };
-
-                if let Some(prop_type) = prop_type {
-                    props.push(Prop {
-                        key: k.to_string(),
-                        typ: prop_type,
-                        type_id: type_id.into(),
-                        wrapped_type_id: typ.get_id(),
-                    });
                 }
+                _ => None,
+            };
+
+            if let Some(prop_type) = prop_type {
+                props.push(Prop {
+                    key: k.to_string(),
+                    typ: prop_type,
+                    type_id,
+                    wrapped_type_id: typ.get_id(),
+                });
             }
-            Ok(())
-        })?;
+        }
 
         let mut builder = t::struct_();
         for prop in props {

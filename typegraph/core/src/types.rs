@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::collections::HashMap;
 use std::fmt::Debug;
 
 use common::typegraph::TypeNode;
@@ -8,11 +9,12 @@ use enum_dispatch::enum_dispatch;
 
 use crate::conversion::types::TypeConversion;
 use crate::errors::{self, Result};
-use crate::global_store::{with_store, Store};
+use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
-    TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger,
-    TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion, TypeWithInjection,
+    PolicySpec, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId as CoreTypeId,
+    TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
+    TypeWithInjection,
 };
 use std::rc::Rc;
 
@@ -49,10 +51,10 @@ pub trait TypeData {
 }
 
 pub trait WrapperTypeData {
-    fn resolve(&self, store: &Store) -> Option<TypeId>;
+    fn resolve(&self) -> Option<TypeId>;
 
-    fn try_resolve(&self, store: &Store) -> Result<TypeId> {
-        self.resolve(store)
+    fn try_resolve(&self) -> Result<TypeId> {
+        self.resolve()
             .ok_or_else(|| "cannot resolve wrapped type".into())
     }
 }
@@ -119,6 +121,15 @@ pub enum Type {
     WithInjection(Rc<WithInjection>),
 }
 
+impl Type {
+    fn get_name(&self) -> Option<&str> {
+        match self {
+            Type::Proxy(inner) => Some(&inner.data.name),
+            _ => self.get_base().and_then(|b| b.name.as_deref()),
+        }
+    }
+}
+
 #[enum_dispatch]
 pub trait TypeFun {
     fn get_id(&self) -> TypeId;
@@ -128,11 +139,10 @@ pub trait TypeFun {
     fn to_string(&self) -> String;
 
     fn get_concrete_type_name(&self) -> Result<String> {
-        with_store(|s| {
-            let concrete_type = self.get_concrete_type().unwrap(); // TODO error
-            s.get_type(concrete_type)
-                .map(|t| t.get_data().variant_name())
-        })
+        let concrete_type = self
+            .get_concrete_type()
+            .ok_or_else(|| "cannot find wrapped concrete type".to_string())?;
+        concrete_type.as_type().map(|t| t.get_data().variant_name())
     }
 
     fn as_wrapper_type(&self) -> Option<&dyn WrapperTypeData> {
@@ -161,7 +171,7 @@ impl<T: TypeFun> TypeFun for Rc<T> {
         (**self).get_id()
     }
 
-    fn get_data(&self) ->  &dyn TypeData {
+    fn get_data(&self) -> &dyn TypeData {
         (**self).get_data()
     }
 
@@ -223,11 +233,9 @@ where
     }
 
     fn get_concrete_type(&self) -> Option<TypeId> {
-        with_store(|s| {
-            self.data
-                .resolve(s)
-                .map(|id| s.get_type(id).unwrap().get_concrete_type().unwrap())
-        })
+        self.data
+            .resolve()
+            .map(|id| id.as_type().unwrap().get_concrete_type().unwrap())
     }
 
     fn get_base(&self) -> Option<&TypeBase> {
@@ -239,18 +247,18 @@ where
     }
 }
 
-impl Store {
-    pub fn type_as_struct(&self, type_id: TypeId) -> Result<&Struct> {
-        match self.get_type(type_id)? {
-            Type::Struct(s) => Ok(s),
-            Type::Proxy(p) => self.type_as_struct(p.data.try_resolve(self)?),
-            _ => Err(errors::invalid_type(
-                "Struct",
-                &self.get_type_repr(type_id)?,
-            )),
-        }
-    }
-}
+// impl Store {
+//     pub fn type_as_struct(&self, type_id: TypeId) -> Result<Rc<Struct>> {
+//         match self.get_type(type_id)? {
+//             Type::Struct(s) => Ok(s),
+//             Type::Proxy(p) => self.type_as_struct(p.data.try_resolve(self)?),
+//             _ => Err(errors::invalid_type(
+//                 "Struct",
+//                 &self.get_type_repr(type_id)?,
+//             )),
+//         }
+//     }
+// }
 
 pub enum ProxyResolution {
     None,
@@ -258,21 +266,17 @@ pub enum ProxyResolution {
     Force,
 }
 
+#[derive(Debug)]
+pub struct TypeAttributes {
+    pub concrete_type: TypeId,
+    pub proxy_data: HashMap<String, String>,
+    pub policy_chain: Vec<PolicySpec>,
+    pub injection: Option<String>,
+}
+
 impl TypeId {
-    pub fn as_type<'a>(&self, store: &'a Store) -> Result<&'a Type> {
-        store.get_type(*self)
-    }
-
-    pub fn as_struct<'a>(&self, store: &'a Store) -> Result<&'a Struct> {
-        store.type_as_struct(*self)
-    }
-
-    pub fn concrete_type_id(
-        &self,
-        store: &Store,
-        resolve_proxy: ProxyResolution,
-    ) -> Result<Option<TypeId>> {
-        let typ = self.as_type(store)?;
+    pub fn concrete_type_id(&self, resolve_proxy: ProxyResolution) -> Result<Option<TypeId>> {
+        let typ = self.as_type()?;
         if typ.is_concrete_type() {
             return Ok(Some(*self));
         }
@@ -280,15 +284,74 @@ impl TypeId {
         let wrapped_type = match typ {
             Type::Proxy(p) => match resolve_proxy {
                 ProxyResolution::None => return Ok(None),
-                ProxyResolution::Try => p.data.resolve(store),
-                ProxyResolution::Force => Some(p.data.try_resolve(store)?),
+                ProxyResolution::Try => p.data.resolve(),
+                ProxyResolution::Force => Some(p.data.try_resolve()?),
             },
-            x => Some(x.as_wrapper_type().unwrap().resolve(store).unwrap()),
+            x => Some(x.as_wrapper_type().unwrap().resolve().unwrap()),
         };
 
         match wrapped_type {
-            Some(wrapped_type) => wrapped_type.concrete_type_id(store, resolve_proxy),
+            Some(wrapped_type) => wrapped_type.concrete_type_id(resolve_proxy),
             None => Ok(None),
+        }
+    }
+
+    pub fn type_name(&self) -> Result<Option<String>> {
+        self.as_type().map(|t| t.get_name().map(|s| s.to_string()))
+    }
+
+    pub fn repr(&self) -> Result<String> {
+        self.as_type().map(|t| t.to_string())
+    }
+
+    pub fn resolve_proxy(&self) -> Result<TypeId> {
+        match self.as_type()? {
+            Type::Proxy(inner) => Store::get_type_by_name(&inner.data.name)
+                .ok_or_else(|| errors::unregistered_type_name(&inner.data.name)),
+            _ => Ok(*self),
+        }
+    }
+
+    pub fn attrs(&self) -> Result<TypeAttributes> {
+        let mut type_id = *self;
+        let mut proxy_data: HashMap<String, String> = HashMap::new();
+        let mut policy_chain = Vec::new();
+        let mut injection: Option<String> = None;
+
+        loop {
+            let typ = type_id.as_type()?;
+            match typ {
+                Type::Proxy(p) => {
+                    proxy_data.extend(p.data.extras.clone());
+                    type_id = Store::get_type_by_name(&p.data.name)
+                        .ok_or_else(|| errors::unregistered_type_name(&p.data.name))?;
+                    continue;
+                }
+
+                Type::WithPolicy(inner) => {
+                    policy_chain.extend(inner.data.chain.clone());
+                    type_id = inner.data.tpe.into();
+                    continue;
+                }
+
+                Type::WithInjection(inner) => {
+                    if injection.is_some() {
+                        return Err("multiple injections not supported".to_string());
+                    }
+                    injection = Some(inner.data.injection.clone());
+                }
+
+                _ => {
+                    break {
+                        Ok(TypeAttributes {
+                            concrete_type: type_id,
+                            proxy_data,
+                            policy_chain,
+                            injection,
+                        })
+                    }
+                }
+            }
         }
     }
 }

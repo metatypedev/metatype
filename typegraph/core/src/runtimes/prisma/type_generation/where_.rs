@@ -3,7 +3,6 @@
 
 use crate::{
     errors::Result,
-    global_store::with_store,
     t::{self, ConcreteTypeBuilder, TypeBuilder},
     types::{Type, TypeId},
 };
@@ -34,46 +33,42 @@ impl TypeGen for Where {
         }
         let mut props = vec![];
 
-        with_store(|s| -> Result<()> {
-            for (k, ty) in s.type_as_struct(self.model_id).unwrap().data.props.iter() {
-                if let Some(rel) = context.registry.find_relationship_on(self.model_id, k) {
-                    if !self.relations {
-                        continue;
+        for (k, ty) in self.model_id.as_struct().unwrap().iter_props() {
+            if let Some(rel) = context.registry.find_relationship_on(self.model_id, k) {
+                if !self.relations {
+                    continue;
+                }
+                let model = rel.get_opposite_of(self.model_id, k).unwrap();
+                props.push(Prop {
+                    key: k.to_string(),
+                    ty: model.model_type,
+                    recurse: true,
+                    relations: false,
+                });
+            } else {
+                let attrs = ty.attrs()?;
+                match attrs.concrete_type.as_type()? {
+                    // different runtime
+                    Type::Func(_) => continue,
+                    Type::Optional(ty) => {
+                        props.push(Prop {
+                            key: k.to_string(),
+                            ty: ty.data.of.into(),
+                            recurse: false,
+                            relations: false,
+                        });
                     }
-                    let model = rel.get_opposite_of(self.model_id, k).unwrap();
-                    props.push(Prop {
-                        key: k.to_string(),
-                        ty: model.model_type,
-                        recurse: true,
-                        relations: false,
-                    });
-                } else {
-                    let attrs = s.get_attributes((*ty).into())?;
-                    match attrs.concrete_type.as_type(s)? {
-                        // different runtime
-                        Type::Func(_) => continue,
-                        Type::Optional(ty) => {
-                            props.push(Prop {
-                                key: k.to_string(),
-                                ty: ty.data.of.into(),
-                                recurse: false,
-                                relations: false,
-                            });
-                        }
-                        _ => {
-                            props.push(Prop {
-                                key: k.to_string(),
-                                ty: (*ty).into(),
-                                recurse: false,
-                                relations: false,
-                            });
-                        }
+                    _ => {
+                        props.push(Prop {
+                            key: k.to_string(),
+                            ty,
+                            recurse: false,
+                            relations: false,
+                        });
                     }
                 }
             }
-
-            Ok(())
-        })?;
+        }
 
         let mut st = t::struct_();
         for prop in props.into_iter() {

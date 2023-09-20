@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::Result;
-use crate::global_store::with_store;
 use crate::t;
 use crate::t::TypeBuilder;
 use crate::types::TypeId;
@@ -164,12 +163,9 @@ impl PrismaLink {
 }
 
 pub fn prisma_link(type_id: TypeId) -> Result<PrismaLink> {
-    // TODO Lib::get_type_name
-    let name = with_store(|s| -> Result<_> {
-        s.get_type_name(type_id)?
-            .map(|s| s.to_owned())
-            .ok_or_else(|| "Prisma link target must be named".to_string())
-    })?;
+    let name = type_id
+        .type_name()?
+        .ok_or_else(|| "Prisma link target must be named".to_string())?;
     Ok(prisma_linkn(name))
 }
 

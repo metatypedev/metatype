@@ -9,7 +9,7 @@ use crate::{
     errors,
     global_store::with_store,
     typegraph::TypegraphContext,
-    types::{Func, Type, TypeData},
+    types::{Func, Type, TypeData, TypeId},
     wit::core::TypeFunc,
 };
 
@@ -19,8 +19,8 @@ impl TypeConversion for Func {
             with_store(|s| -> Result<_> { ctx.register_materializer(s, self.data.mat) })?;
 
         let input = with_store(|s| -> Result<_> {
-            let inp_id = s.resolve_proxy(self.data.inp.into())?;
-            match s.get_type(inp_id)? {
+            let inp_id = TypeId(self.data.inp).resolve_proxy()?;
+            match inp_id.as_type()? {
                 Type::Struct(_) => Ok(ctx.register_type(s, inp_id, Some(runtime_id))?),
                 _ => Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?)),
             }
@@ -28,7 +28,7 @@ impl TypeConversion for Func {
         .into();
 
         let output = with_store(|s| -> Result<_> {
-            let out_id = s.resolve_proxy(self.data.out.into())?;
+            let out_id = TypeId(self.data.out).resolve_proxy()?;
             ctx.register_type(s, out_id, Some(runtime_id))
         })?
         .into();

@@ -3,9 +3,10 @@
 
 use crate::errors::{self, Result};
 use crate::runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime};
-use crate::types::{Type, TypeFun, TypeId};
-use crate::wit::core::{Error as TgError, Policy, PolicyId, PolicySpec, RuntimeId};
+use crate::types::{Struct, Type, TypeFun, TypeId, WrapperTypeData};
+use crate::wit::core::{Error as TgError, Policy, PolicyId, RuntimeId};
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
+use std::rc::Rc;
 use std::{cell::RefCell, collections::HashMap};
 
 #[derive(Default)]
@@ -54,94 +55,50 @@ impl Store {
     }
 }
 
-#[derive(Debug)]
-pub struct TypeAttributes {
-    pub concrete_type: TypeId,
-    pub proxy_data: Vec<(String, String)>,
-    pub policy_chain: Vec<PolicySpec>,
-}
-
 impl Store {
-    pub fn resolve_proxy(&self, type_id: TypeId) -> Result<TypeId, TgError> {
-        match self.get_type(type_id)? {
-            Type::Proxy(p) => self
-                .get_type_by_name(&p.data.name)
-                .ok_or_else(|| errors::unregistered_type_name(&p.data.name)),
-            _ => Ok(type_id),
-        }
-    }
-
-    /// Collect all the data from all wrapper types, and get the concrete type
-    pub fn get_attributes(&self, type_id: TypeId) -> Result<TypeAttributes> {
-        let mut type_id = type_id;
-        let mut proxy_data: Vec<(String, String)> = Vec::new();
-        let mut policy_chain = Vec::new();
-
-        loop {
-            let ty = self.get_type(type_id)?;
-            match ty {
-                Type::Proxy(p) => {
-                    proxy_data.extend(p.data.extras.clone());
-                    type_id = self
-                        .get_type_by_name(&p.data.name)
-                        .ok_or_else(|| errors::unregistered_type_name(&p.data.name))?;
-                    continue;
-                }
-                Type::WithPolicy(p) => {
-                    policy_chain.extend(p.data.chain.clone());
-                    type_id = p.data.tpe.into();
-                    continue;
-                }
-                _ => {
-                    break Ok(TypeAttributes {
-                        concrete_type: type_id,
-                        proxy_data,
-                        policy_chain,
-                    })
-                }
-            }
-        }
-    }
-
-    pub fn get_type(&self, type_id: TypeId) -> Result<&Type, TgError> {
+    fn get_type(&self, type_id: TypeId) -> Result<Type, TgError> {
         self.types
             .get(type_id.0 as usize)
+            .cloned()
             .ok_or_else(|| errors::object_not_found("type", type_id.0))
     }
 
-    pub fn get_type_name(&self, type_id: TypeId) -> Result<Option<&str>, TgError> {
-        let ty = self.get_type(type_id)?;
-        match ty.get_base() {
-            Some(base) => Ok(base.name.as_deref()),
-            None => match ty {
-                Type::Proxy(p) => Ok(Some(p.data.name.as_str())),
-                _ => Ok(None),
-            },
-        }
+    // pub fn get_type_mut(&mut self, type_id: TypeId) -> Result<&mut Type, TgError> {
+    //     self.types
+    //         .get_mut(type_id.0 as usize)
+    //         .ok_or_else(|| errors::object_not_found("type", type_id.into()))
+    // }
+
+    pub fn get_type_by_name(name: &str) -> Option<TypeId> {
+        with_store(|s| s.type_by_names.get(name).copied())
     }
 
-    pub fn get_type_mut(&mut self, type_id: TypeId) -> Result<&mut Type, TgError> {
-        self.types
-            .get_mut(type_id.0 as usize)
-            .ok_or_else(|| errors::object_not_found("type", type_id.into()))
-    }
+    // pub fn add_type(&mut self, build: impl FnOnce(TypeId) -> Type) -> TypeId {
+    //     let id = self.types.len() as u32;
+    //     let tpe = build(id.into());
+    //     if let Some(name) = tpe.get_base().and_then(|b| b.name.as_ref()) {
+    //         self.type_by_names.insert(name.clone(), id.into());
+    //     }
+    //     self.types.push(tpe);
+    //     id.into()
+    // }
 
-    pub fn get_type_by_name(&self, name: &str) -> Option<TypeId> {
-        self.type_by_names.get(name).copied()
-    }
+    pub fn register_type(build: impl FnOnce(TypeId) -> Type) -> TypeId {
+        // this works since the store is thread local
+        let id = with_store(|s| s.types.len()) as u32;
+        let typ = build(id.into());
+        with_store_mut(|s| {
+            if let Some(name) = typ.get_base().and_then(|b| b.name.as_ref()) {
+                s.type_by_names.insert(name.clone(), id.into());
+            }
+            s.types.push(typ);
+        });
 
-    pub fn add_type(&mut self, build: impl FnOnce(TypeId) -> Type) -> TypeId {
-        let id = self.types.len() as u32;
-        let tpe = build(id.into());
-        if let Some(name) = tpe.get_base().and_then(|b| b.name.as_ref()) {
-            self.type_by_names.insert(name.clone(), id.into());
-        }
-        self.types.push(tpe);
         id.into()
     }
 
     pub fn get_type_repr(&self, id: TypeId) -> Result<String, TgError> {
-        Ok(self.get_type(id)?.to_string())
+        Ok(id.as_type()?.to_string())
     }
 
     pub fn register_runtime(&mut self, rt: Runtime) -> RuntimeId {
@@ -225,17 +182,31 @@ impl Store {
     }
 
     pub fn is_func(&self, type_id: TypeId) -> Result<bool> {
-        match self.get_type(type_id)? {
+        match type_id.as_type()? {
             Type::Func(_) => Ok(true),
             _ => Ok(false),
         }
     }
 
     pub fn resolve_quant(&self, type_id: TypeId) -> Result<TypeId> {
-        match self.get_type(type_id)? {
+        match type_id.as_type()? {
             Type::Array(a) => Ok(a.data.of.into()),
             Type::Optional(o) => Ok(o.data.of.into()),
             _ => Ok(type_id),
+        }
+    }
+}
+
+impl TypeId {
+    pub fn as_type(&self) -> Result<Type> {
+        with_store(|s| s.get_type(*self))
+    }
+
+    pub fn as_struct(&self) -> Result<Rc<Struct>> {
+        match self.as_type()? {
+            Type::Struct(s) => Ok(s),
+            Type::Proxy(inner) => inner.data.try_resolve()?.as_struct(),
+            _ => Err(errors::invalid_type("Struct", &self.repr()?)),
         }
     }
 }

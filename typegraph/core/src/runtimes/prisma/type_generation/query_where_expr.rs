@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::global_store::with_store;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::{errors::Result, types::TypeId};
 
@@ -23,7 +22,7 @@ impl TypeGen for QueryWhereExpr {
         let extended_type =
             context.generate(&WithFilters::new(where_type, self.model_id, false))?;
 
-        let props = with_store(|s| extended_type.as_struct(s).unwrap().data.props.to_vec());
+        let props = extended_type.as_struct().unwrap().data.props.to_vec();
 
         let name = self.name(context);
         let self_ref = t::proxy(&name).build()?;

@@ -9,7 +9,7 @@ use crate::{
     errors,
     global_store::with_store,
     typegraph::TypegraphContext,
-    types::{TypeData, Union},
+    types::{TypeData, TypeId, Union},
     wit::core::TypeUnion,
 };
 
@@ -32,7 +32,7 @@ impl TypeConversion for Union {
                     .iter()
                     .map(|vid| {
                         with_store(|s| -> Result<_> {
-                            let id = s.resolve_proxy((*vid).into())?;
+                            let id = TypeId(*vid).resolve_proxy()?;
                             Ok(ctx.register_type(s, id, runtime_id)?.into())
                         })
                     })

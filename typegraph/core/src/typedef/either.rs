@@ -9,7 +9,7 @@ use crate::{
     errors,
     global_store::with_store,
     typegraph::TypegraphContext,
-    types::{Either, TypeData},
+    types::{Either, TypeData, TypeId},
     wit::core::TypeEither,
 };
 
@@ -32,7 +32,7 @@ impl TypeConversion for Either {
                     .iter()
                     .map(|&vid| {
                         with_store(|s| -> Result<_> {
-                            let id = s.resolve_proxy(vid.into())?;
+                            let id = TypeId(vid).resolve_proxy()?;
                             Ok(ctx.register_type(s, id, runtime_id)?.into())
                         })
                     })

@@ -1,9 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::errors::Result;
-use crate::global_store::with_store;
-use crate::runtimes::prisma::type_utils::get_type_name;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::{Type, TypeId};
 
@@ -42,39 +39,35 @@ impl TypeGen for OutType {
         }
         let mut props = vec![];
 
-        with_store(|s| -> Result<_> {
-            for (k, id) in self.model_id.as_struct(s).unwrap().data.props.iter() {
-                let rel = context.registry.find_relationship_on(self.model_id, k);
-                if let Some(rel) = rel {
-                    if self.skip_rel.contains(&rel.name)
-                        || rel.left.model_type == rel.right.model_type
-                    {
+        for (k, id) in self.model_id.as_struct().unwrap().iter_props() {
+            let rel = context.registry.find_relationship_on(self.model_id, k);
+            if let Some(rel) = rel {
+                if self.skip_rel.contains(&rel.name) || rel.left.model_type == rel.right.model_type
+                {
+                    continue;
+                }
+                let entry = rel.get(rel.side_of_type(id).unwrap());
+                props.push(Prop {
+                    key: k.to_string(),
+                    typ: PropType::Model {
+                        model_id: entry.model_type,
+                        cardinality: entry.cardinality,
+                        rel_name: rel.name.clone(),
+                    },
+                })
+            } else {
+                match id.attrs()?.concrete_type.as_type()? {
+                    Type::Func(_) => {
+                        // skip, other runtime
                         continue;
                     }
-                    let entry = rel.get(rel.side_of_type(id.into()).unwrap());
-                    props.push(Prop {
+                    _ => props.push(Prop {
                         key: k.to_string(),
-                        typ: PropType::Model {
-                            model_id: entry.model_type,
-                            cardinality: entry.cardinality,
-                            rel_name: rel.name.clone(),
-                        },
-                    })
-                } else {
-                    match s.get_attributes(id.into())?.concrete_type.as_type(s)? {
-                        Type::Func(_) => {
-                            // skip, other runtime
-                            continue;
-                        }
-                        _ => props.push(Prop {
-                            key: k.to_string(),
-                            typ: PropType::Scalar(id.into()),
-                        }),
-                    }
+                        typ: PropType::Scalar(id),
+                    }),
                 }
             }
-            Ok(())
-        })?;
+        }
 
         let mut builder = t::struct_();
         builder.named(self.name(context));
@@ -108,7 +101,7 @@ impl TypeGen for OutType {
     }
 
     fn name(&self, _context: &super::TypeGenContext) -> String {
-        let model_name = get_type_name(self.model_id).expect("prisma model must have a name");
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         let suffix = if self.skip_rel.is_empty() {
             String::new()
         } else {

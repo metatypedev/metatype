@@ -8,7 +8,7 @@ use crate::{
     errors::Result,
     global_store::with_store,
     typegraph::TypegraphContext,
-    types::{Array, TypeData},
+    types::{Array, TypeData, TypeId},
     wit::core::TypeArray,
 };
 
@@ -26,7 +26,7 @@ impl TypeConversion for Array {
             .build(),
             data: ArrayTypeData {
                 items: with_store(|s| -> Result<_> {
-                    let id = s.resolve_proxy(self.data.of.into())?;
+                    let id = TypeId(self.data.of).resolve_proxy()?;
                     Ok(ctx.register_type(s, id, runtime_id)?.into())
                 })?,
                 max_items: self.data.max,

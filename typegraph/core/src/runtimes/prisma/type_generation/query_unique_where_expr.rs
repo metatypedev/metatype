@@ -21,18 +21,18 @@ impl QueryUniqueWhereExpr {
 impl TypeGen for QueryUniqueWhereExpr {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
         let props = with_store(|s| -> Result<_> {
-            let model = s.type_as_struct(self.model_id).unwrap();
+            let model = self.model_id.as_struct().unwrap();
 
             let mut props = vec![];
-            for (k, ty) in model.data.props.iter() {
-                let attrs = s.get_attributes(ty.into())?;
+            for (k, ty) in model.iter_props() {
+                let attrs = ty.attrs()?;
                 let is_id = attrs
                     .concrete_type
-                    .as_type(s)?
+                    .as_type()?
                     .get_base()
                     .ok_or_else(|| "expected a concrete type".to_string())?
                     .as_id;
-                let is_unique = s.get_type(ty.into())?.get_base().map_or(false, |base| {
+                let is_unique = ty.as_type()?.get_base().map_or(false, |base| {
                     base.runtime_config
                         .iter()
                         .flatten()
@@ -42,7 +42,7 @@ impl TypeGen for QueryUniqueWhereExpr {
                 if s.is_func(attrs.concrete_type)? || (!is_id && !is_unique) {
                     continue;
                 }
-                props.push((k.clone(), s.resolve_quant(attrs.concrete_type)?));
+                props.push((k.to_string(), s.resolve_quant(attrs.concrete_type)?));
             }
 
             Ok(props)
@@ -56,7 +56,7 @@ impl TypeGen for QueryUniqueWhereExpr {
     }
 
     fn name(&self, _context: &TypeGenContext) -> String {
-        let name = with_store(|s| s.get_type_name(self.model_id).unwrap().unwrap().to_string());
+        let name = self.model_id.type_name().unwrap().unwrap();
         format!("QueryUnique{}WhereInput", name)
     }
 }

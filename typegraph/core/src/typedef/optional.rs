@@ -9,7 +9,7 @@ use crate::{
     errors,
     global_store::with_store,
     typegraph::TypegraphContext,
-    types::{Optional, TypeData},
+    types::{Optional, TypeData, TypeId},
     wit::core::TypeOptional,
 };
 
@@ -35,12 +35,18 @@ impl TypeConversion for Optional {
             .build(),
             data: OptionalTypeData {
                 item: with_store(|s| -> Result<_> {
-                    let id = s.resolve_proxy(self.data.of.into())?;
+                    let id = TypeId(self.data.of).resolve_proxy()?;
                     Ok(ctx.register_type(s, id, runtime_id)?.into())
                 })?,
                 default_value,
             },
         })
+    }
+}
+
+impl Optional {
+    pub fn item(&self) -> TypeId {
+        TypeId(self.data.of)
     }
 }
 

@@ -22,7 +22,6 @@ use self::with_nested_count::WithNestedCount;
 
 use super::relationship::registry::RelationshipRegistry;
 use crate::errors::Result;
-use crate::global_store::with_store;
 use crate::runtimes::prisma::relationship::Cardinality;
 use crate::t::{self, TypeBuilder};
 use crate::types::{TypeFun, TypeId};
@@ -250,22 +249,19 @@ impl TypeGenContext {
             Ok(*type_id)
         } else {
             let type_id = generator.generate(self)?;
-            with_store(|s| -> Result<_> {
-                let name = type_id
-                    .as_type(s)?
-                    .get_base()
-                    .ok_or_else(|| "Generated type must be a concrete type".to_string())?
-                    .name
-                    .as_ref()
-                    .ok_or_else(|| format!("Generated type must have name: {type_name}"))?;
-                match name == &type_name {
-                    true => Ok(()),
-                    false => Err(format!(
-                        "Generated type name mismatch: expected {}, got {}",
-                        type_name, name
-                    )),
-                }
-            })?;
+            let typ = type_id.as_type()?;
+            let name = typ
+                .get_base()
+                .ok_or_else(|| "Generated type must be a concrete type".to_string())?
+                .name
+                .as_ref()
+                .ok_or_else(|| format!("Generated type must have name: {type_name}"))?;
+            if name != &type_name {
+                return Err(format!(
+                    "Generated type name mismatch: expected {}, got {}",
+                    type_name, name
+                ));
+            }
             self.cache.insert(type_name, type_id);
             Ok(type_id)
         }
