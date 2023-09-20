@@ -422,9 +422,15 @@ impl wit::Runtimes for crate::Lib {
         runtime: RuntimeId,
         data: TemporalOperationData,
     ) -> Result<CoreTypeId, wit::Error> {
-        let arg = data.func_arg;
+        // TODO: move to temporal.rs
         let (mut inp, effect, mat_data) = match data.operation {
             TemporalOperationType::StartWorkflow => {
+                let arg = data
+                    .func_arg
+                    .ok_or("workflow arg is undefined".to_string())?;
+                let mat_arg = data
+                    .mat_arg
+                    .ok_or("materializer arg is undefined".to_string())?;
                 let mut inp = t::struct_();
                 inp.prop("workflow_id", t::string().build()?);
                 inp.prop("args", t::array(arg.into()).build()?);
@@ -432,24 +438,36 @@ impl wit::Runtimes for crate::Lib {
                     inp,
                     WitEffect::Create(true),
                     TemporalMaterializer::Start {
-                        workflow_type: data.mat_arg,
+                        workflow_type: mat_arg,
                     },
                 )
             }
             TemporalOperationType::SignalWorkflow => {
+                let arg = data
+                    .func_arg
+                    .ok_or("workflow arg is undefined".to_string())?;
+                let mat_arg = data
+                    .mat_arg
+                    .ok_or("materializer arg is undefined".to_string())?;
                 let mut inp = t::struct_();
                 inp.prop("workflow_id", t::string().build()?);
                 inp.prop("run_id", t::string().build()?);
                 inp.prop("args", t::array(arg.into()).build()?);
                 (
                     inp,
-                    WitEffect::Update(false),
+                    WitEffect::Update(true),
                     TemporalMaterializer::Signal {
-                        signal_name: data.mat_arg,
+                        signal_name: mat_arg,
                     },
                 )
             }
             TemporalOperationType::QueryWorkflow => {
+                let arg = data
+                    .func_arg
+                    .ok_or("workflow arg is undefined".to_string())?;
+                let mat_arg = data
+                    .mat_arg
+                    .ok_or("materializer arg is undefined".to_string())?;
                 let mut inp = t::struct_();
                 inp.prop("workflow_id", t::string().build()?);
                 inp.prop("run_id", t::string().build()?);
@@ -458,7 +476,7 @@ impl wit::Runtimes for crate::Lib {
                     inp,
                     WitEffect::None,
                     TemporalMaterializer::Query {
-                        query_type: data.mat_arg,
+                        query_type: mat_arg,
                     },
                 )
             }

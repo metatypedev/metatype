@@ -364,9 +364,9 @@ interface runtimes {
     }
 
     record temporal-operation-data {
-        mat-arg: string,
+        mat-arg: option<string>,
+        func-arg: option<type-id>,
         operation: temporal-operation-type,
-        func-arg: type-id
     }
 
     register-temporal-runtime: func(data: temporal-runtime-data) -> result<runtime-id, error>
