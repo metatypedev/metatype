@@ -20,8 +20,8 @@ request-handlers = { git = "https://github.com/prisma/prisma-engines", tag = "5.
 prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.1.1" }
 datamodel-renderer = { git = "https://github.com/prisma/prisma-engines", tag = "5.1.1" }
 user-facing-errors = { git = "https://github.com/prisma/prisma-engines", tag = "5.1.1" }
-query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.1.1" }
-schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.1.1" }
+query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.3.1" }
+schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.3.1" }
 psl = { git = "https://github.com/prisma/prisma-engines", tag = "5.1.1" }
 schema-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.1.1" }
 futures = "0.3"
@@ -29,27 +29,27 @@ temporal-client = { git = "https://github.com/temporalio/sdk-core", rev = "7f975
 temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core", rev = "7f9755b" }
 connection-string = "0.2.0"
 url = "2.4.0"
-thiserror = "1.0.47"
+thiserror = "1.0.48"
 tokio = { version = "1.32.0", features = ["full"] }
 log = "0.4.20"
 env_logger = "0.10.0"
-serde_json = "1.0.105"
+serde_json = "1.0.107"
 dashmap = "5.5.0"
 common = { path = "../../libs/common" }
 macros = { path = "../../libs/macros" }
 typescript = { path = "../../libs/typescript" }
-sentry = { version = "0.31.5", features = ["anyhow"] }
+sentry = { version = "0.31.7", features = ["anyhow"] }
 tempfile = "3.8.0"
 convert_case = "0.6.0"
 rust-s3 = "0.33.0"
 http = "0.2.9"
 envconfig = "0.10.0"
 once_cell = "1.18.0"
-base64 = "0.21.2"
+base64 = "0.21.4"
 tap = "1.0.1"
 num-traits = "0.2.16"
 num-derive = "0.4.0"
 wasmedge-sdk = "=0.8.1"
 wasmedge-sys = "=0.13.1"
-wasmedge-types = "=0.4.1"
+wasmedge-types = "=0.4.4"
 colored = "2.0.4"
