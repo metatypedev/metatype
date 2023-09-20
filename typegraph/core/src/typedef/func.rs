@@ -21,17 +21,14 @@ impl TypeConversion for Func {
         let input = with_store(|s| -> Result<_> {
             let inp_id = TypeId(self.data.inp).resolve_proxy()?;
             match inp_id.as_type()? {
-                Type::Struct(_) => Ok(ctx.register_type(s, inp_id, Some(runtime_id))?),
+                Type::Struct(_) => Ok(ctx.register_type(inp_id, Some(runtime_id))?),
                 _ => Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?)),
             }
         })?
         .into();
 
-        let output = with_store(|s| -> Result<_> {
-            let out_id = TypeId(self.data.out).resolve_proxy()?;
-            ctx.register_type(s, out_id, Some(runtime_id))
-        })?
-        .into();
+        let out_id = TypeId(self.data.out).resolve_proxy()?;
+        let output = ctx.register_type(out_id, Some(runtime_id))?.into();
 
         Ok(TypeNode::Function {
             base: gen_base(

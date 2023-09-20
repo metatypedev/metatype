@@ -384,7 +384,7 @@ pub fn convert_runtime(
                                 .map(|id| {
                                     Ok(conversion_context
                                         .tg_context
-                                        .register_type(store, id, Some(runtime_idx))?
+                                        .register_type(id, Some(runtime_idx))?
                                         .into())
                                 })
                                 .collect::<Result<Vec<_>>>()?,

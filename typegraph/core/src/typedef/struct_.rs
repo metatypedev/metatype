@@ -8,7 +8,6 @@ use indexmap::IndexMap;
 use crate::{
     conversion::types::{gen_base, TypeConversion},
     errors,
-    global_store::with_store,
     typegraph::TypegraphContext,
     types::{Struct, TypeData, TypeId},
     wit::core::TypeStruct,
@@ -41,13 +40,8 @@ impl TypeConversion for Struct {
                 properties: self
                     .iter_props()
                     .map(|(name, type_id)| -> Result<(String, u32)> {
-                        with_store(|s| -> Result<_> {
-                            let id = type_id.resolve_proxy()?;
-                            Ok((
-                                name.to_string(),
-                                ctx.register_type(s, id, runtime_id)?.into(),
-                            ))
-                        })
+                        let id = type_id.resolve_proxy()?;
+                        Ok((name.to_string(), ctx.register_type(id, runtime_id)?.into()))
                     })
                     .collect::<Result<IndexMap<_, _>>>()?,
                 required: Vec::new(),

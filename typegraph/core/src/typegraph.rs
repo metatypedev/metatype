@@ -226,19 +226,14 @@ pub fn expose(
         }
 
         let mut root_type = ctx.types.get_mut(0).unwrap().take().unwrap();
-        let res = with_store(|s| ctx.expose_on(&mut root_type, s, fns));
+        let res = ctx.expose_on(&mut root_type, fns);
         ctx.types[0] = Some(root_type);
         res
     })?
 }
 
 impl TypegraphContext {
-    fn expose_on(
-        &mut self,
-        target: &mut TypeNode,
-        s: &Store,
-        fns: Vec<(String, TypeId)>,
-    ) -> Result<()> {
+    fn expose_on(&mut self, target: &mut TypeNode, fns: Vec<(String, TypeId)>) -> Result<()> {
         let root = match target {
             TypeNode::Object { ref mut data, .. } => data,
             _ => panic!("expected a struct as root type"),
@@ -259,7 +254,7 @@ impl TypegraphContext {
 
             root.required.push(name.clone());
             root.properties
-                .insert(name, self.register_type(s, type_id, None)?.into());
+                .insert(name, self.register_type(type_id, None)?.into());
         }
 
         Ok(())
@@ -267,7 +262,6 @@ impl TypegraphContext {
 
     pub fn register_type(
         &mut self,
-        store: &Store,
         id: TypeId,
         runtime_id: Option<u32>,
     ) -> Result<TypeId, TgError> {

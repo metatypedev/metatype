@@ -6,7 +6,6 @@ use common::typegraph::{ArrayTypeData, TypeNode};
 use crate::{
     conversion::types::{gen_base, TypeConversion},
     errors::Result,
-    global_store::with_store,
     typegraph::TypegraphContext,
     types::{Array, TypeData, TypeId},
     wit::core::TypeArray,
@@ -25,10 +24,9 @@ impl TypeConversion for Array {
             )
             .build(),
             data: ArrayTypeData {
-                items: with_store(|s| -> Result<_> {
-                    let id = TypeId(self.data.of).resolve_proxy()?;
-                    Ok(ctx.register_type(s, id, runtime_id)?.into())
-                })?,
+                items: ctx
+                    .register_type(TypeId(self.data.of).resolve_proxy()?, runtime_id)?
+                    .into(),
                 max_items: self.data.max,
                 min_items: self.data.min,
                 unique_items: self.data.unique_items,
