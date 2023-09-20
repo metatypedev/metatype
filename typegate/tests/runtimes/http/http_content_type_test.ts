@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, Meta } from "../utils/mod.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 import * as mf from "test/mock_fetch";
 
 mf.install();
@@ -53,7 +53,7 @@ function parseBool(str: string | undefined | null) {
 }
 
 Meta.test("http custom content-type queries", async (t) => {
-  const e = await t.engine("http/http_content_type.py");
+  const e = await t.engine("runtimes/http/http_content_type.py");
 
   mf.mock("POST@/api/sum_range", async (req) => {
     const formData: FormData = await req.formData();
@@ -78,6 +78,7 @@ Meta.test("http custom content-type queries", async (t) => {
     console.info("> query params:", url.search);
     console.info("> formData:", formData);
     const rounded = parseBool(formData.get("rounded")?.toString());
+    console.log({ rounded });
     const celcius = Number(formData.get("celcius") ?? 0);
     const result = {
       farenheit: celciusToFarenheit(celcius, rounded),

@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::collections::HashMap;
+
 use std::rc::Rc;
 
 use crate::errors::Result;
@@ -159,7 +161,8 @@ impl MaterializerConverter for MaterializerHttpRequest {
         if let Some(rename_fields) = &self.rename_fields {
             data.insert(
                 "rename_fields".to_string(),
-                serde_json::to_value(rename_fields).unwrap(),
+                serde_json::to_value(rename_fields.iter().cloned().collect::<HashMap<_, _>>())
+                    .unwrap(),
             );
         }
         if let Some(body_fields) = &self.body_fields {
