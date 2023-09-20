@@ -1,26 +1,28 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.deno import PureFunMat
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.runtimes.deno import DenoRuntime
 
-with TypeGraph("test") as g:
-    public_policy = policies.public()
 
-    inp = t.struct({"a": t.integer().named("arg1")}).named("inp")
-    out = t.struct({"a": t.integer()}).named("out")
+@typegraph()
+def test(g: Graph):
+    deno = DenoRuntime()
+    public_policy = Policy.public()
 
-    test = t.func(
+    inp = t.struct({"a": t.integer(name="arg1")}, name="inp")
+    out = t.struct({"a": t.integer()}, name="out")
+
+    test = deno.func(
         inp,
         out,
-        PureFunMat(
-            """
-                ({ a }: { a: number; }) => {
-                    return {
-                        a
-                    };
-                }
-                """
-        ),
-    ).named("f")
+        code="""
+            ({ a }: { a: number; }) => {
+                return {
+                    a
+                };
+            }
 
-    g.expose(test=test, default_policy=public_policy)
+        """,
+    ).with_policy(public_policy)
+
+    g.expose(test=test)
