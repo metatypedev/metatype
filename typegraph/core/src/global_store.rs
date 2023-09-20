@@ -35,7 +35,7 @@ impl Store {
     }
 }
 
-const PREDEFINED_DENO_FUNCTIONS: &[&str] = &["identity"];
+const PREDEFINED_DENO_FUNCTIONS: &[&str] = &["identity", "true"];
 
 thread_local! {
     pub static STORE: RefCell<Store> = RefCell::new(Store::new());

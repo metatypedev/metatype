@@ -99,7 +99,7 @@ class DenoRuntime(Runtime):
         return t.func(
             inp,
             inp,
-            PredefinedFunMat(id=res.value, name="identity"),
+            PredefinedFunMat(id=res.value, name="identity", effect=EffectNone()),
         )
 
     def policy(
