@@ -6,17 +6,18 @@ pub mod graphql;
 pub mod prisma;
 pub mod python;
 pub mod random;
+pub mod temporal;
 pub mod wasi;
 
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::global_store::{with_store, with_store_mut, Store};
 use crate::runtimes::prisma::with_prisma_runtime;
-use crate::t;
+use crate::t::{self, TypeBuilder};
 use crate::wit::core::{RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
     MaterializerHttpRequest, PrismaLinkData, PrismaRuntimeData, RandomRuntimeData,
-    TemporalRuntimeData,
+    TemporalOperationData, TemporalOperationType, TemporalRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
@@ -27,6 +28,7 @@ use self::prisma::relationship::prisma_link;
 use self::prisma::{PrismaMaterializer, PrismaRuntimeContext};
 pub use self::python::PythonMaterializer;
 pub use self::random::RandomMaterializer;
+pub use self::temporal::TemporalMaterializer;
 pub use self::wasi::WasiMaterializer;
 
 type Result<T, E = TgError> = std::result::Result<T, E>;
@@ -106,6 +108,14 @@ impl Materializer {
             data: data.into(),
         }
     }
+
+    fn temporal(runtime_id: RuntimeId, data: TemporalMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -118,6 +128,7 @@ pub enum MaterializerData {
     Random(RandomMaterializer),
     WasmEdge(WasiMaterializer),
     Prisma(PrismaMaterializer),
+    Temporal(TemporalMaterializer),
 }
 
 // impl From<DenoMaterializer> for MaterializerData {
@@ -405,5 +416,63 @@ impl wit::Runtimes for crate::Lib {
         Ok(with_store_mut(|s| {
             s.register_runtime(Runtime::Temporal(data))
         }))
+    }
+
+    fn generate_temporal_operation(
+        runtime: RuntimeId,
+        data: TemporalOperationData,
+    ) -> Result<CoreTypeId, wit::Error> {
+        let arg = data.func_arg;
+        let (mut inp, effect, mat_data) = match data.operation {
+            TemporalOperationType::StartWorkflow => {
+                let mut inp = t::struct_();
+                inp.prop("workflow_id", t::string().build()?);
+                inp.prop("args", t::array(arg.into()).build()?);
+                (
+                    inp,
+                    WitEffect::Create(true),
+                    TemporalMaterializer::Start {
+                        workflow_type: data.mat_arg,
+                    },
+                )
+            }
+            TemporalOperationType::SignalWorkflow => {
+                let mut inp = t::struct_();
+                inp.prop("workflow_id", t::string().build()?);
+                inp.prop("run_id", t::string().build()?);
+                inp.prop("args", t::array(arg.into()).build()?);
+                (
+                    inp,
+                    WitEffect::Update(false),
+                    TemporalMaterializer::Signal {
+                        signal_name: data.mat_arg,
+                    },
+                )
+            }
+            TemporalOperationType::QueryWorkflow => {
+                let mut inp = t::struct_();
+                inp.prop("workflow_id", t::string().build()?);
+                inp.prop("run_id", t::string().build()?);
+                inp.prop("args", t::array(arg.into()).build()?);
+                (
+                    inp,
+                    WitEffect::None,
+                    TemporalMaterializer::Query {
+                        query_type: data.mat_arg,
+                    },
+                )
+            }
+            TemporalOperationType::DescribeWorkflow => {
+                let mut inp = t::struct_();
+                inp.prop("workflow_id", t::string().build()?);
+                inp.prop("run_id", t::string().build()?);
+                (inp, WitEffect::None, TemporalMaterializer::Describe)
+            }
+        };
+
+        let mat = Materializer::temporal(runtime, mat_data, effect);
+        let mat_id = with_store_mut(|s| s.register_materializer(mat));
+        let fn_id = t::func(inp.build()?, t::string().build()?, mat_id)?;
+        Ok(fn_id.into())
     }
 }

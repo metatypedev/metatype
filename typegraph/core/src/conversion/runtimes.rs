@@ -6,7 +6,7 @@ use crate::global_store::Store;
 use crate::runtimes::prisma::{with_prisma_runtime, ConversionContext};
 use crate::runtimes::{
     DenoMaterializer, Materializer as RawMaterializer, PythonMaterializer, RandomMaterializer,
-    Runtime, WasiMaterializer,
+    Runtime, TemporalMaterializer, WasiMaterializer,
 };
 use crate::wit::core::RuntimeId;
 use crate::wit::runtimes::{HttpMethod, MaterializerHttpRequest};
@@ -279,6 +279,53 @@ impl MaterializerConverter for WasiMaterializer {
         .map_err(|e| e.to_string())?;
 
         let name = "wasi".to_string();
+        Ok(Materializer {
+            name,
+            runtime,
+            effect: effect.into(),
+            data,
+        })
+    }
+}
+
+impl MaterializerConverter for TemporalMaterializer {
+    fn convert(
+        &self,
+        c: &mut TypegraphContext,
+        s: &Store,
+        runtime_id: RuntimeId,
+        effect: WitEffect,
+    ) -> Result<Materializer> {
+        use crate::runtimes::TemporalMaterializer::*;
+        let runtime = c.register_runtime(s, runtime_id)?;
+        let (data, name) = match self {
+            Start { workflow_type } => {
+                let data = serde_json::from_value(json!({
+                    "workflow_type": workflow_type,
+                }))
+                .unwrap();
+                (data, "start_workflow".to_string())
+            }
+            Signal { signal_name } => {
+                let data = serde_json::from_value(json!({
+                    "signal_name": signal_name,
+                }))
+                .unwrap();
+                (data, "signal_workflow".to_string())
+            }
+            Query { query_type } => {
+                let data = serde_json::from_value(json!({
+                    "query_type": query_type,
+                }))
+                .unwrap();
+                (data, "query_workflow".to_string())
+            }
+            Describe => {
+                let data = serde_json::from_value(json!({})).unwrap();
+                (data, "describe_workflow".to_string())
+            }
+        };
+
         Ok(Materializer {
             name,
             runtime,

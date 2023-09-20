@@ -363,8 +363,14 @@ interface runtimes {
         describe-workflow
     }
 
+    record temporal-operation-data {
+        mat-arg: string,
+        operation: temporal-operation-type,
+        func-arg: type-id
+    }
+
     register-temporal-runtime: func(data: temporal-runtime-data) -> result<runtime-id, error>
-    // generate-temporal-operation: func(runtime: runtime-id, operation: temporal-operation-type) -> result<type-id, error>
+    generate-temporal-operation: func(runtime: runtime-id, data: temporal-operation-data) -> result<type-id, error>
 }
 
 world typegraph {
