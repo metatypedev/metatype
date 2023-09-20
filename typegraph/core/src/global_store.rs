@@ -43,15 +43,15 @@ pub fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
     STORE.with(|s| f(&s.borrow()))
 }
 
-pub fn with_store_mut<T, F: FnOnce(&mut Store) -> T>(f: F) -> T {
+fn with_store_mut<T, F: FnOnce(&mut Store) -> T>(f: F) -> T {
     STORE.with(|s| f(&mut s.borrow_mut()))
 }
 
 #[cfg(test)]
 impl Store {
-    pub fn reset(&mut self) {
+    pub fn reset() {
         let _ = crate::typegraph::finalize();
-        *self = Store::new();
+        with_store_mut(|s| *s = Store::new());
     }
 }
 
@@ -99,8 +99,8 @@ impl Store {
             .ok_or_else(|| errors::object_not_found("runtime", id))
     }
 
-    pub fn get_deno_runtime(&self) -> RuntimeId {
-        self.deno_runtime
+    pub fn get_deno_runtime() -> RuntimeId {
+        with_store(|s| s.deno_runtime)
     }
 
     pub fn register_materializer(mat: Materializer) -> MaterializerId {
@@ -117,14 +117,16 @@ impl Store {
             .ok_or_else(|| errors::object_not_found("materializer", id))
     }
 
-    pub fn register_policy(&mut self, policy: Policy) -> Result<PolicyId> {
-        let id = self.policies.len() as u32;
-        if self.policies.iter().any(|p| p.name == policy.name) {
-            Err(errors::duplicate_policy_name(&policy.name))
-        } else {
-            self.policies.push(policy);
-            Ok(id)
-        }
+    pub fn register_policy(policy: Policy) -> Result<PolicyId> {
+        with_store_mut(|s| {
+            let id = s.policies.len() as u32;
+            if s.policies.iter().any(|p| p.name == policy.name) {
+                Err(errors::duplicate_policy_name(&policy.name))
+            } else {
+                s.policies.push(policy);
+                Ok(id)
+            }
+        })
     }
 
     pub fn get_policy(&self, id: PolicyId) -> Result<&Policy> {
@@ -133,13 +135,13 @@ impl Store {
             .ok_or_else(|| errors::object_not_found("policy", id))
     }
 
-    pub fn get_predefined_deno_function(&mut self, name: String) -> Result<MaterializerId> {
-        if let Some(mat) = self.predefined_deno_functions.get(&name) {
-            Ok(*mat)
+    pub fn get_predefined_deno_function(name: String) -> Result<MaterializerId> {
+        if let Some(mat) = with_store(|s| s.predefined_deno_functions.get(&name).cloned()) {
+            Ok(mat)
         } else if PREDEFINED_DENO_FUNCTIONS.iter().any(|n| n == &name) {
             Err(errors::unknown_predefined_function(&name, "deno"))
         } else {
-            let runtime_id = self.get_deno_runtime();
+            let runtime_id = Store::get_deno_runtime();
             let mat = Store::register_materializer(Materializer {
                 runtime_id,
                 effect: Effect::None,
@@ -148,16 +150,18 @@ impl Store {
                 }))
                 .into(),
             });
-            self.predefined_deno_functions.insert(name, mat);
+            with_store_mut(|s| {
+                s.predefined_deno_functions.insert(name, mat);
+            });
             Ok(mat)
         }
     }
 
-    pub fn get_deno_module(&mut self, file: String) -> MaterializerId {
-        if let Some(mat) = self.deno_modules.get(&file) {
-            *mat
+    pub fn get_deno_module(file: String) -> MaterializerId {
+        if let Some(mat) = with_store(|s| s.deno_modules.get(&file).cloned()) {
+            mat
         } else {
-            let runtime_id = self.get_deno_runtime();
+            let runtime_id = Store::get_deno_runtime();
             let mat = Store::register_materializer(Materializer {
                 runtime_id,
                 effect: Effect::None, // N/A
@@ -166,7 +170,7 @@ impl Store {
                 }))
                 .into(),
             });
-            self.deno_modules.insert(file, mat);
+            with_store_mut(|s| s.deno_modules.insert(file, mat));
             mat
         }
     }

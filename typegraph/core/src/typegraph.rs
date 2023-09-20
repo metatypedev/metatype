@@ -136,7 +136,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     };
 
     // register the deno runtime
-    let default_runtime_idx = with_store(|s| ctx.register_runtime(s, s.get_deno_runtime()))?;
+    let default_runtime_idx = with_store(|s| ctx.register_runtime(s, Store::get_deno_runtime()))?;
 
     ctx.types.push(Some(TypeNode::Object {
         base: gen_base(params.name, None, default_runtime_idx).build(),

@@ -17,7 +17,7 @@ mod test_utils;
 use std::collections::HashSet;
 
 use errors::Result;
-use global_store::{with_store, with_store_mut, Store};
+use global_store::{with_store, Store};
 use indoc::formatdoc;
 use regex::Regex;
 use types::{
@@ -220,7 +220,7 @@ impl wit::core::Core for Lib {
     }
 
     fn register_policy(pol: Policy) -> Result<PolicyId> {
-        with_store_mut(|s| s.register_policy(pol))
+        Store::register_policy(pol)
     }
 
     fn register_context_policy(key: String, check: ContextCheck) -> Result<(PolicyId, String)> {
@@ -300,7 +300,7 @@ macro_rules! log {
 #[cfg(test)]
 mod tests {
     use crate::errors;
-    use crate::global_store::{with_store, with_store_mut};
+    use crate::global_store::{with_store, Store};
     use crate::t::{self, TypeBuilder};
     use crate::wit::core::Core;
     use crate::wit::core::Cors;
@@ -387,7 +387,7 @@ mod tests {
 
     #[test]
     fn test_nested_typegraph_context() -> Result<(), String> {
-        with_store_mut(|s| s.reset());
+        Store::reset();
         Lib::init_typegraph(TypegraphInitParams {
             name: "test-1".to_string(),
             dynamic: None,
@@ -411,7 +411,7 @@ mod tests {
 
     #[test]
     fn test_no_active_context() -> Result<(), String> {
-        with_store_mut(|s| s.reset());
+        Store::reset();
         assert_eq!(
             Lib::expose(vec![], vec![], None),
             Err(errors::expected_typegraph_context())
@@ -427,7 +427,7 @@ mod tests {
 
     #[test]
     fn test_expose_invalid_type() -> Result<(), String> {
-        with_store_mut(|s| s.reset());
+        Store::reset();
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
             dynamic: None,
@@ -452,7 +452,6 @@ mod tests {
 
     #[test]
     fn test_expose_invalid_name() -> Result<(), String> {
-        // with_store_mut(|s| s.reset());
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
             dynamic: None,
@@ -491,7 +490,6 @@ mod tests {
 
     #[test]
     fn test_expose_duplicate() -> Result<(), String> {
-        // with_store_mut(|s| s.reset());
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
             dynamic: None,
@@ -524,7 +522,7 @@ mod tests {
 
     #[test]
     fn test_successful_serialization() -> Result<(), String> {
-        with_store_mut(|s| s.reset());
+        Store::reset();
         let a = t::integer().build()?;
         let b = t::integer().min(12).max(44).build()?;
         // -- optional(array(float))

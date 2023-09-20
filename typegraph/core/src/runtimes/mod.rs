@@ -11,7 +11,7 @@ pub mod wasi;
 use std::rc::Rc;
 
 use crate::conversion::runtimes::MaterializerConverter;
-use crate::global_store::{with_store_mut, Store};
+use crate::global_store::Store;
 use crate::runtimes::prisma::with_prisma_runtime;
 use crate::t;
 use crate::wit::core::{RuntimeId, TypeId as CoreTypeId};
@@ -53,7 +53,7 @@ pub struct Materializer {
 impl Materializer {
     fn deno(data: DenoMaterializer, effect: wit::Effect) -> Self {
         Self {
-            runtime_id: with_store_mut(|s| s.get_deno_runtime()),
+            runtime_id: Store::get_deno_runtime(),
             effect,
             data: Rc::new(data).into(),
         }
@@ -149,7 +149,7 @@ macro_rules! prisma_op {
 
 impl wit::Runtimes for crate::Lib {
     fn get_deno_runtime() -> RuntimeId {
-        with_store_mut(|s| s.get_deno_runtime())
+        Store::get_deno_runtime()
     }
 
     fn register_deno_func(
@@ -164,14 +164,14 @@ impl wit::Runtimes for crate::Lib {
     fn get_predefined_deno_func(
         data: wit::MaterializerDenoPredefined,
     ) -> Result<wit::MaterializerId> {
-        with_store_mut(|s| s.get_predefined_deno_function(data.name))
+        Store::get_predefined_deno_function(data.name)
     }
 
     fn import_deno_function(
         data: wit::MaterializerDenoImport,
         effect: wit::Effect,
     ) -> Result<wit::MaterializerId> {
-        let module = with_store_mut(|s| s.get_deno_module(data.module));
+        let module = Store::get_deno_module(data.module);
         let data = MaterializerDenoImport {
             func_name: data.func_name,
             module,
