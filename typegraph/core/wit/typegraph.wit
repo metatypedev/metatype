@@ -349,6 +349,22 @@ interface runtimes {
     prisma-delete-one: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
     prisma-delete-many: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
     prisma-link: func(data: prisma-link-data) -> result<type-id, error>
+
+    // temporal
+    record temporal-runtime-data {
+        name: string,
+        host: string,
+    }
+
+    variant temporal-operation-type {
+        start-workflow,
+        signal-workflow,
+        query-workflow,
+        describe-workflow
+    }
+
+    register-temporal-runtime: func(data: temporal-runtime-data) -> result<runtime-id, error>
+    // generate-temporal-operation: func(runtime: runtime-id, operation: temporal-operation-type) -> result<type-id, error>
 }
 
 world typegraph {

@@ -17,6 +17,7 @@ use common::typegraph::runtimes::http::HTTPRuntimeData;
 use common::typegraph::runtimes::prisma::PrismaRuntimeData;
 use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
+use common::typegraph::runtimes::temporal::TemporalRuntimeData;
 use common::typegraph::runtimes::wasmedge::WasmEdgeRuntimeData;
 use common::typegraph::runtimes::KnownRuntime;
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
@@ -386,5 +387,10 @@ pub fn convert_runtime(
                 },
             )))
         }
+        Runtime::Temporal(d) => Ok(TGRuntime::Known(Temporal(TemporalRuntimeData {
+            name: d.name.clone(),
+            host: d.name.clone(),
+        }))
+        .into()),
     }
 }

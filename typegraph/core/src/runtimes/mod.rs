@@ -16,6 +16,7 @@ use crate::wit::core::{RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
     MaterializerHttpRequest, PrismaLinkData, PrismaRuntimeData, RandomRuntimeData,
+    TemporalRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
@@ -39,6 +40,7 @@ pub enum Runtime {
     Random(RandomRuntimeData),
     WasmEdge,
     Prisma(PrismaRuntimeData, Box<PrismaRuntimeContext>),
+    Temporal(TemporalRuntimeData),
 }
 
 #[derive(Debug)]
@@ -397,5 +399,11 @@ impl wit::Runtimes for crate::Lib {
             builder = builder.unique(unique);
         }
         Ok(builder.build()?.into())
+    }
+
+    fn register_temporal_runtime(data: TemporalRuntimeData) -> Result<RuntimeId, wit::Error> {
+        Ok(with_store_mut(|s| {
+            s.register_runtime(Runtime::Temporal(data))
+        }))
     }
 }
