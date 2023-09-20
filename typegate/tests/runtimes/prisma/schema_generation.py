@@ -296,25 +296,6 @@ def explicit_one_to_many_self_2(g: Graph):
     )
 
 
-# @typegraph()
-# def one_to_one_self(g: Graph):
-#     db = PrismaRuntime("test", "POSTGRES")
-#
-#     tree_node = t.struct(
-#         {
-#             "id": t.integer(as_id=True, config={"auto": True}),
-#             "parent": t.ref("TreeNode"),
-#             "children": t.array(t.ref("TreeNode")),
-#         },
-#         name="TreeNode",
-#     )
-#
-#     g.expose(
-#         createTreeNode=db.create(tree_node),
-#     )
-#
-
-
 @typegraph()
 def one_to_one_self(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
@@ -333,25 +314,6 @@ def one_to_one_self(g: Graph):
     )
 
 
-# @typegraph()
-# def one_to_one_self_2(g: Graph):
-#     db = PrismaRuntime("test", "POSTGRES")
-#
-#     tree_node = t.struct(
-#         {
-#             "id": t.integer(as_id=True, config={"auto": True}),
-#             "parent": db.link("TreeNode", field="children"),
-#             "children": db.link(t.array(t.ref("TreeNode")), field="parent"),
-#         },
-#         name="TreeNode",
-#     )
-#
-#     g.expose(
-#         createTreeNode=db.create(tree_node),
-#     )
-#
-
-
 @typegraph()
 def one_to_one_self_2(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
@@ -368,40 +330,6 @@ def one_to_one_self_2(g: Graph):
     g.expose(
         createListNode=db.create(list_node),
     )
-
-
-# TODO ambiguous targets
-# @typegraph()
-# def multiple_relationships(g: Graph):
-#     db = PrismaRuntime("test", "POSTGRES")
-#
-#     user = t.struct(
-#         {
-#             "id": t.uuid(as_id=True, config={"auto": True}),
-#             "email": t.email(config={"unique": True}),
-#             "posts": t.array(t.ref("Post")),
-#             "favorite_post": t.optional(t.ref("Post"), config={"unique": True}),
-#             "published_posts": t.array(t.ref("Post")),
-#         },
-#         name="User",
-#     )
-#
-#     post = t.struct(
-#         {
-#             "id": t.uuid(as_id=True, config={"auto": True}),
-#             "title": t.string(min=10, max=256),
-#             "content": t.string(min=1000),
-#             "author": t.ref("User"),
-#             "publisher": t.ref("User").optional(),
-#             "favorite_of": t.array(t.ref("User")),
-#         },
-#         name="Post",
-#     )
-#
-#     g.expose(
-#         createUser=db.create(user),
-#         createPost=db.create(post),
-#     )
 
 
 @typegraph()
@@ -458,15 +386,13 @@ def multiple_relationships_2(g: Graph):
             "author": t.ref("User"),
             "publisher": db.link(t.ref("User").optional(), name="PostPublisher"),
             "favorite_of": db.link(t.array(t.ref("User")), field="favorite_post"),
-            # "favorite_of": t.array(g("User")),
         },
         name="Post",
     )
 
-    # TODO db.create(user) fails here
     g.expose(
-        createUser=db.find_unique(user),
-        createPost=db.find_unique(post),
+        createUser=db.create(user),
+        createPost=db.create(post),
     )
 
 
@@ -478,11 +404,7 @@ def multiple_self_relationships(g: Graph):
         {
             "id": t.uuid(as_id=True, config={"auto": True}),
             "personal_hero": db.link(
-                t.ref("Person").optional(config={"unique": True}),
-                field="hero_of"
-                # t.ref("Person").optional(),
-                # field="hero_of",
-                # unique=True,
+                t.ref("Person").optional(config={"unique": True}), field="hero_of"
             ),
             "hero_of": t.ref("Person").optional(),
             "mother": t.ref("Person").optional(),
@@ -491,7 +413,6 @@ def multiple_self_relationships(g: Graph):
         name="Person",
     )
 
-    # TODO db.create(user) fails here
     g.expose(
-        createPerson=db.find_unique(person),
+        createPerson=db.create(person),
     )
