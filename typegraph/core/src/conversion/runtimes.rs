@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::rc::Rc;
+
 use crate::errors::Result;
 use crate::global_store::Store;
 use crate::runtimes::prisma::{with_prisma_runtime, ConversionContext};
@@ -53,6 +55,18 @@ pub trait MaterializerConverter {
         runtime_id: RuntimeId,
         effect: WitEffect,
     ) -> Result<common::typegraph::Materializer>;
+}
+
+impl<T: MaterializerConverter> MaterializerConverter for Rc<T> {
+    fn convert(
+        &self,
+        c: &mut TypegraphContext,
+        s: &Store,
+        runtime_id: RuntimeId,
+        effect: WitEffect,
+    ) -> Result<common::typegraph::Materializer> {
+        (**self).convert(c, s, runtime_id, effect)
+    }
 }
 
 impl MaterializerConverter for DenoMaterializer {

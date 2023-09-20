@@ -8,6 +8,8 @@ pub mod python;
 pub mod random;
 pub mod wasi;
 
+use std::rc::Rc;
+
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::global_store::{with_store_mut, Store};
 use crate::runtimes::prisma::with_prisma_runtime;
@@ -30,18 +32,18 @@ pub use self::wasi::WasiMaterializer;
 
 type Result<T, E = TgError> = std::result::Result<T, E>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Runtime {
     Deno,
-    Graphql(GraphqlRuntimeData),
-    Http(HttpRuntimeData),
+    Graphql(Rc<GraphqlRuntimeData>),
+    Http(Rc<HttpRuntimeData>),
     Python,
-    Random(RandomRuntimeData),
+    Random(Rc<RandomRuntimeData>),
     WasmEdge,
-    Prisma(PrismaRuntimeData, Box<PrismaRuntimeContext>),
+    Prisma(Rc<PrismaRuntimeData>, Rc<PrismaRuntimeContext>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Materializer {
     pub runtime_id: RuntimeId,
     pub effect: wit::Effect,
@@ -53,7 +55,7 @@ impl Materializer {
         Self {
             runtime_id: with_store_mut(|s| s.get_deno_runtime()),
             effect,
-            data: data.into(),
+            data: Rc::new(data).into(),
         }
     }
 
@@ -61,7 +63,7 @@ impl Materializer {
         Self {
             runtime_id,
             effect,
-            data: data.into(),
+            data: Rc::new(data).into(),
         }
     }
 
@@ -69,7 +71,7 @@ impl Materializer {
         Self {
             runtime_id,
             effect,
-            data: data.into(),
+            data: Rc::new(data).into(),
         }
     }
 
@@ -77,7 +79,7 @@ impl Materializer {
         Self {
             runtime_id,
             effect,
-            data: data.into(),
+            data: Rc::new(data).into(),
         }
     }
 
@@ -85,7 +87,7 @@ impl Materializer {
         Self {
             runtime_id,
             effect,
-            data: data.into(),
+            data: Rc::new(data).into(),
         }
     }
 
@@ -93,7 +95,7 @@ impl Materializer {
         Self {
             runtime_id,
             effect,
-            data: data.into(),
+            data: Rc::new(data).into(),
         }
     }
 
@@ -101,21 +103,21 @@ impl Materializer {
         Self {
             runtime_id,
             effect,
-            data: data.into(),
+            data: Rc::new(data).into(),
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[enum_dispatch]
 pub enum MaterializerData {
-    Deno(DenoMaterializer),
-    GraphQL(GraphqlMaterializer),
-    Http(MaterializerHttpRequest),
-    Python(PythonMaterializer),
-    Random(RandomMaterializer),
-    WasmEdge(WasiMaterializer),
-    Prisma(PrismaMaterializer),
+    Deno(Rc<DenoMaterializer>),
+    GraphQL(Rc<GraphqlMaterializer>),
+    Http(Rc<MaterializerHttpRequest>),
+    Python(Rc<PythonMaterializer>),
+    Random(Rc<RandomMaterializer>),
+    WasmEdge(Rc<WasiMaterializer>),
+    Prisma(Rc<PrismaMaterializer>),
 }
 
 // impl From<DenoMaterializer> for MaterializerData {
@@ -181,7 +183,7 @@ impl wit::Runtimes for crate::Lib {
     }
 
     fn register_graphql_runtime(data: GraphqlRuntimeData) -> Result<RuntimeId> {
-        let runtime = Runtime::Graphql(data);
+        let runtime = Runtime::Graphql(data.into());
         Ok(with_store_mut(|s| s.register_runtime(runtime)))
     }
 
@@ -204,7 +206,9 @@ impl wit::Runtimes for crate::Lib {
     }
 
     fn register_http_runtime(data: wit::HttpRuntimeData) -> Result<wit::RuntimeId, wit::Error> {
-        Ok(with_store_mut(|s| s.register_runtime(Runtime::Http(data))))
+        Ok(with_store_mut(|s| {
+            s.register_runtime(Runtime::Http(data.into()))
+        }))
     }
 
     fn http_request(
@@ -255,7 +259,7 @@ impl wit::Runtimes for crate::Lib {
         data: wit::RandomRuntimeData,
     ) -> Result<wit::MaterializerId, wit::Error> {
         Ok(with_store_mut(|s| {
-            s.register_runtime(Runtime::Random(data))
+            s.register_runtime(Runtime::Random(data.into()))
         }))
     }
 
@@ -282,7 +286,7 @@ impl wit::Runtimes for crate::Lib {
 
     fn register_prisma_runtime(data: wit::PrismaRuntimeData) -> Result<wit::RuntimeId, wit::Error> {
         Ok(with_store_mut(|s| {
-            s.register_runtime(Runtime::Prisma(data, Default::default()))
+            s.register_runtime(Runtime::Prisma(data.into(), Default::default()))
         }))
     }
 

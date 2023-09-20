@@ -155,9 +155,9 @@ impl Store {
             let mat = self.register_materializer(Materializer {
                 runtime_id,
                 effect: Effect::None,
-                data: DenoMaterializer::Predefined(MaterializerDenoPredefined {
+                data: Rc::new(DenoMaterializer::Predefined(MaterializerDenoPredefined {
                     name: name.clone(),
-                })
+                }))
                 .into(),
             });
             self.predefined_deno_functions.insert(name, mat);
@@ -173,8 +173,10 @@ impl Store {
             let mat = self.register_materializer(Materializer {
                 runtime_id,
                 effect: Effect::None, // N/A
-                data: DenoMaterializer::Module(MaterializerDenoModule { file: file.clone() })
-                    .into(),
+                data: Rc::new(DenoMaterializer::Module(MaterializerDenoModule {
+                    file: file.clone(),
+                }))
+                .into(),
             });
             self.deno_modules.insert(file, mat);
             mat
