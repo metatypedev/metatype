@@ -14,6 +14,7 @@ use crate::wit::core::{
     TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger,
     TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion, TypeWithInjection,
 };
+use std::rc::Rc;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TypeId(pub CoreTypeId);
@@ -100,22 +101,22 @@ pub type Either = ConcreteType<TypeEither>;
 pub type WithPolicy = WrapperType<TypePolicy>;
 pub type WithInjection = WrapperType<TypeWithInjection>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[enum_dispatch(TypeFun, TypeConversion)]
 pub enum Type {
-    Proxy(Proxy),
-    Struct(Struct),
-    Integer(Integer),
-    Float(Float),
-    Func(Func),
-    Boolean(Boolean),
-    String(StringT),
-    Array(Array),
-    Optional(Optional),
-    Union(Union),
-    Either(Either),
-    WithPolicy(WithPolicy),
-    WithInjection(WithInjection),
+    Proxy(Rc<Proxy>),
+    Struct(Rc<Struct>),
+    Integer(Rc<Integer>),
+    Float(Rc<Float>),
+    Func(Rc<Func>),
+    Boolean(Rc<Boolean>),
+    String(Rc<StringT>),
+    Array(Rc<Array>),
+    Optional(Rc<Optional>),
+    Union(Rc<Union>),
+    Either(Rc<Either>),
+    WithPolicy(Rc<WithPolicy>),
+    WithInjection(Rc<WithInjection>),
 }
 
 #[enum_dispatch]
@@ -140,6 +141,32 @@ pub trait TypeFun {
 
     fn is_concrete_type(&self) -> bool {
         self.as_wrapper_type().is_none()
+    }
+}
+
+impl<T: TypeFun> TypeFun for Rc<T> {
+    fn get_base(&self) -> Option<&TypeBase> {
+        (**self).get_base()
+    }
+
+    fn get_concrete_type_name(&self) -> Result<String> {
+        (**self).get_concrete_type_name()
+    }
+
+    fn to_string(&self) -> String {
+        (**self).to_string()
+    }
+
+    fn get_id(&self) -> TypeId {
+        (**self).get_id()
+    }
+
+    fn get_data(&self) ->  &dyn TypeData {
+        (**self).get_data()
+    }
+
+    fn get_concrete_type(&self) -> Option<TypeId> {
+        (**self).get_concrete_type()
     }
 }
 

@@ -219,13 +219,16 @@ pub fn expose(
                         .filter(|_| !has_policy)
                         .map(|p| {
                             s.add_type(|id| {
-                                Type::WithPolicy(WithPolicy {
-                                    id,
-                                    data: TypePolicy {
-                                        tpe: fn_id.into(),
-                                        chain: p.clone(),
-                                    },
-                                })
+                                Type::WithPolicy(
+                                    WithPolicy {
+                                        id,
+                                        data: TypePolicy {
+                                            tpe: fn_id.into(),
+                                            chain: p.clone(),
+                                        },
+                                    }
+                                    .into(),
+                                )
                             })
                         })
                         .unwrap_or(fn_id),

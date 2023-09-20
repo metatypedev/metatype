@@ -80,7 +80,7 @@ impl wit::core::Core for Lib {
     }
 
     fn proxyb(data: TypeProxy) -> Result<CoreTypeId> {
-        with_store_mut(move |s| Ok(s.add_type(|id| Type::Proxy(Proxy { id, data })).into()))
+        with_store_mut(move |s| Ok(s.add_type(|id| Type::Proxy(Proxy { id, data }.into())).into()))
     }
 
     fn integerb(data: TypeInteger, base: TypeBase) -> Result<CoreTypeId> {
@@ -95,7 +95,7 @@ impl wit::core::Core for Lib {
             }
         }
         Ok(with_store_mut(move |s| {
-            s.add_type(|id| Type::Integer(Integer { id, base, data }))
+            s.add_type(|id| Type::Integer(Integer { id, base, data }.into()))
                 .into()
         }))
     }
@@ -112,7 +112,7 @@ impl wit::core::Core for Lib {
             }
         }
         Ok(with_store_mut(move |s| {
-            s.add_type(|id| Type::Float(Float { id, base, data }))
+            s.add_type(|id| Type::Float(Float { id, base, data }.into()))
                 .into()
         }))
     }
@@ -120,11 +120,14 @@ impl wit::core::Core for Lib {
     fn booleanb(base: TypeBase) -> Result<CoreTypeId> {
         Ok(with_store_mut(move |s| {
             s.add_type(|id| {
-                Type::Boolean(Boolean {
-                    id,
-                    base,
-                    data: TypeBoolean,
-                })
+                Type::Boolean(
+                    Boolean {
+                        id,
+                        base,
+                        data: TypeBoolean,
+                    }
+                    .into(),
+                )
             })
             .into()
         }))
@@ -137,7 +140,7 @@ impl wit::core::Core for Lib {
             }
         }
         Ok(with_store_mut(move |s| {
-            s.add_type(|id| Type::String(StringT { id, base, data }))
+            s.add_type(|id| Type::String(StringT { id, base, data }.into()))
                 .into()
         }))
     }
@@ -164,7 +167,7 @@ impl wit::core::Core for Lib {
                     }
                     None => base,
                 };
-                Type::Array(Array { id, base, data })
+                Type::Array(Array { id, base, data }.into())
             })
             .into())
         })
@@ -187,7 +190,7 @@ impl wit::core::Core for Lib {
                     }
                     None => base,
                 };
-                Type::Optional(Optional { id, base, data })
+                Type::Optional(Optional { id, base, data }.into())
             })
             .into())
         })
@@ -195,14 +198,14 @@ impl wit::core::Core for Lib {
 
     fn unionb(data: TypeUnion, base: TypeBase) -> Result<CoreTypeId> {
         Ok(with_store_mut(move |s| {
-            s.add_type(|id| Type::Union(Union { id, base, data }))
+            s.add_type(|id| Type::Union(Union { id, base, data }.into()))
                 .into()
         }))
     }
 
     fn eitherb(data: TypeEither, base: TypeBase) -> Result<CoreTypeId> {
         Ok(with_store_mut(move |s| {
-            s.add_type(|id| Type::Either(Either { id, base, data }))
+            s.add_type(|id| Type::Either(Either { id, base, data }.into()))
                 .into()
         }))
     }
@@ -220,7 +223,7 @@ impl wit::core::Core for Lib {
         }
 
         Ok(with_store_mut(|s| {
-            s.add_type(|id| Type::Struct(Struct { id, base, data }))
+            s.add_type(|id| Type::Struct(Struct { id, base, data }.into()))
                 .into()
         }))
     }
@@ -233,14 +236,14 @@ impl wit::core::Core for Lib {
                 return Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?));
             }
             let base = TypeBase::default();
-            Ok(s.add_type(|id| Type::Func(Func { id, base, data })).into())
+            Ok(s.add_type(|id| Type::Func(Func { id, base, data }.into())).into())
         })
     }
 
     fn with_injection(data: TypeWithInjection) -> Result<CoreTypeId> {
         with_store_mut(|s| {
             Ok(
-                s.add_type(|id| Type::WithInjection(WithInjection { id, data }))
+                s.add_type(|id| Type::WithInjection(WithInjection { id, data }.into()))
                     .into(),
             )
         })
@@ -248,7 +251,7 @@ impl wit::core::Core for Lib {
 
     fn with_policy(data: TypePolicy) -> Result<CoreTypeId> {
         with_store_mut(|s| {
-            Ok(s.add_type(|id| Type::WithPolicy(WithPolicy { id, data }))
+            Ok(s.add_type(|id| Type::WithPolicy(WithPolicy { id, data }.into()))
                 .into())
         })
     }
