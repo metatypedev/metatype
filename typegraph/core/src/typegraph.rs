@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::conversion::runtimes::{convert_materializer, convert_runtime};
+use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::{gen_base, TypeConversion};
-use crate::global_store::with_store;
+use crate::global_store::{with_store, with_store_mut};
 use crate::host::abi;
-use crate::types::{Type, TypeFun, WrapperTypeData};
+use crate::types::{Type, TypeFun, TypeId, WithPolicy};
 use crate::validation::validate_name;
 use crate::{
     errors::{self, Result},
@@ -25,7 +25,8 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use crate::wit::core::{
-    Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypeId, TypegraphInitParams,
+    Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypePolicy,
+    TypegraphInitParams,
 };
 
 #[derive(Default)]
@@ -137,7 +138,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     let default_runtime_idx = with_store(|s| ctx.register_runtime(s, s.get_deno_runtime()))?;
 
     ctx.types.push(Some(TypeNode::Object {
-        base: gen_base(params.name, None, default_runtime_idx, None),
+        base: gen_base(params.name, None, default_runtime_idx).build(),
         data: ObjectTypeData {
             properties: IndexMap::new(),
             required: vec![],
@@ -180,7 +181,59 @@ pub fn finalize() -> Result<String> {
     serde_json::to_string(&tg).map_err(|e| e.to_string())
 }
 
-pub fn expose(fns: Vec<(String, TypeId)>, namespace: Vec<String>) -> Result<()> {
+pub fn expose(
+    fns: Vec<(String, TypeId)>,
+    namespace: Vec<String>,
+    default_policy: Option<Vec<PolicySpec>>,
+) -> Result<()> {
+    let fns = with_store_mut(move |s| {
+        fns.into_iter()
+            .map(|(name, fn_id)| -> Result<_> {
+                let fn_id = s.resolve_proxy(fn_id)?;
+
+                let has_policy = {
+                    let tpe = s.get_type(fn_id)?;
+                    match tpe {
+                        Type::WithPolicy(typ) => {
+                            let tpe = s.get_type(typ.data.tpe.into())?;
+                            match tpe {
+                                Type::Func(_) => {}
+                                _ => {
+                                    return Err(errors::invalid_export_type(
+                                        &name,
+                                        &tpe.to_string(),
+                                    ))
+                                }
+                            }
+                            true
+                        }
+                        Type::Func(_) => false,
+                        _ => return Err(errors::invalid_export_type(&name, &tpe.to_string())),
+                    }
+                };
+
+                Ok((
+                    name,
+                    default_policy
+                        .as_ref()
+                        .filter(|_| !has_policy)
+                        .map(|p| {
+                            s.add_type(|id| {
+                                Type::WithPolicy(WithPolicy {
+                                    id,
+                                    data: TypePolicy {
+                                        tpe: fn_id.into(),
+                                        chain: p.clone(),
+                                    },
+                                })
+                            })
+                        })
+                        .unwrap_or(fn_id),
+                ))
+            })
+            .collect::<Result<Vec<_>>>()
+    })?;
+
     with_tg_mut(|ctx| -> Result<()> {
         if !namespace.is_empty() {
             return Err(String::from("namespaces not supported"));
@@ -209,22 +262,18 @@ impl TypegraphContext {
                 return Err(errors::invalid_export_name(&name));
             }
             let type_id = s.resolve_proxy(type_id)?;
-            let tpe = s.get_type(type_id)?;
-            let tpe = match tpe {
-                Type::WithPolicy(t) => t.data.get_wrapped_type(s).unwrap(),
-                Type::WithInjection(t) => t.data.get_wrapped_type(s).unwrap(),
-                _ => tpe,
-            };
+            let tpe = s.get_attributes(type_id)?.concrete_type.as_type(s)?;
             if !matches!(tpe, Type::Func(_)) {
                 return Err(errors::invalid_export_type(&name, &tpe.to_string()));
             }
+
             if root.properties.contains_key(&name) {
                 return Err(errors::duplicate_export_name(&name));
             }
 
             root.required.push(name.clone());
             root.properties
-                .insert(name, self.register_type(s, type_id, None)?);
+                .insert(name, self.register_type(s, type_id, None)?.into());
         }
 
         Ok(())
@@ -233,10 +282,10 @@ impl TypegraphContext {
     pub fn register_type(
         &mut self,
         store: &Store,
-        id: u32,
+        id: TypeId,
         runtime_id: Option<u32>,
     ) -> Result<TypeId, TgError> {
-        match self.mapping.types.entry(id) {
+        match self.mapping.types.entry(id.into()) {
             Entry::Vacant(e) => {
                 // to prevent infinite loop from circular dependencies,
                 // we allocate first a slot in the array for the type with None
@@ -252,9 +301,9 @@ impl TypegraphContext {
                 let type_node = tpe.convert(self, runtime_id)?;
 
                 self.types[idx] = Some(type_node);
-                Ok(idx as TypeId)
+                Ok((idx as u32).into())
             }
-            Entry::Occupied(e) => Ok(*e.get()),
+            Entry::Occupied(e) => Ok((*e.get()).into()),
         }
     }
 
@@ -335,12 +384,21 @@ impl TypegraphContext {
             let converted = convert_runtime(self, store, store.get_runtime(id)?)?;
             let idx = self.runtimes.len();
             self.mapping.runtimes.insert(id, idx as u32);
-            self.runtimes.push(converted);
+            match converted {
+                ConvertedRuntime::Converted(rt) => self.runtimes.push(rt),
+                ConvertedRuntime::Lazy(lazy) => {
+                    // we allocate first a slot in the array, as the lazy conversion might register
+                    // other runtimes
+                    self.runtimes.push(TGRuntime::Unknown(Default::default()));
+                    let rt = lazy(id, idx as u32, store, self)?;
+                    self.runtimes[idx] = rt;
+                }
+            };
             Ok(idx as RuntimeId)
         }
     }
 
-    pub fn find_type_index_by_store_id(&self, id: &u32) -> Option<u32> {
-        self.mapping.types.get(id).copied()
+    pub fn find_type_index_by_store_id(&self, id: TypeId) -> Option<u32> {
+        self.mapping.types.get(&id.into()).copied()
     }
 }

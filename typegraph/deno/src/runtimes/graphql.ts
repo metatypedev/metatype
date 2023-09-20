@@ -18,7 +18,7 @@ export class GraphQLRuntime extends Runtime {
     P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
     I extends t.Struct<P> = t.Struct<P>,
     O extends t.Typedef = t.Typedef,
-  >(inp: I, out: O, path: string[] = []): t.Func<P, I, O, QueryMat> {
+  >(inp: I, out: O, path?: string[]): t.Func<P, I, O, QueryMat> {
     const matId = runtimes.graphqlQuery({
       runtime: this._id,
       effect: { tag: "none" },
@@ -40,7 +40,7 @@ export class GraphQLRuntime extends Runtime {
     inp: I,
     out: O,
     effect: Effect,
-    path: string[] = [],
+    path?: string[],
   ): t.Func<P, I, O, MutationMat> {
     const matId = runtimes.graphqlMutation({
       runtime: this._id,
@@ -57,7 +57,7 @@ export class GraphQLRuntime extends Runtime {
 }
 
 interface QueryMat extends Materializer {
-  path: string[];
+  path?: string[];
 }
 
 interface MutationMat extends QueryMat {

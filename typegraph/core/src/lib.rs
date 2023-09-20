@@ -5,10 +5,14 @@ mod conversion;
 mod errors;
 mod global_store;
 mod runtimes;
+mod t;
 mod typedef;
 mod typegraph;
 mod types;
 mod validation;
+
+#[cfg(test)]
+mod test_utils;
 
 use std::collections::HashSet;
 
@@ -22,9 +26,9 @@ use types::{
 };
 use validation::validate_name;
 use wit::core::{
-    ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId,
-    TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
-    TypeWithInjection, TypegraphInitParams,
+    ContextCheck, Policy, PolicyId, PolicySpec, TypeArray, TypeBase, TypeEither, TypeFloat,
+    TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString,
+    TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -75,17 +79,11 @@ impl wit::core::Core for Lib {
         typegraph::finalize()
     }
 
-    fn proxyb(data: TypeProxy) -> Result<TypeId> {
-        with_store_mut(move |s| {
-            if let Some(type_id) = s.type_by_names.get(&data.name) {
-                Ok(*type_id)
-            } else {
-                Ok(s.add_type(|id| Type::Proxy(Proxy { id, data })))
-            }
-        })
+    fn proxyb(data: TypeProxy) -> Result<CoreTypeId> {
+        with_store_mut(move |s| Ok(s.add_type(|id| Type::Proxy(Proxy { id, data })).into()))
     }
 
-    fn integerb(data: TypeInteger, base: TypeBase) -> Result<TypeId> {
+    fn integerb(data: TypeInteger, base: TypeBase) -> Result<CoreTypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
             if min >= max {
                 return Err(errors::invalid_max_value());
@@ -98,10 +96,11 @@ impl wit::core::Core for Lib {
         }
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::Integer(Integer { id, base, data }))
+                .into()
         }))
     }
 
-    fn floatb(data: TypeFloat, base: TypeBase) -> Result<TypeId> {
+    fn floatb(data: TypeFloat, base: TypeBase) -> Result<CoreTypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
             if min >= max {
                 return Err(errors::invalid_max_value());
@@ -114,10 +113,11 @@ impl wit::core::Core for Lib {
         }
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::Float(Float { id, base, data }))
+                .into()
         }))
     }
 
-    fn booleanb(base: TypeBase) -> Result<TypeId> {
+    fn booleanb(base: TypeBase) -> Result<CoreTypeId> {
         Ok(with_store_mut(move |s| {
             s.add_type(|id| {
                 Type::Boolean(Boolean {
@@ -126,10 +126,11 @@ impl wit::core::Core for Lib {
                     data: TypeBoolean,
                 })
             })
+            .into()
         }))
     }
 
-    fn stringb(data: TypeString, base: TypeBase) -> Result<TypeId> {
+    fn stringb(data: TypeString, base: TypeBase) -> Result<CoreTypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
             if min >= max {
                 return Err(errors::invalid_max_value());
@@ -137,39 +138,76 @@ impl wit::core::Core for Lib {
         }
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::String(StringT { id, base, data }))
+                .into()
         }))
     }
 
-    fn arrayb(data: TypeArray, base: TypeBase) -> Result<TypeId> {
+    fn arrayb(data: TypeArray, base: TypeBase) -> Result<CoreTypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
             if min >= max {
                 return Err(errors::invalid_max_value());
             }
         }
-        Ok(with_store_mut(move |s| {
-            s.add_type(|id| Type::Array(Array { id, base, data }))
-        }))
+        with_store_mut(move |s| -> Result<_> {
+            let inner_name = match base.name {
+                Some(_) => None,
+                None => s.get_type_name(data.of.into())?.map(|s| s.to_owned()),
+            };
+            Ok(s.add_type(|id| {
+                let base = match inner_name {
+                    Some(name) => {
+                        let name = format!("_{}_{}[]", id.0, name);
+                        TypeBase {
+                            name: Some(name),
+                            ..base
+                        }
+                    }
+                    None => base,
+                };
+                Type::Array(Array { id, base, data })
+            })
+            .into())
+        })
     }
 
-    fn optionalb(data: TypeOptional, base: TypeBase) -> Result<TypeId> {
-        Ok(with_store_mut(move |s| {
-            s.add_type(|id| Type::Optional(Optional { id, base, data }))
-        }))
+    fn optionalb(data: TypeOptional, base: TypeBase) -> Result<CoreTypeId> {
+        with_store_mut(move |s| -> Result<_> {
+            let inner_name = match base.name {
+                Some(_) => None,
+                None => s.get_type_name(data.of.into())?.map(|s| s.to_owned()),
+            };
+            Ok(s.add_type(|id| {
+                let base = match inner_name {
+                    Some(name) => {
+                        let name = format!("_{}_{}?", id.0, name);
+                        TypeBase {
+                            name: Some(name),
+                            ..base
+                        }
+                    }
+                    None => base,
+                };
+                Type::Optional(Optional { id, base, data })
+            })
+            .into())
+        })
     }
 
-    fn unionb(data: TypeUnion, base: TypeBase) -> Result<TypeId> {
+    fn unionb(data: TypeUnion, base: TypeBase) -> Result<CoreTypeId> {
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::Union(Union { id, base, data }))
+                .into()
         }))
     }
 
-    fn eitherb(data: TypeEither, base: TypeBase) -> Result<TypeId> {
+    fn eitherb(data: TypeEither, base: TypeBase) -> Result<CoreTypeId> {
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::Either(Either { id, base, data }))
+                .into()
         }))
     }
 
-    fn structb(data: TypeStruct, base: TypeBase) -> Result<TypeId> {
+    fn structb(data: TypeStruct, base: TypeBase) -> Result<CoreTypeId> {
         let mut prop_names = HashSet::new();
         for (name, _) in data.props.iter() {
             if !validate_name(name) {
@@ -183,27 +221,36 @@ impl wit::core::Core for Lib {
 
         Ok(with_store_mut(|s| {
             s.add_type(|id| Type::Struct(Struct { id, base, data }))
+                .into()
         }))
     }
 
-    fn funcb(data: TypeFunc) -> Result<TypeId> {
+    fn funcb(data: TypeFunc) -> Result<CoreTypeId> {
         with_store_mut(|s| {
-            let inp_id = s.resolve_proxy(data.inp)?;
+            let inp_id = s.resolve_proxy(data.inp.into())?;
             let inp_type = s.get_type(inp_id)?;
             if !matches!(inp_type, Type::Struct(_)) {
                 return Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?));
             }
             let base = TypeBase::default();
-            Ok(s.add_type(|id| Type::Func(Func { id, base, data })))
+            Ok(s.add_type(|id| Type::Func(Func { id, base, data })).into())
         })
     }
 
-    fn with_injection(data: TypeWithInjection) -> Result<TypeId> {
-        with_store_mut(|s| Ok(s.add_type(|id| Type::WithInjection(WithInjection { id, data }))))
+    fn with_injection(data: TypeWithInjection) -> Result<CoreTypeId> {
+        with_store_mut(|s| {
+            Ok(
+                s.add_type(|id| Type::WithInjection(WithInjection { id, data }))
+                    .into(),
+            )
+        })
     }
 
-    fn with_policy(data: TypePolicy) -> Result<TypeId> {
-        with_store_mut(|s| Ok(s.add_type(|id| Type::WithPolicy(WithPolicy { id, data }))))
+    fn with_policy(data: TypePolicy) -> Result<CoreTypeId> {
+        with_store_mut(|s| {
+            Ok(s.add_type(|id| Type::WithPolicy(WithPolicy { id, data }))
+                .into())
+        })
     }
 
     fn register_policy(pol: Policy) -> Result<PolicyId> {
@@ -260,12 +307,27 @@ impl wit::core::Core for Lib {
         .map(|id| (id, name))
     }
 
-    fn get_type_repr(type_id: TypeId) -> Result<String> {
-        with_store(|s| s.get_type_repr(type_id))
+    fn get_type_repr(type_id: CoreTypeId) -> Result<String> {
+        with_store(|s| s.get_type_repr(type_id.into()))
     }
 
-    fn expose(fns: Vec<(String, TypeId)>, namespace: Vec<String>) -> Result<(), String> {
-        typegraph::expose(fns, namespace)
+    fn expose(
+        fns: Vec<(String, CoreTypeId)>,
+        namespace: Vec<String>,
+        default_policy: Option<Vec<PolicySpec>>,
+    ) -> Result<(), String> {
+        typegraph::expose(
+            fns.into_iter().map(|(k, ty)| (k, ty.into())).collect(),
+            namespace,
+            default_policy,
+        )
+    }
+}
+
+#[macro_export]
+macro_rules! log {
+    ($($arg:tt)*) => {
+        $crate::host::abi::log(&format!($($arg)*));
     }
 }
 
@@ -273,14 +335,10 @@ impl wit::core::Core for Lib {
 mod tests {
     use crate::errors;
     use crate::global_store::{with_store, with_store_mut};
+    use crate::t::{self, TypeBuilder};
+    use crate::wit::core::Core;
     use crate::wit::core::Cors;
-    use crate::wit::{
-        core::{
-            Core, MaterializerId, TypeArray, TypeBase, TypeFloat, TypeFunc, TypeId, TypeInteger,
-            TypeOptional, TypeStruct,
-        },
-        runtimes::{Effect, MaterializerDenoFunc, Runtimes},
-    };
+    use crate::wit::runtimes::{Effect, MaterializerDenoFunc, Runtimes};
     use crate::Lib;
     use crate::TypegraphInitParams;
 
@@ -307,207 +365,51 @@ mod tests {
         }
     }
 
-    impl Default for TypeInteger {
-        fn default() -> Self {
-            Self {
-                min: None,
-                max: None,
-                exclusive_minimum: None,
-                exclusive_maximum: None,
-                multiple_of: None,
-                enumeration: None,
-            }
-        }
-    }
-
-    impl TypeInteger {
-        fn min(mut self, min: i32) -> Self {
-            self.min = Some(min);
-            self
-        }
-        fn max(mut self, max: i32) -> Self {
-            self.max = Some(max);
-            self
-        }
-        fn x_min(mut self, x_min: i32) -> Self {
-            self.exclusive_minimum = Some(x_min);
-            self
-        }
-        fn x_max(mut self, x_max: i32) -> Self {
-            self.exclusive_maximum = Some(x_max);
-            self
-        }
-    }
-
-    impl Default for TypeFloat {
-        fn default() -> Self {
-            Self {
-                min: None,
-                max: None,
-                exclusive_minimum: None,
-                exclusive_maximum: None,
-                multiple_of: None,
-                enumeration: None,
-            }
-        }
-    }
-
-    impl TypeFloat {
-        fn min(mut self, min: f64) -> Self {
-            self.min = Some(min);
-            self
-        }
-        fn max(mut self, max: f64) -> Self {
-            self.max = Some(max);
-            self
-        }
-        fn x_min(mut self, x_min: f64) -> Self {
-            self.exclusive_minimum = Some(x_min);
-            self
-        }
-        fn x_max(mut self, x_max: f64) -> Self {
-            self.exclusive_maximum = Some(x_max);
-            self
-        }
-    }
-
-    impl TypeArray {
-        fn of(index: u32) -> Self {
-            Self {
-                of: index,
-                min: None,
-                max: None,
-                unique_items: None,
-            }
-        }
-    }
-
-    impl TypeOptional {
-        fn of(index: u32) -> Self {
-            Self {
-                of: index,
-                default_item: None,
-            }
-        }
-    }
-
-    impl Default for TypeStruct {
-        fn default() -> Self {
-            Self { props: vec![] }
-        }
-    }
-
-    impl TypeStruct {
-        fn prop(mut self, key: impl Into<String>, type_id: TypeId) -> Self {
-            self.props.push((key.into(), type_id));
-            self
-        }
-    }
-
-    impl TypeFunc {
-        fn new(inp: TypeId, out: TypeId, mat: MaterializerId) -> Self {
-            Self { inp, out, mat }
-        }
-    }
-
-    impl MaterializerDenoFunc {
-        fn with_code(code: impl Into<String>) -> Self {
-            Self {
-                code: code.into(),
-                secrets: vec![],
-            }
-        }
-
-        // fn with_secrets(mut self, secrets: impl Into<Vec<String>>) -> Self {
-        //     self.secrets = secrets.into();
-        //     self
-        // }
-    }
-
-    impl Default for Effect {
-        fn default() -> Self {
-            Self::None
-        }
-    }
-
     #[test]
     fn test_integer_invalid_max() {
-        let res = Lib::integerb(TypeInteger::default().min(12).max(10), TypeBase::default());
+        let res = t::integer().min(12).max(10).build();
         assert_eq!(res, Err(errors::invalid_max_value()));
-        let res = Lib::integerb(
-            TypeInteger::default().x_min(12).x_max(10),
-            TypeBase::default(),
-        );
+        let res = t::integer().x_min(12).x_max(12).build();
         assert_eq!(res, Err(errors::invalid_max_value()));
     }
 
     #[test]
     fn test_number_invalid_max() {
-        let res = Lib::floatb(
-            TypeFloat::default().min(12.34).max(12.3399),
-            TypeBase::default(),
-        );
+        let res = t::float().min(12.34).max(12.3399).build();
         assert_eq!(res, Err(errors::invalid_max_value()));
-        let res = Lib::floatb(
-            TypeFloat::default().x_min(12.6).x_max(12.6),
-            TypeBase::default(),
-        );
+        let res = t::float().x_min(12.34).x_max(12.34).build();
         assert_eq!(res, Err(errors::invalid_max_value()));
     }
 
     #[test]
     fn test_struct_invalid_key() -> Result<(), String> {
-        let res = Lib::structb(
-            TypeStruct::default().prop(
-                "",
-                Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-            ),
-            TypeBase::default(),
-        );
+        let res = t::struct_().prop("", t::integer().build()?).build();
         assert_eq!(res, Err(errors::invalid_prop_key("")));
-        let res = Lib::structb(
-            TypeStruct::default().prop(
-                "hello world",
-                Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-            ),
-            TypeBase::default(),
-        );
+        let res = t::struct_()
+            .prop("hello world", t::integer().build()?)
+            .build();
         assert_eq!(res, Err(errors::invalid_prop_key("hello world")));
         Ok(())
     }
 
     #[test]
     fn test_struct_duplicate_key() -> Result<(), String> {
-        let res = Lib::structb(
-            TypeStruct::default()
-                .prop(
-                    "one",
-                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-                )
-                .prop(
-                    "two",
-                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-                )
-                .prop(
-                    "one",
-                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-                ),
-            TypeBase::default(),
-        );
+        let res = t::struct_()
+            .prop("one", t::integer().build()?)
+            .prop("two", t::integer().build()?)
+            .prop("one", t::integer().build()?)
+            .build();
         assert_eq!(res, Err(errors::duplicate_key("one")));
         Ok(())
     }
 
     #[test]
     fn test_invalid_input_type() -> Result<(), String> {
-        let inp = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
-        let res = Lib::funcb(TypeFunc::new(
-            inp,
-            Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-            mat,
-        ));
+        let inp = t::integer().build()?;
+        let res = t::func(inp, t::integer().build()?, mat);
+
         assert_eq!(
             res,
             Err(errors::invalid_input_type(&with_store(
@@ -545,7 +447,7 @@ mod tests {
     fn test_no_active_context() -> Result<(), String> {
         with_store_mut(|s| s.reset());
         assert_eq!(
-            Lib::expose(vec![], vec![]),
+            Lib::expose(vec![], vec![], None),
             Err(errors::expected_typegraph_context())
         );
 
@@ -568,8 +470,8 @@ mod tests {
             ..Default::default()
         })
         .unwrap();
-        let tpe = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
-        let res = Lib::expose(vec![("one".to_string(), tpe.into())], vec![]);
+        let tpe = t::integer().build()?;
+        let res = Lib::expose(vec![("one".to_string(), tpe.into())], vec![], None);
 
         assert_eq!(
             res,
@@ -601,28 +503,20 @@ mod tests {
         let res = Lib::expose(
             vec![(
                 "".to_string(),
-                Lib::funcb(TypeFunc::new(
-                    Lib::structb(TypeStruct::default(), TypeBase::default())?,
-                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-                    mat,
-                ))?
-                .into(),
+                t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
             )],
             vec![],
+            None,
         );
         assert_eq!(res, Err(errors::invalid_export_name("")));
 
         let res = Lib::expose(
             vec![(
                 "hello_world!".to_string(),
-                Lib::funcb(TypeFunc::new(
-                    Lib::structb(TypeStruct::default(), TypeBase::default())?,
-                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-                    mat,
-                ))?
-                .into(),
+                t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
             )],
             vec![],
+            None,
         );
         assert_eq!(res, Err(errors::invalid_export_name("hello_world!")));
 
@@ -647,24 +541,15 @@ mod tests {
             vec![
                 (
                     "one".to_string(),
-                    Lib::funcb(TypeFunc::new(
-                        Lib::structb(TypeStruct::default(), TypeBase::default())?,
-                        Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-                        mat,
-                    ))?
-                    .into(),
+                    t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
                 ),
                 (
                     "one".to_string(),
-                    Lib::funcb(TypeFunc::new(
-                        Lib::structb(TypeStruct::default(), TypeBase::default())?,
-                        Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-                        mat,
-                    ))?
-                    .into(),
+                    t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
                 ),
             ],
             vec![],
+            None,
         );
         assert_eq!(res, Err(errors::duplicate_export_name("one")));
 
@@ -674,21 +559,20 @@ mod tests {
     #[test]
     fn test_successful_serialization() -> Result<(), String> {
         with_store_mut(|s| s.reset());
-        let a = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
-        let b = Lib::integerb(TypeInteger::default().min(12).max(44), TypeBase::default())?;
+        let a = t::integer().build()?;
+        let b = t::integer().min(12).max(44).build()?;
         // -- optional(array(float))
-        let num_idx = Lib::floatb(TypeFloat::default(), TypeBase::default())?;
-        let array_idx = Lib::arrayb(TypeArray::of(num_idx), TypeBase::default())?;
-        let c = Lib::optionalb(TypeOptional::of(array_idx), TypeBase::default())?;
+        let num_idx = t::float().build()?;
+        let array_idx = t::array(num_idx).build()?;
+        let c = t::optional(array_idx).build()?;
         // --
 
-        let s = Lib::structb(
-            TypeStruct::default()
-                .prop("one", a)
-                .prop("two", b)
-                .prop("three", c),
-            TypeBase::default(),
-        )?;
+        let s = t::struct_()
+            .prop("one", a)
+            .prop("two", b)
+            .prop("three", c)
+            .build()?;
+
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
             dynamic: None,
@@ -699,11 +583,9 @@ mod tests {
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
         Lib::expose(
-            vec![(
-                "one".to_string(),
-                Lib::funcb(TypeFunc::new(s, b, mat))?.into(),
-            )],
+            vec![("one".to_string(), t::func(s, b, mat)?.into())],
             vec![],
+            None,
         )?;
         let typegraph = Lib::finalize_typegraph()?;
         insta::assert_snapshot!(typegraph);

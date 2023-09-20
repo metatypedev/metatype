@@ -17,20 +17,23 @@ impl TypeConversion for Either {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Either {
             base: gen_base(
-                format!("either_{}", self.id),
+                self.base
+                    .name
+                    .clone()
+                    .unwrap_or_else(|| format!("either_{}", self.id.0)),
                 self.base.runtime_config.clone(),
                 runtime_id.unwrap(),
-                None,
-            ),
+            )
+            .build(),
             data: EitherTypeData {
                 one_of: self
                     .data
                     .variants
                     .iter()
-                    .map(|vid| {
+                    .map(|&vid| {
                         with_store(|s| -> Result<_> {
-                            let id = s.resolve_proxy(*vid)?;
-                            ctx.register_type(s, id, runtime_id)
+                            let id = s.resolve_proxy(vid.into())?;
+                            Ok(ctx.register_type(s, id, runtime_id)?.into())
                         })
                     })
                     .collect::<Result<Vec<_>>>()?,

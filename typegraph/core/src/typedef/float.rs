@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::{FloatTypeData, TypeNode};
+use common::typegraph::types::{FloatTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
@@ -21,11 +21,15 @@ impl TypeConversion for Float {
             .map(|enums| enums.iter().map(|v| format!("{}", v)).collect());
         Ok(TypeNode::Float {
             base: gen_base(
-                format!("float_{}", self.id),
+                self.base
+                    .name
+                    .clone()
+                    .unwrap_or_else(|| format!("float_{}", self.id.0)),
                 self.base.runtime_config.clone(),
                 runtime_id.unwrap(),
-                enumeration,
-            ),
+            )
+            .enum_(enumeration)
+            .build(),
             data: FloatTypeData {
                 minimum: self.data.min,
                 maximum: self.data.max,

@@ -203,7 +203,12 @@ class FieldBuilder {
     }
     const [rel, side] = found;
     switch (side) {
-      case "left": {
+      case "left":
+        return new ModelField(name, typeNode.title + quant, [
+          `@relation(name: ${toPrismaString(rel.name)})`,
+        ]);
+
+      case "right": {
         const [tag, fkeys] = this.#getRelationTagAndFkeys(
           name,
           typeNode,
@@ -216,11 +221,6 @@ class FieldBuilder {
         modelField.fkeysUnique = rel.right.cardinality !== "many";
         return modelField;
       }
-
-      case "right":
-        return new ModelField(name, typeNode.title + quant, [
-          `@relation(name: ${toPrismaString(rel.name)})`,
-        ]);
 
       default:
         throw new Error(`invalid side: ${side}`);

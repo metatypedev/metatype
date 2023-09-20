@@ -16,6 +16,20 @@ Meta.test("prisma", async (t) => {
   await dropSchemas(e);
   await recreateMigrations(e);
 
+  await t.should("return null for findUnique for invalid key", async () => {
+    await gql`
+      query {
+        findRecord(where: { id: "b7831fd1-799d-4b20-9a84-830588f750a1" }) {
+          id
+        }
+      }
+    `
+      .expectData({
+        findRecord: null,
+      })
+      .on(e);
+  });
+
   await t.should("return no data when empty", async () => {
     await gql`
       query {

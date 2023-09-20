@@ -3,12 +3,12 @@
 
 use crate::global_store::Store;
 use crate::types::Type;
-use crate::wit::core::{TypeFunc, TypeId};
+use crate::wit::core::TypeFunc;
 use crate::{errors, Result};
 
 impl TypeFunc {
     pub fn validate(&self, s: &Store) -> Result<()> {
-        if let Ok(inp_id) = s.resolve_proxy(self.inp) {
+        if let Ok(inp_id) = s.resolve_proxy(self.inp.into()) {
             let inp_type = s.get_type(inp_id)?;
             let Type::Struct(_) = inp_type else {
                 return Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?));
@@ -23,6 +23,8 @@ impl TypeFunc {
 }
 
 pub(super) mod utils {
+    use crate::types::TypeId;
+
     use super::*;
 
     pub fn is_equal(s: &Store, left: TypeId, right: TypeId) -> Result<bool> {

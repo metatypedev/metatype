@@ -71,15 +71,15 @@ Meta.test("schema generation", async (t) => {
       await assertGeneratedSchema(
         "one-to-many",
         outdent`
-          model User {
-              id Int @id
-              posts Post[] @relation(name: "postAuthor")
-          }
-
           model Post {
               id Int @id
               author User @relation(name: "postAuthor", fields: [authorId], references: [id])
               authorId Int
+          }
+
+          model User {
+              id Int @id
+              posts Post[] @relation(name: "postAuthor")
           }
         `,
       );
@@ -91,7 +91,7 @@ Meta.test("schema generation", async (t) => {
               id Int @id @default(autoincrement())
               posts Post[] @relation(name: "__rel_Post_User_1")
           }
-
+      
           model Post {
               id Int @id @default(autoincrement())
               author User @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
@@ -129,7 +129,7 @@ Meta.test("schema generation", async (t) => {
               id Int @id @default(autoincrement())
               posts Post[] @relation(name: "__rel_Post_User_1")
           }
-
+  
           model Post {
               id Int @id @default(autoincrement())
               author User? @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
@@ -146,7 +146,7 @@ Meta.test("schema generation", async (t) => {
               author User? @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
               authorId Int?
           }
-
+  
           model User {
               id Int @id @default(autoincrement())
               posts Post[] @relation(name: "__rel_Post_User_1")
@@ -167,12 +167,12 @@ Meta.test("schema generation", async (t) => {
               id Int @id
               profile Profile? @relation(name: "userProfile")
           }
-
+  
           model Profile {
               id String @db.Uuid @id @default(uuid())
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
-
+  
               @@unique(userId)
           }
         `,
@@ -185,12 +185,12 @@ Meta.test("schema generation", async (t) => {
               id Int @id @default(autoincrement())
               profile Profile? @relation(name: "__rel_Profile_User_1")
           }
-
+      
           model Profile {
               id String @db.Uuid @id @default(uuid())
               user User @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int
-
+      
               @@unique(userId)
           }
         `,
@@ -203,10 +203,10 @@ Meta.test("schema generation", async (t) => {
               id String @db.Uuid @id @default(uuid())
               user User @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int
-
+      
               @@unique(userId)
           }
-
+      
           model User {
               id Int @id @default(autoincrement())
               profile Profile? @relation(name: "__rel_Profile_User_1")
@@ -223,17 +223,17 @@ Meta.test("schema generation", async (t) => {
       await assertGeneratedSchema(
         "optional-one-to-one",
         outdent`
-          model User {
-              id Int @id @default(autoincrement())
-              profile Profile? @relation(name: "__rel_Profile_User_1")
-          }
-
           model Profile {
               id String @db.Uuid @id @default(uuid())
               user User? @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int?
-
+  
               @@unique(userId)
+          }
+  
+          model User {
+              id Int @id @default(autoincrement())
+              profile Profile? @relation(name: "__rel_Profile_User_1")
           }
         `,
       );
@@ -241,17 +241,17 @@ Meta.test("schema generation", async (t) => {
       await assertGeneratedSchema(
         "optional-one-to-one",
         outdent`
+          model User {
+              id Int @id @default(autoincrement())
+              profile Profile? @relation(name: "__rel_Profile_User_1")
+          }
+  
           model Profile {
               id String @db.Uuid @id @default(uuid())
               user User? @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int?
-
+  
               @@unique(userId)
-          }
-
-          model User {
-              id Int @id @default(autoincrement())
-              profile Profile? @relation(name: "__rel_Profile_User_1")
           }
         `,
         ([a, b]) => [b, a],
@@ -259,44 +259,23 @@ Meta.test("schema generation", async (t) => {
     },
   );
 
-  // // TODO fails optional one-to-one with ambiguous direction
-  // //
-  //
   await t.should(
     "generate datamodel with semi-implicit one to one relationship",
     async () => {
       await assertGeneratedSchema(
         "semi-implicit-one-to-one",
         outdent`
-          model User {
-              id Int @id
-              profile Profile? @relation(name: "userProfile")
-          }
-
           model Profile {
               id String @db.Uuid @id @default(uuid())
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
-
+  
               @@unique(userId)
           }
-        `,
-      );
 
-      await assertGeneratedSchema(
-        "semi-implicit-one-to-one-2",
-        outdent`
           model User {
               id Int @id
               profile Profile? @relation(name: "userProfile")
-          }
-      
-          model Profile {
-              id String @db.Uuid @id @default(uuid())
-              user User @relation(name: "userProfile", fields: [userId], references: [id])
-              userId Int
-
-              @@unique(userId)
           }
         `,
       );
@@ -308,13 +287,31 @@ Meta.test("schema generation", async (t) => {
               id String @db.Uuid @id @default(uuid())
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
-
+  
               @@unique(userId)
           }
 
           model User {
               id Int @id
               profile Profile? @relation(name: "userProfile")
+          }
+        `,
+      );
+
+      await assertGeneratedSchema(
+        "semi-implicit-one-to-one-2",
+        outdent`
+          model User {
+              id Int @id
+              profile Profile? @relation(name: "userProfile")
+          }
+          
+          model Profile {
+              id String @db.Uuid @id @default(uuid())
+              user User @relation(name: "userProfile", fields: [userId], references: [id])
+              userId Int
+  
+              @@unique(userId)
           }
         `,
         ([a, b]) => [b, a],
@@ -330,9 +327,9 @@ Meta.test("schema generation", async (t) => {
         outdent`
           model TreeNode {
               id Int @id @default(autoincrement())
-              parent TreeNode @relation(name: "__rel_TreeNode_TreeNode_2", fields: [parentId], references: [id])
+              children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_1")
+              parent TreeNode @relation(name: "__rel_TreeNode_TreeNode_1", fields: [parentId], references: [id])
               parentId Int
-              children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_2")
           }
         `,
       );
@@ -342,9 +339,9 @@ Meta.test("schema generation", async (t) => {
         outdent`
           model TreeNode {
               id Int @id @default(autoincrement())
-              parent TreeNode @relation(name: "__rel_TreeNode_TreeNode_2", fields: [parentId], references: [id])
+              children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_1")
+              parent TreeNode @relation(name: "__rel_TreeNode_TreeNode_1", fields: [parentId], references: [id])
               parentId Int
-              children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_2")
           }
         `,
       );
@@ -354,9 +351,9 @@ Meta.test("schema generation", async (t) => {
         outdent`
           model TreeNode {
               id Int @id @default(autoincrement())
-              children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_2")
-              parent TreeNode @relation(name: "__rel_TreeNode_TreeNode_2", fields: [parentId], references: [id])
+              parent TreeNode @relation(name: "__rel_TreeNode_TreeNode_1", fields: [parentId], references: [id])
               parentId Int
+              children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_1")
           }
         `,
       );
@@ -366,9 +363,9 @@ Meta.test("schema generation", async (t) => {
         outdent`
           model TreeNode {
               id Int @id @default(autoincrement())
-              children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_2")
-              parent TreeNode @relation(name: "__rel_TreeNode_TreeNode_2", fields: [parentId], references: [id])
+              parent TreeNode @relation(name: "__rel_TreeNode_TreeNode_1", fields: [parentId], references: [id])
               parentId Int
+              children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_1")
           }
         `,
       );
@@ -381,10 +378,10 @@ Meta.test("schema generation", async (t) => {
       outdent`
         model ListNode {
             id String @db.Uuid @id @default(uuid())
-            next ListNode? @relation(name: "__rel_ListNode_ListNode_2", fields: [nextId], references: [id])
+            next ListNode? @relation(name: "__rel_ListNode_ListNode_1", fields: [nextId], references: [id])
             nextId String? @db.Uuid
-            prev ListNode? @relation(name: "__rel_ListNode_ListNode_2")
-
+            prev ListNode? @relation(name: "__rel_ListNode_ListNode_1")
+  
             @@unique(nextId)
         }
       `,
@@ -395,10 +392,10 @@ Meta.test("schema generation", async (t) => {
       outdent`
         model ListNode {
             id String @db.Uuid @id @default(uuid())
-            prev ListNode? @relation(name: "__rel_ListNode_ListNode_2")
-            next ListNode? @relation(name: "__rel_ListNode_ListNode_2", fields: [nextId], references: [id])
+            prev ListNode? @relation(name: "__rel_ListNode_ListNode_1")
+            next ListNode? @relation(name: "__rel_ListNode_ListNode_1", fields: [nextId], references: [id])
             nextId String? @db.Uuid
-
+  
             @@unique(nextId)
         }
       `,
@@ -418,7 +415,7 @@ Meta.test("schema generation", async (t) => {
               favorite_post Post? @relation(name: "__rel_User_Post_2", fields: [favorite_postId], references: [id])
               favorite_postId String? @db.Uuid
           }
-
+  
           model Post {
               id String @db.Uuid @id @default(uuid())
               title String @db.VarChar(256)
@@ -441,7 +438,7 @@ Meta.test("schema generation", async (t) => {
               favorite_post Post? @relation(name: "__rel_User_Post_3", fields: [favorite_postId], references: [id])
               favorite_postId String? @db.Uuid
           }
-
+  
           model Post {
               id String @db.Uuid @id @default(uuid())
               title String @db.VarChar(256)
@@ -460,19 +457,17 @@ Meta.test("schema generation", async (t) => {
         outdent`
           model Person {
               id String @db.Uuid @id @default(uuid())
-              personal_hero Person? @relation(name: "__rel_Person_Person_2", fields: [personal_heroId], references: [id])
+              personal_hero Person? @relation(name: "__rel_Person_Person_1", fields: [personal_heroId], references: [id])
               personal_heroId String? @db.Uuid
-              hero_of Person? @relation(name: "__rel_Person_Person_2")
-              mother Person? @relation(name: "__rel_Person_Person_4", fields: [motherId], references: [id])
+              hero_of Person? @relation(name: "__rel_Person_Person_1")
+              mother Person? @relation(name: "__rel_Person_Person_2", fields: [motherId], references: [id])
               motherId String? @db.Uuid
-              children Person[] @relation(name: "__rel_Person_Person_4")
-
+              children Person[] @relation(name: "__rel_Person_Person_2")
+      
               @@unique(personal_heroId)
           }
         `,
       );
     },
   );
-
-  // TODO test missing target
 });

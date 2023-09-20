@@ -2,7 +2,12 @@ export const snapshot = {};
 
 snapshot[`Union type 1`] = `
 [
-  "Type mismatch: got 'StringValue' but expected 'OBJECT' for argument 'color' of type 'union' ('Color') at convert",
+  "Type mismatch: got 'StringValue' but expected 'union' for argument 'color' of type 'union' ('Color') at convert caused by:
+    - Type mismatch: got 'StringValue' but expected ''OBJECT'' for argument 'color' of type 'object' ('RGBArray') at convert
+    - Type mismatch: got 'StringValue' but expected ''OBJECT'' for argument 'color' of type 'object' ('RGBStruct') at convert
+    - Type mismatch: got 'StringValue' but expected ''OBJECT'' for argument 'color' of type 'object' ('HexColor') at convert
+    - Type mismatch: got 'StringValue' but expected ''OBJECT'' for argument 'color' of type 'object' ('NamedColor') at convert
+",
 ]
 `;
 

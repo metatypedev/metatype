@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import List
+from typing import List, Optional
 from dataclasses import dataclass
 
 from typegraph_next.runtimes.base import Materializer, Runtime
@@ -40,7 +40,9 @@ class GraphQLRuntime(Runtime):
         super().__init__(runtime_id.value)
         self.endpoint = endpoint
 
-    def query(self, inp: "t.struct", out: "t.typedef", *, path: List[str] = list()):
+    def query(
+        self, inp: "t.struct", out: "t.typedef", *, path: Optional[List[str]] = None
+    ):
         mat_id = runtimes.graphql_query(
             store,
             BaseMaterializer(runtime=self.id, effect=EffectNone()),
@@ -58,7 +60,7 @@ class GraphQLRuntime(Runtime):
         out: "t.typedef",
         effect: Effect,
         *,
-        path: List[str] = list()
+        path: Optional[List[str]] = None
     ):
         mat_id = runtimes.graphql_mutation(
             store,

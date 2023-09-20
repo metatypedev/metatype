@@ -6,7 +6,7 @@ use crate::{
     errors::Result,
     global_store::{with_store, Store},
     typegraph::TypegraphContext,
-    types::{Type, TypeData, WithInjection, WrapperTypeData},
+    types::{TypeData, TypeId, WithInjection, WrapperTypeData},
     wit::core::TypeWithInjection,
 };
 use common::typegraph::{EffectType, Injection, InjectionData, SingleValue, TypeNode};
@@ -16,18 +16,18 @@ use std::collections::HashMap;
 impl TypeConversion for WithInjection {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         with_store(|s| -> Result<_> {
-            let tpe = s.get_type(self.data.tpe)?;
+            let tpe = s.get_type(self.data.tpe.into())?;
             let mut type_node = tpe.convert(ctx, runtime_id)?;
             let base = type_node.base_mut();
             let value: Injection =
                 serde_json::from_str(&self.data.injection).map_err(|e| e.to_string())?;
             if let Injection::Parent(data) = value {
                 let get_correct_id = |v: u32| -> Result<u32> {
-                    let id = s.resolve_proxy(v)?;
-                    if let Some(index) = ctx.find_type_index_by_store_id(&id) {
+                    let id = s.resolve_proxy(v.into())?;
+                    if let Some(index) = ctx.find_type_index_by_store_id(id) {
                         return Ok(index);
                     }
-                    Err(format!("unable to find type for store id {}", id))
+                    Err(format!("unable to find type for store id {}", id.0))
                 };
                 let new_data = match data {
                     InjectionData::SingleValue(SingleValue { value }) => {
@@ -95,7 +95,7 @@ impl TypeData for TypeWithInjection {
 }
 
 impl WrapperTypeData for TypeWithInjection {
-    fn get_wrapped_type<'a>(&self, store: &'a Store) -> Option<&'a Type> {
-        store.get_type(self.tpe).ok()
+    fn resolve(&self, _store: &Store) -> Option<TypeId> {
+        Some(self.tpe.into())
     }
 }

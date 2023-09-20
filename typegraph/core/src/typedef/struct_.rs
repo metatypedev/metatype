@@ -14,15 +14,28 @@ use crate::{
     wit::core::{TypeId, TypeStruct},
 };
 
+impl TypeStruct {
+    pub fn get_prop(&self, key: &str) -> Option<TypeId> {
+        self.props
+            .iter()
+            .filter(|(k, _)| k == key)
+            .map(|(_, v)| *v)
+            .next()
+    }
+}
+
 impl TypeConversion for Struct {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Object {
             base: gen_base(
-                format!("object_{}", self.id),
+                self.base
+                    .name
+                    .clone()
+                    .unwrap_or_else(|| format!("object_{}", self.id.0)),
                 self.base.runtime_config.clone(),
                 runtime_id.unwrap(),
-                None,
-            ),
+            )
+            .build(),
             data: ObjectTypeData {
                 properties: self
                     .data
@@ -30,8 +43,8 @@ impl TypeConversion for Struct {
                     .iter()
                     .map(|(name, type_id)| -> Result<(String, TypeId)> {
                         with_store(|s| -> Result<_> {
-                            let id = s.resolve_proxy(*type_id)?;
-                            Ok((name.clone(), ctx.register_type(s, id, runtime_id)?))
+                            let id = s.resolve_proxy((*type_id).into())?;
+                            Ok((name.clone(), ctx.register_type(s, id, runtime_id)?.into()))
                         })
                     })
                     .collect::<Result<IndexMap<_, _>>>()?,
@@ -50,5 +63,13 @@ impl TypeData for TypeStruct {
 
     fn variant_name(&self) -> String {
         "struct".to_string()
+    }
+}
+
+impl TypeStruct {
+    pub fn get_prop_type(&self, name: &str) -> Option<TypeId> {
+        self.props
+            .iter()
+            .find_map(|(n, t)| if n == name { Some(*t) } else { None })
     }
 }

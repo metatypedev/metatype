@@ -19,8 +19,16 @@ pub fn invalid_prop_key(name: &str) -> TgError {
     )
 }
 
+// pub fn property_not_found_in(ty: &str, prop_name: &str) -> TgError {
+//     format!("property '{prop_name}' not found in type '{ty}'")
+// }
+
 pub fn invalid_input_type(got: &str) -> TgError {
     format!("expected a Struct as input type but got {got}")
+}
+
+pub fn invalid_type(expected: &str, got: &str) -> TgError {
+    format!("expected {expected} but got {got}")
 }
 
 pub fn nested_typegraph_context(active: &str) -> TgError {

@@ -9,7 +9,7 @@ use crate::{
     errors,
     global_store::{with_store, Store},
     typegraph::TypegraphContext,
-    types::{Proxy, Type, TypeData, WrapperTypeData},
+    types::{Proxy, TypeData, TypeId, WrapperTypeData},
     wit::core::TypeProxy,
 };
 
@@ -33,9 +33,20 @@ impl TypeData for TypeProxy {
 }
 
 impl WrapperTypeData for TypeProxy {
-    fn get_wrapped_type<'a>(&self, store: &'a Store) -> Option<&'a Type> {
-        store
-            .get_type_by_name(&self.name)
-            .map(|id| store.get_type(id).unwrap())
+    fn resolve(&self, store: &Store) -> Option<TypeId> {
+        store.get_type_by_name(&self.name)
+    }
+
+    fn try_resolve(&self, store: &Store) -> Result<TypeId> {
+        self.resolve(store)
+            .ok_or_else(|| format!("could not resolve proxy '{}'", self.name))
+    }
+}
+
+impl TypeProxy {
+    pub fn get_extra(&self, key: &str) -> Option<&str> {
+        self.extras
+            .iter()
+            .find_map(|(k, v)| if k == key { Some(v.as_str()) } else { None })
     }
 }
