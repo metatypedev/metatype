@@ -137,8 +137,7 @@ macro_rules! prisma_op {
             operation: $name.to_string(),
         };
 
-        let mat_id =
-            with_store_mut(|s| s.register_materializer(Materializer::prisma($rt, mat, $effect)));
+        let mat_id = Store::register_materializer(Materializer::prisma($rt, mat, $effect));
 
         Ok(t::func(types.input, types.output, mat_id)?.into())
     }};
@@ -159,7 +158,7 @@ impl wit::Runtimes for crate::Lib {
     ) -> Result<wit::MaterializerId> {
         // TODO: check code is valid function?
         let mat = Materializer::deno(DenoMaterializer::Inline(data), effect);
-        Ok(with_store_mut(|s| s.register_materializer(mat)))
+        Ok(Store::register_materializer(mat))
     }
 
     fn get_predefined_deno_func(
@@ -179,12 +178,12 @@ impl wit::Runtimes for crate::Lib {
             secrets: data.secrets,
         };
         let mat = Materializer::deno(DenoMaterializer::Import(data), effect);
-        Ok(with_store_mut(|s| s.register_materializer(mat)))
+        Ok(Store::register_materializer(mat))
     }
 
     fn register_graphql_runtime(data: GraphqlRuntimeData) -> Result<RuntimeId> {
         let runtime = Runtime::Graphql(data.into());
-        Ok(with_store_mut(|s| s.register_runtime(runtime)))
+        Ok(Store::register_runtime(runtime))
     }
 
     fn graphql_query(
@@ -193,7 +192,7 @@ impl wit::Runtimes for crate::Lib {
     ) -> Result<wit::MaterializerId> {
         let data = GraphqlMaterializer::Query(data);
         let mat = Materializer::graphql(base.runtime, data, base.effect);
-        Ok(with_store_mut(|s| s.register_materializer(mat)))
+        Ok(Store::register_materializer(mat))
     }
 
     fn graphql_mutation(
@@ -202,13 +201,11 @@ impl wit::Runtimes for crate::Lib {
     ) -> Result<wit::MaterializerId> {
         let data = GraphqlMaterializer::Mutation(data);
         let mat = Materializer::graphql(base.runtime, data, base.effect);
-        Ok(with_store_mut(|s| s.register_materializer(mat)))
+        Ok(Store::register_materializer(mat))
     }
 
     fn register_http_runtime(data: wit::HttpRuntimeData) -> Result<wit::RuntimeId, wit::Error> {
-        Ok(with_store_mut(|s| {
-            s.register_runtime(Runtime::Http(data.into()))
-        }))
+        Ok(Store::register_runtime(Runtime::Http(data.into())))
     }
 
     fn http_request(
@@ -216,11 +213,11 @@ impl wit::Runtimes for crate::Lib {
         data: wit::MaterializerHttpRequest,
     ) -> Result<wit::MaterializerId, wit::Error> {
         let mat = Materializer::http(base.runtime, data, base.effect);
-        Ok(with_store_mut(|s| s.register_materializer(mat)))
+        Ok(Store::register_materializer(mat))
     }
 
     fn register_python_runtime() -> Result<wit::RuntimeId, wit::Error> {
-        Ok(with_store_mut(|s| s.register_runtime(Runtime::Python)))
+        Ok(Store::register_runtime(Runtime::Python))
     }
 
     fn from_python_lambda(
@@ -228,7 +225,7 @@ impl wit::Runtimes for crate::Lib {
         data: wit::MaterializerPythonLambda,
     ) -> Result<wit::MaterializerId, wit::Error> {
         let mat = Materializer::python(base.runtime, PythonMaterializer::Lambda(data), base.effect);
-        Ok(with_store_mut(|s| s.register_materializer(mat)))
+        Ok(Store::register_materializer(mat))
     }
 
     fn from_python_def(
@@ -236,7 +233,7 @@ impl wit::Runtimes for crate::Lib {
         data: wit::MaterializerPythonDef,
     ) -> Result<wit::MaterializerId, wit::Error> {
         let mat = Materializer::python(base.runtime, PythonMaterializer::Def(data), base.effect);
-        Ok(with_store_mut(|s| s.register_materializer(mat)))
+        Ok(Store::register_materializer(mat))
     }
 
     fn from_python_module(
@@ -244,7 +241,7 @@ impl wit::Runtimes for crate::Lib {
         data: wit::MaterializerPythonModule,
     ) -> Result<wit::MaterializerId, wit::Error> {
         let mat = Materializer::python(base.runtime, PythonMaterializer::Module(data), base.effect);
-        Ok(with_store_mut(|s| s.register_materializer(mat)))
+        Ok(Store::register_materializer(mat))
     }
 
     fn from_python_import(
@@ -252,15 +249,13 @@ impl wit::Runtimes for crate::Lib {
         data: wit::MaterializerPythonImport,
     ) -> Result<wit::MaterializerId, wit::Error> {
         let mat = Materializer::python(base.runtime, PythonMaterializer::Import(data), base.effect);
-        Ok(with_store_mut(|s| s.register_materializer(mat)))
+        Ok(Store::register_materializer(mat))
     }
 
     fn register_random_runtime(
         data: wit::RandomRuntimeData,
     ) -> Result<wit::MaterializerId, wit::Error> {
-        Ok(with_store_mut(|s| {
-            s.register_runtime(Runtime::Random(data.into()))
-        }))
+        Ok(Store::register_runtime(Runtime::Random(data.into())))
     }
 
     fn create_random_mat(
@@ -269,11 +264,11 @@ impl wit::Runtimes for crate::Lib {
     ) -> Result<wit::MaterializerId, wit::Error> {
         let mat =
             Materializer::random(base.runtime, RandomMaterializer::Runtime(data), base.effect);
-        Ok(with_store_mut(|s| s.register_materializer(mat)))
+        Ok(Store::register_materializer(mat))
     }
 
     fn register_wasmedge_runtime() -> Result<wit::RuntimeId, wit::Error> {
-        Ok(with_store_mut(|s| s.register_runtime(Runtime::WasmEdge)))
+        Ok(Store::register_runtime(Runtime::WasmEdge))
     }
 
     fn from_wasi_module(
@@ -281,13 +276,14 @@ impl wit::Runtimes for crate::Lib {
         data: wit::MaterializerWasi,
     ) -> Result<wit::MaterializerId, wit::Error> {
         let mat = Materializer::wasi(base.runtime, WasiMaterializer::Module(data), base.effect);
-        Ok(with_store_mut(|s| s.register_materializer(mat)))
+        Ok(Store::register_materializer(mat))
     }
 
     fn register_prisma_runtime(data: wit::PrismaRuntimeData) -> Result<wit::RuntimeId, wit::Error> {
-        Ok(with_store_mut(|s| {
-            s.register_runtime(Runtime::Prisma(data.into(), Default::default()))
-        }))
+        Ok(Store::register_runtime(Runtime::Prisma(
+            data.into(),
+            Default::default(),
+        )))
     }
 
     fn prisma_find_unique(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {

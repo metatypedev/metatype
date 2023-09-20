@@ -63,25 +63,9 @@ impl Store {
             .ok_or_else(|| errors::object_not_found("type", type_id.0))
     }
 
-    // pub fn get_type_mut(&mut self, type_id: TypeId) -> Result<&mut Type, TgError> {
-    //     self.types
-    //         .get_mut(type_id.0 as usize)
-    //         .ok_or_else(|| errors::object_not_found("type", type_id.into()))
-    // }
-
     pub fn get_type_by_name(name: &str) -> Option<TypeId> {
         with_store(|s| s.type_by_names.get(name).copied())
     }
-
-    // pub fn add_type(&mut self, build: impl FnOnce(TypeId) -> Type) -> TypeId {
-    //     let id = self.types.len() as u32;
-    //     let tpe = build(id.into());
-    //     if let Some(name) = tpe.get_base().and_then(|b| b.name.as_ref()) {
-    //         self.type_by_names.insert(name.clone(), id.into());
-    //     }
-    //     self.types.push(tpe);
-    //     id.into()
-    // }
 
     pub fn register_type(build: impl FnOnce(TypeId) -> Type) -> TypeId {
         // this works since the store is thread local
@@ -101,10 +85,12 @@ impl Store {
         Ok(id.as_type()?.to_string())
     }
 
-    pub fn register_runtime(&mut self, rt: Runtime) -> RuntimeId {
-        let id = self.runtimes.len() as u32;
-        self.runtimes.push(rt);
-        id
+    pub fn register_runtime(rt: Runtime) -> RuntimeId {
+        with_store_mut(|s| {
+            let id = s.runtimes.len() as u32;
+            s.runtimes.push(rt);
+            id
+        })
     }
 
     pub fn get_runtime(&self, id: RuntimeId) -> Result<&Runtime> {
@@ -117,10 +103,12 @@ impl Store {
         self.deno_runtime
     }
 
-    pub fn register_materializer(&mut self, mat: Materializer) -> MaterializerId {
-        let id = self.materializers.len() as u32;
-        self.materializers.push(mat);
-        id
+    pub fn register_materializer(mat: Materializer) -> MaterializerId {
+        with_store_mut(|s| {
+            let id = s.materializers.len() as u32;
+            s.materializers.push(mat);
+            id
+        })
     }
 
     pub fn get_materializer(&self, id: MaterializerId) -> Result<&Materializer> {
@@ -152,7 +140,7 @@ impl Store {
             Err(errors::unknown_predefined_function(&name, "deno"))
         } else {
             let runtime_id = self.get_deno_runtime();
-            let mat = self.register_materializer(Materializer {
+            let mat = Store::register_materializer(Materializer {
                 runtime_id,
                 effect: Effect::None,
                 data: Rc::new(DenoMaterializer::Predefined(MaterializerDenoPredefined {
@@ -170,7 +158,7 @@ impl Store {
             *mat
         } else {
             let runtime_id = self.get_deno_runtime();
-            let mat = self.register_materializer(Materializer {
+            let mat = Store::register_materializer(Materializer {
                 runtime_id,
                 effect: Effect::None, // N/A
                 data: Rc::new(DenoMaterializer::Module(MaterializerDenoModule {
