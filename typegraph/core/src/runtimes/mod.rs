@@ -436,7 +436,7 @@ impl wit::Runtimes for crate::Lib {
                 inp.prop("args", t::array(arg.into()).build()?);
                 (
                     inp,
-                    WitEffect::Create(true),
+                    WitEffect::Create(false),
                     TemporalMaterializer::Start {
                         workflow_type: mat_arg,
                     },
@@ -455,7 +455,7 @@ impl wit::Runtimes for crate::Lib {
                 inp.prop("args", t::array(arg.into()).build()?);
                 (
                     inp,
-                    WitEffect::Update(true),
+                    WitEffect::Update(false),
                     TemporalMaterializer::Signal {
                         signal_name: mat_arg,
                     },

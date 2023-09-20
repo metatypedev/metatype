@@ -436,7 +436,7 @@ pub fn convert_runtime(
         }
         Runtime::Temporal(d) => Ok(TGRuntime::Known(Temporal(TemporalRuntimeData {
             name: d.name.clone(),
-            host: d.name.clone(),
+            host: d.host.clone(),
         }))
         .into()),
     }
