@@ -1,13 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Runtime } from "@typegraph/deno/src/runtimes/mod.ts";
-import { runtimes } from "@typegraph/deno/src/wit.ts";
-import { Func, Typedef } from "@typegraph/deno/src/types.ts";
+import { Runtime } from "../runtimes/mod.ts";
+import { runtimes } from "../wit.ts";
+import { Func, Typedef } from "../types.ts";
 import {
   TemporalOperationData,
   TemporalOperationType,
-} from "@typegraph/deno/gen/exports/metatype-typegraph-runtimes.d.ts";
+} from "../../gen/exports/metatype-typegraph-runtimes.d.ts";
 
 export class TemporalRuntime extends Runtime {
   host: string;

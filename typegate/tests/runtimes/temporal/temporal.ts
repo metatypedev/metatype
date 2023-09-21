@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
-import { TemporalRuntime } from "@typegraph/deno/src/providers/temporalt.ts";
+import { TemporalRuntime } from "@typegraph/deno/src/providers/temporal.ts";
 
 typegraph("temporal", (g) => {
   const pub = Policy.public();
