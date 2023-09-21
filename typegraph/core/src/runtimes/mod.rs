@@ -6,16 +6,18 @@ pub mod graphql;
 pub mod prisma;
 pub mod python;
 pub mod random;
+pub mod temporal;
 pub mod wasi;
 
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::global_store::{with_store, with_store_mut, Store};
 use crate::runtimes::prisma::with_prisma_runtime;
-use crate::t;
+use crate::t::{self};
 use crate::wit::core::{RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
     MaterializerHttpRequest, PrismaLinkData, PrismaRuntimeData, RandomRuntimeData,
+    TemporalOperationData, TemporalRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
@@ -26,6 +28,8 @@ use self::prisma::relationship::prisma_link;
 use self::prisma::{PrismaMaterializer, PrismaRuntimeContext};
 pub use self::python::PythonMaterializer;
 pub use self::random::RandomMaterializer;
+use self::temporal::temporal_operation;
+pub use self::temporal::TemporalMaterializer;
 pub use self::wasi::WasiMaterializer;
 
 type Result<T, E = TgError> = std::result::Result<T, E>;
@@ -39,6 +43,7 @@ pub enum Runtime {
     Random(RandomRuntimeData),
     WasmEdge,
     Prisma(PrismaRuntimeData, Box<PrismaRuntimeContext>),
+    Temporal(TemporalRuntimeData),
 }
 
 #[derive(Debug)]
@@ -104,6 +109,14 @@ impl Materializer {
             data: data.into(),
         }
     }
+
+    fn temporal(runtime_id: RuntimeId, data: TemporalMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -116,6 +129,7 @@ pub enum MaterializerData {
     Random(RandomMaterializer),
     WasmEdge(WasiMaterializer),
     Prisma(PrismaMaterializer),
+    Temporal(TemporalMaterializer),
 }
 
 // impl From<DenoMaterializer> for MaterializerData {
@@ -397,5 +411,18 @@ impl wit::Runtimes for crate::Lib {
             builder = builder.unique(unique);
         }
         Ok(builder.build()?.into())
+    }
+
+    fn register_temporal_runtime(data: TemporalRuntimeData) -> Result<RuntimeId, wit::Error> {
+        Ok(with_store_mut(|s| {
+            s.register_runtime(Runtime::Temporal(data))
+        }))
+    }
+
+    fn generate_temporal_operation(
+        runtime: RuntimeId,
+        data: TemporalOperationData,
+    ) -> Result<CoreTypeId, wit::Error> {
+        temporal_operation(runtime, data)
     }
 }
