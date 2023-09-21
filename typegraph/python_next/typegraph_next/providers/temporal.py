@@ -25,16 +25,16 @@ class TemporalRuntime(Runtime):
     name: str
 
     def __init__(self, name: str, host: str):
-        self.name = name
-        self.host = host
         data = TemporalRuntimeData(name=name, host=host)
         super().__init__(runtimes.register_temporal_runtime(store, data))
+        self.name = name
+        self.host = host
 
     def _generic_temporal_func(
         self,
-        mat_arg: Union[None, str],
-        func_arg: Union[None, t.typedef],
         operation: TemporalOperationType,
+        mat_arg: Union[None, str] = None,
+        func_arg: Union[None, t.typedef] = None,
     ):
         data = TemporalOperationData(
             mat_arg=mat_arg,
@@ -49,20 +49,20 @@ class TemporalRuntime(Runtime):
 
     def start_workflow(self, workflow_type: str, arg: t.typedef):
         return self._generic_temporal_func(
-            workflow_type, arg, TemporalOperationTypeStartWorkflow()
+            TemporalOperationTypeStartWorkflow(), workflow_type, arg
         )
 
     def signal_workflow(self, signal_name: str, arg: t.typedef):
         return self._generic_temporal_func(
-            signal_name, arg, TemporalOperationTypeSignalWorkflow()
+            TemporalOperationTypeSignalWorkflow(),
+            signal_name,
+            arg,
         )
 
     def query_workflow(self, query_type: str, arg: t.typedef):
         return self._generic_temporal_func(
-            query_type, arg, TemporalOperationTypeQueryWorkflow()
+            TemporalOperationTypeQueryWorkflow(), query_type, arg
         )
 
     def describe_workflow(self):
-        return self._generic_temporal_func(
-            None, None, TemporalOperationTypeDescribeWorkflow()
-        )
+        return self._generic_temporal_func(TemporalOperationTypeDescribeWorkflow())

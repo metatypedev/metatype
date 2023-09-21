@@ -11,7 +11,7 @@ async function testSerialize(t: MetaTest, file: string) {
   });
 }
 
-Meta.test("temporal", async (t) => {
+Meta.test("Typegraph using temporal", async (t) => {
   await testSerialize(t, "runtimes/temporal/temporal.py");
-  // await testSerialize(t, "runtimes/temporal/temporal.ts");
+  await testSerialize(t, "runtimes/temporal/temporal.ts");
 });
