@@ -144,7 +144,6 @@ interface core {
     }
     funcb: func(data: type-func) -> result<type-id, error>
 
-
     type policy-id = u32
 
     record policy {
@@ -351,7 +350,39 @@ interface runtimes {
     prisma-link: func(data: prisma-link-data) -> result<type-id, error>
 }
 
+
+interface utils {
+    type error = string
+    type type-id = u32
+
+
+    // Example:
+    // apply({a: 1, { b: {c: g.inherit(), d: [1, 2, 3]}})
+    // produces a list of apply-path
+    // [ 
+    //  { path: [a], value: { inherit: false, payload: 1 } } 
+    //  { path: [a, b, c], value: { inherit: true } } 
+    //  { path: [a, b, d], value: { inherit: false, payload: [1, 2, 3] } } 
+    // ]
+    record apply-value {
+        inherit: bool,
+        payload: option<string>
+    }
+
+    record apply-path {
+        path: list<string>,
+        value: apply-value,
+    }
+
+    record apply {
+        paths: list<apply-path>
+    }
+
+    gen-applyb: func(supertype-id: type-id, data: apply) -> result<type-id, error>
+}
+
 world typegraph {
     export core
     export runtimes
+    export utils
 }

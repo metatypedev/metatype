@@ -4,6 +4,12 @@
 import * as t from "./types.ts";
 import { core } from "../gen/typegraph_core.js";
 import { caller, dirname, fromFileUrl } from "./deps.ts";
+import { InjectionValue } from "./utils/type_utils.ts";
+import {
+  serializeFromParentInjection,
+  serializeGenericInjection,
+  serializeStaticInjection,
+} from "./utils/injection_utils.ts";
 import { Auth, Cors, Rate } from "./wit.ts";
 
 type Exports = Record<string, t.Func>;
@@ -22,6 +28,35 @@ interface TypegraphArgs {
 
 interface TypegraphBuilderArgs {
   expose: (exports: Exports) => void;
+  inherit: () => InheritDef;
+}
+
+export class InheritDef {
+  public payload: string | undefined;
+  set(value: InjectionValue<unknown>) {
+    this.payload = serializeStaticInjection(value);
+    return this;
+  }
+
+  inject(value: InjectionValue<string>) {
+    this.payload = serializeGenericInjection("dynamic", value);
+    return this;
+  }
+
+  fromContext(value: InjectionValue<string>) {
+    this.payload = serializeGenericInjection("context", value);
+    return this;
+  }
+
+  fromSecret(value: InjectionValue<string>) {
+    this.payload = serializeGenericInjection("secret", value);
+    return this;
+  }
+
+  fromParent(value: InjectionValue<string>) {
+    this.payload = serializeFromParentInjection(value);
+    return this;
+  }
 }
 
 type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
@@ -88,6 +123,9 @@ export function typegraph(
         Object.entries(exports).map(([name, fn]) => [name, fn._id]),
         [],
       );
+    },
+    inherit: () => {
+      return new InheritDef();
     },
   };
 
