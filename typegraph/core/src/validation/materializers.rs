@@ -11,11 +11,11 @@ use super::errors;
 use super::types::utils as type_utils;
 
 impl Materializer {
-    pub fn validate(&self, s: &Store, func: &TypeFunc) -> Result<()> {
+    pub fn validate(&self, func: &TypeFunc) -> Result<()> {
         let runtime = Store::get_runtime(self.runtime_id)?;
         match (runtime, &self.data) {
             (Runtime::Deno, MaterializerData::Deno(mat_data)) => {
-                Self::validate_deno_mat(s, mat_data, func)
+                Self::validate_deno_mat(mat_data, func)
             }
             // TODO
             // _ => Err(errors::invalid_runtime_type("", "")),
@@ -23,7 +23,7 @@ impl Materializer {
         }
     }
 
-    fn validate_deno_mat(s: &Store, mat_data: &DenoMaterializer, func: &TypeFunc) -> Result<()> {
+    fn validate_deno_mat(mat_data: &DenoMaterializer, func: &TypeFunc) -> Result<()> {
         match mat_data {
             DenoMaterializer::Predefined(predef) => {
                 match predef.name.as_str() {
@@ -31,8 +31,8 @@ impl Materializer {
                         if !type_utils::is_equal(func.inp.into(), func.out.into())? {
                             return Err(errors::invalid_output_type_predefined(
                                 &predef.name,
-                                &s.get_type_repr(func.inp.into())?,
-                                &s.get_type_repr(func.out.into())?,
+                                &TypeId(func.inp).repr()?,
+                                &TypeId(func.out).repr()?,
                             ));
                         }
                     }
@@ -44,7 +44,7 @@ impl Materializer {
                                 return Err(errors::invalid_output_type_predefined(
                                     &predef.name,
                                     "bool",
-                                    &s.get_type_repr(func.out.into())?,
+                                    &TypeId(func.out).repr()?,
                                 ));
                             };
                         }

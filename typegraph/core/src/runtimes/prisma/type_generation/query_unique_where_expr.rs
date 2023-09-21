@@ -4,7 +4,7 @@
 use crate::errors::Result;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeFun;
-use crate::{global_store::with_store, types::TypeId};
+use crate::types::TypeId;
 
 use super::{TypeGen, TypeGenContext};
 
@@ -20,7 +20,7 @@ impl QueryUniqueWhereExpr {
 
 impl TypeGen for QueryUniqueWhereExpr {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let props = with_store(|s| -> Result<_> {
+        let props = {
             let model = self.model_id.as_struct().unwrap();
 
             let mut props = vec![];
@@ -39,14 +39,15 @@ impl TypeGen for QueryUniqueWhereExpr {
                         .find_map(|(k, v)| (k == "unique").then(|| v.clone()))
                         .map_or(false, |v| v == "true")
                 });
-                if s.is_func(attrs.concrete_type)? || (!is_id && !is_unique) {
+
+                if attrs.concrete_type.is_func()? || (!is_id && !is_unique) {
                     continue;
                 }
-                props.push((k.to_string(), s.resolve_quant(attrs.concrete_type)?));
+                props.push((k.to_string(), attrs.concrete_type.resolve_quant()?));
             }
 
-            Ok(props)
-        })?;
+            props
+        };
 
         let mut st = t::struct_();
         for (k, ty) in props.into_iter() {

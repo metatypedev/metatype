@@ -4,10 +4,10 @@
 use crate::{
     conversion::types::TypeConversion,
     errors::Result,
-    global_store::with_store,
+    global_store::Store,
     typegraph::TypegraphContext,
     types::{TypeData, TypeId, WithPolicy, WrapperTypeData},
-    wit::core::{PolicySpec, TypePolicy},
+    wit::core::{PolicyId, PolicySpec, TypePolicy},
 };
 use common::typegraph::TypeNode;
 
@@ -21,6 +21,10 @@ impl TypeConversion for WithPolicy {
     }
 }
 
+fn get_policy_name(pol_id: PolicyId) -> String {
+    Store::get_policy(pol_id).unwrap().name.clone()
+}
+
 impl TypeData for TypePolicy {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         params.push(format!(
@@ -28,25 +32,22 @@ impl TypeData for TypePolicy {
             self.chain
                 .iter()
                 .map(|p| match p {
-                    PolicySpec::Simple(pol_id) => format!(
-                        "'{}'",
-                        with_store(|s| s.get_policy(*pol_id).unwrap().name.clone())
-                    ),
-                    PolicySpec::PerEffect(p) => with_store(|s| format!(
+                    PolicySpec::Simple(pol_id) => format!("'{}'", get_policy_name(*pol_id)),
+                    PolicySpec::PerEffect(p) => format!(
                         "{{create='{}', update='{}', delete='{}', none='{}'}}",
                         p.create
-                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
-                            .unwrap_or("null"),
+                            .map(get_policy_name)
+                            .unwrap_or_else(|| "null".to_string()),
                         p.update
-                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
-                            .unwrap_or("null"),
+                            .map(get_policy_name)
+                            .unwrap_or_else(|| "null".to_string()),
                         p.delete
-                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
-                            .unwrap_or("null"),
+                            .map(get_policy_name)
+                            .unwrap_or_else(|| "null".to_string()),
                         p.none
-                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
-                            .unwrap_or("null"),
-                    )),
+                            .map(get_policy_name)
+                            .unwrap_or_else(|| "null".to_string()),
+                    ),
                 })
                 .collect::<Vec<_>>()
                 .join(", ")

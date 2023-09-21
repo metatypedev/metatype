@@ -7,7 +7,6 @@ use errors::Result;
 use crate::{
     conversion::types::{gen_base, TypeConversion},
     errors,
-    global_store::with_store,
     typegraph::TypegraphContext,
     types::{Func, Type, TypeData, TypeId},
     wit::core::TypeFunc,
@@ -17,13 +16,13 @@ impl TypeConversion for Func {
     fn convert(&self, ctx: &mut TypegraphContext, _runtime_id: Option<u32>) -> Result<TypeNode> {
         let (mat_id, runtime_id) = ctx.register_materializer(self.data.mat)?;
 
-        let input = with_store(|s| -> Result<_> {
+        let input = {
             let inp_id = TypeId(self.data.inp).resolve_proxy()?;
             match inp_id.as_type()? {
                 Type::Struct(_) => Ok(ctx.register_type(inp_id, Some(runtime_id))?),
-                _ => Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?)),
+                _ => Err(errors::invalid_input_type(&inp_id.repr()?)),
             }
-        })?
+        }?
         .into();
 
         let out_id = TypeId(self.data.out).resolve_proxy()?;

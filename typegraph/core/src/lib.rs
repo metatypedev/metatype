@@ -17,7 +17,7 @@ mod test_utils;
 use std::collections::HashSet;
 
 use errors::Result;
-use global_store::{with_store, Store};
+use global_store::Store;
 use indoc::formatdoc;
 use regex::Regex;
 use types::{
@@ -220,7 +220,7 @@ impl wit::core::Core for Lib {
     }
 
     fn register_policy(pol: Policy) -> Result<PolicyId> {
-        Store::register_policy(pol)
+        Store::register_policy(pol.into())
     }
 
     fn register_context_policy(key: String, check: ContextCheck) -> Result<(PolicyId, String)> {
@@ -274,7 +274,7 @@ impl wit::core::Core for Lib {
     }
 
     fn get_type_repr(type_id: CoreTypeId) -> Result<String> {
-        with_store(|s| s.get_type_repr(type_id.into()))
+        TypeId(type_id).repr()
     }
 
     fn expose(
@@ -300,7 +300,7 @@ macro_rules! log {
 #[cfg(test)]
 mod tests {
     use crate::errors;
-    use crate::global_store::{with_store, Store};
+    use crate::global_store::Store;
     use crate::t::{self, TypeBuilder};
     use crate::wit::core::Core;
     use crate::wit::core::Cors;
@@ -376,12 +376,7 @@ mod tests {
         let inp = t::integer().build()?;
         let res = t::func(inp, t::integer().build()?, mat);
 
-        assert_eq!(
-            res,
-            Err(errors::invalid_input_type(&with_store(
-                |s| s.get_type_repr(inp)
-            )?)),
-        );
+        assert_eq!(res, Err(errors::invalid_input_type(&inp.repr()?)),);
         Ok(())
     }
 
@@ -439,13 +434,7 @@ mod tests {
         let tpe = t::integer().build()?;
         let res = Lib::expose(vec![("one".to_string(), tpe.into())], vec![], None);
 
-        assert_eq!(
-            res,
-            Err(errors::invalid_export_type(
-                "one",
-                &with_store(|s| s.get_type_repr(tpe))?
-            ))
-        );
+        assert_eq!(res, Err(errors::invalid_export_type("one", &tpe.repr()?,)));
 
         Ok(())
     }

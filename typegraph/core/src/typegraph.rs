@@ -3,7 +3,6 @@
 
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::{gen_base, TypeConversion};
-use crate::global_store::with_store;
 use crate::host::abi;
 use crate::types::{Type, TypeFun, TypeId};
 use crate::validation::validate_name;
@@ -349,7 +348,7 @@ impl TypegraphContext {
         if let Some(idx) = self.mapping.policies.get(&id) {
             Ok(*idx)
         } else {
-            let converted = with_store(|s| s.get_policy(id)?.convert(self))?;
+            let converted = Store::get_policy(id)?.convert(self)?;
             let idx = self.policies.len();
             self.policies.push(converted);
             Ok(idx as PolicyId)

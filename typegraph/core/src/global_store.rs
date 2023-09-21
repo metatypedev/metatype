@@ -4,10 +4,12 @@
 use crate::errors::{self, Result};
 use crate::runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime};
 use crate::types::{Struct, Type, TypeFun, TypeId, WrapperTypeData};
-use crate::wit::core::{Error as TgError, Policy, PolicyId, RuntimeId};
+use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use std::rc::Rc;
 use std::{cell::RefCell, collections::HashMap};
+
+pub type Policy = Rc<CorePolicy>;
 
 #[derive(Default)]
 pub struct Store {
@@ -39,7 +41,7 @@ thread_local! {
     pub static STORE: RefCell<Store> = RefCell::new(Store::new());
 }
 
-pub fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
+fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
     STORE.with(|s| f(&s.borrow()))
 }
 
@@ -56,13 +58,6 @@ impl Store {
 }
 
 impl Store {
-    fn get_type(&self, type_id: TypeId) -> Result<Type, TgError> {
-        self.types
-            .get(type_id.0 as usize)
-            .cloned()
-            .ok_or_else(|| errors::object_not_found("type", type_id.0))
-    }
-
     pub fn get_type_by_name(name: &str) -> Option<TypeId> {
         with_store(|s| s.type_by_names.get(name).copied())
     }
@@ -79,10 +74,6 @@ impl Store {
         });
 
         id.into()
-    }
-
-    pub fn get_type_repr(&self, id: TypeId) -> Result<String, TgError> {
-        Ok(id.as_type()?.to_string())
     }
 
     pub fn register_runtime(rt: Runtime) -> RuntimeId {
@@ -135,10 +126,13 @@ impl Store {
         })
     }
 
-    pub fn get_policy(&self, id: PolicyId) -> Result<&Policy> {
-        self.policies
-            .get(id as usize)
-            .ok_or_else(|| errors::object_not_found("policy", id))
+    pub fn get_policy(id: PolicyId) -> Result<Policy> {
+        with_store(|s| {
+            s.policies
+                .get(id as usize)
+                .cloned()
+                .ok_or_else(|| errors::object_not_found("policy", id))
+        })
     }
 
     pub fn get_predefined_deno_function(name: String) -> Result<MaterializerId> {
@@ -180,26 +174,16 @@ impl Store {
             mat
         }
     }
-
-    pub fn is_func(&self, type_id: TypeId) -> Result<bool> {
-        match type_id.as_type()? {
-            Type::Func(_) => Ok(true),
-            _ => Ok(false),
-        }
-    }
-
-    pub fn resolve_quant(&self, type_id: TypeId) -> Result<TypeId> {
-        match type_id.as_type()? {
-            Type::Array(a) => Ok(a.data.of.into()),
-            Type::Optional(o) => Ok(o.data.of.into()),
-            _ => Ok(type_id),
-        }
-    }
 }
 
 impl TypeId {
     pub fn as_type(&self) -> Result<Type> {
-        with_store(|s| s.get_type(*self))
+        with_store(|s| {
+            s.types
+                .get(self.0 as usize)
+                .cloned()
+                .ok_or_else(|| errors::object_not_found("type", self.0))
+        })
     }
 
     pub fn as_struct(&self) -> Result<Rc<Struct>> {
@@ -207,6 +191,19 @@ impl TypeId {
             Type::Struct(s) => Ok(s),
             Type::Proxy(inner) => inner.data.try_resolve()?.as_struct(),
             _ => Err(errors::invalid_type("Struct", &self.repr()?)),
+        }
+    }
+
+    pub fn is_func(&self) -> Result<bool> {
+        Ok(matches!(self.as_type()?, Type::Func(_)))
+    }
+
+    pub fn resolve_quant(&self) -> Result<TypeId> {
+        let type_id = *self;
+        match type_id.as_type()? {
+            Type::Array(a) => Ok(a.data.of.into()),
+            Type::Optional(o) => Ok(o.data.of.into()),
+            _ => Ok(type_id),
         }
     }
 }

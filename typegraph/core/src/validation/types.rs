@@ -7,16 +7,16 @@ use crate::wit::core::TypeFunc;
 use crate::{errors, Result};
 
 impl TypeFunc {
-    pub fn validate(&self, s: &Store) -> Result<()> {
+    pub fn validate(&self) -> Result<()> {
         if let Ok(inp_id) = TypeId(self.inp).resolve_proxy() {
             let inp_type = inp_id.as_type()?;
             let Type::Struct(_) = inp_type else {
-                return Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?));
+                return Err(errors::invalid_input_type(&inp_id.repr()?));
             };
         }
 
         let mat = Store::get_materializer(self.mat)?;
-        mat.validate(s, self)?;
+        mat.validate(self)?;
 
         Ok(())
     }
