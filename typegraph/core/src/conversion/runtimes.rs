@@ -4,7 +4,7 @@
 use std::rc::Rc;
 
 use crate::errors::Result;
-use crate::global_store::Store;
+use crate::global_store::{with_store, Store};
 use crate::runtimes::prisma::{with_prisma_runtime, ConversionContext};
 use crate::runtimes::{
     DenoMaterializer, Materializer as RawMaterializer, PythonMaterializer, RandomMaterializer,
@@ -100,7 +100,7 @@ impl MaterializerConverter for DenoMaterializer {
                 ("module".to_string(), data)
             }
             Import(import) => {
-                let module_mat = c.register_materializer(s, import.module).unwrap().0;
+                let module_mat = c.register_materializer(import.module).unwrap().0;
                 let data = serde_json::from_value(json!({
                     "mod": module_mat,
                     "name": import.func_name,
@@ -230,7 +230,7 @@ impl MaterializerConverter for PythonMaterializer {
                 ("pymodule".to_string(), data)
             }
             Import(import) => {
-                let module_mat = c.register_materializer(s, import.module).unwrap().0;
+                let module_mat = c.register_materializer(import.module).unwrap().0;
                 let data = serde_json::from_value(json!({
                     "mod": module_mat,
                     "name": import.func_name,
@@ -303,10 +303,9 @@ impl MaterializerConverter for WasiMaterializer {
 
 pub fn convert_materializer(
     c: &mut TypegraphContext,
-    s: &Store,
-    mat: &RawMaterializer,
+    mat: RawMaterializer,
 ) -> Result<Materializer> {
-    mat.data.convert(c, s, mat.runtime_id, mat.effect)
+    with_store(|s| mat.data.convert(c, s, mat.runtime_id, mat.effect))
 }
 
 type RuntimeInitializer =

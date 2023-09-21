@@ -15,8 +15,7 @@ use crate::{
 
 impl TypeConversion for Func {
     fn convert(&self, ctx: &mut TypegraphContext, _runtime_id: Option<u32>) -> Result<TypeNode> {
-        let (mat_id, runtime_id) =
-            with_store(|s| -> Result<_> { ctx.register_materializer(s, self.data.mat) })?;
+        let (mat_id, runtime_id) = ctx.register_materializer(self.data.mat)?;
 
         let input = with_store(|s| -> Result<_> {
             let inp_id = TypeId(self.data.inp).resolve_proxy()?;

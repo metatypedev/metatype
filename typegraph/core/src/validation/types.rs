@@ -15,7 +15,7 @@ impl TypeFunc {
             };
         }
 
-        let mat = s.get_materializer(self.mat)?;
+        let mat = Store::get_materializer(self.mat)?;
         mat.validate(s, self)?;
 
         Ok(())

@@ -111,10 +111,13 @@ impl Store {
         })
     }
 
-    pub fn get_materializer(&self, id: MaterializerId) -> Result<&Materializer> {
-        self.materializers
-            .get(id as usize)
-            .ok_or_else(|| errors::object_not_found("materializer", id))
+    pub fn get_materializer(id: MaterializerId) -> Result<Materializer> {
+        with_store(|s| {
+            s.materializers
+                .get(id as usize)
+                .cloned()
+                .ok_or_else(|| errors::object_not_found("materializer", id))
+        })
     }
 
     pub fn register_policy(policy: Policy) -> Result<PolicyId> {
