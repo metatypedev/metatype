@@ -12,7 +12,7 @@ use super::types::utils as type_utils;
 
 impl Materializer {
     pub fn validate(&self, s: &Store, func: &TypeFunc) -> Result<()> {
-        let runtime = s.get_runtime(self.runtime_id)?;
+        let runtime = Store::get_runtime(self.runtime_id)?;
         match (runtime, &self.data) {
             (Runtime::Deno, MaterializerData::Deno(mat_data)) => {
                 Self::validate_deno_mat(s, mat_data, func)

@@ -136,7 +136,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     };
 
     // register the deno runtime
-    let default_runtime_idx = with_store(|s| ctx.register_runtime(s, Store::get_deno_runtime()))?;
+    let default_runtime_idx = ctx.register_runtime(Store::get_deno_runtime())?;
 
     ctx.types.push(Some(TypeNode::Object {
         base: gen_base(params.name, None, default_runtime_idx).build(),
@@ -356,11 +356,11 @@ impl TypegraphContext {
         }
     }
 
-    pub fn register_runtime(&mut self, store: &Store, id: u32) -> Result<RuntimeId, TgError> {
+    pub fn register_runtime(&mut self, id: u32) -> Result<RuntimeId, TgError> {
         if let Some(idx) = self.mapping.runtimes.get(&id) {
             Ok(*idx)
         } else {
-            let converted = convert_runtime(self, store, store.get_runtime(id)?)?;
+            let converted = convert_runtime(self, Store::get_runtime(id)?)?;
             let idx = self.runtimes.len();
             self.mapping.runtimes.insert(id, idx as u32);
             match converted {
@@ -369,7 +369,7 @@ impl TypegraphContext {
                     // we allocate first a slot in the array, as the lazy conversion might register
                     // other runtimes
                     self.runtimes.push(TGRuntime::Unknown(Default::default()));
-                    let rt = lazy(id, idx as u32, store, self)?;
+                    let rt = lazy(id, idx as u32, self)?;
                     self.runtimes[idx] = rt;
                 }
             };

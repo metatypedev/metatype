@@ -93,10 +93,13 @@ impl Store {
         })
     }
 
-    pub fn get_runtime(&self, id: RuntimeId) -> Result<&Runtime> {
-        self.runtimes
-            .get(id as usize)
-            .ok_or_else(|| errors::object_not_found("runtime", id))
+    pub fn get_runtime(id: RuntimeId) -> Result<Runtime> {
+        with_store(|s| {
+            s.runtimes
+                .get(id as usize)
+                .cloned()
+                .ok_or_else(|| errors::object_not_found("runtime", id))
+        })
     }
 
     pub fn get_deno_runtime() -> RuntimeId {
