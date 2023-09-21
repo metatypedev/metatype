@@ -25,13 +25,13 @@ impl TypeConversion for WithInjection {
                 let new_data = match data {
                     InjectionData::SingleValue(SingleValue { value }) => {
                         InjectionData::SingleValue(SingleValue {
-                            value: ctx.get_correct_id(value)?,
+                            value: ctx.get_correct_id(value.into())?,
                         })
                     }
                     InjectionData::ValueByEffect(per_effect) => {
                         let mut new_per_effect: HashMap<EffectType, u32> = HashMap::new();
                         for (k, v) in per_effect.iter() {
-                            new_per_effect.insert(*k, ctx.get_correct_id(*v)?);
+                            new_per_effect.insert(*k, ctx.get_correct_id(v.into())?);
                         }
                         InjectionData::ValueByEffect(new_per_effect)
                     }

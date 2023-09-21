@@ -13,11 +13,11 @@ use crate::{
 mod apply;
 
 fn find_missing_props(
-    supertype_id: u32,
+    supertype_id: TypeId,
     new_props: &Vec<(String, u32)>,
 ) -> Result<Vec<(String, u32)>> {
     let old_props = with_store(|s| -> Result<Vec<(String, u32)>> {
-        let tpe = s.get_type(supertype_id)?;
+        let tpe = s.get_type(supertype_id.into())?;
         match tpe {
             crate::types::Type::Struct(t) => Ok(t.data.props.clone()),
             _ => Err(format!(
@@ -65,8 +65,8 @@ impl crate::wit::utils::Utils for crate::Lib {
                 let path_infos = item.node.path_infos.clone();
                 let apply_value = path_infos.value;
                 let id = with_store(|s| -> Result<TypeId> {
-                    let id = s.get_type_by_path(supertype_id, &path_infos.path)?.1;
-                    Ok(id)
+                    let id = s.get_type_by_path(supertype_id.into(), &path_infos.path)?.1;
+                    Ok(id.into())
                 })?;
 
                 if apply_value.inherit && apply_value.payload.is_none() {
@@ -109,7 +109,13 @@ impl crate::wit::utils::Utils for crate::Lib {
                     }
                 }
 
-                let id = Lib::structb(TypeStruct { props }, TypeBase::default())?;
+                let id = Lib::structb(
+                    TypeStruct {
+                        props,
+                        ..Default::default()
+                    },
+                    TypeBase::default(),
+                )?;
                 idx_to_store_id_cache.insert(item.index, (item.node.name.clone(), id));
             }
         }

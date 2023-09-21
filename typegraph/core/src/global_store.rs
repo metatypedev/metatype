@@ -77,9 +77,9 @@ impl Store {
         loop {
             let tpe = self.get_type(id)?;
             let new_id = match tpe {
-                Type::Array(t) => t.data.of,
-                Type::Optional(t) => t.data.of,
-                Type::WithInjection(t) => t.data.tpe,
+                Type::Array(t) => t.data.of.into(),
+                Type::Optional(t) => t.data.of.into(),
+                Type::WithInjection(t) => t.data.tpe.into(),
                 Type::Proxy(t) => self.resolve_proxy(t.id)?,
                 _ => id,
             };
@@ -90,7 +90,7 @@ impl Store {
         }
         Ok(id)
     }
-    
+
     /// Collect all the data from all wrapper types, and get the concrete type
     pub fn get_attributes(&self, type_id: TypeId) -> Result<TypeAttributes> {
         let mut type_id = type_id;
@@ -155,7 +155,9 @@ impl Store {
                     let result = t.data.props.iter().find(|(k, _)| k.eq(chunk));
                     curr_path.push(chunk.clone());
                     ret = match result {
-                        Some((_, id)) => (self.get_type(*id)?, *id),
+                        Some((_, id)) => {
+                            (self.get_type(id.to_owned().into())?, id.to_owned().into())
+                        }
                         None => {
                             return Err(errors::invalid_path(
                                 pos,
