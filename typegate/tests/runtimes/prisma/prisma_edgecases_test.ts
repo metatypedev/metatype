@@ -75,7 +75,7 @@ Meta.test("prisma critical edgecases", async (t) => {
           id
         }
       }
-    `.expectErrorContains("Unexpected props 'firstname'")
+    `.expectErrorContains("Unexpected property 'firstname'")
       .on(e);
   });
 });

@@ -6,7 +6,7 @@ use crate::{
     errors::Result,
     global_store::{with_store, Store},
     typegraph::TypegraphContext,
-    types::{Type, TypeData, WithInjection, WrapperTypeData},
+    types::{TypeData, TypeId, WithInjection, WrapperTypeData},
     wit::core::TypeWithInjection,
 };
 use common::typegraph::{EffectType, Injection, InjectionData, SingleValue, TypeNode};
@@ -16,7 +16,7 @@ use std::collections::HashMap;
 impl TypeConversion for WithInjection {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         with_store(|s| -> Result<_> {
-            let tpe = s.get_type(self.data.tpe)?;
+            let tpe = s.get_type(self.data.tpe.into())?;
             let mut type_node = tpe.convert(ctx, runtime_id)?;
             let base = type_node.base_mut();
             let value: Injection =
@@ -88,7 +88,7 @@ impl TypeData for TypeWithInjection {
 }
 
 impl WrapperTypeData for TypeWithInjection {
-    fn get_wrapped_type<'a>(&self, store: &'a Store) -> Option<&'a Type> {
-        store.get_type(self.tpe).ok()
+    fn resolve(&self, _store: &Store) -> Option<TypeId> {
+        Some(self.tpe.into())
     }
 }

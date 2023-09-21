@@ -1,0 +1,12 @@
+---
+source: typegraph/core/src/runtimes/prisma/type_generation/where_.rs
+expression: "tree::print(where_type)"
+---
+root: struct 'RecordWhere_norel' #8
+├─ [id]: optional #5
+│  └─ item: string #0
+├─ [name]: optional #6
+│  └─ item: string #1
+└─ [age]: optional #7
+   └─ item: integer #2
+

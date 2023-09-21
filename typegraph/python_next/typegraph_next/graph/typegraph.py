@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 import inspect
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, Optional
+from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
 from typegraph_next.gen.exports.core import (
     Auth,
@@ -14,6 +14,7 @@ from typegraph_next.gen.exports.core import (
 )
 
 from typegraph_next.gen.types import Err
+from typegraph_next.policy import PolicyPerEffect, PolicySpec, get_policy_chain, Policy
 from typegraph_next.wit import core, store
 
 if TYPE_CHECKING:
@@ -71,9 +72,18 @@ class Typegraph:
     def __call__(self, **kwargs: "t.func"):
         self.expose(**kwargs)
 
-    def expose(self, **kwargs: "t.func"):
+    def expose(
+        self,
+        default_policy: Optional[PolicySpec] = None,
+        **kwargs: "t.func",
+    ):
         lst = list((name, fn.id) for (name, fn) in kwargs.items())
-        res = core.expose(store, lst, [])
+        res = core.expose(
+            store,
+            lst,
+            [],
+            default_policy=get_policy_chain(default_policy) if default_policy else None,
+        )
         if isinstance(res, Err):
             raise Exception(res.value)
 
@@ -82,8 +92,12 @@ class Typegraph:
 class Graph:
     typegraph: Typegraph
 
-    def expose(self, **kwargs: "t.func"):
-        self.typegraph.expose(**kwargs)
+    def expose(
+        self,
+        default_policy: Optional[Union[Policy, PolicyPerEffect]] = None,
+        **kwargs: "t.func",
+    ):
+        self.typegraph.expose(default_policy, **kwargs)
 
     def inherit(self):
         from typegraph_next.injection import InheritDef

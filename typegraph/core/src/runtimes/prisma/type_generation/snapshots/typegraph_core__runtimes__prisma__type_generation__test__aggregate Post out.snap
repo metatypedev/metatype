@@ -1,0 +1,27 @@
+---
+source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+expression: "tree::print(types.output)"
+---
+root: struct #173
+├─ [_count]: struct '_Post_AggrCount' #164
+│  ├─ [_all]: optional #163
+│  │  └─ item: integer #162
+│  ├─ [id]: optional #163
+│  │  └─ item: integer #162
+│  ├─ [title]: optional #163
+│  │  └─ item: integer #162
+│  └─ [author]: optional #163
+│     └─ item: integer #162
+├─ [_avg]: struct '_Post_NumberAgg_avg' #167
+│  └─ [id]: optional #166
+│     └─ item: float #165
+├─ [_sum]: struct '_Post_NumberAgg' #172
+│  └─ [id]: optional #169
+│     └─ item: integer #168
+├─ [_min]: struct '_Post_NumberAgg' #172
+│  └─ [id]: optional #169
+│     └─ item: integer #168
+└─ [_max]: struct '_Post_NumberAgg' #172
+   └─ [id]: optional #169
+      └─ item: integer #168
+

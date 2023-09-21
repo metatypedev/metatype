@@ -17,11 +17,14 @@ impl TypeConversion for Union {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Union {
             base: gen_base(
-                format!("union_{}", self.id),
+                self.base
+                    .name
+                    .clone()
+                    .unwrap_or_else(|| format!("union_{}", self.id.0)),
                 self.base.runtime_config.clone(),
                 runtime_id.unwrap(),
-                None,
-            ),
+            )
+            .build(),
             data: UnionTypeData {
                 any_of: self
                     .data
@@ -29,8 +32,8 @@ impl TypeConversion for Union {
                     .iter()
                     .map(|vid| {
                         with_store(|s| -> Result<_> {
-                            let id = s.resolve_proxy(*vid)?;
-                            ctx.register_type(s, id, runtime_id)
+                            let id = s.resolve_proxy((*vid).into())?;
+                            Ok(ctx.register_type(s, id, runtime_id)?.into())
                         })
                     })
                     .collect::<Result<Vec<_>>>()?,

@@ -1,39 +1,44 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
-from typegraph.runtimes.graphql import GraphQLRuntime
-from typegraph.runtimes.random import RandomMat, RandomRuntime
+from typegraph_next import typegraph, t, Graph, Policy
+from typegraph_next.providers.prisma import PrismaRuntime
+from typegraph_next.runtimes.graphql import GraphQLRuntime
+from typegraph_next.runtimes.random import RandomRuntime
 
-with TypeGraph("prisma") as g:
+
+@typegraph()
+def prisma(g: Graph):
     db = PrismaRuntime("prisma", "POSTGRES")
     gql_1 = GraphQLRuntime("http://mocked/api")
     rand = RandomRuntime(seed=1)
 
-    public = policies.public()
+    public = Policy.public()
     post = t.struct(
         {
             "id": t.string(),
             "title": t.string(),
         },
-    ).named("Post")
+        name="Post",
+    )
 
     user = t.struct(
         {
-            "name": t.string().config(gen="name"),
-            "age": t.integer().config(gen="age", type="adult"),
-        }
-    ).named("Album")
+            "name": t.string(config={"gen": "name"}),
+            "age": t.integer(config={"gen": "age", "type": "adult"}),
+        },
+        name="Album",
+    )
 
     record = t.struct(
         {
-            "id": t.integer().as_id.config("auto"),
+            "id": t.integer(as_id=True, config={"auto": True}),
             "description": t.string(),
             "post": gql_1.query(
-                t.struct({"id": t.string().as_id}),
+                t.struct({"id": t.string(as_id=True)}),
                 t.optional(post),
             ),
-            "user": t.gen(user, RandomMat(runtime=rand)),
+            "user": rand.gen(user),
         },
-    ).named("Record")
+        name="Record",
+    )
 
     g.expose(
         createOneRecord=db.create(record),

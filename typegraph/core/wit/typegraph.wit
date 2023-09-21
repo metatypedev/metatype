@@ -55,7 +55,8 @@ interface core {
     record type-base {
         name: option<string>,
         // string => json string
-        runtime-config: option<list<tuple<string, string>>>
+        runtime-config: option<list<tuple<string, string>>>,
+        as-id: bool,
     }
 
     record type-with-injection {
@@ -67,6 +68,7 @@ interface core {
 
     record type-proxy {
         name: string,
+        extras: list<tuple<string, string>>,
     }
     proxyb: func(data: type-proxy) -> result<type-id, error>
 
@@ -127,6 +129,9 @@ interface core {
 
     record type-struct {
         props: list<tuple<string, type-id>>,
+        additional-props: bool,
+        min: option<u32>,
+        max: option<u32>,
     }
     structb: func(data: type-struct, base: type-base) -> result<type-id, error>
 
@@ -173,14 +178,14 @@ interface core {
     }
     register-context-policy: func(key: string, check: context-check) -> result<tuple<policy-id, string>, error>
 
-    expose: func(fns: list<tuple<string, type-id>>, namespace: list<string>) -> result<_, error>
+    expose: func(fns: list<tuple<string, type-id>>, namespace: list<string>, default-policy: option<list<policy-spec>>) -> result<_, error>
     
     type runtime-id = u32
     type materializer-id = u32
 }
 
 interface runtimes {
-    use core.{error, runtime-id, materializer-id}
+    use core.{error, type-id, runtime-id, materializer-id}
     
     get-deno-runtime: func() -> runtime-id
 
@@ -216,8 +221,11 @@ interface runtimes {
     }
 
     register-deno-func: func(data: materializer-deno-func, effect: effect) -> result<materializer-id, error>
+
+
     get-predefined-deno-func: func(data: materializer-deno-predefined) -> result<materializer-id, error>
     import-deno-function: func(data: materializer-deno-import, effect: effect) -> result<materializer-id, error>
+
 
     // graphql
     record graphql-runtime-data {
@@ -225,7 +233,7 @@ interface runtimes {
     }
 
     record materializer-graphql-query {
-        path: list<string>,
+        path: option<list<string>>,
     }
 
     register-graphql-runtime: func(data: graphql-runtime-data) -> result<runtime-id, error>
@@ -310,6 +318,36 @@ interface runtimes {
 
     register-wasmedge-runtime: func() -> result<runtime-id, error>
     from-wasi-module: func(base: base-materializer, data: materializer-wasi) -> result<materializer-id, error>
+
+    // prisma
+    record prisma-runtime-data {
+        name: string,
+        connection-string-secret: string,
+    }
+
+    record prisma-link-data {
+        target-type: type-id,
+        relationship-name: option<string>,
+        foreign-key: option<bool>,
+        target-field: option<string>,
+        unique: option<bool>,
+    }
+
+    register-prisma-runtime: func(data: prisma-runtime-data) -> result<runtime-id, error>
+    prisma-find-unique: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-find-many: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-find-first: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-aggregate: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-count: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-group-by: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-create-one: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-create-many: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-update-one: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-update-many: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-upsert-one: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-delete-one: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-delete-many: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-link: func(data: prisma-link-data) -> result<type-id, error>
 }
 
 

@@ -1,24 +1,28 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
+from typegraph_next import typegraph, t, Graph, Policy
+from typegraph_next.providers.prisma import PrismaRuntime
 
-with TypeGraph("prisma") as g:
+
+@typegraph()
+def prisma(g: Graph):
     db = PrismaRuntime("prisma", "POSTGRES")
 
-    public = policies.public()
+    public = Policy.public()
 
     user = t.struct(
         {
-            "id": t.integer().as_id,
-            "profile": db.link(g("Profile").optional(), "userProfile"),
-        }
-    ).named("User")
+            "id": t.integer(as_id=True),
+            "profile": db.link(t.ref("Profile").optional(), "userProfile"),
+        },
+        name="User",
+    )
 
     profile = t.struct(
         {
-            "id": t.integer().as_id,
-            "user": db.link(g("User").optional(), "userProfile", fkey=True),
-        }
-    ).named("Profile")
+            "id": t.integer(as_id=True),
+            "user": db.link(t.ref("User").optional(), "userProfile", fkey=True),
+        },
+        name="Profile",
+    )
 
     g.expose(
         createUser=db.create(user),

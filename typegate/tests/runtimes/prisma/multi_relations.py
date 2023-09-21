@@ -1,35 +1,40 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.providers.prisma import PrismaRuntime
 
-with TypeGraph("prisma_multi") as g:
+
+@typegraph()
+def prisma_multi(g: Graph):
     db = PrismaRuntime("prisma", "POSTGRES")
 
-    public = policies.public()
+    public = Policy.public()
 
     record = t.struct(
-        {"id": t.uuid().as_id, "name": t.string(), "age": t.integer().optional()}
-    ).named("record")
+        {"id": t.uuid(as_id=True), "name": t.string(), "age": t.integer().optional()},
+        name="record",
+    )
 
     messages = t.struct(
         {
-            "id": t.integer().as_id,
+            "id": t.integer(as_id=True),
             "time": t.integer(),
             "message": t.string(),
-            "sender": db.link(g("users"), "messageSender"),
-            "recipient": db.link(g("users"), "messageRecipient"),
-        }
-    ).named("messages")
+            "sender": db.link("users", "messageSender"),
+            "recipient": db.link("users", "messageRecipient"),
+        },
+        name="messages",
+    )
 
     users = t.struct(
         {
-            "id": t.integer().as_id,
+            "id": t.integer(as_id=True),
             "email": t.string(),
             "name": t.string(),
-            "sentMessages": db.link(t.array(g("messages")), "messageSender"),
-            "receivedMessages": db.link(t.array(g("messages")), "messageRecipient"),
+            "sentMessages": db.link(t.array(t.ref("messages")), "messageSender"),
+            "receivedMessages": db.link(t.array(t.ref("messages")), "messageRecipient"),
             # "favoriteMessage": favoriteMessage.owned(),  ## optional
-        }
-    ).named("users")
+        },
+        name="users",
+    )
 
     g.expose(
         findManyRecors=db.find_many(record),

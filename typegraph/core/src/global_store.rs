@@ -3,8 +3,8 @@
 
 use crate::errors::{self, Result};
 use crate::runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime};
-use crate::types::{Type, TypeFun};
-use crate::wit::core::{Error as TgError, Policy, PolicyId, RuntimeId, TypeId};
+use crate::types::{Type, TypeFun, TypeId};
+use crate::wit::core::{Error as TgError, Policy, PolicyId, PolicySpec, RuntimeId};
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use std::{cell::RefCell, collections::HashMap};
 
@@ -54,6 +54,13 @@ impl Store {
     }
 }
 
+#[derive(Debug)]
+pub struct TypeAttributes {
+    pub concrete_type: TypeId,
+    pub proxy_data: Vec<(String, String)>,
+    pub policy_chain: Vec<PolicySpec>,
+}
+
 impl Store {
     pub fn resolve_proxy(&self, type_id: TypeId) -> Result<TypeId, TgError> {
         match self.get_type(type_id)? {
@@ -64,7 +71,7 @@ impl Store {
         }
     }
 
-    // unwrap type id inside array, optional, or WithInjection
+    /// unwrap type id inside array, optional, or WithInjection
     pub fn resolve_wrapper(&self, type_id: TypeId) -> Result<TypeId, TgError> {
         let mut id = self.resolve_proxy(type_id)?;
         loop {
@@ -83,11 +90,54 @@ impl Store {
         }
         Ok(id)
     }
+    
+    /// Collect all the data from all wrapper types, and get the concrete type
+    pub fn get_attributes(&self, type_id: TypeId) -> Result<TypeAttributes> {
+        let mut type_id = type_id;
+        let mut proxy_data: Vec<(String, String)> = Vec::new();
+        let mut policy_chain = Vec::new();
+
+        loop {
+            let ty = self.get_type(type_id)?;
+            match ty {
+                Type::Proxy(p) => {
+                    proxy_data.extend(p.data.extras.clone());
+                    type_id = self
+                        .get_type_by_name(&p.data.name)
+                        .ok_or_else(|| errors::unregistered_type_name(&p.data.name))?;
+                    continue;
+                }
+                Type::WithPolicy(p) => {
+                    policy_chain.extend(p.data.chain.clone());
+                    type_id = p.data.tpe.into();
+                    continue;
+                }
+                _ => {
+                    break Ok(TypeAttributes {
+                        concrete_type: type_id,
+                        proxy_data,
+                        policy_chain,
+                    })
+                }
+            }
+        }
+    }
 
     pub fn get_type(&self, type_id: TypeId) -> Result<&Type, TgError> {
         self.types
-            .get(type_id as usize)
-            .ok_or_else(|| errors::object_not_found("type", type_id))
+            .get(type_id.0 as usize)
+            .ok_or_else(|| errors::object_not_found("type", type_id.0))
+    }
+
+    pub fn get_type_name(&self, type_id: TypeId) -> Result<Option<&str>, TgError> {
+        let ty = self.get_type(type_id)?;
+        match ty.get_base() {
+            Some(base) => Ok(base.name.as_deref()),
+            None => match ty {
+                Type::Proxy(p) => Ok(Some(p.data.name.as_str())),
+                _ => Ok(None),
+            },
+        }
     }
 
     pub fn get_type_by_path(
@@ -128,8 +178,8 @@ impl Store {
 
     pub fn get_type_mut(&mut self, type_id: TypeId) -> Result<&mut Type, TgError> {
         self.types
-            .get_mut(type_id as usize)
-            .ok_or_else(|| errors::object_not_found("type", type_id))
+            .get_mut(type_id.0 as usize)
+            .ok_or_else(|| errors::object_not_found("type", type_id.into()))
     }
 
     pub fn get_type_by_name(&self, name: &str) -> Option<TypeId> {
@@ -138,12 +188,12 @@ impl Store {
 
     pub fn add_type(&mut self, build: impl FnOnce(TypeId) -> Type) -> TypeId {
         let id = self.types.len() as u32;
-        let tpe = build(id);
+        let tpe = build(id.into());
         if let Some(name) = tpe.get_base().and_then(|b| b.name.as_ref()) {
-            self.type_by_names.insert(name.clone(), id);
+            self.type_by_names.insert(name.clone(), id.into());
         }
         self.types.push(tpe);
-        id
+        id.into()
     }
 
     pub fn get_type_repr(&self, id: TypeId) -> Result<String, TgError> {
@@ -227,6 +277,21 @@ impl Store {
             });
             self.deno_modules.insert(file, mat);
             mat
+        }
+    }
+
+    pub fn is_func(&self, type_id: TypeId) -> Result<bool> {
+        match self.get_type(type_id)? {
+            Type::Func(_) => Ok(true),
+            _ => Ok(false),
+        }
+    }
+
+    pub fn resolve_quant(&self, type_id: TypeId) -> Result<TypeId> {
+        match self.get_type(type_id)? {
+            Type::Array(a) => Ok(a.data.of.into()),
+            Type::Optional(o) => Ok(o.data.of.into()),
+            _ => Ok(type_id),
         }
     }
 }

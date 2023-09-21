@@ -406,6 +406,7 @@ class ArgumentCollector {
   ): ComputeArg {
     const { value: valueNode } = astNode;
     const variantTypesIndexes: number[] = getVariantTypesIndexes(typeNode);
+    const errors: Error[] = [];
 
     // throw type mismatch error only if the argument node of the query
     // does not match any of the subschemes (variant nodes).
@@ -416,10 +417,14 @@ class ArgumentCollector {
           typeIdx: variantTypeIndex,
         });
       } catch (error) {
+        console.error("variant error:", error);
         if (
           error instanceof TypeMismatchError ||
-          error instanceof MandatoryArgumentError
+          error instanceof UnionTypeMismatchError ||
+          error instanceof MandatoryArgumentError ||
+          error instanceof UnexpectedPropertiesError
         ) {
+          errors.push(error);
           continue;
         }
 
@@ -434,9 +439,11 @@ class ArgumentCollector {
       .map((variantType) => variantType.type)
       .forEach((typeName) => expectedVariants.add(typeName.toUpperCase()));
 
-    throw new TypeMismatchError(
+    throw new UnionTypeMismatchError(
       valueNode.kind,
-      [...expectedVariants],
+      typeNode.type,
+      errors,
+      this.currentNode.path.length,
       this.currentNodeDetails,
     );
   }
@@ -510,11 +517,11 @@ class ArgumentCollector {
 
     const unexpectedProps = Object.keys(fieldByKeys);
     if (unexpectedProps.length > 0) {
-      const details = [
-        unexpectedProps.map((name) => `'${name}'`).join(", "),
-        `for argument ${this.currentNodeDetails}`,
-      ].join(" ");
-      throw new Error(`Unexpected props ${details}`);
+      throw new UnexpectedPropertiesError(
+        unexpectedProps,
+        this.currentNodeDetails,
+        Object.keys(props),
+      );
     }
 
     return (...params: Parameters<ComputeArg>) =>
@@ -742,8 +749,43 @@ class TypeMismatchError extends Error {
       .map((t) => `'${t}'`)
       .join(" or ");
     const errorMessage = [
-      `Type mismatch: got '${actual}' but expected ${exp}`,
+      `Type mismatch: got '${actual}' but expected '${exp}'`,
       `for argument ${argDetails}`,
+    ].join(" ");
+    super(errorMessage);
+  }
+}
+
+class UnionTypeMismatchError extends Error {
+  constructor(
+    actual: string,
+    expected: string,
+    nestedErrors: Error[],
+    depth: number,
+    argDetails: string,
+  ) {
+    const indent = "    ".repeat(depth);
+    const causes = nestedErrors.map((e) => `${indent}- ${e.message}\n`);
+    const errorMessage = [
+      `Type mismatch: got '${actual}' but expected '${expected}'`,
+      `for argument ${argDetails}`,
+      `caused by:\n${causes.join("")}`,
+    ].join(" ");
+    super(errorMessage);
+  }
+}
+
+class UnexpectedPropertiesError extends Error {
+  constructor(
+    props: string[],
+    nodeDetails: string,
+    validProps: string[],
+  ) {
+    const name = props.length === 1 ? "property" : "properties";
+    const errorMessage = [
+      `Unexpected ${name} '${props.join(", ")}'`,
+      `for argument ${nodeDetails};`,
+      `valid properties are: ${validProps.join(", ")}`,
     ].join(" ");
     super(errorMessage);
   }

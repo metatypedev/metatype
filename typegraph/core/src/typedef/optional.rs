@@ -25,15 +25,18 @@ impl TypeConversion for Optional {
 
         Ok(TypeNode::Optional {
             base: gen_base(
-                format!("optional_{}", self.id),
+                self.base
+                    .name
+                    .clone()
+                    .unwrap_or_else(|| format!("optional_{}", self.id.0)),
                 self.base.runtime_config.clone(),
                 runtime_id.unwrap(),
-                None,
-            ),
+            )
+            .build(),
             data: OptionalTypeData {
                 item: with_store(|s| -> Result<_> {
-                    let id = s.resolve_proxy(self.data.of)?;
-                    ctx.register_type(s, id, runtime_id)
+                    let id = s.resolve_proxy(self.data.of.into())?;
+                    Ok(ctx.register_type(s, id, runtime_id)?.into())
                 })?,
                 default_value,
             },

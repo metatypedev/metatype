@@ -37,7 +37,11 @@ export type Simplified<T> = Omit<T, "of">;
 
 export type SimplifiedBase<T> =
   & { config?: Record<string, unknown> }
-  & Omit<T, "runtimeConfig">;
+  & Omit<T, "runtimeConfig" | "asId">;
+
+export type AsId = {
+  asId?: true;
+};
 
 export type SimplifiedNumericData<T> =
   & { enumeration?: number[] }
@@ -48,7 +52,7 @@ export class Typedef {
   readonly runtimeConfig?: Array<[string, string]>;
   policy: Policy[] | null = null;
 
-  constructor(public readonly _id: number, base: TypeBase) {
+  constructor(public readonly _id: number, base: Omit<TypeBase, "asId">) {
     this.name = base.name;
     this.runtimeConfig = base.runtimeConfig;
   }
@@ -144,7 +148,7 @@ class TypeProxy<T extends Typedef = Typedef> extends Typedef {
 }
 
 export function proxy<T extends Typedef = Typedef>(name: string) {
-  return new TypeProxy<T>(core.proxyb({ name }), name);
+  return new TypeProxy<T>(core.proxyb({ name, extras: [] }), name);
 }
 
 export function ref<T extends Typedef = Typedef>(name: string) {
@@ -160,6 +164,7 @@ class Boolean extends Typedef {
 export function boolean(base: SimplifiedBase<TypeBase> = {}) {
   const completeBase = {
     ...base,
+    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Boolean(core.booleanb(completeBase), completeBase);
@@ -186,7 +191,7 @@ class Integer extends Typedef implements Readonly<TypeInteger> {
 
 export function integer(
   data: SimplifiedNumericData<TypeInteger> = {},
-  base: SimplifiedBase<TypeBase> = {},
+  base: SimplifiedBase<TypeBase> & AsId = {},
 ) {
   const completeData = {
     ...data,
@@ -196,6 +201,7 @@ export function integer(
   };
   const completeBase = {
     ...base,
+    asId: base.asId ?? false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Integer(
@@ -236,6 +242,7 @@ export function float(
   };
   const completeBase = {
     ...base,
+    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Float(
@@ -264,10 +271,11 @@ class StringT extends Typedef implements Readonly<TypeString> {
 
 export function string(
   data: TypeString = {},
-  base: SimplifiedBase<TypeBase> = {},
+  base: SimplifiedBase<TypeBase> & AsId = {},
 ) {
   const completeBase = {
     ...base,
+    asId: base.asId ?? false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new StringT(core.stringb(data, completeBase), data, completeBase);
@@ -330,6 +338,7 @@ export function array(
   } as TypeArray;
   const completeBase = {
     ...base,
+    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new ArrayT(
@@ -361,6 +370,7 @@ export function optional(
   } as TypeOptional;
   const completeBase = {
     ...base,
+    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Optional(
@@ -388,6 +398,7 @@ export function union(
   };
   const completeBase = {
     ...base,
+    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Union(
@@ -415,6 +426,7 @@ export function either(
   };
   const completeBase = {
     ...base,
+    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Either(
@@ -438,11 +450,13 @@ export function struct<P extends { [key: string]: Typedef }>(
 ): Struct<P> {
   const completeBase = {
     ...base,
+    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Struct(
     core.structb({
       props: Object.entries(props).map(([name, typ]) => [name, typ._id]),
+      additionalProps: false,
     }, completeBase),
     {
       props,

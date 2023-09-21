@@ -1,38 +1,44 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.providers.prisma import PrismaRuntime
 
-with TypeGraph("prisma") as g:
+
+@typegraph()
+def prisma(g: Graph):
     db = PrismaRuntime("prisma", "POSTGRES")
 
-    public = policies.public()
+    public = Policy.public()
 
     record = t.struct(
         {
-            "id": t.uuid().as_id.config("auto"),
+            "id": t.uuid(as_id=True, config={"auto": True}),
             "name": t.string(),
             "age": t.integer().optional(),
         },
-    ).named("record")
+        name="record",
+    )
 
     messages = t.struct(
         {
-            "id": t.integer().as_id,
+            "id": t.integer(as_id=True),
             "time": t.integer(),
             "message": t.string(),
-            "sender": db.link(g("users").optional(), "messageSender"),
-        }
-    ).named("messages")
+            "sender": db.link(t.ref("users").optional(), name="messageSender"),
+        },
+        name="messages",
+    )
 
     users = t.struct(
         {
-            "id": t.integer().as_id.config("auto"),
+            "id": t.integer(as_id=True, config={"auto": True}),
             "email": t.string(),
             "name": t.string(),
-            "messages": db.link(t.array(g("messages")), "messageSender"),
-        }
-    ).named("users")
+            "messages": db.link(t.array(t.ref("messages")), "messageSender"),
+        },
+        name="users",
+    )
 
     g.expose(
+        public,
         findManyRecords=db.find_many(record),
         createOneRecord=db.create(record),
         deleteOneRecord=db.delete(record),
@@ -42,5 +48,4 @@ with TypeGraph("prisma") as g:
         findMessages=db.find_many(messages),
         updateUser=db.update(users),
         deleteMessages=db.delete_many(messages),
-        default_policy=public,
     )
