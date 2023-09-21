@@ -9,6 +9,7 @@ mod t;
 mod typedef;
 mod typegraph;
 mod types;
+mod utils;
 mod validation;
 
 #[cfg(test)]
@@ -39,7 +40,7 @@ pub mod wit {
 
     export_typegraph!(Lib);
 
-    pub use exports::metatype::typegraph::{core, runtimes};
+    pub use exports::metatype::typegraph::{core, runtimes, utils};
 }
 
 #[cfg(feature = "wasm")]

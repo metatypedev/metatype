@@ -22,23 +22,16 @@ impl TypeConversion for WithInjection {
             let value: Injection =
                 serde_json::from_str(&self.data.injection).map_err(|e| e.to_string())?;
             if let Injection::Parent(data) = value {
-                let get_correct_id = |v: u32| -> Result<u32> {
-                    let id = s.resolve_proxy(v.into())?;
-                    if let Some(index) = ctx.find_type_index_by_store_id(id) {
-                        return Ok(index);
-                    }
-                    Err(format!("unable to find type for store id {}", id.0))
-                };
                 let new_data = match data {
                     InjectionData::SingleValue(SingleValue { value }) => {
                         InjectionData::SingleValue(SingleValue {
-                            value: get_correct_id(value)?,
+                            value: ctx.get_correct_id(value.into())?,
                         })
                     }
                     InjectionData::ValueByEffect(per_effect) => {
                         let mut new_per_effect: HashMap<EffectType, u32> = HashMap::new();
                         for (k, v) in per_effect.iter() {
-                            new_per_effect.insert(*k, get_correct_id(*v)?);
+                            new_per_effect.insert(*k, ctx.get_correct_id(v.into())?);
                         }
                         InjectionData::ValueByEffect(new_per_effect)
                     }

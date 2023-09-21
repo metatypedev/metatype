@@ -99,6 +99,11 @@ class Graph:
     ):
         self.typegraph.expose(default_policy, **kwargs)
 
+    def inherit(self):
+        from typegraph_next.injection import InheritDef
+
+        return InheritDef()
+
 
 def typegraph(
     name: Optional[str] = None,
