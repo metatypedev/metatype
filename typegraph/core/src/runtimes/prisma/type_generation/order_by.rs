@@ -48,16 +48,13 @@ impl TypeGen for OrderBy {
 
         let props = self
             .model_id
-            .as_struct()
-            .unwrap()
-            .data
-            .props
-            .iter()
+            .as_struct()?
+            .iter_props()
             .filter_map(|(k, ty)| {
-                let (ty, opt) = if let Type::Optional(typ) = TypeId(*ty).as_type().unwrap() {
-                    (typ.data.of, true)
+                let (ty, opt) = if let Type::Optional(typ) = ty.as_type().unwrap() {
+                    (typ.data.of.into(), true)
                 } else {
-                    (*ty, false)
+                    (ty, false)
                 };
 
                 let registry_entry = context.registry.models.get(&self.model_id).unwrap();
@@ -70,18 +67,18 @@ impl TypeGen for OrderBy {
                         let relationship_model = rel.get_opposite_of(self.model_id, k).unwrap();
                         match relationship_model.cardinality {
                             Cardinality::Optional | Cardinality::One => Some((
-                                k.clone(),
+                                k.to_string(),
                                 PropType::OrderBy(relationship_model.model_type, rel_name.clone()),
                             )),
-                            Cardinality::Many => Some((k.clone(), PropType::Aggregates)),
+                            Cardinality::Many => Some((k.to_string(), PropType::Aggregates)),
                         }
                     };
                 }
 
-                match TypeId(ty).as_type().unwrap() {
+                match ty.as_type().unwrap() {
                     Type::Boolean(_) | Type::Integer(_) | Type::Float(_) | Type::String(_) => {
                         Some((
-                            k.clone(),
+                            k.to_string(),
                             if opt {
                                 PropType::Optional
                             } else {
@@ -235,11 +232,9 @@ impl TypeGen for AggregateSorting {
         let props = self
             .model_id
             .as_struct()?
-            .data
-            .props
-            .iter()
+            .iter_props()
             .map(|(k, type_id)| -> Result<_> {
-                let attrs = TypeId(*type_id).attrs()?;
+                let attrs = type_id.attrs()?;
                 let typ = attrs.concrete_type.as_type()?;
                 let (typ, is_optional) = match typ {
                     Type::Optional(inner) => (
@@ -250,12 +245,12 @@ impl TypeGen for AggregateSorting {
                 };
                 match typ {
                     Type::Integer(_) | Type::Float(_) => Ok(Prop {
-                        key: k.clone(),
+                        key: k.to_string(),
                         number_type: true,
                         optional: is_optional,
                     }),
                     _ => Ok(Prop {
-                        key: k.clone(),
+                        key: k.to_string(),
                         number_type: false,
                         optional: is_optional,
                     }),

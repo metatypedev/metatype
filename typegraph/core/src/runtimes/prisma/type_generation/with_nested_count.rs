@@ -41,7 +41,6 @@ impl TypeGen for WithNestedCount {
         let mut props = vec![];
         let mut countable = vec![];
 
-        // let registry_entry = context.registry.models.get(&self.model_id).unwrap();
         let model = self.model_id.as_struct().unwrap();
         for (k, ty) in model.iter_props() {
             if let Some(rel) = context.registry.find_relationship_on(self.model_id, k) {

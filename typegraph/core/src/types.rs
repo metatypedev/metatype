@@ -247,19 +247,6 @@ where
     }
 }
 
-// impl Store {
-//     pub fn type_as_struct(&self, type_id: TypeId) -> Result<Rc<Struct>> {
-//         match self.get_type(type_id)? {
-//             Type::Struct(s) => Ok(s),
-//             Type::Proxy(p) => self.type_as_struct(p.data.try_resolve(self)?),
-//             _ => Err(errors::invalid_type(
-//                 "Struct",
-//                 &self.get_type_repr(type_id)?,
-//             )),
-//         }
-//     }
-// }
-
 pub enum ProxyResolution {
     None,
     Try,

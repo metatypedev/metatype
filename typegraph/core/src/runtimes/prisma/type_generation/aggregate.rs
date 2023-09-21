@@ -25,10 +25,8 @@ impl TypeGen for CountOutput {
             .model_id
             .as_struct()
             .unwrap()
-            .data
-            .props
-            .iter()
-            .map(|(k, _)| k.clone())
+            .iter_props()
+            .map(|(k, _)| k.to_string())
             .collect::<Vec<_>>();
 
         let mut builder = t::struct_();

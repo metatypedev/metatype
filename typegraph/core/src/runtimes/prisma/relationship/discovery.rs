@@ -127,11 +127,9 @@ impl Candidate {
         let candidates = self
             .model_type
             .as_struct()?
-            .data
-            .props
-            .iter()
+            .iter_props()
             .filter_map(|(k, ty)| {
-                Candidate::new(self.model_type, k.clone(), ty.into(), Some(self))
+                Candidate::new(self.model_type, k.to_string(), ty, Some(self))
                     .map(|maybe_candidate| {
                         maybe_candidate.filter(|c| !registry.has(c.model_type, &c.field_name))
                     })
@@ -275,12 +273,8 @@ impl CandidatePair {
 
 pub fn scan_model(model: &Struct, registry: &RelationshipRegistry) -> Result<Vec<CandidatePair>> {
     let candidates = model
-        .data
-        .props
-        .iter()
-        .filter_map(|(k, ty)| {
-            Candidate::new(model.get_id(), k.clone(), ty.into(), None).transpose()
-        })
+        .iter_props()
+        .filter_map(|(k, ty)| Candidate::new(model.get_id(), k.to_string(), ty, None).transpose())
         .collect::<Result<Vec<_>>>()?;
 
     candidates

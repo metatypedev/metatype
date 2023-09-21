@@ -39,7 +39,7 @@ impl TypeGen for OutType {
         }
         let mut props = vec![];
 
-        for (k, id) in self.model_id.as_struct().unwrap().iter_props() {
+        for (k, id) in self.model_id.as_struct()?.iter_props() {
             let rel = context.registry.find_relationship_on(self.model_id, k);
             if let Some(rel) = rel {
                 if self.skip_rel.contains(&rel.name) || rel.left.model_type == rel.right.model_type

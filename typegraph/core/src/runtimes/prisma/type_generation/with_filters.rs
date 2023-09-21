@@ -353,15 +353,7 @@ impl TypeGen for WithAggregateFilters {
 
     fn name(&self, _context: &TypeGenContext) -> String {
         // TODO model id??
-        let name = self
-            .model_id
-            .as_type()
-            .unwrap()
-            .get_base()
-            .unwrap()
-            .name
-            .clone()
-            .unwrap();
+        let name = self.model_id.type_name().unwrap().unwrap();
         format!("{name}_with_aggregate_filters")
     }
 }
@@ -500,19 +492,6 @@ impl TypeGen for SumFilter {
         format!("_{model}_SumFilter")
     }
 }
-
-// fn get_props<P, F: Fn(&Store, &str, TypeId) -> Option<P>>(model_id: TypeId, filter: F) -> Vec<P> {
-//     with_store(|s| {
-//         model_id
-//             .as_struct()
-//             .unwrap()
-//             .data
-//             .props
-//             .iter()
-//             .filter_map(|(k, type_id)| filter(s, k, type_id.into()))
-//             .collect::<Vec<_>>()
-//     })
-// }
 
 fn gen_aggregate_filter<P, F: Fn(P) -> (String, NumberType)>(
     context: &mut TypeGenContext,
