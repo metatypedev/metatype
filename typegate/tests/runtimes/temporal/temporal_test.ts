@@ -5,7 +5,7 @@ import { Meta } from "../../utils/mod.ts";
 import { MetaTest } from "../../utils/test.ts";
 
 async function testSerialize(t: MetaTest, file: string) {
-  await t.should("serialize python typegraph", async () => {
+  await t.should(`serialize typegraph ${file}`, async () => {
     const tg = await Meta.cli("serialize", "--pretty", "-f", file);
     await t.assertSnapshot(tg);
   });
