@@ -131,7 +131,7 @@ class PrismaRuntime(Runtime):
 
     def link(
         self,
-        target_type: str,
+        target_type: Union[str, t.typedef],
         name: Optional[str] = None,
         *,
         fkey: Optional[bool] = None,

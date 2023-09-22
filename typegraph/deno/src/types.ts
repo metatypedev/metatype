@@ -282,8 +282,8 @@ export function string(
   return new StringT(core.stringb(data, completeBase), data, completeBase);
 }
 
-export function uuid() {
-  return string({ format: "uuid" });
+export function uuid(base: SimplifiedBase<TypeBase> & AsId = {}) {
+  return string({ format: "uuid" }, base);
 }
 
 export function email() {

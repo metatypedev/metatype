@@ -45,28 +45,38 @@ async function runCommonTestSteps(t: MetaTest, e: Engine) {
 }
 
 Meta.test("required 1-1 relationships", async (t) => {
-  const e = await t.engine("runtimes/prisma/normal_1_1.py", {
-    secrets: {
-      TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-1",
-    },
-  });
-  await dropSchemas(e);
-  await recreateMigrations(e);
+  const typegraphs = [
+    { file: "runtimes/prisma/normal_1_1.py", frontendName: "python" },
+    { file: "runtimes/prisma/normal_1_1.ts", frontendName: "deno" },
+  ];
 
-  await runCommonTestSteps(t, e);
+  for (const tg of typegraphs) {
+    const e = await t.engine(tg.file, {
+      secrets: {
+        TG_PRISMA_POSTGRES:
+          "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-1",
+      },
+    });
+    await dropSchemas(e);
+    await recreateMigrations(e);
 
-  await t.should("delete fails with nested object", async () => {
-    await gql`
-      mutation {
-        deleteUser(where: { id: 12 }) {
-          id
+    await runCommonTestSteps(t, e);
+
+    await t.should(
+      `delete fails with nested object (${tg.frontendName})`,
+      async () => {
+        await gql`
+        mutation {
+          deleteUser(where: { id: 12 }) {
+            id
+          }
         }
-      }
-    `
-      .expectErrorContains("Foreign key constraint failed")
-      .on(e);
-  });
+      `
+          .expectErrorContains("Foreign key constraint failed")
+          .on(e);
+      },
+    );
+  }
 });
 
 Meta.test("optional 1-1 relationships", async (t) => {
