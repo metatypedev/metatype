@@ -8,6 +8,7 @@ import {
   TypeBase,
   TypeEither,
   TypeFloat,
+  TypeFunc,
   TypeInteger,
   TypeOptional,
   TypeString,
@@ -496,6 +497,14 @@ export class Func<
       new Typedef(applyId, {}) as Struct<P>,
       this.out,
       this.mat,
+    );
+  }
+
+  static fromTypeFunc(data: TypeFunc) {
+    return func(
+      new Typedef(data.inp, {}) as Struct<{ [key: string]: Typedef }>,
+      new Typedef(data.out, {}),
+      { _id: data.mat },
     );
   }
 }

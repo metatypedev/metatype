@@ -3,7 +3,7 @@
 
 from typing import Union
 
-from typegraph_next.runtimes.base import Materializer, Runtime
+from typegraph_next.runtimes.base import Runtime
 
 from typegraph_next.gen.exports.runtimes import (
     TemporalOperationData,
@@ -41,15 +41,11 @@ class TemporalRuntime(Runtime):
             func_arg=None if func_arg is None else func_arg.id,
             operation=operation,
         )
-        func = runtimes.generate_temporal_operation(store, self.id.value, data)
-        if isinstance(func, Err):
-            raise Exception(func.value)
+        func_data = runtimes.generate_temporal_operation(store, self.id.value, data)
+        if isinstance(func_data, Err):
+            raise Exception(func_data.value)
 
-        return t.func(
-            t.typedef(func.value.inp),
-            t.typedef(func.value.out),
-            mat=Materializer(id=func.value.mat),
-        )
+        return t.func.from_type_func(func_data.value)
 
     def start_workflow(self, workflow_type: str, arg: t.typedef):
         return self._generic_temporal_func(
