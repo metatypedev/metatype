@@ -74,4 +74,9 @@ def prisma(g: Graph):
         findManyExtendedProfile=db.find_many(extended_profile),
         createOneExtendedProfile=db.create(extended_profile),
         createOneComment=db.create(comment),
+        findFirstPostWithApply=db.find_first(post).apply(
+            {
+                "where": {"id": 10007},
+            }
+        ),
     )
