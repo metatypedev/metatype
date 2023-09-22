@@ -92,10 +92,10 @@ impl TypeGen for OrderBy {
             }
         }
 
-        t::array(builder.build()?).named(self.name(context)).build()
+        t::array(builder.build()?).named(self.name()).build()
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
+    fn name(&self) -> String {
         let name = self.model_id.type_name().unwrap().unwrap();
         let suffix = if self.skip_rel.is_empty() {
             "".to_string()
@@ -114,14 +114,14 @@ impl TypeGen for OrderBy {
 struct SortOrder;
 
 impl TypeGen for SortOrder {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         t::string()
             .enum_(vec!["asc".to_string(), "desc".to_string()])
-            .named(self.name(context))
+            .named(self.name())
             .build()
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
+    fn name(&self) -> String {
         "_SortOrder".to_string()
     }
 }
@@ -129,14 +129,14 @@ impl TypeGen for SortOrder {
 struct NullsOrder;
 
 impl TypeGen for NullsOrder {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         t::string()
             .enum_(vec!["first".to_string(), "last".to_string()])
-            .named(self.name(context))
+            .named(self.name())
             .build()
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
+    fn name(&self) -> String {
         "_NullsOrder".to_string()
     }
 }
@@ -156,11 +156,11 @@ impl TypeGen for Sort {
         }
 
         t::optional(t::union([builder.build()?, sort_order]).build()?)
-            .named(self.name(context))
+            .named(self.name())
             .build()
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
+    fn name(&self) -> String {
         let nullable = if self.nullable { "_nullable" } else { "" };
         format!("_Sort{}", nullable)
     }
@@ -178,12 +178,10 @@ impl TypeGen for SortByAggregates {
         builder.prop("_min", sort);
         builder.prop("_max", sort);
 
-        t::optional(builder.build()?)
-            .named(self.name(context))
-            .build()
+        t::optional(builder.build()?).named(self.name()).build()
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
+    fn name(&self) -> String {
         "_SortByAggregates".to_string()
     }
 }
@@ -256,19 +254,13 @@ impl TypeGen for AggregateSorting {
             .prop("_sum", others)
             .prop("_min", others)
             .prop("_max", others)
-            .named(self.name(context))
+            .named(self.name())
             .build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let name = context
-            .registry
-            .models
-            .get(&self.model_id)
-            .unwrap()
-            .name
-            .clone();
-        format!("_{}_AggregateSorting", name)
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
+        format!("_{model_name}_AggregateSorting")
     }
 }
 

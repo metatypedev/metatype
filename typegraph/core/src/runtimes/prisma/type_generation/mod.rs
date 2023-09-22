@@ -49,7 +49,7 @@ pub struct TypeGenContext {
 
 trait TypeGen {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId>;
-    fn name(&self, context: &TypeGenContext) -> String;
+    fn name(&self) -> String;
 }
 
 pub struct OperationTypes {
@@ -58,10 +58,6 @@ pub struct OperationTypes {
 }
 
 impl TypeGenContext {
-    fn get_model_name(&self, model_id: TypeId) -> &str {
-        &self.registry.models.get(&model_id).unwrap().name
-    }
-
     pub fn find_unique(&mut self, model_id: TypeId) -> Result<OperationTypes> {
         self.registry.manage(model_id)?;
 
@@ -244,7 +240,7 @@ impl TypeGenContext {
         //! Generates a type and caches it, or returns the cached type if it
         //! already exists.
 
-        let type_name = generator.name(self);
+        let type_name = generator.name();
         if let Some(type_id) = self.cache.get(&type_name) {
             Ok(*type_id)
         } else {

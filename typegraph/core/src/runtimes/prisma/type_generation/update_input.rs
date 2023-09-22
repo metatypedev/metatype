@@ -76,13 +76,13 @@ impl TypeGen for UpdateInput {
             builder.prop(key, t::optional(mutation_type).build()?);
         }
 
-        builder.named(self.name(context)).build()
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, context: &super::TypeGenContext) -> String {
+    fn name(&self) -> String {
         format!(
             "_{}_UpdateInput",
-            context.registry.models.get(&self.model_id).unwrap().name
+            self.model_id.type_name().unwrap().unwrap()
         )
     }
 }

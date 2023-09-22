@@ -19,7 +19,7 @@ impl QueryUniqueWhereExpr {
 }
 
 impl TypeGen for QueryUniqueWhereExpr {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         let mut builder = t::struct_();
         let model = self.model_id.as_struct().unwrap();
 
@@ -46,10 +46,10 @@ impl TypeGen for QueryUniqueWhereExpr {
             builder.prop(key, t::optional(inner).build()?);
         }
 
-        builder.named(self.name(context)).build()
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
+    fn name(&self) -> String {
         let name = self.model_id.type_name().unwrap().unwrap();
         format!("QueryUnique{}WhereInput", name)
     }

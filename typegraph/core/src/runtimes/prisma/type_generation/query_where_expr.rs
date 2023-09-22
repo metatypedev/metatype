@@ -24,7 +24,7 @@ impl TypeGen for QueryWhereExpr {
 
         let props = extended_type.as_struct().unwrap().data.props.to_vec();
 
-        let name = self.name(context);
+        let name = self.name();
         let self_ref = t::proxy(&name).build()?;
         let and = t::optional(t::array(self_ref).build()?).build()?;
 
@@ -40,7 +40,7 @@ impl TypeGen for QueryWhereExpr {
         builder.build()
     }
 
-    fn name(&self, _context: &super::TypeGenContext) -> String {
+    fn name(&self) -> String {
         format!(
             "Query{}WhereInput",
             self.model_id.type_name().unwrap().unwrap()

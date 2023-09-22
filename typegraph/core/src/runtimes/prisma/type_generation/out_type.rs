@@ -64,10 +64,10 @@ impl TypeGen for OutType {
             }
         }
 
-        builder.named(self.name(context)).build()
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, _context: &super::TypeGenContext) -> String {
+    fn name(&self) -> String {
         let model_name = self.model_id.type_name().unwrap().unwrap();
         let suffix = if self.skip_rel.is_empty() {
             String::new()

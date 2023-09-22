@@ -51,11 +51,11 @@ impl TypeGen for Where {
             }
         }
 
-        builder.named(self.name(context)).build()
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, context: &super::TypeGenContext) -> String {
-        let model_name = &context.registry.models.get(&self.model_id).unwrap().name;
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         let suffix = if !self.relations { "_norel" } else { "" };
         format!("{model_name}Where{suffix}")
     }

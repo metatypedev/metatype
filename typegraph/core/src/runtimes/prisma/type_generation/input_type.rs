@@ -107,17 +107,11 @@ impl TypeGen for InputType {
             }
         }
 
-        builder.named(self.name(context)).build()
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = context
-            .registry
-            .models
-            .get(&self.model_id)
-            .unwrap()
-            .name
-            .clone();
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         let suffix = if self.skip_rel.is_empty() {
             "".to_string()
         } else {

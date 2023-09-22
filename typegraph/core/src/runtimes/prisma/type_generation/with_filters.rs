@@ -81,10 +81,10 @@ impl TypeGen for WithFilters {
             builder.prop(key, t::optional(generated).build()?);
         }
 
-        builder.named(self.name(context)).build()
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
+    fn name(&self) -> String {
         let suffix = if self.skip_rel { "_norel" } else { "" };
         let suffix2 = if self.with_aggregates {
             "_with_aggregates"
@@ -102,29 +102,29 @@ impl<T: TypeGen> TypeGen for CompleteFilter<T> {
         let inner = context.generate(&self.0)?;
         // TODO and, or ???
         t::optional(t::union([inner, t::struct_().prop("not", inner).build()?]).build()?)
-            .named(self.name(context))
+            .named(self.name())
             .build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        format!("{}_c", self.0.name(context))
+    fn name(&self) -> String {
+        format!("{}_c", self.0.name())
     }
 }
 
 struct BooleanFilter;
 
 impl TypeGen for BooleanFilter {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         t::union([
             t::boolean().build()?,
             t::struct_().prop("equals", t::boolean().build()?).build()?,
             t::struct_().prop("not", t::boolean().build()?).build()?,
         ])
-        .named(self.name(context))
+        .named(self.name())
         .build()
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
+    fn name(&self) -> String {
         "_boolean_filter".to_string()
     }
 }
@@ -163,7 +163,7 @@ impl TypeGen for NumberFilter {
                 t::struct_().prop("_min", base).build()?,
                 t::struct_().prop("_max", base).build()?,
             ])
-            .named(self.name(context))
+            .named(self.name())
             .build()
         } else {
             let type_id = match self.number_type {
@@ -186,12 +186,12 @@ impl TypeGen for NumberFilter {
                 t::struct_().prop("in", array_type_id).build()?,
                 t::struct_().prop("notIn", array_type_id).build()?,
             ])
-            .named(self.name(context))
+            .named(self.name())
             .build()
         }
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
+    fn name(&self) -> String {
         let suffix = if self.with_aggregates {
             "_with_aggregates"
         } else {
@@ -207,7 +207,7 @@ impl TypeGen for NumberFilter {
 struct StringFilter;
 
 impl TypeGen for StringFilter {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         let type_id = t::string().build()?;
         let opt_type_id = t::optional(type_id).build()?;
         let array_type_id = t::array(type_id).build()?;
@@ -234,11 +234,11 @@ impl TypeGen for StringFilter {
                 .min(1)
                 .build()?,
         ])
-        .named(self.name(context))
+        .named(self.name())
         .build()
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
+    fn name(&self) -> String {
         "_string_filter".to_string()
     }
 }
@@ -246,7 +246,7 @@ impl TypeGen for StringFilter {
 struct ScalarListFilter(TypeId);
 
 impl TypeGen for ScalarListFilter {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         if let Type::Optional(_) = self.0.as_type()? {
             return Err("array of optional not supported".to_owned());
         }
@@ -270,11 +270,11 @@ impl TypeGen for ScalarListFilter {
                 .prop("equals", t::array(self.0).build()?)
                 .build()?,
         ])
-        .named(self.name(context))
+        .named(self.name())
         .build()
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
+    fn name(&self) -> String {
         format!("_list_filter_{}", self.0 .0)
     }
 }
@@ -298,7 +298,7 @@ impl TypeGen for WithAggregateFilters {
             .build()
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
+    fn name(&self) -> String {
         // TODO model id??
         let name = self.model_id.type_name().unwrap().unwrap();
         format!("{name}_with_aggregate_filters")
@@ -324,23 +324,12 @@ impl TypeGen for CountFilter {
             .map(|(k, _)| k.to_string())
             .collect();
 
-        gen_aggregate_filter(
-            context,
-            keys,
-            |key| (key, NumberType::Integer),
-            self.name(context),
-        )
+        gen_aggregate_filter(context, keys, |key| (key, NumberType::Integer), self.name())
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model = context
-            .registry
-            .models
-            .get(&self.model_id)
-            .unwrap()
-            .name
-            .clone();
-        format!("_{model}_CountFilter")
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
+        format!("_{model_name}_CountFilter")
     }
 }
 
@@ -374,23 +363,12 @@ impl TypeGen for AvgFilter {
             })
             .collect();
 
-        gen_aggregate_filter(
-            context,
-            keys,
-            |key| (key, NumberType::Float),
-            self.name(context),
-        )
+        gen_aggregate_filter(context, keys, |key| (key, NumberType::Float), self.name())
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model = context
-            .registry
-            .models
-            .get(&self.model_id)
-            .unwrap()
-            .name
-            .clone();
-        format!("_{model}_AvgFilter")
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
+        format!("_{model_name}_AvgFilter")
     }
 }
 
@@ -425,18 +403,12 @@ impl TypeGen for SumFilter {
             })
             .collect();
 
-        gen_aggregate_filter(context, props, |(key, typ)| (key, typ), self.name(context))
+        gen_aggregate_filter(context, props, |(key, typ)| (key, typ), self.name())
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model = context
-            .registry
-            .models
-            .get(&self.model_id)
-            .unwrap()
-            .name
-            .clone();
-        format!("_{model}_SumFilter")
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
+        format!("_{model_name}_SumFilter")
     }
 }
 

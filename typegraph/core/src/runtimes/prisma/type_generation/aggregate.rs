@@ -20,7 +20,7 @@ impl CountOutput {
 }
 
 impl TypeGen for CountOutput {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         let mut builder = t::struct_();
         let opt_int = t::optional(t::integer().build()?).build()?;
         builder.prop("_all", opt_int);
@@ -30,11 +30,11 @@ impl TypeGen for CountOutput {
         }
 
         // TODO union
-        builder.named(self.name(context)).build()
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = &context.registry.models.get(&self.model_id).unwrap().name;
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         format!("_{}_AggrCount", model_name)
     }
 }
@@ -51,7 +51,7 @@ impl NumberAggregateOutput {
 }
 
 impl TypeGen for NumberAggregateOutput {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         let mut builder = t::struct_();
 
         let opt_float = t::optional(t::float().build()?).build()?;
@@ -75,11 +75,11 @@ impl TypeGen for NumberAggregateOutput {
             }
         }
 
-        builder.named(self.name(context)).build()
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = &context.registry.models.get(&self.model_id).unwrap().name;
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         let suffix = if self.avg { "_avg" } else { "" };
         format!("_{model_name}_NumberAgg{suffix}")
     }

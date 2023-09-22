@@ -43,12 +43,12 @@ impl TypeGen for GroupingFields {
         }
 
         t::array(t::string().enum_(fields).build()?)
-            .named(self.name(context))
+            .named(self.name())
             .build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = context.get_model_name(self.model_id);
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         format!("_{}_GroupingFields", model_name)
     }
 }
@@ -70,7 +70,7 @@ impl TypeGen for Having {
         let extended_type = context
             .generate(&WithFilters::new(where_type, self.model_id, true).with_aggregates())?;
 
-        let name = self.name(context);
+        let name = self.name();
         let self_ref = t::proxy(&name).build()?;
 
         t::union([
@@ -87,8 +87,8 @@ impl TypeGen for Having {
         .build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = context.get_model_name(self.model_id);
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         format!("_{}_Having", model_name)
     }
 }
@@ -130,12 +130,12 @@ impl TypeGen for GroupByResult {
                 )
                 .build()?,
         )
-        .named(self.name(context))
+        .named(self.name())
         .build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = context.get_model_name(self.model_id);
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         format!("_{}_GroupByResult", model_name)
     }
 }
@@ -155,7 +155,7 @@ impl SelectNumbers {
 }
 
 impl TypeGen for SelectNumbers {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         let mut builder = t::struct_();
         let opt_float = t::optional(t::float().build()?).build()?;
         let for_int = if self.promote_to_float {
@@ -176,11 +176,11 @@ impl TypeGen for SelectNumbers {
             }
         }
 
-        builder.named(self.name(context)).build()
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = context.get_model_name(self.model_id);
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         let suffix = if self.promote_to_float { "_1" } else { "" };
         format!("_{model_name}_SelectNumbers_{suffix}")
     }

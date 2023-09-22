@@ -71,10 +71,10 @@ impl TypeGen for WithNestedCount {
             builder.prop("_count", count.build()?);
         }
 
-        builder.named(self.name(context)).build()
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
+    fn name(&self) -> String {
         let model_name = self.model_id.type_name().unwrap().unwrap();
         let suffix = if self.skip.is_empty() {
             "".to_string()
