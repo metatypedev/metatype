@@ -3,7 +3,7 @@
 
 import { Runtime } from "../runtimes/mod.ts";
 import { runtimes } from "../wit.ts";
-import { Func, Typedef } from "../types.ts";
+import { func, Struct, Typedef } from "../types.ts";
 import {
   TemporalOperationData,
   TemporalOperationType,
@@ -33,8 +33,15 @@ export class TemporalRuntime extends Runtime {
       funcArg: funcArg?._id,
       operation,
     } as TemporalOperationData;
-    const id = runtimes.generateTemporalOperation(this._id, data);
-    return new Typedef(id, {}) as Func;
+    const { inp, out, mat } = runtimes.generateTemporalOperation(
+      this._id,
+      data,
+    );
+    return func(
+      new Typedef(inp, {}) as Struct<{ [key: string]: Typedef }>,
+      new Typedef(out, {}),
+      { _id: mat },
+    );
   }
 
   startWorkflow(workflowType: string, arg: Typedef) {

@@ -372,6 +372,7 @@ impl Default for TypeFunc {
     }
 }
 
+#[allow(dead_code)]
 pub fn func(inp: TypeId, out: TypeId, mat: u32) -> Result<TypeId> {
     FuncBuilder {
         data: TypeFunc {

@@ -12,8 +12,7 @@ pub mod wasi;
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::global_store::{with_store, with_store_mut, Store};
 use crate::runtimes::prisma::with_prisma_runtime;
-use crate::t::{self};
-use crate::wit::core::{RuntimeId, TypeId as CoreTypeId};
+use crate::wit::core::{RuntimeId, TypeFunc, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
     MaterializerHttpRequest, PrismaLinkData, PrismaRuntimeData, RandomRuntimeData,
@@ -154,7 +153,11 @@ macro_rules! prisma_op {
         let mat_id =
             with_store_mut(|s| s.register_materializer(Materializer::prisma($rt, mat, $effect)));
 
-        Ok(t::func(types.input, types.output, mat_id)?.into())
+        Ok(TypeFunc {
+            inp: types.input.into(),
+            out: types.output.into(),
+            mat: mat_id,
+        })
     }};
 
     ( $rt:expr, $model:expr, $fn:ident, $name:expr ) => {
@@ -302,31 +305,31 @@ impl wit::Runtimes for crate::Lib {
         }))
     }
 
-    fn prisma_find_unique(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+    fn prisma_find_unique(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
         prisma_op!(runtime, model, find_unique, "findUnique")
     }
 
-    fn prisma_find_many(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+    fn prisma_find_many(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
         prisma_op!(runtime, model, find_many, "findMany")
     }
 
-    fn prisma_find_first(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+    fn prisma_find_first(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
         prisma_op!(runtime, model, find_first, "findFirst")
     }
 
-    fn prisma_aggregate(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+    fn prisma_aggregate(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
         prisma_op!(runtime, model, aggregate, "aggregate")
     }
 
-    fn prisma_group_by(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+    fn prisma_group_by(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
         prisma_op!(runtime, model, group_by, "groupBy")
     }
 
-    fn prisma_count(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+    fn prisma_count(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
         prisma_op!(runtime, model, count, "count")
     }
 
-    fn prisma_create_one(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+    fn prisma_create_one(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -336,7 +339,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_create_many(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+    fn prisma_create_many(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -346,7 +349,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_update_one(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+    fn prisma_update_one(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -356,7 +359,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_update_many(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+    fn prisma_update_many(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -366,7 +369,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_upsert_one(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+    fn prisma_upsert_one(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -376,7 +379,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_delete_one(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+    fn prisma_delete_one(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -386,7 +389,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_delete_many(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+    fn prisma_delete_many(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -422,7 +425,7 @@ impl wit::Runtimes for crate::Lib {
     fn generate_temporal_operation(
         runtime: RuntimeId,
         data: TemporalOperationData,
-    ) -> Result<CoreTypeId, wit::Error> {
+    ) -> Result<TypeFunc, wit::Error> {
         temporal_operation(runtime, data)
     }
 }

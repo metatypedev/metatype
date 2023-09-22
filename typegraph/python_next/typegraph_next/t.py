@@ -3,6 +3,7 @@
 
 import json
 from typing import Dict, List, Optional, Tuple, Union
+from typegraph_next.gen.exports.runtimes import EffectNone
 from typegraph_next.utils import serialize_record_values, build_apply_data
 
 from typing_extensions import Self
@@ -517,6 +518,12 @@ class func(typedef):
             raise Exception(apply_id.value)
 
         return func(typedef(id=apply_id.value), self.out, self.mat)
+
+    def from_type_func(data: TypeFunc) -> "func":
+        # Note: effect is a just placeholder
+        # in the deno frontend, we do not have to fill the effect attribute on materializers
+        mat = Materializer(id=data.mat, effect=EffectNone())
+        return func(typedef(id=data.inp), typedef(id=data.out), mat)
 
 
 def gen(out: typedef, mat: Materializer):
