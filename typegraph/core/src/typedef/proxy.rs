@@ -7,7 +7,7 @@ use errors::Result;
 use crate::{
     conversion::types::TypeConversion,
     errors,
-    global_store::{with_store, Store},
+    global_store::Store,
     typegraph::TypegraphContext,
     types::{Proxy, TypeData, TypeId, WrapperTypeData},
     wit::core::TypeProxy,
@@ -15,10 +15,8 @@ use crate::{
 
 impl TypeConversion for Proxy {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
-        with_store(|s| -> Result<_> {
-            let tpe = s.resolve_proxy(self.id).and_then(|id| s.get_type(id))?;
-            tpe.convert(ctx, runtime_id)
-        })
+        let tpe = self.id.resolve_proxy()?.as_type()?;
+        tpe.convert(ctx, runtime_id)
     }
 }
 
@@ -33,12 +31,12 @@ impl TypeData for TypeProxy {
 }
 
 impl WrapperTypeData for TypeProxy {
-    fn resolve(&self, store: &Store) -> Option<TypeId> {
-        store.get_type_by_name(&self.name)
+    fn resolve(&self) -> Option<TypeId> {
+        Store::get_type_by_name(&self.name)
     }
 
-    fn try_resolve(&self, store: &Store) -> Result<TypeId> {
-        self.resolve(store)
+    fn try_resolve(&self) -> Result<TypeId> {
+        self.resolve()
             .ok_or_else(|| format!("could not resolve proxy '{}'", self.name))
     }
 }

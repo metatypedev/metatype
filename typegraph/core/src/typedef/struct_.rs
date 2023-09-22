@@ -8,10 +8,9 @@ use indexmap::IndexMap;
 use crate::{
     conversion::types::{gen_base, TypeConversion},
     errors,
-    global_store::with_store,
     typegraph::TypegraphContext,
-    types::{Struct, TypeData},
-    wit::core::{TypeId, TypeStruct},
+    types::{Struct, TypeData, TypeId},
+    wit::core::TypeStruct,
 };
 
 impl TypeStruct {
@@ -21,6 +20,7 @@ impl TypeStruct {
             .filter(|(k, _)| k == key)
             .map(|(_, v)| *v)
             .next()
+            .map(|id| id.into())
     }
 }
 
@@ -38,19 +38,21 @@ impl TypeConversion for Struct {
             .build(),
             data: ObjectTypeData {
                 properties: self
-                    .data
-                    .props
-                    .iter()
-                    .map(|(name, type_id)| -> Result<(String, TypeId)> {
-                        with_store(|s| -> Result<_> {
-                            let id = s.resolve_proxy((*type_id).into())?;
-                            Ok((name.clone(), ctx.register_type(s, id, runtime_id)?.into()))
-                        })
+                    .iter_props()
+                    .map(|(name, type_id)| -> Result<(String, u32)> {
+                        let id = type_id.resolve_proxy()?;
+                        Ok((name.to_string(), ctx.register_type(id, runtime_id)?.into()))
                     })
                     .collect::<Result<IndexMap<_, _>>>()?,
                 required: Vec::new(),
             },
         })
+    }
+}
+
+impl Struct {
+    pub fn iter_props(&self) -> impl Iterator<Item = (&str, TypeId)> {
+        self.data.props.iter().map(|(k, v)| (k.as_str(), v.into()))
     }
 }
 
@@ -70,6 +72,6 @@ impl TypeStruct {
     pub fn get_prop_type(&self, name: &str) -> Option<TypeId> {
         self.props
             .iter()
-            .find_map(|(n, t)| if n == name { Some(*t) } else { None })
+            .find_map(|(n, t)| if n == name { Some(t.into()) } else { None })
     }
 }

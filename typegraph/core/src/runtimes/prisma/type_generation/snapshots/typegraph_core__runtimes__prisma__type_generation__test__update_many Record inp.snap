@@ -16,8 +16,7 @@ root: struct #60
 │  │        └─ [set]: string #1
 │  └─ [age]: optional #16
 │     └─ item: union #15
-│        ├─ variant_0: optional #3
-│        │  └─ item: integer #2
+│        ├─ variant_0: integer #2
 │        ├─ variant_1: struct #11
 │        │  └─ [set]: optional #3
 │        │     └─ item: integer #2

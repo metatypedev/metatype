@@ -3,10 +3,10 @@
 
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::{gen_base, TypeConversion};
-use crate::global_store::{with_store, with_store_mut};
 use crate::host::abi;
-use crate::types::{Type, TypeFun, TypeId, WithPolicy};
+use crate::types::{Type, TypeFun, TypeId};
 use crate::validation::validate_name;
+use crate::Lib;
 use crate::{
     errors::{self, Result},
     global_store::Store,
@@ -25,7 +25,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use crate::wit::core::{
-    Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypePolicy,
+    Core, Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypePolicy,
     TypegraphInitParams,
 };
 
@@ -135,7 +135,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     };
 
     // register the deno runtime
-    let default_runtime_idx = with_store(|s| ctx.register_runtime(s, s.get_deno_runtime()))?;
+    let default_runtime_idx = ctx.register_runtime(Store::get_deno_runtime())?;
 
     ctx.types.push(Some(TypeNode::Object {
         base: gen_base(params.name, None, default_runtime_idx).build(),
@@ -186,53 +186,25 @@ pub fn expose(
     namespace: Vec<String>,
     default_policy: Option<Vec<PolicySpec>>,
 ) -> Result<()> {
-    let fns = with_store_mut(move |s| {
-        fns.into_iter()
-            .map(|(name, fn_id)| -> Result<_> {
-                let fn_id = s.resolve_proxy(fn_id)?;
+    let fns = fns
+        .into_iter()
+        .map(|(name, fn_id)| -> Result<_> {
+            let fn_id = fn_id.resolve_proxy()?;
 
-                let has_policy = {
-                    let tpe = s.get_type(fn_id)?;
-                    match tpe {
-                        Type::WithPolicy(typ) => {
-                            let tpe = s.get_type(typ.data.tpe.into())?;
-                            match tpe {
-                                Type::Func(_) => {}
-                                _ => {
-                                    return Err(errors::invalid_export_type(
-                                        &name,
-                                        &tpe.to_string(),
-                                    ))
-                                }
-                            }
-                            true
-                        }
-                        Type::Func(_) => false,
-                        _ => return Err(errors::invalid_export_type(&name, &tpe.to_string())),
-                    }
-                };
+            let has_policy = !fn_id.attrs()?.policy_chain.is_empty();
 
-                Ok((
-                    name,
-                    default_policy
-                        .as_ref()
-                        .filter(|_| !has_policy)
-                        .map(|p| {
-                            s.add_type(|id| {
-                                Type::WithPolicy(WithPolicy {
-                                    id,
-                                    data: TypePolicy {
-                                        tpe: fn_id.into(),
-                                        chain: p.clone(),
-                                    },
-                                })
-                            })
-                        })
-                        .unwrap_or(fn_id),
-                ))
-            })
-            .collect::<Result<Vec<_>>>()
-    })?;
+            let fn_id: TypeId = match (has_policy, default_policy.as_ref()) {
+                (false, Some(default_policy)) => Lib::with_policy(TypePolicy {
+                    tpe: fn_id.into(),
+                    chain: default_policy.to_vec(),
+                })?
+                .into(),
+                _ => fn_id,
+            };
+
+            Ok((name, fn_id))
+        })
+        .collect::<Result<Vec<_>>>()?;
 
     with_tg_mut(|ctx| -> Result<()> {
         if !namespace.is_empty() {
@@ -240,19 +212,14 @@ pub fn expose(
         }
 
         let mut root_type = ctx.types.get_mut(0).unwrap().take().unwrap();
-        let res = with_store(|s| ctx.expose_on(&mut root_type, s, fns));
+        let res = ctx.expose_on(&mut root_type, fns);
         ctx.types[0] = Some(root_type);
         res
     })?
 }
 
 impl TypegraphContext {
-    fn expose_on(
-        &mut self,
-        target: &mut TypeNode,
-        s: &Store,
-        fns: Vec<(String, TypeId)>,
-    ) -> Result<()> {
+    fn expose_on(&mut self, target: &mut TypeNode, fns: Vec<(String, TypeId)>) -> Result<()> {
         let root = match target {
             TypeNode::Object { ref mut data, .. } => data,
             _ => panic!("expected a struct as root type"),
@@ -261,8 +228,8 @@ impl TypegraphContext {
             if !validate_name(&name) {
                 return Err(errors::invalid_export_name(&name));
             }
-            let type_id = s.resolve_proxy(type_id)?;
-            let tpe = s.get_attributes(type_id)?.concrete_type.as_type(s)?;
+            let type_id = type_id.resolve_proxy()?;
+            let tpe = type_id.attrs()?.concrete_type.as_type()?;
             if !matches!(tpe, Type::Func(_)) {
                 return Err(errors::invalid_export_type(&name, &tpe.to_string()));
             }
@@ -273,7 +240,7 @@ impl TypegraphContext {
 
             root.required.push(name.clone());
             root.properties
-                .insert(name, self.register_type(s, type_id, None)?.into());
+                .insert(name, self.register_type(type_id, None)?.into());
         }
 
         Ok(())
@@ -281,7 +248,6 @@ impl TypegraphContext {
 
     pub fn register_type(
         &mut self,
-        store: &Store,
         id: TypeId,
         runtime_id: Option<u32>,
     ) -> Result<TypeId, TgError> {
@@ -296,7 +262,7 @@ impl TypegraphContext {
                 e.insert(idx as u32);
                 self.types.push(None);
 
-                let tpe = store.get_type(id)?;
+                let tpe = id.as_type()?;
 
                 let type_node = tpe.convert(self, runtime_id)?;
 
@@ -310,7 +276,6 @@ impl TypegraphContext {
     // TODO
     pub fn register_materializer(
         &mut self,
-        store: &Store,
         id: u32,
     ) -> Result<(MaterializerId, RuntimeId), TgError> {
         match self.mapping.materializers.entry(id) {
@@ -318,7 +283,7 @@ impl TypegraphContext {
                 let idx = self.materializers.len();
                 e.insert(idx as u32);
                 self.materializers.push(None);
-                let converted = convert_materializer(self, store, store.get_materializer(id)?)?;
+                let converted = convert_materializer(self, Store::get_materializer(id)?)?;
                 let runtime_id = converted.runtime;
                 self.materializers[idx] = Some(converted);
                 Ok((idx as MaterializerId, runtime_id as RuntimeId))
@@ -370,18 +335,18 @@ impl TypegraphContext {
         if let Some(idx) = self.mapping.policies.get(&id) {
             Ok(*idx)
         } else {
-            let converted = with_store(|s| s.get_policy(id)?.convert(self))?;
+            let converted = Store::get_policy(id)?.convert(self)?;
             let idx = self.policies.len();
             self.policies.push(converted);
             Ok(idx as PolicyId)
         }
     }
 
-    pub fn register_runtime(&mut self, store: &Store, id: u32) -> Result<RuntimeId, TgError> {
+    pub fn register_runtime(&mut self, id: u32) -> Result<RuntimeId, TgError> {
         if let Some(idx) = self.mapping.runtimes.get(&id) {
             Ok(*idx)
         } else {
-            let converted = convert_runtime(self, store, store.get_runtime(id)?)?;
+            let converted = convert_runtime(self, Store::get_runtime(id)?)?;
             let idx = self.runtimes.len();
             self.mapping.runtimes.insert(id, idx as u32);
             match converted {
@@ -390,7 +355,7 @@ impl TypegraphContext {
                     // we allocate first a slot in the array, as the lazy conversion might register
                     // other runtimes
                     self.runtimes.push(TGRuntime::Unknown(Default::default()));
-                    let rt = lazy(id, idx as u32, store, self)?;
+                    let rt = lazy(id, idx as u32, self)?;
                     self.runtimes[idx] = rt;
                 }
             };
@@ -403,12 +368,10 @@ impl TypegraphContext {
     }
 
     pub fn get_correct_id(&self, id: TypeId) -> Result<u32> {
-        with_store(|s| {
-            let id = s.resolve_proxy(id)?;
-            self.find_type_index_by_store_id(id).ok_or(format!(
-                "unable to find type for store id {}",
-                u32::from(id)
-            ))
-        })
+        let id = id.resolve_proxy()?;
+        self.find_type_index_by_store_id(id).ok_or(format!(
+            "unable to find type for store id {}",
+            u32::from(id)
+        ))
     }
 }

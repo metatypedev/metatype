@@ -3,7 +3,6 @@
 
 use crate::{
     errors::Result,
-    global_store::with_store,
     t::{self, ConcreteTypeBuilder, TypeBuilder},
     types::{Type, TypeId},
 };
@@ -26,76 +25,37 @@ impl Where {
 
 impl TypeGen for Where {
     fn generate(&self, context: &mut super::TypeGenContext) -> Result<TypeId> {
-        struct Prop {
-            key: String,
-            ty: TypeId,
-            recurse: bool,
-            relations: bool,
-        }
-        let mut props = vec![];
+        let mut builder = t::struct_();
 
-        with_store(|s| -> Result<()> {
-            for (k, ty) in s.type_as_struct(self.model_id).unwrap().data.props.iter() {
-                if let Some(rel) = context.registry.find_relationship_on(self.model_id, k) {
-                    if !self.relations {
-                        continue;
-                    }
-                    let model = rel.get_opposite_of(self.model_id, k).unwrap();
-                    props.push(Prop {
-                        key: k.to_string(),
-                        ty: model.model_type,
-                        recurse: true,
-                        relations: false,
-                    });
-                } else {
-                    let attrs = s.get_attributes((*ty).into())?;
-                    match attrs.concrete_type.as_type(s)? {
-                        // different runtime
-                        Type::Func(_) => continue,
-                        Type::Optional(ty) => {
-                            props.push(Prop {
-                                key: k.to_string(),
-                                ty: ty.data.of.into(),
-                                recurse: false,
-                                relations: false,
-                            });
-                        }
-                        _ => {
-                            props.push(Prop {
-                                key: k.to_string(),
-                                ty: (*ty).into(),
-                                recurse: false,
-                                relations: false,
-                            });
-                        }
+        for (key, type_id) in self.model_id.as_struct().unwrap().iter_props() {
+            if let Some(rel) = context.registry.find_relationship_on(self.model_id, key) {
+                if !self.relations {
+                    continue;
+                }
+                let model = rel.get_opposite_of(self.model_id, key).unwrap();
+
+                let inner = context.generate(&Where {
+                    model_id: model.model_type,
+                    relations: false,
+                })?;
+                builder.prop(key, t::optional(inner).build()?);
+            } else {
+                let non_optional = type_id.non_optional_concrete_type()?;
+                match non_optional.as_type()? {
+                    Type::Optional(_) => unreachable!(),
+                    Type::Func(_) => continue,
+                    _ => {
+                        builder.prop(key, t::optional(non_optional).build()?);
                     }
                 }
             }
-
-            Ok(())
-        })?;
-
-        let mut st = t::struct_();
-        for prop in props.into_iter() {
-            if prop.recurse {
-                st.prop(
-                    prop.key,
-                    t::optional(context.generate(&Where {
-                        model_id: prop.ty,
-                        relations: prop.relations,
-                    })?)
-                    .build()?,
-                );
-            } else {
-                st.prop(prop.key, t::optional(prop.ty).build()?);
-            }
         }
 
-        st.named(self.name(context)).build()
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, context: &super::TypeGenContext) -> String {
-        let model_name = &context.registry.models.get(&self.model_id).unwrap().name;
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         let suffix = if !self.relations { "_norel" } else { "" };
         format!("{model_name}Where{suffix}")
     }

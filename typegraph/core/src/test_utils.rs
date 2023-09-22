@@ -66,10 +66,7 @@ pub mod tree {
 
     use ptree::{Style, TreeItem};
 
-    use crate::{
-        global_store::with_store,
-        types::{Type, TypeFun, TypeId},
-    };
+    use crate::types::{Type, TypeFun, TypeId};
 
     #[derive(Clone)]
     struct Node {
@@ -95,38 +92,33 @@ pub mod tree {
         type Child = Self;
 
         fn write_self<W: Write>(&self, f: &mut W, _style: &Style) -> std::io::Result<()> {
-            let (name, title) = with_store(|s| {
-                let ty = s.get_type(self.type_id).unwrap();
-                match ty {
-                    Type::Proxy(p) => (format!("&{}", p.data.name), None),
-                    _ => (
-                        ty.get_data().variant_name(),
-                        ty.get_base().map(|b| b.name.clone()).flatten(),
-                    ),
-                }
-            });
+            let ty = self.type_id.as_type().unwrap();
+            let (name, title) = match &ty {
+                Type::Proxy(p) => (format!("&{}", p.data.name), None),
+                _ => (
+                    ty.get_data().variant_name(),
+                    ty.get_base().map(|b| b.name.clone()).flatten(),
+                ),
+            };
 
-            let enum_variants: Option<Vec<String>> = with_store(|s| {
-                let ty = s.get_type(self.type_id).unwrap();
-                match ty {
-                    Type::Integer(typ) => typ
-                        .data
-                        .enumeration
-                        .clone()
-                        .map(|v| v.iter().map(|v| v.to_string()).collect()),
-                    Type::Float(typ) => typ
-                        .data
-                        .enumeration
-                        .clone()
-                        .map(|v| v.iter().map(|v| v.to_string()).collect()),
-                    Type::String(typ) => typ
-                        .data
-                        .enumeration
-                        .clone()
-                        .map(|v| v.iter().map(|v| format!("'{v}'")).collect()),
-                    _ => None,
-                }
-            });
+            let enum_variants: Option<Vec<String>> = match ty {
+                Type::Integer(typ) => typ
+                    .data
+                    .enumeration
+                    .clone()
+                    .map(|v| v.iter().map(|v| v.to_string()).collect()),
+                Type::Float(typ) => typ
+                    .data
+                    .enumeration
+                    .clone()
+                    .map(|v| v.iter().map(|v| v.to_string()).collect()),
+                Type::String(typ) => typ
+                    .data
+                    .enumeration
+                    .clone()
+                    .map(|v| v.iter().map(|v| format!("'{v}'")).collect()),
+                _ => None,
+            };
 
             let enum_variants = enum_variants
                 .map(|v| format!(" enum{{ {} }}", v.join(", ")))
@@ -144,97 +136,95 @@ pub mod tree {
         }
 
         fn children(&self) -> Cow<[Self::Child]> {
-            with_store(|s| {
-                if self
-                    .parents
-                    .iter()
-                    .find(|&&parent_id| parent_id == self.type_id)
-                    .is_some()
-                {
-                    Cow::Owned(vec![])
-                } else {
-                    let parents = {
-                        let mut p = (*self.parents).clone();
-                        p.push(self.type_id);
-                        Rc::new(p)
-                    };
+            if self
+                .parents
+                .iter()
+                .find(|&&parent_id| parent_id == self.type_id)
+                .is_some()
+            {
+                Cow::Owned(vec![])
+            } else {
+                let parents = {
+                    let mut p = (*self.parents).clone();
+                    p.push(self.type_id);
+                    Rc::new(p)
+                };
 
-                    match s.get_type(self.type_id).unwrap() {
-                        Type::Proxy(_)
-                        | Type::Integer(_)
-                        | Type::Float(_)
-                        | Type::String(_)
-                        | Type::Boolean(_) => Cow::Owned(vec![]),
-                        Type::Struct(ty) => Cow::Owned(
-                            ty.data
-                                .props
-                                .iter()
-                                .map(|(k, id)| Node {
-                                    label: format!("[{k}]"),
-                                    type_id: (*id).into(),
-                                    parents: Rc::clone(&parents),
-                                })
-                                .collect(),
-                        ),
-                        Type::Func(ty) => Cow::Owned(vec![
-                            Node {
-                                label: "input".to_string(),
-                                type_id: ty.data.inp.into(),
+                match self.type_id.as_type().unwrap() {
+                    Type::Proxy(_)
+                    | Type::Integer(_)
+                    | Type::Float(_)
+                    | Type::String(_)
+                    | Type::Boolean(_) => Cow::Owned(vec![]),
+                    Type::Struct(ty) => Cow::Owned(
+                        ty.data
+                            .props
+                            .iter()
+                            .map(|(k, id)| Node {
+                                label: format!("[{k}]"),
+                                type_id: (*id).into(),
                                 parents: Rc::clone(&parents),
-                            },
-                            Node {
-                                label: "output".to_string(),
-                                type_id: ty.data.out.into(),
-                                parents: parents,
-                            },
-                        ]),
-                        Type::Array(ty) => Cow::Owned(vec![Node {
-                            label: "item".to_string(),
-                            type_id: ty.data.of.into(),
+                            })
+                            .collect(),
+                    ),
+                    Type::Func(ty) => Cow::Owned(vec![
+                        Node {
+                            label: "input".to_string(),
+                            type_id: ty.data.inp.into(),
+                            parents: Rc::clone(&parents),
+                        },
+                        Node {
+                            label: "output".to_string(),
+                            type_id: ty.data.out.into(),
                             parents: parents,
-                        }]),
-                        Type::Optional(ty) => Cow::Owned(vec![Node {
-                            label: "item".to_string(),
-                            type_id: ty.data.of.into(),
-                            parents: parents,
-                        }]),
-                        Type::Union(ty) => Cow::Owned(
-                            ty.data
-                                .variants
-                                .iter()
-                                .enumerate()
-                                .map(|(i, id)| Node {
-                                    label: format!("variant_{}", i),
-                                    type_id: (*id).into(),
-                                    parents: Rc::clone(&parents),
-                                })
-                                .collect(),
-                        ),
-                        Type::Either(ty) => Cow::Owned(
-                            ty.data
-                                .variants
-                                .iter()
-                                .enumerate()
-                                .map(|(i, id)| Node {
-                                    label: format!("variant_{}", i),
-                                    type_id: (*id).into(),
-                                    parents: Rc::clone(&parents),
-                                })
-                                .collect(),
-                        ),
-                        Type::WithPolicy(ty) => Cow::Owned(vec![Node {
-                            label: "item".to_string(),
-                            type_id: ty.data.tpe.into(),
-                            parents: parents,
-                        }]),
-                        Type::WithInjection(ty) => Cow::Owned(vec![Node {
-                            label: "item".to_string(),
-                            type_id: ty.data.tpe.into(),
-                            parents: parents,
-                        }]),
-                    }
+                        },
+                    ]),
+                    Type::Array(ty) => Cow::Owned(vec![Node {
+                        label: "item".to_string(),
+                        type_id: ty.data.of.into(),
+                        parents: parents,
+                    }]),
+                    Type::Optional(ty) => Cow::Owned(vec![Node {
+                        label: "item".to_string(),
+                        type_id: ty.data.of.into(),
+                        parents: parents,
+                    }]),
+                    Type::Union(ty) => Cow::Owned(
+                        ty.data
+                            .variants
+                            .iter()
+                            .enumerate()
+                            .map(|(i, id)| Node {
+                                label: format!("variant_{}", i),
+                                type_id: (*id).into(),
+                                parents: Rc::clone(&parents),
+                            })
+                            .collect(),
+                    ),
+                    Type::Either(ty) => Cow::Owned(
+                        ty.data
+                            .variants
+                            .iter()
+                            .enumerate()
+                            .map(|(i, id)| Node {
+                                label: format!("variant_{}", i),
+                                type_id: (*id).into(),
+                                parents: Rc::clone(&parents),
+                            })
+                            .collect(),
+                    ),
+                    Type::WithPolicy(ty) => Cow::Owned(vec![Node {
+                        label: "item".to_string(),
+                        type_id: ty.data.tpe.into(),
+                        parents: parents,
+                    }]),
+                    Type::WithInjection(ty) => Cow::Owned(vec![Node {
+                        label: "item".to_string(),
+                        type_id: ty.data.tpe.into(),
+                        parents: parents,
+                    }]),
                 }
-            })
+            }
         }
     }
 }

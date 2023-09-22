@@ -3,12 +3,11 @@
 
 use std::collections::HashMap;
 
-use crate::{
-    errors::Result,
-    global_store::with_store,
-    wit::core::{Core, TypeBase, TypeId, TypeStruct, TypeWithInjection},
-    Lib,
-};
+use crate::errors::Result;
+use crate::global_store::Store;
+use crate::types::TypeId;
+use crate::wit::core::{Core, TypeBase, TypeId as CoreTypeId, TypeStruct, TypeWithInjection};
+use crate::Lib;
 
 mod apply;
 
@@ -16,16 +15,11 @@ fn find_missing_props(
     supertype_id: TypeId,
     new_props: &Vec<(String, u32)>,
 ) -> Result<Vec<(String, u32)>> {
-    let old_props = with_store(|s| -> Result<Vec<(String, u32)>> {
-        let tpe = s.get_type(supertype_id.into())?;
-        match tpe {
-            crate::types::Type::Struct(t) => Ok(t.data.props.clone()),
-            _ => Err(format!(
-                "supertype (store id {}) is not a struct",
-                supertype_id
-            )),
-        }
-    })?;
+    let old_props = supertype_id
+        .as_struct()?
+        .iter_props()
+        .map(|(k, v)| (k.to_string(), v))
+        .collect::<Vec<_>>();
 
     let mut missing_props = vec![];
     for (k_old, v_old) in old_props {
@@ -37,7 +31,7 @@ fn find_missing_props(
             }
         }
         if is_missing {
-            missing_props.push((k_old, v_old));
+            missing_props.push((k_old, v_old.into()));
         }
     }
 
@@ -45,7 +39,7 @@ fn find_missing_props(
 }
 
 impl crate::wit::utils::Utils for crate::Lib {
-    fn gen_applyb(supertype_id: TypeId, apply: crate::wit::utils::Apply) -> Result<TypeId> {
+    fn gen_applyb(supertype_id: CoreTypeId, apply: crate::wit::utils::Apply) -> Result<CoreTypeId> {
         if apply.paths.is_empty() {
             return Err("apply object is empty".to_string());
         }
@@ -64,14 +58,11 @@ impl crate::wit::utils::Utils for crate::Lib {
             if item.node.is_leaf() {
                 let path_infos = item.node.path_infos.clone();
                 let apply_value = path_infos.value;
-                let id = with_store(|s| -> Result<TypeId> {
-                    let id = s.get_type_by_path(supertype_id.into(), &path_infos.path)?.1;
-                    Ok(id.into())
-                })?;
+                let id = Store::get_type_by_path(supertype_id.into(), &path_infos.path)?.1;
 
                 if apply_value.inherit && apply_value.payload.is_none() {
                     // if inherit and no injection, keep original id
-                    idx_to_store_id_cache.insert(item.index, (item.node.name.clone(), id));
+                    idx_to_store_id_cache.insert(item.index, (item.node.name.clone(), id.into()));
                 } else {
                     // has injection
                     let payload = apply_value.payload.ok_or(format!(
@@ -79,7 +70,7 @@ impl crate::wit::utils::Utils for crate::Lib {
                         path_infos.path.join(".")
                     ))?;
                     let new_id = Lib::with_injection(TypeWithInjection {
-                        tpe: id,
+                        tpe: id.into(),
                         injection: payload,
                     })?;
 
@@ -103,7 +94,7 @@ impl crate::wit::utils::Utils for crate::Lib {
 
                 if item.parent_index.is_none() {
                     // if root, props g.inherit() should be implicit
-                    let missing_props = find_missing_props(supertype_id, &props)?;
+                    let missing_props = find_missing_props(supertype_id.into(), &props)?;
                     for pair in missing_props {
                         props.push(pair);
                     }

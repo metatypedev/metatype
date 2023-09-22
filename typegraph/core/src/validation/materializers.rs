@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::runtimes::{DenoMaterializer, MaterializerData, Runtime};
-use crate::types::Type;
+use crate::types::{Type, TypeId};
 use crate::wit::core::TypeFunc;
 use crate::Result;
 use crate::{global_store::Store, runtimes::Materializer};
@@ -11,11 +11,11 @@ use super::errors;
 use super::types::utils as type_utils;
 
 impl Materializer {
-    pub fn validate(&self, s: &Store, func: &TypeFunc) -> Result<()> {
-        let runtime = s.get_runtime(self.runtime_id)?;
+    pub fn validate(&self, func: &TypeFunc) -> Result<()> {
+        let runtime = Store::get_runtime(self.runtime_id)?;
         match (runtime, &self.data) {
             (Runtime::Deno, MaterializerData::Deno(mat_data)) => {
-                Self::validate_deno_mat(s, mat_data, func)
+                Self::validate_deno_mat(mat_data, func)
             }
             // TODO
             // _ => Err(errors::invalid_runtime_type("", "")),
@@ -23,28 +23,28 @@ impl Materializer {
         }
     }
 
-    fn validate_deno_mat(s: &Store, mat_data: &DenoMaterializer, func: &TypeFunc) -> Result<()> {
+    fn validate_deno_mat(mat_data: &DenoMaterializer, func: &TypeFunc) -> Result<()> {
         match mat_data {
             DenoMaterializer::Predefined(predef) => {
                 match predef.name.as_str() {
                     "identity" => {
-                        if !type_utils::is_equal(s, func.inp.into(), func.out.into())? {
+                        if !type_utils::is_equal(func.inp.into(), func.out.into())? {
                             return Err(errors::invalid_output_type_predefined(
                                 &predef.name,
-                                &s.get_type_repr(func.inp.into())?,
-                                &s.get_type_repr(func.out.into())?,
+                                &TypeId(func.inp).repr()?,
+                                &TypeId(func.out).repr()?,
                             ));
                         }
                     }
 
                     "true" | "false" => {
-                        if let Ok(out_id) = s.resolve_proxy(func.out.into()) {
-                            let out_type = s.get_type(out_id)?;
+                        if let Ok(out_id) = TypeId(func.out).resolve_proxy() {
+                            let out_type = out_id.as_type()?;
                             let Type::Boolean(_) = out_type else {
                                 return Err(errors::invalid_output_type_predefined(
                                     &predef.name,
                                     "bool",
-                                    &s.get_type_repr(func.out.into())?,
+                                    &TypeId(func.out).repr()?,
                                 ));
                             };
                         }

@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::global_store::with_store;
 use crate::runtimes::prisma::errors;
 use crate::runtimes::prisma::type_utils::as_relationship_target;
 use crate::types::{TypeFun, TypeId};
@@ -32,79 +31,69 @@ impl Candidate {
         type_id: TypeId,
         source_candidate: Option<&Candidate>,
     ) -> Result<Option<Candidate>> {
-        with_store(|s| -> Result<_> {
-            let attrs = s.get_attributes(type_id)?;
+        let attrs = type_id.attrs()?;
 
-            as_relationship_target(attrs.concrete_type, None)?
-                .map(|(target_type, cardinality)| -> Result<_> {
-                    if let Some(source_candidate) = source_candidate {
-                        if source_candidate.source_model != target_type {
+        as_relationship_target(attrs.concrete_type, None)?
+            .map(|(target_type, cardinality)| -> Result<_> {
+                if let Some(source_candidate) = source_candidate {
+                    if source_candidate.source_model != target_type {
+                        return Ok(None);
+                    }
+                    if source_candidate.model_type == target_type {
+                        // self reference
+                        if field == source_candidate.field_name {
                             return Ok(None);
                         }
-                        if source_candidate.model_type == target_type {
-                            // self reference
-                            if field == source_candidate.field_name {
-                                return Ok(None);
-                            }
-                        }
                     }
+                }
 
-                    let source_model_name = s
-                        .get_type(source_model)?
-                        .get_base()
-                        .unwrap()
-                        .name
-                        .clone()
-                        .ok_or_else(|| String::from("model must have name"))?;
+                let source_model_name = source_model
+                    .type_name()?
+                    .ok_or_else(|| String::from("model must have name"))?;
 
-                    let model_name = s
-                        .get_type(target_type)?
-                        .get_base()
-                        .unwrap()
-                        .name
-                        .clone()
-                        .ok_or_else(|| String::from("model must have name"))?;
+                let model_name = target_type
+                    .type_name()?
+                    .ok_or_else(|| String::from("model must have name"))?;
 
-                    let fkey = attrs
-                        .proxy_data
-                        .iter()
-                        .find_map(|(k, v)| {
-                            (k == "fkey").then(|| {
-                                serde_json::from_str::<bool>(v).map_err(|_| {
-                                    format!("invalid 'fkey' field: expected bool, got {}", v)
-                                })
+                let fkey = attrs
+                    .proxy_data
+                    .iter()
+                    .find_map(|(k, v)| {
+                        (k == "fkey").then(|| {
+                            serde_json::from_str::<bool>(v).map_err(|_| {
+                                format!("invalid 'fkey' field: expected bool, got {}", v)
                             })
                         })
-                        .transpose()?;
+                    })
+                    .transpose()?;
 
-                    let target_field = attrs
-                        .proxy_data
-                        .iter()
-                        .find_map(|(k, v)| (k == "target_field").then(|| v.clone()));
+                let target_field = attrs
+                    .proxy_data
+                    .iter()
+                    .find_map(|(k, v)| (k == "target_field").then(|| v.clone()));
 
-                    let unique = attrs.is_unique_ref()?;
-                    let relationship_name = attrs
-                        .proxy_data
-                        .iter()
-                        .find_map(|(k, v)| (k == "rel_name").then(|| v.clone()));
+                let unique = attrs.is_unique_ref()?;
+                let relationship_name = attrs
+                    .proxy_data
+                    .iter()
+                    .find_map(|(k, v)| (k == "rel_name").then(|| v.clone()));
 
-                    Ok(Some(Candidate {
-                        source_model,
-                        source_model_name,
-                        field_name: field,
-                        wrapper_type: type_id,
-                        model_type: target_type,
-                        model_name,
-                        cardinality,
-                        fkey,
-                        unique,
-                        relationship_name,
-                        target_field,
-                    }))
-                })
-                .transpose()
-                .map(|r| r.flatten())
-        })
+                Ok(Some(Candidate {
+                    source_model,
+                    source_model_name,
+                    field_name: field,
+                    wrapper_type: type_id,
+                    model_type: target_type,
+                    model_name,
+                    cardinality,
+                    fkey,
+                    unique,
+                    relationship_name,
+                    target_field,
+                }))
+            })
+            .transpose()
+            .map(|r| r.flatten())
     }
 
     fn into_pair(self, registry: &RelationshipRegistry) -> Result<CandidatePair> {
@@ -135,21 +124,18 @@ impl Candidate {
 
     /// get potential targets for this candidate
     fn get_alternatives(&self, registry: &RelationshipRegistry) -> Result<Vec<Candidate>> {
-        let candidates = with_store(|s| -> Result<_> {
-            self.model_type
-                .as_struct(s)?
-                .data
-                .props
-                .iter()
-                .filter_map(|(k, ty)| {
-                    Candidate::new(self.model_type, k.clone(), ty.into(), Some(self))
-                        .map(|maybe_candidate| {
-                            maybe_candidate.filter(|c| !registry.has(c.model_type, &c.field_name))
-                        })
-                        .transpose()
-                })
-                .collect::<Result<Vec<_>>>()
-        })?;
+        let candidates = self
+            .model_type
+            .as_struct()?
+            .iter_props()
+            .filter_map(|(k, ty)| {
+                Candidate::new(self.model_type, k.to_string(), ty, Some(self))
+                    .map(|maybe_candidate| {
+                        maybe_candidate.filter(|c| !registry.has(c.model_type, &c.field_name))
+                    })
+                    .transpose()
+            })
+            .collect::<Result<Vec<_>>>()?;
 
         // match by relationship name
         let matched = candidates
@@ -287,12 +273,8 @@ impl CandidatePair {
 
 pub fn scan_model(model: &Struct, registry: &RelationshipRegistry) -> Result<Vec<CandidatePair>> {
     let candidates = model
-        .data
-        .props
-        .iter()
-        .filter_map(|(k, ty)| {
-            Candidate::new(model.get_id(), k.clone(), ty.into(), None).transpose()
-        })
+        .iter_props()
+        .filter_map(|(k, ty)| Candidate::new(model.get_id(), k.to_string(), ty, None).transpose())
         .collect::<Result<Vec<_>>>()?;
 
     candidates

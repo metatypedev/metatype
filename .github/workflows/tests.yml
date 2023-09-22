@@ -47,6 +47,7 @@ jobs:
               - '.github/workflows/tests.yml'
               - 'libs/**'
               - 'typegate/**'
+              - 'typegraph/**'
               - 'Cargo.lock'
             rust:
               - '.github/workflows/tests.yml'

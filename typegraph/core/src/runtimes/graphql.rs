@@ -19,11 +19,10 @@ impl MaterializerConverter for GraphqlMaterializer {
     fn convert(
         &self,
         c: &mut TypegraphContext,
-        s: &crate::global_store::Store,
         runtime_id: RuntimeId,
         effect: wit::Effect,
     ) -> Result<Materializer> {
-        let runtime = c.register_runtime(s, runtime_id)?;
+        let runtime = c.register_runtime(runtime_id)?;
         let (name, data) = match self {
             GraphqlMaterializer::Query(d) => {
                 let mut data = IndexMap::new();

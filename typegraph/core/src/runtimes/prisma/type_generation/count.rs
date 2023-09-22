@@ -12,13 +12,13 @@ use super::{TypeGen, TypeGenContext};
 pub struct Count;
 
 impl TypeGen for Count {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         t::optional(t::integer().build()?)
-            .named(self.name(context))
+            .named(self.name())
             .build()
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
+    fn name(&self) -> String {
         "_Count".to_string()
     }
 }

@@ -4,7 +4,6 @@
 use crate::{
     conversion::types::TypeConversion,
     errors::Result,
-    global_store::{with_store, Store},
     typegraph::TypegraphContext,
     types::{TypeData, TypeId, WithInjection, WrapperTypeData},
     wit::core::TypeWithInjection,
@@ -15,33 +14,38 @@ use std::collections::HashMap;
 
 impl TypeConversion for WithInjection {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
-        with_store(|s| -> Result<_> {
-            let tpe = s.get_type(self.data.tpe.into())?;
-            let mut type_node = tpe.convert(ctx, runtime_id)?;
-            let base = type_node.base_mut();
-            let value: Injection =
-                serde_json::from_str(&self.data.injection).map_err(|e| e.to_string())?;
-            if let Injection::Parent(data) = value {
-                let new_data = match data {
-                    InjectionData::SingleValue(SingleValue { value }) => {
-                        InjectionData::SingleValue(SingleValue {
-                            value: ctx.get_correct_id(value.into())?,
-                        })
+        let tpe = TypeId(self.data.tpe).as_type()?;
+        let mut type_node = tpe.convert(ctx, runtime_id)?;
+        let base = type_node.base_mut();
+        let value: Injection =
+            serde_json::from_str(&self.data.injection).map_err(|e| e.to_string())?;
+        if let Injection::Parent(data) = value {
+            let get_correct_id = |v: u32| -> Result<u32> {
+                let id = TypeId(v).resolve_proxy()?;
+                if let Some(index) = ctx.find_type_index_by_store_id(id) {
+                    return Ok(index);
+                }
+                Err(format!("unable to find type for store id {}", id.0))
+            };
+            let new_data = match data {
+                InjectionData::SingleValue(SingleValue { value }) => {
+                    InjectionData::SingleValue(SingleValue {
+                        value: get_correct_id(value)?,
+                    })
+                }
+                InjectionData::ValueByEffect(per_effect) => {
+                    let mut new_per_effect: HashMap<EffectType, u32> = HashMap::new();
+                    for (k, v) in per_effect.iter() {
+                        new_per_effect.insert(*k, get_correct_id(*v)?);
                     }
-                    InjectionData::ValueByEffect(per_effect) => {
-                        let mut new_per_effect: HashMap<EffectType, u32> = HashMap::new();
-                        for (k, v) in per_effect.iter() {
-                            new_per_effect.insert(*k, ctx.get_correct_id(v.into())?);
-                        }
-                        InjectionData::ValueByEffect(new_per_effect)
-                    }
-                };
-                base.injection = Some(Injection::Parent(new_data));
-            } else {
-                base.injection = Some(value);
-            }
-            Ok(type_node)
-        })
+                    InjectionData::ValueByEffect(new_per_effect)
+                }
+            };
+            base.injection = Some(Injection::Parent(new_data));
+        } else {
+            base.injection = Some(value);
+        }
+        Ok(type_node)
     }
 }
 
@@ -88,7 +92,7 @@ impl TypeData for TypeWithInjection {
 }
 
 impl WrapperTypeData for TypeWithInjection {
-    fn resolve(&self, _store: &Store) -> Option<TypeId> {
+    fn resolve(&self) -> Option<TypeId> {
         Some(self.tpe.into())
     }
 }
