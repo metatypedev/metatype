@@ -13,7 +13,9 @@ typegraph("temporal", (g) => {
     {
       start: temporal.startWorkflow("<workflow_type>", arg).withPolicy(pub),
       query: temporal.queryWorkflow("<query_type>", arg).withPolicy(pub),
-      signal: temporal.signalWorkflow("<signal_name>", arg).withPolicy(pub),
+      signal: temporal.signalWorkflow("<signal_name>", arg).apply({
+        workflow_id: "1234",
+      }).withPolicy(pub),
       describe: temporal.describeWorkflow().withPolicy(pub),
     },
   );

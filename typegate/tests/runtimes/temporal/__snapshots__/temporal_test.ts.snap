@@ -162,7 +162,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "function",
-        "title": "func_18",
+        "title": "func_21",
         "runtime": 1,
         "policies": [
           2
@@ -177,7 +177,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "object",
-        "title": "object_16",
+        "title": "object_20",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -194,6 +194,12 @@ snapshot[`Typegraph using temporal 1`] = `
         "title": "string_13",
         "runtime": 1,
         "policies": [],
+        "injection": {
+          "source": "static",
+          "data": {
+            "value": "\\\\"1234\\\\""
+          }
+        },
         "config": {},
         "as_id": false
       },
@@ -224,7 +230,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "function",
-        "title": "func_23",
+        "title": "func_26",
         "runtime": 1,
         "policies": [
           3
@@ -239,7 +245,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "object",
-        "title": "object_21",
+        "title": "object_24",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -252,23 +258,23 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "string",
-        "title": "string_19",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
-        "type": "string",
-        "title": "string_20",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
-        "type": "string",
         "title": "string_22",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "string",
+        "title": "string_23",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "string",
+        "title": "string_25",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -549,7 +555,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "function",
-        "title": "func_20",
+        "title": "func_23",
         "runtime": 1,
         "policies": [
           2
@@ -564,7 +570,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "object",
-        "title": "object_18",
+        "title": "object_22",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -581,6 +587,12 @@ snapshot[`Typegraph using temporal 2`] = `
         "title": "string_15",
         "runtime": 1,
         "policies": [],
+        "injection": {
+          "source": "static",
+          "data": {
+            "value": "\\\\"1234\\\\""
+          }
+        },
         "config": {},
         "as_id": false
       },
@@ -611,7 +623,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "function",
-        "title": "func_26",
+        "title": "func_29",
         "runtime": 1,
         "policies": [
           3
@@ -626,7 +638,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "object",
-        "title": "object_24",
+        "title": "object_27",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -639,23 +651,23 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "string",
-        "title": "string_22",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
-        "type": "string",
-        "title": "string_23",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
-        "type": "string",
         "title": "string_25",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "string",
+        "title": "string_26",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "string",
+        "title": "string_28",
         "runtime": 1,
         "policies": [],
         "config": {},
