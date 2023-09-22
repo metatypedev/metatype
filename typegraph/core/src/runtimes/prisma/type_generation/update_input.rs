@@ -40,10 +40,10 @@ impl TypeGen for UpdateInput {
                     let wrapped_type_id = typ.get_id();
                     t::union([
                         wrapped_type_id,
-                        t::struct_().prop("set", wrapped_type_id).build()?,
-                        t::struct_().prop("multiply", type_id).build()?,
-                        t::struct_().prop("decrement", type_id).build()?,
-                        t::struct_().prop("increment", type_id).build()?,
+                        t::struct_().prop("set", type_id).build()?,
+                        t::struct_().prop("multiply", wrapped_type_id).build()?,
+                        t::struct_().prop("decrement", wrapped_type_id).build()?,
+                        t::struct_().prop("increment", wrapped_type_id).build()?,
                     ])
                     .build()?
                 }

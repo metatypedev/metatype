@@ -4,6 +4,7 @@
 use crate::errors::Result;
 use crate::runtimes::prisma::type_utils::get_id_field;
 use crate::types::TypeId;
+use indexmap::IndexMap;
 #[cfg(test)]
 use indexmap::IndexSet as HashSet;
 #[cfg(test)]
@@ -24,7 +25,7 @@ use super::{
 #[derive(Debug)]
 pub struct RegisteredModel {
     // property => relationship_name
-    pub relationships: indexmap::IndexMap<String, String>,
+    pub relationships: IndexMap<String, String>,
     pub name: String,
     pub id_field: String, // TODO support multiple id fields
 }
@@ -56,7 +57,7 @@ impl RelationshipRegistry {
     ) -> Result<()> {
         let entry = match self.models.entry(candidate.model_type) {
             Entry::Vacant(e) => e.insert(RegisteredModel {
-                relationships: indexmap::IndexMap::new(),
+                relationships: IndexMap::new(),
                 name: candidate.model_name.clone(),
                 id_field: get_id_field(candidate.model_type)?,
             }),
@@ -128,7 +129,7 @@ impl RelationshipRegistry {
 
                 if let Entry::Vacant(e) = self.models.entry(model_id) {
                     e.insert(RegisteredModel {
-                        relationships: indexmap::IndexMap::new(),
+                        relationships: IndexMap::new(),
                         name: model
                             .base
                             .name

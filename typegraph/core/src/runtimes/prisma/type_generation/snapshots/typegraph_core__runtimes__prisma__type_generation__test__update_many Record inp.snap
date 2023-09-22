@@ -18,16 +18,14 @@ root: struct #60
 │     └─ item: union #15
 │        ├─ variant_0: integer #2
 │        ├─ variant_1: struct #11
-│        │  └─ [set]: integer #2
+│        │  └─ [set]: optional #3
+│        │     └─ item: integer #2
 │        ├─ variant_2: struct #12
-│        │  └─ [multiply]: optional #3
-│        │     └─ item: integer #2
+│        │  └─ [multiply]: integer #2
 │        ├─ variant_3: struct #13
-│        │  └─ [decrement]: optional #3
-│        │     └─ item: integer #2
+│        │  └─ [decrement]: integer #2
 │        └─ variant_4: struct #14
-│           └─ [increment]: optional #3
-│              └─ item: integer #2
+│           └─ [increment]: integer #2
 └─ [where]: optional '_59_QueryRecordWhereInput?' #59
    └─ item: struct 'QueryRecordWhereInput' #58
       ├─ [id]: optional '_38__string_filter_c?' #38
