@@ -16,12 +16,12 @@ root: struct #129
 │  └─ [id]: optional #122
 │     └─ item: float #121
 ├─ [_sum]: struct '_User_NumberAgg' #128
-│  └─ [id]: optional #125
-│     └─ item: integer #124
+│  └─ [id]: optional #127
+│     └─ item: integer #126
 ├─ [_min]: struct '_User_NumberAgg' #128
-│  └─ [id]: optional #125
-│     └─ item: integer #124
+│  └─ [id]: optional #127
+│     └─ item: integer #126
 └─ [_max]: struct '_User_NumberAgg' #128
-   └─ [id]: optional #125
-      └─ item: integer #124
+   └─ [id]: optional #127
+      └─ item: integer #126
 

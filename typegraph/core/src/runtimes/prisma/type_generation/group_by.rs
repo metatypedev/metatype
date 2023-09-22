@@ -3,11 +3,7 @@
 
 use crate::{
     errors::Result,
-    global_store::with_store,
-    runtimes::prisma::type_generation::{
-        where_::Where,
-        with_filters::{NumberType, WithFilters},
-    },
+    runtimes::prisma::type_generation::{where_::Where, with_filters::WithFilters},
     t::{self, ConcreteTypeBuilder, TypeBuilder},
     types::{Type, TypeId},
 };
@@ -26,47 +22,33 @@ impl GroupingFields {
 
 impl TypeGen for GroupingFields {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let fields = with_store(|s| {
-            self.model_id
-                .as_struct(s)
-                .unwrap()
-                .data
-                .props
-                .iter()
-                .filter_map(|(k, type_id)| {
-                    if context
-                        .registry
-                        .find_relationship_on(self.model_id, k)
-                        .is_some()
-                    {
-                        return None;
-                    }
+        let mut fields = vec![];
+        for (k, type_id) in self.model_id.as_struct()?.iter_props() {
+            if context
+                .registry
+                .find_relationship_on(self.model_id, k)
+                .is_some()
+            {
+                continue;
+            }
 
-                    let typ = s.get_type(type_id.into()).unwrap();
-                    let typ = match typ {
-                        Type::Optional(inner) => s.get_type(inner.data.of.into()).unwrap(),
-                        _ => typ,
-                    };
-
-                    match typ {
-                        Type::Boolean(_)
-                        | Type::Integer(_)
-                        | Type::Float(_)
-                        | Type::String(_)
-                        | Type::Array(_) => Some(k.clone()),
-                        _ => None,
-                    }
-                })
-                .collect::<Vec<_>>()
-        });
+            match type_id.non_optional_concrete_type()?.as_type()? {
+                Type::Boolean(_)
+                | Type::Integer(_)
+                | Type::Float(_)
+                | Type::String(_)
+                | Type::Array(_) => fields.push(k.to_string()),
+                _ => {}
+            }
+        }
 
         t::array(t::string().enum_(fields).build()?)
-            .named(self.name(context))
+            .named(self.name())
             .build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = context.get_model_name(self.model_id);
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         format!("_{}_GroupingFields", model_name)
     }
 }
@@ -88,7 +70,7 @@ impl TypeGen for Having {
         let extended_type = context
             .generate(&WithFilters::new(where_type, self.model_id, true).with_aggregates())?;
 
-        let name = self.name(context);
+        let name = self.name();
         let self_ref = t::proxy(&name).build()?;
 
         t::union([
@@ -105,8 +87,8 @@ impl TypeGen for Having {
         .build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = context.get_model_name(self.model_id);
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         format!("_{}_Having", model_name)
     }
 }
@@ -148,12 +130,12 @@ impl TypeGen for GroupByResult {
                 )
                 .build()?,
         )
-        .named(self.name(context))
+        .named(self.name())
         .build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = context.get_model_name(self.model_id);
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         format!("_{}_GroupByResult", model_name)
     }
 }
@@ -173,52 +155,32 @@ impl SelectNumbers {
 }
 
 impl TypeGen for SelectNumbers {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let props = with_store(|s| {
-            self.model_id.as_struct(s).map(|typ| {
-                typ.data
-                    .props
-                    .iter()
-                    .filter_map(|(k, type_id)| {
-                        let typ = s.get_type(type_id.into()).unwrap();
-                        let typ = match typ {
-                            Type::Optional(inner) => s.get_type(inner.data.of.into()).unwrap(),
-                            _ => typ,
-                        };
-
-                        match typ {
-                            Type::Integer(_) => Some((k.clone(), NumberType::Integer)),
-                            Type::Float(_) => Some((k.clone(), NumberType::Float)),
-                            _ => None,
-                        }
-                    })
-                    .collect::<Vec<_>>()
-            })
-        })?;
-
+    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         let mut builder = t::struct_();
-        let opt_int = t::optional(t::integer().build()?).build()?;
         let opt_float = t::optional(t::float().build()?).build()?;
-        if self.promote_to_float {
-            for (k, _) in props.into_iter() {
-                builder.prop(k, opt_float);
-            }
+        let for_int = if self.promote_to_float {
+            opt_float
         } else {
-            for (k, typ) in props.into_iter() {
-                builder.prop(
-                    k,
-                    match typ {
-                        NumberType::Integer => opt_int,
-                        NumberType::Float => opt_float,
-                    },
-                );
+            t::optional(t::integer().build()?).build()?
+        };
+        for (k, type_id) in self.model_id.as_struct()?.iter_props() {
+            let type_id = type_id.non_optional_concrete_type()?;
+            match type_id.as_type()? {
+                Type::Integer(_) => {
+                    builder.prop(k, for_int);
+                }
+                Type::Float(_) => {
+                    builder.prop(k, opt_float);
+                }
+                _ => {}
             }
         }
-        builder.named(self.name(context)).build()
+
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = context.get_model_name(self.model_id);
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         let suffix = if self.promote_to_float { "_1" } else { "" };
         format!("_{model_name}_SelectNumbers_{suffix}")
     }

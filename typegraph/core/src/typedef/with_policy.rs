@@ -4,23 +4,25 @@
 use crate::{
     conversion::types::TypeConversion,
     errors::Result,
-    global_store::{with_store, Store},
+    global_store::Store,
     typegraph::TypegraphContext,
     types::{TypeData, TypeId, WithPolicy, WrapperTypeData},
-    wit::core::{PolicySpec, TypePolicy},
+    wit::core::{PolicyId, PolicySpec, TypePolicy},
 };
 use common::typegraph::TypeNode;
 
 impl TypeConversion for WithPolicy {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
-        with_store(|s| -> Result<_> {
-            let tpe = s.get_type(self.data.tpe.into())?;
-            let mut type_node = tpe.convert(ctx, runtime_id)?;
-            let base = type_node.base_mut();
-            base.policies = ctx.register_policy_chain(&self.data.chain)?;
-            Ok(type_node)
-        })
+        let tpe = TypeId(self.data.tpe).as_type()?;
+        let mut type_node = tpe.convert(ctx, runtime_id)?;
+        let base = type_node.base_mut();
+        base.policies = ctx.register_policy_chain(&self.data.chain)?;
+        Ok(type_node)
     }
+}
+
+fn get_policy_name(pol_id: PolicyId) -> String {
+    Store::get_policy(pol_id).unwrap().name.clone()
 }
 
 impl TypeData for TypePolicy {
@@ -30,25 +32,22 @@ impl TypeData for TypePolicy {
             self.chain
                 .iter()
                 .map(|p| match p {
-                    PolicySpec::Simple(pol_id) => format!(
-                        "'{}'",
-                        with_store(|s| s.get_policy(*pol_id).unwrap().name.clone())
-                    ),
-                    PolicySpec::PerEffect(p) => with_store(|s| format!(
+                    PolicySpec::Simple(pol_id) => format!("'{}'", get_policy_name(*pol_id)),
+                    PolicySpec::PerEffect(p) => format!(
                         "{{create='{}', update='{}', delete='{}', none='{}'}}",
                         p.create
-                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
-                            .unwrap_or("null"),
+                            .map(get_policy_name)
+                            .unwrap_or_else(|| "null".to_string()),
                         p.update
-                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
-                            .unwrap_or("null"),
+                            .map(get_policy_name)
+                            .unwrap_or_else(|| "null".to_string()),
                         p.delete
-                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
-                            .unwrap_or("null"),
+                            .map(get_policy_name)
+                            .unwrap_or_else(|| "null".to_string()),
                         p.none
-                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
-                            .unwrap_or("null"),
-                    )),
+                            .map(get_policy_name)
+                            .unwrap_or_else(|| "null".to_string()),
+                    ),
                 })
                 .collect::<Vec<_>>()
                 .join(", ")
@@ -61,7 +60,7 @@ impl TypeData for TypePolicy {
 }
 
 impl WrapperTypeData for TypePolicy {
-    fn resolve(&self, _store: &Store) -> Option<TypeId> {
+    fn resolve(&self) -> Option<TypeId> {
         Some(self.tpe.into())
     }
 }

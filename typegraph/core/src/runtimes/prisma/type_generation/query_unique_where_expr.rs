@@ -4,7 +4,7 @@
 use crate::errors::Result;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeFun;
-use crate::{global_store::with_store, types::TypeId};
+use crate::types::TypeId;
 
 use super::{TypeGen, TypeGenContext};
 
@@ -19,44 +19,38 @@ impl QueryUniqueWhereExpr {
 }
 
 impl TypeGen for QueryUniqueWhereExpr {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let props = with_store(|s| -> Result<_> {
-            let model = s.type_as_struct(self.model_id).unwrap();
+    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
+        let mut builder = t::struct_();
+        let model = self.model_id.as_struct().unwrap();
 
-            let mut props = vec![];
-            for (k, ty) in model.data.props.iter() {
-                let attrs = s.get_attributes(ty.into())?;
-                let is_id = attrs
-                    .concrete_type
-                    .as_type(s)?
-                    .get_base()
-                    .ok_or_else(|| "expected a concrete type".to_string())?
-                    .as_id;
-                let is_unique = s.get_type(ty.into())?.get_base().map_or(false, |base| {
-                    base.runtime_config
-                        .iter()
-                        .flatten()
-                        .find_map(|(k, v)| (k == "unique").then(|| v.clone()))
-                        .map_or(false, |v| v == "true")
-                });
-                if s.is_func(attrs.concrete_type)? || (!is_id && !is_unique) {
-                    continue;
-                }
-                props.push((k.clone(), s.resolve_quant(attrs.concrete_type)?));
+        for (key, type_id) in model.iter_props() {
+            let attrs = type_id.attrs()?;
+            let is_id = attrs
+                .concrete_type
+                .as_type()?
+                .get_base()
+                .ok_or_else(|| "expected a concrete type".to_string())?
+                .as_id;
+            let is_unique = type_id.as_type()?.get_base().map_or(false, |base| {
+                base.runtime_config
+                    .iter()
+                    .flatten()
+                    .find_map(|(k, v)| (k == "unique").then(|| v.clone()))
+                    .map_or(false, |v| v == "true")
+            });
+
+            if attrs.concrete_type.is_func()? || (!is_id && !is_unique) {
+                continue;
             }
-
-            Ok(props)
-        })?;
-
-        let mut st = t::struct_();
-        for (k, ty) in props.into_iter() {
-            st.prop(k, t::optional(ty).build()?);
+            let inner = attrs.concrete_type.resolve_quant()?;
+            builder.prop(key, t::optional(inner).build()?);
         }
-        st.named(self.name(context)).build()
+
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, _context: &TypeGenContext) -> String {
-        let name = with_store(|s| s.get_type_name(self.model_id).unwrap().unwrap().to_string());
+    fn name(&self) -> String {
+        let name = self.model_id.type_name().unwrap().unwrap();
         format!("QueryUnique{}WhereInput", name)
     }
 }

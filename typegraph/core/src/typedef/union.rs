@@ -7,9 +7,8 @@ use errors::Result;
 use crate::{
     conversion::types::{gen_base, TypeConversion},
     errors,
-    global_store::with_store,
     typegraph::TypegraphContext,
-    types::{TypeData, Union},
+    types::{TypeData, TypeId, Union},
     wit::core::TypeUnion,
 };
 
@@ -30,11 +29,9 @@ impl TypeConversion for Union {
                     .data
                     .variants
                     .iter()
-                    .map(|vid| {
-                        with_store(|s| -> Result<_> {
-                            let id = s.resolve_proxy((*vid).into())?;
-                            Ok(ctx.register_type(s, id, runtime_id)?.into())
-                        })
+                    .map(|vid| -> Result<_> {
+                        let id = TypeId(*vid).resolve_proxy()?;
+                        Ok(ctx.register_type(id, runtime_id)?.into())
                     })
                     .collect::<Result<Vec<_>>>()?,
             },

@@ -3,7 +3,7 @@
 
 use super::Materializer;
 use crate::errors::Result;
-use crate::global_store::with_store_mut;
+use crate::global_store::Store;
 use crate::t;
 use crate::t::TypeBuilder;
 use crate::wit::core::TypeFunc;
@@ -79,7 +79,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
     };
 
     let mat = Materializer::temporal(runtime, mat_data, effect);
-    let mat_id = with_store_mut(|s| s.register_materializer(mat));
+    let mat_id = Store::register_materializer(mat);
 
     Ok(TypeFunc {
         inp: inp.build()?.into(),

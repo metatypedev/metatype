@@ -2,8 +2,8 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(types.output)"
 ---
-root: array '_Record_GroupByResult' #118
-└─ item: struct #117
+root: array '_Record_GroupByResult' #116
+└─ item: struct #115
    ├─ [id]: string #0
    ├─ [name]: string #1
    ├─ [age]: optional #3
@@ -17,16 +17,16 @@ root: array '_Record_GroupByResult' #118
    │  │  └─ item: integer #104
    │  └─ [age]: optional #105
    │     └─ item: integer #104
-   ├─ [_avg]: struct '_Record_SelectNumbers__1' #111
-   │  └─ [age]: optional #110
-   │     └─ item: float #109
-   ├─ [_sum]: struct '_Record_SelectNumbers_' #116
+   ├─ [_avg]: struct '_Record_SelectNumbers__1' #109
+   │  └─ [age]: optional #108
+   │     └─ item: float #107
+   ├─ [_sum]: struct '_Record_SelectNumbers_' #114
    │  └─ [age]: optional #113
    │     └─ item: integer #112
-   ├─ [_min]: struct '_Record_SelectNumbers_' #116
+   ├─ [_min]: struct '_Record_SelectNumbers_' #114
    │  └─ [age]: optional #113
    │     └─ item: integer #112
-   └─ [_max]: struct '_Record_SelectNumbers_' #116
+   └─ [_max]: struct '_Record_SelectNumbers_' #114
       └─ [age]: optional #113
          └─ item: integer #112
 

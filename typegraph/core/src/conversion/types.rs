@@ -4,6 +4,7 @@
 use common::typegraph::{PolicyIndices, TypeNode, TypeNodeBase};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
+use std::rc::Rc;
 
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
@@ -12,6 +13,12 @@ use crate::typegraph::TypegraphContext;
 pub trait TypeConversion {
     /// takes already converted runtime id
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode>;
+}
+
+impl<T: TypeConversion> TypeConversion for Rc<T> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+        (**self).convert(ctx, runtime_id)
+    }
 }
 
 #[derive(Default)]

@@ -7,9 +7,8 @@ use errors::Result;
 use crate::{
     conversion::types::{gen_base, TypeConversion},
     errors,
-    global_store::with_store,
     typegraph::TypegraphContext,
-    types::{Optional, TypeData},
+    types::{Optional, TypeData, TypeId},
     wit::core::TypeOptional,
 };
 
@@ -34,13 +33,18 @@ impl TypeConversion for Optional {
             )
             .build(),
             data: OptionalTypeData {
-                item: with_store(|s| -> Result<_> {
-                    let id = s.resolve_proxy(self.data.of.into())?;
-                    Ok(ctx.register_type(s, id, runtime_id)?.into())
-                })?,
+                item: ctx
+                    .register_type(TypeId(self.data.of).resolve_proxy()?, runtime_id)?
+                    .into(),
                 default_value,
             },
         })
+    }
+}
+
+impl Optional {
+    pub fn item(&self) -> TypeId {
+        TypeId(self.data.of)
     }
 }
 

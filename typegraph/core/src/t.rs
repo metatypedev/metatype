@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::Result;
-use crate::global_store::with_store;
 use crate::types::TypeId;
 use crate::wit::core::{
     Core, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeOptional,
@@ -324,7 +323,7 @@ pub fn struct_from(props: impl Iterator<Item = (String, TypeId)>) -> StructBuild
 pub fn struct_extends(ty: TypeId) -> Result<StructBuilder> {
     Ok(StructBuilder {
         data: TypeStruct {
-            props: with_store(|s| ty.as_struct(s).map(|typ| typ.data.props.clone()))?,
+            props: ty.as_struct().map(|typ| typ.data.props.clone())?,
             ..Default::default()
         },
         ..Default::default()

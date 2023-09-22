@@ -16,12 +16,12 @@ root: struct #173
 │  └─ [id]: optional #166
 │     └─ item: float #165
 ├─ [_sum]: struct '_Post_NumberAgg' #172
-│  └─ [id]: optional #169
-│     └─ item: integer #168
+│  └─ [id]: optional #171
+│     └─ item: integer #170
 ├─ [_min]: struct '_Post_NumberAgg' #172
-│  └─ [id]: optional #169
-│     └─ item: integer #168
+│  └─ [id]: optional #171
+│     └─ item: integer #170
 └─ [_max]: struct '_Post_NumberAgg' #172
-   └─ [id]: optional #169
-      └─ item: integer #168
+   └─ [id]: optional #171
+      └─ item: integer #170
 

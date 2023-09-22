@@ -3,7 +3,6 @@
 
 use crate::{
     errors::Result,
-    global_store::with_store,
     t::{self, ConcreteTypeBuilder, TypeBuilder},
     types::{Type, TypeId},
 };
@@ -21,31 +20,21 @@ impl CountOutput {
 }
 
 impl TypeGen for CountOutput {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let keys = with_store(|s| {
-            self.model_id
-                .as_struct(s)
-                .unwrap()
-                .data
-                .props
-                .iter()
-                .map(|(k, _)| k.clone())
-                .collect::<Vec<_>>()
-        });
-
+    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         let mut builder = t::struct_();
         let opt_int = t::optional(t::integer().build()?).build()?;
         builder.prop("_all", opt_int);
-        for key in keys {
-            builder.prop(key, opt_int);
+
+        for (k, _) in self.model_id.as_struct()?.iter_props() {
+            builder.prop(k, opt_int);
         }
 
         // TODO union
-        builder.named(self.name(context)).build()
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = &context.registry.models.get(&self.model_id).unwrap().name;
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         format!("_{}_AggrCount", model_name)
     }
 }
@@ -62,62 +51,35 @@ impl NumberAggregateOutput {
 }
 
 impl TypeGen for NumberAggregateOutput {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        enum PropType {
-            Int,
-            Float,
-        }
-
-        let props = with_store(|s| {
-            self.model_id
-                .as_struct(s)
-                .unwrap()
-                .data
-                .props
-                .iter()
-                .filter_map(|(k, type_id)| {
-                    let typ = s.get_type(type_id.into()).unwrap();
-                    let typ = match typ {
-                        Type::Optional(inner) => s.get_type(inner.data.of.into()).unwrap(),
-                        _ => typ,
-                    };
-                    match typ {
-                        Type::Optional(_) => {
-                            Some(Err("optional of optional is not allowed".to_owned()))
-                        }
-                        Type::Integer(_) => Some(Ok((k.clone(), PropType::Int))),
-                        Type::Float(_) => Some(Ok((k.clone(), PropType::Float))),
-                        _ => None,
-                    }
-                })
-                .collect::<Result<Vec<_>>>()
-        })?;
-
+    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         let mut builder = t::struct_();
-        if self.avg {
-            let opt_float = t::optional(t::float().build()?).build()?;
-            for (key, _) in &props {
-                builder.prop(key, opt_float);
-            }
+
+        let opt_float = t::optional(t::float().build()?).build()?;
+        let for_int = if self.avg {
+            opt_float
         } else {
-            let opt_int = t::optional(t::integer().build()?).build()?;
-            let opt_float = t::optional(t::float().build()?).build()?;
-            for (key, prop_type) in &props {
-                builder.prop(
-                    key,
-                    match prop_type {
-                        PropType::Int => opt_int,
-                        PropType::Float => opt_float,
-                    },
-                );
+            t::optional(t::integer().build()?).build()?
+        };
+
+        for (k, type_id) in self.model_id.as_struct()?.iter_props() {
+            let type_id = type_id.non_optional_concrete_type()?;
+            match type_id.as_type()? {
+                Type::Integer(_) => {
+                    builder.prop(k, for_int);
+                }
+                Type::Float(_) => {
+                    builder.prop(k, opt_float);
+                }
+                Type::Optional(_) => unreachable!(),
+                _ => {}
             }
         }
 
-        builder.named(self.name(context)).build()
+        builder.named(self.name()).build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = &context.registry.models.get(&self.model_id).unwrap().name;
+    fn name(&self) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         let suffix = if self.avg { "_avg" } else { "" };
         format!("_{model_name}_NumberAgg{suffix}")
     }
