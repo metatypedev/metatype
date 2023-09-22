@@ -24,5 +24,4 @@ export type InjectionSource =
   | "context"
   | "parent"
   | "secret";
-
 export type InjectionValue<T> = T | PerEffect;

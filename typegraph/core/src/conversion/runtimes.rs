@@ -7,7 +7,7 @@ use crate::errors::Result;
 use crate::runtimes::prisma::{with_prisma_runtime, ConversionContext};
 use crate::runtimes::{
     DenoMaterializer, Materializer as RawMaterializer, PythonMaterializer, RandomMaterializer,
-    Runtime, WasiMaterializer,
+    Runtime, TemporalMaterializer, WasiMaterializer,
 };
 use crate::wit::core::RuntimeId;
 use crate::wit::runtimes::{HttpMethod, MaterializerHttpRequest};
@@ -18,6 +18,7 @@ use common::typegraph::runtimes::http::HTTPRuntimeData;
 use common::typegraph::runtimes::prisma::PrismaRuntimeData;
 use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
+use common::typegraph::runtimes::temporal::TemporalRuntimeData;
 use common::typegraph::runtimes::wasmedge::WasmEdgeRuntimeData;
 use common::typegraph::runtimes::KnownRuntime;
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
@@ -293,6 +294,52 @@ impl MaterializerConverter for WasiMaterializer {
     }
 }
 
+impl MaterializerConverter for TemporalMaterializer {
+    fn convert(
+        &self,
+        c: &mut TypegraphContext,
+        runtime_id: RuntimeId,
+        effect: WitEffect,
+    ) -> Result<Materializer> {
+        use crate::runtimes::TemporalMaterializer::*;
+        let runtime = c.register_runtime(runtime_id)?;
+        let (data, name) = match self {
+            Start { workflow_type } => {
+                let data = serde_json::from_value(json!({
+                    "workflow_type": workflow_type,
+                }))
+                .unwrap();
+                (data, "start_workflow".to_string())
+            }
+            Signal { signal_name } => {
+                let data = serde_json::from_value(json!({
+                    "signal_name": signal_name,
+                }))
+                .unwrap();
+                (data, "signal_workflow".to_string())
+            }
+            Query { query_type } => {
+                let data = serde_json::from_value(json!({
+                    "query_type": query_type,
+                }))
+                .unwrap();
+                (data, "query_workflow".to_string())
+            }
+            Describe => {
+                let data = serde_json::from_value(json!({})).unwrap();
+                (data, "describe_workflow".to_string())
+            }
+        };
+
+        Ok(Materializer {
+            name,
+            runtime,
+            effect: effect.into(),
+            data,
+        })
+    }
+}
+
 pub fn convert_materializer(
     c: &mut TypegraphContext,
     mat: RawMaterializer,
@@ -383,5 +430,10 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                 })
             },
         ))),
+        Runtime::Temporal(d) => Ok(TGRuntime::Known(Temporal(TemporalRuntimeData {
+            name: d.name.clone(),
+            host: d.host.clone(),
+        }))
+        .into()),
     }
 }

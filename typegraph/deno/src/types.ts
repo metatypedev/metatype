@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { core } from "./wit.ts";
+import { core, wit_utils } from "./wit.ts";
 import {
   PolicyPerEffect,
   TypeArray,
@@ -13,15 +13,18 @@ import {
   TypeString,
   TypeUnion,
 } from "../gen/exports/metatype-typegraph-core.d.ts";
+import { Apply } from "../gen/exports/metatype-typegraph-utils.d.ts";
 import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps.ts";
 import Policy from "./policy.ts";
+import { buildApplyData, serializeRecordValues } from "./utils/func_utils.ts";
 import {
-  serializeInjection,
-  serializeRecordValues,
-} from "./utils/func_utils.ts";
-import { CREATE, DELETE, NONE, UPDATE } from "./effects.ts";
+  serializeFromParentInjection,
+  serializeGenericInjection,
+  serializeStaticInjection,
+} from "./utils/injection_utils.ts";
 import { InjectionValue } from "./utils/type_utils.ts";
+import { InheritDef } from "./typegraph.ts";
 
 export type PolicySpec = Policy | {
   none: Policy;
@@ -109,70 +112,31 @@ export class Typedef {
 
   set(value: InjectionValue<unknown>) {
     return this.withInjection(
-      serializeInjection("static", value, (x: unknown) => JSON.stringify(x)),
+      serializeStaticInjection(value),
     );
   }
 
   inject(value: InjectionValue<string>) {
     return this.withInjection(
-      serializeInjection("dynamic", value),
+      serializeGenericInjection("dynamic", value),
     );
   }
 
   fromContext(value: InjectionValue<string>) {
     return this.withInjection(
-      serializeInjection("context", value),
+      serializeGenericInjection("context", value),
     );
   }
 
   fromSecret(value: InjectionValue<string>) {
     return this.withInjection(
-      serializeInjection("secret", value),
+      serializeGenericInjection("secret", value),
     );
   }
 
   fromParent(value: InjectionValue<string>) {
-    let correctValue: any = null;
-    if (typeof value === "string") {
-      correctValue = proxy(value)._id;
-    } else {
-      const isObject = typeof value === "object" && !Array.isArray(value) &&
-        value !== null;
-      if (!isObject) {
-        throw new Error("type not supported");
-      }
-
-      // Note:
-      // Symbol changes the behavior of keys, values, entries => props are skipped
-      const symbols = [UPDATE, DELETE, CREATE, NONE];
-      const noOtherType = Object.keys(value).length == 0;
-      const isPerEffect = noOtherType &&
-        symbols
-          .some((symbol) => (value as any)?.[symbol] !== undefined);
-
-      if (!isPerEffect) {
-        throw new Error("object keys should be of type EffectType");
-      }
-
-      correctValue = {};
-      for (const symbol of symbols) {
-        const v = (value as any)?.[symbol];
-        if (v === undefined) continue;
-        if (typeof v !== "string") {
-          throw new Error(
-            `value for field ${symbol.toString()} must be a string`,
-          );
-        }
-        correctValue[symbol] = proxy(v)._id;
-      }
-    }
-
     return this.withInjection(
-      serializeInjection(
-        "parent",
-        correctValue,
-        (x: unknown) => x as number,
-      ),
+      serializeFromParentInjection(value),
     );
   }
 }
@@ -516,6 +480,23 @@ export class Func<
     this.inp = inp;
     this.out = out;
     this.mat = mat;
+  }
+
+  apply(value: Record<string, unknown | InheritDef>) {
+    const data: Apply = {
+      paths: buildApplyData(value),
+    };
+
+    const applyId = wit_utils.genApplyb(
+      this.inp._id,
+      data,
+    );
+
+    return func(
+      new Typedef(applyId, {}) as Struct<P>,
+      this.out,
+      this.mat,
+    );
   }
 }
 

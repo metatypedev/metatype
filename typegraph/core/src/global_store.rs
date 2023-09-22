@@ -72,8 +72,40 @@ impl Store {
             }
             s.types.push(typ);
         });
-
         id.into()
+    }
+
+    pub fn get_type_by_path(struct_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
+        let mut ret = (struct_id.as_type()?, struct_id);
+
+        let mut curr_path = vec![];
+        for (pos, chunk) in path.iter().enumerate() {
+            let unwrapped_id = ret.1.resolve_wrapper()?;
+            // let unwrapped_id = self.resolve_wrapper(ret.1)?;
+            match unwrapped_id.as_type()? {
+                Type::Struct(t) => {
+                    let result = t.data.props.iter().find(|(k, _)| k.eq(chunk));
+                    curr_path.push(chunk.clone());
+                    ret = match result {
+                        Some((_, id)) => (TypeId(*id).as_type()?, id.to_owned().into()),
+                        None => {
+                            return Err(errors::invalid_path(
+                                pos,
+                                path,
+                                &t.data
+                                    .props
+                                    .iter()
+                                    .map(|v| format!("{:?}", v.0.clone()))
+                                    .collect::<Vec<String>>(),
+                            ));
+                        }
+                    };
+                }
+                _ => return Err(errors::expect_object_at_path(&curr_path)),
+            }
+        }
+
+        Ok(ret)
     }
 
     pub fn register_runtime(rt: Runtime) -> RuntimeId {
@@ -205,5 +237,25 @@ impl TypeId {
             Type::Optional(o) => Ok(o.data.of.into()),
             _ => Ok(type_id),
         }
+    }
+
+    /// unwrap type id inside array, optional, or WithInjection
+    pub fn resolve_wrapper(&self) -> Result<TypeId> {
+        let mut id = self.resolve_proxy()?;
+        loop {
+            let tpe = id.as_type()?;
+            let new_id = match tpe {
+                Type::Array(t) => t.data.of.into(),
+                Type::Optional(t) => t.data.of.into(),
+                Type::WithInjection(t) => t.data.tpe.into(),
+                Type::Proxy(t) => t.id.resolve_proxy()?,
+                _ => id,
+            };
+            if id == new_id {
+                break;
+            }
+            id = new_id;
+        }
+        Ok(id)
     }
 }
