@@ -34,13 +34,12 @@ pub struct Distinct(pub TypeId);
 
 impl TypeGen for Distinct {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let cols = self.0.as_struct().map(|typ| {
-            typ.data
-                .props
-                .iter()
-                .map(|(k, _)| k.clone())
-                .collect::<Vec<_>>()
-        })?;
+        let cols = self
+            .0
+            .as_struct()?
+            .iter_props()
+            .map(|(k, _)| k.to_string())
+            .collect::<Vec<_>>();
 
         t::array(t::string().enum_(cols).build()?)
             .named(self.name(context))

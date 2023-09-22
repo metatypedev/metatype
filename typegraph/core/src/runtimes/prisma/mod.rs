@@ -99,23 +99,26 @@ pub struct ConversionContext<'a> {
 }
 
 impl<'a> ConversionContext<'a> {
-    pub fn convert_relationship(&mut self, rel: Relationship) -> Result<cm::Relationship> {
-        let Relationship { name, left, right } = rel;
-        let left = self.convert_relationship_model(left)?;
-        let right = self.convert_relationship_model(right)?;
-        Ok(cm::Relationship { name, left, right })
+    pub fn convert_relationship(&mut self, rel: &Relationship) -> Result<cm::Relationship> {
+        let left = self.convert_relationship_model(&rel.left)?;
+        let right = self.convert_relationship_model(&rel.right)?;
+        Ok(cm::Relationship {
+            name: rel.name.clone(),
+            left,
+            right,
+        })
     }
 
     pub fn convert_relationship_model(
         &mut self,
-        model: RelationshipModel,
+        model: &RelationshipModel,
     ) -> Result<cm::RelationshipModel> {
         Ok(cm::RelationshipModel {
             type_idx: self
                 .tg_context
                 .register_type(model.model_type, Some(self.runtime_id))?
                 .into(),
-            field: model.field,
+            field: model.field.clone(),
             cardinality: model.cardinality.into(),
         })
     }

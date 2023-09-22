@@ -262,7 +262,16 @@ pub struct TypeAttributes {
 }
 
 impl TypeId {
-    pub fn concrete_type_id(&self, resolve_proxy: ProxyResolution) -> Result<Option<TypeId>> {
+    pub fn non_optional_concrete_type(&self) -> Result<TypeId> {
+        let concrete_type = self.concrete_type(ProxyResolution::Force)?.unwrap();
+
+        Ok(match concrete_type.as_type()? {
+            Type::Optional(inner) => inner.item().concrete_type(ProxyResolution::Force)?.unwrap(),
+            _ => *self,
+        })
+    }
+
+    pub fn concrete_type(&self, resolve_proxy: ProxyResolution) -> Result<Option<TypeId>> {
         let typ = self.as_type()?;
         if typ.is_concrete_type() {
             return Ok(Some(*self));
@@ -278,7 +287,7 @@ impl TypeId {
         };
 
         match wrapped_type {
-            Some(wrapped_type) => wrapped_type.concrete_type_id(resolve_proxy),
+            Some(wrapped_type) => wrapped_type.concrete_type(resolve_proxy),
             None => Ok(None),
         }
     }

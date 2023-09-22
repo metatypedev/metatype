@@ -39,91 +39,64 @@ impl OrderBy {
 
 impl TypeGen for OrderBy {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        enum PropType {
-            Optional,
-            NonOptional,
-            Aggregates,
-            OrderBy(TypeId, String),
-        }
-
-        let props = self
-            .model_id
-            .as_struct()?
-            .iter_props()
-            .filter_map(|(k, ty)| {
-                let (ty, opt) = if let Type::Optional(typ) = ty.as_type().unwrap() {
-                    (typ.data.of.into(), true)
-                } else {
-                    (ty, false)
-                };
-
-                let registry_entry = context.registry.models.get(&self.model_id).unwrap();
-                let rel = registry_entry.relationships.get(k);
-                if let Some(rel_name) = rel {
-                    return if self.skip_rel.contains(rel_name) {
-                        None
-                    } else {
-                        let rel = context.registry.relationships.get(rel_name).unwrap();
-                        let relationship_model = rel.get_opposite_of(self.model_id, k).unwrap();
-                        match relationship_model.cardinality {
-                            Cardinality::Optional | Cardinality::One => Some((
-                                k.to_string(),
-                                PropType::OrderBy(relationship_model.model_type, rel_name.clone()),
-                            )),
-                            Cardinality::Many => Some((k.to_string(), PropType::Aggregates)),
-                        }
-                    };
-                }
-
-                match ty.as_type().unwrap() {
-                    Type::Boolean(_) | Type::Integer(_) | Type::Float(_) | Type::String(_) => {
-                        Some((
-                            k.to_string(),
-                            if opt {
-                                PropType::Optional
-                            } else {
-                                PropType::NonOptional
-                            },
-                        ))
-                    }
-                    Type::Array(_) => None, // TODO: can we order by an array?
-                    _ => panic!("type not supported"),
-                }
-            })
-            .collect::<Vec<_>>();
-
         let mut builder = if self.aggregates {
             t::struct_extends(context.generate(&AggregateSorting::new(self.model_id))?)?
         } else {
             t::struct_()
         };
-        for (k, v) in props {
-            builder.prop(
-                k,
-                match v {
-                    PropType::Optional => context.generate(&Sort { nullable: true })?,
-                    PropType::NonOptional => context.generate(&Sort { nullable: false })?,
-                    PropType::Aggregates => context.generate(&SortByAggregates)?,
-                    PropType::OrderBy(ty, rel_name) => {
-                        let mut skip_rel = self.skip_rel.clone();
-                        skip_rel.push(rel_name);
-                        t::optional(context.generate(&OrderBy::new(ty).skip(skip_rel))?).build()?
+
+        for (k, type_id) in self.model_id.as_struct()?.iter_props() {
+            let registry_entry = context.registry.models.get(&self.model_id).unwrap();
+            let rel = registry_entry.relationships.get(k);
+            if let Some(rel_name) = rel {
+                if self.skip_rel.contains(rel_name) {
+                    continue;
+                }
+
+                let rel = context
+                    .registry
+                    .relationships
+                    .get(rel_name)
+                    .cloned()
+                    .unwrap();
+
+                // TODO does this work for self relationship?
+                let relationship_model = rel.get_opposite_of(self.model_id, k).unwrap();
+                match relationship_model.cardinality {
+                    Cardinality::Many => {
+                        builder.prop(k, context.generate(&SortByAggregates)?);
                     }
-                },
-            );
+                    Cardinality::Optional | Cardinality::One => {
+                        let mut skip_rel = self.skip_rel.clone();
+                        skip_rel.push(rel_name.clone());
+                        let inner = context.generate(
+                            &OrderBy::new(relationship_model.model_type).skip(skip_rel),
+                        )?;
+                        builder.prop(k, t::optional(inner).build()?);
+                    }
+                }
+            } else {
+                let typ = type_id.as_type()?;
+                let (typ, nullable) = if let Type::Optional(inner) = typ {
+                    (inner.item().as_type()?, true)
+                } else {
+                    (typ, false)
+                };
+                match typ {
+                    Type::Boolean(_) | Type::Integer(_) | Type::Float(_) | Type::String(_) => {
+                        builder.prop(k, context.generate(&Sort { nullable })?);
+                    }
+                    Type::Array(_) => {}
+                    _ => Err(format!("Cannot order by type {:?}", typ))?,
+                }
+            }
         }
 
         t::array(builder.build()?).named(self.name(context)).build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let name = context
-            .registry
-            .models
-            .get(&self.model_id)
-            .unwrap()
-            .name
-            .clone();
+    fn name(&self, _context: &TypeGenContext) -> String {
+        let name = self.model_id.type_name().unwrap().unwrap();
         let suffix = if self.skip_rel.is_empty() {
             "".to_string()
         } else {

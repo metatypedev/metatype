@@ -70,8 +70,8 @@ impl TypeGen for QueryInputType {
         builder.named(self.name(context)).build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = &context.registry.models.get(&self.model_id).unwrap().name;
+    fn name(&self, _context: &TypeGenContext) -> String {
+        let model_name = self.model_id.type_name().unwrap().unwrap();
         let suffix = if self.is_group_by { "_group_by" } else { "" };
         format!("_{model_name}_QueryInput{suffix}")
     }

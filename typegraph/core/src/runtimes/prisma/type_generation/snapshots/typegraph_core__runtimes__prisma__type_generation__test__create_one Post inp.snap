@@ -9,14 +9,14 @@ root: struct #45
    ├─ [title]: string #15
    └─ [author]: optional #43
       └─ item: struct #42
-         ├─ [create]: optional '_37__User_CreateInput_excluding___rel_Post_User_1?' #37
+         ├─ [create]: optional '_40__User_CreateInput_excluding___rel_Post_User_1?' #40
          │  └─ item: struct '_User_CreateInput_excluding___rel_Post_User_1' #36
          │     ├─ [id]: integer #9
          │     └─ [name]: string #10
          └─ [connect]: optional '_41_UserWhere_norel?' #41
-            └─ item: struct 'UserWhere_norel' #40
-               ├─ [id]: optional #38
+            └─ item: struct 'UserWhere_norel' #39
+               ├─ [id]: optional #37
                │  └─ item: integer #9
-               └─ [name]: optional #39
+               └─ [name]: optional #38
                   └─ item: string #10
 

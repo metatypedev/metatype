@@ -21,19 +21,12 @@ impl CountOutput {
 
 impl TypeGen for CountOutput {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let keys = self
-            .model_id
-            .as_struct()
-            .unwrap()
-            .iter_props()
-            .map(|(k, _)| k.to_string())
-            .collect::<Vec<_>>();
-
         let mut builder = t::struct_();
         let opt_int = t::optional(t::integer().build()?).build()?;
         builder.prop("_all", opt_int);
-        for key in keys {
-            builder.prop(key, opt_int);
+
+        for (k, _) in self.model_id.as_struct()?.iter_props() {
+            builder.prop(k, opt_int);
         }
 
         // TODO union
@@ -59,50 +52,26 @@ impl NumberAggregateOutput {
 
 impl TypeGen for NumberAggregateOutput {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        enum PropType {
-            Int,
-            Float,
-        }
-
-        let props = self
-            .model_id
-            .as_struct()
-            .unwrap()
-            .iter_props()
-            .filter_map(|(k, type_id)| {
-                let typ = type_id.as_type().unwrap();
-                let typ = match typ {
-                    Type::Optional(inner) => inner.item().as_type().unwrap(),
-                    _ => typ,
-                };
-                match typ {
-                    Type::Optional(_) => {
-                        Some(Err("optional of optional is not allowed".to_owned()))
-                    }
-                    Type::Integer(_) => Some(Ok((k.to_string(), PropType::Int))),
-                    Type::Float(_) => Some(Ok((k.to_string(), PropType::Float))),
-                    _ => None,
-                }
-            })
-            .collect::<Result<Vec<_>>>()?;
-
         let mut builder = t::struct_();
-        if self.avg {
-            let opt_float = t::optional(t::float().build()?).build()?;
-            for (key, _) in props.into_iter() {
-                builder.prop(key, opt_float);
-            }
+
+        let opt_float = t::optional(t::float().build()?).build()?;
+        let for_int = if self.avg {
+            opt_float
         } else {
-            let opt_int = t::optional(t::integer().build()?).build()?;
-            let opt_float = t::optional(t::float().build()?).build()?;
-            for (key, prop_type) in props.into_iter() {
-                builder.prop(
-                    key,
-                    match prop_type {
-                        PropType::Int => opt_int,
-                        PropType::Float => opt_float,
-                    },
-                );
+            t::optional(t::integer().build()?).build()?
+        };
+
+        for (k, type_id) in self.model_id.as_struct()?.iter_props() {
+            let type_id = type_id.non_optional_concrete_type()?;
+            match type_id.as_type()? {
+                Type::Integer(_) => {
+                    builder.prop(k, for_int);
+                }
+                Type::Float(_) => {
+                    builder.prop(k, opt_float);
+                }
+                Type::Optional(_) => unreachable!(),
+                _ => {}
             }
         }
 

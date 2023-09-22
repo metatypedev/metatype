@@ -40,10 +40,10 @@ impl TypeGen for QueryWhereExpr {
         builder.build()
     }
 
-    fn name(&self, context: &super::TypeGenContext) -> String {
+    fn name(&self, _context: &super::TypeGenContext) -> String {
         format!(
             "Query{}WhereInput",
-            context.registry.models.get(&self.model_id).unwrap().name
+            self.model_id.type_name().unwrap().unwrap()
         )
     }
 }

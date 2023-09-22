@@ -32,25 +32,9 @@ impl WithFilters {
 
 impl TypeGen for WithFilters {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        enum PropType {
-            Boolean,
-            Number(NumberType),
-            String,
-            Model(TypeId),
-            // TODO aggregates??
-            // scalar list
-            Array(TypeId),
-            // TODO (mongo only): composite types
-            // see: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#composite-type-filters
-        }
-        struct Prop {
-            key: String,
-            prop_type: PropType,
-        }
+        let mut builder = t::struct_();
 
-        let mut props = vec![];
-
-        for (k, id) in self.type_id.as_struct().unwrap().iter_props() {
+        for (key, id) in self.type_id.as_struct().unwrap().iter_props() {
             let mut id = id;
             let mut ty = id.as_type()?;
             if let Type::Optional(opt) = ty {
@@ -58,83 +42,46 @@ impl TypeGen for WithFilters {
                 ty = id.as_type()?;
             }
 
-            let rel = context.registry.find_relationship_on(self.model_id, k);
-            if let Some(rel) = rel {
-                if self.skip_rel {
-                    continue;
-                }
+            let rel = context.registry.find_relationship_on(self.model_id, key);
+            let generated =
+                if let Some(rel) = rel {
+                    if self.skip_rel {
+                        continue;
+                    }
 
-                let target_model = rel.get_opposite_of(self.model_id, k).unwrap();
-                props.push(Prop {
-                    key: k.to_string(),
-                    prop_type: PropType::Model(target_model.model_type),
-                });
-                continue;
-            }
-
-            match ty {
-                Type::Optional(_) => return Err("optional of optional!?".to_string()),
-                Type::Boolean(_) => {
-                    props.push(Prop {
-                        key: k.to_string(),
-                        prop_type: PropType::Boolean,
-                    });
-                }
-                Type::Integer(_) => {
-                    props.push(Prop {
-                        key: k.to_string(),
-                        prop_type: PropType::Number(NumberType::Integer),
-                    });
-                }
-                Type::Float(_) => {
-                    props.push(Prop {
-                        key: k.to_string(),
-                        prop_type: PropType::Number(NumberType::Float),
-                    });
-                }
-                Type::String(_) => {
-                    props.push(Prop {
-                        key: k.to_string(),
-                        prop_type: PropType::String,
-                    });
-                }
-                Type::Array(inner) => {
-                    props.push(Prop {
-                        key: k.to_string(),
-                        prop_type: PropType::Array(inner.data.of.into()),
-                    });
-                }
-                _ => {
-                    return Err(format!(
-                        "type '{}' not supported by prisma",
-                        ty.get_data().variant_name()
-                    ));
-                }
-            }
+                    let target_model = rel.get_opposite_of(self.model_id, key).unwrap();
+                    context.generate(&WithFilters {
+                        type_id: target_model.model_type,
+                        model_id: target_model.model_type,
+                        skip_rel: true,
+                        with_aggregates: false,
+                    })?
+                } else {
+                    match ty {
+                        Type::Optional(_) => return Err("optional of optional!?".to_string()),
+                        Type::Boolean(_) => context.generate(&CompleteFilter(BooleanFilter))?,
+                        Type::Integer(_) => context.generate(&CompleteFilter(
+                            NumberFilter::new(NumberType::Integer, self.with_aggregates),
+                        ))?,
+                        Type::Float(_) => context.generate(&CompleteFilter(NumberFilter::new(
+                            NumberType::Float,
+                            self.with_aggregates,
+                        )))?,
+                        Type::String(_) => context.generate(&CompleteFilter(StringFilter))?,
+                        Type::Array(inner) => context
+                            .generate(&CompleteFilter(ScalarListFilter(inner.data.of.into())))?,
+                        _ => {
+                            return Err(format!(
+                                "type '{}' not supported by prisma",
+                                ty.get_data().variant_name()
+                            ));
+                        }
+                    }
+                };
+            builder.prop(key, t::optional(generated).build()?);
         }
 
-        let mut builder = t::struct_();
-        builder.named(self.name(context));
-        for prop in props {
-            let ty = match prop.prop_type {
-                PropType::Boolean => context.generate(&CompleteFilter(BooleanFilter))?,
-                PropType::Number(num) => context.generate(&CompleteFilter(NumberFilter::new(
-                    num,
-                    self.with_aggregates,
-                )))?,
-                PropType::String => context.generate(&CompleteFilter(StringFilter))?,
-                PropType::Array(of) => context.generate(&CompleteFilter(ScalarListFilter(of)))?,
-                PropType::Model(target_model_id) => context.generate(&WithFilters {
-                    type_id: target_model_id,
-                    model_id: target_model_id, // TODO ???
-                    skip_rel: true,
-                    with_aggregates: false,
-                })?,
-            };
-            builder.prop(prop.key, t::optional(ty).build()?);
-        }
-
-        builder.build()
+        builder.named(self.name(context)).build()
     }
 
     fn name(&self, _context: &TypeGenContext) -> String {

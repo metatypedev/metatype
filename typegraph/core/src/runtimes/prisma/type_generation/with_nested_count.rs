@@ -4,7 +4,7 @@
 use crate::errors::Result;
 use crate::runtimes::prisma::type_generation::count::Count;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-use crate::types::{ProxyResolution, Type};
+use crate::types::ProxyResolution;
 use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
 
 use super::{TypeGen, TypeGenContext};
@@ -25,111 +25,41 @@ impl WithNestedCount {
 
 impl TypeGen for WithNestedCount {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        enum Prop {
-            Prisma {
-                key: String,
-                ty: TypeId,
-                nest_count_exclude: Option<String>,
-                cardinality: Cardinality,
-            },
-            Other {
-                key: String,
-                typ: TypeId,
-            },
-        }
-
-        let mut props = vec![];
         let mut countable = vec![];
+        let mut builder = t::struct_();
 
         let model = self.model_id.as_struct().unwrap();
-        for (k, ty) in model.iter_props() {
-            if let Some(rel) = context.registry.find_relationship_on(self.model_id, k) {
+        for (key, type_id) in model.iter_props() {
+            if let Some(rel) = context.registry.find_relationship_on(self.model_id, key) {
                 if self.skip.contains(&rel.name) {
                     continue;
                 }
                 // TODO get_concrete_type(resolve_proxy=true)
-                let relation_model = rel.get_opposite_of(self.model_id, k).unwrap();
+                let relation_model = rel.get_opposite_of(self.model_id, key).unwrap();
                 match relation_model.cardinality {
                     Cardinality::Optional => {
-                        props.push(Prop::Prisma {
-                            key: k.to_string(),
-                            ty: relation_model.model_type,
-                            nest_count_exclude: Some(rel.name.clone()),
-                            cardinality: Cardinality::Optional,
-                        });
-                        countable.push(k.to_string());
+                        let inner = context.generate(&WithNestedCount {
+                            model_id: relation_model.model_type,
+                            skip: [self.skip.as_slice(), &[rel.name.clone()]].concat(),
+                        })?;
+                        builder.prop(key, t::optional(inner).build()?);
+                        countable.push(key.to_string());
                     }
                     Cardinality::Many => {
-                        props.push(Prop::Prisma {
-                            key: k.to_string(),
-                            ty: relation_model.model_type,
-                            nest_count_exclude: Some(rel.name.clone()),
-                            cardinality: Cardinality::Many,
-                        });
-                        countable.push(k.to_string());
+                        let inner = context.generate(&WithNestedCount {
+                            model_id: relation_model.model_type,
+                            skip: [self.skip.as_slice(), &[rel.name.clone()]].concat(),
+                        })?;
+                        builder.prop(key, t::array(inner).build()?);
+                        countable.push(key.to_string());
                     }
                     Cardinality::One => {
-                        props.push(Prop::Prisma {
-                            key: k.to_string(),
-                            ty: relation_model.model_type,
-                            nest_count_exclude: None,
-                            cardinality: Cardinality::One,
-                        });
+                        builder.prop(key, relation_model.model_type);
                     }
                 }
             } else {
-                let type_id = ty.concrete_type_id(ProxyResolution::Force)?.unwrap();
-                match type_id.as_type()? {
-                    Type::Func(_) => {
-                        // TODO what if it is a nested prisma query/mutation?
-                        props.push(Prop::Other {
-                            key: k.to_string(),
-                            typ: type_id,
-                        })
-                    }
-                    _ => {
-                        // simple type
-                        props.push(Prop::Prisma {
-                            key: k.to_string(),
-                            ty,
-                            nest_count_exclude: None,
-                            cardinality: Cardinality::One,
-                        });
-                    }
-                }
-            }
-        }
-
-        let mut st = t::struct_();
-        for prop in props.into_iter() {
-            match prop {
-                Prop::Prisma {
-                    key,
-                    ty,
-                    nest_count_exclude,
-                    cardinality,
-                } => {
-                    let mut ty = ty;
-                    if let Some(exclude) = nest_count_exclude {
-                        ty = context.generate(&WithNestedCount {
-                            model_id: ty,
-                            skip: [self.skip.as_slice(), &[exclude]].concat(),
-                        })?;
-                    }
-                    match cardinality {
-                        Cardinality::Optional => {
-                            ty = t::optional(ty).build()?;
-                        }
-                        Cardinality::Many => {
-                            ty = t::array(ty).build()?;
-                        }
-                        Cardinality::One => {}
-                    }
-                    st.prop(key, ty);
-                }
-                Prop::Other { key, typ } => {
-                    st.prop(key, typ);
-                }
+                let type_id = type_id.concrete_type(ProxyResolution::Force)?.unwrap();
+                builder.prop(key, type_id);
             }
         }
 
@@ -138,10 +68,10 @@ impl TypeGen for WithNestedCount {
             for prop in countable.into_iter() {
                 count.prop(prop, context.generate(&Count)?);
             }
-            st.prop("_count", count.build()?);
+            builder.prop("_count", count.build()?);
         }
 
-        st.named(self.name(context)).build()
+        builder.named(self.name(context)).build()
     }
 
     fn name(&self, _context: &TypeGenContext) -> String {

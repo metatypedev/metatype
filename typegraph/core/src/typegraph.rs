@@ -191,23 +191,10 @@ pub fn expose(
         .map(|(name, fn_id)| -> Result<_> {
             let fn_id = fn_id.resolve_proxy()?;
 
-            let has_policy = {
-                let tpe = fn_id.as_type()?;
-                match tpe {
-                    Type::WithPolicy(inner) => {
-                        let tpe = TypeId(inner.data.tpe).as_type()?;
-                        if !matches!(tpe, Type::Func(_)) {
-                            return Err(errors::invalid_export_type(&name, &tpe.to_string()));
-                        }
-                        true
-                    }
-                    Type::Func(_) => false,
-                    _ => return Err(errors::invalid_export_type(&name, &tpe.to_string())),
-                }
-            };
+            let has_policy = !fn_id.attrs()?.policy_chain.is_empty();
 
             let fn_id: TypeId = match (has_policy, default_policy.as_ref()) {
-                (true, Some(default_policy)) => Lib::with_policy(TypePolicy {
+                (false, Some(default_policy)) => Lib::with_policy(TypePolicy {
                     tpe: fn_id.into(),
                     chain: default_policy.to_vec(),
                 })?

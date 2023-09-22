@@ -14,6 +14,7 @@ use std::collections::HashSet;
 use std::collections::{hash_map::Entry, HashMap};
 
 use std::cell::RefCell;
+use std::rc::Rc;
 
 use super::{
     discovery::{scan_model, Candidate, CandidatePair},
@@ -23,7 +24,7 @@ use super::{
 #[derive(Debug)]
 pub struct RegisteredModel {
     // property => relationship_name
-    pub relationships: HashMap<String, String>,
+    pub relationships: indexmap::IndexMap<String, String>,
     pub name: String,
     pub id_field: String, // TODO support multiple id fields
 }
@@ -33,7 +34,7 @@ pub struct RelationshipRegistry {
     pub models: HashMap<TypeId, RegisteredModel>,
     pub models_by_name: HashMap<String, TypeId>,
     // relationship_name => relationship
-    pub relationships: HashMap<String, Relationship>,
+    pub relationships: HashMap<String, Rc<Relationship>>,
     complete_registrations: HashSet<TypeId>,
     counter: RefCell<usize>,
 }
@@ -53,21 +54,21 @@ impl RelationshipRegistry {
         field_name: String,
         rel_name: String,
     ) -> Result<()> {
-        use Entry as E;
         let entry = match self.models.entry(candidate.model_type) {
-            E::Vacant(e) => e.insert(RegisteredModel {
-                relationships: HashMap::new(),
+            Entry::Vacant(e) => e.insert(RegisteredModel {
+                relationships: indexmap::IndexMap::new(),
                 name: candidate.model_name.clone(),
                 id_field: get_id_field(candidate.model_type)?,
             }),
-            E::Occupied(e) => e.into_mut(),
+            Entry::Occupied(e) => e.into_mut(),
         };
+        use indexmap::map::Entry as Ent;
         match entry.relationships.entry(field_name) {
-            E::Vacant(e) => {
+            Ent::Vacant(e) => {
                 e.insert(rel_name);
                 Ok(())
             }
-            E::Occupied(_e) => Err("cannot readd relationship".to_string()),
+            Ent::Occupied(_e) => Err("cannot readd relationship".to_string()),
         }
     }
 
@@ -111,7 +112,7 @@ impl RelationshipRegistry {
         };
 
         self.relationships
-            .insert(relationship.name.clone(), relationship);
+            .insert(relationship.name.clone(), relationship.into());
 
         Ok(true)
     }
@@ -127,7 +128,7 @@ impl RelationshipRegistry {
 
                 if let Entry::Vacant(e) = self.models.entry(model_id) {
                     e.insert(RegisteredModel {
-                        relationships: HashMap::new(),
+                        relationships: indexmap::IndexMap::new(),
                         name: model
                             .base
                             .name
@@ -165,13 +166,13 @@ impl RelationshipRegistry {
             .map_or(false, |entry| entry.relationships.contains_key(prop))
     }
 
-    pub fn find_relationship_on(&self, model: TypeId, field: &str) -> Option<&Relationship> {
+    pub fn find_relationship_on(&self, model: TypeId, field: &str) -> Option<Rc<Relationship>> {
         self.models
             .get(&model)
             .unwrap()
             .relationships
             .get(field)
-            .map(|n| self.relationships.get(n).unwrap())
+            .map(|n| self.relationships.get(n).cloned().unwrap())
     }
 
     pub fn next_id(&self) -> usize {

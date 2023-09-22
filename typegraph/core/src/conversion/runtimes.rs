@@ -375,7 +375,7 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                         relationships: relationships
                             .into_values()
                             .map(|rel| -> Result<_> {
-                                conversion_context.convert_relationship(rel)
+                                conversion_context.convert_relationship(&rel)
                             })
                             .collect::<Result<Vec<_>>>()?,
                         migration_options: None,

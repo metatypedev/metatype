@@ -25,68 +25,33 @@ impl Where {
 
 impl TypeGen for Where {
     fn generate(&self, context: &mut super::TypeGenContext) -> Result<TypeId> {
-        struct Prop {
-            key: String,
-            ty: TypeId,
-            recurse: bool,
-            relations: bool,
-        }
-        let mut props = vec![];
+        let mut builder = t::struct_();
 
-        for (k, ty) in self.model_id.as_struct().unwrap().iter_props() {
-            if let Some(rel) = context.registry.find_relationship_on(self.model_id, k) {
+        for (key, type_id) in self.model_id.as_struct().unwrap().iter_props() {
+            if let Some(rel) = context.registry.find_relationship_on(self.model_id, key) {
                 if !self.relations {
                     continue;
                 }
-                let model = rel.get_opposite_of(self.model_id, k).unwrap();
-                props.push(Prop {
-                    key: k.to_string(),
-                    ty: model.model_type,
-                    recurse: true,
+                let model = rel.get_opposite_of(self.model_id, key).unwrap();
+
+                let inner = context.generate(&Where {
+                    model_id: model.model_type,
                     relations: false,
-                });
+                })?;
+                builder.prop(key, t::optional(inner).build()?);
             } else {
-                let attrs = ty.attrs()?;
-                match attrs.concrete_type.as_type()? {
-                    // different runtime
+                let non_optional = type_id.non_optional_concrete_type()?;
+                match non_optional.as_type()? {
+                    Type::Optional(_) => unreachable!(),
                     Type::Func(_) => continue,
-                    Type::Optional(ty) => {
-                        props.push(Prop {
-                            key: k.to_string(),
-                            ty: ty.data.of.into(),
-                            recurse: false,
-                            relations: false,
-                        });
-                    }
                     _ => {
-                        props.push(Prop {
-                            key: k.to_string(),
-                            ty,
-                            recurse: false,
-                            relations: false,
-                        });
+                        builder.prop(key, t::optional(non_optional).build()?);
                     }
                 }
             }
         }
 
-        let mut st = t::struct_();
-        for prop in props.into_iter() {
-            if prop.recurse {
-                st.prop(
-                    prop.key,
-                    t::optional(context.generate(&Where {
-                        model_id: prop.ty,
-                        relations: prop.relations,
-                    })?)
-                    .build()?,
-                );
-            } else {
-                st.prop(prop.key, t::optional(prop.ty).build()?);
-            }
-        }
-
-        st.named(self.name(context)).build()
+        builder.named(self.name(context)).build()
     }
 
     fn name(&self, context: &super::TypeGenContext) -> String {

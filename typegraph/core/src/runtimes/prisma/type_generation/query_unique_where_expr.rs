@@ -20,40 +20,33 @@ impl QueryUniqueWhereExpr {
 
 impl TypeGen for QueryUniqueWhereExpr {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let props = {
-            let model = self.model_id.as_struct().unwrap();
+        let mut builder = t::struct_();
+        let model = self.model_id.as_struct().unwrap();
 
-            let mut props = vec![];
-            for (k, ty) in model.iter_props() {
-                let attrs = ty.attrs()?;
-                let is_id = attrs
-                    .concrete_type
-                    .as_type()?
-                    .get_base()
-                    .ok_or_else(|| "expected a concrete type".to_string())?
-                    .as_id;
-                let is_unique = ty.as_type()?.get_base().map_or(false, |base| {
-                    base.runtime_config
-                        .iter()
-                        .flatten()
-                        .find_map(|(k, v)| (k == "unique").then(|| v.clone()))
-                        .map_or(false, |v| v == "true")
-                });
+        for (key, type_id) in model.iter_props() {
+            let attrs = type_id.attrs()?;
+            let is_id = attrs
+                .concrete_type
+                .as_type()?
+                .get_base()
+                .ok_or_else(|| "expected a concrete type".to_string())?
+                .as_id;
+            let is_unique = type_id.as_type()?.get_base().map_or(false, |base| {
+                base.runtime_config
+                    .iter()
+                    .flatten()
+                    .find_map(|(k, v)| (k == "unique").then(|| v.clone()))
+                    .map_or(false, |v| v == "true")
+            });
 
-                if attrs.concrete_type.is_func()? || (!is_id && !is_unique) {
-                    continue;
-                }
-                props.push((k.to_string(), attrs.concrete_type.resolve_quant()?));
+            if attrs.concrete_type.is_func()? || (!is_id && !is_unique) {
+                continue;
             }
-
-            props
-        };
-
-        let mut st = t::struct_();
-        for (k, ty) in props.into_iter() {
-            st.prop(k, t::optional(ty).build()?);
+            let inner = attrs.concrete_type.resolve_quant()?;
+            builder.prop(key, t::optional(inner).build()?);
         }
-        st.named(self.name(context)).build()
+
+        builder.named(self.name(context)).build()
     }
 
     fn name(&self, _context: &TypeGenContext) -> String {

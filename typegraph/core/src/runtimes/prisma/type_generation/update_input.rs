@@ -20,27 +20,9 @@ impl UpdateInput {
 
 impl TypeGen for UpdateInput {
     fn generate(&self, context: &mut super::TypeGenContext) -> Result<TypeId> {
-        enum PropType {
-            Boolean,
-            Integer,
-            Float,
-            String,
-            // scalar list: only supported in PostgreSQL, CockroachDB and MongoDB
-            // see: https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#relational-databases
-            Array(TypeId),
-            // TODO: (mongo only) composite types
-            // see: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#composite-type-methods
-        }
-        struct Prop {
-            key: String,
-            typ: PropType,
-            type_id: TypeId,         // may be optional
-            wrapped_type_id: TypeId, // non optional
-        }
+        let mut builder = t::struct_();
 
-        let mut props = vec![];
-
-        for (k, type_id) in self.model_id.as_struct().unwrap().iter_props() {
+        for (key, type_id) in self.model_id.as_struct().unwrap().iter_props() {
             let attrs = type_id.attrs()?;
             // TODO check injection
             let typ = attrs.concrete_type.as_type()?;
@@ -49,72 +31,49 @@ impl TypeGen for UpdateInput {
                 _ => (typ, false),
             };
 
-            // TODO array of scalar support?
-            let prop_type = match &typ {
-                Type::Optional(_) => return Err("".to_owned()),
-                Type::Boolean(_) => Some(PropType::Boolean),
-                Type::Integer(_) => Some(PropType::Integer),
-                Type::Float(_) => Some(PropType::Float),
-                Type::String(_) => Some(PropType::String),
+            let mutation_type = match typ {
+                Type::Optional(_) => unreachable!(),
+                Type::Boolean(_) | Type::String(_) => {
+                    t::union([type_id, t::struct_().prop("set", type_id).build()?]).build()?
+                }
+                Type::Integer(_) | Type::Float(_) => {
+                    let wrapped_type_id = typ.get_id();
+                    t::union([
+                        wrapped_type_id,
+                        t::struct_().prop("set", wrapped_type_id).build()?,
+                        t::struct_().prop("multiply", type_id).build()?,
+                        t::struct_().prop("decrement", type_id).build()?,
+                        t::struct_().prop("increment", type_id).build()?,
+                    ])
+                    .build()?
+                }
                 Type::Array(inner) => {
                     if context
                         .registry
-                        .find_relationship_on(self.model_id, k)
+                        .find_relationship_on(self.model_id, key)
                         .is_some()
                     {
-                        None // relationship
-                    } else {
-                        Some(PropType::Array(inner.data.of.into())) // scalar list
+                        continue;
                     }
+                    // scalar list: only supported in PostgreSQL, CockroachDB and MongoDB
+                    // see: https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#relational-databases
+                    let item_type = inner.data.of.into();
+                    t::union([
+                        type_id,
+                        t::struct_().prop("set", type_id).build()?,
+                        t::struct_().prop("push", item_type).build()?,
+                        // "unset": mongo only
+                    ])
+                    .build()?
                 }
-                _ => None,
+                _ => {
+                    // TODO: (mongo only) composite types
+                    // see: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#composite-type-methods
+                    continue;
+                }
             };
 
-            if let Some(prop_type) = prop_type {
-                props.push(Prop {
-                    key: k.to_string(),
-                    typ: prop_type,
-                    type_id,
-                    wrapped_type_id: typ.get_id(),
-                });
-            }
-        }
-
-        let mut builder = t::struct_();
-        for prop in props {
-            let mutation_type = match prop.typ {
-                PropType::Boolean | PropType::String => t::union([
-                    prop.type_id,
-                    t::struct_().prop("set", prop.type_id).build()?,
-                ])
-                .build()?,
-
-                PropType::Integer | PropType::Float => t::union([
-                    prop.type_id,
-                    t::struct_().prop("set", prop.type_id).build()?,
-                    t::struct_()
-                        .prop("multiply", prop.wrapped_type_id)
-                        .build()?,
-                    t::struct_()
-                        .prop("decrement", prop.wrapped_type_id)
-                        .build()?,
-                    t::struct_()
-                        .prop("increment", prop.wrapped_type_id)
-                        .build()?,
-                ])
-                .build()?,
-
-                // https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#scalar-list-methods
-                PropType::Array(item_type) => t::union([
-                    prop.type_id,
-                    t::struct_().prop("set", prop.type_id).build()?,
-                    t::struct_().prop("push", item_type).build()?,
-                    // "unset": mongo only
-                ])
-                .build()?,
-            };
-
-            builder.prop(prop.key, t::optional(mutation_type).build()?);
+            builder.prop(key, t::optional(mutation_type).build()?);
         }
 
         builder.named(self.name(context)).build()

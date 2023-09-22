@@ -25,79 +25,46 @@ impl TypeGen for OutType {
         &self,
         context: &mut super::TypeGenContext,
     ) -> crate::errors::Result<crate::types::TypeId> {
-        enum PropType {
-            Scalar(TypeId),
-            Model {
-                model_id: TypeId,
-                cardinality: Cardinality,
-                rel_name: String,
-            },
-        }
-        struct Prop {
-            key: String,
-            typ: PropType,
-        }
-        let mut props = vec![];
+        let mut builder = t::struct_();
 
-        for (k, id) in self.model_id.as_struct()?.iter_props() {
-            let rel = context.registry.find_relationship_on(self.model_id, k);
+        for (key, type_id) in self.model_id.as_struct()?.iter_props() {
+            let rel = context.registry.find_relationship_on(self.model_id, key);
+
             if let Some(rel) = rel {
                 if self.skip_rel.contains(&rel.name) || rel.left.model_type == rel.right.model_type
                 {
                     continue;
                 }
-                let entry = rel.get(rel.side_of_type(id).unwrap());
-                props.push(Prop {
-                    key: k.to_string(),
-                    typ: PropType::Model {
-                        model_id: entry.model_type,
-                        cardinality: entry.cardinality,
-                        rel_name: rel.name.clone(),
-                    },
-                })
+                let entry = rel.get(rel.side_of_type(type_id).unwrap());
+                let mut skip_rel = self.skip_rel.clone();
+                skip_rel.push(rel.name.clone());
+
+                let out_type = context.generate(&OutType {
+                    model_id: entry.model_type,
+                    skip_rel,
+                })?;
+
+                let out_type = match entry.cardinality {
+                    Cardinality::Optional => t::optional(out_type).build()?,
+                    Cardinality::One => out_type,
+                    Cardinality::Many => t::array(out_type).build()?,
+                };
+
+                builder.prop(key, out_type);
             } else {
-                match id.attrs()?.concrete_type.as_type()? {
+                match type_id.attrs()?.concrete_type.as_type()? {
                     Type::Func(_) => {
                         // skip, other runtime
                         continue;
                     }
-                    _ => props.push(Prop {
-                        key: k.to_string(),
-                        typ: PropType::Scalar(id),
-                    }),
+                    _ => {
+                        builder.prop(key, type_id);
+                    }
                 }
             }
         }
 
-        let mut builder = t::struct_();
-        builder.named(self.name(context));
-
-        for prop in props.into_iter() {
-            match prop.typ {
-                PropType::Scalar(id) => {
-                    builder.prop(prop.key, id);
-                }
-                PropType::Model {
-                    model_id,
-                    cardinality,
-                    rel_name,
-                } => {
-                    let mut skip_rel = self.skip_rel.clone();
-                    skip_rel.push(rel_name);
-
-                    let ty = context.generate(&OutType { model_id, skip_rel })?;
-                    let ty = match cardinality {
-                        Cardinality::Optional => t::optional(ty).build()?,
-                        Cardinality::One => ty,
-                        Cardinality::Many => t::array(ty).build()?,
-                    };
-
-                    builder.prop(prop.key, ty);
-                }
-            }
-        }
-
-        builder.build()
+        builder.named(self.name(context)).build()
     }
 
     fn name(&self, _context: &super::TypeGenContext) -> String {

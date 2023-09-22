@@ -8,16 +8,16 @@ root: struct #31
    ├─ [name]: string #10
    └─ [posts]: optional #29
       └─ item: struct #28
-         ├─ [create]: optional '_20__Post_CreateInput_excluding___rel_Post_User_1?' #20
+         ├─ [create]: optional '_23__Post_CreateInput_excluding___rel_Post_User_1?' #23
          │  └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #19
          │     ├─ [id]: optional #18
          │     │  └─ item: integer #14
          │     └─ [title]: string #15
          ├─ [connect]: optional '_24_PostWhere_norel?' #24
-         │  └─ item: struct 'PostWhere_norel' #23
-         │     ├─ [id]: optional #21
+         │  └─ item: struct 'PostWhere_norel' #22
+         │     ├─ [id]: optional #20
          │     │  └─ item: integer #14
-         │     └─ [title]: optional #22
+         │     └─ [title]: optional #21
          │        └─ item: string #15
          └─ [createMany]: optional #27
             └─ item: struct #26
