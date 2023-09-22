@@ -78,6 +78,23 @@ Meta.test("prisma full mapping", async (t) => {
       .on(e);
   });
 
+  await t.should("work with apply syntax and find the first item", async () => {
+    await gql`
+        query {
+          findFirstPostWithApply {
+            id
+            title
+          }
+        }
+    `.expectData({
+      findFirstPostWithApply: {
+        id: 10007,
+        title: "Some title",
+      },
+    })
+      .on(e);
+  });
+
   await t.should("paginate correctly with findManyPosts", async () => {
     await gql`
         query {
@@ -161,7 +178,7 @@ Meta.test("prisma full mapping", async (t) => {
             having: {
               published: true,
               views: {_max: { gt: 1 }},
-  
+
               # does nothing, just proves that the validation works
               # Note: fields does not have to be selected in the output
               likes: {_count: {lte: 100000}}
@@ -204,12 +221,12 @@ Meta.test("prisma full mapping", async (t) => {
                       { views: {_count: {in : [-1, -2, -1000]} }}
                     ]
                   },
-  
+
                   # AND operand 2
                   {
                     views: {_sum: {equals: 25}}
                   }
-  
+
                   # AND operand 3
                   {
                     id: {_count: {gt: 0}}
@@ -331,10 +348,10 @@ Meta.test("prisma full mapping", async (t) => {
                     {NOT: {views: {not: {gt: 5}}}},
                   ]
                 },
-  
+
                 # OR operand 2
                 {views: {lt: 3}},
-  
+
                 # OR operand 3
                 {views: {equals: 9}} # or {views: 9}
               ],

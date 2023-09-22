@@ -33,8 +33,11 @@ export class TemporalRuntime extends Runtime {
       funcArg: funcArg?._id,
       operation,
     } as TemporalOperationData;
-    const id = runtimes.generateTemporalOperation(this._id, data);
-    return new Typedef(id, {}) as Func;
+    const dataFunc = runtimes.generateTemporalOperation(
+      this._id,
+      data,
+    );
+    return Func.fromTypeFunc(dataFunc);
   }
 
   startWorkflow(workflowType: string, arg: Typedef) {

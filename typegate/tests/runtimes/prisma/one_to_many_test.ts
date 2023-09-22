@@ -141,4 +141,5 @@ function runTest(tgPath: string, name: string) {
 }
 
 runTest("runtimes/prisma/prisma.py", "required one-to-many");
-runTest("runtimes/prisma/optional_1_n.py", "optional one-to-many");
+runTest("runtimes/prisma/optional_1_n.py", "optional one-to-many (python)");
+runTest("runtimes/prisma/optional_1_n.ts", "optional one-to-many (deno)");

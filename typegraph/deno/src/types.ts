@@ -8,6 +8,7 @@ import {
   TypeBase,
   TypeEither,
   TypeFloat,
+  TypeFunc,
   TypeInteger,
   TypeOptional,
   TypeString,
@@ -281,8 +282,8 @@ export function string(
   return new StringT(core.stringb(data, completeBase), data, completeBase);
 }
 
-export function uuid() {
-  return string({ format: "uuid" });
+export function uuid(base: SimplifiedBase<TypeBase> & AsId = {}) {
+  return string({ format: "uuid" }, base);
 }
 
 export function email() {
@@ -496,6 +497,14 @@ export class Func<
       new Typedef(applyId, {}) as Struct<P>,
       this.out,
       this.mat,
+    );
+  }
+
+  static fromTypeFunc(data: TypeFunc) {
+    return func(
+      new Typedef(data.inp, {}) as Struct<{ [key: string]: Typedef }>,
+      new Typedef(data.out, {}),
+      { _id: data.mat },
     );
   }
 }

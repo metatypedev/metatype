@@ -25,113 +25,113 @@ class PrismaRuntime(Runtime):
         self.name = name
         self.connection_string_secret = connection_string_secret
 
-    def find_unique(self, model: Union[str, t.typedef]) -> t.typedef:
+    def find_unique(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = t.ref(model)
-        type_id = runtimes.prisma_find_unique(store, self.id, model.id)
-        if isinstance(type_id, Err):
-            raise Exception(type_id.value)
-        return t.typedef(type_id.value)
+        type = runtimes.prisma_find_unique(store, self.id, model.id)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
 
-    def find_many(self, model: Union[str, t.typedef]) -> t.typedef:
+    def find_many(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = t.ref(model)
-        type_id = runtimes.prisma_find_many(store, self.id, model.id)
-        if isinstance(type_id, Err):
-            raise Exception(type_id.value)
-        return t.typedef(type_id.value)
+        type = runtimes.prisma_find_many(store, self.id, model.id)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
 
-    def find_first(self, model: Union[str, t.typedef]) -> t.typedef:
+    def find_first(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = t.ref(model)
-        type_id = runtimes.prisma_find_first(store, self.id, model.id)
-        if isinstance(type_id, Err):
-            raise Exception(type_id.value)
-        return t.typedef(type_id.value)
+        type = runtimes.prisma_find_first(store, self.id, model.id)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
 
-    def aggregate(self, model: Union[str, t.typedef]) -> t.typedef:
+    def aggregate(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = t.ref(model)
-        type_id = runtimes.prisma_aggregate(store, self.id, model.id)
-        if isinstance(type_id, Err):
-            raise Exception(type_id.value)
-        return t.typedef(type_id.value)
+        type = runtimes.prisma_aggregate(store, self.id, model.id)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
 
-    def count(self, model: Union[str, t.typedef]) -> t.typedef:
+    def count(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = t.ref(model)
-        type_id = runtimes.prisma_count(store, self.id, model.id)
-        if isinstance(type_id, Err):
-            raise Exception(type_id.value)
-        return t.typedef(type_id.value)
+        type = runtimes.prisma_count(store, self.id, model.id)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
 
-    def group_by(self, model: Union[str, t.typedef]) -> t.typedef:
+    def group_by(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = t.ref(model)
-        type_id = runtimes.prisma_group_by(store, self.id, model.id)
-        if isinstance(type_id, Err):
-            raise Exception(type_id.value)
-        return t.typedef(type_id.value)
+        type = runtimes.prisma_group_by(store, self.id, model.id)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
 
-    def create(self, model: Union[str, t.typedef]) -> t.typedef:
+    def create(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = t.ref(model)
-        type_id = runtimes.prisma_create_one(store, self.id, model.id)
-        if isinstance(type_id, Err):
-            raise Exception(type_id.value)
-        return t.typedef(type_id.value)
+        type = runtimes.prisma_create_one(store, self.id, model.id)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
 
-    def create_many(self, model: Union[str, t.typedef]) -> t.typedef:
+    def create_many(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = t.ref(model)
-        type_id = runtimes.prisma_create_many(store, self.id, model.id)
-        if isinstance(type_id, Err):
-            raise Exception(type_id.value)
-        return t.typedef(type_id.value)
+        type = runtimes.prisma_create_many(store, self.id, model.id)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
 
-    def update(self, model: Union[str, t.typedef]) -> t.typedef:
+    def update(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = t.ref(model)
-        type_id = runtimes.prisma_update_one(store, self.id, model.id)
-        if isinstance(type_id, Err):
-            raise Exception(type_id.value)
-        return t.typedef(type_id.value)
+        type = runtimes.prisma_update_one(store, self.id, model.id)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
 
-    def update_many(self, model: Union[str, t.typedef]) -> t.typedef:
+    def update_many(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = t.ref(model)
-        type_id = runtimes.prisma_update_many(store, self.id, model.id)
-        if isinstance(type_id, Err):
-            raise Exception(type_id.value)
-        return t.typedef(type_id.value)
+        type = runtimes.prisma_update_many(store, self.id, model.id)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
 
-    def upsert(self, model: Union[str, t.typedef]) -> t.typedef:
+    def upsert(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = t.ref(model)
-        type_id = runtimes.prisma_upsert_one(store, self.id, model.id)
-        if isinstance(type_id, Err):
-            raise Exception(type_id.value)
-        return t.typedef(type_id.value)
+        type = runtimes.prisma_upsert_one(store, self.id, model.id)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
 
-    def delete(self, model: Union[str, t.typedef]) -> t.typedef:
+    def delete(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = t.ref(model)
-        type_id = runtimes.prisma_delete_one(store, self.id, model.id)
-        if isinstance(type_id, Err):
-            raise Exception(type_id.value)
-        return t.typedef(type_id.value)
+        type = runtimes.prisma_delete_one(store, self.id, model.id)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
 
-    def delete_many(self, model: Union[str, t.typedef]) -> t.typedef:
+    def delete_many(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = t.ref(model)
-        type_id = runtimes.prisma_delete_many(store, self.id, model.id)
-        if isinstance(type_id, Err):
-            raise Exception(type_id.value)
-        return t.typedef(type_id.value)
+        type = runtimes.prisma_delete_many(store, self.id, model.id)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
 
     def link(
         self,
-        target_type: str,
+        target_type: Union[str, t.typedef],
         name: Optional[str] = None,
         *,
         fkey: Optional[bool] = None,

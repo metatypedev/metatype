@@ -41,11 +41,11 @@ class TemporalRuntime(Runtime):
             func_arg=None if func_arg is None else func_arg.id,
             operation=operation,
         )
-        id = runtimes.generate_temporal_operation(store, self.id.value, data)
-        if isinstance(id, Err):
-            raise Exception(id.value)
+        func_data = runtimes.generate_temporal_operation(store, self.id.value, data)
+        if isinstance(func_data, Err):
+            raise Exception(func_data.value)
 
-        return t.typedef(id=id.value)
+        return t.func.from_type_func(func_data.value)
 
     def start_workflow(self, workflow_type: str, arg: t.typedef):
         return self._generic_temporal_func(
