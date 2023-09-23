@@ -1,16 +1,21 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.http import HTTPRuntime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.runtimes.http import HttpRuntime
 
-with TypeGraph("nesting") as g:
-    remote = HTTPRuntime("https://nesting.example.com/api")
+
+@typegraph()
+def nesting(g: Graph):
+    remote = HttpRuntime("https://nesting.example.com/api")
+
+    public = Policy.public()
 
     user = t.struct(
         {
             "id": t.integer(),
             "email": t.string(),
             "name": t.string(),
-        }
-    ).named("User")
+        },
+        name="User",
+    )
 
     temp = t.struct({"id": t.integer()})
 
@@ -19,27 +24,29 @@ with TypeGraph("nesting") as g:
     post = t.struct(
         {
             "id": t.integer(),
-            "authorId": t.integer().named("Post_authorId"),
+            "authorId": t.integer(name="Post_authorId"),
             "author": remote.get(
                 "/users/{id}",
-                t.struct({"id": t.integer().from_parent(g("Post_authorId"))}),
-                t.optional(g("User")),
+                t.struct({"id": t.integer().from_parent("Post_authorId")}),
+                t.optional(t.ref("User")),
             ),
             "title": t.string(),
             "summary": t.string(),
             "content": t.string(),
-        }
-    ).named("Post")
+        },
+        name="Post",
+    )
 
     user_by_id = remote.get(
-        "/users/{id}", t.struct({"id": t.integer()}), t.optional(g("User"))
-    ).add_policy(policies.public())
+        "/users/{id}", t.struct({"id": t.integer()}), t.optional(t.ref("User"))
+    )
 
     post_by_id = remote.get(
-        "/posts/{id}", t.struct({"id": t.integer()}), t.optional(g("Post"))
-    ).add_policy(policies.public())
+        "/posts/{id}", t.struct({"id": t.integer()}), t.optional(t.ref("Post"))
+    )
 
     g.expose(
+        public,
         user=user_by_id,
         post=post_by_id,
     )
