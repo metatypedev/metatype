@@ -504,7 +504,6 @@ impl PrismaMigrate {
                 "The migration {} failed to be applied: {apply_err}",
                 res.created_migration_name
             );
-        } else {
         }
 
         info!(

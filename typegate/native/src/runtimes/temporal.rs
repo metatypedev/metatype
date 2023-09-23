@@ -58,7 +58,11 @@ enum TemporalUnregisterOutput {
 #[deno]
 fn temporal_unregister(input: TemporalUnregisterInput) -> TemporalUnregisterOutput {
     let Some((_, _client)) = CLIENTS.remove(&input.client_id) else {
-        return TemporalUnregisterOutput::Err { message: format!("Could not remove engine {:?}: entry not found.", {input.client_id})};
+        return TemporalUnregisterOutput::Err {
+            message: format!("Could not remove engine {:?}: entry not found.", {
+                input.client_id
+            }),
+        };
     };
     TemporalUnregisterOutput::Ok
 }

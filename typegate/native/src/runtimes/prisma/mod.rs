@@ -75,7 +75,11 @@ enum PrismaUnregisterEngineOut {
 #[deno]
 fn prisma_unregister_engine(input: PrismaUnregisterEngineInp) -> PrismaUnregisterEngineOut {
     let Some((_, engine)) = ENGINES.remove(&input.engine_name) else {
-        return PrismaUnregisterEngineOut::Err { message: format!("Could not remove engine {:?}: entry not found.", {input.engine_name})};
+        return PrismaUnregisterEngineOut::Err {
+            message: format!("Could not remove engine {:?}: entry not found.", {
+                input.engine_name
+            }),
+        };
     };
     match RT.block_on(engine.disconnect()) {
         Ok(()) => PrismaUnregisterEngineOut::Ok,

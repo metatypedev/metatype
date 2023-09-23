@@ -13,7 +13,7 @@ env:
   PROTOC_VERSION: "3.x"
   POETRY_VERSION: "1.4.1"
   DENO_BINDGEN_URL: https://deno.land/x/deno_bindgen@0.8.1/cli.ts
-  DENO_VERSION: "1.36.1"
+  DENO_VERSION: "1.37.0"
   PNPM_VERSION: "8.6.11"
   NODE_VERSION: "19.8.1"
   WASM_TOOLS_VERSION: "1.0.37"

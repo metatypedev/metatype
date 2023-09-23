@@ -1,18 +1,18 @@
 [package]
 name = "typescript"
-version = "0.1.15-0+dev"
+version = "0.2.0-alpha.1"
 edition = "2021"
 
 [dependencies]
 anyhow = "1.0.75"
 string_cache = "0.8.7"
 lazy_static = "1.4.0"
-dprint-plugin-typescript = "0.86.2"
+dprint-plugin-typescript = "0.87.1"
 
 # https://github.com/denoland/deno_ast/blob/main/Cargo.toml#L42 via dprint deps
-swc_common = { version = "=0.31.21", features = ["tty-emitter"] }
-swc_ecma_ast = "=0.107.7"
-swc_ecma_codegen = "=0.142.17"
-swc_ecma_parser = "=0.137.15"
-swc_ecma_transforms_typescript = "=0.180.33"
-swc_ecma_visit = "=0.93.7"
+swc_common = { version = "=0.32.0", features = ["tty-emitter"] }
+swc_ecma_ast = "=0.109.0"
+swc_ecma_codegen = "=0.144.1"
+swc_ecma_parser = "=0.139.0"
+swc_ecma_transforms_typescript = "=0.182.3"
+swc_ecma_visit = "=0.95.0"

@@ -221,7 +221,13 @@ impl QueryEngine {
             let preview_features = arced_schema.configuration.preview_features();
 
             let executor_fut = async {
-                let executor = load_executor(data_source, preview_features, &url).await?;
+                let executor = load_executor(
+                    request_handlers::ConnectorMode::Rust,
+                    data_source,
+                    preview_features,
+                    &url,
+                )
+                .await?;
                 let connector = executor.primary_connector();
 
                 connector.get_connection().await?;

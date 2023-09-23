@@ -6,7 +6,7 @@ on:
 env:
   PYTHON_VERSION: "3.8"
   POETRY_VERSION: "1.4.1"
-  DENO_VERSION: "1.36.1"
+  DENO_VERSION: "1.37.0"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
 
 jobs:

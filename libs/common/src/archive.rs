@@ -11,7 +11,7 @@ use tar::Archive;
 pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<impl AsRef<[u8]>>) -> Result<()> {
     fs::create_dir_all(dest.as_ref())?;
     let Some(migrations) = migrations else {
-        return Ok(())
+        return Ok(());
     };
     let bytes = STANDARD.decode(migrations)?;
     let decoder = GzDecoder::new(bytes.as_slice());

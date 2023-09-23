@@ -23,16 +23,13 @@ pub struct Watcher {
 impl Watcher {
     pub fn new() -> Result<Self> {
         let (tx, rx) = unbounded_channel();
-        let mut debouncer = new_debouncer(
-            Duration::from_secs(1),
-            None,
-            move |res: DebounceEventResult| {
+        let mut debouncer =
+            new_debouncer(Duration::from_secs(1), move |res: DebounceEventResult| {
                 let events = res.unwrap();
                 for path in events.into_iter().map(|e| e.path) {
                     tx.send(path).unwrap();
                 }
-            },
-        )?;
+            })?;
         debouncer.watcher().configure(
             notify::Config::default()
                 .with_poll_interval(Duration::from_secs(1))

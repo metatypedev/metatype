@@ -31,6 +31,27 @@ typegate2:
 http:
   entrypoint: "/dev/null"
 
+typegate_native:
+  watch:
+    - "typegate/native/src/**/*.rs"
+  env:
+    OUT_DIR: "target"
+  command: |
+    rm -rfv $(deno info --json | jq -r .denoDir)/plug/file typegate/native/bindings.json
+    deno_bindgen -- -p native -F deno
+  depends_on:
+    - libs
+
+meta-cli:
+  workdir: .
+  watch:
+    - "meta-cli/src/**/*.rs"
+    - "typegate/src/**/*.ts"
+  command: "cargo run --color always -p meta-cli -- -C website dev --run-destructive-migrations"
+  #command: "cargo run -p meta-cli -- -C website deploy --allow-dirty --gate http://localhost:7890 --username admin --password password"
+  env:
+    CLICOLOR_FORCE: "1"
+
 system_graphs:
   watch:
     - typegate/src/typegraphs/*.py
@@ -46,28 +67,6 @@ libs:
     - typescript/**/*.rs
     - macros/**/*.rs
   command: "cargo build -p common -p typescript -p macros"
-
-codegen:
-  workdir: .
-  watch:
-    - "libs/xtask/src/**/*.rs"
-  env:
-    TG_JSONSCHEMA_OUT: website/static/specs/$TYPEGRAPH_VERSION.json
-    TG_TYPESCRIPT_OUT: typegate/src/types/typegraph.ts
-  command: "cargo run --package xtask -- codegen"
-  depends_on:
-    - libs
-
-typegate_native:
-  watch:
-    - "typegate/native/src/**/*.rs"
-  env:
-    OUT_DIR: "target"
-  command: |
-    rm -rfv $(deno info --json | jq -r .denoDir)/plug/file typegate/native/bindings.json
-    deno_bindgen -- -p native -F deno
-  depends_on:
-    - libs
 
 typegraph:
   watch:
@@ -90,6 +89,17 @@ typegraph:
   depends_on:
     - libs
 
+codegen:
+  workdir: .
+  watch:
+    - "libs/xtask/src/**/*.rs"
+  env:
+    TG_JSONSCHEMA_OUT: website/static/specs/$TYPEGRAPH_VERSION.json
+    TG_TYPESCRIPT_OUT: typegate/src/types/typegraph.ts
+  command: "cargo run --package xtask -- codegen"
+  depends_on:
+    - libs
+
 website:
   workdir: website
   command: "pnpm start --no-open"
@@ -98,17 +108,7 @@ website:
   depends_on:
     - install
 
-website_meta:
-  workdir: .
-  watch:
-    - "meta-cli/src/**/*.rs"
-    - "typegate/src/**/*.ts"
-  command: "cargo run --color always -p meta-cli -- -C website dev --run-destructive-migrations"
-  #command: "cargo run -p meta-cli -- -C website deploy --allow-dirty --gate http://localhost:7890 --username admin --password password"
-  env:
-    CLICOLOR_FORCE: "1"
-
-website_docgen:
+docgen:
   workdir: website
   watch:
     - "../typegraph/**/*.py"
@@ -133,7 +133,7 @@ install:
     JCO_VERSION: "0.9.4"
     CARGO_INSTA_VERSION: "1.30.0"
     WASMEDGE_VERSION: "0.12.1"
-    DENO_VERSION: "1.36.1"
+    DENO_VERSION: "1.37.0"
   command: |
     set -e
     deno --version | grep -q $DENO_VERSION || (echo "require deno upgrade to $DENO_VERSION" && exit 1)

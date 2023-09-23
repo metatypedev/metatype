@@ -28,6 +28,7 @@ dev:
     '**/Cargo.toml':
       (version = ").+("): METATYPE_VERSION
       (description = ").+("): TAGLINE
+      '([\w-]+\s*=\s*\{\s*git\s*=\s*"https:\/\/github\.com\/prisma\/prisma-engines"\s*,\s*tag\s*=\s*").+("\s*\})': PRISMA_VERSION
     dev/Dockerfile:
       (ARG DENO_VERSION=).*(): DENO_VERSION
       (ARG DENO_BINDGEN_URL=).*(): DENO_BINDGEN_URL
@@ -60,9 +61,9 @@ dev:
     PYTHON_VERSION: '3.8'
     POETRY_VERSION: 1.4.1
     PROTOC_VERSION: 3.x
-    RUST_VERSION: 1.70.0
+    RUST_VERSION: 1.72.1
     DENO_BINDGEN_URL: 'https://deno.land/x/deno_bindgen@0.8.1/cli.ts'
-    DENO_VERSION: 1.36.1
+    DENO_VERSION: 1.37.0
     NODE_VERSION: 19.8.1
     PNPM_VERSION: 8.6.11
     CARGO_INSTA_VERSION: 1.30.0
@@ -71,7 +72,8 @@ dev:
     WASMTIME_VERSION: 10.0.1
     WASMEDGE_VERSION: 0.12.1
     TYPEGRAPH_VERSION: 0.0.2
-    METATYPE_VERSION: 0.1.15-0+dev
+    PRISMA_VERSION: 5.4.0-dev.31
+    METATYPE_VERSION: 0.2.0-alpha.1
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with
       zero-trust and less code, no matter where and how your (legacy) systems
