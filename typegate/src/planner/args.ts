@@ -692,6 +692,7 @@ class ArgumentCollector {
         const polIdx = p[this.effect];
         if (polIdx == null) {
           // not authorized
+          console.log("argument not authorized with effect", this.effect);
           throw this.unexpectedArgument(this.currentNode.path);
         }
         return polIdx;
