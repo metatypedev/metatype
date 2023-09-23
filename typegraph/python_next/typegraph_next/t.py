@@ -33,7 +33,11 @@ from typegraph_next.injection import (
 )
 from typegraph_next.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph_next.runtimes.deno import Materializer
-from typegraph_next.utils import build_apply_data, serialize_record_values
+from typegraph_next.utils import (
+    build_apply_data,
+    ConfigSpec,
+    serialize_config,
+)
 from typegraph_next.wit import wit_utils
 
 
@@ -77,7 +81,7 @@ class typedef:
     def optional(
         self,
         default_value: Optional[str] = None,
-        config: Optional[Dict[str, str]] = None,
+        config: Optional[ConfigSpec] = None,
     ) -> "optional":
         if isinstance(self, optional):
             return self
@@ -172,7 +176,7 @@ class integer(typedef):
         multiple_of: Optional[int] = None,
         enumeration: Optional[List[int]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, any]] = None,
+        config: Optional[ConfigSpec] = None,
         as_id: bool = False,
     ):
         data = TypeInteger(
@@ -183,7 +187,8 @@ class integer(typedef):
             multiple_of=multiple_of,
             enumeration=enumeration,
         )
-        runtime_config = serialize_record_values(config)
+        runtime_config = serialize_config(config)
+        # raise Exception(runtime_config)
         res = core.integerb(
             store,
             data,
@@ -220,7 +225,7 @@ class float(typedef):
         multiple_of: Optional[float] = None,
         enumeration: Optional[List[float]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, any]] = None,
+        config: Optional[ConfigSpec] = None,
     ):
         data = TypeFloat(
             min=min,
@@ -230,7 +235,7 @@ class float(typedef):
             multiple_of=multiple_of,
             enumeration=enumeration,
         )
-        runtime_config = serialize_record_values(config)
+        runtime_config = serialize_config(config)
         res = core.floatb(
             store,
             data,
@@ -250,9 +255,9 @@ class float(typedef):
 
 class boolean(typedef):
     def __init__(
-        self, *, name: Optional[str] = None, config: Optional[Dict[str, any]] = None
+        self, *, name: Optional[str] = None, config: Optional[ConfigSpec] = None
     ):
-        runtime_config = serialize_record_values(config)
+        runtime_config = serialize_config(config)
         res = core.booleanb(
             store, TypeBase(name=name, runtime_config=runtime_config, as_id=False)
         )
@@ -279,7 +284,7 @@ class string(typedef):
         format: Optional[str] = None,
         enumeration: Optional[List[str]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, any]] = None,
+        config: Optional[ConfigSpec] = None,
         as_id: bool = False,
     ):
         enum_variants = None
@@ -290,7 +295,7 @@ class string(typedef):
             min=min, max=max, pattern=pattern, format=format, enumeration=enum_variants
         )
 
-        runtime_config = serialize_record_values(config)
+        runtime_config = serialize_config(config)
         res = core.stringb(
             store,
             data,
@@ -310,7 +315,7 @@ class string(typedef):
 
 def uuid(
     *,
-    config: Optional[Dict[str, any]] = None,
+    config: Optional[ConfigSpec] = None,
     as_id: bool = False,
     name: Optional[str] = None,
 ) -> string:
@@ -319,7 +324,7 @@ def uuid(
 
 def email(
     *,
-    config: Optional[Dict[str, any]] = None,
+    config: Optional[Optional[ConfigSpec]] = None,
     as_id: bool = False,
     name: Optional[str] = None,
 ) -> string:
@@ -362,7 +367,7 @@ class array(typedef):
         max: Optional[int] = None,
         unique_items: Optional[bool] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, any]] = None,
+        config: Optional[ConfigSpec] = None,
     ):
         data = TypeArray(
             of=items.id,
@@ -371,7 +376,7 @@ class array(typedef):
             unique_items=unique_items,
         )
 
-        runtime_config = serialize_record_values(config)
+        runtime_config = serialize_config(config)
         res = core.arrayb(
             store,
             data,
@@ -396,14 +401,14 @@ class optional(typedef):
         item: typedef,
         default_item: Optional[str] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, str]] = None,
+        config: Optional[ConfigSpec] = None,
     ):
         data = TypeOptional(
             of=item.id,
             default_item=default_item,
         )
 
-        runtime_config = serialize_record_values(config)
+        runtime_config = serialize_config(config)
         res = core.optionalb(
             store,
             data,
@@ -424,11 +429,11 @@ class union(typedef):
         self,
         variants: List[typedef],
         name: Optional[str] = None,
-        config: Optional[Dict[str, str]] = None,
+        config: Optional[ConfigSpec] = None,
     ):
         data = TypeUnion(variants=list(map(lambda v: v.id, variants)))
 
-        runtime_config = serialize_record_values(config)
+        runtime_config = serialize_config(config)
         res = core.unionb(
             store,
             data,
@@ -448,11 +453,11 @@ class either(typedef):
         self,
         variants: List[typedef],
         name: Optional[str] = None,
-        config: Optional[Dict[str, str]] = None,
+        config: Optional[ConfigSpec] = None,
     ):
         data = TypeEither(variants=list(map(lambda v: v.id, variants)))
 
-        runtime_config = serialize_record_values(config)
+        runtime_config = serialize_config(config)
         res = core.eitherb(
             store,
             data,
@@ -479,7 +484,7 @@ class struct(typedef):
         min: Optional[int] = None,
         max: Optional[int] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, str]] = None,
+        config: Optional[ConfigSpec] = None,
     ):
         data = TypeStruct(
             props=list((name, tpe.id) for (name, tpe) in props.items()),
@@ -488,7 +493,7 @@ class struct(typedef):
             max=max,
         )
 
-        runtime_config = serialize_record_values(config)
+        runtime_config = serialize_config(config)
         res = core.structb(
             store,
             data,
