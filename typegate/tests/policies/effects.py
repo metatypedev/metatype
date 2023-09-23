@@ -4,9 +4,10 @@ from typegraph_next.runtimes.deno import DenoRuntime
 
 
 @typegraph(
-    auths=[Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}})]
+    name="effects",
+    auths=[Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
 )
-def effects(g: Graph):
+def tg_effects(g: Graph):
     deno = DenoRuntime()
     public = Policy.public()
     admin_only = Policy.context("role", "admin")

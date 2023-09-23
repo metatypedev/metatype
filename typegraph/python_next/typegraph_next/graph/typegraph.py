@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 import inspect
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, Optional, Union, Dict
+from typing import TYPE_CHECKING, Callable, List, Optional, Union, Dict, Tuple
 
 from typegraph_next.gen.exports.core import (
     Auth,

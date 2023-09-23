@@ -531,7 +531,6 @@ class func(typedef):
 
         out = self.out.extend(props)
         return func(self.inp, out, self.mat)
-        self.mat = mat
 
     def apply(self, value: Dict[str, any]) -> "func":
         data = Apply(paths=build_apply_data(value, [], []))

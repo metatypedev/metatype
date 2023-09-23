@@ -6,7 +6,7 @@ from typegraph_next.runtimes.graphql import GraphQLRuntime
 def graphql(g: Graph):
     gql = GraphQLRuntime("https://example.com/api/graphql")
 
-    user = t.struct(
+    _user = t.struct(
         {
             "id": t.integer(),
             "email": t.string(),

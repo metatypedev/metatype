@@ -8,7 +8,7 @@ def nesting(g: Graph):
 
     public = Policy.public()
 
-    user = t.struct(
+    _user = t.struct(
         {
             "id": t.integer(),
             "email": t.string(),
@@ -17,11 +17,11 @@ def nesting(g: Graph):
         name="User",
     )
 
-    temp = t.struct({"id": t.integer()})
+    _temp = t.struct({"id": t.integer()})
 
-    string = t.string()
+    _string = t.string()
 
-    post = t.struct(
+    _post = t.struct(
         {
             "id": t.integer(),
             "authorId": t.integer(name="Post_authorId"),

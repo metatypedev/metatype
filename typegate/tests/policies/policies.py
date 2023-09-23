@@ -1,4 +1,4 @@
-from typegraph_next import typegraph, t, Graph, Policy
+from typegraph_next import typegraph, t, Graph
 from typegraph_next.graph.params import Auth
 from typegraph_next.runtimes.deno import DenoRuntime
 
@@ -10,7 +10,7 @@ def policies(g: Graph):
     deno = DenoRuntime()
     # mod = ModuleMat("ts/policies.ts")
 
-    secret_data = t.struct(
+    _secret_data = t.struct(
         {
             "username": t.string(),
             "data": t.string(),

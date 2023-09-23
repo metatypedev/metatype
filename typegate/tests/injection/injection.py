@@ -53,17 +53,6 @@ def injection(g: Graph):
     )
 
     gql = GraphQLRuntime("https://example.com/api/graphql")
-    res = t.struct(
-        {
-            **req.props,
-            "parent": deno.identity(copy),
-            "graphql": gql.query(
-                t.struct({"id": t.integer().from_parent("A")}),
-                user,
-                path=("user",),
-            ),
-        }
-    )
 
     messages_db = PrismaRuntime("prisma", "POSTGRES")
 
