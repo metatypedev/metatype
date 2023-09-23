@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 import inspect
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, Optional, Union
+from typing import TYPE_CHECKING, Callable, List, Optional, Union, Dict
 
 from typegraph_next.gen.exports.core import (
     Auth,
@@ -19,6 +19,9 @@ from typegraph_next.wit import core, store
 
 if TYPE_CHECKING:
     from typegraph_next import t
+
+
+ExposeItem = Union["t.func", Dict[str, "ExposeItem"]]
 
 
 class Typegraph:
@@ -66,23 +69,55 @@ class Typegraph:
             raise Exception("No active typegraph")
         return cls._context[-1]
 
-    def __call__(self, **kwargs: "t.func"):
+    def __call__(self, **kwargs: ExposeItem):
         self.expose(**kwargs)
+
+    def _expose_impl(
+        self,
+        entries: Dict[str, ExposeItem],
+        default_policy: Optional[List[PolicySpec]],
+        namespace: List[str],
+    ):
+        from typegraph_next import t
+
+        nested_entries: List[Tuple[List[str], Dict[str, ExposeItem]]] = []
+        toplevel_items: List[Tuple[str, int]] = []
+
+        for name, item in entries.items():
+            if isinstance(item, dict):
+                nested_entries.append((namespace + [name], item))
+            elif isinstance(item, t.typedef):  # t.func or t._TypeWithPolicy
+                toplevel_items.append((name, item.id))
+            else:
+                msg = " ".join(
+                    [
+                        "Invalid item type:",
+                        "expected 't.func' or a Dict for namespaced items",
+                        f"but got {type(item)}",
+                    ]
+                )
+                raise Exception(msg)
+
+        if len(toplevel_items) > 0:
+            res = core.expose(
+                store, toplevel_items, namespace, default_policy=default_policy
+            )
+            if isinstance(res, Err):
+                raise Exception(res.value)
+
+        for ns, entries in nested_entries:
+            self._expose_impl(entries, default_policy, ns)
 
     def expose(
         self,
         default_policy: Optional[PolicySpec] = None,
-        **kwargs: "t.func",
+        **kwargs: ExposeItem,
     ):
-        lst = list((name, fn.id) for (name, fn) in kwargs.items())
-        res = core.expose(
-            store,
-            lst,
+        self._expose_impl(
+            kwargs,
+            get_policy_chain(default_policy) if default_policy else None,
             [],
-            default_policy=get_policy_chain(default_policy) if default_policy else None,
         )
-        if isinstance(res, Err):
-            raise Exception(res.value)
 
 
 @dataclass
@@ -92,7 +127,7 @@ class Graph:
     def expose(
         self,
         default_policy: Optional[Union[Policy, PolicyPerEffect]] = None,
-        **kwargs: "t.func",
+        **kwargs: ExposeItem,
     ):
         self.typegraph.expose(default_policy, **kwargs)
 

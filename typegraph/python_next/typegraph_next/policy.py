@@ -16,7 +16,7 @@ from typegraph_next.gen.exports.core import (
     Policy as WitPolicy,
     PolicySpec as WitPolicySpec,
     PolicySpecSimple,
-    PolicySpecPerEffect as WitPolicyPerEffect,
+    PolicyPerEffect as WitPolicyPerEffect,
 )
 from typegraph_next.gen.exports.runtimes import MaterializerDenoPredefined
 from typegraph_next.wit import core, runtimes, store

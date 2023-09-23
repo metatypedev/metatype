@@ -1,46 +1,38 @@
-from typegraph import TypeGraph, t
-from typegraph.graph.models import Auth
-from typegraph.runtimes.deno import ModuleMat, PredefinedFunMat, PureFunMat
+from typegraph_next import typegraph, t, Graph, Policy
+from typegraph_next.graph.params import Auth
+from typegraph_next.runtimes.deno import DenoRuntime
 
 
-def make_policy(name, fn):
-    return (
-        t.func(
-            t.struct({"a": t.integer()}),
-            t.struct({"a": t.integer()}),
-            PredefinedFunMat("identity"),
-        )
-        .named(name)
-        .add_policy(PureFunMat(fn))
-    )
-
-
-with TypeGraph(
-    "policies",
-    auths=[Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
-) as g:
-    mod = ModuleMat("ts/policies.ts")
+@typegraph(
+    auths=[Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}})]
+)
+def policies(g: Graph):
+    deno = DenoRuntime()
+    # mod = ModuleMat("ts/policies.ts")
 
     secret_data = t.struct(
         {
             "username": t.string(),
             "data": t.string(),
-        }
-    ).named("SecretData")
+        },
+        name="SecretData",
+    )
+
+    fn = deno.identity(
+        t.struct({"a": t.integer()}),
+    )
 
     g.expose(
-        pol_true=make_policy("true", "() => true"),
-        pol_false=make_policy("false", "() => false"),
-        pol_two=make_policy(
-            "eq_two", "(_args, { context }) => Number(context.a) === 2"
+        pol_true=fn.with_policy(deno.policy("true", "() => true")),
+        pol_false=fn.with_policy(deno.policy("false", "() => false")),
+        pol_two=fn.with_policy(
+            deno.policy("eq_two", "(_args, { context }) => Number(context.a) === 2")
         ),
-        ns=t.struct(
-            {
-                "select": t.func(
-                    t.struct(),
-                    t.struct({"id": t.integer()}),
-                    PureFunMat("() => ({ id: 12 })"),
-                )
-            }
-        ),
+        ns={
+            "select": deno.func(
+                t.struct({}),
+                t.struct({"id": t.integer()}),
+                code="() => ({ id: 12 })",
+            )
+        },
     )

@@ -317,7 +317,6 @@ mod tests {
                 folder: None,
                 path: ".".to_string(),
                 prefix: None,
-                secrets: vec![],
                 cors: Cors {
                     allow_origin: vec![],
                     allow_headers: vec![],

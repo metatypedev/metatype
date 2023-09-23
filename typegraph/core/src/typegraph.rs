@@ -20,7 +20,7 @@ use graphql_parser::parse_query;
 use indexmap::IndexMap;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use std::path::Path;
 
@@ -152,6 +152,16 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     Ok(())
 }
 
+fn generate_empty_object(name: impl Into<String>, runtime_idx: u32) -> TypeNode {
+    TypeNode::Object {
+        base: gen_base(name.into(), None, runtime_idx).build(),
+        data: ObjectTypeData {
+            properties: IndexMap::new(),
+            required: vec![],
+        },
+    }
+}
+
 pub fn finalize() -> Result<String> {
     #[cfg(test)]
     eprintln!("Finalizing typegraph...");
@@ -207,13 +217,45 @@ pub fn expose(
         .collect::<Result<Vec<_>>>()?;
 
     with_tg_mut(|ctx| -> Result<()> {
-        if !namespace.is_empty() {
-            return Err(String::from("namespaces not supported"));
-        }
+        let mut segment_index = 0;
+        let mut root_type_idx = 0;
 
-        let mut root_type = ctx.types.get_mut(0).unwrap().take().unwrap();
+        let mut root_type = loop {
+            let mut root_type = ctx.types.get_mut(root_type_idx).unwrap().take().unwrap();
+
+            if segment_index >= namespace.len() {
+                break root_type;
+            }
+
+            let runtime_idx = root_type.base().runtime;
+            let segment = &namespace[segment_index];
+
+            let new_root_index = match &mut root_type {
+                TypeNode::Object { data, .. } => {
+                    if !validate_name(segment) {
+                        return Err(errors::invalid_export_name(segment));
+                    }
+                    if data.properties.contains_key(segment) {
+                        return Err(errors::duplicate_export_name(segment));
+                    }
+
+                    let new_root =
+                        generate_empty_object(namespace[0..segment_index].join("::"), runtime_idx);
+                    let new_root_index = ctx.types.len();
+                    ctx.types.push(Some(new_root));
+                    data.properties
+                        .insert(segment.clone(), new_root_index as u32);
+                    new_root_index
+                }
+                _ => panic!("expected a struct as root type"),
+            };
+            ctx.types[root_type_idx] = Some(root_type);
+            root_type_idx = new_root_index;
+            segment_index += 1;
+        };
+
         let res = ctx.expose_on(&mut root_type, fns);
-        ctx.types[0] = Some(root_type);
+        ctx.types[root_type_idx] = Some(root_type);
         res
     })?
 }
