@@ -42,7 +42,6 @@ interface core {
         path: string,
         // TypeMeta
         prefix: option<string>,
-        secrets: list<string>,
         cors: cors,
         auths: list<auth>,
         rate: option<rate>,

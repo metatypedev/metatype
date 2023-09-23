@@ -3,41 +3,38 @@
 
 import json
 from typing import Dict, List, Optional, Tuple, Union
-from typegraph_next.gen.exports.runtimes import EffectNone
-from typegraph_next.utils import serialize_record_values, build_apply_data
 
 from typing_extensions import Self
 
+from typegraph_next.effects import EffectType
 from typegraph_next.gen.exports.core import (
-    TypeWithInjection,
-)
-from typegraph_next.gen.exports.core import (
+    TypeArray,
     TypeBase,
+    TypeEither,
+    TypeFloat,
     TypeFunc,
     TypeInteger,
-    TypeFloat,
-    TypeArray,
-    TypeEither,
-    TypeUnion,
     TypeOptional,
-    TypeString,
     TypePolicy,
     TypeProxy,
+    TypeString,
     TypeStruct,
+    TypeUnion,
+    TypeWithInjection,
 )
+from typegraph_next.gen.exports.runtimes import EffectNone
 from typegraph_next.gen.exports.utils import Apply
-
 from typegraph_next.gen.types import Err
 from typegraph_next.graph.typegraph import core, store
-from typegraph_next.wit import wit_utils
-from typegraph_next.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
-from typegraph_next.runtimes.deno import Materializer
-from typegraph_next.effects import EffectType
 from typegraph_next.injection import (
     serialize_generic_injection,
     serialize_parent_injection,
     serialize_static_injection,
 )
+from typegraph_next.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
+from typegraph_next.runtimes.deno import Materializer
+from typegraph_next.utils import build_apply_data, serialize_record_values
+from typegraph_next.wit import wit_utils
 
 
 class typedef:
@@ -311,12 +308,22 @@ class string(typedef):
         self.as_id = as_id
 
 
-def uuid(*, config: Optional[Dict[str, any]] = None, as_id: bool = False) -> string:
-    return string(format="uuid", config=config, as_id=as_id)
+def uuid(
+    *,
+    config: Optional[Dict[str, any]] = None,
+    as_id: bool = False,
+    name: Optional[str] = None,
+) -> string:
+    return string(format="uuid", config=config, as_id=as_id, name=name)
 
 
-def email(*, config: Optional[Dict[str, any]] = None, as_id: bool = False) -> string:
-    return string(format="email", config=config, as_id=as_id)
+def email(
+    *,
+    config: Optional[Dict[str, any]] = None,
+    as_id: bool = False,
+    name: Optional[str] = None,
+) -> string:
+    return string(format="email", config=config, as_id=as_id, name=name)
 
 
 def uri() -> string:
@@ -493,6 +500,9 @@ class struct(typedef):
         self.props = props
         self.runtime_config = runtime_config
 
+    def extend(self, props: Dict[str, typedef]):
+        return struct(props={**self.props, **props})
+
 
 class func(typedef):
     inp: struct
@@ -508,6 +518,14 @@ class func(typedef):
         super().__init__(id)
         self.inp = inp
         self.out = out
+        self.mat = mat
+
+    def extend(self, props: Dict[str, typedef]):
+        if not isinstance(self.out, struct):
+            raise Exception("Cannot extend non-struct function output")
+
+        out = self.out.extend(props)
+        return func(self.inp, out, self.mat)
         self.mat = mat
 
     def apply(self, value: Dict[str, any]) -> "func":

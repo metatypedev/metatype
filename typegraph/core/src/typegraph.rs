@@ -20,7 +20,7 @@ use graphql_parser::parse_query;
 use indexmap::IndexMap;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use std::path::Path;
 
@@ -128,7 +128,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
                 .collect::<Result<Vec<_>>>()?,
             prefix: params.prefix,
             rate: params.rate.map(|v| v.into()),
-            secrets: params.secrets,
+            secrets: vec![],
         },
         types: vec![],
         ..Default::default()
@@ -373,5 +373,10 @@ impl TypegraphContext {
             "unable to find type for store id {}",
             u32::from(id)
         ))
+    }
+
+    pub fn add_secret(&mut self, name: impl Into<String>) {
+        // TODO unicity
+        self.meta.secrets.push(name.into());
     }
 }

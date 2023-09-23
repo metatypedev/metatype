@@ -170,7 +170,7 @@ impl Store {
     pub fn get_predefined_deno_function(name: String) -> Result<MaterializerId> {
         if let Some(mat) = with_store(|s| s.predefined_deno_functions.get(&name).cloned()) {
             Ok(mat)
-        } else if PREDEFINED_DENO_FUNCTIONS.iter().any(|n| n == &name) {
+        } else if !PREDEFINED_DENO_FUNCTIONS.iter().any(|n| n == &name) {
             Err(errors::unknown_predefined_function(&name, "deno"))
         } else {
             let runtime_id = Store::get_deno_runtime();

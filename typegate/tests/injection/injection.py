@@ -1,13 +1,17 @@
-from typegraph import TypeGraph, effects, policies, t
-from typegraph.providers.prisma import PrismaRuntime
-from typegraph.runtimes import deno
-from typegraph.runtimes.graphql import GraphQLRuntime
-from typegraph.effects import CREATE, UPDATE, DELETE, NONE
+from typegraph_next import typegraph, effects, Policy, t, Graph
+from typegraph_next.providers.prisma import PrismaRuntime
+from typegraph_next.runtimes.deno import DenoRuntime
+from typegraph_next.runtimes.graphql import GraphQLRuntime
+from typegraph_next.effects import CREATE, UPDATE, DELETE, NONE
 
-with TypeGraph("injection") as g:
+
+@typegraph()
+def injection(g: Graph):
+    deno = DenoRuntime()
+
     req = t.struct(
         {
-            "a": t.integer().named("A"),
+            "a": t.integer(name="A"),
             "raw_int": t.integer().set(1),
             "raw_str": t.string().set("2"),
             "secret": t.integer().from_secret("TEST_VAR"),
@@ -37,23 +41,24 @@ with TypeGraph("injection") as g:
         }
     )
 
-    copy = t.struct({"a2": t.integer().from_parent(g("A"))})
+    copy = t.struct({"a2": t.integer().from_parent("A")})
 
     user = t.struct(
         {
-            "id": t.integer().named("UserId"),
+            "id": t.integer(name="UserId"),
             "name": t.string(),
-            "email": t.email().named("UserEmail"),
-        }
-    ).named("User")
+            "email": t.email(name="UserEmail"),
+        },
+        name="User",
+    )
 
     gql = GraphQLRuntime("https://example.com/api/graphql")
     res = t.struct(
         {
             **req.props,
-            "parent": t.func(copy, copy, deno.PredefinedFunMat("identity")),
+            "parent": deno.identity(copy),
             "graphql": gql.query(
-                t.struct({"id": t.integer().from_parent(g("A"))}),
+                t.struct({"id": t.integer().from_parent("A")}),
                 user,
                 path=("user",),
             ),
@@ -64,61 +69,50 @@ with TypeGraph("injection") as g:
 
     message = t.struct(
         {
-            "id": t.uuid().as_id.config("auto"),
+            "id": t.uuid(as_id=True, config={"auto": True}),
             "time": t.datetime(),
             "text": t.string(),
             "senderId": t.integer(),
             "recipientId": t.integer(),
-        }
-    ).named("Messages")
+        },
+        name="Messages",
+    )
 
     find_messages = messages_db.find_many(message)
 
     g.expose(
-        test=t.func(
-            req,
-            res,
-            deno.PredefinedFunMat("identity"),
+        Policy.public(),
+        test=deno.identity(req).extend(
+            {
+                "parent": deno.identity(copy),
+                "graphql": gql.query(
+                    t.struct({"id": t.integer().from_parent("A")}),
+                    user,
+                    path=("user",),
+                ),
+            }
         ),
-        effect_none=t.func(req2, req2, deno.PredefinedFunMat("identity")),
-        effect_create=t.func(
-            req2, req2, deno.PredefinedFunMat("identity", effect=effects.create())
-        ),
-        effect_delete=t.func(
-            req2, req2, deno.PredefinedFunMat("identity", effect=effects.delete())
-        ),
-        effect_update=t.func(
-            req2, req2, deno.PredefinedFunMat("identity", effect=effects.update())
-        ),
-        effect_upsert=t.func(
-            req2, req2, deno.PredefinedFunMat("identity", effect=effects.update())
-        ),
+        effect_none=deno.identity(req2),
+        effect_create=deno.func(req2, req2, code="(x) => x", effect=effects.create()),
+        effect_delete=deno.func(req2, req2, code="(x) => x", effect=effects.delete()),
+        effect_update=deno.func(req2, req2, code="(x) => x", effect=effects.update()),
+        effect_upsert=deno.func(req2, req2, code="(x) => x", effect=effects.update()),
         user=gql.query(
             t.struct({"id": t.integer()}),
-            t.struct(
+            user.extend(
                 {
-                    **user.props,
-                    "from_parent": t.func(
-                        t.struct({"email": t.email().from_parent("UserEmail")}),
-                        t.struct({"email": t.email()}),
-                        deno.PredefinedFunMat("identity"),
+                    "from_parent": deno.identity(t.struct({"email": t.email()})).apply(
+                        {"email": g.inherit().from_parent("UserEmail")}
                     ),
-                    "messagesSent": t.func(
-                        find_messages.inp.compose(
-                            {
-                                "where": t.struct(
-                                    {
-                                        "senderId": t.integer().from_parent("UserId"),
-                                    }
-                                )
+                    "messagesSent": find_messages.apply(
+                        {
+                            "where": {
+                                "senderId": g.inherit().from_parent("UserId"),
                             }
-                        ),
-                        find_messages.out,
-                        find_messages.mat,
+                        }
                     ),
                 }
             ),
             path=("user",),
         ),
-        default_policy=[policies.public()],
     )

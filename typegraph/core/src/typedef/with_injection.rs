@@ -19,31 +19,48 @@ impl TypeConversion for WithInjection {
         let base = type_node.base_mut();
         let value: Injection =
             serde_json::from_str(&self.data.injection).map_err(|e| e.to_string())?;
-        if let Injection::Parent(data) = value {
-            let get_correct_id = |v: u32| -> Result<u32> {
-                let id = TypeId(v).resolve_proxy()?;
-                if let Some(index) = ctx.find_type_index_by_store_id(id) {
-                    return Ok(index);
-                }
-                Err(format!("unable to find type for store id {}", id.0))
-            };
-            let new_data = match data {
-                InjectionData::SingleValue(SingleValue { value }) => {
-                    InjectionData::SingleValue(SingleValue {
-                        value: get_correct_id(value)?,
-                    })
-                }
-                InjectionData::ValueByEffect(per_effect) => {
-                    let mut new_per_effect: HashMap<EffectType, u32> = HashMap::new();
-                    for (k, v) in per_effect.iter() {
-                        new_per_effect.insert(*k, get_correct_id(*v)?);
+        match value {
+            Injection::Parent(data) => {
+                let get_correct_id = |v: u32| -> Result<u32> {
+                    let id = TypeId(v).resolve_proxy()?;
+                    if let Some(index) = ctx.find_type_index_by_store_id(id) {
+                        return Ok(index);
                     }
-                    InjectionData::ValueByEffect(new_per_effect)
+                    Err(format!("unable to find type for store id {}", id.0))
+                };
+                let new_data = match data {
+                    InjectionData::SingleValue(SingleValue { value }) => {
+                        InjectionData::SingleValue(SingleValue {
+                            value: get_correct_id(value)?,
+                        })
+                    }
+                    InjectionData::ValueByEffect(per_effect) => {
+                        let mut new_per_effect: HashMap<EffectType, u32> = HashMap::new();
+                        for (k, v) in per_effect.iter() {
+                            new_per_effect.insert(*k, get_correct_id(*v)?);
+                        }
+                        InjectionData::ValueByEffect(new_per_effect)
+                    }
+                };
+                base.injection = Some(Injection::Parent(new_data));
+            }
+
+            Injection::Secret(data) => {
+                match &data {
+                    InjectionData::SingleValue(SingleValue { value }) => {
+                        ctx.add_secret(value);
+                    }
+                    InjectionData::ValueByEffect(per_effect) => {
+                        for (_, v) in per_effect.iter() {
+                            ctx.add_secret(v);
+                        }
+                    }
                 }
-            };
-            base.injection = Some(Injection::Parent(new_data));
-        } else {
-            base.injection = Some(value);
+                base.injection = Some(Injection::Secret(data));
+            }
+            _ => {
+                base.injection = Some(value);
+            }
         }
         Ok(type_node)
     }

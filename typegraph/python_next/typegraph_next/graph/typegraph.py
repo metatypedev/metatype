@@ -31,7 +31,6 @@ class Typegraph:
     rate: Optional[Rate]
     cors: Optional[Cors]
     prefix: Optional[str]
-    secrets: Optional[List[str]]
 
     def __init__(
         self,
@@ -43,7 +42,6 @@ class Typegraph:
         rate: Optional[Rate] = None,
         cors: Optional[Cors] = None,
         prefix: Optional[str] = None,
-        secrets: Optional[List[str]] = None,
     ):
         self.name = name
         self.dynamic = dynamic
@@ -61,7 +59,6 @@ class Typegraph:
             max_age_sec=None,
         )
         self.prefix = prefix
-        self.secrets = secrets or []
 
     @classmethod
     def get_active(cls) -> Optional["Typegraph"]:
@@ -114,7 +111,6 @@ def typegraph(
     rate: Optional[Rate] = None,
     cors: Optional[Cors] = None,
     prefix: Optional[str] = None,
-    secrets: Optional[List[str]] = None,
 ) -> Callable[[Callable[[Graph], None]], Typegraph]:
     def decorator(builder: Callable[[Graph], None]) -> Typegraph:
         actual_name = name
@@ -132,7 +128,6 @@ def typegraph(
             rate=rate,
             cors=cors,
             prefix=prefix,
-            secrets=secrets,
         )
 
         Typegraph._context.append(tg)
@@ -148,7 +143,6 @@ def typegraph(
                 rate=tg.rate,
                 cors=tg.cors,
                 prefix=tg.prefix,
-                secrets=tg.secrets,
             ),
         )
 
