@@ -13,12 +13,15 @@ use std::rc::Rc;
 
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::global_store::Store;
+use crate::runtimes::prisma::migration::{
+    prisma_apply, prisma_create, prisma_deploy, prisma_diff, prisma_reset,
+};
 use crate::runtimes::prisma::with_prisma_runtime;
-use crate::wit::core::{RuntimeId, TypeFunc, TypeId as CoreTypeId};
+use crate::wit::core::{FuncParams, RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
-    MaterializerHttpRequest, PrismaLinkData, PrismaRuntimeData, RandomRuntimeData,
-    TemporalOperationData, TemporalRuntimeData,
+    MaterializerHttpRequest, PrismaLinkData, PrismaMigrationOperation, PrismaRuntimeData,
+    RandomRuntimeData, TemporalOperationData, TemporalRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
@@ -44,6 +47,7 @@ pub enum Runtime {
     Random(Rc<RandomRuntimeData>),
     WasmEdge,
     Prisma(Rc<PrismaRuntimeData>, Rc<PrismaRuntimeContext>),
+    PrismaMigration,
     Temporal(Rc<TemporalRuntimeData>),
 }
 
@@ -111,6 +115,18 @@ impl Materializer {
         }
     }
 
+    fn prisma_migrate(
+        runtime_id: RuntimeId,
+        data: PrismaMigrationOperation,
+        effect: wit::Effect,
+    ) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
+
     fn temporal(runtime_id: RuntimeId, data: TemporalMaterializer, effect: wit::Effect) -> Self {
         Self {
             runtime_id,
@@ -130,14 +146,9 @@ pub enum MaterializerData {
     Random(Rc<RandomMaterializer>),
     WasmEdge(Rc<WasiMaterializer>),
     Prisma(Rc<PrismaMaterializer>),
+    PrismaMigration(PrismaMigrationOperation),
     Temporal(Rc<TemporalMaterializer>),
 }
-
-// impl From<DenoMaterializer> for MaterializerData {
-//     fn from(mat: DenoMaterializer) -> Self {
-//         Self::Deno(mat)
-//     }
-// }
 
 macro_rules! prisma_op {
     ( $rt:expr, $model:expr, $fn:ident, $name:expr, $effect:expr ) => {{
@@ -152,7 +163,7 @@ macro_rules! prisma_op {
 
         let mat_id = Store::register_materializer(Materializer::prisma($rt, mat, $effect));
 
-        Ok(TypeFunc {
+        Ok(FuncParams {
             inp: types.input.into(),
             out: types.output.into(),
             mat: mat_id,
@@ -303,31 +314,31 @@ impl wit::Runtimes for crate::Lib {
         )))
     }
 
-    fn prisma_find_unique(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_find_unique(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(runtime, model, find_unique, "findUnique")
     }
 
-    fn prisma_find_many(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_find_many(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(runtime, model, find_many, "findMany")
     }
 
-    fn prisma_find_first(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_find_first(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(runtime, model, find_first, "findFirst")
     }
 
-    fn prisma_aggregate(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_aggregate(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(runtime, model, aggregate, "aggregate")
     }
 
-    fn prisma_group_by(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_group_by(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(runtime, model, group_by, "groupBy")
     }
 
-    fn prisma_count(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_count(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(runtime, model, count, "count")
     }
 
-    fn prisma_create_one(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_create_one(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -337,7 +348,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_create_many(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_create_many(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -347,7 +358,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_update_one(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_update_one(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -357,7 +368,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_update_many(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_update_many(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -367,7 +378,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_upsert_one(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_upsert_one(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -377,7 +388,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_delete_one(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_delete_one(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -387,7 +398,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_delete_many(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_delete_many(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -414,6 +425,30 @@ impl wit::Runtimes for crate::Lib {
         Ok(builder.build()?.into())
     }
 
+    fn prisma_migration(operation: PrismaMigrationOperation) -> Result<FuncParams, wit::Error> {
+        use PrismaMigrationOperation as Op;
+
+        let (effect, (inp, out)) = match operation {
+            Op::Diff => (WitEffect::None, prisma_diff()?),
+            Op::Create => (WitEffect::Create(false), prisma_create()?),
+            Op::Apply => (WitEffect::Update(false), prisma_apply()?),
+            Op::Deploy => (WitEffect::Update(true), prisma_deploy()?),
+            Op::Reset => (WitEffect::Delete(true), prisma_reset()?),
+        };
+
+        let mat_id = Store::register_materializer(Materializer::prisma_migrate(
+            Store::get_prisma_migration_runtime(),
+            operation,
+            effect,
+        ));
+
+        Ok(FuncParams {
+            inp: inp.into(),
+            out: out.into(),
+            mat: mat_id,
+        })
+    }
+
     fn register_temporal_runtime(data: TemporalRuntimeData) -> Result<RuntimeId, wit::Error> {
         Ok(Store::register_runtime(Runtime::Temporal(data.into())))
     }
@@ -421,7 +456,7 @@ impl wit::Runtimes for crate::Lib {
     fn generate_temporal_operation(
         runtime: RuntimeId,
         data: TemporalOperationData,
-    ) -> Result<TypeFunc, wit::Error> {
+    ) -> Result<FuncParams, wit::Error> {
         temporal_operation(runtime, data)
     }
 }

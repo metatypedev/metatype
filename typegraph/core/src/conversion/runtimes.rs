@@ -433,6 +433,7 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                 })
             },
         ))),
+        Runtime::PrismaMigration => Ok(TGRuntime::Known(PrismaMigration).into()),
         Runtime::Temporal(d) => Ok(TGRuntime::Known(Temporal(TemporalRuntimeData {
             name: d.name.clone(),
             host: d.host.clone(),

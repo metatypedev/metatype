@@ -380,6 +380,7 @@ impl TypegraphContext {
             let converted = Store::get_policy(id)?.convert(self)?;
             let idx = self.policies.len();
             self.policies.push(converted);
+            self.mapping.policies.insert(id, idx as u32);
             Ok(idx as PolicyId)
         }
     }

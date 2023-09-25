@@ -395,7 +395,7 @@
       "name": "function",
       "runtime": 0,
       "effect": {
-        "effect": null,
+        "effect": "none",
         "idempotent": true
       },
       "data": {
@@ -406,7 +406,7 @@
       "name": "typegraphs",
       "runtime": 1,
       "effect": {
-        "effect": null,
+        "effect": "none",
         "idempotent": true
       },
       "data": {}
@@ -415,7 +415,7 @@
       "name": "serializedTypegraph",
       "runtime": 1,
       "effect": {
-        "effect": null,
+        "effect": "none",
         "idempotent": true
       },
       "data": {}
@@ -424,7 +424,7 @@
       "name": "typegraph",
       "runtime": 1,
       "effect": {
-        "effect": null,
+        "effect": "none",
         "idempotent": true
       },
       "data": {}

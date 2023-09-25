@@ -24,15 +24,18 @@ pub mod wasmedge;
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "name", content = "data", rename_all = "lowercase")]
+#[serde(tag = "name", content = "data", rename_all = "snake_case")]
 pub enum KnownRuntime {
     Deno(DenoRuntimeData),
+    #[serde(rename = "graphql")]
     GraphQL(GraphQLRuntimeData),
+    #[serde(rename = "http")]
     HTTP(HTTPRuntimeData),
     #[serde(rename = "python_wasi")]
     PythonWasi(PythonRuntimeData),
     Random(RandomRuntimeData),
     Prisma(PrismaRuntimeData),
+    PrismaMigration,
     S3(S3RuntimeData),
     Temporal(TemporalRuntimeData),
     WasmEdge(WasmEdgeRuntimeData),

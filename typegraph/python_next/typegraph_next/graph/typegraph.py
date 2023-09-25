@@ -58,7 +58,7 @@ class Typegraph:
             allow_headers=[],
             expose_headers=[],
             allow_methods=[],
-            allow_credentials=False,
+            allow_credentials=True,
             max_age_sec=None,
         )
         self.prefix = prefix

@@ -140,6 +140,8 @@ interface core {
         inp: type-id,
         out: type-id,
         mat: materializer-id,
+        rate-calls: bool,
+        rate-weight: option<u32>,
     }
     funcb: func(data: type-func) -> result<type-id, error>
 
@@ -181,10 +183,16 @@ interface core {
     
     type runtime-id = u32
     type materializer-id = u32
+
+    record func-params {
+        inp: type-id,
+        out: type-id,
+        mat: materializer-id,
+    }
 }
 
 interface runtimes {
-    use core.{error, type-id, type-func, runtime-id, materializer-id}
+    use core.{error, type-id, func-params, runtime-id, materializer-id}
     
     get-deno-runtime: func() -> runtime-id
 
@@ -333,20 +341,31 @@ interface runtimes {
     }
 
     register-prisma-runtime: func(data: prisma-runtime-data) -> result<runtime-id, error>
-    prisma-find-unique: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-find-many: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-find-first: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-aggregate: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-count: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-group-by: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-create-one: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-create-many: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-update-one: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-update-many: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-upsert-one: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-delete-one: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-delete-many: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
+    prisma-find-unique: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-find-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-find-first: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-aggregate: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-count: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-group-by: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-create-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-create-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-update-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-update-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-upsert-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-delete-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-delete-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
     prisma-link: func(data: prisma-link-data) -> result<type-id, error>
+
+
+    // prisma-migrate
+    enum prisma-migration-operation {
+        diff,
+        create,
+        apply,
+        deploy,
+        reset,
+    }
+    prisma-migration: func(operation: prisma-migration-operation) -> result<func-params, error>
 
     // temporal
     record temporal-runtime-data {
@@ -368,7 +387,7 @@ interface runtimes {
     }
 
     register-temporal-runtime: func(data: temporal-runtime-data) -> result<runtime-id, error>
-    generate-temporal-operation: func(runtime: runtime-id, data: temporal-operation-data) -> result<type-func, error>
+    generate-temporal-operation: func(runtime: runtime-id, data: temporal-operation-data) -> result<func-params, error>
 }
 
 

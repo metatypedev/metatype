@@ -8,6 +8,7 @@ from typing_extensions import Self
 
 from typegraph_next.effects import EffectType
 from typegraph_next.gen.exports.core import (
+    FuncParams,
     TypeArray,
     TypeBase,
     TypeEither,
@@ -513,9 +514,24 @@ class func(typedef):
     inp: struct
     out: typedef
     mat: Materializer
+    rate_calls: bool
+    rate_weight: Optional[int]
 
-    def __init__(self, inp: struct, out: typedef, mat: Materializer):
-        data = TypeFunc(inp=inp.id, out=out.id, mat=mat.id)
+    def __init__(
+        self,
+        inp: struct,
+        out: typedef,
+        mat: Materializer,
+        rate_calls: bool = False,
+        rate_weight: Optional[int] = None,
+    ):
+        data = TypeFunc(
+            inp=inp.id,
+            out=out.id,
+            mat=mat.id,
+            rate_calls=rate_calls,
+            rate_weight=rate_weight,
+        )
         res = core.funcb(store, data)
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -524,6 +540,8 @@ class func(typedef):
         self.inp = inp
         self.out = out
         self.mat = mat
+        self.rate_calls = rate_calls
+        self.rate_weight = rate_weight
 
     def extend(self, props: Dict[str, typedef]):
         if not isinstance(self.out, struct):
@@ -541,11 +559,19 @@ class func(typedef):
 
         return func(typedef(id=apply_id.value), self.out, self.mat)
 
-    def from_type_func(data: TypeFunc) -> "func":
+    def from_type_func(
+        data: FuncParams, rate_calls: bool = False, rate_weight: Optional[int] = None
+    ) -> "func":
         # Note: effect is a just placeholder
         # in the deno frontend, we do not have to fill the effect attribute on materializers
         mat = Materializer(id=data.mat, effect=EffectNone())
-        return func(typedef(id=data.inp), typedef(id=data.out), mat)
+        return func(
+            typedef(id=data.inp),
+            typedef(id=data.out),
+            mat,
+            rate_calls=rate_calls,
+            rate_weight=rate_weight,
+        )
 
 
 def gen(out: typedef, mat: Materializer):
