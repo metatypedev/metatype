@@ -400,7 +400,7 @@ impl wit::Runtimes for crate::Lib {
     fn prisma_execute(
         runtime: RuntimeId,
         query: String,
-        param: Option<CoreTypeId>,
+        param: CoreTypeId,
         effect: WitEffect,
     ) -> Result<TypeFunc, wit::Error> {
         let mat = PrismaMaterializer {
@@ -408,7 +408,7 @@ impl wit::Runtimes for crate::Lib {
             operation: "executeRaw".to_string(),
         };
 
-        let types = with_prisma_runtime(runtime, |ctx| ctx.execute_raw(param.map(|v| v.into())))?;
+        let types = with_prisma_runtime(runtime, |ctx| ctx.execute_raw(param.into()))?;
         let mat_id = Store::register_materializer(Materializer::prisma(runtime, mat, effect));
 
         Ok(TypeFunc {

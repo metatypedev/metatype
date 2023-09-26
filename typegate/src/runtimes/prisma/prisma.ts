@@ -190,8 +190,11 @@ export class PrismaRuntime {
           action: matData.operation,
           query: {
             arguments: {
+              // TODO params, query
+              // [resQuery, resParams] <- native.queryFmt(matData.table, params)
+              // query: resQuery,
+              // parameters: resParams,
               query: matData.table,
-              // TODO params
               parameters: "[]",
             },
             selection: {},

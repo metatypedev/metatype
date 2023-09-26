@@ -130,11 +130,11 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  execute(query: string, parameters: Typedef | null, effect: Effect) {
+  execute(query: string, parameters: Typedef, effect: Effect) {
     const type = runtimes.prismaExecute(
       this._id,
       query,
-      parameters ? parameters._id : null,
+      parameters._id,
       effect,
     );
     return t.Func.fromTypeFunc(type);
