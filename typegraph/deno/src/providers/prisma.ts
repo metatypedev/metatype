@@ -4,7 +4,8 @@
 import { Runtime } from "../runtimes/mod.ts";
 import { runtimes } from "../wit.ts";
 import { Typedef } from "../types.ts";
-import { t } from "@typegraph/deno/src/mod.ts";
+import { t } from "../mod.ts";
+import { Effect } from "../../gen/exports/metatype-typegraph-runtimes.d.ts";
 
 type PrismaLinkArg = {
   fkey?: boolean;
@@ -126,6 +127,26 @@ export class PrismaRuntime extends Runtime {
       model = t.ref(model);
     }
     const type = runtimes.prismaDeleteMany(this._id, model._id);
+    return t.Func.fromTypeFunc(type);
+  }
+
+  execute(query: string, parameters: Typedef | null, effect: Effect) {
+    const type = runtimes.prismaExecute(
+      this._id,
+      query,
+      parameters ? parameters._id : null,
+      effect,
+    );
+    return t.Func.fromTypeFunc(type);
+  }
+
+  queryRaw(query: string, parameters: Typedef | null, output: Typedef) {
+    const type = runtimes.prismaQueryRaw(
+      this._id,
+      query,
+      parameters ? parameters._id : null,
+      output._id,
+    );
     return t.Func.fromTypeFunc(type);
   }
 

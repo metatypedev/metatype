@@ -347,8 +347,8 @@ interface runtimes {
     prisma-upsert-one: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
     prisma-delete-one: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
     prisma-delete-many: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-execute: func(runtime: runtime-id, query: string, param: type-id, effect: effect) -> result<type-func, error>
-    prisma-query-raw: func(runtime: runtime-id, query: string, param: type-id, out: type-id) -> result<type-func, error>
+    prisma-execute: func(runtime: runtime-id, query: string, param: option<type-id>, effect: effect) -> result<type-func, error>
+    prisma-query-raw: func(runtime: runtime-id, query: string, param: option<type-id>, out: type-id) -> result<type-func, error>
     prisma-link: func(data: prisma-link-data) -> result<type-id, error>
 
     // temporal

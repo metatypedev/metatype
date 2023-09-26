@@ -236,8 +236,8 @@ impl TypeGenContext {
         })
     }
 
-    pub fn execute_raw(&mut self, param: TypeId) -> Result<OperationTypes> {
-        let param = param.as_struct()?;
+    pub fn execute_raw(&mut self, param: Option<TypeId>) -> Result<OperationTypes> {
+        let param = param.unwrap_or(t::struct_().build()?).as_struct()?;
         Ok(OperationTypes {
             input: t::struct_()
                 .prop("parameters", t::optional(param.get_id()).build()?)
@@ -246,8 +246,8 @@ impl TypeGenContext {
         })
     }
 
-    pub fn query_raw(&mut self, param: TypeId, out: TypeId) -> Result<OperationTypes> {
-        let param = param.as_struct()?;
+    pub fn query_raw(&mut self, param: Option<TypeId>, out: TypeId) -> Result<OperationTypes> {
+        let param = param.unwrap_or(t::struct_().build()?).as_struct()?;
         Ok(OperationTypes {
             input: t::struct_().prop("parameters", param.get_id()).build()?,
             output: out,
