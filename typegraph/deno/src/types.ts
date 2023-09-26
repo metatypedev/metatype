@@ -509,14 +509,30 @@ export class Func<
   }
 }
 
+type FuncConfig = {
+  rateCalls?: boolean;
+  rateWeight?: number;
+};
+
 export function func<
   P extends { [key: string]: Typedef },
   I extends Struct<P> = Struct<P>,
   O extends Typedef = Typedef,
   M extends Materializer = Materializer,
->(inp: I, out: O, mat: M) {
+>(
+  inp: I,
+  out: O,
+  mat: M,
+  { rateCalls = false, rateWeight = undefined }: FuncConfig = {},
+) {
   return new Func<P, I, O, M>(
-    core.funcb({ inp: inp._id, out: out._id, mat: mat._id }) as number,
+    core.funcb({
+      inp: inp._id,
+      out: out._id,
+      mat: mat._id,
+      rateCalls,
+      rateWeight,
+    }) as number,
     inp,
     out,
     mat,
