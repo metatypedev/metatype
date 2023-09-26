@@ -397,6 +397,49 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
+    fn prisma_execute(
+        runtime: RuntimeId,
+        query: String,
+        param: CoreTypeId,
+        effect: WitEffect,
+    ) -> Result<TypeFunc, wit::Error> {
+        let mat = PrismaMaterializer {
+            table: query,
+            operation: "executeRaw".to_string(),
+        };
+
+        let types = with_prisma_runtime(runtime, |ctx| ctx.execute_raw(param.into()))?;
+        let mat_id = Store::register_materializer(Materializer::prisma(runtime, mat, effect));
+
+        Ok(TypeFunc {
+            inp: types.input.into(),
+            out: types.output.into(),
+            mat: mat_id,
+        })
+    }
+
+    fn prisma_query_raw(
+        runtime: RuntimeId,
+        query: String,
+        param: CoreTypeId,
+        out: CoreTypeId,
+    ) -> Result<TypeFunc, wit::Error> {
+        let mat = PrismaMaterializer {
+            table: query,
+            operation: "queryRaw".to_string(),
+        };
+
+        let types = with_prisma_runtime(runtime, |ctx| ctx.query_raw(param.into(), out.into()))?;
+        let mat_id =
+            Store::register_materializer(Materializer::prisma(runtime, mat, WitEffect::None));
+
+        Ok(TypeFunc {
+            inp: types.input.into(),
+            out: types.output.into(),
+            mat: mat_id,
+        })
+    }
+
     fn prisma_link(data: PrismaLinkData) -> Result<CoreTypeId, wit::Error> {
         let mut builder = prisma_link(data.target_type.into())?;
         if let Some(name) = data.relationship_name {

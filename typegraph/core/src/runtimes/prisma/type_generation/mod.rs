@@ -236,6 +236,24 @@ impl TypeGenContext {
         })
     }
 
+    pub fn execute_raw(&mut self, param: TypeId) -> Result<OperationTypes> {
+        let param = param.as_struct()?;
+        Ok(OperationTypes {
+            input: t::struct_()
+                .prop("parameters", t::optional(param.get_id()).build()?)
+                .build()?,
+            output: t::integer().build()?,
+        })
+    }
+
+    pub fn query_raw(&mut self, param: TypeId, out: TypeId) -> Result<OperationTypes> {
+        let param = param.as_struct()?;
+        Ok(OperationTypes {
+            input: t::struct_().prop("parameters", param.get_id()).build()?,
+            output: out,
+        })
+    }
+
     fn generate(&mut self, generator: &impl TypeGen) -> Result<TypeId> {
         //! Generates a type and caches it, or returns the cached type if it
         //! already exists.
