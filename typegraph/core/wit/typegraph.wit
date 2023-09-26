@@ -179,7 +179,7 @@ interface core {
     }
     register-context-policy: func(key: string, check: context-check) -> result<tuple<policy-id, string>, error>
 
-    expose: func(fns: list<tuple<string, type-id>>, namespace: list<string>, default-policy: option<list<policy-spec>>) -> result<_, error>
+    expose: func(fns: list<tuple<string, type-id>>, default-policy: option<list<policy-spec>>) -> result<_, error>
     
     type runtime-id = u32
     type materializer-id = u32

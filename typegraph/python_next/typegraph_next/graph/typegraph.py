@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 import inspect
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, Optional, Union, Dict, Tuple
+from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
 from typegraph_next.gen.exports.core import (
     Auth,
@@ -21,7 +21,8 @@ if TYPE_CHECKING:
     from typegraph_next import t
 
 
-ExposeItem = Union["t.func", Dict[str, "ExposeItem"]]
+# ExposeItem = Union["t.func", Dict[str, "ExposeItem"]]
+ExposeItem = Union["t.func", "t.struct"]
 
 
 class Typegraph:
@@ -72,51 +73,15 @@ class Typegraph:
     def __call__(self, **kwargs: ExposeItem):
         self.expose(**kwargs)
 
-    def _expose_impl(
-        self,
-        entries: Dict[str, ExposeItem],
-        default_policy: Optional[List[PolicySpec]],
-        namespace: List[str],
-    ):
-        from typegraph_next import t
-
-        nested_entries: List[Tuple[List[str], Dict[str, ExposeItem]]] = []
-        toplevel_items: List[Tuple[str, int]] = []
-
-        for name, item in entries.items():
-            if isinstance(item, dict):
-                nested_entries.append((namespace + [name], item))
-            elif isinstance(item, t.typedef):  # t.func or t._TypeWithPolicy
-                toplevel_items.append((name, item.id))
-            else:
-                msg = " ".join(
-                    [
-                        "Invalid item type:",
-                        "expected 't.func' or a Dict for namespaced items",
-                        f"but got {type(item)}",
-                    ]
-                )
-                raise Exception(msg)
-
-        if len(toplevel_items) > 0:
-            res = core.expose(
-                store, toplevel_items, namespace, default_policy=default_policy
-            )
-            if isinstance(res, Err):
-                raise Exception(res.value)
-
-        for ns, entries in nested_entries:
-            self._expose_impl(entries, default_policy, ns)
-
     def expose(
         self,
         default_policy: Optional[PolicySpec] = None,
         **kwargs: ExposeItem,
     ):
-        self._expose_impl(
-            kwargs,
-            get_policy_chain(default_policy) if default_policy else None,
-            [],
+        core.expose(
+            store,
+            [(k, v.id) for k, v in kwargs.items()],
+            default_policy=get_policy_chain(default_policy) if default_policy else None,
         )
 
 

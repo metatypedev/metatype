@@ -4,7 +4,7 @@
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::{gen_base, TypeConversion};
 use crate::host::abi;
-use crate::types::{Type, TypeFun, TypeId};
+use crate::types::{Type, TypeId};
 use crate::validation::validate_name;
 use crate::Lib;
 use crate::{
@@ -53,15 +53,6 @@ thread_local! {
 }
 
 static TYPEGRAPH_VERSION: &str = "0.0.2";
-
-// pub fn with_tg<T>(f: impl FnOnce(&TypegraphContext) -> T) -> Result<T> {
-//     TG.with(|tg| {
-//         let tg = tg.borrow();
-//         tg.as_ref()
-//             .map(|tg| f(tg))
-//             .ok_or_else(errors::expected_typegraph_context)
-//     })
-// }
 
 pub fn with_tg_mut<T>(f: impl FnOnce(&mut TypegraphContext) -> T) -> Result<T> {
     TG.with(|tg| {
@@ -152,16 +143,6 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     Ok(())
 }
 
-fn generate_empty_object(name: impl Into<String>, runtime_idx: u32) -> TypeNode {
-    TypeNode::Object {
-        base: gen_base(name.into(), None, runtime_idx).build(),
-        data: ObjectTypeData {
-            properties: IndexMap::new(),
-            required: vec![],
-        },
-    }
-}
-
 pub fn finalize() -> Result<String> {
     #[cfg(test)]
     eprintln!("Finalizing typegraph...");
@@ -191,103 +172,74 @@ pub fn finalize() -> Result<String> {
     serde_json::to_string(&tg).map_err(|e| e.to_string())
 }
 
+fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
+    let attrs = type_id.attrs()?;
+
+    match attrs.concrete_type.as_type()? {
+        Type::Struct(inner) => {
+            // namespace
+            for (prop_name, prop_type_id) in inner.iter_props() {
+                ensure_valid_export(format!("{export_key}::{prop_name}"), prop_type_id)?;
+            }
+        }
+        Type::Func(_) => {}
+        _ => return Err(errors::invalid_export_type(&export_key, &type_id.repr()?)),
+    }
+
+    Ok(())
+}
+
 pub fn expose(
-    fns: Vec<(String, TypeId)>,
-    namespace: Vec<String>,
+    fields: Vec<(String, TypeId)>,
     default_policy: Option<Vec<PolicySpec>>,
 ) -> Result<()> {
-    let fns = fns
+    let fields = fields
         .into_iter()
-        .map(|(name, fn_id)| -> Result<_> {
-            let fn_id = fn_id.resolve_proxy()?;
+        .map(|(key, type_id)| -> Result<_> {
+            let attrs = type_id.attrs()?;
 
-            let has_policy = !fn_id.attrs()?.policy_chain.is_empty();
+            let has_policy = !attrs.policy_chain.is_empty();
 
-            let fn_id: TypeId = match (has_policy, default_policy.as_ref()) {
+            // TODO how to set default policy on a namespace? Or will it inherit
+            // the policies of the namespace?
+            let type_id: TypeId = match (has_policy, default_policy.as_ref()) {
                 (false, Some(default_policy)) => Lib::with_policy(TypePolicy {
-                    tpe: fn_id.into(),
+                    tpe: type_id.into(),
                     chain: default_policy.to_vec(),
                 })?
                 .into(),
-                _ => fn_id,
+                _ => type_id,
             };
 
-            Ok((name, fn_id))
+            Ok((key, type_id))
         })
         .collect::<Result<Vec<_>>>()?;
 
-    with_tg_mut(|ctx| -> Result<()> {
-        let mut segment_index = 0;
-        let mut root_type_idx = 0;
-
-        let mut root_type = loop {
-            let mut root_type = ctx.types.get_mut(root_type_idx).unwrap().take().unwrap();
-
-            if segment_index >= namespace.len() {
-                break root_type;
-            }
-
-            let runtime_idx = root_type.base().runtime;
-            let segment = &namespace[segment_index];
-
-            let new_root_index = match &mut root_type {
-                TypeNode::Object { data, .. } => {
-                    if !validate_name(segment) {
-                        return Err(errors::invalid_export_name(segment));
-                    }
-                    if data.properties.contains_key(segment) {
-                        return Err(errors::duplicate_export_name(segment));
-                    }
-
-                    let new_root =
-                        generate_empty_object(namespace[0..segment_index].join("::"), runtime_idx);
-                    let new_root_index = ctx.types.len();
-                    ctx.types.push(Some(new_root));
-                    data.properties
-                        .insert(segment.clone(), new_root_index as u32);
-                    new_root_index
-                }
-                _ => panic!("expected a struct as root type"),
-            };
-            ctx.types[root_type_idx] = Some(root_type);
-            root_type_idx = new_root_index;
-            segment_index += 1;
+    with_tg_mut(|ctx| -> Result<_> {
+        let mut root = ctx.types.get_mut(0).unwrap().take().unwrap();
+        let root_props = match &mut root {
+            TypeNode::Object { data, .. } => &mut data.properties,
+            _ => return Err("expect root to be an object".to_string()),
         };
+        for (key, type_id) in fields.into_iter() {
+            if !validate_name(&key) {
+                return Err(errors::invalid_export_name(&key));
+            }
+            if root_props.contains_key(&key) {
+                return Err(errors::duplicate_export_name(&key));
+            }
+            ensure_valid_export(key.clone(), type_id)?;
 
-        let res = ctx.expose_on(&mut root_type, fns);
-        ctx.types[root_type_idx] = Some(root_type);
-        res
+            let type_idx = ctx.register_type(type_id, None)?;
+            root_props.insert(key, type_idx.into());
+        }
+
+        ctx.types[0] = Some(root);
+        Ok(())
     })?
 }
 
 impl TypegraphContext {
-    fn expose_on(&mut self, target: &mut TypeNode, fns: Vec<(String, TypeId)>) -> Result<()> {
-        let root = match target {
-            TypeNode::Object { ref mut data, .. } => data,
-            _ => panic!("expected a struct as root type"),
-        };
-        for (name, type_id) in fns.into_iter() {
-            if !validate_name(&name) {
-                return Err(errors::invalid_export_name(&name));
-            }
-            let type_id = type_id.resolve_proxy()?;
-            let tpe = type_id.attrs()?.concrete_type.as_type()?;
-            if !matches!(tpe, Type::Func(_)) {
-                return Err(errors::invalid_export_type(&name, &tpe.to_string()));
-            }
-
-            if root.properties.contains_key(&name) {
-                return Err(errors::duplicate_export_name(&name));
-            }
-
-            root.required.push(name.clone());
-            root.properties
-                .insert(name, self.register_type(type_id, None)?.into());
-        }
-
-        Ok(())
-    }
-
     pub fn register_type(
         &mut self,
         id: TypeId,

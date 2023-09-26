@@ -8,6 +8,7 @@ use indexmap::IndexMap;
 use crate::{
     conversion::types::{gen_base, TypeConversion},
     errors,
+    global_store::Store,
     typegraph::TypegraphContext,
     types::{Struct, TypeData, TypeId},
     wit::core::TypeStruct,
@@ -33,7 +34,11 @@ impl TypeConversion for Struct {
                     .clone()
                     .unwrap_or_else(|| format!("object_{}", self.id.0)),
                 self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
+                match runtime_id {
+                    Some(id) => id,
+                    // namespace
+                    None => ctx.register_runtime(Store::get_deno_runtime())?,
+                },
             )
             .build(),
             data: ObjectTypeData {

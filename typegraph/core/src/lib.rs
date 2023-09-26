@@ -280,12 +280,10 @@ impl wit::core::Core for Lib {
 
     fn expose(
         fns: Vec<(String, CoreTypeId)>,
-        namespace: Vec<String>,
         default_policy: Option<Vec<PolicySpec>>,
     ) -> Result<(), String> {
         typegraph::expose(
             fns.into_iter().map(|(k, ty)| (k, ty.into())).collect(),
-            namespace,
             default_policy,
         )
     }
