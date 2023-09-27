@@ -1,7 +1,11 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.deno import ModuleMat
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.runtimes.deno import DenoRuntime
 
-with TypeGraph(name="circular") as g:
+
+@typegraph()
+def circular(g: Graph):
+    deno = DenoRuntime()
+
     stars = t.struct({"count": t.integer()})
     medals = t.struct({"title": t.string(), "count": t.integer()})
 
@@ -9,47 +13,49 @@ with TypeGraph(name="circular") as g:
         {
             "name": t.string(),
             # Edgecase #1: optional that holds a self-reference
-            "professor": g("User").optional(),
+            "professor": t.ref("User").optional(),
             # Edgecase #2: array that holds a self-reference
-            "parents": t.array(g("User")),
+            "parents": t.array(t.ref("User")),
             # Edgecase #3: optional array that holds a self-reference
-            "friends": t.array(g("User")).optional(),
+            "friends": t.array(t.ref("User")).optional(),
             # Edgecase #4: optional object that holds a self-reference
-            "paper": t.struct({"title": t.string(), "author": g("User")})
-            .named("Paper")
-            .optional(),
+            "paper": t.struct(
+                {"title": t.string(), "author": t.ref("User")}, name="Paper"
+            ).optional(),
             # Edgecase #5: optional nested object with multiple references
             "root": t.struct(
                 {
                     "some_field": t.string(),
-                    "depth_one": g("User").optional(),
-                    "depth_one_2": g("User"),
-                    "depth_two": t.struct({"depth_three": g("User")}),
-                }
-            )
-            .named("Speciality")
-            .optional(),
+                    "depth_one": t.ref("User").optional(),
+                    "depth_one_2": t.ref("User"),
+                    "depth_two": t.struct({"depth_three": t.ref("User")}),
+                },
+                name="Speciality",
+            ).optional(),
             # Edgecase #6: nested union/either
             "award": t.either(
                 [
-                    t.struct({"name": t.string()}).named("NamedAward"),
+                    t.struct({"name": t.string()}, name="NamedAward"),
                     t.union([medals, stars]),
                 ]
             ).optional(),
-        }
-    ).named("User")
+        },
+        name="User",
+    )
 
-    public = policies.public()
+    public = Policy.public()
 
-    register_user = t.func(
-        t.struct({"user": user}).named("Input"),
+    register_user = deno.import_(
+        t.struct({"user": user}, name="Input"),
         t.struct(
             {
                 "message": t.string(),
                 "user": user,
-            }
-        ).named("Output"),
-        ModuleMat("ts/circular.ts").imp("registerUser"),
-    ).add_policy(public)
+            },
+            name="Output",
+        ),
+        module="ts/circular.ts",
+        name="registerUser",
+    ).with_policy(public)
 
     g.expose(registerUser=register_user)
