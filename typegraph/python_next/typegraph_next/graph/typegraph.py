@@ -9,13 +9,14 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Union
 from typegraph_next.gen.exports.core import (
     Auth,
     Rate,
-    Cors,
+    Cors as CoreCors,
     TypegraphInitParams,
 )
 
 from typegraph_next.gen.types import Err
 from typegraph_next.policy import PolicyPerEffect, PolicySpec, get_policy_chain, Policy
 from typegraph_next.wit import core, store
+from typegraph_next.graph.params import Cors
 
 if TYPE_CHECKING:
     from typegraph_next import t
@@ -33,7 +34,7 @@ class Typegraph:
     _context: List["Typegraph"] = []
     auths: Optional[List[Auth]]
     rate: Optional[Rate]
-    cors: Optional[Cors]
+    cors: Optional[CoreCors]
     prefix: Optional[str]
 
     def __init__(
@@ -54,13 +55,15 @@ class Typegraph:
 
         self.auths = auths or []
         self.rate = rate
-        self.cors = cors or Cors(
-            allow_origin=[],
-            allow_headers=[],
-            expose_headers=[],
-            allow_methods=[],
-            allow_credentials=True,
-            max_age_sec=None,
+
+        cors = cors or Cors()
+        self.cors = CoreCors(
+            allow_origin=cors.allow_origin,
+            allow_headers=cors.allow_headers,
+            expose_headers=cors.expose_headers,
+            allow_methods=cors.allow_methods,
+            allow_credentials=cors.allow_credentials,
+            max_age_sec=cors.max_age_sec,
         )
         self.prefix = prefix
 

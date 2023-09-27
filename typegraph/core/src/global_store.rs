@@ -25,14 +25,16 @@ pub struct Store {
     deno_modules: HashMap<String, MaterializerId>,
 
     prisma_migration_runtime: RuntimeId,
+    typegate_runtime: RuntimeId,
 }
 
 impl Store {
     fn new() -> Self {
         Self {
-            runtimes: vec![Runtime::Deno, Runtime::PrismaMigration],
+            runtimes: vec![Runtime::Deno, Runtime::PrismaMigration, Runtime::Typegate],
             deno_runtime: 0,
             prisma_migration_runtime: 1,
+            typegate_runtime: 2,
             ..Default::default()
         }
     }
@@ -138,6 +140,10 @@ impl Store {
 
     pub fn get_prisma_migration_runtime() -> RuntimeId {
         with_store(|s| s.prisma_migration_runtime)
+    }
+
+    pub fn get_typegate_runtime() -> RuntimeId {
+        with_store(|s| s.typegate_runtime)
     }
 
     pub fn register_materializer(mat: Materializer) -> MaterializerId {

@@ -39,6 +39,7 @@ pub enum KnownRuntime {
     S3(S3RuntimeData),
     Temporal(TemporalRuntimeData),
     WasmEdge(WasmEdgeRuntimeData),
+    Typegate,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

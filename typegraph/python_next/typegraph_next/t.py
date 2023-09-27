@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-import json
+import json as JsonLib
 from typing import Dict, List, Optional, Tuple, Union
 
 from typing_extensions import Self
@@ -290,7 +290,7 @@ class string(typedef):
     ):
         enum_variants = None
         if enumeration is not None:
-            enum_variants = list(json.dumps(variant) for variant in enumeration)
+            enum_variants = list(JsonLib.dumps(variant) for variant in enumeration)
 
         data = TypeString(
             min=min, max=max, pattern=pattern, format=format, enumeration=enum_variants
@@ -350,6 +350,10 @@ def date() -> string:
 
 def datetime() -> string:
     return string(format="date-time")
+
+
+def json() -> string:
+    return string(format="json")
 
 
 def enum(
@@ -579,5 +583,16 @@ class func(typedef):
         )
 
 
-def gen(out: typedef, mat: Materializer):
-    return func(struct({}), out, mat)
+def gen(
+    out: typedef,
+    mat: Materializer,
+    rate_calls: bool = False,
+    rate_weight: Optional[int] = None,
+):
+    return func(
+        struct({}),
+        out,
+        mat,
+        rate_calls=rate_calls,
+        rate_weight=rate_weight,
+    )

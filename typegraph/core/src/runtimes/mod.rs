@@ -7,6 +7,7 @@ pub mod prisma;
 pub mod python;
 pub mod random;
 pub mod temporal;
+pub mod typegate;
 pub mod wasi;
 
 use std::rc::Rc;
@@ -18,7 +19,7 @@ use crate::runtimes::prisma::migration::{
 };
 use crate::runtimes::prisma::with_prisma_runtime;
 use crate::validation::types::validate_value;
-use crate::wit::core::{FuncParams, RuntimeId, TypeId as CoreTypeId};
+use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
     MaterializerHttpRequest, PrismaLinkData, PrismaMigrationOperation, PrismaRuntimeData,
@@ -35,6 +36,7 @@ pub use self::python::PythonMaterializer;
 pub use self::random::RandomMaterializer;
 use self::temporal::temporal_operation;
 pub use self::temporal::TemporalMaterializer;
+use self::typegate::TypegateOperation;
 pub use self::wasi::WasiMaterializer;
 
 type Result<T, E = TgError> = std::result::Result<T, E>;
@@ -50,6 +52,7 @@ pub enum Runtime {
     Prisma(Rc<PrismaRuntimeData>, Rc<PrismaRuntimeContext>),
     PrismaMigration,
     Temporal(Rc<TemporalRuntimeData>),
+    Typegate,
 }
 
 #[derive(Debug, Clone)]
@@ -135,6 +138,14 @@ impl Materializer {
             data: Rc::new(data).into(),
         }
     }
+
+    fn typegate(runtime_id: RuntimeId, data: TypegateOperation, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -149,6 +160,7 @@ pub enum MaterializerData {
     Prisma(Rc<PrismaMaterializer>),
     PrismaMigration(PrismaMigrationOperation),
     Temporal(Rc<TemporalMaterializer>),
+    Typegate(TypegateOperation),
 }
 
 macro_rules! prisma_op {
@@ -477,5 +489,26 @@ impl wit::Runtimes for crate::Lib {
         data: TemporalOperationData,
     ) -> Result<FuncParams, wit::Error> {
         temporal_operation(runtime, data)
+    }
+
+    fn register_typegate_materializer(
+        operation: wit::TypegateOperation,
+    ) -> Result<MaterializerId, wit::Error> {
+        use wit::TypegateOperation as WitOp;
+        use TypegateOperation as Op;
+
+        let (effect, op) = match operation {
+            WitOp::ListTypegraphs => (WitEffect::None, Op::ListTypegraphs),
+            WitOp::FindTypegraph => (WitEffect::None, Op::FindTypegraph),
+            WitOp::AddTypegraph => (WitEffect::Create(true), Op::AddTypegraph),
+            WitOp::RemoveTypegraph => (WitEffect::Delete(true), Op::RemoveTypegraph),
+            WitOp::GetSerializedTypegraph => (WitEffect::None, Op::GetSerializedTypegraph),
+        };
+
+        Ok(Store::register_materializer(Materializer::typegate(
+            Store::get_typegate_runtime(),
+            op,
+            effect,
+        )))
     }
 }

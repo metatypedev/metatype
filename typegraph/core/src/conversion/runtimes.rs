@@ -372,7 +372,7 @@ impl From<TGRuntime> for ConvertedRuntime {
 }
 
 pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<ConvertedRuntime> {
-    use KnownRuntime::*;
+    use KnownRuntime as Rt;
 
     match runtime {
         Runtime::Deno => {
@@ -380,13 +380,13 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                 worker: "default".to_string(),
                 permissions: Default::default(),
             };
-            Ok(TGRuntime::Known(Deno(data)).into())
+            Ok(TGRuntime::Known(Rt::Deno(data)).into())
         }
         Runtime::Graphql(d) => {
             let data = GraphQLRuntimeData {
                 endpoint: d.endpoint.clone(),
             };
-            Ok(TGRuntime::Known(GraphQL(data)).into())
+            Ok(TGRuntime::Known(Rt::GraphQL(data)).into())
         }
         Runtime::Http(d) => {
             let data = HTTPRuntimeData {
@@ -394,18 +394,18 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                 cert_secret: d.cert_secret.clone(),
                 basic_auth_secret: d.basic_auth_secret.clone(),
             };
-            Ok(TGRuntime::Known(HTTP(data)).into())
+            Ok(TGRuntime::Known(Rt::HTTP(data)).into())
         }
         Runtime::Python => {
-            Ok(TGRuntime::Known(PythonWasi(PythonRuntimeData { config: None })).into())
+            Ok(TGRuntime::Known(Rt::PythonWasi(PythonRuntimeData { config: None })).into())
         }
-        Runtime::Random(d) => Ok(TGRuntime::Known(Random(RandomRuntimeData {
+        Runtime::Random(d) => Ok(TGRuntime::Known(Rt::Random(RandomRuntimeData {
             seed: d.seed,
             reset: d.reset.clone(),
         }))
         .into()),
         Runtime::WasmEdge => {
-            Ok(TGRuntime::Known(WasmEdge(WasmEdgeRuntimeData { config: None })).into())
+            Ok(TGRuntime::Known(Rt::WasmEdge(WasmEdgeRuntimeData { config: None })).into())
         }
         Runtime::Prisma(d, _) => Ok(ConvertedRuntime::Lazy(Box::new(
             move |runtime_id, runtime_idx, tg| {
@@ -417,7 +417,7 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                         runtime_id,
                         tg_context: tg,
                     };
-                    Ok(TGRuntime::Known(Prisma(PrismaRuntimeData {
+                    Ok(TGRuntime::Known(Rt::Prisma(PrismaRuntimeData {
                         name: d.name.clone(),
                         connection_string_secret: d.connection_string_secret.clone(),
                         models: models
@@ -440,11 +440,12 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                 })
             },
         ))),
-        Runtime::PrismaMigration => Ok(TGRuntime::Known(PrismaMigration).into()),
-        Runtime::Temporal(d) => Ok(TGRuntime::Known(Temporal(TemporalRuntimeData {
+        Runtime::PrismaMigration => Ok(TGRuntime::Known(Rt::PrismaMigration).into()),
+        Runtime::Temporal(d) => Ok(TGRuntime::Known(Rt::Temporal(TemporalRuntimeData {
             name: d.name.clone(),
             host: d.host.clone(),
         }))
         .into()),
+        Runtime::Typegate => Ok(TGRuntime::Known(Rt::Typegate).into()),
     }
 }

@@ -7,8 +7,34 @@ from typing import List, Optional
 from typegraph_next.gen.exports import core
 from box import Box
 
-Cors = core.Cors
+# Cors = core.Cors
 Rate = core.Rate
+
+
+class Cors:
+    allow_origin: List[str]
+    allow_headers: List[str]
+    expose_headers: List[str]
+    allow_methods: List[str]
+    allow_credentials: bool
+    max_age_sec: Optional[int]
+
+    def __init__(
+        self,
+        *,
+        allow_origin: List[str] = [],
+        allow_headers: List[str] = [],
+        expose_headers: List[str] = [],
+        allow_methods: List[str] = [],
+        allow_credentials: bool = True,
+        max_age_sec: Optional[int] = None,
+    ):
+        self.allow_origin = allow_origin
+        self.allow_headers = allow_headers
+        self.expose_headers = expose_headers
+        self.allow_methods = allow_methods
+        self.allow_credentials = allow_credentials
+        self.max_age_sec = max_age_sec
 
 
 class Auth:

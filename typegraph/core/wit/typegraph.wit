@@ -392,6 +392,17 @@ interface runtimes {
 
     register-temporal-runtime: func(data: temporal-runtime-data) -> result<runtime-id, error>
     generate-temporal-operation: func(runtime: runtime-id, data: temporal-operation-data) -> result<func-params, error>
+
+    // typegate
+    enum typegate-operation {
+        list-typegraphs,
+        find-typegraph,
+        add-typegraph,
+        remove-typegraph,
+        get-serialized-typegraph
+    }
+
+    register-typegate-materializer: func(operation: typegate-operation) -> result<materializer-id, error>
 }
 
 
