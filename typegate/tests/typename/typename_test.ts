@@ -1,13 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { recreateMigrations } from "../utils/migrations.ts";
+import { dropSchemas, recreateMigrations } from "../utils/migrations.ts";
 import { gql, Meta } from "../utils/mod.ts";
 
 Meta.test("Typename", async (t) => {
   const e = await t.engine("typename/typename.py", {
     secrets: {
-      TG_PRISMA_POSTGRES:
+      TG_TYPENAME_TEST_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=typename",
     },
   });
@@ -28,7 +28,7 @@ Meta.test("Typename", async (t) => {
 Meta.test("Typename in deno runtime", async (t) => {
   const e = await t.engine("typename/typename.py", {
     secrets: {
-      TG_PRISMA_POSTGRES:
+      TG_TYPENAME_TEST_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=typename",
     },
   });
@@ -53,7 +53,7 @@ Meta.test("Typename in deno runtime", async (t) => {
 Meta.test("Typename in random runtime", async (t) => {
   const e = await t.engine("typename/typename.py", {
     secrets: {
-      TG_PRISMA_POSTGRES:
+      TG_TYPENAME_TEST_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=typename",
     },
   });
@@ -78,18 +78,19 @@ Meta.test("Typename in random runtime", async (t) => {
 Meta.test("Typename in prisma runtime", async (t) => {
   const e = await t.engine("typename/typename.py", {
     secrets: {
-      TG_PRISMA_POSTGRES:
+      TG_TYPENAME_TEST_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=typename",
     },
   });
 
-  await gql`
-      mutation a {
-        dropSchema
-      }
-    `
-    .expectData({ dropSchema: 0 })
-    .on(e);
+  // await gql`
+  //     mutation a {
+  //       dropSchema
+  //     }
+  //   `
+  //   .expectData({ dropSchema: 0 })
+  //   .on(e);
+  await dropSchemas(e);
   await recreateMigrations(e);
 
   await t.should("allow querying typename in an object", async () => {
@@ -105,7 +106,7 @@ Meta.test("Typename in prisma runtime", async (t) => {
     `
       .expectData({
         createUser: {
-          __typename: "userprismaCreateOutput",
+          __typename: "_userprismaOutputType",
           id: 1,
         },
       })
