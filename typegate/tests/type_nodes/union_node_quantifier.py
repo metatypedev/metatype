@@ -1,7 +1,9 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.deno import ModuleMat
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.runtimes.deno import DenoRuntime
 
-with TypeGraph("union_quantifier") as g:
+
+@typegraph()
+def union_quantifier(g: Graph):
     metadata = t.struct(
         {
             "label": t.string(),
@@ -17,8 +19,9 @@ with TypeGraph("union_quantifier") as g:
             "battery": t.integer(),
             "os": t.enum(["Android", "iOS"]),
             "metadatas": t.array(metadata).optional(),
-        }
-    ).named("SmartPhone")
+        },
+        name="SmartPhone",
+    )
 
     basic_phone = t.struct(
         {
@@ -27,15 +30,17 @@ with TypeGraph("union_quantifier") as g:
             "battery": t.integer(),
             "os": t.enum(["Android", "iOS"]).optional(),
             "metadatas": t.array(metadata).optional(),
-        }
-    ).named("BasicPhone")
+        },
+        name="BasicPhone",
+    )
 
     phone = t.union([basic_phone, smartphone])
 
-    phone_register_materializer = ModuleMat("ts/union/phone_register.ts")
+    # phone_register_materializer = ModuleMat("ts/union/phone_register.ts")
 
-    public = policies.public()
-    register_phone = t.func(
+    public = Policy.public()
+    deno = DenoRuntime()
+    register_phone = deno.import_(
         t.struct({"phone": phone}),
         t.struct(
             {
@@ -44,7 +49,8 @@ with TypeGraph("union_quantifier") as g:
                 "phone": phone,
             }
         ),
-        phone_register_materializer.imp("registerPhone"),
-    ).add_policy(public)
+        module="ts/union/phone_register.ts",
+        name="registerPhone",
+    ).with_policy(public)
 
     g.expose(registerPhone=register_phone)

@@ -344,6 +344,10 @@ def path() -> string:
     return string(format="path")
 
 
+def date() -> string:
+    return string(format="date")
+
+
 def datetime() -> string:
     return string(format="date-time")
 

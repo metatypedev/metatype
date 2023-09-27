@@ -65,17 +65,21 @@ impl Store {
         with_store(|s| s.type_by_names.get(name).copied())
     }
 
-    pub fn register_type(build: impl FnOnce(TypeId) -> Type) -> TypeId {
+    pub fn register_type(build: impl FnOnce(TypeId) -> Type) -> Result<TypeId> {
         // this works since the store is thread local
         let id = with_store(|s| s.types.len()) as u32;
         let typ = build(id.into());
-        with_store_mut(|s| {
+        with_store_mut(|s| -> Result<()> {
             if let Some(name) = typ.get_base().and_then(|b| b.name.as_ref()) {
+                if s.type_by_names.contains_key(name) {
+                    return Err(format!("type with name {:?} already exists", name));
+                }
                 s.type_by_names.insert(name.clone(), id.into());
             }
             s.types.push(typ);
-        });
-        id.into()
+            Ok(())
+        })?;
+        Ok(id.into())
     }
 
     pub fn get_type_by_path(struct_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {

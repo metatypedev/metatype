@@ -81,7 +81,7 @@ impl wit::core::Core for Lib {
     }
 
     fn proxyb(data: TypeProxy) -> Result<CoreTypeId> {
-        Ok(Store::register_type(|id| Type::Proxy(Proxy { id, data }.into())).into())
+        Ok(Store::register_type(|id| Type::Proxy(Proxy { id, data }.into()))?.into())
     }
 
     fn integerb(data: TypeInteger, base: TypeBase) -> Result<CoreTypeId> {
@@ -95,7 +95,7 @@ impl wit::core::Core for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
-        Ok(Store::register_type(|id| Type::Integer(Integer { id, base, data }.into())).into())
+        Ok(Store::register_type(|id| Type::Integer(Integer { id, base, data }.into()))?.into())
     }
 
     fn floatb(data: TypeFloat, base: TypeBase) -> Result<CoreTypeId> {
@@ -109,7 +109,7 @@ impl wit::core::Core for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
-        Ok(Store::register_type(|id| Type::Float(Float { id, base, data }.into())).into())
+        Ok(Store::register_type(|id| Type::Float(Float { id, base, data }.into()))?.into())
     }
 
     fn booleanb(base: TypeBase) -> Result<CoreTypeId> {
@@ -122,7 +122,7 @@ impl wit::core::Core for Lib {
                 }
                 .into(),
             )
-        })
+        })?
         .into())
     }
 
@@ -132,12 +132,12 @@ impl wit::core::Core for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
-        Ok(Store::register_type(|id| Type::String(StringT { id, base, data }.into())).into())
+        Ok(Store::register_type(|id| Type::String(StringT { id, base, data }.into()))?.into())
     }
 
     fn arrayb(data: TypeArray, base: TypeBase) -> Result<CoreTypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
-            if min >= max {
+            if min > max {
                 return Err(errors::invalid_max_value());
             }
         }
@@ -154,7 +154,7 @@ impl wit::core::Core for Lib {
                 None => base,
             };
             Type::Array(Array { id, base, data }.into())
-        })
+        })?
         .into())
     }
 
@@ -172,16 +172,16 @@ impl wit::core::Core for Lib {
                 None => base,
             };
             Type::Optional(Optional { id, base, data }.into())
-        })
+        })?
         .into())
     }
 
     fn unionb(data: TypeUnion, base: TypeBase) -> Result<CoreTypeId> {
-        Ok(Store::register_type(|id| Type::Union(Union { id, base, data }.into())).into())
+        Ok(Store::register_type(|id| Type::Union(Union { id, base, data }.into()))?.into())
     }
 
     fn eitherb(data: TypeEither, base: TypeBase) -> Result<CoreTypeId> {
-        Ok(Store::register_type(|id| Type::Either(Either { id, base, data }.into())).into())
+        Ok(Store::register_type(|id| Type::Either(Either { id, base, data }.into()))?.into())
     }
 
     fn structb(data: TypeStruct, base: TypeBase) -> Result<CoreTypeId> {
@@ -196,7 +196,7 @@ impl wit::core::Core for Lib {
             prop_names.insert(name.clone());
         }
 
-        Ok(Store::register_type(|id| Type::Struct(Struct { id, base, data }.into())).into())
+        Ok(Store::register_type(|id| Type::Struct(Struct { id, base, data }.into()))?.into())
     }
 
     fn funcb(data: TypeFunc) -> Result<CoreTypeId> {
@@ -206,18 +206,18 @@ impl wit::core::Core for Lib {
             return Err(errors::invalid_input_type(&inp_id.repr()?));
         }
         let base = TypeBase::default();
-        Ok(Store::register_type(|id| Type::Func(Func { id, base, data }.into())).into())
+        Ok(Store::register_type(|id| Type::Func(Func { id, base, data }.into()))?.into())
     }
 
     fn with_injection(data: TypeWithInjection) -> Result<CoreTypeId> {
         Ok(
-            Store::register_type(|id| Type::WithInjection(WithInjection { id, data }.into()))
+            Store::register_type(|id| Type::WithInjection(WithInjection { id, data }.into()))?
                 .into(),
         )
     }
 
     fn with_policy(data: TypePolicy) -> Result<CoreTypeId> {
-        Ok(Store::register_type(|id| Type::WithPolicy(WithPolicy { id, data }.into())).into())
+        Ok(Store::register_type(|id| Type::WithPolicy(WithPolicy { id, data }.into()))?.into())
     }
 
     fn register_policy(pol: Policy) -> Result<PolicyId> {
