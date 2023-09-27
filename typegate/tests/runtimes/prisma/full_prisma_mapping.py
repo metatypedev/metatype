@@ -1,4 +1,5 @@
 from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.gen.exports.runtimes import EffectUpdate
 from typegraph_next.providers.prisma import PrismaRuntime
 
 
@@ -79,4 +80,28 @@ def prisma(g: Graph):
                 "where": {"id": 10007},
             }
         ),
+        testExecuteRaw=db.execute(
+            'UPDATE "Post" SET title = $1 WHERE title like $2',
+            # TODO: use struct as ref for ordering params
+            t.struct(
+                {
+                    "first": t.string().set("Title 2 has been changed"),
+                    "second": t.string().set("%Title 2%"),
+                }
+            ),
+            EffectUpdate(True),
+        ),
+        testQueryRaw=db.query_raw(
+            'SELECT id, title FROM "Post" WHERE title like $1 AND id = 10002',
+            # TODO: use struct as ref for ordering params
+            t.struct({"first": t.string()}),
+            t.array(
+                t.struct(
+                    {
+                        "id": db.as_column(t.integer()),
+                        "title": db.as_column(t.string()),
+                    }
+                )
+            ),
+        ).apply({"first": "%Title 2%"}),
     )

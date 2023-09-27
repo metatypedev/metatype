@@ -712,4 +712,42 @@ Meta.test("prisma full mapping", async (t) => {
     })
       .on(e);
   });
+
+  await t.should("work with executeRaw", async () => {
+    await gql`
+        mutation {
+          testExecuteRaw
+        }
+    `.expectData({ testExecuteRaw: 3 })
+      .on(e);
+  });
+
+  // TODO:
+  await t.should("work with queryRaw", async () => {
+    await gql`
+        query {
+          testQueryRaw {
+            id {
+              prisma__type
+              prisma__value
+            }
+            title {
+              prisma__type
+              prisma__value
+            }
+          }
+        }
+    `.expectData({
+      testQueryRaw: [
+        {
+          id: { prisma__type: "int", prisma__value: 10002 },
+          title: {
+            prisma__type: "string",
+            prisma__value: "Title 2 has been changed",
+          },
+        },
+      ],
+    })
+      .on(e);
+  });
 });

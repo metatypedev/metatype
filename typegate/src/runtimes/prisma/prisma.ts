@@ -152,6 +152,7 @@ export class PrismaRuntime {
         throw new ResolverError(res.errors[0].user_facing_error.message);
       }
 
+      // console.log("prisma result", res);
       return path.reduce((r, field) => r[field], res.data);
     };
   }
@@ -186,7 +187,7 @@ export class PrismaRuntime {
         matData.operation === "queryRaw" || matData.operation === "executeRaw"
       ) {
         renames[stage.props.node] = matData.operation;
-        queries.push((_p) => ({
+        queries.push((p) => ({
           action: matData.operation,
           query: {
             arguments: {
@@ -195,7 +196,10 @@ export class PrismaRuntime {
               // query: resQuery,
               // parameters: resParams,
               query: matData.table,
-              parameters: "[]",
+              parameters: JSON.stringify(Object.values(filterValues(
+                stage.props.args?.(p) ?? {},
+                (v) => v != null,
+              ))),
             },
             selection: {},
           },

@@ -161,6 +161,14 @@ class PrismaRuntime(Runtime):
             target_type, name=name, fkey=fkey, field=field, unique=unique
         )
 
+    def as_column(self, tpe: t.typedef) -> t.struct:
+        return t.struct(
+            {
+                "prisma__type": t.string(),
+                "prisma__value": tpe,
+            }
+        )
+
 
 def prisma_link(
     target_type: Union[str, t.typedef],
