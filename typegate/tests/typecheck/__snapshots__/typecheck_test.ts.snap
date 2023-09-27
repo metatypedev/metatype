@@ -1,7 +1,7 @@
 export const snapshot = {};
 
 snapshot[`typecheck 1`] = `
-"function validate_53_1(value, path, errors, context) {
+"function validate_49_1(value, path, errors, context) {
   if (typeof value !== \\"object\\") {
     errors.push([path, \`expected an object, got \${typeof value}\`]);
   } else if (value == null) {
@@ -112,7 +112,7 @@ function validate_4(value, path, errors, context) {
     }
   }
 }
-return validate_53_1;
+return validate_49_1;
 "
 `;
 
