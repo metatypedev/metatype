@@ -503,6 +503,9 @@ impl wit::Runtimes for crate::Lib {
             WitOp::AddTypegraph => (WitEffect::Create(true), Op::AddTypegraph),
             WitOp::RemoveTypegraph => (WitEffect::Delete(true), Op::RemoveTypegraph),
             WitOp::GetSerializedTypegraph => (WitEffect::None, Op::GetSerializedTypegraph),
+            WitOp::Resolver => (WitEffect::None, Op::Resolver),
+            WitOp::GetType => (WitEffect::None, Op::GetType),
+            WitOp::GetSchema => (WitEffect::None, Op::GetSchema),
         };
 
         Ok(Store::register_materializer(Materializer::typegate(
