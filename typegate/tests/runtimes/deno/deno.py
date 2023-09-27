@@ -1,62 +1,66 @@
-from typegraph import TypeGraph, effects, policies, t
-from typegraph.runtimes.deno import DenoRuntime, ModuleMat, PureFunMat
+from typegraph_next import typegraph, effects, Policy, t, Graph
+from typegraph_next.runtimes.deno import DenoRuntime
 
-with TypeGraph("deno") as g:
-    public = policies.public()
-    mod = ModuleMat("ts/deno.ts")
-    math0 = ModuleMat("ts/math.ts")
 
-    worker1 = DenoRuntime(
-        worker="worker 1", allow_net=("deno.land", "cdn.pika.dev", "cdn.skypack.dev")
-    )
-    math1 = ModuleMat("ts/math.ts", runtime=worker1)
+@typegraph()
+def deno(g: Graph):
+    public = Policy.public()
+    # mod = ModuleMat("ts/deno.ts")
+    # math0 = ModuleMat("ts/math.ts")
 
-    number_input = t.struct({"numbers": t.array(t.number())})
+    # worker1 = DenoRuntime(
+    #     worker="worker 1", allow_net=("deno.land", "cdn.pika.dev", "cdn.skypack.dev")
+    # )
+    deno = DenoRuntime()
+    # math1 = ModuleMat("ts/math.ts", runtime=worker1)
 
-    math_npm = ModuleMat("ts/math-npm.ts", runtime=worker1)
+    number_input = t.struct({"numbers": t.array(t.float())})
+
+    # math_npm = ModuleMat("ts/math-npm.ts", runtime=worker1)
 
     g.expose(
-        add=t.func(
-            t.struct({"first": t.number(), "second": t.number()}),
-            t.number(),
-            PureFunMat("({ first, second }) => first + second"),
+        public,
+        add=deno.func(
+            t.struct({"first": t.float(), "second": t.float()}),
+            t.float(),
+            code="({ first, second }) => first + second",
         ),
-        sum=t.func(
+        sum=deno.import_(
             t.struct({"numbers": t.array(t.integer())}),
             t.integer(),
-            mod.imp("sum"),
+            module="ts/deno.ts",
+            name="sum",
         ),
-        count=t.func(
+        count=deno.import_(
             t.struct(),
-            t.integer().min(0),
-            mod.imp("counter", effect=effects.update()),
+            t.integer(min=0),
+            module="ts/deno.ts",
+            name="counter",
+            effect=effects.update(),
         ),
-        min0=t.func(number_input, t.number(), math0.imp("min")),
-        min1=t.func(number_input, t.number(), math1.imp("min")),
-        max=t.func(number_input, t.number(), math1.imp("maxAsync")),
-        log=t.func(
-            t.struct({"number": t.number(), "base": t.number().optional()}),
-            t.number(),
-            math_npm.imp("log"),
+        min=deno.import_(number_input, t.float(), module="ts/math.ts", name="min"),
+        max=deno.import_(number_input, t.float(), module="ts/math.ts", name="maxAsync"),
+        log=deno.import_(
+            t.struct({"number": t.float(), "base": t.float().optional()}),
+            t.float(),
+            module="ts/math-npm.ts",
+            name="log",
         ),
-        static=DenoRuntime.static(t.struct({"x": t.array(t.integer())}), {"x": [1]}),
-        infiniteLoop=t.func(
+        static=deno.static(t.struct({"x": t.array(t.integer())}), {"x": [1]}),
+        infiniteLoop=deno.func(
             t.struct({"enable": t.boolean()}),
             t.boolean(),
-            PureFunMat("({ enable }) => { while(enable); return enable; }"),
+            code="({ enable }) => { while(enable); return enable; }",
         ),
-        stackOverflow=t.func(
+        stackOverflow=deno.func(
             t.struct({"enable": t.boolean()}),
             t.boolean(),
-            PureFunMat(
-                """
+            code="""
                 ({ enable }) => {
                     const fn = () => fn();
                     enable && fn();
                     return enable;
                 }
-                """
-            ),
+                """,
         ),
-        default_policy=[public],
     )

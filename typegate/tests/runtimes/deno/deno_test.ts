@@ -88,10 +88,10 @@ Meta.test("Deno runtime: permissions", async (t) => {
   await t.should("success for allowed network access", async () => {
     await gql`
       query {
-        min1(numbers: [2.5, 1.2, 4, 3])
+        min(numbers: [2.5, 1.2, 4, 3])
       }
     `.expectData({
-      min1: 1.2,
+      min: 1.2,
     }).on(e);
   });
 
@@ -159,7 +159,7 @@ Meta.test("Deno runtime: reloading", async (t) => {
 Meta.test("Deno runtime: infinite loop or similar", async (t) => {
   const e = await t.engine("runtimes/deno/deno.py");
 
-  await t.should("safely fail upon stack oferflow", async () => {
+  await t.should("safely fail upon stack overflow", async () => {
     await gql`
       query {
         stackOverflow(enable: true)

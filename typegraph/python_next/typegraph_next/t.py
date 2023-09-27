@@ -479,7 +479,7 @@ class struct(typedef):
 
     def __init__(
         self,
-        props: Dict[str, typedef],
+        props: Optional[Dict[str, typedef]] = None,
         *,
         additional_props: bool = False,
         min: Optional[int] = None,
@@ -487,6 +487,7 @@ class struct(typedef):
         name: Optional[str] = None,
         config: Optional[ConfigSpec] = None,
     ):
+        props = props or {}
         data = TypeStruct(
             props=list((name, tpe.id) for (name, tpe) in props.items()),
             additional_props=additional_props,

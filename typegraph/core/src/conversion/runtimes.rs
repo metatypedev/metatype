@@ -79,6 +79,13 @@ impl MaterializerConverter for DenoMaterializer {
         use crate::runtimes::DenoMaterializer::*;
         let runtime = c.register_runtime(runtime_id)?;
         let (name, data) = match self {
+            Static(inner) => {
+                let data = serde_json::from_value(json!({
+                    "value": inner.value,
+                }))
+                .unwrap();
+                ("static".to_string(), data)
+            }
             Inline(inline_fun) => {
                 let mut data = IndexMap::new();
                 data.insert(

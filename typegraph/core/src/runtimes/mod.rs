@@ -17,6 +17,7 @@ use crate::runtimes::prisma::migration::{
     prisma_apply, prisma_create, prisma_deploy, prisma_diff, prisma_reset,
 };
 use crate::runtimes::prisma::with_prisma_runtime;
+use crate::validation::types::validate_value;
 use crate::wit::core::{FuncParams, RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
@@ -187,6 +188,24 @@ impl wit::Runtimes for crate::Lib {
         // TODO: check code is valid function?
         let mat = Materializer::deno(DenoMaterializer::Inline(data), effect);
         Ok(Store::register_materializer(mat))
+    }
+
+    fn register_deno_static(
+        data: wit::MaterializerDenoStatic,
+        type_id: CoreTypeId,
+    ) -> Result<wit::MaterializerId> {
+        validate_value(
+            serde_json::from_str::<serde_json::Value>(&data.value).map_err(|e| e.to_string())?,
+            type_id.into(),
+            "<V>".to_string(),
+        )?;
+
+        Ok(Store::register_materializer(Materializer::deno(
+            DenoMaterializer::Static(deno::MaterializerDenoStatic {
+                value: serde_json::from_str(&data.value).map_err(|e| e.to_string())?,
+            }),
+            wit::Effect::None,
+        )))
     }
 
     fn get_predefined_deno_func(
