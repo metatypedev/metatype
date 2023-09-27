@@ -634,7 +634,8 @@
       }
     },
     {
-      "name": "prisma_migration"
+      "name": "prisma_migration",
+      "data": {}
     }
   ],
   "policies": [

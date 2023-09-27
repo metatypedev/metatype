@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import json as JsonLib
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Any
 
 from typing_extensions import Self
 
@@ -13,6 +13,7 @@ from typegraph_next.gen.exports.core import (
     TypeBase,
     TypeEither,
     TypeFloat,
+    TypeFile,
     TypeFunc,
     TypeInteger,
     TypeOptional,
@@ -81,7 +82,7 @@ class typedef:
 
     def optional(
         self,
-        default_value: Optional[str] = None,
+        default_value: Optional[Any] = None,
         config: Optional[ConfigSpec] = None,
     ) -> "optional":
         if isinstance(self, optional):
@@ -363,6 +364,40 @@ def enum(
     return string(enumeration=variants, name=name)
 
 
+class file(typedef):
+    min: Optional[int] = None
+    max: Optional[int] = None
+    allow: Optional[List[str]]
+
+    def __init__(
+        self,
+        *,
+        min: Optional[int] = None,
+        max: Optional[int] = None,
+        allow: Optional[List[str]] = None,
+        config: Optional[ConfigSpec] = None,
+    ):
+        data = TypeFile(
+            min=min,
+            max=max,
+            allow=allow,
+        )
+
+        runtime_config = serialize_config(config)
+        res = core.fileb(
+            store,
+            data,
+            TypeBase(name=None, runtime_config=runtime_config, as_id=False),
+        )
+        if isinstance(res, Err):
+            raise Exception(res.value)
+
+        super().__init__(res.value)
+        self.min = min
+        self.max = max
+        self.allow = allow
+
+
 class array(typedef):
     items: typedef = None
     min: Optional[int] = None
@@ -408,13 +443,13 @@ class optional(typedef):
     def __init__(
         self,
         item: typedef,
-        default_item: Optional[str] = None,
+        default_item: Optional[Any] = None,
         name: Optional[str] = None,
         config: Optional[ConfigSpec] = None,
     ):
         data = TypeOptional(
             of=item.id,
-            default_item=default_item,
+            default_item=None if default_item is None else JsonLib.dumps(default_item),
         )
 
         runtime_config = serialize_config(config)

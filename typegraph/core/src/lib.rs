@@ -22,14 +22,14 @@ use global_store::Store;
 use indoc::formatdoc;
 use regex::Regex;
 use types::{
-    Array, Boolean, Either, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
+    Array, Boolean, Either, File, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
     TypeBoolean, TypeId, Union, WithInjection, WithPolicy,
 };
 use validation::validate_name;
 use wit::core::{
-    ContextCheck, Policy, PolicyId, PolicySpec, TypeArray, TypeBase, TypeEither, TypeFloat,
-    TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString,
-    TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
+    ContextCheck, Policy, PolicyId, PolicySpec, TypeArray, TypeBase, TypeEither, TypeFile,
+    TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy,
+    TypeString, TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -40,7 +40,7 @@ pub mod wit {
 
     export_typegraph!(Lib);
 
-    pub use exports::metatype::typegraph::{core, runtimes, utils};
+    pub use exports::metatype::typegraph::{aws, core, runtimes, utils};
 }
 
 #[cfg(feature = "wasm")]
@@ -133,6 +133,22 @@ impl wit::core::Core for Lib {
             }
         }
         Ok(Store::register_type(|id| Type::String(StringT { id, base, data }.into()))?.into())
+    }
+
+    fn fileb(data: TypeFile, base: TypeBase) -> Result<CoreTypeId> {
+        if let (Some(min), Some(max)) = (data.min, data.max) {
+            if min >= max {
+                return Err(errors::invalid_max_value());
+            }
+        }
+        Ok(Store::register_type(|id| {
+            let base = TypeBase {
+                name: Some(format!("_{}_file", id.0)),
+                ..base
+            };
+            Type::File(File { id, base, data }.into())
+        })?
+        .into())
     }
 
     fn arrayb(data: TypeArray, base: TypeBase) -> Result<CoreTypeId> {

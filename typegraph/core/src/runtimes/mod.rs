@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+pub mod aws;
 pub mod deno;
 pub mod graphql;
 pub mod prisma;
@@ -19,6 +20,7 @@ use crate::runtimes::prisma::migration::{
 };
 use crate::runtimes::prisma::with_prisma_runtime;
 use crate::validation::types::validate_value;
+use crate::wit::aws::S3RuntimeData;
 use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
@@ -28,6 +30,7 @@ use crate::wit::runtimes::{
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
 
+use self::aws::S3Materializer;
 pub use self::deno::{DenoMaterializer, MaterializerDenoImport, MaterializerDenoModule};
 pub use self::graphql::GraphqlMaterializer;
 use self::prisma::relationship::prisma_link;
@@ -53,6 +56,7 @@ pub enum Runtime {
     PrismaMigration,
     Temporal(Rc<TemporalRuntimeData>),
     Typegate,
+    S3(Rc<S3RuntimeData>),
 }
 
 #[derive(Debug, Clone)]
@@ -161,6 +165,7 @@ pub enum MaterializerData {
     PrismaMigration(PrismaMigrationOperation),
     Temporal(Rc<TemporalMaterializer>),
     Typegate(TypegateOperation),
+    S3(Rc<S3Materializer>),
 }
 
 macro_rules! prisma_op {

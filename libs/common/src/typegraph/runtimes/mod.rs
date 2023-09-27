@@ -6,11 +6,15 @@ use indexmap::IndexMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use self::{
-    deno::DenoRuntimeData, graphql::GraphQLRuntimeData, http::HTTPRuntimeData,
-    prisma::PrismaRuntimeData, python::PythonRuntimeData, random::RandomRuntimeData,
-    s3::S3RuntimeData, temporal::TemporalRuntimeData, wasmedge::WasmEdgeRuntimeData,
-};
+use self::deno::DenoRuntimeData;
+use self::graphql::GraphQLRuntimeData;
+use self::http::HTTPRuntimeData;
+use self::prisma::PrismaRuntimeData;
+use self::python::PythonRuntimeData;
+use self::random::RandomRuntimeData;
+use self::s3::S3RuntimeData;
+use self::temporal::TemporalRuntimeData;
+use self::wasmedge::WasmEdgeRuntimeData;
 
 pub mod deno;
 pub mod graphql;
@@ -21,6 +25,14 @@ pub mod random;
 pub mod s3;
 pub mod temporal;
 pub mod wasmedge;
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct TypegateRuntimeData {}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct PrismaMigrationRuntimeData {}
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -35,11 +47,11 @@ pub enum KnownRuntime {
     PythonWasi(PythonRuntimeData),
     Random(RandomRuntimeData),
     Prisma(PrismaRuntimeData),
-    PrismaMigration,
+    PrismaMigration(PrismaMigrationRuntimeData),
     S3(S3RuntimeData),
     Temporal(TemporalRuntimeData),
     WasmEdge(WasmEdgeRuntimeData),
-    Typegate,
+    Typegate(TypegateRuntimeData),
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

@@ -462,7 +462,8 @@
       }
     },
     {
-      "name": "typegate"
+      "name": "typegate",
+      "data": {}
     }
   ],
   "policies": [

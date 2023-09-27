@@ -102,6 +102,14 @@ interface core {
     }
     stringb: func(data: type-string, base: type-base) -> result<type-id, error>
 
+    record type-file {
+        min: option<u32>,
+        max: option<u32>,
+        allow: option<list<string>>,
+    }
+    fileb: func(data: type-file, base: type-base) -> result<type-id, error>
+
+
     record type-array {
         of: type-id,
         min: option<u32>,
@@ -408,6 +416,36 @@ interface runtimes {
     register-typegate-materializer: func(operation: typegate-operation) -> result<materializer-id, error>
 }
 
+interface aws {
+    use core.{error, runtime-id, materializer-id}
+
+    record s3-runtime-data {
+        host-secret: string,
+        region-secret: string,
+        access-key-secret: string,
+        secret-key-secret: string,
+        path-style-secret: string,
+    }
+
+    record s3-presign-get-params {
+        bucket: string,
+        expiry-secs: option<u32>,
+    }
+
+    record s3-presign-put-params {
+        bucket: string,
+        expiry-secs: option<u32>,
+        content-type: option<string>,
+    }
+
+    register-s3-runtime: func(data: s3-runtime-data) -> result<runtime-id, error>
+    s3-presign-get: func(runtime: runtime-id, data: s3-presign-get-params) -> result<materializer-id, error>
+    s3-presign-put: func(runtime: runtime-id, data: s3-presign-put-params) -> result<materializer-id, error>
+    s3-list: func(runtime: runtime-id, bucket: string) -> result<materializer-id, error>
+    s3-upload: func(runtime: runtime-id, bucket: string) -> result<materializer-id, error>
+    s3-upload-all: func(runtime: runtime-id, bucket: string) -> result<materializer-id, error>
+}
+
 
 interface utils {
     type error = string
@@ -443,4 +481,5 @@ world typegraph {
     export core
     export runtimes
     export utils
+    export aws
 }

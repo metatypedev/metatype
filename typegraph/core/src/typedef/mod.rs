@@ -4,6 +4,7 @@
 pub mod array;
 pub mod boolean;
 pub mod either;
+pub mod file;
 pub mod float;
 pub mod func;
 pub mod integer;

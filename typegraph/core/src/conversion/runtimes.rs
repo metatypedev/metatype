@@ -20,9 +20,10 @@ use common::typegraph::runtimes::http::HTTPRuntimeData;
 use common::typegraph::runtimes::prisma::PrismaRuntimeData;
 use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
+use common::typegraph::runtimes::s3::S3RuntimeData;
 use common::typegraph::runtimes::temporal::TemporalRuntimeData;
 use common::typegraph::runtimes::wasmedge::WasmEdgeRuntimeData;
-use common::typegraph::runtimes::KnownRuntime;
+use common::typegraph::runtimes::{KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData};
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
@@ -440,12 +441,22 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                 })
             },
         ))),
-        Runtime::PrismaMigration => Ok(TGRuntime::Known(Rt::PrismaMigration).into()),
+        Runtime::PrismaMigration => {
+            Ok(TGRuntime::Known(Rt::PrismaMigration(PrismaMigrationRuntimeData {})).into())
+        }
         Runtime::Temporal(d) => Ok(TGRuntime::Known(Rt::Temporal(TemporalRuntimeData {
             name: d.name.clone(),
             host: d.host.clone(),
         }))
         .into()),
-        Runtime::Typegate => Ok(TGRuntime::Known(Rt::Typegate).into()),
+        Runtime::Typegate => Ok(TGRuntime::Known(Rt::Typegate(TypegateRuntimeData {})).into()),
+        Runtime::S3(d) => Ok(TGRuntime::Known(Rt::S3(S3RuntimeData {
+            host_secret: d.host_secret.clone(),
+            region_secret: d.region_secret.clone(),
+            access_key_secret: d.access_key_secret.clone(),
+            secret_key_secret: d.secret_key_secret.clone(),
+            path_style_secret: d.path_style_secret.clone(),
+        }))
+        .into()),
     }
 }
