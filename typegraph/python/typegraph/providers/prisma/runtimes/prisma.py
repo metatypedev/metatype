@@ -150,24 +150,18 @@ class PrismaRuntime(Runtime):
             g = TypegraphContext.get_active()
         return LinkProxy(g, typ, rel_name=name, field=field, fkey=fkey)
 
-    def raw_query(self, query: str, out: t.TypeNode, *, effect: Effect) -> t.func:
+    def raw_query(
+        self, query: str, inp: t.TypeNode, out: t.TypeNode, *, effect: Effect
+    ) -> t.func:
         return t.func(
-            t.struct(
-                {
-                    "parameters": t.json(),
-                }
-            ).named("QueryRawInp"),
+            inp,
             out,
             PrismaOperationMat(self, query, "queryRaw", effect=effect),
         )
 
-    def raw_execute(self, query: str, *, effect: Effect) -> t.func:
+    def raw_execute(self, query: str, inp: t.TypeNode, *, effect: Effect) -> t.func:
         return t.func(
-            t.struct(
-                {
-                    "parameters": t.json().optional().default("[]"),
-                }
-            ).named(f"ExecuteRawInp_{TypegraphContext.get_active().next_type_id()}"),
+            inp,
             t.integer(),
             PrismaOperationMat(self, query, "executeRaw", effect=effect),
         )
