@@ -150,13 +150,11 @@ class PrismaRuntime(Runtime):
             g = TypegraphContext.get_active()
         return LinkProxy(g, typ, rel_name=name, field=field, fkey=fkey)
 
-    def raw_query(
-        self, query: str, inp: t.TypeNode, out: t.TypeNode, *, effect: Effect
-    ) -> t.func:
+    def raw_query(self, query: str, inp: t.TypeNode, out: t.TypeNode) -> t.func:
         return t.func(
             inp,
             out,
-            PrismaOperationMat(self, query, "queryRaw", effect=effect),
+            PrismaOperationMat(self, query, "queryRaw", effect=effects.none()),
         )
 
     def raw_execute(self, query: str, inp: t.TypeNode, *, effect: Effect) -> t.func:
@@ -164,6 +162,14 @@ class PrismaRuntime(Runtime):
             inp,
             t.integer(),
             PrismaOperationMat(self, query, "executeRaw", effect=effect),
+        )
+
+    def as_column(tpe: t.TypeNode) -> t.struct:
+        return t.struct(
+            {
+                "prisma__type": t.string(),
+                "prisma__value": tpe,
+            }
         )
 
     def find_unique(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
