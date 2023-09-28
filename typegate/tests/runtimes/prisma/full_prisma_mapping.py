@@ -81,22 +81,25 @@ def prisma(g: Graph):
             }
         ),
         testExecuteRaw=db.execute(
-            'UPDATE "Post" SET title = ${replacement} WHERE title like ${title}',
+            'UPDATE "Post" SET title = ${replacement} WHERE title LIKE ${title}',
             t.struct(
                 {
-                    "replacement": t.string(),
                     "title": t.string().set("%Title 2%"),
+                    "replacement": t.string(),
                 }
             ),
             EffectUpdate(True),
         ),
         testQueryRaw=db.query_raw(
-            'SELECT id, title FROM "Post" WHERE title like ${ title} AND id in (${one}, ${two})',
+            """
+                SELECT id, title, (views + likes) as reactions
+                FROM "Post" WHERE title LIKE ${ title } AND id IN (${one}, ${two})
+            """,
             t.struct(
                 {
-                    "title": t.string(),
                     "one": t.integer(),
                     "two": t.integer(),
+                    "title": t.string(),
                 }
             ),
             t.array(
@@ -104,6 +107,7 @@ def prisma(g: Graph):
                     {
                         "id": db.as_column(t.integer()),
                         "title": db.as_column(t.string()),
+                        "reactions": db.as_column(t.integer()),
                     }
                 )
             ),

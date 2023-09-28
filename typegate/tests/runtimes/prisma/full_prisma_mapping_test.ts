@@ -734,6 +734,10 @@ Meta.test("prisma full mapping", async (t) => {
               prisma__type
               prisma__value
             }
+            reactions {
+              prisma__type
+              prisma__value
+            }
           }
         }
     `.expectData({
@@ -743,6 +747,10 @@ Meta.test("prisma full mapping", async (t) => {
           title: {
             prisma__type: "string",
             prisma__value: "Title 2 has been changed",
+          },
+          reactions: {
+            prisma__type: "int",
+            prisma__value: 9,
           },
         },
       ],
