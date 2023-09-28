@@ -9,11 +9,14 @@ from typegraph_next.providers.prisma import PrismaRuntime
 
 @typegraph(
     cors=Cors(
+        # skip:start
         allow_credentials=False,
         allow_headers=[],
         allow_methods=[],
         expose_headers=[],
         max_age_sec=None,
+        # skip:end
+        # ..
         allow_origin=["https://metatype.dev", "http://localhost:3000"],
     ),
 )
