@@ -716,13 +716,12 @@ Meta.test("prisma full mapping", async (t) => {
   await t.should("work with executeRaw", async () => {
     await gql`
         mutation {
-          testExecuteRaw
+          testExecuteRaw(replacement: "Title 2 has been changed")
         }
     `.expectData({ testExecuteRaw: 3 })
       .on(e);
   });
 
-  // TODO:
   await t.should("work with queryRaw", async () => {
     await gql`
         query {

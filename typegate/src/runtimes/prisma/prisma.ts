@@ -187,23 +187,29 @@ export class PrismaRuntime {
         matData.operation === "queryRaw" || matData.operation === "executeRaw"
       ) {
         renames[stage.props.node] = matData.operation;
-        queries.push((p) => ({
-          action: matData.operation,
-          query: {
-            arguments: {
-              // TODO params, query
-              // [resQuery, resParams] <- native.queryFmt(matData.table, params)
-              // query: resQuery,
-              // parameters: resParams,
+        queries.push((p) => {
+          const parameters = filterValues(
+            stage.props.args?.(p) ?? {},
+            (v) => v != null,
+          );
+          const value = nativeResult(
+            native.replace_variables_to_indices({
+              parameters,
               query: matData.table,
-              parameters: JSON.stringify(Object.values(filterValues(
-                stage.props.args?.(p) ?? {},
-                (v) => v != null,
-              ))),
+            }),
+          );
+
+          return {
+            action: matData.operation,
+            query: {
+              arguments: {
+                query: value.res,
+                parameters: JSON.stringify(Object.values(parameters)),
+              },
+              selection: {},
             },
-            selection: {},
-          },
-        }));
+          };
+        });
       } else {
         renames[stage.props.node] = matData.operation + matData.table;
         queries.push((p) => ({

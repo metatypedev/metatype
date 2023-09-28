@@ -6,11 +6,12 @@
 mod engine;
 mod engine_import;
 use once_cell::sync::Lazy;
+use regex::Regex;
 mod migration;
 use crate::RT;
 use dashmap::DashMap;
 mod utils;
-use macros::deno;
+use macros::{deno, deno_sync};
 
 use self::migration::{
     MigrationContextBuilder, PrismaApplyResult, PrismaCreateResult, PrismaDeployOut,
@@ -238,6 +239,60 @@ fn archive(input: ArchiveInp) -> ArchiveResult {
         Ok(b) => ArchiveResult::Ok { base64: b },
         Err(e) => ArchiveResult::Err {
             message: e.to_string(),
+        },
+    }
+}
+
+#[deno]
+struct QueryFormatInp {
+    query: String,
+    parameters: serde_json::Value,
+}
+
+#[deno]
+enum QueryFormatOutput {
+    Ok { res: String },
+    Err { message: String },
+}
+
+#[deno_sync]
+fn replace_variables_to_indices(input: QueryFormatInp) -> QueryFormatOutput {
+    let mut proc_query = input.query.clone();
+    match input.parameters {
+        serde_json::Value::Object(map) => {
+            let mut not_present = vec![];
+            for (index, (var, _)) in map.iter().enumerate() {
+                // Note: pattern matches ${var}, ${  var}, ${ var  }, ..
+                let pattern = format!("\\$\\{{\\s*{var}\\s*\\}}");
+                match Regex::new(&pattern) {
+                    Ok(re) => {
+                        if !re.is_match(&proc_query) {
+                            not_present.push(format!("{:?}", var));
+                        } else {
+                            proc_query = re
+                                .replace_all(&proc_query, &format!("$${}", index + 1))
+                                .to_string();
+                        }
+                    }
+                    Err(e) => {
+                        return QueryFormatOutput::Err {
+                            message: e.to_string(),
+                        }
+                    }
+                }
+            }
+            if !not_present.is_empty() {
+                return QueryFormatOutput::Err {
+                    message: format!(
+                        "{} present in type definition but not in the query",
+                        not_present.join(", ")
+                    ),
+                };
+            }
+            QueryFormatOutput::Ok { res: proc_query }
+        }
+        _ => QueryFormatOutput::Err {
+            message: "input is not an object".to_string(),
         },
     }
 }

@@ -81,20 +81,24 @@ def prisma(g: Graph):
             }
         ),
         testExecuteRaw=db.execute(
-            'UPDATE "Post" SET title = $1 WHERE title like $2',
-            # TODO: use struct as ref for ordering params
+            'UPDATE "Post" SET title = ${replacement} WHERE title like ${title}',
             t.struct(
                 {
-                    "first": t.string().set("Title 2 has been changed"),
-                    "second": t.string().set("%Title 2%"),
+                    "replacement": t.string(),
+                    "title": t.string().set("%Title 2%"),
                 }
             ),
             EffectUpdate(True),
         ),
         testQueryRaw=db.query_raw(
-            'SELECT id, title FROM "Post" WHERE title like $1 AND id = 10002',
-            # TODO: use struct as ref for ordering params
-            t.struct({"first": t.string()}),
+            'SELECT id, title FROM "Post" WHERE title like ${ title} AND id in (${one}, ${two})',
+            t.struct(
+                {
+                    "title": t.string(),
+                    "one": t.integer(),
+                    "two": t.integer(),
+                }
+            ),
             t.array(
                 t.struct(
                     {
@@ -103,5 +107,5 @@ def prisma(g: Graph):
                     }
                 )
             ),
-        ).apply({"first": "%Title 2%"}),
+        ).apply({"title": "%Title 2%", "one": 10002, "two": -1}),
     )
