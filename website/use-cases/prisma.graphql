@@ -17,4 +17,12 @@ query read {
   ) {
     id
   }
+  find_user(term:"%doe%", id:"") {
+    email {
+      prisma__value
+    }
+    firstname {
+      prisma__value
+    }
+  }
 }

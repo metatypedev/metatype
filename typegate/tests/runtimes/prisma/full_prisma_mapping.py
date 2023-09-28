@@ -92,8 +92,10 @@ def prisma(g: Graph):
         ),
         testQueryRaw=db.query_raw(
             """
-                SELECT id, title, (views + likes) as reactions
-                FROM "Post" WHERE title LIKE ${ title } AND id IN (${one}, ${two})
+                WITH tmp AS (
+                    SELECT id, title, (views + likes) as reactions FROM "Post"
+                    WHERE title LIKE ${title}
+                ) SELECT * FROM tmp WHERE id IN (${one}, ${two})
             """,
             t.struct(
                 {

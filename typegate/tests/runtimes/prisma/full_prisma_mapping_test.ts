@@ -722,7 +722,7 @@ Meta.test("prisma full mapping", async (t) => {
       .on(e);
   });
 
-  await t.should("work with queryRaw", async () => {
+  await t.should("work with complex queryRaw", async () => {
     await gql`
         query {
           testQueryRaw {
