@@ -40,16 +40,13 @@ def prisma_runtime(g: Graph):
                 SELECT id, firstname, email FROM "user"
                 WHERE CAST(id as VARCHAR) = ${id} OR email LIKE ${term} OR firstname LIKE ${term}
             """,
-            t.struct(user),
-            t.array(
-                t.struct(
-                    {
-                        "id": t.uuid(),
-                        "firstname": t.string(),
-                        "email": t.string(),
-                    }
-                )
+            t.struct(
+                {
+                    "id": t.string(),
+                    "term": t.string(),
+                }
             ),
+            t.array(user),
         ),
         default_policy=[public],
     )

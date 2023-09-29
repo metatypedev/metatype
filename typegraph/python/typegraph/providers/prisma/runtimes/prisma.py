@@ -164,14 +164,6 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, query, "executeRaw", effect=effect),
         )
 
-    def as_column(tpe: t.TypeNode) -> t.struct:
-        return t.struct(
-            {
-                "prisma__type": t.string(),
-                "prisma__value": tpe,
-            }
-        )
-
     def find_unique(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen

@@ -43,7 +43,7 @@ g.expose(
     countUsers=db.raw_query(
         "SELECT COUNT(*) as total FROM User",
         t.struct({}),
-        t.array(t.struct({"total": db.as_column(t.integer())}))
+        t.array(t.struct({"total": t.integer()}))
     )
 )
 ```
