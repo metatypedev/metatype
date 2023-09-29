@@ -3,11 +3,13 @@
 
 import { ExportsMetatypeTypegraphCore } from "../gen/exports/metatype-typegraph-core.d.ts";
 import { ExportsMetatypeTypegraphRuntimes } from "../gen/exports/metatype-typegraph-runtimes.d.ts";
+import { ExportsMetatypeTypegraphAws } from "../gen/exports/metatype-typegraph-aws.d.ts";
 import { ExportsMetatypeTypegraphUtils } from "../gen/exports/metatype-typegraph-utils.d.ts";
 import * as js from "../gen/typegraph_core.js";
 
 export const core = js.core as typeof ExportsMetatypeTypegraphCore;
 export const runtimes = js.runtimes as typeof ExportsMetatypeTypegraphRuntimes;
+export const aws = js.aws as typeof ExportsMetatypeTypegraphAws;
 export const wit_utils = js.utils as typeof ExportsMetatypeTypegraphUtils;
 
 export type {

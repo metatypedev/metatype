@@ -49,6 +49,10 @@ async function initBucket() {
   }
 }
 
+Meta.test("s3 typegraphs", async (t) => {
+  await t.assertSameTypegraphs("runtimes/s3/s3.py", "runtimes/s3/s3.ts");
+});
+
 Meta.test("s3", async (t) => {
   const e = await t.engine("runtimes/s3/s3.py", {
     secrets: {

@@ -4,9 +4,11 @@
 import { core, wit_utils } from "./wit.ts";
 import {
   PolicyPerEffect,
+  PolicySpec as WitPolicySpec,
   TypeArray,
   TypeBase,
   TypeEither,
+  TypeFile,
   TypeFloat,
   TypeFunc,
   TypeInteger,
@@ -48,6 +50,21 @@ export type SimplifiedNumericData<T> =
   & { enumeration?: number[] }
   & Omit<T, "enumeration">;
 
+export function getPolicyChain(
+  policy: PolicySpec[] | PolicySpec,
+): WitPolicySpec[] {
+  const chain = Array.isArray(policy) ? policy : [policy];
+  return chain.map((p) => {
+    if (p instanceof Policy) {
+      return { tag: "simple", val: p._id } as const;
+    }
+    return {
+      tag: "per-effect",
+      val: mapValues(p, (v) => v._id) as unknown as PolicyPerEffect,
+    } as const;
+  });
+}
+
 export class Typedef {
   readonly name?: string;
   readonly runtimeConfig?: Array<[string, string]>;
@@ -63,18 +80,12 @@ export class Typedef {
   }
 
   withPolicy(policy: PolicySpec[] | PolicySpec): this {
-    const chain = Array.isArray(policy) ? policy : [policy];
     const id = core.withPolicy({
       tpe: this._id,
-      chain: chain.map((p) => {
-        if (p instanceof Policy) return { tag: "simple", val: p._id } as const;
-        return {
-          tag: "per-effect",
-          val: mapValues(p, (v) => v._id) as unknown as PolicyPerEffect,
-        } as const;
-      }),
+      chain: getPolicyChain(policy),
     });
 
+    const chain = Array.isArray(policy) ? policy : [policy];
     return new Proxy(this, {
       get(target, prop, receiver) {
         if (prop === "_id") {
@@ -313,6 +324,31 @@ export function enum_(variants: string[], base: SimplifiedBase<TypeBase> = {}) {
   }, base);
 }
 
+class File extends Typedef {
+  readonly min?: number;
+  readonly max?: number;
+  readonly allow?: string[];
+
+  constructor(_id: number, data: TypeFile, base: TypeBase) {
+    super(_id, base);
+    this.min = data.min;
+    this.max = data.max;
+    this.allow = data.allow;
+  }
+}
+
+export function file(
+  data: Simplified<TypeFile> = {},
+  base: SimplifiedBase<TypeBase> = {},
+) {
+  const completeBase = {
+    ...base,
+    asId: false,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
+  };
+  return new File(core.fileb(data, completeBase), data, completeBase);
+}
+
 class ArrayT extends Typedef {
   readonly min?: number;
   readonly max?: number;
@@ -368,6 +404,7 @@ export function optional(
   const completeData = {
     of: variant._id,
     ...data,
+    defaultItem: JSON.stringify(data.defaultItem),
   } as TypeOptional;
   const completeBase = {
     ...base,
