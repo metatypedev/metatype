@@ -191,7 +191,8 @@ export class PrismaRuntime {
             stage.props.args?.(p) ?? {},
             (v) => v != null,
           );
-          const parameters = (mat.data.ordered_keys as Array<string>).map((
+          const orderedKeys = (mat.data.ordered_keys ?? []) as Array<string>;
+          const parameters = orderedKeys.map((
             key,
           ) => args[key] ?? null);
           return {
