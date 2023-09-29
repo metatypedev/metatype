@@ -726,32 +726,17 @@ Meta.test("prisma full mapping", async (t) => {
     await gql`
         query {
           testQueryRaw {
-            id {
-              prisma__type
-              prisma__value
-            }
-            title {
-              prisma__type
-              prisma__value
-            }
-            reactions {
-              prisma__type
-              prisma__value
-            }
+            id
+            title
+            reactions
           }
         }
     `.expectData({
       testQueryRaw: [
         {
-          id: { prisma__type: "int", prisma__value: 10002 },
-          title: {
-            prisma__type: "string",
-            prisma__value: "Title 2 has been changed",
-          },
-          reactions: {
-            prisma__type: "int",
-            prisma__value: 9,
-          },
+          id: 10002,
+          title: "Title 2 has been changed",
+          reactions: 9,
         },
       ],
     })

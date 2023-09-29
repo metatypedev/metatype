@@ -152,7 +152,6 @@ export class PrismaRuntime {
         throw new ResolverError(res.errors[0].user_facing_error.message);
       }
 
-      // console.log("prisma result", res);
       return path.reduce((r, field) => r[field], res.data);
     };
   }
@@ -288,7 +287,9 @@ export class PrismaRuntime {
         const resolver: Resolver = ({ _: { parent } }) => {
           const resolver = parent[field.props.node];
           const ret = typeof resolver === "function" ? resolver() : resolver;
-          return ret;
+          const matData = stage.props.materializer
+            ?.data as unknown as PrismaOperationMatData;
+          return matData.operation === "queryRaw" ? ret["prisma__value"] : ret;
         };
         stagesMat.push(
           new ComputeStage({

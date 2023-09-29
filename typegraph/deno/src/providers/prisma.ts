@@ -157,13 +157,6 @@ export class PrismaRuntime extends Runtime {
   ) {
     return prismaLink(targetType, name, arg ?? {});
   }
-
-  asColumn(tpe: Typedef): t.Struct<{ [key: string]: Typedef }> {
-    return t.struct({
-      prisma__type: t.string(),
-      prisma__value: tpe,
-    });
-  }
 }
 
 function prismaLink(

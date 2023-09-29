@@ -90,11 +90,13 @@ def prisma(g: Graph):
             ),
             EffectUpdate(True),
         ),
+        # https://www.postgresql.org/docs/10/functions-subquery.html
+        # expr = ANY(array) equiv. to expr IN (array[0], array[1], ..)
         testQueryRaw=db.query_raw(
             """
                 WITH tmp AS (
                     SELECT id, title, (views + likes) as reactions FROM "Post"
-                    WHERE title LIKE ${title}
+                    WHERE title LIKE ${title} AND id = ANY(${idlist})
                 ) SELECT * FROM tmp WHERE id IN (${one}, ${two})
             """,
             t.struct(
@@ -102,16 +104,24 @@ def prisma(g: Graph):
                     "one": t.integer(),
                     "two": t.integer(),
                     "title": t.string(),
+                    "idlist": t.array(t.integer()),
                 }
             ),
             t.array(
                 t.struct(
                     {
-                        "id": db.as_column(t.integer()),
-                        "title": db.as_column(t.string()),
-                        "reactions": db.as_column(t.integer()),
+                        "id": t.integer(),
+                        "title": t.string(),
+                        "reactions": t.integer(),
                     }
                 )
             ),
-        ).apply({"title": "%Title 2%", "one": 10002, "two": -1}),
+        ).apply(
+            {
+                "title": "%Title 2%",
+                "one": 10002,
+                "two": -1,
+                "idlist": [10003, 10002, 10007],
+            }
+        ),
     )
