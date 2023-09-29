@@ -712,4 +712,34 @@ Meta.test("prisma full mapping", async (t) => {
     })
       .on(e);
   });
+
+  await t.should("work with executeRaw", async () => {
+    await gql`
+        mutation {
+          testExecuteRaw(replacement: "Title 2 has been changed")
+        }
+    `.expectData({ testExecuteRaw: 3 })
+      .on(e);
+  });
+
+  await t.should("work with complex queryRaw", async () => {
+    await gql`
+        query {
+          testQueryRaw {
+            id
+            title
+            reactions
+          }
+        }
+    `.expectData({
+      testQueryRaw: [
+        {
+          id: 10002,
+          title: "Title 2 has been changed",
+          reactions: 9,
+        },
+      ],
+    })
+      .on(e);
+  });
 });

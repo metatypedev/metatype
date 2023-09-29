@@ -108,8 +108,8 @@ pub struct FileFilter {
 impl FileFilter {
     fn python_filters(config: &TypegraphLoaderConfig) -> Result<SpecificFilters> {
         // soon
-        // let matcher = RegexMatcher::new_line_matcher("with\\s+typegraph")?;
-        let matcher = RegexMatcher::new_line_matcher("with\\s+[Tt]ype[Gg]raph")?;
+        // let matcher = RegexMatcher::new_line_matcher("@typegraph\\(.*?\\)");
+        let matcher = RegexMatcher::new_line_matcher("with\\s+[Tt]ype[Gg]raph|@typegraph\\(")?;
 
         Ok(SpecificFilters {
             matcher,

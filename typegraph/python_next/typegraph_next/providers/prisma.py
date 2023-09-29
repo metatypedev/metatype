@@ -6,7 +6,11 @@ from typing import Union, Optional
 from typegraph_next.runtimes.base import Runtime
 from typegraph_next.wit import runtimes, store
 from typegraph_next.gen.types import Err
-from typegraph_next.gen.exports.runtimes import PrismaRuntimeData, PrismaLinkData
+from typegraph_next.gen.exports.runtimes import (
+    Effect,
+    PrismaRuntimeData,
+    PrismaLinkData,
+)
 from typegraph_next import t
 
 
@@ -125,6 +129,21 @@ class PrismaRuntime(Runtime):
         if isinstance(model, str):
             model = t.ref(model)
         type = runtimes.prisma_delete_many(store, self.id, model.id)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
+
+    def execute(self, query: str, parameters: t.typedef, effect: Effect) -> t.func:
+        type = runtimes.prisma_execute(store, self.id, query, parameters.id, effect)
+        if isinstance(type, Err):
+            raise Exception(type.value)
+        return t.func.from_type_func(type.value)
+
+    def query_raw(
+        self, query: str, parameters: Union[None, t.typedef], output: t.typedef
+    ) -> t.func:
+        params_id = None if parameters is None else parameters.id
+        type = runtimes.prisma_query_raw(store, self.id, query, params_id, output.id)
         if isinstance(type, Err):
             raise Exception(type.value)
         return t.func.from_type_func(type.value)

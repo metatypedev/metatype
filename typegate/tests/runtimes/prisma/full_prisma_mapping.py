@@ -1,4 +1,5 @@
 from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.gen.exports.runtimes import EffectUpdate
 from typegraph_next.providers.prisma import PrismaRuntime
 
 
@@ -77,6 +78,50 @@ def prisma(g: Graph):
         findFirstPostWithApply=db.find_first(post).apply(
             {
                 "where": {"id": 10007},
+            }
+        ),
+        testExecuteRaw=db.execute(
+            'UPDATE "Post" SET title = ${replacement} WHERE title LIKE ${title}',
+            t.struct(
+                {
+                    "title": t.string().set("%Title 2%"),
+                    "replacement": t.string(),
+                }
+            ),
+            EffectUpdate(True),
+        ),
+        # https://www.postgresql.org/docs/10/functions-subquery.html
+        # expr = ANY(array) equiv. to expr IN (array[0], array[1], ..)
+        testQueryRaw=db.query_raw(
+            """
+                WITH tmp AS (
+                    SELECT id, title, (views + likes) as reactions FROM "Post"
+                    WHERE title LIKE ${title} AND id = ANY(${idlist})
+                ) SELECT * FROM tmp WHERE id IN (${one}, ${two})
+            """,
+            t.struct(
+                {
+                    "one": t.integer(),
+                    "two": t.integer(),
+                    "title": t.string(),
+                    "idlist": t.array(t.integer()),
+                }
+            ),
+            t.array(
+                t.struct(
+                    {
+                        "id": t.integer(),
+                        "title": t.string(),
+                        "reactions": t.integer(),
+                    }
+                )
+            ),
+        ).apply(
+            {
+                "title": "%Title 2%",
+                "one": 10002,
+                "two": -1,
+                "idlist": [10003, 10002, 10007],
             }
         ),
     )
