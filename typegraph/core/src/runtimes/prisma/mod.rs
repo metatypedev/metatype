@@ -65,6 +65,7 @@ pub fn with_prisma_runtime<R>(
 pub struct PrismaMaterializer {
     pub table: String,
     pub operation: String,
+    pub ordered_keys: Option<Vec<String>>,
 }
 
 impl MaterializerConverter for PrismaMaterializer {
@@ -84,6 +85,10 @@ impl MaterializerConverter for PrismaMaterializer {
             "operation".to_string(),
             serde_json::Value::String(self.operation.clone()),
         );
+        if let Some(ordered_keys) = self.ordered_keys.clone() {
+            let value = serde_json::to_value(ordered_keys).map_err(|e| e.to_string())?;
+            data.insert("ordered_keys".to_string(), value);
+        }
         Ok(Materializer {
             name: "prisma_operation".to_string(),
             runtime,

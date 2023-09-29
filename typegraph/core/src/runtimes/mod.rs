@@ -26,6 +26,7 @@ use enum_dispatch::enum_dispatch;
 pub use self::deno::{DenoMaterializer, MaterializerDenoImport, MaterializerDenoModule};
 pub use self::graphql::GraphqlMaterializer;
 use self::prisma::relationship::prisma_link;
+use self::prisma::type_generation::replace_variables_to_indices;
 use self::prisma::{PrismaMaterializer, PrismaRuntimeContext};
 pub use self::python::PythonMaterializer;
 pub use self::random::RandomMaterializer;
@@ -148,6 +149,7 @@ macro_rules! prisma_op {
                 .type_name()?
                 .ok_or_else(|| "prisma model must be named".to_string())?,
             operation: $name.to_string(),
+            ordered_keys: None,
         };
 
         let mat_id = Store::register_materializer(Materializer::prisma($rt, mat, $effect));
@@ -403,14 +405,14 @@ impl wit::Runtimes for crate::Lib {
         param: CoreTypeId,
         effect: WitEffect,
     ) -> Result<TypeFunc, wit::Error> {
-        let mat = PrismaMaterializer {
-            table: query,
-            operation: "executeRaw".to_string(),
-        };
-
         let types = with_prisma_runtime(runtime, |ctx| ctx.execute_raw(param.into()))?;
+        let proc = replace_variables_to_indices(query, types.input)?;
+        let mat = PrismaMaterializer {
+            table: proc.query,
+            operation: "executeRaw".to_string(),
+            ordered_keys: Some(proc.ordered_keys),
+        };
         let mat_id = Store::register_materializer(Materializer::prisma(runtime, mat, effect));
-
         Ok(TypeFunc {
             inp: types.input.into(),
             out: types.output.into(),
@@ -424,17 +426,17 @@ impl wit::Runtimes for crate::Lib {
         param: Option<CoreTypeId>,
         out: CoreTypeId,
     ) -> Result<TypeFunc, wit::Error> {
-        let mat = PrismaMaterializer {
-            table: query,
-            operation: "queryRaw".to_string(),
-        };
-
         let types = with_prisma_runtime(runtime, |ctx| {
             ctx.query_raw(param.map(|v| v.into()), out.into())
         })?;
+        let proc = replace_variables_to_indices(query, types.input)?;
+        let mat = PrismaMaterializer {
+            table: proc.query,
+            operation: "queryRaw".to_string(),
+            ordered_keys: Some(proc.ordered_keys),
+        };
         let mat_id =
             Store::register_materializer(Materializer::prisma(runtime, mat, WitEffect::None));
-
         Ok(TypeFunc {
             inp: types.input.into(),
             out: types.output.into(),

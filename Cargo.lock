@@ -3733,7 +3733,6 @@ dependencies = [
  "query-connector",
  "query-core",
  "query-engine-metrics",
- "regex",
  "request-handlers",
  "rust-s3",
  "schema-connector",

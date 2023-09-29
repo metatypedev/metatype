@@ -10,6 +10,8 @@
 
 use std::collections::HashMap;
 
+use regex::Regex;
+
 use self::aggregate::{CountOutput, NumberAggregateOutput};
 use self::group_by::GroupByResult;
 use self::input_type::InputType;
@@ -55,6 +57,42 @@ trait TypeGen {
 pub struct OperationTypes {
     pub input: TypeId,
     pub output: TypeId,
+}
+
+pub struct FormattedQuery {
+    pub query: String,
+    pub ordered_keys: Vec<String>,
+}
+
+pub fn replace_variables_to_indices(query: String, input_id: TypeId) -> Result<FormattedQuery> {
+    let parameters = input_id.as_struct()?;
+    let mut proc_query = query;
+    let mut ordered_keys = vec![];
+    let mut not_present = vec![];
+    for (index, (var, _)) in parameters.data.props.iter().enumerate() {
+        // Note: pattern matches ${var}, ${  var}, ${ var  }, ..
+        let pattern = format!("\\$\\{{\\s*{var}\\s*\\}}");
+        let re = Regex::new(&pattern).map_err(|e| e.to_string())?;
+        if !re.is_match(&proc_query) {
+            not_present.push(format!("{:?}", var));
+        } else {
+            ordered_keys.push(var.clone());
+            proc_query = re
+                .replace_all(&proc_query, &format!("$${}", index + 1))
+                .to_string();
+        }
+        if !not_present.is_empty() {
+            return Err(format!(
+                "{} present in type definition but not in the query",
+                not_present.join(", ")
+            ));
+        }
+    }
+
+    Ok(FormattedQuery {
+        query: proc_query,
+        ordered_keys,
+    })
 }
 
 impl TypeGenContext {

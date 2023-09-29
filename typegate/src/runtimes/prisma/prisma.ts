@@ -187,23 +187,19 @@ export class PrismaRuntime {
       ) {
         renames[stage.props.node] = matData.operation;
         queries.push((p) => {
-          const parameters = filterValues(
+          const args = filterValues(
             stage.props.args?.(p) ?? {},
             (v) => v != null,
           );
-          const value = nativeResult(
-            native.replace_variables_to_indices({
-              parameters,
-              query: matData.table,
-            }),
-          );
-
+          const parameters = (mat.data.ordered_keys as Array<string>).map((
+            key,
+          ) => args[key] ?? null);
           return {
             action: matData.operation,
             query: {
               arguments: {
-                query: value.res,
-                parameters: JSON.stringify(Object.values(parameters)),
+                query: matData.table,
+                parameters: JSON.stringify(parameters),
               },
               selection: {},
             },
