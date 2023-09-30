@@ -1,11 +1,6 @@
-import * as meta from "@metatypedev/typegraph/esm/src/mod.ts";
-
-console.log(meta);
-
-/*
-import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
-import { DenoRuntime } from "@metatypedev/typegraph/deno/src/runtimes/deno.ts";
-import { PythonRuntime } from "@typegraph/deno/src/runtimes/python.ts";
+import { Policy, t, typegraph } from "@metatypedev/typegraph";
+import { DenoRuntime } from "@metatypedev/typegraph/runtimes/deno";
+import { PythonRuntime } from "@metatypedev/typegraph/runtimes/python";
 
 typegraph("test-multiple-runtimes", (g) => {
   const pub = Policy.public();
@@ -13,16 +8,17 @@ typegraph("test-multiple-runtimes", (g) => {
   const python = new PythonRuntime();
 
   g.expose({
-    add: t.func(
-      t.struct({ "first": t.float(), "second": t.float() }),
-      t.float(),
-      python.fromLambda("lambda x: x['first'] + x['second']"),
-    ).withPolicy(pub),
-    multiply: deno.func(
-      t.struct({ "first": t.float(), "second": t.float() }),
-      t.float(),
-      { code: "({first, second}) => first * second" },
-    ).withPolicy(pub),
+    add: t
+      .func(
+        t.struct({ first: t.float(), second: t.float() }),
+        t.float(),
+        python.fromLambda("lambda x: x['first'] + x['second']")
+      )
+      .withPolicy(pub),
+    multiply: deno
+      .func(t.struct({ first: t.float(), second: t.float() }), t.float(), {
+        code: "({first, second}) => first * second",
+      })
+      .withPolicy(pub),
   });
 });
-*/

@@ -37,7 +37,7 @@ tmp/
 coverage*
 
 typegraph/node
-typegraph/deno/gen
+typegraph/deno/src/gen
 typegraph/python_next/typegraph_next/gen
 
 *.egg-info/
