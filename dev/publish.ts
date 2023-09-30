@@ -48,8 +48,8 @@ await dnt.build({
   typeCheck: "single",
   packageManager: "pnpm",
   package: {
-    name: "@metatypedev/typegraph",
-    version: "0.0.2", //lockfile.dev.lock.METATYPE_VERSION,
+    name: "@typegraph/sdk",
+    version: "0.0.1", //lockfile.dev.lock.METATYPE_VERSION,
     description: lockfile.dev.lock.TAGLINE,
     license: "MPL-2.0",
     repository: {
