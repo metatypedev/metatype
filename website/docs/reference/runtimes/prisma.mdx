@@ -40,7 +40,11 @@ Generate a raw SQL query operation on the runtime
 ```python
 db = PrismaRuntime("my-app", "POSTGRES")
 g.expose(
-    countUsers=db.raw_query("SELECT COUNT(*) FROM User", t.integer())
+    countUsers=db.raw_query(
+        "SELECT COUNT(*) as total FROM User",
+        t.struct({}),
+        t.array(t.struct({"total": t.integer()}))
+    )
 )
 ```
 
@@ -49,7 +53,11 @@ Generate a raw SQL query operation without return
 ```python
 db = PrismaRuntime("my-app", "POSTGRES")
 g.expose(
-    setActive=db.raw_execute("UPDATE User SET active = TRUE WHERE id=$1", effect=effects.update()),
+    setActive=db.raw_execute(
+        "UPDATE User SET active = TRUE WHERE id=${id}",
+        t.struct({"id": t.uuid()}),
+        effect=effects.update()
+    ),
 )
 ```
 
