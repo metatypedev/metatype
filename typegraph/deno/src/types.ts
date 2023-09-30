@@ -13,8 +13,8 @@ import {
   TypeOptional,
   TypeString,
   TypeUnion,
-} from "../gen/exports/metatype-typegraph-core.d.ts";
-import { Apply } from "../gen/exports/metatype-typegraph-utils.d.ts";
+} from "../gen/interfaces/metatype-typegraph-core.d.ts";
+import { Apply } from "../gen/interfaces/metatype-typegraph-utils.d.ts";
 import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps.ts";
 import Policy from "./policy.ts";

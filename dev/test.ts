@@ -141,6 +141,10 @@ for (let i = 0; i < testFiles.length; i += threads) {
 
   for (const { status, output, testFile } of tests) {
     for await (const line of output) {
+      if (line.startsWith("warning: skipping duplicate package")) {
+        // https://github.com/rust-lang/cargo/issues/10752
+        continue;
+      }
       console.log(line);
     }
     console.log("\n");

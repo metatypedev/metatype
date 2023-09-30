@@ -6,7 +6,7 @@ import {
   Effect,
   HttpMethod,
   MaterializerHttpRequest,
-} from "../../gen/exports/metatype-typegraph-runtimes.d.ts";
+} from "../../gen/interfaces/metatype-typegraph-runtimes.d.ts";
 import { runtimes } from "../wit.ts";
 import { Materializer, Runtime } from "./mod.ts";
 import * as fx from "../effects.ts";

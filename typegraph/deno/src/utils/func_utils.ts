@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { InheritDef } from "../typegraph.ts";
-import { ApplyPath } from "../../gen/exports/metatype-typegraph-utils.d.ts";
+import { ApplyPath } from "../../gen/interfaces/metatype-typegraph-utils.d.ts";
 import { serializeStaticInjection } from "./injection_utils.ts";
 
 export function stringifySymbol(symbol: symbol) {

@@ -6,33 +6,54 @@ use std::path::PathBuf;
 use super::{Action, GenArgs};
 use anyhow::{bail, Ok, Result};
 use async_trait::async_trait;
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use include_dir::{include_dir, Dir};
 
 static TEMPLATES: Dir = include_dir!("examples/templates");
 
+#[derive(ValueEnum, Debug, Clone)]
+#[clap(rename_all = "kebab_case")]
+enum Template {
+    Python,
+    Deno,
+    Node,
+}
+
+impl Template {
+    fn name(&self) -> &'static str {
+        match self {
+            Template::Python => "python",
+            Template::Deno => "deno",
+            Template::Node => "node",
+        }
+    }
+}
+
 #[derive(Parser, Debug)]
+
 pub struct New {
     // Target directory
-    #[clap()]
-    dir: PathBuf,
+    #[clap(default_value = ".")]
+    dir: String,
 
     /// Templates to use
-    #[clap(long, default_value = "new")]
-    template: String,
+    #[clap(long, value_enum)]
+    template: Template,
 }
 
 #[async_trait]
 impl Action for New {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let target_dir = if self.dir.is_absolute() {
-            self.dir.clone()
+        let dir = PathBuf::from(&self.dir);
+        let target_dir = if dir.is_absolute() {
+            dir
         } else {
-            args.dir()?.join(&self.dir)
+            args.dir()?.join(&dir)
         };
         println!("Target directory {}", target_dir.display());
 
-        match TEMPLATES.get_dir(&self.template) {
+        let template_name = self.template.name();
+        match TEMPLATES.get_dir(template_name) {
             Some(template) => {
                 if !target_dir.exists() {
                     println!("Creating directory: {}", target_dir.display());
@@ -41,11 +62,11 @@ impl Action for New {
                     bail!("target directory is a file: {}", target_dir.display());
                 }
 
-                unpack_template(target_dir.clone(), template, &self.template, true)?;
-                unpack_template(target_dir, template, &self.template, false)?;
+                unpack_template(target_dir.clone(), template, template_name, true)?;
+                unpack_template(target_dir, template, template_name, false)?;
                 Ok(())
             }
-            None => bail!("template not found: {}", self.template),
+            None => bail!("template not found: {}", template_name),
         }
     }
 }

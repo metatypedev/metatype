@@ -3,7 +3,7 @@
 
 import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
-import { Effect } from "../../gen/exports/metatype-typegraph-runtimes.d.ts";
+import { Effect } from "../../gen/interfaces/metatype-typegraph-runtimes.d.ts";
 import Policy from "../policy.ts";
 import { Materializer, Runtime } from "./mod.ts";
 
