@@ -6,7 +6,7 @@
     "start": "tsx api.ts"
   },
   "dependencies": {
-    "@metatypedev/typegraph": "link:../../../typegraph/node"
+    "@metatypedev/typegraph": "^0.0.3"
   },
   "devDependencies": {
     "tsx": "^3.13.0",
