@@ -144,7 +144,7 @@ export class PrismaRuntime extends Runtime {
     const type = runtimes.prismaQueryRaw(
       this._id,
       query,
-      parameters ? parameters._id : null,
+      parameters ? parameters._id : undefined,
       output._id,
     );
     return t.Func.fromTypeFunc(type);
