@@ -10,7 +10,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.8"
-  PROTOC_VERSION: "3.x"
+  PROTOC_VERSION: "v24.x"
   POETRY_VERSION: "1.4.1"
   DENO_BINDGEN_URL: https://deno.land/x/deno_bindgen@0.8.1/cli.ts
   DENO_VERSION: "1.36.1"
@@ -27,7 +27,7 @@ jobs:
     permissions:
       pull-requests: read
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v2
         id: filter
         with:
@@ -64,14 +64,14 @@ jobs:
   test-pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - uses: pnpm/action-setup@v2.4.0
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: arduino/setup-protoc@v1
+      - uses: arduino/setup-protoc@v2
         with:
           version: ${{ env.PROTOC_VERSION }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -94,7 +94,7 @@ jobs:
     if: ${{ needs.changes.outputs.website == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -129,7 +129,7 @@ jobs:
     if: ${{ needs.changes.outputs.typegraph == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -157,7 +157,7 @@ jobs:
     if: ${{ needs.changes.outputs.typegraph == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -172,7 +172,7 @@ jobs:
     if: ${{ needs.changes.outputs.meta-cli == 'true' || needs.changes.outputs.typegraph == 'true' || needs.changes.outputs.typegate == 'true' || needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -214,7 +214,7 @@ jobs:
           #- os: windows-latest
           #  activate: '.venv\Scripts\activate.bat'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -283,7 +283,7 @@ jobs:
     env:
       DENO_DIR: deno-dir
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -301,7 +301,7 @@ jobs:
       - uses: abatilo/actions-poetry@v2
         with:
           poetry-version: ${{ env.POETRY_VERSION }}
-      - uses: arduino/setup-protoc@v1
+      - uses: arduino/setup-protoc@v2
         with:
           version: ${{ env.PROTOC_VERSION }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -357,7 +357,7 @@ jobs:
     if: ${{ needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -389,22 +389,22 @@ jobs:
     if: ${{ needs.changes.outputs.typegate == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: docker/setup-buildx-action@v2
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
       - uses: scherermichael-oss/action-has-permission@master
         id: check
         with:
           required-permission: write
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/login-action@v2
+      - uses: docker/login-action@v3
         if: steps.check.outputs.has-permission
         with:
           registry: docker.io
           username: zifeo
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build with cache (internal)
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         if: steps.check.outputs.has-permission
         with:
           file: dev/Dockerfile
@@ -413,7 +413,7 @@ jobs:
           cache-from: type=registry,ref=docker.io/zifeo/metatype-cache:ci
           cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
       - name: Build without cache (external)
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         if: "! steps.check.outputs.has-permission"
         with:
           file: dev/Dockerfile

@@ -186,17 +186,26 @@ export class PrismaRuntime {
         matData.operation === "queryRaw" || matData.operation === "executeRaw"
       ) {
         renames[stage.props.node] = matData.operation;
-        queries.push((_p) => ({
-          action: matData.operation,
-          query: {
-            arguments: {
-              query: matData.table,
-              // TODO params
-              parameters: "[]",
+        queries.push((p) => {
+          const args = filterValues(
+            stage.props.args?.(p) ?? {},
+            (v) => v != null,
+          );
+          const orderedKeys = (mat.data.ordered_keys ?? []) as Array<string>;
+          const parameters = orderedKeys.map((
+            key,
+          ) => args[key] ?? null);
+          return {
+            action: matData.operation,
+            query: {
+              arguments: {
+                query: matData.table,
+                parameters: JSON.stringify(parameters),
+              },
+              selection: {},
             },
-            selection: {},
-          },
-        }));
+          };
+        });
       } else {
         renames[stage.props.node] = matData.operation + matData.table;
         queries.push((p) => ({
@@ -275,7 +284,9 @@ export class PrismaRuntime {
         const resolver: Resolver = ({ _: { parent } }) => {
           const resolver = parent[field.props.node];
           const ret = typeof resolver === "function" ? resolver() : resolver;
-          return ret;
+          const matData = stage.props.materializer
+            ?.data as unknown as PrismaOperationMatData;
+          return matData.operation === "queryRaw" ? ret["prisma__value"] : ret;
         };
         stagesMat.push(
           new ComputeStage({

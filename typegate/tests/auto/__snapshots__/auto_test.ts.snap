@@ -365,15 +365,9 @@ snapshot[`Auto-tests for prisma 1`] = `
 
 snapshot[`Auto-tests for prisma 2`] = `
 {
-  errors: [
-    {
-      extensions: {},
-      locations: [],
-      message: "Validation errors:
-  - at <value>.where.firstname: Value does not match to any variant of the either type
-",
-      path: [],
-    },
-  ],
+  data: {
+    find_user: [],
+    read_user: [],
+  },
 }
 `;

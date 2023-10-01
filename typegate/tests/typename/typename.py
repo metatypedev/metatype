@@ -1,4 +1,4 @@
-from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next import Graph, Policy, effects, t, typegraph
 from typegraph_next.providers.prisma import PrismaRuntime
 from typegraph_next.runtimes.deno import DenoRuntime
 from typegraph_next.runtimes.random import RandomRuntime
@@ -25,8 +25,10 @@ def typename_test(g: Graph):
     g.expose(
         denoUser=deno_user,
         randomUser=randomUser,
-        # dropSchema=prisma.raw_execute(
-        #     "DROP SCHEMA IF EXISTS typename CASCADE", effect=effects.delete()
-        # ).add_policy(public),
+        dropSchema=prisma.raw_execute(
+            "DROP SCHEMA IF EXISTS typename CASCADE",
+            t.struct({}),
+            effect=effects.delete(),
+        ).with_policy(public),
         createUser=prisma.create(prisma_user).with_policy(public),
     )
