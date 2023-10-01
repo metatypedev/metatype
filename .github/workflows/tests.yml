@@ -10,7 +10,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.8"
-  PROTOC_VERSION: "3.x"
+  PROTOC_VERSION: "v3.x"
   POETRY_VERSION: "1.4.1"
   DENO_BINDGEN_URL: https://deno.land/x/deno_bindgen@0.8.1/cli.ts
   DENO_VERSION: "1.36.1"
