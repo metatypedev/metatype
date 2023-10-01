@@ -2,7 +2,7 @@
 
 from typegraph_next import typegraph, t, Graph, Policy
 from typegraph_next.gen.exports.runtimes import (
-    TypegateOperation,
+    TypegraphOperation,
     EffectNone,
 )
 from typegraph_next.wit import runtimes, store
@@ -12,22 +12,22 @@ from typegraph_next.runtimes.base import Materializer
 
 @typegraph()
 def introspection(g: Graph):
-    resolver_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.RESOLVER
+    resolver_mat_id = runtimes.register_typegraph_materializer(
+        store, TypegraphOperation.RESOLVER
     )
     if isinstance(resolver_mat_id, Err):
         raise Exception(resolver_mat_id.value)
     resolver_mat = Materializer(resolver_mat_id.value, effect=EffectNone())
 
-    type_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.GET_TYPE
+    type_mat_id = runtimes.register_typegraph_materializer(
+        store, TypegraphOperation.GET_TYPE
     )
     if isinstance(type_mat_id, Err):
         raise Exception(type_mat_id.value)
     type_mat = Materializer(type_mat_id.value, effect=EffectNone())
 
-    schema_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.GET_SCHEMA
+    schema_mat_id = runtimes.register_typegraph_materializer(
+        store, TypegraphOperation.GET_SCHEMA
     )
     if isinstance(schema_mat_id, Err):
         raise Exception(schema_mat_id.value)

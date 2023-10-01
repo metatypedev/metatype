@@ -32,6 +32,10 @@ pub struct TypegateRuntimeData {}
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct TypegraphRuntimeData {}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PrismaMigrationRuntimeData {}
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -52,6 +56,7 @@ pub enum KnownRuntime {
     Temporal(TemporalRuntimeData),
     WasmEdge(WasmEdgeRuntimeData),
     Typegate(TypegateRuntimeData),
+    Typegraph(TypegraphRuntimeData),
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

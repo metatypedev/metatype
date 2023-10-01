@@ -9,6 +9,7 @@ pub mod python;
 pub mod random;
 pub mod temporal;
 pub mod typegate;
+pub mod typegraph;
 pub mod wasi;
 
 use std::rc::Rc;
@@ -19,6 +20,7 @@ use crate::runtimes::prisma::migration::{
     prisma_apply, prisma_create, prisma_deploy, prisma_diff, prisma_reset,
 };
 use crate::runtimes::prisma::with_prisma_runtime;
+use crate::runtimes::typegraph::TypegraphOperation;
 use crate::validation::types::validate_value;
 use crate::wit::aws::S3RuntimeData;
 use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreTypeId};
@@ -56,6 +58,7 @@ pub enum Runtime {
     PrismaMigration,
     Temporal(Rc<TemporalRuntimeData>),
     Typegate,
+    Typegraph,
     S3(Rc<S3RuntimeData>),
 }
 
@@ -150,6 +153,14 @@ impl Materializer {
             data: data.into(),
         }
     }
+
+    fn typegraph(runtime_id: RuntimeId, data: TypegraphOperation, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -165,6 +176,7 @@ pub enum MaterializerData {
     PrismaMigration(PrismaMigrationOperation),
     Temporal(Rc<TemporalMaterializer>),
     Typegate(TypegateOperation),
+    Typegraph(TypegraphOperation),
     S3(Rc<S3Materializer>),
 }
 
@@ -508,13 +520,29 @@ impl wit::Runtimes for crate::Lib {
             WitOp::AddTypegraph => (WitEffect::Create(true), Op::AddTypegraph),
             WitOp::RemoveTypegraph => (WitEffect::Delete(true), Op::RemoveTypegraph),
             WitOp::GetSerializedTypegraph => (WitEffect::None, Op::GetSerializedTypegraph),
+        };
+
+        Ok(Store::register_materializer(Materializer::typegate(
+            Store::get_typegate_runtime(),
+            op,
+            effect,
+        )))
+    }
+
+    fn register_typegraph_materializer(
+        operation: wit::TypegraphOperation,
+    ) -> Result<MaterializerId, wit::Error> {
+        use wit::TypegraphOperation as WitOp;
+        use TypegraphOperation as Op;
+
+        let (effect, op) = match operation {
             WitOp::Resolver => (WitEffect::None, Op::Resolver),
             WitOp::GetType => (WitEffect::None, Op::GetType),
             WitOp::GetSchema => (WitEffect::None, Op::GetSchema),
         };
 
-        Ok(Store::register_materializer(Materializer::typegate(
-            Store::get_typegate_runtime(),
+        Ok(Store::register_materializer(Materializer::typegraph(
+            Store::get_typegraph_runtime(),
             op,
             effect,
         )))

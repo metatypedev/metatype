@@ -23,7 +23,9 @@ use common::typegraph::runtimes::random::RandomRuntimeData;
 use common::typegraph::runtimes::s3::S3RuntimeData;
 use common::typegraph::runtimes::temporal::TemporalRuntimeData;
 use common::typegraph::runtimes::wasmedge::WasmEdgeRuntimeData;
-use common::typegraph::runtimes::{KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData};
+use common::typegraph::runtimes::{
+    KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData, TypegraphRuntimeData,
+};
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
@@ -450,6 +452,7 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
         }))
         .into()),
         Runtime::Typegate => Ok(TGRuntime::Known(Rt::Typegate(TypegateRuntimeData {})).into()),
+        Runtime::Typegraph => Ok(TGRuntime::Known(Rt::Typegraph(TypegraphRuntimeData {})).into()),
         Runtime::S3(d) => Ok(TGRuntime::Known(Rt::S3(S3RuntimeData {
             host_secret: d.host_secret.clone(),
             region_secret: d.region_secret.clone(),

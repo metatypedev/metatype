@@ -10,15 +10,13 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub enum TypegateOperation {
-    ListTypegraphs,
-    FindTypegraph,
-    AddTypegraph,
-    RemoveTypegraph,
-    GetSerializedTypegraph,
+pub enum TypegraphOperation {
+    Resolver,
+    GetType,
+    GetSchema,
 }
 
-impl MaterializerConverter for TypegateOperation {
+impl MaterializerConverter for TypegraphOperation {
     fn convert(
         &self,
         c: &mut TypegraphContext,
@@ -29,11 +27,9 @@ impl MaterializerConverter for TypegateOperation {
 
         Ok(Materializer {
             name: match self {
-                Self::ListTypegraphs => "typegraphs",
-                Self::FindTypegraph => "typegraph",
-                Self::AddTypegraph => "addTypegraph",
-                Self::RemoveTypegraph => "removeTypegraph",
-                Self::GetSerializedTypegraph => "serializedTypegraph",
+                Self::Resolver => "resolver",
+                Self::GetType => "getType",
+                Self::GetSchema => "getSchema",
             }
             .to_string(),
             runtime,

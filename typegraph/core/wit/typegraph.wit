@@ -408,12 +408,18 @@ interface runtimes {
         add-typegraph,
         remove-typegraph,
         get-serialized-typegraph,
+    }
+
+    register-typegate-materializer: func(operation: typegate-operation) -> result<materializer-id, error>
+
+    // typegraph  (introspection)
+    enum typegraph-operation {
         resolver,
         get-type,
         get-schema,
     }
 
-    register-typegate-materializer: func(operation: typegate-operation) -> result<materializer-id, error>
+    register-typegraph-materializer: func(operation: typegraph-operation) -> result<materializer-id, error>
 }
 
 interface aws {

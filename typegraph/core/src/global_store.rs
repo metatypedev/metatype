@@ -45,15 +45,22 @@ pub struct Store {
 
     prisma_migration_runtime: RuntimeId,
     typegate_runtime: RuntimeId,
+    typegraph_runtime: RuntimeId,
 }
 
 impl Store {
     fn new() -> Self {
         Self {
-            runtimes: vec![Runtime::Deno, Runtime::PrismaMigration, Runtime::Typegate],
+            runtimes: vec![
+                Runtime::Deno,
+                Runtime::PrismaMigration,
+                Runtime::Typegate,
+                Runtime::Typegraph,
+            ],
             deno_runtime: 0,
             prisma_migration_runtime: 1,
             typegate_runtime: 2,
+            typegraph_runtime: 3,
             ..Default::default()
         }
     }
@@ -183,6 +190,10 @@ impl Store {
 
     pub fn get_typegate_runtime() -> RuntimeId {
         with_store(|s| s.typegate_runtime)
+    }
+
+    pub fn get_typegraph_runtime() -> RuntimeId {
+        with_store(|s| s.typegraph_runtime)
     }
 
     pub fn register_materializer(mat: Materializer) -> MaterializerId {
