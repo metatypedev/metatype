@@ -25,7 +25,7 @@ def typename_test(g: Graph):
     g.expose(
         denoUser=deno_user,
         randomUser=randomUser,
-        dropSchema=prisma.raw_execute(
+        dropSchema=prisma.execute(
             "DROP SCHEMA IF EXISTS typename CASCADE",
             t.struct({}),
             effect=effects.delete(),

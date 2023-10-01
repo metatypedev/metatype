@@ -317,6 +317,7 @@ mod tests {
     use crate::errors;
     use crate::global_store::Store;
     use crate::t::{self, TypeBuilder};
+    use crate::test_utils::setup;
     use crate::wit::core::Core;
     use crate::wit::core::Cors;
     use crate::wit::runtimes::{Effect, MaterializerDenoFunc, Runtimes};
@@ -397,21 +398,9 @@ mod tests {
     #[test]
     fn test_nested_typegraph_context() -> Result<(), String> {
         Store::reset();
-        Lib::init_typegraph(TypegraphInitParams {
-            name: "test-1".to_string(),
-            dynamic: None,
-            folder: None,
-            path: ".".to_string(),
-            ..Default::default()
-        })?;
+        setup(Some("test-1"))?;
         assert_eq!(
-            Lib::init_typegraph(TypegraphInitParams {
-                name: "test-2".to_string(),
-                dynamic: None,
-                folder: None,
-                path: ".".to_string(),
-                ..Default::default()
-            }),
+            crate::test_utils::setup(Some("test-2")),
             Err(errors::nested_typegraph_context("test-1"))
         );
         Lib::finalize_typegraph()?;
@@ -422,7 +411,7 @@ mod tests {
     fn test_no_active_context() -> Result<(), String> {
         Store::reset();
         assert_eq!(
-            Lib::expose(vec![], vec![], None),
+            Lib::expose(vec![], None),
             Err(errors::expected_typegraph_context())
         );
 
@@ -437,16 +426,9 @@ mod tests {
     #[test]
     fn test_expose_invalid_type() -> Result<(), String> {
         Store::reset();
-        Lib::init_typegraph(TypegraphInitParams {
-            name: "test".to_string(),
-            dynamic: None,
-            folder: None,
-            path: ".".to_string(),
-            ..Default::default()
-        })
-        .unwrap();
+        setup(None)?;
         let tpe = t::integer().build()?;
-        let res = Lib::expose(vec![("one".to_string(), tpe.into())], vec![], None);
+        let res = Lib::expose(vec![("one".to_string(), tpe.into())], None);
 
         assert_eq!(res, Err(errors::invalid_export_type("one", &tpe.repr()?,)));
 
@@ -455,13 +437,7 @@ mod tests {
 
     #[test]
     fn test_expose_invalid_name() -> Result<(), String> {
-        Lib::init_typegraph(TypegraphInitParams {
-            name: "test".to_string(),
-            dynamic: None,
-            folder: None,
-            path: ".".to_string(),
-            ..Default::default()
-        })?;
+        setup(None)?;
 
         let mat = Lib::register_deno_func(
             MaterializerDenoFunc::with_code("() => 12"),
@@ -473,7 +449,6 @@ mod tests {
                 "".to_string(),
                 t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
             )],
-            vec![],
             None,
         );
         assert_eq!(res, Err(errors::invalid_export_name("")));
@@ -483,7 +458,6 @@ mod tests {
                 "hello_world!".to_string(),
                 t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
             )],
-            vec![],
             None,
         );
         assert_eq!(res, Err(errors::invalid_export_name("hello_world!")));
@@ -493,13 +467,7 @@ mod tests {
 
     #[test]
     fn test_expose_duplicate() -> Result<(), String> {
-        Lib::init_typegraph(TypegraphInitParams {
-            name: "test".to_string(),
-            dynamic: None,
-            folder: None,
-            path: ".".to_string(),
-            ..Default::default()
-        })?;
+        setup(None)?;
 
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
@@ -515,7 +483,6 @@ mod tests {
                     t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
                 ),
             ],
-            vec![],
             None,
         );
         assert_eq!(res, Err(errors::duplicate_export_name("one")));
@@ -540,20 +507,10 @@ mod tests {
             .prop("three", c)
             .build()?;
 
-        Lib::init_typegraph(TypegraphInitParams {
-            name: "test".to_string(),
-            dynamic: None,
-            folder: None,
-            path: ".".to_string(),
-            ..Default::default()
-        })?;
+        setup(None)?;
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
-        Lib::expose(
-            vec![("one".to_string(), t::func(s, b, mat)?.into())],
-            vec![],
-            None,
-        )?;
+        Lib::expose(vec![("one".to_string(), t::func(s, b, mat)?.into())], None)?;
         let typegraph = Lib::finalize_typegraph()?;
         insta::assert_snapshot!(typegraph);
         Ok(())

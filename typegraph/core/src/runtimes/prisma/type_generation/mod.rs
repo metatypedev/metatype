@@ -369,6 +369,7 @@ mod test {
 
     macro_rules! test_op_body {
         ( $op_name:ident, $test_inp:expr, $test_out:expr ) => {{
+            setup(None)?;
             let mut context = TypeGenContext::default();
 
             let record = models::simple_record()?;

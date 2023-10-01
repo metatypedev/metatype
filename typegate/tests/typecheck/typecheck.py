@@ -78,17 +78,17 @@ def typecheck(g: Graph):
     enums = t.struct(
         {
             "userRole": t.enum(["admin", "moderator"]).optional(),
-            # We disabled enumeration for objects
-            # "availableItems": t.array(
-            #     t.struct({"name": t.string(), "unitPrice": t.float()}).enum(
-            #         [
-            #             {"name": "banana", "unitPrice": 200},
-            #             {"name": "orange", "unitPrice": 300},
-            #             {"name": "apple", "unitPrice": 400},
-            #         ],
-            #         name="AvailableItem",
-            #     )
-            # ),
+            "availableItems": t.array(
+                t.struct(
+                    {"name": t.string(), "unitPrice": t.float()},
+                    enum=[
+                        {"name": "banana", "unitPrice": 200},
+                        {"name": "orange", "unitPrice": 300},
+                        {"name": "apple", "unitPrice": 400},
+                    ],
+                    name="AvailableItem",
+                ),
+            ),
         }
     )
 

@@ -139,6 +139,7 @@ interface core {
         additional-props: bool,
         min: option<u32>,
         max: option<u32>,
+        enumeration: option<list<string>>,
     }
     structb: func(data: type-struct, base: type-base) -> result<type-id, error>
 

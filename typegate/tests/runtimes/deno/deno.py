@@ -5,18 +5,10 @@ from typegraph_next.runtimes.deno import DenoRuntime
 @typegraph()
 def deno(g: Graph):
     public = Policy.public()
-    # mod = ModuleMat("ts/deno.ts")
-    # math0 = ModuleMat("ts/math.ts")
 
-    # worker1 = DenoRuntime(
-    #     worker="worker 1", allow_net=("deno.land", "cdn.pika.dev", "cdn.skypack.dev")
-    # )
     deno = DenoRuntime()
-    # math1 = ModuleMat("ts/math.ts", runtime=worker1)
 
     number_input = t.struct({"numbers": t.array(t.float())})
-
-    # math_npm = ModuleMat("ts/math-npm.ts", runtime=worker1)
 
     g.expose(
         public,

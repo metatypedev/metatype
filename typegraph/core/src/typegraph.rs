@@ -233,22 +233,26 @@ pub fn expose(
             TypeNode::Object { data, .. } => data,
             _ => return Err("expect root to be an object".to_string()),
         };
-        for (key, type_id) in fields.into_iter() {
-            if !validate_name(&key) {
-                return Err(errors::invalid_export_name(&key));
-            }
-            if root_data.properties.contains_key(&key) {
-                return Err(errors::duplicate_export_name(&key));
-            }
-            ensure_valid_export(key.clone(), type_id)?;
+        let res = fields
+            .into_iter()
+            .map(|(key, type_id)| -> Result<_> {
+                if !validate_name(&key) {
+                    return Err(errors::invalid_export_name(&key));
+                }
+                if root_data.properties.contains_key(&key) {
+                    return Err(errors::duplicate_export_name(&key));
+                }
+                ensure_valid_export(key.clone(), type_id)?;
 
-            let type_idx = ctx.register_type(type_id, None)?;
-            root_data.properties.insert(key.clone(), type_idx.into());
-            root_data.required.push(key);
-        }
+                let type_idx = ctx.register_type(type_id, None)?;
+                root_data.properties.insert(key.clone(), type_idx.into());
+                root_data.required.push(key);
+                Ok(())
+            })
+            .collect::<Result<Vec<()>>>();
 
         ctx.types[0] = Some(root);
-        Ok(())
+        res.map(|_| ())
     })?
 }
 

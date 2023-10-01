@@ -310,6 +310,7 @@ impl Default for TypeStruct {
             additional_props: false,
             min: None,
             max: None,
+            enumeration: None,
         }
     }
 }

@@ -40,6 +40,7 @@ impl TypeConversion for Struct {
                     None => ctx.register_runtime(Store::get_deno_runtime())?,
                 },
             )
+            .enum_(self.data.enumeration.clone())
             .build(),
             data: ObjectTypeData {
                 properties: self

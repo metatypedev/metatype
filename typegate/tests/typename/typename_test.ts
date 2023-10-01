@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dropSchemas, recreateMigrations } from "../utils/migrations.ts";
+import { recreateMigrations } from "../utils/migrations.ts";
 import { gql, Meta } from "../utils/mod.ts";
 
 Meta.test("Typename", async (t) => {
@@ -83,14 +83,13 @@ Meta.test("Typename in prisma runtime", async (t) => {
     },
   });
 
-  // await gql`
-  //     mutation a {
-  //       dropSchema
-  //     }
-  //   `
-  //   .expectData({ dropSchema: 0 })
-  //   .on(e);
-  await dropSchemas(e);
+  await gql`
+      mutation a {
+        dropSchema
+      }
+    `
+    .expectData({ dropSchema: 0 })
+    .on(e);
   await recreateMigrations(e);
 
   await t.should("allow querying typename in an object", async () => {

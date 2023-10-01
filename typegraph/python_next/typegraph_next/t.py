@@ -519,6 +519,7 @@ class struct(typedef):
     additional_props: bool
     min: Optional[int]
     max: Optional[int]
+    enumeration: Optional[List[int]] = None
 
     def __init__(
         self,
@@ -529,6 +530,7 @@ class struct(typedef):
         max: Optional[int] = None,
         name: Optional[str] = None,
         config: Optional[ConfigSpec] = None,
+        enum: Optional[List[Dict[str, Any]]] = None,
     ):
         if self.__class__ != struct:  # custom class
             if len(self.__class__.__bases__) > 1:
@@ -576,6 +578,7 @@ class struct(typedef):
             additional_props=additional_props,
             min=min,
             max=max,
+            enumeration=[JsonLib.dumps(v) for v in enum] if enum else None,
         )
 
         runtime_config = serialize_config(config)
@@ -589,6 +592,7 @@ class struct(typedef):
         super().__init__(res.value)
         self.props = props
         self.runtime_config = runtime_config
+        self.enumeration = enum
 
     def extend(self, props: Dict[str, typedef]):
         return struct(props={**self.props, **props})
