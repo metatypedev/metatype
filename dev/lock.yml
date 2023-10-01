@@ -60,8 +60,8 @@ dev:
   lock:
     PYTHON_VERSION: '3.8'
     POETRY_VERSION: 1.4.1
-    PROTOC_VERSION: 3.x
-    RUST_VERSION: 1.72.1
+    PROTOC_VERSION: v24.x
+    RUST_VERSION: 1.70.0
     DENO_BINDGEN_URL: 'https://deno.land/x/deno_bindgen@0.8.1/cli.ts'
     DENO_VERSION: 1.37.1
     NODE_VERSION: 19.8.1
