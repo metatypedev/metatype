@@ -530,7 +530,47 @@ class struct(typedef):
         name: Optional[str] = None,
         config: Optional[ConfigSpec] = None,
     ):
-        props = props or {}
+        if self.__class__ != struct:  # custom class
+            if len(self.__class__.__bases__) > 1:
+                raise Exception("multiple inheritance is currently not supported")
+            (base,) = self.__class__.__bases__
+            child_cls = self.__class__
+            child_attr = set([i for i in vars(child_cls) if not i.startswith("__")])
+            parent_attr = set([i for i in vars(base) if not i.startswith("__")])
+
+            # reserved field check
+            reserved_attr = set(vars(struct)).union(vars(typedef))
+            common = sorted(reserved_attr.intersection(child_attr))
+            if len(common) > 0:
+                err_msg = ", ".join(common)
+                if len(common) == 1:
+                    err_msg += " is a reserved field"
+                else:
+                    err_msg += " are reserved fields"
+                raise Exception(err_msg)
+            self_attr = child_attr
+            if base != struct:
+                # child.props should inherit parent.props
+                curr_base = base
+                while curr_base != struct:
+                    if len(curr_base.__bases__) > 1:
+                        raise Exception(
+                            "multiple inheritance is currently not supported"
+                        )
+                    (curr_base,) = curr_base.__bases__
+                    fields = set([i for i in vars(curr_base) if not i.startswith("__")])
+                    parent_attr = parent_attr.union(fields)
+                self_attr = self_attr.union(parent_attr)
+            props = {}
+            for attr in sorted(self_attr):
+                value = getattr(self, attr)
+                if isinstance(value, typedef):
+                    props[attr] = value
+            name = self.__class__.__name__
+
+        else:
+            props = props or {}
+
         data = TypeStruct(
             props=list((name, tpe.id) for (name, tpe) in props.items()),
             additional_props=additional_props,
