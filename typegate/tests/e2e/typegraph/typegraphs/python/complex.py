@@ -32,7 +32,6 @@ complexType = t.struct(
 
 
 @typegraph(
-    secrets=["secret1", "secret2", "secret3"],
     cors=Cors(
         allow_credentials=False,
         allow_headers=[],

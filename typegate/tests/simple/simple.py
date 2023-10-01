@@ -17,7 +17,6 @@ def testing(g: Graph):
         rec=rec.with_policy(public),
         test=deno.identity(
             t.struct({"a": t.integer(name="arg1")}, name="inp"),
-            # t.struct({"a": t.integer().named("deps")}).named("res"),
         )
         # .named("f")
         .with_policy(public),

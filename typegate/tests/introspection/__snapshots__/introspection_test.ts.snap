@@ -53,7 +53,7 @@ Policies:
               name: null,
               ofType: {
                 kind: "OBJECT",
-                name: "res",
+                name: "inp",
                 ofType: null,
               },
             },
@@ -97,36 +97,6 @@ Policies:
         interfaces: [],
         kind: "OBJECT",
         name: "Query",
-        possibleTypes: null,
-      },
-      {
-        description: "res type",
-        enumValues: null,
-        fields: [
-          {
-            args: [],
-            deprecationReason: null,
-            description: "a field
-
-Policies:
-- inherit",
-            isDeprecated: false,
-            name: "a",
-            type: {
-              kind: "NON_NULL",
-              name: null,
-              ofType: {
-                kind: "SCALAR",
-                name: "Int",
-                ofType: null,
-              },
-            },
-          },
-        ],
-        inputFields: null,
-        interfaces: [],
-        kind: "OBJECT",
-        name: "res",
         possibleTypes: null,
       },
       {
