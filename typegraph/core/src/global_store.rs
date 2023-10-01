@@ -6,15 +6,34 @@ use crate::runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Ru
 use crate::types::{Struct, Type, TypeFun, TypeId, WrapperTypeData};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
+use indexmap::IndexMap;
 use std::rc::Rc;
 use std::{cell::RefCell, collections::HashMap};
 
 pub type Policy = Rc<CorePolicy>;
 
+/// As all the store entries are append only, we can set a restore point
+/// to reset it to a previous state.
+/// This is useful to remove the entities that were added in a typegraph scope
+/// instead of the global scope.
+///
+/// The state is saved as item count for each entry.
+///
+/// With this feature, we can reuse a type name in a typegraph definition module,
+/// within different typegraph contexts.
+#[derive(Default, Debug)]
+pub struct SavedState {
+    types: usize,
+    type_names: usize,
+    runtimes: usize,
+    materializers: usize,
+    policies: usize,
+}
+
 #[derive(Default)]
 pub struct Store {
     pub types: Vec<Type>,
-    pub type_by_names: HashMap<String, TypeId>,
+    pub type_by_names: IndexMap<String, TypeId>,
 
     pub runtimes: Vec<Runtime>,
     pub materializers: Vec<Materializer>,
@@ -63,6 +82,26 @@ impl Store {
 }
 
 impl Store {
+    pub fn save() -> SavedState {
+        with_store(|s| SavedState {
+            types: s.types.len(),
+            type_names: s.type_by_names.len(),
+            runtimes: s.runtimes.len(),
+            materializers: s.materializers.len(),
+            policies: s.policies.len(),
+        })
+    }
+
+    pub fn restore(saved_state: SavedState) {
+        with_store_mut(|s| {
+            s.types.truncate(saved_state.types);
+            s.type_by_names.truncate(saved_state.type_names);
+            s.runtimes.truncate(saved_state.runtimes);
+            s.materializers.truncate(saved_state.materializers);
+            s.policies.truncate(saved_state.policies);
+        })
+    }
+
     pub fn get_type_by_name(name: &str) -> Option<TypeId> {
         with_store(|s| s.type_by_names.get(name).copied())
     }

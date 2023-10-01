@@ -3,6 +3,7 @@
 
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::{gen_base, TypeConversion};
+use crate::global_store::SavedState;
 use crate::host::abi;
 use crate::types::{Type, TypeId};
 use crate::validation::validate_name;
@@ -23,6 +24,7 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
 use std::path::Path;
+use std::rc::Rc;
 
 use crate::wit::core::{
     Core, Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypePolicy,
@@ -38,6 +40,11 @@ struct IdMapping {
 }
 
 #[derive(Default)]
+struct RuntimeContexts {
+    prisma_typegen_cache: Rc<RefCell<HashMap<String, TypeId>>>,
+}
+
+#[derive(Default)]
 pub struct TypegraphContext {
     name: String,
     meta: TypeMeta,
@@ -46,6 +53,8 @@ pub struct TypegraphContext {
     materializers: Vec<Option<Materializer>>,
     policies: Vec<Policy>,
     mapping: IdMapping,
+    runtime_contexts: RuntimeContexts,
+    saved_store_state: Option<SavedState>,
 }
 
 thread_local! {
@@ -122,6 +131,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             secrets: vec![],
         },
         types: vec![],
+        saved_store_state: Some(Store::save()),
         ..Default::default()
     };
 
@@ -168,6 +178,8 @@ pub fn finalize() -> Result<String> {
         path: None,
         deps: Default::default(),
     };
+
+    Store::restore(ctx.saved_store_state.unwrap());
 
     serde_json::to_string(&tg).map_err(|e| e.to_string())
 }
@@ -374,5 +386,9 @@ impl TypegraphContext {
     pub fn add_secret(&mut self, name: impl Into<String>) {
         // TODO unicity
         self.meta.secrets.push(name.into());
+    }
+
+    pub fn get_prisma_typegen_cache(&self) -> Rc<RefCell<HashMap<String, TypeId>>> {
+        Rc::clone(&self.runtime_contexts.prisma_typegen_cache)
     }
 }

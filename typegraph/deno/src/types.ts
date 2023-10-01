@@ -28,6 +28,7 @@ import {
 } from "./utils/injection_utils.ts";
 import { InjectionValue } from "./utils/type_utils.ts";
 import { InheritDef } from "./typegraph.ts";
+import { FuncParams } from "@typegraph/deno/gen/exports/metatype-typegraph-runtimes.d.ts";
 
 export type PolicySpec = Policy | {
   none: Policy;
@@ -537,7 +538,7 @@ export class Func<
     );
   }
 
-  static fromTypeFunc(data: TypeFunc) {
+  static fromTypeFunc(data: FuncParams) {
     return func(
       new Typedef(data.inp, {}) as Struct<{ [key: string]: Typedef }>,
       new Typedef(data.out, {}),
