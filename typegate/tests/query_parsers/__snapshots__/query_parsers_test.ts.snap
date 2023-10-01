@@ -10,7 +10,9 @@ snapshot[`GraphQL parser 1`] = `
       mutation: 19,
       query: 18,
     },
-    required: [],
+    required: [
+      "user",
+    ],
     runtime: 0,
     title: "graphql_namespaces",
     type: "object",
@@ -221,7 +223,9 @@ snapshot[`GraphQL parser 1`] = `
       find: 2,
       profile: 14,
     },
-    required: [],
+    required: [
+      "user",
+    ],
     runtime: 0,
     title: "graphql_namespaces_q",
     type: "object",
@@ -236,7 +240,9 @@ snapshot[`GraphQL parser 1`] = `
       profile: 15,
       update: 7,
     },
-    required: [],
+    required: [
+      "user",
+    ],
     runtime: 0,
     title: "graphql_namespaces_m",
     type: "object",
@@ -250,7 +256,9 @@ snapshot[`GraphQL parser 1`] = `
     properties: {
       user: 16,
     },
-    required: [],
+    required: [
+      "user",
+    ],
     runtime: 0,
     title: "Query",
     type: "object",
@@ -264,7 +272,9 @@ snapshot[`GraphQL parser 1`] = `
     properties: {
       user: 17,
     },
-    required: [],
+    required: [
+      "user",
+    ],
     runtime: 0,
     title: "Mutation",
     type: "object",

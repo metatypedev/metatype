@@ -54,6 +54,7 @@ pub enum KnownRuntime {
     PrismaMigration(PrismaMigrationRuntimeData),
     S3(S3RuntimeData),
     Temporal(TemporalRuntimeData),
+    #[serde(rename = "wasmedge")]
     WasmEdge(WasmEdgeRuntimeData),
     Typegate(TypegateRuntimeData),
     Typegraph(TypegraphRuntimeData),

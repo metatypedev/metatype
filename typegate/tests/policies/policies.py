@@ -8,7 +8,6 @@ from typegraph_next.runtimes.deno import DenoRuntime
 )
 def policies(g: Graph):
     deno = DenoRuntime()
-    # mod = ModuleMat("ts/policies.ts")
 
     _secret_data = t.struct(
         {
@@ -28,11 +27,13 @@ def policies(g: Graph):
         pol_two=fn.with_policy(
             deno.policy("eq_two", "(_args, { context }) => Number(context.a) === 2")
         ),
-        ns={
-            "select": deno.func(
-                t.struct({}),
-                t.struct({"id": t.integer()}),
-                code="() => ({ id: 12 })",
-            )
-        },
+        ns=t.struct(
+            {
+                "select": deno.func(
+                    t.struct({}),
+                    t.struct({"id": t.integer()}),
+                    code="() => ({ id: 12 })",
+                )
+            }
+        ),
     )
