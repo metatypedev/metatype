@@ -6,7 +6,7 @@ use crate::errors::Result;
 use crate::global_store::Store;
 use crate::t;
 use crate::t::TypeBuilder;
-use crate::wit::core::TypeFunc;
+use crate::wit::core::FuncParams;
 use crate::wit::runtimes::Effect as WitEffect;
 use crate::wit::runtimes::{RuntimeId, TemporalOperationData, TemporalOperationType};
 
@@ -18,7 +18,7 @@ pub enum TemporalMaterializer {
     Describe,
 }
 
-pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Result<TypeFunc> {
+pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Result<FuncParams> {
     let mut inp = t::struct_();
     let (effect, mat_data) = match data.operation {
         TemporalOperationType::StartWorkflow => {
@@ -81,7 +81,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
     let mat = Materializer::temporal(runtime, mat_data, effect);
     let mat_id = Store::register_materializer(mat);
 
-    Ok(TypeFunc {
+    Ok(FuncParams {
         inp: inp.build()?.into(),
         out: t::string().build()?.into(),
         mat: mat_id,

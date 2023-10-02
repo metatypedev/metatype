@@ -1,11 +1,11 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.random import RandomMat, RandomRuntime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.runtimes.random import RandomRuntime
 
-with TypeGraph(
-    "type_alias",
-) as g:
+
+@typegraph()
+def type_alias(g: Graph):
     random = RandomRuntime(seed=1)
-    public = policies.public()
+    public = Policy.public()
 
     infos = t.struct(
         {
@@ -24,6 +24,6 @@ with TypeGraph(
     )
 
     g.expose(
-        get_message=t.func(t.struct(), message, RandomMat(random)),
-        default_policy=[public],
+        public,
+        get_message=random.gen(message),
     )

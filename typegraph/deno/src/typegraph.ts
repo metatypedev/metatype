@@ -11,6 +11,8 @@ import {
   serializeStaticInjection,
 } from "./utils/injection_utils.ts";
 import { Auth, Cors, Rate } from "./wit.ts";
+import Policy from "@typegraph/deno/src/policy.ts";
+import { getPolicyChain } from "@typegraph/deno/src/types.ts";
 
 type Exports = Record<string, t.Func>;
 
@@ -27,7 +29,7 @@ interface TypegraphArgs {
 }
 
 interface TypegraphBuilderArgs {
-  expose: (exports: Exports) => void;
+  expose: (exports: Exports, defaultPolicy?: Policy) => void;
   inherit: () => InheritDef;
 }
 
@@ -110,7 +112,7 @@ export function typegraph(
     prefix,
     secrets: secrets ?? [],
     cors: cors ?? {
-      allowCredentials: false,
+      allowCredentials: true,
       allowHeaders: [],
       allowMethods: [],
       allowOrigin: [],
@@ -124,10 +126,10 @@ export function typegraph(
   core.initTypegraph({ name, dynamic, path, folder, ...tgParams });
 
   const g: TypegraphBuilderArgs = {
-    expose: (exports) => {
+    expose: (exports, defaultPolicy) => {
       core.expose(
         Object.entries(exports).map(([name, fn]) => [name, fn._id]),
-        [],
+        defaultPolicy ? getPolicyChain(defaultPolicy) : [],
       );
     },
     inherit: () => {

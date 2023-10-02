@@ -42,7 +42,6 @@ interface core {
         path: string,
         // TypeMeta
         prefix: option<string>,
-        secrets: list<string>,
         cors: cors,
         auths: list<auth>,
         rate: option<rate>,
@@ -103,6 +102,14 @@ interface core {
     }
     stringb: func(data: type-string, base: type-base) -> result<type-id, error>
 
+    record type-file {
+        min: option<u32>,
+        max: option<u32>,
+        allow: option<list<string>>,
+    }
+    fileb: func(data: type-file, base: type-base) -> result<type-id, error>
+
+
     record type-array {
         of: type-id,
         min: option<u32>,
@@ -132,6 +139,7 @@ interface core {
         additional-props: bool,
         min: option<u32>,
         max: option<u32>,
+        enumeration: option<list<string>>,
     }
     structb: func(data: type-struct, base: type-base) -> result<type-id, error>
 
@@ -141,6 +149,8 @@ interface core {
         inp: type-id,
         out: type-id,
         mat: materializer-id,
+        rate-calls: bool,
+        rate-weight: option<u32>,
     }
     funcb: func(data: type-func) -> result<type-id, error>
 
@@ -178,14 +188,20 @@ interface core {
     }
     register-context-policy: func(key: string, check: context-check) -> result<tuple<policy-id, string>, error>
 
-    expose: func(fns: list<tuple<string, type-id>>, namespace: list<string>, default-policy: option<list<policy-spec>>) -> result<_, error>
+    expose: func(fns: list<tuple<string, type-id>>, default-policy: option<list<policy-spec>>) -> result<_, error>
     
     type runtime-id = u32
     type materializer-id = u32
+
+    record func-params {
+        inp: type-id,
+        out: type-id,
+        mat: materializer-id,
+    }
 }
 
 interface runtimes {
-    use core.{error, type-id, type-func, runtime-id, materializer-id}
+    use core.{error, type-id, func-params, runtime-id, materializer-id}
     
     get-deno-runtime: func() -> runtime-id
 
@@ -210,6 +226,10 @@ interface runtimes {
         secrets: list<string>,
     }
 
+    record materializer-deno-static {
+        value: string,
+    }
+
     record materializer-deno-predefined {
         name: string,
     }
@@ -221,7 +241,7 @@ interface runtimes {
     }
 
     register-deno-func: func(data: materializer-deno-func, effect: effect) -> result<materializer-id, error>
-
+    register-deno-static: func(data: materializer-deno-static, type-id: type-id) -> result<materializer-id, error>
 
     get-predefined-deno-func: func(data: materializer-deno-predefined) -> result<materializer-id, error>
     import-deno-function: func(data: materializer-deno-import, effect: effect) -> result<materializer-id, error>
@@ -334,22 +354,33 @@ interface runtimes {
     }
 
     register-prisma-runtime: func(data: prisma-runtime-data) -> result<runtime-id, error>
-    prisma-find-unique: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-find-many: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-find-first: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-aggregate: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-count: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-group-by: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-create-one: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-create-many: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-update-one: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-update-many: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-upsert-one: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-delete-one: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-delete-many: func(runtime: runtime-id, model: type-id) -> result<type-func, error>
-    prisma-execute: func(runtime: runtime-id, query: string, param: type-id, effect: effect) -> result<type-func, error>
-    prisma-query-raw: func(runtime: runtime-id, query: string, param: option<type-id>, out: type-id) -> result<type-func, error>
+    prisma-find-unique: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-find-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-find-first: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-aggregate: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-count: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-group-by: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-create-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-create-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-update-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-update-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-upsert-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-delete-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-delete-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
+    prisma-execute: func(runtime: runtime-id, query: string, param: type-id, effect: effect) -> result<func-params, error>
+    prisma-query-raw: func(runtime: runtime-id, query: string, param: option<type-id>, out: type-id) -> result<func-params, error>
     prisma-link: func(data: prisma-link-data) -> result<type-id, error>
+
+
+    // prisma-migrate
+    enum prisma-migration-operation {
+        diff,
+        create,
+        apply,
+        deploy,
+        reset,
+    }
+    prisma-migration: func(operation: prisma-migration-operation) -> result<func-params, error>
 
     // temporal
     record temporal-runtime-data {
@@ -371,7 +402,57 @@ interface runtimes {
     }
 
     register-temporal-runtime: func(data: temporal-runtime-data) -> result<runtime-id, error>
-    generate-temporal-operation: func(runtime: runtime-id, data: temporal-operation-data) -> result<type-func, error>
+    generate-temporal-operation: func(runtime: runtime-id, data: temporal-operation-data) -> result<func-params, error>
+
+    // typegate
+    enum typegate-operation {
+        list-typegraphs,
+        find-typegraph,
+        add-typegraph,
+        remove-typegraph,
+        get-serialized-typegraph,
+    }
+
+    register-typegate-materializer: func(operation: typegate-operation) -> result<materializer-id, error>
+
+    // typegraph  (introspection)
+    enum typegraph-operation {
+        resolver,
+        get-type,
+        get-schema,
+    }
+
+    register-typegraph-materializer: func(operation: typegraph-operation) -> result<materializer-id, error>
+}
+
+interface aws {
+    use core.{error, runtime-id, materializer-id}
+
+    record s3-runtime-data {
+        host-secret: string,
+        region-secret: string,
+        access-key-secret: string,
+        secret-key-secret: string,
+        path-style-secret: string,
+    }
+
+    record s3-presign-get-params {
+        bucket: string,
+        expiry-secs: option<u32>,
+    }
+
+    record s3-presign-put-params {
+        bucket: string,
+        expiry-secs: option<u32>,
+        content-type: option<string>,
+    }
+
+    register-s3-runtime: func(data: s3-runtime-data) -> result<runtime-id, error>
+    s3-presign-get: func(runtime: runtime-id, data: s3-presign-get-params) -> result<materializer-id, error>
+    s3-presign-put: func(runtime: runtime-id, data: s3-presign-put-params) -> result<materializer-id, error>
+    s3-list: func(runtime: runtime-id, bucket: string) -> result<materializer-id, error>
+    s3-upload: func(runtime: runtime-id, bucket: string) -> result<materializer-id, error>
+    s3-upload-all: func(runtime: runtime-id, bucket: string) -> result<materializer-id, error>
 }
 
 
@@ -409,4 +490,5 @@ world typegraph {
     export core
     export runtimes
     export utils
+    export aws
 }

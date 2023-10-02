@@ -37,7 +37,7 @@ tokio = { version = "1.32.0", features = ["full"] }
 futures = "0.3.28"
 log = "0.4.20"
 env_logger = "0.10.0"
-clap = { version = "4.4.4", features = ["derive", "env"] }
+clap = { version = "4.4.6", features = ["derive", "env"] }
 crossbeam-channel = "0.5.8"
 notify-debouncer-mini = { version = "0.4.1", default-features = false }
 tiny_http = "0.12.0"
@@ -59,12 +59,12 @@ typescript = { path = "../libs/typescript" }
 serde_yaml = "0.9.25"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.57", features = ["vendored"] }
-indexmap = { version = "2.0.0", features = ["serde"] }
+indexmap = { version = "2.0.2", features = ["serde"] }
 lade-sdk = "0.8.1"
 async-trait = "0.1.73"
 async-recursion = "1.0.5"
 clap-verbosity-flag = "2.0.1"
-clap_complete = "4.4.1"
+clap_complete = "4.4.3"
 itertools = "0.11.0"
 enum_dispatch = "0.3.12"
 git2 = { version = "0.18.1", features = ["vendored-libgit2"], default-features = false }
@@ -78,5 +78,5 @@ textwrap = "0.16.0"
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
-insta = "1.32.0"
+insta = "1.33.0"
 project-root = "0.2.2"

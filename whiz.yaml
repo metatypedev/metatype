@@ -85,6 +85,7 @@ system_graphs:
   command: "deno run -A dev/serialize.ts"
   depends_on:
     - libs
+    - typegraph
 
 libs:
   workdir: libs

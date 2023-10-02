@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dropSchemas, recreateMigrations } from "../utils/migrations.ts";
-import { gql, Meta } from "../utils/mod.ts";
+import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 
 Meta.test("prisma", async (t) => {
-  const tgPath = "multiple_runtimes/multiple_runtimes.py";
+  const tgPath = "runtimes/prisma/multiple_runtimes.py";
   const e = await t.engine(tgPath, {
     secrets: {
       TG_PRISMA_POSTGRES:

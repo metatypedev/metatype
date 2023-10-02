@@ -9,16 +9,21 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Union
 from typegraph_next.gen.exports.core import (
     Auth,
     Rate,
-    Cors,
+    Cors as CoreCors,
     TypegraphInitParams,
 )
 
 from typegraph_next.gen.types import Err
 from typegraph_next.policy import PolicyPerEffect, PolicySpec, get_policy_chain, Policy
 from typegraph_next.wit import core, store
+from typegraph_next.graph.params import Cors
 
 if TYPE_CHECKING:
     from typegraph_next import t
+
+
+# ExposeItem = Union["t.func", Dict[str, "ExposeItem"]]
+ExposeItem = Union["t.func", "t.struct"]
 
 
 class Typegraph:
@@ -29,9 +34,8 @@ class Typegraph:
     _context: List["Typegraph"] = []
     auths: Optional[List[Auth]]
     rate: Optional[Rate]
-    cors: Optional[Cors]
+    cors: Optional[CoreCors]
     prefix: Optional[str]
-    secrets: Optional[List[str]]
 
     def __init__(
         self,
@@ -43,7 +47,6 @@ class Typegraph:
         rate: Optional[Rate] = None,
         cors: Optional[Cors] = None,
         prefix: Optional[str] = None,
-        secrets: Optional[List[str]] = None,
     ):
         self.name = name
         self.dynamic = dynamic
@@ -52,16 +55,17 @@ class Typegraph:
 
         self.auths = auths or []
         self.rate = rate
-        self.cors = cors or Cors(
-            allow_origin=[],
-            allow_headers=[],
-            expose_headers=[],
-            allow_methods=[],
-            allow_credentials=False,
-            max_age_sec=None,
+
+        cors = cors or Cors()
+        self.cors = CoreCors(
+            allow_origin=cors.allow_origin,
+            allow_headers=cors.allow_headers,
+            expose_headers=cors.expose_headers,
+            allow_methods=cors.allow_methods,
+            allow_credentials=cors.allow_credentials,
+            max_age_sec=cors.max_age_sec,
         )
         self.prefix = prefix
-        self.secrets = secrets or []
 
     @classmethod
     def get_active(cls) -> Optional["Typegraph"]:
@@ -69,23 +73,19 @@ class Typegraph:
             raise Exception("No active typegraph")
         return cls._context[-1]
 
-    def __call__(self, **kwargs: "t.func"):
+    def __call__(self, **kwargs: ExposeItem):
         self.expose(**kwargs)
 
     def expose(
         self,
         default_policy: Optional[PolicySpec] = None,
-        **kwargs: "t.func",
+        **kwargs: ExposeItem,
     ):
-        lst = list((name, fn.id) for (name, fn) in kwargs.items())
-        res = core.expose(
+        core.expose(
             store,
-            lst,
-            [],
+            [(k, v.id) for k, v in kwargs.items()],
             default_policy=get_policy_chain(default_policy) if default_policy else None,
         )
-        if isinstance(res, Err):
-            raise Exception(res.value)
 
 
 @dataclass
@@ -95,7 +95,7 @@ class Graph:
     def expose(
         self,
         default_policy: Optional[Union[Policy, PolicyPerEffect]] = None,
-        **kwargs: "t.func",
+        **kwargs: ExposeItem,
     ):
         self.typegraph.expose(default_policy, **kwargs)
 
@@ -114,7 +114,6 @@ def typegraph(
     rate: Optional[Rate] = None,
     cors: Optional[Cors] = None,
     prefix: Optional[str] = None,
-    secrets: Optional[List[str]] = None,
 ) -> Callable[[Callable[[Graph], None]], Typegraph]:
     def decorator(builder: Callable[[Graph], None]) -> Typegraph:
         actual_name = name
@@ -132,7 +131,6 @@ def typegraph(
             rate=rate,
             cors=cors,
             prefix=prefix,
-            secrets=secrets,
         )
 
         Typegraph._context.append(tg)
@@ -148,7 +146,6 @@ def typegraph(
                 rate=tg.rate,
                 cors=tg.cors,
                 prefix=tg.prefix,
-                secrets=tg.secrets,
             ),
         )
 

@@ -1,104 +1,46 @@
-from typegraph import TypeGraph, t
-from typegraph.policies import Policy
-from typegraph.providers.prisma.runtimes.prisma import (
-    PrismaApplyMat,
-    PrismaCreateMat,
-    PrismaDeployMat,
-    PrismaDiffMat,
-    PrismaResetMat,
+from typegraph_next.gen.exports.runtimes import (
+    PrismaMigrationOperation,
 )
-from typegraph.runtimes.deno import PureFunMat
+from typegraph_next.gen.types import Err
+from typegraph_next import typegraph, t, Graph
+from typegraph_next.graph.params import Auth, Rate
+from typegraph_next.runtimes.deno import DenoRuntime
 
-with TypeGraph(
-    "typegate/prisma_migration",
-    auths=[TypeGraph.Auth.basic(["admin"])],
-    rate=TypeGraph.Rate(
+# we don't want to expose system runtimes to the user, so no client SDK
+from typegraph_next.wit import runtimes, store
+
+
+@typegraph(
+    name="typegate/prisma_migration",
+    auths=[Auth.basic(["admin"])],
+    rate=Rate(
         window_sec=60,
         window_limit=128,
         query_limit=8,
         local_excess=5,
         context_identifier="user",
     ),
-) as g:
-    admin_only = Policy(
-        PureFunMat("(_args, { context }) => context.username === 'admin'")
-    ).named("admin_only")
-
-    base = t.struct(
-        {
-            "typegraph": t.string(),
-            "runtime": t.string().optional(),
-            # base64-encoded gzipped tar migrations folder
-            "migrations": t.string().optional(),
-        }
+)
+def prisma_migration(g: Graph):
+    deno = DenoRuntime()
+    admin_only = deno.policy(
+        "admin_only", code="(_args, { context }) => context.username === 'admin'"
     )
 
+    def _get_operation_func(op: PrismaMigrationOperation):
+        params = runtimes.prisma_migration(store, op)
+        if isinstance(params, Err):
+            raise Exception(params.value)
+        return t.func.from_type_func(params.value).with_policy(admin_only)
+
     g.expose(
-        diff=t.func(
-            t.struct(
-                {
-                    "typegraph": t.string(),
-                    "runtime": t.string().optional(),
-                    "script": t.boolean(),
-                }
-            ),
-            t.struct(
-                {
-                    "diff": t.string().optional(),
-                    "runtimeName": t.string(),
-                }
-            ),
-            PrismaDiffMat(),
-        )
-        .rate(calls=True)
-        .add_policy(admin_only),
+        diff=_get_operation_func(PrismaMigrationOperation.DIFF),
         # apply pending migrations
-        apply=t.func(
-            base.compose({"resetDatabase": t.boolean()}),
-            t.struct(
-                {
-                    "databaseReset": t.boolean(),
-                    "appliedMigrations": t.array(t.string()),
-                }
-            ),
-            PrismaApplyMat(),
-        )
-        .rate(calls=True)
-        .add_policy(admin_only),
+        apply=_get_operation_func(PrismaMigrationOperation.APPLY),
         # create migration
-        create=t.func(
-            base.compose({"name": t.string(), "apply": t.boolean()}),
-            t.struct(
-                {
-                    "createdMigrationName": t.string(),
-                    "applyError": t.optional(t.string()),
-                    "migrations": t.string(),
-                    "runtimeName": t.string(),
-                }
-            ),
-            PrismaCreateMat(),
-        )
-        .rate(calls=True)
-        .add_policy(admin_only),
+        create=_get_operation_func(PrismaMigrationOperation.CREATE),
         # apply migrations -- prod
-        deploy=t.func(
-            base.compose({"migrations": t.string()}),
-            t.struct(
-                {
-                    "migrationCount": t.integer(),
-                    "appliedMigrations": t.array(t.string()),
-                }
-            ),
-            PrismaDeployMat(),
-        )
-        .rate(calls=True)
-        .add_policy(admin_only),
+        deploy=_get_operation_func(PrismaMigrationOperation.DEPLOY),
         # reset database -- dev
-        reset=t.func(
-            base,
-            t.boolean(),
-            PrismaResetMat(),
-        )
-        .rate(calls=True)
-        .add_policy(admin_only),
+        reset=_get_operation_func(PrismaMigrationOperation.RESET),
     )

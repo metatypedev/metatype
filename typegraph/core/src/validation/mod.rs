@@ -3,7 +3,7 @@
 
 pub mod errors;
 pub mod materializers;
-mod types;
+pub mod types;
 
 use once_cell::sync::Lazy;
 use regex::Regex;

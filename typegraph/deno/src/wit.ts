@@ -1,14 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { MetatypeTypegraphCore } from "./gen/interfaces/metatype-typegraph-core.d.ts";
-import { MetatypeTypegraphRuntimes } from "./gen/interfaces/metatype-typegraph-runtimes.d.ts";
-import { MetatypeTypegraphUtils } from "./gen/interfaces/metatype-typegraph-utils.d.ts";
-import * as js from "./gen/typegraph_core.js";
+import { ExportsMetatypeTypegraphCore } from "../gen/exports/metatype-typegraph-core.d.ts";
+import { ExportsMetatypeTypegraphRuntimes } from "../gen/exports/metatype-typegraph-runtimes.d.ts";
+import { ExportsMetatypeTypegraphAws } from "../gen/exports/metatype-typegraph-aws.d.ts";
+import { ExportsMetatypeTypegraphUtils } from "../gen/exports/metatype-typegraph-utils.d.ts";
+import * as js from "../gen/typegraph_core.js";
 
-export const core = js.core as typeof MetatypeTypegraphCore;
-export const runtimes = js.runtimes as typeof MetatypeTypegraphRuntimes;
-export const wit_utils = js.utils as typeof MetatypeTypegraphUtils;
+export const core = js.core as typeof ExportsMetatypeTypegraphCore;
+export const runtimes = js.runtimes as typeof ExportsMetatypeTypegraphRuntimes;
+export const aws = js.aws as typeof ExportsMetatypeTypegraphAws;
+export const wit_utils = js.utils as typeof ExportsMetatypeTypegraphUtils;
 
 export type {
   Auth,

@@ -61,6 +61,18 @@ pub mod models {
     }
 }
 
+pub fn setup(name: Option<&str>) -> crate::errors::Result<()> {
+    use crate::wit::core::Core;
+
+    crate::Lib::init_typegraph(crate::wit::core::TypegraphInitParams {
+        name: name
+            .map(|n| n.to_string())
+            .unwrap_or_else(|| "test".to_string()),
+        path: ".".to_string(),
+        ..Default::default()
+    })
+}
+
 pub mod tree {
     use std::{borrow::Cow, io::Write, rc::Rc};
 
@@ -155,6 +167,7 @@ pub mod tree {
                     | Type::Integer(_)
                     | Type::Float(_)
                     | Type::String(_)
+                    | Type::File(_)
                     | Type::Boolean(_) => Cow::Owned(vec![]),
                     Type::Struct(ty) => Cow::Owned(
                         ty.data

@@ -277,11 +277,7 @@ snapshot[`typegraphs creation 1`] = `
     ],
     "meta": {
       "prefix": null,
-      "secrets": [
-        "secret1",
-        "secret2",
-        "secret3"
-      ],
+      "secrets": [],
       "queries": {
         "dynamic": true,
         "endpoints": []
@@ -413,7 +409,7 @@ snapshot[`typegraphs creation 2`] = `
         "title": "func_10",
         "runtime": 0,
         "policies": [
-          1
+          0
         ],
         "config": {},
         "as_id": false,
@@ -516,10 +512,6 @@ snapshot[`typegraphs creation 2`] = `
       {
         "name": "__public",
         "materializer": 1
-      },
-      {
-        "name": "__public",
-        "materializer": 1
       }
     ],
     "meta": {
@@ -534,7 +526,7 @@ snapshot[`typegraphs creation 2`] = `
         "allow_headers": [],
         "expose_headers": [],
         "allow_methods": [],
-        "allow_credentials": false,
+        "allow_credentials": true,
         "max_age_sec": null
       },
       "auths": [],
@@ -762,7 +754,7 @@ snapshot[`typegraphs creation 3`] = `
           "idempotent": true
         },
         "data": {
-          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1Y727bNhD3Zz0FoX6ROlW1ZScbvKnY1nZdgRYL2mwYEAQCLdG2UEnUKGqxZ/hN9jZ7sd2Rsv7ZTtqtDdbBB9gieeTxeDz+eLyQp3nCVm6+HnwyGgKdTybqC9T/jseTLwej4eR8NPSG3hjbRyPPg+/gHqgsJBWEDP4t9Rf3mdAD8pTnaxEvlpK8ZpLKdc7IT3/96ZAkDllWsIiUWcQEkUtGXvM/4iSh5KKcAZe80j3IL0wUMc+I5w5d4wF5e/Hs10cV79HLiGUynsdMTMnri1ePoI9hzAVPCc60EDRfBhlbSRKnOReSSKdhHOrnqqKbU0HTYjfou1IuHViIKBzyhkp2y8C6cTf2xdGZcg6LXO/6XajawY6ihCWmrHBhrXzX/xmU32iGYRQ8ZZdoWZ9It5CiDKVlEKCN+kcyecbMKbCpEHRtSTfOJFswYdkOSePMHzskoynzzcsbbtpOM05CHcfxXMIm0ASG5oKv1pb5tprVtKv+W/3RcmquY9iGEWocuEtJGgAjzhZqRl202srQYJ5wKhVblSzUfeQOYRFlImOYI+BzH7ygMyoLWFamahQWrCtlDUcv7rrXtTJMM2RnKWxggqIZ/KuRQ7xrh4Q8m8cLf2O+Y2vobP5Ok5KZ2wM6N/K04l1p7hnIc8+6ugTaSjtjoME21QyNHLszWcYKyaLORrMYzpawrloGbS3KvrbtZm/3RQU3MDwQbA4yd27WM21K40TbFkvWIWd42my/9gfj29rJtRMULBRMFv6VqUsj3B5d9Jri2LzWYkM4jD6eSKvWhSYJvwmgl4IEmhT+D/DXUlZ3WDIKeAMTXfc5KZNLHqEKL55fmntsDigGznZlPmzz2CrnBTsoNaWrgC5YAKr7I2+oGZV1KEAK9EZkcWe0iEPwSQkG/x7L2IpuqYDHXaY09M7OLcX/ESqKbVcTgQcxH0GpMcRNnEWgL057PnT6zUmcxhL0+arh/FYysa4YreaEhzQJ2CpkReGfNe3g8xJwKYhr7PXNsmDCrFdoGxGbE9Q3qA5+gNtdWIupBkR7qroqQPPbWGbZipGXM2jXmOjm6joAjmItXG3yZr04j4+i3HmZhU271rV2PKfDkO6M84TRrO3zekQEDmvZxH9C4Mwxs2HbrjoMGrgtUKsaahuDEx2mGpXrS+zjR4J3xH+jM4j5evHfeOx5p/jvHug9QzHno8ZJ+RqAPKtHqNouVvpnAVb7umqB25539wFOQ9cBKLsd/bT+flf14wBIo8iXB8CvG2a1abPXgmTOY1G0g6seNNb94GrhWXR7x22nxe6j78FxeuEu7lGQ0HQWUUt/yGpKVleVftfkC6xUSrRDpj2Ahm+LXW3X+thl0Yqy9i1xaNXb91tWdaVsiJLqEC2IbNUdo9rIw6rRfK/FfD4XThGKOJfFY7kUjLmyGHwCugP/AfnHffz3xpPRCf/vgR4//pAEwPOEFrL18lcvfhBx9MlfDdDPfnzSiDkNGblEb3uZ5aVUSDebEnhszZj4Giq0qWwNA6EUwB6xAJ9ARPkposKGUIfMyHbaEoaHbwMtm10IPCVv4NSK6Bv9snJgKe8yfpM9wdePPVWT0/bkLU22igtvmlJk9Wyo0+D/REWM8fcnTf/dGf+dn+/n/4aTs9P5vwf6L+f/nCoquy34vDs0pCqfVadTIBk3ame4NiaFiAFOtznrJJNU3sqDCMIwZh0JmuFg9sCfjIGNT+uuxDjqiMLYBAJCHa5ApsYyL7Bmb3cpvZ/xcQ6SsNOdkjAzwUUjSw+uZWnRRyPiD37mHw+PFZxDUqph71qOR8KQ1msFdwUk6WZO50U/8sxuXLWT2QrZICnYEoLmdwiarpaETUoahHRxNCW4XWqXtnZPeicMVDIrhgmVNea1tFpzzFSZtnEgXFY3ktZHu1+g1oU/vSOqA4hKeVQmUO+HXLeppA3en/aUzzjRiU70Eehv7ULwjQAeAAA="
+          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1Y727bNhD3Zz0FoX6ROkWx5SQdvKnY1nZdgQYL0mwYEAQCLdG2UEnUSGqxZ/hN9jZ7sR1JWf9sx+mWBGvhA2yJPPJ4dzz+dLyQpnlC5m6+6D0a9YHOTk7UE6j7HHov+r1B/+Rs0Pf63lD2DwbeYNjr956ACi4wQ6j3X6lr3GdCz9Armi9YPJ0JdE4EFoucoJ///stBSRySjJMIFVlEGBIzgs7pn3GSYHRRjIGL3usR6FfCeEwz5Ll913iGPly8/u2o5B29i0gm4klM2AidX7w/gjGGMWE0RXKlKcP5LMjIXKA4zSkTSDg1Y9s4V726OWY45etJ3xdi5oAhjDvoEgtyx8Sqcz337c6VcgpGLtbjLlRr60BWgIkp4S7YStfjX8P7pWYYBqcpuZKe9ZFwuWBFKCwDAS3VvySTZsQcARszhheWcONMkClhlu2gNM78oYMynBLfvLqlpu3U8wS05TyaC9gEnMDUnNH5wjI/lKuadjl+pR9aTsV1DNswQo0D+5TEATDibKpW1K9WUxkcTBKKhWKrN0vqPnD7YESRiBjWCOjEhyhozcoCkhWpmiVfrGvlDUcbd9MZWjqmnrL2lOwgDEs3+NcDB3k3DgppNomn/tL8SBYw2PwDJwUxV1t0ruVpxdvS3FOQ5562dQm0l9bOkA5blivUcuzWYhnhgkStjSYxnC1mXTcc2jDKvrHtem83RQW3MD1gZAIy12HWcW2K40T7Vr5Z24LhVb39Oh6M76og10EQwuny5RGzKuE4SehtEDKizjhOuP8j/DVW1wNmBAOAcP/6pstJiZjRCDjm2zdX5gabAixB9Fybz5s8Ms8pJ1ulpnge4CkJOAn9gdfXjNJcDBgBoyVUuGPM4xCCTIAHf5DvslfGmUISd5bi0Ds9sxT/J2gotl0uBCFBfIkytSNu4ywCfeWyZ32n253EaSxAn69rzu8FYYuS0ehOaIiTgMxDwrl/WvdDEAsAmiCuwNQ3C06YWVloGxGZIKlvUJ7kQO4ft6YjjXD2SA1VCOU3wcmyFSMvxtCvQc7NFb4DR7GmrnZ5ba9cx5ei3EmRhXW/1rWKJKfFEO6Y0oTgrBnEekYEEWjZyH+J4BARs2bbropujcQWqFVOtY3egR6EKlSuPmIPnwnuyf8Gp8ON/G849LxD/vcEdM9UzHnQPClfAO5n1QzVWudK/y7Ban6uGli4Ed1dPNRItwX57gZLrb/fVn03XuIo8sUWrGynWU1abvRIMicx483kqoOk1Tj4EtEsunvgqtVjd8F66zxtuCv3KEhwOo6wpR9oPkLz61K/G/SVbJRKNFOmDTyHZ4Ndbtdi17elkWVtemKb1av7mVV+gZZISXWQFoRW6pOk+tDzstO8lzGfz/eJhyzOBT8WM0aIK3jvEWgP/gPyD7v47w1PBgf8fwI6Pv6UAsCbBHPRuPmrGz+I2HnlLyfoa7+80rAJDgm6ktH2LssLoZBuPEJw2RoT9g00cN1YGYaEUgB7iQXyCoRUnEpUWCLsoDFajRrC5OFbQs9ynTGP0CWcWhZ9q29WDpjyMaO32Ut5+7FHanHcXLyhyUpxGREFy6rVpE69L4l4LNP1Ry3/7c3/zs5ebNT/+ienh/P/BPR/rv85ZVZ2V/K5PzXEqp5VlVOgGDdoVriWJoaMAU63OW4Vk1TdyoMMwjDGLQma4chig38yBLa8ibclxlFLlMxNICHU6QpUaizzQrbs1bqk94u8y4MkOWivJFnIoKyWpSdXsrTonRnxJ1cFdqfHCs6hKFWz1z27M2Eo6zWSOw5FurHTKgAMPLOdV61lNlI2KAo2hEj3O0i6rpIku5Q0SOniaITkdqldWtkd6a00UMksGSY0FrICqdWayMKWaRtb0mX1RdL66PALlF3yp3dEDQBRKY2KBNrdlOsulbTDu8seyh8HOtCBHoD+ASho2SUAHgAA"
         }
       },
       {
@@ -812,7 +804,7 @@ snapshot[`typegraphs creation 3`] = `
         "allow_headers": [],
         "expose_headers": [],
         "allow_methods": [],
-        "allow_credentials": false,
+        "allow_credentials": true,
         "max_age_sec": null
       },
       "auths": [],
@@ -1100,11 +1092,7 @@ snapshot[`typegraphs creation 4`] = `
     ],
     "meta": {
       "prefix": null,
-      "secrets": [
-        "secret1",
-        "secret2",
-        "secret3"
-      ],
+      "secrets": [],
       "queries": {
         "dynamic": true,
         "endpoints": []
@@ -1236,7 +1224,7 @@ snapshot[`typegraphs creation 5`] = `
         "title": "func_10",
         "runtime": 0,
         "policies": [
-          1
+          0
         ],
         "config": {},
         "as_id": false,
@@ -1339,10 +1327,6 @@ snapshot[`typegraphs creation 5`] = `
       {
         "name": "__public",
         "materializer": 1
-      },
-      {
-        "name": "__public",
-        "materializer": 1
       }
     ],
     "meta": {
@@ -1357,7 +1341,7 @@ snapshot[`typegraphs creation 5`] = `
         "allow_headers": [],
         "expose_headers": [],
         "allow_methods": [],
-        "allow_credentials": false,
+        "allow_credentials": true,
         "max_age_sec": null
       },
       "auths": [],
@@ -1635,7 +1619,7 @@ snapshot[`typegraphs creation 6`] = `
         "allow_headers": [],
         "expose_headers": [],
         "allow_methods": [],
-        "allow_credentials": false,
+        "allow_credentials": true,
         "max_age_sec": null
       },
       "auths": [],

@@ -12,14 +12,20 @@
         "diff": 1,
         "apply": 11,
         "create": 23,
-        "deploy": 33,
-        "reset": 40
+        "deploy": 39,
+        "reset": 49
       },
-      "required": []
+      "required": [
+        "diff",
+        "apply",
+        "create",
+        "deploy",
+        "reset"
+      ]
     },
     {
       "type": "function",
-      "title": "function_17",
+      "title": "func_9",
       "runtime": 1,
       "policies": [
         0
@@ -28,13 +34,13 @@
       "as_id": false,
       "input": 2,
       "output": 7,
-      "materializer": 1,
+      "materializer": 0,
       "rate_weight": null,
-      "rate_calls": true
+      "rate_calls": false
     },
     {
       "type": "object",
-      "title": "object_12",
+      "title": "object_4",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -48,7 +54,7 @@
     },
     {
       "type": "string",
-      "title": "string_8",
+      "title": "string_0",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -56,7 +62,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_10",
+      "title": "optional_2",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -66,7 +72,7 @@
     },
     {
       "type": "string",
-      "title": "string_9",
+      "title": "string_1",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -74,7 +80,7 @@
     },
     {
       "type": "boolean",
-      "title": "boolean_11",
+      "title": "boolean_3",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -82,7 +88,7 @@
     },
     {
       "type": "object",
-      "title": "object_16",
+      "title": "object_8",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -95,7 +101,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_14",
+      "title": "optional_6",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -105,7 +111,7 @@
     },
     {
       "type": "string",
-      "title": "string_13",
+      "title": "string_5",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -113,7 +119,7 @@
     },
     {
       "type": "string",
-      "title": "string_15",
+      "title": "string_7",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -121,7 +127,7 @@
     },
     {
       "type": "function",
-      "title": "function_24",
+      "title": "func_22",
       "runtime": 1,
       "policies": [
         0
@@ -132,11 +138,11 @@
       "output": 19,
       "materializer": 2,
       "rate_weight": null,
-      "rate_calls": true
+      "rate_calls": false
     },
     {
       "type": "object",
-      "title": "object_19",
+      "title": "object_17",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -151,7 +157,7 @@
     },
     {
       "type": "string",
-      "title": "string_2",
+      "title": "string_11",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -159,7 +165,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_4",
+      "title": "optional_13",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -169,7 +175,7 @@
     },
     {
       "type": "string",
-      "title": "string_3",
+      "title": "string_12",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -177,7 +183,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_6",
+      "title": "optional_15",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -187,7 +193,7 @@
     },
     {
       "type": "string",
-      "title": "string_5",
+      "title": "string_14",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -195,7 +201,7 @@
     },
     {
       "type": "boolean",
-      "title": "boolean_18",
+      "title": "boolean_16",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -203,7 +209,7 @@
     },
     {
       "type": "object",
-      "title": "object_23",
+      "title": "object_21",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -216,7 +222,7 @@
     },
     {
       "type": "boolean",
-      "title": "boolean_20",
+      "title": "boolean_18",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -224,7 +230,7 @@
     },
     {
       "type": "array",
-      "title": "array_22",
+      "title": "array_20",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -233,7 +239,7 @@
     },
     {
       "type": "string",
-      "title": "string_21",
+      "title": "string_19",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -241,7 +247,7 @@
     },
     {
       "type": "function",
-      "title": "function_34",
+      "title": "func_39",
       "runtime": 1,
       "policies": [
         0
@@ -249,26 +255,44 @@
       "config": {},
       "as_id": false,
       "input": 24,
-      "output": 27,
+      "output": 32,
       "materializer": 3,
       "rate_weight": null,
-      "rate_calls": true
+      "rate_calls": false
     },
     {
       "type": "object",
-      "title": "object_27",
+      "title": "object_31",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "typegraph": 13,
-        "runtime": 14,
-        "migrations": 16,
-        "name": 25,
-        "apply": 26
+        "typegraph": 25,
+        "runtime": 26,
+        "name": 28,
+        "apply": 29,
+        "migrations": 30
       },
       "required": []
+    },
+    {
+      "type": "string",
+      "title": "string_24",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "optional",
+      "title": "optional_26",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 27,
+      "default_value": null
     },
     {
       "type": "string",
@@ -279,31 +303,16 @@
       "as_id": false
     },
     {
-      "type": "boolean",
-      "title": "boolean_26",
+      "type": "string",
+      "title": "string_27",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false
     },
     {
-      "type": "object",
-      "title": "object_33",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "properties": {
-        "createdMigrationName": 28,
-        "applyError": 29,
-        "migrations": 31,
-        "runtimeName": 32
-      },
-      "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_28",
+      "type": "boolean",
+      "title": "boolean_28",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -316,7 +325,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 30,
+      "item": 31,
       "default_value": null
     },
     {
@@ -328,12 +337,19 @@
       "as_id": false
     },
     {
-      "type": "string",
-      "title": "string_31",
+      "type": "object",
+      "title": "object_38",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false
+      "as_id": false,
+      "properties": {
+        "createdMigrationName": 33,
+        "applyError": 34,
+        "migrations": 36,
+        "runtimeName": 38
+      },
+      "required": []
     },
     {
       "type": "string",
@@ -344,33 +360,32 @@
       "as_id": false
     },
     {
-      "type": "function",
-      "title": "function_41",
-      "runtime": 1,
-      "policies": [
-        0
-      ],
-      "config": {},
-      "as_id": false,
-      "input": 34,
-      "output": 36,
-      "materializer": 4,
-      "rate_weight": null,
-      "rate_calls": true
-    },
-    {
-      "type": "object",
-      "title": "object_36",
+      "type": "optional",
+      "title": "optional_34",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
-      "properties": {
-        "typegraph": 13,
-        "runtime": 14,
-        "migrations": 35
-      },
-      "required": []
+      "item": 35,
+      "default_value": null
+    },
+    {
+      "type": "string",
+      "title": "string_33",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "optional",
+      "title": "optional_36",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 37,
+      "default_value": null
     },
     {
       "type": "string",
@@ -381,38 +396,8 @@
       "as_id": false
     },
     {
-      "type": "object",
-      "title": "object_40",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "properties": {
-        "migrationCount": 37,
-        "appliedMigrations": 38
-      },
-      "required": []
-    },
-    {
-      "type": "integer",
-      "title": "integer_37",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "array",
-      "title": "array_39",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "items": 39
-    },
-    {
       "type": "string",
-      "title": "string_38",
+      "title": "string_37",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -420,36 +405,162 @@
     },
     {
       "type": "function",
-      "title": "function_43",
+      "title": "func_50",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
       "as_id": false,
-      "input": 41,
-      "output": 42,
-      "materializer": 5,
+      "input": 40,
+      "output": 45,
+      "materializer": 4,
       "rate_weight": null,
-      "rate_calls": true
+      "rate_calls": false
     },
     {
       "type": "object",
-      "title": "object_7",
+      "title": "object_45",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "typegraph": 13,
-        "runtime": 14,
-        "migrations": 16
+        "typegraph": 41,
+        "runtime": 42,
+        "migrations": 44
       },
       "required": []
     },
     {
+      "type": "string",
+      "title": "string_41",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "optional",
+      "title": "optional_43",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 43,
+      "default_value": null
+    },
+    {
+      "type": "string",
+      "title": "string_42",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "string",
+      "title": "string_44",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "object",
+      "title": "object_49",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "migrationCount": 46,
+        "appliedMigrations": 47
+      },
+      "required": []
+    },
+    {
+      "type": "integer",
+      "title": "integer_46",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "array",
+      "title": "array_48",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 48
+    },
+    {
+      "type": "string",
+      "title": "string_47",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "function",
+      "title": "func_57",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 50,
+      "output": 54,
+      "materializer": 5,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "object_55",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "typegraph": 51,
+        "runtime": 52
+      },
+      "required": []
+    },
+    {
+      "type": "string",
+      "title": "string_52",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "optional",
+      "title": "optional_54",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 53,
+      "default_value": null
+    },
+    {
+      "type": "string",
+      "title": "string_53",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
       "type": "boolean",
-      "title": "boolean_42",
+      "title": "boolean_56",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -458,24 +569,24 @@
   ],
   "materializers": [
     {
+      "name": "diff",
+      "runtime": 1,
+      "effect": {
+        "effect": "none",
+        "idempotent": true
+      },
+      "data": {}
+    },
+    {
       "name": "function",
       "runtime": 0,
       "effect": {
-        "effect": null,
+        "effect": "none",
         "idempotent": true
       },
       "data": {
         "script": "var _my_lambda=(_args,{context})=>context.username===\"admin\";"
       }
-    },
-    {
-      "name": "diff",
-      "runtime": 1,
-      "effect": {
-        "effect": null,
-        "idempotent": true
-      },
-      "data": {}
     },
     {
       "name": "apply",
@@ -500,7 +611,7 @@
       "runtime": 1,
       "effect": {
         "effect": "update",
-        "idempotent": false
+        "idempotent": true
       },
       "data": {}
     },
@@ -530,7 +641,7 @@
   "policies": [
     {
       "name": "admin_only",
-      "materializer": 0
+      "materializer": 1
     }
   ],
   "meta": {

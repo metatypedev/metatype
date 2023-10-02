@@ -53,7 +53,7 @@ impl TypeData for TypeString {
         if let Some(max) = self.max {
             params.push(format!("max={}", max));
         }
-        if let Some(pattern) = self.pattern.to_owned() {
+        if let Some(pattern) = self.pattern.as_ref() {
             params.push(format!("pattern={}", pattern));
         }
         if let Some(format) = self.format.to_owned() {

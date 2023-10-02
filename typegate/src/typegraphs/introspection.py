@@ -1,30 +1,59 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph import TypeGraph, t
-from typegraph.policies import Policy
-from typegraph.runtimes.deno import PureFunMat
-from typegraph.runtimes.typegate import ResolverMat, SchemaMat, TypeMat
+from typegraph_next import typegraph, t, Graph, Policy
+from typegraph_next.gen.exports.runtimes import (
+    TypegraphOperation,
+    EffectNone,
+)
+from typegraph_next.wit import runtimes, store
+from typegraph_next.gen.types import Err
+from typegraph_next.runtimes.base import Materializer
 
-with TypeGraph("introspection") as g:
+
+@typegraph()
+def introspection(g: Graph):
+    resolver_mat_id = runtimes.register_typegraph_materializer(
+        store, TypegraphOperation.RESOLVER
+    )
+    if isinstance(resolver_mat_id, Err):
+        raise Exception(resolver_mat_id.value)
+    resolver_mat = Materializer(resolver_mat_id.value, effect=EffectNone())
+
+    type_mat_id = runtimes.register_typegraph_materializer(
+        store, TypegraphOperation.GET_TYPE
+    )
+    if isinstance(type_mat_id, Err):
+        raise Exception(type_mat_id.value)
+    type_mat = Materializer(type_mat_id.value, effect=EffectNone())
+
+    schema_mat_id = runtimes.register_typegraph_materializer(
+        store, TypegraphOperation.GET_SCHEMA
+    )
+    if isinstance(schema_mat_id, Err):
+        raise Exception(schema_mat_id.value)
+    schema_mat = Materializer(schema_mat_id.value, effect=EffectNone())
+
     enum_value = t.struct(
         {
             "name": t.string(),
             "description": t.string().optional(),
             "isDeprecated": t.boolean(),
             "deprecationReason": t.string().optional(),
-        }
-    ).named("enum_value")
+        },
+        name="enum_value",
+    )
 
     input_value = t.struct(
         {
             "name": t.string(),
             "description": t.string().optional(),
-            "type": g("type"),
+            "type": t.ref("type"),
             "defaultValue": t.string().optional(),
             "isDeprecated": t.boolean(),
             "deprecationReason": t.string().optional(),
-        }
-    ).named("input_value")
+        },
+        name="input_value",
+    )
 
     field = t.struct(
         {
@@ -40,29 +69,27 @@ with TypeGraph("introspection") as g:
                     }
                 ),
                 t.array(input_value),
-                ResolverMat(),
+                resolver_mat,
             ),
-            "type": g("type"),
+            "type": t.ref("type"),
             "isDeprecated": t.boolean(),
             "deprecationReason": t.string().optional(),
-        }
-    ).named("field")
+        },
+        name="field",
+    )
 
-    kind = (
-        t.string()
-        .enum(
-            [
-                "SCALAR",
-                "OBJECT",
-                "INTERFACE",
-                "UNION",
-                "ENUM",
-                "INPUT_OBJECT",
-                "LIST",
-                "NON_NULL",
-            ]
-        )
-        .named("type_kind")
+    kind = t.enum(
+        [
+            "SCALAR",
+            "OBJECT",
+            "INTERFACE",
+            "UNION",
+            "ENUM",
+            "INPUT_OBJECT",
+            "LIST",
+            "NON_NULL",
+        ],
+        name="type_kind",
     )
 
     type = t.struct(
@@ -74,50 +101,48 @@ with TypeGraph("introspection") as g:
             "fields": t.func(
                 t.struct({"includeDeprecated": t.boolean().optional()}),
                 t.array(field).optional(),
-                ResolverMat(),
+                resolver_mat,
             ),
-            "interfaces": t.array(g("type")).optional(),
-            "possibleTypes": t.array(g("type")).optional(),
+            "interfaces": t.array(t.ref("type")).optional(),
+            "possibleTypes": t.array(t.ref("type")).optional(),
             "enumValues": t.func(
                 t.struct({"includeDeprecated": t.boolean().optional()}),
                 t.array(enum_value).optional(),
-                ResolverMat(),
+                resolver_mat,
             ),
             "inputFields": t.func(
                 t.struct({"includeDeprecated": t.boolean().optional()}),
                 t.array(input_value).optional(),
-                ResolverMat(),
+                resolver_mat,
             ),
-            "ofType": g("type", lambda x: x.optional()),
-        }
-    ).named("type")
+            "ofType": t.ref("type").optional(),
+        },
+        name="type",
+    )
 
-    directive_location = (
-        t.string()
-        .enum(
-            [
-                "QUERY",
-                "MUTATION",
-                "SUBSCRIPTION",
-                "FIELD",
-                "FRAGMENT_DEFINITION",
-                "FRAGMENT_SPREAD",
-                "INLINE_FRAGMENT",
-                "VARIABLE_DEFINITION",
-                "SCHEMA",
-                "SCALAR",
-                "OBJECT",
-                "FIELD_DEFINITION",
-                "ARGUMENT_DEFINITION",
-                "INTERFACE",
-                "UNION",
-                "ENUM",
-                "ENUM_VALUE",
-                "INPUT_OBJECT",
-                "INPUT_FIELD_DEFINITION",
-            ]
-        )
-        .named("directive_location")
+    directive_location = t.enum(
+        [
+            "QUERY",
+            "MUTATION",
+            "SUBSCRIPTION",
+            "FIELD",
+            "FRAGMENT_DEFINITION",
+            "FRAGMENT_SPREAD",
+            "INLINE_FRAGMENT",
+            "VARIABLE_DEFINITION",
+            "SCHEMA",
+            "SCALAR",
+            "OBJECT",
+            "FIELD_DEFINITION",
+            "ARGUMENT_DEFINITION",
+            "INTERFACE",
+            "UNION",
+            "ENUM",
+            "ENUM_VALUE",
+            "INPUT_OBJECT",
+            "INPUT_FIELD_DEFINITION",
+        ],
+        name="directive_location",
     )
 
     directive = t.struct(
@@ -129,16 +154,17 @@ with TypeGraph("introspection") as g:
             "args": t.func(
                 t.struct({"includeDeprecated": t.boolean().optional()}),
                 t.array(input_value),
-                ResolverMat(),
+                resolver_mat,
             ),
-        }
-    ).named("directive")
+        },
+        name="directive",
+    )
 
-    public = Policy(PureFunMat("() => true")).named("__public")
+    public = Policy.public()
 
     get_type = t.func(
-        t.struct({"name": t.string()}), type.optional(), TypeMat()
-    ).add_policy(public)
+        t.struct({"name": t.string()}), type.optional(), type_mat
+    ).with_policy(public)
     g.expose(__type=get_type)
 
     schema = t.struct(
@@ -149,8 +175,9 @@ with TypeGraph("introspection") as g:
             "mutationType": type.optional(),
             "subscriptionType": type.optional(),
             "directives": t.array(directive),
-        }
-    ).named("schema")
+        },
+        name="schema",
+    )
 
-    get_schema = t.func(t.struct({}), schema, SchemaMat()).add_policy(public)
+    get_schema = t.func(t.struct({}), schema, schema_mat).with_policy(public)
     g.expose(__schema=get_schema)

@@ -3,7 +3,8 @@
 
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Any
+import json
 
 from typegraph_next.runtimes.base import Materializer, Runtime
 
@@ -13,6 +14,7 @@ from typegraph_next.gen.exports.runtimes import (
     MaterializerDenoFunc,
     MaterializerDenoImport,
     MaterializerDenoPredefined,
+    MaterializerDenoStatic,
 )
 from typegraph_next.gen.types import Err
 from typegraph_next.policy import Policy
@@ -25,6 +27,26 @@ if TYPE_CHECKING:
 class DenoRuntime(Runtime):
     def __init__(self):
         super().__init__(runtimes.get_deno_runtime(store))
+
+    def static(self, out: "t.typedef", value: Any):
+        from typegraph_next import t
+
+        mat_id = runtimes.register_deno_static(
+            store, MaterializerDenoStatic(json.dumps(value)), out.id
+        )
+
+        if isinstance(mat_id, Err):
+            raise Exception(mat_id.value)
+
+        return t.func(
+            t.struct(),
+            out,
+            StaticMat(
+                mat_id.value,
+                value=value,
+                effect=EffectNone(),
+            ),
+        )
 
     def func(
         self,
@@ -99,7 +121,7 @@ class DenoRuntime(Runtime):
         return t.func(
             inp,
             inp,
-            PredefinedFunMat(id=res.value, name="identity"),
+            PredefinedFunMat(id=res.value, name="identity", effect=EffectNone()),
         )
 
     def policy(
@@ -146,6 +168,11 @@ class DenoRuntime(Runtime):
 class FunMat(Materializer):
     code: str
     secrets: List[str]
+
+
+@dataclass
+class StaticMat(Materializer):
+    value: Any
 
 
 @dataclass

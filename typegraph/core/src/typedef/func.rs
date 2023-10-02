@@ -42,8 +42,8 @@ impl TypeConversion for Func {
                 input,
                 output,
                 materializer: mat_id,
-                rate_calls: false,
-                rate_weight: None,
+                rate_calls: self.data.rate_calls,
+                rate_weight: self.data.rate_weight,
             },
         })
     }

@@ -12,9 +12,9 @@ use crate::errors::{self, Result};
 use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
-    PolicySpec, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId as CoreTypeId,
-    TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
-    TypeWithInjection,
+    PolicySpec, TypeArray, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc,
+    TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct,
+    TypeUnion, TypeWithInjection,
 };
 use std::rc::Rc;
 
@@ -94,6 +94,7 @@ pub type Float = ConcreteType<TypeFloat>;
 pub type Func = ConcreteType<TypeFunc>;
 pub type Boolean = ConcreteType<TypeBoolean>;
 pub type StringT = ConcreteType<TypeString>;
+pub type File = ConcreteType<TypeFile>;
 pub type Array = ConcreteType<TypeArray>;
 pub type Optional = ConcreteType<TypeOptional>;
 pub type Union = ConcreteType<TypeUnion>;
@@ -113,6 +114,7 @@ pub enum Type {
     Func(Rc<Func>),
     Boolean(Rc<Boolean>),
     String(Rc<StringT>),
+    File(Rc<File>),
     Array(Rc<Array>),
     Optional(Rc<Optional>),
     Union(Rc<Union>),

@@ -6,7 +6,7 @@ use crate::wit::core::Error as TgError;
 pub type Result<T, E = TgError> = std::result::Result<T, E>;
 
 pub fn invalid_max_value() -> TgError {
-    "min must be less than max".to_string()
+    "min must be less than or equal to max".to_string()
 }
 
 pub fn duplicate_key(name: &str) -> TgError {

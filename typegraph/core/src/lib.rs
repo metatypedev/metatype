@@ -22,14 +22,14 @@ use global_store::Store;
 use indoc::formatdoc;
 use regex::Regex;
 use types::{
-    Array, Boolean, Either, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
+    Array, Boolean, Either, File, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
     TypeBoolean, TypeId, Union, WithInjection, WithPolicy,
 };
 use validation::validate_name;
 use wit::core::{
-    ContextCheck, Policy, PolicyId, PolicySpec, TypeArray, TypeBase, TypeEither, TypeFloat,
-    TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString,
-    TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
+    ContextCheck, Policy, PolicyId, PolicySpec, TypeArray, TypeBase, TypeEither, TypeFile,
+    TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy,
+    TypeString, TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -40,7 +40,7 @@ pub mod wit {
 
     export_typegraph!(Lib);
 
-    pub use exports::metatype::typegraph::{core, runtimes, utils};
+    pub use exports::metatype::typegraph::{aws, core, runtimes, utils};
 }
 
 #[cfg(feature = "wasm")]
@@ -81,7 +81,7 @@ impl wit::core::Core for Lib {
     }
 
     fn proxyb(data: TypeProxy) -> Result<CoreTypeId> {
-        Ok(Store::register_type(|id| Type::Proxy(Proxy { id, data }.into())).into())
+        Ok(Store::register_type(|id| Type::Proxy(Proxy { id, data }.into()))?.into())
     }
 
     fn integerb(data: TypeInteger, base: TypeBase) -> Result<CoreTypeId> {
@@ -95,7 +95,7 @@ impl wit::core::Core for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
-        Ok(Store::register_type(|id| Type::Integer(Integer { id, base, data }.into())).into())
+        Ok(Store::register_type(|id| Type::Integer(Integer { id, base, data }.into()))?.into())
     }
 
     fn floatb(data: TypeFloat, base: TypeBase) -> Result<CoreTypeId> {
@@ -109,7 +109,7 @@ impl wit::core::Core for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
-        Ok(Store::register_type(|id| Type::Float(Float { id, base, data }.into())).into())
+        Ok(Store::register_type(|id| Type::Float(Float { id, base, data }.into()))?.into())
     }
 
     fn booleanb(base: TypeBase) -> Result<CoreTypeId> {
@@ -122,7 +122,7 @@ impl wit::core::Core for Lib {
                 }
                 .into(),
             )
-        })
+        })?
         .into())
     }
 
@@ -132,12 +132,28 @@ impl wit::core::Core for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
-        Ok(Store::register_type(|id| Type::String(StringT { id, base, data }.into())).into())
+        Ok(Store::register_type(|id| Type::String(StringT { id, base, data }.into()))?.into())
+    }
+
+    fn fileb(data: TypeFile, base: TypeBase) -> Result<CoreTypeId> {
+        if let (Some(min), Some(max)) = (data.min, data.max) {
+            if min >= max {
+                return Err(errors::invalid_max_value());
+            }
+        }
+        Ok(Store::register_type(|id| {
+            let base = TypeBase {
+                name: Some(format!("_{}_file", id.0)),
+                ..base
+            };
+            Type::File(File { id, base, data }.into())
+        })?
+        .into())
     }
 
     fn arrayb(data: TypeArray, base: TypeBase) -> Result<CoreTypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
-            if min >= max {
+            if min > max {
                 return Err(errors::invalid_max_value());
             }
         }
@@ -154,7 +170,7 @@ impl wit::core::Core for Lib {
                 None => base,
             };
             Type::Array(Array { id, base, data }.into())
-        })
+        })?
         .into())
     }
 
@@ -172,16 +188,16 @@ impl wit::core::Core for Lib {
                 None => base,
             };
             Type::Optional(Optional { id, base, data }.into())
-        })
+        })?
         .into())
     }
 
     fn unionb(data: TypeUnion, base: TypeBase) -> Result<CoreTypeId> {
-        Ok(Store::register_type(|id| Type::Union(Union { id, base, data }.into())).into())
+        Ok(Store::register_type(|id| Type::Union(Union { id, base, data }.into()))?.into())
     }
 
     fn eitherb(data: TypeEither, base: TypeBase) -> Result<CoreTypeId> {
-        Ok(Store::register_type(|id| Type::Either(Either { id, base, data }.into())).into())
+        Ok(Store::register_type(|id| Type::Either(Either { id, base, data }.into()))?.into())
     }
 
     fn structb(data: TypeStruct, base: TypeBase) -> Result<CoreTypeId> {
@@ -196,7 +212,7 @@ impl wit::core::Core for Lib {
             prop_names.insert(name.clone());
         }
 
-        Ok(Store::register_type(|id| Type::Struct(Struct { id, base, data }.into())).into())
+        Ok(Store::register_type(|id| Type::Struct(Struct { id, base, data }.into()))?.into())
     }
 
     fn funcb(data: TypeFunc) -> Result<CoreTypeId> {
@@ -206,18 +222,18 @@ impl wit::core::Core for Lib {
             return Err(errors::invalid_input_type(&inp_id.repr()?));
         }
         let base = TypeBase::default();
-        Ok(Store::register_type(|id| Type::Func(Func { id, base, data }.into())).into())
+        Ok(Store::register_type(|id| Type::Func(Func { id, base, data }.into()))?.into())
     }
 
     fn with_injection(data: TypeWithInjection) -> Result<CoreTypeId> {
         Ok(
-            Store::register_type(|id| Type::WithInjection(WithInjection { id, data }.into()))
+            Store::register_type(|id| Type::WithInjection(WithInjection { id, data }.into()))?
                 .into(),
         )
     }
 
     fn with_policy(data: TypePolicy) -> Result<CoreTypeId> {
-        Ok(Store::register_type(|id| Type::WithPolicy(WithPolicy { id, data }.into())).into())
+        Ok(Store::register_type(|id| Type::WithPolicy(WithPolicy { id, data }.into()))?.into())
     }
 
     fn register_policy(pol: Policy) -> Result<PolicyId> {
@@ -280,12 +296,10 @@ impl wit::core::Core for Lib {
 
     fn expose(
         fns: Vec<(String, CoreTypeId)>,
-        namespace: Vec<String>,
         default_policy: Option<Vec<PolicySpec>>,
     ) -> Result<(), String> {
         typegraph::expose(
             fns.into_iter().map(|(k, ty)| (k, ty.into())).collect(),
-            namespace,
             default_policy,
         )
     }
@@ -303,6 +317,7 @@ mod tests {
     use crate::errors;
     use crate::global_store::Store;
     use crate::t::{self, TypeBuilder};
+    use crate::test_utils::setup;
     use crate::wit::core::Core;
     use crate::wit::core::Cors;
     use crate::wit::runtimes::{Effect, MaterializerDenoFunc, Runtimes};
@@ -317,7 +332,6 @@ mod tests {
                 folder: None,
                 path: ".".to_string(),
                 prefix: None,
-                secrets: vec![],
                 cors: Cors {
                     allow_origin: vec![],
                     allow_headers: vec![],
@@ -384,21 +398,9 @@ mod tests {
     #[test]
     fn test_nested_typegraph_context() -> Result<(), String> {
         Store::reset();
-        Lib::init_typegraph(TypegraphInitParams {
-            name: "test-1".to_string(),
-            dynamic: None,
-            folder: None,
-            path: ".".to_string(),
-            ..Default::default()
-        })?;
+        setup(Some("test-1"))?;
         assert_eq!(
-            Lib::init_typegraph(TypegraphInitParams {
-                name: "test-2".to_string(),
-                dynamic: None,
-                folder: None,
-                path: ".".to_string(),
-                ..Default::default()
-            }),
+            crate::test_utils::setup(Some("test-2")),
             Err(errors::nested_typegraph_context("test-1"))
         );
         Lib::finalize_typegraph()?;
@@ -409,7 +411,7 @@ mod tests {
     fn test_no_active_context() -> Result<(), String> {
         Store::reset();
         assert_eq!(
-            Lib::expose(vec![], vec![], None),
+            Lib::expose(vec![], None),
             Err(errors::expected_typegraph_context())
         );
 
@@ -424,16 +426,9 @@ mod tests {
     #[test]
     fn test_expose_invalid_type() -> Result<(), String> {
         Store::reset();
-        Lib::init_typegraph(TypegraphInitParams {
-            name: "test".to_string(),
-            dynamic: None,
-            folder: None,
-            path: ".".to_string(),
-            ..Default::default()
-        })
-        .unwrap();
+        setup(None)?;
         let tpe = t::integer().build()?;
-        let res = Lib::expose(vec![("one".to_string(), tpe.into())], vec![], None);
+        let res = Lib::expose(vec![("one".to_string(), tpe.into())], None);
 
         assert_eq!(res, Err(errors::invalid_export_type("one", &tpe.repr()?,)));
 
@@ -442,13 +437,7 @@ mod tests {
 
     #[test]
     fn test_expose_invalid_name() -> Result<(), String> {
-        Lib::init_typegraph(TypegraphInitParams {
-            name: "test".to_string(),
-            dynamic: None,
-            folder: None,
-            path: ".".to_string(),
-            ..Default::default()
-        })?;
+        setup(None)?;
 
         let mat = Lib::register_deno_func(
             MaterializerDenoFunc::with_code("() => 12"),
@@ -460,7 +449,6 @@ mod tests {
                 "".to_string(),
                 t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
             )],
-            vec![],
             None,
         );
         assert_eq!(res, Err(errors::invalid_export_name("")));
@@ -470,7 +458,6 @@ mod tests {
                 "hello_world!".to_string(),
                 t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
             )],
-            vec![],
             None,
         );
         assert_eq!(res, Err(errors::invalid_export_name("hello_world!")));
@@ -480,13 +467,7 @@ mod tests {
 
     #[test]
     fn test_expose_duplicate() -> Result<(), String> {
-        Lib::init_typegraph(TypegraphInitParams {
-            name: "test".to_string(),
-            dynamic: None,
-            folder: None,
-            path: ".".to_string(),
-            ..Default::default()
-        })?;
+        setup(None)?;
 
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
@@ -502,7 +483,6 @@ mod tests {
                     t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
                 ),
             ],
-            vec![],
             None,
         );
         assert_eq!(res, Err(errors::duplicate_export_name("one")));
@@ -527,20 +507,10 @@ mod tests {
             .prop("three", c)
             .build()?;
 
-        Lib::init_typegraph(TypegraphInitParams {
-            name: "test".to_string(),
-            dynamic: None,
-            folder: None,
-            path: ".".to_string(),
-            ..Default::default()
-        })?;
+        setup(None)?;
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
-        Lib::expose(
-            vec![("one".to_string(), t::func(s, b, mat)?.into())],
-            vec![],
-            None,
-        )?;
+        Lib::expose(vec![("one".to_string(), t::func(s, b, mat)?.into())], None)?;
         let typegraph = Lib::finalize_typegraph()?;
         insta::assert_snapshot!(typegraph);
         Ok(())
