@@ -260,6 +260,9 @@ export type KnownRuntime = {
   name: "prisma";
   data: PrismaRuntimeData;
 } | {
+  name: "prisma_migration";
+  data: PrismaMigrationRuntimeData;
+} | {
   name: "s3";
   data: S3RuntimeData;
 } | {
@@ -268,6 +271,12 @@ export type KnownRuntime = {
 } | {
   name: "wasmedge";
   data: WasmEdgeRuntimeData;
+} | {
+  name: "typegate";
+  data: TypegateRuntimeData;
+} | {
+  name: "typegraph";
+  data: TypegraphRuntimeData;
 };
 export type Cardinality = "optional" | "one" | "many";
 export type AuthProtocol = "oauth2" | "jwt" | "basic";
@@ -375,6 +384,10 @@ export interface MigrationOptions {
   create: boolean;
   reset: boolean;
 }
+export type PrismaMigrationRuntimeData = Record<
+  string | number | symbol,
+  unknown
+>;
 export interface S3RuntimeData {
   host_secret: string;
   region_secret: string;
@@ -389,6 +402,10 @@ export interface TemporalRuntimeData {
 export interface WasmEdgeRuntimeData {
   config?: string | null;
 }
+
+export type TypegateRuntimeData = Record<string | number | symbol, unknown>;
+
+export type TypegraphRuntimeData = Record<string | number | symbol, unknown>;
 export interface UnknownRuntime {
   name: string;
   data: {

@@ -9,7 +9,7 @@ sidebar_position: 1
 
 ## typegraph
 
-**Type:** [object_13](objects#object_13)
+**Type:** [object_11](objects#object_11)
 
 typegraph field
 
@@ -35,7 +35,7 @@ name<br />
 
 ## typegraphs
 
-**Type:** [[typegraph!]!](objects#typegraph)
+**Type:** [[Typegraph!]!](objects#typegraph)
 
 typegraphs field
 

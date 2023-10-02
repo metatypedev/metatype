@@ -9,7 +9,7 @@ sidebar_position: 1
 
 ## diff
 
-**Type:** [object_16!](objects#object_16)
+**Type:** [object_8!](objects#object_8)
 
 diff field
 
