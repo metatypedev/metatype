@@ -3,8 +3,9 @@
 
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::{gen_base, TypeConversion};
+use crate::global_store::SavedState;
 use crate::host::abi;
-use crate::types::{Type, TypeFun, TypeId};
+use crate::types::{Type, TypeId};
 use crate::validation::validate_name;
 use crate::Lib;
 use crate::{
@@ -23,6 +24,7 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
 use std::path::Path;
+use std::rc::Rc;
 
 use crate::wit::core::{
     Core, Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypePolicy,
@@ -38,6 +40,11 @@ struct IdMapping {
 }
 
 #[derive(Default)]
+struct RuntimeContexts {
+    prisma_typegen_cache: Rc<RefCell<HashMap<String, TypeId>>>,
+}
+
+#[derive(Default)]
 pub struct TypegraphContext {
     name: String,
     meta: TypeMeta,
@@ -46,6 +53,8 @@ pub struct TypegraphContext {
     materializers: Vec<Option<Materializer>>,
     policies: Vec<Policy>,
     mapping: IdMapping,
+    runtime_contexts: RuntimeContexts,
+    saved_store_state: Option<SavedState>,
 }
 
 thread_local! {
@@ -53,15 +62,6 @@ thread_local! {
 }
 
 static TYPEGRAPH_VERSION: &str = "0.0.2";
-
-// pub fn with_tg<T>(f: impl FnOnce(&TypegraphContext) -> T) -> Result<T> {
-//     TG.with(|tg| {
-//         let tg = tg.borrow();
-//         tg.as_ref()
-//             .map(|tg| f(tg))
-//             .ok_or_else(errors::expected_typegraph_context)
-//     })
-// }
 
 pub fn with_tg_mut<T>(f: impl FnOnce(&mut TypegraphContext) -> T) -> Result<T> {
     TG.with(|tg| {
@@ -128,9 +128,10 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
                 .collect::<Result<Vec<_>>>()?,
             prefix: params.prefix,
             rate: params.rate.map(|v| v.into()),
-            secrets: params.secrets,
+            secrets: vec![],
         },
         types: vec![],
+        saved_store_state: Some(Store::save()),
         ..Default::default()
     };
 
@@ -178,74 +179,84 @@ pub fn finalize() -> Result<String> {
         deps: Default::default(),
     };
 
+    Store::restore(ctx.saved_store_state.unwrap());
+
     serde_json::to_string(&tg).map_err(|e| e.to_string())
 }
 
+fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
+    let attrs = type_id.attrs()?;
+
+    match attrs.concrete_type.as_type()? {
+        Type::Struct(inner) => {
+            // namespace
+            for (prop_name, prop_type_id) in inner.iter_props() {
+                ensure_valid_export(format!("{export_key}::{prop_name}"), prop_type_id)?;
+            }
+        }
+        Type::Func(_) => {}
+        _ => return Err(errors::invalid_export_type(&export_key, &type_id.repr()?)),
+    }
+
+    Ok(())
+}
+
 pub fn expose(
-    fns: Vec<(String, TypeId)>,
-    namespace: Vec<String>,
+    fields: Vec<(String, TypeId)>,
     default_policy: Option<Vec<PolicySpec>>,
 ) -> Result<()> {
-    let fns = fns
+    let fields = fields
         .into_iter()
-        .map(|(name, fn_id)| -> Result<_> {
-            let fn_id = fn_id.resolve_proxy()?;
+        .map(|(key, type_id)| -> Result<_> {
+            let attrs = type_id.attrs()?;
 
-            let has_policy = !fn_id.attrs()?.policy_chain.is_empty();
+            let has_policy = !attrs.policy_chain.is_empty();
 
-            let fn_id: TypeId = match (has_policy, default_policy.as_ref()) {
+            // TODO how to set default policy on a namespace? Or will it inherit
+            // the policies of the namespace?
+            let type_id: TypeId = match (has_policy, default_policy.as_ref()) {
                 (false, Some(default_policy)) => Lib::with_policy(TypePolicy {
-                    tpe: fn_id.into(),
+                    tpe: type_id.into(),
                     chain: default_policy.to_vec(),
                 })?
                 .into(),
-                _ => fn_id,
+                _ => type_id,
             };
 
-            Ok((name, fn_id))
+            Ok((key, type_id))
         })
         .collect::<Result<Vec<_>>>()?;
 
-    with_tg_mut(|ctx| -> Result<()> {
-        if !namespace.is_empty() {
-            return Err(String::from("namespaces not supported"));
-        }
+    with_tg_mut(|ctx| -> Result<_> {
+        let mut root = ctx.types.get_mut(0).unwrap().take().unwrap();
+        let root_data = match &mut root {
+            TypeNode::Object { data, .. } => data,
+            _ => return Err("expect root to be an object".to_string()),
+        };
+        let res = fields
+            .into_iter()
+            .map(|(key, type_id)| -> Result<_> {
+                if !validate_name(&key) {
+                    return Err(errors::invalid_export_name(&key));
+                }
+                if root_data.properties.contains_key(&key) {
+                    return Err(errors::duplicate_export_name(&key));
+                }
+                ensure_valid_export(key.clone(), type_id)?;
 
-        let mut root_type = ctx.types.get_mut(0).unwrap().take().unwrap();
-        let res = ctx.expose_on(&mut root_type, fns);
-        ctx.types[0] = Some(root_type);
-        res
+                let type_idx = ctx.register_type(type_id, None)?;
+                root_data.properties.insert(key.clone(), type_idx.into());
+                root_data.required.push(key);
+                Ok(())
+            })
+            .collect::<Result<Vec<()>>>();
+
+        ctx.types[0] = Some(root);
+        res.map(|_| ())
     })?
 }
 
 impl TypegraphContext {
-    fn expose_on(&mut self, target: &mut TypeNode, fns: Vec<(String, TypeId)>) -> Result<()> {
-        let root = match target {
-            TypeNode::Object { ref mut data, .. } => data,
-            _ => panic!("expected a struct as root type"),
-        };
-        for (name, type_id) in fns.into_iter() {
-            if !validate_name(&name) {
-                return Err(errors::invalid_export_name(&name));
-            }
-            let type_id = type_id.resolve_proxy()?;
-            let tpe = type_id.attrs()?.concrete_type.as_type()?;
-            if !matches!(tpe, Type::Func(_)) {
-                return Err(errors::invalid_export_type(&name, &tpe.to_string()));
-            }
-
-            if root.properties.contains_key(&name) {
-                return Err(errors::duplicate_export_name(&name));
-            }
-
-            root.required.push(name.clone());
-            root.properties
-                .insert(name, self.register_type(type_id, None)?.into());
-        }
-
-        Ok(())
-    }
-
     pub fn register_type(
         &mut self,
         id: TypeId,
@@ -338,6 +349,7 @@ impl TypegraphContext {
             let converted = Store::get_policy(id)?.convert(self)?;
             let idx = self.policies.len();
             self.policies.push(converted);
+            self.mapping.policies.insert(id, idx as u32);
             Ok(idx as PolicyId)
         }
     }
@@ -373,5 +385,14 @@ impl TypegraphContext {
             "unable to find type for store id {}",
             u32::from(id)
         ))
+    }
+
+    pub fn add_secret(&mut self, name: impl Into<String>) {
+        // TODO unicity
+        self.meta.secrets.push(name.into());
+    }
+
+    pub fn get_prisma_typegen_cache(&self) -> Rc<RefCell<HashMap<String, TypeId>>> {
+        Rc::clone(&self.runtime_contexts.prisma_typegen_cache)
     }
 }

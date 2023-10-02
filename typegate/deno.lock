@@ -741,12 +741,19 @@
       "graphql@16.8.0": "graphql@16.8.0",
       "json-schema-faker@0.5.3": "json-schema-faker@0.5.3",
       "lodash": "lodash@4.17.21",
+      "mathjs@11.11.1": "mathjs@11.11.1",
       "mathjs@11.8.0": "mathjs@11.8.0",
       "validator": "validator@13.11.0"
     },
     "packages": {
       "@babel/runtime@7.22.10": {
         "integrity": "sha512-21t/fkKLMZI4pqP2wlmsQAWnYW1PDyKyyUV4vCi+B25ydmdaYTKXPwCj0BzSUnZf4seIiYvSA3jcZ3gdsMFkLQ==",
+        "dependencies": {
+          "regenerator-runtime": "regenerator-runtime@0.14.0"
+        }
+      },
+      "@babel/runtime@7.23.1": {
+        "integrity": "sha512-hC2v6p8ZSI/W0HUzh3V8C5g+NwSKzKPtJwSpTjwl0o297GP9+ZLQSkdvHz46CM3LqyoXxq+5G9komY+eSqSO0g==",
         "dependencies": {
           "regenerator-runtime": "regenerator-runtime@0.14.0"
         }
@@ -850,6 +857,10 @@
         "integrity": "sha512-/KxoyCnPM0GwYI4NN0Iag38Tqt+od3/mLuguepLgCAKPn0ZhC544nssAW0tG2/00zXEYl9W+7hwAIpLHo6Oc7Q==",
         "dependencies": {}
       },
+      "fraction.js@4.3.4": {
+        "integrity": "sha512-pwiTgt0Q7t+GHZA4yaLjObx4vXmmdcS0iSJ19o8d/goUGgItX9UZWKWNnLHehxviD8wU2IWRsnR8cD5+yOJP2Q==",
+        "dependencies": {}
+      },
       "graphql@16.8.0": {
         "integrity": "sha512-0oKGaR+y3qcS5mCu1vb7KG+a89vjn06C7Ihq/dDl3jA+A8B3TKomvi3CiEcVLJQGalbu8F52LxkOym7U5sSfbg==",
         "dependencies": {}
@@ -899,6 +910,20 @@
         "integrity": "sha512-Pn9cox5CsMYngeDbmChANltQl+5pi6XmTrraMSzhPmMBbmgcxmqWry0U3PGapCU1yB4/LqCcom7qhHZiF/jGfQ==",
         "dependencies": {}
       },
+      "mathjs@11.11.1": {
+        "integrity": "sha512-uWrwMrhU31TCqHKmm1yFz0C352njGUVr/I1UnpMOxI/VBTTbCktx/mREUXx5Vyg11xrFdg/F3wnMM7Ql/csVsQ==",
+        "dependencies": {
+          "@babel/runtime": "@babel/runtime@7.23.1",
+          "complex.js": "complex.js@2.1.1",
+          "decimal.js": "decimal.js@10.4.3",
+          "escape-latex": "escape-latex@1.2.0",
+          "fraction.js": "fraction.js@4.3.4",
+          "javascript-natural-sort": "javascript-natural-sort@0.7.1",
+          "seedrandom": "seedrandom@3.0.5",
+          "tiny-emitter": "tiny-emitter@2.1.0",
+          "typed-function": "typed-function@4.1.1"
+        }
+      },
       "mathjs@11.8.0": {
         "integrity": "sha512-I7r8HCoqUGyEiHQdeOCF2m2k9N+tcOHO3cZQ3tyJkMMBQMFqMR7dMQEboBMJAiFW2Um3PEItGPwcOc4P6KRqwg==",
         "dependencies": {
@@ -945,6 +970,10 @@
       },
       "typed-function@4.1.0": {
         "integrity": "sha512-DGwUl6cioBW5gw2L+6SMupGwH/kZOqivy17E4nsh1JI9fKF87orMmlQx3KISQPmg3sfnOUGlwVkroosvgddrlg==",
+        "dependencies": {}
+      },
+      "typed-function@4.1.1": {
+        "integrity": "sha512-Pq1DVubcvibmm8bYcMowjVnnMwPVMeh0DIdA8ad8NZY2sJgapANJmiigSUwlt+EgXxpfIv8MWrQXTIzkfYZLYQ==",
         "dependencies": {}
       },
       "validator@13.11.0": {

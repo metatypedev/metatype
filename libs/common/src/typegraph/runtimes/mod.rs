@@ -6,11 +6,15 @@ use indexmap::IndexMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use self::{
-    deno::DenoRuntimeData, graphql::GraphQLRuntimeData, http::HTTPRuntimeData,
-    prisma::PrismaRuntimeData, python::PythonRuntimeData, random::RandomRuntimeData,
-    s3::S3RuntimeData, temporal::TemporalRuntimeData, wasmedge::WasmEdgeRuntimeData,
-};
+use self::deno::DenoRuntimeData;
+use self::graphql::GraphQLRuntimeData;
+use self::http::HTTPRuntimeData;
+use self::prisma::PrismaRuntimeData;
+use self::python::PythonRuntimeData;
+use self::random::RandomRuntimeData;
+use self::s3::S3RuntimeData;
+use self::temporal::TemporalRuntimeData;
+use self::wasmedge::WasmEdgeRuntimeData;
 
 pub mod deno;
 pub mod graphql;
@@ -24,18 +28,36 @@ pub mod wasmedge;
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "name", content = "data", rename_all = "lowercase")]
+pub struct TypegateRuntimeData {}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct TypegraphRuntimeData {}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct PrismaMigrationRuntimeData {}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(tag = "name", content = "data", rename_all = "snake_case")]
 pub enum KnownRuntime {
     Deno(DenoRuntimeData),
+    #[serde(rename = "graphql")]
     GraphQL(GraphQLRuntimeData),
+    #[serde(rename = "http")]
     HTTP(HTTPRuntimeData),
     #[serde(rename = "python_wasi")]
     PythonWasi(PythonRuntimeData),
     Random(RandomRuntimeData),
     Prisma(PrismaRuntimeData),
+    PrismaMigration(PrismaMigrationRuntimeData),
     S3(S3RuntimeData),
     Temporal(TemporalRuntimeData),
+    #[serde(rename = "wasmedge")]
     WasmEdge(WasmEdgeRuntimeData),
+    Typegate(TypegateRuntimeData),
+    Typegraph(TypegraphRuntimeData),
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

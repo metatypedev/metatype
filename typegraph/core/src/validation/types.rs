@@ -22,6 +22,133 @@ impl TypeFunc {
     }
 }
 
+pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -> Result<()> {
+    let attrs = type_id.attrs()?;
+    let typ = attrs.concrete_type.as_type()?;
+    match typ {
+        Type::Func(_) => Err("cannot validate function".to_string()),
+
+        Type::Struct(inner) => {
+            let Some(value) = value.as_object() else {
+                return Err(format!(
+                    "expected object at {path:?}, got: {}",
+                    serde_json::to_string(&value).map_err(|e| e.to_string())?,
+                ))
+            };
+            for (key, type_id) in inner.iter_props() {
+                validate_value(
+                    value.get(key).unwrap_or(&serde_json::Value::Null).clone(),
+                    type_id,
+                    format!("{path}.{key}"),
+                )?;
+            }
+            // TODO min max?
+            Ok(())
+        }
+
+        Type::Array(inner) => {
+            let Some(value) = value.as_array() else {
+                return Err(format!(
+                    "expected array at {path:?}, got: {}",
+                    serde_json::to_string(&value).map_err(|e| e.to_string())?,
+                ))
+            };
+            for (i, value) in value.iter().enumerate() {
+                validate_value(value.clone(), inner.data.of.into(), format!("{path}[{i}]"))?;
+            }
+            // TODO min max?
+            Ok(())
+        }
+
+        Type::Optional(inner) => {
+            if value.is_null() {
+                return Ok(());
+            }
+            validate_value(value, inner.data.of.into(), path)?;
+            Ok(())
+        }
+
+        Type::Either(inner) => {
+            let mut match_count = 0;
+            for type_id in inner.data.variants.iter() {
+                match validate_value(value.clone(), type_id.into(), path.clone()) {
+                    Ok(()) => match_count += 1,
+                    Err(_) => continue,
+                }
+            }
+            match match_count {
+                0 => Err(format!(
+                    "value {} at {path:?} does not match any of the variants of the either",
+                    serde_json::to_string(&value).map_err(|e| e.to_string())?,
+                )),
+                1 => Ok(()),
+                _ => Err(format!(
+                    "value {} at {path:?} matches multiple variants of the either",
+                    serde_json::to_string(&value).map_err(|e| e.to_string())?,
+                )),
+            }
+        }
+
+        Type::Union(inner) => {
+            for type_id in inner.data.variants.iter() {
+                match validate_value(value.clone(), type_id.into(), path.clone()) {
+                    Ok(()) => return Ok(()),
+                    Err(_) => continue,
+                }
+            }
+            Err(format!(
+                "value {} at {path:?} does not match any of the variants of the union",
+                serde_json::to_string(&value).map_err(|e| e.to_string())?,
+            ))
+        }
+
+        Type::String(_inner) => {
+            let Some(_value) = value.as_str() else {
+                return Err(format!(
+                    "expected string at {path:?}, got: {}",
+                    serde_json::to_string(&value).map_err(|e| e.to_string())?,
+                ))
+            };
+            // TODO min max
+            Ok(())
+        }
+
+        Type::Integer(_inner) => {
+            let Some(_value) = value.as_i64() else {
+                return Err(format!(
+                    "expected integer at {path:?}, got: {}",
+                    serde_json::to_string(&value).map_err(|e| e.to_string())?,
+                ))
+            };
+            // TODO min max
+            Ok(())
+        }
+
+        Type::Float(_inner) => {
+            let Some(_value) = value.as_f64() else {
+                return Err(format!(
+                    "expected float at {path:?}, got: {}",
+                    serde_json::to_string(&value).map_err(|e| e.to_string())?,
+                ))
+            };
+            // TODO min max
+            Ok(())
+        }
+
+        Type::Boolean(_inner) => {
+            let Some(_) = value.as_bool() else {
+                return Err(format!(
+                    "expected boolean at {path:?}, got: {}",
+                    serde_json::to_string(&value).map_err(|e| e.to_string())?,
+                ))
+            };
+            Ok(())
+        }
+
+        _ => unreachable!(),
+    }
+}
+
 pub(super) mod utils {
     use crate::types::TypeId;
 

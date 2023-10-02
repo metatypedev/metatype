@@ -182,6 +182,7 @@ use registry::RelationshipRegistry;
 mod test {
     use super::prisma_linkn;
     use crate::errors::Result;
+    use crate::global_store::Store;
     use crate::runtimes::prisma::errors;
     use crate::runtimes::prisma::relationship::prisma_link;
     use crate::runtimes::prisma::relationship::registry::RelationshipRegistry;
@@ -202,6 +203,7 @@ mod test {
 
     #[test]
     fn test_explicit_relationship_name() -> Result<(), String> {
+        Store::reset();
         let user = t::struct_()
             .prop("id", t::integer().as_id(true).build()?)
             .prop("name", t::string().build()?)
@@ -227,6 +229,7 @@ mod test {
 
     #[test]
     fn test_fkey_attribute() -> Result<(), String> {
+        Store::reset();
         let user = t::struct_()
             .prop("id", t::integer().as_id(true).build()?)
             .prop(
@@ -255,6 +258,7 @@ mod test {
 
     #[test]
     fn test_unique_attribute() -> Result<(), String> {
+        Store::reset();
         let user = t::struct_()
             .prop("id", t::integer().as_id(true).build()?)
             .prop(
@@ -283,6 +287,7 @@ mod test {
 
     #[test]
     fn test_self_relationship() -> Result<(), String> {
+        Store::reset();
         let node = t::struct_()
             .prop("id", t::string().as_id(true).build()?)
             .prop("children", t::array(t::proxy("Node").build()?).build()?)
@@ -300,6 +305,7 @@ mod test {
 
     #[test]
     fn test_ambiguous_side() -> Result<(), String> {
+        Store::reset();
         let user = t::struct_()
             .prop("id", t::integer().as_id(true).build()?)
             .prop("profile", t::proxy("Profile").build()?)
@@ -324,6 +330,7 @@ mod test {
             Err(errors::ambiguous_side("User", "profile", "Profile", "user"))
         );
 
+        Store::reset();
         let user = t::struct_()
             .prop("id", t::integer().as_id(true).build()?)
             .prop(
@@ -356,6 +363,7 @@ mod test {
 
     #[test]
     fn test_conflicting_attributes() -> Result<(), String> {
+        Store::reset();
         let user = t::struct_()
             .prop("id", t::integer().as_id(true).build()?)
             .prop("profile", prisma_linkn("Profile").fkey(true).build()?)
@@ -384,6 +392,7 @@ mod test {
             ))
         );
 
+        Store::reset();
         let user = t::struct_()
             .prop("id", t::integer().as_id(true).build()?)
             .prop("profile", prisma_linkn("Profile").fkey(false).build()?)
@@ -417,6 +426,7 @@ mod test {
 
     #[test]
     fn test_missing_target() -> Result<(), String> {
+        Store::reset();
         let user = t::struct_()
             .prop("id", t::integer().as_id(true).build()?)
             .prop("profile", prisma_linkn("Profile").fkey(true).build()?)

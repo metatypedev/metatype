@@ -10,6 +10,10 @@ use crate::wit::core::{
 
 pub trait TypeBuilder {
     fn build(&mut self) -> Result<TypeId>;
+
+    fn optional(&mut self) -> Result<OptionalBuilder> {
+        Ok(optional(self.build()?))
+    }
 }
 
 pub trait ConcreteTypeBuilder: TypeBuilder {
@@ -240,6 +244,10 @@ pub fn array(ty: TypeId) -> ArrayBuilder {
     }
 }
 
+pub fn arrayx(mut item_builder: impl TypeBuilder) -> Result<ArrayBuilder> {
+    Ok(array(item_builder.build()?))
+}
+
 #[derive(Default)]
 pub struct UnionBuilder {
     base: TypeBase,
@@ -302,6 +310,7 @@ impl Default for TypeStruct {
             additional_props: false,
             min: None,
             max: None,
+            enumeration: None,
         }
     }
 }
@@ -336,6 +345,15 @@ impl StructBuilder {
         self
     }
 
+    pub fn propx(
+        &mut self,
+        name: impl Into<String>,
+        mut builder: impl TypeBuilder,
+    ) -> Result<&mut Self> {
+        self.data.props.push((name.into(), builder.build()?.into()));
+        Ok(self)
+    }
+
     #[allow(dead_code)]
     pub fn props(&mut self, props: impl IntoIterator<Item = (String, TypeId)>) {
         self.data
@@ -367,6 +385,8 @@ impl Default for TypeFunc {
             inp: u32::max_value(),
             out: u32::max_value(),
             mat: u32::max_value(),
+            rate_calls: false,
+            rate_weight: None,
         }
     }
 }
@@ -378,6 +398,7 @@ pub fn func(inp: TypeId, out: TypeId, mat: u32) -> Result<TypeId> {
             inp: inp.into(),
             out: out.into(),
             mat,
+            ..Default::default()
         },
         ..Default::default()
     }

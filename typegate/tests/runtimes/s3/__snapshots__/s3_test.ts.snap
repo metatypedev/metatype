@@ -1,0 +1,492 @@
+export const snapshot = {};
+
+snapshot[`s3 typegraphs 1`] = `
+'{
+  "\$id": "https://metatype.dev/specs/0.0.2.json",
+  "types": [
+    {
+      "type": "object",
+      "title": "s3-test",
+      "runtime": 0,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "listObjects": 1,
+        "getDownloadUrl": 12,
+        "signTextUploadUrl": 16,
+        "upload": 21,
+        "uploadMany": 27
+      },
+      "required": [
+        "listObjects",
+        "getDownloadUrl",
+        "signTextUploadUrl",
+        "upload",
+        "uploadMany"
+      ]
+    },
+    {
+      "type": "function",
+      "title": "func_10",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 2,
+      "output": 5,
+      "materializer": 0,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "object_2",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "path": 3
+      },
+      "required": []
+    },
+    {
+      "type": "optional",
+      "title": "optional_1",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 4,
+      "default_value": null
+    },
+    {
+      "type": "string",
+      "title": "string_0",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "object",
+      "title": "object_9",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "keys": 6,
+        "prefix": 10
+      },
+      "required": []
+    },
+    {
+      "type": "array",
+      "title": "array_6",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 7
+    },
+    {
+      "type": "object",
+      "title": "object_5",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "key": 8,
+        "size": 9
+      },
+      "required": []
+    },
+    {
+      "type": "string",
+      "title": "string_3",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "integer",
+      "title": "integer_4",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "array",
+      "title": "array_8",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 11
+    },
+    {
+      "type": "string",
+      "title": "string_7",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "function",
+      "title": "func_14",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 13,
+      "output": 15,
+      "materializer": 2,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "object_12",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "path": 14
+      },
+      "required": []
+    },
+    {
+      "type": "string",
+      "title": "string_11",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "string",
+      "title": "string_13",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "format": "uri"
+    },
+    {
+      "type": "function",
+      "title": "func_19",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 17,
+      "output": 20,
+      "materializer": 3,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "object_17",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "length": 18,
+        "path": 19
+      },
+      "required": []
+    },
+    {
+      "type": "integer",
+      "title": "integer_15",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "string",
+      "title": "string_16",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "string",
+      "title": "string_18",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "format": "uri"
+    },
+    {
+      "type": "function",
+      "title": "func_25",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 22,
+      "output": 26,
+      "materializer": 4,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "object_23",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "file": 23,
+        "path": 24
+      },
+      "required": []
+    },
+    {
+      "type": "file",
+      "title": "_20_file",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "mimeTypes": [
+        "text/plain"
+      ]
+    },
+    {
+      "type": "optional",
+      "title": "optional_22",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 25,
+      "default_value": null
+    },
+    {
+      "type": "string",
+      "title": "string_21",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "boolean",
+      "title": "boolean_24",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "function",
+      "title": "func_32",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 28,
+      "output": 33,
+      "materializer": 5,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "object_30",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "prefix": 29,
+        "files": 31
+      },
+      "required": []
+    },
+    {
+      "type": "optional",
+      "title": "optional_28",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 30,
+      "default_value": ""
+    },
+    {
+      "type": "string",
+      "title": "string_27",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "array",
+      "title": "_29__26_file[]",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 32
+    },
+    {
+      "type": "file",
+      "title": "_26_file",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "boolean",
+      "title": "boolean_31",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    }
+  ],
+  "materializers": [
+    {
+      "name": "list",
+      "runtime": 1,
+      "effect": {
+        "effect": "none",
+        "idempotent": true
+      },
+      "data": {
+        "bucket": "bucket"
+      }
+    },
+    {
+      "name": "predefined_function",
+      "runtime": 0,
+      "effect": {
+        "effect": "none",
+        "idempotent": true
+      },
+      "data": {
+        "name": "true"
+      }
+    },
+    {
+      "name": "presign_get",
+      "runtime": 1,
+      "effect": {
+        "effect": "none",
+        "idempotent": true
+      },
+      "data": {
+        "bucket": "bucket",
+        "expiry_secs": null
+      }
+    },
+    {
+      "name": "presign_put",
+      "runtime": 1,
+      "effect": {
+        "effect": "none",
+        "idempotent": true
+      },
+      "data": {
+        "bucket": "bucket",
+        "content_type": "text/plain",
+        "expiry_secs": null
+      }
+    },
+    {
+      "name": "upload",
+      "runtime": 1,
+      "effect": {
+        "effect": "create",
+        "idempotent": true
+      },
+      "data": {
+        "bucket": "bucket"
+      }
+    },
+    {
+      "name": "upload_all",
+      "runtime": 1,
+      "effect": {
+        "effect": "create",
+        "idempotent": true
+      },
+      "data": {
+        "bucket": "bucket"
+      }
+    }
+  ],
+  "runtimes": [
+    {
+      "name": "deno",
+      "data": {
+        "worker": "default",
+        "permissions": {}
+      }
+    },
+    {
+      "name": "s3",
+      "data": {
+        "host_secret": "HOST",
+        "region_secret": "REGION",
+        "access_key_secret": "access_key",
+        "secret_key_secret": "secret_key",
+        "path_style_secret": "PATH_STYLE"
+      }
+    }
+  ],
+  "policies": [
+    {
+      "name": "__public",
+      "materializer": 1
+    }
+  ],
+  "meta": {
+    "prefix": null,
+    "secrets": [],
+    "queries": {
+      "dynamic": true,
+      "endpoints": []
+    },
+    "cors": {
+      "allow_origin": [],
+      "allow_headers": [],
+      "expose_headers": [],
+      "allow_methods": [],
+      "allow_credentials": true,
+      "max_age_sec": null
+    },
+    "auths": [],
+    "rate": null,
+    "version": "0.0.2"
+  }
+}'
+`;

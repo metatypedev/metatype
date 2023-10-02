@@ -131,6 +131,10 @@ impl TypeVisitor for Validator {
                         return VisitResult::Continue(false);
                     }
                 }
+                TypeNode::Function { .. } => {
+                    // validate materializer??
+                    // TODO deno static
+                }
                 _ => {}
             }
         }

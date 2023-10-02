@@ -2,14 +2,34 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import json
-from typing import Dict, List, Union
+from functools import reduce
+from typing import Dict, List, Union, Tuple, Optional, Any
 from typegraph_next.injection import InheritDef
 from typegraph_next.gen.exports.utils import ApplyPath, ApplyValue
 from typegraph_next.injection import serialize_static_injection
 
 
-def serialize_record_values(obj: Union[Dict[str, any], None]):
-    return [(k, json.dumps(v)) for k, v in obj.items()] if obj is not None else None
+# def serialize_record_values(obj: Union[Dict[str, any], None]):
+#     return [(k, json.dumps(v)) for k, v in obj.items()] if obj is not None else None
+
+
+ConfigSpec = Union[List[Union[str, Dict[str, Any]]], Dict[str, Any]]
+
+
+def serialize_config(config: Optional[ConfigSpec]) -> Optional[List[Tuple[str, str]]]:
+    if config is None:
+        return None
+
+    if isinstance(config, list):
+        return reduce(
+            lambda acc, c: acc + [(c, "true")]
+            if isinstance(c, str)
+            else acc + serialize_config(c),
+            config,
+            [],
+        )
+
+    return [(k, json.dumps(v)) for k, v in config.items()]
 
 
 def build_apply_data(node: any, paths: List[ApplyPath], curr_path: List[str]):

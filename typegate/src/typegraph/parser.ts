@@ -9,6 +9,14 @@ export async function parseTypegraph(json: string): Promise<TypeGraphDS> {
   if ("Valid" in res) {
     return JSON.parse(res.Valid.json) as TypeGraphDS;
   } else {
-    throw new Error(`Invalid typegraph definition: ${res.NotValid.reason}`);
+    let name;
+    try {
+      name = JSON.parse(json).types[0].title;
+    } catch (_e) {
+      name = "<unknown>";
+    }
+    throw new Error(
+      `Invalid typegraph definition for '${name}': ${res.NotValid.reason}`,
+    );
   }
 }

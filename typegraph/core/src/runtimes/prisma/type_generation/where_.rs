@@ -69,6 +69,8 @@ mod test {
 
     #[test]
     fn test_generate_where() -> Result<()> {
+        setup(None)?;
+
         let mut context = TypeGenContext::default();
         let record = models::simple_record()?;
         context.registry.manage(record)?;

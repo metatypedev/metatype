@@ -1,26 +1,29 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.graph.auth import oauth2
-from typegraph.policies import Policy
-from typegraph.runtimes.deno import PredefinedFunMat, PureFunMat
-from typegraph.runtimes.http import HTTPRuntime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.graph.params import oauth2
+from typegraph_next.runtimes.deno import DenoRuntime
+from typegraph_next.runtimes.http import HttpRuntime
 
-with TypeGraph("test_auth", auths=[oauth2.github("openid profile email")]) as g:
-    remote = HTTPRuntime("https://api.github.com")
 
-    public = policies.public()
-    private = Policy(
-        PureFunMat("(_args, { context }) => !!context.user1"),
-    )
-    with_token = Policy(
-        PureFunMat("(_args, { context }) => !!context.accessToken"),
+@typegraph(
+    name="test_auth",
+    auths=[oauth2.github("openid profile email")],
+)
+def test_auth(g: Graph):
+    deno = DenoRuntime()
+    remote = HttpRuntime("https://api.github.com")
+
+    public = Policy.public()
+    private = deno.policy("private", "(_args, { context }) => !!context.user1")
+    with_token = deno.policy(
+        "with_token", "(_args, { context }) => !!context.accessToken"
     )
 
     x = t.struct({"x": t.integer()})
 
     g.expose(
-        public=t.func(x, x, PredefinedFunMat("identity")).add_policy(public),
-        private=t.func(x, x, PredefinedFunMat("identity")).add_policy(private),
-        token=t.func(x, x, PredefinedFunMat("identity")).add_policy(with_token),
+        public=deno.identity(x).with_policy(public),
+        private=deno.identity(x).with_policy(private),
+        token=deno.identity(x).with_policy(with_token),
         user=remote.get(
             "/user",
             t.struct({"token": t.string().from_context("token")}),
@@ -31,5 +34,5 @@ with TypeGraph("test_auth", auths=[oauth2.github("openid profile email")]) as g:
                 }
             ),
             auth_token_field="token",
-        ).add_policy(public),
+        ).with_policy(public),
     )
