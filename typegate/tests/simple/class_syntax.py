@@ -15,7 +15,7 @@ def class_syntax(g: Graph):
     class Info(TitledEntity):
         content = t.string()
 
-    metadata = t.either([tag, Info().renamed("Info")])
+    metadata = t.either([tag, Info().rename("Info")])
 
     class Comment(TitledEntity):
         content = t.string()

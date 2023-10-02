@@ -49,7 +49,7 @@ snapshot[`Basic introspection 1`] = `
       {
         fields: null,
         kind: "SCALAR",
-        name: "ToyIn",
+        name: "FavoriteToyIn",
         possibleTypes: null,
       },
       {

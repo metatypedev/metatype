@@ -14,7 +14,7 @@ def introspect_union_either(g: Graph):
     user = t.struct(
         {
             "name": t.string(name="Username"),
-            "favorite": toy,  # .named("FavoriteToy"),
+            "favorite": toy.rename("FavoriteToy"),
         },
         name="User",
     )

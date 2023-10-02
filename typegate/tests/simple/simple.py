@@ -4,6 +4,9 @@ from typegraph_next.runtimes.deno import DenoRuntime
 
 @typegraph()
 def testing(g: Graph):
+    import sys
+
+    print("simple...", file=sys.stderr)
     deno = DenoRuntime()
     public = Policy.public()
 
@@ -18,6 +21,6 @@ def testing(g: Graph):
         test=deno.identity(
             t.struct({"a": t.integer(name="arg1")}, name="inp"),
         )
-        # .named("f")
-        .with_policy(public),
+        .with_policy(public)
+        .rename("f"),
     )

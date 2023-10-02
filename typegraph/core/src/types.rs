@@ -341,11 +341,15 @@ impl TypeId {
                         return Err("multiple injections not supported".to_string());
                     }
                     injection = Some(inner.data.injection.clone());
+                    type_id = inner.data.tpe.into();
+                    continue;
                 }
 
                 Type::Renamed(inner) => {
                     // only use the outer name
                     name = name.or_else(|| Some(inner.data.name.clone()));
+                    type_id = inner.data.tpe.into();
+                    continue;
                 }
 
                 // exhaustively match all concrete type

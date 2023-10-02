@@ -72,7 +72,7 @@ class typedef:
 
         return _TypeWithPolicy(res.value, self, policies)
 
-    def renamed(self, name: str) -> Self:
+    def rename(self, name: str) -> Self:
         res = core.rename_type(
             store,
             TypeRenamed(
@@ -583,7 +583,6 @@ class struct(typedef):
                 value = getattr(self, attr)
                 if isinstance(value, typedef):
                     props[attr] = value
-            # name = self.__class__.__name__
 
         else:
             props = props or {}

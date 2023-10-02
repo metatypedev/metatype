@@ -100,7 +100,7 @@ export class Typedef {
     }) as this;
   }
 
-  renamed(name: string): this {
+  rename(name: string): this {
     const id = core.renameType({
       tpe: this._id,
       name,

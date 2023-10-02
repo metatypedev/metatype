@@ -111,7 +111,7 @@ def test(g: Graph):
                             }
                         ),
                         code=dummy_func,
-                    ).renamed("UserProfile"),
+                    ).rename("UserProfile"),
                     "taggedPic": deno.func(
                         t.struct(
                             {
