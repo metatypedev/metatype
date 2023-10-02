@@ -384,10 +384,7 @@ export interface MigrationOptions {
   create: boolean;
   reset: boolean;
 }
-export type PrismaMigrationRuntimeData = Record<
-  string | number | symbol,
-  unknown
->;
+export type PrismaMigrationRuntimeData = Record<string, unknown>;
 export interface S3RuntimeData {
   host_secret: string;
   region_secret: string;
@@ -402,10 +399,8 @@ export interface TemporalRuntimeData {
 export interface WasmEdgeRuntimeData {
   config?: string | null;
 }
-
-export type TypegateRuntimeData = Record<string | number | symbol, unknown>;
-
-export type TypegraphRuntimeData = Record<string | number | symbol, unknown>;
+export type TypegateRuntimeData = Record<string, unknown>;
+export type TypegraphRuntimeData = Record<string, unknown>;
 export interface UnknownRuntime {
   name: string;
   data: {
