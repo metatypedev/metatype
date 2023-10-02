@@ -53,7 +53,7 @@ fn import(specifier: ImportNamedSpecifier, source: &str) -> ImportDecl {
             raw: Default::default(),
         }),
         type_only: true,
-        asserts: None,
+        with: None,
     }
 }
 

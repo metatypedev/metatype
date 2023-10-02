@@ -1,7 +1,6 @@
 services:
   typegate:
-    image: ghcr.io/metatypedev/typegate:v0.1.15-0+dev
-    platform: linux/amd64
+    image: ghcr.io/metatypedev/typegate:v0.2.0-alpha.1
     restart: always
     ports:
       - "7890:7890"
@@ -23,6 +22,7 @@ services:
 
   # for prisma runtime with postgres
   # postgresql://postgres:password@localhost:5432/db
+  # see metatype.yml
   postgres:
     image: postgres:15
     restart: always
@@ -36,9 +36,10 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   # for prisma runtime with mongo
-  # postgresql://postgres:password@localhost:5432/db
+  # mongodb://root:password@mongo:27017/db
+  # see metatype.yml
   mongo:
-    image: mongo:6
+    image: mongo:7
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: root

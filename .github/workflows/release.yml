@@ -6,7 +6,7 @@ on:
 env:
   PYTHON_VERSION: "3.8"
   POETRY_VERSION: "1.4.1"
-  DENO_VERSION: "1.36.1"
+  DENO_VERSION: "1.37.0"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
 
 jobs:
@@ -139,16 +139,16 @@ jobs:
           file: dev/Dockerfile
           platforms: ${{ matrix.platform }}
           target: prd
-          cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:nightly
+          cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:latest
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
       - run: |
-          mkdir -p /tmp/digests
+          mkdir -p ./digests
           digest="${{ steps.prd.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
+          touch "./digests/${digest#sha256:}"
       - uses: actions/upload-artifact@v3
         with:
           name: digests
-          path: /tmp/digests/*
+          path: ./digests/*
           if-no-files-found: error
           retention-days: 1
 
@@ -167,8 +167,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - working-directory: /tmp/digests
-        run: |
+      - run: |
+          cd ./digests
           docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:${{ github.ref_name }} --tag ${{ env.REGISTRY_IMAGE }}:latest $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:latest
 

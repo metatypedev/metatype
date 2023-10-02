@@ -5,4 +5,4 @@
 from typegraph import types as t  # noqa
 from typegraph.graph.typegraph import TypeGraph  # noqa
 
-version = "0.1.15-0+dev"
+version = "0.2.0-alpha.1"
