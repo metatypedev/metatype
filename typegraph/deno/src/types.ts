@@ -10,7 +10,6 @@ import {
   TypeEither,
   TypeFile,
   TypeFloat,
-  TypeFunc,
   TypeInteger,
   TypeOptional,
   TypeString,
@@ -28,7 +27,7 @@ import {
 } from "./utils/injection_utils.ts";
 import { InjectionValue } from "./utils/type_utils.ts";
 import { InheritDef } from "./typegraph.ts";
-import { FuncParams } from "@typegraph/deno/gen/exports/metatype-typegraph-runtimes.d.ts";
+import { FuncParams } from "@typegraph/deno/gen/interfaces/metatype-typegraph-runtimes.d.ts";
 
 export type PolicySpec = Policy | {
   none: Policy;
