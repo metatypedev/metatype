@@ -4,9 +4,6 @@ from typegraph_next.runtimes.deno import DenoRuntime
 
 @typegraph()
 def testing(g: Graph):
-    import sys
-
-    print("simple...", file=sys.stderr)
     deno = DenoRuntime()
     public = Policy.public()
 
