@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-// deno-lint-ignore-file no-explicit-any
+// deno-lint-ignore-file no-explicit-any no-empty-interface
 
 export type OptionalNode = {
   type: "optional";
@@ -260,6 +260,9 @@ export type KnownRuntime = {
   name: "prisma";
   data: PrismaRuntimeData;
 } | {
+  name: "prisma_migration";
+  data: PrismaMigrationRuntimeData;
+} | {
   name: "s3";
   data: S3RuntimeData;
 } | {
@@ -268,6 +271,12 @@ export type KnownRuntime = {
 } | {
   name: "wasmedge";
   data: WasmEdgeRuntimeData;
+} | {
+  name: "typegate";
+  data: TypegateRuntimeData;
+} | {
+  name: "typegraph";
+  data: TypegraphRuntimeData;
 };
 export type Cardinality = "optional" | "one" | "many";
 export type AuthProtocol = "oauth2" | "jwt" | "basic";
@@ -375,6 +384,8 @@ export interface MigrationOptions {
   create: boolean;
   reset: boolean;
 }
+export interface PrismaMigrationRuntimeData {
+}
 export interface S3RuntimeData {
   host_secret: string;
   region_secret: string;
@@ -388,6 +399,10 @@ export interface TemporalRuntimeData {
 }
 export interface WasmEdgeRuntimeData {
   config?: string | null;
+}
+export interface TypegateRuntimeData {
+}
+export interface TypegraphRuntimeData {
 }
 export interface UnknownRuntime {
   name: string;
