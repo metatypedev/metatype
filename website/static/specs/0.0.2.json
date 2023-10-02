@@ -1486,6 +1486,24 @@
             "name": {
               "type": "string",
               "enum": [
+                "prisma_migration"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/PrismaMigrationRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
                 "s3"
               ]
             },
@@ -1527,6 +1545,42 @@
             },
             "data": {
               "$ref": "#/definitions/WasmEdgeRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "typegate"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/TypegateRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "typegraph"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/TypegraphRuntimeData"
             }
           }
         }
@@ -1724,6 +1778,9 @@
         }
       }
     },
+    "PrismaMigrationRuntimeData": {
+      "type": "object"
+    },
     "S3RuntimeData": {
       "type": "object",
       "required": [
@@ -1776,6 +1833,12 @@
           ]
         }
       }
+    },
+    "TypegateRuntimeData": {
+      "type": "object"
+    },
+    "TypegraphRuntimeData": {
+      "type": "object"
     },
     "UnknownRuntime": {
       "type": "object",

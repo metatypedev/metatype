@@ -1,27 +1,37 @@
-from typegraph import TypeGraph, t
-from typegraph.runtimes.deno import PureFunMat
-from typegraph import policies as p
+from typegraph_next import typegraph, t, Graph, Policy
+from typegraph_next.runtimes.deno import DenoRuntime
+from typing import Optional
 
-with TypeGraph("test") as g:
-    A = t.struct({"a": t.integer()}).named("A")
+
+@typegraph()
+def test(g: Graph):
+    A = t.struct({"a": t.integer()}, name="A")
     B = t.struct(
         {
             "b": t.either(
                 [
-                    t.struct({"c": t.integer()}).named("C1"),
-                    t.struct({"c": t.string()}).named("C2"),
+                    t.struct({"c": t.integer()}, name="C1"),
+                    t.struct({"c": t.string()}, name="C2"),
                 ]
             )
-        }
-    ).named("B")
+        },
+        name="B",
+    )
 
-    def gen_union1():
-        return t.union([t.integer(), t.string()])
+    def gen_union1(name: Optional[str] = None):
+        if name is None:
+            return t.union([t.integer(), t.string()])
+        else:
+            return t.union([t.integer(), t.string()], name=name)
 
-    def gen_union2():
-        return t.union([A, B])
+    def gen_union2(name: Optional[str] = None):
+        if name is None:
+            return t.union([A, B])
+        else:
+            return t.union([A, B], name=name)
 
-    dummy_mat = PureFunMat("() => ({})")
+    deno = DenoRuntime()
+    dummy_func = "() => {}"
 
     record = t.struct(
         {
@@ -34,26 +44,26 @@ with TypeGraph("test") as g:
                     "third": t.boolean().optional(),
                 }
             ),
-            "from_union1": t.func(
+            "union1": gen_union1("Union1"),
+            "union2": gen_union2("Union2"),
+            "from_union1": deno.func(
                 t.struct({"u1": gen_union1().from_parent("Union1")}),
                 t.integer(),
-                dummy_mat,
+                code=dummy_func,
             ),
-            "from_union2": t.func(
+            "from_union2": deno.func(
                 t.struct({"u2": gen_union2().from_parent("Union2")}),
                 t.integer(),
-                dummy_mat,
+                code=dummy_func,
             ),
-            "union1": gen_union1().named("Union1"),
-            "union2": gen_union2().named("Union2"),
         }
     )
 
     registered_user = t.struct(
         {
-            "id": t.uuid().as_id,
-            "email": t.email().named("RegisteredUserEmail"),
-            "profile": t.func(
+            "id": t.uuid(as_id=True),
+            "email": t.email(name="RegisteredUserEmail"),
+            "profile": deno.func(
                 t.struct({"email": t.email().from_parent("RegisteredUserEmail")}),
                 t.struct(
                     {
@@ -62,32 +72,35 @@ with TypeGraph("test") as g:
                         "profilePic": t.string(),
                     }
                 ),
-                dummy_mat,
+                code=dummy_func,
             ),
         },
-    ).named("RegisteredUser")
+        name="RegisteredUser",
+    )
 
     guest_user = t.struct(
         {
-            "id": t.uuid().as_id,
-        }
-    ).named("GuestUser")
+            "id": t.uuid(as_id=True),
+        },
+        name="GuestUser",
+    )
 
-    public = p.public()
+    public = Policy.public()
 
     g.expose(
-        one=t.func(
+        public,
+        one=deno.func(
             t.struct({}),
             record,
-            dummy_mat,
+            code=dummy_func,
         ),
-        two=t.func(
-            t.struct(),
+        two=deno.func(
+            t.struct({}),
             t.struct(
                 {
                     "id": t.integer(),
-                    "email": t.email().named("UserEmail"),
-                    "profile": t.func(
+                    "email": t.email(name="UserEmail"),
+                    "profile": deno.func(
                         t.struct({"email": t.email().from_parent("UserEmail")}),
                         t.struct(
                             {
@@ -97,32 +110,31 @@ with TypeGraph("test") as g:
                                 "profilePic": t.string(),
                             }
                         ),
-                        dummy_mat,
-                    ).named("UserProfile"),
-                    "taggedPic": t.func(
-                        t.struct(
-                            {
-                                "profile": t.struct(
-                                    {"email": t.email(), "profilePic": t.string()}
-                                ).from_parent("UserProfile")
-                            }
-                        ),
-                        t.string(),
-                        dummy_mat,
-                    ),
+                        code=dummy_func,
+                    ),  # .named("UserProfile"),
+                    # "taggedPic": deno.func(
+                    #     t.struct(
+                    #         {
+                    #             "profile": t.struct(
+                    #                 {"email": t.email(), "profilePic": t.string()}
+                    #             ).from_parent("UserProfile")
+                    #         }
+                    #     ),
+                    #     t.string(),
+                    #     code=dummy_func,
+                    # ),
                 }
             ),
-            dummy_mat,
+            code=dummy_func,
         ),
-        three=t.func(
-            t.struct(),
+        three=deno.func(
+            t.struct({}),
             t.struct(
                 {
-                    "id": t.integer().as_id,
+                    "id": t.integer(as_id=True),
                     "user": t.either([registered_user, guest_user]),
                 }
             ),
-            dummy_mat,
+            code=dummy_func,
         ),
-        default_policy=[public],
     )

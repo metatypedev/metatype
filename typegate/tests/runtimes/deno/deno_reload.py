@@ -1,16 +1,19 @@
 import os
 
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.deno import ModuleMat
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.runtimes.deno import DenoRuntime
 
-with TypeGraph("deno-reload") as g:
-    public = policies.public()
-    mod = ModuleMat(os.environ["DYNAMIC"])
+
+@typegraph()
+def deno_reload(g: Graph):
+    deno = DenoRuntime()
+    public = Policy.public()
 
     g.expose(
-        fire=t.func(
+        fire=deno.import_(
             t.struct({}),
-            t.number(),
-            mod.imp("fire"),
-        ).add_policy(public),
+            t.float(),
+            module=os.environ["DYNAMIC"],
+            name="fire",
+        ).with_policy(public),
     )

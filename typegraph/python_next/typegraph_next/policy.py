@@ -16,7 +16,7 @@ from typegraph_next.gen.exports.core import (
     Policy as WitPolicy,
     PolicySpec as WitPolicySpec,
     PolicySpecSimple,
-    PolicySpecPerEffect as WitPolicyPerEffect,
+    PolicyPerEffect as WitPolicyPerEffect,
 )
 from typegraph_next.gen.exports.runtimes import MaterializerDenoPredefined
 from typegraph_next.wit import core, runtimes, store
@@ -25,6 +25,9 @@ from typegraph_next.wit import core, runtimes, store
 class Policy:
     id: int
     name: str
+
+    # class attributes
+    __public: Optional["Policy"] = None
 
     def __init__(self, id: int, name: str):
         self.id = id
@@ -39,7 +42,10 @@ class Policy:
             raise Exception(res.value)
         mat_id = res.value
 
-        return cls.create("__public", mat_id)
+        if cls.__public is None:
+            cls.__public = cls.create("__public", mat_id)
+
+        return cls.__public
 
     @classmethod
     def context(cls, key: str, check: Union[str, Pattern]) -> "Policy":

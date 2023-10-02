@@ -8,7 +8,9 @@
 //! Type generation should always be done through the `TypeGenContext` to enable
 //! the cache. Do not call `TypeGen::generate` directly.
 
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::{Rc, Weak};
 
 use regex::Regex;
 
@@ -26,6 +28,7 @@ use super::relationship::registry::RelationshipRegistry;
 use crate::errors::Result;
 use crate::runtimes::prisma::relationship::Cardinality;
 use crate::t::{self, TypeBuilder};
+use crate::typegraph::with_tg_mut;
 use crate::types::{TypeFun, TypeId};
 
 mod additional_filters;
@@ -46,7 +49,7 @@ mod with_nested_count;
 #[derive(Default, Debug)]
 pub struct TypeGenContext {
     pub registry: RelationshipRegistry,
-    cache: HashMap<String, TypeId>,
+    cache: Weak<RefCell<HashMap<String, TypeId>>>,
 }
 
 trait TypeGen {
@@ -274,6 +277,17 @@ impl TypeGenContext {
         })
     }
 
+    fn get_cache(&mut self) -> Result<Rc<RefCell<HashMap<String, TypeId>>>> {
+        match self.cache.upgrade() {
+            Some(cache) => Ok(cache),
+            None => with_tg_mut(|tg| {
+                let cache = tg.get_prisma_typegen_cache();
+                self.cache = Rc::downgrade(&cache);
+                cache
+            }),
+        }
+    }
+
     pub fn execute_raw(&mut self, param: TypeId) -> Result<OperationTypes> {
         let param = param.as_struct()?;
         Ok(OperationTypes {
@@ -294,9 +308,15 @@ impl TypeGenContext {
         //! Generates a type and caches it, or returns the cached type if it
         //! already exists.
 
+        let cache = self.get_cache()?;
+
         let type_name = generator.name();
-        if let Some(type_id) = self.cache.get(&type_name) {
-            Ok(*type_id)
+        let cached_type = {
+            let cache = cache.borrow();
+            cache.get(&type_name).copied()
+        };
+        if let Some(type_id) = cached_type {
+            Ok(type_id)
         } else {
             let type_id = generator.generate(self)?;
             let typ = type_id.as_type()?;
@@ -312,7 +332,7 @@ impl TypeGenContext {
                     type_name, name
                 ));
             }
-            self.cache.insert(type_name, type_id);
+            cache.borrow_mut().insert(type_name, type_id);
             Ok(type_id)
         }
     }
@@ -349,6 +369,7 @@ mod test {
 
     macro_rules! test_op_body {
         ( $op_name:ident, $test_inp:expr, $test_out:expr ) => {{
+            setup(None)?;
             let mut context = TypeGenContext::default();
 
             let record = models::simple_record()?;

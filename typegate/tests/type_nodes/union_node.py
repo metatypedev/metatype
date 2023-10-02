@@ -1,30 +1,36 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
-from typegraph.runtimes.deno import ModuleMat, PureFunMat
+from typegraph_next import Policy, t, typegraph, Graph
+from typegraph_next.runtimes.deno import DenoRuntime
 
-with TypeGraph("union") as g:
-    channel_of_8_bits = t.integer().min(0).max(255).named("8BitsChannel")
 
-    rgb_array = t.struct({"rgb": t.array(channel_of_8_bits).min(3).max(3)}).named(
-        "RGBArray"
+@typegraph()
+def union(g: Graph):
+    channel_of_8_bits = t.integer(min=0, max=255, name="8BitChannel")
+
+    rgb_array = t.struct(
+        {
+            "rgb": t.array(channel_of_8_bits, min=3, max=3),
+        },
+        name="RGBArray",
     )
-
     rgb_struct = t.struct(
         {
             "r": channel_of_8_bits,
             "g": channel_of_8_bits,
             "b": channel_of_8_bits,
-        }
-    ).named("RGBStruct")
+        },
+        name="RGBStruct",
+    )
 
     hex = t.struct(
-        {"hex": t.string().pattern("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")}
-    ).named("HexColor")
+        {
+            "hex": t.string(pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"),
+        },
+        name="HexColor",
+    )
 
     named_color = t.struct(
         {
-            "name": t.string().enum(
+            "name": t.enum(
                 [
                     "red",
                     "green",
@@ -33,19 +39,20 @@ with TypeGraph("union") as g:
                     "white",
                 ]
             )
-        }
-    ).named("NamedColor")
+        },
+        name="NamedColor",
+    )
 
-    color = t.union([rgb_array, rgb_struct, hex, named_color]).named("Color")
+    color = t.union([rgb_array, rgb_struct, hex, named_color], name="Color")
 
-    colorFormat = t.string().enum(["rgb_array", "rgb_struct", "hex", "colorName"])
+    colorFormat = t.enum(["rgb_array", "rgb_struct", "hex", "colorName"])
 
-    colorMaterializer = ModuleMat("ts/union/color_converter.ts")
-
-    convert = t.func(
+    deno = DenoRuntime()
+    convert = deno.import_(
         t.struct({"color": color, "to": colorFormat}),
         color,
-        colorMaterializer.imp("convert"),
+        module="ts/union/color_converter.ts",
+        name="convert",
     )
 
     nested_unions = t.union(
@@ -58,66 +65,72 @@ with TypeGraph("union") as g:
                                 {
                                     "a": t.union(
                                         [
-                                            t.struct({"s": t.string()}).named("A3"),
+                                            t.struct({"s": t.string()}, name="A3"),
                                             t.struct(
-                                                {"i": t.integer(), "j": t.integer()}
-                                            ).named("A4"),
+                                                {"i": t.integer(), "j": t.integer()},
+                                                name="A4",
+                                            ),
                                         ]
                                     )
-                                }
-                            ).named("A2"),
-                            g("B"),
+                                },
+                                name="A2",
+                            ),
+                            t.ref("B"),
                         ],
                     ),
-                }
-            ).named("A1"),
+                },
+                name="A1",
+            ),
             t.struct(
                 {
                     "b": t.string(),
-                }
-            ).named("B"),
-        ]
-    ).named("NestedUnions")
+                },
+                name="B",
+            ),
+        ],
+        name="NestedUnions",
+    )
 
     multilevel_union = t.union(
         [
-            t.struct({"a": t.string()}).named("Ua"),
-            t.struct({"b": t.string()}).named("Ub"),
+            t.struct({"a": t.string()}, name="Ua"),
+            t.struct({"b": t.string()}, name="Ub"),
             t.union(
                 [
-                    t.struct({"c": t.string()}).named("Uc"),
-                    t.struct({"d": t.string()}).named("Ud"),
+                    t.struct({"c": t.string()}, name="Uc"),
+                    t.struct({"d": t.string()}, name="Ud"),
                     t.either(
                         [
-                            t.struct({"e": t.string()}).named("Ue"),
-                            t.struct({"f": t.string()}).named("Uf"),
+                            t.struct({"e": t.string()}, name="Ue"),
+                            t.struct({"f": t.string()}, name="Uf"),
                         ]
                     ),
                 ]
             ),
-        ]
-    ).named("MultilevelUnion")
+        ],
+        name="MultilevelUnion",
+    )
 
-    scalar_union = t.union([t.boolean(), t.integer(), t.string()]).named("ScalarUnion")
+    scalar_union = t.union([t.boolean(), t.integer(), t.string()], name="ScalarUnion")
 
-    public = policies.public()
+    public = Policy.public()
 
     g.expose(
+        public,
         convert=convert,
-        nested=t.func(
+        nested=deno.func(
             t.struct({"inp": t.array(nested_unions)}),
             t.array(nested_unions),
-            PureFunMat("({ inp }) => inp"),
+            code="({ inp }) => inp",
         ),
-        scalar=t.func(
+        scalar=deno.func(
             t.struct({"inp": t.array(scalar_union)}),
             t.array(scalar_union),
-            PureFunMat("({ inp }) => inp"),
+            code="({ inp }) => inp",
         ),
-        multilevel=t.func(
+        multilevel=deno.func(
             t.struct({"inp": t.array(multilevel_union)}),
             t.array(multilevel_union),
-            PureFunMat("({ inp }) => inp"),
+            code="({ inp }) => inp",
         ),
-        default_policy=public,
     )

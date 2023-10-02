@@ -134,7 +134,7 @@ export class Typegate {
         });
       }
 
-      if (serviceName == "auth") {
+      if (serviceName === "auth") {
         return handleAuth(request, engine, new Headers(cors));
       }
 
@@ -156,7 +156,7 @@ export class Typegate {
         headers: Object.fromEntries(request.headers.entries()),
       };
 
-      if (serviceName == "rest") {
+      if (serviceName === "rest") {
         return handleRest(request, engine, context, info, limit, headers);
       }
 

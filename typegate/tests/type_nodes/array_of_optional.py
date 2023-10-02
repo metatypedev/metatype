@@ -1,9 +1,9 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
-from typegraph.runtimes.deno import PredefinedFunMat
+from typegraph_next import Policy, t, typegraph, Graph
+from typegraph_next.runtimes.deno import DenoRuntime
 
-with TypeGraph("array_optional") as g:
+
+@typegraph()
+def array_optional(g: Graph):
     nested = t.struct(
         {
             "a": t.string(),
@@ -34,16 +34,10 @@ with TypeGraph("array_optional") as g:
         }
     )
 
-    public = policies.public()
+    deno = DenoRuntime()
+    public = Policy.public()
+
     g.expose(
-        test=t.func(
-            rec.named("Input1"),
-            rec.named("Output1"),
-            PredefinedFunMat("identity"),
-        ).add_policy(public),
-        testNonNull=t.func(
-            rec_not_null.named("Input2"),
-            rec_not_null.named("Output2"),
-            PredefinedFunMat("identity"),
-        ).add_policy(public),
+        test=deno.identity(rec).with_policy(public),
+        testNonNull=deno.identity(rec_not_null).with_policy(public),
     )

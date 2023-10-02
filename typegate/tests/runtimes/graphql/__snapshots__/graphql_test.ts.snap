@@ -80,7 +80,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "title": "func_8",
       "runtime": 1,
       "policies": [
-        1
+        0
       ],
       "config": {},
       "as_id": false,
@@ -165,10 +165,6 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "name": "__public",
       "materializer": 1
-    },
-    {
-      "name": "__public",
-      "materializer": 1
     }
   ],
   "meta": {
@@ -183,7 +179,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "allow_headers": [],
       "expose_headers": [],
       "allow_methods": [],
-      "allow_credentials": false,
+      "allow_credentials": true,
       "max_age_sec": null
     },
     "auths": [],

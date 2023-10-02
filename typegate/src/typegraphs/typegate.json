@@ -14,11 +14,16 @@
         "addTypegraph": 15,
         "removeTypegraph": 32
       },
-      "required": []
+      "required": [
+        "typegraphs",
+        "typegraph",
+        "addTypegraph",
+        "removeTypegraph"
+      ]
     },
     {
       "type": "function",
-      "title": "function_10",
+      "title": "func_8",
       "runtime": 1,
       "policies": [
         0
@@ -27,13 +32,13 @@
       "as_id": false,
       "input": 2,
       "output": 3,
-      "materializer": 1,
+      "materializer": 0,
       "rate_weight": null,
       "rate_calls": true
     },
     {
       "type": "object",
-      "title": "object_8",
+      "title": "object_6",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -43,7 +48,7 @@
     },
     {
       "type": "array",
-      "title": "array_9",
+      "title": "_7_Typegraph[]",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -52,7 +57,7 @@
     },
     {
       "type": "object",
-      "title": "typegraph",
+      "title": "Typegraph",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -65,7 +70,7 @@
     },
     {
       "type": "string",
-      "title": "string_4",
+      "title": "string_3",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -73,7 +78,7 @@
     },
     {
       "type": "string",
-      "title": "string_5",
+      "title": "string_4",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -82,7 +87,7 @@
     },
     {
       "type": "function",
-      "title": "function_15",
+      "title": "func_13",
       "runtime": 1,
       "policies": [
         0
@@ -91,13 +96,13 @@
       "as_id": false,
       "input": 8,
       "output": 10,
-      "materializer": 3,
+      "materializer": 2,
       "rate_weight": null,
       "rate_calls": true
     },
     {
       "type": "object",
-      "title": "object_12",
+      "title": "object_10",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -109,7 +114,7 @@
     },
     {
       "type": "string",
-      "title": "string_11",
+      "title": "string_9",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -117,7 +122,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_14",
+      "title": "optional_12",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -127,7 +132,7 @@
     },
     {
       "type": "object",
-      "title": "object_13",
+      "title": "object_11",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -141,20 +146,20 @@
     },
     {
       "type": "function",
-      "title": "function_3",
+      "title": "func_2",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "input": 13,
       "output": 14,
-      "materializer": 2,
+      "materializer": 3,
       "rate_weight": null,
       "rate_calls": false
     },
     {
       "type": "object",
-      "title": "object_2",
+      "title": "object_1",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -164,7 +169,7 @@
     },
     {
       "type": "string",
-      "title": "string_1",
+      "title": "string_0",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -172,7 +177,7 @@
     },
     {
       "type": "function",
-      "title": "function_32",
+      "title": "func_30",
       "runtime": 1,
       "policies": [
         0
@@ -187,7 +192,7 @@
     },
     {
       "type": "object",
-      "title": "object_19",
+      "title": "object_17",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -201,25 +206,25 @@
     },
     {
       "type": "string",
+      "title": "string_14",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "format": "json"
+    },
+    {
+      "type": "string",
+      "title": "string_15",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "format": "json"
+    },
+    {
+      "type": "string",
       "title": "string_16",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "format": "json"
-    },
-    {
-      "type": "string",
-      "title": "string_17",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "format": "json"
-    },
-    {
-      "type": "string",
-      "title": "string_18",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -227,7 +232,7 @@
     },
     {
       "type": "object",
-      "title": "object_31",
+      "title": "object_29",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -242,7 +247,7 @@
     },
     {
       "type": "string",
-      "title": "string_20",
+      "title": "string_18",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -250,7 +255,7 @@
     },
     {
       "type": "array",
-      "title": "array_24",
+      "title": "array_22",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -259,7 +264,7 @@
     },
     {
       "type": "object",
-      "title": "object_23",
+      "title": "object_21",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -272,7 +277,7 @@
     },
     {
       "type": "string",
-      "title": "string_21",
+      "title": "string_19",
       "runtime": 1,
       "policies": [],
       "enum": [
@@ -285,7 +290,7 @@
     },
     {
       "type": "string",
-      "title": "string_22",
+      "title": "string_20",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -293,7 +298,7 @@
     },
     {
       "type": "array",
-      "title": "array_28",
+      "title": "array_26",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -302,7 +307,7 @@
     },
     {
       "type": "object",
-      "title": "object_27",
+      "title": "object_25",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -315,7 +320,7 @@
     },
     {
       "type": "string",
-      "title": "string_25",
+      "title": "string_23",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -323,7 +328,7 @@
     },
     {
       "type": "string",
-      "title": "string_26",
+      "title": "string_24",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -331,7 +336,7 @@
     },
     {
       "type": "array",
-      "title": "array_30",
+      "title": "array_28",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -340,7 +345,7 @@
     },
     {
       "type": "string",
-      "title": "string_29",
+      "title": "string_27",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -348,7 +353,7 @@
     },
     {
       "type": "function",
-      "title": "function_36",
+      "title": "func_34",
       "runtime": 1,
       "policies": [
         0
@@ -363,7 +368,7 @@
     },
     {
       "type": "object",
-      "title": "object_34",
+      "title": "object_32",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -375,7 +380,7 @@
     },
     {
       "type": "string",
-      "title": "string_33",
+      "title": "string_31",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -383,7 +388,7 @@
     },
     {
       "type": "integer",
-      "title": "integer_35",
+      "title": "integer_33",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -392,10 +397,19 @@
   ],
   "materializers": [
     {
+      "name": "typegraphs",
+      "runtime": 1,
+      "effect": {
+        "effect": "none",
+        "idempotent": true
+      },
+      "data": {}
+    },
+    {
       "name": "function",
       "runtime": 0,
       "effect": {
-        "effect": null,
+        "effect": "none",
         "idempotent": true
       },
       "data": {
@@ -403,10 +417,10 @@
       }
     },
     {
-      "name": "typegraphs",
+      "name": "typegraph",
       "runtime": 1,
       "effect": {
-        "effect": null,
+        "effect": "none",
         "idempotent": true
       },
       "data": {}
@@ -415,16 +429,7 @@
       "name": "serializedTypegraph",
       "runtime": 1,
       "effect": {
-        "effect": null,
-        "idempotent": true
-      },
-      "data": {}
-    },
-    {
-      "name": "typegraph",
-      "runtime": 1,
-      "effect": {
-        "effect": null,
+        "effect": "none",
         "idempotent": true
       },
       "data": {}
@@ -434,7 +439,7 @@
       "runtime": 1,
       "effect": {
         "effect": "create",
-        "idempotent": false
+        "idempotent": true
       },
       "data": {}
     },
@@ -464,7 +469,7 @@
   "policies": [
     {
       "name": "admin_only",
-      "materializer": 0
+      "materializer": 1
     }
   ],
   "meta": {

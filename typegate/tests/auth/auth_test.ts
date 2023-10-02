@@ -177,7 +177,7 @@ Meta.test("Auth", async (t) => {
     const { token } = JSON.parse(await decrypt(cook!));
     const claims = await verifyJWT(token) as JWTClaims;
     assertEquals(claims.accessToken, accessToken);
-    assertEquals(claims.profile?.id, `${id}`);
+    assertEquals(claims.profile?.id, id);
     assertEquals(await decrypt(claims.refreshToken as string), refreshToken);
   });
 

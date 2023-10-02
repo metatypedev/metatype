@@ -1,33 +1,34 @@
-from typegraph import TypeGraph, effects, policies, t
-from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
-from typegraph.runtimes.deno import PureFunMat
-from typegraph.runtimes.random import RandomMat, RandomRuntime
+from typegraph_next import Graph, Policy, effects, t, typegraph
+from typegraph_next.providers.prisma import PrismaRuntime
+from typegraph_next.runtimes.deno import DenoRuntime
+from typegraph_next.runtimes.random import RandomRuntime
 
-with TypeGraph("prisma") as g:
-    public = policies.public()
-    userModel = t.struct({"id": t.integer()}).named("user")
-    userModelPrisma = t.struct({"id": t.integer().as_id}).named("userprisma")
 
-    prismaRuntimePostgres = PrismaRuntime("prisma", "POSTGRES")
+@typegraph()
+def typename_test(g: Graph):
+    public = Policy.public()
+    user = t.struct({"id": t.integer()}, name="user")
+    prisma_user = t.struct({"id": t.integer(as_id=True)}, name="userprisma")
 
-    randomRuntimeSeeded = RandomRuntime(seed=1)
-    randomUser = t.gen(g("user"), RandomMat(runtime=randomRuntimeSeeded)).add_policy(
-        public
-    )
+    deno = DenoRuntime()
+    prisma = PrismaRuntime("prisma", "POSTGRES")
 
-    denoUser = t.func(
+    random = RandomRuntime(seed=1)
+    randomUser = random.gen(t.ref("user")).with_policy(public)
+
+    deno_user = deno.func(
         t.struct(),
-        userModel,
-        PureFunMat("() => ({ id: 12 })"),
-    ).add_policy(public)
+        user,
+        code="() => ({ id: 12 })",
+    ).with_policy(public)
 
     g.expose(
-        denoUser=denoUser,
+        denoUser=deno_user,
         randomUser=randomUser,
-        dropSchema=prismaRuntimePostgres.raw_execute(
+        dropSchema=prisma.execute(
             "DROP SCHEMA IF EXISTS typename CASCADE",
             t.struct({}),
             effect=effects.delete(),
-        ).add_policy(public),
-        createUser=prismaRuntimePostgres.create(userModelPrisma).add_policy(public),
+        ).with_policy(public),
+        createUser=prisma.create(prisma_user).with_policy(public),
     )

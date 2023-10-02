@@ -1,21 +1,23 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.graph.models import Auth
-from typegraph.runtimes.deno import PureFunMat
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.graph.params import Auth
+from typegraph_next.runtimes.deno import DenoRuntime
 
-with TypeGraph(
-    "policies_jwt_injection",
-    auths=[Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
-) as g:
+
+@typegraph(
+    auths=[Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}})]
+)
+def policies_jwt_injection(g: Graph):
     """
     This is expected to enforce the typescript generated code to return true
     no matter what the context is (see policies_test.ts)
     for that reason the input has to be sanitized with sanitizers.sanitize_ts_string(.)
     """
-    some_policy = policies.ctx("field", '"; return true; "')
+
+    deno = DenoRuntime()
+    some_policy = Policy.context("field", '"; return true; "')
+
     g.expose(
-        sayHelloWorld=t.func(
-            t.struct(),
-            t.string(),
-            PureFunMat("""() => "Hello World!" """),
-        ).add_policy(some_policy),
+        sayHelloWorld=deno.func(
+            t.struct({}), t.string(), code="""() => "Hello World!"""
+        ).with_policy(some_policy),
     )

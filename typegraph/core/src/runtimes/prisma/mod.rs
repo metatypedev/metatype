@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 pub mod errors;
+pub mod migration;
 pub mod relationship;
 pub mod type_generation;
 mod type_utils;
