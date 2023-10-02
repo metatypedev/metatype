@@ -9,7 +9,7 @@ sidebar_position: 2
 
 ## addTypegraph
 
-**Type:** [object_31!](objects#object_31)
+**Type:** [object_29!](objects#object_29)
 
 addTypegraph field
 

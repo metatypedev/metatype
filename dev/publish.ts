@@ -6,18 +6,21 @@ import { getLockfile, projectDir } from "./utils.ts";
 
 const lockfile = await getLockfile();
 
-const outDir = resolve(projectDir, "../typegraph/node");
+const outDir = resolve(projectDir, "./typegraph/node");
 await dnt.emptyDir(outDir);
 
 await dnt.build({
-  entryPoints: [resolve(projectDir, "../typegraph/deno/mod.ts")],
+  entryPoints: [resolve(projectDir, "./typegraph/deno/src/mod.ts")],
   outDir,
   shims: {
     deno: true,
   },
+  scriptModule: false,
+  typeCheck: false,
+  packageManager: "pnpm",
   package: {
     name: "@metatypedev/typegraph",
-    version: lockfile.dev.lock.METATYPE_VERSION,
+    version: "0.0.1", //lockfile.dev.lock.METATYPE_VERSION,
     description: lockfile.dev.lock.TAGLINE,
     license: "MPL-2.0",
     repository: {
@@ -30,8 +33,8 @@ await dnt.build({
   },
   postBuild() {
     Deno.copyFileSync(
-      resolve(projectDir, "LICENSE-MPL-2.0.md"),
-      resolve(outDir, "LICENSE.md"),
+      resolve(projectDir, "./dev/LICENSE-MPL-2.0.md"),
+      resolve(outDir, "./LICENSE.md"),
     );
   },
 });
