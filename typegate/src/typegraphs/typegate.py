@@ -1,53 +1,106 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph import TypeGraph, t
-from typegraph.policies import Policy
-from typegraph.runtimes.deno import PureFunMat
-from typegraph.runtimes.typegate import (
-    AddTypeGraphMat,
-    RemoveTypeGraphMat,
-    SerializedTypegraphMat,
-    TypeGraphMat,
-    TypeGraphsMat,
+from typegraph_next import typegraph, t, Graph
+from typegraph_next.runtimes.deno import DenoRuntime
+from typegraph_next.graph.params import Auth, Rate, Cors
+from typegraph_next.wit import runtimes, store
+from typegraph_next.gen.exports.runtimes import (
+    TypegateOperation,
+    EffectNone,
+    EffectCreate,
+    EffectDelete,
 )
+from typegraph_next.gen.types import Err
+from typegraph_next.runtimes.base import Materializer
 
-with TypeGraph(
-    "typegate",
-    auths=[TypeGraph.Auth.basic(["admin"])],
-    cors=TypeGraph.Cors(
+
+@typegraph(
+    auths=[Auth.basic(["admin"])],
+    cors=Cors(
         allow_origin=["*"],
         allow_credentials=True,
     ),
-    rate=TypeGraph.Rate(
+    rate=Rate(
         window_sec=60,
         window_limit=128,
         query_limit=8,
         local_excess=5,
         context_identifier="user",
     ),
-) as g:
-    serialized = t.gen(t.string(), SerializedTypegraphMat())
+)
+def typegate(g: Graph):
+    deno = DenoRuntime()
+    admin_only = deno.policy(
+        "admin_only", code="(_args, { context }) => context.username === 'admin'"
+    )
+
+    list_typegraphs_mat_id = runtimes.register_typegate_materializer(
+        store, TypegateOperation.LIST_TYPEGRAPHS
+    )
+    if isinstance(list_typegraphs_mat_id, Err):
+        raise Exception(list_typegraphs_mat_id.value)
+    list_typegraphs_mat = Materializer(
+        list_typegraphs_mat_id.value, effect=EffectNone()
+    )
+
+    find_typegraph_mat_id = runtimes.register_typegate_materializer(
+        store, TypegateOperation.FIND_TYPEGRAPH
+    )
+    if isinstance(find_typegraph_mat_id, Err):
+        raise Exception(find_typegraph_mat_id.value)
+    find_typegraph_mat = Materializer(find_typegraph_mat_id.value, effect=EffectNone())
+
+    add_typegraph_mat_id = runtimes.register_typegate_materializer(
+        store, TypegateOperation.ADD_TYPEGRAPH
+    )
+    if isinstance(add_typegraph_mat_id, Err):
+        raise Exception(add_typegraph_mat_id.value)
+    add_typegraph_mat = Materializer(
+        add_typegraph_mat_id.value, effect=EffectCreate(True)
+    )
+
+    remove_typegraph_mat_id = runtimes.register_typegate_materializer(
+        store, TypegateOperation.REMOVE_TYPEGRAPH
+    )
+    if isinstance(remove_typegraph_mat_id, Err):
+        raise Exception(remove_typegraph_mat_id.value)
+    remove_typegraph_mat = Materializer(
+        remove_typegraph_mat_id.value, effect=EffectDelete(True)
+    )
+
+    serialized_typegraph_mat_id = runtimes.register_typegate_materializer(
+        store,
+        TypegateOperation.GET_SERIALIZED_TYPEGRAPH,
+    )
+    if isinstance(serialized_typegraph_mat_id, Err):
+        raise Exception(serialized_typegraph_mat_id.value)
+    serialized_typegraph_mat = Materializer(
+        serialized_typegraph_mat_id.value, effect=EffectNone()
+    )
+
+    serialized = t.gen(t.string(), serialized_typegraph_mat)
 
     typegraph = t.struct(
         {
             "name": t.string(),
             "url": t.uri(),
-        }
-    ).named("typegraph")
-
-    admin_only = Policy(
-        PureFunMat("(_args, { context }) => context.username === 'admin'")
-    ).named("admin_only")
+        },
+        name="Typegraph",
+    )
 
     g.expose(
-        typegraphs=t.func(t.struct({}), t.array(typegraph), TypeGraphsMat()).rate(
-            calls=True
+        typegraphs=t.func(
+            t.struct({}),
+            t.array(typegraph),
+            list_typegraphs_mat,
+            rate_calls=True,
         ),
         typegraph=t.func(
             t.struct({"name": t.string()}),
-            t.optional(typegraph.compose({"serialized": serialized})),
-            TypeGraphMat(),
-        ).rate(calls=True),
+            t.optional(typegraph.extend({"serialized": serialized})),
+            find_typegraph_mat,
+            rate_calls=True,
+        ),
         addTypegraph=t.func(
             t.struct(
                 {"fromString": t.json(), "secrets": t.json(), "cliVersion": t.string()}
@@ -74,10 +127,14 @@ with TypeGraph(
                     "resetRequired": t.array(t.string()),
                 }
             ),
-            AddTypeGraphMat(),
-        ).rate(calls=True),
+            add_typegraph_mat,
+            rate_calls=True,
+        ),
         removeTypegraph=t.func(
-            t.struct({"name": t.string()}), t.integer(), RemoveTypeGraphMat()
-        ).rate(calls=True),
+            t.struct({"name": t.string()}),
+            t.integer(),
+            remove_typegraph_mat,
+            rate_calls=True,
+        ),
         default_policy=admin_only,
     )

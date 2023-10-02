@@ -16,7 +16,13 @@ pub struct MaterializerDenoImport {
 }
 
 #[derive(Debug)]
+pub struct MaterializerDenoStatic {
+    pub value: serde_json::Value,
+}
+
+#[derive(Debug)]
 pub enum DenoMaterializer {
+    Static(MaterializerDenoStatic),
     Inline(wit::MaterializerDenoFunc),
     Predefined(wit::MaterializerDenoPredefined),
     Module(MaterializerDenoModule),

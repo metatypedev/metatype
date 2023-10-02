@@ -1,25 +1,22 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.deno import DenoRuntime, ModuleMat
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.runtimes.deno import DenoRuntime
 
-with TypeGraph("test_internal") as g:
-    public = policies.public()
-    internal = policies.internal()
 
-    worker1 = DenoRuntime(worker="worker 1")
-    math_npm = ModuleMat("ts/logic.ts", runtime=worker1)
+@typegraph(name="test_internal")
+def test_internal(g: Graph):
+    public = Policy.public()
+    internal = Policy.internal()
 
-    inp = t.struct({"first": t.number(), "second": t.number()})
-    out = t.number()
+    deno = DenoRuntime()
+
+    inp = t.struct({"first": t.float(), "second": t.float()})
+    out = t.float()
 
     g.expose(
-        sum=t.func(
-            inp,
-            out,
-            math_npm.imp("sum"),
-        ).add_policy(internal),
-        remoteSum=t.func(
-            inp,
-            out,
-            math_npm.imp("remoteSum"),
-        ).add_policy(public),
+        sum=deno.import_(inp, out, module="ts/logic.ts", name="sum").with_policy(
+            internal
+        ),
+        remoteSum=deno.import_(
+            inp, out, module="ts/logic.ts", name="remoteSum"
+        ).with_policy(public),
     )

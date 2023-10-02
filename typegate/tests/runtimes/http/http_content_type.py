@@ -1,26 +1,29 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.http import HTTPRuntime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.runtimes.http import HttpRuntime
 
-with TypeGraph("content_type") as g:
-    remote = HTTPRuntime("https://content-type.example.com/api")
-    public = policies.public()
+
+@typegraph()
+def content_type(g: Graph):
+    remote = HttpRuntime("https://content-type.example.com/api")
+    public = Policy.public()
 
     sum_range_with_form_data = remote.post(
         "/sum_range",
-        t.struct({"start": t.integer(), "end": t.integer()}).named("Range"),
+        t.struct({"start": t.integer(), "end": t.integer()}, name="Range"),
         t.struct(
             {
                 "self_content_type": t.string(),
                 "steps": t.integer(),
                 "total": t.integer(),
-            }
-        ).named("SumResult"),
+            },
+            name="SumResult",
+        ),
         body_fields=(
             "start",
             "end",
         ),
         content_type="multipart/form-data",
-    ).add_policy(public)
+    ).with_policy(public)
 
     qinfos = t.struct(
         {
@@ -31,8 +34,9 @@ with TypeGraph("content_type") as g:
                     "rounded": t.boolean(),
                 }
             ),
-        }
-    ).named("QInfos")
+        },
+        name="QInfos",
+    )
 
     # testing which `celcius` is populated first
     celcius_to_farenheit = remote.post(
@@ -44,9 +48,10 @@ with TypeGraph("content_type") as g:
                 "celcius_query_one": t.float(),
                 "celcius_query_two": t.float(),
                 "celcius_query_three": t.float(),
-            }
-        ).named("Celcius"),
-        t.struct({"farenheit": t.float(), "qinfos": qinfos}).named("Farenheit"),
+            },
+            name="Celcius",
+        ),
+        t.struct({"farenheit": t.float(), "qinfos": qinfos}, name="Farenheit"),
         body_fields=(
             "celcius",
             "roundedTo",
@@ -65,7 +70,7 @@ with TypeGraph("content_type") as g:
             "celcius_query_three": "the_third",
         },
         content_type="multipart/form-data",
-    ).add_policy(public)
+    ).with_policy(public)
 
     g.expose(
         sumRangeWithFormData=sum_range_with_form_data,

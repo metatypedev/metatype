@@ -132,7 +132,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "union_18Out",
+        name: "union_17Out",
         possibleTypes: [
           {
             kind: "OBJECT",
@@ -304,7 +304,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "SCALAR",
-        name: "union_18In",
+        name: "union_17In",
         possibleTypes: null,
       },
       {

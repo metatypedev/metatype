@@ -27,7 +27,7 @@ class RandomRuntime(Runtime):
 
     def gen(
         self,
-        inp: "t.typedef",
+        out: "t.typedef",
     ):
         effect = EffectNone()
 
@@ -42,7 +42,7 @@ class RandomRuntime(Runtime):
 
         return t.func(
             t.struct({}),
-            inp,
+            out,
             RandomMat(id=mat_id.value, runtime=self.id.value, effect=effect),
         )
 

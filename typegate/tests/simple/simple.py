@@ -1,20 +1,23 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.deno import PredefinedFunMat, PureFunMat
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.runtimes.deno import DenoRuntime
 
-with TypeGraph("testing") as g:
-    rec = t.func(
-        t.struct({"nested": t.struct({"arg": t.integer()}).named("Nested")}),
+
+@typegraph()
+def testing(g: Graph):
+    deno = DenoRuntime()
+    public = Policy.public()
+
+    rec = deno.func(
+        t.struct({"nested": t.struct({"arg": t.integer()}, name="Nested")}),
         t.integer(),
-        PureFunMat("(args) => args.nested && args.nested.arg"),
+        code="(args) => args.nested && args.nested.arg",
     )
 
     g.expose(
-        rec=rec.add_policy(policies.public()),
-        test=t.func(
-            t.struct({"a": t.integer().named("arg1")}).named("inp"),
-            t.struct({"a": t.integer().named("deps")}).named("res"),
-            PredefinedFunMat("identity"),
+        rec=rec.with_policy(public),
+        test=deno.identity(
+            t.struct({"a": t.integer(name="arg1")}, name="inp"),
         )
-        .named("f")
-        .add_policy(policies.public()),
+        # .named("f")
+        .with_policy(public),
     )

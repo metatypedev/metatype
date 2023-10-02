@@ -12,11 +12,14 @@
         "__type": 1,
         "__schema": 64
       },
-      "required": []
+      "required": [
+        "__type",
+        "__schema"
+      ]
     },
     {
       "type": "function",
-      "title": "function_75",
+      "title": "func_79",
       "runtime": 1,
       "policies": [
         0
@@ -25,13 +28,13 @@
       "as_id": false,
       "input": 2,
       "output": 4,
-      "materializer": 2,
+      "materializer": 0,
       "rate_weight": null,
       "rate_calls": false
     },
     {
       "type": "object",
-      "title": "object_73",
+      "title": "object_77",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -43,7 +46,7 @@
     },
     {
       "type": "string",
-      "title": "string_72",
+      "title": "string_76",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -51,7 +54,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_74",
+      "title": "_78_type?",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -100,7 +103,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_31",
+      "title": "optional_32",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -110,7 +113,7 @@
     },
     {
       "type": "string",
-      "title": "string_30",
+      "title": "string_31",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -118,7 +121,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_33",
+      "title": "optional_34",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -128,7 +131,7 @@
     },
     {
       "type": "string",
-      "title": "string_32",
+      "title": "string_33",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -136,7 +139,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_35",
+      "title": "optional_36",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -146,7 +149,7 @@
     },
     {
       "type": "string",
-      "title": "string_34",
+      "title": "string_35",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -154,7 +157,7 @@
     },
     {
       "type": "function",
-      "title": "function_41",
+      "title": "func_42",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -167,7 +170,7 @@
     },
     {
       "type": "object",
-      "title": "object_38",
+      "title": "object_39",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -179,7 +182,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_37",
+      "title": "optional_38",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -189,7 +192,7 @@
     },
     {
       "type": "boolean",
-      "title": "boolean_36",
+      "title": "boolean_37",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -197,7 +200,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_40",
+      "title": "_41__40_field[]?",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -207,7 +210,7 @@
     },
     {
       "type": "array",
-      "title": "array_39",
+      "title": "_40_field[]",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -259,7 +262,7 @@
     },
     {
       "type": "function",
-      "title": "function_24",
+      "title": "func_24",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -302,7 +305,7 @@
     },
     {
       "type": "array",
-      "title": "array_23",
+      "title": "_23_input_value[]",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -328,7 +331,7 @@
     },
     {
       "type": "string",
-      "title": "string_8",
+      "title": "string_7",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -336,7 +339,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_10",
+      "title": "optional_9",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -346,7 +349,7 @@
     },
     {
       "type": "string",
-      "title": "string_9",
+      "title": "string_8",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -398,7 +401,7 @@
     },
     {
       "type": "boolean",
-      "title": "boolean_25",
+      "title": "boolean_26",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -406,7 +409,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_27",
+      "title": "optional_28",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -416,7 +419,7 @@
     },
     {
       "type": "string",
-      "title": "string_26",
+      "title": "string_27",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -424,7 +427,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_43",
+      "title": "_45__44_type[]?",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -434,7 +437,7 @@
     },
     {
       "type": "array",
-      "title": "array_42",
+      "title": "_44_type[]",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -443,7 +446,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_45",
+      "title": "_48__47_type[]?",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -453,7 +456,7 @@
     },
     {
       "type": "array",
-      "title": "array_44",
+      "title": "_47_type[]",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -462,7 +465,7 @@
     },
     {
       "type": "function",
-      "title": "function_51",
+      "title": "func_54",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -475,7 +478,7 @@
     },
     {
       "type": "object",
-      "title": "object_48",
+      "title": "object_51",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -487,7 +490,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_47",
+      "title": "optional_50",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -497,7 +500,7 @@
     },
     {
       "type": "boolean",
-      "title": "boolean_46",
+      "title": "boolean_49",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -505,7 +508,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_50",
+      "title": "_53__52_enum_value[]?",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -515,7 +518,7 @@
     },
     {
       "type": "array",
-      "title": "array_49",
+      "title": "_52_enum_value[]",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -539,7 +542,7 @@
     },
     {
       "type": "string",
-      "title": "string_1",
+      "title": "string_0",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -547,7 +550,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_3",
+      "title": "optional_2",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -557,7 +560,7 @@
     },
     {
       "type": "string",
-      "title": "string_2",
+      "title": "string_1",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -565,7 +568,7 @@
     },
     {
       "type": "boolean",
-      "title": "boolean_4",
+      "title": "boolean_3",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -573,7 +576,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_6",
+      "title": "optional_5",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -583,7 +586,7 @@
     },
     {
       "type": "string",
-      "title": "string_5",
+      "title": "string_4",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -591,7 +594,7 @@
     },
     {
       "type": "function",
-      "title": "function_57",
+      "title": "func_60",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -604,7 +607,7 @@
     },
     {
       "type": "object",
-      "title": "object_54",
+      "title": "object_57",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -616,7 +619,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_53",
+      "title": "optional_56",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -626,7 +629,7 @@
     },
     {
       "type": "boolean",
-      "title": "boolean_52",
+      "title": "boolean_55",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -634,7 +637,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_56",
+      "title": "_59__58_input_value[]?",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -644,7 +647,7 @@
     },
     {
       "type": "array",
-      "title": "array_55",
+      "title": "_58_input_value[]",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -653,7 +656,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_86",
+      "title": "_62_type?",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -663,7 +666,7 @@
     },
     {
       "type": "function",
-      "title": "function_84",
+      "title": "func_89",
       "runtime": 1,
       "policies": [
         0
@@ -678,7 +681,7 @@
     },
     {
       "type": "object",
-      "title": "object_83",
+      "title": "object_88",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -705,7 +708,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_77",
+      "title": "optional_82",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -715,7 +718,7 @@
     },
     {
       "type": "string",
-      "title": "string_76",
+      "title": "string_81",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -723,7 +726,7 @@
     },
     {
       "type": "array",
-      "title": "array_78",
+      "title": "_83_type[]",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -732,7 +735,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_79",
+      "title": "_84_type?",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -742,7 +745,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_80",
+      "title": "_85_type?",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -752,7 +755,7 @@
     },
     {
       "type": "array",
-      "title": "array_81",
+      "title": "_86_directive[]",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -777,7 +780,7 @@
     },
     {
       "type": "string",
-      "title": "string_60",
+      "title": "string_65",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -785,7 +788,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_62",
+      "title": "optional_67",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -795,7 +798,7 @@
     },
     {
       "type": "string",
-      "title": "string_61",
+      "title": "string_66",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -803,7 +806,7 @@
     },
     {
       "type": "boolean",
-      "title": "boolean_63",
+      "title": "boolean_68",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -811,7 +814,7 @@
     },
     {
       "type": "array",
-      "title": "array_64",
+      "title": "_69_directive_location[]",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -849,7 +852,7 @@
     },
     {
       "type": "function",
-      "title": "function_69",
+      "title": "func_74",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -862,7 +865,7 @@
     },
     {
       "type": "object",
-      "title": "object_67",
+      "title": "object_72",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -874,7 +877,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_66",
+      "title": "optional_71",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -884,7 +887,7 @@
     },
     {
       "type": "boolean",
-      "title": "boolean_65",
+      "title": "boolean_70",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -892,7 +895,7 @@
     },
     {
       "type": "array",
-      "title": "array_68",
+      "title": "_73_input_value[]",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -902,39 +905,39 @@
   ],
   "materializers": [
     {
-      "name": "function",
-      "runtime": 0,
+      "name": "getType",
+      "runtime": 1,
       "effect": {
-        "effect": null,
+        "effect": "none",
         "idempotent": true
       },
-      "data": {
-        "script": "var _my_lambda=()=>true;"
-      }
+      "data": {}
     },
     {
       "name": "resolver",
       "runtime": 1,
       "effect": {
-        "effect": null,
+        "effect": "none",
         "idempotent": true
       },
       "data": {}
     },
     {
-      "name": "getType",
-      "runtime": 1,
+      "name": "predefined_function",
+      "runtime": 0,
       "effect": {
-        "effect": null,
+        "effect": "none",
         "idempotent": true
       },
-      "data": {}
+      "data": {
+        "name": "true"
+      }
     },
     {
       "name": "getSchema",
       "runtime": 1,
       "effect": {
-        "effect": null,
+        "effect": "none",
         "idempotent": true
       },
       "data": {}
@@ -956,7 +959,7 @@
   "policies": [
     {
       "name": "__public",
-      "materializer": 0
+      "materializer": 2
     }
   ],
   "meta": {

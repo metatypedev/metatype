@@ -103,7 +103,7 @@ snapshot[`Typegraph using temporal 1`] = `
         "title": "func_12",
         "runtime": 1,
         "policies": [
-          1
+          0
         ],
         "config": {},
         "as_id": false,
@@ -165,7 +165,7 @@ snapshot[`Typegraph using temporal 1`] = `
         "title": "func_21",
         "runtime": 1,
         "policies": [
-          2
+          0
         ],
         "config": {},
         "as_id": false,
@@ -233,7 +233,7 @@ snapshot[`Typegraph using temporal 1`] = `
         "title": "func_26",
         "runtime": 1,
         "policies": [
-          3
+          0
         ],
         "config": {},
         "as_id": false,
@@ -356,18 +356,6 @@ snapshot[`Typegraph using temporal 1`] = `
       {
         "name": "__public",
         "materializer": 1
-      },
-      {
-        "name": "__public",
-        "materializer": 1
-      },
-      {
-        "name": "__public",
-        "materializer": 1
-      },
-      {
-        "name": "__public",
-        "materializer": 1
       }
     ],
     "meta": {
@@ -382,7 +370,7 @@ snapshot[`Typegraph using temporal 1`] = `
         "allow_headers": [],
         "expose_headers": [],
         "allow_methods": [],
-        "allow_credentials": false,
+        "allow_credentials": true,
         "max_age_sec": null
       },
       "auths": [],
@@ -496,7 +484,7 @@ snapshot[`Typegraph using temporal 2`] = `
         "title": "func_13",
         "runtime": 1,
         "policies": [
-          1
+          0
         ],
         "config": {},
         "as_id": false,
@@ -558,7 +546,7 @@ snapshot[`Typegraph using temporal 2`] = `
         "title": "func_23",
         "runtime": 1,
         "policies": [
-          2
+          0
         ],
         "config": {},
         "as_id": false,
@@ -626,7 +614,7 @@ snapshot[`Typegraph using temporal 2`] = `
         "title": "func_29",
         "runtime": 1,
         "policies": [
-          3
+          0
         ],
         "config": {},
         "as_id": false,
@@ -749,18 +737,6 @@ snapshot[`Typegraph using temporal 2`] = `
       {
         "name": "__public",
         "materializer": 1
-      },
-      {
-        "name": "__public",
-        "materializer": 1
-      },
-      {
-        "name": "__public",
-        "materializer": 1
-      },
-      {
-        "name": "__public",
-        "materializer": 1
       }
     ],
     "meta": {
@@ -775,7 +751,7 @@ snapshot[`Typegraph using temporal 2`] = `
         "allow_headers": [],
         "expose_headers": [],
         "allow_methods": [],
-        "allow_credentials": false,
+        "allow_credentials": true,
         "max_age_sec": null
       },
       "auths": [],

@@ -1,28 +1,38 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+pub mod aws;
 pub mod deno;
 pub mod graphql;
 pub mod prisma;
 pub mod python;
 pub mod random;
 pub mod temporal;
+pub mod typegate;
+pub mod typegraph;
 pub mod wasi;
 
 use std::rc::Rc;
 
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::global_store::Store;
+use crate::runtimes::prisma::migration::{
+    prisma_apply, prisma_create, prisma_deploy, prisma_diff, prisma_reset,
+};
 use crate::runtimes::prisma::with_prisma_runtime;
-use crate::wit::core::{RuntimeId, TypeFunc, TypeId as CoreTypeId};
+use crate::runtimes::typegraph::TypegraphOperation;
+use crate::validation::types::validate_value;
+use crate::wit::aws::S3RuntimeData;
+use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
-    MaterializerHttpRequest, PrismaLinkData, PrismaRuntimeData, RandomRuntimeData,
-    TemporalOperationData, TemporalRuntimeData,
+    MaterializerHttpRequest, PrismaLinkData, PrismaMigrationOperation, PrismaRuntimeData,
+    RandomRuntimeData, TemporalOperationData, TemporalRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
 
+use self::aws::S3Materializer;
 pub use self::deno::{DenoMaterializer, MaterializerDenoImport, MaterializerDenoModule};
 pub use self::graphql::GraphqlMaterializer;
 use self::prisma::relationship::prisma_link;
@@ -32,6 +42,7 @@ pub use self::python::PythonMaterializer;
 pub use self::random::RandomMaterializer;
 use self::temporal::temporal_operation;
 pub use self::temporal::TemporalMaterializer;
+use self::typegate::TypegateOperation;
 pub use self::wasi::WasiMaterializer;
 
 type Result<T, E = TgError> = std::result::Result<T, E>;
@@ -45,7 +56,11 @@ pub enum Runtime {
     Random(Rc<RandomRuntimeData>),
     WasmEdge,
     Prisma(Rc<PrismaRuntimeData>, Rc<PrismaRuntimeContext>),
+    PrismaMigration,
     Temporal(Rc<TemporalRuntimeData>),
+    Typegate,
+    Typegraph,
+    S3(Rc<S3RuntimeData>),
 }
 
 #[derive(Debug, Clone)]
@@ -112,11 +127,39 @@ impl Materializer {
         }
     }
 
+    fn prisma_migrate(
+        runtime_id: RuntimeId,
+        data: PrismaMigrationOperation,
+        effect: wit::Effect,
+    ) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
+
     fn temporal(runtime_id: RuntimeId, data: TemporalMaterializer, effect: wit::Effect) -> Self {
         Self {
             runtime_id,
             effect,
             data: Rc::new(data).into(),
+        }
+    }
+
+    fn typegate(runtime_id: RuntimeId, data: TypegateOperation, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
+
+    fn typegraph(runtime_id: RuntimeId, data: TypegraphOperation, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
         }
     }
 }
@@ -131,14 +174,12 @@ pub enum MaterializerData {
     Random(Rc<RandomMaterializer>),
     WasmEdge(Rc<WasiMaterializer>),
     Prisma(Rc<PrismaMaterializer>),
+    PrismaMigration(PrismaMigrationOperation),
     Temporal(Rc<TemporalMaterializer>),
+    Typegate(TypegateOperation),
+    Typegraph(TypegraphOperation),
+    S3(Rc<S3Materializer>),
 }
-
-// impl From<DenoMaterializer> for MaterializerData {
-//     fn from(mat: DenoMaterializer) -> Self {
-//         Self::Deno(mat)
-//     }
-// }
 
 macro_rules! prisma_op {
     ( $rt:expr, $model:expr, $fn:ident, $name:expr, $effect:expr ) => {{
@@ -154,7 +195,7 @@ macro_rules! prisma_op {
 
         let mat_id = Store::register_materializer(Materializer::prisma($rt, mat, $effect));
 
-        Ok(TypeFunc {
+        Ok(FuncParams {
             inp: types.input.into(),
             out: types.output.into(),
             mat: mat_id,
@@ -178,6 +219,24 @@ impl wit::Runtimes for crate::Lib {
         // TODO: check code is valid function?
         let mat = Materializer::deno(DenoMaterializer::Inline(data), effect);
         Ok(Store::register_materializer(mat))
+    }
+
+    fn register_deno_static(
+        data: wit::MaterializerDenoStatic,
+        type_id: CoreTypeId,
+    ) -> Result<wit::MaterializerId> {
+        validate_value(
+            serde_json::from_str::<serde_json::Value>(&data.value).map_err(|e| e.to_string())?,
+            type_id.into(),
+            "<V>".to_string(),
+        )?;
+
+        Ok(Store::register_materializer(Materializer::deno(
+            DenoMaterializer::Static(deno::MaterializerDenoStatic {
+                value: serde_json::from_str(&data.value).map_err(|e| e.to_string())?,
+            }),
+            wit::Effect::None,
+        )))
     }
 
     fn get_predefined_deno_func(
@@ -305,31 +364,31 @@ impl wit::Runtimes for crate::Lib {
         )))
     }
 
-    fn prisma_find_unique(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_find_unique(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(runtime, model, find_unique, "findUnique")
     }
 
-    fn prisma_find_many(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_find_many(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(runtime, model, find_many, "findMany")
     }
 
-    fn prisma_find_first(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_find_first(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(runtime, model, find_first, "findFirst")
     }
 
-    fn prisma_aggregate(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_aggregate(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(runtime, model, aggregate, "aggregate")
     }
 
-    fn prisma_group_by(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_group_by(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(runtime, model, group_by, "groupBy")
     }
 
-    fn prisma_count(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_count(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(runtime, model, count, "count")
     }
 
-    fn prisma_create_one(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_create_one(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -339,7 +398,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_create_many(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_create_many(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -349,7 +408,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_update_one(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_update_one(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -359,7 +418,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_update_many(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_update_many(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -369,7 +428,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_upsert_one(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_upsert_one(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -379,7 +438,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_delete_one(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_delete_one(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -389,7 +448,7 @@ impl wit::Runtimes for crate::Lib {
         )
     }
 
-    fn prisma_delete_many(runtime: RuntimeId, model: CoreTypeId) -> Result<TypeFunc, wit::Error> {
+    fn prisma_delete_many(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
@@ -404,7 +463,7 @@ impl wit::Runtimes for crate::Lib {
         query: String,
         param: CoreTypeId,
         effect: WitEffect,
-    ) -> Result<TypeFunc, wit::Error> {
+    ) -> Result<FuncParams, wit::Error> {
         let types = with_prisma_runtime(runtime, |ctx| ctx.execute_raw(param.into()))?;
         let proc = replace_variables_to_indices(query, types.input)?;
         let mat = PrismaMaterializer {
@@ -413,7 +472,7 @@ impl wit::Runtimes for crate::Lib {
             ordered_keys: Some(proc.ordered_keys),
         };
         let mat_id = Store::register_materializer(Materializer::prisma(runtime, mat, effect));
-        Ok(TypeFunc {
+        Ok(FuncParams {
             inp: types.input.into(),
             out: types.output.into(),
             mat: mat_id,
@@ -425,7 +484,7 @@ impl wit::Runtimes for crate::Lib {
         query: String,
         param: Option<CoreTypeId>,
         out: CoreTypeId,
-    ) -> Result<TypeFunc, wit::Error> {
+    ) -> Result<FuncParams, wit::Error> {
         let types = with_prisma_runtime(runtime, |ctx| {
             ctx.query_raw(param.map(|v| v.into()), out.into())
         })?;
@@ -437,7 +496,7 @@ impl wit::Runtimes for crate::Lib {
         };
         let mat_id =
             Store::register_materializer(Materializer::prisma(runtime, mat, WitEffect::None));
-        Ok(TypeFunc {
+        Ok(FuncParams {
             inp: types.input.into(),
             out: types.output.into(),
             mat: mat_id,
@@ -461,6 +520,30 @@ impl wit::Runtimes for crate::Lib {
         Ok(builder.build()?.into())
     }
 
+    fn prisma_migration(operation: PrismaMigrationOperation) -> Result<FuncParams, wit::Error> {
+        use PrismaMigrationOperation as Op;
+
+        let (effect, (inp, out)) = match operation {
+            Op::Diff => (WitEffect::None, prisma_diff()?),
+            Op::Create => (WitEffect::Create(false), prisma_create()?),
+            Op::Apply => (WitEffect::Update(false), prisma_apply()?),
+            Op::Deploy => (WitEffect::Update(true), prisma_deploy()?),
+            Op::Reset => (WitEffect::Delete(true), prisma_reset()?),
+        };
+
+        let mat_id = Store::register_materializer(Materializer::prisma_migrate(
+            Store::get_prisma_migration_runtime(),
+            operation,
+            effect,
+        ));
+
+        Ok(FuncParams {
+            inp: inp.into(),
+            out: out.into(),
+            mat: mat_id,
+        })
+    }
+
     fn register_temporal_runtime(data: TemporalRuntimeData) -> Result<RuntimeId, wit::Error> {
         Ok(Store::register_runtime(Runtime::Temporal(data.into())))
     }
@@ -468,7 +551,47 @@ impl wit::Runtimes for crate::Lib {
     fn generate_temporal_operation(
         runtime: RuntimeId,
         data: TemporalOperationData,
-    ) -> Result<TypeFunc, wit::Error> {
+    ) -> Result<FuncParams, wit::Error> {
         temporal_operation(runtime, data)
+    }
+
+    fn register_typegate_materializer(
+        operation: wit::TypegateOperation,
+    ) -> Result<MaterializerId, wit::Error> {
+        use wit::TypegateOperation as WitOp;
+        use TypegateOperation as Op;
+
+        let (effect, op) = match operation {
+            WitOp::ListTypegraphs => (WitEffect::None, Op::ListTypegraphs),
+            WitOp::FindTypegraph => (WitEffect::None, Op::FindTypegraph),
+            WitOp::AddTypegraph => (WitEffect::Create(true), Op::AddTypegraph),
+            WitOp::RemoveTypegraph => (WitEffect::Delete(true), Op::RemoveTypegraph),
+            WitOp::GetSerializedTypegraph => (WitEffect::None, Op::GetSerializedTypegraph),
+        };
+
+        Ok(Store::register_materializer(Materializer::typegate(
+            Store::get_typegate_runtime(),
+            op,
+            effect,
+        )))
+    }
+
+    fn register_typegraph_materializer(
+        operation: wit::TypegraphOperation,
+    ) -> Result<MaterializerId, wit::Error> {
+        use wit::TypegraphOperation as WitOp;
+        use TypegraphOperation as Op;
+
+        let (effect, op) = match operation {
+            WitOp::Resolver => (WitEffect::None, Op::Resolver),
+            WitOp::GetType => (WitEffect::None, Op::GetType),
+            WitOp::GetSchema => (WitEffect::None, Op::GetSchema),
+        };
+
+        Ok(Store::register_materializer(Materializer::typegraph(
+            Store::get_typegraph_runtime(),
+            op,
+            effect,
+        )))
     }
 }

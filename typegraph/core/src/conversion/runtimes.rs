@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::collections::HashMap;
+
 use std::rc::Rc;
 
 use crate::errors::Result;
@@ -18,9 +20,12 @@ use common::typegraph::runtimes::http::HTTPRuntimeData;
 use common::typegraph::runtimes::prisma::PrismaRuntimeData;
 use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
+use common::typegraph::runtimes::s3::S3RuntimeData;
 use common::typegraph::runtimes::temporal::TemporalRuntimeData;
 use common::typegraph::runtimes::wasmedge::WasmEdgeRuntimeData;
-use common::typegraph::runtimes::KnownRuntime;
+use common::typegraph::runtimes::{
+    KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData, TypegraphRuntimeData,
+};
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
@@ -77,6 +82,13 @@ impl MaterializerConverter for DenoMaterializer {
         use crate::runtimes::DenoMaterializer::*;
         let runtime = c.register_runtime(runtime_id)?;
         let (name, data) = match self {
+            Static(inner) => {
+                let data = serde_json::from_value(json!({
+                    "value": inner.value,
+                }))
+                .unwrap();
+                ("static".to_string(), data)
+            }
             Inline(inline_fun) => {
                 let mut data = IndexMap::new();
                 data.insert(
@@ -159,7 +171,8 @@ impl MaterializerConverter for MaterializerHttpRequest {
         if let Some(rename_fields) = &self.rename_fields {
             data.insert(
                 "rename_fields".to_string(),
-                serde_json::to_value(rename_fields).unwrap(),
+                serde_json::to_value(rename_fields.iter().cloned().collect::<HashMap<_, _>>())
+                    .unwrap(),
             );
         }
         if let Some(body_fields) = &self.body_fields {
@@ -362,7 +375,7 @@ impl From<TGRuntime> for ConvertedRuntime {
 }
 
 pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<ConvertedRuntime> {
-    use KnownRuntime::*;
+    use KnownRuntime as Rt;
 
     match runtime {
         Runtime::Deno => {
@@ -370,13 +383,13 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                 worker: "default".to_string(),
                 permissions: Default::default(),
             };
-            Ok(TGRuntime::Known(Deno(data)).into())
+            Ok(TGRuntime::Known(Rt::Deno(data)).into())
         }
         Runtime::Graphql(d) => {
             let data = GraphQLRuntimeData {
                 endpoint: d.endpoint.clone(),
             };
-            Ok(TGRuntime::Known(GraphQL(data)).into())
+            Ok(TGRuntime::Known(Rt::GraphQL(data)).into())
         }
         Runtime::Http(d) => {
             let data = HTTPRuntimeData {
@@ -384,18 +397,18 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                 cert_secret: d.cert_secret.clone(),
                 basic_auth_secret: d.basic_auth_secret.clone(),
             };
-            Ok(TGRuntime::Known(HTTP(data)).into())
+            Ok(TGRuntime::Known(Rt::HTTP(data)).into())
         }
         Runtime::Python => {
-            Ok(TGRuntime::Known(PythonWasi(PythonRuntimeData { config: None })).into())
+            Ok(TGRuntime::Known(Rt::PythonWasi(PythonRuntimeData { config: None })).into())
         }
-        Runtime::Random(d) => Ok(TGRuntime::Known(Random(RandomRuntimeData {
+        Runtime::Random(d) => Ok(TGRuntime::Known(Rt::Random(RandomRuntimeData {
             seed: d.seed,
             reset: d.reset.clone(),
         }))
         .into()),
         Runtime::WasmEdge => {
-            Ok(TGRuntime::Known(WasmEdge(WasmEdgeRuntimeData { config: None })).into())
+            Ok(TGRuntime::Known(Rt::WasmEdge(WasmEdgeRuntimeData { config: None })).into())
         }
         Runtime::Prisma(d, _) => Ok(ConvertedRuntime::Lazy(Box::new(
             move |runtime_id, runtime_idx, tg| {
@@ -407,7 +420,7 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                         runtime_id,
                         tg_context: tg,
                     };
-                    Ok(TGRuntime::Known(Prisma(PrismaRuntimeData {
+                    Ok(TGRuntime::Known(Rt::Prisma(PrismaRuntimeData {
                         name: d.name.clone(),
                         connection_string_secret: d.connection_string_secret.clone(),
                         models: models
@@ -430,9 +443,22 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                 })
             },
         ))),
-        Runtime::Temporal(d) => Ok(TGRuntime::Known(Temporal(TemporalRuntimeData {
+        Runtime::PrismaMigration => {
+            Ok(TGRuntime::Known(Rt::PrismaMigration(PrismaMigrationRuntimeData {})).into())
+        }
+        Runtime::Temporal(d) => Ok(TGRuntime::Known(Rt::Temporal(TemporalRuntimeData {
             name: d.name.clone(),
             host: d.host.clone(),
+        }))
+        .into()),
+        Runtime::Typegate => Ok(TGRuntime::Known(Rt::Typegate(TypegateRuntimeData {})).into()),
+        Runtime::Typegraph => Ok(TGRuntime::Known(Rt::Typegraph(TypegraphRuntimeData {})).into()),
+        Runtime::S3(d) => Ok(TGRuntime::Known(Rt::S3(S3RuntimeData {
+            host_secret: d.host_secret.clone(),
+            region_secret: d.region_secret.clone(),
+            access_key_secret: d.access_key_secret.clone(),
+            secret_key_secret: d.secret_key_secret.clone(),
+            path_style_secret: d.path_style_secret.clone(),
         }))
         .into()),
     }
