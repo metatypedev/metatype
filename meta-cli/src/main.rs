@@ -31,12 +31,8 @@ async fn main() -> Result<()> {
 
     let args = match Args::try_parse() {
         Ok(cli) => cli,
-        Err(e) if e.kind() == clap::error::ErrorKind::DisplayHelp => {
-            Args::command().print_help()?;
-            return Ok(());
-        }
         Err(e) => {
-            eprintln!("BUG{:?}", e);
+            e.print()?;
             return Ok(());
         }
     };

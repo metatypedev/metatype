@@ -2,13 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Materializer, Runtime } from "../runtimes/mod.ts";
-import { aws, runtimes } from "../wit.ts";
-import { Typedef } from "../types.ts";
+import { aws } from "../wit.ts";
 import {
   S3PresignGetParams,
   S3PresignPutParams,
   S3RuntimeData,
-} from "@typegraph/deno/gen/exports/metatype-typegraph-aws.d.ts";
+} from "../gen/exports/metatype-typegraph-aws.d.ts";
 import { t } from "@typegraph/deno/src/mod.ts";
 
 type S3PresignGetMat = Materializer & S3PresignGetParams;

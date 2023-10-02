@@ -52,6 +52,32 @@ meta-cli:
   env:
     CLICOLOR_FORCE: "1"
 
+typegraph:
+  watch:
+    - "typegraph/core/src/**/*.rs"
+    - "typegraph/core/wit/*.wit"
+    - "typegraph/deno/dev/fix-declarations.sh"
+  env:
+    WASM_FILE: target/debug/typegraph_core.wasm
+  command: |
+    set -e
+    cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
+    wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+
+    rm -rf typegraph/deno/src/gen
+    jco transpile $WASM_FILE -o typegraph/deno/src/gen --map "*=../imports.ts"
+    deno run -A typegraph/deno/dev/fix-declarations.ts
+
+    # cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm --release
+    # wasm-opt -Oz target/wasm32-unknown-unknown/release/typegraph_core.wasm -o test.wasm
+    # wasm-tools component new test.wasm -o $WASM_FILE
+    # jco + transpile
+
+    rm -rf typegraph/python_next/typegraph_next/gen
+    poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
+  depends_on:
+    - libs
+
 system_graphs:
   watch:
     - typegate/src/typegraphs/*.py
@@ -68,27 +94,6 @@ libs:
     - typescript/**/*.rs
     - macros/**/*.rs
   command: "cargo build -p common -p typescript -p macros"
-
-typegraph:
-  watch:
-    - "typegraph/core/src/**/*.rs"
-    - "typegraph/core/wit/*.wit"
-    - "typegraph/deno/dev/fix-declarations.sh"
-  env:
-    WASM_FILE: target/debug/typegraph_core.wasm
-  command: |
-    set -e
-    cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
-    wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
-
-    rm -rf typegraph/deno/gen
-    jco transpile $WASM_FILE -o typegraph/deno/gen --no-nodejs-compat --map "*=../src/imports.ts"
-    bash typegraph/deno/dev/fix-declarations.sh
-
-    rm -rf typegraph/python_next/typegraph_next/gen
-    poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
-  depends_on:
-    - libs
 
 codegen:
   workdir: .
@@ -131,10 +136,10 @@ install:
   env:
     DENO_BINDGEN_URL: "https://deno.land/x/deno_bindgen@0.8.1/cli.ts"
     WASM_TOOLS_VERSION: "1.0.37"
-    JCO_VERSION: "0.9.4"
+    JCO_VERSION: "0.12.1"
     CARGO_INSTA_VERSION: "1.30.0"
     WASMEDGE_VERSION: "0.12.1"
-    DENO_VERSION: "1.37.0"
+    DENO_VERSION: "1.37.1"
   command: |
     set -e
     deno --version | grep -q $DENO_VERSION || (echo "require deno upgrade to $DENO_VERSION" && exit 1)

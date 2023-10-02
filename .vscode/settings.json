@@ -4,13 +4,11 @@
     "website/.docusaurus": true,
     "website/node_modules": true
   },
-  "python.formatting.provider": "black",
-  "python.linting.flake8Enabled": true,
-  "python.linting.enabled": true,
   "deno.importMap": "typegate/deno.json",
   "deno.enablePaths": [
     "typegate",
     "dev",
+    "examples/templates/deno",
     "typegraph/core/tests/typegraphs/deno",
     "typegraph/deno"
   ],

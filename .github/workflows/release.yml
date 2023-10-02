@@ -6,7 +6,7 @@ on:
 env:
   PYTHON_VERSION: "3.8"
   POETRY_VERSION: "1.4.1"
-  DENO_VERSION: "1.37.0"
+  DENO_VERSION: "1.37.1"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
 
 jobs:
@@ -143,7 +143,7 @@ jobs:
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
       - run: |
           mkdir -p ./digests
-          digest="${{ steps.prd.outputs.digest }}"
+          digest="${{ steps.build.outputs.digest }}"
           touch "./digests/${digest#sha256:}"
       - uses: actions/upload-artifact@v3
         with:

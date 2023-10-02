@@ -1,0 +1,15 @@
+{
+  "name": "example",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "tsx api.ts"
+  },
+  "dependencies": {
+    "@metatypedev/typegraph": "^0.0.3"
+  },
+  "devDependencies": {
+    "tsx": "^3.13.0",
+    "typescript": "^5.2.2"
+  }
+}
