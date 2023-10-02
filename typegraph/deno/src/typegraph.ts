@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as t from "./types.ts";
-import { core } from "../gen/typegraph_core.js";
+import { core } from "./gen/typegraph_core.js";
 import { caller, dirname, fromFileUrl } from "./deps.ts";
 import { InjectionValue } from "./utils/type_utils.ts";
 import {
@@ -100,7 +100,13 @@ export function typegraph(
   if (!file) {
     throw new Error("Could not determine caller file");
   }
-  const path = dirname(fromFileUrl(file));
+  // node/deno compat tick until MET-236 is landed
+  const simpleFile = file.replace(/:[0-9]+$/, "").replace(/^file:\/\//, "");
+  const path = dirname(
+    fromFileUrl(
+      `file://${simpleFile}`,
+    ),
+  );
 
   const tgParams = {
     prefix,

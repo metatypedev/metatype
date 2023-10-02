@@ -64,9 +64,14 @@ typegraph:
     cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
     wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
 
-    rm -rf typegraph/deno/gen
-    jco transpile $WASM_FILE -o typegraph/deno/gen --no-nodejs-compat --map "*=../src/imports.ts"
+    rm -rf typegraph/deno/src/gen
+    jco transpile $WASM_FILE -o typegraph/deno/src/gen --map "*=../imports.ts"
     deno run -A typegraph/deno/dev/fix-declarations.ts
+
+    # cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm --release
+    # wasm-opt -Oz target/wasm32-unknown-unknown/release/typegraph_core.wasm -o test.wasm
+    # wasm-tools component new test.wasm -o $WASM_FILE
+    # jco + transpile
 
     rm -rf typegraph/python_next/typegraph_next/gen
     poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
