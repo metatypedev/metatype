@@ -9,7 +9,7 @@ sidebar_position: 2
 
 ## apply
 
-**Type:** [object_23!](objects#object_23)
+**Type:** [object_21!](objects#object_21)
 
 apply field
 
@@ -62,7 +62,7 @@ typegraph<br />
 
 ## create
 
-**Type:** [object_33!](objects#object_33)
+**Type:** [object_38!](objects#object_38)
 
 create field
 
@@ -74,6 +74,15 @@ Policies:
 <table>
 <thead><tr><th>Name</th><th>Description</th></tr></thead>
 <tbody>
+<tr>
+<td>
+migrations<br />
+<a href="scalars#string"><code>String</code></a>
+</td>
+<td>
+<p>migrations input field</p>
+</td>
+</tr>
 <tr>
 <td>
 apply<br />
@@ -90,15 +99,6 @@ name<br />
 </td>
 <td>
 <p>name input field</p>
-</td>
-</tr>
-<tr>
-<td>
-migrations<br />
-<a href="scalars#string"><code>String</code></a>
-</td>
-<td>
-<p>migrations input field</p>
 </td>
 </tr>
 <tr>
@@ -124,7 +124,7 @@ typegraph<br />
 
 ## deploy
 
-**Type:** [object_40!](objects#object_40)
+**Type:** [object_49!](objects#object_49)
 
 deploy field
 
@@ -180,15 +180,6 @@ Policies:
 <table>
 <thead><tr><th>Name</th><th>Description</th></tr></thead>
 <tbody>
-<tr>
-<td>
-migrations<br />
-<a href="scalars#string"><code>String</code></a>
-</td>
-<td>
-<p>migrations input field</p>
-</td>
-</tr>
 <tr>
 <td>
 runtime<br />

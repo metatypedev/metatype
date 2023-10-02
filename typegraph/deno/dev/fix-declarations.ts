@@ -6,25 +6,21 @@ import {
   fromFileUrl,
   resolve,
 } from "https://deno.land/std@0.202.0/path/mod.ts";
-export const genDir = dirname(fromFileUrl(import.meta.url));
+import { expandGlobSync } from "https://deno.land/std@0.202.0/fs/mod.ts";
 
-const fixImports = (s: string) =>
-  s.replace(/^(import .*)(?<!\.ts)\';$/, "$1.d.ts';");
+export const thisDir = dirname(fromFileUrl(import.meta.url));
 
 const replacements = [
+  ...Array.from(expandGlobSync("../src/gen/**/*.d.ts", {
+    root: thisDir,
+    includeDirs: false,
+    globstar: true,
+  })).map(({ path }) => ({
+    path,
+    op: (s: string) => s.replace(/^(import .*)(?<!\.ts)\';$/, "$1.d.ts';"),
+  })),
   {
-    path: resolve(
-      genDir,
-      "../src/gen/interfaces/metatype-typegraph-runtimes.d.ts",
-    ),
-    op: fixImports,
-  },
-  {
-    path: resolve(genDir, "../src/gen/typegraph_core.d.ts"),
-    op: fixImports,
-  },
-  {
-    path: resolve(genDir, "../src/gen/typegraph_core.js"),
+    path: resolve(thisDir, "../src/gen/typegraph_core.js"),
     op: (s: string) => s.replaceAll(/,\s*\w+ as '[\w:\/]+'/g, ""),
   },
 ];
@@ -41,9 +37,7 @@ for (
 
   const newText = rewrite.join("\n");
   if (text != newText) {
-    console.log(`- Updated ${path.replace(genDir, "")}`);
+    console.log(`Fixed generated code in ${path.replace(thisDir, "")}`);
     Deno.writeTextFileSync(path, newText);
-  } else {
-    console.log(`- No change ${path.replace(genDir, "")}`);
   }
 }
