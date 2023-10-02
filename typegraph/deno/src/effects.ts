@@ -6,7 +6,7 @@ import {
   EffectDelete,
   EffectNone,
   EffectUpdate,
-} from "../gen/exports/metatype-typegraph-runtimes.d.ts";
+} from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
 
 export function none(): EffectNone {
   return { tag: "none" };

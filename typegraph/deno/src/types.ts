@@ -10,13 +10,12 @@ import {
   TypeEither,
   TypeFile,
   TypeFloat,
-  TypeFunc,
   TypeInteger,
   TypeOptional,
   TypeString,
   TypeUnion,
-} from "../gen/exports/metatype-typegraph-core.d.ts";
-import { Apply } from "../gen/exports/metatype-typegraph-utils.d.ts";
+} from "../gen/interfaces/metatype-typegraph-core.d.ts";
+import { Apply } from "../gen/interfaces/metatype-typegraph-utils.d.ts";
 import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps.ts";
 import Policy from "./policy.ts";
@@ -28,7 +27,7 @@ import {
 } from "./utils/injection_utils.ts";
 import { InjectionValue } from "./utils/type_utils.ts";
 import { InheritDef } from "./typegraph.ts";
-import { FuncParams } from "@typegraph/deno/gen/exports/metatype-typegraph-runtimes.d.ts";
+import { FuncParams } from "@typegraph/deno/gen/interfaces/metatype-typegraph-runtimes.d.ts";
 
 export type PolicySpec = Policy | {
   none: Policy;
