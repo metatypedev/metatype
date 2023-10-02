@@ -13,8 +13,8 @@ use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
     PolicySpec, TypeArray, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc,
-    TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct,
-    TypeUnion, TypeWithInjection,
+    TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeRenamed,
+    TypeString, TypeStruct, TypeUnion, TypeWithInjection,
 };
 use std::rc::Rc;
 
@@ -103,6 +103,7 @@ pub type Either = ConcreteType<TypeEither>;
 // Note: TypePolicy|TypeWithInjection|Proxy => Struct | Integer | ...
 pub type WithPolicy = WrapperType<TypePolicy>;
 pub type WithInjection = WrapperType<TypeWithInjection>;
+pub type Renamed = WrapperType<TypeRenamed>;
 
 #[derive(Debug, Clone)]
 #[enum_dispatch(TypeFun, TypeConversion)]
@@ -121,6 +122,7 @@ pub enum Type {
     Either(Rc<Either>),
     WithPolicy(Rc<WithPolicy>),
     WithInjection(Rc<WithInjection>),
+    Renamed(Rc<Renamed>),
 }
 
 impl Type {
@@ -258,6 +260,7 @@ pub enum ProxyResolution {
 #[derive(Debug)]
 pub struct TypeAttributes {
     pub concrete_type: TypeId,
+    pub name: Option<String>,
     pub proxy_data: HashMap<String, String>,
     pub policy_chain: Vec<PolicySpec>,
     pub injection: Option<String>,
@@ -315,6 +318,7 @@ impl TypeId {
         let mut proxy_data: HashMap<String, String> = HashMap::new();
         let mut policy_chain = Vec::new();
         let mut injection: Option<String> = None;
+        let mut name = None;
 
         loop {
             let typ = type_id.as_type()?;
@@ -339,10 +343,29 @@ impl TypeId {
                     injection = Some(inner.data.injection.clone());
                 }
 
-                _ => {
+                Type::Renamed(inner) => {
+                    // only use the outer name
+                    name = name.or_else(|| Some(inner.data.name.clone()));
+                }
+
+                // exhaustively match all concrete type
+                // so that this emits an error when a new type is added
+                Type::Boolean(_)
+                | Type::Integer(_)
+                | Type::Float(_)
+                | Type::String(_)
+                | Type::File(_)
+                | Type::Optional(_)
+                | Type::Array(_)
+                | Type::Struct(_)
+                | Type::Union(_)
+                | Type::Either(_)
+                | Type::Func(_) => {
                     break {
+                        name = name.or_else(|| typ.get_name().map(|s| s.to_string()));
                         Ok(TypeAttributes {
                             concrete_type: type_id,
+                            name,
                             proxy_data,
                             policy_chain,
                             injection,

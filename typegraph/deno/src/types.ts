@@ -100,6 +100,25 @@ export class Typedef {
     }) as this;
   }
 
+  renamed(name: string): this {
+    const id = core.renameType({
+      tpe: this._id,
+      name,
+    });
+
+    return new Proxy(this, {
+      get(target, prop, receiver) {
+        if (prop === "_id") {
+          return id;
+        } else if (prop === "name") {
+          return name;
+        } else {
+          return Reflect.get(target, prop, receiver);
+        }
+      },
+    });
+  }
+
   asTypedef(): Typedef {
     return new Typedef(this._id, { name: this.name });
   }
