@@ -33,7 +33,7 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
                 return Err(format!(
                     "expected object at {path:?}, got: {}",
                     serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                ))
+                ));
             };
             for (key, type_id) in inner.iter_props() {
                 validate_value(
@@ -51,7 +51,7 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
                 return Err(format!(
                     "expected array at {path:?}, got: {}",
                     serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                ))
+                ));
             };
             for (i, value) in value.iter().enumerate() {
                 validate_value(value.clone(), inner.data.of.into(), format!("{path}[{i}]"))?;
@@ -107,7 +107,7 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
                 return Err(format!(
                     "expected string at {path:?}, got: {}",
                     serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                ))
+                ));
             };
             // TODO min max
             Ok(())
@@ -118,7 +118,7 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
                 return Err(format!(
                     "expected integer at {path:?}, got: {}",
                     serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                ))
+                ));
             };
             // TODO min max
             Ok(())
@@ -129,7 +129,7 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
                 return Err(format!(
                     "expected float at {path:?}, got: {}",
                     serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                ))
+                ));
             };
             // TODO min max
             Ok(())
@@ -140,7 +140,7 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
                 return Err(format!(
                     "expected boolean at {path:?}, got: {}",
                     serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                ))
+                ));
             };
             Ok(())
         }
