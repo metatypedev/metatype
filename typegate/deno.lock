@@ -9,12 +9,11 @@
       "npm:json-schema-faker@0.5.3": "npm:json-schema-faker@0.5.3",
       "npm:lodash": "npm:lodash@4.17.21",
       "npm:mathjs@11.11.1": "npm:mathjs@11.11.1",
-      "npm:mathjs@11.8.0": "npm:mathjs@11.8.0",
       "npm:validator": "npm:validator@13.11.0"
     },
     "npm": {
-      "@babel/runtime@7.22.15": {
-        "integrity": "sha512-T0O+aa+4w0u06iNmapipJXMV4HoUir03hpx3/YqXXhu9xim3w+dVphjFWl1OH8NbZHw5Lbm9k45drDkgq2VNNA==",
+      "@babel/runtime@7.23.1": {
+        "integrity": "sha512-hC2v6p8ZSI/W0HUzh3V8C5g+NwSKzKPtJwSpTjwl0o297GP9+ZLQSkdvHz46CM3LqyoXxq+5G9komY+eSqSO0g==",
         "dependencies": {
           "regenerator-runtime": "regenerator-runtime@0.14.0"
         }
@@ -118,10 +117,6 @@
         "integrity": "sha512-pwiTgt0Q7t+GHZA4yaLjObx4vXmmdcS0iSJ19o8d/goUGgItX9UZWKWNnLHehxviD8wU2IWRsnR8cD5+yOJP2Q==",
         "dependencies": {}
       },
-      "fraction.js@4.3.6": {
-        "integrity": "sha512-n2aZ9tNfYDwaHhvFTkhFErqOMIb8uyzSQ+vGJBjZyanAKZVbGUQ1sngfk9FdkBw7G26O7AgNjLcecLffD1c7eg==",
-        "dependencies": {}
-      },
       "graphql@16.8.1": {
         "integrity": "sha512-59LZHPdGZVh695Ud9lRzPBVTtlX9ZCV150Er2W43ro37wVof0ctenSaskPPjN7lVTIN8mSZt8PHUNKZuNQUuxw==",
         "dependencies": {}
@@ -174,25 +169,11 @@
       "mathjs@11.11.1": {
         "integrity": "sha512-uWrwMrhU31TCqHKmm1yFz0C352njGUVr/I1UnpMOxI/VBTTbCktx/mREUXx5Vyg11xrFdg/F3wnMM7Ql/csVsQ==",
         "dependencies": {
-          "@babel/runtime": "@babel/runtime@7.22.15",
+          "@babel/runtime": "@babel/runtime@7.23.1",
           "complex.js": "complex.js@2.1.1",
           "decimal.js": "decimal.js@10.4.3",
           "escape-latex": "escape-latex@1.2.0",
           "fraction.js": "fraction.js@4.3.4",
-          "javascript-natural-sort": "javascript-natural-sort@0.7.1",
-          "seedrandom": "seedrandom@3.0.5",
-          "tiny-emitter": "tiny-emitter@2.1.0",
-          "typed-function": "typed-function@4.1.1"
-        }
-      },
-      "mathjs@11.8.0": {
-        "integrity": "sha512-I7r8HCoqUGyEiHQdeOCF2m2k9N+tcOHO3cZQ3tyJkMMBQMFqMR7dMQEboBMJAiFW2Um3PEItGPwcOc4P6KRqwg==",
-        "dependencies": {
-          "@babel/runtime": "@babel/runtime@7.22.15",
-          "complex.js": "complex.js@2.1.1",
-          "decimal.js": "decimal.js@10.4.3",
-          "escape-latex": "escape-latex@1.2.0",
-          "fraction.js": "fraction.js@4.3.6",
           "javascript-natural-sort": "javascript-natural-sort@0.7.1",
           "seedrandom": "seedrandom@3.0.5",
           "tiny-emitter": "tiny-emitter@2.1.0",
@@ -831,12 +812,6 @@
     "https://esm.sh/v131/ws@7.5.9/denonext/ws.mjs": "bb14a389271bb68778d59f498428caee8048221eea59cc7522898b44aad66d88",
     "https://esm.sh/v131/ws@8.13.0/denonext/ws.mjs": "ed9425cc1b9c9b9987590c15646b9adcd8e7d4c4cfff745fdc273a46cbc2b7cc",
     "https://esm.sh/v131/xtend@4.0.2/denonext/xtend.mjs": "503056f181793967e90c0566a737612694366fa7191172f4a106099b5c2a80d2",
-    "https://esm.sh/v131/yallist@4.0.0/denonext/yallist.mjs": "61f180d807dda50bac17028eda05d5722a3fecef6e98a9064e2353ea6864fd82",
-    "https://raw.githubusercontent.com/levibostian/deno-udd/ignore-prerelease/deps.ts": "2b20d8c142749898e0ad5e4adfdc554dbe1411e8e5ef093687767650a1073ff8",
-    "https://raw.githubusercontent.com/levibostian/deno-udd/ignore-prerelease/mod.ts": "3ef8bb10b88541586bae7d92c32f469627d3a6a799fa8a897ac819b2f7dd95e8",
-    "https://raw.githubusercontent.com/levibostian/deno-udd/ignore-prerelease/progress.ts": "bb8eb122f5ac32efc073e05e2c13cceea61458b0e49ac05bddc3a49124dc39e3",
-    "https://raw.githubusercontent.com/levibostian/deno-udd/ignore-prerelease/registry.ts": "fd8e1b05f14cb988fee7a72a51e68131a920f7d4b72f949d9b86794b3c699671",
-    "https://raw.githubusercontent.com/levibostian/deno-udd/ignore-prerelease/search.ts": "52f9a539ca76893c47d01f8c6d401487ea286d54d1305b079b8727598e4c847a",
-    "https://raw.githubusercontent.com/levibostian/deno-udd/ignore-prerelease/semver.ts": "c051a906405dd72b55434eb0f390f678881379d57847abe4ec60d8a02af4f6f2"
+    "https://esm.sh/v131/yallist@4.0.0/denonext/yallist.mjs": "61f180d807dda50bac17028eda05d5722a3fecef6e98a9064e2353ea6864fd82"
   }
 }

@@ -87,7 +87,7 @@ impl TypeGen for OrderBy {
                         builder.prop(k, context.generate(&Sort { nullable })?);
                     }
                     Type::Array(_) => {}
-                    _ => Err(format!("Cannot order by type {:?}", typ))?,
+                    _ => {}
                 }
             }
         }

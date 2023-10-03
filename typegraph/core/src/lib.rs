@@ -22,14 +22,14 @@ use global_store::Store;
 use indoc::formatdoc;
 use regex::Regex;
 use types::{
-    Array, Boolean, Either, File, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
-    TypeBoolean, TypeId, Union, WithInjection, WithPolicy,
+    Array, Boolean, Either, File, Float, Func, Integer, Optional, Proxy, Renamed, StringT, Struct,
+    Type, TypeBoolean, TypeId, Union, WithInjection, WithPolicy,
 };
 use validation::validate_name;
 use wit::core::{
     ContextCheck, Policy, PolicyId, PolicySpec, TypeArray, TypeBase, TypeEither, TypeFile,
     TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy,
-    TypeString, TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
+    TypeRenamed, TypeString, TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -288,6 +288,13 @@ impl wit::core::Core for Lib {
             materializer: mat_id,
         })
         .map(|id| (id, name))
+    }
+
+    fn rename_type(data: TypeRenamed) -> Result<CoreTypeId, String> {
+        let name = data.name.clone();
+        let type_id = Store::register_type(|id| Type::Renamed(Renamed { id, data }.into()))?;
+        Store::register_type_name(name, type_id)?;
+        Ok(type_id.into())
     }
 
     fn get_type_repr(type_id: CoreTypeId) -> Result<String> {

@@ -18,7 +18,7 @@ from typegraph_next import t
 
 
 class RandomRuntime(Runtime):
-    def __init__(self, seed: int, reset: Optional[str] = ""):
+    def __init__(self, seed: Optional[int] = None, reset: Optional[str] = ""):
         super().__init__(
             runtimes.register_random_runtime(
                 store, data=RandomRuntimeData(seed=seed, reset=reset)

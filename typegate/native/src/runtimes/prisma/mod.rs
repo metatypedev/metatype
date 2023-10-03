@@ -19,6 +19,14 @@ use self::migration::{
 
 static ENGINES: Lazy<DashMap<String, engine_import::QueryEngine>> = Lazy::new(DashMap::new);
 
+fn reformat_datamodel(datamodel: &str) -> Option<String> {
+    let datamodel = prisma_models::psl::reformat(datamodel, 4);
+    if datamodel.is_some() {
+        log::info!("Reformatted datamodel:\n{}", datamodel.as_ref().unwrap());
+    }
+    datamodel
+}
+
 // register engine
 #[deno]
 struct PrismaRegisterEngineInp {
@@ -34,19 +42,11 @@ enum PrismaRegisterEngineOut {
 
 #[deno]
 fn prisma_register_engine(input: PrismaRegisterEngineInp) -> PrismaRegisterEngineOut {
-    let datamodel = prisma_models::psl::reformat(&input.datamodel, 4);
-
-    let datamodel = match datamodel {
-        Some(dm) => dm,
-        None => {
-            log::error!("Error formatting datamodel:\n{}", input.datamodel);
-            return PrismaRegisterEngineOut::Err {
-                message: "Error formatting datamodel".to_string(),
-            };
-        }
+    let Some(datamodel) = reformat_datamodel(&input.datamodel) else {
+        return PrismaRegisterEngineOut::Err {
+            message: "Error formatting datamodel".to_string(),
+        };
     };
-
-    log::info!("Reformatted datamodel:\n{}", datamodel);
 
     match RT.block_on(engine::register_engine(datamodel, input.engine_name)) {
         Ok(()) => PrismaRegisterEngineOut::Ok,
@@ -130,7 +130,12 @@ enum PrismaDiffOut {
 
 #[deno]
 fn prisma_diff(input: PrismaDiffInp) -> PrismaDiffOut {
-    let res = migration::diff(input.datasource, input.datamodel, input.script);
+    let Some(datamodel) = reformat_datamodel(&input.datamodel) else {
+        return PrismaDiffOut::Err {
+            message: "Error formatting datamodel".to_string(),
+        };
+    };
+    let res = migration::diff(input.datasource, datamodel, input.script);
     match RT.block_on(res) {
         Ok(diff) => PrismaDiffOut::Ok { diff },
         Err(e) => PrismaDiffOut::Err {
@@ -149,9 +154,13 @@ struct PrismaDevInp {
 
 #[deno]
 fn prisma_apply(input: PrismaDevInp) -> PrismaApplyResult {
+    let Some(datamodel) = reformat_datamodel(&input.datamodel) else {
+        return PrismaApplyResult::Err {
+            message: "Error formatting datamodel".to_string(),
+        };
+    };
     RT.block_on(migration::apply(
-        MigrationContextBuilder::new(input.datasource, input.datamodel)
-            .with_migrations(input.migrations),
+        MigrationContextBuilder::new(input.datasource, datamodel).with_migrations(input.migrations),
         input.reset_database,
     ))
 }
@@ -165,8 +174,13 @@ struct PrismaDeployInp {
 
 #[deno]
 fn prisma_deploy(input: PrismaDeployInp) -> PrismaDeployOut {
+    let Some(datamodel) = reformat_datamodel(&input.datamodel) else {
+        return PrismaDeployOut::Err {
+            message: "Error formatting datamodel".to_string(),
+        };
+    };
     RT.block_on(migration::deploy(
-        MigrationContextBuilder::new(input.datasource, input.datamodel)
+        MigrationContextBuilder::new(input.datasource, datamodel)
             .with_migrations(Some(input.migrations)),
     ))
 }
@@ -182,9 +196,13 @@ pub struct PrismaCreateInp {
 
 #[deno]
 fn prisma_create(input: PrismaCreateInp) -> PrismaCreateResult {
+    let Some(datamodel) = reformat_datamodel(&input.datamodel) else {
+        return PrismaCreateResult::Err {
+            message: "Error formatting datamodel".to_string(),
+        };
+    };
     RT.block_on(migration::create(
-        MigrationContextBuilder::new(input.datasource, input.datamodel)
-            .with_migrations(input.migrations),
+        MigrationContextBuilder::new(input.datasource, datamodel).with_migrations(input.migrations),
         input.migration_name,
         input.apply,
     ))

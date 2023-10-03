@@ -2,9 +2,6 @@ from typegraph_next import typegraph, Policy, t, Graph
 from typegraph_next.runtimes.deno import DenoRuntime
 
 
-# TODO how to specify custom name?
-
-
 @typegraph()
 def class_syntax(g: Graph):
     # class Tag(t.struct):
@@ -18,7 +15,7 @@ def class_syntax(g: Graph):
     class Info(TitledEntity):
         content = t.string()
 
-    metadata = t.either([tag, Info()])
+    metadata = t.either([tag, Info().rename("Info")])
 
     class Comment(TitledEntity):
         content = t.string()

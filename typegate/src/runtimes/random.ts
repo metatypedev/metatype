@@ -27,7 +27,7 @@ export class RandomRuntime extends Runtime {
   static async init(params: RuntimeInitParams): Promise<Runtime> {
     const { args } = params as RuntimeInitParams<RandomRuntimeData>;
     const { seed } = args;
-    const runtime = await new RandomRuntime(seed);
+    const runtime = await new RandomRuntime(seed ?? null);
     runtime.setTgTypes(params.typegraph.types);
     return runtime;
   }

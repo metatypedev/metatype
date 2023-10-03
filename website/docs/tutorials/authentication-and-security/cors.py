@@ -1,12 +1,13 @@
 # skip:start
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.random import RandomRuntime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.graph.params import Cors
+from typegraph_next.runtimes.random import RandomRuntime
+
 
 # skip:end
-with TypeGraph(
-    "cors",
+@typegraph(
     # highlight-next-line
-    cors=TypeGraph.Cors(
+    cors=Cors(
         # highlight-next-line
         allow_origin=["https://not-this.domain"],
         # highlight-next-line
@@ -19,11 +20,12 @@ with TypeGraph(
         max_age_sec=60,
         # highlight-next-line
     ),
-) as g:
+)
+def auth(g: Graph):
     random = RandomRuntime(seed=0)
-    public = policies.public()
+    public = Policy.public()
 
     g.expose(
-        catch_me_if_you_can=random.generate(t.string()),
-        default_policy=[public],
+        public,
+        catch_me_if_you_can=random.gen(t.string()),
     )

@@ -94,7 +94,7 @@ pub fn run() -> Result<()> {
         .collect::<Vec<_>>()
         .join("");
 
-    let lint_ignore_directive = "deno-lint-ignore-file no-explicit-any";
+    let lint_ignore_directive = "deno-lint-ignore-file no-explicit-any no-empty-interface";
 
     println!("Writing at {path:?}");
     let mut file = fs::File::options()
