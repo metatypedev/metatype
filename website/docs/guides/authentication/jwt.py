@@ -1,20 +1,22 @@
 # skip:start
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.deno import DenoRuntime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.graph.params import Auth, Cors
+from typegraph_next.runtimes.deno import DenoRuntime
 
 # skip:end
 
-with TypeGraph(
-    "jwt_authentification",
+
+@typegraph(
     auths=[
         # highlight-next-line
-        TypeGraph.Auth.hmac256("custom"),
+        Auth.hmac256("custom"),
     ],
     # skip:next-line
-    cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
-) as g:
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+)
+def jwt_authentication(g: Graph):
     deno = DenoRuntime()
-    public = policies.public()
+    public = Policy.public()
 
     ctx = t.struct(
         {"your_own_content": t.string().optional().from_context("your_own_content")}

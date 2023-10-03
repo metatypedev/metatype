@@ -1,34 +1,37 @@
 # skip:start
-from typegraph import TypeGraph, policies, t
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.graph.params import Cors
 
 # isort: off
 # skip:end
 # highlight-next-line
-from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
+from typegraph_next.providers.prisma import PrismaRuntime
 
-with TypeGraph(
-    "database",
+
+@typegraph(
     # skip:next-line
-    cors=TypeGraph.Cors(
+    cors=Cors(
         allow_origin=["https://metatype.dev", "http://localhost:3000"],
     ),
-) as g:
+)
+def database(g: Graph):
     db = PrismaRuntime("database", "POSTGRES_CONN")
-    public = policies.public()
+    public = Policy.public()
 
     message = t.struct(
         {
             # highlight-next-line
-            "id": t.integer().as_id.config("auto"),
+            "id": t.integer(as_id=True, config=["auto"]),
             "title": t.string(),
             "body": t.string(),
-        }
+        },
         # highlight-next-line
-    ).named("message")
+        name="message",
+    )
 
     g.expose(
+        public,
         # highlight-next-line
         create_message=db.create(message),
         list_messages=db.find_many(message),
-        default_policy=[public],
     )

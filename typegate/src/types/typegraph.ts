@@ -359,7 +359,7 @@ export interface PythonRuntimeData {
   config?: string | null;
 }
 export interface RandomRuntimeData {
-  seed: number;
+  seed?: number | null;
   reset?: string | null;
 }
 export interface PrismaRuntimeData {

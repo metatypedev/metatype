@@ -1,22 +1,24 @@
 # skip:start
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.deno import PureFunMat
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.graph.params import Cors
+from typegraph_next.runtimes.deno import DenoRuntime
 
 # skip:end
 
-with TypeGraph(
-    "deno",
-    # skip:next-line
-    cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
-) as g:
-    public = policies.public()
 
-    fib = t.func(
-        t.struct({"n": t.number()}),
+@typegraph(
+    # skip:next-line
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+)
+def deno(g: Graph):
+    deno = DenoRuntime()
+    public = Policy.public()
+
+    fib = deno.func(
+        t.struct({"n": t.float()}),
         t.struct({"res": t.integer(), "ms": t.float()}),
-        PureFunMat(
-            """
-            ({ n }) => {
+        code="""
+        ({ n }) => {
                 let a = 0, b = 1, c;
                 const start = performance.now();
                 for (
@@ -29,11 +31,10 @@ with TypeGraph(
                     ms: performance.now() - start,
                 };
             }
-            """
-        ),
+            """,
     )
 
     g.expose(
+        public,
         compute_fib=fib,
-        default_policy=[public],
     )

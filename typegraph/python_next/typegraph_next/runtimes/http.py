@@ -79,8 +79,8 @@ class HttpRuntime(Runtime):
         self,
         method: HttpMethod,
         path: str,
-        inp: t.struct,
-        out: t.typedef,
+        inp: "t.struct",
+        out: "t.typedef",
         effect: Effect,
         opts: HttpRequestOptions,
     ):
@@ -119,8 +119,8 @@ class HttpRuntime(Runtime):
     def get(
         self,
         path,
-        inp: t.struct,
-        out: t.typedef,
+        inp: "t.struct",
+        out: "t.typedef",
         **kwargs: HttpRequestKwargs,
     ):
         return self.__request(
@@ -135,8 +135,8 @@ class HttpRuntime(Runtime):
     def post(
         self,
         path: str,
-        inp: t.struct,
-        out: t.typedef,
+        inp: "t.struct",
+        out: "t.typedef",
         *,
         effect: Effect = fx.create(),
         **kwargs: HttpRequestKwargs,
@@ -153,8 +153,8 @@ class HttpRuntime(Runtime):
     def put(
         self,
         path: str,
-        inp: t.struct,
-        out: t.typedef,
+        inp: "t.struct",
+        out: "t.typedef",
         *,
         effect: Effect = fx.update(),
         **kwargs: HttpRequestKwargs,
@@ -171,8 +171,8 @@ class HttpRuntime(Runtime):
     def patch(
         self,
         path: str,
-        inp: t.struct,
-        out: t.typedef,
+        inp: "t.struct",
+        out: "t.typedef",
         *,
         effect: Effect = fx.update(),
         **kwargs: HttpRequestKwargs,
@@ -189,8 +189,8 @@ class HttpRuntime(Runtime):
     def delete(
         self,
         path: str,
-        inp: t.struct,
-        out: t.typedef,
+        inp: "t.struct",
+        out: "t.typedef",
         *,
         effect: Effect = fx.delete(),
         **kwargs: HttpRequestKwargs,

@@ -253,7 +253,7 @@ snapshot[`Auto-tests for policies 2`] = `
     {
       extensions: {},
       locations: [],
-      message: "No policy took decision on type 'function_9' ('function') at '<root>.admin_only'",
+      message: "No policy took decision on type 'func_6' ('function') at '<root>.admin_only'",
       path: [],
     },
   ],
@@ -266,7 +266,7 @@ snapshot[`Auto-tests for policies 3`] = `
     {
       extensions: {},
       locations: [],
-      message: "No policy took decision on type 'function_12' ('function') at '<root>.user_only'",
+      message: "No policy took decision on type 'func_10' ('function') at '<root>.user_only'",
       path: [],
     },
   ],
@@ -279,7 +279,7 @@ snapshot[`Auto-tests for policies 4`] = `
     {
       extensions: {},
       locations: [],
-      message: "No policy took decision on type 'function_15' ('function') at '<root>.both'",
+      message: "No policy took decision on type 'func_14' ('function') at '<root>.both'",
       path: [],
     },
   ],
