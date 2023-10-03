@@ -767,7 +767,7 @@ files = []
 develop = true
 
 [package.dependencies]
-python-box = "^7.0"
+python-box = "^7.1.1"
 typing-extensions = "^4.7.1"
 wasmtime = "^10.0.1"
 
