@@ -62,7 +62,7 @@ snapshot[`Basic introspection 1`] = `
       {
         fields: null,
         kind: "UNION",
-        name: "ToyOut",
+        name: "FavoriteToyOut",
         possibleTypes: [
           {
             kind: "OBJECT",

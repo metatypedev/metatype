@@ -73,7 +73,7 @@ snapshot[`Class Syntax 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "Post",
+        name: "object_22",
       },
       {
         fields: [
@@ -85,12 +85,12 @@ snapshot[`Class Syntax 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "Comment",
+        name: "object_13",
       },
       {
         fields: null,
         kind: "UNION",
-        name: "either_6Out",
+        name: "either_7Out",
       },
       {
         fields: [
@@ -132,7 +132,7 @@ snapshot[`Class Syntax 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "A",
+        name: "object_19",
       },
       {
         fields: [
@@ -144,7 +144,7 @@ snapshot[`Class Syntax 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "C",
+        name: "object_25",
       },
       {
         fields: null,
