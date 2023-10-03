@@ -14,7 +14,7 @@ from typegraph_next.runtimes.deno import DenoRuntime
     # skip:next-line
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 )
-def basic_authentification(g: Graph):
+def basic_authentication(g: Graph):
     deno = DenoRuntime()
     public = Policy.public()
 
