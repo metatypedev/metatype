@@ -163,17 +163,17 @@ Meta.test("schema generation", async (t) => {
       await assertGeneratedSchema(
         "one-to-one",
         outdent`
+          model User {
+              id Int @id
+              profile Profile? @relation(name: "userProfile")
+          }
+
           model Profile {
               id String @db.Uuid @id @default(uuid())
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
   
               @@unique(userId)
-          }
-
-          model User {
-              id Int @id
-              profile Profile? @relation(name: "userProfile")
           }
         `,
       );
@@ -223,17 +223,17 @@ Meta.test("schema generation", async (t) => {
       await assertGeneratedSchema(
         "optional-one-to-one",
         outdent`
+          model User {
+              id Int @id @default(autoincrement())
+              profile Profile? @relation(name: "__rel_Profile_User_1")
+          }
+
           model Profile {
               id String @db.Uuid @id @default(uuid())
               user User? @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int?
   
               @@unique(userId)
-          }
-  
-          model User {
-              id Int @id @default(autoincrement())
-              profile Profile? @relation(name: "__rel_Profile_User_1")
           }
         `,
       );
@@ -241,17 +241,17 @@ Meta.test("schema generation", async (t) => {
       await assertGeneratedSchema(
         "optional-one-to-one",
         outdent`
-          model User {
-              id Int @id @default(autoincrement())
-              profile Profile? @relation(name: "__rel_Profile_User_1")
-          }
-  
           model Profile {
               id String @db.Uuid @id @default(uuid())
               user User? @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int?
   
               @@unique(userId)
+          }
+
+          model User {
+              id Int @id @default(autoincrement())
+              profile Profile? @relation(name: "__rel_Profile_User_1")
           }
         `,
         ([a, b]) => [b, a],
@@ -265,17 +265,17 @@ Meta.test("schema generation", async (t) => {
       await assertGeneratedSchema(
         "semi-implicit-one-to-one",
         outdent`
+          model User {
+              id Int @id
+              profile Profile? @relation(name: "userProfile")
+          }
+
           model Profile {
               id String @db.Uuid @id @default(uuid())
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
   
               @@unique(userId)
-          }
-
-          model User {
-              id Int @id
-              profile Profile? @relation(name: "userProfile")
           }
         `,
       );
@@ -408,6 +408,14 @@ Meta.test("schema generation", async (t) => {
       await assertGeneratedSchema(
         "multiple-relationships",
         outdent`
+          model User {
+              id String @db.Uuid @id @default(uuid())
+              email String @db.Text @unique
+              posts Post[] @relation(name: "__rel_Post_User_1")
+              favorite_post Post? @relation(name: "__rel_User_Post_2", fields: [favorite_postId], references: [id])
+              favorite_postId String? @db.Uuid
+          }
+
           model Post {
               id String @db.Uuid @id @default(uuid())
               title String @db.VarChar(256)
@@ -415,14 +423,6 @@ Meta.test("schema generation", async (t) => {
               author User @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
               authorId String @db.Uuid
               favorite_of User[] @relation(name: "__rel_User_Post_2")
-          }
-
-          model User {
-              id String @db.Uuid @id @default(uuid())
-              email String @db.Text @unique
-              posts Post[] @relation(name: "__rel_Post_User_1")
-              favorite_post Post? @relation(name: "__rel_User_Post_2", fields: [favorite_postId], references: [id])
-              favorite_postId String? @db.Uuid
           }
         `,
       );
