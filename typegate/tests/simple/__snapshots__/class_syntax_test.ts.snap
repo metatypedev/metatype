@@ -52,6 +52,101 @@ snapshot[`Class Syntax 1`] = `
         name: "Query",
       },
       {
+        fields: [
+          {
+            name: "metadatas",
+          },
+          {
+            name: "likes",
+          },
+          {
+            name: "id",
+          },
+          {
+            name: "content",
+          },
+          {
+            name: "title",
+          },
+          {
+            name: "comments",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Post",
+      },
+      {
+        fields: [
+          {
+            name: "title",
+          },
+          {
+            name: "content",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Comment",
+      },
+      {
+        fields: null,
+        kind: "UNION",
+        name: "either_6Out",
+      },
+      {
+        fields: [
+          {
+            name: "name",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Tag",
+      },
+      {
+        fields: [
+          {
+            name: "content",
+          },
+          {
+            name: "title",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Info",
+      },
+      {
+        fields: [
+          {
+            name: "class",
+          },
+          {
+            name: "b",
+          },
+        ],
+        kind: "OBJECT",
+        name: "B",
+      },
+      {
+        fields: [
+          {
+            name: "a",
+          },
+        ],
+        kind: "OBJECT",
+        name: "A",
+      },
+      {
+        fields: [
+          {
+            name: "c",
+          },
+          {
+            name: "struct",
+          },
+        ],
+        kind: "OBJECT",
+        name: "C",
+      },
+      {
         fields: null,
         kind: "INPUT_OBJECT",
         name: "CommentInp",
