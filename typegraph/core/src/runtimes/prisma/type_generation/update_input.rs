@@ -34,17 +34,17 @@ impl TypeGen for UpdateInput {
             let mutation_type = match typ {
                 Type::Optional(_) => unreachable!(),
                 Type::Boolean(_) | Type::String(_) => {
-                    t::union([type_id, t::struct_().prop("set", type_id).build()?]).build()?
+                    t::unionx![type_id, t::struct_().prop("set", type_id)].build()?
                 }
                 Type::Integer(_) | Type::Float(_) => {
                     let wrapped_type_id = typ.get_id();
-                    t::union([
+                    t::unionx![
                         wrapped_type_id,
-                        t::struct_().prop("set", type_id).build()?,
-                        t::struct_().prop("multiply", wrapped_type_id).build()?,
-                        t::struct_().prop("decrement", wrapped_type_id).build()?,
-                        t::struct_().prop("increment", wrapped_type_id).build()?,
-                    ])
+                        t::struct_().prop("set", type_id),
+                        t::struct_().prop("multiply", wrapped_type_id),
+                        t::struct_().prop("decrement", wrapped_type_id),
+                        t::struct_().prop("increment", wrapped_type_id),
+                    ]
                     .build()?
                 }
                 Type::Array(inner) => {
@@ -58,12 +58,12 @@ impl TypeGen for UpdateInput {
                     // scalar list: only supported in PostgreSQL, CockroachDB and MongoDB
                     // see: https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#relational-databases
                     let item_type = inner.data.of.into();
-                    t::union([
+                    t::unionx![
                         type_id,
-                        t::struct_().prop("set", type_id).build()?,
-                        t::struct_().prop("push", item_type).build()?,
+                        t::struct_().prop("set", type_id),
+                        t::struct_().prop("push", item_type),
                         // "unset": mongo only
-                    ])
+                    ]
                     .build()?
                 }
                 _ => {

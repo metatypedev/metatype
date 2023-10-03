@@ -155,7 +155,7 @@ impl TypeGen for Sort {
             builder.prop("nulls", nulls_order);
         }
 
-        t::optionalx(t::union([builder.build()?, sort_order]))?
+        t::optionalx(t::unionx![builder, sort_order])?
             .named(self.name())
             .build()
     }

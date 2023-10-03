@@ -9,9 +9,9 @@ use crate::wit::core::{
 };
 
 pub trait TypeBuilder {
-    fn build(&mut self) -> Result<TypeId>;
+    fn build(&self) -> Result<TypeId>;
 
-    fn optional(&mut self) -> Result<OptionalBuilder> {
+    fn optional(&self) -> Result<OptionalBuilder> {
         Ok(optional(self.build()?))
     }
 }
@@ -20,8 +20,14 @@ impl<T> TypeBuilder for &mut T
 where
     T: TypeBuilder,
 {
-    fn build(&mut self) -> Result<TypeId> {
+    fn build(&self) -> Result<TypeId> {
         (**self).build()
+    }
+}
+
+impl TypeBuilder for TypeId {
+    fn build(&self) -> Result<TypeId> {
+        Ok(*self)
     }
 }
 
@@ -226,7 +232,7 @@ pub fn optional(ty: TypeId) -> OptionalBuilder {
     }
 }
 
-pub fn optionalx(mut item_builder: impl TypeBuilder) -> Result<OptionalBuilder> {
+pub fn optionalx(item_builder: impl TypeBuilder) -> Result<OptionalBuilder> {
     Ok(optional(item_builder.build()?))
 }
 
@@ -257,7 +263,7 @@ pub fn array(ty: TypeId) -> ArrayBuilder {
     }
 }
 
-pub fn arrayx(mut item_builder: impl TypeBuilder) -> Result<ArrayBuilder> {
+pub fn arrayx(item_builder: impl TypeBuilder) -> Result<ArrayBuilder> {
     Ok(array(item_builder.build()?))
 }
 
@@ -285,6 +291,17 @@ pub fn union(variants: impl IntoIterator<Item = TypeId>) -> UnionBuilder {
     }
 }
 
+macro_rules! unionx {
+    [ $($ty:expr),* ] => {
+        $crate::t::union(vec![$($ty.build()?),*])
+    };
+
+    [ $($ty:expr),*, ] => {
+        crate::t::unionx![$($ty),*]
+    };
+}
+pub(crate) use unionx;
+
 #[derive(Default)]
 pub struct EitherBuilder {
     base: TypeBase,
@@ -308,6 +325,17 @@ pub fn either(variants: impl IntoIterator<Item = TypeId>) -> EitherBuilder {
         ..Default::default()
     }
 }
+
+macro_rules! eitherx {
+    [ $($ty:expr),* ] => {
+        $crate::t::either(vec![$($ty.build()?),*])
+    };
+
+    [ $($ty:expr),*, ] => {
+        crate::t::eitherx![$($ty),*]
+    };
+}
+pub(crate) use eitherx;
 
 #[derive(Default)]
 pub struct StructBuilder {
@@ -361,7 +389,7 @@ impl StructBuilder {
     pub fn propx(
         &mut self,
         name: impl Into<String>,
-        mut builder: impl TypeBuilder,
+        builder: impl TypeBuilder,
     ) -> Result<&mut Self> {
         self.data.props.push((name.into(), builder.build()?.into()));
         Ok(self)
@@ -452,9 +480,9 @@ pub fn proxy(name: impl Into<String>) -> ProxyBuilder {
 macro_rules! impl_type_builder {
     ( $ty:ty, $build:ident ) => {
         impl TypeBuilder for $ty {
-            fn build(&mut self) -> Result<TypeId> {
-                let builder = std::mem::take(self);
-                Ok($crate::Lib::$build(builder.data, builder.base)?.into())
+            fn build(&self) -> Result<TypeId> {
+                let builder = self.clone();
+                Ok($crate::Lib::$build(builder.data.clone(), builder.base.clone())?.into())
             }
         }
 
@@ -467,17 +495,17 @@ macro_rules! impl_type_builder {
 
     ( $ty:ty, $build:ident, true ) => {
         impl TypeBuilder for $ty {
-            fn build(&mut self) -> Result<TypeId> {
-                let builder = std::mem::take(self);
-                Ok($crate::Lib::$build(builder.data)?.into())
+            fn build(&self) -> Result<TypeId> {
+                let builder = self.clone();
+                Ok($crate::Lib::$build(builder.data.clone())?.into())
             }
         }
     };
 }
 impl TypeBuilder for BooleanBuilder {
-    fn build(&mut self) -> Result<TypeId> {
-        let builder = std::mem::take(self);
-        Ok(crate::Lib::booleanb(builder.base)?.into())
+    fn build(&self) -> Result<TypeId> {
+        let builder = self.clone();
+        Ok(crate::Lib::booleanb(builder.base.clone())?.into())
     }
 }
 

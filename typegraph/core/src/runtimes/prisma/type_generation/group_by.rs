@@ -73,12 +73,12 @@ impl TypeGen for Having {
         let name = self.name();
         let self_ref = t::proxy(&name).build()?;
 
-        t::union([
+        t::unionx![
             extended_type,
             t::struct_().propx("AND", t::array(self_ref))?.build()?,
             t::struct_().propx("OR", t::array(self_ref))?.build()?,
-            t::struct_().prop("NOT", self_ref).build()?,
-        ])
+            t::struct_().prop("NOT", self_ref).build()?
+        ]
         .named(name)
         .build()
     }

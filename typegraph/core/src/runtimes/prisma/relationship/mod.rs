@@ -145,15 +145,15 @@ impl PrismaLink {
         self
     }
 
-    pub fn build(mut self) -> Result<TypeId> {
-        let mut proxy = t::proxy(self.type_name);
-        if let Some(rel_name) = self.rel_name.take() {
+    fn build_link(&self) -> Result<TypeId> {
+        let mut proxy = t::proxy(&self.type_name);
+        if let Some(rel_name) = self.rel_name.clone() {
             proxy.set("rel_name", rel_name);
         }
         if let Some(fkey) = self.fkey {
             proxy.set("fkey", format!("{fkey}"));
         }
-        if let Some(target_field) = self.target_field.take() {
+        if let Some(target_field) = self.target_field.clone() {
             proxy.set("target_field", target_field);
         }
         let res = proxy.build()?;
@@ -163,13 +163,13 @@ impl PrismaLink {
 }
 
 impl TypeBuilder for PrismaLink {
-    fn build(&mut self) -> Result<TypeId> {
-        self.clone().build()
+    fn build(&self) -> Result<TypeId> {
+        self.build_link()
     }
 }
 
 #[allow(dead_code)]
-pub fn prisma_linkx(mut typ: impl TypeBuilder) -> Result<PrismaLink> {
+pub fn prisma_linkx(typ: impl TypeBuilder) -> Result<PrismaLink> {
     prisma_link(typ.build()?)
 }
 
