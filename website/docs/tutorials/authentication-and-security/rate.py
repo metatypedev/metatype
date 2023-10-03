@@ -1,12 +1,13 @@
 # skip:start
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.random import RandomRuntime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.graph.params import Cors, Rate
+from typegraph_next.runtimes.random import RandomRuntime
+
 
 # skip:end
-with TypeGraph(
-    "rate",
+@typegraph(
     # highlight-next-line
-    rate=TypeGraph.Rate(
+    rate=Rate(
         # highlight-next-line
         window_limit=35,
         # highlight-next-line
@@ -20,19 +21,20 @@ with TypeGraph(
         # highlight-next-line
     ),
     # skip:next-line
-    cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
-) as g:
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+)
+def rate(g: Graph):
     random = RandomRuntime(seed=0)
-    public = policies.public()
+    public = Policy.public()
 
     g.expose(
-        lightweight_call=random.generate(t.string(), rate_weight=1, rate_calls=True),
-        medium_call=random.generate(t.string(), rate_weight=5, rate_calls=True),
-        heavy_call=random.generate(t.string(), rate_weight=15, rate_calls=True),
-        by_result_count=random.generate(
+        public,
+        lightweight_call=random.gen(t.string()).rate(calls=True, weight=1),
+        medium_call=random.gen(t.string()).rate(calls=True, weight=5),
+        heavy_call=random.gen(t.string()).rate(calls=True, weight=15),
+        by_result_count=random.gen(
             t.array(t.string()),
-            rate_weight=2,
-            rate_calls=False,  # increment by # of results returned
-        ),
-        default_policy=[public],
+        ).rate(
+            calls=False, weight=2
+        ),  # increment by # of results returned
     )

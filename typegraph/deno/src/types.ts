@@ -16,6 +16,7 @@ import {
   TypeUnion,
 } from "./gen/interfaces/metatype-typegraph-core.d.ts";
 import { Apply } from "./gen/interfaces/metatype-typegraph-utils.d.ts";
+import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.d.ts";
 import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps.ts";
 import Policy from "./policy.ts";
@@ -27,7 +28,6 @@ import {
 } from "./utils/injection_utils.ts";
 import { InjectionValue } from "./utils/type_utils.ts";
 import { InheritDef } from "./typegraph.ts";
-import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.d.ts";
 
 export type PolicySpec = Policy | {
   none: Policy;
@@ -97,6 +97,25 @@ export class Typedef {
         }
       },
     }) as this;
+  }
+
+  rename(name: string): this {
+    const id = core.renameType({
+      tpe: this._id,
+      name,
+    });
+
+    return new Proxy(this, {
+      get(target, prop, receiver) {
+        if (prop === "_id") {
+          return id;
+        } else if (prop === "name") {
+          return name;
+        } else {
+          return Reflect.get(target, prop, receiver);
+        }
+      },
+    });
   }
 
   asTypedef(): Typedef {

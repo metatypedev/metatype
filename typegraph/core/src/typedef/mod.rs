@@ -10,6 +10,7 @@ pub mod func;
 pub mod integer;
 pub mod optional;
 pub mod proxy;
+pub mod renamed;
 pub mod string;
 pub mod struct_;
 pub mod union;

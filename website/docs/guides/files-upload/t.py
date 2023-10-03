@@ -1,10 +1,10 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.providers.aws.runtimes.s3 import S3Runtime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.providers.aws import S3Runtime
 
-with TypeGraph(
-    "retrend",
-) as g:
-    public = policies.public()
+
+@typegraph()
+def retrend(g: Graph):
+    public = Policy.public()
 
     s3 = S3Runtime(
         "S3_HOST",
@@ -18,7 +18,7 @@ with TypeGraph(
         listObjects=s3.list("bucket"),
         getDownloadUrl=s3.presign_get("bucket"),
         signUploadUrl=s3.presign_put("bucket"),
-        upload=s3.upload("bucket", t.file().allow(["image/png", "image/jpeg"])),
+        upload=s3.upload("bucket", t.file(allow=["image/png", "image/jpeg"])),
         uploadMany=s3.upload_all("bucket"),
         default_policy=[public],
     )

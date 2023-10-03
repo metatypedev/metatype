@@ -54,12 +54,12 @@ snapshot[`Class Syntax 1`] = `
       {
         fields: null,
         kind: "INPUT_OBJECT",
-        name: "CommentInp",
+        name: "object_13Inp",
       },
       {
         fields: null,
         kind: "SCALAR",
-        name: "either_6In",
+        name: "either_7In",
       },
       {
         fields: null,
@@ -74,7 +74,7 @@ snapshot[`Class Syntax 1`] = `
       {
         fields: null,
         kind: "INPUT_OBJECT",
-        name: "AInp",
+        name: "object_19Inp",
       },
       {
         fields: null,

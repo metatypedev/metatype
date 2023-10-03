@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-// deno-lint-ignore-file no-explicit-any
+// deno-lint-ignore-file no-explicit-any no-empty-interface
 
 export type OptionalNode = {
   type: "optional";
@@ -359,7 +359,7 @@ export interface PythonRuntimeData {
   config?: string | null;
 }
 export interface RandomRuntimeData {
-  seed: number;
+  seed?: number | null;
   reset?: string | null;
 }
 export interface PrismaRuntimeData {
@@ -384,7 +384,8 @@ export interface MigrationOptions {
   create: boolean;
   reset: boolean;
 }
-export type PrismaMigrationRuntimeData = Record<string, unknown>;
+export interface PrismaMigrationRuntimeData {
+}
 export interface S3RuntimeData {
   host_secret: string;
   region_secret: string;
@@ -399,8 +400,10 @@ export interface TemporalRuntimeData {
 export interface WasmEdgeRuntimeData {
   config?: string | null;
 }
-export type TypegateRuntimeData = Record<string, unknown>;
-export type TypegraphRuntimeData = Record<string, unknown>;
+export interface TypegateRuntimeData {
+}
+export interface TypegraphRuntimeData {
+}
 export interface UnknownRuntime {
   name: string;
   data: {

@@ -188,6 +188,13 @@ interface core {
     }
     register-context-policy: func(key: string, check: context-check) -> result<tuple<policy-id, string>, error>
 
+    record type-renamed {
+        tpe: type-id,
+        name: string,
+    }
+
+    rename-type: func(data: type-renamed) -> result<type-id, error>
+
     expose: func(fns: list<tuple<string, type-id>>, default-policy: option<list<policy-spec>>) -> result<_, error>
     
     type runtime-id = u32
@@ -319,7 +326,7 @@ interface runtimes {
 
     // random
     record random-runtime-data {
-        seed: u32,
+        seed: option<u32>,
         reset: option<string>,
     }
 

@@ -1,50 +1,53 @@
 # skip:start
-from typegraph import TypeGraph, policies, t
-from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.graph.params import Cors
+from typegraph_next.providers.prisma import PrismaRuntime
 
 # isort: off
 # skip:end
 # highlight-next-line
-from typegraph.runtimes.graphql import GraphQLRuntime
+from typegraph_next.runtimes.graphql import GraphQLRuntime
 
-with TypeGraph(
-    "graphql",
+
+@typegraph(
     # skip:next-line
-    cors=TypeGraph.Cors(
+    cors=Cors(
         allow_origin=["https://metatype.dev", "http://localhost:3000"],
     ),
-) as g:
+)
+def graphql(g: Graph):
     db = PrismaRuntime("database", "POSTGRES_CONN")
     # highlight-next-line
     gql = GraphQLRuntime("https://graphqlzero.almansi.me/api")
-    public = policies.public()
+    public = Policy.public()
 
     # highlight-next-line
     user = t.struct({"id": t.string(), "name": t.string()})
 
     message = t.struct(
         {
-            "id": t.integer().as_id.config("auto"),
+            "id": t.integer(as_id=True, config=["auto"]),
             "title": t.string(),
             # highlight-next-line
-            "user_id": t.string().named("uid"),
+            "user_id": t.string(name="uid"),
             # highlight-next-line
             "user": gql.query(
                 t.struct(
                     {
                         # highlight-next-line
-                        "id": t.string().as_id.from_parent(g("uid"))
+                        "id": t.string(as_id=True).from_parent("uid")
                     }
                 ),
                 t.optional(user),
             ),
-        }
-    ).named("message")
+        },
+        name="message",
+    )
 
     g.expose(
+        public,
         create_message=db.create(message),
         messages=db.find_many(message),
         # highlight-next-line
         users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
-        default_policy=[public],
     )

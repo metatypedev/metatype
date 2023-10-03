@@ -19,6 +19,7 @@ from typegraph_next.gen.exports.core import (
     TypeOptional,
     TypePolicy,
     TypeProxy,
+    TypeRenamed,
     TypeString,
     TypeStruct,
     TypeUnion,
@@ -70,6 +71,20 @@ class typedef:
             raise Exception(res.value)
 
         return _TypeWithPolicy(res.value, self, policies)
+
+    def rename(self, name: str) -> Self:
+        res = core.rename_type(
+            store,
+            TypeRenamed(
+                name=name,
+                tpe=self.id,
+            ),
+        )
+
+        if isinstance(res, Err):
+            raise Exception(res.value)
+
+        return _TypeWrapper(res.value, self)
 
     def _with_injection(self, injection: str) -> Self:
         res = core.with_injection(
@@ -568,7 +583,6 @@ class struct(typedef):
                 value = getattr(self, attr)
                 if isinstance(value, typedef):
                     props[attr] = value
-            name = self.__class__.__name__
 
         else:
             props = props or {}
@@ -630,6 +644,9 @@ class func(typedef):
         self.mat = mat
         self.rate_calls = rate_calls
         self.rate_weight = rate_weight
+
+    def rate(self, calls: bool = False, weight: Optional[int] = None) -> "func":
+        return func(self.inp, self.out, self.mat, calls, weight)
 
     def extend(self, props: Dict[str, typedef]):
         if not isinstance(self.out, struct):
