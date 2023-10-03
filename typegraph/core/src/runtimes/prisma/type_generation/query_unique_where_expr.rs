@@ -43,7 +43,7 @@ impl TypeGen for QueryUniqueWhereExpr {
                 continue;
             }
             let inner = attrs.concrete_type.resolve_quant()?;
-            builder.prop(key, t::optional(inner).build()?);
+            builder.propx(key, t::optional(inner))?;
         }
 
         builder.named(self.name()).build()

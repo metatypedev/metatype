@@ -13,9 +13,7 @@ pub struct Count;
 
 impl TypeGen for Count {
     fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
-        t::optional(t::integer().build()?)
-            .named(self.name())
-            .build()
+        t::optionalx(t::integer())?.named(self.name()).build()
     }
 
     fn name(&self) -> String {

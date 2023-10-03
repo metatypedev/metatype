@@ -74,18 +74,18 @@ impl TypeGen for InputType {
                 let connect = context.generate(&Where::new(entry.model_type, false))?;
 
                 let mut inner = t::struct_();
-                inner.prop("create", t::optional(create).build()?);
-                inner.prop("connect", t::optional(connect).build()?);
+                inner.propx("create", t::optional(create))?;
+                inner.propx("connect", t::optional(connect))?;
 
                 if let Cardinality::Many = entry.cardinality {
-                    let create_many = t::struct_()
-                        .prop("data", t::array(create).build()?)
-                        .build()?;
-                    inner.prop("createMany", t::optional(create_many).build()?);
+                    inner.propx(
+                        "createMany",
+                        t::optionalx(t::struct_().propx("data", t::array(create))?)?,
+                    )?;
                 }
 
                 // TODO what if cardinality is Cardinality::One ??
-                builder.prop(k, t::optional(inner.min(1).max(1).build()?).build()?);
+                builder.propx(k, t::optionalx(inner.min(1).max(1))?)?;
             } else {
                 let attrs = type_id.attrs()?;
                 match attrs.concrete_type.as_type()? {

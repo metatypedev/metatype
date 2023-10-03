@@ -78,7 +78,7 @@ impl TypeGen for WithFilters {
                         }
                     }
                 };
-            builder.prop(key, t::optional(generated).build()?);
+            builder.propx(key, t::optional(generated))?;
         }
 
         builder.named(self.name()).build()
@@ -101,7 +101,7 @@ impl<T: TypeGen> TypeGen for CompleteFilter<T> {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
         let inner = context.generate(&self.0)?;
         // TODO and, or ???
-        t::optional(t::union([inner, t::struct_().prop("not", inner).build()?]).build()?)
+        t::optionalx(t::union([inner, t::struct_().prop("not", inner).build()?]))?
             .named(self.name())
             .build()
     }
@@ -117,8 +117,8 @@ impl TypeGen for BooleanFilter {
     fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         t::union([
             t::boolean().build()?,
-            t::struct_().prop("equals", t::boolean().build()?).build()?,
-            t::struct_().prop("not", t::boolean().build()?).build()?,
+            t::struct_().propx("equals", t::boolean())?.build()?,
+            t::struct_().propx("not", t::boolean())?.build()?,
         ])
         .named(self.name())
         .build()

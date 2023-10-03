@@ -115,7 +115,7 @@ impl Relationship {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct PrismaLink {
     type_name: String,
     rel_name: Option<String>,
@@ -162,6 +162,17 @@ impl PrismaLink {
     }
 }
 
+impl TypeBuilder for PrismaLink {
+    fn build(&mut self) -> Result<TypeId> {
+        self.clone().build()
+    }
+}
+
+#[allow(dead_code)]
+pub fn prisma_linkx(mut typ: impl TypeBuilder) -> Result<PrismaLink> {
+    prisma_link(typ.build()?)
+}
+
 pub fn prisma_link(type_id: TypeId) -> Result<PrismaLink> {
     let name = type_id
         .type_name()?
@@ -180,11 +191,10 @@ use registry::RelationshipRegistry;
 
 #[cfg(test)]
 mod test {
-    use super::prisma_linkn;
+    use super::{prisma_linkn, prisma_linkx};
     use crate::errors::Result;
     use crate::global_store::Store;
     use crate::runtimes::prisma::errors;
-    use crate::runtimes::prisma::relationship::prisma_link;
     use crate::runtimes::prisma::relationship::registry::RelationshipRegistry;
     use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
     use crate::test_utils::*;
@@ -205,16 +215,16 @@ mod test {
     fn test_explicit_relationship_name() -> Result<(), String> {
         Store::reset();
         let user = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop("name", t::string().build()?)
-            .prop("posts", t::array(t::proxy("Post").build()?).build()?)
+            .propx("id", t::integer().as_id(true))?
+            .propx("name", t::string())?
+            .propx("posts", t::arrayx(t::proxy("Post"))?)?
             .named("User")
             .build()?;
 
         let post = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop("title", t::string().build()?)
-            .prop("author", prisma_linkn("User").name("PostAuthor").build()?)
+            .propx("id", t::integer().as_id(true))?
+            .propx("title", t::string())?
+            .propx("author", prisma_linkn("User").name("PostAuthor"))?
             .named("Post")
             .build()?;
 
@@ -231,19 +241,17 @@ mod test {
     fn test_fkey_attribute() -> Result<(), String> {
         Store::reset();
         let user = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop(
+            .propx("id", t::integer().as_id(true))?
+            .propx(
                 "profile",
-                prisma_link(t::optional(t::proxy("Profile").build()?).build()?)?
-                    .fkey(true)
-                    .build()?,
-            )
+                prisma_linkx(t::optionalx(t::proxy("Profile"))?)?.fkey(true),
+            )?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop("user", t::optional(t::proxy("User").build()?).build()?)
+            .propx("id", t::integer().as_id(true))?
+            .propx("user", t::optionalx(t::proxy("User"))?)?
             .named("Profile")
             .build()?;
 
@@ -260,19 +268,17 @@ mod test {
     fn test_unique_attribute() -> Result<(), String> {
         Store::reset();
         let user = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop(
+            .propx("id", t::integer().as_id(true))?
+            .propx(
                 "profile",
-                t::optional(t::proxy("Profile").build()?)
-                    .config("unique", "true")
-                    .build()?,
-            )
+                t::optionalx(t::proxy("Profile"))?.config("unique", "true"),
+            )?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop("user", t::optional(t::proxy("User").build()?).build()?)
+            .propx("id", t::integer().as_id(true))?
+            .propx("user", t::optionalx(t::proxy("User"))?)?
             .named("Profile")
             .build()?;
 
@@ -289,9 +295,9 @@ mod test {
     fn test_self_relationship() -> Result<(), String> {
         Store::reset();
         let node = t::struct_()
-            .prop("id", t::string().as_id(true).build()?)
-            .prop("children", t::array(t::proxy("Node").build()?).build()?)
-            .prop("parent", t::proxy("Node").build()?)
+            .propx("id", t::string().as_id(true))?
+            .propx("children", t::arrayx(t::proxy("Node"))?)?
+            .propx("parent", t::proxy("Node"))?
             .named("Node")
             .build()?;
 
@@ -307,14 +313,14 @@ mod test {
     fn test_ambiguous_side() -> Result<(), String> {
         Store::reset();
         let user = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop("profile", t::proxy("Profile").build()?)
+            .propx("id", t::integer().as_id(true))?
+            .propx("profile", t::proxy("Profile"))?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop("user", t::proxy("User").build()?)
+            .propx("id", t::integer().as_id(true))?
+            .propx("user", t::proxy("User"))?
             .named("Profile")
             .build()?;
 
@@ -332,17 +338,14 @@ mod test {
 
         Store::reset();
         let user = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop(
-                "profile",
-                t::optional(t::proxy("Profile").build()?).build()?,
-            )
+            .propx("id", t::integer().as_id(true))?
+            .propx("profile", t::optionalx(t::proxy("Profile"))?)?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop("user", t::optional(t::proxy("User").build()?).build()?)
+            .propx("id", t::integer().as_id(true))?
+            .propx("user", t::optionalx(t::proxy("User"))?)?
             .named("Profile")
             .build()?;
 
@@ -365,14 +368,14 @@ mod test {
     fn test_conflicting_attributes() -> Result<(), String> {
         Store::reset();
         let user = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop("profile", prisma_linkn("Profile").fkey(true).build()?)
+            .propx("id", t::integer().as_id(true))?
+            .propx("profile", prisma_linkn("Profile").fkey(true))?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop("user", prisma_linkn("User").fkey(true).build()?)
+            .propx("id", t::integer().as_id(true))?
+            .propx("user", prisma_linkn("User").fkey(true))?
             .named("Profile")
             .build()?;
 
@@ -394,14 +397,14 @@ mod test {
 
         Store::reset();
         let user = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop("profile", prisma_linkn("Profile").fkey(false).build()?)
+            .propx("id", t::integer().as_id(true))?
+            .propx("profile", prisma_linkn("Profile").fkey(false))?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop("user", prisma_linkn("User").fkey(false).build()?)
+            .propx("id", t::integer().as_id(true))?
+            .propx("user", prisma_linkn("User").fkey(false))?
             .named("Profile")
             .build()?;
 
@@ -428,13 +431,13 @@ mod test {
     fn test_missing_target() -> Result<(), String> {
         Store::reset();
         let user = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
-            .prop("profile", prisma_linkn("Profile").fkey(true).build()?)
+            .propx("id", t::integer().as_id(true))?
+            .propx("profile", prisma_linkn("Profile").fkey(true))?
             .named("User")
             .build()?;
 
         let _profile = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
+            .propx("id", t::integer().as_id(true))?
             .named("Profile")
             .build()?;
 

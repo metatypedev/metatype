@@ -26,7 +26,7 @@ impl TypeGen for QueryWhereExpr {
 
         let name = self.name();
         let self_ref = t::proxy(&name).build()?;
-        let and = t::optional(t::array(self_ref).build()?).build()?;
+        let and = t::optionalx(t::array(self_ref))?.build()?;
 
         let mut builder = t::struct_();
         builder.named(name);
@@ -35,7 +35,7 @@ impl TypeGen for QueryWhereExpr {
         }
         builder.prop("AND", and);
         builder.prop("OR", and);
-        builder.prop("NOT", t::optional(self_ref).build()?);
+        builder.propx("NOT", t::optional(self_ref))?;
 
         builder.build()
     }

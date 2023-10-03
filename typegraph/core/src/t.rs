@@ -16,6 +16,15 @@ pub trait TypeBuilder {
     }
 }
 
+impl<T> TypeBuilder for &mut T
+where
+    T: TypeBuilder,
+{
+    fn build(&mut self) -> Result<TypeId> {
+        (**self).build()
+    }
+}
+
 pub trait ConcreteTypeBuilder: TypeBuilder {
     fn base_mut(&mut self) -> &mut TypeBase;
 
@@ -215,6 +224,10 @@ pub fn optional(ty: TypeId) -> OptionalBuilder {
             default_item: None,
         },
     }
+}
+
+pub fn optionalx(mut item_builder: impl TypeBuilder) -> Result<OptionalBuilder> {
+    Ok(optional(item_builder.build()?))
 }
 
 #[derive(Default)]

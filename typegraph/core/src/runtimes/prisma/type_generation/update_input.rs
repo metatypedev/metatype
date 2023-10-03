@@ -73,7 +73,7 @@ impl TypeGen for UpdateInput {
                 }
             };
 
-            builder.prop(key, t::optional(mutation_type).build()?);
+            builder.propx(key, t::optional(mutation_type))?;
         }
 
         builder.named(self.name()).build()

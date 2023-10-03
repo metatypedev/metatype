@@ -104,10 +104,10 @@ impl TypeGenContext {
 
         Ok(OperationTypes {
             input: t::struct_()
-                .prop(
+                .propx(
                     "where",
-                    t::optional(self.generate(&QueryUniqueWhereExpr::new(model_id))?).build()?,
-                )
+                    t::optional(self.generate(&QueryUniqueWhereExpr::new(model_id))?),
+                )?
                 .build()?,
             output: t::optional(self.generate(&WithNestedCount::new(model_id))?).build()?,
         })
@@ -194,13 +194,13 @@ impl TypeGenContext {
 
         Ok(OperationTypes {
             input: t::struct_()
-                .prop(
+                .propx(
                     "data",
-                    t::array(self.generate(&InputType::for_create(model_id))?).build()?,
-                )
+                    t::array(self.generate(&InputType::for_create(model_id))?),
+                )?
                 .build()?,
             // TODO typegen: BatchOutput
-            output: t::struct_().prop("count", t::integer().build()?).build()?,
+            output: t::struct_().propx("count", t::integer())?.build()?,
         })
     }
 
@@ -230,7 +230,7 @@ impl TypeGenContext {
                     t::optional(self.generate(&QueryWhereExpr::new(model_id))?).build()?,
                 )
                 .build()?,
-            output: t::struct_().prop("count", t::integer().build()?).build()?,
+            output: t::struct_().propx("count", t::integer())?.build()?,
         })
     }
 
@@ -273,7 +273,7 @@ impl TypeGenContext {
                     t::optional(self.generate(&QueryWhereExpr::new(model_id))?).build()?,
                 )
                 .build()?,
-            output: t::struct_().prop("count", t::integer().build()?).build()?,
+            output: t::struct_().propx("count", t::integer())?.build()?,
         })
     }
 

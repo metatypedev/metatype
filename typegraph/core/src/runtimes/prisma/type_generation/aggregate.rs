@@ -22,7 +22,7 @@ impl CountOutput {
 impl TypeGen for CountOutput {
     fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         let mut builder = t::struct_();
-        let opt_int = t::optional(t::integer().build()?).build()?;
+        let opt_int = t::optionalx(t::integer())?.build()?;
         builder.prop("_all", opt_int);
 
         for (k, _) in self.model_id.as_struct()?.iter_props() {
@@ -54,11 +54,11 @@ impl TypeGen for NumberAggregateOutput {
     fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         let mut builder = t::struct_();
 
-        let opt_float = t::optional(t::float().build()?).build()?;
+        let opt_float = t::optionalx(t::float())?.build()?;
         let for_int = if self.avg {
             opt_float
         } else {
-            t::optional(t::integer().build()?).build()?
+            t::optionalx(t::integer())?.build()?
         };
 
         for (k, type_id) in self.model_id.as_struct()?.iter_props() {

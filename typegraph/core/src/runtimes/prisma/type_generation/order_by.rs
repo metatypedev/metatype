@@ -72,7 +72,7 @@ impl TypeGen for OrderBy {
                         let inner = context.generate(
                             &OrderBy::new(relationship_model.model_type).skip(skip_rel),
                         )?;
-                        builder.prop(k, t::optional(inner).build()?);
+                        builder.propx(k, t::optional(inner))?;
                     }
                 }
             } else {
@@ -92,7 +92,7 @@ impl TypeGen for OrderBy {
             }
         }
 
-        t::array(builder.build()?).named(self.name()).build()
+        t::arrayx(builder)?.named(self.name()).build()
     }
 
     fn name(&self) -> String {
@@ -155,7 +155,7 @@ impl TypeGen for Sort {
             builder.prop("nulls", nulls_order);
         }
 
-        t::optional(t::union([builder.build()?, sort_order]).build()?)
+        t::optionalx(t::union([builder.build()?, sort_order]))?
             .named(self.name())
             .build()
     }
@@ -178,7 +178,7 @@ impl TypeGen for SortByAggregates {
         builder.prop("_min", sort);
         builder.prop("_max", sort);
 
-        t::optional(builder.build()?).named(self.name()).build()
+        t::optionalx(builder)?.named(self.name()).build()
     }
 
     fn name(&self) -> String {
@@ -230,23 +230,17 @@ impl TypeGen for AggregateSorting {
             .collect::<Result<Vec<_>>>()?;
 
         let mut builder = t::struct_();
-        let count = t::optional(
-            t::struct_from(props.iter().filter_map(|p| {
-                p.generate(context, true)
-                    .unwrap()
-                    .map(|ty| (p.key.clone(), ty))
-            }))
-            .build()?,
-        )
+        let count = t::optionalx(t::struct_from(props.iter().filter_map(|p| {
+            p.generate(context, true)
+                .unwrap()
+                .map(|ty| (p.key.clone(), ty))
+        })))?
         .build()?;
-        let others = t::optional(
-            t::struct_from(props.iter().filter_map(|p| {
-                p.generate(context, false)
-                    .unwrap()
-                    .map(|ty| (p.key.clone(), ty))
-            }))
-            .build()?,
-        )
+        let others = t::optionalx(t::struct_from(props.iter().filter_map(|p| {
+            p.generate(context, false)
+                .unwrap()
+                .map(|ty| (p.key.clone(), ty))
+        })))?
         .build()?;
         builder
             .prop("_count", count)

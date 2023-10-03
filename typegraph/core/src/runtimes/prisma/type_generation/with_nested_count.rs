@@ -42,7 +42,7 @@ impl TypeGen for WithNestedCount {
                             model_id: relation_model.model_type,
                             skip: [self.skip.as_slice(), &[rel.name.clone()]].concat(),
                         })?;
-                        builder.prop(key, t::optional(inner).build()?);
+                        builder.propx(key, t::optional(inner))?;
                         countable.push(key.to_string());
                     }
                     Cardinality::Many => {
@@ -50,7 +50,7 @@ impl TypeGen for WithNestedCount {
                             model_id: relation_model.model_type,
                             skip: [self.skip.as_slice(), &[rel.name.clone()]].concat(),
                         })?;
-                        builder.prop(key, t::array(inner).build()?);
+                        builder.propx(key, t::array(inner))?;
                         countable.push(key.to_string());
                     }
                     Cardinality::One => {
@@ -68,7 +68,7 @@ impl TypeGen for WithNestedCount {
             for prop in countable.into_iter() {
                 count.prop(prop, context.generate(&Count)?);
             }
-            builder.prop("_count", count.build()?);
+            builder.propx("_count", count)?;
         }
 
         builder.named(self.name()).build()

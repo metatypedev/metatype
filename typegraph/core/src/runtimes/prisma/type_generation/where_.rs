@@ -38,14 +38,14 @@ impl TypeGen for Where {
                     model_id: model.model_type,
                     relations: false,
                 })?;
-                builder.prop(key, t::optional(inner).build()?);
+                builder.propx(key, t::optional(inner))?;
             } else {
                 let non_optional = type_id.non_optional_concrete_type()?;
                 match non_optional.as_type()? {
                     Type::Optional(_) => unreachable!(),
                     Type::Func(_) => continue,
                     _ => {
-                        builder.prop(key, t::optional(non_optional).build()?);
+                        builder.propx(key, t::optional(non_optional))?;
                     }
                 }
             }
