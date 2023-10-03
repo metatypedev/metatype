@@ -1,11 +1,13 @@
 # skip:start
-from typegraph import TypeGraph, t
+from typegraph_next import typegraph, t, Graph
 
-with TypeGraph("typecheck") as g:
+
+@typegraph()
+def typecheck(g: Graph):
     # skip:end
     t.struct(
         {
-            "name": t.string().max(200),
+            "name": t.string(max=200),
             "age": t.optional(t.integer()),  # or t.integer().optional()
             "messages": t.array(t.struct({"text": t.string(), "sentAt": t.datetime()})),
         }

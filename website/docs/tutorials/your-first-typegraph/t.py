@@ -1,14 +1,16 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.random import RandomMat, RandomRuntime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.graph.params import Cors
+from typegraph_next.runtimes import RandomRuntime
 
-with TypeGraph(
-    "first-typegraph",
+
+@typegraph(
     # skip:next-line
-    cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
-) as g:
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+)
+def first_typegraph(g: Graph):
     # declare runtimes and policies
     random = RandomRuntime()
-    public = policies.public()
+    public = Policy.public()
 
     # declare types
     message = t.struct(
@@ -21,7 +23,7 @@ with TypeGraph(
 
     # expose them with policies
     g.expose(
+        public,
         # input → output via materializer
-        get_message=t.func(t.struct(), message, RandomMat(random)),
-        default_policy=[public],
+        get_message=random.gen(message),
     )

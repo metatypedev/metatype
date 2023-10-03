@@ -645,6 +645,9 @@ class func(typedef):
         self.rate_calls = rate_calls
         self.rate_weight = rate_weight
 
+    def rate(self, calls: bool = False, weight: Optional[int] = None) -> "func":
+        return func(self.inp, self.out, self.mat, calls, weight)
+
     def extend(self, props: Dict[str, typedef]):
         if not isinstance(self.out, struct):
             raise Exception("Cannot extend non-struct function output")

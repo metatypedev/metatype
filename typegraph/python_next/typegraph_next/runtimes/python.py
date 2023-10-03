@@ -31,9 +31,13 @@ class PythonRuntime(Runtime):
 
     def from_lambda(
         self,
+        inp: "t.struct",
+        out: "t.typedef",
         function: callable,
+        *,
+        effect: Effect = EffectNone(),
+        # secrets: Optional[List[str]] = None,
     ):
-        effect = EffectNone()
         lambdas, _defs = DefinitionCollector.collect(function)
         assert len(lambdas) == 1
         fn = str(lambdas[0])
@@ -46,13 +50,22 @@ class PythonRuntime(Runtime):
         if isinstance(mat_id, Err):
             raise Exception(mat_id.value)
 
-        return LambdaMat(id=mat_id.value, fn=fn, effect=effect)
+        from typegraph_next import t
+
+        return t.func(
+            inp,
+            out,
+            LambdaMat(id=mat_id.value, fn=fn, effect=effect),
+        )
 
     def from_def(
         self,
+        inp: "t.struct",
+        out: "t.typedef",
         function: callable,
+        *,
+        effect: Effect = EffectNone(),
     ):
-        effect = EffectNone()
         _lambdas, defs = DefinitionCollector.collect(function)
         assert len(defs) == 1
         name, fn = defs[0]
@@ -66,7 +79,13 @@ class PythonRuntime(Runtime):
         if isinstance(mat_id, Err):
             raise Exception(mat_id.value)
 
-        return DefMat(id=mat_id.value, name=name, fn=fn, effect=effect)
+        from typegraph_next import t
+
+        return t.func(
+            inp,
+            out,
+            DefMat(id=mat_id.value, name=name, fn=fn, effect=effect),
+        )
 
     def import_(
         self,

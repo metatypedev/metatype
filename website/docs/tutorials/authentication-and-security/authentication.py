@@ -1,24 +1,26 @@
 # skip:start
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.deno import DenoRuntime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.graph.params import Cors, Auth
+from typegraph_next.runtimes.deno import DenoRuntime
 
 # skip:end
 
-with TypeGraph(
-    "authentication",
+
+@typegraph(
     auths=[
         # highlight-start
         # expects a secret in metatype.yml
         # `TG_[typegraph]_BASIC_[username]`
         # highlight-next-line
-        TypeGraph.Auth.basic(["admin"]),
+        Auth.basic(["admin"]),
         # highlight-end
     ],
     # skip:next-line
-    cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
-) as g:
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+)
+def authentication(g: Graph):
     deno = DenoRuntime()
-    public = policies.public()
+    public = Policy.public()
 
     ctx = t.struct({"username": t.string().optional().from_context("username")})
 

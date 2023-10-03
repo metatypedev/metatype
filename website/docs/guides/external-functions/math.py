@@ -1,37 +1,35 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.policies import Policy
-from typegraph.runtimes.deno import DenoRuntime, ModuleMat, PureFunMat
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.runtimes.deno import DenoRuntime
 
-with TypeGraph(name="math") as g:
-    worker = DenoRuntime(worker="worker 1")
 
-    public = policies.public()
+@typegraph()
+def math(g: Graph):
+    deno = DenoRuntime()
 
-    restrict_referer = Policy(
-        PureFunMat(
-            '(_, context) => context["headers"]["referer"] && new URL(context["headers"]["referer"]).pathname === "/math"',
-            runtime=worker,
-        ),
-    ).named("restrict_referer_policy")
+    public = Policy.public()
 
-    fib = ModuleMat("fib.ts", runtime=worker)
+    restrict_referer = deno.policy(
+        "restrict_referer_policy",
+        '(_, context) => context["headers"]["referer"] && new URL(context["headers"]["referer"]).pathname === "/math"',
+    )
 
     random_item_fn = "({ items }) => items[Math.floor(Math.random() * items.length)]"
 
     g.expose(
-        fib=t.func(
+        fib=deno.import_(
             t.struct({"size": t.integer()}),
             t.array(t.float()),
-            fib.imp("default"),
-        ).add_policy(restrict_referer),
-        random=t.func(
+            module="fib.ts",
+            name="default",
+        ).with_policy(restrict_referer),
+        random=deno.func(
             t.struct(),
             t.float(),
-            PureFunMat("() => Math.random()"),
-        ).add_policy(public),
-        randomItem=t.func(
+            code="() => Math.random()",
+        ).with_policy(public),
+        randomItem=deno.func(
             t.struct({"items": t.array(t.string())}),
             t.string(),
-            PureFunMat(random_item_fn, runtime=worker),
-        ).add_policy(public),
+            code=random_item_fn,
+        ).with_policy(public),
     )
