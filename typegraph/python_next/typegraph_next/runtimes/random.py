@@ -3,22 +3,20 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from typegraph_next.runtimes.base import Materializer, Runtime
-
+from typegraph_next import t
 from typegraph_next.gen.exports.runtimes import (
-    EffectNone,
     BaseMaterializer,
+    EffectNone,
     MaterializerRandom,
     RandomRuntimeData,
 )
 from typegraph_next.gen.types import Err
+from typegraph_next.runtimes.base import Materializer, Runtime
 from typegraph_next.wit import runtimes, store
-
-from typegraph_next import t
 
 
 class RandomRuntime(Runtime):
-    def __init__(self, seed: int = 0, reset: Optional[str] = ""):
+    def __init__(self, seed: Optional[int] = None, reset: Optional[str] = ""):
         super().__init__(
             runtimes.register_random_runtime(
                 store, data=RandomRuntimeData(seed=seed, reset=reset)

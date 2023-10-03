@@ -1649,12 +1649,12 @@
     },
     "RandomRuntimeData": {
       "type": "object",
-      "required": [
-        "seed"
-      ],
       "properties": {
         "seed": {
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint32",
           "minimum": 0.0
         },

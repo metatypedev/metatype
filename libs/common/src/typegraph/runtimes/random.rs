@@ -8,6 +8,6 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RandomRuntimeData {
-    pub seed: u32,
+    pub seed: Option<u32>,
     pub reset: Option<String>,
 }
