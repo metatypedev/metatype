@@ -1,7 +1,7 @@
-from typegraph_next import t, typegraph, Graph
+from typegraph_next import Graph, t, typegraph
 from typegraph_next.policy import Policy
-from typegraph_next.runtimes.python import PythonRuntime
 from typegraph_next.runtimes.deno import DenoRuntime
+from typegraph_next.runtimes.python import PythonRuntime
 
 
 @typegraph()
@@ -11,7 +11,7 @@ def test_multiple_runtimes(g: Graph):
     python = PythonRuntime()
 
     g.expose(
-        add=t.func(
+        add=python.from_lambda(
             t.struct(
                 {
                     "first": t.float(),
@@ -19,7 +19,7 @@ def test_multiple_runtimes(g: Graph):
                 }
             ),
             t.float(),
-            python.from_lambda(lambda x: x["first"] + x["second"]),
+            lambda x: x["first"] + x["second"],
         ).with_policy(public),
         multiply=deno.func(
             t.struct({"first": t.float(), "second": t.float()}),

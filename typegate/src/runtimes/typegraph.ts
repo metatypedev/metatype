@@ -133,6 +133,7 @@ export class TypeGraphRuntime extends Runtime {
         const regularTypeIndices = new Set<number>();
 
         const inputRootTypeIndices = new Set<number>();
+        const outputRootTypeIndices = new Set<number>();
         // decides whether or not custom object should be generated
         let hasUnion = false;
 
@@ -144,6 +145,7 @@ export class TypeGraphRuntime extends Runtime {
             // the struct input of a function never generates a GrahpQL type
             // the actual inputs are the properties
             inputRootTypeIndices.add(type.input);
+            outputRootTypeIndices.add(type.output);
             visitTypes(
               this.tg,
               getChildTypes(this.tg.types[type.input]),
@@ -160,13 +162,16 @@ export class TypeGraphRuntime extends Runtime {
                 return true;
               },
             );
-
             return true;
           },
           default: ({ type, idx }) => {
-            if (inputRootTypeIndices.has(idx)) {
+            if (
+              inputRootTypeIndices.has(idx) &&
+              !outputRootTypeIndices.has(idx)
+            ) {
               return false;
             }
+            // type is either a regular type or an input type reused in the output
             hasUnion ||= isUnion(type) || isEither(type);
             if (isScalar(type)) {
               scalarTypeIndices.add(idx);
@@ -188,6 +193,7 @@ export class TypeGraphRuntime extends Runtime {
         const scalarTypes = distinctScalars.map((type) =>
           this.formatType(type, false, false)
         );
+
         const customScalarTypes = hasUnion
           ? distinctScalars.map((node) => {
             const idx = this.scalarIndex.get(node.type)!;
@@ -195,10 +201,12 @@ export class TypeGraphRuntime extends Runtime {
             return this.formatType(asObject, false, false);
           })
           : [];
+
         const regularTypes = distinctBy(
           [...regularTypeIndices].map((idx) => this.tg.types[idx]),
           (t) => t.title,
         ).map((type) => this.formatType(type, false, false));
+
         const inputTypes = distinctBy(
           [...inputTypeIndices].map((idx) => this.tg.types[idx]),
           (t) => t.title,
