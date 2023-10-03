@@ -217,6 +217,15 @@ jobs:
           cd typegraph/python_next
           poetry install --sync
           cd ../..
+
+          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
+          export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
+          cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
+          cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
+          wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+          rm -rf typegraph/python_next/typegraph_next/gen
+          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
+
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
 
