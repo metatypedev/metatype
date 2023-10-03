@@ -5,7 +5,7 @@ import { Runtime } from "../runtimes/mod.ts";
 import { runtimes } from "../wit.ts";
 import { Typedef } from "../types.ts";
 import { t } from "../mod.ts";
-import { Effect } from "../gen/exports/metatype-typegraph-runtimes.d.ts";
+import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
 
 type PrismaLinkArg = {
   fkey?: boolean;

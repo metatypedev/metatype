@@ -6,7 +6,7 @@ import { runtimes } from "../wit.ts";
 import {
   Effect,
   RandomRuntimeData,
-} from "../gen/exports/metatype-typegraph-runtimes.d.ts";
+} from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
 import { Materializer, Runtime } from "./mod.ts";
 
 interface RandomMat extends Materializer {
