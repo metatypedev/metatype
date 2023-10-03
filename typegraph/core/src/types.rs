@@ -8,7 +8,7 @@ use common::typegraph::TypeNode;
 use enum_dispatch::enum_dispatch;
 
 use crate::conversion::types::TypeConversion;
-use crate::errors::{self, Result};
+use crate::errors::{self, ErrorContext, Result};
 use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
@@ -314,6 +314,11 @@ impl TypeId {
     }
 
     pub fn attrs(&self) -> Result<TypeAttributes> {
+        let error_context = || match self.repr() {
+            Ok(s) => format!("while getting attributes for type {}", s),
+            Err(e) => format!("while getting attributes for type #{}: {}", self.0, e),
+        };
+
         let mut type_id = *self;
         let mut proxy_data: HashMap<String, String> = HashMap::new();
         let mut policy_chain = Vec::new();
@@ -321,7 +326,7 @@ impl TypeId {
         let mut name = None;
 
         loop {
-            let typ = type_id.as_type()?;
+            let typ = type_id.as_type().with_context(error_context)?;
             match typ {
                 Type::Proxy(p) => {
                     proxy_data.extend(p.data.extras.clone());
@@ -338,7 +343,7 @@ impl TypeId {
 
                 Type::WithInjection(inner) => {
                     if injection.is_some() {
-                        return Err("multiple injections not supported".to_string());
+                        return Err("multiple injections not supported".to_string().into());
                     }
                     injection = Some(inner.data.injection.clone());
                     type_id = inner.data.tpe.into();

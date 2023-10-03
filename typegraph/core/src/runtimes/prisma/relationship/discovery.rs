@@ -117,7 +117,8 @@ impl Candidate {
                 Err(format!(
                     "multiple alternative targets found for {:?}:{details}",
                     self
-                ))
+                )
+                .into())
             }
         }
     }
@@ -195,7 +196,7 @@ impl CandidatePair {
                     Ok(a.clone())
                 } else {
                     // unreachable!
-                    Err(format!("conflicting relationship names: {} and {}", a, b))
+                    Err(format!("conflicting relationship names: {} and {}", a, b).into())
                 }
             }
         }
@@ -243,7 +244,7 @@ impl CandidatePair {
                 Err(format!(
                     "many-to-many relationship not supported: use explicit join table between {} and {}",
                     first.model_name, second.model_name
-                ))
+                ).into())
             }
         }
     }
@@ -266,7 +267,8 @@ impl CandidatePair {
                 "model {:?} is not in relationship {}",
                 model_id,
                 self.rel_name(0)?
-            ))
+            )
+            .into())
         }
     }
 }

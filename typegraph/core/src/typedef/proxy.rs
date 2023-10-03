@@ -37,7 +37,7 @@ impl WrapperTypeData for TypeProxy {
 
     fn try_resolve(&self) -> Result<TypeId> {
         self.resolve()
-            .ok_or_else(|| format!("could not resolve proxy '{}'", self.name))
+            .ok_or_else(|| format!("could not resolve proxy '{}'", self.name).into())
     }
 }
 

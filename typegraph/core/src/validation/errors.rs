@@ -15,8 +15,9 @@ pub fn invalid_output_type_predefined(name: &str, expected: &str, got: &str) -> 
         "invalid output type for predefined function {}: expected {}, got {}",
         name, expected, got
     )
+    .into()
 }
 
 pub fn unknown_predefined_function(name: &str) -> Error {
-    format!("unknown predefined function {}", name)
+    format!("unknown predefined function {}", name).into()
 }

@@ -69,7 +69,7 @@ impl RelationshipRegistry {
                 e.insert(rel_name);
                 Ok(())
             }
-            Ent::Occupied(_e) => Err("cannot readd relationship".to_string()),
+            Ent::Occupied(_e) => Err("cannot readd relationship".into()),
         }
     }
 
@@ -80,7 +80,8 @@ impl RelationshipRegistry {
                 return Err(format!(
                     "Pair partially registered: pair={pair:?}, registry={:#?}",
                     self
-                ))
+                )
+                .into())
             }
             (false, false) => {}
         }
