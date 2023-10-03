@@ -204,30 +204,6 @@ snapshot[`Auto-tests for rate 4`] = `
 }
 `;
 
-snapshot[`Auto-tests for fcm 1`] = `
-{
-  data: {
-    send_notification: {
-      error: {
-        code: 401,
-        message: "Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.",
-      },
-    },
-  },
-}
-`;
-
-snapshot[`Auto-tests for fcm 2`] = `
-{
-  data: {
-    user: {
-      id: "1",
-      name: "Leanne Graham",
-    },
-  },
-}
-`;
-
 snapshot[`Auto-tests for deno 1`] = `
 {
   data: {
@@ -286,19 +262,6 @@ snapshot[`Auto-tests for policies 4`] = `
 }
 `;
 
-snapshot[`Auto-tests for business-logic 1`] = `
-{
-  errors: [
-    {
-      extensions: {},
-      locations: [],
-      message: "Authorization failed for policy '__ctx_user_type' with effect 'none' on type 'function_408' ('function') at '<root>.list_messages'",
-      path: [],
-    },
-  ],
-}
-`;
-
 snapshot[`Auto-tests for index 1`] = `
 {
   data: {
@@ -341,7 +304,7 @@ snapshot[`Auto-tests for index 3`] = `
     {
       extensions: {},
       locations: [],
-      message: "Authorization failed for policy '__ctx_email__metatype_dev' with effect 'none' on type 'string_4' ('string') at '<root>.list_feedback.email'",
+      message: "Authorization failed for policy '__ctx_p_email____metatype_dev' with effect 'none' on type 'string_1' ('string') at '<root>.list_feedback.email'",
       path: [],
     },
   ],
