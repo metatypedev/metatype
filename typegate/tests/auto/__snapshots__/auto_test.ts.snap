@@ -10,11 +10,85 @@ snapshot[`Auto-tests for test 1`] = `
 }
 `;
 
+snapshot[`Auto-tests for test 2`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "integer type",
+          fields: null,
+          inputFields: null,
+          name: "Int",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "test",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+        {
+          description: "out type",
+          fields: [
+            {
+              name: "a",
+            },
+          ],
+          inputFields: null,
+          name: "out",
+        },
+      ],
+    },
+  },
+}
+`;
+
 snapshot[`Auto-tests for basic 1`] = `
 {
   data: {
     get_context: {
       username: null,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for basic 2`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "string type",
+          fields: null,
+          inputFields: null,
+          name: "String",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "get_context",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+        {
+          description: "object_3 type",
+          fields: [
+            {
+              name: "username",
+            },
+          ],
+          inputFields: null,
+          name: "object_3",
+        },
+      ],
     },
   },
 }
@@ -30,11 +104,85 @@ snapshot[`Auto-tests for jwt 1`] = `
 }
 `;
 
+snapshot[`Auto-tests for jwt 2`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "string type",
+          fields: null,
+          inputFields: null,
+          name: "String",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "get_context",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+        {
+          description: "object_3 type",
+          fields: [
+            {
+              name: "your_own_content",
+            },
+          ],
+          inputFields: null,
+          name: "object_3",
+        },
+      ],
+    },
+  },
+}
+`;
+
 snapshot[`Auto-tests for oauth2 1`] = `
 {
   data: {
     get_context: {
       exp: null,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for oauth2 2`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "integer type",
+          fields: null,
+          inputFields: null,
+          name: "Int",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "get_context",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+        {
+          description: "object_3 type",
+          fields: [
+            {
+              name: "exp",
+            },
+          ],
+          inputFields: null,
+          name: "object_3",
+        },
+      ],
     },
   },
 }
@@ -59,6 +207,358 @@ snapshot[`Auto-tests for database 2`] = `
         id: 1,
       },
     ],
+  },
+}
+`;
+
+snapshot[`Auto-tests for database 3`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "integer type",
+          fields: null,
+          inputFields: null,
+          name: "Int",
+        },
+        {
+          description: "string type",
+          fields: null,
+          inputFields: null,
+          name: "String",
+        },
+        {
+          description: "_Integer type",
+          fields: [
+            {
+              name: "integer",
+            },
+          ],
+          inputFields: null,
+          name: "_Integer",
+        },
+        {
+          description: "_String type",
+          fields: [
+            {
+              name: "string",
+            },
+          ],
+          inputFields: null,
+          name: "_String",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "list_messages",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+        {
+          description: "messageWithNestedCount type",
+          fields: [
+            {
+              name: "body",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "messageWithNestedCount",
+        },
+        {
+          description: "Mutation type",
+          fields: [
+            {
+              name: "create_message",
+            },
+          ],
+          inputFields: null,
+          name: "Mutation",
+        },
+        {
+          description: "_messageOutputType type",
+          fields: [
+            {
+              name: "body",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "_messageOutputType",
+        },
+        {
+          description: "QuerymessageWhereInput input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "body",
+            },
+            {
+              name: "AND",
+            },
+            {
+              name: "OR",
+            },
+            {
+              name: "NOT",
+            },
+          ],
+          name: "QuerymessageWhereInputInp",
+        },
+        {
+          description: "union type
+_integer_filter, object_22",
+          fields: null,
+          inputFields: null,
+          name: "union_23In",
+        },
+        {
+          description: "either type
+integer_13, object_16, object_17, object_18, object_19, object_20",
+          fields: null,
+          inputFields: null,
+          name: "_integer_filterIn",
+        },
+        {
+          description: "object_16 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "equals",
+            },
+          ],
+          name: "object_16Inp",
+        },
+        {
+          description: "object_17 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_17Inp",
+        },
+        {
+          description: "object_18 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "lt",
+            },
+            {
+              name: "gt",
+            },
+            {
+              name: "lte",
+            },
+            {
+              name: "gte",
+            },
+          ],
+          name: "object_18Inp",
+        },
+        {
+          description: "object_19 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "in",
+            },
+          ],
+          name: "object_19Inp",
+        },
+        {
+          description: "object_20 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "notIn",
+            },
+          ],
+          name: "object_20Inp",
+        },
+        {
+          description: "object_22 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_22Inp",
+        },
+        {
+          description: "union type
+_string_filter, object_39",
+          fields: null,
+          inputFields: null,
+          name: "union_40In",
+        },
+        {
+          description: "union type
+string_26, object_29, object_30, object_31, object_32, object_35, object_36, object_37",
+          fields: null,
+          inputFields: null,
+          name: "_string_filterIn",
+        },
+        {
+          description: "object_29 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "equals",
+            },
+          ],
+          name: "object_29Inp",
+        },
+        {
+          description: "object_30 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_30Inp",
+        },
+        {
+          description: "object_31 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "in",
+            },
+          ],
+          name: "object_31Inp",
+        },
+        {
+          description: "object_32 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "notIn",
+            },
+          ],
+          name: "object_32Inp",
+        },
+        {
+          description: "object_35 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "contains",
+            },
+            {
+              name: "mode",
+            },
+          ],
+          name: "object_35Inp",
+        },
+        {
+          description: "object_36 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "search",
+            },
+          ],
+          name: "object_36Inp",
+        },
+        {
+          description: "object_37 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "startsWith",
+            },
+            {
+              name: "endsWith",
+            },
+          ],
+          name: "object_37Inp",
+        },
+        {
+          description: "object_39 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_39Inp",
+        },
+        {
+          description: "object_56 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "body",
+            },
+          ],
+          name: "object_56Inp",
+        },
+        {
+          description: "union type
+object_53, _SortOrder",
+          fields: null,
+          inputFields: null,
+          name: "union_54In",
+        },
+        {
+          description: "object_53 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "sort",
+            },
+          ],
+          name: "object_53Inp",
+        },
+        {
+          description: "_message_CreateInput input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "body",
+            },
+          ],
+          name: "_message_CreateInputInp",
+        },
+      ],
+    },
   },
 }
 `;
@@ -139,6 +639,387 @@ snapshot[`Auto-tests for graphql 3`] = `
 }
 `;
 
+snapshot[`Auto-tests for graphql 4`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "integer type",
+          fields: null,
+          inputFields: null,
+          name: "Int",
+        },
+        {
+          description: "string type",
+          fields: null,
+          inputFields: null,
+          name: "String",
+        },
+        {
+          description: "_Integer type",
+          fields: [
+            {
+              name: "integer",
+            },
+          ],
+          inputFields: null,
+          name: "_Integer",
+        },
+        {
+          description: "_String type",
+          fields: [
+            {
+              name: "string",
+            },
+          ],
+          inputFields: null,
+          name: "_String",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "users",
+            },
+            {
+              name: "messages",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+        {
+          description: "messageWithNestedCount type",
+          fields: [
+            {
+              name: "user",
+            },
+            {
+              name: "user_id",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "messageWithNestedCount",
+        },
+        {
+          description: "object_2 type",
+          fields: [
+            {
+              name: "name",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "object_2",
+        },
+        {
+          description: "object_81 type",
+          fields: [
+            {
+              name: "data",
+            },
+          ],
+          inputFields: null,
+          name: "object_81",
+        },
+        {
+          description: "Mutation type",
+          fields: [
+            {
+              name: "create_message",
+            },
+          ],
+          inputFields: null,
+          name: "Mutation",
+        },
+        {
+          description: "_messageOutputType type",
+          fields: [
+            {
+              name: "user_id",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "_messageOutputType",
+        },
+        {
+          description: "QuerymessageWhereInput input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "user_id",
+            },
+            {
+              name: "AND",
+            },
+            {
+              name: "OR",
+            },
+            {
+              name: "NOT",
+            },
+          ],
+          name: "QuerymessageWhereInputInp",
+        },
+        {
+          description: "union type
+_integer_filter, object_31",
+          fields: null,
+          inputFields: null,
+          name: "union_32In",
+        },
+        {
+          description: "either type
+integer_22, object_25, object_26, object_27, object_28, object_29",
+          fields: null,
+          inputFields: null,
+          name: "_integer_filterIn",
+        },
+        {
+          description: "object_25 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "equals",
+            },
+          ],
+          name: "object_25Inp",
+        },
+        {
+          description: "object_26 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_26Inp",
+        },
+        {
+          description: "object_27 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "lt",
+            },
+            {
+              name: "gt",
+            },
+            {
+              name: "lte",
+            },
+            {
+              name: "gte",
+            },
+          ],
+          name: "object_27Inp",
+        },
+        {
+          description: "object_28 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "in",
+            },
+          ],
+          name: "object_28Inp",
+        },
+        {
+          description: "object_29 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "notIn",
+            },
+          ],
+          name: "object_29Inp",
+        },
+        {
+          description: "object_31 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_31Inp",
+        },
+        {
+          description: "union type
+_string_filter, object_48",
+          fields: null,
+          inputFields: null,
+          name: "union_49In",
+        },
+        {
+          description: "union type
+string_35, object_38, object_39, object_40, object_41, object_44, object_45, object_46",
+          fields: null,
+          inputFields: null,
+          name: "_string_filterIn",
+        },
+        {
+          description: "object_38 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "equals",
+            },
+          ],
+          name: "object_38Inp",
+        },
+        {
+          description: "object_39 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_39Inp",
+        },
+        {
+          description: "object_40 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "in",
+            },
+          ],
+          name: "object_40Inp",
+        },
+        {
+          description: "object_41 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "notIn",
+            },
+          ],
+          name: "object_41Inp",
+        },
+        {
+          description: "object_44 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "contains",
+            },
+            {
+              name: "mode",
+            },
+          ],
+          name: "object_44Inp",
+        },
+        {
+          description: "object_45 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "search",
+            },
+          ],
+          name: "object_45Inp",
+        },
+        {
+          description: "object_46 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "startsWith",
+            },
+            {
+              name: "endsWith",
+            },
+          ],
+          name: "object_46Inp",
+        },
+        {
+          description: "object_48 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_48Inp",
+        },
+        {
+          description: "object_65 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "user_id",
+            },
+          ],
+          name: "object_65Inp",
+        },
+        {
+          description: "union type
+object_62, _SortOrder",
+          fields: null,
+          inputFields: null,
+          name: "union_63In",
+        },
+        {
+          description: "object_62 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "sort",
+            },
+          ],
+          name: "object_62Inp",
+        },
+        {
+          description: "_message_CreateInput input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "user_id",
+            },
+          ],
+          name: "_message_CreateInputInp",
+        },
+      ],
+    },
+  },
+}
+`;
+
 snapshot[`Auto-tests for authentication 1`] = `
 {
   data: {
@@ -149,10 +1030,74 @@ snapshot[`Auto-tests for authentication 1`] = `
 }
 `;
 
+snapshot[`Auto-tests for authentication 2`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "string type",
+          fields: null,
+          inputFields: null,
+          name: "String",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "get_context",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+        {
+          description: "object_3 type",
+          fields: [
+            {
+              name: "username",
+            },
+          ],
+          inputFields: null,
+          name: "object_3",
+        },
+      ],
+    },
+  },
+}
+`;
+
 snapshot[`Auto-tests for cors 1`] = `
 {
   data: {
     catch_me_if_you_can: "R0!S@O!FUVCGw",
+  },
+}
+`;
+
+snapshot[`Auto-tests for cors 2`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "string type",
+          fields: null,
+          inputFields: null,
+          name: "String",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "catch_me_if_you_can",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+      ],
+    },
   },
 }
 `;
@@ -204,12 +1149,94 @@ snapshot[`Auto-tests for rate 4`] = `
 }
 `;
 
+snapshot[`Auto-tests for rate 5`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "string type",
+          fields: null,
+          inputFields: null,
+          name: "String",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "by_result_count",
+            },
+            {
+              name: "heavy_call",
+            },
+            {
+              name: "medium_call",
+            },
+            {
+              name: "lightweight_call",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+      ],
+    },
+  },
+}
+`;
+
 snapshot[`Auto-tests for deno 1`] = `
 {
   data: {
     compute_fib: {
       ms: 0,
       res: 3,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for deno 2`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "float type",
+          fields: null,
+          inputFields: null,
+          name: "Float",
+        },
+        {
+          description: "integer type",
+          fields: null,
+          inputFields: null,
+          name: "Int",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "compute_fib",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+        {
+          description: "object_4 type",
+          fields: [
+            {
+              name: "ms",
+            },
+            {
+              name: "res",
+            },
+          ],
+          inputFields: null,
+          name: "object_4",
+        },
+      ],
     },
   },
 }
@@ -262,6 +1289,42 @@ snapshot[`Auto-tests for policies 4`] = `
 }
 `;
 
+snapshot[`Auto-tests for policies 5`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "string type",
+          fields: null,
+          inputFields: null,
+          name: "String",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "both",
+            },
+            {
+              name: "user_only",
+            },
+            {
+              name: "admin_only",
+            },
+            {
+              name: "public",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+      ],
+    },
+  },
+}
+`;
+
 snapshot[`Auto-tests for index 1`] = `
 {
   data: {
@@ -311,6 +1374,298 @@ snapshot[`Auto-tests for index 3`] = `
 }
 `;
 
+snapshot[`Auto-tests for index 4`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "string type",
+          fields: null,
+          inputFields: null,
+          name: "String",
+        },
+        {
+          description: "integer type",
+          fields: null,
+          inputFields: null,
+          name: "Int",
+        },
+        {
+          description: "_String type",
+          fields: [
+            {
+              name: "string",
+            },
+          ],
+          inputFields: null,
+          name: "_String",
+        },
+        {
+          description: "_Integer type",
+          fields: [
+            {
+              name: "integer",
+            },
+          ],
+          inputFields: null,
+          name: "_Integer",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "list_feedback",
+            },
+            {
+              name: "stargazers",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+        {
+          description: "object_14 type",
+          fields: [
+            {
+              name: "user",
+            },
+            {
+              name: "login",
+            },
+          ],
+          inputFields: null,
+          name: "object_14",
+        },
+        {
+          description: "object_12 type",
+          fields: [
+            {
+              name: "name",
+            },
+          ],
+          inputFields: null,
+          name: "object_12",
+        },
+        {
+          description: "feedbackWithNestedCount type",
+          fields: [
+            {
+              name: "message",
+            },
+            {
+              name: "email",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "feedbackWithNestedCount",
+        },
+        {
+          description: "Mutation type",
+          fields: [
+            {
+              name: "send_feedback",
+            },
+          ],
+          inputFields: null,
+          name: "Mutation",
+        },
+        {
+          description: "_feedbackOutputType type",
+          fields: [
+            {
+              name: "message",
+            },
+            {
+              name: "email",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "_feedbackOutputType",
+        },
+        {
+          description: "QueryfeedbackWhereInput input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "email",
+            },
+            {
+              name: "message",
+            },
+            {
+              name: "AND",
+            },
+            {
+              name: "OR",
+            },
+            {
+              name: "NOT",
+            },
+          ],
+          name: "QueryfeedbackWhereInputInp",
+        },
+        {
+          description: "union type
+_string_filter, object_40",
+          fields: null,
+          inputFields: null,
+          name: "union_41In",
+        },
+        {
+          description: "union type
+string_27, object_30, object_31, object_32, object_33, object_36, object_37, object_38",
+          fields: null,
+          inputFields: null,
+          name: "_string_filterIn",
+        },
+        {
+          description: "object_30 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "equals",
+            },
+          ],
+          name: "object_30Inp",
+        },
+        {
+          description: "object_31 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_31Inp",
+        },
+        {
+          description: "object_32 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "in",
+            },
+          ],
+          name: "object_32Inp",
+        },
+        {
+          description: "object_33 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "notIn",
+            },
+          ],
+          name: "object_33Inp",
+        },
+        {
+          description: "object_36 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "contains",
+            },
+            {
+              name: "mode",
+            },
+          ],
+          name: "object_36Inp",
+        },
+        {
+          description: "object_37 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "search",
+            },
+          ],
+          name: "object_37Inp",
+        },
+        {
+          description: "object_38 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "startsWith",
+            },
+            {
+              name: "endsWith",
+            },
+          ],
+          name: "object_38Inp",
+        },
+        {
+          description: "object_40 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_40Inp",
+        },
+        {
+          description: "object_58 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "message",
+            },
+          ],
+          name: "object_58Inp",
+        },
+        {
+          description: "union type
+object_55, _SortOrder",
+          fields: null,
+          inputFields: null,
+          name: "union_56In",
+        },
+        {
+          description: "object_55 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "sort",
+            },
+          ],
+          name: "object_55Inp",
+        },
+        {
+          description: "_feedback_CreateInput input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "email",
+            },
+            {
+              name: "message",
+            },
+          ],
+          name: "_feedback_CreateInputInp",
+        },
+      ],
+    },
+  },
+}
+`;
+
 snapshot[`Auto-tests for prisma 1`] = `
 {
   errors: [
@@ -331,6 +1686,294 @@ snapshot[`Auto-tests for prisma 2`] = `
   data: {
     find_user: [],
     read_user: [],
+  },
+}
+`;
+
+snapshot[`Auto-tests for prisma 3`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "string type",
+          fields: null,
+          inputFields: null,
+          name: "String",
+        },
+        {
+          description: "integer type",
+          fields: null,
+          inputFields: null,
+          name: "Int",
+        },
+        {
+          description: "_String type",
+          fields: [
+            {
+              name: "string",
+            },
+          ],
+          inputFields: null,
+          name: "_String",
+        },
+        {
+          description: "_Integer type",
+          fields: [
+            {
+              name: "integer",
+            },
+          ],
+          inputFields: null,
+          name: "_Integer",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "find_user",
+            },
+            {
+              name: "read_user",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+        {
+          description: "userWithNestedCount type",
+          fields: [
+            {
+              name: "firstname",
+            },
+            {
+              name: "email",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "userWithNestedCount",
+        },
+        {
+          description: "user type",
+          fields: [
+            {
+              name: "firstname",
+            },
+            {
+              name: "email",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "user",
+        },
+        {
+          description: "Mutation type",
+          fields: [
+            {
+              name: "create_user",
+            },
+          ],
+          inputFields: null,
+          name: "Mutation",
+        },
+        {
+          description: "_userOutputType type",
+          fields: [
+            {
+              name: "firstname",
+            },
+            {
+              name: "email",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "_userOutputType",
+        },
+        {
+          description: "QueryuserWhereInput input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "email",
+            },
+            {
+              name: "firstname",
+            },
+            {
+              name: "AND",
+            },
+            {
+              name: "OR",
+            },
+            {
+              name: "NOT",
+            },
+          ],
+          name: "QueryuserWhereInputInp",
+        },
+        {
+          description: "union type
+_string_filter, object_26",
+          fields: null,
+          inputFields: null,
+          name: "union_27In",
+        },
+        {
+          description: "union type
+string_13, object_16, object_17, object_18, object_19, object_22, object_23, object_24",
+          fields: null,
+          inputFields: null,
+          name: "_string_filterIn",
+        },
+        {
+          description: "object_16 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "equals",
+            },
+          ],
+          name: "object_16Inp",
+        },
+        {
+          description: "object_17 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_17Inp",
+        },
+        {
+          description: "object_18 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "in",
+            },
+          ],
+          name: "object_18Inp",
+        },
+        {
+          description: "object_19 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "notIn",
+            },
+          ],
+          name: "object_19Inp",
+        },
+        {
+          description: "object_22 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "contains",
+            },
+            {
+              name: "mode",
+            },
+          ],
+          name: "object_22Inp",
+        },
+        {
+          description: "object_23 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "search",
+            },
+          ],
+          name: "object_23Inp",
+        },
+        {
+          description: "object_24 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "startsWith",
+            },
+            {
+              name: "endsWith",
+            },
+          ],
+          name: "object_24Inp",
+        },
+        {
+          description: "object_26 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_26Inp",
+        },
+        {
+          description: "object_44 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "email",
+            },
+            {
+              name: "firstname",
+            },
+          ],
+          name: "object_44Inp",
+        },
+        {
+          description: "union type
+object_41, _SortOrder",
+          fields: null,
+          inputFields: null,
+          name: "union_42In",
+        },
+        {
+          description: "object_41 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "sort",
+            },
+          ],
+          name: "object_41Inp",
+        },
+        {
+          description: "_user_CreateInput input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "email",
+            },
+            {
+              name: "firstname",
+            },
+          ],
+          name: "_user_CreateInputInp",
+        },
+      ],
+    },
   },
 }
 `;

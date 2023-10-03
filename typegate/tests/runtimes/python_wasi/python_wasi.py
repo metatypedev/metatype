@@ -1,4 +1,4 @@
-from typegraph_next import t, typegraph, Policy, Graph
+from typegraph_next import Graph, Policy, t, typegraph
 from typegraph_next.runtimes.python import PythonRuntime
 
 
@@ -44,7 +44,9 @@ def python_wasi(g: Graph):
             lambda x: x["a"],
         ).with_policy(public),
         testDef=python.from_def(
-            t.struct({"a": t.string()}), t.string(), test
+            t.struct({"a": t.string()}),
+            t.string(),
+            test,
         ).with_policy(public),
         testMod=python.import_(
             t.struct({"name": t.string()}),
