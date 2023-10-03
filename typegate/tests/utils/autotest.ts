@@ -91,6 +91,25 @@ export async function autoTest(rootDir: string, target = "dev") {
           },
         );
       }
-    });
+
+      await t.should(
+        `introspect field types schema for ${pythonFile.path}`,
+        async () => {
+          await gql`
+          query IntrospectionQuery {
+            __schema {
+              types {
+                name
+                inputFields { name }
+                fields { name }
+                description
+              }
+            }
+          }
+        `.matchSnapshot(t)
+            .on(e);
+        },
+      );
+    }, { introspection: true });
   }
 }
