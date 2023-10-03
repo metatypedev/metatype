@@ -1,4 +1,4 @@
-from typegraph_next import t, typegraph, Policy, Graph
+from typegraph_next import Graph, Policy, t, typegraph
 from typegraph_next.runtimes.python import PythonRuntime
 
 
@@ -38,15 +38,15 @@ def python_wasi(g: Graph):
     python = PythonRuntime()
 
     g.expose(
-        test=t.func(
+        test=python.from_lambda(
             t.struct({"a": t.string()}),
             t.string(),
-            python.from_lambda(lambda x: x["a"]),
+            lambda x: x["a"],
         ).with_policy(public),
-        testDef=t.func(
+        testDef=python.from_def(
             t.struct({"a": t.string()}),
             t.string(),
-            python.from_def(test),
+            test,
         ).with_policy(public),
         testMod=python.import_(
             t.struct({"name": t.string()}),
@@ -54,19 +54,19 @@ def python_wasi(g: Graph):
             module="py/hello.py",
             name="sayHello",
         ).with_policy(public),
-        identity=t.func(
+        identity=python.from_def(
             t.struct({"input": tpe}),
             tpe,
-            python.from_def(identity),
+            identity,
         ).with_policy(public),
-        stackOverflow=t.func(
+        stackOverflow=python.from_def(
             t.struct({"enable": t.boolean()}),
             t.boolean(),
-            python.from_def(stackoverflow),
+            stackoverflow,
         ).with_policy(public),
-        infiniteLoop=t.func(
+        infiniteLoop=python.from_def(
             t.struct({"enable": t.boolean()}),
             t.boolean(),
-            python.from_def(infinite_loop),
+            infinite_loop,
         ).with_policy(public),
     )

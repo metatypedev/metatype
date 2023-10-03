@@ -100,6 +100,36 @@ Policies:
         possibleTypes: null,
       },
       {
+        description: "inp type",
+        enumValues: null,
+        fields: [
+          {
+            args: [],
+            deprecationReason: null,
+            description: "a field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "a",
+            type: {
+              kind: "NON_NULL",
+              name: null,
+              ofType: {
+                kind: "SCALAR",
+                name: "Int",
+                ofType: null,
+              },
+            },
+          },
+        ],
+        inputFields: null,
+        interfaces: [],
+        kind: "OBJECT",
+        name: "inp",
+        possibleTypes: null,
+      },
+      {
         description: "Nested input type",
         enumValues: null,
         fields: null,
