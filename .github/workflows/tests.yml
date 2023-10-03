@@ -122,35 +122,6 @@ jobs:
           pnpm lint
           pnpm build
 
-  test-typegraph:
-    needs:
-      - changes
-      - test-meta-cli
-    if: ${{ needs.changes.outputs.typegraph == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-      - uses: actions/cache@v3
-        with:
-          path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: actions/download-artifact@v3
-        with:
-          name: meta
-      - run: |
-          tar -xvf meta.tar
-          python3 -m venv .venv
-          source .venv/bin/activate
-          cd typegraph/python
-          poetry install
-          pytest -s tests
-
   test-typegraph-core:
     needs:
       - changes
@@ -190,7 +161,7 @@ jobs:
       - run: |
           python3 -m venv .venv
           source .venv/bin/activate
-          cd typegraph/python
+          cd typegraph/python_next
           poetry install --sync
           cd ../..
           cargo run --locked --package meta-cli -- --help
@@ -232,7 +203,7 @@ jobs:
       - run: |
           python3 -m venv .venv
           ${{ matrix.activate }}
-          cd typegraph/python
+          cd typegraph/python_next
           poetry install --sync
           cd ../..
           cargo run --locked --package meta-cli -- --help
@@ -379,7 +350,7 @@ jobs:
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
-          cd typegraph/python
+          cd typegraph/python_next
           poetry install --sync
           cd ../..
           cargo test --locked --exclude meta-cli --exclude native --exclude typegraph_core --workspace
