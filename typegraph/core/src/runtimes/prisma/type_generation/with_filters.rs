@@ -101,7 +101,7 @@ impl<T: TypeGen> TypeGen for CompleteFilter<T> {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
         let inner = context.generate(&self.0)?;
         // TODO and, or ???
-        t::optionalx(t::unionx![inner, t::struct_().prop("not", inner).build()?])?
+        t::optionalx(t::unionx![inner, t::struct_().prop("not", inner)])?
             .named(self.name())
             .build()
     }
@@ -117,8 +117,8 @@ impl TypeGen for BooleanFilter {
     fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         t::unionx![
             t::boolean().build()?,
-            t::struct_().propx("equals", t::boolean())?.build()?,
-            t::struct_().propx("not", t::boolean())?.build()?,
+            t::struct_().propx("equals", t::boolean())?,
+            t::struct_().propx("not", t::boolean())?,
         ]
         .named(self.name())
         .build()
@@ -182,8 +182,8 @@ impl TypeGen for NumberFilter {
                     .prop("lte", opt_type_id)
                     .prop("gte", opt_type_id)
                     .min(1),
-                t::struct_().prop("in", array_type_id).build()?,
-                t::struct_().prop("notIn", array_type_id).build()?,
+                t::struct_().prop("in", array_type_id),
+                t::struct_().prop("notIn", array_type_id),
             ]
             .named(self.name())
             .build()
@@ -217,21 +217,16 @@ impl TypeGen for StringFilter {
             t::struct_().prop("not", type_id),
             t::struct_().prop("in", array_type_id),
             t::struct_().prop("notIn", array_type_id),
-            t::struct_()
-                .prop("contains", type_id)
-                .prop(
-                    "mode",
-                    t::optional(t::string().enum_(vec!["insensitive".to_string()]).build()?)
-                        .build()?,
-                )
-                .build()?,
+            t::struct_().prop("contains", type_id).prop(
+                "mode",
+                t::optional(t::string().enum_(vec!["insensitive".to_string()]).build()?).build()?,
+            ),
             // TODO optional feature -- previewFeatures = ["fullTextSearch"]
-            t::struct_().prop("search", type_id).build()?,
+            t::struct_().prop("search", type_id),
             t::struct_()
                 .prop("startsWith", opt_type_id)
                 .prop("endsWith", opt_type_id)
-                .min(1)
-                .build()?,
+                .min(1),
         ]
         .named(self.name())
         .build()

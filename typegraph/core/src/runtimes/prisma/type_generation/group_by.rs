@@ -75,9 +75,9 @@ impl TypeGen for Having {
 
         t::unionx![
             extended_type,
-            t::struct_().propx("AND", t::array(self_ref))?.build()?,
-            t::struct_().propx("OR", t::array(self_ref))?.build()?,
-            t::struct_().prop("NOT", self_ref).build()?
+            t::struct_().propx("AND", t::array(self_ref))?,
+            t::struct_().propx("OR", t::array(self_ref))?,
+            t::struct_().prop("NOT", self_ref)
         ]
         .named(name)
         .build()
