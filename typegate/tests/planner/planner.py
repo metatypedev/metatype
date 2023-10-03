@@ -111,18 +111,18 @@ def test(g: Graph):
                             }
                         ),
                         code=dummy_func,
-                    ),  # .named("UserProfile"),
-                    # "taggedPic": deno.func(
-                    #     t.struct(
-                    #         {
-                    #             "profile": t.struct(
-                    #                 {"email": t.email(), "profilePic": t.string()}
-                    #             ).from_parent("UserProfile")
-                    #         }
-                    #     ),
-                    #     t.string(),
-                    #     code=dummy_func,
-                    # ),
+                    ).rename("UserProfile"),
+                    "taggedPic": deno.func(
+                        t.struct(
+                            {
+                                "profile": t.struct(
+                                    {"email": t.email(), "profilePic": t.string()}
+                                ).from_parent("UserProfile")
+                            }
+                        ),
+                        t.string(),
+                        code=dummy_func,
+                    ),
                 }
             ),
             code=dummy_func,

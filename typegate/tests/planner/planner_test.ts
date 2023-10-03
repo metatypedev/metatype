@@ -221,7 +221,7 @@ Meta.test("planner: dependencies", async (t) => {
       `
         query {
           two {
-            # taggedPic
+            taggedPic
             profile {
               firstName lastName profilePic
             }
@@ -236,7 +236,7 @@ Meta.test("planner: dependencies", async (t) => {
         query {
           two {
             id
-            # taggedPic
+            taggedPic
           }
         }`,
     );

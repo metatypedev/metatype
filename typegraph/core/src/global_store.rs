@@ -117,17 +117,25 @@ impl Store {
         // this works since the store is thread local
         let id = with_store(|s| s.types.len()) as u32;
         let typ = build(id.into());
-        with_store_mut(|s| -> Result<()> {
-            if let Some(name) = typ.get_base().and_then(|b| b.name.as_ref()) {
-                if s.type_by_names.contains_key(name) {
-                    return Err(format!("type with name {:?} already exists", name));
-                }
-                s.type_by_names.insert(name.clone(), id.into());
-            }
+        if let Some(name) = typ.get_base().and_then(|b| b.name.clone()) {
+            Self::register_type_name(name, id.into())?;
+        }
+        with_store_mut(move |s| -> Result<()> {
             s.types.push(typ);
             Ok(())
         })?;
         Ok(id.into())
+    }
+
+    pub fn register_type_name(name: impl Into<String>, id: TypeId) -> Result<()> {
+        let name = name.into();
+        with_store_mut(move |s| -> Result<()> {
+            if s.type_by_names.contains_key(&name) {
+                return Err(format!("type with name {:?} already exists", name));
+            }
+            s.type_by_names.insert(name, id);
+            Ok(())
+        })
     }
 
     pub fn get_type_by_path(struct_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
