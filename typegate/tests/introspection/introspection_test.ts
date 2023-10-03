@@ -28,6 +28,9 @@ Meta.test("Basic introspection", async (t) => {
               "name": "Query",
             },
             {
+              name: "inp",
+            },
+            {
               "name": "NestedInp",
             },
           ],
