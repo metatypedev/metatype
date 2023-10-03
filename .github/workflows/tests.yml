@@ -211,7 +211,9 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - run: |
+      - env:
+          WASM_FILE: target/debug/typegraph_core.wasm
+        run: |
           python3 -m venv .venv
           ${{ matrix.activate }}
           cd typegraph/python_next
