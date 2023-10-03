@@ -758,19 +758,6 @@ files = [
 ]
 
 [[package]]
-name = "typegraph"
-version = "0.1.15.post0+dev"
-description = "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are."
-optional = false
-python-versions = "*"
-files = []
-develop = true
-
-[package.source]
-type = "directory"
-url = "typegraph/python"
-
-[[package]]
 name = "typegraph-next"
 version = "0.2.0-alpha.1"
 description = "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are."
@@ -787,20 +774,6 @@ wasmtime = "^10.0.1"
 [package.source]
 type = "directory"
 url = "typegraph/python_next"
-
-[[package]]
-name = "typegraph-std"
-version = "0.0.1"
-description = "Metatype standard library."
-optional = false
-python-versions = ">=3.8,<4.0"
-files = [
-    {file = "typegraph_std-0.0.1-py3-none-any.whl", hash = "sha256:b3395824dc650d77dff505d4e6335854dfa2c092e820310514a695f5e4a2207f"},
-    {file = "typegraph_std-0.0.1.tar.gz", hash = "sha256:f91aa3eef3e4d178418581622b27d02b77e78f6d94a7403c85eda733b9a4a43d"},
-]
-
-[package.dependencies]
-typegraph = ">=0.1.9,<0.2.0"
 
 [[package]]
 name = "typing-extensions"
@@ -1005,4 +978,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "6d894ba583169a20a0cd8f6964768197a894921049a34c24ca7d82eb7319dffc"
+content-hash = "85de3d4ea85f673e250965408f8a6fe9257af98234ef287049783c200ea99da4"
