@@ -1,7 +1,7 @@
-from typegraph_next import t, typegraph
-from typegraph_next.graph.typegraph import Graph
-from typegraph_next.policy import Policy
-from typegraph_next.runtimes.random import RandomRuntime
+from typegraph import t, typegraph
+from typegraph.graph.typegraph import Graph
+from typegraph.policy import Policy
+from typegraph.runtimes.random import RandomRuntime
 
 rec = t.struct(
     {

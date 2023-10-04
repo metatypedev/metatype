@@ -4,17 +4,17 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 from typing_extensions import TypedDict
-from typegraph_next.gen.exports.runtimes import (
+from typegraph.gen.exports.runtimes import (
     Effect,
     BaseMaterializer,
     HttpMethod,
     HttpRuntimeData,
     MaterializerHttpRequest,
 )
-from typegraph_next.gen.types import Err
-from typegraph_next.wit import runtimes, store
-from typegraph_next.runtimes.base import Materializer, Runtime
-from typegraph_next import t, fx
+from typegraph.gen.types import Err
+from typegraph.wit import runtimes, store
+from typegraph.runtimes.base import Materializer, Runtime
+from typegraph import t, fx
 
 
 class HttpRequestKwargs(TypedDict):

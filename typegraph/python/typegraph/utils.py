@@ -4,9 +4,9 @@
 import json
 from functools import reduce
 from typing import Dict, List, Union, Tuple, Optional, Any
-from typegraph_next.injection import InheritDef
-from typegraph_next.gen.exports.utils import ApplyPath, ApplyValue
-from typegraph_next.injection import serialize_static_injection
+from typegraph.injection import InheritDef
+from typegraph.gen.exports.utils import ApplyPath, ApplyValue
+from typegraph.injection import serialize_static_injection
 
 
 # def serialize_record_values(obj: Union[Dict[str, any], None]):

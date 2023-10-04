@@ -1,7 +1,7 @@
-from typegraph_next import typegraph, Policy, t, Graph
-from typegraph_next.graph.params import oauth2
-from typegraph_next.runtimes.deno import DenoRuntime
-from typegraph_next.runtimes.http import HttpRuntime
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.graph.params import oauth2
+from typegraph.runtimes.deno import DenoRuntime
+from typegraph.runtimes.http import HttpRuntime
 
 
 @typegraph(

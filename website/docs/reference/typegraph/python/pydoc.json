@@ -1,5 +1,13 @@
 {
-  "items": [],
-  "label": null,
+  "items": [
+    {
+      "items": [
+        "docs/reference/typegraph/python/typegraph/graph/params"
+      ],
+      "label": "typegraph.graph",
+      "type": "category"
+    }
+  ],
+  "label": "typegraph",
   "type": "category"
 }

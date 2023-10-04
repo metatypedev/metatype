@@ -1,5 +1,5 @@
-from typegraph_next import typegraph, effects, Policy, t, Graph
-from typegraph_next.runtimes.deno import DenoRuntime
+from typegraph import typegraph, effects, Policy, t, Graph
+from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph()

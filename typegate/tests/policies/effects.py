@@ -1,6 +1,6 @@
-from typegraph_next import typegraph, effects, t, Graph, Policy
-from typegraph_next.graph.params import Auth
-from typegraph_next.runtimes.deno import DenoRuntime
+from typegraph import typegraph, effects, t, Graph, Policy
+from typegraph.graph.params import Auth
+from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph(

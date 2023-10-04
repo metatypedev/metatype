@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "typegraph_next"
-version = "0.2.0-alpha.1"
+name = "typegraph"
+version = "0.2.0"
 description = "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are."
 authors = ["Metatype Contributors <support@metatype.dev>"]
 license = "MPL-2.0"
 homepage = "https://metatype.dev"
 repository = "https://github.com/metatypedev/metatype"
-include = ["typegraph_next/**/*", "LICENSE.md"]
+include = ["typegraph/**/*", "LICENSE.md"]
 keywords = ["api", "composition", "typesystem", "graphql", "ecosystem"]
 classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -19,7 +19,3 @@ wasmtime = "^10.0.1"
 typing-extensions = "^4.7.1"
 python-box = "^7.1.1"
 astunparse = "^1.6.3"
-
-[tool.pyright]
-venvPath = "."
-venv = ".venv"

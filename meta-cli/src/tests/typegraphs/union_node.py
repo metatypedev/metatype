@@ -1,5 +1,5 @@
-from typegraph_next import t, typegraph, Graph
-from typegraph_next.runtimes import DenoRuntime
+from typegraph import t, typegraph, Graph
+from typegraph.runtimes import DenoRuntime
 
 
 @typegraph()

@@ -6,8 +6,8 @@ from typing import Dict, List, Optional, Tuple, Union, Any
 
 from typing_extensions import Self
 
-from typegraph_next.effects import EffectType
-from typegraph_next.gen.exports.core import (
+from typegraph.effects import EffectType
+from typegraph.gen.exports.core import (
     FuncParams,
     TypeArray,
     TypeBase,
@@ -25,23 +25,23 @@ from typegraph_next.gen.exports.core import (
     TypeUnion,
     TypeWithInjection,
 )
-from typegraph_next.gen.exports.runtimes import EffectNone
-from typegraph_next.gen.exports.utils import Apply
-from typegraph_next.gen.types import Err
-from typegraph_next.graph.typegraph import core, store
-from typegraph_next.injection import (
+from typegraph.gen.exports.runtimes import EffectNone
+from typegraph.gen.exports.utils import Apply
+from typegraph.gen.types import Err
+from typegraph.graph.typegraph import core, store
+from typegraph.injection import (
     serialize_generic_injection,
     serialize_parent_injection,
     serialize_static_injection,
 )
-from typegraph_next.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
-from typegraph_next.runtimes.deno import Materializer
-from typegraph_next.utils import (
+from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
+from typegraph.runtimes.deno import Materializer
+from typegraph.utils import (
     build_apply_data,
     ConfigSpec,
     serialize_config,
 )
-from typegraph_next.wit import wit_utils
+from typegraph.wit import wit_utils
 
 
 class typedef:

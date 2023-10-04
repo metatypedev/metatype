@@ -1,5 +1,5 @@
-from typegraph_next import typegraph, t, Graph, Policy
-from typegraph_next.providers.prisma import PrismaRuntime
+from typegraph import typegraph, t, Graph, Policy
+from typegraph.providers.prisma import PrismaRuntime
 
 
 @typegraph()

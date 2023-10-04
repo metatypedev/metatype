@@ -1,7 +1,7 @@
-from typegraph_next import Graph, t, typegraph
-from typegraph_next.policy import Policy
-from typegraph_next.runtimes.deno import DenoRuntime
-from typegraph_next.runtimes.python import PythonRuntime
+from typegraph import Graph, t, typegraph
+from typegraph.policy import Policy
+from typegraph.runtimes.deno import DenoRuntime
+from typegraph.runtimes.python import PythonRuntime
 
 
 @typegraph()

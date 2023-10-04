@@ -3,15 +3,15 @@
 
 from typing import Union, Optional
 
-from typegraph_next.runtimes.base import Runtime
-from typegraph_next.wit import runtimes, store
-from typegraph_next.gen.types import Err
-from typegraph_next.gen.exports.runtimes import (
+from typegraph.runtimes.base import Runtime
+from typegraph.wit import runtimes, store
+from typegraph.gen.types import Err
+from typegraph.gen.exports.runtimes import (
     Effect,
     PrismaRuntimeData,
     PrismaLinkData,
 )
-from typegraph_next import t
+from typegraph import t
 
 
 class PrismaRuntime(Runtime):

@@ -38,6 +38,6 @@ coverage*
 
 typegraph/node
 typegraph/deno/src/gen
-typegraph/python_next/typegraph_next/gen
+typegraph/python/typegraph/gen
 
 *.egg-info/

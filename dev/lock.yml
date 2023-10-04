@@ -1,7 +1,7 @@
 dev:
   files:
     dev/LICENSE-MPL-2.0.md:
-      - typegraph/python_next/LICENSE.md
+      - typegraph/python/LICENSE.md
       - typegraph/deno/LICENSE.md
   lines:
     rust-toolchain.toml:
@@ -17,9 +17,10 @@ dev:
       '(  WASM_TOOLS_VERSION: ").+(")': WASM_TOOLS_VERSION
       '(  JCO_VERSION: ").+(")': JCO_VERSION
       '(  WASMEDGE_VERSION: ").+(")': WASMEDGE_VERSION
-    typegraph/python_next/typegraph_next/__init__.py:
+      '(  WASM_OPT_VERSION: ").+(")': WASM_OPT_VERSION
+    typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
-    typegraph/python_next/pyproject.toml:
+    typegraph/python/pyproject.toml:
       (description = ").+("): TAGLINE
     '**/Cargo.toml':
       (version = ").+("): METATYPE_VERSION
@@ -32,7 +33,7 @@ dev:
       (ARG WASMEDGE_VERSION=).*(): WASMEDGE_VERSION
     typegate/src/typegraph/versions.ts:
       (const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
-    typegraph/python_next/typegraph_next/graph/typegraph.py:
+    typegraph/python/typegraph/graph/typegraph.py:
       (typegraph_version = ").*("): TYPEGRAPH_VERSION
     typegraph/core/src/typegraph.rs:
       '(static TYPEGRAPH_VERSION: &str = ").*(";)': TYPEGRAPH_VERSION
@@ -69,7 +70,8 @@ dev:
     WASMEDGE_VERSION: 0.12.1
     TYPEGRAPH_VERSION: 0.0.2
     PRISMA_VERSION: 5.4.0-dev.31
-    METATYPE_VERSION: 0.2.0-alpha.1
+    METATYPE_VERSION: 0.2.0
+    WASM_OPT_VERSION: 0.114.1
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with
       zero-trust and less code, no matter where and how your (legacy) systems

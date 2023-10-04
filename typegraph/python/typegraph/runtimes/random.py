@@ -3,16 +3,16 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from typegraph_next import t
-from typegraph_next.gen.exports.runtimes import (
+from typegraph import t
+from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
     EffectNone,
     MaterializerRandom,
     RandomRuntimeData,
 )
-from typegraph_next.gen.types import Err
-from typegraph_next.runtimes.base import Materializer, Runtime
-from typegraph_next.wit import runtimes, store
+from typegraph.gen.types import Err
+from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.wit import runtimes, store
 
 
 class RandomRuntime(Runtime):

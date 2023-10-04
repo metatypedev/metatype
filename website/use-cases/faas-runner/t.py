@@ -1,7 +1,7 @@
 # skip:start
-from typegraph_next import typegraph, Policy, t, Graph
-from typegraph_next.graph.params import Cors
-from typegraph_next.runtimes import DenoRuntime, PythonRuntime
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.graph.params import Cors
+from typegraph.runtimes import DenoRuntime, PythonRuntime
 
 
 # skip:end

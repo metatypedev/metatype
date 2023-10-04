@@ -1,11 +1,11 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph_next import t, typegraph
-from typegraph_next.graph.params import Auth, Cors, Rate
-from typegraph_next.graph.typegraph import Graph
-from typegraph_next.policy import Policy
-from typegraph_next.runtimes.deno import DenoRuntime
+from typegraph import t, typegraph
+from typegraph.graph.params import Auth, Cors, Rate
+from typegraph.graph.typegraph import Graph
+from typegraph.policy import Policy
+from typegraph.runtimes.deno import DenoRuntime
 
 someType = t.struct(
     {

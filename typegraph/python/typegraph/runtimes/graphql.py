@@ -4,17 +4,17 @@
 from typing import List, Optional
 from dataclasses import dataclass
 
-from typegraph_next.runtimes.base import Materializer, Runtime
-from typegraph_next.gen.types import Err
-from typegraph_next.gen.exports.runtimes import (
+from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.gen.types import Err
+from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
     Effect,
     EffectNone,
     GraphqlRuntimeData,
     MaterializerGraphqlQuery,
 )
-from typegraph_next.wit import runtimes, store
-from typegraph_next import t
+from typegraph.wit import runtimes, store
+from typegraph import t
 
 
 @dataclass

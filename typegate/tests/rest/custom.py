@@ -1,5 +1,5 @@
-from typegraph_next import t, typegraph, Graph, Policy
-from typegraph_next.runtimes.deno import DenoRuntime
+from typegraph import t, typegraph, Graph, Policy
+from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph(dynamic=False, folder="custom_dir")
