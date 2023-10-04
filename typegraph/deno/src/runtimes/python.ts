@@ -59,7 +59,7 @@ export class PythonRuntime extends Runtime {
     P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
     I extends t.Struct<P> = t.Struct<P>,
     O extends t.Typedef = t.Typedef,
-  >(input: I, output: O, { code }: { code: string }) {
+  >(inp: I, out: O, { code }: { code: string }) {
     const name = code.trim().match(/def\s+([A-Za-z0-9_]+)/)?.[1];
     if (name == undefined) {
       throw new Error(`unable to extract def name from source code ${code}`);
@@ -76,7 +76,7 @@ export class PythonRuntime extends Runtime {
       },
     );
 
-    return t.func(input, output, {
+    return t.func(inp, out, {
       _id: matId,
       name,
       fn: code,

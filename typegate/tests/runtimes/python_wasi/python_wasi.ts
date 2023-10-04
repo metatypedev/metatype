@@ -3,6 +3,7 @@
 
 import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
 import { PythonRuntime } from "@typegraph/deno/src/runtimes/python.ts";
+import outdent from "outdent";
 
 const tpe = t.struct({
   "a": t.string(),
@@ -22,7 +23,12 @@ typegraph("python_wasi", (g) => {
     identityDef: python.fromDef(
       t.struct({ input: tpe }),
       tpe,
-      { code: "def identity(x):\n\treturn x['input']" },
+      {
+        code: outdent`
+        def identity(x):
+          return x['input']
+        `,
+      },
     ).withPolicy(pub),
     identityMod: python.import(
       t.struct({ input: tpe }),
