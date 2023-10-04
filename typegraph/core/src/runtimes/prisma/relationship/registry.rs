@@ -4,15 +4,15 @@
 use crate::errors::Result;
 use crate::runtimes::prisma::type_utils::get_id_field;
 use crate::types::TypeId;
-use indexmap::IndexMap;
+#[cfg(test)]
+use indexmap::IndexMap as HashMap;
 #[cfg(test)]
 use indexmap::IndexSet as HashSet;
-#[cfg(test)]
-use indexmap::{map::Entry, IndexMap as HashMap};
+use indexmap::{map::Entry, IndexMap};
+#[cfg(not(test))]
+use std::collections::HashMap;
 #[cfg(not(test))]
 use std::collections::HashSet;
-#[cfg(not(test))]
-use std::collections::{hash_map::Entry, HashMap};
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -32,7 +32,7 @@ pub struct RegisteredModel {
 
 #[derive(Default, Debug)]
 pub struct RelationshipRegistry {
-    pub models: HashMap<TypeId, RegisteredModel>,
+    pub models: IndexMap<TypeId, RegisteredModel>,
     pub models_by_name: HashMap<String, TypeId>,
     // relationship_name => relationship
     pub relationships: HashMap<String, Rc<Relationship>>,
@@ -63,13 +63,12 @@ impl RelationshipRegistry {
             }),
             Entry::Occupied(e) => e.into_mut(),
         };
-        use indexmap::map::Entry as Ent;
         match entry.relationships.entry(field_name) {
-            Ent::Vacant(e) => {
+            Entry::Vacant(e) => {
                 e.insert(rel_name);
                 Ok(())
             }
-            Ent::Occupied(_e) => Err("cannot readd relationship".to_string()),
+            Entry::Occupied(_e) => Err("cannot readd relationship".to_string()),
         }
     }
 

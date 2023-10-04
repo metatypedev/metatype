@@ -216,10 +216,11 @@ impl wit::core::Core for Lib {
     }
 
     fn funcb(data: TypeFunc) -> Result<CoreTypeId> {
-        let inp_id = TypeId(data.inp).resolve_proxy()?;
-        let inp_type = inp_id.as_type()?;
-        if !matches!(inp_type, Type::Struct(_)) {
-            return Err(errors::invalid_input_type(&inp_id.repr()?));
+        let wrapper_type = TypeId(data.inp);
+        let attrs = wrapper_type.attrs()?;
+        let concrete_type = attrs.concrete_type.as_type()?;
+        if !matches!(concrete_type, Type::Struct(_)) {
+            return Err(errors::invalid_input_type(&wrapper_type.repr()?));
         }
         let base = TypeBase::default();
         Ok(Store::register_type(|id| Type::Func(Func { id, base, data }.into()))?.into())

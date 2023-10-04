@@ -1,16 +1,18 @@
-from typegraph import t
-from typegraph import TypeGraph
-from typegraph.runtimes.deno import ModuleMat
+from typegraph_next import t, typegraph, Graph
+from typegraph_next.runtimes import DenoRuntime
 
-with TypeGraph("enum") as g:
-    rgb_materializer = ModuleMat("ts/rgb.ts")
 
-    color = t.enum(["red", "green", "blue", "purple", "yellow"]).named("Color")
+@typegraph()
+def enum(g: Graph):
+    deno = DenoRuntime()
 
-    get_rgb = t.func(
+    color = t.enum(["red", "green", "blue", "purple", "yellow"], name="Color")
+
+    get_rgb = deno.import_(
         t.struct({"color": color}),
-        t.struct({"rgb": t.array(t.integer()).named("RGB")}),
-        rgb_materializer.imp("get_rgb"),
+        t.struct({"rgb": t.array(t.integer(), name="RGB")}),
+        module="ts/rgb.ts",
+        name="get_rgb",
     )
 
     g.expose(rgb=get_rgb)

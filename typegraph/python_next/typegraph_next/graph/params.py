@@ -7,8 +7,28 @@ from typing import List, Optional
 from typegraph_next.gen.exports import core
 from box import Box
 
-# Cors = core.Cors
-Rate = core.Rate
+
+class Rate:
+    window_limit: int
+    window_sec: int
+    query_limit: int
+    context_identifier: Optional[str]
+    local_excess: int
+
+    def __init__(
+        self,
+        *,
+        window_limit: int,
+        window_sec: int,
+        query_limit: int,
+        context_identifier: Optional[str] = None,
+        local_excess: int = 0,
+    ):
+        self.window_limit = window_limit
+        self.window_sec = window_sec
+        self.query_limit = query_limit
+        self.context_identifier = context_identifier
+        self.local_excess = local_excess
 
 
 class Cors:
