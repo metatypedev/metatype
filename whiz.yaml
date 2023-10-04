@@ -68,11 +68,6 @@ typegraph:
     jco transpile $WASM_FILE -o typegraph/deno/src/gen --map "*=../imports.ts"
     deno run -A typegraph/deno/dev/fix-declarations.ts
 
-    # cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm --release
-    # wasm-opt -Oz target/wasm32-unknown-unknown/release/typegraph_core.wasm -o test.wasm
-    # wasm-tools component new test.wasm -o $WASM_FILE
-    # jco + transpile
-
     rm -rf typegraph/python_next/typegraph_next/gen
     poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
   depends_on:
@@ -131,7 +126,7 @@ docgen:
 install:
   workdir: .
   watch:
-    - typegraph/python/pyproject.toml
+    - typegraph/python_next/pyproject.toml
     - website/package.json
   env:
     DENO_BINDGEN_URL: "https://raw.githubusercontent.com/Natoandro/deno_bindgen/main/cli.ts"
@@ -139,6 +134,7 @@ install:
     JCO_VERSION: "0.12.1"
     CARGO_INSTA_VERSION: "1.30.0"
     WASMEDGE_VERSION: "0.12.1"
+    WASM_OPT_VERSION: "0.114.1"
     DENO_VERSION: "1.37.1"
   command: |
     set -e
@@ -146,6 +142,7 @@ install:
     poetry install --sync
     ~/.wasmedge/bin/wasmedge --version | grep -q $WASMEDGE_VERSION || curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
     cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
+    cargo install wasm-opt --version $WASM_OPT_VERSION --locked
     cargo install cargo-insta --version $CARGO_INSTA_VERSION --locked
     deno install --allow-all --force -n deno_bindgen $DENO_BINDGEN_URL
     npm install --global @bytecodealliance/jco@$JCO_VERSION

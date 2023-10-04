@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "metatype"
-version = "0.2.0-alpha.1"
+version = "0.2.0"
 description = ""
 authors = []
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-typegraph_next = { path = "typegraph/python_next", develop = true }
+typegraph = { path = "typegraph/python_next", develop = true }
 # typegraph-std = "^0.0.1"
 
 [tool.poetry.group.dev.dependencies]
