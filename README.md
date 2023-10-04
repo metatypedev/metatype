@@ -26,7 +26,10 @@ Support us by <a href="https://github.com/metatypedev/metatype/stargazers">starr
         <img src="https://img.shields.io/github/v/release/metatypedev/metatype?include_prereleases&label=meta-cli" alt="Meta CLI binary" />
     </a>
     <a href="https://pypi.org/project/typegraph/" target="_blank">
-        <img src="https://img.shields.io/pypi/v/typegraph?label=typegraph" alt="Python typegraph SDK" />
+        <img src="https://img.shields.io/pypi/v/typegraph?label=typegraph&logo=pypi" alt="Python typegraph SDK" />
+    </a>
+    <a href="https://www.npmjs.com/package/@typegraph/sdk" target="_blank">
+        <img src="https://img.shields.io/npm/v/@typegraph/sdk?label=@typegraph/sdk&logo=npm" alt="Typescript typegraph SDK" />
     </a>
 </p>
 

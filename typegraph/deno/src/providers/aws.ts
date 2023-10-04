@@ -8,7 +8,7 @@ import {
   S3PresignPutParams,
   S3RuntimeData,
 } from "../gen/interfaces/metatype-typegraph-aws.d.ts";
-import { t } from "@typegraph/deno/src/mod.ts";
+import { t } from "../mod.ts";
 
 type S3PresignGetMat = Materializer & S3PresignGetParams;
 type S3PresignPutMat = Materializer & S3PresignPutParams;
