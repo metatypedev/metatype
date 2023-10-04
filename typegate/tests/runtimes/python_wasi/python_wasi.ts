@@ -14,15 +14,15 @@ typegraph("python_wasi", (g) => {
   const pub = Policy.public();
 
   g.expose({
-    identityLambda: t.func(
+    identityLambda: python.fromLambda(
       t.struct({ input: tpe }),
       tpe,
-      python.fromLambda("lambda x: x['input']"),
+      { code: "lambda x: x['input']" },
     ).withPolicy(pub),
-    identityDef: t.func(
+    identityDef: python.fromDef(
       t.struct({ input: tpe }),
       tpe,
-      python.fromDef("def identity(x):\n\treturn x['input']"),
+      { code: "def identity(x):\n\treturn x['input']" },
     ).withPolicy(pub),
     identityMod: python.import(
       t.struct({ input: tpe }),
