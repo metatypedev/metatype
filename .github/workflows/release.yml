@@ -141,6 +141,9 @@ jobs:
           deno run -A ../../../dev/publish.ts
           cd ../../..
 
+          npm install --global @bytecodealliance/jco@$JCO_VERSION
+          jco transpile $WASM_FILE -o typegraph/deno/src/gen --map "*=../imports.ts"
+          deno run -A typegraph/deno/dev/fix-declarations.ts
           cd typegraph/node
           pnpm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
           pnpm publish
