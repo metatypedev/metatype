@@ -458,4 +458,5 @@ export interface ModuleMatData {
 export interface PrismaOperationMatData {
   table: string;
   operation: string;
+  ordered_keys?: string[];
 }
