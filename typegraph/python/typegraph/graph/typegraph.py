@@ -6,20 +6,20 @@ import inspect
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
-from typegraph_next.gen.exports.core import (
+from typegraph.gen.exports.core import (
     Auth,
     Rate,
     Cors as CoreCors,
     TypegraphInitParams,
 )
 
-from typegraph_next.gen.types import Err
-from typegraph_next.policy import PolicyPerEffect, PolicySpec, get_policy_chain, Policy
-from typegraph_next.wit import core, store
-from typegraph_next.graph.params import Cors
+from typegraph.gen.types import Err
+from typegraph.policy import PolicyPerEffect, PolicySpec, get_policy_chain, Policy
+from typegraph.wit import core, store
+from typegraph.graph.params import Cors
 
 if TYPE_CHECKING:
-    from typegraph_next import t
+    from typegraph import t
 
 
 typegraph_version = "0.0.2"
@@ -102,7 +102,7 @@ class Graph:
         self.typegraph.expose(default_policy, **kwargs)
 
     def inherit(self):
-        from typegraph_next.injection import InheritDef
+        from typegraph.injection import InheritDef
 
         return InheritDef()
 

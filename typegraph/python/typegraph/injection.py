@@ -3,8 +3,8 @@
 
 import json
 from typing import Callable, Dict, Union
-from typegraph_next.effects import EffectType
-from typegraph_next import t
+from typegraph.effects import EffectType
+from typegraph import t
 
 
 def serialize_injection(

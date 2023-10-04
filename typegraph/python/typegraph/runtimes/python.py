@@ -7,9 +7,9 @@ from astunparse import unparse
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional
 
-from typegraph_next.runtimes.base import Materializer, Runtime
+from typegraph.runtimes.base import Materializer, Runtime
 
-from typegraph_next.gen.exports.runtimes import (
+from typegraph.gen.exports.runtimes import (
     Effect,
     EffectNone,
     BaseMaterializer,
@@ -18,11 +18,11 @@ from typegraph_next.gen.exports.runtimes import (
     MaterializerPythonDef,
     MaterializerPythonModule,
 )
-from typegraph_next.gen.types import Err
-from typegraph_next.wit import runtimes, store
+from typegraph.gen.types import Err
+from typegraph.wit import runtimes, store
 
 if TYPE_CHECKING:
-    from typegraph_next import t
+    from typegraph import t
 
 
 class PythonRuntime(Runtime):
@@ -50,7 +50,7 @@ class PythonRuntime(Runtime):
         if isinstance(mat_id, Err):
             raise Exception(mat_id.value)
 
-        from typegraph_next import t
+        from typegraph import t
 
         return t.func(
             inp,
@@ -79,7 +79,7 @@ class PythonRuntime(Runtime):
         if isinstance(mat_id, Err):
             raise Exception(mat_id.value)
 
-        from typegraph_next import t
+        from typegraph import t
 
         return t.func(
             inp,
@@ -119,7 +119,7 @@ class PythonRuntime(Runtime):
         if isinstance(py_mod_mat_id, Err):
             raise Exception(py_mod_mat_id.value)
 
-        from typegraph_next import t
+        from typegraph import t
 
         return t.func(
             inp,

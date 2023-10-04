@@ -68,8 +68,8 @@ typegraph:
     jco transpile $WASM_FILE -o typegraph/deno/src/gen --map "*=../imports.ts"
     deno run -A typegraph/deno/dev/fix-declarations.ts
 
-    rm -rf typegraph/python_next/typegraph_next/gen
-    poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
+    rm -rf typegraph/python/typegraph/gen
+    poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
   depends_on:
     - libs
 
@@ -126,7 +126,7 @@ docgen:
 install:
   workdir: .
   watch:
-    - typegraph/python_next/pyproject.toml
+    - typegraph/python/pyproject.toml
     - website/package.json
   env:
     DENO_BINDGEN_URL: "https://raw.githubusercontent.com/Natoandro/deno_bindgen/main/cli.ts"

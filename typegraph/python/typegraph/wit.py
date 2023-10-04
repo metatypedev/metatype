@@ -3,12 +3,12 @@
 
 from wasmtime import Store
 
-from typegraph_next.gen import Root, RootImports
-from typegraph_next.gen.exports.core import Core
-from typegraph_next.gen.exports.runtimes import Runtimes
-from typegraph_next.gen.exports.utils import Utils
-from typegraph_next.gen.exports.aws import Aws
-from typegraph_next.imports import Abi
+from typegraph.gen import Root, RootImports
+from typegraph.gen.exports.core import Core
+from typegraph.gen.exports.runtimes import Runtimes
+from typegraph.gen.exports.utils import Utils
+from typegraph.gen.exports.aws import Aws
+from typegraph.imports import Abi
 
 store = Store()
 abi = Abi()

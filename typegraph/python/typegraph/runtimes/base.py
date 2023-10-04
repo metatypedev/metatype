@@ -3,8 +3,8 @@
 
 from dataclasses import dataclass
 
-from typegraph_next.gen.exports.core import MaterializerId, RuntimeId
-from typegraph_next.gen.exports.runtimes import Effect
+from typegraph.gen.exports.core import MaterializerId, RuntimeId
+from typegraph.gen.exports.runtimes import Effect
 
 
 @dataclass

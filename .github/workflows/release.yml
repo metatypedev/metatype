@@ -129,9 +129,9 @@ jobs:
           wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
 
           poetry install
-          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
+          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
-          cd typegraph/python_next
+          cd typegraph/python
           poetry install --sync
           poetry build
           poetry publish

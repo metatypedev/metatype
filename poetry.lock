@@ -800,7 +800,7 @@ wasmtime = "^10.0.1"
 
 [package.source]
 type = "directory"
-url = "typegraph/python_next"
+url = "typegraph/python"
 
 [[package]]
 name = "typing-extensions"

@@ -1,5 +1,5 @@
-from typegraph_next import typegraph, Policy, t, Graph
-from typegraph_next.providers.aws import S3Runtime
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.providers.aws import S3Runtime
 
 
 @typegraph()

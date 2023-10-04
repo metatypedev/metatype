@@ -1,5 +1,5 @@
-from typegraph_next import Graph, Policy, t, typegraph
-from typegraph_next.runtimes.python import PythonRuntime
+from typegraph import Graph, Policy, t, typegraph
+from typegraph.runtimes.python import PythonRuntime
 
 
 def test(x):

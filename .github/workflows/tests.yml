@@ -163,7 +163,7 @@ jobs:
         run: |
           python3 -m venv .venv
           source .venv/bin/activate
-          cd typegraph/python_next
+          cd typegraph/python
           poetry install --sync
           cd ../..
 
@@ -172,8 +172,8 @@ jobs:
           cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
           cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
           wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
-          rm -rf typegraph/python_next/typegraph_next/gen
-          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
+          rm -rf typegraph/python/typegraph/gen
+          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
@@ -216,7 +216,7 @@ jobs:
         run: |
           python3 -m venv .venv
           ${{ matrix.activate }}
-          cd typegraph/python_next
+          cd typegraph/python
           poetry install --sync
           cd ../..
 
@@ -225,8 +225,8 @@ jobs:
           cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
           cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
           wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
-          rm -rf typegraph/python_next/typegraph_next/gen
-          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
+          rm -rf typegraph/python/typegraph/gen
+          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
@@ -326,8 +326,8 @@ jobs:
           rm -rf typegraph/deno/src/gen
           jco transpile $WASM_FILE -o typegraph/deno/src/gen --map "*=../imports.ts"
           deno run -A typegraph/deno/dev/fix-declarations.ts
-          rm -rf typegraph/python_next/typegraph_next/gen
-          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
+          rm -rf typegraph/python/typegraph/gen
+          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
           deno install -A -n deno_bindgen $DENO_BINDGEN_URL
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
@@ -372,7 +372,7 @@ jobs:
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
-          cd typegraph/python_next
+          cd typegraph/python
           poetry install --sync
           cd ../..
           cargo test --locked --exclude meta-cli --exclude native --exclude typegraph_core --workspace

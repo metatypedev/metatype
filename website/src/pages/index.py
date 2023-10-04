@@ -1,10 +1,10 @@
 # skip:start
 import re
 
-from typegraph_next import typegraph, Policy, t, Graph
-from typegraph_next.graph.params import Cors, Rate, oauth2
-from typegraph_next.providers import PrismaRuntime
-from typegraph_next.runtimes import HttpRuntime
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.graph.params import Cors, Rate, oauth2
+from typegraph.providers import PrismaRuntime
+from typegraph.runtimes import HttpRuntime
 
 
 # skip:end

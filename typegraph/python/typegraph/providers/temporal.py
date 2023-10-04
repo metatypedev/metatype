@@ -3,9 +3,9 @@
 
 from typing import Union
 
-from typegraph_next.runtimes.base import Runtime
+from typegraph.runtimes.base import Runtime
 
-from typegraph_next.gen.exports.runtimes import (
+from typegraph.gen.exports.runtimes import (
     TemporalOperationData,
     TemporalRuntimeData,
     TemporalOperationType,
@@ -14,10 +14,10 @@ from typegraph_next.gen.exports.runtimes import (
     TemporalOperationTypeQueryWorkflow,
     TemporalOperationTypeDescribeWorkflow,
 )
-from typegraph_next.gen.types import Err
-from typegraph_next.wit import runtimes, store
+from typegraph.gen.types import Err
+from typegraph.wit import runtimes, store
 
-from typegraph_next import t
+from typegraph import t
 
 
 class TemporalRuntime(Runtime):

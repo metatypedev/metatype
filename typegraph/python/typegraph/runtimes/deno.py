@@ -6,9 +6,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional, Any
 import json
 
-from typegraph_next.runtimes.base import Materializer, Runtime
+from typegraph.runtimes.base import Materializer, Runtime
 
-from typegraph_next.gen.exports.runtimes import (
+from typegraph.gen.exports.runtimes import (
     Effect,
     EffectNone,
     MaterializerDenoFunc,
@@ -16,12 +16,12 @@ from typegraph_next.gen.exports.runtimes import (
     MaterializerDenoPredefined,
     MaterializerDenoStatic,
 )
-from typegraph_next.gen.types import Err
-from typegraph_next.policy import Policy
-from typegraph_next.wit import runtimes, store
+from typegraph.gen.types import Err
+from typegraph.policy import Policy
+from typegraph.wit import runtimes, store
 
 if TYPE_CHECKING:
-    from typegraph_next import t
+    from typegraph import t
 
 
 class DenoRuntime(Runtime):
@@ -29,7 +29,7 @@ class DenoRuntime(Runtime):
         super().__init__(runtimes.get_deno_runtime(store))
 
     def static(self, out: "t.typedef", value: Any):
-        from typegraph_next import t
+        from typegraph import t
 
         mat_id = runtimes.register_deno_static(
             store, MaterializerDenoStatic(json.dumps(value)), out.id
@@ -68,7 +68,7 @@ class DenoRuntime(Runtime):
         if isinstance(mat_id, Err):
             raise Exception(mat_id.value)
 
-        from typegraph_next import t
+        from typegraph import t
 
         return t.func(
             inp, out, FunMat(mat_id.value, code=code, secrets=secrets, effect=effect)
@@ -95,7 +95,7 @@ class DenoRuntime(Runtime):
         if isinstance(mat_id, Err):
             raise Exception(mat_id.value)
 
-        from typegraph_next import t
+        from typegraph import t
 
         return t.func(
             inp,
@@ -110,7 +110,7 @@ class DenoRuntime(Runtime):
         )
 
     def identity(self, inp: "t.struct") -> "t.func":
-        from typegraph_next import t
+        from typegraph import t
 
         res = runtimes.get_predefined_deno_func(
             store, MaterializerDenoPredefined(name="identity")

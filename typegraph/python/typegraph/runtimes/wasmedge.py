@@ -3,18 +3,18 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from typegraph_next.runtimes.base import Materializer, Runtime
+from typegraph.runtimes.base import Materializer, Runtime
 
-from typegraph_next.gen.exports.runtimes import (
+from typegraph.gen.exports.runtimes import (
     Effect,
     EffectNone,
     BaseMaterializer,
     MaterializerWasi,
 )
-from typegraph_next.gen.types import Err
-from typegraph_next.wit import runtimes, store
+from typegraph.gen.types import Err
+from typegraph.wit import runtimes, store
 
-from typegraph_next import t
+from typegraph import t
 
 
 class WasmEdgeRuntime(Runtime):

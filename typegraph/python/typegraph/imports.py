@@ -5,8 +5,8 @@ import glob
 from typing import List
 import sys
 
-from typegraph_next.gen import imports
-from typegraph_next.gen.types import Err, Ok, Result
+from typegraph.gen import imports
+from typegraph.gen.types import Err, Ok, Result
 
 
 class Abi(imports.Abi):

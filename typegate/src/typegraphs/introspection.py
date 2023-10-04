@@ -1,13 +1,13 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph_next import typegraph, t, Graph, Policy
-from typegraph_next.gen.exports.runtimes import (
+from typegraph import typegraph, t, Graph, Policy
+from typegraph.gen.exports.runtimes import (
     TypegraphOperation,
     EffectNone,
 )
-from typegraph_next.wit import runtimes, store
-from typegraph_next.gen.types import Err
-from typegraph_next.runtimes.base import Materializer
+from typegraph.wit import runtimes, store
+from typegraph.gen.types import Err
+from typegraph.runtimes.base import Materializer
 
 
 @typegraph()

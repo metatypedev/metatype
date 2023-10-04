@@ -2,18 +2,18 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from dataclasses import dataclass
-from typegraph_next.runtimes.base import Materializer
-from typegraph_next.runtimes.base import Runtime
-from typegraph_next.wit import aws, store
-from typegraph_next.gen.exports.aws import (
+from typegraph.runtimes.base import Materializer
+from typegraph.runtimes.base import Runtime
+from typegraph.wit import aws, store
+from typegraph.gen.exports.aws import (
     S3RuntimeData,
     S3PresignGetParams,
     S3PresignPutParams,
 )
-from typegraph_next.gen.exports.runtimes import EffectNone, EffectCreate
-from typegraph_next.gen.types import Err
+from typegraph.gen.exports.runtimes import EffectNone, EffectCreate
+from typegraph.gen.types import Err
 from typing import Optional
-from typegraph_next import t
+from typegraph import t
 
 
 class S3Runtime(Runtime):

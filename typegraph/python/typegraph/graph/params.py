@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 import json
 from typing import List, Optional
-from typegraph_next.gen.exports import core
+from typegraph.gen.exports import core
 from box import Box
 
 

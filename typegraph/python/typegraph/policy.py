@@ -5,21 +5,21 @@ from dataclasses import dataclass
 from re import Pattern
 from typing import Optional, Union, List
 
-from typegraph_next.gen.exports.core import (
+from typegraph.gen.exports.core import (
     ContextCheckPattern,
     ContextCheckValue,
     Err,
     MaterializerId,
     PolicySpecPerEffect,
 )
-from typegraph_next.gen.exports.core import (
+from typegraph.gen.exports.core import (
     Policy as WitPolicy,
     PolicySpec as WitPolicySpec,
     PolicySpecSimple,
     PolicyPerEffect as WitPolicyPerEffect,
 )
-from typegraph_next.gen.exports.runtimes import MaterializerDenoPredefined
-from typegraph_next.wit import core, runtimes, store
+from typegraph.gen.exports.runtimes import MaterializerDenoPredefined
+from typegraph.wit import core, runtimes, store
 
 
 class Policy:
@@ -65,7 +65,7 @@ class Policy:
     # TODO implement in Rust for the Guest wasm
     @classmethod
     def internal(cls) -> "Policy":
-        from typegraph_next.runtimes.deno import DenoRuntime
+        from typegraph.runtimes.deno import DenoRuntime
 
         return DenoRuntime().policy(
             "__internal", "(_, { context }) => context.provider === 'internal'"

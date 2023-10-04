@@ -1,17 +1,17 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph_next import typegraph, t, Graph
-from typegraph_next.runtimes.deno import DenoRuntime
-from typegraph_next.graph.params import Auth, Rate, Cors
-from typegraph_next.wit import runtimes, store
-from typegraph_next.gen.exports.runtimes import (
+from typegraph import typegraph, t, Graph
+from typegraph.runtimes.deno import DenoRuntime
+from typegraph.graph.params import Auth, Rate, Cors
+from typegraph.wit import runtimes, store
+from typegraph.gen.exports.runtimes import (
     TypegateOperation,
     EffectNone,
     EffectCreate,
     EffectDelete,
 )
-from typegraph_next.gen.types import Err
-from typegraph_next.runtimes.base import Materializer
+from typegraph.gen.types import Err
+from typegraph.runtimes.base import Materializer
 
 
 @typegraph(

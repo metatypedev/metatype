@@ -1,5 +1,5 @@
-from typegraph_next import typegraph, Policy, t, Graph
-from typegraph_next.runtimes.random import RandomRuntime
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.runtimes.random import RandomRuntime
 
 
 @typegraph()

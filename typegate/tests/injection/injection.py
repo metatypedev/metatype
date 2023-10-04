@@ -1,8 +1,8 @@
-from typegraph_next import typegraph, effects, Policy, t, Graph
-from typegraph_next.providers.prisma import PrismaRuntime
-from typegraph_next.runtimes.deno import DenoRuntime
-from typegraph_next.runtimes.graphql import GraphQLRuntime
-from typegraph_next.effects import CREATE, UPDATE, DELETE, NONE
+from typegraph import typegraph, effects, Policy, t, Graph
+from typegraph.providers.prisma import PrismaRuntime
+from typegraph.runtimes.deno import DenoRuntime
+from typegraph.runtimes.graphql import GraphQLRuntime
+from typegraph.effects import CREATE, UPDATE, DELETE, NONE
 
 
 @typegraph()
