@@ -33,8 +33,11 @@ export class PythonRuntime extends Runtime {
   constructor() {
     super(runtimes.registerPythonRuntime());
   }
-
-  fromLambda(code: string) {
+  fromLambda<
+    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
+    I extends t.Struct<P> = t.Struct<P>,
+    O extends t.Typedef = t.Typedef,
+  >(inp: I, out: O, { code }: { code: string }) {
     const matId = runtimes.fromPythonLambda(
       {
         runtime: this._id,
@@ -46,13 +49,17 @@ export class PythonRuntime extends Runtime {
       },
     );
 
-    return {
+    return t.func(inp, out, {
       _id: matId,
       fn: code,
-    } as LambdaMat;
+    } as LambdaMat);
   }
 
-  fromDef(code: string) {
+  fromDef<
+    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
+    I extends t.Struct<P> = t.Struct<P>,
+    O extends t.Typedef = t.Typedef,
+  >(inp: I, out: O, { code }: { code: string }) {
     const name = code.trim().match(/def\s+([A-Za-z0-9_]+)/)?.[1];
     if (name == undefined) {
       throw new Error(`unable to extract def name from source code ${code}`);
@@ -69,11 +76,11 @@ export class PythonRuntime extends Runtime {
       },
     );
 
-    return {
+    return t.func(inp, out, {
       _id: matId,
       name,
       fn: code,
-    } as DefMat;
+    } as DefMat);
   }
 
   import<

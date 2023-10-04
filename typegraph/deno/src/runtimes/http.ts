@@ -21,8 +21,8 @@ type HttpRequestMat<M extends string> =
 export class HttpRuntime extends Runtime {
   constructor(
     public endpoint: string,
-    public certSecret: string | undefined,
-    public basicAuthSecret: string | undefined,
+    public certSecret?: string,
+    public basicAuthSecret?: string,
   ) {
     super(runtimes.registerHttpRuntime({
       endpoint,
