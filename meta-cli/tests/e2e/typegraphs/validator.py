@@ -1,13 +1,17 @@
-from typegraph import TypeGraph, t
-from typegraph.runtimes import deno
+from typegraph_next import typegraph, t, Graph
+from typegraph_next.runtimes import DenoRuntime
 
-with TypeGraph("validator") as g:
+
+@typegraph()
+def validator(g: Graph):
+    deno = DenoRuntime()
+
     injection = t.struct(
         {
             "a": t.integer().set("1"),
             "b": t.string().set(["h", "e", "l", "l", "o"]),
-            "c": t.integer().min(2).set(0),
-            "d": t.string().max(4).set("hello"),
+            "c": t.integer(min=2).set(0),
+            "d": t.string(max=4).set("hello"),
             "e": t.struct({"a": t.integer()}).set({}),
             "f": t.struct({"a": t.integer()}).set({"b": 1}),
             "g": t.struct({"a": t.integer()}).set({"a": 2, "b": 1}),
@@ -16,15 +20,16 @@ with TypeGraph("validator") as g:
 
     enums = t.struct(
         {
-            "a": t.string().min(4).enum(["hi", "hello", 12]),
-            "b": t.struct({"name": t.string(), "age": t.number()}).enum(
-                [{"name": "John", "age": "13"}]
+            "a": t.string(min=4, enum=["hi", "hello", 12]),
+            "b": t.struct(
+                {"name": t.string(), "age": t.float()},
+                enum=[{"name": "John", "age": "13"}],
             ),
-            "c": t.integer().optional().enum([1, 3, 5]),
+            "c": t.integer(enum=[1, 3, 5]).optional(),
         }
     )
 
     g.expose(
-        test=t.func(injection, injection, deno.PredefinedFunMat("identity")),
-        testEnums=t.func(enums, enums, deno.PredefinedFunMat("identity")),
+        test=deno.identity(injection),
+        testEnums=deno.identity(enums),
     )

@@ -17,8 +17,9 @@ impl TypeConversion for Func {
         let (mat_id, runtime_id) = ctx.register_materializer(self.data.mat)?;
 
         let input = {
-            let inp_id = TypeId(self.data.inp).resolve_proxy()?;
-            match inp_id.as_type()? {
+            let inp_id = TypeId(self.data.inp);
+            let concrete_type = TypeId(self.data.inp).attrs()?.concrete_type;
+            match concrete_type.as_type()? {
                 Type::Struct(_) => Ok(ctx.register_type(inp_id, Some(runtime_id))?),
                 _ => Err(errors::invalid_input_type(&inp_id.repr()?)),
             }

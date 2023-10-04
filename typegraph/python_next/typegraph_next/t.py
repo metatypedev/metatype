@@ -191,7 +191,7 @@ class integer(typedef):
         exclusive_minimum: Optional[int] = None,
         exclusive_maximum: Optional[int] = None,
         multiple_of: Optional[int] = None,
-        enumeration: Optional[List[int]] = None,
+        enum: Optional[List[int]] = None,
         name: Optional[str] = None,
         config: Optional[ConfigSpec] = None,
         as_id: bool = False,
@@ -202,7 +202,7 @@ class integer(typedef):
             exclusive_minimum=exclusive_minimum,
             exclusive_maximum=exclusive_maximum,
             multiple_of=multiple_of,
-            enumeration=enumeration,
+            enumeration=enum,
         )
         runtime_config = serialize_config(config)
         # raise Exception(runtime_config)
@@ -219,7 +219,7 @@ class integer(typedef):
         self.exclusive_minimum = exclusive_minimum
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
-        self.enumeration = enumeration
+        self.enumeration = enum
         self.runtime_config = runtime_config
         self.as_id = as_id
 
@@ -240,7 +240,7 @@ class float(typedef):
         exclusive_minimum: Optional[float] = None,
         exclusive_maximum: Optional[float] = None,
         multiple_of: Optional[float] = None,
-        enumeration: Optional[List[float]] = None,
+        enum: Optional[List[float]] = None,
         name: Optional[str] = None,
         config: Optional[ConfigSpec] = None,
     ):
@@ -250,7 +250,7 @@ class float(typedef):
             exclusive_minimum=exclusive_minimum,
             exclusive_maximum=exclusive_maximum,
             multiple_of=multiple_of,
-            enumeration=enumeration,
+            enumeration=enum,
         )
         runtime_config = serialize_config(config)
         res = core.floatb(
@@ -266,7 +266,7 @@ class float(typedef):
         self.exclusive_minimum = exclusive_minimum
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
-        self.enumeration = enumeration
+        self.enumeration = enum
         self.runtime_config = runtime_config
 
 
@@ -299,14 +299,14 @@ class string(typedef):
         max: Optional[int] = None,
         pattern: Optional[str] = None,
         format: Optional[str] = None,
-        enumeration: Optional[List[str]] = None,
+        enum: Optional[List[str]] = None,
         name: Optional[str] = None,
         config: Optional[ConfigSpec] = None,
         as_id: bool = False,
     ):
         enum_variants = None
-        if enumeration is not None:
-            enum_variants = list(JsonLib.dumps(variant) for variant in enumeration)
+        if enum is not None:
+            enum_variants = list(JsonLib.dumps(variant) for variant in enum)
 
         data = TypeString(
             min=min, max=max, pattern=pattern, format=format, enumeration=enum_variants
@@ -325,7 +325,7 @@ class string(typedef):
         self.max = max
         self.pattern = pattern
         self.format = format
-        self.enumeration = enumeration
+        self.enumeration = enum
         self.runtime_config = runtime_config
         self.as_id = as_id
 
@@ -376,7 +376,7 @@ def enum(
     variants: List[str],
     name: Optional[str] = None,
 ):
-    return string(enumeration=variants, name=name)
+    return string(enum=variants, name=name)
 
 
 class file(typedef):
