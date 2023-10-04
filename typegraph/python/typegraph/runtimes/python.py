@@ -1,21 +1,157 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
-
 import ast
-import hashlib
 import inspect
-from typing import List, Optional, Tuple
-
 from astunparse import unparse
-from attr import field
-from attrs import frozen
 
-from typegraph import effects
-from typegraph.effects import Effect
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, List, Optional
+
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.utils.attrs import always
-from typegraph.graph.nodes import Node
-from typegraph.graph.builder import Collector
+
+from typegraph.gen.exports.runtimes import (
+    Effect,
+    EffectNone,
+    BaseMaterializer,
+    MaterializerPythonImport,
+    MaterializerPythonLambda,
+    MaterializerPythonDef,
+    MaterializerPythonModule,
+)
+from typegraph.gen.types import Err
+from typegraph.wit import runtimes, store
+
+if TYPE_CHECKING:
+    from typegraph import t
+
+
+class PythonRuntime(Runtime):
+    def __init__(self):
+        super().__init__(runtimes.register_python_runtime(store))
+
+    def from_lambda(
+        self,
+        inp: "t.struct",
+        out: "t.typedef",
+        function: callable,
+        *,
+        effect: Effect = EffectNone(),
+        # secrets: Optional[List[str]] = None,
+    ):
+        lambdas, _defs = DefinitionCollector.collect(function)
+        assert len(lambdas) == 1
+        fn = str(lambdas[0])
+        mat_id = runtimes.from_python_lambda(
+            store,
+            BaseMaterializer(runtime=self.id.value, effect=effect),
+            MaterializerPythonLambda(runtime=self.id.value, fn=fn),
+        )
+
+        if isinstance(mat_id, Err):
+            raise Exception(mat_id.value)
+
+        from typegraph import t
+
+        return t.func(
+            inp,
+            out,
+            LambdaMat(id=mat_id.value, fn=fn, effect=effect),
+        )
+
+    def from_def(
+        self,
+        inp: "t.struct",
+        out: "t.typedef",
+        function: callable,
+        *,
+        effect: Effect = EffectNone(),
+    ):
+        _lambdas, defs = DefinitionCollector.collect(function)
+        assert len(defs) == 1
+        name, fn = defs[0]
+
+        mat_id = runtimes.from_python_def(
+            store,
+            BaseMaterializer(runtime=self.id.value, effect=effect),
+            MaterializerPythonDef(runtime=self.id.value, name=name, fn=fn),
+        )
+
+        if isinstance(mat_id, Err):
+            raise Exception(mat_id.value)
+
+        from typegraph import t
+
+        return t.func(
+            inp,
+            out,
+            DefMat(id=mat_id.value, name=name, fn=fn, effect=effect),
+        )
+
+    def import_(
+        self,
+        inp: "t.struct",
+        out: "t.typedef",
+        *,
+        module: str,
+        name: str,
+        effect: Optional[Effect] = None,
+        secrets: Optional[List[str]] = None,
+    ):
+        effect = effect or EffectNone()
+        secrets = secrets or []
+
+        base = BaseMaterializer(runtime=self.id.value, effect=effect)
+        mat_id = runtimes.from_python_module(
+            store, base, MaterializerPythonModule(file=module, runtime=self.id.value)
+        )
+
+        if isinstance(mat_id, Err):
+            raise Exception(mat_id.value)
+
+        py_mod_mat_id = runtimes.from_python_import(
+            store,
+            base,
+            MaterializerPythonImport(
+                module=mat_id.value, func_name=name, secrets=secrets
+            ),
+        )
+
+        if isinstance(py_mod_mat_id, Err):
+            raise Exception(py_mod_mat_id.value)
+
+        from typegraph import t
+
+        return t.func(
+            inp,
+            out,
+            ImportMat(
+                id=py_mod_mat_id.value,
+                name=name,
+                module=module,
+                secrets=secrets,
+                effect=effect,
+            ),
+        )
+
+
+@dataclass
+class LambdaMat(Materializer):
+    fn: str
+    effect: Effect
+
+
+@dataclass
+class DefMat(Materializer):
+    fn: str
+    name: str
+    effect: Effect
+
+
+@dataclass
+class ImportMat(Materializer):
+    module: str
+    name: str
+    secrets: List[str]
 
 
 class DefinitionCollector(ast.NodeTransformer):
@@ -37,94 +173,3 @@ class DefinitionCollector(ast.NodeTransformer):
 
     def visit_FunctionDef(self, node):
         self.defs.append((node.name, unparse(node).strip()))
-
-
-@frozen
-class Python(Runtime):
-    """
-    [Documentation](https://metatype.dev/docs/reference/runtimes/python)
-    """
-
-    runtime_name: str = always("python_wasi")
-
-    def from_lambda(self, function):
-        lambdas, _defs = DefinitionCollector.collect(function)
-        assert len(lambdas) == 1
-        fn = str(lambdas[0])
-        m = hashlib.sha256()
-        m.update(fn.encode("utf-8"))
-        return LambdaMat(self, m.hexdigest(), fn)
-
-    def from_def(self, function):
-        _lambdas, defs = DefinitionCollector.collect(function)
-        assert len(defs) == 1
-        name, fn = defs[0]
-        return DefMat(self, name, fn)
-
-
-@frozen
-class LambdaMat(Materializer):
-    runtime: Runtime
-    name: str
-    fn: str
-    materializer_name: str = always("lambda")
-    effect: Effect = field(kw_only=True, default=effects.none())
-
-
-@frozen
-class DefMat(Materializer):
-    runtime: Runtime
-    name: str
-    fn: str
-    materializer_name: str = always("def")
-    effect: Effect = field(kw_only=True, default=effects.none())
-
-
-# Import function from a module
-@frozen
-class ImportFunMat(Materializer):
-    mod: "PyModuleMat" = field()
-    name: str = field(default="main")
-    secrets: Tuple[str] = field(kw_only=True, factory=tuple)
-    effect: Effect = field(kw_only=True, default=effects.none())
-    runtime: Python = field(
-        kw_only=True, factory=Python
-    )  # should be the same runtime as `mod`'s
-    materializer_name: str = always("import_function")
-    collector_target = always(Collector.materializers)
-
-    @property
-    def edges(self) -> List[Node]:
-        return super().edges + [self.mod]
-
-    def data(self, collector: Collector) -> dict:
-        data = super().data(collector)
-        data["data"]["mod"] = collector.index(self.mod)
-        return data
-
-
-@frozen
-class PyModuleMat(Materializer):
-    file: Optional[str] = field(default=None)
-    secrets: Tuple[str] = field(kw_only=True, factory=tuple)
-    code: Optional[str] = field(kw_only=True, default=None)
-    runtime: Python = field(kw_only=True, factory=Python)
-    materializer_name: str = always("pymodule")
-    effect: Effect = always(effects.none())
-
-    def __attrs_post_init__(self):
-        if self.file is None:
-            raise Exception("you must provide the source file")
-        object.__setattr__(self, "code", f"file:{self.file}")
-
-    def imp(
-        self, name: str = "main", *, effect: Effect = effects.none(), **kwargs
-    ) -> ImportFunMat:
-        return ImportFunMat(
-            self,
-            name,
-            runtime=self.runtime,
-            secrets=self.secrets,
-            effect=effect,
-            **kwargs,
-        )

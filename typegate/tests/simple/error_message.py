@@ -1,22 +1,18 @@
-from typegraph import TypeGraph, effects, policies, t
-from typegraph.runtimes.deno import PredefinedFunMat
+from typegraph import typegraph, effects, Policy, t, Graph
+from typegraph.runtimes import DenoRuntime
 
-with TypeGraph("test_error") as g:
+
+@typegraph()
+def test_error(g: Graph):
+    deno = DenoRuntime()
     user = t.struct({"id": t.integer(), "name": t.string()})
     g.expose(
-        returnSelf=t.func(
-            user.named("InputA"),
-            user.named("OutputA"),
-            PredefinedFunMat("identity", effect=effects.none()),
-        ).add_policy(policies.public()),
-        returnSelfQuery=t.func(
-            user.named("InputB"),
-            user.named("OutputB"),
-            PredefinedFunMat("identity", effect=effects.none()),
-        ).add_policy(policies.public()),
-        returnSelfMutation=t.func(
-            user.named("InputC"),
-            user.named("OutputC"),
-            PredefinedFunMat("identity", effect=effects.create()),
-        ).add_policy(policies.public()),
+        returnSelf=deno.identity(user.rename("A")).with_policy(Policy.public()),
+        returnSelfQuery=deno.identity(user.rename("B")).with_policy(Policy.public()),
+        returnSelfMutation=deno.func(
+            user.rename("InputC"),
+            user.rename("OutputC"),
+            code="(x) => x",
+            effect=effects.create(),
+        ).with_policy(Policy.public()),
     )

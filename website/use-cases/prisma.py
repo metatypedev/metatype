@@ -1,8 +1,8 @@
 # skip:start
-from typegraph_next import Policy, t
-from typegraph_next.graph.params import Cors
-from typegraph_next.graph.typegraph import Graph, typegraph
-from typegraph_next.providers.prisma import PrismaRuntime
+from typegraph import Policy, t
+from typegraph.graph.params import Cors
+from typegraph.graph.typegraph import Graph, typegraph
+from typegraph.providers.prisma import PrismaRuntime
 
 # skip:end
 

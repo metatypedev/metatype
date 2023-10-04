@@ -1,7 +1,7 @@
-from typegraph_next import typegraph, Policy, t, Graph
-from typegraph_next.graph.params import Auth, Rate
-from typegraph_next.providers import PrismaRuntime
-from typegraph_next.runtimes import DenoRuntime, HttpRuntime, PythonRuntime
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.graph.params import Auth, Rate
+from typegraph.providers import PrismaRuntime
+from typegraph.runtimes import DenoRuntime, HttpRuntime, PythonRuntime
 
 
 @typegraph(

@@ -122,35 +122,6 @@ jobs:
           pnpm lint
           pnpm build
 
-  test-typegraph:
-    needs:
-      - changes
-      - test-meta-cli
-    if: ${{ needs.changes.outputs.typegraph == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-      - uses: actions/cache@v3
-        with:
-          path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: actions/download-artifact@v3
-        with:
-          name: meta
-      - run: |
-          tar -xvf meta.tar
-          python3 -m venv .venv
-          source .venv/bin/activate
-          cd typegraph/python
-          poetry install
-          pytest -s tests
-
   test-typegraph-core:
     needs:
       - changes
@@ -187,12 +158,23 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - run: |
+      - env:
+          WASM_FILE: target/debug/typegraph_core.wasm
+        run: |
           python3 -m venv .venv
           source .venv/bin/activate
           cd typegraph/python
           poetry install --sync
           cd ../..
+
+          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
+          export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
+          cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
+          cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
+          wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+          rm -rf typegraph/python/typegraph/gen
+          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
+
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
           tar -cvf meta.tar target/debug/meta
@@ -229,12 +211,23 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - run: |
+      - env:
+          WASM_FILE: target/debug/typegraph_core.wasm
+        run: |
           python3 -m venv .venv
           ${{ matrix.activate }}
           cd typegraph/python
           poetry install --sync
           cd ../..
+
+          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
+          export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
+          cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
+          cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
+          wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+          rm -rf typegraph/python/typegraph/gen
+          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
+
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
 
@@ -333,8 +326,8 @@ jobs:
           rm -rf typegraph/deno/src/gen
           jco transpile $WASM_FILE -o typegraph/deno/src/gen --map "*=../imports.ts"
           deno run -A typegraph/deno/dev/fix-declarations.ts
-          rm -rf typegraph/python_next/typegraph_next/gen
-          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
+          rm -rf typegraph/python/typegraph/gen
+          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
           deno install -A -n deno_bindgen $DENO_BINDGEN_URL
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno

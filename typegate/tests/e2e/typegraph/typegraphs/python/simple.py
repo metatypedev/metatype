@@ -1,8 +1,8 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph_next import t, typegraph, Policy, Graph
-from typegraph_next.runtimes.deno import DenoRuntime
+from typegraph import t, typegraph, Policy, Graph
+from typegraph.runtimes.deno import DenoRuntime
 
 a = t.integer()
 

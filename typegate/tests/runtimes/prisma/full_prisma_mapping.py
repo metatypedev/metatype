@@ -1,6 +1,6 @@
-from typegraph_next import typegraph, Policy, t, Graph
-from typegraph_next.gen.exports.runtimes import EffectUpdate
-from typegraph_next.providers.prisma import PrismaRuntime
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.gen.exports.runtimes import EffectUpdate
+from typegraph.providers.prisma import PrismaRuntime
 
 
 @typegraph()

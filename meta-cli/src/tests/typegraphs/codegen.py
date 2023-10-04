@@ -1,23 +1,28 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.deno import ModuleMat
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.runtimes import DenoRuntime
 
-with TypeGraph(name="math") as g:
-    public = policies.public()
-    mod = ModuleMat("/inexisting/path/to/ts/module.ts")
+
+@typegraph()
+def math(g: Graph):
+    deno = DenoRuntime()
+    public = Policy.public()
     g.expose(
-        div=t.func(
+        div=deno.import_(
             t.struct(
                 {
                     "dividend": t.integer(),
                     "divisor": t.integer(),
-                }
-            ).named("Input"),
+                },
+                name="Input",
+            ),
             t.struct(
                 {
                     "quotient": t.integer(),
                     "remainder": t.integer(),
-                }
-            ).named("Output"),
-            mod.imp("div"),
-        ).add_policy(public)
+                },
+                name="Output",
+            ),
+            module="/inexisting/path/to/ts/module.ts",
+            name="div",
+        ).with_policy(public)
     )

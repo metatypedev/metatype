@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "example"
-version = "0.2.0-alpha.1"
+version = "0.2.0"
 description = ""
 authors = []
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-typegraph = "0.2.0-alpha.1"
+typegraph = "0.2.0"
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,94 +1,50 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
+from dataclasses import dataclass
+from typing import Optional
 
-from typing import Callable, Dict, List, Optional
-
-from attrs import field, frozen
-
-from typegraph import effects, utils
-from typegraph import types as t
-from typegraph.effects import Effect
+from typegraph import t
+from typegraph.gen.exports.runtimes import (
+    BaseMaterializer,
+    EffectNone,
+    MaterializerRandom,
+    RandomRuntimeData,
+)
+from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.utils.attrs import always
+from typegraph.wit import runtimes, store
 
 
-def pick(d: Dict, *largs) -> Dict:
-    return utils.drop_nones(utils.pick(d, *largs))
-
-
-@frozen
 class RandomRuntime(Runtime):
-    """
-    [Documentation](https://metatype.dev/docs/reference/runtimes/random)
-    """
-
-    runtime_name: str = always("random")
-    seed: Optional[int] = field(kw_only=True, default=None)
-    reset: str = field(kw_only=True, default="")
-
-    def get_type_config(self, tpe: "t.typedef") -> Dict:
-        base = tpe.runtime_config
-
-        def pick(*largs) -> Dict:
-            return utils.drop_nones(utils.pick(base, *largs))
-
-        gen = base.get("gen")
-
-        def pick_fields(default: Callable[[], Dict] = dict, **d: List[str]) -> Dict:
-            if gen in d:
-                return pick("gen", *d[gen])
-            else:
-                return default()
-
-        if tpe.type == "boolean":
-            return pick(base, "likelihood")
-
-        if tpe.type == "number":
-            if gen == "float":
-                return pick("gen", "fixed", "min", "max")
-
-        if tpe.type == "integer":
-            if gen == "age":
-                return pick("gen", "type")
-            if gen == "natural" or gen == "prime" or gen is None:
-                return pick("gen", "min", "max")
-
-        if tpe.type == "string":
-            return pick_fields(
-                (
-                    lambda: pick(
-                        "length", "pool", "alpha", "numeric", "casing", "symbols"
-                    )
-                ),
-                char=["pool", "alpha", "numeric", "casing", "symbols"],
-                letter=["casing"],
-                paragraph=["sentences"],
-                sentence=["words"],
-                syllable=[],
-                word=["length", "syllables"],
-                birthday=[],
-                first=["nationality", "gender"],
-                last=["nationality", "gender"],
-                name=["middle", "middle_initial", "prefix", "nationality"],
-                gender=["extraGenders"],
-                prefix=["full", "gender"],
-                suffix=["full"],
-                animal=["type"],
-                address=["short_suffix"],
-                city=[],
-                country=["full"],
-                postcode=[],
+    def __init__(self, seed: Optional[int] = None, reset: Optional[str] = ""):
+        super().__init__(
+            runtimes.register_random_runtime(
+                store, data=RandomRuntimeData(seed=seed, reset=reset)
             )
-            # TODO more...
+        )
 
-        return dict()
+    def gen(
+        self,
+        out: "t.typedef",
+    ):
+        effect = EffectNone()
 
-    def generate(self, out, **kwargs):
-        return t.gen(out, RandomMat(runtime=self), **kwargs)
+        mat_id = runtimes.create_random_mat(
+            store,
+            base=BaseMaterializer(runtime=self.id.value, effect=effect),
+            data=MaterializerRandom(runtime=self.id.value),
+        )
+
+        if isinstance(mat_id, Err):
+            raise Exception(mat_id.value)
+
+        return t.func(
+            t.struct({}),
+            out,
+            RandomMat(id=mat_id.value, runtime=self.id.value, effect=effect),
+        )
 
 
-@frozen
+@dataclass
 class RandomMat(Materializer):
-    runtime: Runtime = field(factory=RandomRuntime)
-    materializer_name: str = always("random")
-    effect: Effect = field(kw_only=True, default=effects.none())
+    runtime: int

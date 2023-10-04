@@ -1,5 +1,5 @@
-from typegraph_next import t, typegraph, Policy, Graph
-from typegraph_next.providers.temporal import TemporalRuntime
+from typegraph import t, typegraph, Policy, Graph
+from typegraph.providers.temporal import TemporalRuntime
 
 
 @typegraph()

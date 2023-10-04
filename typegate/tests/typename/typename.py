@@ -1,7 +1,7 @@
-from typegraph_next import Graph, Policy, effects, t, typegraph
-from typegraph_next.providers.prisma import PrismaRuntime
-from typegraph_next.runtimes.deno import DenoRuntime
-from typegraph_next.runtimes.random import RandomRuntime
+from typegraph import Graph, Policy, effects, t, typegraph
+from typegraph.providers.prisma import PrismaRuntime
+from typegraph.runtimes.deno import DenoRuntime
+from typegraph.runtimes.random import RandomRuntime
 
 
 @typegraph()

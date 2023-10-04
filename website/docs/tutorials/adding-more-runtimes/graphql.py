@@ -1,12 +1,12 @@
 # skip:start
-from typegraph_next import typegraph, Policy, t, Graph
-from typegraph_next.graph.params import Cors
-from typegraph_next.providers.prisma import PrismaRuntime
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.graph.params import Cors
+from typegraph.providers.prisma import PrismaRuntime
 
 # isort: off
 # skip:end
 # highlight-next-line
-from typegraph_next.runtimes.graphql import GraphQLRuntime
+from typegraph.runtimes.graphql import GraphQLRuntime
 
 
 @typegraph(

@@ -1,23 +1,29 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.deno import ModuleMat
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.runtimes.deno import DenoRuntime
 
-with TypeGraph("union_attr") as g:
-    rgb = t.struct({"R": t.float(), "G": t.float(), "B": t.float()}).named("Rgb")
-    vec = t.struct({"x": t.float(), "y": t.float(), "z": t.float()}).named("Vec")
+
+@typegraph()
+def union_attr(g: Graph):
+    rgb = t.struct({"R": t.float(), "G": t.float(), "B": t.float()}, name="Rgb")
+    vec = t.struct({"x": t.float(), "y": t.float(), "z": t.float()}, name="Vec")
     pair = t.struct({"first": t.float(), "second": t.float()})
     axis_pairs = t.struct(
         {
-            "xy": pair.named("xy"),
-            "xz": pair.named("xz"),
-            "yz": pair.named("yz"),
-        }
-    ).named("AxisPair")
-    public = policies.public()
-    normalize = t.func(
+            "xy": pair.rename("xy"),
+            "xz": pair.rename("xz"),
+            "yz": pair.rename("yz"),
+        },
+        name="AxisPair",
+    )
+    public = Policy.public()
+    deno = DenoRuntime()
+    normalize = deno.import_(
         t.struct(
-            {"x": t.float(), "y": t.float(), "z": t.float(), "as": t.string()}
-        ).named("Input"),
-        t.union([rgb, vec, axis_pairs]).named("Output"),
-        ModuleMat("ts/union/vec_normalizer.ts").imp("normalize"),
-    ).add_policy(public)
+            {"x": t.float(), "y": t.float(), "z": t.float(), "as": t.string()},
+            name="Input",
+        ),
+        t.union([rgb, vec, axis_pairs], name="Output"),
+        module="ts/union/vec_normalizer.ts",
+        name="normalize",
+    ).with_policy(public)
     g.expose(normalize=normalize)

@@ -2246,6 +2246,15 @@
         },
         "operation": {
           "type": "string"
+        },
+        "ordered_keys": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

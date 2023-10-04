@@ -1,36 +1,34 @@
-from typegraph import t
-from typegraph import TypeGraph
-from typegraph.runtimes.deno import ModuleMat
+from typegraph import t, typegraph, Graph
+from typegraph.runtimes import DenoRuntime
 
-with TypeGraph("union") as g:
-    rgb = t.array(t.integer().min(0).max(255)).min(3).max(3).named("RGBArray")
-    hex = t.string().pattern("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$").named("HexColor")
-    colorName = (
-        t.string()
-        .enum(
-            [
-                "red",
-                "black",
-                "blue",
-                "orange",
-                "purple",
-                "white",
-                "yellow",
-            ]
-        )
-        .named("NamedColor")
+
+@typegraph()
+def union(g: Graph):
+    rgb = t.array(t.integer(min=0, max=255), min=3, max=3, name="RGBArray")
+    hex = t.string(pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", name="HexColor")
+    colorName = t.enum(
+        [
+            "red",
+            "black",
+            "blue",
+            "orange",
+            "purple",
+            "white",
+            "yellow",
+        ],
+        name="NamedColor",
     )
 
-    color = t.union((rgb, hex, colorName)).named("Color")
+    color = t.union((rgb, hex, colorName), name="Color")
 
-    colorFormat = t.string().enum(["rgb", "hex", "colorName"])
+    colorFormat = t.enum(["rgb", "hex", "colorName"])
 
-    colorMaterializer = ModuleMat("ts/color_converter.ts")
-
-    convert = t.func(
+    deno = DenoRuntime()
+    convert = deno.import_(
         t.struct({"color": color, "to": colorFormat}),
         color,
-        colorMaterializer.imp("convert"),
+        module="ts/color_converter.ts",
+        name="convert",
     )
 
     g.expose(convert=convert)

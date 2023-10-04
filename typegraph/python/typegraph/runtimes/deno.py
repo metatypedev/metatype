@@ -1,165 +1,187 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Any, Dict, List, Optional, Tuple
+import re
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, List, Optional, Any
+import json
 
-from attrs import field, frozen
-from frozendict import frozendict
-
-from typegraph import effects
-from typegraph import types as t
-from typegraph.effects import Effect
-from typegraph.graph.builder import Collector
-from typegraph.graph.nodes import Node
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.utils.attrs import SKIP, always
+
+from typegraph.gen.exports.runtimes import (
+    Effect,
+    EffectNone,
+    MaterializerDenoFunc,
+    MaterializerDenoImport,
+    MaterializerDenoPredefined,
+    MaterializerDenoStatic,
+)
+from typegraph.gen.types import Err
+from typegraph.policy import Policy
+from typegraph.wit import runtimes, store
+
+if TYPE_CHECKING:
+    from typegraph import t
 
 
-@frozen
 class DenoRuntime(Runtime):
-    """
-    [Documentation](https://metatype.dev/docs/reference/runtimes/deno)
-    """
+    def __init__(self):
+        super().__init__(runtimes.get_deno_runtime(store))
 
-    worker: str = field(kw_only=True, default="default")
-    allow_net: Tuple[str, ...] = field(
-        kw_only=True, factory=tuple, metadata={SKIP: True}
-    )
-    permissions: Dict[str, Any] = field(factory=frozendict, init=False)
-    runtime_name: str = always("deno")
+    def static(self, out: "t.typedef", value: Any):
+        from typegraph import t
 
-    @classmethod
-    def static(cls, out: t.Type, value: Any) -> "t.func":
-        def prepare(x):
-            if isinstance(x, dict):
-                return frozendict({k: prepare(v) for k, v in x.items()})
-            if isinstance(x, list):
-                return tuple(prepare(v) for v in x)
-            return x
-
-        return t.func(t.struct({}), out, StaticMat(prepare(value)))
-
-    @classmethod
-    def identity(cls, tpe: t.Type) -> "t.func":
-        return t.func(tpe, tpe, PredefinedFunMat("identity"))
-
-    def __attrs_post_init__(self):
-        permissions = {}
-        if len(self.allow_net) > 0:
-            if "*" in self.allow_net:
-                permissions["net"] = True
-            else:
-                permissions["net"] = self.allow_net
-        object.__setattr__(self, "permissions", frozendict(permissions))
-
-
-# Inlined fuction
-@frozen
-class FunMat(Materializer):
-    fn_expr: Optional[str] = field(default=None, metadata={SKIP: True})
-
-    # a script that assigns a function expression into the variable _my_lambda
-    script: Optional[str] = field(kw_only=True, default=None)
-    runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
-    materializer_name: str = field(default="function", init=False)
-    effect: Effect = field(kw_only=True, default=effects.none())
-
-    def __attrs_post_init__(self):
-        if self.fn_expr is None:
-            if self.script is None:
-                raise Exception("you must give the script or a function expression")
-        else:
-            if self.script is not None:
-                raise Exception(
-                    "you must only give either the script or a function expression"
-                )
-            object.__setattr__(self, "script", f"var _my_lambda = {self.fn_expr};")
-
-
-@frozen
-class PureFunMat(FunMat):
-    effect: Effect = always(effects.none())
-
-
-@frozen
-class PredefinedFunMat(Materializer):
-    name: str
-    effect: Effect = field(kw_only=True, default=effects.none())
-    runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
-    materializer_name: str = field(default="predefined_function", init=False)
-
-
-# Import function from a module
-@frozen
-class ImportFunMat(Materializer):
-    mod: "ModuleMat" = field()
-    name: str = field(default="default")
-    secrets: Tuple[str] = field(kw_only=True, factory=tuple)
-    effect: Effect = field(kw_only=True, default=effects.none())
-    runtime: DenoRuntime = field(
-        kw_only=True, factory=DenoRuntime
-    )  # should be the same runtime as `mod`'s
-    materializer_name: str = always("import_function")
-    collector_target = always(Collector.materializers)
-
-    @property
-    def edges(self) -> List[Node]:
-        return super().edges + [self.mod]
-
-    def data(self, collector: Collector) -> dict:
-        data = super().data(collector)
-        data["data"]["mod"] = collector.index(self.mod)
-        return data
-
-
-@frozen
-class ModuleMat(Materializer):
-    file: Optional[str] = field(default=None, metadata={SKIP: True})
-    secrets: Tuple[str] = field(kw_only=True, factory=tuple)
-    code: Optional[str] = field(kw_only=True, default=None)
-    runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)  # DenoRuntime
-    materializer_name: str = always("module")
-    effect: Effect = always(effects.none())
-
-    def __attrs_post_init__(self):
-        if self.file is None:
-            if self.code is None:
-                raise Exception(
-                    f"you must give source code for the module: {self.file}"
-                )
-        else:
-            if self.code is not None:
-                raise Exception("you must only give either source file or source code")
-
-            # from typegraph.graph.typegraph import get_absolute_path
-
-            # depth 0: typegraph.py (definition)
-            # depth 1: this file (immediate caller)
-            # depth 2: infos about the current instance
-            # depth 3: tg (caller of this file)
-            # path = get_absolute_path(self.file, 3)
-
-            # assume file is relative by default
-            path = self.file
-
-            object.__setattr__(self, "code", f"file:{path}")
-
-    def imp(
-        self, name: str = "default", *, effect: Effect = effects.none(), **kwargs
-    ) -> ImportFunMat:
-        return ImportFunMat(
-            self,
-            name,
-            runtime=self.runtime,
-            secrets=self.secrets,
-            effect=effect,
-            **kwargs,
+        mat_id = runtimes.register_deno_static(
+            store, MaterializerDenoStatic(json.dumps(value)), out.id
         )
 
+        if isinstance(mat_id, Err):
+            raise Exception(mat_id.value)
 
-@frozen
+        return t.func(
+            t.struct(),
+            out,
+            StaticMat(
+                mat_id.value,
+                value=value,
+                effect=EffectNone(),
+            ),
+        )
+
+    def func(
+        self,
+        inp: "t.struct",
+        out: "t.typedef",
+        *,
+        code: str,
+        secrets: Optional[List[str]] = None,
+        effect: Optional[Effect] = None,
+    ):
+        secrets = secrets or []
+        effect = effect or EffectNone()
+        mat_id = runtimes.register_deno_func(
+            store,
+            MaterializerDenoFunc(code=code, secrets=secrets),
+            effect,
+        )
+
+        if isinstance(mat_id, Err):
+            raise Exception(mat_id.value)
+
+        from typegraph import t
+
+        return t.func(
+            inp, out, FunMat(mat_id.value, code=code, secrets=secrets, effect=effect)
+        )
+
+    def import_(
+        self,
+        inp: "t.struct",
+        out: "t.typedef",
+        *,
+        module: str,
+        name: str,
+        effect: Optional[Effect] = None,
+        secrets: Optional[List[str]] = None,
+    ):
+        effect = effect or EffectNone()
+        secrets = secrets or []
+        mat_id = runtimes.import_deno_function(
+            store,
+            MaterializerDenoImport(func_name=name, module=module, secrets=secrets),
+            effect,
+        )
+
+        if isinstance(mat_id, Err):
+            raise Exception(mat_id.value)
+
+        from typegraph import t
+
+        return t.func(
+            inp,
+            out,
+            ImportMat(
+                id=mat_id.value,
+                name=name,
+                module=module,
+                secrets=secrets,
+                effect=effect,
+            ),
+        )
+
+    def identity(self, inp: "t.struct") -> "t.func":
+        from typegraph import t
+
+        res = runtimes.get_predefined_deno_func(
+            store, MaterializerDenoPredefined(name="identity")
+        )
+        if isinstance(res, Err):
+            raise Exception(res.value)
+
+        return t.func(
+            inp,
+            inp,
+            PredefinedFunMat(id=res.value, name="identity", effect=EffectNone()),
+        )
+
+    def policy(
+        self, name: str, code: str, secrets: Optional[List[str]] = None
+    ) -> Policy:
+        secrets = secrets or []
+        mat_id = runtimes.register_deno_func(
+            store,
+            MaterializerDenoFunc(code=code, secrets=secrets),
+            EffectNone(),
+        )
+
+        if isinstance(mat_id, Err):
+            raise Exception(mat_id.value)
+
+        return Policy.create(
+            name,
+            mat_id.value,
+        )
+
+    def import_policy(
+        self,
+        func_name: str,
+        module: str,
+        secrets: Optional[List[str]] = None,
+        name: Optional[str] = None,
+    ) -> Policy:
+        name = name or re.sub("[^a-zA-Z0-9_]", "_", f"__imp_{module}_{name}")
+
+        res = runtimes.import_deno_function(
+            store,
+            MaterializerDenoImport(
+                func_name=func_name, module=module, secrets=secrets or []
+            ),
+            EffectNone(),
+        )
+        if isinstance(res, Err):
+            raise Exception(res.value)
+
+        return Policy.create(name, res.value)
+
+
+@dataclass
+class FunMat(Materializer):
+    code: str
+    secrets: List[str]
+
+
+@dataclass
 class StaticMat(Materializer):
-    value: Any = field()
-    effect: Effect = always(effects.none())
-    runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
-    materializer_name: str = always("static")
+    value: Any
+
+
+@dataclass
+class ImportMat(Materializer):
+    module: str
+    name: str
+    secrets: List[str]
+
+
+@dataclass
+class PredefinedFunMat(Materializer):
+    name: str

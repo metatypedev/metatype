@@ -63,4 +63,5 @@ pub struct PrismaRuntimeData {
 pub struct PrismaOperationMatData {
     pub table: String,
     pub operation: String,
+    pub ordered_keys: Option<Vec<String>>,
 }

@@ -28,15 +28,23 @@ repos:
     rev: 3.6.0
     hooks:
       - id: commitizen
-        stages: [commit-msg]
+        stages:
+          - commit-msg
   - repo: https://github.com/doublify/pre-commit-rust
     rev: v1.0
     hooks:
       - id: fmt
       - id: cargo-check
-        args: ["--locked"]
+        args:
+          - "--locked"
       - id: clippy
-        args: ["--locked", "-F", "wasm", "--", "--deny", "warnings"]
+        args:
+          - "--locked"
+          - "-F"
+          - "wasm"
+          - "--"
+          - "--deny"
+          - "warnings"
   - repo: local
     hooks:
       - id: deno-fmt

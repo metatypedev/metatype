@@ -36,10 +36,11 @@ impl TypeGen for WithFilters {
 
         for (key, id) in self.type_id.as_struct().unwrap().iter_props() {
             let mut id = id;
-            let mut ty = id.as_type()?;
+            let mut ty = id.attrs()?.concrete_type.as_type()?;
+            // let mut ty = id.as_type()?;
             if let Type::Optional(opt) = ty {
                 id = opt.item();
-                ty = id.as_type()?;
+                ty = id.attrs()?.concrete_type.as_type()?;
             }
 
             let rel = context.registry.find_relationship_on(self.model_id, key);
