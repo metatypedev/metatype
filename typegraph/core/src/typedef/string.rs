@@ -64,4 +64,6 @@ impl TypeData for TypeString {
     fn variant_name(&self) -> String {
         "string".to_string()
     }
+
+    super::impl_into_type!(concrete, String);
 }

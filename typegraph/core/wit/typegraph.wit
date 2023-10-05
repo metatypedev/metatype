@@ -193,7 +193,7 @@ interface core {
         name: string,
     }
 
-    rename-type: func(data: type-renamed) -> result<type-id, error>
+    rename-type: func(tpe: type-id, new-name: string) -> result<type-id, error>
 
     expose: func(fns: list<tuple<string, type-id>>, default-policy: option<list<policy-spec>>) -> result<_, error>
     

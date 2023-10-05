@@ -58,4 +58,6 @@ impl TypeData for TypeFunc {
     fn variant_name(&self) -> String {
         "func".to_string()
     }
+
+    super::impl_into_type!(concrete, Func);
 }

@@ -28,6 +28,8 @@ impl TypeData for TypeProxy {
     fn variant_name(&self) -> String {
         "proxy".to_string()
     }
+
+    super::impl_into_type!(wrapper, Proxy);
 }
 
 impl WrapperTypeData for TypeProxy {
