@@ -13,8 +13,8 @@ use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
     PolicySpec, TypeArray, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc,
-    TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeRenamed,
-    TypeString, TypeStruct, TypeUnion, TypeWithInjection,
+    TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct,
+    TypeUnion, TypeWithInjection,
 };
 use std::rc::Rc;
 
@@ -48,6 +48,7 @@ impl From<TypeId> for CoreTypeId {
 pub trait TypeData {
     fn get_display_params_into(&self, params: &mut Vec<String>);
     fn variant_name(&self) -> String;
+    fn into_type(self, type_id: TypeId, base: Option<TypeBase>) -> Result<Type>;
 }
 
 pub trait WrapperTypeData {
@@ -64,6 +65,14 @@ pub struct ConcreteType<T: TypeData> {
     pub id: TypeId,
     pub base: TypeBase,
     pub data: T,
+}
+
+impl<T: TypeData + Clone> ConcreteType<T> {
+    pub fn rename(&self, new_name: String) -> Result<TypeId> {
+        let mut base = self.base.clone();
+        base.name = Some(new_name);
+        Store::register_type(|id| self.data.clone().into_type(id, Some(base)).unwrap())
+    }
 }
 
 #[derive(Debug)]
@@ -84,7 +93,7 @@ impl Default for TypeBase {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TypeBoolean;
 
 pub type Proxy = WrapperType<TypeProxy>;
@@ -103,7 +112,6 @@ pub type Either = ConcreteType<TypeEither>;
 // Note: TypePolicy|TypeWithInjection|Proxy => Struct | Integer | ...
 pub type WithPolicy = WrapperType<TypePolicy>;
 pub type WithInjection = WrapperType<TypeWithInjection>;
-pub type Renamed = WrapperType<TypeRenamed>;
 
 #[derive(Debug, Clone)]
 #[enum_dispatch(TypeFun, TypeConversion)]
@@ -122,7 +130,6 @@ pub enum Type {
     Either(Rc<Either>),
     WithPolicy(Rc<WithPolicy>),
     WithInjection(Rc<WithInjection>),
-    Renamed(Rc<Renamed>),
 }
 
 impl Type {
@@ -341,13 +348,6 @@ impl TypeId {
                         return Err("multiple injections not supported".to_string());
                     }
                     injection = Some(inner.data.injection.clone());
-                    type_id = inner.data.tpe.into();
-                    continue;
-                }
-
-                Type::Renamed(inner) => {
-                    // only use the outer name
-                    name = name.or_else(|| Some(inner.data.name.clone()));
                     type_id = inner.data.tpe.into();
                     continue;
                 }

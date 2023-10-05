@@ -106,6 +106,8 @@ impl TypeData for TypeWithInjection {
     fn variant_name(&self) -> String {
         "injection".to_string()
     }
+
+    super::impl_into_type!(wrapper, WithInjection);
 }
 
 impl WrapperTypeData for TypeWithInjection {
