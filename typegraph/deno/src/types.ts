@@ -129,7 +129,7 @@ export class Typedef {
     return optional(this, data);
   }
 
-  private withInjection(injection: string) {
+  withInjection(injection: string) {
     const wrapperId = core.withInjection({
       tpe: this._id,
       injection,

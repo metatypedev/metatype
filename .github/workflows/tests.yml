@@ -236,7 +236,9 @@ jobs:
       - changes
       - test-meta-cli
     if: ${{ needs.changes.outputs.typegate == 'true' }}
-    runs-on: custom-linux
+    runs-on:
+      - self-hosted # https://check-jsonschema.readthedocs.io/en/latest/faq.html#using-self-hosted-runners
+      - custom-linux
     timeout-minutes: 60
     services:
       redis:

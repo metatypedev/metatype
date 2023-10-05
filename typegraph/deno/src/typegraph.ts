@@ -11,8 +11,8 @@ import {
   serializeStaticInjection,
 } from "./utils/injection_utils.ts";
 import { Auth, Cors, Rate } from "./wit.ts";
-import Policy from "@typegraph/deno/src/policy.ts";
-import { getPolicyChain } from "@typegraph/deno/src/types.ts";
+import Policy from "./policy.ts";
+import { getPolicyChain } from "./types.ts";
 
 type Exports = Record<string, t.Func>;
 
