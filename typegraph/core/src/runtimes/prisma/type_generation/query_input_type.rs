@@ -42,29 +42,26 @@ impl TypeGen for QueryInputType {
         };
 
         builder
-            .prop(
+            .propx(
                 "where",
-                t::optional(context.generate(&QueryWhereExpr::new(self.model_id))?).build()?,
-            )
-            .prop(
-                "orderBy",
-                t::optional(context.generate(&order_by)?).build()?,
-            )
-            .prop("take", t::optional(context.generate(&Take)?).build()?)
-            .prop("skip", t::optional(context.generate(&Skip)?).build()?);
+                t::optional(context.generate(&QueryWhereExpr::new(self.model_id))?),
+            )?
+            .propx("orderBy", t::optional(context.generate(&order_by)?))?
+            .propx("take", t::optional(context.generate(&Take)?))?
+            .propx("skip", t::optional(context.generate(&Skip)?))?;
 
         if self.is_group_by {
             builder.prop("by", context.generate(&GroupingFields::new(self.model_id))?);
-            builder.prop(
+            builder.propx(
                 "having",
                 // t::optional(context.generate(&Having::new(self.model_id))?).build()?,
-                t::optional(context.generate(&Having::new(self.model_id))?).build()?,
-            );
+                t::optional(context.generate(&Having::new(self.model_id))?),
+            )?;
         } else {
-            builder.prop(
+            builder.propx(
                 "distinct",
-                t::optional(context.generate(&Distinct(self.model_id))?).build()?,
-            );
+                t::optional(context.generate(&Distinct(self.model_id))?),
+            )?;
         }
 
         builder.named(self.name()).build()

@@ -41,7 +41,7 @@ impl TypeGen for Distinct {
             .map(|(k, _)| k.to_string())
             .collect::<Vec<_>>();
 
-        t::array(t::string().enum_(cols).build()?)
+        t::arrayx(t::string().enum_(cols))?
             .named(self.name())
             .build()
     }

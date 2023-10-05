@@ -79,7 +79,7 @@ impl TypeGen for WithFilters {
                         }
                     }
                 };
-            builder.prop(key, t::optional(generated).build()?);
+            builder.propx(key, t::optional(generated))?;
         }
 
         builder.named(self.name()).build()
@@ -102,7 +102,7 @@ impl<T: TypeGen> TypeGen for CompleteFilter<T> {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
         let inner = context.generate(&self.0)?;
         // TODO and, or ???
-        t::optional(t::union([inner, t::struct_().prop("not", inner).build()?]).build()?)
+        t::optionalx(t::unionx![inner, t::struct_().prop("not", inner)])?
             .named(self.name())
             .build()
     }
@@ -116,11 +116,11 @@ struct BooleanFilter;
 
 impl TypeGen for BooleanFilter {
     fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
-        t::union([
+        t::unionx![
             t::boolean().build()?,
-            t::struct_().prop("equals", t::boolean().build()?).build()?,
-            t::struct_().prop("not", t::boolean().build()?).build()?,
-        ])
+            t::struct_().propx("equals", t::boolean())?,
+            t::struct_().propx("not", t::boolean())?,
+        ]
         .named(self.name())
         .build()
     }
@@ -156,14 +156,14 @@ impl TypeGen for NumberFilter {
             let base = context.generate(&NumberFilter::new(self.number_type, false))?;
             let float_base = context.generate(&NumberFilter::new(NumberType::Float, false))?;
             let int_base = context.generate(&NumberFilter::new(NumberType::Integer, false))?;
-            t::union([
+            t::unionx![
                 base,
-                t::struct_().prop("_count", int_base).build()?,
-                t::struct_().prop("_sum", base).build()?,
-                t::struct_().prop("_avg", float_base).build()?,
-                t::struct_().prop("_min", base).build()?,
-                t::struct_().prop("_max", base).build()?,
-            ])
+                t::struct_().prop("_count", int_base),
+                t::struct_().prop("_sum", base),
+                t::struct_().prop("_avg", float_base),
+                t::struct_().prop("_min", base),
+                t::struct_().prop("_max", base),
+            ]
             .named(self.name())
             .build()
         } else {
@@ -173,20 +173,19 @@ impl TypeGen for NumberFilter {
             };
             let opt_type_id = t::optional(type_id).build()?;
             let array_type_id = t::array(type_id).build()?;
-            t::either([
+            t::eitherx![
                 type_id,
-                t::struct_().prop("equals", type_id).build()?,
-                t::struct_().prop("not", type_id).build()?,
+                t::struct_().prop("equals", type_id),
+                t::struct_().prop("not", type_id),
                 t::struct_()
                     .prop("lt", opt_type_id)
                     .prop("gt", opt_type_id)
                     .prop("lte", opt_type_id)
                     .prop("gte", opt_type_id)
-                    .min(1)
-                    .build()?,
-                t::struct_().prop("in", array_type_id).build()?,
-                t::struct_().prop("notIn", array_type_id).build()?,
-            ])
+                    .min(1),
+                t::struct_().prop("in", array_type_id),
+                t::struct_().prop("notIn", array_type_id),
+            ]
             .named(self.name())
             .build()
         }
@@ -213,28 +212,23 @@ impl TypeGen for StringFilter {
         let opt_type_id = t::optional(type_id).build()?;
         let array_type_id = t::array(type_id).build()?;
 
-        t::union([
+        t::unionx![
             type_id,
-            t::struct_().prop("equals", type_id).build()?,
-            t::struct_().prop("not", type_id).build()?,
-            t::struct_().prop("in", array_type_id).build()?,
-            t::struct_().prop("notIn", array_type_id).build()?,
-            t::struct_()
-                .prop("contains", type_id)
-                .prop(
-                    "mode",
-                    t::optional(t::string().enum_(vec!["insensitive".to_string()]).build()?)
-                        .build()?,
-                )
-                .build()?,
+            t::struct_().prop("equals", type_id),
+            t::struct_().prop("not", type_id),
+            t::struct_().prop("in", array_type_id),
+            t::struct_().prop("notIn", array_type_id),
+            t::struct_().prop("contains", type_id).prop(
+                "mode",
+                t::optional(t::string().enum_(vec!["insensitive".to_string()]).build()?).build()?,
+            ),
             // TODO optional feature -- previewFeatures = ["fullTextSearch"]
-            t::struct_().prop("search", type_id).build()?,
+            t::struct_().prop("search", type_id),
             t::struct_()
                 .prop("startsWith", opt_type_id)
                 .prop("endsWith", opt_type_id)
-                .min(1)
-                .build()?,
-        ])
+                .min(1),
+        ]
         .named(self.name())
         .build()
     }
@@ -255,22 +249,14 @@ impl TypeGen for ScalarListFilter {
         // we can use union here instead of either since the structs do not have
         // overlapping fields.
         // Union validation is more efficient.
-        t::union([
-            t::struct_().prop("has", self.0).build()?,
-            t::struct_()
-                .prop("hasEvery", t::array(self.0).build()?)
-                .build()?,
-            t::struct_()
-                .prop("hasSome", t::array(self.0).build()?)
-                .build()?,
-            t::struct_()
-                .prop("isEmpty", t::boolean().build()?)
-                .build()?,
+        t::unionx![
+            t::struct_().prop("has", self.0),
+            t::struct_().propx("hasEvery", t::array(self.0))?,
+            t::struct_().propx("hasSome", t::array(self.0))?,
+            t::struct_().propx("isEmpty", t::boolean())?,
             // TODO "isSet": mongo only
-            t::struct_()
-                .prop("equals", t::array(self.0).build()?)
-                .build()?,
-        ])
+            t::struct_().propx("equals", t::array(self.0))?,
+        ]
         .named(self.name())
         .build()
     }

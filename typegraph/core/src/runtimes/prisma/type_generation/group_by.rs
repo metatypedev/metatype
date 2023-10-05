@@ -42,7 +42,7 @@ impl TypeGen for GroupingFields {
             }
         }
 
-        t::array(t::string().enum_(fields).build()?)
+        t::arrayx(t::string().enum_(fields))?
             .named(self.name())
             .build()
     }
@@ -73,16 +73,12 @@ impl TypeGen for Having {
         let name = self.name();
         let self_ref = t::proxy(&name).build()?;
 
-        t::union([
+        t::unionx![
             extended_type,
-            t::struct_()
-                .prop("AND", t::array(self_ref).build()?)
-                .build()?,
-            t::struct_()
-                .prop("OR", t::array(self_ref).build()?)
-                .build()?,
-            t::struct_().prop("NOT", self_ref).build()?,
-        ])
+            t::struct_().propx("AND", t::array(self_ref))?,
+            t::struct_().propx("OR", t::array(self_ref))?,
+            t::struct_().prop("NOT", self_ref)
+        ]
         .named(name)
         .build()
     }

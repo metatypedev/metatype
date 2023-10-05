@@ -21,6 +21,7 @@ use crate::runtimes::prisma::migration::{
 };
 use crate::runtimes::prisma::with_prisma_runtime;
 use crate::runtimes::typegraph::TypegraphOperation;
+use crate::t::TypeBuilder;
 use crate::validation::types::validate_value;
 use crate::wit::aws::S3RuntimeData;
 use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreTypeId};
