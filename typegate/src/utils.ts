@@ -30,6 +30,7 @@ type FolderRepr = {
   entryPoint: string;
   base64: string;
   hash: string; // root/tmp/{hash}
+  contentHash: string;
 };
 
 // Map undefined | null to None
@@ -276,5 +277,6 @@ export async function structureRepr(str: string): Promise<FolderRepr> {
 
   const base64 = base64Str.substring(b64Prefix.length);
   const hash = await sha1(entryPoint);
-  return { entryPoint, base64, hash };
+  const contentHash = await sha1(base64);
+  return { entryPoint, base64, hash, contentHash };
 }

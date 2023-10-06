@@ -74,9 +74,9 @@ export class DenoRuntime extends Runtime {
     }
 
     const tgRuntimes = DenoRuntime.getInstancesIn(typegraphName);
-    const runtime = tgRuntimes[name];
-    if (runtime != null) {
-      return runtime;
+    const runtime = tgRuntimes?.[name];
+    if (runtime) {
+      await runtime.deinit();
     }
 
     const secrets: Record<string, string> = {};
@@ -134,7 +134,10 @@ export class DenoRuntime extends Runtime {
 
         ops.set(registryCount, {
           type: "register_import_func",
-          modulePath: path.join(outDir, repr.entryPoint),
+          modulePath: path.join(
+            outDir,
+            `${repr.entryPoint}?hash=${repr.contentHash}`,
+          ),
           op: registryCount,
           verbose: false,
         });
@@ -166,6 +169,7 @@ export class DenoRuntime extends Runtime {
       secrets,
     );
     tgRuntimes[name] = rt;
+
     return rt;
   }
 
@@ -173,6 +177,7 @@ export class DenoRuntime extends Runtime {
     await this.w.terminate();
     const tgName = TypeGraph.formatName(this.tg);
     delete DenoRuntime.getInstancesIn(tgName)[this.name];
+    DenoRuntime.runtimes.delete(tgName);
   }
 
   materialize(
