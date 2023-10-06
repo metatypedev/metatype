@@ -121,7 +121,7 @@ Meta.test("Deno runtime: use local imports", async (t) => {
   });
 });
 
-Meta.test("Deno runtime: reloading", async (t) => {
+Meta.test("Deno runtime: file name reloading", async (t) => {
   const load = async (value: number) => {
     Deno.env.set("DYNAMIC", join("dynamic", `${value}.ts`));
     const e = await t.engine("runtimes/deno/deno_reload.py");
@@ -154,6 +154,45 @@ Meta.test("Deno runtime: reloading", async (t) => {
       })
       .on(v2);
   });
+});
+
+Meta.test("Deno runtime: script reloading", async (t) => {
+  const denoScript = join(
+    "typegate/tests/runtimes/deno",
+    "reload",
+    "template.ts",
+  );
+  const originalContent = Deno.readTextFileSync(denoScript);
+  const testReload = async (value: number) => {
+    try {
+      Deno.env.set("DYNAMIC", "reload/template.ts");
+      Deno.writeTextFileSync(
+        denoScript,
+        originalContent.replace('"REWRITE_ME"', `${value}`),
+      );
+      const e = await t.engine("runtimes/deno/deno_reload.py");
+      await t.should("work with v1", async () => {
+        await gql`
+          query {
+            fire
+          }
+        `.expectData({
+          fire: value,
+        }).on(e);
+      });
+      await t.unregister(e);
+    } catch (err) {
+      throw err;
+    } finally {
+      Deno.writeTextFileSync(
+        denoScript,
+        originalContent,
+      );
+    }
+  };
+
+  await testReload(1);
+  await testReload(2);
 });
 
 Meta.test("Deno runtime: infinite loop or similar", async (t) => {
