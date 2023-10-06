@@ -124,19 +124,21 @@ export class DenoRuntime extends Runtime {
         const code = mat.data.code as string;
 
         const repr = await structureRepr(code);
-        const outDir = path.join(basePath, repr.hash);
+        const outDir = path.join(basePath, repr.hashes.entryPoint);
         const entries = await uncompress(
           outDir,
           repr.base64,
         );
 
         logger.info(`uncompressed ${entries.join(", ")} at ${outDir}`);
-
+        // Note:
+        // Worker destruction seems to have no effect on the import cache? (deinit() => stop(worker))
+        // hence the use of contentHash
         ops.set(registryCount, {
           type: "register_import_func",
           modulePath: path.join(
             outDir,
-            `${repr.entryPoint}?hash=${repr.contentHash}`,
+            `${repr.entryPoint}?hash=${repr.hashes.content}`,
           ),
           op: registryCount,
           verbose: false,
