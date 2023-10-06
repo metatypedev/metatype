@@ -29,7 +29,10 @@ export type JSONValue =
 type FolderRepr = {
   entryPoint: string;
   base64: string;
-  hash: string; // root/tmp/{hash}
+  hashes: {
+    entryPoint: string; // root/tmp/{tgname}/{hash}
+    content: string;
+  };
 };
 
 // Map undefined | null to None
@@ -251,7 +254,7 @@ export async function uncompress(
 }
 
 /**
- * Convert string `file:SCRIPT,base64:TARBALL` to FolderRepr object.
+ * Convert string `file:SCRIPT;base64:TARBALL` to FolderRepr object.
  * * `SCRIPT`: refers to a file relative to the typegraph path
  * * `TARBALL`: base64 encoded tarball of scripts/(deno|python)
  * `FolderRepr` is expected to provide all the minimum information necessary
@@ -275,6 +278,14 @@ export async function structureRepr(str: string): Promise<FolderRepr> {
   const entryPoint = fileStr.substring(filePrefix.length);
 
   const base64 = base64Str.substring(b64Prefix.length);
-  const hash = await sha1(entryPoint);
-  return { entryPoint, base64, hash };
+  const entryPointHash = await sha1(entryPoint);
+  const contentHash = await sha1(base64);
+  return {
+    entryPoint,
+    base64,
+    hashes: {
+      entryPoint: entryPointHash,
+      content: contentHash,
+    },
+  };
 }

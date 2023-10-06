@@ -28,7 +28,8 @@ const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
 };
 
 export class DenoRuntime extends Runtime {
-  static runtimes: Map<string, Record<string, DenoRuntime>> = new Map();
+  /** For easy lookups (eg. __typename), NOT for caching */
+  static defaultRuntimes: Map<string, DenoRuntime> = new Map();
 
   private constructor(
     private w: DenoMessenger,
@@ -42,21 +43,11 @@ export class DenoRuntime extends Runtime {
   }
 
   static getDefaultRuntime(tgName: string): Runtime {
-    const rt = this.getInstancesIn(tgName)["default"];
+    const rt = this.defaultRuntimes.get(tgName);
     if (rt == null) {
       throw new Error(`could not find default runtime in ${tgName}`); // TODO: create
     }
     return rt;
-  }
-
-  static getInstancesIn(tgName: string) {
-    const instances = DenoRuntime.runtimes.get(tgName);
-    if (instances != null) {
-      return instances;
-    }
-    const ret: Record<string, DenoRuntime> = {};
-    DenoRuntime.runtimes.set(tgName, ret);
-    return ret;
   }
 
   static async init(
@@ -66,17 +57,17 @@ export class DenoRuntime extends Runtime {
       params as RuntimeInitParams<DenoRuntimeData>;
     const typegraphName = TypeGraph.formatName(tg);
 
+    const runtime = DenoRuntime.defaultRuntimes.get(typegraphName);
+    if (runtime) {
+      // clear leaking worker
+      await runtime.w.terminate();
+    }
+
     const { worker: name } = args as unknown as DenoRuntimeData;
     if (name == null) {
       throw new Error(
         `Cannot create deno runtime: worker name required, got ${name}`,
       );
-    }
-
-    const tgRuntimes = DenoRuntime.getInstancesIn(typegraphName);
-    const runtime = tgRuntimes[name];
-    if (runtime != null) {
-      return runtime;
     }
 
     const secrets: Record<string, string> = {};
@@ -124,17 +115,22 @@ export class DenoRuntime extends Runtime {
         const code = mat.data.code as string;
 
         const repr = await structureRepr(code);
-        const outDir = path.join(basePath, repr.hash);
+        const outDir = path.join(basePath, repr.hashes.entryPoint);
         const entries = await uncompress(
           outDir,
           repr.base64,
         );
 
         logger.info(`uncompressed ${entries.join(", ")} at ${outDir}`);
-
+        // Note:
+        // Worker destruction seems to have no effect on the import cache? (deinit() => stop(worker))
+        // hence the use of contentHash
         ops.set(registryCount, {
           type: "register_import_func",
-          modulePath: path.join(outDir, repr.entryPoint),
+          modulePath: path.join(
+            outDir,
+            `${repr.entryPoint}?hash=${repr.hashes.content}`,
+          ),
           op: registryCount,
           verbose: false,
         });
@@ -165,14 +161,15 @@ export class DenoRuntime extends Runtime {
       tg,
       secrets,
     );
-    tgRuntimes[name] = rt;
+
+    DenoRuntime.defaultRuntimes.set(typegraphName, rt);
     return rt;
   }
 
   async deinit(): Promise<void> {
     await this.w.terminate();
     const tgName = TypeGraph.formatName(this.tg);
-    delete DenoRuntime.getInstancesIn(tgName)[this.name];
+    DenoRuntime.defaultRuntimes.delete(tgName);
   }
 
   materialize(

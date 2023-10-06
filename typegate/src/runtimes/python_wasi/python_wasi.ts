@@ -75,7 +75,7 @@ export class PythonWasiRuntime extends Runtime {
             "python",
             vmId,
           );
-          const outDir = path.join(basePath, repr.hash);
+          const outDir = path.join(basePath, repr.hashes.entryPoint);
           const entries = await uncompress(
             outDir,
             repr.base64,
