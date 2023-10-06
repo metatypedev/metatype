@@ -57,6 +57,12 @@ export class DenoRuntime extends Runtime {
       params as RuntimeInitParams<DenoRuntimeData>;
     const typegraphName = TypeGraph.formatName(tg);
 
+    const runtime = DenoRuntime.defaultRuntimes.get(typegraphName);
+    if (runtime) {
+      // clear leaking worker
+      await runtime.w.terminate();
+    }
+
     const { worker: name } = args as unknown as DenoRuntimeData;
     if (name == null) {
       throw new Error(
