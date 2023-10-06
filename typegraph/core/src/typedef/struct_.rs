@@ -72,6 +72,8 @@ impl TypeData for TypeStruct {
     fn variant_name(&self) -> String {
         "struct".to_string()
     }
+
+    super::impl_into_type!(concrete, Struct);
 }
 
 impl TypeStruct {

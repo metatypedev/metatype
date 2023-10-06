@@ -49,4 +49,6 @@ impl TypeData for TypeUnion {
     fn variant_name(&self) -> String {
         "union".to_string()
     }
+
+    super::impl_into_type!(concrete, Union);
 }

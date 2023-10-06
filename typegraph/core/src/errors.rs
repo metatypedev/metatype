@@ -87,3 +87,11 @@ pub fn unknown_predefined_function(name: &str, runtime: &str) -> TgError {
 pub fn duplicate_policy_name(name: &str) -> TgError {
     format!("duplicate policy name '{name}'")
 }
+
+pub fn base_required(name: &str) -> TgError {
+    format!("Concrete type '{name}' must have a base.")
+}
+
+pub fn base_not_allowed(name: &str) -> TgError {
+    format!("Wrapper type '{name}' must not have a base.")
+}

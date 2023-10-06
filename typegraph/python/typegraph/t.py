@@ -19,7 +19,6 @@ from typegraph.gen.exports.core import (
     TypeOptional,
     TypePolicy,
     TypeProxy,
-    TypeRenamed,
     TypeString,
     TypeStruct,
     TypeUnion,
@@ -73,13 +72,7 @@ class typedef:
         return _TypeWithPolicy(res.value, self, policies)
 
     def rename(self, name: str) -> Self:
-        res = core.rename_type(
-            store,
-            TypeRenamed(
-                name=name,
-                tpe=self.id,
-            ),
-        )
+        res = core.rename_type(store, self.id, name)
 
         if isinstance(res, Err):
             raise Exception(res.value)

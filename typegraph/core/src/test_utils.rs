@@ -236,11 +236,6 @@ pub mod tree {
                         type_id: ty.data.tpe.into(),
                         parents: parents,
                     }]),
-                    Type::Renamed(inner) => Cow::Owned(vec![Node {
-                        label: "item".to_string(),
-                        type_id: inner.data.tpe.into(),
-                        parents: parents,
-                    }]),
                 }
             }
         }

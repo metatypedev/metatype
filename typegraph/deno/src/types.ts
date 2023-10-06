@@ -100,10 +100,7 @@ export class Typedef {
   }
 
   rename(name: string): this {
-    const id = core.renameType({
-      tpe: this._id,
-      name,
-    });
+    const id = core.renameType(this._id, name);
 
     return new Proxy(this, {
       get(target, prop, receiver) {

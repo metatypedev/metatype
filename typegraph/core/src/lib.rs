@@ -22,14 +22,14 @@ use global_store::Store;
 use indoc::formatdoc;
 use regex::Regex;
 use types::{
-    Array, Boolean, Either, File, Float, Func, Integer, Optional, Proxy, Renamed, StringT, Struct,
-    Type, TypeBoolean, TypeId, Union, WithInjection, WithPolicy,
+    Array, Boolean, Either, File, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
+    TypeBoolean, TypeId, Union, WithInjection, WithPolicy,
 };
 use validation::validate_name;
 use wit::core::{
     ContextCheck, Policy, PolicyId, PolicySpec, TypeArray, TypeBase, TypeEither, TypeFile,
     TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy,
-    TypeRenamed, TypeString, TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
+    TypeString, TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -70,6 +70,16 @@ pub mod host {
 }
 
 pub struct Lib {}
+
+impl TypeBase {
+    pub fn rename(&self, new_name: String) -> Self {
+        // Store::regi
+        Self {
+            name: Some(new_name),
+            ..self.clone()
+        }
+    }
+}
 
 impl wit::core::Core for Lib {
     fn init_typegraph(params: TypegraphInitParams) -> Result<()> {
@@ -291,11 +301,30 @@ impl wit::core::Core for Lib {
         .map(|id| (id, name))
     }
 
-    fn rename_type(data: TypeRenamed) -> Result<CoreTypeId, String> {
-        let name = data.name.clone();
-        let type_id = Store::register_type(|id| Type::Renamed(Renamed { id, data }.into()))?;
-        Store::register_type_name(name, type_id)?;
-        Ok(type_id.into())
+    fn rename_type(type_id: CoreTypeId, new_name: String) -> Result<CoreTypeId, String> {
+        let typ = TypeId(type_id).as_type()?;
+        match typ {
+            Type::Proxy(_) => Err("cannot rename proxy".to_string()),
+            Type::WithPolicy(inner) => Self::with_policy(TypePolicy {
+                tpe: Self::rename_type(inner.data.tpe, new_name)?,
+                chain: inner.data.chain.clone(),
+            }),
+            Type::WithInjection(inner) => Self::with_injection(TypeWithInjection {
+                tpe: Self::rename_type(inner.data.tpe, new_name)?,
+                injection: inner.data.injection.clone(),
+            }),
+            Type::Boolean(inner) => Ok(inner.rename(new_name)?.into()),
+            Type::Integer(inner) => Ok(inner.rename(new_name)?.into()),
+            Type::Float(inner) => Ok(inner.rename(new_name)?.into()),
+            Type::String(inner) => Ok(inner.rename(new_name)?.into()),
+            Type::File(inner) => Ok(inner.rename(new_name)?.into()),
+            Type::Optional(inner) => Ok(inner.rename(new_name)?.into()),
+            Type::Array(inner) => Ok(inner.rename(new_name)?.into()),
+            Type::Union(inner) => Ok(inner.rename(new_name)?.into()),
+            Type::Either(inner) => Ok(inner.rename(new_name)?.into()),
+            Type::Struct(inner) => Ok(inner.rename(new_name)?.into()),
+            Type::Func(inner) => Ok(inner.rename(new_name)?.into()),
+        }
     }
 
     fn get_type_repr(type_id: CoreTypeId) -> Result<String> {

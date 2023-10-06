@@ -57,6 +57,8 @@ impl TypeData for TypePolicy {
     fn variant_name(&self) -> String {
         "policy".to_string()
     }
+
+    super::impl_into_type!(wrapper, WithPolicy);
 }
 
 impl WrapperTypeData for TypePolicy {

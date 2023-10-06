@@ -63,4 +63,6 @@ impl TypeData for TypeFloat {
     fn variant_name(&self) -> String {
         "float".to_string()
     }
+
+    super::impl_into_type!(concrete, Float);
 }
