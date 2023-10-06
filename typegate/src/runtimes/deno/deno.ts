@@ -28,7 +28,8 @@ const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
 };
 
 export class DenoRuntime extends Runtime {
-  static runtimes: Map<string, Record<string, DenoRuntime>> = new Map();
+  /** For easy lookups (eg. __typename), NOT for caching */
+  static defaultRuntimes: Map<string, DenoRuntime> = new Map();
 
   private constructor(
     private w: DenoMessenger,
@@ -42,21 +43,11 @@ export class DenoRuntime extends Runtime {
   }
 
   static getDefaultRuntime(tgName: string): Runtime {
-    const rt = this.getInstancesIn(tgName)["default"];
+    const rt = this.defaultRuntimes.get(tgName);
     if (rt == null) {
       throw new Error(`could not find default runtime in ${tgName}`); // TODO: create
     }
     return rt;
-  }
-
-  static getInstancesIn(tgName: string) {
-    const instances = DenoRuntime.runtimes.get(tgName);
-    if (instances != null) {
-      return instances;
-    }
-    const ret: Record<string, DenoRuntime> = {};
-    DenoRuntime.runtimes.set(tgName, ret);
-    return ret;
   }
 
   static async init(
@@ -71,12 +62,6 @@ export class DenoRuntime extends Runtime {
       throw new Error(
         `Cannot create deno runtime: worker name required, got ${name}`,
       );
-    }
-
-    const tgRuntimes = DenoRuntime.getInstancesIn(typegraphName);
-    const runtime = tgRuntimes?.[name];
-    if (runtime) {
-      await runtime.deinit();
     }
 
     const secrets: Record<string, string> = {};
@@ -170,16 +155,15 @@ export class DenoRuntime extends Runtime {
       tg,
       secrets,
     );
-    tgRuntimes[name] = rt;
 
+    DenoRuntime.defaultRuntimes.set(typegraphName, rt);
     return rt;
   }
 
   async deinit(): Promise<void> {
     await this.w.terminate();
     const tgName = TypeGraph.formatName(this.tg);
-    delete DenoRuntime.getInstancesIn(tgName)[this.name];
-    DenoRuntime.runtimes.delete(tgName);
+    DenoRuntime.defaultRuntimes.delete(tgName);
   }
 
   materialize(

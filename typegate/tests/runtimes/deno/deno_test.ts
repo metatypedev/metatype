@@ -171,7 +171,7 @@ Meta.test("Deno runtime: script reloading", async (t) => {
         originalContent.replace('"REWRITE_ME"', `${value}`),
       );
       const e = await t.engine("runtimes/deno/deno_reload.py");
-      await t.should("work with v1", async () => {
+      await t.should(`reload with new value ${value}`, async () => {
         await gql`
           query {
             fire
