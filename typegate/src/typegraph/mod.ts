@@ -48,10 +48,14 @@ export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 export type RuntimeResolver = Record<string, Runtime>;
 
 export class SecretManager {
+  private typegraphName: string;
   constructor(
-    private typegraphName: string,
+    typegraph: TypeGraphDS,
     public secrets: Record<string, string>,
-  ) {}
+  ) {
+    // name without prefix as secrets are not prefixed
+    this.typegraphName = TypeGraph.formatName(typegraph, false);
+  }
 
   static formatSecretName(typegraphName: string, secretName: string): string {
     return `TG_${typegraphName}_${secretName}`.replaceAll("-", "_")
@@ -132,11 +136,10 @@ export class TypeGraph {
     this.root = this.type(0);
     this.name = TypeGraph.formatName(tg);
     this.name = TypeGraph.formatName(tg);
-    // this.typeByName = this.tg.types.reduce((agg, tpe) => ({ ...agg, [tpe.name]: tpe }), {});
     const typeByName: Record<string, TypeNode> = {};
-    tg.types.forEach((tpe) => {
+    for (const tpe of tg.types) {
       typeByName[tpe.title] = tpe;
-    });
+    }
     this.typeByName = typeByName;
   }
 

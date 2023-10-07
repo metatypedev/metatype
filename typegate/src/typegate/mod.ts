@@ -208,8 +208,7 @@ export class Typegate {
     }
 
     const secretManager = new SecretManager(
-      // name without prefix as secrets are not prefixed
-      TypeGraph.formatName(tgJson, false),
+      tgJson,
       secrets,
     );
 
@@ -258,7 +257,7 @@ export class Typegate {
     const introspection = enableIntrospection
       ? await TypeGraph.init(
         introspectionDef,
-        new SecretManager(TypeGraph.formatName(introspectionDef), {}),
+        new SecretManager(introspectionDef, {}),
         {
           typegraph: TypeGraphRuntime.init(
             tgDS,

@@ -40,7 +40,7 @@ async function assertGeneratedSchema(
   const schemaGenerator = new SchemaGenerator(
     tg,
     runtime.data,
-    new SecretManager(tgName, {
+    new SecretManager(tg, {
       [secretKey]: "postgresql://postgres:postgres@localhost:5432/postgres",
     }),
   );

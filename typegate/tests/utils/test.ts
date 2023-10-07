@@ -111,16 +111,14 @@ export class MetaTest {
 
   async engine(path: string, opts: ParseOptions = {}): Promise<Engine> {
     const tgString = await this.serialize(path, opts);
-
     const tgJson = await TypeGraph.parseJson(tgString);
-    // name without prefix as secrets are not prefixed
-    const name = TypeGraph.formatName(tgJson, false);
 
     // for convience, automatically prefix secrets
     const secrets = opts.secrets ?? {};
     if (opts.autoSecretName !== false) {
       const secretPrefx = SecretManager.formatSecretName(
-        name,
+        // name without prefix as secrets are not prefixed
+        TypeGraph.formatName(tgJson, false),
         "",
       );
       for (const k of Object.keys(secrets)) {
@@ -128,7 +126,6 @@ export class MetaTest {
         delete secrets[k];
       }
     }
-    console.log(secrets);
 
     const [engine, _] = await this.typegate.pushTypegraph(
       tgJson,
