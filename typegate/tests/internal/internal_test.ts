@@ -3,7 +3,7 @@
 
 import { gql, Meta } from "../utils/mod.ts";
 
-const port = 7895;
+const port = 7896;
 Meta.test("Internal test", async (t) => {
   const e = await t.engine("internal/internal.py");
 

@@ -417,7 +417,6 @@ class ArgumentCollector {
           typeIdx: variantTypeIndex,
         });
       } catch (error) {
-        console.error("variant error:", error);
         if (
           error instanceof TypeMismatchError ||
           error instanceof UnionTypeMismatchError ||
@@ -428,6 +427,7 @@ class ArgumentCollector {
           continue;
         }
 
+        console.error("variant error:", error);
         throw error;
       }
     }

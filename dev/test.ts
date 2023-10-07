@@ -26,15 +26,14 @@ import {
   join,
   mergeReadableStreams,
   parseFlags,
-  PromisePool,
   resolve,
   TextLineStream,
 } from "./deps.ts";
-import { projectDir } from "./utils.ts";
+import { projectDir, relPath } from "./utils.ts";
 
 const flags = parseFlags(Deno.args, { "--": true, string: ["threads"] });
 
-const testFiles = [];
+const testFiles: string[] = [];
 
 // find test files
 if (flags._.length === 0) {
@@ -111,61 +110,97 @@ if (!Deno.env.get(libPath)?.includes(wasmEdgeLib)) {
 }
 
 const threads = flags.threads ? parseInt(flags.threads) : 4;
-console.log(`Testing with ${threads} threads`);
+const prefix = "[dev/test.ts]";
+console.log(`${prefix} Testing with ${threads} threads`);
 
-const failures: string[] = [];
-const active: {
-  status: Promise<Deno.CommandStatus>;
-  testFile: string;
-  output: ReadableStream<string>;
-}[] = [];
-
-await PromisePool.for(testFiles).withConcurrency(threads).process(
-  (testFile) => {
-    console.log(`Running ${testFile}...`);
-    const p = new Deno.Command("deno", {
-      args: [
-        "task",
-        "test",
-        testFile,
-        ...flags["--"],
-      ],
-      cwd,
-      stdout: "piped",
-      stderr: "piped",
-      env: { ...Deno.env.toObject(), ...env },
-    }).spawn();
-
-    const output = mergeReadableStreams(p.stdout, p.stderr).pipeThrough(
-      new TextDecoderStream(),
-    ).pipeThrough(new TextLineStream());
-
-    const shouldStartStreaming = active.length == 0;
-    active.push({ status: p.status, output, testFile });
-    if (shouldStartStreaming) {
-      void (async () => {
-        while (active.length > 0) {
-          const { status, output, testFile } = active.shift()!;
-          for await (const line of output) {
-            if (line.startsWith("warning: skipping duplicate package")) {
-              // https://github.com/rust-lang/cargo/issues/10752
-              continue;
-            }
-            console.log(line);
-          }
-          console.log("\n");
-
-          const { success } = await status;
-          if (!success) {
-            failures.push(testFile);
-          }
-        }
-      })();
+interface Run {
+  result: Promise<
+    {
+      testFile: string;
+      duration: number;
+      success: boolean;
     }
+  >;
+  output: ReadableStream<string>;
+  terminated: boolean;
+}
 
-    return p.status;
-  },
-);
+function createRun(testFile: string): Run {
+  const start = Date.now();
+  const child = new Deno.Command("deno", {
+    args: [
+      "task",
+      "test",
+      testFile,
+      ...flags["--"],
+    ],
+    cwd,
+    stdout: "piped",
+    stderr: "piped",
+    env: { ...Deno.env.toObject(), ...env },
+  }).spawn();
+
+  const output = mergeReadableStreams(child.stdout, child.stderr).pipeThrough(
+    new TextDecoderStream(),
+  ).pipeThrough(new TextLineStream());
+
+  const result = child.status.then(({ success }) => {
+    const end = Date.now();
+    return { success, testFile, duration: end - start };
+  }).catch(({ success }) => {
+    const end = Date.now();
+    return { success, testFile, duration: end - start };
+  });
+
+  return {
+    result,
+    output,
+    terminated: false,
+  };
+}
+
+const queues = [...testFiles];
+const runs: Record<string, Run> = {};
+const failures: string[] = [];
+
+void (async () => {
+  while (queues.length > 0) {
+    const current = Object.values(runs).filter((r) => !r.terminated).map((r) =>
+      r.result
+    );
+    if (current.length <= threads) {
+      const next = queues.shift()!;
+      runs[next] = createRun(next);
+    } else {
+      const done = await Promise.any(current);
+      runs[done.testFile].terminated = true;
+    }
+  }
+})();
+
+while (Object.keys(runs).length > 0) {
+  const file = Object.keys(runs).find((f) => runs[f].terminated) ??
+    Object.keys(runs)[0];
+  const { result, output } = runs[file];
+  delete runs[file];
+
+  console.log(`${prefix} Launched ${relPath(file)}`);
+  for await (const line of output) {
+    if (line.startsWith("warning: skipping duplicate package")) {
+      // https://github.com/rust-lang/cargo/issues/10752
+      continue;
+    }
+    console.log(line);
+  }
+
+  const { success, duration } = await result;
+  console.log(
+    `${prefix} Completed ${relPath(file)} in ${duration / 1000}ms`,
+  );
+  if (!success) {
+    failures.push(file);
+  }
+}
 
 if (failures.length > 0) {
   console.log("Some errors were detected:");
