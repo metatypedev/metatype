@@ -21,18 +21,17 @@ import {
 } from "../typegraph/types.ts";
 import { registerRuntime } from "./mod.ts";
 
-@registerRuntime
+@registerRuntime("s3")
 export class S3Runtime extends Runtime {
-  static readonly runtime_name = "s3";
-
   private constructor(
+    typegraphName: string,
     private client: S3Client,
   ) {
-    super();
+    super(typegraphName);
   }
 
   static init(params: RuntimeInitParams): Runtime {
-    const { secretManager } = params;
+    const { secretManager, typegraphName } = params;
     const args = params.args as unknown as S3RuntimeData;
 
     const {
@@ -53,7 +52,7 @@ export class S3Runtime extends Runtime {
       forcePathStyle: secretManager.secretOrNull(path_style_secret) === "true",
     };
     const client = new S3Client(clientInit);
-    return new S3Runtime(client);
+    return new S3Runtime(typegraphName, client);
   }
 
   async deinit(): Promise<void> {}

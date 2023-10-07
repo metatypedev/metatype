@@ -16,8 +16,10 @@ const logger = getLogger(import.meta);
 export class TypeGateRuntime extends Runtime {
   static singleton: TypeGateRuntime | null = null;
 
-  private constructor(private typegate: Typegate) {
-    super();
+  private constructor(
+    private typegate: Typegate,
+  ) {
+    super("system");
   }
 
   static init(typegate: Typegate): TypeGateRuntime {

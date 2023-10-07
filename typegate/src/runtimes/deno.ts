@@ -4,4 +4,4 @@
 import { DenoRuntime } from "./deno/deno.ts";
 import { registerRuntime } from "./mod.ts";
 
-registerRuntime(DenoRuntime);
+registerRuntime("deno")(DenoRuntime);

@@ -9,16 +9,17 @@ import { Resolver, RuntimeInitParams } from "../types.ts";
 import { RandomRuntimeData } from "../typegraph/types.ts";
 import { registerRuntime } from "./mod.ts";
 
-@registerRuntime
+@registerRuntime("random")
 export class RandomRuntime extends Runtime {
-  static readonly runtime_name = "random";
-
   seed: number | null;
   chance: typeof Chance;
   private _tgTypes: TypeNode[] = [];
 
-  constructor(seed: number | null) {
-    super();
+  constructor(
+    typegraphName: string,
+    seed: number | null,
+  ) {
+    super(typegraphName);
     this.seed = seed;
     if (this.seed == null) {
       this.chance = new Chance();
@@ -28,9 +29,11 @@ export class RandomRuntime extends Runtime {
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { args } = params as RuntimeInitParams<RandomRuntimeData>;
+    const { args, typegraphName } = params as RuntimeInitParams<
+      RandomRuntimeData
+    >;
     const { seed } = args;
-    const runtime = await new RandomRuntime(seed ?? null);
+    const runtime = await new RandomRuntime(typegraphName, seed ?? null);
     runtime.setTgTypes(params.typegraph.types);
     return runtime;
   }

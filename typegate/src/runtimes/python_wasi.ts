@@ -4,4 +4,4 @@
 import { registerRuntime } from "./mod.ts";
 import { PythonWasiRuntime } from "./python_wasi/python_wasi.ts";
 
-registerRuntime(PythonWasiRuntime);
+registerRuntime("python_wasi")(PythonWasiRuntime);

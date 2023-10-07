@@ -10,19 +10,20 @@ const localDir = dirname(fromFileUrl(import.meta.url));
 const registeredRuntimes: Map<string, RuntimeInit> = new Map();
 
 interface RegistrableRuntime {
-  readonly runtime_name: string;
   init(params: RuntimeInitParams): Promise<Runtime> | Runtime;
 }
 
 export function registerRuntime<
   T extends RegistrableRuntime,
 >(
-  runtime: T,
-) {
-  if (registeredRuntimes.has(runtime.runtime_name)) {
-    throw new Error(`Runtime ${runtime.runtime_name} is already registered`);
-  }
-  registeredRuntimes.set(runtime.runtime_name, runtime.init);
+  name: string,
+): (runtime: T) => void {
+  return (runtime: T) => {
+    if (registeredRuntimes.has(name)) {
+      throw new Error(`Runtime ${name} is already registered`);
+    }
+    registeredRuntimes.set(name, runtime.init);
+  };
 }
 
 export async function initRuntime(

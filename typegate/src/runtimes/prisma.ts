@@ -4,4 +4,4 @@
 import { registerRuntime } from "./mod.ts";
 import { PrismaRuntime } from "./prisma/mod.ts";
 
-registerRuntime(PrismaRuntime);
+registerRuntime("prisma")(PrismaRuntime);

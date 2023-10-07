@@ -130,7 +130,7 @@ export class PrismaMigrationRuntime extends Runtime {
   private constructor(
     private register: Register,
   ) {
-    super();
+    super("system");
   }
 
   static init(register: Register): Runtime {

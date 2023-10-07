@@ -3,8 +3,8 @@
 
 import { gql, Meta } from "../utils/mod.ts";
 
+const port = 7895;
 Meta.test("Internal test", async (t) => {
-  const port = 7895;
   const e = await t.engine("internal/internal.py");
 
   await t.should("work on the default worker", async () => {
@@ -18,4 +18,4 @@ Meta.test("Internal test", async (t) => {
       })
       .on(e, `http://localhost:${port}`);
   });
-}, { port: 7895 });
+}, { port });

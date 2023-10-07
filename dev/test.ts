@@ -26,6 +26,7 @@ import {
   join,
   mergeReadableStreams,
   parseFlags,
+  PromisePool,
   resolve,
   TextLineStream,
 } from "./deps.ts";
@@ -111,14 +112,17 @@ if (!Deno.env.get(libPath)?.includes(wasmEdgeLib)) {
 
 const threads = flags.threads ? parseInt(flags.threads) : 4;
 console.log(`Testing with ${threads} threads`);
-const failures = [];
 
-for (let i = 0; i < testFiles.length; i += threads) {
-  const tests = [];
+const failures: string[] = [];
+const active: {
+  status: Promise<Deno.CommandStatus>;
+  testFile: string;
+  output: ReadableStream<string>;
+}[] = [];
 
-  for (let j = 0; j < threads && i + j < testFiles.length; j += 1) {
-    const testFile = testFiles[i + j];
-
+await PromisePool.for(testFiles).withConcurrency(threads).process(
+  (testFile) => {
+    console.log(`Running ${testFile}...`);
     const p = new Deno.Command("deno", {
       args: [
         "task",
@@ -136,25 +140,32 @@ for (let i = 0; i < testFiles.length; i += threads) {
       new TextDecoderStream(),
     ).pipeThrough(new TextLineStream());
 
-    tests.push({ status: p.status, output, testFile });
-  }
+    const shouldStartStreaming = active.length == 0;
+    active.push({ status: p.status, output, testFile });
+    if (shouldStartStreaming) {
+      void (async () => {
+        while (active.length > 0) {
+          const { status, output, testFile } = active.shift()!;
+          for await (const line of output) {
+            if (line.startsWith("warning: skipping duplicate package")) {
+              // https://github.com/rust-lang/cargo/issues/10752
+              continue;
+            }
+            console.log(line);
+          }
+          console.log("\n");
 
-  for (const { status, output, testFile } of tests) {
-    for await (const line of output) {
-      if (line.startsWith("warning: skipping duplicate package")) {
-        // https://github.com/rust-lang/cargo/issues/10752
-        continue;
-      }
-      console.log(line);
+          const { success } = await status;
+          if (!success) {
+            failures.push(testFile);
+          }
+        }
+      })();
     }
-    console.log("\n");
 
-    const { success } = await status;
-    if (!success) {
-      failures.push(testFile);
-    }
-  }
-}
+    return p.status;
+  },
+);
 
 if (failures.length > 0) {
   console.log("Some errors were detected:");

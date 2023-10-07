@@ -57,6 +57,7 @@ export interface RuntimeInitParams<
   RTData extends RuntimeDataBase = RuntimeDataBase,
 > {
   typegraph: TypeGraphDS;
+  typegraphName: string;
   materializers: TypeMaterializer[];
   args: RTData;
   secretManager: SecretManager;

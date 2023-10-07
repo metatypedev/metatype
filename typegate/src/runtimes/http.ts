@@ -36,24 +36,24 @@ const encodeRequestBody = (
   }
 };
 
-@registerRuntime
+@registerRuntime("http")
 export class HTTPRuntime extends Runtime {
-  static readonly runtime_name = "http";
   private logger: Logger;
 
   constructor(
+    typegraphName: string,
     private endpoint: string,
     private client: Deno.HttpClient,
     private headers: Headers,
   ) {
-    super();
+    super(typegraphName);
     this.logger = getLogger(`http:${new URL(endpoint).hostname}`);
   }
 
   static init(
     params: RuntimeInitParams,
   ): Runtime {
-    const { args, secretManager } = params as RuntimeInitParams<
+    const { args, secretManager, typegraphName } = params as RuntimeInitParams<
       HTTPRuntimeData
     >;
 
@@ -75,7 +75,12 @@ export class HTTPRuntime extends Runtime {
       );
     }
 
-    return new HTTPRuntime(args.endpoint as string, client, headers);
+    return new HTTPRuntime(
+      typegraphName,
+      args.endpoint as string,
+      client,
+      headers,
+    );
   }
 
   // deno-lint-ignore require-await

@@ -10,12 +10,12 @@ import { TypeGraph } from "../typegraph/mod.ts";
 import { TemporalRuntimeData } from "../typegraph/types.ts";
 import { registerRuntime } from "./mod.ts";
 
-@registerRuntime
+@registerRuntime("temporal")
 export class TemporalRuntime extends Runtime {
-  static readonly runtime_name = "temporal";
-
-  private constructor(private client_id: string) {
-    super();
+  private constructor(
+    typegraphName: string,
+  ) {
+    super(typegraphName);
   }
 
   static async init(
@@ -25,23 +25,22 @@ export class TemporalRuntime extends Runtime {
       TemporalRuntimeData
     >;
     const typegraphName = TypeGraph.formatName(typegraph);
-    const client_id = `${typegraphName}_${args.name}`;
 
+    const instance = new TemporalRuntime(typegraphName);
     nativeVoid(
       await native.temporal_register({
         url: args.host as string,
         namespace: "default",
-        client_id,
+        client_id: instance.id,
       }),
     );
-    return new TemporalRuntime(client_id);
+    return instance;
   }
 
   async deinit(): Promise<void> {
-    const { client_id } = this;
     nativeVoid(
       await native.temporal_unregister({
-        client_id,
+        client_id: this.id,
       }),
     );
   }
@@ -52,7 +51,7 @@ export class TemporalRuntime extends Runtime {
     _verbose: boolean,
   ): ComputeStage[] {
     const name = stage.props.materializer?.name;
-    const { client_id } = this;
+    const client_id = this.id;
 
     const resolver: Resolver = (() => {
       if (name === "start_workflow") {

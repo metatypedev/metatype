@@ -162,7 +162,7 @@ export class TypeGraph {
     } else {
       let name;
       try {
-        name = JSON.parse(json).types[0].title;
+        name = TypeGraph.formatName(JSON.parse(json));
       } catch (_e) {
         name = "<unknown>";
       }
@@ -248,6 +248,7 @@ export class TypeGraph {
 
         return initRuntime(runtime.name, {
           typegraph,
+          typegraphName,
           materializers,
           args: (runtime as any)?.data ?? {},
           secretManager,

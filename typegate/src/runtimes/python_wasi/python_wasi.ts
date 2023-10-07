@@ -7,7 +7,6 @@ import { RuntimeInitParams } from "../../types.ts";
 import { ComputeStage } from "../../engine/query_engine.ts";
 import { PythonWasmMessenger } from "./python_wasm_messenger.ts";
 import { path } from "compress/deps.ts";
-import { TypeGraph } from "../../typegraph/mod.ts";
 import { PythonVirtualMachine } from "./python_vm.ts";
 import { Materializer } from "../../typegraph/types.ts";
 import { structureRepr } from "../../utils.ts";
@@ -25,19 +24,17 @@ function generateVmIdentifier(mat: Materializer) {
 }
 
 export class PythonWasiRuntime extends Runtime {
-  static readonly runtime_name = "python_wasi";
-
   private constructor(
+    typegraphName: string,
+    uuid: string,
     private w: PythonWasmMessenger,
   ) {
-    super();
+    super(typegraphName, uuid);
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { materializers, typegraph } = params;
+    const { materializers, typegraph, typegraphName } = params;
     const w = await PythonWasmMessenger.init();
-
-    const typegraphName = TypeGraph.formatName(typegraph);
 
     logger.info(`initializing default vm: ${typegraphName}`);
 
@@ -45,6 +42,7 @@ export class PythonWasiRuntime extends Runtime {
     const defaultVm = new PythonVirtualMachine();
     await defaultVm.setup("default");
     w.vmMap.set("default", defaultVm);
+    const uuid = crypto.randomUUID();
 
     for (const m of materializers) {
       switch (m.name) {
@@ -74,6 +72,7 @@ export class PythonWasiRuntime extends Runtime {
             "tmp",
             "scripts",
             typegraphName,
+            uuid,
             "python",
             vmId,
           );
@@ -109,7 +108,7 @@ export class PythonWasiRuntime extends Runtime {
       }
     }
 
-    return new PythonWasiRuntime(w);
+    return new PythonWasiRuntime(typegraphName, uuid, w);
   }
 
   async deinit(): Promise<void> {

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TypeGraphDS, TypeMaterializer } from "../typegraph/mod.ts";
+import { TypeGraph, TypeGraphDS, TypeMaterializer } from "../typegraph/mod.ts";
 import { TypeKind } from "graphql";
 import { ensure } from "../utils.ts";
 import { Runtime } from "./Runtime.ts";
@@ -58,7 +58,7 @@ export class TypeGraphRuntime extends Runtime {
   private scalarIndex = new Map<string, number>();
 
   private constructor(tg: TypeGraphDS) {
-    super();
+    super(TypeGraph.formatName(tg));
     this.tg = tg;
   }
 

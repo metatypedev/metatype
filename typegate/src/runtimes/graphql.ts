@@ -20,15 +20,16 @@ export interface FromVars<T> {
   (variables: Record<string, unknown>): T;
 }
 
-@registerRuntime
+@registerRuntime("graphql")
 export class GraphQLRuntime extends Runtime {
-  static readonly runtime_name = "graphql";
-
   endpoint: string;
   inlineVars = false;
 
-  constructor(endpoint: string) {
-    super();
+  constructor(
+    typegraphName: string,
+    endpoint: string,
+  ) {
+    super(typegraphName);
     this.endpoint = endpoint;
   }
 
@@ -39,8 +40,10 @@ export class GraphQLRuntime extends Runtime {
   static async init(
     params: RuntimeInitParams,
   ): Promise<Runtime> {
-    const { args } = params as RuntimeInitParams<GraphQLRuntimeData>;
-    return await new GraphQLRuntime(args.endpoint as string);
+    const { typegraphName, args } = params as RuntimeInitParams<
+      GraphQLRuntimeData
+    >;
+    return await new GraphQLRuntime(typegraphName, args.endpoint as string);
   }
 
   async deinit(): Promise<void> {}

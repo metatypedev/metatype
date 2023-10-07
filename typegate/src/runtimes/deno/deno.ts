@@ -2,11 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { ComputeStage } from "../../engine/query_engine.ts";
-import {
-  TypeGraph,
-  TypeGraphDS,
-  TypeMaterializer,
-} from "../../typegraph/mod.ts";
+import { TypeGraphDS, TypeMaterializer } from "../../typegraph/mod.ts";
 import { Runtime } from "../Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { DenoRuntimeData } from "../../typegraph/types.ts";
@@ -28,25 +24,22 @@ const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
 };
 
 export class DenoRuntime extends Runtime {
-  static readonly runtime_name = "deno";
-
   private constructor(
+    private typegraphName: string,
+    uuid: string,
+    private tg: TypeGraphDS,
     private w: DenoMessenger,
     private registry: Map<string, number>,
-    private typegraphName: string,
-    private name: string,
-    private tg: TypeGraphDS,
     private secrets: Record<string, string>,
   ) {
-    super();
+    super(typegraphName, uuid);
   }
 
   static async init(
     params: RuntimeInitParams,
   ): Promise<Runtime> {
-    const { typegraph: tg, args, materializers, secretManager } =
+    const { typegraph: tg, typegraphName, args, materializers, secretManager } =
       params as RuntimeInitParams<DenoRuntimeData>;
-    const typegraphName = TypeGraph.formatName(tg);
 
     const { worker: name } = args as unknown as DenoRuntimeData;
     if (name == null) {
@@ -65,12 +58,14 @@ export class DenoRuntime extends Runtime {
     const registry = new Map<string, number>();
     const ops = new Map<number, Task>();
 
+    const uuid = crypto.randomUUID();
     //    (user) tg_root/*
     // => (gate) tmp/scripts/{tgname}/deno/*
     const basePath = path.join(
       config.tmp_dir,
       "scripts",
       typegraphName,
+      uuid,
       "deno",
       name.replaceAll(" ", "_"), // TODO: improve sanitization
     );
@@ -139,11 +134,11 @@ export class DenoRuntime extends Runtime {
     }
 
     const rt = new DenoRuntime(
+      typegraphName,
+      uuid,
+      tg,
       w,
       registry,
-      typegraphName,
-      name,
-      tg,
       secrets,
     );
 

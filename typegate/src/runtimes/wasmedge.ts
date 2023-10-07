@@ -8,16 +8,16 @@ import { nativeResult } from "../utils.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
 import { registerRuntime } from "./mod.ts";
 
-@registerRuntime
+@registerRuntime("wasmedge")
 export class WasmEdgeRuntime extends Runtime {
-  static readonly runtime_name = "wasmedge";
-
-  private constructor() {
-    super();
+  private constructor(typegraphName: string) {
+    super(typegraphName);
   }
 
-  static init(_params: RuntimeInitParams): Promise<Runtime> {
-    return Promise.resolve(new WasmEdgeRuntime());
+  static init(params: RuntimeInitParams): Promise<Runtime> {
+    const { typegraphName } = params;
+
+    return Promise.resolve(new WasmEdgeRuntime(typegraphName));
   }
 
   async deinit(): Promise<void> {
