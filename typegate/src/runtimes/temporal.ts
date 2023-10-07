@@ -8,9 +8,12 @@ import { nativeResult, nativeVoid } from "../utils.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
 import { TypeGraph } from "../typegraph/mod.ts";
 import { TemporalRuntimeData } from "../typegraph/types.ts";
-import { Typegate } from "../typegate/mod.ts";
+import { registerRuntime } from "./mod.ts";
 
+@registerRuntime
 export class TemporalRuntime extends Runtime {
+  static readonly runtime_name = "temporal";
+
   private constructor(private client_id: string) {
     super();
   }
@@ -129,5 +132,3 @@ export class TemporalRuntime extends Runtime {
     ];
   }
 }
-
-Typegate.registerRuntime("temporal", TemporalRuntime.init);

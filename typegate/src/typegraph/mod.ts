@@ -4,7 +4,7 @@
 import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
 import type { DenoRuntime } from "../runtimes/deno/deno.ts";
-import type { Runtime } from "../runtimes/Runtime.ts";
+import { Runtime } from "../runtimes/Runtime.ts";
 import { ensure, ensureNonNullable } from "../utils.ts";
 import { typegraph_validate } from "native";
 
@@ -41,7 +41,7 @@ import type {
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { Protocol } from "../services/auth/protocols/protocol.ts";
 import { OAuth2Auth } from "../services/auth/protocols/oauth2.ts";
-import { Typegate } from "../typegate/mod.ts";
+import { initRuntime } from "../runtimes/mod.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -246,7 +246,7 @@ export class TypeGraph {
           materializers.push(...additionnalAuthMaterializers);
         }
 
-        return Typegate.initRuntime(runtime.name, {
+        return initRuntime(runtime.name, {
           typegraph,
           materializers,
           args: (runtime as any)?.data ?? {},

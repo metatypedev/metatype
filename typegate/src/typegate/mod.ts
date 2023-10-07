@@ -29,8 +29,6 @@ import {
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphRuntime } from "../runtimes/typegraph.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
-import { RuntimeInit, RuntimeInitParams } from "../types.ts";
-import { Runtime } from "../runtimes/Runtime.ts";
 import { resolveIdentifier } from "../services/middlewares.ts";
 import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
@@ -52,23 +50,6 @@ function parsePath(pathname: string): [string, string | undefined] {
 const localDir = dirname(fromFileUrl(import.meta.url));
 
 export class Typegate {
-  static #registeredRuntimes: Map<string, RuntimeInit> = new Map();
-
-  static registerRuntime(name: string, init: RuntimeInit) {
-    this.#registeredRuntimes.set(name, init);
-  }
-
-  static async initRuntime(
-    name: string,
-    params: RuntimeInitParams,
-  ): Promise<Runtime> {
-    const init = this.#registeredRuntimes.get(name);
-    if (!init) {
-      throw new Error(`Runtime ${name} is not registered`);
-    }
-    return await init(params);
-  }
-
   #onPushHooks: PushHandler[] = [];
 
   constructor(
@@ -227,7 +208,7 @@ export class Typegate {
     }
 
     logger.info(`Initializing engine '${name}'`);
-    const engine = await this.initEngine(
+    const engine = await this.initQueryEngine(
       tg,
       secretManager,
       SystemTypegraph.getCustomRuntimes(this),
@@ -240,7 +221,7 @@ export class Typegate {
     return [engine, pushResponse];
   }
 
-  async initEngine(
+  async initQueryEngine(
     tgDS: TypeGraphDS,
     secretManager: SecretManager,
     customRuntime: RuntimeResolver = {},

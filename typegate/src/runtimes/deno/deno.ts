@@ -28,6 +28,8 @@ const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
 };
 
 export class DenoRuntime extends Runtime {
+  static readonly runtime_name = "deno";
+
   private constructor(
     private w: DenoMessenger,
     private registry: Map<string, number>,

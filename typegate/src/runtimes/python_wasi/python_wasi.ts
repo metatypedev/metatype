@@ -25,6 +25,8 @@ function generateVmIdentifier(mat: Materializer) {
 }
 
 export class PythonWasiRuntime extends Runtime {
+  static readonly runtime_name = "python_wasi";
+
   private constructor(
     private w: PythonWasmMessenger,
   ) {

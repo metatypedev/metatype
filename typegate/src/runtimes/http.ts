@@ -10,7 +10,7 @@ import * as base64 from "std/encoding/base64.ts";
 import { getLogger } from "../log.ts";
 import { Logger } from "std/log/logger.ts";
 import { HTTPRuntimeData } from "../typegraph/types.ts";
-import { Typegate } from "../typegate/mod.ts";
+import { registerRuntime } from "./mod.ts";
 
 const encodeRequestBody = (
   body: Record<string, any>,
@@ -36,7 +36,9 @@ const encodeRequestBody = (
   }
 };
 
+@registerRuntime
 export class HTTPRuntime extends Runtime {
+  static readonly runtime_name = "http";
   private logger: Logger;
 
   constructor(
@@ -209,5 +211,3 @@ export class HTTPRuntime extends Runtime {
     return stagesMat;
   }
 }
-
-Typegate.registerRuntime("http", HTTPRuntime.init);

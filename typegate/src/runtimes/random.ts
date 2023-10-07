@@ -7,9 +7,12 @@ import { TypeNode } from "../typegraph/type_node.ts";
 import Chance from "chance";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { RandomRuntimeData } from "../typegraph/types.ts";
-import { Typegate } from "../typegate/mod.ts";
+import { registerRuntime } from "./mod.ts";
 
+@registerRuntime
 export class RandomRuntime extends Runtime {
+  static readonly runtime_name = "random";
+
   seed: number | null;
   chance: typeof Chance;
   private _tgTypes: TypeNode[] = [];
@@ -117,5 +120,3 @@ export class RandomRuntime extends Runtime {
     }
   }
 }
-
-Typegate.registerRuntime("random", RandomRuntime.init);

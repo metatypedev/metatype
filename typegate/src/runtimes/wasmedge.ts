@@ -6,9 +6,12 @@ import * as native from "native";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { nativeResult } from "../utils.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
-import { Typegate } from "../typegate/mod.ts";
+import { registerRuntime } from "./mod.ts";
 
+@registerRuntime
 export class WasmEdgeRuntime extends Runtime {
+  static readonly runtime_name = "wasmedge";
+
   private constructor() {
     super();
   }
@@ -54,5 +57,3 @@ export class WasmEdgeRuntime extends Runtime {
     ];
   }
 }
-
-Typegate.registerRuntime("wasmedge", WasmEdgeRuntime.init);

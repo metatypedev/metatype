@@ -71,12 +71,16 @@ interface GenQuery {
   (params: ComputeArgParams): SingleQuery | BatchQuery;
 }
 
-export class PrismaRuntime {
+export class PrismaRuntime extends Runtime {
+  static readonly runtime_name = "prisma";
+
   private constructor(
     readonly name: string,
     private engine_name: string,
     private datamodel: string,
-  ) {}
+  ) {
+    super();
+  }
 
   static async init(
     params: RuntimeInitParams,
