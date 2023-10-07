@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Runtime } from "./Runtime.ts";
-import { ComputeStage } from "../engine.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
 import { RuntimeInitParams } from "../types.ts";
 // import { iterParentStages, JSONValue } from "../utils.ts";
 import {
@@ -18,7 +18,7 @@ import {
   Materializer,
   S3Materializer,
   S3RuntimeData,
-} from "../types/typegraph.ts";
+} from "../typegraph/types.ts";
 import { Typegate } from "../typegate/mod.ts";
 
 export class S3Runtime extends Runtime {

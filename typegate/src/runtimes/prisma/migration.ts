@@ -3,7 +3,7 @@
 
 import { Runtime } from "../Runtime.ts";
 import { Resolver, ResolverArgs } from "../../types.ts";
-import { ComputeStage, Engine } from "../../engine.ts";
+import { ComputeStage, QueryEngine } from "../../engine/query_engine.ts";
 import { Register } from "../../typegate/register.ts";
 import * as native from "native";
 import { nativeResult } from "../../utils.ts";
@@ -12,7 +12,7 @@ import type { PrismaRT } from "./mod.ts";
 
 type PrismaRuntimeDS = PrismaRT.DS<PrismaRT.DataWithDatamodel>;
 
-function findPrismaRuntime(engine: Engine, name: string | null) {
+function findPrismaRuntime(engine: QueryEngine, name: string | null) {
   const prismaRuntimes = engine.tg.tg.runtimes.filter(
     (rt) => rt.name == "prisma",
   ) as Array<PrismaRuntimeDS>;
@@ -48,7 +48,7 @@ export class PrismaMigrate {
   private datasource: string;
 
   constructor(
-    engine: Engine,
+    engine: QueryEngine,
     private runtime: PrismaRuntimeDS,
     private migrations: string | null,
   ) {
@@ -139,7 +139,10 @@ export class PrismaMigrationRuntime extends Runtime {
 
   async deinit(): Promise<void> {}
 
-  getMigrationTarget(tg: string, rt: string | null): [Engine, PrismaRuntimeDS] {
+  getMigrationTarget(
+    tg: string,
+    rt: string | null,
+  ): [QueryEngine, PrismaRuntimeDS] {
     const engine = this.register.get(tg);
     if (engine == null) {
       throw new Error(`could not find typegraph ${tg}`);

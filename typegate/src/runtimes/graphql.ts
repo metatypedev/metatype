@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ComputeStage } from "../engine.ts";
-import { gq } from "../gq.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
+import { gq } from "../transports/graphql/gq.ts";
 import type { Resolver, RuntimeInitParams } from "../types.ts";
-import type { GraphQLRuntimeData } from "../types/typegraph.ts";
+import type { GraphQLRuntimeData } from "../typegraph/types.ts";
 import { Runtime } from "./Runtime.ts";
 import * as GraphQL from "graphql";
 import { Kind } from "graphql";

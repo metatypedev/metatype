@@ -1,69 +1,28 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Type, TypeNode } from "../type_node.ts";
-import { TypeGraph } from "../typegraph/mod.ts";
+import { TypeGraph } from "../../typegraph/mod.ts";
 import { CodeGenerator } from "./code_generator.ts";
 import { mapValues } from "std/collections/map_values.ts";
-import { ErrorEntry, validationContext, ValidatorFn } from "./common.ts";
+import {
+  ErrorEntry,
+  validationContext,
+  Validator,
+  ValidatorFn,
+} from "./common.ts";
 
-export type VariantMatcher = (value: unknown) => string | null;
-
-export function flattenUnionVariants(
-  tg: TypeGraph,
-  variants: number[],
-): number[] {
-  return variants.flatMap((idx) => {
-    const typeNode = tg.type(idx);
-    switch (typeNode.type) {
-      case Type.UNION:
-        return flattenUnionVariants(tg, typeNode.anyOf);
-      case Type.EITHER:
-        return flattenUnionVariants(tg, typeNode.oneOf);
-      default:
-        return [idx];
-    }
-  });
-}
-
-// get the all the variants in a multilevel union/either
-export function getNestedUnionVariants(
-  tg: TypeGraph,
-  typeNode: TypeNode,
-): number[] {
-  switch (typeNode.type) {
-    case Type.UNION:
-      return flattenUnionVariants(tg, typeNode.anyOf);
-    case Type.EITHER:
-      return flattenUnionVariants(tg, typeNode.oneOf);
-    default:
-      throw new Error(`Expected either or union, got '${typeNode.type}'`);
-  }
-}
-// optimized variant matcher for union of objects
-export function generateVariantMatcher(
-  tg: TypeGraph,
-  typeIdx: number,
-): VariantMatcher {
-  // all variants must be objects
-  const variantIndices = getNestedUnionVariants(tg, tg.type(typeIdx));
-  const variants = variantIndices.map((idx) => tg.type(idx, Type.OBJECT));
-
-  const validators = new Function(
-    new VariantMatcherCompiler(tg).generate(variantIndices),
-  )() as ValidatorFn[];
-
+export function generateValidator(tg: TypeGraph, typeIdx: number): Validator {
+  const validator = new Function(
+    new InputValidationCompiler(tg).generate(typeIdx),
+  )() as ValidatorFn;
   return (value: unknown) => {
-    let errors: ErrorEntry[] = [];
-    for (let i = 0; i < variants.length; ++i) {
-      const validator = validators[i];
-      validator(value, "<value>", errors, validationContext);
-      if (errors.length === 0) {
-        return variants[i].title;
-      }
-      errors = [];
+    const errors: ErrorEntry[] = [];
+    validator(value, "<value>", errors, validationContext);
+    if (errors.length > 0) {
+      const messages = errors.map(([path, msg]) => `  - at ${path}: ${msg}\n`)
+        .join("");
+      throw new Error(`Validation errors:\n${messages}`);
     }
-    return null;
   };
 }
 
@@ -71,17 +30,15 @@ function functionName(typeIdx: number) {
   return `validate_${typeIdx}`;
 }
 
-class VariantMatcherCompiler {
+export class InputValidationCompiler {
   codes: Map<number, string> = new Map();
 
   constructor(private tg: TypeGraph) {}
 
-  generate(variants: number[]): string {
-    // TODO onError: return
+  generate(rootTypeIdx: number): string {
     const cg = new CodeGenerator();
-    const queue = [...variants];
-    const refs = new Set(variants);
-
+    const queue = [rootTypeIdx];
+    const refs = new Set([rootTypeIdx]);
     for (
       let typeIdx = queue.shift();
       typeIdx != null;
@@ -91,10 +48,7 @@ class VariantMatcherCompiler {
       if (this.codes.has(typeIdx)) {
         continue;
       }
-      let typeNode = this.tg.type(typeIdx);
-      if (typeNode.type === Type.FUNCTION) {
-        typeNode = this.tg.type(typeNode.output);
-      }
+      const typeNode = this.tg.type(typeIdx);
 
       if (typeNode.enum != null) {
         cg.generateEnumValidator(typeNode);
@@ -109,6 +63,9 @@ class VariantMatcherCompiler {
             break;
           case "string":
             cg.generateStringValidator(typeNode);
+            break;
+          case "file":
+            cg.generateFileValidator(typeNode);
             break;
           case "optional":
             cg.generateOptionalValidator(typeNode, functionName(typeNode.item));
@@ -152,10 +109,10 @@ class VariantMatcherCompiler {
       );
     }
 
-    const validatorNames = variants.map((idx) => functionName(idx));
-    const variantValidators = `\nreturn [${validatorNames.join(", ")}]`;
+    const rootValidatorName = functionName(rootTypeIdx);
+    const rootValidator = `\nreturn ${rootValidatorName}`;
 
-    return [...refs].map((idx) => this.codes.get(idx)).join("\n") +
-      variantValidators;
+    return [...refs].map((idx) => this.codes.get(idx))
+      .join("\n") + rootValidator;
   }
 }

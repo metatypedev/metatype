@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TypeGraphDS } from "../typegraph/mod.ts";
-import { TypeNode } from "../type_node.ts";
+import { TypeGraphDS } from "../../typegraph/mod.ts";
+import { TypeNode } from "../../typegraph/type_node.ts";
 
 /**
  * Returns true if the given `type` already exists in the `TypeGraph`.

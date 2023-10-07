@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Runtime } from "./Runtime.ts";
-import { ComputeStage } from "../engine.ts";
-import { TypeNode } from "../type_node.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
+import { TypeNode } from "../typegraph/type_node.ts";
 import Chance from "chance";
 import { Resolver, RuntimeInitParams } from "../types.ts";
-import { RandomRuntimeData } from "../types/typegraph.ts";
+import { RandomRuntimeData } from "../typegraph/types.ts";
 import { Typegate } from "../typegate/mod.ts";
 
 export class RandomRuntime extends Runtime {

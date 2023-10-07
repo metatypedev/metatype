@@ -5,7 +5,7 @@ import { TypeGraphDS, TypeMaterializer } from "../typegraph/mod.ts";
 import { TypeKind } from "graphql";
 import { ensure } from "../utils.ts";
 import { Runtime } from "./Runtime.ts";
-import { ComputeStage } from "../engine.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
 import {
   isArray,
   isEither,
@@ -18,7 +18,7 @@ import {
   ObjectNode,
   Type,
   TypeNode,
-} from "../type_node.ts";
+} from "../typegraph/type_node.ts";
 import { Resolver } from "../types.ts";
 import {
   getChildTypes,
@@ -27,7 +27,7 @@ import {
 } from "../typegraph/visitor.ts";
 import { distinctBy } from "std/collections/distinct_by.ts";
 import { isInjected } from "../typegraph/utils.ts";
-import { PolicyIndices } from "../types/typegraph.ts";
+import { PolicyIndices } from "../typegraph/types.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
 

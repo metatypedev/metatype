@@ -3,27 +3,27 @@
 
 import { parse } from "graphql";
 import * as ast from "graphql/ast";
-import type { TypeGraph } from "./typegraph/mod.ts";
-import { JSONValue } from "./utils.ts";
-import { findOperation, FragmentDefs } from "./graphql.ts";
+import type { TypeGraph } from "../typegraph/mod.ts";
+import { JSONValue } from "../utils.ts";
+import { findOperation, FragmentDefs } from "../transports/graphql/graphql.ts";
 import * as log from "std/log/mod.ts";
-import { sha1 } from "./crypto.ts";
-import { RateLimit } from "./typegate/rate_limiter.ts";
+import { sha1 } from "../crypto.ts";
+import { RateLimit } from "../typegate/rate_limiter.ts";
 import type {
   ComputeStageProps,
   Context,
   Info,
   Resolver,
   Variables,
-} from "./types.ts";
+} from "../types.ts";
 import { Planner } from "./planner/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
 import { None } from "monads";
 import { Validator } from "./typecheck/common.ts";
 import { generateValidator } from "./typecheck/result.ts";
-import { ComputationEngine } from "./engine/computation_engine.ts";
-import { isIntrospectionQuery } from "./services/graphql_service.ts";
-import { ObjectNode } from "./type_node.ts";
+import { ComputationEngine } from "./computation_engine.ts";
+import { isIntrospectionQuery } from "../services/graphql_service.ts";
+import { ObjectNode } from "../typegraph/type_node.ts";
 import { RestSchemaGenerator } from "./typecheck/rest_schema_generator.ts";
 
 /**
@@ -114,7 +114,7 @@ export interface EndpointToSchemaMap {
   [index: string]: { fnName: string; outputSchema: unknown };
 }
 
-export class Engine {
+export class QueryEngine {
   name: string;
   queryCache: QueryCache;
   logger: log.Logger;

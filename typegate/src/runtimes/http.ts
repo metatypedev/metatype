@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ComputeStage } from "../engine.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
 import { Runtime } from "./Runtime.ts";
 import { createUrl } from "../utils.ts";
 import { MatOptions, replaceDynamicPathParams } from "./utils/http.ts";
@@ -9,7 +9,7 @@ import { Resolver, RuntimeInitParams } from "../types.ts";
 import * as base64 from "std/encoding/base64.ts";
 import { getLogger } from "../log.ts";
 import { Logger } from "std/log/logger.ts";
-import { HTTPRuntimeData } from "../types/typegraph.ts";
+import { HTTPRuntimeData } from "../typegraph/types.ts";
 import { Typegate } from "../typegate/mod.ts";
 
 const encodeRequestBody = (

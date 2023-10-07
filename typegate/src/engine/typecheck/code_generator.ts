@@ -13,8 +13,8 @@ import {
   Type,
   TypeNode,
   UnionNode,
-} from "../type_node.ts";
-import { EitherNode } from "../types/typegraph.ts";
+} from "../../typegraph/type_node.ts";
+import { EitherNode } from "../../typegraph/types.ts";
 
 export class CodeGenerator {
   lines: string[] = [];

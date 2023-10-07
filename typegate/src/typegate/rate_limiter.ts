@@ -3,7 +3,7 @@
 
 import { connect, Redis, RedisConnectOptions } from "redis";
 import { Deferred, deferred } from "std/async/deferred.ts";
-import { Engine } from "../engine.ts";
+import { QueryEngine } from "../engine/query_engine.ts";
 
 // keys: tokens, latest
 // args: n
@@ -59,7 +59,7 @@ export abstract class RateLimiter {
   ): Promise<number>;
 
   getLimitForEngine(
-    engine: Engine,
+    engine: QueryEngine,
     identifier: string,
   ): Promise<RateLimit | null> {
     if (

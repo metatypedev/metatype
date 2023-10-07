@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Engine } from "../../src/engine.ts";
+import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { join } from "std/path/mod.ts";
 import { PrismaMigrate } from "../../src/runtimes/prisma/migration.ts";
 import * as native from "native";
@@ -10,11 +10,11 @@ import * as PrismaRT from "../../src/runtimes/prisma/types.ts";
 
 import { ensure } from "../../src/utils.ts";
 import { testDir } from "./dir.ts";
-import { KnownRuntime } from "../../src/types/typegraph.ts";
+import { KnownRuntime } from "../../src/typegraph/types.ts";
 
 type PrismaRuntimeDS = KnownRuntime & { name: "prisma" };
 
-export async function dropSchemas(engine: Engine) {
+export async function dropSchemas(engine: QueryEngine) {
   const runtimes = engine.tg.runtimeReferences.filter((r) =>
     r instanceof PrismaRuntime
   ) as PrismaRuntime[];
@@ -52,7 +52,7 @@ export async function dropSchemas(engine: Engine) {
   }
 }
 
-export async function recreateMigrations(engine: Engine) {
+export async function recreateMigrations(engine: QueryEngine) {
   const runtimes = engine.tg.tg.runtimes.filter(
     (rt) => rt.name === "prisma",
   ) as PrismaRT.DS[];
@@ -72,7 +72,7 @@ export async function recreateMigrations(engine: Engine) {
   }
 }
 
-export async function removeMigrations(engine: Engine) {
+export async function removeMigrations(engine: QueryEngine) {
   await Deno.remove(join(testDir, "prisma-migrations", engine.rawName), {
     recursive: true,
   }).catch(() => {});

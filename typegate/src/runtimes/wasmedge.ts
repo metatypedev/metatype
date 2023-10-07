@@ -5,7 +5,7 @@ import { Runtime } from "./Runtime.ts";
 import * as native from "native";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { nativeResult } from "../utils.ts";
-import { ComputeStage } from "../engine.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
 import { Typegate } from "../typegate/mod.ts";
 
 export class WasmEdgeRuntime extends Runtime {

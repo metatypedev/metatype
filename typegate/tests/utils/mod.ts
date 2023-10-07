@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Engine } from "../../src/engine.ts";
+import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { dirname, join } from "std/path/mod.ts";
 import { copy } from "std/streams/copy.ts";
 import { init_native } from "native";
@@ -43,7 +43,7 @@ export const Meta = {
 };
 
 export async function execute(
-  engine: Engine,
+  engine: QueryEngine,
   request: Request,
 ): Promise<Response> {
   const register = new SingleRegister(engine.name, engine);

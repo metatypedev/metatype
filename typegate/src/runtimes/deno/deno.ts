@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ComputeStage } from "../../engine.ts";
+import { ComputeStage } from "../../engine/query_engine.ts";
 import {
   TypeGraph,
   TypeGraphDS,
@@ -9,7 +9,7 @@ import {
 } from "../../typegraph/mod.ts";
 import { Runtime } from "../Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
-import { DenoRuntimeData } from "../../types/typegraph.ts";
+import { DenoRuntimeData } from "../../typegraph/types.ts";
 import * as ast from "graphql/ast";
 import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";

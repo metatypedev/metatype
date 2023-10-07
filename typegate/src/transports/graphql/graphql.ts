@@ -4,7 +4,7 @@
 import * as ast from "graphql/ast";
 import { Kind } from "graphql";
 import { None, Option, Some } from "monads";
-import { forceOptionToValue } from "./utils.ts";
+import { forceOptionToValue } from "../../utils.ts";
 
 export type FragmentDefs = Record<string, ast.FragmentDefinitionNode>;
 

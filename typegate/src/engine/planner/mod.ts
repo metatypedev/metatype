@@ -3,17 +3,25 @@
 
 import * as ast from "graphql/ast";
 import { FieldNode, Kind } from "graphql";
-import { ComputeStage } from "../engine.ts";
-import { FragmentDefs, resolveSelection } from "../graphql.ts";
-import { TypeGraph } from "../typegraph/mod.ts";
-import { ComputeStageProps } from "../types.ts";
-import { ensureNonNullable, getReverseMapNameToQuery } from "../utils.ts";
-import { getWrappedType, isQuantifier, Type, UnionNode } from "../type_node.ts";
-import { closestWord, unparse } from "../utils.ts";
+import { ComputeStage } from "../query_engine.ts";
+import {
+  FragmentDefs,
+  resolveSelection,
+} from "../../transports/graphql/graphql.ts";
+import { TypeGraph } from "../../typegraph/mod.ts";
+import { ComputeStageProps } from "../../types.ts";
+import { ensureNonNullable, getReverseMapNameToQuery } from "../../utils.ts";
+import {
+  getWrappedType,
+  isQuantifier,
+  Type,
+  UnionNode,
+} from "../../typegraph/type_node.ts";
+import { closestWord, unparse } from "../../utils.ts";
 import { collectArgs, ComputeArg } from "./args.ts";
 import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";
-import { getLogger } from "../log.ts";
-import { EitherNode } from "../types/typegraph.ts";
+import { getLogger } from "../../log.ts";
+import { EitherNode } from "../../typegraph/types.ts";
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { DependencyResolver } from "./dependency_resolver.ts";

@@ -15,10 +15,10 @@ import {
   serverError,
 } from "../services/responses.ts";
 import { handleRest } from "../services/rest_service.ts";
-import { Engine } from "../engine.ts";
+import { QueryEngine } from "../engine/query_engine.ts";
 import { PushHandler, PushResponse } from "../typegate/hooks.ts";
 import { upgradeTypegraph } from "../typegraph/versions.ts";
-import { parseGraphQLTypeGraph } from "../graphql/graphql.ts";
+import { parseGraphQLTypeGraph } from "../transports/graphql/typegraph.ts";
 import * as PrismaHooks from "../runtimes/prisma/hooks/mod.ts";
 import {
   RuntimeResolver,
@@ -190,7 +190,7 @@ export class Typegate {
     secrets: Record<string, string>,
     enableIntrospection: boolean,
     system = false,
-  ): Promise<[Engine, PushResponse]> {
+  ): Promise<[QueryEngine, PushResponse]> {
     const name = TypeGraph.formatName(tgJson);
 
     if (SystemTypegraph.check(name)) {
@@ -245,7 +245,7 @@ export class Typegate {
     secretManager: SecretManager,
     customRuntime: RuntimeResolver = {},
     enableIntrospection: boolean,
-  ): Promise<Engine> {
+  ): Promise<QueryEngine> {
     const introspectionDef = parseGraphQLTypeGraph(
       await TypeGraph.parseJson(
         await Deno.readTextFile(
@@ -276,7 +276,7 @@ export class Typegate {
       introspection,
     );
 
-    const engine = new Engine(tg);
+    const engine = new QueryEngine(tg);
     await engine.registerEndpoints();
     return engine;
   }

@@ -4,7 +4,10 @@
 import { JSONValue } from "../../utils.ts";
 import type { FromVars } from "../graphql.ts";
 import { filterValues } from "std/collections/filter_values.ts";
-import { ComputeArg, DEFAULT_COMPUTE_PARAMS } from "../../planner/args.ts";
+import {
+  ComputeArg,
+  DEFAULT_COMPUTE_PARAMS,
+} from "../../engine/planner/args.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { isNameContinue, isNameStart } from "graphql/characters";
 

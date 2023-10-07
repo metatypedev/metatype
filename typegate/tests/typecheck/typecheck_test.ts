@@ -3,13 +3,13 @@
 
 import { Meta } from "../utils/mod.ts";
 import { assertThrows } from "std/assert/mod.ts";
-import { findOperation } from "../../src/graphql.ts";
+import { findOperation } from "../../src/transports/graphql/graphql.ts";
 import { parse } from "graphql";
 import { None } from "monads";
 import {
   generateValidator,
   ResultValidationCompiler,
-} from "../../src/typecheck/result.ts";
+} from "../../src/engine/typecheck/result.ts";
 import * as native from "native";
 import { nativeResult } from "../../src/utils.ts";
 

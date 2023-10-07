@@ -3,7 +3,7 @@
 
 import * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import { TypeGraph } from "../typegraph/mod.ts";
+import { TypeGraph } from "../../typegraph/mod.ts";
 import {
   Context,
   Parents,
@@ -11,8 +11,8 @@ import {
   StageId,
   TypeIdx,
   Variables,
-} from "../types.ts";
-import { JSONValue } from "../utils.ts";
+} from "../../types.ts";
+import { JSONValue } from "../../utils.ts";
 import {
   ArrayNode,
   getVariantTypesIndexes,
@@ -20,16 +20,16 @@ import {
   Type,
   TypeNode,
   UnionNode,
-} from "../type_node.ts";
+} from "../../typegraph/type_node.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { filterValues } from "std/collections/filter_values.ts";
 
-import { EffectType, EitherNode } from "../types/typegraph.ts";
+import { EffectType, EitherNode } from "../../typegraph/types.ts";
 
-import { getChildTypes, visitTypes } from "../typegraph/visitor.ts";
+import { getChildTypes, visitTypes } from "../../typegraph/visitor.ts";
 import { generateValidator } from "../typecheck/input.ts";
-import { getParentId } from "../utils/stage_id.ts";
-import { BadContext } from "../errors.ts";
+import { getParentId } from "../stage_id.ts";
+import { BadContext } from "../../errors.ts";
 import { selectInjection } from "./injection_utils.ts";
 
 class MandatoryArgumentError extends Error {

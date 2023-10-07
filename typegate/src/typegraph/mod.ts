@@ -27,7 +27,7 @@ import {
   isUnion,
   Type,
   TypeNode,
-} from "../type_node.ts";
+} from "./type_node.ts";
 import { Batcher } from "../types.ts";
 
 import type {
@@ -37,7 +37,7 @@ import type {
   Rate,
   TGRuntime as TypeRuntime,
   Typegraph as TypeGraphDS,
-} from "../types/typegraph.ts";
+} from "./types.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { Protocol } from "../services/auth/protocols/protocol.ts";
 import { OAuth2Auth } from "../services/auth/protocols/oauth2.ts";

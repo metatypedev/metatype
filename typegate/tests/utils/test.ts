@@ -10,7 +10,7 @@ import { shell } from "./shell.ts";
 import { Server } from "std/http/server.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
 import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
-import { Engine } from "../../src/engine.ts";
+import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 
 import { NoLimiter } from "./no_limiter.ts";
@@ -74,7 +74,7 @@ export class MetaTest {
     this.cleanups.push(fn);
   }
 
-  getTypegraphEngine(name: string): Engine | undefined {
+  getTypegraphEngine(name: string): QueryEngine | undefined {
     return this.register.get(name);
   }
 
@@ -109,7 +109,7 @@ export class MetaTest {
     return stdout;
   }
 
-  async engine(path: string, opts: ParseOptions = {}): Promise<Engine> {
+  async engine(path: string, opts: ParseOptions = {}): Promise<QueryEngine> {
     const tgString = await this.serialize(path, opts);
     const tgJson = await TypeGraph.parseJson(tgString);
 
@@ -136,7 +136,7 @@ export class MetaTest {
     return engine;
   }
 
-  async unregister(engine: Engine) {
+  async unregister(engine: QueryEngine) {
     await Promise.all(
       this.register
         .list()

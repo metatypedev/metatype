@@ -4,12 +4,12 @@
 import { getLogger } from "../../log.ts";
 import { Runtime } from "../Runtime.ts";
 import { RuntimeInitParams } from "../../types.ts";
-import { ComputeStage } from "../../engine.ts";
+import { ComputeStage } from "../../engine/query_engine.ts";
 import { PythonWasmMessenger } from "./python_wasm_messenger.ts";
 import { path } from "compress/deps.ts";
 import { TypeGraph } from "../../typegraph/mod.ts";
 import { PythonVirtualMachine } from "./python_vm.ts";
-import { Materializer } from "../../types/typegraph.ts";
+import { Materializer } from "../../typegraph/types.ts";
 import { structureRepr } from "../../utils.ts";
 import { uncompress } from "../../utils.ts";
 import * as ast from "graphql/ast";

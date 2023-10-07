@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { RuntimeDataBase } from "../../types.ts";
-import { PrismaRuntimeData, TGRuntime } from "../../types/typegraph.ts";
+import { PrismaRuntimeData, TGRuntime } from "../../typegraph/types.ts";
 
 // from the CLI
 // export type DataRaw = Omit<PrismaRuntimeData, "datamodel">;
