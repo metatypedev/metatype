@@ -24,7 +24,7 @@ import { generateValidator } from "./typecheck/result.ts";
 import { ComputationEngine } from "./computation_engine.ts";
 import { isIntrospectionQuery } from "../services/graphql_service.ts";
 import { ObjectNode } from "../typegraph/type_node.ts";
-import { RestSchemaGenerator } from "./typecheck/rest_schema_generator.ts";
+import { RestSchemaGenerator } from "../transports/rest/rest_schema_generator.ts";
 
 /**
  * Processed graphql node to be evaluated against a Runtime
