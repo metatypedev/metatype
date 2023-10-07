@@ -9,6 +9,7 @@ import { getLogger } from "../log.ts";
 import config from "../config.ts";
 import * as semver from "std/semver/mod.ts";
 import { Typegate } from "../typegate/mod.ts";
+import { TypeGraph } from "../typegraph/mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -104,15 +105,15 @@ export class TypeGateRuntime extends Runtime {
 
   addTypegraph: Resolver = async ({ fromString, secrets, cliVersion }) => {
     logger.info("Adding typegraph");
-    logger.info("Adding typegraph");
     if (!semver.gte(semver.parse(cliVersion), semver.parse(config.version))) {
       throw new Error(
         `Meta CLI version ${cliVersion} must be greater than typegate version ${config.version} (until the releases are stable)`,
       );
     }
 
+    const tgJson = await TypeGraph.parseJson(fromString);
     const [engine, pushResponse] = await this.typegate.pushTypegraph(
-      fromString,
+      tgJson,
       JSON.parse(secrets),
       true, // introspection
     );

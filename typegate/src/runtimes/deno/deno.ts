@@ -28,9 +28,6 @@ const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
 };
 
 export class DenoRuntime extends Runtime {
-  /** For easy lookups (eg. __typename), NOT for caching */
-  static defaultRuntimes: Map<string, DenoRuntime> = new Map();
-
   private constructor(
     private w: DenoMessenger,
     private registry: Map<string, number>,
@@ -42,26 +39,12 @@ export class DenoRuntime extends Runtime {
     super();
   }
 
-  static getDefaultRuntime(tgName: string): Runtime {
-    const rt = this.defaultRuntimes.get(tgName);
-    if (rt == null) {
-      throw new Error(`could not find default runtime in ${tgName}`); // TODO: create
-    }
-    return rt;
-  }
-
   static async init(
     params: RuntimeInitParams,
   ): Promise<Runtime> {
     const { typegraph: tg, args, materializers, secretManager } =
       params as RuntimeInitParams<DenoRuntimeData>;
     const typegraphName = TypeGraph.formatName(tg);
-
-    const runtime = DenoRuntime.defaultRuntimes.get(typegraphName);
-    if (runtime) {
-      // clear leaking worker
-      await runtime.w.terminate();
-    }
 
     const { worker: name } = args as unknown as DenoRuntimeData;
     if (name == null) {
@@ -162,14 +145,11 @@ export class DenoRuntime extends Runtime {
       secrets,
     );
 
-    DenoRuntime.defaultRuntimes.set(typegraphName, rt);
     return rt;
   }
 
   async deinit(): Promise<void> {
     await this.w.terminate();
-    const tgName = TypeGraph.formatName(this.tg);
-    DenoRuntime.defaultRuntimes.delete(tgName);
   }
 
   materialize(

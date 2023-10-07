@@ -6,7 +6,7 @@ import { RedisReplicatedMap } from "../replicated_map.ts";
 import { RedisConnectOptions, XIdInput } from "redis";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { decrypt, encrypt } from "../crypto.ts";
-import { SecretManager, TypeGraphDS } from "../typegraph/mod.ts";
+import { SecretManager, TypeGraph, TypeGraphDS } from "../typegraph/mod.ts";
 import { Typegate } from "./mod.ts";
 import {
   isTypegraphUpToDate,
@@ -55,13 +55,25 @@ export class ReplicatedRegister extends Register {
           TypeGraphDS,
           string,
         ];
+        const name = TypeGraph.formatName(tg);
         const secrets = JSON.parse(await decrypt(encryptedSecrets));
 
         // typegraph is updated while being pushed, this is only for iniial load
         const hasUpgrade = initialLoad && isTypegraphUpToDate(tg);
 
+        /* FIXME
+        const oldEngine = replicatedMap.get(name);
+        if (oldEngine) {
+          console.info(`Unregistering engine '${name}'`);
+          await oldEngine.terminate();
+        }
+        */
+
         // name without prefix
-        const secretManager = new SecretManager(tg.types[0].title, secrets);
+        const secretManager = new SecretManager(
+          name,
+          secrets,
+        );
         const engine = await typegate.initEngine(
           hasUpgrade ? upgradeTypegraph(tg) : tg,
           secretManager,

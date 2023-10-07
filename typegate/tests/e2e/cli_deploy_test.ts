@@ -12,8 +12,7 @@ const port = 7895;
 Meta.test("cli:deploy - automatic migrations", async (t) => {
   const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
-      TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=e2e",
+      POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e",
     },
   });
 
@@ -87,8 +86,7 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
 Meta.test("cli:deploy - with prefix", async (t) => {
   const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
-      TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=e2e",
+      POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e",
     },
     prefix: "pref-",
   });
@@ -140,7 +138,7 @@ Meta.test("cli:deploy - with prefix", async (t) => {
     );
   });
 
-  await t.should("commit changes", async () => {
+  await t.should("commit changes 2", async () => {
     await shell(["git", "add", "."]);
     await shell(["git", "commit", "-m", "create migrations"]);
   });

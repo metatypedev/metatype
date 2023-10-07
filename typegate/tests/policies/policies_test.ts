@@ -5,9 +5,7 @@ import config from "../../src/config.ts";
 import { signJWT } from "../../src/crypto.ts";
 import { gql, Meta } from "../utils/mod.ts";
 
-async function genSecretKey(
-  typegraphName: string,
-): Promise<Record<string, string>> {
+async function genSecretKey(): Promise<Record<string, string>> {
   const key = await crypto.subtle.importKey(
     "raw",
     config.tg_secret.slice(32, 64),
@@ -16,13 +14,12 @@ async function genSecretKey(
     ["verify"],
   );
   const jwk = JSON.stringify(await crypto.subtle.exportKey("jwk", key));
-  const envVar = `TG_${typegraphName.toUpperCase()}_NATIVE_JWT`;
-  return { [envVar]: jwk };
+  return { NATIVE_JWT: jwk };
 }
 
 Meta.test("Policies", async (t) => {
   const e = await t.engine("policies/policies.py", {
-    secrets: await genSecretKey("policies"),
+    secrets: await genSecretKey(),
   });
 
   await t.should("have public access", async () => {
@@ -106,10 +103,10 @@ Meta.test("Policies", async (t) => {
 
 Meta.test("Role jwt policy access", async (t) => {
   const e_norm = await t.engine("policies/policies_jwt.py", {
-    secrets: await genSecretKey("policies_jwt"),
+    secrets: await genSecretKey(),
   });
   const e_inject = await t.engine("policies/policies_jwt_injection.py", {
-    secrets: await genSecretKey("policies_jwt_injection"),
+    secrets: await genSecretKey(),
   });
 
   await t.should("have role", async () => {
@@ -197,7 +194,7 @@ Meta.test("Role jwt policy access", async (t) => {
 
 Meta.test("Namespace policies", async (t) => {
   const e = await t.engine("policies/policies.py", {
-    secrets: await genSecretKey("policies"),
+    secrets: await genSecretKey(),
   });
 
   await t.should("fail when no policy", async () => {
@@ -215,7 +212,7 @@ Meta.test("Namespace policies", async (t) => {
 
 Meta.test("Policies for effects", async (t) => {
   const e = await t.engine("policies/effects.py", {
-    secrets: await genSecretKey("effects"),
+    secrets: await genSecretKey(),
   });
 
   await t.should("succeeed", async () => {

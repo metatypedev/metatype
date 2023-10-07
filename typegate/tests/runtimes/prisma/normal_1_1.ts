@@ -4,7 +4,7 @@
 import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
 import { PrismaRuntime } from "@typegraph/deno/src/providers/prisma.ts";
 
-typegraph("prisma", (g) => {
+typegraph("prisma_normal", (g) => {
   const db = new PrismaRuntime("prisma", "POSTGRES");
   const pub = Policy.public();
 
