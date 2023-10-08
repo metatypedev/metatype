@@ -123,6 +123,7 @@ interface Run {
   >;
   output: ReadableStream<string>;
   terminated: boolean;
+  logged: boolean;
 }
 
 function createRun(testFile: string): Run {
@@ -156,6 +157,7 @@ function createRun(testFile: string): Run {
     result,
     output,
     terminated: false,
+    logged: false,
   };
 }
 
@@ -173,18 +175,24 @@ void (async () => {
       runs[next] = createRun(next);
     } else {
       const done = await Promise.any(current);
-      runs[done.testFile].terminated = true;
+      // may already be removed by the logger
+      if (runs[done.testFile]) {
+        runs[done.testFile].terminated = true;
+      }
     }
   }
 })();
 
 while (Object.keys(runs).length > 0) {
-  const file = Object.keys(runs).find((f) => runs[f].terminated) ??
+  const file = Object.keys(runs).find((f) =>
+    runs[f].terminated && !runs[f].logged
+  ) ??
     Object.keys(runs)[0];
-  const { result, output } = runs[file];
+  const run = runs[file];
+  run.logged = true;
 
   console.log(`${prefix} Launched ${relPath(file)}`);
-  for await (const line of output) {
+  for await (const line of run.output) {
     if (line.startsWith("warning: skipping duplicate package")) {
       // https://github.com/rust-lang/cargo/issues/10752
       continue;
@@ -192,8 +200,7 @@ while (Object.keys(runs).length > 0) {
     console.log(line);
   }
 
-  const { success, duration } = await result;
-  delete runs[file]; // remove only when done, otherwise runs[done.testFile] may be undefined
+  const { success, duration } = await run.result;
 
   console.log(
     `${prefix} Completed ${relPath(file)} in ${duration / 1000}ms`,
