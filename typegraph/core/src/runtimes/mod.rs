@@ -208,7 +208,7 @@ macro_rules! prisma_op {
     };
 }
 
-impl wit::Runtimes for crate::Lib {
+impl crate::wit::runtimes::Guest for crate::Lib {
     fn get_deno_runtime() -> RuntimeId {
         Store::get_deno_runtime()
     }

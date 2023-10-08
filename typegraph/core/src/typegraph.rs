@@ -27,7 +27,7 @@ use std::path::Path;
 use std::rc::Rc;
 
 use crate::wit::core::{
-    Core, Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypePolicy,
+    Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypePolicy,
     TypegraphInitParams,
 };
 

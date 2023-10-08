@@ -31,14 +31,20 @@ use wit::core::{
     TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy,
     TypeString, TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
 };
-use wit::runtimes::{MaterializerDenoFunc, Runtimes};
+use wit::runtimes::{Guest, MaterializerDenoFunc};
 
 pub mod wit {
     use super::*;
 
-    wit_bindgen::generate!("typegraph");
-
-    export_typegraph!(Lib);
+    wit_bindgen::generate!({
+        world: "typegraph",
+        exports: {
+            "metatype:typegraph/core": Lib,
+            "metatype:typegraph/runtimes": Lib,
+            "metatype:typegraph/utils": Lib,
+            "metatype:typegraph/aws": Lib,
+        }
+    });
 
     pub use exports::metatype::typegraph::{aws, core, runtimes, utils};
 }
@@ -81,7 +87,7 @@ impl TypeBase {
     }
 }
 
-impl wit::core::Core for Lib {
+impl wit::core::Guest for Lib {
     fn init_typegraph(params: TypegraphInitParams) -> Result<()> {
         typegraph::init(params)
     }
@@ -355,9 +361,9 @@ mod tests {
     use crate::global_store::Store;
     use crate::t::{self, TypeBuilder};
     use crate::test_utils::setup;
-    use crate::wit::core::Core;
     use crate::wit::core::Cors;
-    use crate::wit::runtimes::{Effect, MaterializerDenoFunc, Runtimes};
+    use crate::wit::core::Guest;
+    use crate::wit::runtimes::{Effect, Guest as GuestRuntimes, MaterializerDenoFunc};
     use crate::Lib;
     use crate::TypegraphInitParams;
 

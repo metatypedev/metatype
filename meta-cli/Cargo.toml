@@ -31,7 +31,7 @@ self_update = { version = "0.38.0", features = [
   "compression-zip-deflate",
   "compression-zip-bzip2",
 ] }
-prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.0-dev.31"  }
+prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.0"  }
 lazy_static = "1.4.0"
 tokio = { version = "1.32.0", features = ["full"] }
 futures = "0.3.28"
@@ -47,7 +47,7 @@ anyhow = "1.0.75"
 indoc = "2.0.4"
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = { version = "1.0.107", features = ["preserve_order"] }
-reqwest = { version = "0.11.20", features = ["json"] }
+reqwest = { version = "0.11.22", features = ["json"] }
 colored = "2.0.4"
 question = "0.2.2"
 dialoguer = "0.11.0"
@@ -60,7 +60,7 @@ serde_yaml = "0.9.25"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.57", features = ["vendored"] }
 indexmap = { version = "2.0.2", features = ["serde"] }
-lade-sdk = "0.8.1"
+lade-sdk = "0.9.1"
 async-trait = "0.1.73"
 async-recursion = "1.0.5"
 clap-verbosity-flag = "2.0.1"

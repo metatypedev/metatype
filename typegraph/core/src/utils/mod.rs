@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use crate::errors::Result;
 use crate::global_store::Store;
 use crate::types::TypeId;
-use crate::wit::core::{Core, TypeBase, TypeId as CoreTypeId, TypeStruct, TypeWithInjection};
+use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct, TypeWithInjection};
 use crate::Lib;
 
 mod apply;
@@ -38,7 +38,7 @@ fn find_missing_props(
     Ok(missing_props)
 }
 
-impl crate::wit::utils::Utils for crate::Lib {
+impl crate::wit::utils::Guest for crate::Lib {
     fn gen_applyb(supertype_id: CoreTypeId, apply: crate::wit::utils::Apply) -> Result<CoreTypeId> {
         if apply.paths.is_empty() {
             return Err("apply object is empty".to_string());

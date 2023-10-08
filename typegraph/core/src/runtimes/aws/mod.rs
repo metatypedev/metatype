@@ -8,7 +8,7 @@ use crate::errors::Result;
 use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
 use crate::wit::aws::{
-    Aws, MaterializerId, RuntimeId, S3PresignGetParams, S3PresignPutParams, S3RuntimeData,
+    MaterializerId, RuntimeId, S3PresignGetParams, S3PresignPutParams, S3RuntimeData,
 };
 use crate::wit::runtimes::Effect as WitEffect;
 use crate::wit::runtimes::Effect;
@@ -120,7 +120,7 @@ impl MaterializerConverter for S3Materializer {
     }
 }
 
-impl Aws for crate::Lib {
+impl crate::wit::aws::Guest for crate::Lib {
     fn register_s3_runtime(data: S3RuntimeData) -> Result<RuntimeId> {
         Ok(Store::register_runtime(Runtime::S3(data.into())))
     }

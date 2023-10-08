@@ -62,7 +62,7 @@ pub mod models {
 }
 
 pub fn setup(name: Option<&str>) -> crate::errors::Result<()> {
-    use crate::wit::core::Core;
+    use crate::wit::core::Guest;
 
     crate::Lib::init_typegraph(crate::wit::core::TypegraphInitParams {
         name: name
