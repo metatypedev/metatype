@@ -15,7 +15,7 @@ env:
   DENO_BINDGEN_URL: https://raw.githubusercontent.com/Natoandro/deno_bindgen/main/cli.ts
   DENO_VERSION: "1.37.1"
   PNPM_VERSION: "8.6.11"
-  NODE_VERSION: "19.8.1"
+  NODE_VERSION: "20.8.0"
   WASM_TOOLS_VERSION: "1.0.37"
   JCO_VERSION: "0.12.1"
   WASMEDGE_VERSION: "0.12.1"
