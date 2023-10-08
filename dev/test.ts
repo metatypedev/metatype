@@ -182,7 +182,6 @@ while (Object.keys(runs).length > 0) {
   const file = Object.keys(runs).find((f) => runs[f].terminated) ??
     Object.keys(runs)[0];
   const { result, output } = runs[file];
-  delete runs[file];
 
   console.log(`${prefix} Launched ${relPath(file)}`);
   for await (const line of output) {
@@ -194,6 +193,8 @@ while (Object.keys(runs).length > 0) {
   }
 
   const { success, duration } = await result;
+  delete runs[file]; // remove only when done, otherwise runs[done.testFile] may be undefined
+
   console.log(
     `${prefix} Completed ${relPath(file)} in ${duration / 1000}ms`,
   );
