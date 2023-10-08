@@ -113,17 +113,17 @@ const threads = flags.threads ? parseInt(flags.threads) : 4;
 const prefix = "[dev/test.ts]";
 console.log(`${prefix} Testing with ${threads} threads`);
 
+interface Result {
+  testFile: string;
+  duration: number;
+  success: boolean;
+}
+
 interface Run {
-  result: Promise<
-    {
-      testFile: string;
-      duration: number;
-      success: boolean;
-    }
-  >;
+  promise: Promise<Result>;
   output: ReadableStream<string>;
-  terminated: boolean;
-  logged: boolean;
+  done: boolean;
+  streamed: boolean;
 }
 
 function createRun(testFile: string): Run {
@@ -145,7 +145,7 @@ function createRun(testFile: string): Run {
     new TextDecoderStream(),
   ).pipeThrough(new TextLineStream());
 
-  const result = child.status.then(({ success }) => {
+  const promise = child.status.then(({ success }) => {
     const end = Date.now();
     return { success, testFile, duration: end - start };
   }).catch(({ success }) => {
@@ -154,42 +154,37 @@ function createRun(testFile: string): Run {
   });
 
   return {
-    result,
+    promise,
     output,
-    terminated: false,
-    logged: false,
+    done: false,
+    streamed: false,
   };
 }
 
 const queues = [...testFiles];
 const runs: Record<string, Run> = {};
-const failures: string[] = [];
 
 void (async () => {
   while (queues.length > 0) {
-    const current = Object.values(runs).filter((r) => !r.terminated).map((r) =>
-      r.result
+    const current = Object.values(runs).filter((r) => !r.done).map((r) =>
+      r.promise
     );
     if (current.length <= threads) {
       const next = queues.shift()!;
       runs[next] = createRun(next);
     } else {
-      const done = await Promise.any(current);
-      // may already be removed by the logger
-      if (runs[done.testFile]) {
-        runs[done.testFile].terminated = true;
-      }
+      const result = await Promise.any(current);
+      runs[result.testFile].done = true;
     }
   }
 })();
 
-while (Object.keys(runs).length > 0) {
-  const file = Object.keys(runs).find((f) =>
-    runs[f].terminated && !runs[f].logged
-  ) ??
-    Object.keys(runs)[0];
+let nexts = Object.keys(runs);
+do {
+  const file = nexts.find((f) => !runs[f].done) ??
+    nexts[0];
   const run = runs[file];
-  run.logged = true;
+  run.streamed = true;
 
   console.log(`${prefix} Launched ${relPath(file)}`);
   for await (const line of run.output) {
@@ -200,20 +195,32 @@ while (Object.keys(runs).length > 0) {
     console.log(line);
   }
 
-  const { success, duration } = await run.result;
-
+  const { duration } = await run.promise;
   console.log(
     `${prefix} Completed ${relPath(file)} in ${duration / 1000}ms`,
   );
-  if (!success) {
-    failures.push(file);
-  }
-}
+
+  nexts = Object.keys(runs).filter((f) => !runs[f].streamed);
+} while (nexts.length > 0);
+
+const finished = await Promise.all(Object.values(runs).map((r) => r.promise));
+const successes = finished.filter((r) => r.success);
+const failures = finished.filter((r) => !r.success);
+
+console.log("\n");
+console.log(`Tests completed:`);
+console.log(
+  `  succcesses: ${successes.length}/${testFiles.length}`,
+);
+console.log(
+  `  failures: ${failures.length}/${testFiles.length}`,
+);
+console.log("");
 
 if (failures.length > 0) {
   console.log("Some errors were detected:");
   for (const failure of failures) {
-    console.log(`- ${failure}`);
+    console.log(`- ${failure.testFile}`);
   }
   Deno.exit(1);
 }
