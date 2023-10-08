@@ -61,14 +61,6 @@ export class ReplicatedRegister extends Register {
         // typegraph is updated while being pushed, this is only for iniial load
         const hasUpgrade = initialLoad && isTypegraphUpToDate(tg);
 
-        /* FIXME
-        const oldEngine = replicatedMap.get(name);
-        if (oldEngine) {
-          console.info(`Unregistering engine '${name}'`);
-          await oldEngine.terminate();
-        }
-        */
-
         const secretManager = new SecretManager(
           tg,
           secrets,
@@ -86,6 +78,9 @@ export class ReplicatedRegister extends Register {
         }
 
         return engine;
+      },
+      async (engine: QueryEngine) => {
+        await engine.terminate();
       },
     );
 
@@ -106,11 +101,16 @@ export class ReplicatedRegister extends Register {
   }
 
   async remove(name: string): Promise<void> {
-    if (name === "typegate" || !this.has(name)) {
-      return;
+    if (SystemTypegraph.check(name)) {
+      // no need for a sync
+      const old = this.replicatedMap.memory.get(name);
+      if (old) {
+        this.replicatedMap.memory.delete(name);
+        await old.terminate();
+      }
+    } else {
+      await this.replicatedMap.delete(name);
     }
-    await this.get(name)!.terminate();
-    await this.replicatedMap.delete(name);
   }
 
   list(): QueryEngine[] {

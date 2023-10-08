@@ -11,20 +11,30 @@ export class MemoryRegister extends Register {
     super();
   }
 
-  add(engine: QueryEngine): Promise<void> {
+  async add(engine: QueryEngine): Promise<void> {
+    const old = this.map.get(engine.name);
     this.map.set(engine.name, engine);
-    return Promise.resolve();
+    if (old) {
+      await old.terminate();
+    }
   }
-  remove(name: string): Promise<void> {
-    this.map.delete(name);
-    return Promise.resolve();
+
+  async remove(name: string): Promise<void> {
+    const old = this.map.get(name);
+    if (old) {
+      this.map.delete(name);
+      await old.terminate();
+    }
   }
+
   list(): QueryEngine[] {
     return Array.from(this.map.values());
   }
+
   get(name: string): QueryEngine | undefined {
     return this.map.get(name);
   }
+
   has(name: string): boolean {
     return this.map.has(name);
   }

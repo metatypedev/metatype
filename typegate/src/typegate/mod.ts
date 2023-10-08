@@ -201,12 +201,6 @@ export class Typegate {
       pushResponse,
     );
 
-    const oldEngine = this.register.get(name);
-    if (oldEngine) {
-      logger.info(`Unregistering engine '${name}'`);
-      await oldEngine.terminate();
-    }
-
     logger.info(`Initializing engine '${name}'`);
     const engine = await this.initQueryEngine(
       tg,

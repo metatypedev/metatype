@@ -4,6 +4,7 @@
 import { connect, Redis, RedisConnectOptions, XIdInput } from "redis";
 import * as Sentry from "sentry";
 import { getLogger } from "./log.ts";
+import { ensure } from "./utils.ts";
 
 const logger = getLogger(import.meta);
 
@@ -29,28 +30,26 @@ redis.call('XADD', KEYS[2], 'MAXLEN', '~', '10000', '*', 'name', ARGV[1], 'event
 
 type Serializer<T> = (elem: T) => Promise<string> | string;
 type Deserializer<T> = (value: string, initialLoad: boolean) => Promise<T> | T;
+type TerminateHook<T> = (elem: T) => Promise<void> | void;
 
 export class RedisReplicatedMap<T> {
-  instance: string;
-  redis: Redis;
-  redisObs: Redis;
-  memory: Map<string, T>;
-  key: string;
-  ekey: string;
-  serializer: Serializer<T>;
-  deserializer: Deserializer<T>;
+  private instance: string;
+
+  public memory: Map<string, T>;
+  private key: string;
+  private ekey: string;
+
   sync: SyncContext | null;
 
   private constructor(
     name: string,
-    redis: Redis,
-    redisObs: Redis,
-    serializer: Serializer<T>,
-    deserializer: Deserializer<T>,
+    private redis: Redis,
+    private redisObs: Redis,
+    private serializer: Serializer<T>,
+    private deserializer: Deserializer<T>,
+    private terminatateHook: TerminateHook<T>,
   ) {
     this.instance = crypto.randomUUID();
-    this.redis = redis;
-    this.redisObs = redisObs;
     this.memory = new Map();
     this.key = name;
     this.ekey = `${name}_event`;
@@ -64,6 +63,7 @@ export class RedisReplicatedMap<T> {
     connection: RedisConnectOptions,
     serializer: Serializer<T>,
     deserializer: Deserializer<T>,
+    terminatateHook: TerminateHook<T>,
   ) {
     // needs two connections because
     // 1. xread with block delays other commands
@@ -77,11 +77,12 @@ export class RedisReplicatedMap<T> {
       redisObs,
       serializer,
       deserializer,
+      terminatateHook,
     );
   }
 
   async historySync(): Promise<XIdInput> {
-    const { key, redis, memory, deserializer } = this;
+    const { key, redis, deserializer } = this;
 
     // get last received message before loading history
     const [lastMessage] = await redis.xrevrange(this.ekey, "+", "-", 1);
@@ -94,18 +95,35 @@ export class RedisReplicatedMap<T> {
       const name = all[i];
       const payload = all[i + 1];
       logger.info(`reloaded addition: ${name}`);
-      memory.set(name, await deserializer(payload, true));
+      ensure(
+        !this.memory.has(name),
+        () => `typegraph ${name} should not exists in memory at first sync`,
+      );
+      this.memory.set(name, await deserializer(payload, true));
     }
     logger.debug("history load end");
     return lastId;
   }
 
-  // never ending function
+  private async memorySet(name: string, elem: T | null): Promise<void> {
+    const { memory, terminatateHook } = this;
+    const old = memory.get(name);
+    if (elem !== null) {
+      this.memory.set(name, elem);
+    } else {
+      this.memory.delete(name);
+    }
+    if (old) {
+      await terminatateHook(old);
+    }
+  }
+
+  // never terminating function
   async startSync(xid: XIdInput): Promise<void> {
     if (this.sync) {
       return;
     }
-    const { key, redis, memory, deserializer } = this;
+    const { key, redis, deserializer } = this;
     this.sync = this.subscribe();
 
     for await (
@@ -122,11 +140,10 @@ export class RedisReplicatedMap<T> {
           throw Error(`added message without payload ${name}`);
         }
         logger.info(`received addition: ${name}`);
-
-        memory.set(name, await deserializer(payload, false));
+        await this.memorySet(name, await deserializer(payload, false));
       } else if (event === RM) {
         logger.info(`received removal: ${name}`);
-        memory.delete(name);
+        await this.memorySet(name, null);
       } else {
         throw Error(`unexpected message ${name} with ${event}`);
       }
@@ -176,12 +193,12 @@ export class RedisReplicatedMap<T> {
   }
 
   async set(name: string, elem: T) {
-    const { key, ekey, serializer } = this;
+    const { key, ekey, serializer, redis } = this;
 
-    this.memory.set(name, elem);
+    await this.memorySet(name, elem);
     logger.info(`sent addition: ${name}`);
 
-    await this.redis.eval(
+    await redis.eval(
       addCmd,
       [key, ekey],
       [name, this.instance, await serializer(elem)],
@@ -197,12 +214,12 @@ export class RedisReplicatedMap<T> {
   }
 
   async delete(name: string): Promise<void> {
-    const { key, ekey } = this;
+    const { key, ekey, redis } = this;
 
-    this.memory.delete(name);
+    await this.memorySet(name, null);
     logger.info(`sent removal: ${name}`);
 
-    await this.redis.eval(
+    await redis.eval(
       rmCmd,
       [key, ekey],
       [name, this.instance],

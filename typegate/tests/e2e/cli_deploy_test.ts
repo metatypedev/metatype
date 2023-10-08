@@ -67,6 +67,23 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
     "runtimes/prisma/prisma.py",
   );
 
+  await t.should(
+    "succeed have replaced and terminated the previous engine",
+    async () => {
+      await gql`
+      query {
+        findManyRecords{
+          id
+        }
+      }
+    `
+        .expectErrorContains("Could not find engine")
+        .on(e);
+    },
+  );
+
+  const e2 = t.getTypegraphEngine("prisma")!;
+
   await t.should("succeed to query database", async () => {
     await gql`
       query {
@@ -79,7 +96,7 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
       .expectData({
         findManyRecords: [],
       })
-      .on(e);
+      .on(e2);
   });
 }, { systemTypegraphs: true, port, cleanGitRepo: true });
 
@@ -150,7 +167,23 @@ Meta.test("cli:deploy - with prefix", async (t) => {
     "-f",
     "runtimes/prisma/prisma.py",
   );
-  //
+
+  await t.should(
+    "succeed have replaced and terminated the previous engine",
+    async () => {
+      await gql`
+      query {
+        findManyRecords{
+          id
+        }
+      }
+    `
+        .expectErrorContains("Could not find engine")
+        .on(e);
+    },
+  );
+
+  const e2 = t.getTypegraphEngine("pref-prisma")!;
 
   await t.should("succeed to query database", async () => {
     await gql`
@@ -164,6 +197,6 @@ Meta.test("cli:deploy - with prefix", async (t) => {
       .expectData({
         findManyRecords: [],
       })
-      .on(e);
+      .on(e2);
   });
 }, { systemTypegraphs: true, port, cleanGitRepo: true });
