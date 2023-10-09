@@ -491,6 +491,8 @@ interface utils {
     }
 
     gen-applyb: func(supertype-id: type-id, data: apply) -> result<type-id, error>
+
+    add-graphql-endpoint: func(graphql: string) -> result<u32, error>
 }
 
 world typegraph {

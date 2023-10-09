@@ -10,7 +10,7 @@ import {
   serializeGenericInjection,
   serializeStaticInjection,
 } from "./utils/injection_utils.ts";
-import { Auth, Cors, Rate } from "./wit.ts";
+import { Auth, Cors, Rate, wit_utils } from "./wit.ts";
 import Policy from "./policy.ts";
 import { getPolicyChain } from "./types.ts";
 
@@ -31,6 +31,7 @@ interface TypegraphArgs {
 interface TypegraphBuilderArgs {
   expose: (exports: Exports, defaultPolicy?: Policy) => void;
   inherit: () => InheritDef;
+  rest: (graphql: string) => number;
 }
 
 export class InheritDef {
@@ -134,6 +135,9 @@ export function typegraph(
     },
     inherit: () => {
       return new InheritDef();
+    },
+    rest: (graphql: string) => {
+      return wit_utils.addGraphqlEndpoint(graphql);
     },
   };
 
