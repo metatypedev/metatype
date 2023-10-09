@@ -19,7 +19,6 @@ type Exports = Record<string, t.Func>;
 interface TypegraphArgs {
   name: string;
   dynamic?: boolean;
-  folder?: string;
   builder: TypegraphBuilder;
   prefix?: string;
   secrets?: Array<string>;
@@ -86,7 +85,6 @@ export function typegraph(
   const {
     name,
     dynamic,
-    folder,
     auths,
     cors,
     prefix,
@@ -124,7 +122,7 @@ export function typegraph(
     rate,
   };
 
-  core.initTypegraph({ name, dynamic, path, folder, ...tgParams });
+  core.initTypegraph({ name, dynamic, path, ...tgParams });
 
   const g: TypegraphBuilderArgs = {
     expose: (exports, defaultPolicy) => {

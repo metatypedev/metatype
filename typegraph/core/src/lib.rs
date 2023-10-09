@@ -347,7 +347,6 @@ mod tests {
             Self {
                 name: "".to_string(),
                 dynamic: None,
-                folder: None,
                 path: ".".to_string(),
                 prefix: None,
                 cors: Cors {

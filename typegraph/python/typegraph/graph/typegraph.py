@@ -32,7 +32,6 @@ ExposeItem = Union["t.func", "t.struct"]
 class Typegraph:
     name: str
     dynamic: Optional[bool]
-    folder: Optional[str]
     path: str
     _context: List["Typegraph"] = []
     auths: Optional[List[Auth]]
@@ -44,7 +43,6 @@ class Typegraph:
         self,
         name: str,
         dynamic: Optional[bool] = None,
-        folder: Optional[str] = None,
         *,
         auths: Optional[List[Auth]] = None,
         rate: Optional[Rate] = None,
@@ -53,7 +51,6 @@ class Typegraph:
     ):
         self.name = name
         self.dynamic = dynamic
-        self.folder = folder
         self.path = str(Path(inspect.stack()[2].filename).resolve().parent)
 
         self.auths = auths or []
@@ -118,7 +115,6 @@ def typegraph(
     name: Optional[str] = None,
     *,
     dynamic: Optional[bool] = None,
-    folder: Optional[str] = None,
     auths: Optional[List[Auth]] = None,
     rate: Optional[Rate] = None,
     cors: Optional[Cors] = None,
@@ -135,7 +131,6 @@ def typegraph(
         tg = Typegraph(
             name=actual_name,
             dynamic=dynamic,
-            folder=folder,
             auths=auths,
             rate=rate,
             cors=cors,
@@ -149,7 +144,6 @@ def typegraph(
             TypegraphInitParams(
                 name=tg.name,
                 dynamic=tg.dynamic,
-                folder=tg.folder,
                 path=tg.path,
                 auths=tg.auths,
                 rate=tg.rate,
