@@ -104,8 +104,8 @@ class Graph:
 
         return InheritDef()
 
-    def rest(graphql: str) -> int:
-        res = wit_utils.add_graphql_endpoint(graphql)
+    def rest(self, graphql: str) -> int:
+        res = wit_utils.add_graphql_endpoint(store, graphql)
         if isinstance(res, Err):
             raise Exception(res.value)
         return res.value
