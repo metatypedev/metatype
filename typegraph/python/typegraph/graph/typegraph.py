@@ -1,22 +1,23 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from dataclasses import dataclass
 import inspect
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
 from typegraph.gen.exports.core import (
     Auth,
     Rate,
-    Cors as CoreCors,
     TypegraphInitParams,
 )
-
+from typegraph.gen.exports.core import (
+    Cors as CoreCors,
+)
 from typegraph.gen.types import Err
-from typegraph.policy import PolicyPerEffect, PolicySpec, get_policy_chain, Policy
-from typegraph.wit import core, store
 from typegraph.graph.params import Cors
+from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
+from typegraph.wit import core, store, wit_utils
 
 if TYPE_CHECKING:
     from typegraph import t
@@ -105,6 +106,12 @@ class Graph:
         from typegraph.injection import InheritDef
 
         return InheritDef()
+
+    def rest(graphql: str) -> int:
+        res = wit_utils.add_graphql_endpoint(graphql)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return res.value
 
 
 def typegraph(
