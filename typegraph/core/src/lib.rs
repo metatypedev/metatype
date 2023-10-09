@@ -50,25 +50,6 @@ pub mod host {
     pub use metatype::typegraph::abi;
 }
 
-// native stubs to make the test compilation work
-#[cfg(not(feature = "wasm"))]
-pub mod host {
-    pub mod abi {
-        pub fn log(message: &str) {
-            println!("{}", message);
-        }
-        pub fn glob(_pattern: &str, _exts: &[String]) -> Result<Vec<String>, String> {
-            Ok(vec![])
-        }
-        pub fn read_file(path: &str) -> Result<String, String> {
-            Ok(path.to_string())
-        }
-        pub fn write_file(_path: &str, _data: &str) -> Result<(), String> {
-            Ok(())
-        }
-    }
-}
-
 pub struct Lib {}
 
 impl TypeBase {
