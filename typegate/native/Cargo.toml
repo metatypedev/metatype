@@ -14,16 +14,16 @@ deno = []
 anyhow = "1.0"
 deno_bindgen = "0.8.1"
 serde = { version = "1.0.188", features = ["derive"] }
-query-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.0" }
-query-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.0" }
-request-handlers = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.0" }
-prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.0" }
-datamodel-renderer = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.0" }
-user-facing-errors = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.0" }
-query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.0" }
-schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.0" }
-psl = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.0" }
-schema-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.0" }
+query-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.2" }
+query-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.2" }
+request-handlers = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.2" }
+prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.2" }
+datamodel-renderer = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.2" }
+user-facing-errors = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.2" }
+query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.2" }
+schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.2" }
+psl = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.2" }
+schema-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.2" }
 futures = "0.3"
 temporal-client = { git = "https://github.com/temporalio/sdk-core", rev = "7f9755b" }
 temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core", rev = "7f9755b" }
