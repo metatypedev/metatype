@@ -1,9 +1,9 @@
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.providers.prisma import PrismaRuntime
 
 
 @typegraph()
-def prisma(g: Graph):
+def prisma_opt_n(g: Graph):
     db = PrismaRuntime("prisma", "POSTGRES")
 
     public = Policy.public()

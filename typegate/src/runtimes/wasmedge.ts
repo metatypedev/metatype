@@ -5,16 +5,19 @@ import { Runtime } from "./Runtime.ts";
 import * as native from "native";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { nativeResult } from "../utils.ts";
-import { ComputeStage } from "../engine.ts";
-import { Typegate } from "../typegate/mod.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
+import { registerRuntime } from "./mod.ts";
 
+@registerRuntime("wasmedge")
 export class WasmEdgeRuntime extends Runtime {
-  private constructor() {
-    super();
+  private constructor(typegraphName: string) {
+    super(typegraphName);
   }
 
-  static init(_params: RuntimeInitParams): Promise<Runtime> {
-    return Promise.resolve(new WasmEdgeRuntime());
+  static init(params: RuntimeInitParams): Promise<Runtime> {
+    const { typegraphName } = params;
+
+    return Promise.resolve(new WasmEdgeRuntime(typegraphName));
   }
 
   async deinit(): Promise<void> {
@@ -54,5 +57,3 @@ export class WasmEdgeRuntime extends Runtime {
     ];
   }
 }
-
-Typegate.registerRuntime("wasmedge", WasmEdgeRuntime.init);

@@ -15,10 +15,10 @@ import {
   serverError,
 } from "../services/responses.ts";
 import { handleRest } from "../services/rest_service.ts";
-import { Engine } from "../engine.ts";
+import { QueryEngine } from "../engine/query_engine.ts";
 import { PushHandler, PushResponse } from "../typegate/hooks.ts";
 import { upgradeTypegraph } from "../typegraph/versions.ts";
-import { parseGraphQLTypeGraph } from "../graphql/graphql.ts";
+import { parseGraphQLTypeGraph } from "../transports/graphql/typegraph.ts";
 import * as PrismaHooks from "../runtimes/prisma/hooks/mod.ts";
 import {
   RuntimeResolver,
@@ -29,9 +29,6 @@ import {
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphRuntime } from "../runtimes/typegraph.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
-import { RuntimeInit, RuntimeInitParams } from "../types.ts";
-import { Runtime } from "../runtimes/Runtime.ts";
-import { parseTypegraph } from "../typegraph/parser.ts";
 import { resolveIdentifier } from "../services/middlewares.ts";
 import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
@@ -52,30 +49,7 @@ function parsePath(pathname: string): [string, string | undefined] {
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 
-const introspectionDef = parseGraphQLTypeGraph(
-  await parseTypegraph(
-    await Deno.readTextFile(join(localDir, "../typegraphs/introspection.json")),
-  ),
-);
-
 export class Typegate {
-  static #registeredRuntimes: Map<string, RuntimeInit> = new Map();
-
-  static registerRuntime(name: string, init: RuntimeInit) {
-    this.#registeredRuntimes.set(name, init);
-  }
-
-  static async initRuntime(
-    name: string,
-    params: RuntimeInitParams,
-  ): Promise<Runtime> {
-    const init = this.#registeredRuntimes.get(name);
-    if (!init) {
-      throw new Error(`Runtime ${name} is not registered`);
-    }
-    return await init(params);
-  }
-
   #onPushHooks: PushHandler[] = [];
 
   constructor(
@@ -193,13 +167,12 @@ export class Typegate {
   }
 
   async pushTypegraph(
-    tgJson: string,
+    tgJson: TypeGraphDS,
     secrets: Record<string, string>,
     enableIntrospection: boolean,
     system = false,
-  ): Promise<[Engine, PushResponse]> {
-    const tgDS = await parseTypegraph(tgJson);
-    const name = TypeGraph.formatName(tgDS);
+  ): Promise<[QueryEngine, PushResponse]> {
+    const name = TypeGraph.formatName(tgJson);
 
     if (SystemTypegraph.check(name)) {
       if (!system) {
@@ -215,19 +188,21 @@ export class Typegate {
       }
     }
 
-    // name without prefix
-    const secretManager = new SecretManager(tgDS.types[0].title, secrets);
+    const secretManager = new SecretManager(
+      tgJson,
+      secrets,
+    );
 
     const pushResponse = new PushResponse();
     logger.info("Handling onPush hooks");
     const tg = await this.#handleOnPushHooks(
-      tgDS,
+      tgJson,
       secretManager,
       pushResponse,
     );
 
     logger.info(`Initializing engine '${name}'`);
-    const engine = await this.initEngine(
+    const engine = await this.initQueryEngine(
       tg,
       secretManager,
       SystemTypegraph.getCustomRuntimes(this),
@@ -240,16 +215,24 @@ export class Typegate {
     return [engine, pushResponse];
   }
 
-  async initEngine(
+  async initQueryEngine(
     tgDS: TypeGraphDS,
     secretManager: SecretManager,
     customRuntime: RuntimeResolver = {},
     enableIntrospection: boolean,
-  ): Promise<Engine> {
+  ): Promise<QueryEngine> {
+    const introspectionDef = parseGraphQLTypeGraph(
+      await TypeGraph.parseJson(
+        await Deno.readTextFile(
+          join(localDir, "../typegraphs/introspection.json"),
+        ),
+      ),
+    );
+
     const introspection = enableIntrospection
       ? await TypeGraph.init(
         introspectionDef,
-        new SecretManager(introspectionDef.types[0].title, {}),
+        new SecretManager(introspectionDef, {}),
         {
           typegraph: TypeGraphRuntime.init(
             tgDS,
@@ -268,7 +251,7 @@ export class Typegate {
       introspection,
     );
 
-    const engine = new Engine(tg);
+    const engine = new QueryEngine(tg);
     await engine.registerEndpoints();
     return engine;
   }

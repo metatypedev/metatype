@@ -1,14 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { parseTypegraph } from "../../../src/typegraph/parser.ts";
 import { Meta } from "../../utils/mod.ts";
 import { serialize } from "../../utils/meta.ts";
 import { SchemaGenerator } from "../../../src/runtimes/prisma/hooks/generate_schema.ts";
 import * as PrismaRT from "../../../src/runtimes/prisma/types.ts";
 import { assertEquals } from "std/assert/mod.ts";
 import outdent from "outdent";
-import { SecretManager } from "../../../src/typegraph/mod.ts";
+import { SecretManager, TypeGraph } from "../../../src/typegraph/mod.ts";
 
 interface Permutation<T> {
   (arr: T[]): T[];
@@ -19,7 +18,7 @@ async function assertGeneratedSchema(
   schema: string,
   reorderModels?: Permutation<number>,
 ) {
-  const tg = await parseTypegraph(
+  const tg = await TypeGraph.parseJson(
     await serialize("runtimes/prisma/schema_generation.py", {
       unique: true,
       typegraph: tgName,
@@ -41,7 +40,7 @@ async function assertGeneratedSchema(
   const schemaGenerator = new SchemaGenerator(
     tg,
     runtime.data,
-    new SecretManager(tgName, {
+    new SecretManager(tg, {
       [secretKey]: "postgresql://postgres:postgres@localhost:5432/postgres",
     }),
   );

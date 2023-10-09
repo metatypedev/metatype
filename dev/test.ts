@@ -29,11 +29,11 @@ import {
   resolve,
   TextLineStream,
 } from "./deps.ts";
-import { projectDir } from "./utils.ts";
+import { projectDir, relPath } from "./utils.ts";
 
 const flags = parseFlags(Deno.args, { "--": true, string: ["threads"] });
 
-const testFiles = [];
+const testFiles: string[] = [];
 
 // find test files
 if (flags._.length === 0) {
@@ -110,56 +110,117 @@ if (!Deno.env.get(libPath)?.includes(wasmEdgeLib)) {
 }
 
 const threads = flags.threads ? parseInt(flags.threads) : 4;
-console.log(`Testing with ${threads} threads`);
-const failures = [];
+const prefix = "[dev/test.ts]";
+console.log(`${prefix} Testing with ${threads} threads`);
 
-for (let i = 0; i < testFiles.length; i += threads) {
-  const tests = [];
-
-  for (let j = 0; j < threads && i + j < testFiles.length; j += 1) {
-    const testFile = testFiles[i + j];
-
-    const p = new Deno.Command("deno", {
-      args: [
-        "task",
-        "test",
-        testFile,
-        ...flags["--"],
-      ],
-      cwd,
-      stdout: "piped",
-      stderr: "piped",
-      env: { ...Deno.env.toObject(), ...env },
-    }).spawn();
-
-    const output = mergeReadableStreams(p.stdout, p.stderr).pipeThrough(
-      new TextDecoderStream(),
-    ).pipeThrough(new TextLineStream());
-
-    tests.push({ status: p.status, output, testFile });
-  }
-
-  for (const { status, output, testFile } of tests) {
-    for await (const line of output) {
-      if (line.startsWith("warning: skipping duplicate package")) {
-        // https://github.com/rust-lang/cargo/issues/10752
-        continue;
-      }
-      console.log(line);
-    }
-    console.log("\n");
-
-    const { success } = await status;
-    if (!success) {
-      failures.push(testFile);
-    }
-  }
+interface Result {
+  testFile: string;
+  duration: number;
+  success: boolean;
 }
+
+interface Run {
+  promise: Promise<Result>;
+  output: ReadableStream<string>;
+  done: boolean;
+  streamed: boolean;
+}
+
+function createRun(testFile: string): Run {
+  const start = Date.now();
+  const child = new Deno.Command("deno", {
+    args: [
+      "task",
+      "test",
+      testFile,
+      ...flags["--"],
+    ],
+    cwd,
+    stdout: "piped",
+    stderr: "piped",
+    env: { ...Deno.env.toObject(), ...env },
+  }).spawn();
+
+  const output = mergeReadableStreams(child.stdout, child.stderr).pipeThrough(
+    new TextDecoderStream(),
+  ).pipeThrough(new TextLineStream());
+
+  const promise = child.status.then(({ success }) => {
+    const end = Date.now();
+    return { success, testFile, duration: end - start };
+  }).catch(({ success }) => {
+    const end = Date.now();
+    return { success, testFile, duration: end - start };
+  });
+
+  return {
+    promise,
+    output,
+    done: false,
+    streamed: false,
+  };
+}
+
+const queues = [...testFiles];
+const runs: Record<string, Run> = {};
+
+void (async () => {
+  while (queues.length > 0) {
+    const current = Object.values(runs).filter((r) => !r.done).map((r) =>
+      r.promise
+    );
+    if (current.length <= threads) {
+      const next = queues.shift()!;
+      runs[next] = createRun(next);
+    } else {
+      const result = await Promise.any(current);
+      runs[result.testFile].done = true;
+    }
+  }
+})();
+
+let nexts = Object.keys(runs);
+do {
+  const file = nexts.find((f) => !runs[f].done) ??
+    nexts[0];
+  const run = runs[file];
+  run.streamed = true;
+
+  console.log(`${prefix} Launched ${relPath(file)}`);
+  for await (const line of run.output) {
+    if (line.startsWith("warning: skipping duplicate package")) {
+      // https://github.com/rust-lang/cargo/issues/10752
+      continue;
+    }
+    console.log(line);
+  }
+
+  const { duration } = await run.promise;
+  console.log(
+    `${prefix} Completed ${relPath(file)} in ${duration / 1000}ms`,
+  );
+
+  nexts = Object.keys(runs).filter((f) => !runs[f].streamed);
+} while (nexts.length > 0);
+
+const finished = await Promise.all(Object.values(runs).map((r) => r.promise));
+const successes = finished.filter((r) => r.success);
+const failures = finished.filter((r) => !r.success);
+
+console.log("\n");
+console.log(`Tests completed:`);
+console.log(
+  `  succcesses: ${successes.length}/${testFiles.length}`,
+);
+console.log(
+  `  failures: ${failures.length}/${testFiles.length}`,
+);
+console.log("");
 
 if (failures.length > 0) {
   console.log("Some errors were detected:");
   for (const failure of failures) {
-    console.log(`- ${failure}`);
+    console.log(`- ${failure.testFile}`);
   }
   Deno.exit(1);
 }

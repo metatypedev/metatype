@@ -24,8 +24,8 @@ Meta.test("Auth", async (t) => {
   const clientSecret = "client_secret_1";
   const e = await t.engine("auth/auth.py", {
     secrets: {
-      TG_TEST_AUTH_GITHUB_CLIENT_ID: clientId,
-      TG_TEST_AUTH_GITHUB_CLIENT_SECRET: clientSecret,
+      GITHUB_CLIENT_ID: clientId,
+      GITHUB_CLIENT_SECRET: clientSecret,
     },
   });
 

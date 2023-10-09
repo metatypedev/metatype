@@ -3,7 +3,7 @@
 
 import { assertEquals, assertStringIncludes } from "std/assert/mod.ts";
 import { gql, Meta, rest } from "../utils/mod.ts";
-import { RestSchemaGenerator } from "../../src/typecheck/rest_schema_generator.ts";
+import { RestSchemaGenerator } from "../../src/transports/rest/rest_schema_generator.ts";
 
 Meta.test("Rest queries in Python", async (t) => {
   const e = await t.engine("rest/custom.py");

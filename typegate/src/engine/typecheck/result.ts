@@ -1,17 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { FragmentDefs } from "../graphql.ts";
+import { FragmentDefs } from "../../transports/graphql/graphql.ts";
 import {
   OperationDefinitionNode,
   SelectionNode,
   SelectionSetNode,
 } from "graphql/ast";
 import { FieldNode, Kind } from "graphql";
-import { isScalar, ObjectNode, Type } from "../type_node.ts";
-import { TypeGraph } from "../typegraph/mod.ts";
+import { isScalar, ObjectNode, Type } from "../../typegraph/type_node.ts";
+import { TypeGraph } from "../../typegraph/mod.ts";
 import { CodeGenerator } from "./code_generator.ts";
-import { getChildTypes } from "../typegraph/visitor.ts";
+import { getChildTypes } from "../../typegraph/visitor.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import {
   ErrorEntry,

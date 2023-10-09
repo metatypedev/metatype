@@ -30,7 +30,7 @@ import type {
   StringNode,
   TypeNode,
   UnionNode,
-} from "./types/typegraph.ts";
+} from "./types.ts";
 
 export type {
   AnyNode,

@@ -7,7 +7,7 @@ import { gql, Meta } from "../../utils/mod.ts";
 Meta.test("prisma full mapping", async (t) => {
   const e = await t.engine("runtimes/prisma/full_prisma_mapping.py", {
     secrets: {
-      TG_PRISMA_POSTGRES:
+      POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-full",
     },
   });

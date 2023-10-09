@@ -10,12 +10,12 @@ import { shell } from "./shell.ts";
 import { Server } from "std/http/server.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
 import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
-import { Engine } from "../../src/engine.ts";
+import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 
 import { NoLimiter } from "./no_limiter.ts";
-import { SingleRegister } from "./single_register.ts";
 import { meta } from "./meta.ts";
+import { SecretManager, TypeGraph } from "../../src/typegraph/mod.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
@@ -26,9 +26,8 @@ type AssertSnapshotParams = typeof assertSnapshot extends (
 export interface ParseOptions {
   deploy?: boolean;
   typegraph?: string;
-  // ports on which this typegraph will be exposed
-  ports?: number[];
   secrets?: Record<string, string>;
+  autoSecretName?: boolean;
   prefix?: string;
   pretty?: boolean;
 }
@@ -49,11 +48,6 @@ function serve(typegate: Typegate, port: number): () => void {
     server.close();
     await listener;
   };
-}
-
-function exposeOnPort(engine: Engine, port: number): () => void {
-  const register = new SingleRegister(engine.name, engine);
-  return serve(new Typegate(register, new NoLimiter()), port);
 }
 
 type MetaTestCleanupFn = () => void | Promise<void>;
@@ -80,12 +74,8 @@ export class MetaTest {
     this.cleanups.push(fn);
   }
 
-  getTypegraph(name: string, ports: number[] = []): Engine | undefined {
-    const engine = this.register.get(name);
-    if (engine != null) {
-      this.cleanups.push(...ports.map((port) => exposeOnPort(engine, port)));
-    }
-    return engine;
+  getTypegraphEngine(name: string): QueryEngine | undefined {
+    return this.register.get(name);
   }
 
   async serialize(path: string, opts: ParseOptions = {}): Promise<string> {
@@ -119,22 +109,34 @@ export class MetaTest {
     return stdout;
   }
 
-  async engine(path: string, opts: ParseOptions = {}): Promise<Engine> {
-    const tgJson = await this.serialize(path, opts);
+  async engine(path: string, opts: ParseOptions = {}): Promise<QueryEngine> {
+    const tgString = await this.serialize(path, opts);
+    const tgJson = await TypeGraph.parseJson(tgString);
+
+    // for convience, automatically prefix secrets
+    const secrets = opts.secrets ?? {};
+    if (opts.autoSecretName !== false) {
+      const secretPrefx = SecretManager.formatSecretName(
+        // name without prefix as secrets are not prefixed
+        TypeGraph.formatName(tgJson, false),
+        "",
+      );
+      for (const k of Object.keys(secrets)) {
+        secrets[`${secretPrefx}${k}`] = secrets[k];
+        delete secrets[k];
+      }
+    }
+
     const [engine, _] = await this.typegate.pushTypegraph(
       tgJson,
-      opts.secrets ?? {},
+      secrets,
       this.introspection,
-    );
-
-    this.cleanups.push(
-      ...(opts.ports ?? []).map((port) => exposeOnPort(engine, port)),
     );
 
     return engine;
   }
 
-  async unregister(engine: Engine) {
+  async unregister(engine: QueryEngine) {
     await Promise.all(
       this.register
         .list()

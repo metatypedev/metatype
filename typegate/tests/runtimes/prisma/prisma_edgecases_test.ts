@@ -7,7 +7,7 @@ import { gql, Meta } from "../../utils/mod.ts";
 Meta.test("prisma critical edgecases", async (t) => {
   const e = await t.engine("runtimes/prisma/prisma_edgecases.py", {
     secrets: {
-      TG_PRISMA_POSTGRES:
+      POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-edgecases",
     },
   });

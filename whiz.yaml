@@ -96,7 +96,7 @@ codegen:
     - "libs/xtask/src/**/*.rs"
   env:
     TG_JSONSCHEMA_OUT: website/static/specs/$TYPEGRAPH_VERSION.json
-    TG_TYPESCRIPT_OUT: typegate/src/types/typegraph.ts
+    TG_TYPESCRIPT_OUT: typegate/src/typegraph/types.ts
   command: "cargo run --package xtask -- codegen"
   depends_on:
     - libs

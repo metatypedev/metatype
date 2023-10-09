@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Context } from "../../types.ts";
-import { EffectType } from "../../types/typegraph.ts";
+import { EffectType } from "../../typegraph/types.ts";
 
 export interface Code {
   name: string;

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Engine } from "../engine.ts";
+import { QueryEngine } from "../engine/query_engine.ts";
 import { RedisReplicatedMap } from "../replicated_map.ts";
 import { RedisConnectOptions, XIdInput } from "redis";
 import { SystemTypegraph } from "../system_typegraphs.ts";
@@ -24,13 +24,13 @@ export interface Migrations {
 }
 
 export abstract class Register {
-  abstract add(engine: Engine): Promise<void>;
+  abstract add(engine: QueryEngine): Promise<void>;
 
   abstract remove(name: string): Promise<void>;
 
-  abstract list(): Engine[];
+  abstract list(): QueryEngine[];
 
-  abstract get(name: string): Engine | undefined;
+  abstract get(name: string): QueryEngine | undefined;
 
   abstract has(name: string): boolean;
 }
@@ -40,10 +40,10 @@ export class ReplicatedRegister extends Register {
     deferredTypegate: Promise<Typegate>,
     redisConfig: RedisConnectOptions,
   ): Promise<ReplicatedRegister> {
-    const replicatedMap = await RedisReplicatedMap.init<Engine>(
+    const replicatedMap = await RedisReplicatedMap.init<QueryEngine>(
       "typegraph",
       redisConfig,
-      async (engine: Engine) => {
+      async (engine: QueryEngine) => {
         const encryptedSecrets = await encrypt(
           JSON.stringify(engine.tg.secretManager.secrets),
         );
@@ -55,14 +55,17 @@ export class ReplicatedRegister extends Register {
           TypeGraphDS,
           string,
         ];
+        //const name = TypeGraph.formatName(tg);
         const secrets = JSON.parse(await decrypt(encryptedSecrets));
 
         // typegraph is updated while being pushed, this is only for iniial load
         const hasUpgrade = initialLoad && isTypegraphUpToDate(tg);
 
-        // name without prefix
-        const secretManager = new SecretManager(tg.types[0].title, secrets);
-        const engine = await typegate.initEngine(
+        const secretManager = new SecretManager(
+          tg,
+          secrets,
+        );
+        const engine = await typegate.initQueryEngine(
           hasUpgrade ? upgradeTypegraph(tg) : tg,
           secretManager,
           SystemTypegraph.getCustomRuntimes(typegate),
@@ -76,16 +79,19 @@ export class ReplicatedRegister extends Register {
 
         return engine;
       },
+      async (engine: QueryEngine) => {
+        await engine.terminate();
+      },
     );
 
     return new ReplicatedRegister(replicatedMap);
   }
 
-  constructor(private replicatedMap: RedisReplicatedMap<Engine>) {
+  constructor(private replicatedMap: RedisReplicatedMap<QueryEngine>) {
     super();
   }
 
-  async add(engine: Engine): Promise<void> {
+  async add(engine: QueryEngine): Promise<void> {
     if (SystemTypegraph.check(engine.name)) {
       // no need for a sync
       this.replicatedMap.memory.set(engine.name, engine);
@@ -95,18 +101,23 @@ export class ReplicatedRegister extends Register {
   }
 
   async remove(name: string): Promise<void> {
-    if (name === "typegate" || !this.has(name)) {
-      return;
+    if (SystemTypegraph.check(name)) {
+      // no need for a sync
+      const old = this.replicatedMap.memory.get(name);
+      if (old) {
+        this.replicatedMap.memory.delete(name);
+        await old.terminate();
+      }
+    } else {
+      await this.replicatedMap.delete(name);
     }
-    await this.get(name)!.terminate();
-    await this.replicatedMap.delete(name);
   }
 
-  list(): Engine[] {
+  list(): QueryEngine[] {
     return Array.from(this.replicatedMap.memory.values());
   }
 
-  get(name: string): Engine | undefined {
+  get(name: string): QueryEngine | undefined {
     return this.replicatedMap.get(name);
   }
 

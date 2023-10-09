@@ -1,13 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import type { ComputeStage } from "./engine.ts";
+import type { ComputeStage } from "./engine/query_engine.ts";
 import * as ast from "graphql/ast";
 import * as base64 from "std/encoding/base64.ts";
 import levenshtein from "levenshtein";
 import { None, Option, Some } from "monads";
 
-import { Type } from "./type_node.ts";
+import { Type } from "./typegraph/type_node.ts";
 import type { TypeGraph } from "./typegraph/mod.ts";
 
 import { ensureDir, ensureFile } from "std/fs/mod.ts";

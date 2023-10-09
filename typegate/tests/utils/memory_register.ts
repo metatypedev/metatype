@@ -1,30 +1,40 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Engine } from "../../src/engine.ts";
+import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Register } from "../../src/typegate/register.ts";
 
 export class MemoryRegister extends Register {
-  private map = new Map<string, Engine>();
+  private map = new Map<string, QueryEngine>();
 
   constructor() {
     super();
   }
 
-  add(engine: Engine): Promise<void> {
+  async add(engine: QueryEngine): Promise<void> {
+    const old = this.map.get(engine.name);
     this.map.set(engine.name, engine);
-    return Promise.resolve();
+    if (old) {
+      await old.terminate();
+    }
   }
-  remove(name: string): Promise<void> {
-    this.map.delete(name);
-    return Promise.resolve();
+
+  async remove(name: string): Promise<void> {
+    const old = this.map.get(name);
+    if (old) {
+      this.map.delete(name);
+      await old.terminate();
+    }
   }
-  list(): Engine[] {
+
+  list(): QueryEngine[] {
     return Array.from(this.map.values());
   }
-  get(name: string): Engine | undefined {
+
+  get(name: string): QueryEngine | undefined {
     return this.map.get(name);
   }
+
   has(name: string): boolean {
     return this.map.has(name);
   }

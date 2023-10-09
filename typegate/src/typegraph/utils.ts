@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { TypeGraphDS } from "../typegraph/mod.ts";
-import { isObject, TypeNode } from "../type_node.ts";
+import { isObject, TypeNode } from "./type_node.ts";
 
 export function isInjected(tg: TypeGraphDS, t: TypeNode): boolean {
   return t.injection != null ||

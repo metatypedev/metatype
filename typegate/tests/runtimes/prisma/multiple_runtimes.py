@@ -1,9 +1,9 @@
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.providers.prisma import PrismaRuntime
 
 
 @typegraph()
-def prisma(g: Graph):
+def prisma_multi_runtimes(g: Graph):
     db1 = PrismaRuntime("db1", "POSTGRES")
     db2 = PrismaRuntime("db2", "POSTGRES_2")
 
