@@ -38,7 +38,6 @@ interface core {
     record typegraph-init-params {
         name: string,
         dynamic: option<bool>,
-        folder: option<string>,
         path: string,
         // TypeMeta
         prefix: option<string>,
@@ -491,6 +490,8 @@ interface utils {
     }
 
     gen-applyb: func(supertype-id: type-id, data: apply) -> result<type-id, error>
+
+    add-graphql-endpoint: func(graphql: string) -> result<u32, error>
 }
 
 world typegraph {

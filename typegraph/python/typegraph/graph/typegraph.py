@@ -1,22 +1,23 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from dataclasses import dataclass
 import inspect
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
 from typegraph.gen.exports.core import (
     Auth,
     Rate,
-    Cors as CoreCors,
     TypegraphInitParams,
 )
-
+from typegraph.gen.exports.core import (
+    Cors as CoreCors,
+)
 from typegraph.gen.types import Err
-from typegraph.policy import PolicyPerEffect, PolicySpec, get_policy_chain, Policy
-from typegraph.wit import core, store
 from typegraph.graph.params import Cors
+from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
+from typegraph.wit import core, store, wit_utils
 
 if TYPE_CHECKING:
     from typegraph import t
@@ -31,7 +32,6 @@ ExposeItem = Union["t.func", "t.struct"]
 class Typegraph:
     name: str
     dynamic: Optional[bool]
-    folder: Optional[str]
     path: str
     _context: List["Typegraph"] = []
     auths: Optional[List[Auth]]
@@ -43,7 +43,6 @@ class Typegraph:
         self,
         name: str,
         dynamic: Optional[bool] = None,
-        folder: Optional[str] = None,
         *,
         auths: Optional[List[Auth]] = None,
         rate: Optional[Rate] = None,
@@ -52,7 +51,6 @@ class Typegraph:
     ):
         self.name = name
         self.dynamic = dynamic
-        self.folder = folder
         self.path = str(Path(inspect.stack()[2].filename).resolve().parent)
 
         self.auths = auths or []
@@ -106,12 +104,17 @@ class Graph:
 
         return InheritDef()
 
+    def rest(self, graphql: str) -> int:
+        res = wit_utils.add_graphql_endpoint(store, graphql)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return res.value
+
 
 def typegraph(
     name: Optional[str] = None,
     *,
     dynamic: Optional[bool] = None,
-    folder: Optional[str] = None,
     auths: Optional[List[Auth]] = None,
     rate: Optional[Rate] = None,
     cors: Optional[Cors] = None,
@@ -128,7 +131,6 @@ def typegraph(
         tg = Typegraph(
             name=actual_name,
             dynamic=dynamic,
-            folder=folder,
             auths=auths,
             rate=rate,
             cors=cors,
@@ -142,7 +144,6 @@ def typegraph(
             TypegraphInitParams(
                 name=tg.name,
                 dynamic=tg.dynamic,
-                folder=tg.folder,
                 path=tg.path,
                 auths=tg.auths,
                 rate=tg.rate,

@@ -3,6 +3,7 @@
 
 import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
 import { DenoRuntime } from "@typegraph/deno/src/runtimes/deno.ts";
+import { endpoints } from "./custom/custom_loader.ts";
 
 const user = t.struct({
   id: t.integer(),
@@ -48,6 +49,9 @@ typegraph("rest", (g) => {
       effect: { tag: "none" } as any,
     },
   ).withPolicy(pub);
+
+  g.rest(endpoints.mutation);
+  g.rest(endpoints.query);
 
   g.expose({
     postFromUser,

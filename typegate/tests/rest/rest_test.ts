@@ -6,7 +6,7 @@ import { gql, Meta, rest } from "../utils/mod.ts";
 import { RestSchemaGenerator } from "../../src/transports/rest/rest_schema_generator.ts";
 
 Meta.test("Rest queries in Python", async (t) => {
-  const e = await t.engine("rest/custom.py");
+  const e = await t.engine("rest/rest_simple.py");
 
   await t.should("work with simple rest requests", async () => {
     await rest.get("ping")
@@ -29,7 +29,7 @@ Meta.test("Rest queries in Python", async (t) => {
 });
 
 Meta.test("Rest queries in Deno", async (t) => {
-  const e = await t.engine("rest/rest.ts");
+  const e = await t.engine("rest/rest_custom_loader.ts");
 
   await t.should("work with simple rest requests", async () => {
     await rest.get("get_post_id?id=1")
