@@ -6,15 +6,13 @@ import { resolve } from "std/path/resolve.ts";
 import { join } from "std/path/join.ts";
 import { fromFileUrl } from "std/path/from_file_url.ts";
 
-function customDir(): string {
-  return resolve(dirname(fromFileUrl(import.meta.url)));
-}
+const customDir = resolve(dirname(fromFileUrl(import.meta.url)));
 
 export const endpoints = {
   mutation: Deno.readTextFileSync(
-    join(customDir(), "m.gql"),
+    join(customDir, "m.gql"),
   ),
   query: Deno.readTextFileSync(
-    join(customDir(), "q.graphql"),
+    join(customDir, "q.graphql"),
   ),
 };
