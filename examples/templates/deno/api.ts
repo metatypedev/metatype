@@ -22,10 +22,10 @@ typegraph("test-multiple-runtimes", (g) => {
   const python = new PythonRuntime();
 
   g.expose({
-    add: t.func(
+    add: python.fromLambda(
       t.struct({ "first": t.float(), "second": t.float() }),
       t.float(),
-      python.fromLambda("lambda x: x['first'] + x['second']"),
+      { code: "lambda x: x['first'] + x['second']" },
     ).withPolicy(pub),
     multiply: deno.func(
       t.struct({ "first": t.float(), "second": t.float() }),

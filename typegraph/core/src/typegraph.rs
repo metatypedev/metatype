@@ -4,7 +4,6 @@
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::{gen_base, TypeConversion};
 use crate::global_store::SavedState;
-use crate::host::abi;
 use crate::types::{Type, TypeId};
 use crate::validation::validate_name;
 use crate::Lib;
@@ -17,13 +16,11 @@ use common::typegraph::{
     Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TypeMeta,
     TypeNode, Typegraph,
 };
-use graphql_parser::parse_query;
 use indexmap::IndexMap;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
-use std::path::Path;
 use std::rc::Rc;
 
 use crate::wit::core::{
@@ -84,40 +81,13 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
         }
     })?;
 
-    let endpoints = {
-        let glob = format!(
-            "{}/**/*",
-            Path::new(&params.path)
-                .join(params.folder.unwrap_or(params.name.clone()))
-                .to_str()
-                .expect("Invalid path")
-        );
-
-        abi::glob(&glob, &["graphql".to_string(), "gql".to_string()])?
-            .into_iter()
-            .flat_map(|p| {
-                let data = abi::read_file(&p).unwrap();
-                let ast = parse_query::<&str>(&data).unwrap();
-                ast.definitions
-                    .into_iter()
-                    .map(|op| {
-                        format!("{}", op)
-                            .split_whitespace()
-                            .collect::<Vec<_>>()
-                            .join(" ")
-                    })
-                    .collect::<Vec<_>>()
-            })
-            .collect::<Vec<_>>()
-    };
-
     let mut ctx = TypegraphContext {
         name: params.name.clone(),
         meta: TypeMeta {
             version: TYPEGRAPH_VERSION.to_string(),
             queries: Queries {
                 dynamic: params.dynamic.unwrap_or(true),
-                endpoints,
+                endpoints: vec![],
             },
 
             cors: params.cors.into(),
@@ -174,7 +144,13 @@ pub fn finalize() -> Result<String> {
         runtimes: ctx.runtimes,
         materializers: ctx.materializers.into_iter().map(|m| m.unwrap()).collect(),
         policies: ctx.policies,
-        meta: ctx.meta,
+        meta: TypeMeta {
+            queries: Queries {
+                dynamic: ctx.meta.queries.dynamic,
+                endpoints: Store::get_graphql_endpoints(),
+            },
+            ..ctx.meta
+        },
         path: None,
         deps: Default::default(),
     };

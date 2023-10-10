@@ -6,6 +6,7 @@ use crate::runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Ru
 use crate::types::{Struct, Type, TypeFun, TypeId, WrapperTypeData};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
+use graphql_parser::parse_query;
 use indexmap::IndexMap;
 use std::rc::Rc;
 use std::{cell::RefCell, collections::HashMap};
@@ -46,6 +47,7 @@ pub struct Store {
     prisma_migration_runtime: RuntimeId,
     typegate_runtime: RuntimeId,
     typegraph_runtime: RuntimeId,
+    graphql_endpoints: Vec<String>,
 }
 
 impl Store {
@@ -280,6 +282,29 @@ impl Store {
             with_store_mut(|s| s.deno_modules.insert(file, mat));
             mat
         }
+    }
+
+    pub fn add_graphql_endpoint(graphql: String) -> Result<()> {
+        with_store_mut(|s| {
+            let ast = parse_query::<&str>(&graphql).map_err(|e| e.to_string())?;
+            let endpoints = ast
+                .definitions
+                .into_iter()
+                .map(|op| {
+                    format!("{}", op)
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .collect::<Vec<_>>();
+
+            s.graphql_endpoints.extend(endpoints);
+            Ok(())
+        })
+    }
+
+    pub fn get_graphql_endpoints() -> Vec<String> {
+        with_store(|s| s.graphql_endpoints.clone())
     }
 }
 

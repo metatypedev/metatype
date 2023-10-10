@@ -117,4 +117,9 @@ impl crate::wit::utils::Guest for crate::Lib {
 
         Ok(*root_id)
     }
+
+    fn add_graphql_endpoint(graphql: String) -> Result<u32> {
+        Store::add_graphql_endpoint(graphql)?;
+        Ok(Store::get_graphql_endpoints().len() as u32)
+    }
 }
