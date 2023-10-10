@@ -1,20 +1,20 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import List, Optional
 from dataclasses import dataclass
+from typing import List, Optional
 
-from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.gen.types import Err
+from typegraph import t
 from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
     Effect,
-    EffectNone,
+    EffectRead,
     GraphqlRuntimeData,
     MaterializerGraphqlQuery,
 )
+from typegraph.gen.types import Err
+from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.wit import runtimes, store
-from typegraph import t
 
 
 @dataclass
@@ -45,14 +45,14 @@ class GraphQLRuntime(Runtime):
     ):
         mat_id = runtimes.graphql_query(
             store,
-            BaseMaterializer(runtime=self.id, effect=EffectNone()),
+            BaseMaterializer(runtime=self.id, effect=EffectRead()),
             MaterializerGraphqlQuery(path=path),
         )
 
         if isinstance(mat_id, Err):
             raise Exception(mat_id.value)
 
-        return t.func(inp, out, QueryMat(mat_id.value, effect=EffectNone(), path=path))
+        return t.func(inp, out, QueryMat(mat_id.value, effect=EffectRead(), path=path))
 
     def mutation(
         self,

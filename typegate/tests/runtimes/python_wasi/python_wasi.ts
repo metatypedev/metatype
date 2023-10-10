@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
-import { PythonRuntime } from "@typegraph/deno/src/runtimes/python.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk/mod.ts";
+import { PythonRuntime } from "@typegraph/sdk/runtimes/python.ts";
 import outdent from "outdent";
 
 const tpe = t.struct({

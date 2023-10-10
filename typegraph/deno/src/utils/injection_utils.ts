@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { CREATE, DELETE, NONE, UPDATE } from "../effects.ts";
+import { CREATE, DELETE, READ, UPDATE } from "../effects.ts";
 import { InjectionSource, InjectionValue } from "./type_utils.ts";
 import { stringifySymbol } from "./func_utils.ts";
 import * as t from "../types.ts";
@@ -18,7 +18,7 @@ export function serializeInjection(
   ) {
     // Note:
     // Symbol changes the behavior of keys, values, entries => props are skipped
-    const symbols = [UPDATE, DELETE, CREATE, NONE];
+    const symbols = [UPDATE, DELETE, CREATE, READ];
     const noOtherType = Object.keys(value).length == 0;
     const isPerEffect = noOtherType &&
       symbols
@@ -76,7 +76,7 @@ export function serializeFromParentInjection(value: InjectionValue<string>) {
 
     // Note:
     // Symbol changes the behavior of keys, values, entries => props are skipped
-    const symbols = [UPDATE, DELETE, CREATE, NONE];
+    const symbols = [UPDATE, DELETE, CREATE, READ];
     const noOtherType = Object.keys(value).length == 0;
     const isPerEffect = noOtherType &&
       symbols

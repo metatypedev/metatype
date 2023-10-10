@@ -2,23 +2,22 @@
 # SPDX-License-Identifier: MPL-2.0
 import ast
 import inspect
-from astunparse import unparse
-
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional
 
-from typegraph.runtimes.base import Materializer, Runtime
+from astunparse import unparse
 
 from typegraph.gen.exports.runtimes import (
-    Effect,
-    EffectNone,
     BaseMaterializer,
+    Effect,
+    EffectRead,
+    MaterializerPythonDef,
     MaterializerPythonImport,
     MaterializerPythonLambda,
-    MaterializerPythonDef,
     MaterializerPythonModule,
 )
 from typegraph.gen.types import Err
+from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.wit import runtimes, store
 
 if TYPE_CHECKING:
@@ -35,7 +34,7 @@ class PythonRuntime(Runtime):
         out: "t.typedef",
         function: callable,
         *,
-        effect: Effect = EffectNone(),
+        effect: Effect = EffectRead(),
         # secrets: Optional[List[str]] = None,
     ):
         lambdas, _defs = DefinitionCollector.collect(function)
@@ -64,7 +63,7 @@ class PythonRuntime(Runtime):
         out: "t.typedef",
         function: callable,
         *,
-        effect: Effect = EffectNone(),
+        effect: Effect = EffectRead(),
     ):
         _lambdas, defs = DefinitionCollector.collect(function)
         assert len(defs) == 1
@@ -97,7 +96,7 @@ class PythonRuntime(Runtime):
         effect: Optional[Effect] = None,
         secrets: Optional[List[str]] = None,
     ):
-        effect = effect or EffectNone()
+        effect = effect or EffectRead()
         secrets = secrets or []
 
         base = BaseMaterializer(runtime=self.id.value, effect=effect)

@@ -1,10 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-// TODO: use import map
-import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
-import { DenoRuntime } from "@typegraph/deno/src/runtimes/deno.ts";
-import { Auth } from "@typegraph/deno/src/params.ts";
+import { fx, Policy, t, typegraph } from "@typegraph/sdk/mod.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+import { Auth } from "@typegraph/sdk/params.ts";
 
 const someType = t.struct({
   one: t.array(t.integer(), { min: 3 }, { name: "Two" }),
@@ -59,7 +58,7 @@ typegraph(
         t.boolean(),
         {
           code: "() => true",
-          effect: { tag: "none" } as any,
+          effect: fx.read(),
         },
       ).withPolicy(pub),
     });

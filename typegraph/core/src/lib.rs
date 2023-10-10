@@ -49,13 +49,6 @@ pub mod wit {
     pub use exports::metatype::typegraph::{aws, core, runtimes, utils};
 }
 
-#[cfg(feature = "wasm")]
-pub mod host {
-    wit_bindgen::generate!("host");
-
-    pub use metatype::typegraph::abi;
-}
-
 pub struct Lib {}
 
 impl TypeBase {
@@ -278,7 +271,7 @@ impl wit::core::Guest for Lib {
                 code,
                 secrets: vec![],
             },
-            wit::runtimes::Effect::None,
+            wit::runtimes::Effect::Read,
         )?;
 
         Lib::register_policy(Policy {
@@ -532,7 +525,7 @@ mod tests {
 
         setup(None)?;
         let mat =
-            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
+            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::Read)?;
         Lib::expose(vec![("one".to_string(), t::func(s, b, mat)?.into())], None)?;
         let typegraph = Lib::finalize_typegraph()?;
         insta::assert_snapshot!(typegraph);

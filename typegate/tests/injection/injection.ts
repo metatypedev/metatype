@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
-import { CREATE, DELETE, NONE, UPDATE } from "@typegraph/deno/src/effects.ts";
-import { DenoRuntime } from "@typegraph/deno/src/runtimes/deno.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk/mod.ts";
+import { CREATE, DELETE, READ, UPDATE } from "@typegraph/sdk/effects.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
 
 const tpe = t.struct({
   "a": t.integer({}, { name: "A" }),
@@ -11,7 +11,7 @@ const tpe = t.struct({
     [CREATE]: 1,
     [UPDATE]: 2,
     [DELETE]: 3,
-    [NONE]: 4,
+    [READ]: 4,
   }),
   "raw_str": t.string().set("2"),
   "secret": t.integer().fromSecret("TEST_VAR"),
@@ -39,7 +39,7 @@ typegraph("injection", (g) => {
         fromParent: deno.func(
           t.struct({
             value: t.integer().fromParent({
-              [NONE]: "someName",
+              [READ]: "someName",
             }),
           }),
           t.struct({ value: t.integer() }),

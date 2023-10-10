@@ -129,7 +129,7 @@ impl crate::wit::aws::Guest for crate::Lib {
         let mat = Materializer::s3(
             runtime,
             S3Materializer::PresignGet(params.into()),
-            WitEffect::None,
+            WitEffect::Read,
         );
         Ok(Store::register_materializer(mat))
     }
@@ -138,7 +138,7 @@ impl crate::wit::aws::Guest for crate::Lib {
         let mat = Materializer::s3(
             runtime,
             S3Materializer::PresignPut(params.into()),
-            WitEffect::None,
+            WitEffect::Read,
         );
         Ok(Store::register_materializer(mat))
     }
@@ -147,7 +147,7 @@ impl crate::wit::aws::Guest for crate::Lib {
         let mat = Materializer::s3(
             runtime,
             S3Materializer::List(S3ListItemsMat { bucket }),
-            WitEffect::None,
+            WitEffect::Read,
         );
         Ok(Store::register_materializer(mat))
     }

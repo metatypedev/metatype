@@ -161,7 +161,7 @@ interface core {
     }
 
     record policy-per-effect {
-        none: option<policy-id>,
+        read: option<policy-id>,
         create: option<policy-id>,
         update: option<policy-id>,
         delete: option<policy-id>,
@@ -214,7 +214,7 @@ interface runtimes {
     type idempotency = bool
 
     variant effect {
-        none,
+        read,
         create(idempotency),
         update(idempotency),
         delete(idempotency),

@@ -5,6 +5,7 @@ import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
 import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
 import { Materializer, Runtime } from "./mod.ts";
+import { fx } from "../mod.ts";
 
 interface LambdaMat extends Materializer {
   fn: string;
@@ -41,7 +42,7 @@ export class PythonRuntime extends Runtime {
     const matId = runtimes.fromPythonLambda(
       {
         runtime: this._id,
-        effect: { tag: "none" },
+        effect: fx.read(),
       },
       {
         fn: code, // not formatted
@@ -67,7 +68,7 @@ export class PythonRuntime extends Runtime {
     const matId = runtimes.fromPythonDef(
       {
         runtime: this._id,
-        effect: { tag: "none" },
+        effect: fx.read(),
       },
       {
         name: name,
@@ -90,7 +91,7 @@ export class PythonRuntime extends Runtime {
   >(
     inp: I,
     out: O,
-    { name, module, effect = { tag: "none" }, secrets = [] }: PythonImport,
+    { name, module, effect = fx.read(), secrets = [] }: PythonImport,
   ): t.Func<P, I, O, ImportMat> {
     const base = {
       runtime: this._id,

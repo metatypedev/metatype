@@ -4,12 +4,12 @@
 import {
   EffectCreate,
   EffectDelete,
-  EffectNone,
+  EffectRead,
   EffectUpdate,
 } from "./gen/interfaces/metatype-typegraph-runtimes.d.ts";
 
-export function none(): EffectNone {
-  return { tag: "none" };
+export function read(): EffectRead {
+  return { tag: "read" };
 }
 
 export function create(idempotent = false): EffectCreate {
@@ -27,10 +27,10 @@ export function update(idempotent = true): EffectUpdate {
 export const UPDATE = Symbol("update");
 export const DELETE = Symbol("delete");
 export const CREATE = Symbol("create");
-export const NONE = Symbol("none");
+export const READ = Symbol("read");
 export type PerEffect = {
   [CREATE]?: string;
   [UPDATE]?: string;
   [DELETE]?: string;
-  [NONE]?: string;
+  [READ]?: string;
 };

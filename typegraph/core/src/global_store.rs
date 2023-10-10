@@ -253,7 +253,7 @@ impl Store {
             let runtime_id = Store::get_deno_runtime();
             let mat = Store::register_materializer(Materializer {
                 runtime_id,
-                effect: Effect::None,
+                effect: Effect::Read,
                 data: Rc::new(DenoMaterializer::Predefined(MaterializerDenoPredefined {
                     name: name.clone(),
                 }))
@@ -273,7 +273,7 @@ impl Store {
             let runtime_id = Store::get_deno_runtime();
             let mat = Store::register_materializer(Materializer {
                 runtime_id,
-                effect: Effect::None, // N/A
+                effect: Effect::Read, // N/A
                 data: Rc::new(DenoMaterializer::Module(MaterializerDenoModule {
                     file: file.clone(),
                 }))

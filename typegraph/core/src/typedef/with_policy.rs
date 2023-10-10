@@ -34,7 +34,7 @@ impl TypeData for TypePolicy {
                 .map(|p| match p {
                     PolicySpec::Simple(pol_id) => format!("'{}'", get_policy_name(*pol_id)),
                     PolicySpec::PerEffect(p) => format!(
-                        "{{create='{}', update='{}', delete='{}', none='{}'}}",
+                        "{{create='{}', update='{}', delete='{}', read='{}'}}",
                         p.create
                             .map(get_policy_name)
                             .unwrap_or_else(|| "null".to_string()),
@@ -44,7 +44,7 @@ impl TypeData for TypePolicy {
                         p.delete
                             .map(get_policy_name)
                             .unwrap_or_else(|| "null".to_string()),
-                        p.none
+                        p.read
                             .map(get_policy_name)
                             .unwrap_or_else(|| "null".to_string()),
                     ),

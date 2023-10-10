@@ -785,7 +785,7 @@ files = [
 
 [[package]]
 name = "typegraph"
-version = "0.2.1"
+version = "0.2.2"
 description = "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are."
 optional = false
 python-versions = ">=3.8,<4.0"
@@ -795,7 +795,7 @@ develop = true
 [package.dependencies]
 astunparse = "^1.6.3"
 python-box = "^7.1.1"
-typing-extensions = "^4.7.1"
+typing-extensions = "^4.8.0"
 wasmtime = "^13.0.2"
 
 [package.source]

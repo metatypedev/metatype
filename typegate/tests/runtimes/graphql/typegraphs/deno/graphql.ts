@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
-import { GraphQLRuntime } from "@typegraph/deno/src/runtimes/graphql.ts";
-import * as effects from "@typegraph/deno/src/effects.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk/mod.ts";
+import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql.ts";
+import * as effects from "@typegraph/sdk/effects.ts";
 
 const user = t.struct({
   id: t.integer(),

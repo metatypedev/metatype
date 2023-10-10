@@ -260,7 +260,6 @@ impl TypegraphContext {
         }
     }
 
-    // TODO
     pub fn register_materializer(
         &mut self,
         id: u32,
@@ -292,7 +291,7 @@ impl TypegraphContext {
                     PolicySpec::PerEffect(policies) => {
                         PolicyIndices::EffectPolicies(PolicyIndicesByEffect {
                             none: policies
-                                .none
+                                .read
                                 .as_ref()
                                 .map(|id| self.register_policy(*id))
                                 .transpose()?,
