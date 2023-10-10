@@ -27,7 +27,7 @@ export interface FunctionSubtreeData {
 }
 
 interface GetResolverResult {
-  (polIdx: PolicyIdx, effect: EffectType | "none"): Promise<boolean | null>;
+  (polIdx: PolicyIdx, effect: EffectType): Promise<boolean | null>;
 }
 
 type CheckResult = { authorized: true } | {
@@ -103,8 +103,8 @@ export class OperationPolicies {
     verbose: boolean,
   ) {
     const logger = getLogger("policies");
-    const authorizedTypes: Record<EffectType | "none", Set<TypeIdx>> = {
-      "none": new Set(),
+    const authorizedTypes: Record<EffectType, Set<TypeIdx>> = {
+      "read": new Set(),
       "create": new Set(),
       "update": new Set(),
       "delete": new Set(),
@@ -114,7 +114,7 @@ export class OperationPolicies {
 
     const getResolverResult = async (
       idx: PolicyIdx,
-      effect: EffectType | "none",
+      effect: EffectType,
     ): Promise<boolean | null> => {
       verbose &&
         logger.info(
@@ -140,7 +140,7 @@ export class OperationPolicies {
           context,
           info,
           variables: {},
-          effect: effect === "none" ? null : effect,
+          effect: effect === "read" ? null : effect,
         },
       }) as boolean | null;
       cache.set(idx, res);
@@ -152,7 +152,7 @@ export class OperationPolicies {
     for (const [_stageId, subtree] of this.functions) {
       const effect = this.tg.materializer(
         this.tg.type(subtree.funcTypeIdx, Type.FUNCTION).materializer,
-      ).effect.effect ?? "none";
+      ).effect.effect ?? "read";
 
       this.authorizeArgs(
         subtree.argPolicies,
@@ -205,7 +205,7 @@ export class OperationPolicies {
   getRejectionReason(
     stageId: StageId,
     typeIdx: TypeIdx,
-    effect: EffectType | "none",
+    effect: EffectType,
     policyName: string,
   ): string {
     const typ = this.tg.type(typeIdx);
@@ -220,7 +220,7 @@ export class OperationPolicies {
 
   private async authorizeArgs(
     argPolicies: ArgPolicies,
-    effect: EffectType | "none",
+    effect: EffectType,
     getResolverResult: GetResolverResult,
     authorizedTypes: Set<TypeIdx>,
   ) {
@@ -244,7 +244,7 @@ export class OperationPolicies {
 
   private async checkTypePolicies(
     policies: PolicyIdx[],
-    effect: EffectType | "none",
+    effect: EffectType,
     getResolverResult: GetResolverResult,
   ): Promise<CheckResult> {
     if (policies.length === 0) {

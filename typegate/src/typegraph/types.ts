@@ -239,7 +239,7 @@ export type StringFormat =
   | "date"
   | "date-time"
   | "phone";
-export type EffectType = "create" | "update" | "delete" | "none";
+export type EffectType = "create" | "update" | "delete" | "read";
 export type TGRuntime = KnownRuntime | UnknownRuntime;
 export type KnownRuntime = {
   name: "deno";
@@ -318,7 +318,7 @@ export interface Typegraph {
   meta: TypeMeta;
 }
 export interface PolicyIndicesByEffect {
-  none?: number | null;
+  read?: number | null;
   create?: number | null;
   delete?: number | null;
   update?: number | null;

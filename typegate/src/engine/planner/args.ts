@@ -80,7 +80,7 @@ interface CollectedArgs {
 export function collectArgs(
   typegraph: TypeGraph,
   stageId: StageId,
-  effect: EffectType | "none",
+  effect: EffectType,
   parentProps: Record<string, number>,
   typeIdx: TypeIdx,
   astNodes: Record<string, ast.ArgumentNode>,
@@ -118,7 +118,7 @@ export function collectArgs(
       (c) =>
         c({
           ...DEFAULT_COMPUTE_PARAMS,
-          effect: effect !== "none" ? effect : null,
+          effect: effect !== "read" ? effect : null,
         }),
     );
     // typecheck

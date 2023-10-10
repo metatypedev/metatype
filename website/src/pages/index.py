@@ -1,7 +1,7 @@
 # skip:start
 import re
 
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Cors, Rate, oauth2
 from typegraph.providers import PrismaRuntime
 from typegraph.runtimes import HttpRuntime
@@ -21,7 +21,7 @@ def homepage(g: Graph):
     # every field may be controlled by a policy
     public = Policy.public()
     meta_only = Policy.context("email", re.compile(".+@metatype.dev"))
-    public_write_only = Policy.on(create=public, none=meta_only)
+    public_write_only = Policy.on(create=public, read=meta_only)
 
     # define runtimes where your queries are executed
     github = HttpRuntime("https://api.github.com")

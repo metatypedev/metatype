@@ -58,7 +58,7 @@ thread_local! {
     static TG: RefCell<Option<TypegraphContext>> = RefCell::new(None);
 }
 
-static TYPEGRAPH_VERSION: &str = "0.0.2";
+static TYPEGRAPH_VERSION: &str = "0.0.3";
 
 pub fn with_tg_mut<T>(f: impl FnOnce(&mut TypegraphContext) -> T) -> Result<T> {
     TG.with(|tg| {
@@ -292,7 +292,7 @@ impl TypegraphContext {
                     PolicySpec::Simple(id) => PolicyIndices::Policy(self.register_policy(*id)?),
                     PolicySpec::PerEffect(policies) => {
                         PolicyIndices::EffectPolicies(PolicyIndicesByEffect {
-                            none: policies
+                            read: policies
                                 .read
                                 .as_ref()
                                 .map(|id| self.register_policy(*id))

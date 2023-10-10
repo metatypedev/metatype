@@ -104,7 +104,7 @@ class QueryCache {
 }
 
 const effectToMethod = {
-  "none": "GET",
+  "read": "GET",
   "create": "POST",
   "update": "PUT",
   "delete": "DELETE",

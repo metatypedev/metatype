@@ -1,8 +1,8 @@
+from typegraph import Graph, t, typegraph
 from typegraph.gen.exports.runtimes import (
     PrismaMigrationOperation,
 )
 from typegraph.gen.types import Err
-from typegraph import typegraph, t, Graph
 from typegraph.graph.params import Auth, Rate
 from typegraph.runtimes.deno import DenoRuntime
 

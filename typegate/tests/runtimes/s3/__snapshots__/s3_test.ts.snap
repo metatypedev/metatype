@@ -2,7 +2,7 @@ export const snapshot = {};
 
 snapshot[`s3 typegraphs 1`] = `
 '{
-  "\$id": "https://metatype.dev/specs/0.0.2.json",
+  "\$id": "https://metatype.dev/specs/0.0.3.json",
   "types": [
     {
       "type": "object",
@@ -378,7 +378,7 @@ snapshot[`s3 typegraphs 1`] = `
       "name": "list",
       "runtime": 1,
       "effect": {
-        "effect": "none",
+        "effect": "read",
         "idempotent": true
       },
       "data": {
@@ -389,7 +389,7 @@ snapshot[`s3 typegraphs 1`] = `
       "name": "predefined_function",
       "runtime": 0,
       "effect": {
-        "effect": "none",
+        "effect": "read",
         "idempotent": true
       },
       "data": {
@@ -400,7 +400,7 @@ snapshot[`s3 typegraphs 1`] = `
       "name": "presign_get",
       "runtime": 1,
       "effect": {
-        "effect": "none",
+        "effect": "read",
         "idempotent": true
       },
       "data": {
@@ -412,7 +412,7 @@ snapshot[`s3 typegraphs 1`] = `
       "name": "presign_put",
       "runtime": 1,
       "effect": {
-        "effect": "none",
+        "effect": "read",
         "idempotent": true
       },
       "data": {
@@ -486,7 +486,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     "auths": [],
     "rate": null,
-    "version": "0.0.2"
+    "version": "0.0.3"
   }
 }'
 `;

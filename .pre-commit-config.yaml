@@ -45,8 +45,6 @@ repos:
       - id: clippy
         args:
           - "--locked"
-          - "-F"
-          - "wasm"
           - "--"
           - "--deny"
           - "warnings"

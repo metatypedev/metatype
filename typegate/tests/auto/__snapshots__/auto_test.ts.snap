@@ -1367,7 +1367,7 @@ snapshot[`Auto-tests for index 3`] = `
     {
       extensions: {},
       locations: [],
-      message: "Authorization failed for policy '__ctx_p_email____metatype_dev' with effect 'none' on type 'string_1' ('string') at '<root>.list_feedback.email'",
+      message: "Authorization failed for policy '__ctx_p_email____metatype_dev' with effect 'read' on type 'string_1' ('string') at '<root>.list_feedback.email'",
       path: [],
     },
   ],

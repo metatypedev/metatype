@@ -1,13 +1,12 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph import typegraph, t, Graph, Policy
+from typegraph import Graph, Policy, fx, t, typegraph
 from typegraph.gen.exports.runtimes import (
     TypegraphOperation,
-    EffectNone,
 )
-from typegraph.wit import runtimes, store
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer
+from typegraph.wit import runtimes, store
 
 
 @typegraph()
@@ -17,21 +16,21 @@ def introspection(g: Graph):
     )
     if isinstance(resolver_mat_id, Err):
         raise Exception(resolver_mat_id.value)
-    resolver_mat = Materializer(resolver_mat_id.value, effect=EffectNone())
+    resolver_mat = Materializer(resolver_mat_id.value, effect=fx.read())
 
     type_mat_id = runtimes.register_typegraph_materializer(
         store, TypegraphOperation.GET_TYPE
     )
     if isinstance(type_mat_id, Err):
         raise Exception(type_mat_id.value)
-    type_mat = Materializer(type_mat_id.value, effect=EffectNone())
+    type_mat = Materializer(type_mat_id.value, effect=fx.read())
 
     schema_mat_id = runtimes.register_typegraph_materializer(
         store, TypegraphOperation.GET_SCHEMA
     )
     if isinstance(schema_mat_id, Err):
         raise Exception(schema_mat_id.value)
-    schema_mat = Materializer(schema_mat_id.value, effect=EffectNone())
+    schema_mat = Materializer(schema_mat_id.value, effect=fx.read())
 
     enum_value = t.struct(
         {

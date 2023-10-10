@@ -21,10 +21,7 @@ def tg_effects(g: Graph):
             ),
         },
         name="User",
-    ).with_policy(
-        # {"none": public, "update": current_user_only, "delete": current_user_only}
-        Policy.on(read=public, update=admin_only, delete=admin_only)
-    )
+    ).with_policy(Policy.on(read=public, update=admin_only, delete=admin_only))
 
     g.expose(
         public,

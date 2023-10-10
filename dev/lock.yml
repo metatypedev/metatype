@@ -33,8 +33,6 @@ dev:
       (ARG WASMEDGE_VERSION=).*(): WASMEDGE_VERSION
     typegate/src/typegraph/versions.ts:
       (const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
-    typegraph/python/typegraph/graph/typegraph.py:
-      (typegraph_version = ").*("): TYPEGRAPH_VERSION
     typegraph/core/src/typegraph.rs:
       '(static TYPEGRAPH_VERSION: &str = ").*(";)': TYPEGRAPH_VERSION
     whiz.yaml:
@@ -68,7 +66,7 @@ dev:
     JCO_VERSION: 0.12.1
     WASMTIME_VERSION: 13.0.2
     WASMEDGE_VERSION: 0.12.1
-    TYPEGRAPH_VERSION: 0.0.2
+    TYPEGRAPH_VERSION: 0.0.3
     PRISMA_VERSION: 5.4.2
     METATYPE_VERSION: 0.2.2
     WASM_OPT_VERSION: 0.114.1

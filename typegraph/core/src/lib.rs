@@ -393,7 +393,7 @@ mod tests {
     #[test]
     fn test_invalid_input_type() -> Result<()> {
         let mat =
-            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
+            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::Read)?;
         let inp = t::integer().build()?;
         let res = t::func(inp, t::integer().build()?, mat);
 
@@ -476,7 +476,7 @@ mod tests {
         setup(None)?;
 
         let mat =
-            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
+            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::Read)?;
 
         let res = Lib::expose(
             vec![
