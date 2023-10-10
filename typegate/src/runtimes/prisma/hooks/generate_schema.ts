@@ -1,14 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ObjectNode, Type, TypeNode } from "../../../type_node.ts";
+import { ObjectNode, Type, TypeNode } from "../../../typegraph/type_node.ts";
 import { PushHandler } from "../../../typegate/hooks.ts";
 import { SecretManager, TypeGraphDS } from "../../../typegraph/mod.ts";
-import { Relationship, StringNode } from "../../../types/typegraph.ts";
+import { Relationship, StringNode } from "../../../typegraph/types.ts";
 import { ensure, ensureNonNullable } from "../../../utils.ts";
 import { PrismaRT } from "../mod.ts";
 import { validate_prisma_runtime_data } from "native";
-import { isUuid } from "../../../type_node.ts";
+import { isUuid } from "../../../typegraph/type_node.ts";
 
 type QuantifierSuffix = "" | "?" | "[]";
 

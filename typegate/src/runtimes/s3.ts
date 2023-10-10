@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Runtime } from "./Runtime.ts";
-import { ComputeStage } from "../engine.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
 import { RuntimeInitParams } from "../types.ts";
 // import { iterParentStages, JSONValue } from "../utils.ts";
 import {
@@ -18,18 +18,20 @@ import {
   Materializer,
   S3Materializer,
   S3RuntimeData,
-} from "../types/typegraph.ts";
-import { Typegate } from "../typegate/mod.ts";
+} from "../typegraph/types.ts";
+import { registerRuntime } from "./mod.ts";
 
+@registerRuntime("s3")
 export class S3Runtime extends Runtime {
   private constructor(
+    typegraphName: string,
     private client: S3Client,
   ) {
-    super();
+    super(typegraphName);
   }
 
   static init(params: RuntimeInitParams): Runtime {
-    const { secretManager } = params;
+    const { secretManager, typegraphName } = params;
     const args = params.args as unknown as S3RuntimeData;
 
     const {
@@ -50,7 +52,7 @@ export class S3Runtime extends Runtime {
       forcePathStyle: secretManager.secretOrNull(path_style_secret) === "true",
     };
     const client = new S3Client(clientInit);
-    return new S3Runtime(client);
+    return new S3Runtime(typegraphName, client);
   }
 
   async deinit(): Promise<void> {}
@@ -174,5 +176,3 @@ export class S3Runtime extends Runtime {
     });
   }
 }
-
-Typegate.registerRuntime("s3", S3Runtime.init);

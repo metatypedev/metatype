@@ -8,9 +8,9 @@ Meta.test("prisma", async (t) => {
   const tgPath = "runtimes/prisma/multiple_runtimes.py";
   const e = await t.engine(tgPath, {
     secrets: {
-      TG_PRISMA_POSTGRES:
+      POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-multi-a",
-      TG_PRISMA_POSTGRES_2:
+      POSTGRES_2:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-multi-b",
     },
   });

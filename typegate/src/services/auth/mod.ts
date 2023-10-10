@@ -5,13 +5,13 @@ import { JWTAuth } from "./protocols/jwt.ts";
 import { BasicAuth } from "./protocols/basic.ts";
 import { OAuth2Auth } from "./protocols/oauth2.ts";
 
-import type { Auth } from "../../types/typegraph.ts";
+import type { Auth } from "../../typegraph/types.ts";
 import { SecretManager } from "../../typegraph/mod.ts";
 
 import { Protocol } from "./protocols/protocol.ts";
 import { DenoRuntime } from "../../runtimes/deno/deno.ts";
 import { unsafeExtractJWT } from "../../crypto.ts";
-import { Engine } from "../../engine.ts";
+import { QueryEngine } from "../../engine/query_engine.ts";
 import { clearCookie, getEncryptedCookie } from "../auth/cookies.ts";
 import { getLogger } from "../../log.ts";
 import { methodNotAllowed } from "../../services/responses.ts";
@@ -50,7 +50,7 @@ export type JWTClaims = {
 
 export async function ensureJWT(
   request: Request,
-  engine: Engine,
+  engine: QueryEngine,
   headers: Headers,
 ): Promise<[Record<string, unknown>, Headers]> {
   const [kind, token] = (request.headers.get("Authorization") ?? "").split(
@@ -94,7 +94,7 @@ export async function ensureJWT(
 
 export async function handleAuth(
   request: Request,
-  engine: Engine,
+  engine: QueryEngine,
   headers: Headers,
 ): Promise<Response> {
   if (request.method !== "GET") {

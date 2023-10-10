@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import config from "../config.ts";
-import { Engine } from "../engine.ts";
+import { QueryEngine } from "../engine/query_engine.ts";
 import { getLogger } from "../log.ts";
 
 const logger = getLogger(import.meta);
@@ -20,7 +20,7 @@ export function baseUrl(request: Request): string {
 
 export function resolveIdentifier(
   request: Request,
-  engine: Engine,
+  engine: QueryEngine,
   context: Record<string, unknown>,
   connInfo: Deno.ServeHandlerInfo,
 ): string {

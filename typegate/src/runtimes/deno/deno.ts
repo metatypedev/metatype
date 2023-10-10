@@ -1,15 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ComputeStage } from "../../engine.ts";
-import {
-  TypeGraph,
-  TypeGraphDS,
-  TypeMaterializer,
-} from "../../typegraph/mod.ts";
+import { ComputeStage } from "../../engine/query_engine.ts";
+import { TypeGraphDS, TypeMaterializer } from "../../typegraph/mod.ts";
 import { Runtime } from "../Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
-import { DenoRuntimeData } from "../../types/typegraph.ts";
+import { DenoRuntimeData } from "../../typegraph/types.ts";
 import * as ast from "graphql/ast";
 import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
@@ -28,40 +24,22 @@ const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
 };
 
 export class DenoRuntime extends Runtime {
-  /** For easy lookups (eg. __typename), NOT for caching */
-  static defaultRuntimes: Map<string, DenoRuntime> = new Map();
-
   private constructor(
+    private typegraphName: string,
+    uuid: string,
+    private tg: TypeGraphDS,
     private w: DenoMessenger,
     private registry: Map<string, number>,
-    private typegraphName: string,
-    private name: string,
-    private tg: TypeGraphDS,
     private secrets: Record<string, string>,
   ) {
-    super();
-  }
-
-  static getDefaultRuntime(tgName: string): Runtime {
-    const rt = this.defaultRuntimes.get(tgName);
-    if (rt == null) {
-      throw new Error(`could not find default runtime in ${tgName}`); // TODO: create
-    }
-    return rt;
+    super(typegraphName, uuid);
   }
 
   static async init(
     params: RuntimeInitParams,
   ): Promise<Runtime> {
-    const { typegraph: tg, args, materializers, secretManager } =
+    const { typegraph: tg, typegraphName, args, materializers, secretManager } =
       params as RuntimeInitParams<DenoRuntimeData>;
-    const typegraphName = TypeGraph.formatName(tg);
-
-    const runtime = DenoRuntime.defaultRuntimes.get(typegraphName);
-    if (runtime) {
-      // clear leaking worker
-      await runtime.w.terminate();
-    }
 
     const { worker: name } = args as unknown as DenoRuntimeData;
     if (name == null) {
@@ -80,12 +58,14 @@ export class DenoRuntime extends Runtime {
     const registry = new Map<string, number>();
     const ops = new Map<number, Task>();
 
+    const uuid = crypto.randomUUID();
     //    (user) tg_root/*
     // => (gate) tmp/scripts/{tgname}/deno/*
     const basePath = path.join(
       config.tmp_dir,
       "scripts",
       typegraphName,
+      uuid,
       "deno",
       name.replaceAll(" ", "_"), // TODO: improve sanitization
     );
@@ -154,22 +134,19 @@ export class DenoRuntime extends Runtime {
     }
 
     const rt = new DenoRuntime(
+      typegraphName,
+      uuid,
+      tg,
       w,
       registry,
-      typegraphName,
-      name,
-      tg,
       secrets,
     );
 
-    DenoRuntime.defaultRuntimes.set(typegraphName, rt);
     return rt;
   }
 
   async deinit(): Promise<void> {
     await this.w.terminate();
-    const tgName = TypeGraph.formatName(this.tg);
-    DenoRuntime.defaultRuntimes.delete(tgName);
   }
 
   materialize(

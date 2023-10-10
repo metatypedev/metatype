@@ -1,11 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ComputeStage } from "../engine.ts";
-import { equal } from "std/testing/asserts.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
+import { equal } from "std/assert/equal.ts";
 import { Resolver } from "../types.ts";
 
 export abstract class Runtime {
+  readonly id: string;
+
+  constructor(typegraphName: string, uuid = crypto.randomUUID()) {
+    this.id = `${typegraphName}_${this.constructor.name}_${uuid}`;
+  }
+
   abstract deinit(): Promise<void>;
 
   abstract materialize(

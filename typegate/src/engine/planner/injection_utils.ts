@@ -5,7 +5,7 @@ import {
   EffectType,
   InjectionDataFor_String,
   InjectionDataForUint32,
-} from "../types/typegraph.ts";
+} from "../../typegraph/types.ts";
 
 export function selectInjection(
   data: InjectionDataForUint32,

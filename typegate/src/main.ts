@@ -67,21 +67,6 @@ const server = Deno.serve(
   (req, connInfo) => typegate.handle(req, connInfo),
 );
 
-if (config.debug && (config.tg_port === 7890 || config.tg_port === 7891)) {
-  // deno-lint-ignore no-inner-declarations
-  function reload(backoff = 1) {
-    fetch(
-      `http://localhost:5000/dev?node=${encodeURI("http://localhost:7890")}`,
-    ).catch((e) => {
-      getLogger().debug(e.message);
-      if (backoff < 3) {
-        setTimeout(reload, 1000 * backoff, backoff + 1);
-      }
-    });
-  }
-  setTimeout(reload, 200);
-}
-
 getLogger().info(`typegate ready on ${config.tg_port}`);
 
 await server.finished;

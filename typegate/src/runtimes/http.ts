@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ComputeStage } from "../engine.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
 import { Runtime } from "./Runtime.ts";
 import { createUrl } from "../utils.ts";
 import { MatOptions, replaceDynamicPathParams } from "./utils/http.ts";
@@ -9,8 +9,8 @@ import { Resolver, RuntimeInitParams } from "../types.ts";
 import * as base64 from "std/encoding/base64.ts";
 import { getLogger } from "../log.ts";
 import { Logger } from "std/log/logger.ts";
-import { HTTPRuntimeData } from "../types/typegraph.ts";
-import { Typegate } from "../typegate/mod.ts";
+import { HTTPRuntimeData } from "../typegraph/types.ts";
+import { registerRuntime } from "./mod.ts";
 
 const encodeRequestBody = (
   body: Record<string, any>,
@@ -36,22 +36,24 @@ const encodeRequestBody = (
   }
 };
 
+@registerRuntime("http")
 export class HTTPRuntime extends Runtime {
   private logger: Logger;
 
   constructor(
+    typegraphName: string,
     private endpoint: string,
     private client: Deno.HttpClient,
     private headers: Headers,
   ) {
-    super();
+    super(typegraphName);
     this.logger = getLogger(`http:${new URL(endpoint).hostname}`);
   }
 
   static init(
     params: RuntimeInitParams,
   ): Runtime {
-    const { args, secretManager } = params as RuntimeInitParams<
+    const { args, secretManager, typegraphName } = params as RuntimeInitParams<
       HTTPRuntimeData
     >;
 
@@ -73,7 +75,12 @@ export class HTTPRuntime extends Runtime {
       );
     }
 
-    return new HTTPRuntime(args.endpoint as string, client, headers);
+    return new HTTPRuntime(
+      typegraphName,
+      args.endpoint as string,
+      client,
+      headers,
+    );
   }
 
   // deno-lint-ignore require-await
@@ -209,5 +216,3 @@ export class HTTPRuntime extends Runtime {
     return stagesMat;
   }
 }
-
-Typegate.registerRuntime("http", HTTPRuntime.init);

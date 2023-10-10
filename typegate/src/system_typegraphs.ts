@@ -5,7 +5,7 @@ import { basename, dirname, fromFileUrl, join } from "std/path/mod.ts";
 
 import { Register } from "./typegate/register.ts";
 import { PrismaMigrationRuntime } from "./runtimes/prisma/mod.ts";
-import { RuntimeResolver } from "./typegraph/mod.ts";
+import { RuntimeResolver, TypeGraph } from "./typegraph/mod.ts";
 import { getLogger } from "./log.ts";
 import { TypeGateRuntime } from "./runtimes/typegate.ts";
 import { Typegate } from "./typegate/mod.ts";
@@ -43,8 +43,10 @@ export class SystemTypegraph {
     const reload = async (paths: string[]) => {
       for await (const path of paths) {
         logger.info(`reloading system graph ${basename(path)}`);
+        const tgString = await Deno.readTextFile(path);
+        const tgJson = await TypeGraph.parseJson(tgString);
         await typegate.pushTypegraph(
-          await Deno.readTextFile(path),
+          tgJson,
           {},
           true, // introspection
           true, // system
@@ -56,7 +58,7 @@ export class SystemTypegraph {
     await reload(paths);
 
     if (watch) {
-      (async () => {
+      void (async () => {
         const watcher = Deno.watchFs(paths);
         for await (const event of watcher) {
           if (event.kind === "modify") {

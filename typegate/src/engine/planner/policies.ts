@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { DenoRuntime } from "../runtimes/deno/deno.ts";
-import { TypeGraph } from "../typegraph/mod.ts";
+import { DenoRuntime } from "../../runtimes/deno/deno.ts";
+import { TypeGraph } from "../../typegraph/mod.ts";
 import {
   Context,
   Info,
@@ -11,13 +11,13 @@ import {
   Resolver,
   StageId,
   TypeIdx,
-} from "../types.ts";
-import { EffectType, PolicyIndices } from "../types/typegraph.ts";
-import { ensure } from "../utils.ts";
-import { getLogger } from "../log.ts";
-import { Type } from "../type_node.ts";
+} from "../../types.ts";
+import { EffectType, PolicyIndices } from "../../typegraph/types.ts";
+import { ensure } from "../../utils.ts";
+import { getLogger } from "../../log.ts";
+import { Type } from "../../typegraph/type_node.ts";
 import { ArgPolicies } from "./args.ts";
-import { BadContext } from "../errors.ts";
+import { BadContext } from "../../errors.ts";
 
 export interface FunctionSubtreeData {
   typeIdx: TypeIdx;

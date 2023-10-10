@@ -7,7 +7,7 @@ import {
   AssertionError,
   assertStringIncludes,
 } from "std/assert/mod.ts";
-import { Engine } from "../../../src/engine.ts";
+import { QueryEngine } from "../../../src/engine/query_engine.ts";
 import { JSONValue } from "../../../src/utils.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";
 import { signJWT } from "../../../src/crypto.ts";
@@ -167,7 +167,7 @@ export abstract class Query {
 
   abstract getRequest(url: string): Promise<Request>;
 
-  async on(engine: Engine, host = "http://typegate.local"): Promise<void> {
+  async on(engine: QueryEngine, host = "http://typegate.local"): Promise<void> {
     const request = await this.getRequest(`${host}/${engine.name}`);
     const response = await execute(engine, request);
 

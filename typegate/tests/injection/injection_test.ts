@@ -27,12 +27,12 @@ const schema = buildSchema(`
   }
 `);
 
-const TG_INJECTION_POSTGRES =
+const POSTGRES =
   "postgresql://postgres:password@localhost:5432/db?schema=prisma";
 
 Meta.test("Injected values", async (t) => {
   const e = await t.engine("injection/injection.py", {
-    secrets: { TG_INJECTION_TEST_VAR: "3", TG_INJECTION_POSTGRES },
+    secrets: { TEST_VAR: "3", POSTGRES },
   });
 
   await t.should("fail for missing context", async () => {
@@ -151,7 +151,7 @@ mf.mock("POST@/api/graphql", async (req) => {
 
 Meta.test("Injection from/into graphql", async (t) => {
   const e = await t.engine("injection/injection.py", {
-    secrets: { TG_INJECTION_TEST_VAR: "3", TG_INJECTION_POSTGRES },
+    secrets: { TEST_VAR: "3", POSTGRES },
   });
 
   await dropSchemas(e);
@@ -229,7 +229,7 @@ Meta.test("Injection from/into graphql", async (t) => {
 
 Meta.test("dynamic value injection", async (t) => {
   const e = await t.engine("injection/injection.py", {
-    secrets: { TG_INJECTION_TEST_VAR: "3", TG_INJECTION_POSTGRES },
+    secrets: { TEST_VAR: "3", POSTGRES },
   });
 
   freezeDate();
@@ -255,7 +255,7 @@ Meta.test("dynamic value injection", async (t) => {
 
 Meta.test("Deno: value injection", async (t) => {
   const e = await t.engine("injection/injection.ts", {
-    secrets: { TG_INJECTION_TEST_VAR: "3" },
+    secrets: { TEST_VAR: "3" },
   });
 
   freezeDate();

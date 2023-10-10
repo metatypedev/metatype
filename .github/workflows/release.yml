@@ -147,7 +147,7 @@ jobs:
 
           cd typegraph/node
           pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
-          pnpm publish
+          pnpm publish --no-git-checks
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ github.ref }}

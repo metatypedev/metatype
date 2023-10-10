@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Engine } from "../../../src/engine.ts";
+import { QueryEngine } from "../../../src/engine/query_engine.ts";
 import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 import { MetaTest } from "../../utils/test.ts";
 
-async function runCommonTestSteps(t: MetaTest, e: Engine) {
+async function runCommonTestSteps(t: MetaTest, e: QueryEngine) {
   await t.should("create a record with a nested object", async () => {
     await gql`
       mutation {
@@ -53,7 +53,7 @@ Meta.test("required 1-1 relationships", async (t) => {
   for (const tg of typegraphs) {
     const e = await t.engine(tg.file, {
       secrets: {
-        TG_PRISMA_POSTGRES:
+        POSTGRES:
           "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-1",
       },
     });
@@ -82,7 +82,7 @@ Meta.test("required 1-1 relationships", async (t) => {
 Meta.test("optional 1-1 relationships", async (t) => {
   const e = await t.engine("runtimes/prisma/optional_1_1.py", {
     secrets: {
-      TG_PRISMA_POSTGRES:
+      POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-1",
     },
   });

@@ -5,7 +5,7 @@ on:
 
 env:
   PNPM_VERSION: "8.6.11"
-  NODE_VERSION: "19.8.1"
+  NODE_VERSION: "20.8.0"
   POETRY_VERSION: "1.4.1"
   PYTHON_VERSION: "3.8"
 
