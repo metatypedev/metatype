@@ -23,6 +23,7 @@ pub fn ambiguous_side(
         "Please add 'fkey' or 'unique' attribute on one side",
     ]
     .join(" ")
+    .into()
 }
 
 pub fn conflicting_attributes(
@@ -38,8 +39,10 @@ pub fn conflicting_attributes(
         format!("and {second_model}::{second_field}"),
     ]
     .join(" ")
+    .into()
 }
 
 pub fn no_relationship_target(model: &str, field: &str, target_model: &str) -> Error {
     format!(r#"Relationship target field not found for "{model}::{field}" on {target_model:?}."#)
+        .into()
 }

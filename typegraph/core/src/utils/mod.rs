@@ -41,7 +41,7 @@ fn find_missing_props(
 impl crate::wit::utils::Guest for crate::Lib {
     fn gen_applyb(supertype_id: CoreTypeId, apply: crate::wit::utils::Apply) -> Result<CoreTypeId> {
         if apply.paths.is_empty() {
-            return Err("apply object is empty".to_string());
+            return Err("apply object is empty".into());
         }
         let apply_tree = apply::PathTree::build_from(&apply)?;
         let mut item_list = apply::flatten_to_sorted_items_array(&apply_tree)?;
@@ -80,7 +80,7 @@ impl crate::wit::utils::Guest for crate::Lib {
                 // parent node => must be a struct
                 let child_indices = p2c_indices.get(&item.index).unwrap();
                 if child_indices.is_empty() {
-                    return Err(format!("parent item at index {} has no child", item.index));
+                    return Err(format!("parent item at index {} has no child", item.index).into());
                 }
 
                 let mut props = vec![];

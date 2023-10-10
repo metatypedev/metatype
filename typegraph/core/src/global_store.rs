@@ -133,7 +133,7 @@ impl Store {
         let name = name.into();
         with_store_mut(move |s| -> Result<()> {
             if s.type_by_names.contains_key(&name) {
-                return Err(format!("type with name {:?} already exists", name));
+                return Err(format!("type with name {:?} already exists", name).into());
             }
             s.type_by_names.insert(name, id);
             Ok(())

@@ -41,14 +41,14 @@ pub fn as_relationship_target(
         Type::Optional(inner) => {
             let concrete_type = TypeId(inner.data.of).attrs()?.concrete_type;
             if cardinality.is_some() {
-                return Err("nested optional/list not supported".to_string());
+                return Err("nested optional/list not supported".into());
             }
             as_relationship_target(concrete_type, Some(Cardinality::Optional))
         }
         Type::Array(inner) => {
             let concrete_type = TypeId(inner.data.of).attrs()?.concrete_type;
             if cardinality.is_some() {
-                return Err("nested optional/list not supported".to_string());
+                return Err("nested optional/list not supported".into());
             }
             as_relationship_target(concrete_type, Some(Cardinality::Many))
         }
@@ -70,7 +70,8 @@ pub fn get_id_field(model_id: TypeId) -> Result<String> {
                             Err(format!(
                                 "id must be on type Integer or String, not {}",
                                 typ.get_data().variant_name()
-                            ))
+                            )
+                            .into())
                         } else {
                             Ok(None)
                         }
@@ -84,9 +85,9 @@ pub fn get_id_field(model_id: TypeId) -> Result<String> {
         .flatten()
         .collect::<Vec<_>>();
     match matches.len() {
-        0 => Err("no id field found".to_string()),
+        0 => Err("no id field found".into()),
         1 => Ok(matches.into_iter().next().unwrap()),
-        _ => Err("multiple id fields not supported".to_string()),
+        _ => Err("multiple id fields not supported".into()),
     }
 }
 
@@ -110,7 +111,7 @@ impl<'a> RuntimeConfig<'a> {
             .last()
             .map(|v| serde_json::from_str(v))
             .transpose()
-            .map_err(|e| format!("invalid config value for {}: {}", key, e))
+            .map_err(|e| format!("invalid config value for {}: {}", key, e).into())
     }
 }
 
