@@ -54,7 +54,7 @@ impl TypeNodeBaseBuilder {
         });
 
         TypeNodeBase {
-            config: config.unwrap_or(Default::default()),
+            config: config.unwrap_or_default(),
             description: None,
             enumeration: self.enumeration,
             injection: None,

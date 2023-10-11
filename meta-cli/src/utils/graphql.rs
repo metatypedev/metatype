@@ -4,6 +4,7 @@
 use anyhow::{bail, Result};
 use async_trait::async_trait;
 use colored::Colorize;
+use itertools::Itertools;
 use reqwest::{header::CONTENT_TYPE, RequestBuilder, Response as HttpResponse};
 use serde::Deserialize;
 use serde_json;
@@ -97,7 +98,7 @@ pub trait GraphqlErrorMessages {
 
 impl GraphqlErrorMessages for Vec<GraphqlError> {
     fn error_messages(&self) -> String {
-        self.iter().map(|e| format!(" - {}\n", e.message)).collect()
+        self.iter().map(|e| format!(" - {}", e.message)).join("\n")
     }
 }
 

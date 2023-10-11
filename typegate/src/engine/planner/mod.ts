@@ -421,7 +421,7 @@ export class Planner {
     if (
       this.operation.operation === "query" &&
       // TODO: effect should always be non-null
-      (mat.effect.effect != null && mat.effect.effect != "none")
+      (mat.effect.effect != null && mat.effect.effect != "read")
     ) {
       throw new Error(
         `'${schema.title}' via '${mat.name}' can only be executed in mutation`,
@@ -436,7 +436,7 @@ export class Planner {
     const collected = collectArgs(
       this.tg,
       node.path.join("."),
-      mat.effect.effect ?? "none",
+      mat.effect.effect ?? "read",
       parentProps,
       inputIdx,
       argNodes,

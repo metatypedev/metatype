@@ -5,6 +5,7 @@ import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
 import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
 import { Materializer, Runtime } from "./mod.ts";
+import { fx } from "../mod.ts";
 
 export class GraphQLRuntime extends Runtime {
   constructor(private endpoint: string) {
@@ -20,7 +21,7 @@ export class GraphQLRuntime extends Runtime {
   >(inp: I, out: O, path?: string[]): t.Func<P, I, O, QueryMat> {
     const matId = runtimes.graphqlQuery({
       runtime: this._id,
-      effect: { tag: "none" },
+      effect: fx.read(),
     }, {
       path,
     });

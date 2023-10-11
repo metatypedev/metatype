@@ -1,5 +1,5 @@
 {
-  "$id": "https://metatype.dev/specs/0.0.2.json",
+  "$id": "https://metatype.dev/specs/0.0.3.json",
   "types": [
     {
       "type": "object",
@@ -908,7 +908,7 @@
       "name": "getType",
       "runtime": 1,
       "effect": {
-        "effect": "none",
+        "effect": "read",
         "idempotent": true
       },
       "data": {}
@@ -917,7 +917,7 @@
       "name": "resolver",
       "runtime": 1,
       "effect": {
-        "effect": "none",
+        "effect": "read",
         "idempotent": true
       },
       "data": {}
@@ -926,7 +926,7 @@
       "name": "predefined_function",
       "runtime": 0,
       "effect": {
-        "effect": "none",
+        "effect": "read",
         "idempotent": true
       },
       "data": {
@@ -937,7 +937,7 @@
       "name": "getSchema",
       "runtime": 1,
       "effect": {
-        "effect": "none",
+        "effect": "read",
         "idempotent": true
       },
       "data": {}
@@ -979,6 +979,6 @@
     },
     "auths": [],
     "rate": null,
-    "version": "0.0.2"
+    "version": "0.0.3"
   }
 }

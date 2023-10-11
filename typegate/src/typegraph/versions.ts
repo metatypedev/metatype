@@ -5,7 +5,7 @@ import { TypeGraph, TypeGraphDS } from "../typegraph/mod.ts";
 import config from "../config.ts";
 import * as semver from "std/semver/mod.ts";
 
-const typegraphVersion = "0.0.2";
+const typegraphVersion = "0.0.3";
 
 const typegraphChangelog: Record<
   string,
@@ -24,6 +24,17 @@ const typegraphChangelog: Record<
         dynamic: true,
         endpoints: [],
       };
+      return x;
+    },
+  },
+  "0.0.2": {
+    "next": "0.0.3",
+    "transform": (x) => {
+      x.materializers.forEach((m: any) => {
+        if (m.effet?.effect === "none") {
+          m.effet.effect = "read";
+        }
+      });
       return x;
     },
   },

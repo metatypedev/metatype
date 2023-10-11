@@ -6,7 +6,7 @@ from typing import Optional
 from typegraph import t
 from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
-    EffectNone,
+    EffectRead,
     MaterializerRandom,
     RandomRuntimeData,
 )
@@ -27,7 +27,7 @@ class RandomRuntime(Runtime):
         self,
         out: "t.typedef",
     ):
-        effect = EffectNone()
+        effect = EffectRead()
 
         mat_id = runtimes.create_random_mat(
             store,

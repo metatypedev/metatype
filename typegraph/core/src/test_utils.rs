@@ -14,7 +14,7 @@ impl MaterializerDenoFunc {
 
 impl Default for Effect {
     fn default() -> Self {
-        Self::None
+        Self::Read
     }
 }
 
@@ -62,7 +62,7 @@ pub mod models {
 }
 
 pub fn setup(name: Option<&str>) -> crate::errors::Result<()> {
-    use crate::wit::core::Core;
+    use crate::wit::core::Guest;
 
     crate::Lib::init_typegraph(crate::wit::core::TypegraphInitParams {
         name: name
@@ -109,7 +109,7 @@ pub mod tree {
                 Type::Proxy(p) => (format!("&{}", p.data.name), None),
                 _ => (
                     ty.get_data().variant_name(),
-                    ty.get_base().map(|b| b.name.clone()).flatten(),
+                    ty.get_base().and_then(|b| b.name.clone()),
                 ),
             };
 
@@ -151,8 +151,7 @@ pub mod tree {
             if self
                 .parents
                 .iter()
-                .find(|&&parent_id| parent_id == self.type_id)
-                .is_some()
+                .any(|&parent_id| parent_id == self.type_id)
             {
                 Cow::Owned(vec![])
             } else {
@@ -189,18 +188,18 @@ pub mod tree {
                         Node {
                             label: "output".to_string(),
                             type_id: ty.data.out.into(),
-                            parents: parents,
+                            parents,
                         },
                     ]),
                     Type::Array(ty) => Cow::Owned(vec![Node {
                         label: "item".to_string(),
                         type_id: ty.data.of.into(),
-                        parents: parents,
+                        parents,
                     }]),
                     Type::Optional(ty) => Cow::Owned(vec![Node {
                         label: "item".to_string(),
                         type_id: ty.data.of.into(),
-                        parents: parents,
+                        parents,
                     }]),
                     Type::Union(ty) => Cow::Owned(
                         ty.data
@@ -229,12 +228,12 @@ pub mod tree {
                     Type::WithPolicy(ty) => Cow::Owned(vec![Node {
                         label: "item".to_string(),
                         type_id: ty.data.tpe.into(),
-                        parents: parents,
+                        parents,
                     }]),
                     Type::WithInjection(ty) => Cow::Owned(vec![Node {
                         label: "item".to_string(),
                         type_id: ty.data.tpe.into(),
-                        parents: parents,
+                        parents,
                     }]),
                 }
             }

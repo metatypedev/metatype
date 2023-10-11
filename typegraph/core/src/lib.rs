@@ -31,38 +31,27 @@ use wit::core::{
     TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy,
     TypeString, TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
 };
-use wit::runtimes::{MaterializerDenoFunc, Runtimes};
+use wit::runtimes::{Guest, MaterializerDenoFunc};
 
 pub mod wit {
     use super::*;
 
-    wit_bindgen::generate!("typegraph");
-
-    export_typegraph!(Lib);
+    wit_bindgen::generate!({
+        world: "typegraph",
+        exports: {
+            "metatype:typegraph/core": Lib,
+            "metatype:typegraph/runtimes": Lib,
+            "metatype:typegraph/utils": Lib,
+            "metatype:typegraph/aws": Lib,
+        }
+    });
 
     pub use exports::metatype::typegraph::{aws, core, runtimes, utils};
 }
 
-#[cfg(feature = "wasm")]
-pub mod host {
-    wit_bindgen::generate!("host");
-
-    pub use metatype::typegraph::abi;
-}
-
 pub struct Lib {}
 
-impl TypeBase {
-    pub fn rename(&self, new_name: String) -> Self {
-        // Store::regi
-        Self {
-            name: Some(new_name),
-            ..self.clone()
-        }
-    }
-}
-
-impl wit::core::Core for Lib {
+impl wit::core::Guest for Lib {
     fn init_typegraph(params: TypegraphInitParams) -> Result<()> {
         typegraph::init(params)
     }
@@ -272,7 +261,7 @@ impl wit::core::Core for Lib {
                 code,
                 secrets: vec![],
             },
-            wit::runtimes::Effect::None,
+            wit::runtimes::Effect::Read,
         )?;
 
         Lib::register_policy(Policy {
@@ -282,10 +271,10 @@ impl wit::core::Core for Lib {
         .map(|id| (id, name))
     }
 
-    fn rename_type(type_id: CoreTypeId, new_name: String) -> Result<CoreTypeId, String> {
+    fn rename_type(type_id: CoreTypeId, new_name: String) -> Result<CoreTypeId, wit::core::Error> {
         let typ = TypeId(type_id).as_type()?;
         match typ {
-            Type::Proxy(_) => Err("cannot rename proxy".to_string()),
+            Type::Proxy(_) => Err("cannot rename proxy".into()),
             Type::WithPolicy(inner) => Self::with_policy(TypePolicy {
                 tpe: Self::rename_type(inner.data.tpe, new_name)?,
                 chain: inner.data.chain.clone(),
@@ -315,7 +304,7 @@ impl wit::core::Core for Lib {
     fn expose(
         fns: Vec<(String, CoreTypeId)>,
         default_policy: Option<Vec<PolicySpec>>,
-    ) -> Result<(), String> {
+    ) -> Result<()> {
         typegraph::expose(
             fns.into_iter().map(|(k, ty)| (k, ty.into())).collect(),
             default_policy,
@@ -332,13 +321,13 @@ macro_rules! log {
 
 #[cfg(test)]
 mod tests {
-    use crate::errors;
+    use crate::errors::{self, Result};
     use crate::global_store::Store;
     use crate::t::{self, TypeBuilder};
     use crate::test_utils::setup;
-    use crate::wit::core::Core;
     use crate::wit::core::Cors;
-    use crate::wit::runtimes::{Effect, MaterializerDenoFunc, Runtimes};
+    use crate::wit::core::Guest;
+    use crate::wit::runtimes::{Effect, Guest as GuestRuntimes, MaterializerDenoFunc};
     use crate::Lib;
     use crate::TypegraphInitParams;
 
@@ -380,7 +369,7 @@ mod tests {
     }
 
     #[test]
-    fn test_struct_invalid_key() -> Result<(), String> {
+    fn test_struct_invalid_key() -> Result<()> {
         let res = t::struct_().prop("", t::integer().build()?).build();
         assert_eq!(res, Err(errors::invalid_prop_key("")));
         let res = t::struct_()
@@ -391,7 +380,7 @@ mod tests {
     }
 
     #[test]
-    fn test_struct_duplicate_key() -> Result<(), String> {
+    fn test_struct_duplicate_key() -> Result<()> {
         let res = t::struct_()
             .prop("one", t::integer().build()?)
             .prop("two", t::integer().build()?)
@@ -402,9 +391,9 @@ mod tests {
     }
 
     #[test]
-    fn test_invalid_input_type() -> Result<(), String> {
+    fn test_invalid_input_type() -> Result<()> {
         let mat =
-            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
+            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::Read)?;
         let inp = t::integer().build()?;
         let res = t::func(inp, t::integer().build()?, mat);
 
@@ -413,7 +402,7 @@ mod tests {
     }
 
     #[test]
-    fn test_nested_typegraph_context() -> Result<(), String> {
+    fn test_nested_typegraph_context() -> Result<()> {
         Store::reset();
         setup(Some("test-1"))?;
         assert_eq!(
@@ -425,7 +414,7 @@ mod tests {
     }
 
     #[test]
-    fn test_no_active_context() -> Result<(), String> {
+    fn test_no_active_context() -> Result<()> {
         Store::reset();
         assert_eq!(
             Lib::expose(vec![], None),
@@ -441,7 +430,7 @@ mod tests {
     }
 
     #[test]
-    fn test_expose_invalid_type() -> Result<(), String> {
+    fn test_expose_invalid_type() -> Result<()> {
         Store::reset();
         setup(None)?;
         let tpe = t::integer().build()?;
@@ -453,7 +442,7 @@ mod tests {
     }
 
     #[test]
-    fn test_expose_invalid_name() -> Result<(), String> {
+    fn test_expose_invalid_name() -> Result<()> {
         setup(None)?;
 
         let mat = Lib::register_deno_func(
@@ -483,11 +472,11 @@ mod tests {
     }
 
     #[test]
-    fn test_expose_duplicate() -> Result<(), String> {
+    fn test_expose_duplicate() -> Result<()> {
         setup(None)?;
 
         let mat =
-            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
+            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::Read)?;
 
         let res = Lib::expose(
             vec![
@@ -508,7 +497,7 @@ mod tests {
     }
 
     #[test]
-    fn test_successful_serialization() -> Result<(), String> {
+    fn test_successful_serialization() -> Result<()> {
         Store::reset();
         let a = t::integer().build()?;
         let b = t::integer().min(12).max(44).build()?;
@@ -526,7 +515,7 @@ mod tests {
 
         setup(None)?;
         let mat =
-            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
+            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::Read)?;
         Lib::expose(vec![("one".to_string(), t::func(s, b, mat)?.into())], None)?;
         let typegraph = Lib::finalize_typegraph()?;
         insta::assert_snapshot!(typegraph);

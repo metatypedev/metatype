@@ -43,7 +43,7 @@ fn effect(typ: EffectType, idempotent: bool) -> Effect {
 impl From<WitEffect> for Effect {
     fn from(eff: WitEffect) -> Self {
         match eff {
-            WitEffect::None => effect(EffectType::None, true),
+            WitEffect::Read => effect(EffectType::Read, true),
             WitEffect::Create(idemp) => effect(EffectType::Create, idemp),
             WitEffect::Update(idemp) => effect(EffectType::Update, idemp),
             WitEffect::Delete(idemp) => effect(EffectType::Delete, idemp),

@@ -2,18 +2,18 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from dataclasses import dataclass
-from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
-from typegraph.wit import aws, store
+from typing import Optional
+
+from typegraph import t
 from typegraph.gen.exports.aws import (
-    S3RuntimeData,
     S3PresignGetParams,
     S3PresignPutParams,
+    S3RuntimeData,
 )
-from typegraph.gen.exports.runtimes import EffectNone, EffectCreate
+from typegraph.gen.exports.runtimes import EffectCreate, EffectRead
 from typegraph.gen.types import Err
-from typing import Optional
-from typegraph import t
+from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.wit import aws, store
 
 
 class S3Runtime(Runtime):
@@ -70,7 +70,7 @@ class S3Runtime(Runtime):
                 mat_id.value,
                 bucket=bucket,
                 expiry_secs=expiry_secs,
-                effect=EffectNone(),
+                effect=EffectRead(),
             ),
         )
 
@@ -100,7 +100,7 @@ class S3Runtime(Runtime):
                 bucket=bucket,
                 content_type=content_type,
                 expiry_secs=expiry_secs,
-                effect=EffectNone(),
+                effect=EffectRead(),
             ),
         )
 
@@ -117,7 +117,7 @@ class S3Runtime(Runtime):
                     "prefix": t.array(t.string()),
                 }
             ),
-            S3ListMat(mat_id.value, bucket=bucket, effect=EffectNone()),
+            S3ListMat(mat_id.value, bucket=bucket, effect=EffectRead()),
         )
 
     def upload(self, bucket: str, file_type: Optional[t.file] = None):

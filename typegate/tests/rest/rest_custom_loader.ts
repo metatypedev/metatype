@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
-import { DenoRuntime } from "@typegraph/deno/src/runtimes/deno.ts";
+import { fx, Policy, t, typegraph } from "@typegraph/sdk/mod.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
 import { endpoints } from "./custom/custom_loader.ts";
 
 const user = t.struct({
@@ -35,7 +35,7 @@ typegraph("rest", (g) => {
     t.boolean(),
     {
       code: "() => true",
-      effect: { tag: "update" } as any,
+      effect: fx.update(true),
     },
   ).withPolicy(pub);
 
@@ -46,7 +46,7 @@ typegraph("rest", (g) => {
     complexType,
     {
       code: "(x) => x['input']",
-      effect: { tag: "none" } as any,
+      effect: fx.read(),
     },
   ).withPolicy(pub);
 

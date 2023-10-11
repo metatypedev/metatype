@@ -23,8 +23,6 @@ if TYPE_CHECKING:
     from typegraph import t
 
 
-typegraph_version = "0.0.2"
-
 # ExposeItem = Union["t.func", Dict[str, "ExposeItem"]]
 ExposeItem = Union["t.func", "t.struct"]
 

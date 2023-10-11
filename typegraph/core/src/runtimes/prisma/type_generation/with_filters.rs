@@ -59,7 +59,7 @@ impl TypeGen for WithFilters {
                     })?
                 } else {
                     match ty {
-                        Type::Optional(_) => return Err("optional of optional!?".to_string()),
+                        Type::Optional(_) => return Err("optional of optional!?".into()),
                         Type::Boolean(_) => context.generate(&CompleteFilter(BooleanFilter))?,
                         Type::Integer(_) => context.generate(&CompleteFilter(
                             NumberFilter::new(NumberType::Integer, self.with_aggregates),
@@ -75,7 +75,8 @@ impl TypeGen for WithFilters {
                             return Err(format!(
                                 "type '{}' not supported by prisma",
                                 ty.get_data().variant_name()
-                            ));
+                            )
+                            .into());
                         }
                     }
                 };
@@ -243,7 +244,7 @@ struct ScalarListFilter(TypeId);
 impl TypeGen for ScalarListFilter {
     fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
         if let Type::Optional(_) = self.0.as_type()? {
-            return Err("array of optional not supported".to_owned());
+            return Err("array of optional not supported".into());
         }
 
         // we can use union here instead of either since the structs do not have

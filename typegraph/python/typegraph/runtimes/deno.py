@@ -1,16 +1,14 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+import json
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional, Any
-import json
-
-from typegraph.runtimes.base import Materializer, Runtime
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from typegraph.gen.exports.runtimes import (
     Effect,
-    EffectNone,
+    EffectRead,
     MaterializerDenoFunc,
     MaterializerDenoImport,
     MaterializerDenoPredefined,
@@ -18,6 +16,7 @@ from typegraph.gen.exports.runtimes import (
 )
 from typegraph.gen.types import Err
 from typegraph.policy import Policy
+from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.wit import runtimes, store
 
 if TYPE_CHECKING:
@@ -44,7 +43,7 @@ class DenoRuntime(Runtime):
             StaticMat(
                 mat_id.value,
                 value=value,
-                effect=EffectNone(),
+                effect=EffectRead(),
             ),
         )
 
@@ -58,7 +57,7 @@ class DenoRuntime(Runtime):
         effect: Optional[Effect] = None,
     ):
         secrets = secrets or []
-        effect = effect or EffectNone()
+        effect = effect or EffectRead()
         mat_id = runtimes.register_deno_func(
             store,
             MaterializerDenoFunc(code=code, secrets=secrets),
@@ -84,7 +83,7 @@ class DenoRuntime(Runtime):
         effect: Optional[Effect] = None,
         secrets: Optional[List[str]] = None,
     ):
-        effect = effect or EffectNone()
+        effect = effect or EffectRead()
         secrets = secrets or []
         mat_id = runtimes.import_deno_function(
             store,
@@ -121,7 +120,7 @@ class DenoRuntime(Runtime):
         return t.func(
             inp,
             inp,
-            PredefinedFunMat(id=res.value, name="identity", effect=EffectNone()),
+            PredefinedFunMat(id=res.value, name="identity", effect=EffectRead()),
         )
 
     def policy(
@@ -131,7 +130,7 @@ class DenoRuntime(Runtime):
         mat_id = runtimes.register_deno_func(
             store,
             MaterializerDenoFunc(code=code, secrets=secrets),
-            EffectNone(),
+            EffectRead(),
         )
 
         if isinstance(mat_id, Err):
@@ -156,7 +155,7 @@ class DenoRuntime(Runtime):
             MaterializerDenoImport(
                 func_name=func_name, module=module, secrets=secrets or []
             ),
-            EffectNone(),
+            EffectRead(),
         )
         if isinstance(res, Err):
             raise Exception(res.value)

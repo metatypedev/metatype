@@ -1,5 +1,5 @@
 env:
-  TYPEGRAPH_VERSION: "0.0.2"
+  TYPEGRAPH_VERSION: "0.0.3"
 
 typegate1: &tp
   workdir: typegate
@@ -61,11 +61,11 @@ typegraph:
     WASM_FILE: target/debug/typegraph_core.wasm
   command: |
     set -e
-    cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
+    cargo build -p typegraph_core --target wasm32-unknown-unknown
     wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
 
     rm -rf typegraph/deno/src/gen
-    jco transpile $WASM_FILE -o typegraph/deno/src/gen --map "*=../imports.ts"
+    jco transpile $WASM_FILE -o typegraph/deno/src/gen
     deno run -A typegraph/deno/dev/fix-declarations.ts
 
     rm -rf typegraph/python/typegraph/gen
@@ -130,9 +130,9 @@ install:
     - website/package.json
   env:
     DENO_BINDGEN_URL: "https://raw.githubusercontent.com/Natoandro/deno_bindgen/main/cli.ts"
-    WASM_TOOLS_VERSION: "1.0.37"
+    WASM_TOOLS_VERSION: "1.0.45"
     JCO_VERSION: "0.12.1"
-    CARGO_INSTA_VERSION: "1.30.0"
+    CARGO_INSTA_VERSION: "1.33.0"
     WASMEDGE_VERSION: "0.12.1"
     WASM_OPT_VERSION: "0.114.1"
     DENO_VERSION: "1.37.1"

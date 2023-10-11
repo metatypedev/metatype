@@ -104,7 +104,7 @@ pub enum EffectType {
     Create,
     Update,
     Delete,
-    None,
+    Read,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -134,7 +134,7 @@ pub struct Policy {
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PolicyIndicesByEffect {
-    pub none: Option<u32>,
+    pub read: Option<u32>,
     pub create: Option<u32>,
     pub delete: Option<u32>,
     pub update: Option<u32>,

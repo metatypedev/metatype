@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass
 from re import Pattern
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 from typegraph.gen.exports.core import (
     ContextCheckPattern,
@@ -11,12 +11,16 @@ from typegraph.gen.exports.core import (
     Err,
     MaterializerId,
     PolicySpecPerEffect,
+    PolicySpecSimple,
 )
 from typegraph.gen.exports.core import (
     Policy as WitPolicy,
-    PolicySpec as WitPolicySpec,
-    PolicySpecSimple,
+)
+from typegraph.gen.exports.core import (
     PolicyPerEffect as WitPolicyPerEffect,
+)
+from typegraph.gen.exports.core import (
+    PolicySpec as WitPolicySpec,
 )
 from typegraph.gen.exports.runtimes import MaterializerDenoPredefined
 from typegraph.wit import core, runtimes, store
@@ -86,9 +90,9 @@ class Policy:
         update: Optional["Policy"] = None,
         delete: Optional["Policy"] = None,
         create: Optional["Policy"] = None,
-        none: Optional["Policy"] = None,
+        read: Optional["Policy"] = None,
     ) -> "PolicyPerEffect":
-        return PolicyPerEffect(create=create, update=update, delete=delete, none=none)
+        return PolicyPerEffect(create=create, update=update, delete=delete, read=read)
 
 
 @dataclass
@@ -96,7 +100,7 @@ class PolicyPerEffect:
     create: Optional[Policy] = None
     update: Optional[Policy] = None
     delete: Optional[Policy] = None
-    none: Optional[Policy] = None
+    read: Optional[Policy] = None
 
 
 SinglePolicySpec = Union[Policy, PolicyPerEffect]
@@ -116,7 +120,7 @@ def get_policy_chain(policies: PolicySpec) -> List[WitPolicySpec]:
                 create=p.create and p.create.id,
                 update=p.update and p.update.id,
                 delete=p.delete and p.delete.id,
-                none=p.none and p.none.id,
+                read=p.read and p.read.id,
             )
         )
         for p in policies

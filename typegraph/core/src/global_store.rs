@@ -133,7 +133,7 @@ impl Store {
         let name = name.into();
         with_store_mut(move |s| -> Result<()> {
             if s.type_by_names.contains_key(&name) {
-                return Err(format!("type with name {:?} already exists", name));
+                return Err(format!("type with name {:?} already exists", name).into());
             }
             s.type_by_names.insert(name, id);
             Ok(())
@@ -253,7 +253,7 @@ impl Store {
             let runtime_id = Store::get_deno_runtime();
             let mat = Store::register_materializer(Materializer {
                 runtime_id,
-                effect: Effect::None,
+                effect: Effect::Read,
                 data: Rc::new(DenoMaterializer::Predefined(MaterializerDenoPredefined {
                     name: name.clone(),
                 }))
@@ -273,7 +273,7 @@ impl Store {
             let runtime_id = Store::get_deno_runtime();
             let mat = Store::register_materializer(Materializer {
                 runtime_id,
-                effect: Effect::None, // N/A
+                effect: Effect::Read, // N/A
                 data: Rc::new(DenoMaterializer::Module(MaterializerDenoModule {
                     file: file.clone(),
                 }))

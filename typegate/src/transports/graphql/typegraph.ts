@@ -66,7 +66,7 @@ function splitGraphQLOperations(
         if (
           // TODO effect should always be defined
           childMaterializer.effect.effect === null ||
-          childMaterializer.effect.effect === "none"
+          childMaterializer.effect.effect === "read"
         ) {
           queryProperties[propertyName] = typeIndex;
           // TODO additional checks

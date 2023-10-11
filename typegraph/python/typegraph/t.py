@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import json as JsonLib
-from typing import Dict, List, Optional, Tuple, Union, Any
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from typing_extensions import Self
 
@@ -12,8 +12,8 @@ from typegraph.gen.exports.core import (
     TypeArray,
     TypeBase,
     TypeEither,
-    TypeFloat,
     TypeFile,
+    TypeFloat,
     TypeFunc,
     TypeInteger,
     TypeOptional,
@@ -24,7 +24,7 @@ from typegraph.gen.exports.core import (
     TypeUnion,
     TypeWithInjection,
 )
-from typegraph.gen.exports.runtimes import EffectNone
+from typegraph.gen.exports.runtimes import EffectRead
 from typegraph.gen.exports.utils import Apply
 from typegraph.gen.types import Err
 from typegraph.graph.typegraph import core, store
@@ -36,8 +36,8 @@ from typegraph.injection import (
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph.runtimes.deno import Materializer
 from typegraph.utils import (
-    build_apply_data,
     ConfigSpec,
+    build_apply_data,
     serialize_config,
 )
 from typegraph.wit import wit_utils
@@ -662,7 +662,7 @@ class func(typedef):
     ) -> "func":
         # Note: effect is a just placeholder
         # in the deno frontend, we do not have to fill the effect attribute on materializers
-        mat = Materializer(id=data.mat, effect=EffectNone())
+        mat = Materializer(id=data.mat, effect=EffectRead())
         return func(
             typedef(id=data.inp),
             typedef(id=data.out),

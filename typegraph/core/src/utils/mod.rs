@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use crate::errors::Result;
 use crate::global_store::Store;
 use crate::types::TypeId;
-use crate::wit::core::{Core, TypeBase, TypeId as CoreTypeId, TypeStruct, TypeWithInjection};
+use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct, TypeWithInjection};
 use crate::Lib;
 
 mod apply;
@@ -38,10 +38,10 @@ fn find_missing_props(
     Ok(missing_props)
 }
 
-impl crate::wit::utils::Utils for crate::Lib {
+impl crate::wit::utils::Guest for crate::Lib {
     fn gen_applyb(supertype_id: CoreTypeId, apply: crate::wit::utils::Apply) -> Result<CoreTypeId> {
         if apply.paths.is_empty() {
-            return Err("apply object is empty".to_string());
+            return Err("apply object is empty".into());
         }
         let apply_tree = apply::PathTree::build_from(&apply)?;
         let mut item_list = apply::flatten_to_sorted_items_array(&apply_tree)?;
@@ -80,7 +80,7 @@ impl crate::wit::utils::Utils for crate::Lib {
                 // parent node => must be a struct
                 let child_indices = p2c_indices.get(&item.index).unwrap();
                 if child_indices.is_empty() {
-                    return Err(format!("parent item at index {} has no child", item.index));
+                    return Err(format!("parent item at index {} has no child", item.index).into());
                 }
 
                 let mut props = vec![];

@@ -1,17 +1,18 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+from enum import Enum, auto
+
 from typegraph.gen.exports.runtimes import (
     EffectCreate,
     EffectDelete,
-    EffectNone,
+    EffectRead,
     EffectUpdate,
 )
-from enum import auto, Enum
 
 
-def none():
-    return EffectNone()
+def read():
+    return EffectRead()
 
 
 def create(idempotent: bool = False):
@@ -31,10 +32,10 @@ class EffectType(Enum):
     CREATE = auto()
     UPDATE = auto()
     DELETE = auto()
-    NONE = auto()
+    READ = auto()
 
 
 CREATE = EffectType.CREATE
 UPDATE = EffectType.UPDATE
 DELETE = EffectType.DELETE
-NONE = EffectType.NONE
+READ = EffectType.READ

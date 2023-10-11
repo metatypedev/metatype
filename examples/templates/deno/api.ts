@@ -1,20 +1,6 @@
-/*
-import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
-import { DenoRuntime } from "@typegraph/deno/src/runtimes/deno.ts";
-import { PythonRuntime } from "@typegraph/deno/src/runtimes/python.ts";
-
-import { Policy, t, typegraph } from "../../../../typegraph/deno/src/mod.ts";
-import { DenoRuntime } from "../../../../typegraph/deno/src/runtimes/deno.ts";
-import { PythonRuntime } from "../../../../typegraph/deno/src/runtimes/python.ts";
-*/
-
-import { PythonRuntime } from "https://github.com/metatypedev/typegraph/raw/main/deno/src/runtimes/python.ts";
-import {
-  Policy,
-  t,
-  typegraph,
-} from "https://github.com/metatypedev/typegraph/raw/main/deno/src/mod.ts";
-import { DenoRuntime } from "https://github.com/metatypedev/typegraph/raw/main/deno/src/runtimes/deno.ts";
+import { PythonRuntime } from "npm:@typegraph/sdk/runtimes/python.ts";
+import { Policy, t, typegraph } from "npm:@typegraph/sdk/mod.ts";
+import { DenoRuntime } from "npm:@typegraph/sdk/runtimes/deno.ts";
 
 typegraph("test-multiple-runtimes", (g) => {
   const pub = Policy.public();

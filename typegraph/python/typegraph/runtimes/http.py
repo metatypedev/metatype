@@ -3,18 +3,20 @@
 
 from dataclasses import dataclass
 from typing import Dict, List, Optional
+
 from typing_extensions import TypedDict
+
+from typegraph import fx, t
 from typegraph.gen.exports.runtimes import (
-    Effect,
     BaseMaterializer,
+    Effect,
     HttpMethod,
     HttpRuntimeData,
     MaterializerHttpRequest,
 )
 from typegraph.gen.types import Err
-from typegraph.wit import runtimes, store
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph import t, fx
+from typegraph.wit import runtimes, store
 
 
 class HttpRequestKwargs(TypedDict):
@@ -128,7 +130,7 @@ class HttpRuntime(Runtime):
             path,
             inp,
             out,
-            fx.none(),
+            fx.read(),
             HttpRequestOptions.from_kwargs(**kwargs),
         )
 

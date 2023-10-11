@@ -24,7 +24,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::wit::core::{
-    Core, Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypePolicy,
+    Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypePolicy,
     TypegraphInitParams,
 };
 
@@ -58,7 +58,7 @@ thread_local! {
     static TG: RefCell<Option<TypegraphContext>> = RefCell::new(None);
 }
 
-static TYPEGRAPH_VERSION: &str = "0.0.2";
+static TYPEGRAPH_VERSION: &str = "0.0.3";
 
 pub fn with_tg_mut<T>(f: impl FnOnce(&mut TypegraphContext) -> T) -> Result<T> {
     TG.with(|tg| {
@@ -139,7 +139,9 @@ pub fn finalize() -> Result<String> {
             .types
             .into_iter()
             .enumerate()
-            .map(|(id, t)| t.ok_or_else(|| format!("Unexpected: type {id} was not finalized")))
+            .map(|(id, t)| {
+                t.ok_or_else(|| format!("Unexpected: type {id} was not finalized").into())
+            })
             .collect::<Result<Vec<_>>>()?,
         runtimes: ctx.runtimes,
         materializers: ctx.materializers.into_iter().map(|m| m.unwrap()).collect(),
@@ -157,7 +159,7 @@ pub fn finalize() -> Result<String> {
 
     Store::restore(ctx.saved_store_state.unwrap());
 
-    serde_json::to_string(&tg).map_err(|e| e.to_string())
+    serde_json::to_string(&tg).map_err(|e| e.to_string().into())
 }
 
 fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
@@ -207,7 +209,7 @@ pub fn expose(
         let mut root = ctx.types.get_mut(0).unwrap().take().unwrap();
         let root_data = match &mut root {
             TypeNode::Object { data, .. } => data,
-            _ => return Err("expect root to be an object".to_string()),
+            _ => return Err("expect root to be an object".into()),
         };
         let res = fields
             .into_iter()
@@ -260,7 +262,6 @@ impl TypegraphContext {
         }
     }
 
-    // TODO
     pub fn register_materializer(
         &mut self,
         id: u32,
@@ -291,8 +292,8 @@ impl TypegraphContext {
                     PolicySpec::Simple(id) => PolicyIndices::Policy(self.register_policy(*id)?),
                     PolicySpec::PerEffect(policies) => {
                         PolicyIndices::EffectPolicies(PolicyIndicesByEffect {
-                            none: policies
-                                .none
+                            read: policies
+                                .read
                                 .as_ref()
                                 .map(|id| self.register_policy(*id))
                                 .transpose()?,
@@ -357,10 +358,8 @@ impl TypegraphContext {
 
     pub fn get_correct_id(&self, id: TypeId) -> Result<u32> {
         let id = id.resolve_proxy()?;
-        self.find_type_index_by_store_id(id).ok_or(format!(
-            "unable to find type for store id {}",
-            u32::from(id)
-        ))
+        self.find_type_index_by_store_id(id)
+            .ok_or(format!("unable to find type for store id {}", u32::from(id)).into())
     }
 
     pub fn add_secret(&mut self, name: impl Into<String>) {

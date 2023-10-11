@@ -57,4 +57,8 @@
     "typegraphs",
     "wasmedge"
   ],
+  "python.languageServer": "Pylance",
+  "python.analysis.extraPaths": [
+    "typegraph/python"
+  ],
 }

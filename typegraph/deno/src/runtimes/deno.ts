@@ -6,6 +6,7 @@ import { runtimes } from "../wit.ts";
 import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
 import Policy from "../policy.ts";
 import { Materializer, Runtime } from "./mod.ts";
+import { fx } from "../mod.ts";
 
 interface FunMat extends Materializer {
   code: string;
@@ -49,7 +50,7 @@ export class DenoRuntime extends Runtime {
   >(
     inp: I,
     out: O,
-    { code, secrets = [], effect = { tag: "none" } }: DenoFunc,
+    { code, secrets = [], effect = fx.read() }: DenoFunc,
   ): t.Func<P, I, O, FunMat> {
     const matId = runtimes.registerDenoFunc({ code, secrets }, effect);
     const mat: FunMat = {
@@ -68,7 +69,7 @@ export class DenoRuntime extends Runtime {
   >(
     inp: I,
     out: O,
-    { name, module, effect = { tag: "none" }, secrets = [] }: DenoImport,
+    { name, module, effect = fx.read(), secrets = [] }: DenoImport,
   ): t.Func<P, I, O, ImportMat> {
     const matId = runtimes.importDenoFunction({
       funcName: name,
@@ -109,7 +110,7 @@ export class DenoRuntime extends Runtime {
 
     return Policy.create(
       name,
-      runtimes.registerDenoFunc(params, { tag: "none" }),
+      runtimes.registerDenoFunc(params, fx.read()),
     );
   }
 
@@ -124,7 +125,7 @@ export class DenoRuntime extends Runtime {
         funcName: data.name,
         module: data.module,
         secrets: data.secrets ?? [],
-      }, { tag: "none" }),
+      }, fx.read()),
     );
   }
 }

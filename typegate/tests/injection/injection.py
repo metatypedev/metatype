@@ -2,7 +2,7 @@ from typegraph import typegraph, effects, Policy, t, Graph
 from typegraph.providers.prisma import PrismaRuntime
 from typegraph.runtimes.deno import DenoRuntime
 from typegraph.runtimes.graphql import GraphQLRuntime
-from typegraph.effects import CREATE, UPDATE, DELETE, NONE
+from typegraph.effects import CREATE, UPDATE, DELETE, READ
 
 
 @typegraph()
@@ -35,7 +35,7 @@ def injection(g: Graph):
                     CREATE: "insert",
                     UPDATE: "modify",
                     DELETE: "remove",
-                    NONE: "read",
+                    READ: "read",
                 }
             )
         }

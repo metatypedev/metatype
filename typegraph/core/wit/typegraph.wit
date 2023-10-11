@@ -2,7 +2,9 @@ package metatype:typegraph
 
 interface core {
 
-    type error = string
+    record error {
+        stack: list<string>,
+    }
 
     // typegraph description
     record cors {
@@ -161,7 +163,7 @@ interface core {
     }
 
     record policy-per-effect {
-        none: option<policy-id>,
+        read: option<policy-id>,
         create: option<policy-id>,
         update: option<policy-id>,
         delete: option<policy-id>,
@@ -214,7 +216,7 @@ interface runtimes {
     type idempotency = bool
 
     variant effect {
-        none,
+        read,
         create(idempotency),
         update(idempotency),
         delete(idempotency),
@@ -463,7 +465,7 @@ interface aws {
 
 
 interface utils {
-    type error = string
+    use core.{error}
     type type-id = u32
 
 

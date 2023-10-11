@@ -3,18 +3,16 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from typegraph.runtimes.base import Materializer, Runtime
-
+from typegraph import t
 from typegraph.gen.exports.runtimes import (
-    Effect,
-    EffectNone,
     BaseMaterializer,
+    Effect,
+    EffectRead,
     MaterializerWasi,
 )
 from typegraph.gen.types import Err
+from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.wit import runtimes, store
-
-from typegraph import t
 
 
 class WasmEdgeRuntime(Runtime):
@@ -30,7 +28,7 @@ class WasmEdgeRuntime(Runtime):
         wasm: str,
         effect: Optional[Effect] = None,
     ):
-        effect = effect or EffectNone()
+        effect = effect or EffectRead()
         wasm = f"file:{wasm}"
 
         mat_id = runtimes.from_wasi_module(

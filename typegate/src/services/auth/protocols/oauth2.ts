@@ -61,7 +61,7 @@ export class OAuth2Auth extends Protocol {
       name: "function",
       runtime: -1, // dummy
       effect: {
-        effect: "none",
+        effect: "read",
         idempotent: true,
       },
       data: {

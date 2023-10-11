@@ -149,8 +149,8 @@ impl Loader {
                 let mut command = Command::new("deno");
                 command
                     .arg("run")
-                    .arg("--allow-read")
-                    .arg("--allow-write")
+                    .arg("--unstable")
+                    .arg("--allow-all")
                     .arg("--check")
                     .arg(path.to_str().unwrap())
                     .envs(vars);
