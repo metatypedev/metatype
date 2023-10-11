@@ -91,11 +91,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             },
 
             cors: params.cors.into(),
-            auths: params
-                .auths
-                .iter()
-                .map(|auth| auth.convert())
-                .collect::<Result<Vec<_>>>()?,
+            auths: vec![],
             prefix: params.prefix,
             rate: params.rate.map(|v| v.into()),
             secrets: vec![],
@@ -151,6 +147,7 @@ pub fn finalize() -> Result<String> {
                 dynamic: ctx.meta.queries.dynamic,
                 endpoints: Store::get_graphql_endpoints(),
             },
+            auths: Store::get_auths(),
             ..ctx.meta
         },
         path: None,

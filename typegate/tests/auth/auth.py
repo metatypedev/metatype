@@ -6,7 +6,6 @@ from typegraph.runtimes.http import HttpRuntime
 
 @typegraph(
     name="test_auth",
-    auths=[oauth2.github("openid profile email")],
 )
 def test_auth(g: Graph):
     deno = DenoRuntime()
@@ -19,6 +18,8 @@ def test_auth(g: Graph):
     )
 
     x = t.struct({"x": t.integer()})
+
+    g.auth(oauth2.github("openid profile email"))
 
     g.expose(
         public=deno.identity(x).with_policy(public),

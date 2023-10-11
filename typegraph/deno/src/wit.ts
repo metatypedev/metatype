@@ -12,12 +12,11 @@ export const runtimes = js.runtimes as typeof MetatypeTypegraphRuntimes;
 export const aws = js.aws as typeof MetatypeTypegraphAws;
 export const wit_utils = js.utils as typeof MetatypeTypegraphUtils;
 
+export type { Cors, Rate } from "./gen/interfaces/metatype-typegraph-core.d.ts";
 export type {
   Auth,
   AuthProtocol,
   AuthProtocolBasic,
   AuthProtocolJwt,
   AuthProtocolOauth2,
-  Cors,
-  Rate,
-} from "./gen/interfaces/metatype-typegraph-core.d.ts";
+} from "./gen/interfaces/metatype-typegraph-utils.d.ts";

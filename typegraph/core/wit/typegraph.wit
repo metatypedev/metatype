@@ -16,19 +16,6 @@ interface core {
         max-age-sec: option<u32>
     }
 
-    variant auth-protocol {
-        oauth2,
-        jwt,
-        basic,
-    }
-
-    record auth {
-        name: string,
-        protocol: auth-protocol,
-        // string => json string
-        auth-data: list<tuple<string, string>>,
-    }
-
     record rate {
         window-limit: u32,
         window-sec: u32,
@@ -44,7 +31,6 @@ interface core {
         // TypeMeta
         prefix: option<string>,
         cors: cors,
-        auths: list<auth>,
         rate: option<rate>,
     }
 
@@ -494,6 +480,21 @@ interface utils {
     gen-applyb: func(supertype-id: type-id, data: apply) -> result<type-id, error>
 
     add-graphql-endpoint: func(graphql: string) -> result<u32, error>
+
+    variant auth-protocol {
+        oauth2,
+        jwt,
+        basic,
+    }
+
+    record auth {
+        name: string,
+        protocol: auth-protocol,
+        // string => json string
+        auth-data: list<tuple<string, string>>,
+    }
+
+    add-auth: func(data: auth) -> result<u32, error>
 }
 
 world typegraph {

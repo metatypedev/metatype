@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 import json
 from typing import List, Optional
-from typegraph.gen.exports import core
+from typegraph.gen.exports import utils
 from box import Box
 
 
@@ -58,7 +58,7 @@ class Cors:
 
 
 class Auth:
-    def jwt(name: str, format: str, algorithm: None) -> "core.Auth":
+    def jwt(name: str, format: str, algorithm: None) -> "utils.Auth":
         """
         [Documentation](http://localhost:3000/docs/guides/authentication#jwt-authentication)
         """
@@ -70,14 +70,14 @@ class Auth:
             ("algorithm", json.dumps(algorithm)),
         ]
 
-        return core.Auth(name, core.AuthProtocolJwt(), auth_data)
+        return utils.Auth(name, utils.AuthProtocolJwt(), auth_data)
 
-    def hmac256(name: str) -> "core.Auth":
+    def hmac256(name: str) -> "utils.Auth":
         return Auth.jwt(name, "raw", {"name": "HMAC", "hash": {"name": "SHA-256"}})
 
-    def basic(users: List[str]) -> "core.Auth":
+    def basic(users: List[str]) -> "utils.Auth":
         auth_data = [("users", json.dumps(users))]
-        return core.Auth("basic", core.AuthProtocolBasic(), auth_data)
+        return utils.Auth("basic", utils.AuthProtocolBasic(), auth_data)
 
     @classmethod
     def oauth2(
@@ -88,10 +88,10 @@ class Auth:
         scopes: str,
         profile_url: Optional[str] = None,
         profiler: Optional[str] = None,
-    ) -> "core.Auth":
-        return core.Auth(
+    ) -> "utils.Auth":
+        return utils.Auth(
             name,
-            core.AuthProtocolOauth2(),
+            utils.AuthProtocolOauth2(),
             [
                 ("authorize_url", json.dumps(authorize_url)),
                 ("access_url", json.dumps(access_url)),

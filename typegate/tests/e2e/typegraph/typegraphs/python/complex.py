@@ -40,7 +40,6 @@ complexType = t.struct(
         expose_headers=[],
         max_age_sec=120,
     ),
-    auths=[Auth.basic(["testBasicAuth"]), Auth.hmac256("testHmacAuth")],
     rate=Rate(
         window_sec=60,
         window_limit=128,
@@ -52,6 +51,9 @@ complexType = t.struct(
 def test_complex_types(g: Graph):
     deno = DenoRuntime()
     pub = Policy.public()
+
+    g.auth(Auth.basic(["testBasicAuth"]))
+    g.auth(Auth.hmac256("testHmacAuth"))
 
     g.expose(
         test=deno.func(

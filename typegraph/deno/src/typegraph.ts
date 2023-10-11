@@ -23,7 +23,6 @@ interface TypegraphArgs {
   prefix?: string;
   secrets?: Array<string>;
   cors?: Cors;
-  auths?: Array<Auth>;
   rate?: Rate;
 }
 
@@ -31,6 +30,7 @@ interface TypegraphBuilderArgs {
   expose: (exports: Exports, defaultPolicy?: Policy) => void;
   inherit: () => InheritDef;
   rest: (graphql: string) => number;
+  auth: (value: Auth) => number;
 }
 
 export class InheritDef {
@@ -85,7 +85,6 @@ export function typegraph(
   const {
     name,
     dynamic,
-    auths,
     cors,
     prefix,
     rate,
@@ -118,7 +117,6 @@ export function typegraph(
       exposeHeaders: [],
       maxAgeSec: undefined,
     } as Cors,
-    auths: auths ?? [],
     rate,
   };
 
@@ -136,6 +134,9 @@ export function typegraph(
     },
     rest: (graphql: string) => {
       return wit_utils.addGraphqlEndpoint(graphql);
+    },
+    auth: (value: Auth) => {
+      return wit_utils.addAuth(value);
     },
   };
 

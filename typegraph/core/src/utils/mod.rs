@@ -7,6 +7,7 @@ use crate::errors::Result;
 use crate::global_store::Store;
 use crate::types::TypeId;
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct, TypeWithInjection};
+use crate::wit::utils::Auth as WitAuth;
 use crate::Lib;
 
 mod apply;
@@ -119,7 +120,10 @@ impl crate::wit::utils::Guest for crate::Lib {
     }
 
     fn add_graphql_endpoint(graphql: String) -> Result<u32> {
-        Store::add_graphql_endpoint(graphql)?;
-        Ok(Store::get_graphql_endpoints().len() as u32)
+        Store::add_graphql_endpoint(graphql)
+    }
+
+    fn add_auth(data: WitAuth) -> Result<u32> {
+        Store::add_auth(data)
     }
 }
