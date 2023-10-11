@@ -68,7 +68,7 @@ dev:
     WASMEDGE_VERSION: 0.12.1
     TYPEGRAPH_VERSION: 0.0.3
     PRISMA_VERSION: 5.4.2
-    METATYPE_VERSION: 0.2.2
+    METATYPE_VERSION: 0.2.3-0+dev
     WASM_OPT_VERSION: 0.114.1
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with
