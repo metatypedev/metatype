@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::Result;
+use crate::runtimes::prisma::context::PrismaContext;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeFun;
 use crate::types::TypeId;
 
-use super::{TypeGen, TypeGenContext};
+use super::TypeGen;
 
 pub struct QueryUniqueWhereExpr {
     model_id: TypeId,
@@ -19,7 +20,7 @@ impl QueryUniqueWhereExpr {
 }
 
 impl TypeGen for QueryUniqueWhereExpr {
-    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
         let model = self.model_id.as_struct().unwrap();
 

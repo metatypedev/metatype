@@ -4,7 +4,7 @@
 use crate::{
     errors::Result,
     t::{self, ConcreteTypeBuilder, TypeBuilder},
-    types::TypeId,
+    types::TypeId, runtimes::prisma::context::PrismaContext,
 };
 
 use super::{
@@ -12,7 +12,7 @@ use super::{
     group_by::{GroupingFields, Having},
     order_by::OrderBy,
     query_where_expr::QueryWhereExpr,
-    TypeGen, TypeGenContext,
+    TypeGen,
 };
 
 pub struct QueryInputType {
@@ -30,7 +30,7 @@ impl QueryInputType {
 }
 
 impl TypeGen for QueryInputType {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
         let order_by = {
             let order_by = OrderBy::new(self.model_id);

@@ -3,12 +3,12 @@
 
 use crate::{
     errors::Result,
-    runtimes::prisma::type_generation::{where_::Where, with_filters::WithFilters},
+    runtimes::prisma::{type_generation::{where_::Where, with_filters::WithFilters}, context::PrismaContext},
     t::{self, ConcreteTypeBuilder, TypeBuilder},
     types::{Type, TypeId},
 };
 
-use super::{aggregate::CountOutput, TypeGen, TypeGenContext};
+use super::{aggregate::CountOutput, TypeGen};
 
 pub struct GroupingFields {
     model_id: TypeId,
@@ -21,24 +21,19 @@ impl GroupingFields {
 }
 
 impl TypeGen for GroupingFields {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut fields = vec![];
-        for (k, type_id) in self.model_id.as_struct()?.iter_props() {
-            if context
-                .registry
-                .find_relationship_on(self.model_id, k)
-                .is_some()
-            {
+
+        let model = context.model(self.model_id)?;
+        let model = model.borrow();
+
+        for (k, prop) in model.iter_props() {
+            if model.relationships.contains_key(k) {
                 continue;
             }
 
-            match type_id.non_optional_concrete_type()?.as_type()? {
-                Type::Boolean(_)
-                | Type::Integer(_)
-                | Type::Float(_)
-                | Type::String(_)
-                | Type::Array(_) => fields.push(k.to_string()),
-                _ => {}
+            if prop.is_scalar() {
+                fields.push(k.to_string());
             }
         }
 
@@ -64,7 +59,7 @@ impl Having {
 }
 
 impl TypeGen for Having {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         // TODO relations??
         let where_type = context.generate(&Where::new(self.model_id, false))?;
         let extended_type = context
@@ -100,7 +95,7 @@ impl GroupByResult {
 }
 
 impl TypeGen for GroupByResult {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let model_id = self.model_id;
         t::array(
             t::struct_extends(model_id)?
@@ -151,7 +146,7 @@ impl SelectNumbers {
 }
 
 impl TypeGen for SelectNumbers {
-    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
         let opt_float = t::optional(t::float().build()?).build()?;
         let for_int = if self.promote_to_float {

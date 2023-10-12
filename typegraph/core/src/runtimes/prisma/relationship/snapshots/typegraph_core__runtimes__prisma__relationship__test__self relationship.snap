@@ -1,17 +1,67 @@
 ---
 source: typegraph/core/src/runtimes/prisma/relationship/mod.rs
-expression: reg
+expression: ctx
 ---
-RelationshipRegistry {
+PrismaContext {
     models: {
-        Type#4: RegisteredModel {
-            relationships: {
-                "children": "__rel_Node_Node_1",
-                "parent": "__rel_Node_Node_1",
+        Type#4: ModelRef(
+            RefCell {
+                value: Model {
+                    type_id: Type#4,
+                    type_name: "Node",
+                    props: {
+                        "id": Property {
+                            wrapper_type_id: Type#0,
+                            prop_type: Scalar(
+                                Scalar {
+                                    type_id: Type#0,
+                                    typ: String(
+                                        Plain,
+                                    ),
+                                    injection: None,
+                                },
+                            ),
+                            quantifier: One,
+                            unique: false,
+                            auto: false,
+                        },
+                        "children": Property {
+                            wrapper_type_id: Type#2,
+                            prop_type: Model {
+                                type_id: Type#4,
+                                relationship_attributes: RelationshipAttributes {
+                                    name: None,
+                                    target_field: None,
+                                    fkey: None,
+                                },
+                            },
+                            quantifier: Many,
+                            unique: false,
+                            auto: false,
+                        },
+                        "parent": Property {
+                            wrapper_type_id: Type#3,
+                            prop_type: Model {
+                                type_id: Type#4,
+                                relationship_attributes: RelationshipAttributes {
+                                    name: None,
+                                    target_field: None,
+                                    fkey: None,
+                                },
+                            },
+                            quantifier: One,
+                            unique: false,
+                            auto: false,
+                        },
+                    },
+                    id_field: "id",
+                    relationships: {
+                        "children": "__rel_Node_Node_2",
+                        "parent": "__rel_Node_Node_2",
+                    },
+                },
             },
-            name: "Node",
-            id_field: "id",
-        },
+        ),
     },
     models_by_name: {},
     relationships: {
@@ -32,11 +82,29 @@ RelationshipRegistry {
                 field: "parent",
             },
         },
+        "__rel_Node_Node_2": Relationship {
+            name: "__rel_Node_Node_2",
+            left: RelationshipModel {
+                model_type: Type#4,
+                model_name: "Node",
+                wrapper_type: Type#3,
+                cardinality: One,
+                field: "children",
+            },
+            right: RelationshipModel {
+                model_type: Type#4,
+                model_name: "Node",
+                wrapper_type: Type#2,
+                cardinality: Many,
+                field: "parent",
+            },
+        },
     },
+    typegen_cache: OnceCell(Uninit),
     complete_registrations: {
         Type#4,
     },
-    counter: RefCell {
-        value: 1,
+    counter: Cell {
+        value: 2,
     },
 }

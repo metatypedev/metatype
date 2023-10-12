@@ -9,8 +9,7 @@ root: struct #11
 │  ├─ [name]: optional #6
 │  │  └─ item: string #1
 │  └─ [age]: optional #7
-│     └─ item: optional #3
-│        └─ item: integer #2
+│     └─ item: integer #2
 └─ [where]: struct 'QueryUniqueRecordWhereInput' #10
    └─ [id]: optional #9
       └─ item: string #0

@@ -1,6 +1,6 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(types.input)"
+expression: "tree::print(inp)"
 ---
 root: struct #60
 ├─ [data]: struct '_Record_UpdateInput' #17
@@ -16,7 +16,8 @@ root: struct #60
 │  │        └─ [set]: string #1
 │  └─ [age]: optional #16
 │     └─ item: union #15
-│        ├─ variant_0: integer #2
+│        ├─ variant_0: optional #3
+│        │  └─ item: integer #2
 │        ├─ variant_1: struct #11
 │        │  └─ [set]: optional #3
 │        │     └─ item: integer #2

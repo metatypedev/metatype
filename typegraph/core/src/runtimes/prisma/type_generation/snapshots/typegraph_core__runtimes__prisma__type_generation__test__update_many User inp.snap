@@ -1,28 +1,28 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(types.input)"
+expression: "tree::print(inp)"
 ---
-root: struct #102
-├─ [data]: struct '_User_UpdateInput' #81
-│  ├─ [id]: optional #77
-│  │  └─ item: union #76
-│  │     ├─ variant_0: integer #63
-│  │     ├─ variant_1: struct #72
-│  │     │  └─ [set]: integer #63
-│  │     ├─ variant_2: struct #73
-│  │     │  └─ [multiply]: integer #63
-│  │     ├─ variant_3: struct #74
-│  │     │  └─ [decrement]: integer #63
-│  │     └─ variant_4: struct #75
-│  │        └─ [increment]: integer #63
-│  └─ [name]: optional #80
-│     └─ item: union #79
-│        ├─ variant_0: string #64
-│        └─ variant_1: struct #78
-│           └─ [set]: string #64
-└─ [where]: optional '_101_QueryUserWhereInput?' #101
-   └─ item: struct 'QueryUserWhereInput' #100
-      ├─ [id]: optional '_89__integer_filter_c?' #89
+root: struct #100
+├─ [data]: struct '_User_UpdateInput' #79
+│  ├─ [id]: optional #75
+│  │  └─ item: union #74
+│  │     ├─ variant_0: integer #61
+│  │     ├─ variant_1: struct #70
+│  │     │  └─ [set]: integer #61
+│  │     ├─ variant_2: struct #71
+│  │     │  └─ [multiply]: integer #61
+│  │     ├─ variant_3: struct #72
+│  │     │  └─ [decrement]: integer #61
+│  │     └─ variant_4: struct #73
+│  │        └─ [increment]: integer #61
+│  └─ [name]: optional #78
+│     └─ item: union #77
+│        ├─ variant_0: string #62
+│        └─ variant_1: struct #76
+│           └─ [set]: string #62
+└─ [where]: optional '_99_QueryUserWhereInput?' #99
+   └─ item: struct 'QueryUserWhereInput' #98
+      ├─ [id]: optional '_87__integer_filter_c?' #87
       │  └─ item: optional '_integer_filter_c' #51
       │     └─ item: union #50
       │        ├─ variant_0: either '_integer_filter' #48
@@ -68,7 +68,7 @@ root: struct #102
       │              └─ variant_5: struct #47
       │                 └─ [notIn]: array #42
       │                    └─ item: integer #40
-      ├─ [name]: optional '_90__string_filter_c?' #90
+      ├─ [name]: optional '_88__string_filter_c?' #88
       │  └─ item: optional '_string_filter_c' #37
       │     └─ item: union #36
       │        ├─ variant_0: union '_string_filter' #34
@@ -118,9 +118,9 @@ root: struct #102
       │                 │  └─ item: string #22
       │                 └─ [endsWith]: optional #23
       │                    └─ item: string #22
-      ├─ [posts]: optional '_94__71WithFilters_norel?' #94
-      │  └─ item: struct '_71WithFilters_norel' #93
-      │     ├─ [id]: optional '_91__integer_filter_c?' #91
+      ├─ [posts]: optional '_92__69WithFilters_norel?' #92
+      │  └─ item: struct '_69WithFilters_norel' #91
+      │     ├─ [id]: optional '_89__integer_filter_c?' #89
       │     │  └─ item: optional '_integer_filter_c' #51
       │     │     └─ item: union #50
       │     │        ├─ variant_0: either '_integer_filter' #48
@@ -166,7 +166,7 @@ root: struct #102
       │     │              └─ variant_5: struct #47
       │     │                 └─ [notIn]: array #42
       │     │                    └─ item: integer #40
-      │     └─ [title]: optional '_92__string_filter_c?' #92
+      │     └─ [title]: optional '_90__string_filter_c?' #90
       │        └─ item: optional '_string_filter_c' #37
       │           └─ item: union #36
       │              ├─ variant_0: union '_string_filter' #34
@@ -216,12 +216,12 @@ root: struct #102
       │                       │  └─ item: string #22
       │                       └─ [endsWith]: optional #23
       │                          └─ item: string #22
-      ├─ [AND]: optional '_98__97_QueryUserWhereInput[]?' #98
-      │  └─ item: array '_97_QueryUserWhereInput[]' #97
-      │     └─ item: &QueryUserWhereInput #96
-      ├─ [OR]: optional '_98__97_QueryUserWhereInput[]?' #98
-      │  └─ item: array '_97_QueryUserWhereInput[]' #97
-      │     └─ item: &QueryUserWhereInput #96
-      └─ [NOT]: optional '_99_QueryUserWhereInput?' #99
-         └─ item: &QueryUserWhereInput #96
+      ├─ [AND]: optional '_96__95_QueryUserWhereInput[]?' #96
+      │  └─ item: array '_95_QueryUserWhereInput[]' #95
+      │     └─ item: &QueryUserWhereInput #94
+      ├─ [OR]: optional '_96__95_QueryUserWhereInput[]?' #96
+      │  └─ item: array '_95_QueryUserWhereInput[]' #95
+      │     └─ item: &QueryUserWhereInput #94
+      └─ [NOT]: optional '_97_QueryUserWhereInput?' #97
+         └─ item: &QueryUserWhereInput #94
 

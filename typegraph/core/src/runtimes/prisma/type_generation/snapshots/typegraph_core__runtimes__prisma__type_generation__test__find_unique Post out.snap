@@ -1,14 +1,12 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(types.output)"
+expression: "tree::print(out)"
 ---
-root: optional '_36_PostWithNestedCount?' #36
-└─ item: struct 'PostWithNestedCount' #35
+root: optional '_34__PostOutputType?' #34
+└─ item: struct '_PostOutputType' #33
    ├─ [id]: integer #16
    ├─ [title]: string #17
-   └─ [author]: struct 'User' #15
+   └─ [author]: struct '_UserOutputType_excluding___rel_Post_User_2' #32
       ├─ [id]: integer #11
-      ├─ [name]: string #12
-      └─ [posts]: array '_14_Post[]' #14
-         └─ item: &Post #13
+      └─ [name]: string #12
 

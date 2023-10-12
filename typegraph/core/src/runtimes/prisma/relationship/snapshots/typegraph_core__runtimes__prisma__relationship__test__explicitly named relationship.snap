@@ -1,23 +1,123 @@
 ---
 source: typegraph/core/src/runtimes/prisma/relationship/mod.rs
-expression: reg
+expression: ctx
 ---
-RelationshipRegistry {
+PrismaContext {
     models: {
-        Type#4: RegisteredModel {
-            relationships: {
-                "posts": "PostAuthor",
+        Type#4: ModelRef(
+            RefCell {
+                value: Model {
+                    type_id: Type#4,
+                    type_name: "User",
+                    props: {
+                        "id": Property {
+                            wrapper_type_id: Type#0,
+                            prop_type: Scalar(
+                                Scalar {
+                                    type_id: Type#0,
+                                    typ: Integer,
+                                    injection: None,
+                                },
+                            ),
+                            quantifier: One,
+                            unique: false,
+                            auto: false,
+                        },
+                        "name": Property {
+                            wrapper_type_id: Type#1,
+                            prop_type: Scalar(
+                                Scalar {
+                                    type_id: Type#1,
+                                    typ: String(
+                                        Plain,
+                                    ),
+                                    injection: None,
+                                },
+                            ),
+                            quantifier: One,
+                            unique: false,
+                            auto: false,
+                        },
+                        "posts": Property {
+                            wrapper_type_id: Type#3,
+                            prop_type: Model {
+                                type_id: Type#8,
+                                relationship_attributes: RelationshipAttributes {
+                                    name: None,
+                                    target_field: None,
+                                    fkey: None,
+                                },
+                            },
+                            quantifier: Many,
+                            unique: false,
+                            auto: false,
+                        },
+                    },
+                    id_field: "id",
+                    relationships: {
+                        "posts": "PostAuthor",
+                    },
+                },
             },
-            name: "User",
-            id_field: "id",
-        },
-        Type#8: RegisteredModel {
-            relationships: {
-                "author": "PostAuthor",
+        ),
+        Type#8: ModelRef(
+            RefCell {
+                value: Model {
+                    type_id: Type#8,
+                    type_name: "Post",
+                    props: {
+                        "id": Property {
+                            wrapper_type_id: Type#5,
+                            prop_type: Scalar(
+                                Scalar {
+                                    type_id: Type#5,
+                                    typ: Integer,
+                                    injection: None,
+                                },
+                            ),
+                            quantifier: One,
+                            unique: false,
+                            auto: false,
+                        },
+                        "title": Property {
+                            wrapper_type_id: Type#6,
+                            prop_type: Scalar(
+                                Scalar {
+                                    type_id: Type#6,
+                                    typ: String(
+                                        Plain,
+                                    ),
+                                    injection: None,
+                                },
+                            ),
+                            quantifier: One,
+                            unique: false,
+                            auto: false,
+                        },
+                        "author": Property {
+                            wrapper_type_id: Type#7,
+                            prop_type: Model {
+                                type_id: Type#4,
+                                relationship_attributes: RelationshipAttributes {
+                                    name: Some(
+                                        "PostAuthor",
+                                    ),
+                                    target_field: None,
+                                    fkey: None,
+                                },
+                            },
+                            quantifier: One,
+                            unique: false,
+                            auto: false,
+                        },
+                    },
+                    id_field: "id",
+                    relationships: {
+                        "author": "PostAuthor",
+                    },
+                },
             },
-            name: "Post",
-            id_field: "id",
-        },
+        ),
     },
     models_by_name: {},
     relationships: {
@@ -39,11 +139,12 @@ RelationshipRegistry {
             },
         },
     },
+    typegen_cache: OnceCell(Uninit),
     complete_registrations: {
         Type#4,
         Type#8,
     },
-    counter: RefCell {
-        value: 1,
+    counter: Cell {
+        value: 2,
     },
 }

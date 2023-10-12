@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::Result;
+use crate::runtimes::prisma::context::PrismaContext;
+use crate::runtimes::prisma::relationship::Cardinality;
+use crate::runtimes::prisma::utils::model::ScalarType;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeId;
 use crate::types::{Type, TypeFun};
@@ -19,61 +22,50 @@ impl UpdateInput {
 }
 
 impl TypeGen for UpdateInput {
-    fn generate(&self, context: &mut super::TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
 
-        for (key, type_id) in self.model_id.as_struct().unwrap().iter_props() {
-            let attrs = type_id.attrs()?;
-            // TODO check injection
-            let typ = attrs.concrete_type.as_type()?;
-            let (typ, _nullable) = match typ {
-                Type::Optional(inner) => (TypeId(inner.data.of).as_type()?, true),
-                _ => (typ, false),
-            };
+        let model = context.model(self.model_id)?;
+        let model = model.borrow();
 
-            let mutation_type = match typ {
-                Type::Optional(_) => unreachable!(),
-                Type::Boolean(_) | Type::String(_) => {
-                    t::unionx![type_id, t::struct_().prop("set", type_id)].build()?
-                }
-                Type::Integer(_) | Type::Float(_) => {
-                    let wrapped_type_id = typ.get_id();
+        for (key, prop) in model.iter_props() {
+            // let attrs = type_id.attrs()?;
+            // // TODO check injection
+            // let typ = attrs.concrete_type.as_type()?;
+            // let (typ, _nullable) = match typ {
+            //     Type::Optional(inner) => (TypeId(inner.data.of).as_type()?, true),
+            //     _ => (typ, false),
+            // };
+
+            if let Some(prop) = prop.as_scalar_property() {
+                let mutation_type = if prop.quantifier == Cardinality::Many {
                     t::unionx![
-                        wrapped_type_id,
-                        t::struct_().prop("set", type_id),
-                        t::struct_().prop("multiply", wrapped_type_id),
-                        t::struct_().prop("decrement", wrapped_type_id),
-                        t::struct_().prop("increment", wrapped_type_id),
-                    ]
-                    .build()?
-                }
-                Type::Array(inner) => {
-                    if context
-                        .registry
-                        .find_relationship_on(self.model_id, key)
-                        .is_some()
-                    {
-                        continue;
-                    }
-                    // scalar list: only supported in PostgreSQL, CockroachDB and MongoDB
-                    // see: https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#relational-databases
-                    let item_type = inner.data.of.into();
-                    t::unionx![
-                        type_id,
-                        t::struct_().prop("set", type_id),
-                        t::struct_().prop("push", item_type),
+                        prop.wrapper_type_id,
+                        t::struct_().prop("set", prop.wrapper_type_id),
+                        t::struct_().prop("push", prop.type_id),
                         // "unset": mongo only
                     ]
                     .build()?
-                }
-                _ => {
-                    // TODO: (mongo only) composite types
-                    // see: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#composite-type-methods
-                    continue;
-                }
-            };
-
-            builder.propx(key, t::optional(mutation_type))?;
+                } else {
+                    let wrapper_type_id = prop.wrapper_type_id;
+                    match prop.prop_type {
+                        ScalarType::Boolean | ScalarType::String(_) => t::unionx![
+                            wrapper_type_id,
+                            t::struct_().prop("set", prop.wrapper_type_id)
+                        ]
+                        .build()?,
+                        ScalarType::Integer | ScalarType::Float => t::unionx![
+                            wrapper_type_id,
+                            t::struct_().prop("set", wrapper_type_id),
+                            t::struct_().prop("multiply", prop.type_id),
+                            t::struct_().prop("decrement", prop.type_id),
+                            t::struct_().prop("increment", prop.type_id),
+                        ]
+                        .build()?,
+                    }
+                };
+                builder.propx(key, t::optional(mutation_type))?;
+            }
         }
 
         builder.named(self.name()).build()

@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::runtimes::prisma::context::PrismaContext;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::{errors::Result, types::TypeId};
 
@@ -17,7 +18,7 @@ impl QueryWhereExpr {
 }
 
 impl TypeGen for QueryWhereExpr {
-    fn generate(&self, context: &mut super::TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let where_type = context.generate(&Where::new(self.model_id, true))?;
         let extended_type =
             context.generate(&WithFilters::new(where_type, self.model_id, false))?;
@@ -47,3 +48,25 @@ impl TypeGen for QueryWhereExpr {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::*;
+    #[test]
+    fn test_query_where_expr() -> Result<()> {
+        setup(None)?;
+
+        let mut ctx = PrismaContext::default();
+
+        let (user, post) = models::simple_relationship()?;
+
+        ctx.manage(user)?;
+        let user_where_expr = ctx.generate(&QueryWhereExpr::new(user))?;
+        insta::assert_snapshot!("User/QueryWhereExpr", tree::print(user_where_expr));
+
+
+        Ok(())
+    }
+}
+

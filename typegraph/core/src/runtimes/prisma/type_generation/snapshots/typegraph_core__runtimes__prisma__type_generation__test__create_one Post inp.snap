@@ -1,22 +1,22 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(types.input)"
+expression: "tree::print(inp)"
 ---
-root: struct #45
-└─ [data]: struct '_Post_CreateInput' #44
-   ├─ [id]: optional #35
-   │  └─ item: integer #14
-   ├─ [title]: string #15
-   └─ [author]: optional #43
-      └─ item: struct #42
-         ├─ [create]: optional '_40__User_CreateInput_excluding___rel_Post_User_1?' #40
-         │  └─ item: struct '_User_CreateInput_excluding___rel_Post_User_1' #36
-         │     ├─ [id]: integer #9
-         │     └─ [name]: string #10
-         └─ [connect]: optional '_41_UserWhere_norel?' #41
-            └─ item: struct 'UserWhere_norel' #39
-               ├─ [id]: optional #37
-               │  └─ item: integer #9
-               └─ [name]: optional #38
-                  └─ item: string #10
+root: struct #41
+└─ [data]: struct '_Post_CreateInput' #40
+   ├─ [id]: optional #31
+   │  └─ item: integer #13
+   ├─ [title]: string #14
+   └─ [author]: optional #39
+      └─ item: struct #38
+         ├─ [create]: optional '_36__User_CreateInput_excluding___rel_Post_User_2?' #36
+         │  └─ item: struct '_User_CreateInput_excluding___rel_Post_User_2' #32
+         │     ├─ [id]: integer #8
+         │     └─ [name]: string #9
+         └─ [connect]: optional '_37_UserWhere_norel?' #37
+            └─ item: struct 'UserWhere_norel' #35
+               ├─ [id]: optional #33
+               │  └─ item: integer #8
+               └─ [name]: optional #34
+                  └─ item: string #9
 

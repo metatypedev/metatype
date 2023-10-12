@@ -1,23 +1,93 @@
 ---
 source: typegraph/core/src/runtimes/prisma/relationship/mod.rs
-expression: reg
+expression: ctx
 ---
-RelationshipRegistry {
+PrismaContext {
     models: {
-        Type#4: RegisteredModel {
-            relationships: {
-                "profile": "__rel_User_Profile_1",
+        Type#4: ModelRef(
+            RefCell {
+                value: Model {
+                    type_id: Type#4,
+                    type_name: "User",
+                    props: {
+                        "id": Property {
+                            wrapper_type_id: Type#0,
+                            prop_type: Scalar(
+                                Scalar {
+                                    type_id: Type#0,
+                                    typ: Integer,
+                                    injection: None,
+                                },
+                            ),
+                            quantifier: One,
+                            unique: false,
+                            auto: false,
+                        },
+                        "profile": Property {
+                            wrapper_type_id: Type#3,
+                            prop_type: Model {
+                                type_id: Type#8,
+                                relationship_attributes: RelationshipAttributes {
+                                    name: None,
+                                    target_field: None,
+                                    fkey: Some(
+                                        true,
+                                    ),
+                                },
+                            },
+                            quantifier: Optional,
+                            unique: false,
+                            auto: false,
+                        },
+                    },
+                    id_field: "id",
+                    relationships: {
+                        "profile": "__rel_User_Profile_2",
+                    },
+                },
             },
-            name: "User",
-            id_field: "id",
-        },
-        Type#8: RegisteredModel {
-            relationships: {
-                "user": "__rel_User_Profile_1",
+        ),
+        Type#8: ModelRef(
+            RefCell {
+                value: Model {
+                    type_id: Type#8,
+                    type_name: "Profile",
+                    props: {
+                        "id": Property {
+                            wrapper_type_id: Type#5,
+                            prop_type: Scalar(
+                                Scalar {
+                                    type_id: Type#5,
+                                    typ: Integer,
+                                    injection: None,
+                                },
+                            ),
+                            quantifier: One,
+                            unique: false,
+                            auto: false,
+                        },
+                        "user": Property {
+                            wrapper_type_id: Type#7,
+                            prop_type: Model {
+                                type_id: Type#4,
+                                relationship_attributes: RelationshipAttributes {
+                                    name: None,
+                                    target_field: None,
+                                    fkey: None,
+                                },
+                            },
+                            quantifier: Optional,
+                            unique: false,
+                            auto: false,
+                        },
+                    },
+                    id_field: "id",
+                    relationships: {
+                        "user": "__rel_User_Profile_2",
+                    },
+                },
             },
-            name: "Profile",
-            id_field: "id",
-        },
+        ),
     },
     models_by_name: {},
     relationships: {
@@ -38,12 +108,30 @@ RelationshipRegistry {
                 field: "profile",
             },
         },
+        "__rel_User_Profile_2": Relationship {
+            name: "__rel_User_Profile_2",
+            left: RelationshipModel {
+                model_type: Type#8,
+                model_name: "Profile",
+                wrapper_type: Type#3,
+                cardinality: Optional,
+                field: "user",
+            },
+            right: RelationshipModel {
+                model_type: Type#4,
+                model_name: "User",
+                wrapper_type: Type#7,
+                cardinality: Optional,
+                field: "profile",
+            },
+        },
     },
+    typegen_cache: OnceCell(Uninit),
     complete_registrations: {
         Type#4,
         Type#8,
     },
-    counter: RefCell {
-        value: 1,
+    counter: Cell {
+        value: 2,
     },
 }

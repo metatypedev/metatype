@@ -1,6 +1,6 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(types.input)"
+expression: "tree::print(inp)"
 ---
 root: struct '_User_QueryInput' #107
 ├─ [where]: optional '_96_QueryUserWhereInput?' #96

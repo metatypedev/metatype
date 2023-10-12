@@ -126,3 +126,4 @@ impl<'a> TryFrom<&'a Type> for RuntimeConfig<'a> {
         ))
     }
 }
+

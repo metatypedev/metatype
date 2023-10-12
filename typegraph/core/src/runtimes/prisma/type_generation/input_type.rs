@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::Result;
-use crate::runtimes::prisma::type_utils::RuntimeConfig;
+use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::{relationship::Cardinality, type_generation::where_::Where};
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-use crate::types::{Type, TypeId};
+use crate::types::TypeId;
 
-use super::{TypeGen, TypeGenContext};
+use super::TypeGen;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 enum Operation {
     Create,
     Update,
@@ -49,35 +49,36 @@ impl InputType {
 }
 
 impl TypeGen for InputType {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+        crate::log!("generating input type for {:?}", self.model_id);
         let mut builder = t::struct_();
+        let model = context.model(self.model_id)?;
+        let model = model.borrow();
 
-        for (k, type_id) in self.model_id.as_struct()?.iter_props() {
-            let rel = context.registry.find_relationship_on(self.model_id, k);
-            if let Some(rel) = rel {
-                if self.skip_rel.contains(&rel.name) {
+        for (k, prop) in model.iter_props() {
+            if let Some(rel_name) = model.relationships.get(k) {
+                if self.skip_rel.contains(rel_name) {
                     continue;
                 }
+                let prop = prop.as_relationship_property().unwrap();
 
-                let entry = rel.get(rel.side_of_type(type_id).unwrap());
-                // model
                 let create = context.generate(&InputType {
-                    model_id: entry.model_type,
+                    model_id: prop.model_id,
                     skip_rel: {
                         let mut skip_rel = self.skip_rel.clone();
-                        skip_rel.push(rel.name.clone());
+                        skip_rel.push(rel_name.to_string());
                         skip_rel
                     },
                     operation: Operation::Create,
                 })?;
                 // TODO unique where
-                let connect = context.generate(&Where::new(entry.model_type, false))?;
+                let connect = context.generate(&Where::new(prop.model_id, false))?;
 
                 let mut inner = t::struct_();
                 inner.propx("create", t::optional(create))?;
                 inner.propx("connect", t::optional(connect))?;
 
-                if let Cardinality::Many = entry.cardinality {
+                if let Cardinality::Many = prop.quantifier {
                     inner.propx(
                         "createMany",
                         t::optionalx(t::struct_().propx("data", t::array(create))?)?,
@@ -86,24 +87,16 @@ impl TypeGen for InputType {
 
                 // TODO what if cardinality is Cardinality::One ??
                 builder.propx(k, t::optionalx(inner.min(1).max(1))?)?;
-            } else {
-                let attrs = type_id.attrs()?;
-                match attrs.concrete_type.as_type()? {
-                    Type::Func(_) => continue,
-                    typ => {
-                        let is_auto = || -> Result<_> {
-                            Ok(RuntimeConfig::try_from(&typ)?.get("auto")?.unwrap_or(false))
-                        };
-                        builder.prop(
-                            k,
-                            if self.operation.is_update() || is_auto()? {
-                                t::optional(type_id).build()?
-                            } else {
-                                type_id
-                            },
-                        );
-                    }
-                }
+            } else if let Some(prop) = prop.as_scalar_property() {
+                crate::log!("operation: {:?}, k={k:?}, auto={}", self.operation, prop.auto);
+                builder.prop(
+                    k,
+                    if self.operation.is_update() || prop.auto {
+                        t::optional(prop.type_id).build()?
+                    } else {
+                        prop.wrapper_type_id
+                    },
+                );
             }
         }
 
@@ -122,5 +115,44 @@ impl TypeGen for InputType {
             Operation::Update => "Update",
         };
         format!("_{model_name}_{op}Input{suffix}")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::runtimes::prisma::context::PrismaContext;
+    use crate::test_utils::*;
+
+    #[test]
+    fn test_input_type() -> Result<()> {
+        setup(None)?;
+
+        let mut ctx = PrismaContext::default();
+        let (user, post) = models::simple_relationship()?;
+
+        ctx.manage(user)?;
+
+        insta::assert_snapshot!(
+            "user input type for create",
+            tree::print(ctx.generate(&InputType::for_create(user))?)
+        );
+
+        insta::assert_snapshot!(
+            "user input type for update",
+            tree::print(ctx.generate(&InputType::for_update(user))?)
+        );
+
+        insta::assert_snapshot!(
+            "post input type for create",
+            tree::print(ctx.generate(&InputType::for_create(post))?)
+        );
+        
+        insta::assert_snapshot!(
+            "post input type for update",
+            tree::print(ctx.generate(&InputType::for_update(post))?)
+        );
+
+        Ok(())
     }
 }

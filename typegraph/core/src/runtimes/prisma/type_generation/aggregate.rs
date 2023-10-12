@@ -4,10 +4,10 @@
 use crate::{
     errors::Result,
     t::{self, ConcreteTypeBuilder, TypeBuilder},
-    types::{Type, TypeId},
+    types::{Type, TypeId}, runtimes::prisma::context::PrismaContext,
 };
 
-use super::{TypeGen, TypeGenContext};
+use super::{TypeGen};
 
 pub struct CountOutput {
     model_id: TypeId,
@@ -20,7 +20,7 @@ impl CountOutput {
 }
 
 impl TypeGen for CountOutput {
-    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
         let opt_int = t::optionalx(t::integer())?.build()?;
         builder.prop("_all", opt_int);
@@ -51,7 +51,7 @@ impl NumberAggregateOutput {
 }
 
 impl TypeGen for NumberAggregateOutput {
-    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
 
         let opt_float = t::optionalx(t::float())?.build()?;

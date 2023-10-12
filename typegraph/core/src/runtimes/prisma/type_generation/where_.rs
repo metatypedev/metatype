@@ -3,6 +3,7 @@
 
 use crate::{
     errors::Result,
+    runtimes::prisma::context::PrismaContext,
     t::{self, ConcreteTypeBuilder, TypeBuilder},
     types::{Type, TypeId},
 };
@@ -23,30 +24,31 @@ impl Where {
     }
 }
 
+// TODO merge with with filters??
 impl TypeGen for Where {
-    fn generate(&self, context: &mut super::TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
 
-        for (key, type_id) in self.model_id.as_struct().unwrap().iter_props() {
-            if let Some(rel) = context.registry.find_relationship_on(self.model_id, key) {
+        let model = context.model(self.model_id)?;
+        let model = model.borrow();
+
+        for (key, prop) in model.iter_props() {
+            if let Some(_) = model.relationships.get(key) {
                 if !self.relations {
                     continue;
                 }
-                let model = rel.get_opposite_of(self.model_id, key).unwrap();
+
+                let prop = prop.as_relationship_property().unwrap();
 
                 let inner = context.generate(&Where {
-                    model_id: model.model_type,
+                    model_id: prop.model_id,
                     relations: false,
                 })?;
                 builder.propx(key, t::optional(inner))?;
             } else {
-                let non_optional = type_id.non_optional_concrete_type()?;
-                match non_optional.as_type()? {
-                    Type::Optional(_) => unreachable!(),
-                    Type::Func(_) => continue,
-                    _ => {
-                        builder.propx(key, t::optional(non_optional))?;
-                    }
+                if let Some(prop) = prop.as_scalar_property() {
+                    // TODO cardinality??
+                    builder.propx(key, t::optional(prop.type_id))?;
                 }
             }
         }
@@ -71,12 +73,34 @@ mod test {
     fn test_generate_where() -> Result<()> {
         setup(None)?;
 
-        let mut context = TypeGenContext::default();
+        let mut context = PrismaContext::default();
         let record = models::simple_record()?;
-        context.registry.manage(record)?;
+        context.manage(record)?;
 
         let where_type = context.generate(&Where::new(record, false))?;
         insta::assert_snapshot!("where Record", tree::print(where_type));
+
+        let (user, post) = models::simple_relationship()?;
+        context.manage(user)?;
+
+        insta::assert_snapshot!(
+            "where User (no rel)",
+            tree::print(context.generate(&Where::new(user, false))?)
+        );
+        insta::assert_snapshot!(
+            "where User (with rel)",
+            tree::print(context.generate(&Where::new(user, true))?)
+        );
+
+        insta::assert_snapshot!(
+            "where Post (no rel)",
+            tree::print(context.generate(&Where::new(post, false))?)
+        );
+
+        insta::assert_snapshot!(
+            "where Post (with rel)",
+            tree::print(context.generate(&Where::new(post, true))?)
+        );
 
         Ok(())
     }

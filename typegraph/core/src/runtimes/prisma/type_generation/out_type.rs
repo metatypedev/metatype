@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::errors::Result;
+use crate::runtimes::prisma::context::PrismaContext;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::{Type, TypeId};
 
@@ -21,30 +23,30 @@ impl OutType {
 }
 
 impl TypeGen for OutType {
-    fn generate(
-        &self,
-        context: &mut super::TypeGenContext,
-    ) -> crate::errors::Result<crate::types::TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
 
-        for (key, type_id) in self.model_id.as_struct()?.iter_props() {
-            let rel = context.registry.find_relationship_on(self.model_id, key);
+        let model = context.model(self.model_id)?;
+        let model = model.borrow();
 
-            if let Some(rel) = rel {
-                if self.skip_rel.contains(&rel.name) || rel.left.model_type == rel.right.model_type
-                {
+        for (key, prop) in model.iter_props() {
+            if let Some(rel_name) = model.relationships.get(key) {
+                let rel = context.relationships.get(rel_name).unwrap();
+                if self.skip_rel.contains(rel_name) || rel.left.model_type == rel.right.model_type {
                     continue;
                 }
-                let entry = rel.get(rel.side_of_type(type_id).unwrap());
+
                 let mut skip_rel = self.skip_rel.clone();
-                skip_rel.push(rel.name.clone());
+                skip_rel.push(rel_name.clone());
+
+                let prop = prop.as_relationship_property().unwrap();
 
                 let out_type = context.generate(&OutType {
-                    model_id: entry.model_type,
+                    model_id: prop.model_id,
                     skip_rel,
                 })?;
 
-                let out_type = match entry.cardinality {
+                let out_type = match prop.quantifier {
                     Cardinality::Optional => t::optional(out_type).build()?,
                     Cardinality::One => out_type,
                     Cardinality::Many => t::array(out_type).build()?,
@@ -52,15 +54,7 @@ impl TypeGen for OutType {
 
                 builder.prop(key, out_type);
             } else {
-                match type_id.attrs()?.concrete_type.as_type()? {
-                    Type::Func(_) => {
-                        // skip, other runtime
-                        continue;
-                    }
-                    _ => {
-                        builder.prop(key, type_id);
-                    }
-                }
+                builder.prop(key, prop.wrapper_type_id);
             }
         }
 
