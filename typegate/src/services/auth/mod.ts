@@ -6,7 +6,7 @@ import { BasicAuth } from "./protocols/basic.ts";
 import { OAuth2Auth } from "./protocols/oauth2.ts";
 
 import type { Auth } from "../../typegraph/types.ts";
-import { SecretManager } from "../../typegraph/mod.ts";
+import { SecretManager, TypeGraphDS } from "../../typegraph/mod.ts";
 
 import { Protocol } from "./protocols/protocol.ts";
 import { DenoRuntime } from "../../runtimes/deno/deno.ts";
@@ -26,10 +26,11 @@ export function initAuth(
   auth: Auth,
   secretManager: SecretManager,
   denoRuntime: DenoRuntime,
+  typegraph: TypeGraphDS,
 ): Promise<Protocol> {
   switch (auth.protocol) {
     case "oauth2":
-      return OAuth2Auth.init(typegraphName, auth, secretManager, denoRuntime);
+      return OAuth2Auth.init(typegraphName, auth, secretManager, typegraph);
     case "basic":
       return BasicAuth.init(typegraphName, auth, secretManager, denoRuntime);
     case "jwt":

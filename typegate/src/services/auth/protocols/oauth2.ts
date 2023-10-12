@@ -6,24 +6,30 @@ import { OAuth2Client, OAuth2ClientConfig, Tokens } from "oauth2_client";
 import { encrypt, randomUUID, signJWT, verifyJWT } from "../../../crypto.ts";
 import { JWTClaims } from "../mod.ts";
 import { getLogger } from "../../../log.ts";
-import { SecretManager } from "../../../typegraph/mod.ts";
+import { SecretManager, TypeGraphDS } from "../../../typegraph/mod.ts";
 import {
   clearCookie,
   getEncryptedCookie,
   setEncryptedSessionCookie,
 } from "../cookies.ts";
 import { Protocol } from "./protocol.ts";
-import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
-import { Auth, Materializer } from "../../../typegraph/types.ts";
+import { Auth } from "../../../typegraph/types.ts";
 
 const logger = getLogger(import.meta);
+
+class AuthProfiler {
+  constructor(private typegraph: TypeGraphDS, private funcIndex: number) {}
+  transform(_input: unknown) {
+    return Promise.reject("TODO");
+  }
+}
 
 export class OAuth2Auth extends Protocol {
   static init(
     typegraphName: string,
     auth: Auth,
     secretManager: SecretManager,
-    denoRuntime: DenoRuntime,
+    typegraph: TypeGraphDS,
   ): Promise<Protocol> {
     const clientId = secretManager.secretOrFail(`${auth.name}_CLIENT_ID`);
     const clientSecret = secretManager.secretOrFail(
@@ -46,37 +52,29 @@ export class OAuth2Auth extends Protocol {
         auth.name,
         clientData,
         profile_url as string | null,
-        denoRuntime,
-        profiler
-          ? OAuth2Auth.materializerForProfiler(profiler as string)
+        profiler !== undefined
+          ? new AuthProfiler(typegraph, profiler as number)
           : null,
       ),
     );
   }
 
-  static materializerForProfiler(
-    profiler: string,
-  ): Materializer {
-    return {
-      name: "function",
-      runtime: -1, // dummy
-      effect: {
-        effect: "read",
-        idempotent: true,
-      },
-      data: {
-        script: `var _my_lambda = ${profiler};`,
-      },
-    } as Materializer;
-  }
+  // static materializerForProfiler(
+  //   typegraph: TypeGraphDS,
+  //   funcIndex: number,
+  // ): TGRuntime {
+  //   const { types, materializers, runtimes } = typegraph;
+  //   const func = types[funcIndex]! as FunctionNode;
+  //   const mat = materializers[func.materializer];
+  //   return runtimes[mat.runtime];
+  // }
 
   private constructor(
     typegraphName: string,
     private authName: string,
     private clientData: Omit<OAuth2ClientConfig, "redirectUri">,
     private profileUrl: string | null,
-    private denoRuntime: DenoRuntime,
-    private profiler: Materializer | null,
+    private authProfiler: AuthProfiler | null,
   ) {
     super(typegraphName);
   }
@@ -216,11 +214,13 @@ export class OAuth2Auth extends Protocol {
       });
       let profile = await res.json();
 
-      if (this.profiler) {
-        profile = await this.denoRuntime.delegate(this.profiler, false)(
-          // dummy values
-          { ...profile, _: { info: { url } } },
-        );
+      if (this.authProfiler) {
+        // profile = await this.denoRuntime.delegate(this.profiler, false)(
+        //   // dummy values
+        //   { ...profile, _: { info: { url } } },
+        // );
+
+        profile = await this.authProfiler!.transform(profile);
       }
 
       return profile;
