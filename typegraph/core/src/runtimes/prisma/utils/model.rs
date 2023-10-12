@@ -109,7 +109,6 @@ pub struct RelationshipAttributes {
     pub name: Option<String>,
     pub target_field: Option<String>,
     pub fkey: Option<bool>,
-    // pub unique: bool,
 }
 
 impl TryFrom<TypeAttributes> for RelationshipAttributes {
@@ -124,17 +123,14 @@ impl TryFrom<TypeAttributes> for RelationshipAttributes {
                 .get("fkey")
                 .map(|v| serde_json::from_str(v).map_err(|e| e.to_string()))
                 .transpose()?,
-            // unique: proxy_data.get("unique").map(|v| v.as_bool().unwrap()).unwrap_or(false),
         })
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct Property {
-    // key: String,
     pub wrapper_type_id: TypeId,
     pub prop_type: PropertyType,
-    // type_id: TypeId,
     quantifier: Cardinality,
     pub unique: bool,
     pub auto: bool,
@@ -190,8 +186,6 @@ impl Property {
         let runtime_config = RuntimeConfig::new(typ.get_base().unwrap().runtime_config.as_ref());
         let unique = runtime_config.get("unique")?.unwrap_or(false);
         let auto = runtime_config.get("auto")?.unwrap_or(false);
-        // TODO
-        // let fkey = false;
         match typ {
             Type::Func(_) => Ok(None), // other runtime
             Type::Optional(inner) => {
@@ -263,6 +257,35 @@ pub enum Injection {
     },
 }
 
+impl From<&common::typegraph::Injection> for Injection {
+    fn from(injection: &common::typegraph::Injection) -> Self {
+        use common::typegraph::EffectType;
+        use common::typegraph::Injection as I;
+        use common::typegraph::InjectionData as ID;
+
+        match injection {
+            I::Static(inj) | I::Secret(inj) | I::Context(inj) | I::Dynamic(inj) => match inj {
+                ID::SingleValue(_) => Self::Always,
+                ID::ValueByEffect(map) => Self::PerEffect {
+                    create: map.contains_key(&EffectType::Create),
+                    update: map.contains_key(&EffectType::Update),
+                    delete: map.contains_key(&EffectType::Delete),
+                    none: map.contains_key(&EffectType::None),
+                },
+            },
+            I::Parent(inj) => match inj {
+                ID::SingleValue(_) => Self::Always,
+                ID::ValueByEffect(map) => Self::PerEffect {
+                    create: map.contains_key(&EffectType::Create),
+                    update: map.contains_key(&EffectType::Update),
+                    delete: map.contains_key(&EffectType::Delete),
+                    none: map.contains_key(&EffectType::None),
+                },
+            },
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Scalar {
     type_id: TypeId,
@@ -324,7 +347,7 @@ impl PropertyType {
             Type::Integer(_) => Ok(Self::Scalar(Scalar {
                 type_id: concrete_type,
                 typ: ScalarType::Integer,
-                injection: None,
+                injection: wrapper_attrs.injection.map(|i| (&i).into()),
             })),
             Type::Float(_) => Ok(Self::Scalar(Scalar {
                 type_id: concrete_type,
