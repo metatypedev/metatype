@@ -3,9 +3,7 @@ from typegraph.graph.params import Auth
 from typegraph.runtimes.deno import DenoRuntime
 
 
-@typegraph(
-    auths=[Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}})]
-)
+@typegraph()
 def policies_jwt_injection(g: Graph):
     """
     This is expected to enforce the typescript generated code to return true
@@ -15,6 +13,8 @@ def policies_jwt_injection(g: Graph):
 
     deno = DenoRuntime()
     some_policy = Policy.context("field", '"; return true; "')
+
+    g.auth(Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}}))
 
     g.expose(
         sayHelloWorld=deno.func(

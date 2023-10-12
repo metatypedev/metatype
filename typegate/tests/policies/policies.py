@@ -3,9 +3,7 @@ from typegraph.graph.params import Auth
 from typegraph.runtimes.deno import DenoRuntime
 
 
-@typegraph(
-    auths=[Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}})]
-)
+@typegraph()
 def policies(g: Graph):
     deno = DenoRuntime()
 
@@ -20,6 +18,8 @@ def policies(g: Graph):
     fn = deno.identity(
         t.struct({"a": t.integer()}),
     )
+
+    g.auth(Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}}))
 
     g.expose(
         pol_true=fn.with_policy(deno.policy("true", "() => true")),

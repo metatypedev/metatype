@@ -3,13 +3,12 @@ from typegraph.graph.params import Auth
 from typegraph.runtimes.deno import DenoRuntime
 
 
-@typegraph(
-    auths=[Auth.hmac256("native")],
-)
+@typegraph()
 def policies_jwt_format(g: Graph):
     deno = DenoRuntime()
     some_policy = Policy.context("role", "myrole")
 
+    g.auth(Auth.hmac256("native"))
     g.expose(
         sayHelloWorld=deno.func(
             t.struct({}),
