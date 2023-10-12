@@ -123,11 +123,43 @@ pub fn finalize() -> Result<String> {
     #[cfg(test)]
     eprintln!("Finalizing typegraph...");
 
-    let ctx = TG.with(|tg| {
+    let mut ctx = TG.with(|tg| {
         tg.borrow_mut()
             .take()
             .ok_or_else(errors::expected_typegraph_context)
     })?;
+
+    // TODO: move to finalize_auth and keep ctx non mut in the current scope
+    let auths = Store::get_auths()
+        .iter()
+        .map(|auth| match auth.protocol {
+            common::typegraph::AuthProtocol::OAuth2 => {
+                let profiler_key = "profiler";
+                match auth.auth_data.get(profiler_key) {
+                    Some(value) => {
+                        let func_store_idx = value
+                            .as_number()
+                            .ok_or_else(|| "profiler has invalid type index".to_string())
+                            .and_then(|n| {
+                                n.as_u64()
+                                    .ok_or_else(|| "unable to convert profiler index".to_string())
+                            })? as u32;
+
+                        let type_idx = ctx.register_type(func_store_idx.into(), None)?;
+
+                        let mut auth_processed = auth.clone();
+                        auth_processed
+                            .auth_data
+                            .insert_full(profiler_key.to_string(), type_idx.into());
+
+                        Ok(auth_processed)
+                    }
+                    None => Ok(auth.to_owned()),
+                }
+            }
+            _ => Ok(auth.to_owned()),
+        })
+        .collect::<Result<Vec<_>>>()?;
 
     let tg = Typegraph {
         id: format!("https://metatype.dev/specs/{TYPEGRAPH_VERSION}.json"),
@@ -147,7 +179,7 @@ pub fn finalize() -> Result<String> {
                 dynamic: ctx.meta.queries.dynamic,
                 endpoints: Store::get_graphql_endpoints(),
             },
-            auths: Store::get_auths(),
+            auths,
             ..ctx.meta
         },
         path: None,

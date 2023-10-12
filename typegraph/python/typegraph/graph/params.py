@@ -3,9 +3,12 @@
 
 from dataclasses import dataclass
 import json
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from typegraph.gen.exports import utils
 from box import Box
+
+if TYPE_CHECKING:
+    from typegraph import t
 
 
 class Rate:
@@ -87,7 +90,7 @@ class Auth:
         access_url: str,
         scopes: str,
         profile_url: Optional[str] = None,
-        profiler: Optional[str] = None,
+        profiler: Optional["t.func"] = None,
     ) -> "utils.Auth":
         return utils.Auth(
             name,
@@ -97,7 +100,7 @@ class Auth:
                 ("access_url", json.dumps(access_url)),
                 ("scopes", json.dumps(scopes)),
                 ("profile_url", json.dumps(profile_url)),
-                ("profiler", json.dumps(profiler)),
+                ("profiler", json.dumps(None if profiler is None else profiler.id)),
             ],
         )
 
@@ -110,7 +113,7 @@ class OAuth2Params:
     authorize_url: str
     access_url: str
     profile_url: Optional[str]
-    profiler: Optional[str]
+    profiler: Optional[int]
 
 
 _oauth2_params = {
