@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{wit::core::Error, types::TypeId};
+use crate::{types::TypeId, wit::core::Error};
 
 // pub fn relationship_not_found(source_model: &str, field: &str) -> Error {
 //     format!("relationship target not found for  {source_model}::{field}")
@@ -60,8 +60,7 @@ pub fn unregistered_model(type_id: TypeId) -> Error {
     format!("Model not registered: {}", type_id.repr().unwrap())
 }
 
+#[allow(dead_code)]
 pub(crate) fn unregistered_prop(key: &str, type_name: &str) -> Error {
     format!("Property not registered: {}.{}", type_name, key)
 }
-
-

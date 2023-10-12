@@ -4,7 +4,7 @@
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-use crate::types::{Type, TypeId};
+use crate::types::TypeId;
 
 use super::{Cardinality, TypeGen};
 

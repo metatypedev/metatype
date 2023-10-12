@@ -3,11 +3,12 @@
 
 use crate::{
     errors::Result,
+    runtimes::prisma::context::PrismaContext,
     t::{self, ConcreteTypeBuilder, TypeBuilder},
-    types::{Type, TypeId}, runtimes::prisma::context::PrismaContext,
+    types::{Type, TypeId},
 };
 
-use super::{TypeGen};
+use super::TypeGen;
 
 pub struct CountOutput {
     model_id: TypeId,

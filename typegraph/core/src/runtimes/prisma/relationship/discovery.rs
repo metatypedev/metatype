@@ -74,7 +74,7 @@ impl PrismaContext {
         let model = candidate.model.borrow();
         let mut candidates = model
             .iter_relationship_props()
-            .filter_map(|(k, ty)| {
+            .filter_map(|(k, _prop)| {
                 self.create_candidate(candidate.model.clone(), k.to_string(), Some(&candidate))
                     .transpose()
             })
@@ -111,7 +111,7 @@ impl PrismaContext {
         let match_by_target_field = candidates
             .iter()
             .enumerate()
-            .filter(|(i, c)| {
+            .filter(|(_i, c)| {
                 c.relationship_attributes
                     .target_field
                     .as_ref()
@@ -169,7 +169,7 @@ impl PrismaContext {
         let candidates = model
             .borrow()
             .iter_relationship_props()
-            .filter_map(|(k, ty)| {
+            .filter_map(|(k, _prop)| {
                 self.create_candidate(model.clone(), k.to_string(), None)
                     .transpose()
             })
@@ -256,38 +256,4 @@ impl CandidatePair {
             }
         }
     }
-
-    /// get the model related to the given one in this pair.
-    /// Returns an error if the given model is not in this pair.
-    /// Returns None if the given model is in this pair in a self-referencing relationship
-    pub fn get_related(&self, model_id: TypeId) -> Result<Option<TypeId>> {
-        let (first, second) = (self.0.model.type_id(), self.1.model.type_id());
-        if first == model_id {
-            if first == second {
-                Ok(None)
-            } else {
-                Ok(Some(second))
-            }
-        } else if second == model_id {
-            Ok(Some(first))
-        } else {
-            Err(format!(
-                "model {:?} is not in relationship {}",
-                model_id,
-                self.rel_name(0)?
-            ))
-        }
-    }
 }
-
-// pub fn scan_model(model: &Struct, registry: &RelationshipRegistry) -> Result<Vec<CandidatePair>> {
-//     let candidates = model
-//         .iter_props()
-//         .filter_map(|(k, ty)| Candidate::new(model.get_id(), k.to_string(), ty, None).transpose())
-//         .collect::<Result<Vec<_>>>()?;
-//
-//     candidates
-//         .into_iter()
-//         .map(|c| c.into_pair(registry))
-//         .collect()
-// }

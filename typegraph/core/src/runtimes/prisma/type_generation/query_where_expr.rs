@@ -65,8 +65,9 @@ mod tests {
         let user_where_expr = ctx.generate(&QueryWhereExpr::new(user))?;
         insta::assert_snapshot!("User/QueryWhereExpr", tree::print(user_where_expr));
 
+        let post_where_expr = ctx.generate(&QueryWhereExpr::new(post))?;
+        insta::assert_snapshot!("Post/QueryWhereExpr", tree::print(post_where_expr));
 
         Ok(())
     }
 }
-

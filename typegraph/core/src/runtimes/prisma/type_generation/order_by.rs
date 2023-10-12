@@ -55,7 +55,6 @@ impl TypeGen for OrderBy {
                     continue;
                 }
 
-                let rel = &context.relationships.get(rel_name).unwrap();
                 let prop = prop.as_relationship_property().unwrap();
 
                 // TODO does this work for self relationship?

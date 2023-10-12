@@ -53,67 +53,6 @@ pub struct Relationship {
     pub right: RelationshipModel,
 }
 
-pub enum SideOfModel {
-    Left,
-    Right,
-    Both,
-    None,
-}
-
-impl Relationship {
-    pub fn get_opposite_of(&self, model_id: TypeId, field: &str) -> Option<&RelationshipModel> {
-        use SideOfModel as S;
-        match self.side_of_model(model_id) {
-            S::Both => {
-                if self.left.field == field {
-                    Some(&self.right)
-                } else if self.right.field == field {
-                    Some(&self.left)
-                } else {
-                    unreachable!()
-                }
-            }
-            S::Left => Some(&self.right),
-            S::Right => Some(&self.left),
-            S::None => None,
-        }
-    }
-
-    fn side_of_model(&self, model_type: TypeId) -> SideOfModel {
-        use SideOfModel as S;
-        if self.left.model_type == self.right.model_type {
-            if self.left.model_type == model_type {
-                S::Both
-            } else {
-                S::None
-            }
-        } else if self.left.model_type == model_type {
-            S::Left
-        } else if self.right.model_type == model_type {
-            S::Right
-        } else {
-            S::None
-        }
-    }
-
-    pub fn side_of_type(&self, type_id: TypeId) -> Option<Side> {
-        if self.left.wrapper_type == type_id {
-            Some(Side::Left)
-        } else if self.right.wrapper_type == type_id {
-            Some(Side::Right)
-        } else {
-            None
-        }
-    }
-
-    pub fn get(&self, side: Side) -> &RelationshipModel {
-        match side {
-            Side::Left => &self.left,
-            Side::Right => &self.right,
-        }
-    }
-}
-
 #[derive(Default, Clone)]
 pub struct PrismaLink {
     type_name: String,
@@ -219,23 +158,23 @@ mod test {
             .propx("posts", t::arrayx(t::proxy("Post"))?)?
             .named("User")
             .build()?;
-    
+
         let post = t::struct_()
             .propx("id", t::integer().as_id(true))?
             .propx("title", t::string())?
             .propx("author", prisma_linkn("User").name("PostAuthor"))?
             .named("Post")
             .build()?;
-    
+
         let mut ctx = PrismaContext::default();
         ctx.manage(user)?;
         ctx.manage(post)?;
-    
+
         insta::assert_debug_snapshot!("explicitly named relationship", ctx);
-    
+
         Ok(())
     }
-    
+
     #[test]
     fn test_fkey_attribute() -> Result<(), String> {
         Store::reset();
@@ -247,22 +186,22 @@ mod test {
             )?
             .named("User")
             .build()?;
-    
+
         let profile = t::struct_()
             .propx("id", t::integer().as_id(true))?
             .propx("user", t::optionalx(t::proxy("User"))?)?
             .named("Profile")
             .build()?;
-    
+
         let mut ctx = PrismaContext::default();
         ctx.manage(user)?;
         ctx.manage(profile)?;
-    
+
         insta::assert_debug_snapshot!("fkey attribute", ctx);
-    
+
         Ok(())
     }
-    
+
     #[test]
     fn test_unique_attribute() -> Result<(), String> {
         Store::reset();
@@ -274,22 +213,22 @@ mod test {
             )?
             .named("User")
             .build()?;
-    
+
         let profile = t::struct_()
             .propx("id", t::integer().as_id(true))?
             .propx("user", t::optionalx(t::proxy("User"))?)?
             .named("Profile")
             .build()?;
-    
+
         let mut ctx = PrismaContext::default();
         ctx.manage(user)?;
         ctx.manage(profile)?;
-    
+
         insta::assert_debug_snapshot!("unique attribute", ctx);
-    
+
         Ok(())
     }
-    
+
     #[test]
     fn test_self_relationship() -> Result<(), String> {
         Store::reset();
@@ -299,15 +238,15 @@ mod test {
             .propx("parent", t::proxy("Node"))?
             .named("Node")
             .build()?;
-    
+
         let mut ctx = PrismaContext::default();
         ctx.manage(node)?;
-    
+
         insta::assert_debug_snapshot!("self relationship", ctx);
-    
+
         Ok(())
     }
-    
+
     #[test]
     fn test_ambiguous_side() -> Result<(), String> {
         Store::reset();
@@ -316,13 +255,13 @@ mod test {
             .propx("profile", t::proxy("Profile"))?
             .named("User")
             .build()?;
-    
+
         let profile = t::struct_()
             .propx("id", t::integer().as_id(true))?
             .propx("user", t::proxy("User"))?
             .named("Profile")
             .build()?;
-    
+
         let mut ctx = PrismaContext::default();
         let res = ctx.manage(user);
         assert_eq!(
@@ -334,20 +273,20 @@ mod test {
             res,
             Err(errors::ambiguous_side("User", "profile", "Profile", "user"))
         );
-    
+
         Store::reset();
         let user = t::struct_()
             .propx("id", t::integer().as_id(true))?
             .propx("profile", t::optionalx(t::proxy("Profile"))?)?
             .named("User")
             .build()?;
-    
+
         let profile = t::struct_()
             .propx("id", t::integer().as_id(true))?
             .propx("user", t::optionalx(t::proxy("User"))?)?
             .named("Profile")
             .build()?;
-    
+
         let mut ctx = PrismaContext::default();
         let res = ctx.manage(user);
         assert_eq!(
@@ -359,10 +298,10 @@ mod test {
             res,
             Err(errors::ambiguous_side("User", "profile", "Profile", "user"))
         );
-    
+
         Ok(())
     }
-    
+
     #[test]
     fn test_conflicting_attributes() -> Result<(), String> {
         Store::reset();
@@ -371,13 +310,13 @@ mod test {
             .propx("profile", prisma_linkn("Profile").fkey(true))?
             .named("User")
             .build()?;
-    
+
         let profile = t::struct_()
             .propx("id", t::integer().as_id(true))?
             .propx("user", prisma_linkn("User").fkey(true))?
             .named("Profile")
             .build()?;
-    
+
         let mut ctx = PrismaContext::default();
         let res = ctx.manage(user);
         assert_eq!(
@@ -393,20 +332,20 @@ mod test {
                 "fkey", "User", "profile", "Profile", "user"
             ))
         );
-    
+
         Store::reset();
         let user = t::struct_()
             .propx("id", t::integer().as_id(true))?
             .propx("profile", prisma_linkn("Profile").fkey(false))?
             .named("User")
             .build()?;
-    
+
         let profile = t::struct_()
             .propx("id", t::integer().as_id(true))?
             .propx("user", prisma_linkn("User").fkey(false))?
             .named("Profile")
             .build()?;
-    
+
         let mut ctx = PrismaContext::default();
         let res = ctx.manage(user);
         assert_eq!(
@@ -422,10 +361,10 @@ mod test {
                 "fkey", "User", "profile", "Profile", "user"
             ))
         );
-    
+
         Ok(())
     }
-    
+
     #[test]
     fn test_missing_target() -> Result<(), String> {
         Store::reset();
@@ -434,19 +373,19 @@ mod test {
             .propx("profile", prisma_linkn("Profile").fkey(true))?
             .named("User")
             .build()?;
-    
+
         let _profile = t::struct_()
             .propx("id", t::integer().as_id(true))?
             .named("Profile")
             .build()?;
-    
+
         let mut ctx = PrismaContext::default();
         let res = ctx.manage(user);
         assert_eq!(
             res,
             Err(errors::no_relationship_target("User", "profile", "Profile"))
         );
-    
+
         Ok(())
     }
 }

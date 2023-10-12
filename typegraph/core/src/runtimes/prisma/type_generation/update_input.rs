@@ -7,7 +7,6 @@ use crate::runtimes::prisma::relationship::Cardinality;
 use crate::runtimes::prisma::utils::model::ScalarType;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeId;
-use crate::types::{Type, TypeFun};
 
 use super::TypeGen;
 
@@ -29,13 +28,7 @@ impl TypeGen for UpdateInput {
         let model = model.borrow();
 
         for (key, prop) in model.iter_props() {
-            // let attrs = type_id.attrs()?;
-            // // TODO check injection
-            // let typ = attrs.concrete_type.as_type()?;
-            // let (typ, _nullable) = match typ {
-            //     Type::Optional(inner) => (TypeId(inner.data.of).as_type()?, true),
-            //     _ => (typ, false),
-            // };
+            // TODO check injection
 
             if let Some(prop) = prop.as_scalar_property() {
                 let mutation_type = if prop.quantifier == Cardinality::Many {

@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use indexmap::IndexMap;
 
 use crate::errors::Result;
@@ -73,7 +76,7 @@ impl Model {
         match id_fields.len() {
             0 => Err(errors::id_field_not_found(type_name)),
             1 => Ok(id_fields.into_iter().next().unwrap()),
-            _ => return Err(errors::multiple_id_fields(type_name)),
+            _ => Err(errors::multiple_id_fields(type_name)),
         }
     }
 
@@ -109,12 +112,14 @@ pub struct RelationshipAttributes {
     // pub unique: bool,
 }
 
-impl RelationshipAttributes {
-    fn new(concrete_type: TypeId, wrapper_attrs: TypeAttributes) -> Result<Self> {
-        let proxy_data = wrapper_attrs.proxy_data;
+impl TryFrom<TypeAttributes> for RelationshipAttributes {
+    type Error = crate::wit::core::Error;
+
+    fn try_from(attrs: TypeAttributes) -> Result<Self> {
+        let proxy_data = attrs.proxy_data;
         Ok(Self {
-            name: proxy_data.get("rel_name").map(|n| n.clone()),
-            target_field: proxy_data.get("target_field").map(|n| n.clone()),
+            name: proxy_data.get("rel_name").cloned(),
+            target_field: proxy_data.get("target_field").cloned(),
             fkey: proxy_data
                 .get("fkey")
                 .map(|v| serde_json::from_str(v).map_err(|e| e.to_string()))
@@ -225,16 +230,14 @@ impl Property {
             })),
         }
     }
-
-    fn is_model(&self) -> bool {
-        matches!(self.prop_type, PropertyType::Model { .. })
-    }
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum StringType {
     Plain,
+    #[allow(dead_code)]
     Uuid,
+    #[allow(dead_code)]
     DateTime,
     // Enum??
 }
@@ -249,7 +252,9 @@ pub enum ScalarType {
 
 #[derive(Debug, Clone)]
 pub enum Injection {
+    #[allow(dead_code)]
     Always,
+    #[allow(dead_code)]
     PerEffect {
         create: bool,
         update: bool,
@@ -311,7 +316,7 @@ impl PropertyType {
         match concrete_type.as_type()? {
             Type::Struct(_) => Ok(Self::Model {
                 type_id: concrete_type,
-                relationship_attributes: RelationshipAttributes::new(concrete_type, wrapper_attrs)?,
+                relationship_attributes: wrapper_attrs.try_into()?,
             }),
             Type::Optional(_) | Type::Array(_) => {
                 Err("nested optional/list not supported".to_string())

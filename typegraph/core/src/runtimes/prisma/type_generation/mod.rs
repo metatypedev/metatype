@@ -8,8 +8,6 @@
 //! Type generation should always be done through the `TypeGenContext` to enable
 //! the cache. Do not call `TypeGen::generate` directly.
 
-use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 
 use regex::Regex;
@@ -26,10 +24,9 @@ use self::with_nested_count::WithNestedCount;
 
 use super::context::PrismaContext;
 use crate::errors::Result;
-use crate::global_store::Store;
 use crate::runtimes::prisma::relationship::Cardinality;
 use crate::t::{self, TypeBuilder};
-use crate::typegraph::{with_tg, with_tg_mut};
+use crate::typegraph::with_tg;
 use crate::types::{TypeFun, TypeId};
 
 mod additional_filters;
@@ -111,7 +108,7 @@ impl PrismaContext {
             });
             let cache = cache
                 .upgrade()
-                .ok_or_else(|| format!("Typegen cache not available"))?;
+                .ok_or_else(|| "Typegen cache not available".to_string())?;
             let cache = cache.borrow();
             cache.get(&type_name).cloned()
         };
@@ -140,7 +137,7 @@ impl PrismaContext {
             let cache = self.typegen_cache.get().unwrap();
             let cache = cache
                 .upgrade()
-                .ok_or_else(|| format!("Typegen cache not available"))?;
+                .ok_or_else(|| "Typegen cache not available".to_string())?;
             let mut cache = cache.borrow_mut();
             cache.insert(type_name, type_id);
             Ok(type_id)
@@ -281,7 +278,7 @@ impl PrismaOperation for CreateMany {
             )?
             .build()
     }
-    fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+    fn generate_output_type(&self, _context: &PrismaContext, _model_id: TypeId) -> Result<TypeId> {
         t::struct_().propx("count", t::integer())?.build()
     }
 }
@@ -311,7 +308,7 @@ impl PrismaOperation for UpdateMany {
             )
             .build()
     }
-    fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+    fn generate_output_type(&self, _context: &PrismaContext, _model_id: TypeId) -> Result<TypeId> {
         t::struct_().propx("count", t::integer())?.build()
     }
 }
@@ -358,23 +355,12 @@ impl PrismaOperation for DeleteMany {
             )
             .build()
     }
-    fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+    fn generate_output_type(&self, _context: &PrismaContext, _model_id: TypeId) -> Result<TypeId> {
         t::struct_().propx("count", t::integer())?.build()
     }
 }
 
 impl PrismaContext {
-    // fn get_cache(&mut self) -> Result<Rc<RefCell<HashMap<String, TypeId>>>> {
-    //     match self.typegen_cache.upgrade() {
-    //         Some(cache) => Ok(cache),
-    //         None => with_tg_mut(|tg| {
-    //             let cache = tg.get_prisma_typegen_cache();
-    //             self.typegen_cache = Rc::downgrade(&cache);
-    //             cache
-    //         }),
-    //     }
-    // }
-
     pub fn execute_raw(&mut self, param: TypeId) -> Result<OperationTypes> {
         let param = param.as_struct()?;
         Ok(OperationTypes {

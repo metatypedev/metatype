@@ -24,7 +24,7 @@ use crate::typegraph::TypegraphContext;
 use crate::wit::runtimes::{self as wit, RuntimeId};
 
 use self::context::PrismaContext;
-use self::relationship::{Cardinality, Relationship, RelationshipModel};
+use self::relationship::Cardinality;
 
 use super::Runtime;
 

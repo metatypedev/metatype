@@ -5,7 +5,7 @@ use crate::{
     errors::Result,
     runtimes::prisma::context::PrismaContext,
     t::{self, ConcreteTypeBuilder, TypeBuilder},
-    types::{Type, TypeId},
+    types::TypeId,
 };
 
 use super::TypeGen;
@@ -33,7 +33,7 @@ impl TypeGen for Where {
         let model = model.borrow();
 
         for (key, prop) in model.iter_props() {
-            if let Some(_) = model.relationships.get(key) {
+            if model.relationships.get(key).is_some() {
                 if !self.relations {
                     continue;
                 }
@@ -45,11 +45,9 @@ impl TypeGen for Where {
                     relations: false,
                 })?;
                 builder.propx(key, t::optional(inner))?;
-            } else {
-                if let Some(prop) = prop.as_scalar_property() {
-                    // TODO cardinality??
-                    builder.propx(key, t::optional(prop.type_id))?;
-                }
+            } else if let Some(prop) = prop.as_scalar_property() {
+                // TODO cardinality??
+                builder.propx(key, t::optional(prop.type_id))?;
             }
         }
 

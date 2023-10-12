@@ -40,7 +40,7 @@ impl TypeGen for WithFilters {
             let model = model.borrow();
 
             let generated =
-                if let Some(rel_name) = model.relationships.get(key) {
+                if let Some(_rel_name) = model.relationships.get(key) {
                     if self.skip_rel {
                         continue;
                     }
@@ -52,7 +52,6 @@ impl TypeGen for WithFilters {
                         .as_relationship_property()
                         .unwrap();
 
-                    let target_model = prop.model_id;
                     context.generate(&WithFilters {
                         type_id: prop.model_id,
                         model_id: prop.model_id,

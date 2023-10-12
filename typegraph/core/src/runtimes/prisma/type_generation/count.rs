@@ -3,8 +3,9 @@
 
 use crate::{
     errors::Result,
+    runtimes::prisma::context::PrismaContext,
     t::{self, ConcreteTypeBuilder, TypeBuilder},
-    types::TypeId, runtimes::prisma::context::PrismaContext,
+    types::TypeId,
 };
 
 use super::TypeGen;

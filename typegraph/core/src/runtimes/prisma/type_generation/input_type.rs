@@ -50,7 +50,6 @@ impl InputType {
 
 impl TypeGen for InputType {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
-        crate::log!("generating input type for {:?}", self.model_id);
         let mut builder = t::struct_();
         let model = context.model(self.model_id)?;
         let model = model.borrow();
@@ -88,7 +87,6 @@ impl TypeGen for InputType {
                 // TODO what if cardinality is Cardinality::One ??
                 builder.propx(k, t::optionalx(inner.min(1).max(1))?)?;
             } else if let Some(prop) = prop.as_scalar_property() {
-                crate::log!("operation: {:?}, k={k:?}, auto={}", self.operation, prop.auto);
                 builder.prop(
                     k,
                     if self.operation.is_update() || prop.auto {
@@ -147,7 +145,7 @@ mod tests {
             "post input type for create",
             tree::print(ctx.generate(&InputType::for_create(post))?)
         );
-        
+
         insta::assert_snapshot!(
             "post input type for update",
             tree::print(ctx.generate(&InputType::for_update(post))?)

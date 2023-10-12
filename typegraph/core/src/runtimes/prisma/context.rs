@@ -1,6 +1,9 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use std::{
     cell::{Cell, OnceCell, Ref, RefCell, RefMut},
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     rc::{Rc, Weak},
 };
 
@@ -63,13 +66,6 @@ impl PrismaContext {
             .unwrap(); // TODO ?
 
         Ok(model.clone())
-    }
-
-    pub fn has_relationship_from(&self, candidate: &Candidate) -> bool {
-        // TODO check
-        self.relationships.values().any(|r| {
-            r.left.model_type == candidate.model.type_id() && r.left.field == candidate.field_name
-        })
     }
 
     pub fn is_registered(&self, candidate: &Candidate) -> bool {
@@ -199,7 +195,6 @@ impl PrismaContext {
                 .models
                 .keys()
                 .cloned()
-                .into_iter()
                 .map(|id| -> Result<_> { Ok(ctx.register_type(id, Some(runtime_idx))?.into()) })
                 .collect::<Result<Vec<_>>>()?,
             relationships: {

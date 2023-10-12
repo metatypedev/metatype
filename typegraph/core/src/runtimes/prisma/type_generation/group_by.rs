@@ -3,7 +3,10 @@
 
 use crate::{
     errors::Result,
-    runtimes::prisma::{type_generation::{where_::Where, with_filters::WithFilters}, context::PrismaContext},
+    runtimes::prisma::{
+        context::PrismaContext,
+        type_generation::{where_::Where, with_filters::WithFilters},
+    },
     t::{self, ConcreteTypeBuilder, TypeBuilder},
     types::{Type, TypeId},
 };
