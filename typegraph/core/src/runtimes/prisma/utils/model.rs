@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use common::typegraph::{EffectType, InjectionData};
 use indexmap::IndexMap;
 
 use crate::errors::Result;
@@ -82,6 +83,16 @@ impl Model {
 
     pub fn iter_props(&self) -> impl Iterator<Item = (&str, &Property)> {
         self.props.iter().map(|(k, p)| (k.as_str(), p))
+    }
+
+    pub fn iter_props_filter(
+        &self,
+        filter: impl Fn(&Property) -> bool,
+    ) -> impl Iterator<Item = (&str, &Property)> {
+        self.props
+            .iter()
+            .filter(move |(_, p)| filter(p))
+            .map(|(k, p)| (k.as_str(), p))
     }
 
     pub fn iter_relationship_props(&self) -> impl Iterator<Item = (&str, RelationshipProperty)> {
@@ -245,43 +256,79 @@ pub enum ScalarType {
 }
 
 #[derive(Debug, Clone)]
-pub enum Injection {
-    #[allow(dead_code)]
-    Always,
-    #[allow(dead_code)]
-    PerEffect {
-        create: bool,
-        update: bool,
-        delete: bool,
-        none: bool,
-    },
+enum InjectionHandler {
+    Typegate,
+    Prisma,
 }
 
-impl From<&common::typegraph::Injection> for Injection {
-    fn from(injection: &common::typegraph::Injection) -> Self {
-        use common::typegraph::EffectType;
+#[derive(Debug, Clone)]
+pub struct Injection {
+    create: Option<InjectionHandler>,
+    update: Option<InjectionHandler>,
+}
+
+#[derive(Debug, Clone)]
+pub enum InjectionError {
+    // property can only be present in output types
+    UnmanagedProperty,
+    GenericError(String),
+}
+
+impl Injection {
+    fn convert_injection<T>(data: &InjectionData<T>) -> Result<Self, InjectionError> {
+        match data {
+            InjectionData::SingleValue(_) => Err(InjectionError::UnmanagedProperty),
+            InjectionData::ValueByEffect(map) => {
+                if map.contains_key(&EffectType::None) {
+                    // TODO check if other effects are present??
+                    Err(InjectionError::UnmanagedProperty)
+                } else {
+                    Ok(Self {
+                        create: map
+                            .get(&EffectType::Create)
+                            .map(|_| InjectionHandler::Typegate),
+                        update: map
+                            .get(&EffectType::Update)
+                            .map(|_| InjectionHandler::Typegate),
+                    })
+                }
+            }
+        }
+    }
+
+    fn convert_dynamic_injection(data: &InjectionData<String>) -> Result<Self, InjectionError> {
+        match data {
+            InjectionData::SingleValue(_) => Err(InjectionError::UnmanagedProperty),
+            InjectionData::ValueByEffect(map) => {
+                if map.contains_key(&EffectType::None) {
+                    // TODO check if other effects are present??
+                    Err(InjectionError::UnmanagedProperty)
+                } else {
+                    // TODO check function name -> Prisma vs Typegate
+                    Ok(Self {
+                        create: map
+                            .get(&EffectType::Create)
+                            .map(|_| InjectionHandler::Prisma),
+                        update: map
+                            .get(&EffectType::Update)
+                            .map(|_| InjectionHandler::Prisma),
+                    })
+                }
+            }
+        }
+    }
+}
+
+impl TryFrom<&common::typegraph::Injection> for Injection {
+    type Error = InjectionError;
+
+    fn try_from(injection: &common::typegraph::Injection) -> Result<Self, Self::Error> {
         use common::typegraph::Injection as I;
-        use common::typegraph::InjectionData as ID;
 
         match injection {
-            I::Static(inj) | I::Secret(inj) | I::Context(inj) | I::Dynamic(inj) => match inj {
-                ID::SingleValue(_) => Self::Always,
-                ID::ValueByEffect(map) => Self::PerEffect {
-                    create: map.contains_key(&EffectType::Create),
-                    update: map.contains_key(&EffectType::Update),
-                    delete: map.contains_key(&EffectType::Delete),
-                    none: map.contains_key(&EffectType::None),
-                },
-            },
-            I::Parent(inj) => match inj {
-                ID::SingleValue(_) => Self::Always,
-                ID::ValueByEffect(map) => Self::PerEffect {
-                    create: map.contains_key(&EffectType::Create),
-                    update: map.contains_key(&EffectType::Update),
-                    delete: map.contains_key(&EffectType::Delete),
-                    none: map.contains_key(&EffectType::None),
-                },
-            },
+            I::Static(inj) | I::Secret(inj) | I::Context(inj) => Self::convert_injection(inj),
+            I::Parent(inj) => Self::convert_injection(inj),
+            I::Dynamic(inj) => Self::convert_dynamic_injection(inj),
         }
     }
 }
@@ -298,7 +345,6 @@ pub struct ScalarProperty {
     pub wrapper_type_id: TypeId,
     pub type_id: TypeId,
     pub prop_type: ScalarType,
-    pub injection: Option<Injection>,
     pub quantifier: Cardinality,
     pub unique: bool,
     pub auto: bool,
@@ -313,7 +359,6 @@ impl TryFrom<Property> for ScalarProperty {
                 wrapper_type_id: prop.wrapper_type_id,
                 type_id: s.type_id,
                 prop_type: s.typ,
-                injection: s.injection,
                 quantifier: prop.quantifier,
                 unique: prop.unique,
                 auto: prop.auto,
@@ -331,41 +376,78 @@ pub enum PropertyType {
         type_id: TypeId,
         relationship_attributes: RelationshipAttributes,
     },
-    // TODO Func
+    /// not managed by prisma --> can be present only in the output types
+    Unmanaged(TypeId),
+}
+
+pub trait PropertyFilter {
+    fn filter(&self, prop: &Property) -> bool;
 }
 
 impl PropertyType {
     fn new(concrete_type: TypeId, wrapper_attrs: TypeAttributes) -> Result<Self> {
-        match concrete_type.as_type()? {
-            Type::Struct(_) => Ok(Self::Model {
-                type_id: concrete_type,
-                relationship_attributes: wrapper_attrs.try_into()?,
-            }),
-            Type::Optional(_) | Type::Array(_) => {
-                Err("nested optional/list not supported".to_string())
+        match wrapper_attrs
+            .injection
+            .as_ref()
+            .map(Injection::try_from)
+            .transpose()
+        {
+            Ok(injection) => {
+                match concrete_type.as_type()? {
+                    Type::Struct(_) => {
+                        if injection.is_some() {
+                            return Err("injection not supported for models".to_string());
+                        }
+                        Ok(Self::Model {
+                            type_id: concrete_type,
+                            relationship_attributes: wrapper_attrs.try_into()?,
+                        })
+                    }
+                    Type::Optional(_) | Type::Array(_) => {
+                        Err("nested optional/list not supported".to_string())
+                    }
+                    Type::Integer(_) => Ok(Self::Scalar(Scalar {
+                        type_id: concrete_type,
+                        typ: ScalarType::Integer,
+                        injection,
+                    })),
+                    Type::Float(_) => Ok(Self::Scalar(Scalar {
+                        type_id: concrete_type,
+                        typ: ScalarType::Float,
+                        injection,
+                    })),
+                    Type::Boolean(_) => Ok(Self::Scalar(Scalar {
+                        type_id: concrete_type,
+                        typ: ScalarType::Boolean,
+                        injection,
+                    })),
+                    // TODO check format
+                    Type::String(_) => Ok(Self::Scalar(Scalar {
+                        type_id: concrete_type,
+                        typ: ScalarType::String(StringType::Plain),
+                        injection,
+                    })),
+                    // TODO use original type_id
+                    Type::Func(_) => Ok(Self::Unmanaged(wrapper_attrs.concrete_type)),
+                    _ => Err("unsupported property type".to_string()),
+                }
             }
-            Type::Integer(_) => Ok(Self::Scalar(Scalar {
-                type_id: concrete_type,
-                typ: ScalarType::Integer,
-                injection: wrapper_attrs.injection.map(|i| (&i).into()),
-            })),
-            Type::Float(_) => Ok(Self::Scalar(Scalar {
-                type_id: concrete_type,
-                typ: ScalarType::Float,
-                injection: None,
-            })),
-            Type::Boolean(_) => Ok(Self::Scalar(Scalar {
-                type_id: concrete_type,
-                typ: ScalarType::Boolean,
-                injection: None,
-            })),
-            // TODO check format
-            Type::String(_) => Ok(Self::Scalar(Scalar {
-                type_id: concrete_type,
-                typ: ScalarType::String(StringType::Plain),
-                injection: None,
-            })),
-            _ => Err("unsupported property type".to_string()),
+            Err(e) => match e {
+                InjectionError::UnmanagedProperty => match concrete_type.as_type()? {
+                    Type::Func(_) => Err("injection not supported on t::struct()".to_string()),
+                    Type::Optional(_) | Type::Array(_) => {
+                        Err("nested optional/list not supported".to_string())
+                    }
+                    // TODO use original type_id on the property
+                    Type::Struct(_)
+                    | Type::String(_)
+                    | Type::Integer(_)
+                    | Type::Float(_)
+                    | Type::Boolean(_) => Ok(Self::Unmanaged(wrapper_attrs.concrete_type)),
+                    _ => Err("unsupported property type".to_string()),
+                },
+                InjectionError::GenericError(e) => Err(e),
+            },
         }
     }
 }
