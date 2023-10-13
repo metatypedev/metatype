@@ -145,12 +145,8 @@ export class PythonWasiRuntime extends Runtime {
 
     if (stage.props.materializer != null) {
       const mat = stage.props.materializer;
-      const { name } = mat.data ?? {};
-      const vmId = generateVmIdentifier(mat);
       return [
-        stage.withResolver((args) =>
-          this.w.execute(name as string, { vmId, args })
-        ),
+        stage.withResolver((args) => this.delegate(args, mat)),
       ];
     }
 
@@ -165,5 +161,11 @@ export class PythonWasiRuntime extends Runtime {
       const resolver = parent[stage.props.node];
       return typeof resolver === "function" ? resolver() : resolver;
     })];
+  }
+
+  delegate(args: unknown, mat: Materializer) {
+    const { name } = mat.data ?? {};
+    const vmId = generateVmIdentifier(mat);
+    return this.w.execute(name as string, { vmId, args });
   }
 }

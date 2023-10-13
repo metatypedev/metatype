@@ -17,6 +17,7 @@ import { Auth, Materializer, TypeNode } from "../../../typegraph/types.ts";
 import { Runtime } from "../../../runtimes/Runtime.ts";
 import { FunctionNode } from "../../../typegraph/type_node.ts";
 import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
+import { PythonWasiRuntime } from "../../../runtimes/python_wasi/python_wasi.ts";
 
 const logger = getLogger(import.meta);
 
@@ -28,24 +29,24 @@ class AuthProfiler {
     private funcIndex: number,
   ) {}
 
-  async transform(input: any, url: string) {
+  async transform(profile: any, url: string) {
     const func = this.types[this.funcIndex] as FunctionNode;
     const mat = this.materializers[func.materializer];
     const runtime = this.runtimeReferences[mat.runtime];
 
+    const input = { ...profile, _: { info: { url } } };
+    // TODO: validate(func.input, input)
+    let ret = {};
     if (runtime instanceof DenoRuntime) {
       const resolver = runtime.delegate(mat, false);
-      // TODO: validate(func.input, input)
-      const ret = await resolver(
-        { ...input, _: { info: { url } } },
-      );
-      // TODO: validate(func.output, ret)
-      return ret;
+      ret = await resolver(input);
+    } else if (runtime instanceof PythonWasiRuntime) {
+      ret = await runtime.delegate(input, mat) as any;
+    } else {
+      throw Error(`runtime id "${runtime.id}" not supported by profiler`);
     }
-
-    // TODO other runtimes
-
-    throw Error(`runtime id "${runtime.id}" not supported by profiler`);
+    // TODO: validate(func.output, ret)
+    return ret;
   }
 }
 
