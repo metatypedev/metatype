@@ -30,7 +30,7 @@ interface TypegraphBuilderArgs {
   expose: (exports: Exports, defaultPolicy?: Policy) => void;
   inherit: () => InheritDef;
   rest: (graphql: string) => number;
-  auth: (value: Auth) => number;
+  auth: (value: Auth | RawAuth) => number;
 }
 
 export class InheritDef {
@@ -62,6 +62,10 @@ export class InheritDef {
 }
 
 type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
+
+export class RawAuth {
+  constructor(readonly jsonStr: string) {}
+}
 
 export function typegraph(
   name: string,
@@ -135,7 +139,10 @@ export function typegraph(
     rest: (graphql: string) => {
       return wit_utils.addGraphqlEndpoint(graphql);
     },
-    auth: (value: Auth) => {
+    auth: (value: Auth | RawAuth) => {
+      if (value instanceof RawAuth) {
+        return wit_utils.addRawAuth(value.jsonStr);
+      }
       return wit_utils.addAuth(value);
     },
   };

@@ -1,7 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Auth as Auth_ } from "./wit.ts";
+import { RawAuth } from "./typegraph.ts";
+import { Auth as Auth_, wit_utils } from "./wit.ts";
 
 export class Auth {
   static jwt(name: string, format: string, algorithm?: any): Auth_ {
@@ -36,5 +37,9 @@ export class Auth {
       protocol: { tag: "basic" },
       authData,
     };
+  }
+
+  static oauth2Github(scopes: string): RawAuth {
+    return new RawAuth(wit_utils.authGithub(scopes));
   }
 }

@@ -15,7 +15,7 @@ from typegraph.gen.exports.core import (
 )
 
 from typegraph.gen.types import Err
-from typegraph.graph.params import Auth, Cors
+from typegraph.graph.params import Auth, Cors, RawAuth
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph.wit import core, store, wit_utils
 
@@ -105,8 +105,12 @@ class Graph:
             raise Exception(res.value)
         return res.value
 
-    def auth(self, value: Auth):
-        res = wit_utils.add_auth(store, value)
+    def auth(self, value: Union[Auth, RawAuth]):
+        res = (
+            wit_utils.add_raw_auth(store, value.json_str)
+            if isinstance(value, RawAuth)
+            else wit_utils.add_auth(store, value)
+        )
         if isinstance(res, Err):
             raise Exception(res.value)
         return res.value

@@ -6,6 +6,9 @@ import json
 from typing import List, Optional, TYPE_CHECKING
 from typegraph.gen.exports import utils
 from box import Box
+from typegraph.wit import store, wit_utils
+
+from typegraph.gen.types import Err
 
 if TYPE_CHECKING:
     from typegraph import t
@@ -104,8 +107,19 @@ class Auth:
             ],
         )
 
+    def oauth2_github(scopes: str) -> "utils.Auth":
+        res = wit_utils.auth_github(store, scopes)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return RawAuth(res.value)
+
 
 oauth2 = dict()
+
+
+@dataclass
+class RawAuth:
+    json_str: str
 
 
 @dataclass

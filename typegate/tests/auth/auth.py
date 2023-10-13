@@ -19,23 +19,7 @@ def test_auth(g: Graph):
 
     x = t.struct({"x": t.integer()})
 
-    # g.auth(oauth2.github("openid profile email"))
-    g.auth(
-        Auth.oauth2(
-            name="github",
-            authorize_url="https://github.com/login/oauth/authorize",
-            access_url="https://github.com/login/oauth/access_token",
-            # https://docs.github.com/en/rest/reference/users?apiVersion=2022-11-28#get-the-authenticated-user
-            profile_url="https://api.github.com/user",
-            # profiler="(p) => ({id: p.id})",
-            profiler=deno.func(
-                t.struct({"id": t.string(), "login": t.string()}),
-                t.struct({"id": t.string()}),
-                code="(p) => ({id: p.id})",
-            ),
-            scopes="openid profile email",
-        )
-    )
+    g.auth(Auth.oauth2_github("openid profile email"))
 
     g.expose(
         public=deno.identity(x).with_policy(public),

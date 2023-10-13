@@ -318,6 +318,13 @@ impl Store {
         })
     }
 
+    pub fn add_raw_auth(auth: common::typegraph::Auth) -> Result<u32> {
+        with_store_mut(|s| {
+            s.auths.push(auth);
+            Ok(s.auths.len() as u32)
+        })
+    }
+
     pub fn get_auths() -> Vec<common::typegraph::Auth> {
         with_store(|s| s.auths.clone())
     }

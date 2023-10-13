@@ -3,12 +3,18 @@
 
 use std::collections::HashMap;
 
+use common::typegraph::{Auth, AuthProtocol};
+use indexmap::IndexMap;
+
 use crate::errors::Result;
 use crate::global_store::Store;
+use crate::runtimes::{DenoMaterializer, Materializer};
+use crate::t::TypeBuilder;
 use crate::types::TypeId;
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct, TypeWithInjection};
+use crate::wit::runtimes::MaterializerDenoFunc;
 use crate::wit::utils::Auth as WitAuth;
-use crate::Lib;
+use crate::{t, Lib};
 
 mod apply;
 
@@ -37,6 +43,49 @@ fn find_missing_props(
     }
 
     Ok(missing_props)
+}
+
+struct Oauth2Params {
+    name: String,
+    authorize_url: String,
+    access_url: String,
+    scopes: String,
+    profile_url: Option<String>,
+    profiler: Option<TypeId>,
+}
+
+fn gen_oauth2(params: Oauth2Params) -> Auth {
+    let mut auth_data = IndexMap::new();
+
+    auth_data.insert(
+        "authorize_url".to_string(),
+        serde_json::to_value(params.authorize_url).unwrap(),
+    );
+    auth_data.insert(
+        "access_url".to_string(),
+        serde_json::to_value(params.access_url).unwrap(),
+    );
+    auth_data.insert(
+        "scopes".to_string(),
+        serde_json::to_value(params.scopes).unwrap(),
+    );
+    auth_data.insert(
+        "profile_url".to_string(),
+        serde_json::to_value(params.profile_url).unwrap(),
+    );
+    auth_data.insert(
+        "profiler".to_string(),
+        params
+            .profiler
+            .map(|p| p.into())
+            .unwrap_or(serde_json::Value::Null),
+    );
+
+    Auth {
+        name: params.name,
+        protocol: AuthProtocol::OAuth2,
+        auth_data,
+    }
 }
 
 impl crate::wit::utils::Guest for crate::Lib {
@@ -125,5 +174,32 @@ impl crate::wit::utils::Guest for crate::Lib {
 
     fn add_auth(data: WitAuth) -> Result<u32> {
         Store::add_auth(data)
+    }
+
+    fn add_raw_auth(data: String) -> Result<u32> {
+        let raw_auth: Auth = serde_json::from_str(&data).map_err(|e| e.to_string())?;
+        Store::add_raw_auth(raw_auth)
+    }
+
+    fn auth_github(scopes: String) -> Result<String> {
+        let inp = t::struct_().propx("id", t::string())?.build()?;
+        let out = t::struct_().propx("id", t::string())?.build()?;
+        let deno_mat = DenoMaterializer::Inline(MaterializerDenoFunc {
+            code: "(p) => ({id: p.id})".to_string(),
+            secrets: vec![],
+        });
+        let mat = Materializer::deno(deno_mat, crate::wit::runtimes::Effect::Read);
+        let func_idx = t::func(inp, out, Store::register_materializer(mat))?;
+
+        let oauth = gen_oauth2(Oauth2Params {
+            name: "github".to_string(),
+            authorize_url: "https://github.com/login/oauth/authorize".to_string(),
+            access_url: "https://github.com/login/oauth/access_token".to_string(),
+            scopes,
+            // https://docs.github.com/en/rest/reference/users?apiVersion=2022-11-28#get-the-authenticated-user
+            profile_url: Some("https://api.github.com/user".to_string()),
+            profiler: Some(func_idx),
+        });
+        Ok(serde_json::to_string(&oauth).map_err(|e| e.to_string())?)
     }
 }
