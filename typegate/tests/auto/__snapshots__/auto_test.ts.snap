@@ -1516,67 +1516,34 @@ snapshot[`Auto-tests for index 4`] = `
         },
         {
           description: "union type
-_string_filter, object_40",
+_string_filter, object_45",
           fields: null,
           inputFields: null,
-          name: "union_41In",
+          name: "union_46In",
         },
         {
           description: "union type
-string_27, object_30, object_31, object_32, object_33, object_36, object_37, object_38",
+string_32, object_35, object_36, object_37, object_38, object_41, object_42, object_43",
           fields: null,
           inputFields: null,
           name: "_string_filterIn",
         },
         {
-          description: "object_30 input type",
+          description: "object_35 input type",
           fields: null,
           inputFields: [
             {
               name: "equals",
             },
           ],
-          name: "object_30Inp",
-        },
-        {
-          description: "object_31 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "not",
-            },
-          ],
-          name: "object_31Inp",
-        },
-        {
-          description: "object_32 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "in",
-            },
-          ],
-          name: "object_32Inp",
-        },
-        {
-          description: "object_33 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "notIn",
-            },
-          ],
-          name: "object_33Inp",
+          name: "object_35Inp",
         },
         {
           description: "object_36 input type",
           fields: null,
           inputFields: [
             {
-              name: "contains",
-            },
-            {
-              name: "mode",
+              name: "not",
             },
           ],
           name: "object_36Inp",
@@ -1586,7 +1553,7 @@ string_27, object_30, object_31, object_32, object_33, object_36, object_37, obj
           fields: null,
           inputFields: [
             {
-              name: "search",
+              name: "in",
             },
           ],
           name: "object_37Inp",
@@ -1596,26 +1563,59 @@ string_27, object_30, object_31, object_32, object_33, object_36, object_37, obj
           fields: null,
           inputFields: [
             {
+              name: "notIn",
+            },
+          ],
+          name: "object_38Inp",
+        },
+        {
+          description: "object_41 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "contains",
+            },
+            {
+              name: "mode",
+            },
+          ],
+          name: "object_41Inp",
+        },
+        {
+          description: "object_42 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "search",
+            },
+          ],
+          name: "object_42Inp",
+        },
+        {
+          description: "object_43 input type",
+          fields: null,
+          inputFields: [
+            {
               name: "startsWith",
             },
             {
               name: "endsWith",
             },
           ],
-          name: "object_38Inp",
+          name: "object_43Inp",
         },
         {
-          description: "object_40 input type",
+          description: "object_45 input type",
           fields: null,
           inputFields: [
             {
               name: "not",
             },
           ],
-          name: "object_40Inp",
+          name: "object_45Inp",
         },
         {
-          description: "object_58 input type",
+          description: "object_63 input type",
           fields: null,
           inputFields: [
             {
@@ -1625,24 +1625,24 @@ string_27, object_30, object_31, object_32, object_33, object_36, object_37, obj
               name: "message",
             },
           ],
-          name: "object_58Inp",
+          name: "object_63Inp",
         },
         {
           description: "union type
-object_55, _SortOrder",
+object_60, _SortOrder",
           fields: null,
           inputFields: null,
-          name: "union_56In",
+          name: "union_61In",
         },
         {
-          description: "object_55 input type",
+          description: "object_60 input type",
           fields: null,
           inputFields: [
             {
               name: "sort",
             },
           ],
-          name: "object_55Inp",
+          name: "object_60Inp",
         },
         {
           description: "_feedback_CreateInput input type",

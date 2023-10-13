@@ -136,24 +136,28 @@ pub fn finalize() -> Result<String> {
             common::typegraph::AuthProtocol::OAuth2 => {
                 let profiler_key = "profiler";
                 match auth.auth_data.get(profiler_key) {
-                    Some(value) => {
-                        let func_store_idx = value
-                            .as_number()
-                            .ok_or_else(|| "profiler has invalid type index".to_string())
-                            .and_then(|n| {
-                                n.as_u64()
-                                    .ok_or_else(|| "unable to convert profiler index".to_string())
-                            })? as u32;
+                    Some(value) => match value {
+                        serde_json::Value::Null => Ok(auth.to_owned()),
+                        _ => {
+                            let func_store_idx = value
+                                .as_number()
+                                .ok_or_else(|| "profiler has invalid type index".to_string())
+                                .and_then(|n| {
+                                    n.as_u64().ok_or_else(|| {
+                                        "unable to convert profiler index".to_string()
+                                    })
+                                })? as u32;
 
-                        let type_idx = ctx.register_type(func_store_idx.into(), None)?;
+                            let type_idx = ctx.register_type(func_store_idx.into(), None)?;
 
-                        let mut auth_processed = auth.clone();
-                        auth_processed
-                            .auth_data
-                            .insert_full(profiler_key.to_string(), type_idx.into());
+                            let mut auth_processed = auth.clone();
+                            auth_processed
+                                .auth_data
+                                .insert_full(profiler_key.to_string(), type_idx.into());
 
-                        Ok(auth_processed)
-                    }
+                            Ok(auth_processed)
+                        }
+                    },
                     None => Ok(auth.to_owned()),
                 }
             }

@@ -2,7 +2,7 @@
 import re
 
 from typegraph import Graph, Policy, t, typegraph
-from typegraph.graph.params import Cors, Rate, oauth2
+from typegraph.graph.params import Auth, Cors, Rate
 from typegraph.providers import PrismaRuntime
 from typegraph.runtimes import HttpRuntime
 
@@ -49,7 +49,7 @@ def homepage(g: Graph):
 
     # skip:next-line
     # out of the box authenfication support
-    g.auth(oauth2.github("openid email"))
+    g.auth(Auth.oauth2_github("openid email"))
 
     # expose part of the graph for queries
     g.expose(
