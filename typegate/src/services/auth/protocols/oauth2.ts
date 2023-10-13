@@ -4,23 +4,48 @@
 import config from "../../../config.ts";
 import { OAuth2Client, OAuth2ClientConfig, Tokens } from "oauth2_client";
 import { encrypt, randomUUID, signJWT, verifyJWT } from "../../../crypto.ts";
-import { JWTClaims } from "../mod.ts";
+import { AdditionalAuthParams, JWTClaims } from "../mod.ts";
 import { getLogger } from "../../../log.ts";
-import { SecretManager, TypeGraphDS } from "../../../typegraph/mod.ts";
+import { SecretManager } from "../../../typegraph/mod.ts";
 import {
   clearCookie,
   getEncryptedCookie,
   setEncryptedSessionCookie,
 } from "../cookies.ts";
 import { Protocol } from "./protocol.ts";
-import { Auth } from "../../../typegraph/types.ts";
+import { Auth, Materializer, TypeNode } from "../../../typegraph/types.ts";
+import { Runtime } from "../../../runtimes/Runtime.ts";
+import { FunctionNode } from "../../../typegraph/type_node.ts";
+import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
 
 const logger = getLogger(import.meta);
 
 class AuthProfiler {
-  constructor(private typegraph: TypeGraphDS, private funcIndex: number) {}
-  transform(_input: unknown) {
-    return Promise.reject("TODO");
+  constructor(
+    private types: TypeNode[],
+    private materializers: Materializer[],
+    private runtimeReferences: Runtime[],
+    private funcIndex: number,
+  ) {}
+
+  async transform(input: any, url: string) {
+    const func = this.types[this.funcIndex] as FunctionNode;
+    const mat = this.materializers[func.materializer];
+    const runtime = this.runtimeReferences[mat.runtime];
+
+    if (runtime instanceof DenoRuntime) {
+      const resolver = runtime.delegate(mat, false);
+      // TODO: validate(func.input, input)
+      const ret = await resolver(
+        { ...input, _: { info: { url } } },
+      );
+      // TODO: validate(func.output, ret)
+      return ret;
+    }
+
+    // TODO other runtimes
+
+    throw Error(`runtime id "${runtime.id}" not supported by profiler`);
   }
 }
 
@@ -29,7 +54,8 @@ export class OAuth2Auth extends Protocol {
     typegraphName: string,
     auth: Auth,
     secretManager: SecretManager,
-    typegraph: TypeGraphDS,
+    authParameters: AdditionalAuthParams,
+    runtimeReferences: Runtime[],
   ): Promise<Protocol> {
     const clientId = secretManager.secretOrFail(`${auth.name}_CLIENT_ID`);
     const clientSecret = secretManager.secretOrFail(
@@ -53,7 +79,12 @@ export class OAuth2Auth extends Protocol {
         clientData,
         profile_url as string | null,
         profiler !== undefined
-          ? new AuthProfiler(typegraph, profiler as number)
+          ? new AuthProfiler(
+            authParameters.types,
+            authParameters.materializers,
+            runtimeReferences,
+            profiler as number,
+          )
           : null,
       ),
     );
@@ -215,12 +246,7 @@ export class OAuth2Auth extends Protocol {
       let profile = await res.json();
 
       if (this.authProfiler) {
-        // profile = await this.denoRuntime.delegate(this.profiler, false)(
-        //   // dummy values
-        //   { ...profile, _: { info: { url } } },
-        // );
-
-        profile = await this.authProfiler!.transform(profile);
+        profile = await this.authProfiler!.transform(profile, url);
       }
 
       return profile;

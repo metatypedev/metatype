@@ -5,8 +5,8 @@ import { JWTAuth } from "./protocols/jwt.ts";
 import { BasicAuth } from "./protocols/basic.ts";
 import { OAuth2Auth } from "./protocols/oauth2.ts";
 
-import type { Auth } from "../../typegraph/types.ts";
-import { SecretManager, TypeGraphDS } from "../../typegraph/mod.ts";
+import type { Auth, Materializer, TypeNode } from "../../typegraph/types.ts";
+import { SecretManager } from "../../typegraph/mod.ts";
 
 import { Protocol } from "./protocols/protocol.ts";
 import { DenoRuntime } from "../../runtimes/deno/deno.ts";
@@ -15,22 +15,34 @@ import { QueryEngine } from "../../engine/query_engine.ts";
 import { clearCookie, getEncryptedCookie } from "../auth/cookies.ts";
 import { getLogger } from "../../log.ts";
 import { methodNotAllowed } from "../../services/responses.ts";
+import { Runtime } from "../../runtimes/Runtime.ts";
 
 const logger = getLogger(import.meta);
 
 export const nextAuthorizationHeader = "next-authorization";
 export const internalAuthName = "internal";
+export type AdditionalAuthParams = {
+  types: TypeNode[];
+  materializers: Materializer[];
+};
 
 export function initAuth(
   typegraphName: string,
   auth: Auth,
   secretManager: SecretManager,
   denoRuntime: DenoRuntime,
-  typegraph: TypeGraphDS,
+  authParameters: AdditionalAuthParams,
+  runtimeReferences: Runtime[],
 ): Promise<Protocol> {
   switch (auth.protocol) {
     case "oauth2":
-      return OAuth2Auth.init(typegraphName, auth, secretManager, typegraph);
+      return OAuth2Auth.init(
+        typegraphName,
+        auth,
+        secretManager,
+        authParameters,
+        runtimeReferences,
+      );
     case "basic":
       return BasicAuth.init(typegraphName, auth, secretManager, denoRuntime);
     case "jwt":
