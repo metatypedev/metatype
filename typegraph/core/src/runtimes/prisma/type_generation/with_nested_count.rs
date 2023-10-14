@@ -3,11 +3,11 @@
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
+use crate::runtimes::prisma::model::Property;
+use crate::runtimes::prisma::relationship::Cardinality;
 use crate::runtimes::prisma::type_generation::count::Count;
-use crate::runtimes::prisma::utils::model::Property;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-use crate::types::ProxyResolution;
-use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
+use crate::types::{ProxyResolution, TypeId};
 
 use super::TypeGen;
 

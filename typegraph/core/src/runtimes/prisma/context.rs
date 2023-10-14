@@ -18,7 +18,7 @@ use super::relationship::{
 use crate::errors::Result;
 use crate::types::TypeId;
 
-use super::{errors, relationship::Relationship, utils::model::Model};
+use super::{errors, model::Model, relationship::Relationship};
 
 #[derive(Debug, Clone)]
 pub struct ModelRef(Rc<RefCell<Model>>);

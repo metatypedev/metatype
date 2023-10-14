@@ -4,7 +4,7 @@
 use crate::errors::Result;
 use crate::runtimes::prisma::context::{ModelRef, PrismaContext};
 use crate::runtimes::prisma::errors;
-use crate::runtimes::prisma::utils::model::{Property, RelationshipProperty};
+use crate::runtimes::prisma::model::{Property, RelationshipProperty};
 
 use super::Cardinality;
 

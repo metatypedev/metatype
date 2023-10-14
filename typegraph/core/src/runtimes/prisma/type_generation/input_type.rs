@@ -3,7 +3,7 @@
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
-use crate::runtimes::prisma::utils::model::Property;
+use crate::runtimes::prisma::model::Property;
 use crate::runtimes::prisma::{relationship::Cardinality, type_generation::where_::Where};
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeId;

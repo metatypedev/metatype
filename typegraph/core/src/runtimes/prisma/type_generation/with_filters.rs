@@ -3,7 +3,7 @@
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
-use crate::runtimes::prisma::utils::model::Property;
+use crate::runtimes::prisma::model::Property;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::{Type, TypeFun, TypeId};
 

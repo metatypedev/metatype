@@ -40,7 +40,6 @@ pub mod query_input_type;
 mod query_unique_where_expr;
 mod query_where_expr;
 mod update_input;
-mod utils;
 mod where_;
 mod with_filters;
 mod with_nested_count;

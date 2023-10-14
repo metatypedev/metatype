@@ -1,16 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{
-    errors::Result,
-    runtimes::prisma::{
-        context::PrismaContext,
-        type_generation::{where_::Where, with_filters::WithFilters},
-        utils::model::Property,
-    },
-    t::{self, ConcreteTypeBuilder, TypeBuilder},
-    types::{Type, TypeId},
-};
+use crate::errors::Result;
+use crate::runtimes::prisma::context::PrismaContext;
+use crate::runtimes::prisma::model::Property;
+use crate::runtimes::prisma::type_generation::{where_::Where, with_filters::WithFilters};
+use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+use crate::types::{Type, TypeId};
 
 use super::{aggregate::CountOutput, TypeGen};
 

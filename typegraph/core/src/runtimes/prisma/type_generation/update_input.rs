@@ -3,8 +3,8 @@
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
+use crate::runtimes::prisma::model::{Property, ScalarType};
 use crate::runtimes::prisma::relationship::Cardinality;
-use crate::runtimes::prisma::utils::model::{Property, ScalarType};
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeId;
 

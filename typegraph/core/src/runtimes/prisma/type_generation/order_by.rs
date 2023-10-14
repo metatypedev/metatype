@@ -4,8 +4,8 @@
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::errors;
+use crate::runtimes::prisma::model::Property;
 use crate::runtimes::prisma::relationship::Cardinality;
-use crate::runtimes::prisma::utils::model::Property;
 use crate::t::{ConcreteTypeBuilder, TypeBuilder};
 use crate::types::Type;
 use crate::{t, types::TypeId};

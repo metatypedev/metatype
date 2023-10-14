@@ -4,10 +4,10 @@
 pub mod context;
 pub mod errors;
 pub mod migration;
+mod model;
 pub mod relationship;
 pub mod type_generation;
 mod type_utils;
-mod utils;
 
 use std::cell::RefCell;
 use std::fmt::Debug;
