@@ -6,6 +6,7 @@ use crate::{
     runtimes::prisma::{
         context::PrismaContext,
         type_generation::{where_::Where, with_filters::WithFilters},
+        utils::model::Property,
     },
     t::{self, ConcreteTypeBuilder, TypeBuilder},
     types::{Type, TypeId},
@@ -25,20 +26,16 @@ impl GroupingFields {
 
 impl TypeGen for GroupingFields {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
-        let mut fields = vec![];
-
         let model = context.model(self.model_id)?;
         let model = model.borrow();
 
-        for (k, prop) in model.iter_props() {
-            if model.relationships.contains_key(k) {
-                continue;
-            }
-
-            if prop.is_scalar() {
-                fields.push(k.to_string());
-            }
-        }
+        let fields = model
+            .iter_props()
+            .filter_map(|(k, prop)| match prop {
+                Property::Scalar(_) => Some(k.to_string()),
+                _ => None,
+            })
+            .collect();
 
         t::arrayx(t::string().enum_(fields))?
             .named(self.name())

@@ -3,6 +3,7 @@
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
+use crate::runtimes::prisma::utils::model::Property;
 use crate::runtimes::prisma::{relationship::Cardinality, type_generation::where_::Where};
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeId;
@@ -55,46 +56,54 @@ impl TypeGen for InputType {
         let model = model.borrow();
 
         for (k, prop) in model.iter_props() {
-            if let Some(rel_name) = model.relationships.get(k) {
-                if self.skip_rel.contains(rel_name) {
-                    continue;
+            match prop {
+                Property::Model(prop) => {
+                    let rel_name = model.relationships.get(k).ok_or_else(|| {
+                        format!("relationship not registered: {}::{}", model.type_name, k)
+                    })?;
+                    if self.skip_rel.contains(rel_name) {
+                        continue;
+                    }
+
+                    let create = context.generate(&InputType {
+                        model_id: prop.model_id,
+                        skip_rel: {
+                            let mut skip_rel = self.skip_rel.clone();
+                            skip_rel.push(rel_name.to_string());
+                            skip_rel
+                        },
+                        operation: Operation::Create,
+                    })?;
+                    // TODO unique where
+                    let connect = context.generate(&Where::new(prop.model_id, false))?;
+
+                    let mut inner = t::struct_();
+                    inner.propx("create", t::optional(create))?;
+                    inner.propx("connect", t::optional(connect))?;
+
+                    if let Cardinality::Many = prop.quantifier {
+                        inner.propx(
+                            "createMany",
+                            t::optionalx(t::struct_().propx("data", t::array(create))?)?,
+                        )?;
+                    }
+
+                    // TODO what if cardinality is Cardinality::One ??
+                    builder.propx(k, t::optionalx(inner.min(1).max(1))?)?;
                 }
-                let prop = prop.as_relationship_property().unwrap();
 
-                let create = context.generate(&InputType {
-                    model_id: prop.model_id,
-                    skip_rel: {
-                        let mut skip_rel = self.skip_rel.clone();
-                        skip_rel.push(rel_name.to_string());
-                        skip_rel
-                    },
-                    operation: Operation::Create,
-                })?;
-                // TODO unique where
-                let connect = context.generate(&Where::new(prop.model_id, false))?;
-
-                let mut inner = t::struct_();
-                inner.propx("create", t::optional(create))?;
-                inner.propx("connect", t::optional(connect))?;
-
-                if let Cardinality::Many = prop.quantifier {
-                    inner.propx(
-                        "createMany",
-                        t::optionalx(t::struct_().propx("data", t::array(create))?)?,
-                    )?;
+                Property::Scalar(prop) => {
+                    builder.prop(
+                        k,
+                        if self.operation.is_update() || prop.auto {
+                            t::optional(prop.type_id).build()?
+                        } else {
+                            prop.wrapper_type_id
+                        },
+                    );
                 }
 
-                // TODO what if cardinality is Cardinality::One ??
-                builder.propx(k, t::optionalx(inner.min(1).max(1))?)?;
-            } else if let Some(prop) = prop.as_scalar_property() {
-                builder.prop(
-                    k,
-                    if self.operation.is_update() || prop.auto {
-                        t::optional(prop.type_id).build()?
-                    } else {
-                        prop.wrapper_type_id
-                    },
-                );
+                Property::Unmanaged(_) => continue,
             }
         }
 

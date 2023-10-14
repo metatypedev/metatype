@@ -10,49 +10,45 @@ PrismaContext {
                     type_id: Type#4,
                     type_name: "Node",
                     props: {
-                        "id": Property {
-                            wrapper_type_id: Type#0,
-                            prop_type: Scalar(
-                                Scalar {
-                                    type_id: Type#0,
-                                    typ: String(
-                                        Plain,
-                                    ),
-                                    injection: None,
-                                },
-                            ),
-                            quantifier: One,
-                            unique: false,
-                            auto: false,
-                        },
-                        "children": Property {
-                            wrapper_type_id: Type#2,
-                            prop_type: Model {
-                                type_id: Type#4,
+                        "id": Scalar(
+                            ScalarProperty {
+                                wrapper_type_id: Type#0,
+                                type_id: Type#0,
+                                prop_type: String(
+                                    Plain,
+                                ),
+                                injection: None,
+                                quantifier: One,
+                                unique: false,
+                                auto: false,
+                            },
+                        ),
+                        "children": Model(
+                            RelationshipProperty {
+                                wrapper_type_id: Type#2,
+                                model_id: Type#4,
+                                quantifier: Many,
                                 relationship_attributes: RelationshipAttributes {
                                     name: None,
                                     target_field: None,
                                     fkey: None,
                                 },
+                                unique: false,
                             },
-                            quantifier: Many,
-                            unique: false,
-                            auto: false,
-                        },
-                        "parent": Property {
-                            wrapper_type_id: Type#3,
-                            prop_type: Model {
-                                type_id: Type#4,
+                        ),
+                        "parent": Model(
+                            RelationshipProperty {
+                                wrapper_type_id: Type#3,
+                                model_id: Type#4,
+                                quantifier: One,
                                 relationship_attributes: RelationshipAttributes {
                                     name: None,
                                     target_field: None,
                                     fkey: None,
                                 },
+                                unique: false,
                             },
-                            quantifier: One,
-                            unique: false,
-                            auto: false,
-                        },
+                        ),
                     },
                     id_field: "id",
                     relationships: {

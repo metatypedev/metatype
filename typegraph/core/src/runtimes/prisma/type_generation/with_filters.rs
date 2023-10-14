@@ -3,6 +3,7 @@
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
+use crate::runtimes::prisma::utils::model::Property;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::{Type, TypeFun, TypeId};
 
@@ -34,23 +35,26 @@ impl WithFilters {
 impl TypeGen for WithFilters {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
+        let model = context.model(self.model_id)?;
+        let model = model.borrow();
+
+        let as_model_prop = |key| {
+            if let Some(prop) = model.props.get(key) {
+                match prop {
+                    Property::Model(prop) => Some(prop),
+                    _ => None,
+                }
+            } else {
+                None
+            }
+        };
 
         for (key, id) in self.type_id.as_struct().unwrap().iter_props() {
-            let model = context.model(self.model_id)?;
-            let model = model.borrow();
-
             let generated =
-                if let Some(_rel_name) = model.relationships.get(key) {
+                if let Some(prop) = as_model_prop(key) {
                     if self.skip_rel {
                         continue;
                     }
-
-                    let prop = model
-                        .props
-                        .get(key)
-                        .unwrap()
-                        .as_relationship_property()
-                        .unwrap();
 
                     context.generate(&WithFilters {
                         type_id: prop.model_id,

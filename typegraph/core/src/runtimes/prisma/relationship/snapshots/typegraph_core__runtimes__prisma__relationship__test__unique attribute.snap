@@ -10,33 +10,30 @@ PrismaContext {
                     type_id: Type#3,
                     type_name: "User",
                     props: {
-                        "id": Property {
-                            wrapper_type_id: Type#0,
-                            prop_type: Scalar(
-                                Scalar {
-                                    type_id: Type#0,
-                                    typ: Integer,
-                                    injection: None,
-                                },
-                            ),
-                            quantifier: One,
-                            unique: false,
-                            auto: false,
-                        },
-                        "profile": Property {
-                            wrapper_type_id: Type#2,
-                            prop_type: Model {
-                                type_id: Type#7,
+                        "id": Scalar(
+                            ScalarProperty {
+                                wrapper_type_id: Type#0,
+                                type_id: Type#0,
+                                prop_type: Integer,
+                                injection: None,
+                                quantifier: One,
+                                unique: false,
+                                auto: false,
+                            },
+                        ),
+                        "profile": Model(
+                            RelationshipProperty {
+                                wrapper_type_id: Type#2,
+                                model_id: Type#7,
+                                quantifier: Optional,
                                 relationship_attributes: RelationshipAttributes {
                                     name: None,
                                     target_field: None,
                                     fkey: None,
                                 },
+                                unique: true,
                             },
-                            quantifier: Optional,
-                            unique: true,
-                            auto: false,
-                        },
+                        ),
                     },
                     id_field: "id",
                     relationships: {
@@ -51,33 +48,30 @@ PrismaContext {
                     type_id: Type#7,
                     type_name: "Profile",
                     props: {
-                        "id": Property {
-                            wrapper_type_id: Type#4,
-                            prop_type: Scalar(
-                                Scalar {
-                                    type_id: Type#4,
-                                    typ: Integer,
-                                    injection: None,
-                                },
-                            ),
-                            quantifier: One,
-                            unique: false,
-                            auto: false,
-                        },
-                        "user": Property {
-                            wrapper_type_id: Type#6,
-                            prop_type: Model {
-                                type_id: Type#3,
+                        "id": Scalar(
+                            ScalarProperty {
+                                wrapper_type_id: Type#4,
+                                type_id: Type#4,
+                                prop_type: Integer,
+                                injection: None,
+                                quantifier: One,
+                                unique: false,
+                                auto: false,
+                            },
+                        ),
+                        "user": Model(
+                            RelationshipProperty {
+                                wrapper_type_id: Type#6,
+                                model_id: Type#3,
+                                quantifier: Optional,
                                 relationship_attributes: RelationshipAttributes {
                                     name: None,
                                     target_field: None,
                                     fkey: None,
                                 },
+                                unique: false,
                             },
-                            quantifier: Optional,
-                            unique: false,
-                            auto: false,
-                        },
+                        ),
                     },
                     id_field: "id",
                     relationships: {

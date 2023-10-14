@@ -29,11 +29,7 @@ impl TryFrom<TypeId> for Model {
 
         let props = typ
             .iter_props()
-            .filter_map(|(k, type_id)| {
-                Property::new(type_id)
-                    .transpose()
-                    .map(|p| p.map(|p| (k.to_string(), p)))
-            })
+            .map(|(k, type_id)| Property::new(type_id).map(|p| (k.to_string(), p)))
             .collect::<Result<IndexMap<_, _>>>()?;
 
         let type_name = type_id
@@ -56,21 +52,19 @@ impl Model {
     fn find_id_field(type_name: &str, props: &IndexMap<String, Property>) -> Result<String> {
         let id_fields = props
             .iter()
-            .filter_map(|(k, p)| {
-                if p.quantifier == Cardinality::One {
-                    match &p.prop_type {
-                        PropertyType::Scalar(s) => {
-                            if s.type_id.as_type().unwrap().get_base().unwrap().as_id {
-                                Some(k.clone())
-                            } else {
-                                None
-                            }
-                        }
-                        _ => None,
-                    }
-                } else {
-                    None
-                }
+            .filter_map(|(k, p)| match p {
+                Property::Scalar(prop) => match prop.quantifier {
+                    Cardinality::One => prop
+                        .type_id
+                        .as_type()
+                        .unwrap()
+                        .get_base()
+                        .unwrap()
+                        .as_id
+                        .then(|| k.clone()),
+                    _ => None,
+                },
+                _ => None,
             })
             .collect::<Vec<_>>();
 
@@ -81,31 +75,20 @@ impl Model {
         }
     }
 
-    pub fn iter_props(&self) -> impl Iterator<Item = (&str, &Property)> {
-        self.props.iter().map(|(k, p)| (k.as_str(), p))
+    pub fn iter_props(&self) -> impl Iterator<Item = (&String, &Property)> {
+        self.props.iter()
     }
 
-    pub fn iter_props_filter(
-        &self,
-        filter: impl Fn(&Property) -> bool,
-    ) -> impl Iterator<Item = (&str, &Property)> {
-        self.props
-            .iter()
-            .filter(move |(_, p)| filter(p))
-            .map(|(k, p)| (k.as_str(), p))
-    }
-
-    pub fn iter_relationship_props(&self) -> impl Iterator<Item = (&str, RelationshipProperty)> {
-        self.props.iter().filter_map(|(k, p)| {
-            RelationshipProperty::try_from(p.clone())
-                .ok()
-                .map(|p| (k.as_str(), p))
+    pub fn iter_relationship_props(&self) -> impl Iterator<Item = (&str, &RelationshipProperty)> {
+        self.props.iter().filter_map(|(k, p)| match p {
+            Property::Model(p) => Some((k.as_str(), p)),
+            _ => None,
         })
     }
 
     pub fn iter_related_models(&self) -> impl Iterator<Item = TypeId> + '_ {
-        self.props.iter().filter_map(|(_, p)| match p.prop_type {
-            PropertyType::Model { type_id, .. } => Some(type_id),
+        self.props.iter().filter_map(|(_, p)| match p {
+            Property::Model(p) => Some(p.model_id),
             _ => None,
         })
     }
@@ -139,29 +122,22 @@ impl TryFrom<TypeAttributes> for RelationshipAttributes {
 }
 
 #[derive(Debug, Clone)]
-pub struct Property {
-    pub wrapper_type_id: TypeId,
-    pub prop_type: PropertyType,
-    quantifier: Cardinality,
-    pub unique: bool,
-    pub auto: bool,
+pub enum Property {
+    Scalar(ScalarProperty),
+    Model(RelationshipProperty),
+    Unmanaged(TypeId),
 }
 
-impl Property {
-    pub fn as_relationship_property(&self) -> Option<RelationshipProperty> {
-        RelationshipProperty::try_from(self.clone()).ok()
-    }
+// #[derive(Debug, Clone)]
+// pub struct Property {
+//     pub wrapper_type_id: TypeId,
+//     pub prop_type: PropertyType,
+//     quantifier: Cardinality,
+//     pub unique: bool,
+//     pub auto: bool,
+// }
 
-    pub fn as_scalar_property(&self) -> Option<ScalarProperty> {
-        ScalarProperty::try_from(self.clone()).ok()
-    }
-
-    pub fn is_scalar(&self) -> bool {
-        self.as_scalar_property().is_some()
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RelationshipProperty {
     pub wrapper_type_id: TypeId,
     pub model_id: TypeId,
@@ -170,69 +146,117 @@ pub struct RelationshipProperty {
     pub unique: bool,
 }
 
-impl TryFrom<Property> for RelationshipProperty {
-    type Error = crate::wit::core::Error;
-
-    fn try_from(prop: Property) -> Result<Self> {
-        match prop.prop_type {
-            PropertyType::Model {
-                type_id,
-                relationship_attributes,
-            } => Ok(Self {
-                wrapper_type_id: prop.wrapper_type_id,
-                model_id: type_id,
-                quantifier: prop.quantifier,
-                relationship_attributes,
-                unique: prop.unique,
-            }),
-            _ => Err("not a model".to_string()),
-        }
-    }
-}
+// impl TryFrom<Property> for RelationshipProperty {
+//     type Error = crate::wit::core::Error;
+//
+//     fn try_from(prop: Property) -> Result<Self> {
+//         match prop.prop_type {
+//             PropertyType::Model {
+//                 type_id,
+//                 relationship_attributes,
+//             } => Ok(Self {
+//                 wrapper_type_id: prop.wrapper_type_id,
+//                 model_id: type_id,
+//                 quantifier: prop.quantifier,
+//                 relationship_attributes,
+//                 unique: prop.unique,
+//             }),
+//             _ => Err("not a model".to_string()),
+//         }
+//     }
+// }
 
 impl Property {
-    fn new(wrapper_type_id: TypeId) -> Result<Option<Self>> {
+    fn new(wrapper_type_id: TypeId) -> Result<Self> {
         let attrs = wrapper_type_id.attrs()?;
         let typ = attrs.concrete_type.as_type()?;
         let runtime_config = RuntimeConfig::new(typ.get_base().unwrap().runtime_config.as_ref());
         let unique = runtime_config.get("unique")?.unwrap_or(false);
         let auto = runtime_config.get("auto")?.unwrap_or(false);
-        match typ {
-            Type::Func(_) => Ok(None), // other runtime
+        let (type_id, card) = match typ {
+            // Type::Func(_) => return Ok(Self::Unmanaged(wrapper_type_id)), // other runtime
             Type::Optional(inner) => {
-                // TODO injection??
-                Ok(Some(Self {
-                    wrapper_type_id,
-                    prop_type: PropertyType::new(
-                        TypeId(inner.data.of).attrs()?.concrete_type,
-                        attrs,
-                    )?,
-                    quantifier: Cardinality::Optional,
-                    auto,
-                    unique,
-                }))
+                (TypeId(inner.data.of).attrs()?.concrete_type, Cardinality::Optional)
             }
             Type::Array(inner) => {
-                // TODO injection?
-                Ok(Some(Self {
-                    wrapper_type_id,
-                    // prop_type: PropertyType::new(TypeId(inner.data.of).attrs()?)?,
-                    prop_type: PropertyType::new(
-                        TypeId(inner.data.of).attrs()?.concrete_type,
-                        attrs,
-                    )?,
-                    quantifier: Cardinality::Many,
-                    auto,
-                    unique,
-                }))
+                (TypeId(inner.data.of).attrs()?.concrete_type, Cardinality::Many)
             }
-            _ => Ok(Some(Self {
+            _ => {
+                (attrs.concrete_type, Cardinality::One)
+            }
+            // _ => Ok(Some(Self {
+            //     wrapper_type_id,
+            //     prop_type: PropertyType::new(attrs.concrete_type, attrs)?,
+            //     quantifier: Cardinality::One,
+            //     auto,
+            //     unique,
+            // })),
+        };
+
+        let scalar = |typ, injection| {
+            Self::Scalar(ScalarProperty {
                 wrapper_type_id,
-                prop_type: PropertyType::new(attrs.concrete_type, attrs)?,
-                quantifier: Cardinality::One,
-                auto,
+                type_id,
+                prop_type: typ,
+                injection,
+                quantifier: card,
                 unique,
-            })),
+                auto,
+            })
+        };
+
+        match attrs
+            .injection
+            .as_ref()
+            .map(Injection::try_from)
+            .transpose()
+        {
+            Ok(injection) => {
+                match type_id.as_type()? {
+                    Type::Struct(_) => {
+                        if injection.is_some() {
+                            return Err("injection not supported for models".to_string());
+                        }
+                        Ok(Self::Model(RelationshipProperty {
+                            wrapper_type_id,
+                            model_id: type_id,
+                            quantifier: card,
+                            relationship_attributes: RelationshipAttributes::try_from(attrs)?,
+                            unique,
+                        }))
+                    }
+                    Type::Optional(_) | Type::Array(_) => {
+                        Err("nested optional/list not supported".to_string())
+                    }
+                    Type::Integer(_) => Ok(scalar(ScalarType::Integer, injection)),
+                    Type::Float(_) => Ok(scalar(ScalarType::Float, injection)),
+                    Type::Boolean(_) => Ok(scalar(ScalarType::Boolean, injection)),
+                    // TODO check format
+                    Type::String(_) => Ok(scalar(ScalarType::String(StringType::Plain), injection)),
+                    // TODO not supported??
+                    Type::Func(_) => {
+                        if injection.is_some() {
+                            Err("injection not supported for function type".to_string())
+                        } else {
+                            Ok(Self::Unmanaged(wrapper_type_id))
+                        }
+                    }
+                    _ => Err("unsupported property type".to_string()),
+                }
+            }
+            Err(_) => match type_id.as_type()? {
+                Type::Func(_) => Err("injection not supported on t::struct()".to_string()),
+                Type::Optional(_) | Type::Array(_) => {
+                    Err("nested optional/list not supported".to_string())
+                }
+                // TODO use original type_id on the property
+                Type::Struct(_)
+                | Type::String(_)
+                | Type::Integer(_)
+                | Type::Float(_)
+                | Type::Boolean(_) => Ok(Self::Unmanaged(wrapper_type_id)),
+                _ => Err("unsupported property type".to_string()),
+            },
         }
     }
 }
@@ -263,27 +287,25 @@ enum InjectionHandler {
 
 #[derive(Debug, Clone)]
 pub struct Injection {
+    #[allow(dead_code)]
     create: Option<InjectionHandler>,
+    #[allow(dead_code)]
     update: Option<InjectionHandler>,
 }
 
-#[derive(Debug, Clone)]
-pub enum InjectionError {
-    // property can only be present in output types
-    UnmanagedProperty,
-    GenericError(String),
-}
-
 impl Injection {
-    fn convert_injection<T>(data: &InjectionData<T>) -> Result<Self, InjectionError> {
+    /// return None if the injection implies that the property is unmanaged.
+    /// Unmanaged properties are properties that will not be present in the
+    /// prisma model.
+    fn convert_injection<T>(data: &InjectionData<T>) -> Option<Self> {
         match data {
-            InjectionData::SingleValue(_) => Err(InjectionError::UnmanagedProperty),
+            InjectionData::SingleValue(_) => None, // unmanaged
             InjectionData::ValueByEffect(map) => {
                 if map.contains_key(&EffectType::None) {
                     // TODO check if other effects are present??
-                    Err(InjectionError::UnmanagedProperty)
+                    None
                 } else {
-                    Ok(Self {
+                    Some(Self {
                         create: map
                             .get(&EffectType::Create)
                             .map(|_| InjectionHandler::Typegate),
@@ -296,16 +318,16 @@ impl Injection {
         }
     }
 
-    fn convert_dynamic_injection(data: &InjectionData<String>) -> Result<Self, InjectionError> {
+    fn convert_dynamic_injection(data: &InjectionData<String>) -> Option<Self> {
         match data {
-            InjectionData::SingleValue(_) => Err(InjectionError::UnmanagedProperty),
+            InjectionData::SingleValue(_) => None, // unmanaged
             InjectionData::ValueByEffect(map) => {
                 if map.contains_key(&EffectType::None) {
                     // TODO check if other effects are present??
-                    Err(InjectionError::UnmanagedProperty)
+                    None
                 } else {
                     // TODO check function name -> Prisma vs Typegate
-                    Ok(Self {
+                    Some(Self {
                         create: map
                             .get(&EffectType::Create)
                             .map(|_| InjectionHandler::Prisma),
@@ -320,24 +342,20 @@ impl Injection {
 }
 
 impl TryFrom<&common::typegraph::Injection> for Injection {
-    type Error = InjectionError;
+    // unmanaged property
+    type Error = ();
 
     fn try_from(injection: &common::typegraph::Injection) -> Result<Self, Self::Error> {
         use common::typegraph::Injection as I;
 
         match injection {
-            I::Static(inj) | I::Secret(inj) | I::Context(inj) => Self::convert_injection(inj),
-            I::Parent(inj) => Self::convert_injection(inj),
-            I::Dynamic(inj) => Self::convert_dynamic_injection(inj),
+            I::Static(inj) | I::Secret(inj) | I::Context(inj) => {
+                Self::convert_injection(inj).ok_or(())
+            }
+            I::Parent(inj) => Self::convert_injection(inj).ok_or(()),
+            I::Dynamic(inj) => Self::convert_dynamic_injection(inj).ok_or(()),
         }
     }
-}
-
-#[derive(Debug, Clone)]
-pub struct Scalar {
-    type_id: TypeId,
-    typ: ScalarType,
-    injection: Option<Injection>,
 }
 
 #[derive(Debug, Clone)]
@@ -345,109 +363,106 @@ pub struct ScalarProperty {
     pub wrapper_type_id: TypeId,
     pub type_id: TypeId,
     pub prop_type: ScalarType,
+    pub injection: Option<Injection>,
     pub quantifier: Cardinality,
     pub unique: bool,
     pub auto: bool,
 }
+//
+// impl TryFrom<Property> for ScalarProperty {
+//     type Error = crate::wit::core::Error;
+//
+//     fn try_from(prop: Property) -> Result<Self> {
+//         match prop.prop_type {
+//             PropertyType::Scalar(s) => Ok(Self {
+//                 wrapper_type_id: prop.wrapper_type_id,
+//                 type_id: s.type_id,
+//                 prop_type: s.typ,
+//                 quantifier: prop.quantifier,
+//                 unique: prop.unique,
+//                 auto: prop.auto,
+//             }),
+//             _ => Err("not a scalar".to_string()),
+//         }
+//     }
+// }
 
-impl TryFrom<Property> for ScalarProperty {
-    type Error = crate::wit::core::Error;
+// /// type without quantifier
+// #[derive(Debug, Clone)]
+// pub enum PropertyType {
+//     Scalar(Scalar),
+//     Model {
+//         type_id: TypeId,
+//         relationship_attributes: RelationshipAttributes,
+//     },
+//     /// not managed by prisma --> can be present only in the output types
+//     Unmanaged(TypeId),
+// }
 
-    fn try_from(prop: Property) -> Result<Self> {
-        match prop.prop_type {
-            PropertyType::Scalar(s) => Ok(Self {
-                wrapper_type_id: prop.wrapper_type_id,
-                type_id: s.type_id,
-                prop_type: s.typ,
-                quantifier: prop.quantifier,
-                unique: prop.unique,
-                auto: prop.auto,
-            }),
-            _ => Err("not a scalar".to_string()),
-        }
-    }
-}
-
-/// type without quantifier
-#[derive(Debug, Clone)]
-pub enum PropertyType {
-    Scalar(Scalar),
-    Model {
-        type_id: TypeId,
-        relationship_attributes: RelationshipAttributes,
-    },
-    /// not managed by prisma --> can be present only in the output types
-    Unmanaged(TypeId),
-}
-
-pub trait PropertyFilter {
-    fn filter(&self, prop: &Property) -> bool;
-}
-
-impl PropertyType {
-    fn new(concrete_type: TypeId, wrapper_attrs: TypeAttributes) -> Result<Self> {
-        match wrapper_attrs
-            .injection
-            .as_ref()
-            .map(Injection::try_from)
-            .transpose()
-        {
-            Ok(injection) => {
-                match concrete_type.as_type()? {
-                    Type::Struct(_) => {
-                        if injection.is_some() {
-                            return Err("injection not supported for models".to_string());
-                        }
-                        Ok(Self::Model {
-                            type_id: concrete_type,
-                            relationship_attributes: wrapper_attrs.try_into()?,
-                        })
-                    }
-                    Type::Optional(_) | Type::Array(_) => {
-                        Err("nested optional/list not supported".to_string())
-                    }
-                    Type::Integer(_) => Ok(Self::Scalar(Scalar {
-                        type_id: concrete_type,
-                        typ: ScalarType::Integer,
-                        injection,
-                    })),
-                    Type::Float(_) => Ok(Self::Scalar(Scalar {
-                        type_id: concrete_type,
-                        typ: ScalarType::Float,
-                        injection,
-                    })),
-                    Type::Boolean(_) => Ok(Self::Scalar(Scalar {
-                        type_id: concrete_type,
-                        typ: ScalarType::Boolean,
-                        injection,
-                    })),
-                    // TODO check format
-                    Type::String(_) => Ok(Self::Scalar(Scalar {
-                        type_id: concrete_type,
-                        typ: ScalarType::String(StringType::Plain),
-                        injection,
-                    })),
-                    // TODO use original type_id
-                    Type::Func(_) => Ok(Self::Unmanaged(wrapper_attrs.concrete_type)),
-                    _ => Err("unsupported property type".to_string()),
-                }
-            }
-            Err(e) => match e {
-                InjectionError::UnmanagedProperty => match concrete_type.as_type()? {
-                    Type::Func(_) => Err("injection not supported on t::struct()".to_string()),
-                    Type::Optional(_) | Type::Array(_) => {
-                        Err("nested optional/list not supported".to_string())
-                    }
-                    // TODO use original type_id on the property
-                    Type::Struct(_)
-                    | Type::String(_)
-                    | Type::Integer(_)
-                    | Type::Float(_)
-                    | Type::Boolean(_) => Ok(Self::Unmanaged(wrapper_attrs.concrete_type)),
-                    _ => Err("unsupported property type".to_string()),
-                },
-                InjectionError::GenericError(e) => Err(e),
-            },
-        }
-    }
-}
+// impl PropertyType {
+//     fn new(concrete_type: TypeId, wrapper_attrs: TypeAttributes) -> Result<Self> {
+//         match wrapper_attrs
+//             .injection
+//             .as_ref()
+//             .map(Injection::try_from)
+//             .transpose()
+//         {
+//             Ok(injection) => {
+//                 match concrete_type.as_type()? {
+//                     Type::Struct(_) => {
+//                         if injection.is_some() {
+//                             return Err("injection not supported for models".to_string());
+//                         }
+//                         Ok(Self::Model {
+//                             type_id: concrete_type,
+//                             relationship_attributes: wrapper_attrs.try_into()?,
+//                         })
+//                     }
+//                     Type::Optional(_) | Type::Array(_) => {
+//                         Err("nested optional/list not supported".to_string())
+//                     }
+//                     Type::Integer(_) => Ok(Self::Scalar(Scalar {
+//                         type_id: concrete_type,
+//                         typ: ScalarType::Integer,
+//                         injection,
+//                     })),
+//                     Type::Float(_) => Ok(Self::Scalar(Scalar {
+//                         type_id: concrete_type,
+//                         typ: ScalarType::Float,
+//                         injection,
+//                     })),
+//                     Type::Boolean(_) => Ok(Self::Scalar(Scalar {
+//                         type_id: concrete_type,
+//                         typ: ScalarType::Boolean,
+//                         injection,
+//                     })),
+//                     // TODO check format
+//                     Type::String(_) => Ok(Self::Scalar(Scalar {
+//                         type_id: concrete_type,
+//                         typ: ScalarType::String(StringType::Plain),
+//                         injection,
+//                     })),
+//                     // TODO use original type_id
+//                     Type::Func(_) => Ok(Self::Unmanaged(wrapper_attrs.concrete_type)),
+//                     _ => Err("unsupported property type".to_string()),
+//                 }
+//             }
+//             Err(e) => match e {
+//                 InjectionError::UnmanagedProperty => match concrete_type.as_type()? {
+//                     Type::Func(_) => Err("injection not supported on t::struct()".to_string()),
+//                     Type::Optional(_) | Type::Array(_) => {
+//                         Err("nested optional/list not supported".to_string())
+//                     }
+//                     // TODO use original type_id on the property
+//                     Type::Struct(_)
+//                     | Type::String(_)
+//                     | Type::Integer(_)
+//                     | Type::Float(_)
+//                     | Type::Boolean(_) => Ok(Self::Unmanaged(wrapper_attrs.concrete_type)),
+//                     _ => Err("unsupported property type".to_string()),
+//                 },
+//                 InjectionError::GenericError(e) => Err(e),
+//             },
+//         }
+//     }
+// }

@@ -3,7 +3,7 @@
 
 use crate::{
     errors::Result,
-    runtimes::prisma::context::PrismaContext,
+    runtimes::prisma::{context::PrismaContext, utils::model::Property},
     t::{self, ConcreteTypeBuilder, TypeBuilder},
     types::TypeId,
 };
@@ -33,21 +33,23 @@ impl TypeGen for Where {
         let model = model.borrow();
 
         for (key, prop) in model.iter_props() {
-            if model.relationships.get(key).is_some() {
-                if !self.relations {
-                    continue;
+            match prop {
+                Property::Model(prop) => {
+                    if !self.relations {
+                        continue;
+                    }
+
+                    let inner = context.generate(&Where {
+                        model_id: prop.model_id,
+                        relations: false,
+                    })?;
+                    builder.propx(key, t::optional(inner))?;
                 }
-
-                let prop = prop.as_relationship_property().unwrap();
-
-                let inner = context.generate(&Where {
-                    model_id: prop.model_id,
-                    relations: false,
-                })?;
-                builder.propx(key, t::optional(inner))?;
-            } else if let Some(prop) = prop.as_scalar_property() {
-                // TODO cardinality??
-                builder.propx(key, t::optional(prop.type_id))?;
+                Property::Scalar(prop) => {
+                    // TODO cardinality?? - many?
+                    builder.propx(key, t::optional(prop.type_id))?;
+                }
+                Property::Unmanaged(_) => continue,
             }
         }
 

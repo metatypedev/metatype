@@ -10,48 +10,43 @@ PrismaContext {
                     type_id: Type#4,
                     type_name: "User",
                     props: {
-                        "id": Property {
-                            wrapper_type_id: Type#0,
-                            prop_type: Scalar(
-                                Scalar {
-                                    type_id: Type#0,
-                                    typ: Integer,
-                                    injection: None,
-                                },
-                            ),
-                            quantifier: One,
-                            unique: false,
-                            auto: false,
-                        },
-                        "name": Property {
-                            wrapper_type_id: Type#1,
-                            prop_type: Scalar(
-                                Scalar {
-                                    type_id: Type#1,
-                                    typ: String(
-                                        Plain,
-                                    ),
-                                    injection: None,
-                                },
-                            ),
-                            quantifier: One,
-                            unique: false,
-                            auto: false,
-                        },
-                        "posts": Property {
-                            wrapper_type_id: Type#3,
-                            prop_type: Model {
-                                type_id: Type#8,
+                        "id": Scalar(
+                            ScalarProperty {
+                                wrapper_type_id: Type#0,
+                                type_id: Type#0,
+                                prop_type: Integer,
+                                injection: None,
+                                quantifier: One,
+                                unique: false,
+                                auto: false,
+                            },
+                        ),
+                        "name": Scalar(
+                            ScalarProperty {
+                                wrapper_type_id: Type#1,
+                                type_id: Type#1,
+                                prop_type: String(
+                                    Plain,
+                                ),
+                                injection: None,
+                                quantifier: One,
+                                unique: false,
+                                auto: false,
+                            },
+                        ),
+                        "posts": Model(
+                            RelationshipProperty {
+                                wrapper_type_id: Type#3,
+                                model_id: Type#8,
+                                quantifier: Many,
                                 relationship_attributes: RelationshipAttributes {
                                     name: None,
                                     target_field: None,
                                     fkey: None,
                                 },
+                                unique: false,
                             },
-                            quantifier: Many,
-                            unique: false,
-                            auto: false,
-                        },
+                        ),
                     },
                     id_field: "id",
                     relationships: {
@@ -66,38 +61,35 @@ PrismaContext {
                     type_id: Type#8,
                     type_name: "Post",
                     props: {
-                        "id": Property {
-                            wrapper_type_id: Type#5,
-                            prop_type: Scalar(
-                                Scalar {
-                                    type_id: Type#5,
-                                    typ: Integer,
-                                    injection: None,
-                                },
-                            ),
-                            quantifier: One,
-                            unique: false,
-                            auto: false,
-                        },
-                        "title": Property {
-                            wrapper_type_id: Type#6,
-                            prop_type: Scalar(
-                                Scalar {
-                                    type_id: Type#6,
-                                    typ: String(
-                                        Plain,
-                                    ),
-                                    injection: None,
-                                },
-                            ),
-                            quantifier: One,
-                            unique: false,
-                            auto: false,
-                        },
-                        "author": Property {
-                            wrapper_type_id: Type#7,
-                            prop_type: Model {
-                                type_id: Type#4,
+                        "id": Scalar(
+                            ScalarProperty {
+                                wrapper_type_id: Type#5,
+                                type_id: Type#5,
+                                prop_type: Integer,
+                                injection: None,
+                                quantifier: One,
+                                unique: false,
+                                auto: false,
+                            },
+                        ),
+                        "title": Scalar(
+                            ScalarProperty {
+                                wrapper_type_id: Type#6,
+                                type_id: Type#6,
+                                prop_type: String(
+                                    Plain,
+                                ),
+                                injection: None,
+                                quantifier: One,
+                                unique: false,
+                                auto: false,
+                            },
+                        ),
+                        "author": Model(
+                            RelationshipProperty {
+                                wrapper_type_id: Type#7,
+                                model_id: Type#4,
+                                quantifier: One,
                                 relationship_attributes: RelationshipAttributes {
                                     name: Some(
                                         "PostAuthor",
@@ -105,11 +97,9 @@ PrismaContext {
                                     target_field: None,
                                     fkey: None,
                                 },
+                                unique: false,
                             },
-                            quantifier: One,
-                            unique: false,
-                            auto: false,
-                        },
+                        ),
                     },
                     id_field: "id",
                     relationships: {

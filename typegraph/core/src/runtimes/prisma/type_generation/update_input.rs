@@ -4,7 +4,7 @@
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::relationship::Cardinality;
-use crate::runtimes::prisma::utils::model::ScalarType;
+use crate::runtimes::prisma::utils::model::{Property, ScalarType};
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeId;
 
@@ -29,35 +29,38 @@ impl TypeGen for UpdateInput {
 
         for (key, prop) in model.iter_props() {
             // TODO check injection
-
-            if let Some(prop) = prop.as_scalar_property() {
-                let mutation_type = if prop.quantifier == Cardinality::Many {
-                    t::unionx![
-                        prop.wrapper_type_id,
-                        t::struct_().prop("set", prop.wrapper_type_id),
-                        t::struct_().prop("push", prop.type_id),
-                        // "unset": mongo only
-                    ]
-                    .build()?
-                } else {
-                    let wrapper_type_id = prop.wrapper_type_id;
-                    match prop.prop_type {
-                        ScalarType::Boolean | ScalarType::String(_) => t::unionx![
-                            wrapper_type_id,
-                            t::struct_().prop("set", prop.wrapper_type_id)
+            match prop {
+                Property::Scalar(prop) => {
+                    let mutation_type = if prop.quantifier == Cardinality::Many {
+                        t::unionx![
+                            prop.wrapper_type_id,
+                            t::struct_().prop("set", prop.wrapper_type_id),
+                            t::struct_().prop("push", prop.type_id),
+                            // "unset": mongo only
                         ]
-                        .build()?,
-                        ScalarType::Integer | ScalarType::Float => t::unionx![
-                            wrapper_type_id,
-                            t::struct_().prop("set", wrapper_type_id),
-                            t::struct_().prop("multiply", prop.type_id),
-                            t::struct_().prop("decrement", prop.type_id),
-                            t::struct_().prop("increment", prop.type_id),
-                        ]
-                        .build()?,
-                    }
-                };
-                builder.propx(key, t::optional(mutation_type))?;
+                        .build()?
+                    } else {
+                        let wrapper_type_id = prop.wrapper_type_id;
+                        match prop.prop_type {
+                            ScalarType::Boolean | ScalarType::String(_) => t::unionx![
+                                wrapper_type_id,
+                                t::struct_().prop("set", prop.wrapper_type_id)
+                            ]
+                            .build()?,
+                            ScalarType::Integer | ScalarType::Float => t::unionx![
+                                wrapper_type_id,
+                                t::struct_().prop("set", wrapper_type_id),
+                                t::struct_().prop("multiply", prop.type_id),
+                                t::struct_().prop("decrement", prop.type_id),
+                                t::struct_().prop("increment", prop.type_id),
+                            ]
+                            .build()?,
+                        }
+                    };
+                    builder.propx(key, t::optional(mutation_type))?;
+                }
+                Property::Model(_) => continue,
+                Property::Unmanaged(_) => continue,
             }
         }
 

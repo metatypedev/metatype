@@ -4,8 +4,7 @@
 use crate::errors::Result;
 use crate::runtimes::prisma::context::{ModelRef, PrismaContext};
 use crate::runtimes::prisma::errors;
-use crate::runtimes::prisma::utils::model::{RelationshipAttributes, RelationshipProperty};
-use crate::types::TypeId;
+use crate::runtimes::prisma::utils::model::{Property, RelationshipProperty};
 
 use super::Cardinality;
 
@@ -13,12 +12,8 @@ use super::Cardinality;
 pub struct Candidate {
     pub source_model: ModelRef,
     pub field_name: String,
-    pub wrapper_type: TypeId,
-    // pub model_id: TypeId,
+    pub property: RelationshipProperty,
     pub model: ModelRef,
-    pub cardinality: Cardinality,
-    pub relationship_attributes: RelationshipAttributes,
-    pub unique: bool,
 }
 
 impl PrismaContext {
@@ -28,18 +23,18 @@ impl PrismaContext {
         prop_name: String,
         source_candidate: Option<&Candidate>,
     ) -> Result<Option<Candidate>> {
+        let model = source_model.borrow();
         let prop = {
-            let model = source_model.borrow();
             let prop = model.get_prop(&prop_name).ok_or_else(|| {
                 format!(
                     "Property {} not found on model {}",
                     prop_name, model.type_name
                 )
             })?;
-            match RelationshipProperty::try_from(prop.clone()) {
-                Ok(prop) => prop,
-                Err(_) => return Ok(None),
-            }
+            let Property::Model(prop) = prop else {
+                return Ok(None);
+            };
+            prop
         };
 
         if let Some(source_candidate) = source_candidate {
@@ -60,11 +55,8 @@ impl PrismaContext {
         Ok(Some(Candidate {
             source_model: source_model.clone(),
             field_name: prop_name,
-            wrapper_type: prop.wrapper_type_id,
+            property: prop.clone(),
             model: target_model,
-            cardinality: prop.quantifier,
-            relationship_attributes: prop.relationship_attributes,
-            unique: prop.unique,
         }))
     }
 
@@ -90,8 +82,8 @@ impl PrismaContext {
             .enumerate()
             .filter_map(|(i, c)| {
                 match (
-                    &c.relationship_attributes.name,
-                    &candidate.relationship_attributes.name,
+                    &c.property.relationship_attributes.name,
+                    &candidate.property.relationship_attributes.name,
                 ) {
                     (Some(a), Some(b)) if a == b => Some(i),
                     _ => None,
@@ -112,12 +104,14 @@ impl PrismaContext {
             .iter()
             .enumerate()
             .filter(|(_i, c)| {
-                c.relationship_attributes
+                c.property
+                    .relationship_attributes
                     .target_field
                     .as_ref()
                     .map(|n| n == &candidate.field_name)
                     .unwrap_or(false)
                     || candidate
+                        .property
                         .relationship_attributes
                         .target_field
                         .as_ref()
@@ -188,8 +182,8 @@ pub struct CandidatePair(pub Candidate, pub Candidate);
 impl CandidatePair {
     pub fn rel_name(&self, id: usize) -> Result<String> {
         match (
-            &self.0.relationship_attributes.name,
-            &self.1.relationship_attributes.name,
+            &self.0.property.relationship_attributes.name,
+            &self.1.property.relationship_attributes.name,
         ) {
             (None, None) => Ok(format!(
                 "__rel_{}_{}_{id}",
@@ -213,9 +207,9 @@ impl CandidatePair {
         let CandidatePair(first, second) = self;
         // right will be the model that has the foreign key
         use Cardinality as C;
-        match (first.cardinality, second.cardinality) {
+        match (first.property.quantifier, second.property.quantifier) {
             (C::One, C::One) | (C::Optional, C::Optional) => {
-                let (first_attrs, second_attrs) = (&first.relationship_attributes, &second.relationship_attributes);
+                let (first_attrs, second_attrs) = (&first.property.relationship_attributes, &second.property.relationship_attributes);
                 match (first_attrs.fkey, second_attrs.fkey) {
                     (Some(true), Some(false)) => Ok(Self(first, second)),
                     (Some(false), Some(true)) => Ok(Self(second, first)),
@@ -229,7 +223,7 @@ impl CandidatePair {
                     (None, Some(false)) => Ok(Self(first, second)),
                     (None, None) => {
                         // choose by unique attribute
-                        match (first.unique, second.unique) {
+                        match (first.property.unique, second.property.unique) {
                             (true, false) => Ok(Self(first, second)),
                             (false, true) => Ok(Self(second, first)),
                             (true, true) => Err(errors::conflicting_attributes("unique", &first.model.type_name(), &second.field_name, &second.model.type_name(), &first.field_name)),

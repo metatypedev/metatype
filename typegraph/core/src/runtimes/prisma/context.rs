@@ -93,15 +93,15 @@ impl PrismaContext {
                     left: RelationshipModel {
                         model_type: left.model.type_id(),
                         model_name: left.model.type_name(),
-                        wrapper_type: left.wrapper_type,
-                        cardinality: left.cardinality,
+                        wrapper_type: left.property.wrapper_type_id,
+                        cardinality: left.property.quantifier,
                         field: right.field_name.clone(),
                     },
                     right: RelationshipModel {
                         model_type: right.model.type_id(),
                         model_name: right.model.type_name(),
-                        wrapper_type: right.wrapper_type,
-                        cardinality: right.cardinality,
+                        wrapper_type: right.property.wrapper_type_id,
+                        cardinality: right.property.quantifier,
                         field: left.field_name.clone(),
                     },
                 };

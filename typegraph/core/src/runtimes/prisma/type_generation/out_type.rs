@@ -3,6 +3,8 @@
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
+use crate::runtimes::prisma::errors;
+use crate::runtimes::prisma::utils::model::Property;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeId;
 
@@ -30,31 +32,41 @@ impl TypeGen for OutType {
         let model = model.borrow();
 
         for (key, prop) in model.iter_props() {
-            if let Some(rel_name) = model.relationships.get(key) {
-                let rel = context.relationships.get(rel_name).unwrap();
-                if self.skip_rel.contains(rel_name) || rel.left.model_type == rel.right.model_type {
-                    continue;
+            match prop {
+                Property::Model(prop) => {
+                    let rel_name = model
+                        .relationships
+                        .get(key)
+                        .ok_or_else(|| errors::unregistered_relationship(&model.type_name, key))?;
+                    let rel = context.relationships.get(rel_name).unwrap();
+                    if self.skip_rel.contains(rel_name)
+                        || rel.left.model_type == rel.right.model_type
+                    {
+                        continue;
+                    }
+
+                    let mut skip_rel = self.skip_rel.clone();
+                    skip_rel.push(rel_name.clone());
+
+                    let out_type = context.generate(&OutType {
+                        model_id: prop.model_id,
+                        skip_rel,
+                    })?;
+
+                    let out_type = match prop.quantifier {
+                        Cardinality::Optional => t::optional(out_type).build()?,
+                        Cardinality::One => out_type,
+                        Cardinality::Many => t::array(out_type).build()?,
+                    };
+
+                    builder.prop(key, out_type);
                 }
-
-                let mut skip_rel = self.skip_rel.clone();
-                skip_rel.push(rel_name.clone());
-
-                let prop = prop.as_relationship_property().unwrap();
-
-                let out_type = context.generate(&OutType {
-                    model_id: prop.model_id,
-                    skip_rel,
-                })?;
-
-                let out_type = match prop.quantifier {
-                    Cardinality::Optional => t::optional(out_type).build()?,
-                    Cardinality::One => out_type,
-                    Cardinality::Many => t::array(out_type).build()?,
-                };
-
-                builder.prop(key, out_type);
-            } else {
-                builder.prop(key, prop.wrapper_type_id);
+                Property::Scalar(prop) => {
+                    builder.prop(key, prop.wrapper_type_id);
+                }
+                Property::Unmanaged(type_id) => {
+                    builder.prop(key, *type_id);
+                }
             }
         }
 

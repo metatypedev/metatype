@@ -3,7 +3,9 @@
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
+use crate::runtimes::prisma::errors;
 use crate::runtimes::prisma::relationship::Cardinality;
+use crate::runtimes::prisma::utils::model::Property;
 use crate::t::{ConcreteTypeBuilder, TypeBuilder};
 use crate::types::Type;
 use crate::{t, types::TypeId};
@@ -50,38 +52,44 @@ impl TypeGen for OrderBy {
         let model = model.borrow();
 
         for (k, prop) in model.iter_props() {
-            if let Some(rel_name) = model.relationships.get(k) {
-                if self.skip_rel.contains(rel_name) {
-                    continue;
+            match prop {
+                Property::Model(prop) => {
+                    let rel_name = model
+                        .relationships
+                        .get(k)
+                        .ok_or_else(|| errors::unregistered_relationship(&model.type_name, k))?;
+
+                    if self.skip_rel.contains(rel_name) {
+                        continue;
+                    }
+
+                    // TODO does this work for self relationship?
+                    match prop.quantifier {
+                        Cardinality::Many => {
+                            builder.prop(k, context.generate(&SortByAggregates)?);
+                        }
+                        Cardinality::Optional | Cardinality::One => {
+                            let mut skip_rel = self.skip_rel.clone();
+                            skip_rel.push(rel_name.clone());
+                            let inner =
+                                context.generate(&OrderBy::new(prop.model_id).skip(skip_rel))?;
+                            builder.propx(k, t::optional(inner))?;
+                        }
+                    }
                 }
 
-                let prop = prop.as_relationship_property().unwrap();
+                Property::Scalar(prop) => {
+                    if prop.quantifier != Cardinality::Many {
+                        builder.prop(
+                            k,
+                            context.generate(&Sort {
+                                nullable: prop.quantifier == Cardinality::Optional,
+                            })?,
+                        );
+                    }
+                }
 
-                // TODO does this work for self relationship?
-                match prop.quantifier {
-                    Cardinality::Many => {
-                        builder.prop(k, context.generate(&SortByAggregates)?);
-                    }
-                    Cardinality::Optional | Cardinality::One => {
-                        let mut skip_rel = self.skip_rel.clone();
-                        skip_rel.push(rel_name.clone());
-                        let inner =
-                            context.generate(&OrderBy::new(prop.model_id).skip(skip_rel))?;
-                        builder.propx(k, t::optional(inner))?;
-                    }
-                }
-            } else {
-                let Some(prop) = prop.as_scalar_property() else {
-                    continue;
-                };
-                if prop.quantifier != Cardinality::Many {
-                    builder.prop(
-                        k,
-                        context.generate(&Sort {
-                            nullable: prop.quantifier == Cardinality::Optional,
-                        })?,
-                    );
-                }
+                Property::Unmanaged(_) => {}
             }
         }
 
