@@ -9,7 +9,7 @@ import {
 } from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
 import { runtimes } from "../wit.ts";
 import { Materializer, Runtime } from "./mod.ts";
-import * as fx from "../effects.ts";
+import { fx } from "../mod.ts";
 
 type HttpRequestMat<M extends string> =
   & Materializer
@@ -21,8 +21,8 @@ type HttpRequestMat<M extends string> =
 export class HttpRuntime extends Runtime {
   constructor(
     public endpoint: string,
-    public certSecret: string | undefined,
-    public basicAuthSecret: string | undefined,
+    public certSecret?: string,
+    public basicAuthSecret?: string,
   ) {
     super(runtimes.registerHttpRuntime({
       endpoint,
@@ -65,7 +65,7 @@ export class HttpRuntime extends Runtime {
     out: O,
     options: Omit<MaterializerHttpRequest, "method">,
   ): t.Func<P, I, O> {
-    return this.#request("get", inp, out, options, fx.none());
+    return this.#request("get", inp, out, options, fx.read());
   }
 
   post<

@@ -1,5 +1,5 @@
-from typegraph_next import t, typegraph, effects, Policy, Graph
-from typegraph_next.runtimes.graphql import GraphQLRuntime
+from typegraph import t, typegraph, effects, Policy, Graph
+from typegraph.runtimes.graphql import GraphQLRuntime
 
 user = t.struct(
     {

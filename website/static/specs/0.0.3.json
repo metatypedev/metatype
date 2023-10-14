@@ -1,0 +1,2262 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Typegraph",
+  "type": "object",
+  "required": [
+    "$id",
+    "materializers",
+    "meta",
+    "policies",
+    "runtimes",
+    "types"
+  ],
+  "properties": {
+    "$id": {
+      "type": "string"
+    },
+    "types": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TypeNode"
+      }
+    },
+    "materializers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Materializer"
+      }
+    },
+    "runtimes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TGRuntime"
+      }
+    },
+    "policies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Policy"
+      }
+    },
+    "meta": {
+      "$ref": "#/definitions/TypeMeta"
+    }
+  },
+  "definitions": {
+    "TypeNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "as_id",
+            "item",
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "optional"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Injection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "as_id": {
+              "type": "boolean"
+            },
+            "item": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "default_value": true
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "as_id",
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "boolean"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Injection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "as_id": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "as_id",
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "float"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Injection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "as_id": {
+              "type": "boolean"
+            },
+            "minimum": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "maximum": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "exclusiveMinimum": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "exclusiveMaximum": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "multipleOf": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "as_id",
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "integer"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Injection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "as_id": {
+              "type": "boolean"
+            },
+            "minimum": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
+            "maximum": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
+            "exclusiveMinimum": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
+            "exclusiveMaximum": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
+            "multipleOf": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "as_id",
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "string"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Injection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "as_id": {
+              "type": "boolean"
+            },
+            "minLength": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "maxLength": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "pattern": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "format": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/StringFormat"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "as_id",
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "file"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Injection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "as_id": {
+              "type": "boolean"
+            },
+            "minSize": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "maxSize": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "mimeTypes": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "as_id",
+            "policies",
+            "properties",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "object"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Injection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "as_id": {
+              "type": "boolean"
+            },
+            "properties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            },
+            "required": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "as_id",
+            "items",
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "array"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Injection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "as_id": {
+              "type": "boolean"
+            },
+            "items": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "maxItems": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "minItems": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "uniqueItems": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "as_id",
+            "input",
+            "materializer",
+            "output",
+            "policies",
+            "rate_calls",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "function"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Injection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "as_id": {
+              "type": "boolean"
+            },
+            "input": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "output": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "materializer": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "rate_weight": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "rate_calls": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "anyOf",
+            "as_id",
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "union"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Injection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "as_id": {
+              "type": "boolean"
+            },
+            "anyOf": {
+              "description": "Array of indexes of the nodes that are used as subschemes in the anyOf field of JSON Schema.",
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "as_id",
+            "oneOf",
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "either"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Injection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "as_id": {
+              "type": "boolean"
+            },
+            "oneOf": {
+              "description": "Array of indexes of the nodes that are used as subschemes in the oneOf field of JSON Schema.",
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "as_id",
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "any"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Injection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "as_id": {
+              "type": "boolean"
+            }
+          }
+        }
+      ]
+    },
+    "PolicyIndices": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        {
+          "$ref": "#/definitions/PolicyIndicesByEffect"
+        }
+      ]
+    },
+    "PolicyIndicesByEffect": {
+      "type": "object",
+      "properties": {
+        "read": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "create": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "delete": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "update": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "Injection": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "static"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/InjectionData_for_String"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "context"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/InjectionData_for_String"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "secret"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/InjectionData_for_String"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "parent"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/InjectionData_for_uint32"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "dynamic"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/InjectionData_for_String"
+            }
+          }
+        }
+      ]
+    },
+    "InjectionData_for_String": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/SingleValue_for_String"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "SingleValue_for_String": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "InjectionData_for_uint32": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/SingleValue_for_uint32"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          }
+        }
+      ]
+    },
+    "SingleValue_for_uint32": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "StringFormat": {
+      "type": "string",
+      "enum": [
+        "uuid",
+        "email",
+        "uri",
+        "json",
+        "hostname",
+        "ean",
+        "date",
+        "date-time",
+        "phone"
+      ]
+    },
+    "Materializer": {
+      "type": "object",
+      "required": [
+        "data",
+        "effect",
+        "name",
+        "runtime"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "runtime": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "effect": {
+          "$ref": "#/definitions/Effect"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "Effect": {
+      "type": "object",
+      "required": [
+        "idempotent"
+      ],
+      "properties": {
+        "effect": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/EffectType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "idempotent": {
+          "type": "boolean"
+        }
+      }
+    },
+    "EffectType": {
+      "type": "string",
+      "enum": [
+        "create",
+        "update",
+        "delete",
+        "read"
+      ]
+    },
+    "TGRuntime": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/KnownRuntime"
+        },
+        {
+          "$ref": "#/definitions/UnknownRuntime"
+        }
+      ]
+    },
+    "KnownRuntime": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "deno"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/DenoRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "graphql"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/GraphQLRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "http"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/HTTPRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "python_wasi"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/PythonRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "random"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/RandomRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "prisma"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/PrismaRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "prisma_migration"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/PrismaMigrationRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "s3"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/S3RuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "temporal"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/TemporalRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "wasmedge"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/WasmEdgeRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "typegate"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/TypegateRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "typegraph"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/TypegraphRuntimeData"
+            }
+          }
+        }
+      ]
+    },
+    "DenoRuntimeData": {
+      "type": "object",
+      "required": [
+        "permissions",
+        "worker"
+      ],
+      "properties": {
+        "worker": {
+          "type": "string"
+        },
+        "permissions": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "GraphQLRuntimeData": {
+      "type": "object",
+      "required": [
+        "endpoint"
+      ],
+      "properties": {
+        "endpoint": {
+          "type": "string"
+        }
+      }
+    },
+    "HTTPRuntimeData": {
+      "type": "object",
+      "required": [
+        "endpoint"
+      ],
+      "properties": {
+        "endpoint": {
+          "type": "string"
+        },
+        "cert_secret": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "basic_auth_secret": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "PythonRuntimeData": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "RandomRuntimeData": {
+      "type": "object",
+      "properties": {
+        "seed": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "reset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "PrismaRuntimeData": {
+      "type": "object",
+      "required": [
+        "connection_string_secret",
+        "models",
+        "name",
+        "relationships"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "connection_string_secret": {
+          "type": "string"
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          }
+        },
+        "relationships": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Relationship"
+          }
+        },
+        "migration_options": {
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MigrationOptions"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Relationship": {
+      "type": "object",
+      "required": [
+        "left",
+        "name",
+        "right"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "left": {
+          "$ref": "#/definitions/RelationshipModel"
+        },
+        "right": {
+          "$ref": "#/definitions/RelationshipModel"
+        }
+      }
+    },
+    "RelationshipModel": {
+      "type": "object",
+      "required": [
+        "cardinality",
+        "field",
+        "type_idx"
+      ],
+      "properties": {
+        "type_idx": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "field": {
+          "type": "string"
+        },
+        "cardinality": {
+          "$ref": "#/definitions/Cardinality"
+        }
+      }
+    },
+    "Cardinality": {
+      "type": "string",
+      "enum": [
+        "optional",
+        "one",
+        "many"
+      ]
+    },
+    "MigrationOptions": {
+      "type": "object",
+      "required": [
+        "create",
+        "reset"
+      ],
+      "properties": {
+        "migration_files": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "create": {
+          "type": "boolean"
+        },
+        "reset": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PrismaMigrationRuntimeData": {
+      "type": "object"
+    },
+    "S3RuntimeData": {
+      "type": "object",
+      "required": [
+        "access_key_secret",
+        "host_secret",
+        "path_style_secret",
+        "region_secret",
+        "secret_key_secret"
+      ],
+      "properties": {
+        "host_secret": {
+          "type": "string"
+        },
+        "region_secret": {
+          "type": "string"
+        },
+        "access_key_secret": {
+          "type": "string"
+        },
+        "secret_key_secret": {
+          "type": "string"
+        },
+        "path_style_secret": {
+          "type": "string"
+        }
+      }
+    },
+    "TemporalRuntimeData": {
+      "type": "object",
+      "required": [
+        "host",
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        }
+      }
+    },
+    "WasmEdgeRuntimeData": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "TypegateRuntimeData": {
+      "type": "object"
+    },
+    "TypegraphRuntimeData": {
+      "type": "object"
+    },
+    "UnknownRuntime": {
+      "type": "object",
+      "required": [
+        "data",
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "required": [
+        "materializer",
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "materializer": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "TypeMeta": {
+      "type": "object",
+      "required": [
+        "auths",
+        "cors",
+        "queries",
+        "secrets",
+        "version"
+      ],
+      "properties": {
+        "prefix": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "secrets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "queries": {
+          "$ref": "#/definitions/Queries"
+        },
+        "cors": {
+          "$ref": "#/definitions/Cors"
+        },
+        "auths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Auth"
+          }
+        },
+        "rate": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Rate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "Queries": {
+      "type": "object",
+      "required": [
+        "dynamic",
+        "endpoints"
+      ],
+      "properties": {
+        "dynamic": {
+          "type": "boolean"
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Cors": {
+      "type": "object",
+      "required": [
+        "allow_credentials",
+        "allow_headers",
+        "allow_origin",
+        "expose_headers"
+      ],
+      "properties": {
+        "allow_origin": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allow_headers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expose_headers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allow_methods": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allow_credentials": {
+          "type": "boolean"
+        },
+        "max_age_sec": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "Auth": {
+      "type": "object",
+      "required": [
+        "auth_data",
+        "name",
+        "protocol"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "protocol": {
+          "$ref": "#/definitions/AuthProtocol"
+        },
+        "auth_data": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "AuthProtocol": {
+      "type": "string",
+      "enum": [
+        "oauth2",
+        "jwt",
+        "basic"
+      ]
+    },
+    "Rate": {
+      "type": "object",
+      "required": [
+        "local_excess",
+        "query_limit",
+        "window_limit",
+        "window_sec"
+      ],
+      "properties": {
+        "window_limit": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "window_sec": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "query_limit": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "context_identifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "local_excess": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "FunctionMatData": {
+      "title": "FunctionMatData",
+      "type": "object",
+      "required": [
+        "script"
+      ],
+      "properties": {
+        "script": {
+          "type": "string"
+        }
+      }
+    },
+    "ModuleMatData": {
+      "title": "ModuleMatData",
+      "type": "object",
+      "required": [
+        "code"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        }
+      }
+    },
+    "S3Materializer": {
+      "title": "S3Materializer",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "presign_get"
+              ]
+            },
+            "data": {
+              "type": "object",
+              "required": [
+                "bucket"
+              ],
+              "properties": {
+                "bucket": {
+                  "type": "string"
+                },
+                "expiry_secs": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint",
+                  "minimum": 0.0
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "presign_put"
+              ]
+            },
+            "data": {
+              "type": "object",
+              "required": [
+                "bucket"
+              ],
+              "properties": {
+                "bucket": {
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "expiry_secs": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint",
+                  "minimum": 0.0
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "list"
+              ]
+            },
+            "data": {
+              "type": "object",
+              "required": [
+                "bucket"
+              ],
+              "properties": {
+                "bucket": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "upload"
+              ]
+            },
+            "data": {
+              "type": "object",
+              "required": [
+                "bucket"
+              ],
+              "properties": {
+                "bucket": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "upload_all"
+              ]
+            },
+            "data": {
+              "type": "object",
+              "required": [
+                "bucket"
+              ],
+              "properties": {
+                "bucket": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "PrismaOperationMatData": {
+      "title": "PrismaOperationMatData",
+      "type": "object",
+      "required": [
+        "operation",
+        "table"
+      ],
+      "properties": {
+        "table": {
+          "type": "string"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "ordered_keys": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

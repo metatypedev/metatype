@@ -1,13 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import type { ComputeStage } from "./engine.ts";
+import type { ComputeStage } from "./engine/query_engine.ts";
 import * as ast from "graphql/ast";
 import * as base64 from "std/encoding/base64.ts";
 import levenshtein from "levenshtein";
 import { None, Option, Some } from "monads";
 
-import { Type } from "./type_node.ts";
+import { Type } from "./typegraph/type_node.ts";
 import type { TypeGraph } from "./typegraph/mod.ts";
 
 import { ensureDir, ensureFile } from "std/fs/mod.ts";
@@ -29,7 +29,10 @@ export type JSONValue =
 type FolderRepr = {
   entryPoint: string;
   base64: string;
-  hash: string; // root/tmp/{hash}
+  hashes: {
+    entryPoint: string; // root/tmp/{tgname}/{hash}
+    content: string;
+  };
 };
 
 // Map undefined | null to None
@@ -251,7 +254,7 @@ export async function uncompress(
 }
 
 /**
- * Convert string `file:SCRIPT,base64:TARBALL` to FolderRepr object.
+ * Convert string `file:SCRIPT;base64:TARBALL` to FolderRepr object.
  * * `SCRIPT`: refers to a file relative to the typegraph path
  * * `TARBALL`: base64 encoded tarball of scripts/(deno|python)
  * `FolderRepr` is expected to provide all the minimum information necessary
@@ -275,6 +278,14 @@ export async function structureRepr(str: string): Promise<FolderRepr> {
   const entryPoint = fileStr.substring(filePrefix.length);
 
   const base64 = base64Str.substring(b64Prefix.length);
-  const hash = await sha1(entryPoint);
-  return { entryPoint, base64, hash };
+  const entryPointHash = await sha1(entryPoint);
+  const contentHash = await sha1(base64);
+  return {
+    entryPoint,
+    base64,
+    hashes: {
+      entryPoint: entryPointHash,
+      content: contentHash,
+    },
+  };
 }

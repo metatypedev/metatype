@@ -26,14 +26,15 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
     let attrs = type_id.attrs()?;
     let typ = attrs.concrete_type.as_type()?;
     match typ {
-        Type::Func(_) => Err("cannot validate function".to_string()),
+        Type::Func(_) => Err("cannot validate function".into()),
 
         Type::Struct(inner) => {
             let Some(value) = value.as_object() else {
                 return Err(format!(
                     "expected object at {path:?}, got: {}",
                     serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                ));
+                )
+                .into());
             };
             for (key, type_id) in inner.iter_props() {
                 validate_value(
@@ -51,7 +52,8 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
                 return Err(format!(
                     "expected array at {path:?}, got: {}",
                     serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                ));
+                )
+                .into());
             };
             for (i, value) in value.iter().enumerate() {
                 validate_value(value.clone(), inner.data.of.into(), format!("{path}[{i}]"))?;
@@ -80,12 +82,14 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
                 0 => Err(format!(
                     "value {} at {path:?} does not match any of the variants of the either",
                     serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                )),
+                )
+                .into()),
                 1 => Ok(()),
                 _ => Err(format!(
                     "value {} at {path:?} matches multiple variants of the either",
                     serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                )),
+                )
+                .into()),
             }
         }
 
@@ -99,7 +103,8 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
             Err(format!(
                 "value {} at {path:?} does not match any of the variants of the union",
                 serde_json::to_string(&value).map_err(|e| e.to_string())?,
-            ))
+            )
+            .into())
         }
 
         Type::String(_inner) => {
@@ -107,7 +112,8 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
                 return Err(format!(
                     "expected string at {path:?}, got: {}",
                     serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                ));
+                )
+                .into());
             };
             // TODO min max
             Ok(())
@@ -118,7 +124,8 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
                 return Err(format!(
                     "expected integer at {path:?}, got: {}",
                     serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                ));
+                )
+                .into());
             };
             // TODO min max
             Ok(())
@@ -129,7 +136,8 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
                 return Err(format!(
                     "expected float at {path:?}, got: {}",
                     serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                ));
+                )
+                .into());
             };
             // TODO min max
             Ok(())
@@ -140,7 +148,8 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
                 return Err(format!(
                     "expected boolean at {path:?}, got: {}",
                     serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                ));
+                )
+                .into());
             };
             Ok(())
         }

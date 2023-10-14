@@ -1,5 +1,5 @@
-from typegraph_next import t, typegraph, Policy, Graph
-from typegraph_next.runtimes.deno import DenoRuntime
+from typegraph import Graph, Policy, t, typegraph
+from typegraph.runtimes.deno import DenoRuntime
 
 simple_tpe = t.struct(
     {

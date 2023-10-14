@@ -5,9 +5,14 @@ on:
 
 env:
   PYTHON_VERSION: "3.8"
-  POETRY_VERSION: "1.4.1"
+  POETRY_VERSION: "1.6.1"
   DENO_VERSION: "1.37.1"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
+  WASM_TOOLS_VERSION: "1.0.45"
+  JCO_VERSION: "0.12.1"
+  WASMEDGE_VERSION: "0.12.1"
+  WASM_OPT_VERSION: "0.114.1"
+  PNPM_VERSION: "8.8.0"
 
 jobs:
   check-bump:
@@ -92,20 +97,57 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: dsherret/rust-toolchain-file@v1
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
       - uses: abatilo/actions-poetry@v2
         with:
           poetry-version: ${{ env.POETRY_VERSION }}
+      - uses: pnpm/action-setup@v2.4.0
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "poetry"
-      - working-directory: typegraph/python
-        env:
+      - env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          WASM_FILE: target/release/typegraph_core.wasm
         run: |
+          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
+          export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
+          cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
+          cargo install wasm-opt --version $WASM_OPT_VERSION --locked
+
+          cargo build -p typegraph_core --target wasm32-unknown-unknown --release
+          wasm-opt -Oz target/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE.opt
+          wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
+
+          poetry install
+          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
+
+          cd typegraph/python
           poetry install --sync
           poetry build
           poetry publish
+          cd ../..
+
+          npm install --global @bytecodealliance/jco@$JCO_VERSION
+          jco transpile $WASM_FILE -o typegraph/deno/src/gen
+          deno run -A typegraph/deno/dev/fix-declarations.ts
+
+          cd typegraph/deno/src
+          deno run -A ../../../dev/publish.ts
+          cd ../../..
+
+          cd typegraph/node
+          pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
+          pnpm publish --no-git-checks
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ github.ref }}
@@ -134,7 +176,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v5
-        id: prd
+        id: build
         with:
           file: dev/Dockerfile
           platforms: ${{ matrix.platform }}
@@ -160,7 +202,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: digests
-          path: /tmp/digests
+          path: ./digests
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:

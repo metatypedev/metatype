@@ -5,6 +5,7 @@ import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
 import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
 import { Materializer, Runtime } from "./mod.ts";
+import { fx } from "../mod.ts";
 
 interface LambdaMat extends Materializer {
   fn: string;
@@ -33,12 +34,15 @@ export class PythonRuntime extends Runtime {
   constructor() {
     super(runtimes.registerPythonRuntime());
   }
-
-  fromLambda(code: string) {
+  fromLambda<
+    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
+    I extends t.Struct<P> = t.Struct<P>,
+    O extends t.Typedef = t.Typedef,
+  >(inp: I, out: O, { code }: { code: string }) {
     const matId = runtimes.fromPythonLambda(
       {
         runtime: this._id,
-        effect: { tag: "none" },
+        effect: fx.read(),
       },
       {
         fn: code, // not formatted
@@ -46,13 +50,17 @@ export class PythonRuntime extends Runtime {
       },
     );
 
-    return {
+    return t.func(inp, out, {
       _id: matId,
       fn: code,
-    } as LambdaMat;
+    } as LambdaMat);
   }
 
-  fromDef(code: string) {
+  fromDef<
+    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
+    I extends t.Struct<P> = t.Struct<P>,
+    O extends t.Typedef = t.Typedef,
+  >(inp: I, out: O, { code }: { code: string }) {
     const name = code.trim().match(/def\s+([A-Za-z0-9_]+)/)?.[1];
     if (name == undefined) {
       throw new Error(`unable to extract def name from source code ${code}`);
@@ -60,7 +68,7 @@ export class PythonRuntime extends Runtime {
     const matId = runtimes.fromPythonDef(
       {
         runtime: this._id,
-        effect: { tag: "none" },
+        effect: fx.read(),
       },
       {
         name: name,
@@ -69,11 +77,11 @@ export class PythonRuntime extends Runtime {
       },
     );
 
-    return {
+    return t.func(inp, out, {
       _id: matId,
       name,
       fn: code,
-    } as DefMat;
+    } as DefMat);
   }
 
   import<
@@ -83,7 +91,7 @@ export class PythonRuntime extends Runtime {
   >(
     inp: I,
     out: O,
-    { name, module, effect = { tag: "none" }, secrets = [] }: PythonImport,
+    { name, module, effect = fx.read(), secrets = [] }: PythonImport,
   ): t.Func<P, I, O, ImportMat> {
     const base = {
       runtime: this._id,

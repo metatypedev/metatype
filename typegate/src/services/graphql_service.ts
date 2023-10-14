@@ -5,10 +5,13 @@ import { getLogger } from "../log.ts";
 import { parse } from "graphql";
 import { Context, Info } from "../types.ts";
 import { RateLimit } from "../typegate/rate_limiter.ts";
-import { Operations, parseRequest } from "../graphql/request_parser.ts";
-import { findOperation, FragmentDefs } from "../graphql.ts";
+import {
+  Operations,
+  parseRequest,
+} from "../transports/graphql/request_parser.ts";
+import { findOperation, FragmentDefs } from "../transports/graphql/graphql.ts";
 import { forceAnyToOption } from "../utils.ts";
-import { Engine } from "../engine.ts";
+import { QueryEngine } from "../engine/query_engine.ts";
 import * as ast from "graphql/ast";
 import { BadContext, ResolverError } from "../errors.ts";
 import { badRequest, jsonError, jsonOk } from "./responses.ts";
@@ -24,7 +27,7 @@ export function isIntrospectionQuery(
 
 export async function handleGraphQL(
   request: Request,
-  engine: Engine,
+  engine: QueryEngine,
   context: Context,
   info: Info,
   limit: RateLimit | null,

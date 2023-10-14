@@ -28,6 +28,8 @@ impl TypeData for TypeProxy {
     fn variant_name(&self) -> String {
         "proxy".to_string()
     }
+
+    super::impl_into_type!(wrapper, Proxy);
 }
 
 impl WrapperTypeData for TypeProxy {
@@ -37,7 +39,7 @@ impl WrapperTypeData for TypeProxy {
 
     fn try_resolve(&self) -> Result<TypeId> {
         self.resolve()
-            .ok_or_else(|| format!("could not resolve proxy '{}'", self.name))
+            .ok_or_else(|| format!("could not resolve proxy '{}'", self.name).into())
     }
 }
 

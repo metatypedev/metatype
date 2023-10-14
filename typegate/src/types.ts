@@ -1,18 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ComputeStage } from "./engine.ts";
+import { ComputeStage } from "./engine/query_engine.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
 import type {
   SecretManager,
   TypeGraphDS,
   TypeMaterializer,
 } from "./typegraph/mod.ts";
-import { TypeNode } from "./type_node.ts";
+import { TypeNode } from "./typegraph/type_node.ts";
 import * as ast from "graphql/ast";
-import { ComputeArg } from "./planner/args.ts";
-import { EffectType, PolicyIndices } from "./types/typegraph.ts";
-import { VariantMatcher } from "./typecheck/matching_variant.ts";
+import { ComputeArg } from "./engine/planner/args.ts";
+import { EffectType, PolicyIndices } from "./typegraph/types.ts";
+import { VariantMatcher } from "./engine/typecheck/matching_variant.ts";
 
 export interface Parents {
   [key: string]: (() => Promise<unknown> | unknown) | unknown;
@@ -57,6 +57,7 @@ export interface RuntimeInitParams<
   RTData extends RuntimeDataBase = RuntimeDataBase,
 > {
   typegraph: TypeGraphDS;
+  typegraphName: string;
   materializers: TypeMaterializer[];
   args: RTData;
   secretManager: SecretManager;

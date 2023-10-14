@@ -3,7 +3,7 @@
 
 import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import { DenoRuntime } from "../runtimes/deno/deno.ts";
+import type { DenoRuntime } from "../runtimes/deno/deno.ts";
 import { Runtime } from "../runtimes/Runtime.ts";
 import { ensure, ensureNonNullable } from "../utils.ts";
 import { typegraph_validate } from "native";
@@ -27,7 +27,7 @@ import {
   isUnion,
   Type,
   TypeNode,
-} from "../type_node.ts";
+} from "./type_node.ts";
 import { Batcher } from "../types.ts";
 
 import type {
@@ -37,24 +37,29 @@ import type {
   Rate,
   TGRuntime as TypeRuntime,
   Typegraph as TypeGraphDS,
-} from "../types/typegraph.ts";
+} from "./types.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { Protocol } from "../services/auth/protocols/protocol.ts";
 import { OAuth2Auth } from "../services/auth/protocols/oauth2.ts";
-import { Typegate } from "../typegate/mod.ts";
+import { initRuntime } from "../runtimes/mod.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
 export type RuntimeResolver = Record<string, Runtime>;
 
 export class SecretManager {
+  private typegraphName: string;
   constructor(
-    private typegraph: string,
+    typegraph: TypeGraphDS,
     public secrets: Record<string, string>,
-  ) {}
+  ) {
+    // name without prefix as secrets are not prefixed
+    this.typegraphName = TypeGraph.formatName(typegraph, false);
+  }
 
-  private secretName(name: string): string {
-    return `TG_${this.typegraph}_${name}`.replaceAll("-", "_").toUpperCase();
+  static formatSecretName(typegraphName: string, secretName: string): string {
+    return `TG_${typegraphName}_${secretName}`.replaceAll("-", "_")
+      .toUpperCase();
   }
 
   private valueOrNull(secretName: string): string | null {
@@ -73,11 +78,11 @@ export class SecretManager {
   secretOrFail(
     name: string,
   ): string {
-    const secretName = this.secretName(name);
+    const secretName = SecretManager.formatSecretName(this.typegraphName, name);
     const value = this.valueOrNull(secretName);
     ensure(
       value != null,
-      `cannot find env "${secretName}" for "${this.typegraph}"`,
+      `cannot find env "${secretName}" for "${this.typegraphName}"`,
     );
     return value as string;
   }
@@ -85,7 +90,10 @@ export class SecretManager {
   secretOrNull(
     name: string,
   ): string | null {
-    const secretName = this.secretName(name);
+    const secretName = SecretManager.formatSecretName(
+      this.typegraphName,
+      name,
+    );
     return this.valueOrNull(secretName);
   }
 }
@@ -119,6 +127,7 @@ export class TypeGraph {
   private constructor(
     public tg: TypeGraphDS,
     public secretManager: SecretManager,
+    public denoRuntimeIdx: number,
     public runtimeReferences: Runtime[],
     public cors: (req: Request) => Record<string, string>,
     public auths: Map<string, Protocol>,
@@ -127,11 +136,10 @@ export class TypeGraph {
     this.root = this.type(0);
     this.name = TypeGraph.formatName(tg);
     this.name = TypeGraph.formatName(tg);
-    // this.typeByName = this.tg.types.reduce((agg, tpe) => ({ ...agg, [tpe.name]: tpe }), {});
     const typeByName: Record<string, TypeNode> = {};
-    tg.types.forEach((tpe) => {
+    for (const tpe of tg.types) {
       typeByName[tpe.title] = tpe;
-    });
+    }
     this.typeByName = typeByName;
   }
 
@@ -139,8 +147,12 @@ export class TypeGraph {
     return this.root.title;
   }
 
-  static formatName(tg: TypeGraphDS): string {
-    return (tg.meta.prefix ?? "") + tg.types[0].title;
+  static formatName(tg: TypeGraphDS, prefix = true): string {
+    const name = tg.types[0].title;
+    if (!prefix) {
+      return name;
+    }
+    return `${tg.meta.prefix ?? ""}${name}`;
   }
 
   static async parseJson(json: string): Promise<TypeGraphDS> {
@@ -148,7 +160,15 @@ export class TypeGraph {
     if ("Valid" in res) {
       return JSON.parse(res.Valid.json) as TypeGraphDS;
     } else {
-      throw new Error(`Invalid typegraph definition: ${res.NotValid.reason}`);
+      let name;
+      try {
+        name = TypeGraph.formatName(JSON.parse(json));
+      } catch (_e) {
+        name = "<unknown>";
+      }
+      throw new Error(
+        `Invalid typegraph definition for '${name}': ${res.NotValid.reason}`,
+      );
     }
   }
 
@@ -226,9 +246,9 @@ export class TypeGraph {
           materializers.push(...additionnalAuthMaterializers);
         }
 
-        // logger.debug(`init ${runtime.name} (${idx})`);
-        return Typegate.initRuntime(runtime.name, {
+        return initRuntime(runtime.name, {
           typegraph,
+          typegraphName,
           materializers,
           args: (runtime as any)?.data ?? {},
           secretManager,
@@ -257,6 +277,7 @@ export class TypeGraph {
     return new TypeGraph(
       typegraph,
       secretManager,
+      denoRuntimeIdx,
       runtimeReferences,
       cors,
       auths,

@@ -97,7 +97,7 @@ impl PrismaContext {
                 let i = match_by_name[0];
                 return Ok(vec![candidates.swap_remove(i)]);
             }
-            _ => return Err("multiple matching relationships found".to_string()), // TODO
+            _ => return Err("multiple matching relationships found".into()), // TODO
         }
 
         let match_by_target_field = candidates
@@ -127,7 +127,7 @@ impl PrismaContext {
                 let i = match_by_target_field[0];
                 return Ok(vec![candidates.swap_remove(i)]);
             }
-            _ => return Err("multiple matching relationships found".to_string()), // TODO
+            _ => return Err("multiple matching relationships found".into()), // TODO
         }
 
         Ok(candidates)
@@ -154,7 +154,8 @@ impl PrismaContext {
                 Err(format!(
                     "multiple alternative targets found for {:?}: {}",
                     candidate, details
-                ))
+                )
+                .into())
             }
         }
     }
@@ -197,7 +198,7 @@ impl CandidatePair {
                     Ok(a.clone())
                 } else {
                     // unreachable!
-                    Err(format!("conflicting relationship names: {} and {}", a, b))
+                    Err(format!("conflicting relationship names: {} and {}", a, b).into())
                 }
             }
         }
@@ -246,7 +247,7 @@ impl CandidatePair {
                 Err(format!(
                     "many-to-many relationship not supported: use explicit join table between {} and {}",
                     first.model.type_name(), second.model.type_name()
-                ))
+                ).into())
             }
         }
     }

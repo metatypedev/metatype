@@ -8,7 +8,7 @@ function runTest(tgPath: string, name: string) {
   Meta.test(name, async (t) => {
     const e = await t.engine(tgPath, {
       secrets: {
-        TG_PRISMA_POSTGRES:
+        POSTGRES:
           "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-many",
       },
     });

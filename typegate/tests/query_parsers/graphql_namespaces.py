@@ -1,5 +1,5 @@
-from typegraph_next import typegraph, effects, Policy, t, Graph
-from typegraph_next.runtimes.graphql import GraphQLRuntime
+from typegraph import typegraph, effects, Policy, t, Graph
+from typegraph.runtimes.graphql import GraphQLRuntime
 
 
 @typegraph(name="graphql_namespaces")

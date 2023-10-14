@@ -1,6 +1,6 @@
-from typegraph_next import typegraph, effects, t, Graph, Policy
-from typegraph_next.graph.params import Auth
-from typegraph_next.runtimes.deno import DenoRuntime
+from typegraph import Graph, Policy, effects, t, typegraph
+from typegraph.graph.params import Auth
+from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph(
@@ -21,10 +21,7 @@ def tg_effects(g: Graph):
             ),
         },
         name="User",
-    ).with_policy(
-        # {"none": public, "update": current_user_only, "delete": current_user_only}
-        Policy.on(none=public, update=admin_only, delete=admin_only)
-    )
+    ).with_policy(Policy.on(read=public, update=admin_only, delete=admin_only))
 
     g.expose(
         public,

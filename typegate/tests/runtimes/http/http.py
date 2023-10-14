@@ -1,5 +1,5 @@
-from typegraph_next import typegraph, Policy, t, Graph
-from typegraph_next.runtimes.http import HttpRuntime
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.runtimes.http import HttpRuntime
 
 
 @typegraph()

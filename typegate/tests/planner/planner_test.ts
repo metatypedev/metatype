@@ -1,16 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { findOperation } from "../../src/graphql.ts";
+import { findOperation } from "../../src/transports/graphql/graphql.ts";
 import { gql, Meta } from "../utils/mod.ts";
 import { None } from "monads";
 import { parse } from "graphql";
 import { mapValues } from "std/collections/map_values.ts";
 import { filterKeys } from "std/collections/filter_keys.ts";
-import { Engine } from "../../src/engine.ts";
+import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { MetaTest } from "../utils/test.ts";
 
-async function assertPlanSnapshot(t: MetaTest, e: Engine, query: string) {
+async function assertPlanSnapshot(t: MetaTest, e: QueryEngine, query: string) {
   const [op, frags] = findOperation(parse(query), None);
   const [plan] = await e.getPlan(op.unwrap(), frags, false, false);
 

@@ -1,19 +1,23 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.deno import ModuleMat, PureFunMat
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.runtimes.deno import DenoRuntime
 
-with TypeGraph("deno_dep") as g:
-    public = policies.public()
+
+@typegraph()
+def deno_dep(g: Graph):
+    deno = DenoRuntime()
+    public = Policy.public()
 
     g.expose(
-        doAddition=t.func(
-            t.struct({"a": t.number(), "b": t.number()}),
-            t.number(),
-            ModuleMat("ts/dep/main.ts").imp("doAddition"),
+        public,
+        doAddition=deno.import_(
+            t.struct({"a": t.float(), "b": t.float()}),
+            t.float(),
+            module="ts/dep/main.ts",
+            name="doAddition",
         ),
-        simple=t.func(
-            t.struct({"a": t.number(), "b": t.number()}),
-            t.number(),
-            PureFunMat("({ a, b }) => a + b"),
+        simple=deno.func(
+            t.struct({"a": t.float(), "b": t.float()}),
+            t.float(),
+            code="({ a, b }) => a + b",
         ),
-        default_policy=[public],
     )

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Engine } from "../engine.ts";
+import { QueryEngine } from "../engine/query_engine.ts";
 import { BadContext, ResolverError } from "../errors.ts";
 import { getLogger } from "../log.ts";
 import { RateLimit } from "../typegate/rate_limiter.ts";
@@ -20,7 +20,7 @@ type BadResponse = {
 
 export async function handleRest(
   req: Request,
-  engine: Engine,
+  engine: QueryEngine,
   context: Context,
   info: Info,
   limit: RateLimit | null,
@@ -130,7 +130,10 @@ export async function handleRest(
   }
 }
 
-export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
+export function buildOpenAPISpecFrom(
+  baseUrl: string,
+  engine: QueryEngine,
+): string {
   // https://swagger.io/specification/
   // https://github.com/OAI/OpenAPI-Specification/blob/main/examples/v3.0/petstore.json
   const title = engine.tg.type(0).title;

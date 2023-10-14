@@ -26,7 +26,7 @@ impl TypeConversion for WithInjection {
                     if let Some(index) = ctx.find_type_index_by_store_id(id) {
                         return Ok(index);
                     }
-                    Err(format!("unable to find type for store id {}", id.0))
+                    Err(format!("unable to find type for store id {}", id.0).into())
                 };
                 let new_data = match data {
                     InjectionData::SingleValue(SingleValue { value }) => {
@@ -106,6 +106,8 @@ impl TypeData for TypeWithInjection {
     fn variant_name(&self) -> String {
         "injection".to_string()
     }
+
+    super::impl_into_type!(wrapper, WithInjection);
 }
 
 impl WrapperTypeData for TypeWithInjection {

@@ -6,7 +6,7 @@ import { getLogger } from "../../../log.ts";
 import { SecretManager } from "../../../typegraph/mod.ts";
 import { Protocol } from "./protocol.ts";
 import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
-import { Auth } from "../../../types/typegraph.ts";
+import { Auth } from "../../../typegraph/types.ts";
 
 const logger = getLogger(import.meta);
 const encoder = new TextEncoder();

@@ -1,5 +1,5 @@
 # skip:start
-from typegraph_next import typegraph, t, Graph
+from typegraph import typegraph, t, Graph
 
 
 @typegraph()

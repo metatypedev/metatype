@@ -6,9 +6,9 @@ import * as native from "native";
 import { ResolverError } from "../../errors.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { iterParentStages, nativeResult, nativeVoid } from "../../utils.ts";
-import { ComputeStage } from "../../engine.ts";
-import { ComputeArgParams } from "../../planner/args.ts";
-import { Materializer, PrismaOperationMatData } from "../../types/typegraph.ts";
+import { ComputeStage } from "../../engine/query_engine.ts";
+import { ComputeArgParams } from "../../engine/planner/args.ts";
+import { PrismaOperationMatData } from "../../typegraph/types.ts";
 import { getLogger } from "../../log.ts";
 import * as PrismaRT from "./types.ts";
 import { filterValues } from "https://deno.land/std@0.192.0/collections/filter_values.ts";
@@ -41,11 +41,6 @@ type PrismaResult = {
   errors: PrismaError[];
 };
 
-interface PrismaOperationMat extends Materializer {
-  name: "prisma_operation";
-  data: PrismaOperationMatData & Record<string, unknown>;
-}
-
 type PrismaRuntimeData = PrismaRT.DataFinal;
 
 type SelectionSet = Record<string, SelectionSetValue>;
@@ -71,52 +66,43 @@ interface GenQuery {
   (params: ComputeArgParams): SingleQuery | BatchQuery;
 }
 
-export class PrismaRuntime {
+export class PrismaRuntime extends Runtime {
   private constructor(
+    typegraphName: string,
     readonly name: string,
-    private engine_name: string,
     private datamodel: string,
-  ) {}
+  ) {
+    super(typegraphName);
+  }
 
   static async init(
     params: RuntimeInitParams,
   ): Promise<Runtime> {
-    const { typegraph, args, secretManager } =
+    const { typegraphName, args, secretManager } =
       params as unknown as RuntimeInitParams<PrismaRuntimeData>;
-    // const typegraphName = TypeGraph.formatName(typegraph);
-    const typegraphName = typegraph.types[0].title;
 
     const datasource = makeDatasource(secretManager.secretOrFail(
       args.connection_string_secret as string,
     ));
     const datamodel = `${datasource}${args.datamodel}`;
-    const engine_name = `${typegraphName}_${args.name}`;
     const instance = new PrismaRuntime(
+      typegraphName,
       args.name,
-      engine_name,
       datamodel,
     );
-    await instance.registerEngine();
+    nativeVoid(
+      await native.prisma_register_engine({
+        engine_name: instance.id,
+        datamodel,
+      }),
+    );
     return instance;
   }
 
   async deinit(): Promise<void> {
-    await this.unregisterEngine();
-  }
-
-  async registerEngine(): Promise<void> {
-    nativeVoid(
-      await native.prisma_register_engine({
-        engine_name: this.engine_name,
-        datamodel: this.datamodel,
-      }),
-    );
-  }
-
-  async unregisterEngine(): Promise<void> {
     nativeVoid(
       await native.prisma_unregister_engine({
-        engine_name: this.engine_name,
+        engine_name: this.id,
       }),
     );
   }
@@ -124,7 +110,7 @@ export class PrismaRuntime {
   async query(query: SingleQuery | BatchQuery) {
     const { res } = nativeResult(
       await native.prisma_query({
-        engine_name: this.engine_name,
+        engine_name: this.id,
         query: query,
         datamodel: this.datamodel,
       }),
@@ -191,7 +177,7 @@ export class PrismaRuntime {
             stage.props.args?.(p) ?? {},
             (v) => v != null,
           );
-          const orderedKeys = (mat.data.ordered_keys ?? []) as Array<string>;
+          const orderedKeys = (matData.ordered_keys ?? []) as Array<string>;
           const parameters = orderedKeys.map((
             key,
           ) => args[key] ?? null);

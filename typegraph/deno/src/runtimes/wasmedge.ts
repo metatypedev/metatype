@@ -5,6 +5,7 @@ import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
 import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
 import { Materializer, Runtime } from "./mod.ts";
+import { fx } from "../mod.ts";
 
 interface WasiMat extends Materializer {
   module: string;
@@ -24,7 +25,7 @@ export class WasmEdgeRuntime extends Runtime {
   >(
     inp: I,
     out: O,
-    { func, wasm, effect = { tag: "none" } }: {
+    { func, wasm, effect = fx.read() }: {
       func: string;
       wasm: string;
       effect?: Effect;

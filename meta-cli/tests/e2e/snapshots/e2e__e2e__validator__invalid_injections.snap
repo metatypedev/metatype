@@ -20,10 +20,8 @@ expression: stderr
 [ERROR] at validator:/testEnums/[in]/a: Expected a minimum length of 4, got "hi" (len=2)
 [ERROR] at validator:/testEnums/[in]/a: Expected a string, got '12'
 [ERROR] at validator:/testEnums/[in]/b: Expected float got '"13"'
-[ERROR] at validator:/testEnums/[in]/c: optional not cannot have enumerated values
 [ERROR] at validator:/testEnums/[out]/a: Expected a minimum length of 4, got "hi" (len=2)
 [ERROR] at validator:/testEnums/[out]/a: Expected a string, got '12'
 [ERROR] at validator:/testEnums/[out]/b: Expected float got '"13"'
-[ERROR] at validator:/testEnums/[out]/c: optional not cannot have enumerated values
 Error: error while post processing typegraph validator from "tests/e2e/typegraphs/validator.py": Typegraph validator failed validation
 

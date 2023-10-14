@@ -1,5 +1,5 @@
-from typegraph_next import typegraph, Policy, t, Graph
-from typegraph_next.providers.prisma import PrismaRuntime
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.providers.prisma import PrismaRuntime
 
 
 @typegraph()
@@ -17,6 +17,8 @@ def prisma(g: Graph):
         name="record",
     )
 
+    renamed_record = record.rename("renamed_record")
+
     messages = t.struct(
         {
             "id": t.integer(as_id=True),
@@ -24,8 +26,7 @@ def prisma(g: Graph):
             "message": t.string(),
             "sender": db.link("users", "messageSender"),
         },
-        name="messages",
-    )
+    ).rename("messages")
 
     users = t.struct(
         {
@@ -42,6 +43,7 @@ def prisma(g: Graph):
         findRecord=db.find_unique(record),
         findManyRecords=db.find_many(record),
         createOneRecord=db.create(record),
+        createRenamedRecord=db.create(renamed_record),
         deleteOneRecord=db.delete(record),
         updateOneRecord=db.update(record),
         createUser=db.create(users),

@@ -59,4 +59,6 @@ impl TypeData for TypeOptional {
     fn variant_name(&self) -> String {
         "optional".to_string()
     }
+
+    super::impl_into_type!(concrete, Optional);
 }

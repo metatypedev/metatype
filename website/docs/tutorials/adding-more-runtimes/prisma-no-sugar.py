@@ -1,6 +1,6 @@
 # # skip:start
-# from typegraph_next import typegraph, effects, t, Graph
-# from typegraph_next.providers.prisma import PrismaRuntime
+# from typegraph import typegraph, effects, t, Graph
+# from typegraph.providers.prisma import PrismaRuntime
 #
 #
 # @typegraph()

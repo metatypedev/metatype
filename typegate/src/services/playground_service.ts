@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import config from "../config.ts";
-import { Engine } from "../engine.ts";
+import { QueryEngine } from "../engine/query_engine.ts";
 import { baseUrl } from "./middlewares.ts";
 
 export const handlePlaygroundGraphQL = (
   request: Request,
-  engine: Engine,
+  engine: QueryEngine,
 ): Response => {
   const url = `${baseUrl(request)}/${engine.name}`;
   const auth = engine.name === "typegate" && config.debug

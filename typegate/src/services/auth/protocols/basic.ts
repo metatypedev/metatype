@@ -7,7 +7,7 @@ import { SecretManager } from "../../../typegraph/mod.ts";
 import config from "../../../config.ts";
 import { Protocol } from "./protocol.ts";
 import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
-import { Auth } from "../../../types/typegraph.ts";
+import { Auth } from "../../../typegraph/types.ts";
 
 export class BasicAuth extends Protocol {
   static init(

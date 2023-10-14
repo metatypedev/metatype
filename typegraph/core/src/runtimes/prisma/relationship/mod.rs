@@ -138,7 +138,7 @@ mod test {
     use crate::test_utils::*;
 
     #[test]
-    fn test_implicit_relationships() -> Result<(), String> {
+    fn test_implicit_relationships() -> Result<()> {
         let (user, _post) = models::simple_relationship()?;
 
         let mut ctx = PrismaContext::default();
@@ -150,7 +150,7 @@ mod test {
     }
 
     #[test]
-    fn test_explicit_relationship_name() -> Result<(), String> {
+    fn test_explicit_relationship_name() -> Result<()> {
         Store::reset();
         let user = t::struct_()
             .propx("id", t::integer().as_id(true))?
@@ -176,7 +176,7 @@ mod test {
     }
 
     #[test]
-    fn test_fkey_attribute() -> Result<(), String> {
+    fn test_fkey_attribute() -> Result<()> {
         Store::reset();
         let user = t::struct_()
             .propx("id", t::integer().as_id(true))?
@@ -203,7 +203,7 @@ mod test {
     }
 
     #[test]
-    fn test_unique_attribute() -> Result<(), String> {
+    fn test_unique_attribute() -> Result<()> {
         Store::reset();
         let user = t::struct_()
             .propx("id", t::integer().as_id(true))?
@@ -230,7 +230,7 @@ mod test {
     }
 
     #[test]
-    fn test_self_relationship() -> Result<(), String> {
+    fn test_self_relationship() -> Result<()> {
         Store::reset();
         let node = t::struct_()
             .propx("id", t::string().as_id(true))?
@@ -248,7 +248,7 @@ mod test {
     }
 
     #[test]
-    fn test_ambiguous_side() -> Result<(), String> {
+    fn test_ambiguous_side() -> Result<()> {
         Store::reset();
         let user = t::struct_()
             .propx("id", t::integer().as_id(true))?
@@ -303,7 +303,7 @@ mod test {
     }
 
     #[test]
-    fn test_conflicting_attributes() -> Result<(), String> {
+    fn test_conflicting_attributes() -> Result<()> {
         Store::reset();
         let user = t::struct_()
             .propx("id", t::integer().as_id(true))?
@@ -366,7 +366,7 @@ mod test {
     }
 
     #[test]
-    fn test_missing_target() -> Result<(), String> {
+    fn test_missing_target() -> Result<()> {
         Store::reset();
         let user = t::struct_()
             .propx("id", t::integer().as_id(true))?

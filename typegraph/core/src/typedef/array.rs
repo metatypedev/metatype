@@ -52,4 +52,6 @@ impl TypeData for TypeArray {
     fn variant_name(&self) -> String {
         "array".to_string()
     }
+
+    super::impl_into_type!(concrete, Array);
 }

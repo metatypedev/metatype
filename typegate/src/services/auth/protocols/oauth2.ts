@@ -14,7 +14,7 @@ import {
 } from "../cookies.ts";
 import { Protocol } from "./protocol.ts";
 import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
-import { Auth, Materializer } from "../../../types/typegraph.ts";
+import { Auth, Materializer } from "../../../typegraph/types.ts";
 
 const logger = getLogger(import.meta);
 
@@ -61,7 +61,7 @@ export class OAuth2Auth extends Protocol {
       name: "function",
       runtime: -1, // dummy
       effect: {
-        effect: "none",
+        effect: "read",
         idempotent: true,
       },
       data: {

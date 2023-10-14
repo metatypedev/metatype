@@ -16,7 +16,7 @@ import { testDir } from "../utils/dir.ts";
 
 Meta.test("prisma migrations", async (t) => {
   const tgPath = "runtimes/prisma/prisma.py";
-  const migrations = t.getTypegraph("typegate/prisma_migration")!;
+  const migrations = t.getTypegraphEngine("typegate/prisma_migration")!;
   assertExists(migrations);
 
   const migrationDir = join(
@@ -27,7 +27,7 @@ Meta.test("prisma migrations", async (t) => {
 
   const e = await t.engine(tgPath, {
     secrets: {
-      TG_PRISMA_POSTGRES:
+      POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-migrate",
     },
   });

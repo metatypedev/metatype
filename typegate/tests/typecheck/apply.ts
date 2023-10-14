@@ -1,9 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
-import { DenoRuntime } from "@typegraph/deno/src/runtimes/deno.ts";
-import { NONE } from "@typegraph/deno/src/effects.ts";
+import { fx, Policy, t, typegraph } from "@typegraph/sdk/mod.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
 
 const student = t.struct({
   id: t.integer(),
@@ -91,7 +90,7 @@ typegraph("test-apply-deno", (g) => {
         grades: {
           year: g.inherit().set(2000),
           subjects: g.inherit().fromContext({
-            [NONE]: "subjects",
+            [fx.READ]: "subjects",
           }),
         },
       })

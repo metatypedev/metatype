@@ -3,8 +3,8 @@
 
 import { gql, Meta } from "../utils/mod.ts";
 
-import { Type } from "../../src/type_node.ts";
-import { InputValidationCompiler } from "../../src/typecheck/input.ts";
+import { Type } from "../../src/typegraph/type_node.ts";
+import { InputValidationCompiler } from "../../src/engine/typecheck/input.ts";
 import { nativeResult } from "../../src/utils.ts";
 import * as native from "native";
 import { assert, assertEquals } from "std/assert/mod.ts";

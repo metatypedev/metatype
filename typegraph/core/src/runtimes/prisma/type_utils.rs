@@ -46,7 +46,7 @@ impl<'a> RuntimeConfig<'a> {
             .last()
             .map(|v| serde_json::from_str(v))
             .transpose()
-            .map_err(|e| format!("invalid config value for {}: {}", key, e))
+            .map_err(|e| format!("invalid config value for {}: {}", key, e).into())
     }
 }
 

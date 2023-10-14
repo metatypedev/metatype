@@ -88,7 +88,7 @@ fn temporal_workflow_start(input: TemporalWorkflowStartInput) -> TemporalWorkflo
     let client_id = input.client_id;
     let client = CLIENTS
         .get(&client_id)
-        .with_context(|| format!("Cound not find engine '{client_id}"))
+        .with_context(|| format!("Could not find engine '{client_id}"))
         .unwrap();
 
     let run = RT
@@ -141,7 +141,7 @@ fn temporal_workflow_signal(input: TemporalWorkflowSignalInput) -> TemporalWorkf
     let client_id = input.client_id;
     let client = CLIENTS
         .get(&client_id)
-        .with_context(|| format!("Cound not find engine '{client_id}"))
+        .with_context(|| format!("Could not find engine '{client_id}"))
         .unwrap();
 
     // empty response
@@ -181,7 +181,7 @@ fn temporal_workflow_query(input: TemporalWorkflowQueryInput) -> TemporalWorkflo
     let client_id = input.client_id;
     let client = CLIENTS
         .get(&client_id)
-        .with_context(|| format!("Cound not find engine '{client_id}"))
+        .with_context(|| format!("Could not find engine '{client_id}"))
         .unwrap();
 
     // empty response
@@ -240,7 +240,7 @@ fn temporal_workflow_describe(
     let client_id = input.client_id;
     let client = CLIENTS
         .get(&client_id)
-        .with_context(|| format!("Cound not find engine '{client_id}"))
+        .with_context(|| format!("Could not find engine '{client_id}"))
         .unwrap();
 
     // empty response

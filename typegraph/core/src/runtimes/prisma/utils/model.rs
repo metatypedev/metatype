@@ -215,7 +215,7 @@ impl Property {
                 match type_id.as_type()? {
                     Type::Struct(_) => {
                         if injection.is_some() {
-                            return Err("injection not supported for models".to_string());
+                            return Err("injection not supported for models".to_string().into());
                         }
                         Ok(Self::Model(RelationshipProperty {
                             wrapper_type_id,
@@ -226,7 +226,7 @@ impl Property {
                         }))
                     }
                     Type::Optional(_) | Type::Array(_) => {
-                        Err("nested optional/list not supported".to_string())
+                        Err("nested optional/list not supported".into())
                     }
                     Type::Integer(_) => Ok(scalar(ScalarType::Integer, injection)),
                     Type::Float(_) => Ok(scalar(ScalarType::Float, injection)),
@@ -236,18 +236,18 @@ impl Property {
                     // TODO not supported??
                     Type::Func(_) => {
                         if injection.is_some() {
-                            Err("injection not supported for function type".to_string())
+                            Err("injection not supported for function type".into())
                         } else {
                             Ok(Self::Unmanaged(wrapper_type_id))
                         }
                     }
-                    _ => Err("unsupported property type".to_string()),
+                    _ => Err("unsupported property type".into()),
                 }
             }
             Err(_) => match type_id.as_type()? {
-                Type::Func(_) => Err("injection not supported on t::struct()".to_string()),
+                Type::Func(_) => Err("injection not supported on t::struct()".into()),
                 Type::Optional(_) | Type::Array(_) => {
-                    Err("nested optional/list not supported".to_string())
+                    Err("nested optional/list not supported".into())
                 }
                 // TODO use original type_id on the property
                 Type::Struct(_)
@@ -255,7 +255,7 @@ impl Property {
                 | Type::Integer(_)
                 | Type::Float(_)
                 | Type::Boolean(_) => Ok(Self::Unmanaged(wrapper_type_id)),
-                _ => Err("unsupported property type".to_string()),
+                _ => Err("unsupported property type".into()),
             },
         }
     }
@@ -301,7 +301,7 @@ impl Injection {
         match data {
             InjectionData::SingleValue(_) => None, // unmanaged
             InjectionData::ValueByEffect(map) => {
-                if map.contains_key(&EffectType::None) {
+                if map.contains_key(&EffectType::Read) {
                     // TODO check if other effects are present??
                     None
                 } else {
@@ -322,7 +322,7 @@ impl Injection {
         match data {
             InjectionData::SingleValue(_) => None, // unmanaged
             InjectionData::ValueByEffect(map) => {
-                if map.contains_key(&EffectType::None) {
+                if map.contains_key(&EffectType::Read) {
                     // TODO check if other effects are present??
                     None
                 } else {

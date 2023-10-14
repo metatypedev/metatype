@@ -79,7 +79,7 @@ impl PrismaContext {
         match (self.is_registered(&pair.0), self.is_registered(&pair.1)) {
             (true, true) => Ok(false),
             (true, false) | (false, true) => {
-                Err(format!("Pair partially registered: pair={pair:?}"))
+                Err(format!("Pair partially registered: pair={pair:?}").into())
             }
             (false, false) => {
                 let id = self.next_id();

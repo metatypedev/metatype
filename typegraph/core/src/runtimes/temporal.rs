@@ -65,7 +65,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
             inp.prop("run_id", t::string().build()?);
             inp.prop("args", t::array(arg.into()).build()?);
             (
-                WitEffect::None,
+                WitEffect::Read,
                 TemporalMaterializer::Query {
                     query_type: mat_arg,
                 },
@@ -74,7 +74,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
         TemporalOperationType::DescribeWorkflow => {
             inp.prop("workflow_id", t::string().build()?);
             inp.prop("run_id", t::string().build()?);
-            (WitEffect::None, TemporalMaterializer::Describe)
+            (WitEffect::Read, TemporalMaterializer::Describe)
         }
     };
 

@@ -1,48 +1,54 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
+from dataclasses import dataclass
+from typing import List, Optional
 
-from attrs import frozen
-
-from typegraph import effects
-from typegraph import types as t
-from typegraph.effects import Effect
+from typegraph import t
+from typegraph.gen.exports.runtimes import (
+    BaseMaterializer,
+    Effect,
+    EffectRead,
+    MaterializerWasi,
+)
+from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.utils.attrs import always, required
+from typegraph.wit import runtimes, store
 
 
-@frozen
 class WasmEdgeRuntime(Runtime):
-    """
-    [Documentation](https://metatype.dev/docs/reference/runtimes/wasmedge)
-    """
-
-    runtime_name: str = always("wasmedge")
-
-    def data(self, collector):
-        return {
-            **super().data(collector),
-        }
+    def __init__(self):
+        super().__init__(runtimes.register_wasmedge_runtime(store))
 
     def wasi(
         self,
-        wasm_file: str,
+        inp: "t.struct",
+        out: "t.typedef",
+        *,
         func: str,
-        inp,
-        out,
-        effect: Effect = effects.none(),
-        **kwargs,
+        wasm: str,
+        effect: Optional[Effect] = None,
     ):
+        effect = effect or EffectRead()
+        wasm = f"file:{wasm}"
+
+        mat_id = runtimes.from_wasi_module(
+            store,
+            BaseMaterializer(runtime=self.id.value, effect=effect),
+            MaterializerWasi(module=wasm, func_name=func),
+        )
+
+        if isinstance(mat_id, Err):
+            raise Exception(mat_id.value)
+
         return t.func(
             inp,
             out,
-            WASIMat(self, f"file:{wasm_file}", func, effect=effect, **kwargs),
+            WasiMat(id=mat_id.value, module=wasm, func_name=func, effect=effect),
         )
 
 
-@frozen
-class WASIMat(Materializer):
-    runtime: Runtime
-    wasm: str
-    func: str
-    effect: Effect = required()
-    materializer_name: str = always("wasi")
+@dataclass
+class WasiMat(Materializer):
+    module: str
+    func_name: str
+    effect: List[str]

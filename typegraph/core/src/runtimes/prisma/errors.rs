@@ -23,6 +23,7 @@ pub fn ambiguous_side(
         "Please add 'fkey' or 'unique' attribute on one side",
     ]
     .join(" ")
+    .into()
 }
 
 pub fn conflicting_attributes(
@@ -38,33 +39,35 @@ pub fn conflicting_attributes(
         format!("and {second_model}::{second_field}"),
     ]
     .join(" ")
+    .into()
 }
 
 pub fn no_relationship_target(model: &str, field: &str, target_model: &str) -> Error {
     format!(r#"Relationship target field not found for "{model}::{field}" on {target_model:?}."#)
+        .into()
 }
 
 pub fn unnamed_model(repr: &str) -> Error {
-    format!("Prisma model must have a name: {repr}")
+    format!("Prisma model must have a name: {repr}").into()
 }
 
 pub fn multiple_id_fields(model: &str) -> Error {
-    format!("Multiple id fields are not yet supported: model {model}")
+    format!("Multiple id fields are not yet supported: model {model}").into()
 }
 
 pub fn id_field_not_found(model: &str) -> Error {
-    format!("Id field not found: model {model}")
+    format!("Id field not found: model {model}").into()
 }
 
 pub fn unregistered_model(type_id: TypeId) -> Error {
-    format!("Model not registered: {}", type_id.repr().unwrap())
+    format!("Model not registered: {}", type_id.repr().unwrap()).into()
 }
 
 #[allow(dead_code)]
 pub(crate) fn unregistered_prop(key: &str, type_name: &str) -> Error {
-    format!("Property not registered: {}.{}", type_name, key)
+    format!("Property not registered: {}.{}", type_name, key).into()
 }
 
 pub fn unregistered_relationship(type_name: &str, prop_name: &str) -> Error {
-    format!("Relationship not registered: {}::{}", type_name, prop_name)
+    format!("Relationship not registered: {}::{}", type_name, prop_name).into()
 }

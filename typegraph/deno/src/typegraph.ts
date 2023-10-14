@@ -10,16 +10,15 @@ import {
   serializeGenericInjection,
   serializeStaticInjection,
 } from "./utils/injection_utils.ts";
-import { Auth, Cors, Rate } from "./wit.ts";
-import Policy from "@typegraph/deno/src/policy.ts";
-import { getPolicyChain } from "@typegraph/deno/src/types.ts";
+import { Auth, Cors, Rate, wit_utils } from "./wit.ts";
+import Policy from "./policy.ts";
+import { getPolicyChain } from "./types.ts";
 
 type Exports = Record<string, t.Func>;
 
 interface TypegraphArgs {
   name: string;
   dynamic?: boolean;
-  folder?: string;
   builder: TypegraphBuilder;
   prefix?: string;
   secrets?: Array<string>;
@@ -31,6 +30,7 @@ interface TypegraphArgs {
 interface TypegraphBuilderArgs {
   expose: (exports: Exports, defaultPolicy?: Policy) => void;
   inherit: () => InheritDef;
+  rest: (graphql: string) => number;
 }
 
 export class InheritDef {
@@ -85,7 +85,6 @@ export function typegraph(
   const {
     name,
     dynamic,
-    folder,
     auths,
     cors,
     prefix,
@@ -123,7 +122,7 @@ export function typegraph(
     rate,
   };
 
-  core.initTypegraph({ name, dynamic, path, folder, ...tgParams });
+  core.initTypegraph({ name, dynamic, path, ...tgParams });
 
   const g: TypegraphBuilderArgs = {
     expose: (exports, defaultPolicy) => {
@@ -134,6 +133,9 @@ export function typegraph(
     },
     inherit: () => {
       return new InheritDef();
+    },
+    rest: (graphql: string) => {
+      return wit_utils.addGraphqlEndpoint(graphql);
     },
   };
 

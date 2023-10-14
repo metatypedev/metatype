@@ -4,10 +4,10 @@
 import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
 import {
-  Effect,
   RandomRuntimeData,
 } from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
 import { Materializer, Runtime } from "./mod.ts";
+import { fx } from "../mod.ts";
 
 interface RandomMat extends Materializer {
   runtime: number;
@@ -19,7 +19,7 @@ export class RandomRuntime extends Runtime {
   }
 
   gen(inp: t.Typedef) {
-    const effect = { tag: "none" } as Effect;
+    const effect = fx.read();
 
     const matId = runtimes.createRandomMat(
       {

@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ComputeStage } from "../engine.ts";
-import { gq } from "../gq.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
+import { gq } from "../transports/graphql/gq.ts";
 import type { Resolver, RuntimeInitParams } from "../types.ts";
-import type { GraphQLRuntimeData } from "../types/typegraph.ts";
+import type { GraphQLRuntimeData } from "../typegraph/types.ts";
 import { Runtime } from "./Runtime.ts";
 import * as GraphQL from "graphql";
 import { Kind } from "graphql";
@@ -12,7 +12,7 @@ import { OperationDefinitionNode, OperationTypeNode } from "graphql/ast";
 import { QueryRebuilder } from "./utils/graphql_forward_vars.ts";
 import { withInlinedVars } from "./utils/graphql_inline_vars.ts";
 import { getLogger } from "../log.ts";
-import { Typegate } from "../typegate/mod.ts";
+import { registerRuntime } from "./mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -20,12 +20,16 @@ export interface FromVars<T> {
   (variables: Record<string, unknown>): T;
 }
 
+@registerRuntime("graphql")
 export class GraphQLRuntime extends Runtime {
   endpoint: string;
   inlineVars = false;
 
-  constructor(endpoint: string) {
-    super();
+  constructor(
+    typegraphName: string,
+    endpoint: string,
+  ) {
+    super(typegraphName);
     this.endpoint = endpoint;
   }
 
@@ -36,8 +40,10 @@ export class GraphQLRuntime extends Runtime {
   static async init(
     params: RuntimeInitParams,
   ): Promise<Runtime> {
-    const { args } = params as RuntimeInitParams<GraphQLRuntimeData>;
-    return await new GraphQLRuntime(args.endpoint as string);
+    const { typegraphName, args } = params as RuntimeInitParams<
+      GraphQLRuntimeData
+    >;
+    return await new GraphQLRuntime(typegraphName, args.endpoint as string);
   }
 
   async deinit(): Promise<void> {}
@@ -181,5 +187,3 @@ export class GraphQLRuntime extends Runtime {
     return {};
   }
 }
-
-Typegate.registerRuntime("graphql", GraphQLRuntime.init);

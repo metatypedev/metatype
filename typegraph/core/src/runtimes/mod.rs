@@ -213,11 +213,11 @@ macro_rules! prisma_op {
     }};
 
     ( $rt:expr, $model:expr, $fn:ident, $name:expr ) => {
-        prisma_op!($rt, $model, $fn, $name, WitEffect::None)
+        prisma_op!($rt, $model, $fn, $name, WitEffect::Read)
     };
 }
 
-impl wit::Runtimes for crate::Lib {
+impl crate::wit::runtimes::Guest for crate::Lib {
     fn get_deno_runtime() -> RuntimeId {
         Store::get_deno_runtime()
     }
@@ -245,7 +245,7 @@ impl wit::Runtimes for crate::Lib {
             DenoMaterializer::Static(deno::MaterializerDenoStatic {
                 value: serde_json::from_str(&data.value).map_err(|e| e.to_string())?,
             }),
-            wit::Effect::None,
+            wit::Effect::Read,
         )))
     }
 
@@ -511,7 +511,7 @@ impl wit::Runtimes for crate::Lib {
             ordered_keys: Some(proc.ordered_keys),
         };
         let mat_id =
-            Store::register_materializer(Materializer::prisma(runtime, mat, WitEffect::None));
+            Store::register_materializer(Materializer::prisma(runtime, mat, WitEffect::Read));
         Ok(FuncParams {
             inp: types.input.into(),
             out: types.output.into(),
@@ -540,7 +540,7 @@ impl wit::Runtimes for crate::Lib {
         use PrismaMigrationOperation as Op;
 
         let (effect, (inp, out)) = match operation {
-            Op::Diff => (WitEffect::None, prisma_diff()?),
+            Op::Diff => (WitEffect::Read, prisma_diff()?),
             Op::Create => (WitEffect::Create(false), prisma_create()?),
             Op::Apply => (WitEffect::Update(false), prisma_apply()?),
             Op::Deploy => (WitEffect::Update(true), prisma_deploy()?),
@@ -578,11 +578,11 @@ impl wit::Runtimes for crate::Lib {
         use TypegateOperation as Op;
 
         let (effect, op) = match operation {
-            WitOp::ListTypegraphs => (WitEffect::None, Op::ListTypegraphs),
-            WitOp::FindTypegraph => (WitEffect::None, Op::FindTypegraph),
+            WitOp::ListTypegraphs => (WitEffect::Read, Op::ListTypegraphs),
+            WitOp::FindTypegraph => (WitEffect::Read, Op::FindTypegraph),
             WitOp::AddTypegraph => (WitEffect::Create(true), Op::AddTypegraph),
             WitOp::RemoveTypegraph => (WitEffect::Delete(true), Op::RemoveTypegraph),
-            WitOp::GetSerializedTypegraph => (WitEffect::None, Op::GetSerializedTypegraph),
+            WitOp::GetSerializedTypegraph => (WitEffect::Read, Op::GetSerializedTypegraph),
         };
 
         Ok(Store::register_materializer(Materializer::typegate(
@@ -599,9 +599,9 @@ impl wit::Runtimes for crate::Lib {
         use TypegraphOperation as Op;
 
         let (effect, op) = match operation {
-            WitOp::Resolver => (WitEffect::None, Op::Resolver),
-            WitOp::GetType => (WitEffect::None, Op::GetType),
-            WitOp::GetSchema => (WitEffect::None, Op::GetSchema),
+            WitOp::Resolver => (WitEffect::Read, Op::Resolver),
+            WitOp::GetType => (WitEffect::Read, Op::GetType),
+            WitOp::GetSchema => (WitEffect::Read, Op::GetSchema),
         };
 
         Ok(Store::register_materializer(Materializer::typegraph(

@@ -52,7 +52,7 @@ export class AsyncMessenger<Broker, M, A> {
   async terminate(): Promise<void> {
     await Promise.all([...this.#tasks.values()].map((t) => t.promise));
     logger.info(`close worker ${this.constructor.name}`);
-    this.#stop(this.broker);
+    await this.#stop(this.broker);
     clearInterval(this.#timer);
   }
 

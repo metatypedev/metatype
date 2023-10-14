@@ -17,13 +17,10 @@ dev:
       '(  WASM_TOOLS_VERSION: ").+(")': WASM_TOOLS_VERSION
       '(  JCO_VERSION: ").+(")': JCO_VERSION
       '(  WASMEDGE_VERSION: ").+(")': WASMEDGE_VERSION
+      '(  WASM_OPT_VERSION: ").+(")': WASM_OPT_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
-    typegraph/python_next/typegraph_next/__init__.py:
-      (version = ").+("): METATYPE_VERSION
     typegraph/python/pyproject.toml:
-      (description = ").+("): TAGLINE
-    typegraph/python_next/pyproject.toml:
       (description = ").+("): TAGLINE
     '**/Cargo.toml':
       (version = ").+("): METATYPE_VERSION
@@ -36,8 +33,6 @@ dev:
       (ARG WASMEDGE_VERSION=).*(): WASMEDGE_VERSION
     typegate/src/typegraph/versions.ts:
       (const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
-    typegraph/python/typegraph/graph/typegraph.py:
-      (typegraph_version = ").*("): TYPEGRAPH_VERSION
     typegraph/core/src/typegraph.rs:
       '(static TYPEGRAPH_VERSION: &str = ").*(";)': TYPEGRAPH_VERSION
     whiz.yaml:
@@ -59,21 +54,22 @@ dev:
       (typegraph = ").+("): METATYPE_VERSION
   lock:
     PYTHON_VERSION: '3.8'
-    POETRY_VERSION: 1.4.1
+    POETRY_VERSION: 1.6.1
     PROTOC_VERSION: v24.x
-    RUST_VERSION: 1.72.1
+    RUST_VERSION: 1.73.0
     DENO_BINDGEN_URL: 'https://raw.githubusercontent.com/Natoandro/deno_bindgen/main/cli.ts'
     DENO_VERSION: 1.37.1
-    NODE_VERSION: 19.8.1
-    PNPM_VERSION: 8.6.11
-    CARGO_INSTA_VERSION: 1.30.0
-    WASM_TOOLS_VERSION: 1.0.37
+    NODE_VERSION: 20.8.0
+    PNPM_VERSION: 8.8.0
+    CARGO_INSTA_VERSION: 1.33.0
+    WASM_TOOLS_VERSION: 1.0.45
     JCO_VERSION: 0.12.1
-    WASMTIME_VERSION: 10.0.1
+    WASMTIME_VERSION: 13.0.2
     WASMEDGE_VERSION: 0.12.1
-    TYPEGRAPH_VERSION: 0.0.2
-    PRISMA_VERSION: 5.4.0-dev.31
-    METATYPE_VERSION: 0.2.0-alpha.1
+    TYPEGRAPH_VERSION: 0.0.3
+    PRISMA_VERSION: 5.4.2
+    METATYPE_VERSION: 0.2.3-0+dev
+    WASM_OPT_VERSION: 0.114.1
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with
       zero-trust and less code, no matter where and how your (legacy) systems

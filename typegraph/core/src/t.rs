@@ -4,7 +4,7 @@
 use crate::errors::Result;
 use crate::types::TypeId;
 use crate::wit::core::{
-    Core, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeOptional,
+    Guest, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeOptional,
     TypeProxy, TypeString, TypeStruct, TypeUnion,
 };
 
@@ -504,8 +504,7 @@ macro_rules! impl_type_builder {
 }
 impl TypeBuilder for BooleanBuilder {
     fn build(&self) -> Result<TypeId> {
-        let builder = self.clone();
-        Ok(crate::Lib::booleanb(builder.base.clone())?.into())
+        Ok(crate::Lib::booleanb(self.base.clone())?.into())
     }
 }
 

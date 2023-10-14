@@ -192,9 +192,7 @@ pub fn build_parent_to_child_indices(item_list: &Vec<ItemNode>) -> HashMap<u32, 
     let mut map: HashMap<u32, Vec<u32>> = HashMap::new();
     for item in item_list {
         if let Some(parent_index) = item.parent_index {
-            map.entry(parent_index)
-                .or_insert_with(Vec::new)
-                .push(item.index);
+            map.entry(parent_index).or_default().push(item.index);
         }
     }
     map

@@ -118,7 +118,9 @@ PrismaContext {
             },
         },
     },
-    typegen_cache: OnceCell(Uninit),
+    typegen_cache: OnceCell(
+        <uninit>,
+    ),
     complete_registrations: {
         Type#3,
         Type#7,

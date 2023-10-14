@@ -87,7 +87,8 @@ pub fn replace_variables_to_indices(query: String, input_id: TypeId) -> Result<F
             return Err(format!(
                 "{} present in type definition but not in the query",
                 not_present.join(", ")
-            ));
+            )
+            .into());
         }
     }
 
@@ -130,7 +131,8 @@ impl PrismaContext {
                 return Err(format!(
                     "Generated type name mismatch: expected {}, got {}",
                     type_name, name
-                ));
+                )
+                .into());
             }
 
             // insert new entry into cache

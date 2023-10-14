@@ -100,10 +100,7 @@ export class Typedef {
   }
 
   rename(name: string): this {
-    const id = core.renameType({
-      tpe: this._id,
-      name,
-    });
+    const id = core.renameType(this._id, name);
 
     return new Proxy(this, {
       get(target, prop, receiver) {
@@ -129,7 +126,7 @@ export class Typedef {
     return optional(this, data);
   }
 
-  private withInjection(injection: string) {
+  withInjection(injection: string) {
     const wrapperId = core.withInjection({
       tpe: this._id,
       injection,

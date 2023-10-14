@@ -3,7 +3,7 @@ export const snapshot = {};
 snapshot[`typegraphs creation 1`] = `
 '[
   {
-    "\$id": "https://metatype.dev/specs/0.0.2.json",
+    "\$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",
@@ -241,7 +241,7 @@ snapshot[`typegraphs creation 1`] = `
         "name": "function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -252,7 +252,7 @@ snapshot[`typegraphs creation 1`] = `
         "name": "predefined_function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -325,7 +325,7 @@ snapshot[`typegraphs creation 1`] = `
         "context_identifier": "user",
         "local_excess": 5
       },
-      "version": "0.0.2"
+      "version": "0.0.3"
     }
   }
 ]'
@@ -334,7 +334,7 @@ snapshot[`typegraphs creation 1`] = `
 snapshot[`typegraphs creation 2`] = `
 \`[
   {
-    "\$id": "https://metatype.dev/specs/0.0.2.json",
+    "\$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",
@@ -462,7 +462,7 @@ snapshot[`typegraphs creation 2`] = `
         "name": "lambda",
         "runtime": 1,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -474,7 +474,7 @@ snapshot[`typegraphs creation 2`] = `
         "name": "predefined_function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -485,7 +485,7 @@ snapshot[`typegraphs creation 2`] = `
         "name": "function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -531,7 +531,7 @@ snapshot[`typegraphs creation 2`] = `
       },
       "auths": [],
       "rate": null,
-      "version": "0.0.2"
+      "version": "0.0.3"
     }
   }
 ]\`
@@ -540,7 +540,7 @@ snapshot[`typegraphs creation 2`] = `
 snapshot[`typegraphs creation 3`] = `
 '[
   {
-    "\$id": "https://metatype.dev/specs/0.0.2.json",
+    "\$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",
@@ -693,7 +693,7 @@ snapshot[`typegraphs creation 3`] = `
         "name": "function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -704,7 +704,7 @@ snapshot[`typegraphs creation 3`] = `
         "name": "function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -715,7 +715,7 @@ snapshot[`typegraphs creation 3`] = `
         "name": "function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -726,7 +726,7 @@ snapshot[`typegraphs creation 3`] = `
         "name": "function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -737,7 +737,7 @@ snapshot[`typegraphs creation 3`] = `
         "name": "import_function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -750,18 +750,18 @@ snapshot[`typegraphs creation 3`] = `
         "name": "module",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
-          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1Y727bNhD3Zz0FoX6ROkWx5SQdvKnY1nZdgQYL0mwYEAQCLdG2UEnUSGqxZ/hN9jZ7sR1JWf/8r8WSYB18QGKRRx7vjscfjxfSNE/I3M0XvUejPtDF2Zn6Ber+Dr0X/d6gf3Yx6Ht9byj7BwNvMOz1e09ABReYIdT7t9Q17guhZ+gVzRcsns4EuiQCi0VO0M9//+WgJA5JxkmEiiwiDIkZQZf0zzhJMLoqxsBF7/UI9CthPKYZ8ty+azxDH65e/3ZS8k7eRSQT8SQmbIQur96fwBjDmDCaIrnSlOF8FmRkLlCc5pQJJJyasW2cqz7dHDOc8vWk7wsxc8AQxh10jQXZM7HqXM99u3OlnIKRi/W4K9XaOpAVYGJKuAu20vX41/B9rRmGwWlKbqRnfSRcLlgRCstAQEv1X5JJM2KOgI0ZwwtLuHEmyJQwy3ZQGmf+0EEZTolv3txT03bqeQLach7NBWwCTmBqzuh8YZkfylVNuxy/0j9aTsV1DNswQo0Dh5TEATDibKpW1J9WUxkcTBKKhWKrL0vqPnD7YESRiBjWCOjEhyhozcoCkhWpmiU/rFvlDUcbd9cZWjqmnrL2lOwgDEs3+LcDB3l3DgppNomn/tL8SBYw2PwDJwUxV1t0ruVpxdvS3HOQ5563dQm0l9bOkA5blivUcuzWYhnhgkStjSYxnC1m3TYc2jDKvrPtem83RQX3MD1gZAIy12HWcW2K40T7Vn5Z24LhVb39Oh6M76og10EQwuny5RGzKuE4Seh9EDKizjhOuP8j/GusrgfMCAYA4f7tXZeTEjGjEXDMt29uzA02BViC6Lk1nzd5ZJ5TTrZKTfE8wFMScBL6A6+vGaW5GDACRkuocMeYxyEEmQAP/iC/Za+MM4Uk7izFoXd+YSn+T9BQbLtcCEKC+BJlakfcx1kE+splL/pOtzuJ01iAPl/XnN8LwhYlo9Gd0BAnAZmHhHP/vO6HIBYANEFcgalvFpwws7LQNiIyQVLfoDzJgdw/bk1HGuHskRqqEMpvgpNlK0ZejKFfg5ybK3wHjmJNXe3y2l65ji9FuZMiC+t+rWsVSU6LIdwxpQnBWTOI9YwIItCykf8SwSEiZs22XRXdGoktUKucahu9Iz0IVahcXWIPnwkeyP8G595G/jcceoNj/vcEtCcVU7jhHM7IHi5P2jspX8BlkVXLqFaVYDWvqwYWbkR3Fw810m1Bvv1gqVXx21rsxkscRb6e40oTgwSn4whbHXhsplxNWm70SDInMePNRKuDqtU4uJVoFu0fuGr12F3g3jpPG4HmIzS/LZW5Q1/JRrni3R4ch9+GuHKbFrvulEZ2tWn1NgtXn2ZCefMskZLqIC0IrdRVpPrQ87LT/CRjvrx7iYcszgU/FTNGiCt47xHoAP4D8g+7+O8Nz474/xR0evo5BYA3Ceai8fJXL34QsfPJX07Qz375pGETHBJ0I6PtXZYXQqHbeITgsTUm7Bto4LqxMgwJpQD3EhPkEwipOJXosETYQWO0GjWEyUO4hJ7lOmMeoWs4vSz6Vr+sHDDlY0bvs5fy9WOP1OK4uXhDk5XiMiIKllWrSZ16/yfisUzXH7X8dzD/u7h4sVH/65+dH8//E9B/uf7nlFmZs6dId7j2hlU9qyqnQDFu0KxwLU0MmQOcbnPcKiapupUHmYRhjFsSNMORxQb/bAhs+RJvS4yjliiZo0BCqNMWqNRY5pVs2at1Se8X+ZYHSXLQQUmykEFZLUtPrmRp0Tsz4s+uCuxOjxWcQ1GqZq97dmfCUNZrJHkcinRjp1UAGHhmO79ay2ykblAUbAiR7neQdF0lSXYpaZDaxdEIye1Su7SyO9Jb6aCSWTJMaCxkBVKrNZGFLdM2tqTI6kbS+ujwC5Rd8k/viBoAolIaFQm0uynXPpW0w7vLHssfRzrSkR6A/gGuiuYsAB4AAA=="
+          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1Y727bNhD3Zz0FoX6ROkXxv6SDNxXb2q4r0GBBmg0DDEOgJdoWKokaSS32DL/J3mYvtiMp65/tuMWSYCt8QGKRdzzeHckfjxfQJIvJ0s1WnUejLtDlcKh+gdq/g36/1+l1h5e9br/bH8j+Xq/ffdHpdp6Aci4wQ6jzb6nt3P+EnqFXNFuxaL4Q6IoILFYZQT///ZeD4iggKSchytOQMCQWBF3RP6M4xug6nwIXvdcS6FfCeERT1He7rvEMfbh+/dtZwTt7F5JURLOIsBG6un5/BjKGMWM0QXKmOcPZAkVJRplAwqn6WiKu/p9hhhO+lf8+FwsHzGfcQTdYkP1jdqZ5u09/RsGh1VbkWrXaMiwHTxLCXXCJbkVfw/eNZhgGpwm5lQH0kHC5YHkgLAMBrdV/SSZNiTkCNmYMryzhRqkgc8Is20FJlHoDB6U4IZ55e0dN26nGCWjLcTQTEGscw9CM0eXKMj8Us5p2Ib/RP1pPyXUM2zACfdyPGYl9YETpXM2oP626MdifxRQLxVZflrS953bBiTwWEczh05kHi90YlfokzRM1Sn5YYxUNRzs3aYkWgamGbCMlO7xxz0H9iYMCms6iubc2P5IVSJl/4Dgn5maPsZUibXGhxr0ARe5Fc3Zfx2XrvgzRulBdKbAbs6SECxI2lpZEcGiYNa6FsOaGPbHtajV3Vfl3MNxnZAY6txurFcwER7GOpvyy9i3/q2rB9Q4wvit3tF72AA6QJ0+RVSrHcUzv/IARdXhxzL0f4V9tdi2wIBiQgXvjSZuTELGgIXDMt29uzR02BbyB/TI2n9d5ZJlRTvZqTfDSx3PicxJ4cDVoRuEuBhgAaYkG7hTzKIBtJSCCP8hv2St3lgILd5HgoH9xaSn+T9BQbLuYiAGGeBJIqkDcRWkI9sppL7tOuzuOkkiAPV9XnN9zwlYFo9Yd0wDHPlkGhHPvouqH3SvIUvhRiZKemXPCzNJD2wjJDEl7/eLs+nL9uDUfaSSzR0pUYZJXhyPLVowsn0K/RjQ3U8ANHMWauzrklb9yHk+qcmd5GlT92tZyJzkNhnCnlMYEp/VNrEeEsAMtG3kvERwiYlZs21W7W8OuBWYVQ22jc6KnpBKuy9vt4TPBI/lfb/hi2M7/BoNB75T/PQHtT8UUsjj3ZmQPkjEdks9WcH+kpXLVKrOs+g1Wg8edndyGSA1+e8DwfvzUpnhNKw5DKA5DT49xpXd+jJNpiK0WYtbzrjqtd3okmbOI8Xq21QLaUg4uKpqG9wtuGj12G8v3jtNOoOUILceFMRP0lWwUM07ugXb4rakrlml16JqpJVy7Xu/zcPNpLhSX0RoprQ7SitBG3U6qDz0vOs1PcubLuKp4wKJM8HOxYIS4gncegY7gPyD/oI3//cHwhP9PQefnn1MAeBNjLmovf/XiBxUHn/zFAP3sly8fNsMBQbdyt71Ls1woxJuOEDzGpoR9Aw1cNTaGIeEVrgCJE/KlhNQ+lYixRthBU7QZ1ZTJg7mGnvU2sR6hGzjRLPxWP8AccOVjSu/Sl/KRZI/U5Lg+ec2SjeIyInKWlrNJmzpfEvFIZvWPWv47mv9dXlzs1P+6w/7p/D8B/Ufrf06RpDn7y3XHS3FYlbfKWgvU5nr1gtfaxJBDwJk2p43akipj9SGnMIxpQ4NmOLIS4Q0HwJbP9KbGKGyoktkKpIY6gYEyjmVey5a92Vb4fpEPfdAkhY5qklUOyipdenCpS6s+mBt/dsngcKKsQBwqVhV723M4J4YqXy3d41C6mzqN6kCvbzYzra3OWhIHNcKaEhl+B8nQlZpkl9IGSV4UjpBcLrVKG7ulvZEYKp0Fw4TGShYktVkzWfUybWNPsqzuIW2P3n6+8kv+6RVRAqAqoWEeQ7udaN1nkg54e9pTbeREJzrRg9I/dTR9KgAeAAA="
         }
       },
       {
         "name": "predefined_function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -809,7 +809,7 @@ snapshot[`typegraphs creation 3`] = `
       },
       "auths": [],
       "rate": null,
-      "version": "0.0.2"
+      "version": "0.0.3"
     }
   }
 ]'
@@ -818,7 +818,7 @@ snapshot[`typegraphs creation 3`] = `
 snapshot[`typegraphs creation 4`] = `
 '[
   {
-    "\$id": "https://metatype.dev/specs/0.0.2.json",
+    "\$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",
@@ -1056,7 +1056,7 @@ snapshot[`typegraphs creation 4`] = `
         "name": "function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -1067,7 +1067,7 @@ snapshot[`typegraphs creation 4`] = `
         "name": "predefined_function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -1140,7 +1140,7 @@ snapshot[`typegraphs creation 4`] = `
         "context_identifier": "user",
         "local_excess": 5
       },
-      "version": "0.0.2"
+      "version": "0.0.3"
     }
   }
 ]'
@@ -1149,7 +1149,7 @@ snapshot[`typegraphs creation 4`] = `
 snapshot[`typegraphs creation 5`] = `
 \`[
   {
-    "\$id": "https://metatype.dev/specs/0.0.2.json",
+    "\$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",
@@ -1277,7 +1277,7 @@ snapshot[`typegraphs creation 5`] = `
         "name": "lambda",
         "runtime": 1,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -1289,7 +1289,7 @@ snapshot[`typegraphs creation 5`] = `
         "name": "predefined_function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -1300,7 +1300,7 @@ snapshot[`typegraphs creation 5`] = `
         "name": "function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -1346,7 +1346,7 @@ snapshot[`typegraphs creation 5`] = `
       },
       "auths": [],
       "rate": null,
-      "version": "0.0.2"
+      "version": "0.0.3"
     }
   }
 ]\`
@@ -1355,7 +1355,7 @@ snapshot[`typegraphs creation 5`] = `
 snapshot[`typegraphs creation 6`] = `
 '[
   {
-    "\$id": "https://metatype.dev/specs/0.0.2.json",
+    "\$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",
@@ -1508,7 +1508,7 @@ snapshot[`typegraphs creation 6`] = `
         "name": "function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -1519,7 +1519,7 @@ snapshot[`typegraphs creation 6`] = `
         "name": "function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -1530,7 +1530,7 @@ snapshot[`typegraphs creation 6`] = `
         "name": "function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -1541,7 +1541,7 @@ snapshot[`typegraphs creation 6`] = `
         "name": "function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -1552,7 +1552,7 @@ snapshot[`typegraphs creation 6`] = `
         "name": "import_function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -1565,18 +1565,18 @@ snapshot[`typegraphs creation 6`] = `
         "name": "module",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
-          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+0Y7W7bNtC//RSE/lTuFMeSnWDQ1mJdW6wFOiRoMmBAYBi0RDtC9TWKmm0YepO9zV5sd0fqw06WZOgSrJ0PhkUd74tH3vF0QZbksVgPVdF7NBgBnE4m9ATYf47H40nPHU1O3ZE38saId13P9Xqj3hNAWSguGet9Luwv7guB42P2Oss3MlpeK/azUFxtcsHO/vzDYXEUiLQQISvTUEimrgV7G/NCRQH7oKeYNxwN+yDi4vzNr0cGefQ+FKmKFpGQfs1wBIR9JLw8e3PmsxJYoyTPpGIJz/tmuGXnGejcOEzBD8xYSp5fs4otZJYw64cGdQwKsuNCBsdJFsLJtb5rRbyBqY8l6E/EnZxS0xSE2ZPxqlR3q8255EmhufpBlhaKFVkiLtF1L5gaFkqWgbK3fcayVPiA4VLyja2GUarEUkh74ICeJEp9NmYVjlOeAKF1ucosVg0c4FSrDDmzXEVZymNgzmW23tjWhVFlDYCuy9xMgITGsEAH+G228Rm8ROnS12gY2aSZzxZxxhWiaWAbU12HJWWsIpB3tvCZZwzl6UykZYLk+JzZVxas2nKYBUuwpjWNWXpDW7tiyxAjJMd1+uwKtHhTcgrwMbA/XURg4pZ9EhtY5O88LnGFKLXqmtsIrm3eEzs8AcHDk2nDpT3hd3zCSHgrY2BoU1EoEXb3UUQQDtK+6jius6TBdDBoN64jYrYCvpkU4L36wNQeTHgUkwtxYO/t7Ot2E83mNqfSBn7tKUOrQNOR2fUjJCssh+YLEUihCvCFpYcu7pEeeu1wbE01PbgO5GnZjK2iNMxWFyLw2enI2UF+iJII/Oh639b430ohNwbdIOMs4PHbdSAKsOGkxsL+KrFW3aRhQX6QxujKMadAFq0tPI6z1WspiIfHMLOAf+F0p98JDlkLVzvdwUOOu85C8sJPby+t3ckzyIN40q+s5+2MWOdZIW6Rl/D1q6Ugl7jeaMdeDikEaQ0lZpThnBdRAMGBG/QjjhFr4qMhuk544J2c2kT1Dl6IyNCQZtJgLwfsxcs2RCDQMTtBhKdi1U2CNhyWliYv50Ci0+wQXuCJBESxHOqF2rWX0QKfxA4XZRrYBs26KcVpkGo4z7JY8NQetMhtM0KuEI+nTYZDwAnL6cyKxUJgMG6Z4hDtVoopBJIwLyA6Ni1lVQ8HQ4wlvRQblmK0VrReoIJn7wD3Qp3QZ/WF+AiV4D31n3viefv133jsuYf67wngKeu//1qdd76BqyD9R1JyYjGVX3sH60u3jqWjmhwu1U6ivjMFPySLGwFkgqHZWYJJ5XuJnIdUuXRTeKfisRaRLJTVqXl0IZCloXWzENLMNaFBGJ+g9z7wZB5y24rpydY+W189Iw3PpuwbfNGin03rK+1v0rhx5eaW++ffNX7b3EtbEuYwzV/RthGKPTc4q759bjUab57qi7t1ikBGuSqO1bUU4pG6APfkf8j84/38740nh/z/FPCk+R8qfbnggWCXeNrep3mpKDPOfQbfanMhMcvx9qXq9zGVQbLGBICfU4zOKX3zMO6wOav8jjAMw23lU1DTV4XPPkLkyvB7/ZXmwFI+pdkqfUkVov6g4F3lHUsqmoUPolKmjTa0qfc1QRFhLf+o7b/74t+DcL/R/xt5k0P8PwH8D+s/0xjj1A5rWjZtJ8/d6ZNR4O/2q3QzDNtf3UbbfEdeQ+Vgm8Bnk3GXFhsc+924KOxqoZICqjjqT5nG3zm8WnudoV+wVdIVjTwPEI0NikxSK1buSiQt+00mXeCabtLNovYBVevdZS9dDdAsa2lqzO1FLbVV29KwgKbh3GnaDTutBterW0k7ZVst31SC1G1tBZJbyJc3peIcSYZNRs/iHtOGVoNbNZHUXI8teNlgr03bRm0r6uOSDXiRGSv0Qa9rXljfjVGzYcQGMiFIyhgR+zXd11i3HuAABzjAAT4P/gLoXEMSACAAAA=="
+          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1Y727bNhD3Zz8FoS+VN0Wx5DgYtLVY1xZrgQ4N2gwYEBgGLVGOUEnUKGq2YehN9jZ7sd2R1B8raRugS4p2JoKYOt79eDzyjscLeVakbOvKcnRvbQrt/OxM/UIb/s78+dnIm56de1N/6s+Q7nm+NxtNRw/QqlJSQcjoc9twcV9JOz0lz3ixE8n6WpLfmKRyVzDy5p+/HZImIctLFpEqj5gg8pqRFyktZRKS13qI+O7UHQPEu4vnf5wY4smriOUyiRMmgkbgBBjH4yQruJBkT+KtQy444O8cIuEPplwLWlyTmsSCZ8T6uSWdltH704xHcECtHzuE5yznbyuYJmMfEhJ6uDwFdfhA/GklPzhZQQXNSi0wDnleSlLyjF2iXR4T6ZZSVKG092NCeM4CoFAh6M6WbpJLtmbCnjgwRZbkAZmRGvs5zYDRutxwi9QTByTlhqMkL2TCc5qCcCH4dmdb78xU1gT4+sLtACC0ioXae2/TjS7hI8nXgSZDz1Yz02WcciqRrDq2UdVzSFalMgG8N3FAfKMozZcsrzJkx9+lfWXBqi2HWLAEa9HwmKW3vI0p9gQpTFBcZ0CuYBZ/oYwCcgT0z+MEVNyT92wHi/yLphWuEFHrvrotcKPzANadA7A7X7RS2hJBzyZEgXcYE8Obs1KyqL+PLIGzLuyrnuF6S5osJpNu43oQyw3ILQUD6zUHprFgRpNUmRA79mBnn3WbaDa3PZA2yGtLGV4JM52YXT9BttJy1HjJQsFkCbawdNfDPdJdv+vOrIXmB9MBnsYmZJPkEd+8Y2FAzqfOAfF1kiVgR8//oaH/WTGxM+SWmPKQpi+2IStBh3lDhf2VbCv7EcGqSiaM0rVjToEoO11omvLNM8GUDE1hJIb/zOkPv2QUQhKudnFAhwB2zSNlhV9fXFqHg28gyOFJv7K+60bYtuAluwUvo9una6ZM4vnTA30pRA/kNZwYTNwVLZMQnAM36BfsI9X4R8t0ndHQn5/biuslfCgmw6NmVjPY6wl5/KRzEXB0jGHg4Tnb9EOfDYel4ymqFbDouOrCB/wig+JYu3qhdmNl1CBQsG5c5aFtyKQfUpyWKN0V5ymjuT3piPu2h1IRHk9bKQ4OxyynN8rimKEzxltXgKX7IHXTnbjoPlp7G7Q3PLVaInDB7+jY/vPWxPxlc13eQyb4ifzPm0/nw/xvNvP9Y/73AO2L5H9fNPe72MEdkd8VoFDcJhvs7mV9ETfOc9Kww0XbC94fDct3iewGQKlgeA60N+F9ENxpBNmM0RsX95pmq4g2Eb6XEFlxIkpp9VIinSfwPLJu5klauGE0hH0T+VM1CdkGZHv1SOE+WpDv8UMDPlpYTaz/QKQ3xtzdcivdk872XoE5RMvXauMUiXxnaB9XGi+n+uu+mMpQJIUsT+W1YOyeqgCfiP8Q+WfD+O/Pzrxj/H+A9qDxHx4DIqYhI5d42l7lRSVVoFwFBJ5zKyYw6NHuox6PMbJB2MZogC8uos6pehYR6pAVqYMeGPrkvg6Uh6uHR0DeghuL6Cf9kHNgKe9zvsmfqIxSvzlof/KeJrUahTdTJfJ2NtRp9C21MsF0/17Lf5/yfx/7w/rf1D/6/0O0/03+ZypmVNXJ2lpOV+LzDgpoyt0PC1m6SoZ1sX4FbnWA13I5WD8IyNmsz4uVj2GZLon6s6isAlI5VbgyFcEL+LQGJaPfsYbSh0aZO0Bj5YLDtqAmh4hqlmH1SWe5psx0M7O9Q+r68dxXXQhQRet4Gsrtma2qt3bZYQnVxJXT1iEOahCe39SYDjK3Bt8kg6oM2wEqsyhb3kTFMYUMm4yWxT1WG1pPbp1JoRa6b8HHDotwWjdVz1IFXqUDXl9GC33Gm7QX1nej126YEgNM8I8qRcIwk/vmU9djO7Zj+8z2L/88dp8AHgAA"
         }
       },
       {
         "name": "predefined_function",
         "runtime": 0,
         "effect": {
-          "effect": "none",
+          "effect": "read",
           "idempotent": true
         },
         "data": {
@@ -1624,7 +1624,7 @@ snapshot[`typegraphs creation 6`] = `
       },
       "auths": [],
       "rate": null,
-      "version": "0.0.2"
+      "version": "0.0.3"
     }
   }
 ]'

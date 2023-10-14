@@ -49,4 +49,6 @@ impl TypeData for TypeEither {
     fn variant_name(&self) -> String {
         "either".to_string()
     }
+
+    super::impl_into_type!(concrete, Either);
 }

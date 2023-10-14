@@ -33,4 +33,6 @@ impl TypeData for TypeBoolean {
     fn variant_name(&self) -> String {
         "boolean".to_string()
     }
+
+    super::impl_into_type!(concrete, Boolean);
 }

@@ -4,12 +4,11 @@
 import { getLogger } from "../../log.ts";
 import { Runtime } from "../Runtime.ts";
 import { RuntimeInitParams } from "../../types.ts";
-import { ComputeStage } from "../../engine.ts";
+import { ComputeStage } from "../../engine/query_engine.ts";
 import { PythonWasmMessenger } from "./python_wasm_messenger.ts";
 import { path } from "compress/deps.ts";
-import { TypeGraph } from "../../typegraph/mod.ts";
 import { PythonVirtualMachine } from "./python_vm.ts";
-import { Materializer } from "../../types/typegraph.ts";
+import { Materializer } from "../../typegraph/types.ts";
 import { structureRepr } from "../../utils.ts";
 import { uncompress } from "../../utils.ts";
 import * as ast from "graphql/ast";
@@ -26,16 +25,16 @@ function generateVmIdentifier(mat: Materializer) {
 
 export class PythonWasiRuntime extends Runtime {
   private constructor(
+    typegraphName: string,
+    uuid: string,
     private w: PythonWasmMessenger,
   ) {
-    super();
+    super(typegraphName, uuid);
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { materializers, typegraph } = params;
+    const { materializers, typegraph, typegraphName } = params;
     const w = await PythonWasmMessenger.init();
-
-    const typegraphName = TypeGraph.formatName(typegraph);
 
     logger.info(`initializing default vm: ${typegraphName}`);
 
@@ -43,6 +42,7 @@ export class PythonWasiRuntime extends Runtime {
     const defaultVm = new PythonVirtualMachine();
     await defaultVm.setup("default");
     w.vmMap.set("default", defaultVm);
+    const uuid = crypto.randomUUID();
 
     for (const m of materializers) {
       switch (m.name) {
@@ -72,10 +72,11 @@ export class PythonWasiRuntime extends Runtime {
             "tmp",
             "scripts",
             typegraphName,
+            uuid,
             "python",
             vmId,
           );
-          const outDir = path.join(basePath, repr.hash);
+          const outDir = path.join(basePath, repr.hashes.entryPoint);
           const entries = await uncompress(
             outDir,
             repr.base64,
@@ -107,7 +108,7 @@ export class PythonWasiRuntime extends Runtime {
       }
     }
 
-    return new PythonWasiRuntime(w);
+    return new PythonWasiRuntime(typegraphName, uuid, w);
   }
 
   async deinit(): Promise<void> {

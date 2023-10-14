@@ -27,7 +27,7 @@ pub async fn register_engine(datamodel: String, engine_name: String) -> Result<(
 pub async fn query(engine_name: String, query: serde_json::Value) -> Result<String> {
     let engine = super::ENGINES
         .get(&engine_name)
-        .with_context(|| format!("Cound not find engine '{engine_name}"))?;
+        .with_context(|| format!("Could not find engine '{engine_name}"))?;
     if !engine.is_connected().await {
         // lazy connection, will eventually have to be moved to inner helpers
         engine

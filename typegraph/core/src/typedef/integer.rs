@@ -65,4 +65,6 @@ impl TypeData for TypeInteger {
     fn variant_name(&self) -> String {
         "integer".to_string()
     }
+
+    super::impl_into_type!(concrete, Integer);
 }

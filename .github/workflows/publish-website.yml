@@ -4,9 +4,9 @@ on:
       - main
 
 env:
-  PNPM_VERSION: "8.6.11"
-  NODE_VERSION: "19.8.1"
-  POETRY_VERSION: "1.4.1"
+  PNPM_VERSION: "8.8.0"
+  NODE_VERSION: "20.8.0"
+  POETRY_VERSION: "1.6.1"
   PYTHON_VERSION: "3.8"
 
 jobs:

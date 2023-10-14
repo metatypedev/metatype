@@ -1,14 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { parseTypegraph } from "../../../src/typegraph/parser.ts";
 import { Meta } from "../../utils/mod.ts";
 import { serialize } from "../../utils/meta.ts";
 import { SchemaGenerator } from "../../../src/runtimes/prisma/hooks/generate_schema.ts";
 import * as PrismaRT from "../../../src/runtimes/prisma/types.ts";
 import { assertEquals } from "std/assert/mod.ts";
 import outdent from "outdent";
-import { SecretManager } from "../../../src/typegraph/mod.ts";
+import { SecretManager, TypeGraph } from "../../../src/typegraph/mod.ts";
 
 interface Permutation<T> {
   (arr: T[]): T[];
@@ -19,7 +18,7 @@ async function assertGeneratedSchema(
   schema: string,
   reorderModels?: Permutation<number>,
 ) {
-  const tg = await parseTypegraph(
+  const tg = await TypeGraph.parseJson(
     await serialize("runtimes/prisma/schema_generation.py", {
       unique: true,
       typegraph: tgName,
@@ -41,7 +40,7 @@ async function assertGeneratedSchema(
   const schemaGenerator = new SchemaGenerator(
     tg,
     runtime.data,
-    new SecretManager(tgName, {
+    new SecretManager(tg, {
       [secretKey]: "postgresql://postgres:postgres@localhost:5432/postgres",
     }),
   );
@@ -163,17 +162,17 @@ Meta.test("schema generation", async (t) => {
       await assertGeneratedSchema(
         "one-to-one",
         outdent`
+          model User {
+              id Int @id
+              profile Profile? @relation(name: "userProfile")
+          }
+
           model Profile {
               id String @db.Uuid @id @default(uuid())
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
   
               @@unique(userId)
-          }
-
-          model User {
-              id Int @id
-              profile Profile? @relation(name: "userProfile")
           }
         `,
       );
@@ -223,17 +222,17 @@ Meta.test("schema generation", async (t) => {
       await assertGeneratedSchema(
         "optional-one-to-one",
         outdent`
+          model User {
+              id Int @id @default(autoincrement())
+              profile Profile? @relation(name: "__rel_Profile_User_1")
+          }
+
           model Profile {
               id String @db.Uuid @id @default(uuid())
               user User? @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int?
   
               @@unique(userId)
-          }
-  
-          model User {
-              id Int @id @default(autoincrement())
-              profile Profile? @relation(name: "__rel_Profile_User_1")
           }
         `,
       );
@@ -241,17 +240,17 @@ Meta.test("schema generation", async (t) => {
       await assertGeneratedSchema(
         "optional-one-to-one",
         outdent`
-          model User {
-              id Int @id @default(autoincrement())
-              profile Profile? @relation(name: "__rel_Profile_User_1")
-          }
-  
           model Profile {
               id String @db.Uuid @id @default(uuid())
               user User? @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int?
   
               @@unique(userId)
+          }
+
+          model User {
+              id Int @id @default(autoincrement())
+              profile Profile? @relation(name: "__rel_Profile_User_1")
           }
         `,
         ([a, b]) => [b, a],
@@ -265,17 +264,17 @@ Meta.test("schema generation", async (t) => {
       await assertGeneratedSchema(
         "semi-implicit-one-to-one",
         outdent`
+          model User {
+              id Int @id
+              profile Profile? @relation(name: "userProfile")
+          }
+
           model Profile {
               id String @db.Uuid @id @default(uuid())
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
   
               @@unique(userId)
-          }
-
-          model User {
-              id Int @id
-              profile Profile? @relation(name: "userProfile")
           }
         `,
       );
@@ -408,6 +407,14 @@ Meta.test("schema generation", async (t) => {
       await assertGeneratedSchema(
         "multiple-relationships",
         outdent`
+          model User {
+              id String @db.Uuid @id @default(uuid())
+              email String @db.Text @unique
+              posts Post[] @relation(name: "__rel_Post_User_1")
+              favorite_post Post? @relation(name: "__rel_User_Post_2", fields: [favorite_postId], references: [id])
+              favorite_postId String? @db.Uuid
+          }
+
           model Post {
               id String @db.Uuid @id @default(uuid())
               title String @db.VarChar(256)
@@ -415,14 +422,6 @@ Meta.test("schema generation", async (t) => {
               author User @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
               authorId String @db.Uuid
               favorite_of User[] @relation(name: "__rel_User_Post_2")
-          }
-
-          model User {
-              id String @db.Uuid @id @default(uuid())
-              email String @db.Text @unique
-              posts Post[] @relation(name: "__rel_Post_User_1")
-              favorite_post Post? @relation(name: "__rel_User_Post_2", fields: [favorite_postId], references: [id])
-              favorite_postId String? @db.Uuid
           }
         `,
       );

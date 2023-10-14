@@ -1,17 +1,14 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph_next import typegraph, t, Graph
-from typegraph_next.runtimes.deno import DenoRuntime
-from typegraph_next.graph.params import Auth, Rate, Cors
-from typegraph_next.wit import runtimes, store
-from typegraph_next.gen.exports.runtimes import (
+from typegraph import Graph, fx, t, typegraph
+from typegraph.gen.exports.runtimes import (
     TypegateOperation,
-    EffectNone,
-    EffectCreate,
-    EffectDelete,
 )
-from typegraph_next.gen.types import Err
-from typegraph_next.runtimes.base import Materializer
+from typegraph.gen.types import Err
+from typegraph.graph.params import Auth, Cors, Rate
+from typegraph.runtimes.base import Materializer
+from typegraph.runtimes.deno import DenoRuntime
+from typegraph.wit import runtimes, store
 
 
 @typegraph(
@@ -39,25 +36,21 @@ def typegate(g: Graph):
     )
     if isinstance(list_typegraphs_mat_id, Err):
         raise Exception(list_typegraphs_mat_id.value)
-    list_typegraphs_mat = Materializer(
-        list_typegraphs_mat_id.value, effect=EffectNone()
-    )
+    list_typegraphs_mat = Materializer(list_typegraphs_mat_id.value, effect=fx.read())
 
     find_typegraph_mat_id = runtimes.register_typegate_materializer(
         store, TypegateOperation.FIND_TYPEGRAPH
     )
     if isinstance(find_typegraph_mat_id, Err):
         raise Exception(find_typegraph_mat_id.value)
-    find_typegraph_mat = Materializer(find_typegraph_mat_id.value, effect=EffectNone())
+    find_typegraph_mat = Materializer(find_typegraph_mat_id.value, effect=fx.read())
 
     add_typegraph_mat_id = runtimes.register_typegate_materializer(
         store, TypegateOperation.ADD_TYPEGRAPH
     )
     if isinstance(add_typegraph_mat_id, Err):
         raise Exception(add_typegraph_mat_id.value)
-    add_typegraph_mat = Materializer(
-        add_typegraph_mat_id.value, effect=EffectCreate(True)
-    )
+    add_typegraph_mat = Materializer(add_typegraph_mat_id.value, effect=fx.create(True))
 
     remove_typegraph_mat_id = runtimes.register_typegate_materializer(
         store, TypegateOperation.REMOVE_TYPEGRAPH
@@ -65,7 +58,7 @@ def typegate(g: Graph):
     if isinstance(remove_typegraph_mat_id, Err):
         raise Exception(remove_typegraph_mat_id.value)
     remove_typegraph_mat = Materializer(
-        remove_typegraph_mat_id.value, effect=EffectDelete(True)
+        remove_typegraph_mat_id.value, effect=fx.delete(True)
     )
 
     serialized_typegraph_mat_id = runtimes.register_typegate_materializer(
@@ -75,7 +68,7 @@ def typegate(g: Graph):
     if isinstance(serialized_typegraph_mat_id, Err):
         raise Exception(serialized_typegraph_mat_id.value)
     serialized_typegraph_mat = Materializer(
-        serialized_typegraph_mat_id.value, effect=EffectNone()
+        serialized_typegraph_mat_id.value, effect=fx.read()
     )
 
     serialized = t.gen(t.string(), serialized_typegraph_mat)

@@ -2,20 +2,24 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Runtime } from "./Runtime.ts";
-import { ComputeStage } from "../engine.ts";
-import { TypeNode } from "../type_node.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
+import { TypeNode } from "../typegraph/type_node.ts";
 import Chance from "chance";
 import { Resolver, RuntimeInitParams } from "../types.ts";
-import { RandomRuntimeData } from "../types/typegraph.ts";
-import { Typegate } from "../typegate/mod.ts";
+import { RandomRuntimeData } from "../typegraph/types.ts";
+import { registerRuntime } from "./mod.ts";
 
+@registerRuntime("random")
 export class RandomRuntime extends Runtime {
   seed: number | null;
   chance: typeof Chance;
   private _tgTypes: TypeNode[] = [];
 
-  constructor(seed: number | null) {
-    super();
+  constructor(
+    typegraphName: string,
+    seed: number | null,
+  ) {
+    super(typegraphName);
     this.seed = seed;
     if (this.seed == null) {
       this.chance = new Chance();
@@ -25,9 +29,11 @@ export class RandomRuntime extends Runtime {
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { args } = params as RuntimeInitParams<RandomRuntimeData>;
+    const { args, typegraphName } = params as RuntimeInitParams<
+      RandomRuntimeData
+    >;
     const { seed } = args;
-    const runtime = await new RandomRuntime(seed ?? null);
+    const runtime = await new RandomRuntime(typegraphName, seed ?? null);
     runtime.setTgTypes(params.typegraph.types);
     return runtime;
   }
@@ -117,5 +123,3 @@ export class RandomRuntime extends Runtime {
     }
   }
 }
-
-Typegate.registerRuntime("random", RandomRuntime.init);
