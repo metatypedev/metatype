@@ -16,35 +16,61 @@ import { Protocol } from "./protocol.ts";
 import { Auth, Materializer, TypeNode } from "../../../typegraph/types.ts";
 import { Runtime } from "../../../runtimes/Runtime.ts";
 import { FunctionNode } from "../../../typegraph/type_node.ts";
-import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
-import { PythonWasiRuntime } from "../../../runtimes/python_wasi/python_wasi.ts";
+import { ComputeStage } from "../../../engine/query_engine.ts";
+import * as ast from "graphql/ast";
 
 const logger = getLogger(import.meta);
 
 class AuthProfiler {
+  runtime: Runtime;
   constructor(
     private types: TypeNode[],
     private materializers: Materializer[],
     private runtimeReferences: Runtime[],
     private funcIndex: number,
-  ) {}
-
-  async transform(profile: any, url: string) {
+  ) {
     const func = this.types[this.funcIndex] as FunctionNode;
     const mat = this.materializers[func.materializer];
-    const runtime = this.runtimeReferences[mat.runtime];
+    this.runtime = runtimeReferences[mat.runtime];
+  }
 
+  private getComputeStage(): ComputeStage {
+    const func = this.types[this.funcIndex] as FunctionNode;
+    const mat = this.materializers[func.materializer];
+    return new ComputeStage({
+      operationName: "",
+      dependencies: [],
+      args: (x: any) => x,
+      operationType: ast.OperationTypeNode.QUERY,
+      outType: this.types[func.output],
+      typeIdx: func.input,
+      runtime: this.runtime,
+      materializer: mat,
+      node: "",
+      path: [],
+      batcher: (x) => x,
+      rateCalls: false,
+      rateWeight: 0,
+      effect: null,
+    });
+  }
+
+  async transform(profile: any, url: string) {
     const input = { ...profile, _: { info: { url } } };
+    const stage = this.getComputeStage();
+    const stages = this.runtime.materialize(
+      stage,
+      [],
+      true,
+    );
     // TODO: validate(func.input, input)
-    let ret = {};
-    if (runtime instanceof DenoRuntime) {
-      const resolver = runtime.delegate(mat, false);
-      ret = await resolver(input);
-    } else if (runtime instanceof PythonWasiRuntime) {
-      ret = await runtime.delegate(input, mat) as any;
-    } else {
-      throw Error(`runtime id "${runtime.id}" not supported by profiler`);
+    const resolver = stages.pop()?.props.resolver;
+    if (typeof resolver != "function") {
+      throw Error(
+        `invalid resolver, function was expected but got ${typeof resolver} instead`,
+      );
     }
+    const ret = await resolver(input);
     // TODO: validate(func.output, ret)
     return ret;
   }
