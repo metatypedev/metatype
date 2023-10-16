@@ -5,10 +5,11 @@ from typegraph.runtimes import DenoRuntime, HttpRuntime, PythonRuntime
 
 
 @typegraph(
-    auths=[Auth.oauth2.github("openid profile email")],
     rate=Rate(window_limit=2000, window_sec=60, query_limit=200),
 )
 def public_api(g: Graph):
+    g.auth(Auth.oauth2_github("openid profile email"))
+
     deno = DenoRuntime()
 
     # 1 what / types

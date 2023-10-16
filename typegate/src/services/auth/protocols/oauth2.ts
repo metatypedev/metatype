@@ -14,7 +14,6 @@ import {
 } from "../cookies.ts";
 import { Protocol } from "./protocol.ts";
 import { Auth } from "../../../typegraph/types.ts";
-import { Runtime } from "../../../runtimes/Runtime.ts";
 import { FunctionNode, ObjectNode } from "../../../typegraph/type_node.ts";
 import { ComputeStage } from "../../../engine/query_engine.ts";
 import * as ast from "graphql/ast";
@@ -23,21 +22,17 @@ import { generateValidator } from "../../../engine/typecheck/input.ts";
 const logger = getLogger(import.meta);
 
 class AuthProfiler {
-  runtime: Runtime;
   constructor(
     private authParameters: AdditionalAuthParams,
     private funcIndex: number,
-  ) {
+  ) {}
+
+  private getComputeStage(): ComputeStage {
     const { types, materializers, runtimeReferences } = this.authParameters;
     const funcNode = types[this.funcIndex] as FunctionNode;
     const mat = materializers[funcNode.materializer];
-    this.runtime = runtimeReferences[mat.runtime];
-  }
+    const runtime = runtimeReferences[mat.runtime];
 
-  private getComputeStage(): ComputeStage {
-    const { types, materializers } = this.authParameters;
-    const funcNode = types[this.funcIndex] as FunctionNode;
-    const mat = materializers[funcNode.materializer];
     return new ComputeStage({
       operationName: "",
       dependencies: [],
@@ -45,7 +40,7 @@ class AuthProfiler {
       operationType: ast.OperationTypeNode.QUERY,
       outType: types[funcNode.output],
       typeIdx: funcNode.input,
-      runtime: this.runtime,
+      runtime: runtime,
       materializer: mat,
       node: "",
       path: [],
@@ -57,9 +52,11 @@ class AuthProfiler {
   }
 
   async transform(profile: any, url: string) {
-    const { types, tg } = this.authParameters;
+    const { types, tg, runtimeReferences, materializers } = this.authParameters;
     const funcNode = types[this.funcIndex] as FunctionNode;
     const inputNode = types[funcNode.input] as ObjectNode;
+    const mat = materializers[funcNode.materializer];
+    const runtime = runtimeReferences[mat.runtime];
     const validatorInput = generateValidator(tg, funcNode.input);
     const validatorOutput = generateValidator(tg, funcNode.output);
 
@@ -73,7 +70,7 @@ class AuthProfiler {
     validatorInput(Object.fromEntries(filtered));
 
     // Note: this assumes func is a simple t.func(inp, out, mat)
-    const stages = this.runtime.materialize(
+    const stages = runtime.materialize(
       this.getComputeStage(),
       [],
       true,
