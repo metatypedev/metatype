@@ -15,7 +15,7 @@ import {
 import { Protocol } from "./protocol.ts";
 import { Auth } from "../../../typegraph/types.ts";
 import { Runtime } from "../../../runtimes/Runtime.ts";
-import { FunctionNode } from "../../../typegraph/type_node.ts";
+import { FunctionNode, ObjectNode } from "../../../typegraph/type_node.ts";
 import { ComputeStage } from "../../../engine/query_engine.ts";
 import * as ast from "graphql/ast";
 import { generateValidator } from "../../../engine/typecheck/input.ts";
@@ -29,22 +29,22 @@ class AuthProfiler {
     private funcIndex: number,
   ) {
     const { types, materializers, runtimeReferences } = this.authParameters;
-    const func = types[this.funcIndex] as FunctionNode;
-    const mat = materializers[func.materializer];
+    const funcNode = types[this.funcIndex] as FunctionNode;
+    const mat = materializers[funcNode.materializer];
     this.runtime = runtimeReferences[mat.runtime];
   }
 
   private getComputeStage(): ComputeStage {
     const { types, materializers } = this.authParameters;
-    const func = types[this.funcIndex] as FunctionNode;
-    const mat = materializers[func.materializer];
+    const funcNode = types[this.funcIndex] as FunctionNode;
+    const mat = materializers[funcNode.materializer];
     return new ComputeStage({
       operationName: "",
       dependencies: [],
       args: (x: any) => x,
       operationType: ast.OperationTypeNode.QUERY,
-      outType: types[func.output],
-      typeIdx: func.input,
+      outType: types[funcNode.output],
+      typeIdx: funcNode.input,
       runtime: this.runtime,
       materializer: mat,
       node: "",
@@ -57,13 +57,24 @@ class AuthProfiler {
   }
 
   async transform(profile: any, url: string) {
-    const { types } = this.authParameters;
-    const func = types[this.funcIndex] as FunctionNode;
+    const { types, tg } = this.authParameters;
+    const funcNode = types[this.funcIndex] as FunctionNode;
+    const inputNode = types[funcNode.input] as ObjectNode;
+    const validatorInput = generateValidator(tg, funcNode.input);
+    const validatorOutput = generateValidator(tg, funcNode.output);
 
     const input = { ...profile, _: { info: { url } } };
-    const stage = this.getComputeStage();
+
+    // TODO: only validate against all fields/subfields that appears on the func input
+    const explicitlyDeclared = Object.keys(inputNode.properties);
+    const filtered = Object.entries(input).filter(([k, _]) => {
+      return explicitlyDeclared.includes(k);
+    });
+    validatorInput(Object.fromEntries(filtered));
+
+    // Note: this assumes func is a simple t.func(inp, out, mat)
     const stages = this.runtime.materialize(
-      stage,
+      this.getComputeStage(),
       [],
       true,
     );
@@ -74,10 +85,9 @@ class AuthProfiler {
         `invalid resolver, function was expected but got ${typeof resolver} instead`,
       );
     }
-    const ret = await resolver(input);
 
-    const validator = generateValidator(this.authParameters.tg, func.output);
-    validator(ret);
+    const ret = await resolver(input);
+    validatorOutput(ret);
 
     return ret;
   }
