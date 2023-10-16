@@ -3,7 +3,6 @@ name = "example"
 version = "0.2.3-0+dev"
 description = ""
 authors = []
-readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"

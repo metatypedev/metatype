@@ -24,7 +24,7 @@ services:
   # postgresql://postgres:password@localhost:5432/db
   # see metatype.yml
   postgres:
-    image: postgres:15
+    image: postgres:16
     restart: always
     environment:
       POSTGRES_DB: db
