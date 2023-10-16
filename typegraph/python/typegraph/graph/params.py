@@ -108,7 +108,7 @@ class Auth:
         )
 
     def oauth2_github(scopes: str) -> "utils.Auth":
-        res = wit_utils.auth_github(store, scopes)
+        res = wit_utils.oauth2_github(store, scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)

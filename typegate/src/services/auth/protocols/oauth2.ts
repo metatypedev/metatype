@@ -13,36 +13,37 @@ import {
   setEncryptedSessionCookie,
 } from "../cookies.ts";
 import { Protocol } from "./protocol.ts";
-import { Auth, Materializer, TypeNode } from "../../../typegraph/types.ts";
+import { Auth } from "../../../typegraph/types.ts";
 import { Runtime } from "../../../runtimes/Runtime.ts";
 import { FunctionNode } from "../../../typegraph/type_node.ts";
 import { ComputeStage } from "../../../engine/query_engine.ts";
 import * as ast from "graphql/ast";
+import { generateValidator } from "../../../engine/typecheck/input.ts";
 
 const logger = getLogger(import.meta);
 
 class AuthProfiler {
   runtime: Runtime;
   constructor(
-    private types: TypeNode[],
-    private materializers: Materializer[],
-    private runtimeReferences: Runtime[],
+    private authParameters: AdditionalAuthParams,
     private funcIndex: number,
   ) {
-    const func = this.types[this.funcIndex] as FunctionNode;
-    const mat = this.materializers[func.materializer];
+    const { types, materializers, runtimeReferences } = this.authParameters;
+    const func = types[this.funcIndex] as FunctionNode;
+    const mat = materializers[func.materializer];
     this.runtime = runtimeReferences[mat.runtime];
   }
 
   private getComputeStage(): ComputeStage {
-    const func = this.types[this.funcIndex] as FunctionNode;
-    const mat = this.materializers[func.materializer];
+    const { types, materializers } = this.authParameters;
+    const func = types[this.funcIndex] as FunctionNode;
+    const mat = materializers[func.materializer];
     return new ComputeStage({
       operationName: "",
       dependencies: [],
       args: (x: any) => x,
       operationType: ast.OperationTypeNode.QUERY,
-      outType: this.types[func.output],
+      outType: types[func.output],
       typeIdx: func.input,
       runtime: this.runtime,
       materializer: mat,
@@ -56,6 +57,9 @@ class AuthProfiler {
   }
 
   async transform(profile: any, url: string) {
+    const { types } = this.authParameters;
+    const func = types[this.funcIndex] as FunctionNode;
+
     const input = { ...profile, _: { info: { url } } };
     const stage = this.getComputeStage();
     const stages = this.runtime.materialize(
@@ -71,7 +75,10 @@ class AuthProfiler {
       );
     }
     const ret = await resolver(input);
-    // TODO: validate(func.output, ret)
+
+    const validator = generateValidator(this.authParameters.tg, func.output);
+    validator(ret);
+
     return ret;
   }
 }
@@ -82,7 +89,6 @@ export class OAuth2Auth extends Protocol {
     auth: Auth,
     secretManager: SecretManager,
     authParameters: AdditionalAuthParams,
-    runtimeReferences: Runtime[],
   ): Promise<Protocol> {
     const clientId = secretManager.secretOrFail(`${auth.name}_CLIENT_ID`);
     const clientSecret = secretManager.secretOrFail(
@@ -107,9 +113,7 @@ export class OAuth2Auth extends Protocol {
         profile_url as string | null,
         profiler !== undefined
           ? new AuthProfiler(
-            authParameters.types,
-            authParameters.materializers,
-            runtimeReferences,
+            authParameters,
             profiler as number,
           )
           : null,

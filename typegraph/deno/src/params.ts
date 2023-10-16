@@ -40,6 +40,6 @@ export class Auth {
   }
 
   static oauth2Github(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.authGithub(scopes));
+    return new RawAuth(wit_utils.oauth2Github(scopes));
   }
 }

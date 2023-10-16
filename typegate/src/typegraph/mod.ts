@@ -247,23 +247,7 @@ export class TypeGraph {
     ensureNonNullable(denoRuntime, "cannot find deno runtime");
 
     const auths = new Map<string, Protocol>();
-    for (const auth of meta.auths) {
-      auths.set(
-        auth.name,
-        await initAuth(
-          typegraphName,
-          auth,
-          secretManager,
-          denoRuntime as DenoRuntime,
-          { types, materializers },
-          runtimeReferences,
-        ),
-      );
-    }
-    // override "internal" to enforce internal auth
-    auths.set(internalAuthName, await InternalAuth.init(typegraphName));
-
-    return new TypeGraph(
+    const tg = new TypeGraph(
       typegraph,
       secretManager,
       denoRuntimeIdx,
@@ -272,6 +256,29 @@ export class TypeGraph {
       auths,
       introspection,
     );
+
+    for (const auth of meta.auths) {
+      auths.set(
+        auth.name,
+        await initAuth(
+          typegraphName,
+          auth,
+          secretManager,
+          denoRuntime as DenoRuntime,
+          {
+            tg: tg, // required for validation
+            types,
+            materializers,
+            runtimeReferences,
+          },
+        ),
+      );
+    }
+
+    // override "internal" to enforce internal auth
+    auths.set(internalAuthName, await InternalAuth.init(typegraphName));
+
+    return tg;
   }
 
   async deinit(): Promise<void> {

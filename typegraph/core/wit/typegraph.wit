@@ -496,20 +496,20 @@ interface utils {
 
     add-auth: func(data: auth) -> result<u32, error>
     add-raw-auth: func(data: string) -> result<u32, error>
-    auth-github: func(scopes: string) -> result<string, error>
+    oauth2-github: func(scopes: string) -> result<string, error>
     /* TODO
-    auth-digitalocean: func(scopes: string) -> result<string, error>
-    auth-discord: func(scopes: string) -> result<string, error>
-    auth-dropbox: func(scopes: string) -> result<string, error>
-    auth-facebook: func(scopes: string) -> result<string, error>
-    auth-github: func(scopes: string) -> result<string, error>
-    auth-gitlab: func(scopes: string) -> result<string, error>
-    auth-google: func(scopes: string) -> result<string, error>
-    auth-instagram: func(scopes: string) -> result<string, error>
-    auth-linkedin: func(scopes: string) -> result<string, error>
-    auth-microsoft: func(scopes: string) -> result<string, error>
-    auth-stackexchange: func(scopes: string) -> result<string, error>
-    auth-twitter: func(scopes: string) -> result<string, error>*/
+    oauth2-digitalocean: func(scopes: string) -> result<string, error>
+    oauth2-discord: func(scopes: string) -> result<string, error>
+    oauth2-dropbox: func(scopes: string) -> result<string, error>
+    oauth2-facebook: func(scopes: string) -> result<string, error>
+    oauth2-github: func(scopes: string) -> result<string, error>
+    oauth2-gitlab: func(scopes: string) -> result<string, error>
+    oauth2-google: func(scopes: string) -> result<string, error>
+    oauth2-instagram: func(scopes: string) -> result<string, error>
+    oauth2-linkedin: func(scopes: string) -> result<string, error>
+    oauth2-microsoft: func(scopes: string) -> result<string, error>
+    oauth2-stackexchange: func(scopes: string) -> result<string, error>
+    oauth2-twitter: func(scopes: string) -> result<string, error>*/
 }
 
 world typegraph {

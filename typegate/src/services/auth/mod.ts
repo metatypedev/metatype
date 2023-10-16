@@ -6,7 +6,7 @@ import { BasicAuth } from "./protocols/basic.ts";
 import { OAuth2Auth } from "./protocols/oauth2.ts";
 
 import type { Auth, Materializer, TypeNode } from "../../typegraph/types.ts";
-import { SecretManager } from "../../typegraph/mod.ts";
+import { SecretManager, TypeGraph } from "../../typegraph/mod.ts";
 
 import { Protocol } from "./protocols/protocol.ts";
 import { DenoRuntime } from "../../runtimes/deno/deno.ts";
@@ -22,8 +22,10 @@ const logger = getLogger(import.meta);
 export const nextAuthorizationHeader = "next-authorization";
 export const internalAuthName = "internal";
 export type AdditionalAuthParams = {
+  tg: TypeGraph;
   types: TypeNode[];
   materializers: Materializer[];
+  runtimeReferences: Runtime[];
 };
 
 export function initAuth(
@@ -32,7 +34,6 @@ export function initAuth(
   secretManager: SecretManager,
   denoRuntime: DenoRuntime,
   authParameters: AdditionalAuthParams,
-  runtimeReferences: Runtime[],
 ): Promise<Protocol> {
   switch (auth.protocol) {
     case "oauth2":
@@ -41,7 +42,6 @@ export function initAuth(
         auth,
         secretManager,
         authParameters,
-        runtimeReferences,
       );
     case "basic":
       return BasicAuth.init(typegraphName, auth, secretManager, denoRuntime);

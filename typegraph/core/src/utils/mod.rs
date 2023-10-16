@@ -181,9 +181,9 @@ impl crate::wit::utils::Guest for crate::Lib {
         Store::add_raw_auth(raw_auth)
     }
 
-    fn auth_github(scopes: String) -> Result<String> {
-        let inp = t::struct_().propx("id", t::string())?.build()?;
-        let out = t::struct_().propx("id", t::string())?.build()?;
+    fn oauth2_github(scopes: String) -> Result<String> {
+        let inp = t::struct_().propx("id", t::integer())?.build()?;
+        let out = t::struct_().propx("id", t::integer())?.build()?;
         let deno_mat = DenoMaterializer::Inline(MaterializerDenoFunc {
             code: "(p) => ({id: p.id})".to_string(),
             secrets: vec![],
