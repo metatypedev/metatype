@@ -3,7 +3,7 @@
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
-use crate::runtimes::prisma::model::{Property, ScalarType};
+use crate::runtimes::prisma::model::{InjectionHandler, Property, ScalarType};
 use crate::runtimes::prisma::relationship::Cardinality;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeId;
@@ -28,9 +28,14 @@ impl TypeGen for UpdateInput {
         let model = model.borrow();
 
         for (key, prop) in model.iter_props() {
-            // TODO check injection
             match prop {
                 Property::Scalar(prop) => {
+                    if let Some(inj) = &prop.injection {
+                        if let Some(InjectionHandler::Prisma) = &inj.update {
+                            // value set by prisma
+                            continue;
+                        }
+                    }
                     let mutation_type = if prop.quantifier == Cardinality::Many {
                         t::unionx![
                             prop.wrapper_type_id,
@@ -44,7 +49,7 @@ impl TypeGen for UpdateInput {
                         match prop.prop_type {
                             ScalarType::Boolean | ScalarType::String(_) => t::unionx![
                                 wrapper_type_id,
-                                t::struct_().prop("set", prop.wrapper_type_id)
+                                t::struct_().prop("set", wrapper_type_id)
                             ]
                             .build()?,
                             ScalarType::Integer | ScalarType::Float => t::unionx![
@@ -59,6 +64,7 @@ impl TypeGen for UpdateInput {
                     };
                     builder.propx(key, t::optional(mutation_type))?;
                 }
+                // TODO
                 Property::Model(_) => continue,
                 Property::Unmanaged(_) => continue,
             }

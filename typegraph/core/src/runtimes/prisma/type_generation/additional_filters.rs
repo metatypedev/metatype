@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::runtimes::prisma::context::PrismaContext;
+use crate::runtimes::prisma::model::Property;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::{errors::Result, types::TypeId};
 
@@ -34,13 +35,17 @@ impl TypeGen for Skip {
 pub struct Distinct(pub TypeId);
 
 impl TypeGen for Distinct {
-    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
-        let cols = self
-            .0
-            .as_struct()?
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+        let model = context.model(self.0)?;
+        let model = model.borrow();
+
+        let cols: Vec<_> = model
             .iter_props()
-            .map(|(k, _)| k.to_string())
-            .collect::<Vec<_>>();
+            .filter_map(|(k, prop)| match prop {
+                Property::Scalar(_) | Property::Model(_) => Some(k.to_string()),
+                Property::Unmanaged(_) => None,
+            })
+            .collect();
 
         t::arrayx(t::string().enum_(cols))?
             .named(self.name())

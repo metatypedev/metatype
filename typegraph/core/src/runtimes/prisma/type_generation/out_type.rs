@@ -65,6 +65,7 @@ impl TypeGen for OutType {
                     builder.prop(key, prop.wrapper_type_id);
                 }
                 Property::Unmanaged(type_id) => {
+                    // just forward the original type
                     builder.prop(key, *type_id);
                 }
             }

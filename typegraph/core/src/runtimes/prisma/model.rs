@@ -280,17 +280,15 @@ pub enum ScalarType {
 }
 
 #[derive(Debug, Clone)]
-enum InjectionHandler {
+pub enum InjectionHandler {
     Typegate,
     Prisma,
 }
 
 #[derive(Debug, Clone)]
 pub struct Injection {
-    #[allow(dead_code)]
-    create: Option<InjectionHandler>,
-    #[allow(dead_code)]
-    update: Option<InjectionHandler>,
+    pub create: Option<InjectionHandler>,
+    pub update: Option<InjectionHandler>,
 }
 
 impl Injection {

@@ -1,12 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{
-    errors::Result,
-    runtimes::prisma::context::PrismaContext,
-    t::{self, ConcreteTypeBuilder, TypeBuilder},
-    types::{Type, TypeId},
-};
+use crate::errors::Result;
+use crate::runtimes::prisma::context::PrismaContext;
+use crate::runtimes::prisma::model::{Property, ScalarType};
+use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+use crate::types::TypeId;
 
 use super::TypeGen;
 
@@ -21,13 +20,21 @@ impl CountOutput {
 }
 
 impl TypeGen for CountOutput {
-    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
         let opt_int = t::optionalx(t::integer())?.build()?;
         builder.prop("_all", opt_int);
 
-        for (k, _) in self.model_id.as_struct()?.iter_props() {
-            builder.prop(k, opt_int);
+        let model = context.model(self.model_id)?;
+        let model = model.borrow();
+
+        for (k, prop) in model.iter_props() {
+            match prop {
+                Property::Scalar(_) | Property::Model(_) => {
+                    builder.prop(k, opt_int);
+                }
+                Property::Unmanaged(_) => continue,
+            }
         }
 
         // TODO union
@@ -52,7 +59,7 @@ impl NumberAggregateOutput {
 }
 
 impl TypeGen for NumberAggregateOutput {
-    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
 
         let opt_float = t::optionalx(t::float())?.build()?;
@@ -62,17 +69,22 @@ impl TypeGen for NumberAggregateOutput {
             t::optionalx(t::integer())?.build()?
         };
 
-        for (k, type_id) in self.model_id.as_struct()?.iter_props() {
-            let type_id = type_id.non_optional_concrete_type()?;
-            match type_id.as_type()? {
-                Type::Integer(_) => {
-                    builder.prop(k, for_int);
-                }
-                Type::Float(_) => {
-                    builder.prop(k, opt_float);
-                }
-                Type::Optional(_) => unreachable!(),
-                _ => {}
+        let model = context.model(self.model_id)?;
+        let model = model.borrow();
+
+        for (k, prop) in model.iter_props() {
+            match prop {
+                Property::Scalar(prop) => match prop.prop_type {
+                    ScalarType::Integer => {
+                        builder.prop(k, for_int);
+                    }
+                    ScalarType::Float => {
+                        builder.prop(k, opt_float);
+                    }
+                    _ => continue,
+                },
+                Property::Model(_) => continue,
+                Property::Unmanaged(_) => continue,
             }
         }
 

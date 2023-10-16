@@ -3,10 +3,10 @@
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
-use crate::runtimes::prisma::model::Property;
+use crate::runtimes::prisma::model::{Property, ScalarType};
 use crate::runtimes::prisma::type_generation::{where_::Where, with_filters::WithFilters};
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-use crate::types::{Type, TypeId};
+use crate::types::TypeId;
 
 use super::{aggregate::CountOutput, TypeGen};
 
@@ -142,7 +142,7 @@ impl SelectNumbers {
 }
 
 impl TypeGen for SelectNumbers {
-    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
         let opt_float = t::optional(t::float().build()?).build()?;
         let for_int = if self.promote_to_float {
@@ -150,16 +150,23 @@ impl TypeGen for SelectNumbers {
         } else {
             t::optional(t::integer().build()?).build()?
         };
-        for (k, type_id) in self.model_id.as_struct()?.iter_props() {
-            let type_id = type_id.non_optional_concrete_type()?;
-            match type_id.as_type()? {
-                Type::Integer(_) => {
-                    builder.prop(k, for_int);
-                }
-                Type::Float(_) => {
-                    builder.prop(k, opt_float);
-                }
-                _ => {}
+
+        let model = context.model(self.model_id)?;
+        let model = model.borrow();
+
+        for (k, prop) in model.iter_props() {
+            match prop {
+                Property::Scalar(prop) => match prop.prop_type {
+                    ScalarType::Integer => {
+                        builder.prop(k, for_int);
+                    }
+                    ScalarType::Float => {
+                        builder.prop(k, opt_float);
+                    }
+                    _ => {}
+                },
+                Property::Model(_) => {}
+                Property::Unmanaged(_) => {}
             }
         }
 

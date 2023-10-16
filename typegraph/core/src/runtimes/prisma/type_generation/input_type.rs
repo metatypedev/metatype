@@ -3,7 +3,7 @@
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
-use crate::runtimes::prisma::model::Property;
+use crate::runtimes::prisma::model::{InjectionHandler, Property};
 use crate::runtimes::prisma::{relationship::Cardinality, type_generation::where_::Where};
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeId;
@@ -93,6 +93,22 @@ impl TypeGen for InputType {
                 }
 
                 Property::Scalar(prop) => {
+                    if let Some(inj) = &prop.injection {
+                        match self.operation {
+                            Operation::Create => {
+                                if let Some(InjectionHandler::Prisma) = &inj.create {
+                                    // value inserted by the prisma engine
+                                    continue;
+                                }
+                            }
+                            Operation::Update => {
+                                if let Some(InjectionHandler::Prisma) = &inj.update {
+                                    // value inserted by the prisma engine
+                                    continue;
+                                }
+                            }
+                        }
+                    }
                     builder.prop(
                         k,
                         if self.operation.is_update() || prop.auto {
@@ -122,44 +138,5 @@ impl TypeGen for InputType {
             Operation::Update => "Update",
         };
         format!("_{model_name}_{op}Input{suffix}")
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::runtimes::prisma::context::PrismaContext;
-    use crate::test_utils::*;
-
-    #[test]
-    fn test_input_type() -> Result<()> {
-        setup(None)?;
-
-        let mut ctx = PrismaContext::default();
-        let (user, post) = models::simple_relationship()?;
-
-        ctx.manage(user)?;
-
-        insta::assert_snapshot!(
-            "user input type for create",
-            tree::print(ctx.generate(&InputType::for_create(user))?)
-        );
-
-        insta::assert_snapshot!(
-            "user input type for update",
-            tree::print(ctx.generate(&InputType::for_update(user))?)
-        );
-
-        insta::assert_snapshot!(
-            "post input type for create",
-            tree::print(ctx.generate(&InputType::for_create(post))?)
-        );
-
-        insta::assert_snapshot!(
-            "post input type for update",
-            tree::print(ctx.generate(&InputType::for_update(post))?)
-        );
-
-        Ok(())
     }
 }

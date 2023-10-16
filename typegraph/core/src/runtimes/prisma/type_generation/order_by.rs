@@ -4,10 +4,9 @@
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::errors;
-use crate::runtimes::prisma::model::Property;
+use crate::runtimes::prisma::model::{Property, ScalarType};
 use crate::runtimes::prisma::relationship::Cardinality;
 use crate::t::{ConcreteTypeBuilder, TypeBuilder};
-use crate::types::Type;
 use crate::{t, types::TypeId};
 
 use super::TypeGen;
@@ -199,50 +198,50 @@ impl AggregateSorting {
 
 impl TypeGen for AggregateSorting {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
-        use AggregateSortingProp as Prop;
+        let model = context.model(self.model_id)?;
+        let model = model.borrow();
 
-        let props = self
-            .model_id
-            .as_struct()?
-            .iter_props()
-            .map(|(k, type_id)| -> Result<_> {
-                let attrs = type_id.attrs()?;
-                let typ = attrs.concrete_type.as_type()?;
-                let (typ, is_optional) = match typ {
-                    Type::Optional(inner) => (
-                        TypeId(inner.data.of).attrs()?.concrete_type.as_type()?,
-                        true,
-                    ),
-                    _ => (typ, false),
-                };
-                match typ {
-                    Type::Integer(_) | Type::Float(_) => Ok(Prop {
-                        key: k.to_string(),
-                        number_type: true,
-                        optional: is_optional,
-                    }),
-                    _ => Ok(Prop {
-                        key: k.to_string(),
-                        number_type: false,
-                        optional: is_optional,
-                    }),
+        let mut agg_builder = t::struct_();
+        let mut count_builder = t::struct_();
+
+        for (k, prop) in model.iter_props() {
+            match prop {
+                Property::Scalar(prop) => {
+                    count_builder.prop(
+                        k,
+                        context.generate(&Sort {
+                            nullable: prop.quantifier == Cardinality::Optional,
+                        })?,
+                    );
+                    match prop.prop_type {
+                        ScalarType::Integer | ScalarType::Float => {
+                            agg_builder.prop(
+                                k,
+                                context.generate(&Sort {
+                                    nullable: prop.quantifier == Cardinality::Optional,
+                                })?,
+                            );
+                        }
+                        // skip
+                        _ => {}
+                    }
                 }
-            })
-            .collect::<Result<Vec<_>>>()?;
+                Property::Model(prop) => {
+                    count_builder.prop(
+                        k,
+                        context.generate(&Sort {
+                            nullable: prop.quantifier == Cardinality::Optional,
+                        })?,
+                    );
+                }
+
+                Property::Unmanaged(_) => {}
+            }
+        }
 
         let mut builder = t::struct_();
-        let count = t::optionalx(t::struct_from(props.iter().filter_map(|p| {
-            p.generate(context, true)
-                .unwrap()
-                .map(|ty| (p.key.clone(), ty))
-        })))?
-        .build()?;
-        let others = t::optionalx(t::struct_from(props.iter().filter_map(|p| {
-            p.generate(context, false)
-                .unwrap()
-                .map(|ty| (p.key.clone(), ty))
-        })))?
-        .build()?;
+        let count = t::optionalx(count_builder)?.build()?;
+        let others = t::optionalx(agg_builder)?.build()?;
         builder
             .prop("_count", count)
             .prop("_avg", others)
@@ -256,30 +255,5 @@ impl TypeGen for AggregateSorting {
     fn name(&self) -> String {
         let model_name = self.model_id.type_name().unwrap().unwrap();
         format!("_{model_name}_AggregateSorting")
-    }
-}
-
-struct AggregateSortingProp {
-    key: String,
-    number_type: bool,
-    optional: bool,
-}
-
-impl AggregateSortingProp {
-    fn generate(&self, context: &PrismaContext, count: bool) -> Result<Option<TypeId>> {
-        Ok(match count {
-            true => Some(context.generate(&Sort {
-                nullable: self.optional,
-            })?),
-            false => {
-                if self.number_type {
-                    Some(context.generate(&Sort {
-                        nullable: self.optional,
-                    })?)
-                } else {
-                    None
-                }
-            }
-        })
     }
 }

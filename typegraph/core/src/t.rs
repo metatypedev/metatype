@@ -360,16 +360,6 @@ pub fn struct_() -> StructBuilder {
     Default::default()
 }
 
-pub fn struct_from(props: impl Iterator<Item = (String, TypeId)>) -> StructBuilder {
-    StructBuilder {
-        data: TypeStruct {
-            props: props.map(|(k, ty)| (k, ty.into())).collect(),
-            ..Default::default()
-        },
-        ..Default::default()
-    }
-}
-
 pub fn struct_extends(ty: TypeId) -> Result<StructBuilder> {
     Ok(StructBuilder {
         data: TypeStruct {

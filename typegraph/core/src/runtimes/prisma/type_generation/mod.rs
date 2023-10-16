@@ -44,12 +44,6 @@ mod where_;
 mod with_filters;
 mod with_nested_count;
 
-// #[derive(Default, Debug)]
-// pub struct TypeGenContext {
-//     pub registry: RelationshipRegistry,
-//     cache: Weak<RefCell<HashMap<String, TypeId>>>,
-// }
-
 trait TypeGen {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId>;
     fn name(&self) -> String;
@@ -385,6 +379,8 @@ mod test {
     use crate::test_utils::*;
     use paste::paste;
 
+    /// generate a test for the operation:
+    /// snapshot for the input type and/or the output type as specified
     macro_rules! test_op {
         ( $op_name:ident, $test_inp:expr, $test_out:expr ) => {
             paste! {
@@ -478,8 +474,8 @@ mod test {
     test_op!(UpdateOne, input_only);
     test_op!(UpdateMany, input_only);
     // the following operations reuse already tests types, so no need to test them
-    // test_op!(count);
-    // test_op!(upsert_one);
-    // test_op!(delete_one);
-    // test_op!(delete_many);
+    // test_op!(Count);
+    // test_op!(UpsertOne);
+    // test_op!(DeleteOne);
+    // test_op!(DeleteMany);
 }
