@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import json
 from typing import List, Optional, TYPE_CHECKING
 from typegraph.gen.exports import utils
-from box import Box
 from typegraph.wit import store, wit_utils
 
 from typegraph.gen.types import Err
@@ -107,14 +106,89 @@ class Auth:
             ],
         )
 
+    def oauth2_digitalocean(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2_digitalocean(store, scopes)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return RawAuth(res.value)
+
+    def oauth2_discord(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2_discord(store, scopes)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return RawAuth(res.value)
+
+    def oauth2_dropbox(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2_dropbox(store, scopes)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return RawAuth(res.value)
+
+    def oauth2_facebook(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2_facebook(store, scopes)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return RawAuth(res.value)
+
     def oauth2_github(scopes: str) -> "utils.Auth":
         res = wit_utils.oauth2_github(store, scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)
 
+    def oauth2_gitlab(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2_gitlab(store, scopes)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return RawAuth(res.value)
 
-oauth2 = dict()
+    def oauth2_google(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2_google(store, scopes)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return RawAuth(res.value)
+
+    def oauth2_instagram(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2_instagram(store, scopes)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return RawAuth(res.value)
+
+    def oauth2_linkedin(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2_linkedin(store, scopes)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return RawAuth(res.value)
+
+    def oauth2_microsoft(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2_microsoft(store, scopes)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return RawAuth(res.value)
+
+    def oauth2_reddit(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2_reddit(store, scopes)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return RawAuth(res.value)
+
+    def oauth2_slack(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2_slack(store, scopes)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return RawAuth(res.value)
+
+    def oauth2_stackexchange(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2_stackexchange(store, scopes)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return RawAuth(res.value)
+
+    def oauth2_twitter(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2_twitter(store, scopes)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return RawAuth(res.value)
 
 
 @dataclass
@@ -128,129 +202,3 @@ class OAuth2Params:
     access_url: str
     profile_url: Optional[str]
     profiler: Optional[int]
-
-
-_oauth2_params = {
-    "digitalocean": OAuth2Params(
-        authorize_url="https://cloud.digitalocean.com/v1/oauth/authorize",
-        access_url="https://cloud.digitalocean.com/v1/oauth/token",
-        # https://docs.digitalocean.com/reference/api/api-reference/#operation/account_get
-        profile_url="https://api.digitalocean.com/v2/account",
-        profiler="(p) => ({id: p.account.uuid})",
-    ),
-    "discord": OAuth2Params(
-        authorize_url="https://discord.com/api/oauth2/authorize",
-        access_url="https://discord.com/api/oauth2/token",
-        # https://discord.com/developers/docs/resources/user
-        profile_url="https://discord.com/api/users/@me",
-        profiler="(p) => ({id: p.id})",
-    ),
-    "dropbox": OAuth2Params(
-        authorize_url="https://www.dropbox.com/oauth2/authorize",
-        access_url="https://api.dropboxapi.com/oauth2/token",
-        # https://www.dropbox.com/developers/documentation/http/documentation#users-get_current_account
-        profile_url="https://api.dropboxapi.com/2/users/get_current_account",
-        profiler="(p) => ({id: p.account_id})",
-    ),
-    "facebook": OAuth2Params(
-        authorize_url="https://www.facebook.com/v16.0/dialog/oauth",
-        access_url="https://graph.facebook.com/v16.0/oauth/access_token",
-        # https://developers.facebook.com/docs/graph-api/overview#me
-        # https://developers.facebook.com/docs/graph-api/reference/user/
-        profile_url="https://graph.facebook.com/me",
-        profiler="(p) => ({id: p.id})",
-    ),
-    "github": OAuth2Params(
-        authorize_url="https://github.com/login/oauth/authorize",
-        access_url="https://github.com/login/oauth/access_token",
-        # https://docs.github.com/en/rest/reference/users?apiVersion=2022-11-28#get-the-authenticated-user
-        profile_url="https://api.github.com/user",
-        profiler="(p) => ({id: p.id})",
-    ),
-    "gitlab": OAuth2Params(
-        authorize_url="https://gitlab.com/oauth/authorize",
-        access_url="https://gitlab.com/oauth/token",
-        # https://docs.gitlab.com/ee/api/users.html#list-current-user
-        profile_url="https://gitlab.com/api/v3/user",
-        profiler="(p) => ({id: p.id})",
-    ),
-    "google": OAuth2Params(
-        authorize_url="https://accounts.google.com/o/oauth2/v2/auth",
-        access_url="https://oauth2.googleapis.com/token",
-        # https://cloud.google.com/identity-platform/docs/reference/rest/v1/UserInfo
-        profile_url="https://openidconnect.googleapis.com/v1/userinfo",
-        profiler="(p) => ({id: p.localId})",
-    ),
-    "instagram": OAuth2Params(
-        authorize_url="https://api.instagram.com/oauth/authorize",
-        access_url="https://api.instagram.com/oauth/access_token",
-        # https://developers.facebook.com/docs/instagram-basic-display-api/reference/me
-        # https://developers.facebook.com/docs/instagram-basic-display-api/reference/user#reading
-        profile_url="https://graph.instagram.com/me",
-        profiler="(p) => ({id: p.id})",
-    ),
-    "linkedin": OAuth2Params(
-        authorize_url="https://www.linkedin.com/oauth/v2/authorization",
-        access_url="https://www.linkedin.com/oauth/v2/accessToken",
-        # https://learn.microsoft.com/en-us/linkedin/shared/integrations/people/profile-api#retrieve-current-members-profile
-        profile_url="https://api.linkedin.com/v2/me",
-        profiler="(p) => ({id: p.id})",
-    ),
-    "microsoft": OAuth2Params(
-        authorize_url="https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-        access_url="https://login.microsoftonline.com/common/oauth2/v2.0/token",
-        # https://learn.microsoft.com/en-us//javascript/api/@microsoft/teams-js/app.userinfo?view=msteams-client-js-latest
-        profile_url="https://graph.microsoft.com/oidc/userinfo",
-        profiler="(p) => ({id: p.id})",
-    ),
-    "reddit": OAuth2Params(
-        authorize_url="https://www.reddit.com/api/v1/authorize",
-        access_url="https://www.reddit.com/api/v1/access_token",
-        # https://www.reddit.com/dev/api/#GET_api_v1_me
-        profile_url="https://oauth.reddit.com/api/v1/me",
-        profiler="(p) => ({id: p.id})",
-    ),
-    "slack": OAuth2Params(
-        authorize_url="https://slack.com/oauth/v2/authorize",
-        access_url="https://slack.com/api/oauth.v2.access",
-        # https://api.slack.com/methods/auth.test
-        profile_url="https://slack.com/api/auth.test",
-        profiler="(p) => ({id: p.user_id})",
-    ),
-    "stackexchange": OAuth2Params(
-        authorize_url="https://stackoverflow.com/oauth",
-        access_url="https://stackoverflow.com/oauth/access_token/json",
-        # https://api.stackexchange.com/docs/me
-        profile_url="https://api.stackexchange.com/2.3/me",
-        profiler="(p) => ({id: `${p.account_id}`})",
-    ),
-    "twitter": OAuth2Params(
-        authorize_url="https://twitter.com/i/oauth2/authorize",
-        access_url="https://api.twitter.com/2/oauth2/token",
-        # https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-me
-        profile_url="https://api.twitter.com/2/users/me",
-        profiler="(p) => ({id: p.data.id})",
-    ),
-}
-
-
-def __gen(auth_name: str, details: OAuth2Params):
-    def auth(scopes: str, name=None):
-        return Auth.oauth2(
-            name if name is not None else auth_name,
-            details.authorize_url,
-            details.access_url,
-            scopes,
-            details.profile_url,
-            details.profiler,
-        )
-
-    return auth
-
-
-oauth2 = Box(
-    {
-        auth_name: __gen(auth_name, params)
-        for auth_name, params in _oauth2_params.items()
-    }
-)

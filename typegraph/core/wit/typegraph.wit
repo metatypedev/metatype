@@ -496,8 +496,6 @@ interface utils {
 
     add-auth: func(data: auth) -> result<u32, error>
     add-raw-auth: func(data: string) -> result<u32, error>
-    oauth2-github: func(scopes: string) -> result<string, error>
-    /* TODO
     oauth2-digitalocean: func(scopes: string) -> result<string, error>
     oauth2-discord: func(scopes: string) -> result<string, error>
     oauth2-dropbox: func(scopes: string) -> result<string, error>
@@ -508,8 +506,10 @@ interface utils {
     oauth2-instagram: func(scopes: string) -> result<string, error>
     oauth2-linkedin: func(scopes: string) -> result<string, error>
     oauth2-microsoft: func(scopes: string) -> result<string, error>
+    oauth2-reddit: func(scopes: string) -> result<string, error>
+    oauth2-slack: func(scopes: string) -> result<string, error>
     oauth2-stackexchange: func(scopes: string) -> result<string, error>
-    oauth2-twitter: func(scopes: string) -> result<string, error>*/
+    oauth2-twitter: func(scopes: string) -> result<string, error>
 }
 
 world typegraph {
