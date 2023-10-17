@@ -195,7 +195,7 @@ impl crate::wit::utils::Guest for crate::Lib {
         let func_idx = t::func(inp, out, Store::register_materializer(mat))?;
 
         let oauth = gen_oauth2(Oauth2Params {
-            name: "github".to_string(),
+            name: "digitalocean".to_string(),
             authorize_url: "https://cloud.digitalocean.com/v1/oauth/authorize".to_string(),
             access_url: "https://cloud.digitalocean.com/v1/oauth/token".to_string(),
             // https://docs.digitalocean.com/reference/api/api-reference/#operation/account_get
@@ -217,7 +217,7 @@ impl crate::wit::utils::Guest for crate::Lib {
         let func_idx = t::func(inp, out, Store::register_materializer(mat))?;
 
         let oauth = gen_oauth2(Oauth2Params {
-            name: "github".to_string(),
+            name: "discord".to_string(),
             authorize_url: "https://discord.com/api/oauth2/authorize".to_string(),
             access_url: "https://discord.com/api/oauth2/token".to_string(),
             // https://discord.com/developers/docs/resources/user
@@ -239,7 +239,7 @@ impl crate::wit::utils::Guest for crate::Lib {
         let func_idx = t::func(inp, out, Store::register_materializer(mat))?;
 
         let oauth = gen_oauth2(Oauth2Params {
-            name: "github".to_string(),
+            name: "dropbox".to_string(),
             authorize_url: "https://www.dropbox.com/oauth2/authorize".to_string(),
             access_url: "https://api.dropboxapi.com/oauth2/token".to_string(),
             // https://www.dropbox.com/developers/documentation/http/documentation#users-get_current_account
@@ -261,7 +261,7 @@ impl crate::wit::utils::Guest for crate::Lib {
         let func_idx = t::func(inp, out, Store::register_materializer(mat))?;
 
         let oauth = gen_oauth2(Oauth2Params {
-            name: "github".to_string(),
+            name: "facebook".to_string(),
             authorize_url: "https://www.facebook.com/v16.0/dialog/oauth".to_string(),
             access_url: "https://graph.facebook.com/v16.0/oauth/access_token".to_string(),
             // https://developers.facebook.com/docs/graph-api/overview#me
@@ -306,7 +306,7 @@ impl crate::wit::utils::Guest for crate::Lib {
         let func_idx = t::func(inp, out, Store::register_materializer(mat))?;
 
         let oauth = gen_oauth2(Oauth2Params {
-            name: "github".to_string(),
+            name: "gitlab".to_string(),
             authorize_url: "https://gitlab.com/oauth/authorize".to_string(),
             access_url: "https://gitlab.com/oauth/token".to_string(),
             // https://docs.gitlab.com/ee/api/users.html#list-current-user
@@ -328,7 +328,7 @@ impl crate::wit::utils::Guest for crate::Lib {
         let func_idx = t::func(inp, out, Store::register_materializer(mat))?;
 
         let oauth = gen_oauth2(Oauth2Params {
-            name: "github".to_string(),
+            name: "google".to_string(),
             authorize_url: "https://accounts.google.com/o/oauth2/v2/auth".to_string(),
             access_url: "https://oauth2.googleapis.com/token".to_string(),
             // https://cloud.google.com/identity-platform/docs/reference/rest/v1/UserInfo
@@ -350,7 +350,7 @@ impl crate::wit::utils::Guest for crate::Lib {
         let func_idx = t::func(inp, out, Store::register_materializer(mat))?;
 
         let oauth = gen_oauth2(Oauth2Params {
-            name: "github".to_string(),
+            name: "instagram".to_string(),
             authorize_url: "https://api.instagram.com/oauth/authorize".to_string(),
             access_url: "https://api.instagram.com/oauth/access_token".to_string(),
             // https://developers.facebook.com/docs/instagram-basic-display-api/reference/me
@@ -373,7 +373,7 @@ impl crate::wit::utils::Guest for crate::Lib {
         let func_idx = t::func(inp, out, Store::register_materializer(mat))?;
 
         let oauth = gen_oauth2(Oauth2Params {
-            name: "github".to_string(),
+            name: "linkedin".to_string(),
             authorize_url: "https://www.linkedin.com/oauth/v2/authorization".to_string(),
             access_url: "https://www.linkedin.com/oauth/v2/accessToken".to_string(),
             // https://learn.microsoft.com/en-us/linkedin/shared/integrations/people/profile-api#retrieve-current-members-profile
@@ -395,7 +395,7 @@ impl crate::wit::utils::Guest for crate::Lib {
         let func_idx = t::func(inp, out, Store::register_materializer(mat))?;
 
         let oauth = gen_oauth2(Oauth2Params {
-            name: "github".to_string(),
+            name: "microsoft".to_string(),
             authorize_url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
                 .to_string(),
             access_url: "https://login.microsoftonline.com/common/oauth2/v2.0/token".to_string(),
@@ -422,7 +422,7 @@ impl crate::wit::utils::Guest for crate::Lib {
         let func_idx = t::func(inp, out, Store::register_materializer(mat))?;
 
         let oauth = gen_oauth2(Oauth2Params {
-            name: "github".to_string(),
+            name: "reddit".to_string(),
             authorize_url: "https://www.reddit.com/api/v1/authorize".to_string(),
             access_url: "https://www.reddit.com/api/v1/access_token".to_string(),
             // https://www.reddit.com/dev/api/#GET_api_v1_me
@@ -444,7 +444,7 @@ impl crate::wit::utils::Guest for crate::Lib {
         let func_idx = t::func(inp, out, Store::register_materializer(mat))?;
 
         let oauth = gen_oauth2(Oauth2Params {
-            name: "github".to_string(),
+            name: "slack".to_string(),
             authorize_url: "https://slack.com/oauth/v2/authorize".to_string(),
             access_url: "https://slack.com/api/oauth.v2.access".to_string(),
             // https://api.slack.com/methods/auth.test
@@ -466,7 +466,7 @@ impl crate::wit::utils::Guest for crate::Lib {
         let func_idx = t::func(inp, out, Store::register_materializer(mat))?;
 
         let oauth = gen_oauth2(Oauth2Params {
-            name: "github".to_string(),
+            name: "stackexchange".to_string(),
             authorize_url: "https://stackoverflow.com/oauth".to_string(),
             access_url: "https://stackoverflow.com/oauth/access_token/json".to_string(),
             // https://api.stackexchange.com/docs/me
@@ -491,7 +491,7 @@ impl crate::wit::utils::Guest for crate::Lib {
         let func_idx = t::func(inp, out, Store::register_materializer(mat))?;
 
         let oauth = gen_oauth2(Oauth2Params {
-            name: "github".to_string(),
+            name: "twitter".to_string(),
             authorize_url: "https://twitter.com/i/oauth2/authorize".to_string(),
             access_url: "https://api.twitter.com/2/oauth2/token".to_string(),
             // https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-me
