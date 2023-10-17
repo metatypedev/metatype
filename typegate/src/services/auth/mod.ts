@@ -5,7 +5,7 @@ import { JWTAuth } from "./protocols/jwt.ts";
 import { BasicAuth } from "./protocols/basic.ts";
 import { OAuth2Auth } from "./protocols/oauth2.ts";
 
-import type { Auth, Materializer, TypeNode } from "../../typegraph/types.ts";
+import type { Auth } from "../../typegraph/types.ts";
 import { SecretManager, TypeGraph } from "../../typegraph/mod.ts";
 
 import { Protocol } from "./protocols/protocol.ts";
@@ -23,8 +23,6 @@ export const nextAuthorizationHeader = "next-authorization";
 export const internalAuthName = "internal";
 export type AdditionalAuthParams = {
   tg: TypeGraph;
-  types: TypeNode[];
-  materializers: Materializer[];
   runtimeReferences: Runtime[];
 };
 

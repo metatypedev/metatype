@@ -178,7 +178,7 @@ export class TypeGraph {
     introspection: TypeGraph | null,
   ): Promise<TypeGraph> {
     const typegraphName = TypeGraph.formatName(typegraph);
-    const { meta, runtimes, types, materializers } = typegraph;
+    const { meta, runtimes } = typegraph;
 
     // check mandatory secrets for injection
     meta.secrets.forEach((s) => secretManager.secretOrFail(s));
@@ -267,8 +267,6 @@ export class TypeGraph {
           denoRuntime as DenoRuntime,
           {
             tg: tg, // required for validation
-            types,
-            materializers,
             runtimeReferences,
           },
         ),

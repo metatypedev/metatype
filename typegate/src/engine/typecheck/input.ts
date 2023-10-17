@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { TypeGraph } from "../../typegraph/mod.ts";
+import { TypeNode } from "../../typegraph/types.ts";
 import { CodeGenerator } from "./code_generator.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import {
@@ -24,6 +25,81 @@ export function generateValidator(tg: TypeGraph, typeIdx: number): Validator {
       throw new Error(`Validation errors:\n${messages}`);
     }
   };
+}
+
+/**
+ * Validate against fields/subfields that only appears on the refered type (if object)
+ *
+ * # Example:
+ *
+ * ## Typegraph
+ * ```
+ * A = t.struct({
+ *  a: t.either([t.string(), t.integer()]),
+ *  b: t.struct({ c: t.string(), d: t.integer().optional() }))
+ *      .optional()
+ * })
+ * ```
+ * ## Validation
+ * ```
+ * const validatorWeak = generateWeakValidator(tg, idxA);
+ * validatorWeak({ a: 1, b: { c: "hello" } }); // ok
+ * validatorWeak({ a: "one", b: { c: "hello", whatever: "world" } }); // ok
+ * validatorWeak({ a: false, b: { c: "hello" } }); // fail
+ * validatorWeak({ a: 1, whatever: 1234 }); // ok
+ * validatorWeak({ whatever: 1234 }); // fail
+ * ```
+ */
+export function generateWeakValidator(
+  tg: TypeGraph,
+  typeIdx: number,
+): Validator {
+  const validator = generateValidator(tg, typeIdx);
+  const node = tg.type(typeIdx);
+  switch (node.type) {
+    case "object":
+      return (obj: unknown) => {
+        const filtered = filterDeclaredFields(tg, obj, node, {});
+        validator(filtered);
+      };
+    case "optional":
+      return generateWeakValidator(tg, node.item);
+    default: {
+      return validator;
+    }
+  }
+}
+
+function filterDeclaredFields(
+  tg: TypeGraph,
+  value: any,
+  node: TypeNode,
+  result: Record<string, unknown>,
+): unknown {
+  switch (node.type) {
+    case "object": {
+      const explicitlyDeclared = Object.entries(node.properties);
+      for (const [field, idx] of explicitlyDeclared) {
+        const nextNode = tg.type(idx);
+        result[field] = filterDeclaredFields(
+          tg,
+          value[field],
+          nextNode,
+          {},
+        );
+      }
+      return result;
+    }
+    case "optional":
+      return filterDeclaredFields(
+        tg,
+        value,
+        tg.type(node.item),
+        {},
+      );
+    default:
+      return value;
+  }
 }
 
 function functionName(typeIdx: number) {
