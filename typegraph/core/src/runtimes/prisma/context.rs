@@ -11,9 +11,12 @@ use crate::{typegraph::TypegraphContext, wit::runtimes as wit};
 use common::typegraph::runtimes::prisma as cm;
 use indexmap::{map::Entry, IndexMap, IndexSet};
 
-use super::relationship::{
-    discovery::{Candidate, CandidatePair},
-    RelationshipModel,
+use super::{
+    model::{InjectionHandler, Property},
+    relationship::{
+        discovery::{Candidate, CandidatePair},
+        RelationshipModel,
+    },
 };
 use crate::errors::Result;
 use crate::types::TypeId;
@@ -193,10 +196,81 @@ impl PrismaContext {
             connection_string_secret: data.connection_string_secret.clone(),
             models: self
                 .models
-                .keys()
-                .cloned()
-                .map(|id| -> Result<_> { Ok(ctx.register_type(id, Some(runtime_idx))?.into()) })
+                .iter()
+                .map(|(type_id, model)| -> Result<_> {
+                    let model = model.borrow();
+
+                    Ok(cm::Model {
+                        type_idx: ctx.register_type(*type_id, Some(runtime_idx))?.into(),
+                        type_name: model.type_name.clone(),
+                        props: model
+                            .props
+                            .iter()
+                            .map(|(key, prop): (&String, &Property)| -> Result<_> {
+                                Ok(match prop {
+                                    Property::Scalar(prop) => {
+                                        Some(cm::Property::Scalar(cm::ScalarProperty {
+                                            key: key.clone(),
+                                            cardinality: prop.quantifier.into(),
+                                            type_idx: ctx
+                                                .register_type(
+                                                    prop.wrapper_type_id,
+                                                    Some(runtime_idx),
+                                                )?
+                                                .into(),
+                                            injection: prop.injection.as_ref().map(|inj| {
+                                                cm::ManagedInjection {
+                                                    create: inj.create.as_ref().and_then(
+                                                        |handler| match handler {
+                                                            InjectionHandler::Typegate => None,
+                                                            InjectionHandler::PrismaDateNow => {
+                                                                Some(cm::Injection::DateNow)
+                                                            }
+                                                        },
+                                                    ),
+                                                    update: inj.update.as_ref().and_then(
+                                                        |handler| match handler {
+                                                            InjectionHandler::Typegate => None,
+                                                            InjectionHandler::PrismaDateNow => {
+                                                                Some(cm::Injection::DateNow)
+                                                            }
+                                                        },
+                                                    ),
+                                                }
+                                            }),
+                                            unique: prop.unique,
+                                            auto: prop.auto,
+                                        }))
+                                    }
+                                    Property::Model(prop) => {
+                                        let model = self.model(*type_id)?;
+                                        let model = model.borrow();
+                                        let rel_name = model.relationships.get(key).unwrap();
+                                        Some(cm::Property::Relationship(cm::RelationshipProperty {
+                                            key: key.clone(),
+                                            cardinality: prop.quantifier.into(),
+                                            type_idx: ctx
+                                                .register_type(
+                                                    prop.wrapper_type_id,
+                                                    Some(runtime_idx),
+                                                )?
+                                                .into(),
+                                            unique: prop.unique,
+                                            relationship_name: rel_name.clone(),
+                                        }))
+                                    }
+                                    Property::Unmanaged(_) => {
+                                        // skip
+                                        None
+                                    }
+                                })
+                            })
+                            .filter_map(|r| r.transpose())
+                            .collect::<Result<Vec<_>>>()?,
+                    })
+                })
                 .collect::<Result<Vec<_>>>()?,
+
             relationships: {
                 self.relationships
                     .iter()

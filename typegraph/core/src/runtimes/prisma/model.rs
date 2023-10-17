@@ -282,7 +282,7 @@ pub enum ScalarType {
 #[derive(Debug, Clone)]
 pub enum InjectionHandler {
     Typegate,
-    Prisma,
+    PrismaDateNow,
 }
 
 #[derive(Debug, Clone)]
@@ -326,12 +326,14 @@ impl Injection {
                 } else {
                     // TODO check function name -> Prisma vs Typegate
                     Some(Self {
-                        create: map
-                            .get(&EffectType::Create)
-                            .map(|_| InjectionHandler::Prisma),
-                        update: map
-                            .get(&EffectType::Update)
-                            .map(|_| InjectionHandler::Prisma),
+                        create: map.get(&EffectType::Create).and_then(|i| match i.as_str() {
+                            "now" => Some(InjectionHandler::PrismaDateNow),
+                            _ => None,
+                        }),
+                        update: map.get(&EffectType::Update).and_then(|i| match i.as_str() {
+                            "now" => Some(InjectionHandler::PrismaDateNow),
+                            _ => None,
+                        }),
                     })
                 }
             }

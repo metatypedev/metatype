@@ -31,9 +31,11 @@ impl TypeGen for UpdateInput {
             match prop {
                 Property::Scalar(prop) => {
                     if let Some(inj) = &prop.injection {
-                        if let Some(InjectionHandler::Prisma) = &inj.update {
-                            // value set by prisma
-                            continue;
+                        if let Some(inj) = &inj.update {
+                            if !matches!(inj, InjectionHandler::Typegate) {
+                                // value set by prisma
+                                continue;
+                            }
                         }
                     }
                     let mutation_type = if prop.quantifier == Cardinality::Many {

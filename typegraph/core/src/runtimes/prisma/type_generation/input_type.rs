@@ -96,15 +96,19 @@ impl TypeGen for InputType {
                     if let Some(inj) = &prop.injection {
                         match self.operation {
                             Operation::Create => {
-                                if let Some(InjectionHandler::Prisma) = &inj.create {
-                                    // value inserted by the prisma engine
-                                    continue;
+                                if let Some(inj) = &inj.create {
+                                    if !matches!(inj, &InjectionHandler::Typegate) {
+                                        // value inserted by the prisma engine
+                                        continue;
+                                    }
                                 }
                             }
                             Operation::Update => {
-                                if let Some(InjectionHandler::Prisma) = &inj.update {
-                                    // value inserted by the prisma engine
-                                    continue;
+                                if let Some(inj) = &inj.update {
+                                    if !matches!(inj, &InjectionHandler::Typegate) {
+                                        // value inserted by the prisma engine
+                                        continue;
+                                    }
                                 }
                             }
                         }
