@@ -58,8 +58,8 @@ export function generateWeakValidator(
   const node = tg.type(typeIdx);
   switch (node.type) {
     case "object":
-      return (obj: unknown) => {
-        const filtered = filterDeclaredFields(tg, obj, node, {});
+      return (value: unknown) => {
+        const filtered = filterDeclaredFields(tg, value, node, {});
         validator(filtered);
       };
     case "optional":

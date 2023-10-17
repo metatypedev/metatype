@@ -119,18 +119,8 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     Ok(())
 }
 
-pub fn finalize() -> Result<String> {
-    #[cfg(test)]
-    eprintln!("Finalizing typegraph...");
-
-    let mut ctx = TG.with(|tg| {
-        tg.borrow_mut()
-            .take()
-            .ok_or_else(errors::expected_typegraph_context)
-    })?;
-
-    // TODO: move to finalize_auth and keep ctx non mut in the current scope
-    let auths = Store::get_auths()
+pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegraph::Auth>> {
+    Store::get_auths()
         .iter()
         .map(|auth| match auth.protocol {
             common::typegraph::AuthProtocol::OAuth2 => {
@@ -163,7 +153,20 @@ pub fn finalize() -> Result<String> {
             }
             _ => Ok(auth.to_owned()),
         })
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<Result<Vec<_>>>()
+}
+
+pub fn finalize() -> Result<String> {
+    #[cfg(test)]
+    eprintln!("Finalizing typegraph...");
+
+    let mut ctx = TG.with(|tg| {
+        tg.borrow_mut()
+            .take()
+            .ok_or_else(errors::expected_typegraph_context)
+    })?;
+
+    let auths = finalize_auths(&mut ctx)?;
 
     let tg = Typegraph {
         id: format!("https://metatype.dev/specs/{TYPEGRAPH_VERSION}.json"),
