@@ -1,5 +1,7 @@
 from typegraph import typegraph, t, Graph
-from typegraph.providers.prisma import PrismaRuntime
+from typegraph.providers import PrismaRuntime
+from typegraph.runtimes import DenoRuntime
+from typegraph.effects import CREATE, UPDATE
 
 
 @typegraph()
@@ -415,4 +417,30 @@ def multiple_self_relationships(g: Graph):
 
     g.expose(
         createPerson=db.create(person),
+    )
+
+
+@typegraph()
+def injection(g: Graph):
+    db = PrismaRuntime("test", "POSTGRES")
+    deno = DenoRuntime()
+
+    user = t.struct(
+        {
+            "id": t.uuid(as_id=True, config=["auto"]),
+            "email": t.email(config=["unique"]),
+            "date_of_birth": t.date().optional().rename("DOB"),
+            "age": deno.func(
+                t.struct({"dob": t.date().optional().from_parent("DOB")}),
+                t.integer(min=0),
+                code="() => 0",
+            ),
+            "createAt": t.datetime().inject({CREATE: "now"}),
+            "updatedAt": t.datetime().inject({UPDATE: "now"}),
+        },
+        name="User",
+    )
+
+    g.expose(
+        createUser=db.create(user),
     )

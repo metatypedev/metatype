@@ -470,4 +470,22 @@ Meta.test("schema generation", async (t) => {
       );
     },
   );
+
+  await t.should(
+    "typegraph with injections and nested function",
+    async () => {
+      await assertGeneratedSchema(
+        "injection",
+        outdent`
+          model User {
+              id String @db.Uuid @default(uuid()) @id
+              email String @db.Text @unique
+              date_of_birth DateTime?
+              createAt DateTime @default(now())
+              updatedAt DateTime @updatedAt
+          }
+        `,
+      );
+    },
+  );
 });

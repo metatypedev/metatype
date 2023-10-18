@@ -83,7 +83,9 @@ class FieldBuilder {
         let typeName: string = prop.propType.type;
         let tags: string[] = [];
         if (prop.propType.type === "String") {
-          const typeNode = this.typegraph.types[prop.typeIdx];
+          const [typeIdx, _] = this.#unwrapQuantifier(prop.typeIdx);
+          const typeNode = this.typegraph.types[typeIdx];
+
           if (typeNode.type !== Type.STRING) {
             throw new Error("expected string type");
           }
@@ -238,12 +240,14 @@ class FieldBuilder {
     const src = this.source;
     switch (this.provider) {
       case "postgresql":
+      // deno-lint-ignore no-fallthrough
       case "mysql":
         switch (typeNode.format) {
           case "uuid":
             tags.push(`@${src}.Uuid`);
             return ["String", [`@${src}.Uuid`]];
 
+          case "date":
           case "date-time": {
             const injection = typeNode.injection;
             const tags = [];
@@ -285,6 +289,18 @@ class FieldBuilder {
 
       default:
         throw new Error(`unsupported provider: ${this.provider}`);
+    }
+  }
+
+  #unwrapQuantifier(typeIdx: number): [number, QuantifierSuffix] {
+    const typeNode = this.typegraph.types[typeIdx];
+    switch (typeNode.type) {
+      case Type.OPTIONAL:
+        return [typeNode.item, "?"];
+      case Type.ARRAY:
+        return [typeNode.items, "[]"];
+      default:
+        return [typeIdx, ""];
     }
   }
 }
