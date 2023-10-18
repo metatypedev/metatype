@@ -1,6 +1,6 @@
 [package]
 name = "rust"
-version = "0.2.3-0+dev"
+version = "0.2.3"
 edition = "2021"
 
 [lib]
