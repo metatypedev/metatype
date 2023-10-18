@@ -2,6 +2,6 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(out)"
 ---
-root: struct #62
-└─ [count]: integer #61
+root: struct #90
+└─ [count]: integer #89
 

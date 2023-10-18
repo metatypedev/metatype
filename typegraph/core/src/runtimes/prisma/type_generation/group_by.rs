@@ -4,7 +4,7 @@
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::model::{Property, ScalarType};
-use crate::runtimes::prisma::type_generation::{where_::Where, with_filters::WithFilters};
+use crate::runtimes::prisma::type_generation::where_::Where;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeId;
 
@@ -57,15 +57,13 @@ impl Having {
 impl TypeGen for Having {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         // TODO relations??
-        let where_type = context.generate(&Where::new(self.model_id))?;
-        let extended_type = context
-            .generate(&WithFilters::new(where_type, self.model_id, true).with_aggregates())?;
+        let where_type = context.generate(&Where::new(self.model_id).with_aggregates())?;
 
         let name = self.name();
         let self_ref = t::proxy(&name).build()?;
 
         t::unionx![
-            extended_type,
+            where_type,
             t::struct_().propx("AND", t::array(self_ref))?,
             t::struct_().propx("OR", t::array(self_ref))?,
             t::struct_().prop("NOT", self_ref)

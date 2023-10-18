@@ -32,6 +32,7 @@ use crate::types::{TypeFun, TypeId};
 mod additional_filters;
 mod aggregate;
 mod count;
+mod filters;
 pub mod group_by;
 mod input_type;
 mod order_by;
@@ -41,7 +42,6 @@ mod query_unique_where_expr;
 mod query_where_expr;
 mod update_input;
 mod where_;
-mod with_filters;
 mod with_nested_count;
 
 trait TypeGen {

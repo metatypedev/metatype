@@ -1,19 +1,25 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use common::typegraph::runtimes::prisma::ScalarType;
 use indexmap::IndexMap;
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::model::Property;
+use crate::runtimes::prisma::relationship::Cardinality;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeId;
 
+use super::filters::{
+    BooleanFilter, CompleteFilter, NumberFilter, NumberType, ScalarListFilter, StringFilter,
+};
 use super::TypeGen;
 
 pub struct Where {
     model_id: TypeId,
     skip_models: IndexMap<TypeId, String>,
+    aggregates: bool,
 }
 
 impl Where {
@@ -21,6 +27,7 @@ impl Where {
         Self {
             model_id,
             skip_models: Default::default(),
+            aggregates: false,
         }
     }
 
@@ -30,6 +37,14 @@ impl Where {
         Self {
             model_id,
             skip_models,
+            aggregates: self.aggregates,
+        }
+    }
+
+    pub fn with_aggregates(self) -> Self {
+        Self {
+            aggregates: true,
+            ..self
         }
     }
 }
@@ -55,8 +70,26 @@ impl TypeGen for Where {
                     }
                 },
                 Property::Scalar(prop) => {
+                    let generated = if let Cardinality::Many = prop.quantifier {
+                        context.generate(&CompleteFilter(ScalarListFilter(prop.type_id)))?
+                    } else {
+                        match prop.prop_type {
+                            ScalarType::Boolean => {
+                                context.generate(&CompleteFilter(BooleanFilter))?
+                            }
+                            ScalarType::Integer => context.generate(&CompleteFilter(
+                                NumberFilter::new(NumberType::Integer, false), // TODO with aggregates??
+                            ))?,
+                            ScalarType::Float => context.generate(&CompleteFilter(
+                                NumberFilter::new(NumberType::Float, false), // TODO with aggregates??
+                            ))?,
+                            ScalarType::String { .. } => {
+                                context.generate(&CompleteFilter(StringFilter))?
+                            }
+                        }
+                    };
                     // TODO cardinality?? - many?
-                    builder.propx(key, t::optional(prop.type_id))?;
+                    builder.propx(key, t::optional(generated))?;
                 }
                 Property::Unmanaged(_) => continue,
             }
@@ -67,7 +100,14 @@ impl TypeGen for Where {
 
     fn name(&self) -> String {
         let model_name = self.model_id.type_name().unwrap().unwrap();
-        let suffix = if !self.skip_models.is_empty() {
+
+        let suffix1 = if self.aggregates {
+            "__agg".to_string()
+        } else {
+            "".to_string()
+        };
+
+        let suffix2 = if !self.skip_models.is_empty() {
             format!(
                 "__skip_{}",
                 self.skip_models
@@ -79,7 +119,7 @@ impl TypeGen for Where {
         } else {
             "".to_string()
         };
-        format!("{model_name}Where{suffix}")
+        format!("{model_name}Where{suffix1}{suffix2}")
     }
 }
 

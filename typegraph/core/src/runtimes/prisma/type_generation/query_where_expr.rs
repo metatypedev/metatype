@@ -5,7 +5,7 @@ use crate::runtimes::prisma::context::PrismaContext;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::{errors::Result, types::TypeId};
 
-use super::{where_::Where, with_filters::WithFilters, TypeGen};
+use super::{where_::Where, TypeGen};
 
 pub struct QueryWhereExpr {
     model_id: TypeId,
@@ -20,10 +20,8 @@ impl QueryWhereExpr {
 impl TypeGen for QueryWhereExpr {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let where_type = context.generate(&Where::new(self.model_id))?;
-        let extended_type =
-            context.generate(&WithFilters::new(where_type, self.model_id, false))?;
 
-        let props = extended_type.as_struct().unwrap().data.props.to_vec();
+        let props = where_type.as_struct().unwrap().data.props.to_vec();
 
         let name = self.name();
         let self_ref = t::proxy(&name).build()?;

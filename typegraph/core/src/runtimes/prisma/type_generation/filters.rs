@@ -3,114 +3,12 @@
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
-use crate::runtimes::prisma::model::Property;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-use crate::types::{Type, TypeFun, TypeId};
+use crate::types::{Type, TypeId};
 
 use super::TypeGen;
 
-pub struct WithFilters {
-    type_id: TypeId,
-    model_id: TypeId,
-    skip_rel: bool, // TODO list??
-    with_aggregates: bool,
-}
-
-impl WithFilters {
-    pub fn new(type_id: TypeId, model_id: TypeId, skip_rel: bool) -> Self {
-        Self {
-            type_id,
-            model_id,
-            skip_rel,
-            with_aggregates: false,
-        }
-    }
-
-    pub fn with_aggregates(mut self) -> Self {
-        self.with_aggregates = true;
-        self
-    }
-}
-
-impl TypeGen for WithFilters {
-    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
-        let mut builder = t::struct_();
-        let model = context.model(self.model_id)?;
-        let model = model.borrow();
-
-        let as_model_prop = |key| {
-            if let Some(prop) = model.props.get(key) {
-                match prop {
-                    Property::Model(prop) => Some(prop),
-                    _ => None,
-                }
-            } else {
-                None
-            }
-        };
-
-        for (key, id) in self.type_id.as_struct().unwrap().iter_props() {
-            let generated =
-                if let Some(prop) = as_model_prop(key) {
-                    if self.skip_rel {
-                        continue;
-                    }
-
-                    context.generate(&WithFilters {
-                        type_id: prop.model_id,
-                        model_id: prop.model_id,
-                        skip_rel: true,
-                        with_aggregates: false,
-                    })?
-                } else {
-                    let mut id = id;
-                    let mut ty = id.as_type()?;
-                    if let Type::Optional(opt) = ty {
-                        id = opt.item();
-                        ty = id.as_type()?;
-                    }
-
-                    match ty {
-                        Type::Optional(_) => return Err("optional of optional!?".into()),
-                        Type::Boolean(_) => context.generate(&CompleteFilter(BooleanFilter))?,
-                        Type::Integer(_) => context.generate(&CompleteFilter(
-                            NumberFilter::new(NumberType::Integer, self.with_aggregates),
-                        ))?,
-                        Type::Float(_) => context.generate(&CompleteFilter(NumberFilter::new(
-                            NumberType::Float,
-                            self.with_aggregates,
-                        )))?,
-                        Type::String(_) => context.generate(&CompleteFilter(StringFilter))?,
-                        Type::Array(inner) => context
-                            .generate(&CompleteFilter(ScalarListFilter(inner.data.of.into())))?,
-                        _ => {
-                            return Err(format!(
-                                "type '{}' not supported by prisma",
-                                ty.get_data().variant_name()
-                            )
-                            .into());
-                        }
-                    }
-                };
-
-            builder.propx(key, t::optional(generated))?;
-        }
-
-        builder.named(self.name()).build()
-    }
-
-    fn name(&self) -> String {
-        let suffix = if self.skip_rel { "_norel" } else { "" };
-        let suffix2 = if self.with_aggregates {
-            "_with_aggregates"
-        } else {
-            ""
-        };
-        format!("_{}WithFilters{}{}", self.type_id.0, suffix, suffix2)
-    }
-}
-
-struct CompleteFilter<T: TypeGen>(T);
+pub(super) struct CompleteFilter<T: TypeGen>(pub T);
 
 impl<T: TypeGen> TypeGen for CompleteFilter<T> {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
@@ -126,7 +24,7 @@ impl<T: TypeGen> TypeGen for CompleteFilter<T> {
     }
 }
 
-struct BooleanFilter;
+pub(super) struct BooleanFilter;
 
 impl TypeGen for BooleanFilter {
     fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
@@ -218,7 +116,7 @@ impl TypeGen for NumberFilter {
     }
 }
 
-struct StringFilter;
+pub(super) struct StringFilter;
 
 impl TypeGen for StringFilter {
     fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
@@ -252,7 +150,7 @@ impl TypeGen for StringFilter {
     }
 }
 
-struct ScalarListFilter(TypeId);
+pub(super) struct ScalarListFilter(pub TypeId);
 
 impl TypeGen for ScalarListFilter {
     fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
