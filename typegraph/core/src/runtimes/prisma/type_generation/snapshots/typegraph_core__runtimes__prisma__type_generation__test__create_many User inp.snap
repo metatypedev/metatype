@@ -2,27 +2,35 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(inp)"
 ---
-root: struct #34
-└─ [data]: array '_33__User_CreateInput[]' #33
-   └─ item: struct '_User_CreateInput' #32
+root: struct #40
+└─ [data]: array '_39__User_CreateInput[]' #39
+   └─ item: struct '_User_CreateInput' #38
       ├─ [id]: integer #11
       ├─ [name]: string #12
-      └─ [posts]: optional #31
-         └─ item: struct #30
-            ├─ [create]: optional '_25__Post_CreateInput_excluding___rel_Post_User_1?' #25
+      └─ [posts]: optional #37
+         └─ item: struct #36
+            ├─ [create]: optional '_31__Post_CreateInput_excluding___rel_Post_User_1?' #31
             │  └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #21
             │     ├─ [id]: optional #20
             │     │  └─ item: integer #16
             │     └─ [title]: string #17
-            ├─ [connect]: optional '_26_PostWhere_norel?' #26
-            │  └─ item: struct 'PostWhere_norel' #24
+            ├─ [connect]: optional '_32_PostWhere?' #32
+            │  └─ item: struct 'PostWhere' #30
             │     ├─ [id]: optional #22
             │     │  └─ item: integer #16
-            │     └─ [title]: optional #23
-            │        └─ item: string #17
-            └─ [createMany]: optional #29
-               └─ item: struct #28
-                  └─ [data]: array '_27__Post_CreateInput_excluding___rel_Post_User_1[]' #27
+            │     ├─ [title]: optional #23
+            │     │  └─ item: string #17
+            │     └─ [author]: optional '_29_UserWhere__skip_19_PostWhere?' #29
+            │        └─ item: struct 'UserWhere__skip_19_PostWhere' #28
+            │           ├─ [id]: optional #24
+            │           │  └─ item: integer #11
+            │           ├─ [name]: optional #25
+            │           │  └─ item: string #12
+            │           └─ [posts]: optional '_27_PostWhere?' #27
+            │              └─ item: &PostWhere #26
+            └─ [createMany]: optional #35
+               └─ item: struct #34
+                  └─ [data]: array '_33__Post_CreateInput_excluding___rel_Post_User_1[]' #33
                      └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #21
                         ├─ [id]: optional #20
                         │  └─ item: integer #16

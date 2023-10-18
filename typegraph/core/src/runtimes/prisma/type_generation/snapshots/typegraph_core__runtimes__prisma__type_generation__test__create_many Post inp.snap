@@ -2,22 +2,30 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(inp)"
 ---
-root: struct #48
-└─ [data]: array '_47__Post_CreateInput[]' #47
-   └─ item: struct '_Post_CreateInput' #46
-      ├─ [id]: optional #37
+root: struct #60
+└─ [data]: array '_59__Post_CreateInput[]' #59
+   └─ item: struct '_Post_CreateInput' #58
+      ├─ [id]: optional #43
       │  └─ item: integer #16
       ├─ [title]: string #17
-      └─ [author]: optional #45
-         └─ item: struct #44
-            ├─ [create]: optional '_42__User_CreateInput_excluding___rel_Post_User_1?' #42
-            │  └─ item: struct '_User_CreateInput_excluding___rel_Post_User_1' #38
+      └─ [author]: optional #57
+         └─ item: struct #56
+            ├─ [create]: optional '_54__User_CreateInput_excluding___rel_Post_User_1?' #54
+            │  └─ item: struct '_User_CreateInput_excluding___rel_Post_User_1' #44
             │     ├─ [id]: integer #11
             │     └─ [name]: string #12
-            └─ [connect]: optional '_43_UserWhere_norel?' #43
-               └─ item: struct 'UserWhere_norel' #41
-                  ├─ [id]: optional #39
+            └─ [connect]: optional '_55_UserWhere?' #55
+               └─ item: struct 'UserWhere' #53
+                  ├─ [id]: optional #45
                   │  └─ item: integer #11
-                  └─ [name]: optional #40
-                     └─ item: string #12
+                  ├─ [name]: optional #46
+                  │  └─ item: string #12
+                  └─ [posts]: optional '_52_PostWhere__skip_15_UserWhere?' #52
+                     └─ item: struct 'PostWhere__skip_15_UserWhere' #51
+                        ├─ [id]: optional #47
+                        │  └─ item: integer #16
+                        ├─ [title]: optional #48
+                        │  └─ item: string #17
+                        └─ [author]: optional '_50_UserWhere?' #50
+                           └─ item: &UserWhere #49
 

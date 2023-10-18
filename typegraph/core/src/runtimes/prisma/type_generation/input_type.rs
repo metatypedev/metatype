@@ -75,7 +75,7 @@ impl TypeGen for InputType {
                         operation: Operation::Create,
                     })?;
                     // TODO unique where
-                    let connect = context.generate(&Where::new(prop.model_id, false))?;
+                    let connect = context.generate(&Where::new(prop.model_id))?;
 
                     let mut inner = t::struct_();
                     inner.propx("create", t::optional(create))?;

@@ -2,33 +2,41 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(inp)"
 ---
-root: struct #38
-├─ [data]: struct '_User_UpdateInput' #35
+root: struct #44
+├─ [data]: struct '_User_UpdateInput' #41
 │  ├─ [id]: optional #21
 │  │  └─ item: integer #12
 │  ├─ [name]: optional #22
 │  │  └─ item: string #13
-│  └─ [posts]: optional #34
-│     └─ item: struct #33
-│        ├─ [create]: optional '_28__Post_CreateInput_excluding___rel_Post_User_1?' #28
+│  └─ [posts]: optional #40
+│     └─ item: struct #39
+│        ├─ [create]: optional '_34__Post_CreateInput_excluding___rel_Post_User_1?' #34
 │        │  └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #24
 │        │     ├─ [id]: optional #23
 │        │     │  └─ item: integer #17
 │        │     └─ [title]: string #18
-│        ├─ [connect]: optional '_29_PostWhere_norel?' #29
-│        │  └─ item: struct 'PostWhere_norel' #27
+│        ├─ [connect]: optional '_35_PostWhere?' #35
+│        │  └─ item: struct 'PostWhere' #33
 │        │     ├─ [id]: optional #25
 │        │     │  └─ item: integer #17
-│        │     └─ [title]: optional #26
-│        │        └─ item: string #18
-│        └─ [createMany]: optional #32
-│           └─ item: struct #31
-│              └─ [data]: array '_30__Post_CreateInput_excluding___rel_Post_User_1[]' #30
+│        │     ├─ [title]: optional #26
+│        │     │  └─ item: string #18
+│        │     └─ [author]: optional '_32_UserWhere__skip_20_PostWhere?' #32
+│        │        └─ item: struct 'UserWhere__skip_20_PostWhere' #31
+│        │           ├─ [id]: optional #27
+│        │           │  └─ item: integer #12
+│        │           ├─ [name]: optional #28
+│        │           │  └─ item: string #13
+│        │           └─ [posts]: optional '_30_PostWhere?' #30
+│        │              └─ item: &PostWhere #29
+│        └─ [createMany]: optional #38
+│           └─ item: struct #37
+│              └─ [data]: array '_36__Post_CreateInput_excluding___rel_Post_User_1[]' #36
 │                 └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #24
 │                    ├─ [id]: optional #23
 │                    │  └─ item: integer #17
 │                    └─ [title]: string #18
-└─ [where]: struct 'QueryUniqueUserWhereInput' #37
-   └─ [id]: optional #36
+└─ [where]: struct 'QueryUniqueUserWhereInput' #43
+   └─ [id]: optional #42
       └─ item: integer #12
 

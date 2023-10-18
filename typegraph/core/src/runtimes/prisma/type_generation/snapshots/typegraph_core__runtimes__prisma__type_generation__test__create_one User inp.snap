@@ -2,26 +2,34 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(inp)"
 ---
-root: struct #30
-└─ [data]: struct '_User_CreateInput' #29
+root: struct #36
+└─ [data]: struct '_User_CreateInput' #35
    ├─ [id]: integer #8
    ├─ [name]: string #9
-   └─ [posts]: optional #28
-      └─ item: struct #27
-         ├─ [create]: optional '_22__Post_CreateInput_excluding___rel_Post_User_1?' #22
+   └─ [posts]: optional #34
+      └─ item: struct #33
+         ├─ [create]: optional '_28__Post_CreateInput_excluding___rel_Post_User_1?' #28
          │  └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #18
          │     ├─ [id]: optional #17
          │     │  └─ item: integer #13
          │     └─ [title]: string #14
-         ├─ [connect]: optional '_23_PostWhere_norel?' #23
-         │  └─ item: struct 'PostWhere_norel' #21
+         ├─ [connect]: optional '_29_PostWhere?' #29
+         │  └─ item: struct 'PostWhere' #27
          │     ├─ [id]: optional #19
          │     │  └─ item: integer #13
-         │     └─ [title]: optional #20
-         │        └─ item: string #14
-         └─ [createMany]: optional #26
-            └─ item: struct #25
-               └─ [data]: array '_24__Post_CreateInput_excluding___rel_Post_User_1[]' #24
+         │     ├─ [title]: optional #20
+         │     │  └─ item: string #14
+         │     └─ [author]: optional '_26_UserWhere__skip_16_PostWhere?' #26
+         │        └─ item: struct 'UserWhere__skip_16_PostWhere' #25
+         │           ├─ [id]: optional #21
+         │           │  └─ item: integer #8
+         │           ├─ [name]: optional #22
+         │           │  └─ item: string #9
+         │           └─ [posts]: optional '_24_PostWhere?' #24
+         │              └─ item: &PostWhere #23
+         └─ [createMany]: optional #32
+            └─ item: struct #31
+               └─ [data]: array '_30__Post_CreateInput_excluding___rel_Post_User_1[]' #30
                   └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #18
                      ├─ [id]: optional #17
                      │  └─ item: integer #13

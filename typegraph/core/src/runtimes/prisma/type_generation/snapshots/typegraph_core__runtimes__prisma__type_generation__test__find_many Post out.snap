@@ -1,9 +1,9 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(types.output)"
+expression: "tree::print(out)"
 ---
-root: array '_148_PostWithNestedCount[]' #148
-└─ item: struct 'PostWithNestedCount' #147
+root: array '_152_PostWithNestedCount[]' #152
+└─ item: struct 'PostWithNestedCount' #151
    ├─ [id]: integer #73
    ├─ [title]: string #74
    └─ [author]: struct 'User' #72

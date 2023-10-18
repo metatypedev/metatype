@@ -57,7 +57,7 @@ impl Having {
 impl TypeGen for Having {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         // TODO relations??
-        let where_type = context.generate(&Where::new(self.model_id, false))?;
+        let where_type = context.generate(&Where::new(self.model_id))?;
         let extended_type = context
             .generate(&WithFilters::new(where_type, self.model_id, true).with_aggregates())?;
 

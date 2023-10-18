@@ -19,7 +19,7 @@ impl QueryWhereExpr {
 
 impl TypeGen for QueryWhereExpr {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
-        let where_type = context.generate(&Where::new(self.model_id, true))?;
+        let where_type = context.generate(&Where::new(self.model_id))?;
         let extended_type =
             context.generate(&WithFilters::new(where_type, self.model_id, false))?;
 

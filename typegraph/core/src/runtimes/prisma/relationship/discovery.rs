@@ -62,7 +62,6 @@ impl PrismaContext {
 
     /// get potential targets for candidate
     fn get_potential_targets(&self, candidate: Candidate) -> Result<Vec<Candidate>> {
-        eprintln!("> getting potential targets for candidate {candidate:#?}");
         let model = candidate.model.borrow();
         let mut candidates = model
             .iter_relationship_props()

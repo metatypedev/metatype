@@ -2,25 +2,33 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(inp)"
 ---
-root: struct #52
-├─ [data]: struct '_Post_UpdateInput' #49
-│  ├─ [id]: optional #39
+root: struct #64
+├─ [data]: struct '_Post_UpdateInput' #61
+│  ├─ [id]: optional #45
 │  │  └─ item: integer #17
-│  ├─ [title]: optional #40
+│  ├─ [title]: optional #46
 │  │  └─ item: string #18
-│  └─ [author]: optional #48
-│     └─ item: struct #47
-│        ├─ [create]: optional '_45__User_CreateInput_excluding___rel_Post_User_1?' #45
-│        │  └─ item: struct '_User_CreateInput_excluding___rel_Post_User_1' #41
+│  └─ [author]: optional #60
+│     └─ item: struct #59
+│        ├─ [create]: optional '_57__User_CreateInput_excluding___rel_Post_User_1?' #57
+│        │  └─ item: struct '_User_CreateInput_excluding___rel_Post_User_1' #47
 │        │     ├─ [id]: integer #12
 │        │     └─ [name]: string #13
-│        └─ [connect]: optional '_46_UserWhere_norel?' #46
-│           └─ item: struct 'UserWhere_norel' #44
-│              ├─ [id]: optional #42
+│        └─ [connect]: optional '_58_UserWhere?' #58
+│           └─ item: struct 'UserWhere' #56
+│              ├─ [id]: optional #48
 │              │  └─ item: integer #12
-│              └─ [name]: optional #43
-│                 └─ item: string #13
-└─ [where]: struct 'QueryUniquePostWhereInput' #51
-   └─ [id]: optional #50
+│              ├─ [name]: optional #49
+│              │  └─ item: string #13
+│              └─ [posts]: optional '_55_PostWhere__skip_16_UserWhere?' #55
+│                 └─ item: struct 'PostWhere__skip_16_UserWhere' #54
+│                    ├─ [id]: optional #50
+│                    │  └─ item: integer #17
+│                    ├─ [title]: optional #51
+│                    │  └─ item: string #18
+│                    └─ [author]: optional '_53_UserWhere?' #53
+│                       └─ item: &UserWhere #52
+└─ [where]: struct 'QueryUniquePostWhereInput' #63
+   └─ [id]: optional #62
       └─ item: integer #17
 

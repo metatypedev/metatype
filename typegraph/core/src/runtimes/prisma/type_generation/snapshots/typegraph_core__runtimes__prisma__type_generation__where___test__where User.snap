@@ -1,0 +1,18 @@
+---
+source: typegraph/core/src/runtimes/prisma/type_generation/where_.rs
+expression: "tree::print(context.generate(&Where::new(user))?)"
+---
+root: struct 'UserWhere' #26
+├─ [id]: optional #18
+│  └─ item: integer #9
+├─ [name]: optional #19
+│  └─ item: string #10
+└─ [posts]: optional '_25_PostWhere__skip_13_UserWhere?' #25
+   └─ item: struct 'PostWhere__skip_13_UserWhere' #24
+      ├─ [id]: optional #20
+      │  └─ item: integer #14
+      ├─ [title]: optional #21
+      │  └─ item: string #15
+      └─ [author]: optional '_23_UserWhere?' #23
+         └─ item: &UserWhere #22
+

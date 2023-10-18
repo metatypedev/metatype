@@ -1,12 +1,12 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(types.output)"
+expression: "tree::print(out)"
 ---
 root: array '_Post_GroupByResult' #244
 └─ item: struct #243
-   ├─ [id]: integer #122
-   ├─ [title]: string #123
-   ├─ [author]: &User #124
+   ├─ [id]: integer #118
+   ├─ [title]: string #119
+   ├─ [author]: &User #120
    ├─ [_count]: struct '_Post_AggrCount' #234
    │  ├─ [_all]: optional #233
    │  │  └─ item: integer #232
