@@ -78,10 +78,10 @@ impl TypeGen for Where {
                                 context.generate(&CompleteFilter(BooleanFilter))?
                             }
                             ScalarType::Integer => context.generate(&CompleteFilter(
-                                NumberFilter::new(NumberType::Integer, false), // TODO with aggregates??
+                                NumberFilter::new(NumberType::Integer, self.aggregates), // TODO with aggregates??
                             ))?,
                             ScalarType::Float => context.generate(&CompleteFilter(
-                                NumberFilter::new(NumberType::Float, false), // TODO with aggregates??
+                                NumberFilter::new(NumberType::Float, self.aggregates), // TODO with aggregates??
                             ))?,
                             ScalarType::String { .. } => {
                                 context.generate(&CompleteFilter(StringFilter))?

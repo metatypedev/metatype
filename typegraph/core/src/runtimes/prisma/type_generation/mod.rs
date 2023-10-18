@@ -182,7 +182,7 @@ impl PrismaOperation for FindUnique {
     }
 
     fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
-        t::optional(context.generate(&OutType::new(model_id))?).build()
+        t::optional(context.generate(&WithNestedCount::new(model_id))?).build()
     }
 }
 

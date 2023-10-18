@@ -2,31 +2,31 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(out)"
 ---
-root: array '_Record_GroupByResult' #90
-└─ item: struct #89
+root: array '_Record_GroupByResult' #108
+└─ item: struct #107
    ├─ [id]: string #0
    ├─ [name]: string #1
    ├─ [age]: optional #3
    │  └─ item: integer #2
-   ├─ [_count]: struct '_Record_AggrCount' #80
-   │  ├─ [_all]: optional #79
-   │  │  └─ item: integer #78
-   │  ├─ [id]: optional #79
-   │  │  └─ item: integer #78
-   │  ├─ [name]: optional #79
-   │  │  └─ item: integer #78
-   │  └─ [age]: optional #79
-   │     └─ item: integer #78
-   ├─ [_avg]: struct '_Record_SelectNumbers__1' #83
-   │  └─ [age]: optional #82
-   │     └─ item: float #81
-   ├─ [_sum]: struct '_Record_SelectNumbers_' #88
-   │  └─ [age]: optional #87
-   │     └─ item: integer #86
-   ├─ [_min]: struct '_Record_SelectNumbers_' #88
-   │  └─ [age]: optional #87
-   │     └─ item: integer #86
-   └─ [_max]: struct '_Record_SelectNumbers_' #88
-      └─ [age]: optional #87
-         └─ item: integer #86
+   ├─ [_count]: struct '_Record_AggrCount' #98
+   │  ├─ [_all]: optional #97
+   │  │  └─ item: integer #96
+   │  ├─ [id]: optional #97
+   │  │  └─ item: integer #96
+   │  ├─ [name]: optional #97
+   │  │  └─ item: integer #96
+   │  └─ [age]: optional #97
+   │     └─ item: integer #96
+   ├─ [_avg]: struct '_Record_SelectNumbers__1' #101
+   │  └─ [age]: optional #100
+   │     └─ item: float #99
+   ├─ [_sum]: struct '_Record_SelectNumbers_' #106
+   │  └─ [age]: optional #105
+   │     └─ item: integer #104
+   ├─ [_min]: struct '_Record_SelectNumbers_' #106
+   │  └─ [age]: optional #105
+   │     └─ item: integer #104
+   └─ [_max]: struct '_Record_SelectNumbers_' #106
+      └─ [age]: optional #105
+         └─ item: integer #104
 
