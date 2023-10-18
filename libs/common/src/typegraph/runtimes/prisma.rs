@@ -60,8 +60,31 @@ pub struct ManagedInjection {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum StringType {
+    Plain,
+    Uuid,
+    DateTime,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(tag = "type")]
+pub enum ScalarType {
+    Boolean,
+    #[serde(rename = "Int")]
+    Integer,
+    Float,
+    String {
+        format: StringType,
+    },
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct ScalarProperty {
     pub key: String,
+    pub prop_type: ScalarType,
     pub cardinality: Cardinality,
     pub type_idx: u32,
     pub injection: Option<ManagedInjection>,
@@ -71,16 +94,28 @@ pub struct ScalarProperty {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct RelationshipProperty {
-    pub key: String,
-    pub cardinality: Cardinality,
-    pub type_idx: u32,
-    pub unique: bool,
-    pub relationship_name: String,
+#[serde(rename_all = "lowercase")]
+pub enum Side {
+    Left,
+    Right,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct RelationshipProperty {
+    pub key: String,
+    pub cardinality: Cardinality,
+    pub type_idx: u32,
+    pub model_name: String,
+    pub unique: bool,
+    pub relationship_name: String,
+    pub relationship_side: Side,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(tag = "type", rename_all = "lowercase")]
 pub enum Property {
     Scalar(ScalarProperty),
     Relationship(RelationshipProperty),
@@ -88,10 +123,12 @@ pub enum Property {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Model {
     pub type_idx: u32,
     pub type_name: String,
     pub props: Vec<Property>,
+    pub id_fields: Vec<String>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

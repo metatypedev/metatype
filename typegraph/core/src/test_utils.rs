@@ -42,8 +42,8 @@ pub mod models {
     pub fn simple_relationship() -> Result<(TypeId, TypeId)> {
         let user = t::struct_()
             .prop("id", t::integer().as_id(true).build()?)
-            .prop("name", t::string().build()?)
-            .prop("posts", t::array(t::proxy("Post").build()?).build()?)
+            .propx("name", t::string())?
+            .propx("posts", t::arrayx(t::proxy("Post"))?)?
             .named("User")
             .build()?;
 

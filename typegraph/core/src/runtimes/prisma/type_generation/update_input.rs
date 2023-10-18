@@ -49,7 +49,7 @@ impl TypeGen for UpdateInput {
                     } else {
                         let wrapper_type_id = prop.wrapper_type_id;
                         match prop.prop_type {
-                            ScalarType::Boolean | ScalarType::String(_) => t::unionx![
+                            ScalarType::Boolean | ScalarType::String { .. } => t::unionx![
                                 wrapper_type_id,
                                 t::struct_().prop("set", wrapper_type_id)
                             ]

@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+pub use common::typegraph::runtimes::prisma::{ScalarType, StringType};
 use common::typegraph::{EffectType, InjectionData};
 use indexmap::IndexMap;
 
@@ -128,15 +129,6 @@ pub enum Property {
     Unmanaged(TypeId),
 }
 
-// #[derive(Debug, Clone)]
-// pub struct Property {
-//     pub wrapper_type_id: TypeId,
-//     pub prop_type: PropertyType,
-//     quantifier: Cardinality,
-//     pub unique: bool,
-//     pub auto: bool,
-// }
-
 #[derive(Debug, Clone)]
 pub struct RelationshipProperty {
     pub wrapper_type_id: TypeId,
@@ -145,26 +137,6 @@ pub struct RelationshipProperty {
     pub relationship_attributes: RelationshipAttributes,
     pub unique: bool,
 }
-
-// impl TryFrom<Property> for RelationshipProperty {
-//     type Error = crate::wit::core::Error;
-//
-//     fn try_from(prop: Property) -> Result<Self> {
-//         match prop.prop_type {
-//             PropertyType::Model {
-//                 type_id,
-//                 relationship_attributes,
-//             } => Ok(Self {
-//                 wrapper_type_id: prop.wrapper_type_id,
-//                 model_id: type_id,
-//                 quantifier: prop.quantifier,
-//                 relationship_attributes,
-//                 unique: prop.unique,
-//             }),
-//             _ => Err("not a model".to_string()),
-//         }
-//     }
-// }
 
 impl Property {
     fn new(wrapper_type_id: TypeId) -> Result<Self> {
@@ -175,22 +147,15 @@ impl Property {
         let auto = runtime_config.get("auto")?.unwrap_or(false);
         let (type_id, card) = match typ {
             // Type::Func(_) => return Ok(Self::Unmanaged(wrapper_type_id)), // other runtime
-            Type::Optional(inner) => {
-                (TypeId(inner.data.of).attrs()?.concrete_type, Cardinality::Optional)
-            }
-            Type::Array(inner) => {
-                (TypeId(inner.data.of).attrs()?.concrete_type, Cardinality::Many)
-            }
-            _ => {
-                (attrs.concrete_type, Cardinality::One)
-            }
-            // _ => Ok(Some(Self {
-            //     wrapper_type_id,
-            //     prop_type: PropertyType::new(attrs.concrete_type, attrs)?,
-            //     quantifier: Cardinality::One,
-            //     auto,
-            //     unique,
-            // })),
+            Type::Optional(inner) => (
+                TypeId(inner.data.of).attrs()?.concrete_type,
+                Cardinality::Optional,
+            ),
+            Type::Array(inner) => (
+                TypeId(inner.data.of).attrs()?.concrete_type,
+                Cardinality::Many,
+            ),
+            _ => (attrs.concrete_type, Cardinality::One),
         };
 
         let scalar = |typ, injection| {
@@ -232,7 +197,16 @@ impl Property {
                     Type::Float(_) => Ok(scalar(ScalarType::Float, injection)),
                     Type::Boolean(_) => Ok(scalar(ScalarType::Boolean, injection)),
                     // TODO check format
-                    Type::String(_) => Ok(scalar(ScalarType::String(StringType::Plain), injection)),
+                    Type::String(inner) => Ok(scalar(
+                        ScalarType::String {
+                            format: match inner.data.format.as_deref() {
+                                Some("uuid") => StringType::Uuid,
+                                Some("date-time") => StringType::DateTime,
+                                _ => StringType::Plain,
+                            },
+                        },
+                        injection,
+                    )),
                     // TODO not supported??
                     Type::Func(_) => {
                         if injection.is_some() {
@@ -259,24 +233,6 @@ impl Property {
             },
         }
     }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum StringType {
-    Plain,
-    #[allow(dead_code)]
-    Uuid,
-    #[allow(dead_code)]
-    DateTime,
-    // Enum??
-}
-
-#[derive(Debug, Clone)]
-pub enum ScalarType {
-    Integer,
-    Float,
-    Boolean,
-    String(StringType),
 }
 
 #[derive(Debug, Clone)]
@@ -368,101 +324,3 @@ pub struct ScalarProperty {
     pub unique: bool,
     pub auto: bool,
 }
-//
-// impl TryFrom<Property> for ScalarProperty {
-//     type Error = crate::wit::core::Error;
-//
-//     fn try_from(prop: Property) -> Result<Self> {
-//         match prop.prop_type {
-//             PropertyType::Scalar(s) => Ok(Self {
-//                 wrapper_type_id: prop.wrapper_type_id,
-//                 type_id: s.type_id,
-//                 prop_type: s.typ,
-//                 quantifier: prop.quantifier,
-//                 unique: prop.unique,
-//                 auto: prop.auto,
-//             }),
-//             _ => Err("not a scalar".to_string()),
-//         }
-//     }
-// }
-
-// /// type without quantifier
-// #[derive(Debug, Clone)]
-// pub enum PropertyType {
-//     Scalar(Scalar),
-//     Model {
-//         type_id: TypeId,
-//         relationship_attributes: RelationshipAttributes,
-//     },
-//     /// not managed by prisma --> can be present only in the output types
-//     Unmanaged(TypeId),
-// }
-
-// impl PropertyType {
-//     fn new(concrete_type: TypeId, wrapper_attrs: TypeAttributes) -> Result<Self> {
-//         match wrapper_attrs
-//             .injection
-//             .as_ref()
-//             .map(Injection::try_from)
-//             .transpose()
-//         {
-//             Ok(injection) => {
-//                 match concrete_type.as_type()? {
-//                     Type::Struct(_) => {
-//                         if injection.is_some() {
-//                             return Err("injection not supported for models".to_string());
-//                         }
-//                         Ok(Self::Model {
-//                             type_id: concrete_type,
-//                             relationship_attributes: wrapper_attrs.try_into()?,
-//                         })
-//                     }
-//                     Type::Optional(_) | Type::Array(_) => {
-//                         Err("nested optional/list not supported".to_string())
-//                     }
-//                     Type::Integer(_) => Ok(Self::Scalar(Scalar {
-//                         type_id: concrete_type,
-//                         typ: ScalarType::Integer,
-//                         injection,
-//                     })),
-//                     Type::Float(_) => Ok(Self::Scalar(Scalar {
-//                         type_id: concrete_type,
-//                         typ: ScalarType::Float,
-//                         injection,
-//                     })),
-//                     Type::Boolean(_) => Ok(Self::Scalar(Scalar {
-//                         type_id: concrete_type,
-//                         typ: ScalarType::Boolean,
-//                         injection,
-//                     })),
-//                     // TODO check format
-//                     Type::String(_) => Ok(Self::Scalar(Scalar {
-//                         type_id: concrete_type,
-//                         typ: ScalarType::String(StringType::Plain),
-//                         injection,
-//                     })),
-//                     // TODO use original type_id
-//                     Type::Func(_) => Ok(Self::Unmanaged(wrapper_attrs.concrete_type)),
-//                     _ => Err("unsupported property type".to_string()),
-//                 }
-//             }
-//             Err(e) => match e {
-//                 InjectionError::UnmanagedProperty => match concrete_type.as_type()? {
-//                     Type::Func(_) => Err("injection not supported on t::struct()".to_string()),
-//                     Type::Optional(_) | Type::Array(_) => {
-//                         Err("nested optional/list not supported".to_string())
-//                     }
-//                     // TODO use original type_id on the property
-//                     Type::Struct(_)
-//                     | Type::String(_)
-//                     | Type::Integer(_)
-//                     | Type::Float(_)
-//                     | Type::Boolean(_) => Ok(Self::Unmanaged(wrapper_attrs.concrete_type)),
-//                     _ => Err("unsupported property type".to_string()),
-//                 },
-//                 InjectionError::GenericError(e) => Err(e),
-//             },
-//         }
-//     }
-// }

@@ -25,9 +25,9 @@ PrismaContext {
                             ScalarProperty {
                                 wrapper_type_id: Type#1,
                                 type_id: Type#1,
-                                prop_type: String(
-                                    Plain,
-                                ),
+                                prop_type: String {
+                                    format: Plain,
+                                },
                                 injection: None,
                                 quantifier: One,
                                 unique: false,
@@ -76,9 +76,9 @@ PrismaContext {
                             ScalarProperty {
                                 wrapper_type_id: Type#6,
                                 type_id: Type#6,
-                                prop_type: String(
-                                    Plain,
-                                ),
+                                prop_type: String {
+                                    format: Plain,
+                                },
                                 injection: None,
                                 quantifier: One,
                                 unique: false,

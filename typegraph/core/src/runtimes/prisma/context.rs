@@ -180,11 +180,12 @@ impl PrismaContext {
     }
 
     fn next_id(&self) -> usize {
-        let id = self.counter.get() + 1;
-        self.counter.set(id);
+        let id = self.counter.get();
+        self.counter.set(id + 1);
         id
     }
 
+    // TODO refactor - too much indentation haha
     pub fn convert(
         &self,
         ctx: &mut TypegraphContext,
@@ -218,6 +219,7 @@ impl PrismaContext {
                                                     Some(runtime_idx),
                                                 )?
                                                 .into(),
+                                            prop_type: prop.prop_type.clone(),
                                             injection: prop.injection.as_ref().map(|inj| {
                                                 cm::ManagedInjection {
                                                     create: inj.create.as_ref().and_then(
@@ -243,9 +245,14 @@ impl PrismaContext {
                                         }))
                                     }
                                     Property::Model(prop) => {
-                                        let model = self.model(*type_id)?;
+                                        let rel_name = {
+                                            let model = self.model(*type_id)?;
+                                            let model = model.borrow();
+                                            model.relationships.get(key).unwrap().clone()
+                                        };
+                                        let model = self.model(prop.model_id)?;
                                         let model = model.borrow();
-                                        let rel_name = model.relationships.get(key).unwrap();
+
                                         Some(cm::Property::Relationship(cm::RelationshipProperty {
                                             key: key.clone(),
                                             cardinality: prop.quantifier.into(),
@@ -255,8 +262,22 @@ impl PrismaContext {
                                                     Some(runtime_idx),
                                                 )?
                                                 .into(),
+                                            model_name: model.type_name.clone(),
                                             unique: prop.unique,
                                             relationship_name: rel_name.clone(),
+                                            relationship_side: {
+                                                let rel =
+                                                    self.relationships.get(&rel_name).unwrap();
+                                                if rel.left.wrapper_type == prop.wrapper_type_id {
+                                                    cm::Side::Left
+                                                } else if rel.right.wrapper_type
+                                                    == prop.wrapper_type_id
+                                                {
+                                                    cm::Side::Right
+                                                } else {
+                                                    unreachable!()
+                                                }
+                                            },
                                         }))
                                     }
                                     Property::Unmanaged(_) => {
@@ -267,6 +288,7 @@ impl PrismaContext {
                             })
                             .filter_map(|r| r.transpose())
                             .collect::<Result<Vec<_>>>()?,
+                        id_fields: vec![model.id_field.clone()],
                     })
                 })
                 .collect::<Result<Vec<_>>>()?,

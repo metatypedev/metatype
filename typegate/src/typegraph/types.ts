@@ -279,12 +279,38 @@ export type KnownRuntime = {
   data: TypegraphRuntimeData;
 };
 export type Property = {
-  Scalar: ScalarProperty;
+  type: "scalar";
+  key: string;
+  propType: ScalarType;
+  cardinality: Cardinality;
+  typeIdx: number;
+  injection?: ManagedInjection | null;
+  unique: boolean;
+  auto: boolean;
 } | {
-  Relationship: RelationshipProperty;
+  type: "relationship";
+  key: string;
+  cardinality: Cardinality;
+  typeIdx: number;
+  modelName: string;
+  unique: boolean;
+  relationshipName: string;
+  relationshipSide: Side;
 };
+export type ScalarType = {
+  type: "Boolean";
+} | {
+  type: "Int";
+} | {
+  type: "Float";
+} | {
+  type: "String";
+  format: StringType;
+};
+export type StringType = "Plain" | "Uuid" | "DateTime";
 export type Cardinality = "optional" | "one" | "many";
 export type Injection2 = "DateNow";
+export type Side = "left" | "right";
 export type AuthProtocol = "oauth2" | "jwt" | "basic";
 export type S3Materializer = {
   name: "presign_get";
@@ -376,28 +402,14 @@ export interface PrismaRuntimeData {
   migration_options?: MigrationOptions | null;
 }
 export interface Model {
-  type_idx: number;
-  type_name: string;
+  typeIdx: number;
+  typeName: string;
   props: Property[];
-}
-export interface ScalarProperty {
-  key: string;
-  cardinality: Cardinality;
-  type_idx: number;
-  injection?: ManagedInjection | null;
-  unique: boolean;
-  auto: boolean;
+  idFields: string[];
 }
 export interface ManagedInjection {
   create?: Injection2 | null;
   update?: Injection2 | null;
-}
-export interface RelationshipProperty {
-  key: string;
-  cardinality: Cardinality;
-  type_idx: number;
-  unique: boolean;
-  relationship_name: string;
 }
 export interface Relationship {
   name: string;
