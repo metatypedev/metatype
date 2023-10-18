@@ -435,6 +435,7 @@ def injection(g: Graph):
                 t.integer(min=0),
                 code="() => 0",
             ),
+            # TODO how to make this not updatable?
             "createAt": t.datetime().inject({CREATE: "now"}),
             "updatedAt": t.datetime().inject({UPDATE: "now"}),
         },

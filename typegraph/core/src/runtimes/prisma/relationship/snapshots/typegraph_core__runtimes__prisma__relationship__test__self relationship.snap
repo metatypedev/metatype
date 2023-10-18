@@ -52,8 +52,8 @@ PrismaContext {
                     },
                     id_field: "id",
                     relationships: {
-                        "children": "__rel_Node_Node_2",
-                        "parent": "__rel_Node_Node_2",
+                        "children": "__rel_Node_Node_1",
+                        "parent": "__rel_Node_Node_1",
                     },
                 },
             },
@@ -61,8 +61,8 @@ PrismaContext {
     },
     models_by_name: {},
     relationships: {
-        "__rel_Node_Node_1": Relationship {
-            name: "__rel_Node_Node_1",
+        "__rel_Node_Node_0": Relationship {
+            name: "__rel_Node_Node_0",
             left: RelationshipModel {
                 model_type: Type#4,
                 model_name: "Node",
@@ -78,8 +78,8 @@ PrismaContext {
                 field: "parent",
             },
         },
-        "__rel_Node_Node_2": Relationship {
-            name: "__rel_Node_Node_2",
+        "__rel_Node_Node_1": Relationship {
+            name: "__rel_Node_Node_1",
             left: RelationshipModel {
                 model_type: Type#4,
                 model_name: "Node",

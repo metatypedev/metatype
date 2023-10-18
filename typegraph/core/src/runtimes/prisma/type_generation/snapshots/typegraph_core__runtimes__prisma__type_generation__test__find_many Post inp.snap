@@ -220,8 +220,8 @@ root: struct '_Post_QueryInput' #146
 │        │     ├─ variant_0: struct #49
 │        │     │  └─ [sort]: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
 │        │     └─ variant_1: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
-│        └─ [author]: optional '_137__User_OrderBy_excluding___rel_Post_User_2?' #137
-│           └─ item: array '_User_OrderBy_excluding___rel_Post_User_2' #136
+│        └─ [author]: optional '_137__User_OrderBy_excluding___rel_Post_User_1?' #137
+│           └─ item: array '_User_OrderBy_excluding___rel_Post_User_1' #136
 │              └─ item: struct #135
 │                 ├─ [id]: optional '_Sort' #51
 │                 │  └─ item: union #50

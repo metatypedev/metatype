@@ -6,7 +6,7 @@ root: optional '_22__PostOutputType?' #22
 └─ item: struct '_PostOutputType' #21
    ├─ [id]: integer #12
    ├─ [title]: string #13
-   └─ [author]: struct '_UserOutputType_excluding___rel_Post_User_2' #20
+   └─ [author]: struct '_UserOutputType_excluding___rel_Post_User_1' #20
       ├─ [id]: integer #7
       └─ [name]: string #8
 

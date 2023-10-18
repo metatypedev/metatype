@@ -12,7 +12,7 @@ use common::typegraph::runtimes::prisma as cm;
 use indexmap::{map::Entry, IndexMap, IndexSet};
 
 use super::{
-    model::{InjectionHandler, Property},
+    model::{InjectionHandler, Property, RelationshipProperty, ScalarProperty},
     relationship::{
         discovery::{Candidate, CandidatePair},
         RelationshipModel,
@@ -185,7 +185,115 @@ impl PrismaContext {
         id
     }
 
-    // TODO refactor - too much indentation haha
+    fn convert_scalar_prop(
+        &self,
+        ctx: &mut TypegraphContext,
+        key: &str,
+        prop: &ScalarProperty,
+        runtime_idx: u32,
+    ) -> Result<cm::ScalarProperty> {
+        Ok(cm::ScalarProperty {
+            key: key.to_string(),
+            cardinality: prop.quantifier.into(),
+            type_idx: ctx
+                .register_type(prop.wrapper_type_id, Some(runtime_idx))?
+                .into(),
+            prop_type: prop.prop_type.clone(),
+            injection: prop.injection.as_ref().map(|inj| cm::ManagedInjection {
+                create: inj.create.as_ref().and_then(|handler| match handler {
+                    InjectionHandler::Typegate => None,
+                    InjectionHandler::PrismaDateNow => Some(cm::Injection::DateNow),
+                }),
+                update: inj.update.as_ref().and_then(|handler| match handler {
+                    InjectionHandler::Typegate => None,
+                    InjectionHandler::PrismaDateNow => Some(cm::Injection::DateNow),
+                }),
+            }),
+            unique: prop.unique,
+            auto: prop.auto,
+        })
+    }
+
+    fn convert_relationship_prop(
+        &self,
+        ctx: &mut TypegraphContext,
+        key: &str,
+        prop: &RelationshipProperty,
+        rel_name: String,
+        runtime_idx: u32,
+    ) -> Result<cm::RelationshipProperty> {
+        let model = self.model(prop.model_id)?;
+        let model = model.borrow();
+
+        Ok(cm::RelationshipProperty {
+            key: key.to_string(),
+            cardinality: prop.quantifier.into(),
+            type_idx: ctx
+                .register_type(prop.wrapper_type_id, Some(runtime_idx))?
+                .into(),
+            model_name: model.type_name.clone(),
+            unique: prop.unique,
+            relationship_name: rel_name.clone(),
+            relationship_side: {
+                let rel = self.relationships.get(&rel_name).unwrap();
+                if rel.left.wrapper_type == prop.wrapper_type_id {
+                    cm::Side::Left
+                } else if rel.right.wrapper_type == prop.wrapper_type_id {
+                    cm::Side::Right
+                } else {
+                    unreachable!()
+                }
+            },
+        })
+    }
+
+    fn convert_model(
+        &self,
+        ctx: &mut TypegraphContext,
+        model: &Model,
+        type_id: TypeId,
+        runtime_idx: u32,
+    ) -> Result<cm::Model> {
+        Ok(cm::Model {
+            type_idx: ctx.register_type(type_id, Some(runtime_idx))?.into(),
+            type_name: model.type_name.clone(),
+            props: model
+                .props
+                .iter()
+                .map(|(key, prop): (&String, &Property)| -> Result<_> {
+                    Ok(match prop {
+                        Property::Scalar(prop) => Some(cm::Property::Scalar(
+                            self.convert_scalar_prop(ctx, key, prop, runtime_idx)?,
+                        )),
+
+                        Property::Model(prop) => {
+                            let rel_name = {
+                                let model = self.model(type_id)?;
+                                let model = model.borrow();
+                                model.relationships.get(key).unwrap().clone()
+                            };
+
+                            Some(cm::Property::Relationship(self.convert_relationship_prop(
+                                ctx,
+                                key,
+                                prop,
+                                rel_name,
+                                runtime_idx,
+                            )?))
+                        }
+
+                        Property::Unmanaged(_) => {
+                            // skip
+                            None
+                        }
+                    })
+                })
+                .filter_map(|r| r.transpose())
+                .collect::<Result<Vec<_>>>()?,
+            id_fields: vec![model.id_field.clone()],
+        })
+    }
+
     pub fn convert(
         &self,
         ctx: &mut TypegraphContext,
@@ -200,96 +308,7 @@ impl PrismaContext {
                 .iter()
                 .map(|(type_id, model)| -> Result<_> {
                     let model = model.borrow();
-
-                    Ok(cm::Model {
-                        type_idx: ctx.register_type(*type_id, Some(runtime_idx))?.into(),
-                        type_name: model.type_name.clone(),
-                        props: model
-                            .props
-                            .iter()
-                            .map(|(key, prop): (&String, &Property)| -> Result<_> {
-                                Ok(match prop {
-                                    Property::Scalar(prop) => {
-                                        Some(cm::Property::Scalar(cm::ScalarProperty {
-                                            key: key.clone(),
-                                            cardinality: prop.quantifier.into(),
-                                            type_idx: ctx
-                                                .register_type(
-                                                    prop.wrapper_type_id,
-                                                    Some(runtime_idx),
-                                                )?
-                                                .into(),
-                                            prop_type: prop.prop_type.clone(),
-                                            injection: prop.injection.as_ref().map(|inj| {
-                                                cm::ManagedInjection {
-                                                    create: inj.create.as_ref().and_then(
-                                                        |handler| match handler {
-                                                            InjectionHandler::Typegate => None,
-                                                            InjectionHandler::PrismaDateNow => {
-                                                                Some(cm::Injection::DateNow)
-                                                            }
-                                                        },
-                                                    ),
-                                                    update: inj.update.as_ref().and_then(
-                                                        |handler| match handler {
-                                                            InjectionHandler::Typegate => None,
-                                                            InjectionHandler::PrismaDateNow => {
-                                                                Some(cm::Injection::DateNow)
-                                                            }
-                                                        },
-                                                    ),
-                                                }
-                                            }),
-                                            unique: prop.unique,
-                                            auto: prop.auto,
-                                        }))
-                                    }
-                                    Property::Model(prop) => {
-                                        let rel_name = {
-                                            let model = self.model(*type_id)?;
-                                            let model = model.borrow();
-                                            model.relationships.get(key).unwrap().clone()
-                                        };
-                                        let model = self.model(prop.model_id)?;
-                                        let model = model.borrow();
-
-                                        Some(cm::Property::Relationship(cm::RelationshipProperty {
-                                            key: key.clone(),
-                                            cardinality: prop.quantifier.into(),
-                                            type_idx: ctx
-                                                .register_type(
-                                                    prop.wrapper_type_id,
-                                                    Some(runtime_idx),
-                                                )?
-                                                .into(),
-                                            model_name: model.type_name.clone(),
-                                            unique: prop.unique,
-                                            relationship_name: rel_name.clone(),
-                                            relationship_side: {
-                                                let rel =
-                                                    self.relationships.get(&rel_name).unwrap();
-                                                if rel.left.wrapper_type == prop.wrapper_type_id {
-                                                    cm::Side::Left
-                                                } else if rel.right.wrapper_type
-                                                    == prop.wrapper_type_id
-                                                {
-                                                    cm::Side::Right
-                                                } else {
-                                                    unreachable!()
-                                                }
-                                            },
-                                        }))
-                                    }
-                                    Property::Unmanaged(_) => {
-                                        // skip
-                                        None
-                                    }
-                                })
-                            })
-                            .filter_map(|r| r.transpose())
-                            .collect::<Result<Vec<_>>>()?,
-                        id_fields: vec![model.id_field.clone()],
-                    })
+                    self.convert_model(ctx, &model, *type_id, runtime_idx)
                 })
                 .collect::<Result<Vec<_>>>()?,
 

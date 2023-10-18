@@ -146,7 +146,6 @@ impl Property {
         let unique = runtime_config.get("unique")?.unwrap_or(false);
         let auto = runtime_config.get("auto")?.unwrap_or(false);
         let (type_id, card) = match typ {
-            // Type::Func(_) => return Ok(Self::Unmanaged(wrapper_type_id)), // other runtime
             Type::Optional(inner) => (
                 TypeId(inner.data.of).attrs()?.concrete_type,
                 Cardinality::Optional,
@@ -176,54 +175,49 @@ impl Property {
             .map(Injection::try_from)
             .transpose()
         {
-            Ok(injection) => {
-                match type_id.as_type()? {
-                    Type::Struct(_) => {
-                        if injection.is_some() {
-                            return Err("injection not supported for models".to_string().into());
-                        }
-                        Ok(Self::Model(RelationshipProperty {
-                            wrapper_type_id,
-                            model_id: type_id,
-                            quantifier: card,
-                            relationship_attributes: RelationshipAttributes::try_from(attrs)?,
-                            unique,
-                        }))
+            Ok(injection) => match type_id.as_type()? {
+                Type::Struct(_) => {
+                    if injection.is_some() {
+                        return Err("injection not supported for models".to_string().into());
                     }
-                    Type::Optional(_) | Type::Array(_) => {
-                        Err("nested optional/list not supported".into())
-                    }
-                    Type::Integer(_) => Ok(scalar(ScalarType::Integer, injection)),
-                    Type::Float(_) => Ok(scalar(ScalarType::Float, injection)),
-                    Type::Boolean(_) => Ok(scalar(ScalarType::Boolean, injection)),
-                    // TODO check format
-                    Type::String(inner) => Ok(scalar(
-                        ScalarType::String {
-                            format: match inner.data.format.as_deref() {
-                                Some("uuid") => StringType::Uuid,
-                                Some("date-time") => StringType::DateTime,
-                                _ => StringType::Plain,
-                            },
-                        },
-                        injection,
-                    )),
-                    // TODO not supported??
-                    Type::Func(_) => {
-                        if injection.is_some() {
-                            Err("injection not supported for function type".into())
-                        } else {
-                            Ok(Self::Unmanaged(wrapper_type_id))
-                        }
-                    }
-                    _ => Err("unsupported property type".into()),
+                    Ok(Self::Model(RelationshipProperty {
+                        wrapper_type_id,
+                        model_id: type_id,
+                        quantifier: card,
+                        relationship_attributes: RelationshipAttributes::try_from(attrs)?,
+                        unique,
+                    }))
                 }
-            }
+                Type::Optional(_) | Type::Array(_) => {
+                    Err("nested optional/list not supported".into())
+                }
+                Type::Integer(_) => Ok(scalar(ScalarType::Integer, injection)),
+                Type::Float(_) => Ok(scalar(ScalarType::Float, injection)),
+                Type::Boolean(_) => Ok(scalar(ScalarType::Boolean, injection)),
+                Type::String(inner) => Ok(scalar(
+                    ScalarType::String {
+                        format: match inner.data.format.as_deref() {
+                            Some("uuid") => StringType::Uuid,
+                            Some("date-time") => StringType::DateTime,
+                            _ => StringType::Plain,
+                        },
+                    },
+                    injection,
+                )),
+                Type::Func(_) => {
+                    if injection.is_some() {
+                        Err("injection not supported for function type".into())
+                    } else {
+                        Ok(Self::Unmanaged(wrapper_type_id))
+                    }
+                }
+                _ => Err("unsupported property type".into()),
+            },
             Err(_) => match type_id.as_type()? {
                 Type::Func(_) => Err("injection not supported on t::struct()".into()),
                 Type::Optional(_) | Type::Array(_) => {
                     Err("nested optional/list not supported".into())
                 }
-                // TODO use original type_id on the property
                 Type::Struct(_)
                 | Type::String(_)
                 | Type::Integer(_)
@@ -280,7 +274,6 @@ impl Injection {
                     // TODO check if other effects are present??
                     None
                 } else {
-                    // TODO check function name -> Prisma vs Typegate
                     Some(Self {
                         create: map.get(&EffectType::Create).and_then(|i| match i.as_str() {
                             "now" => Some(InjectionHandler::PrismaDateNow),

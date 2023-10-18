@@ -9,8 +9,8 @@ root: struct #41
    ├─ [title]: string #14
    └─ [author]: optional #39
       └─ item: struct #38
-         ├─ [create]: optional '_36__User_CreateInput_excluding___rel_Post_User_2?' #36
-         │  └─ item: struct '_User_CreateInput_excluding___rel_Post_User_2' #32
+         ├─ [create]: optional '_36__User_CreateInput_excluding___rel_Post_User_1?' #36
+         │  └─ item: struct '_User_CreateInput_excluding___rel_Post_User_1' #32
          │     ├─ [id]: integer #8
          │     └─ [name]: string #9
          └─ [connect]: optional '_37_UserWhere_norel?' #37

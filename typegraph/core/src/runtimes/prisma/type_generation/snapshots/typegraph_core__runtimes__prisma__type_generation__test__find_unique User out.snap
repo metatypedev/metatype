@@ -6,8 +6,8 @@ root: optional '_27__UserOutputType?' #27
 └─ item: struct '_UserOutputType' #26
    ├─ [id]: integer #11
    ├─ [name]: string #12
-   └─ [posts]: array '_25__PostOutputType_excluding___rel_Post_User_2[]' #25
-      └─ item: struct '_PostOutputType_excluding___rel_Post_User_2' #24
+   └─ [posts]: array '_25__PostOutputType_excluding___rel_Post_User_1[]' #25
+      └─ item: struct '_PostOutputType_excluding___rel_Post_User_1' #24
          ├─ [id]: integer #16
          └─ [title]: string #17
 

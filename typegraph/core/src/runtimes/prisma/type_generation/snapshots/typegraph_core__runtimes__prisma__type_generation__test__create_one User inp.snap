@@ -8,8 +8,8 @@ root: struct #30
    ├─ [name]: string #9
    └─ [posts]: optional #28
       └─ item: struct #27
-         ├─ [create]: optional '_22__Post_CreateInput_excluding___rel_Post_User_2?' #22
-         │  └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_2' #18
+         ├─ [create]: optional '_22__Post_CreateInput_excluding___rel_Post_User_1?' #22
+         │  └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #18
          │     ├─ [id]: optional #17
          │     │  └─ item: integer #13
          │     └─ [title]: string #14
@@ -21,8 +21,8 @@ root: struct #30
          │        └─ item: string #14
          └─ [createMany]: optional #26
             └─ item: struct #25
-               └─ [data]: array '_24__Post_CreateInput_excluding___rel_Post_User_2[]' #24
-                  └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_2' #18
+               └─ [data]: array '_24__Post_CreateInput_excluding___rel_Post_User_1[]' #24
+                  └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #18
                      ├─ [id]: optional #17
                      │  └─ item: integer #13
                      └─ [title]: string #14

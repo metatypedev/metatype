@@ -265,8 +265,8 @@ root: struct '_Post_QueryInput_group_by' #231
 │        │     ├─ variant_0: struct #49
 │        │     │  └─ [sort]: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
 │        │     └─ variant_1: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
-│        └─ [author]: optional '_212__User_OrderBy_excluding___rel_Post_User_2?' #212
-│           └─ item: array '_User_OrderBy_excluding___rel_Post_User_2' #211
+│        └─ [author]: optional '_212__User_OrderBy_excluding___rel_Post_User_1?' #212
+│           └─ item: array '_User_OrderBy_excluding___rel_Post_User_1' #211
 │              └─ item: struct #210
 │                 ├─ [id]: optional '_Sort' #51
 │                 │  └─ item: union #50

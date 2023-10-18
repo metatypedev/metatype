@@ -39,7 +39,7 @@ PrismaContext {
                     },
                     id_field: "id",
                     relationships: {
-                        "profile": "__rel_User_Profile_2",
+                        "profile": "__rel_User_Profile_1",
                     },
                 },
             },
@@ -77,7 +77,7 @@ PrismaContext {
                     },
                     id_field: "id",
                     relationships: {
-                        "user": "__rel_User_Profile_2",
+                        "user": "__rel_User_Profile_1",
                     },
                 },
             },
@@ -85,8 +85,8 @@ PrismaContext {
     },
     models_by_name: {},
     relationships: {
-        "__rel_User_Profile_1": Relationship {
-            name: "__rel_User_Profile_1",
+        "__rel_User_Profile_0": Relationship {
+            name: "__rel_User_Profile_0",
             left: RelationshipModel {
                 model_type: Type#8,
                 model_name: "Profile",
@@ -102,8 +102,8 @@ PrismaContext {
                 field: "profile",
             },
         },
-        "__rel_User_Profile_2": Relationship {
-            name: "__rel_User_Profile_2",
+        "__rel_User_Profile_1": Relationship {
+            name: "__rel_User_Profile_1",
             left: RelationshipModel {
                 model_type: Type#8,
                 model_name: "Profile",
