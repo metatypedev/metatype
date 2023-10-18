@@ -14,7 +14,7 @@ import {
 } from "../cookies.ts";
 import { Protocol } from "./protocol.ts";
 import { Auth } from "../../../typegraph/types.ts";
-import { FunctionNode } from "../../../typegraph/type_node.ts";
+import { FunctionNode, Type } from "../../../typegraph/type_node.ts";
 import { ComputeStage } from "../../../engine/query_engine.ts";
 import * as ast from "graphql/ast";
 import {
@@ -56,7 +56,7 @@ class AuthProfiler {
 
   async transform(profile: any, url: string) {
     const { tg, runtimeReferences } = this.authParameters;
-    const funcNode = tg.type(this.funcIndex) as FunctionNode;
+    const funcNode = tg.type(this.funcIndex, Type.FUNCTION);
     const mat = tg.materializer(funcNode.materializer);
     const runtime = runtimeReferences[mat.runtime];
     const validatorInputWeak = generateWeakValidator(tg, funcNode.input);

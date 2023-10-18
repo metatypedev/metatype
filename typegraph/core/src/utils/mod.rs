@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 
 use common::typegraph::{Auth, AuthProtocol};
-use indexmap::IndexMap;
+use serde_json::json;
 
 use crate::errors::Result;
 use crate::global_store::Store;
@@ -55,36 +55,20 @@ struct Oauth2Params {
 }
 
 fn gen_oauth2(params: Oauth2Params) -> Auth {
-    let mut auth_data = IndexMap::new();
-
-    auth_data.insert(
-        "authorize_url".to_string(),
-        serde_json::to_value(params.authorize_url).unwrap(),
-    );
-    auth_data.insert(
-        "access_url".to_string(),
-        serde_json::to_value(params.access_url).unwrap(),
-    );
-    auth_data.insert(
-        "scopes".to_string(),
-        serde_json::to_value(params.scopes).unwrap(),
-    );
-    auth_data.insert(
-        "profile_url".to_string(),
-        serde_json::to_value(params.profile_url).unwrap(),
-    );
-    auth_data.insert(
-        "profiler".to_string(),
-        params
+    let auth_data = json!({
+        "authorize_url": serde_json::to_value(params.authorize_url).unwrap(),
+        "access_url": serde_json::to_value(params.access_url).unwrap(),
+        "scopes": serde_json::to_value(params.scopes).unwrap(),
+        "profile_url": serde_json::to_value(params.profile_url).unwrap(),
+        "profiler": params
             .profiler
             .map(|p| p.into())
             .unwrap_or(serde_json::Value::Null),
-    );
-
+    });
     Auth {
         name: params.name,
         protocol: AuthProtocol::OAuth2,
-        auth_data,
+        auth_data: serde_json::from_value(auth_data).unwrap(),
     }
 }
 
