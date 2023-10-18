@@ -8,9 +8,6 @@ from typegraph.runtimes.random import RandomRuntime
 
 
 @typegraph(
-    auths=[
-        Auth.basic(["admin", "user"]),
-    ],
     cors=Cors(
         allow_origin=["https://metatype.dev", "http://localhost:3000"],
     ),
@@ -28,6 +25,8 @@ def policies(g: Graph):
         "user_only",
         "(args, { context }) => context.username ? context.username === 'user' : null",
     )
+
+    g.auth(Auth.basic(["admin", "user"]))
 
     g.expose(
         public=random.gen(t.string()).with_policy(public),

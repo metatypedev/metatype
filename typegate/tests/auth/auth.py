@@ -1,15 +1,16 @@
 from typegraph import typegraph, Policy, t, Graph
-from typegraph.graph.params import oauth2
+from typegraph.graph.params import Auth
 from typegraph.runtimes.deno import DenoRuntime
 from typegraph.runtimes.http import HttpRuntime
+from typegraph.runtimes.python import PythonRuntime
 
 
 @typegraph(
     name="test_auth",
-    auths=[oauth2.github("openid profile email")],
 )
 def test_auth(g: Graph):
     deno = DenoRuntime()
+    python = PythonRuntime()
     remote = HttpRuntime("https://api.github.com")
 
     public = Policy.public()
@@ -19,6 +20,27 @@ def test_auth(g: Graph):
     )
 
     x = t.struct({"x": t.integer()})
+
+    # deno runtime
+    # g.auth(Auth.oauth2_github("openid profile email"))
+
+    # python runtime
+    g.auth(
+        Auth.oauth2(
+            name="github",
+            authorize_url="https://github.com/login/oauth/authorize",
+            access_url="https://github.com/login/oauth/access_token",
+            # https://docs.github.com/en/rest/reference/users?apiVersion=2022-11-28#get-the-authenticated-user
+            profile_url="https://api.github.com/user",
+            # profiler="(p) => ({id: p.id})",
+            profiler=python.from_lambda(
+                t.struct({"id": t.integer()}),
+                t.struct({"id": t.integer()}),
+                lambda p: {"id": p["id"]},
+            ),
+            scopes="openid profile email",
+        )
+    )
 
     g.expose(
         public=deno.identity(x).with_policy(public),

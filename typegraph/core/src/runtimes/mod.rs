@@ -72,7 +72,7 @@ pub struct Materializer {
 }
 
 impl Materializer {
-    fn deno(data: DenoMaterializer, effect: wit::Effect) -> Self {
+    pub fn deno(data: DenoMaterializer, effect: wit::Effect) -> Self {
         Self {
             runtime_id: Store::get_deno_runtime(),
             effect,
