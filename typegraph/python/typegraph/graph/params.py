@@ -106,86 +106,86 @@ class Auth:
             ],
         )
 
-    def oauth2_digitalocean(scopes: str) -> "RawAuth":
-        res = wit_utils.oauth2_digitalocean(store, scopes)
+    def oauth2_digitalocean(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2(store, "digitalocean", scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)
 
-    def oauth2_discord(scopes: str) -> "RawAuth":
-        res = wit_utils.oauth2_discord(store, scopes)
+    def oauth2_discord(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2(store, "discord", scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)
 
-    def oauth2_dropbox(scopes: str) -> "RawAuth":
-        res = wit_utils.oauth2_dropbox(store, scopes)
+    def oauth2_dropbox(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2(store, "dropbox", scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)
 
-    def oauth2_facebook(scopes: str) -> "RawAuth":
-        res = wit_utils.oauth2_facebook(store, scopes)
+    def oauth2_facebook(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2(store, "facebook", scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)
 
-    def oauth2_github(scopes: str) -> "RawAuth":
-        res = wit_utils.oauth2_github(store, scopes)
+    def oauth2_github(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2(store, "github", scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)
 
-    def oauth2_gitlab(scopes: str) -> "RawAuth":
-        res = wit_utils.oauth2_gitlab(store, scopes)
+    def oauth2_gitlab(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2(store, "gitlab", scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)
 
-    def oauth2_google(scopes: str) -> "RawAuth":
-        res = wit_utils.oauth2_google(store, scopes)
+    def oauth2_google(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2(store, "google", scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)
 
-    def oauth2_instagram(scopes: str) -> "RawAuth":
-        res = wit_utils.oauth2_instagram(store, scopes)
+    def oauth2_instagram(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2(store, "instagram", scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)
 
-    def oauth2_linkedin(scopes: str) -> "RawAuth":
-        res = wit_utils.oauth2_linkedin(store, scopes)
+    def oauth2_linkedin(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2(store, "linkedin", scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)
 
-    def oauth2_microsoft(scopes: str) -> "RawAuth":
-        res = wit_utils.oauth2_microsoft(store, scopes)
+    def oauth2_microsoft(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2(store, "microsoft", scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)
 
-    def oauth2_reddit(scopes: str) -> "RawAuth":
-        res = wit_utils.oauth2_reddit(store, scopes)
+    def oauth2_reddit(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2(store, "reddit", scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)
 
-    def oauth2_slack(scopes: str) -> "RawAuth":
-        res = wit_utils.oauth2_slack(store, scopes)
+    def oauth2_slack(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2(store, "slack", scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)
 
-    def oauth2_stackexchange(scopes: str) -> "RawAuth":
-        res = wit_utils.oauth2_stackexchange(store, scopes)
+    def oauth2_stackexchange(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2(store, "stackexchange", scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)
 
-    def oauth2_twitter(scopes: str) -> "RawAuth":
-        res = wit_utils.oauth2_twitter(store, scopes)
+    def oauth2_twitter(scopes: str) -> "utils.Auth":
+        res = wit_utils.oauth2(store, "twitter", scopes)
         if isinstance(res, Err):
             raise Exception(res.value)
         return RawAuth(res.value)

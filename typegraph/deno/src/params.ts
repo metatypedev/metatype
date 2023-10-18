@@ -40,58 +40,58 @@ export class Auth {
   }
 
   static oauth2Digitalocean(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.oauth2Digitalocean(scopes));
+    return new RawAuth(wit_utils.oauth2("digitalocean", scopes));
   }
 
   static oauth2Discord(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.oauth2Discord(scopes));
+    return new RawAuth(wit_utils.oauth2("discord", scopes));
   }
 
   static oauth2Dropbox(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.oauth2Dropbox(scopes));
+    return new RawAuth(wit_utils.oauth2("dropbox", scopes));
   }
 
   static oauth2Facebook(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.oauth2Facebook(scopes));
+    return new RawAuth(wit_utils.oauth2("facebook", scopes));
   }
 
   static oauth2Github(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.oauth2Github(scopes));
+    return new RawAuth(wit_utils.oauth2("github", scopes));
   }
 
   static oauth2Gitlab(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.oauth2Gitlab(scopes));
+    return new RawAuth(wit_utils.oauth2("gitlab", scopes));
   }
 
   static oauth2Google(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.oauth2Google(scopes));
+    return new RawAuth(wit_utils.oauth2("google", scopes));
   }
 
   static oauth2Instagram(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.oauth2Instagram(scopes));
+    return new RawAuth(wit_utils.oauth2("instagram", scopes));
   }
 
   static oauth2Linkedin(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.oauth2Linkedin(scopes));
+    return new RawAuth(wit_utils.oauth2("linkedin", scopes));
   }
 
   static oauth2Microsoft(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.oauth2Microsoft(scopes));
+    return new RawAuth(wit_utils.oauth2("microsoft", scopes));
   }
 
   static oauth2Reddit(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.oauth2Reddit(scopes));
+    return new RawAuth(wit_utils.oauth2("reddit", scopes));
   }
 
   static oauth2Slack(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.oauth2Slack(scopes));
+    return new RawAuth(wit_utils.oauth2("slack", scopes));
   }
 
   static oauth2Stackexchange(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.oauth2Stackexchange(scopes));
+    return new RawAuth(wit_utils.oauth2("stackexchange", scopes));
   }
 
   static oauth2Twitter(scopes: string): RawAuth {
-    return new RawAuth(wit_utils.oauth2Twitter(scopes));
+    return new RawAuth(wit_utils.oauth2("twitter", scopes));
   }
 }
