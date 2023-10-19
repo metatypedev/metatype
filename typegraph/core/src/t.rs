@@ -282,6 +282,18 @@ impl Default for TypeUnion {
     }
 }
 
+impl UnionBuilder {
+    pub fn add(&mut self, ty: TypeId) -> &mut Self {
+        self.data.variants.push(ty.0);
+        self
+    }
+
+    pub fn addx(&mut self, ty: impl TypeBuilder) -> Result<&mut Self> {
+        self.add(ty.build()?);
+        Ok(self)
+    }
+}
+
 pub fn union(variants: impl IntoIterator<Item = TypeId>) -> UnionBuilder {
     UnionBuilder {
         data: TypeUnion {

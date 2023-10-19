@@ -74,22 +74,73 @@ impl TypeGen for InputType {
                         },
                         operation: Operation::Create,
                     })?;
-                    // TODO unique where
                     let connect = context.generate(&Where::new(prop.model_id))?;
+                    let connect_or_create = t::struct_()
+                        .prop("create", create)
+                        .prop("where", connect)
+                        .build()?;
 
-                    let mut inner = t::struct_();
-                    inner.propx("create", t::optional(create))?;
-                    inner.propx("connect", t::optional(connect))?;
+                    let mut inner = t::unionx!(
+                        t::struct_().prop("create", create),
+                        t::struct_().prop("connect", connect),
+                        t::struct_().prop("connectOrCreate", connect_or_create),
+                    );
 
-                    if let Cardinality::Many = prop.quantifier {
-                        inner.propx(
-                            "createMany",
-                            t::optionalx(t::struct_().propx("data", t::array(create))?)?,
-                        )?;
+                    if let Operation::Update = self.operation {
+                        let update = context.generate(&InputType {
+                            model_id: prop.model_id,
+                            skip_rel: {
+                                let mut skip_rel = self.skip_rel.clone();
+                                skip_rel.push(rel_name.to_string());
+                                skip_rel
+                            },
+                            operation: Operation::Update,
+                        })?;
+                        inner.addx(t::struct_().prop("update", update))?;
+
+                        match prop.quantifier {
+                            Cardinality::Optional => {
+                                inner.addx(t::struct_().propx("disconnect", t::boolean())?)?;
+                                inner.addx(t::struct_().propx("delete", t::boolean())?)?;
+
+                                let upsert = t::struct_()
+                                    .prop("create", create)
+                                    .prop("update", update)
+                                    .build()?;
+                                inner.addx(t::struct_().prop("upsert", upsert))?;
+                            }
+                            Cardinality::Many => {
+                                inner.addx(
+                                    t::struct_().propx(
+                                        "updateMany",
+                                        t::struct_()
+                                            .propx("where", t::optional(connect))?
+                                            .prop("data", update),
+                                    )?,
+                                )?;
+
+                                inner.addx(t::struct_().propx(
+                                    "deleteMany",
+                                    t::struct_().propx("where", t::optional(connect))?,
+                                )?)?;
+                            }
+                            _ => (),
+                        }
                     }
 
-                    // TODO what if cardinality is Cardinality::One ??
-                    builder.propx(k, t::optionalx(inner.min(1).max(1))?)?;
+                    if let Cardinality::Many = prop.quantifier {
+                        inner.addx(t::struct_().propx(
+                            "createMany",
+                            t::optionalx(t::struct_().propx("data", t::array(create))?)?,
+                        )?)?;
+                    }
+
+                    if let (Operation::Create, Cardinality::One) = (self.operation, prop.quantifier)
+                    {
+                        builder.propx(k, inner)?;
+                    } else {
+                        builder.propx(k, t::optionalx(inner)?)?;
+                    }
                 }
 
                 Property::Scalar(prop) => {
