@@ -278,7 +278,39 @@ export type KnownRuntime = {
   name: "typegraph";
   data: TypegraphRuntimeData;
 };
+export type Property = {
+  type: "scalar";
+  key: string;
+  propType: ScalarType;
+  cardinality: Cardinality;
+  typeIdx: number;
+  injection?: ManagedInjection | null;
+  unique: boolean;
+  auto: boolean;
+} | {
+  type: "relationship";
+  key: string;
+  cardinality: Cardinality;
+  typeIdx: number;
+  modelName: string;
+  unique: boolean;
+  relationshipName: string;
+  relationshipSide: Side;
+};
+export type ScalarType = {
+  type: "Boolean";
+} | {
+  type: "Int";
+} | {
+  type: "Float";
+} | {
+  type: "String";
+  format: StringType;
+};
+export type StringType = "Plain" | "Uuid" | "DateTime";
 export type Cardinality = "optional" | "one" | "many";
+export type Injection2 = "DateNow";
+export type Side = "left" | "right";
 export type AuthProtocol = "oauth2" | "jwt" | "basic";
 export type S3Materializer = {
   name: "presign_get";
@@ -365,9 +397,19 @@ export interface RandomRuntimeData {
 export interface PrismaRuntimeData {
   name: string;
   connection_string_secret: string;
-  models: number[];
+  models: Model[];
   relationships: Relationship[];
   migration_options?: MigrationOptions | null;
+}
+export interface Model {
+  typeIdx: number;
+  typeName: string;
+  props: Property[];
+  idFields: string[];
+}
+export interface ManagedInjection {
+  create?: Injection2 | null;
+  update?: Injection2 | null;
 }
 export interface Relationship {
   name: string;

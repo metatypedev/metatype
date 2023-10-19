@@ -1684,9 +1684,7 @@
         "models": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "format": "uint32",
-            "minimum": 0.0
+            "$ref": "#/definitions/Model"
           }
         },
         "relationships": {
@@ -1708,6 +1706,253 @@
         }
       },
       "additionalProperties": false
+    },
+    "Model": {
+      "type": "object",
+      "required": [
+        "idFields",
+        "props",
+        "typeIdx",
+        "typeName"
+      ],
+      "properties": {
+        "typeIdx": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "typeName": {
+          "type": "string"
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Property"
+          }
+        },
+        "idFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Property": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "auto",
+            "cardinality",
+            "key",
+            "propType",
+            "type",
+            "typeIdx",
+            "unique"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "scalar"
+              ]
+            },
+            "key": {
+              "type": "string"
+            },
+            "propType": {
+              "$ref": "#/definitions/ScalarType"
+            },
+            "cardinality": {
+              "$ref": "#/definitions/Cardinality"
+            },
+            "typeIdx": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "injection": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/ManagedInjection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "unique": {
+              "type": "boolean"
+            },
+            "auto": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "cardinality",
+            "key",
+            "modelName",
+            "relationshipName",
+            "relationshipSide",
+            "type",
+            "typeIdx",
+            "unique"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "relationship"
+              ]
+            },
+            "key": {
+              "type": "string"
+            },
+            "cardinality": {
+              "$ref": "#/definitions/Cardinality"
+            },
+            "typeIdx": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "modelName": {
+              "type": "string"
+            },
+            "unique": {
+              "type": "boolean"
+            },
+            "relationshipName": {
+              "type": "string"
+            },
+            "relationshipSide": {
+              "$ref": "#/definitions/Side"
+            }
+          }
+        }
+      ]
+    },
+    "ScalarType": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Boolean"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Int"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Float"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "format",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "String"
+              ]
+            },
+            "format": {
+              "$ref": "#/definitions/StringType"
+            }
+          }
+        }
+      ]
+    },
+    "StringType": {
+      "type": "string",
+      "enum": [
+        "Plain",
+        "Uuid",
+        "DateTime"
+      ]
+    },
+    "Cardinality": {
+      "type": "string",
+      "enum": [
+        "optional",
+        "one",
+        "many"
+      ]
+    },
+    "ManagedInjection": {
+      "type": "object",
+      "properties": {
+        "create": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Injection2"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "update": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Injection2"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Injection2": {
+      "type": "string",
+      "enum": [
+        "DateNow"
+      ]
+    },
+    "Side": {
+      "type": "string",
+      "enum": [
+        "left",
+        "right"
+      ]
     },
     "Relationship": {
       "type": "object",
@@ -1748,14 +1993,6 @@
           "$ref": "#/definitions/Cardinality"
         }
       }
-    },
-    "Cardinality": {
-      "type": "string",
-      "enum": [
-        "optional",
-        "one",
-        "many"
-      ]
     },
     "MigrationOptions": {
       "type": "object",

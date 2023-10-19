@@ -6,8 +6,7 @@ use crate::t;
 use crate::t::TypeBuilder;
 use crate::types::TypeId;
 
-mod discovery;
-pub mod registry;
+pub mod discovery;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Cardinality {
@@ -52,67 +51,6 @@ pub struct Relationship {
     pub name: String,
     pub left: RelationshipModel,
     pub right: RelationshipModel,
-}
-
-pub enum SideOfModel {
-    Left,
-    Right,
-    Both,
-    None,
-}
-
-impl Relationship {
-    pub fn get_opposite_of(&self, model_id: TypeId, field: &str) -> Option<&RelationshipModel> {
-        use SideOfModel as S;
-        match self.side_of_model(model_id) {
-            S::Both => {
-                if self.left.field == field {
-                    Some(&self.right)
-                } else if self.right.field == field {
-                    Some(&self.left)
-                } else {
-                    unreachable!()
-                }
-            }
-            S::Left => Some(&self.right),
-            S::Right => Some(&self.left),
-            S::None => None,
-        }
-    }
-
-    fn side_of_model(&self, model_type: TypeId) -> SideOfModel {
-        use SideOfModel as S;
-        if self.left.model_type == self.right.model_type {
-            if self.left.model_type == model_type {
-                S::Both
-            } else {
-                S::None
-            }
-        } else if self.left.model_type == model_type {
-            S::Left
-        } else if self.right.model_type == model_type {
-            S::Right
-        } else {
-            S::None
-        }
-    }
-
-    pub fn side_of_type(&self, type_id: TypeId) -> Option<Side> {
-        if self.left.wrapper_type == type_id {
-            Some(Side::Left)
-        } else if self.right.wrapper_type == type_id {
-            Some(Side::Right)
-        } else {
-            None
-        }
-    }
-
-    pub fn get(&self, side: Side) -> &RelationshipModel {
-        match side {
-            Side::Left => &self.left,
-            Side::Right => &self.right,
-        }
-    }
 }
 
 #[derive(Default, Clone)]
@@ -187,15 +125,13 @@ pub fn prisma_linkn(name: impl Into<String>) -> PrismaLink {
     }
 }
 
-use registry::RelationshipRegistry;
-
 #[cfg(test)]
 mod test {
     use super::{prisma_linkn, prisma_linkx};
     use crate::errors::Result;
     use crate::global_store::Store;
+    use crate::runtimes::prisma::context::PrismaContext;
     use crate::runtimes::prisma::errors;
-    use crate::runtimes::prisma::relationship::registry::RelationshipRegistry;
     use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
     use crate::test_utils::*;
 
@@ -203,10 +139,14 @@ mod test {
     fn test_implicit_relationships() -> Result<()> {
         let (user, _post) = models::simple_relationship()?;
 
-        let mut reg = RelationshipRegistry::default();
-        reg.manage(user)?;
+        let mut ctx = PrismaContext::default();
+        ctx.manage(user)?;
 
-        insta::assert_debug_snapshot!("implicit relationship", reg);
+        assert_eq!(ctx.relationships.len(), 1);
+        let (name, rel) = ctx.relationships.iter().next().unwrap();
+        assert_eq!(name, "__rel_Post_User_1");
+        assert_eq!(rel.left.model_name, "User");
+        assert_eq!(rel.right.model_name, "Post");
 
         Ok(())
     }
@@ -228,11 +168,16 @@ mod test {
             .named("Post")
             .build()?;
 
-        let mut reg = RelationshipRegistry::default();
-        reg.manage(user)?;
-        reg.manage(post)?;
+        let mut ctx = PrismaContext::default();
+        ctx.manage(user)?;
+        ctx.manage(post)?;
 
-        insta::assert_debug_snapshot!("explicitly named relationship", reg);
+        let relationships = ctx.relationships;
+        assert_eq!(relationships.len(), 1);
+        let (name, rel) = relationships.iter().next().unwrap();
+        assert_eq!(name, "PostAuthor");
+        assert_eq!(rel.left.model_name, "User");
+        assert_eq!(rel.right.model_name, "Post");
 
         Ok(())
     }
@@ -255,11 +200,16 @@ mod test {
             .named("Profile")
             .build()?;
 
-        let mut reg = RelationshipRegistry::default();
-        reg.manage(user)?;
-        reg.manage(profile)?;
+        let mut ctx = PrismaContext::default();
+        ctx.manage(user)?;
+        ctx.manage(profile)?;
 
-        insta::assert_debug_snapshot!("fkey attribute", reg);
+        let relationships = ctx.relationships;
+        assert_eq!(relationships.len(), 1);
+        let (name, rel) = relationships.iter().next().unwrap();
+        assert_eq!(name, "__rel_User_Profile_1");
+        assert_eq!(rel.left.model_name, "Profile");
+        assert_eq!(rel.right.model_name, "User");
 
         Ok(())
     }
@@ -282,11 +232,15 @@ mod test {
             .named("Profile")
             .build()?;
 
-        let mut reg = RelationshipRegistry::default();
-        reg.manage(user)?;
-        reg.manage(profile)?;
+        let mut ctx = PrismaContext::default();
+        ctx.manage(user)?;
+        ctx.manage(profile)?;
 
-        insta::assert_debug_snapshot!("unique attribute", reg);
+        assert_eq!(ctx.relationships.len(), 1);
+        let (name, rel) = ctx.relationships.iter().next().unwrap();
+        assert_eq!(name, "__rel_User_Profile_1");
+        assert_eq!(rel.left.model_name, "Profile");
+        assert_eq!(rel.right.model_name, "User");
 
         Ok(())
     }
@@ -301,10 +255,14 @@ mod test {
             .named("Node")
             .build()?;
 
-        let mut reg = RelationshipRegistry::default();
-        reg.manage(node)?;
+        let mut ctx = PrismaContext::default();
+        ctx.manage(node)?;
 
-        insta::assert_debug_snapshot!("self relationship", reg);
+        assert_eq!(ctx.relationships.len(), 1);
+        let (name, rel) = ctx.relationships.iter().next().unwrap();
+        assert_eq!(name, "__rel_Node_Node_1");
+        assert_eq!(rel.left.model_name, "Node");
+        assert_eq!(rel.right.model_name, "Node");
 
         Ok(())
     }
@@ -324,13 +282,13 @@ mod test {
             .named("Profile")
             .build()?;
 
-        let mut reg = RelationshipRegistry::default();
-        let res = reg.manage(user);
+        let mut ctx = PrismaContext::default();
+        let res = ctx.manage(user);
         assert_eq!(
             res,
             Err(errors::ambiguous_side("Profile", "user", "User", "profile"))
         );
-        let res = reg.manage(profile);
+        let res = ctx.manage(profile);
         assert_eq!(
             res,
             Err(errors::ambiguous_side("User", "profile", "Profile", "user"))
@@ -349,13 +307,13 @@ mod test {
             .named("Profile")
             .build()?;
 
-        let mut reg = RelationshipRegistry::default();
-        let res = reg.manage(user);
+        let mut ctx = PrismaContext::default();
+        let res = ctx.manage(user);
         assert_eq!(
             res,
             Err(errors::ambiguous_side("Profile", "user", "User", "profile"))
         );
-        let res = reg.manage(profile);
+        let res = ctx.manage(profile);
         assert_eq!(
             res,
             Err(errors::ambiguous_side("User", "profile", "Profile", "user"))
@@ -379,15 +337,15 @@ mod test {
             .named("Profile")
             .build()?;
 
-        let mut reg = RelationshipRegistry::default();
-        let res = reg.manage(user);
+        let mut ctx = PrismaContext::default();
+        let res = ctx.manage(user);
         assert_eq!(
             res,
             Err(errors::conflicting_attributes(
                 "fkey", "Profile", "user", "User", "profile"
             ))
         );
-        let res = reg.manage(profile);
+        let res = ctx.manage(profile);
         assert_eq!(
             res,
             Err(errors::conflicting_attributes(
@@ -408,15 +366,15 @@ mod test {
             .named("Profile")
             .build()?;
 
-        let mut reg = RelationshipRegistry::default();
-        let res = reg.manage(user);
+        let mut ctx = PrismaContext::default();
+        let res = ctx.manage(user);
         assert_eq!(
             res,
             Err(errors::conflicting_attributes(
                 "fkey", "Profile", "user", "User", "profile"
             ))
         );
-        let res = reg.manage(profile);
+        let res = ctx.manage(profile);
         assert_eq!(
             res,
             Err(errors::conflicting_attributes(
@@ -441,8 +399,8 @@ mod test {
             .named("Profile")
             .build()?;
 
-        let mut reg = RelationshipRegistry::default();
-        let res = reg.manage(user);
+        let mut ctx = PrismaContext::default();
+        let res = ctx.manage(user);
         assert_eq!(
             res,
             Err(errors::no_relationship_target("User", "profile", "Profile"))

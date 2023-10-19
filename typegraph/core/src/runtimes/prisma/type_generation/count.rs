@@ -3,16 +3,17 @@
 
 use crate::{
     errors::Result,
+    runtimes::prisma::context::PrismaContext,
     t::{self, ConcreteTypeBuilder, TypeBuilder},
     types::TypeId,
 };
 
-use super::{TypeGen, TypeGenContext};
+use super::TypeGen;
 
 pub struct Count;
 
 impl TypeGen for Count {
-    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
         t::optionalx(t::integer())?.named(self.name()).build()
     }
 

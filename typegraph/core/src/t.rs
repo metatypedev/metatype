@@ -282,6 +282,18 @@ impl Default for TypeUnion {
     }
 }
 
+impl UnionBuilder {
+    pub fn add(&mut self, ty: TypeId) -> &mut Self {
+        self.data.variants.push(ty.0);
+        self
+    }
+
+    pub fn addx(&mut self, ty: impl TypeBuilder) -> Result<&mut Self> {
+        self.add(ty.build()?);
+        Ok(self)
+    }
+}
+
 pub fn union(variants: impl IntoIterator<Item = TypeId>) -> UnionBuilder {
     UnionBuilder {
         data: TypeUnion {
@@ -358,16 +370,6 @@ impl Default for TypeStruct {
 
 pub fn struct_() -> StructBuilder {
     Default::default()
-}
-
-pub fn struct_from(props: impl Iterator<Item = (String, TypeId)>) -> StructBuilder {
-    StructBuilder {
-        data: TypeStruct {
-            props: props.map(|(k, ty)| (k, ty.into())).collect(),
-            ..Default::default()
-        },
-        ..Default::default()
-    }
 }
 
 pub fn struct_extends(ty: TypeId) -> Result<StructBuilder> {

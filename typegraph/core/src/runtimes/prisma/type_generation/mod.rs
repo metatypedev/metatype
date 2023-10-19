@@ -8,9 +8,7 @@
 //! Type generation should always be done through the `TypeGenContext` to enable
 //! the cache. Do not call `TypeGen::generate` directly.
 
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::{Rc, Weak};
+use std::rc::Rc;
 
 use regex::Regex;
 
@@ -21,19 +19,19 @@ use self::out_type::OutType;
 use self::query_input_type::QueryInputType;
 use self::query_unique_where_expr::QueryUniqueWhereExpr;
 use self::query_where_expr::QueryWhereExpr;
-use self::update_input::UpdateInput;
 use self::with_nested_count::WithNestedCount;
 
-use super::relationship::registry::RelationshipRegistry;
+use super::context::PrismaContext;
 use crate::errors::Result;
 use crate::runtimes::prisma::relationship::Cardinality;
 use crate::t::{self, TypeBuilder};
-use crate::typegraph::with_tg_mut;
+use crate::typegraph::with_tg;
 use crate::types::{TypeFun, TypeId};
 
 mod additional_filters;
 mod aggregate;
 mod count;
+mod filters;
 pub mod group_by;
 mod input_type;
 mod order_by;
@@ -41,19 +39,11 @@ mod out_type;
 pub mod query_input_type;
 mod query_unique_where_expr;
 mod query_where_expr;
-mod update_input;
 mod where_;
-mod with_filters;
 mod with_nested_count;
 
-#[derive(Default, Debug)]
-pub struct TypeGenContext {
-    pub registry: RelationshipRegistry,
-    cache: Weak<RefCell<HashMap<String, TypeId>>>,
-}
-
 trait TypeGen {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId>;
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId>;
     fn name(&self) -> String;
 }
 
@@ -99,196 +89,274 @@ pub fn replace_variables_to_indices(query: String, input_id: TypeId) -> Result<F
     })
 }
 
-impl TypeGenContext {
-    pub fn find_unique(&mut self, model_id: TypeId) -> Result<OperationTypes> {
-        self.registry.manage(model_id)?;
+impl PrismaContext {
+    fn generate(&self, generator: &impl TypeGen) -> Result<TypeId> {
+        let type_name = generator.name();
 
-        Ok(OperationTypes {
-            input: t::struct_()
-                .propx(
-                    "where",
-                    t::optional(self.generate(&QueryUniqueWhereExpr::new(model_id))?),
-                )?
-                .build()?,
-            output: t::optional(self.generate(&WithNestedCount::new(model_id))?).build()?,
-        })
-    }
+        let cached = {
+            let cache = self.typegen_cache.get_or_init(|| {
+                let cache = with_tg(|tg| tg.get_prisma_typegen_cache()).unwrap();
+                Rc::downgrade(&cache)
+            });
+            let cache = cache
+                .upgrade()
+                .ok_or_else(|| "Typegen cache not available".to_string())?;
+            let cache = cache.borrow();
+            cache.get(&type_name).cloned()
+        };
 
-    pub fn find_many(&mut self, model_id: TypeId) -> Result<OperationTypes> {
-        self.registry.manage(model_id)?;
+        if let Some(type_id) = cached {
+            Ok(type_id)
+        } else {
+            let type_id = generator.generate(self)?;
 
-        Ok(OperationTypes {
-            input: self.generate(&QueryInputType::new(model_id, false))?,
-            output: t::array(self.generate(&WithNestedCount::new(model_id))?).build()?,
-        })
-    }
-
-    pub fn find_first(&mut self, model_id: TypeId) -> Result<OperationTypes> {
-        self.registry.manage(model_id)?;
-
-        Ok(OperationTypes {
-            input: self.generate(&QueryInputType::new(model_id, false))?,
-            output: t::optional(self.generate(&OutType::new(model_id))?).build()?,
-        })
-    }
-
-    pub fn aggregate(&mut self, model_id: TypeId) -> Result<OperationTypes> {
-        self.registry.manage(model_id)?;
-
-        Ok(OperationTypes {
-            input: self.generate(&QueryInputType::new(model_id, false))?,
-            // TODO typegen
-            output: t::struct_()
-                .prop("_count", self.generate(&CountOutput::new(model_id))?)
-                .prop(
-                    "_avg",
-                    self.generate(&NumberAggregateOutput::new(model_id, true))?,
+            // name validation
+            let typ = type_id.as_type()?;
+            let name = typ
+                .get_base()
+                .ok_or_else(|| "Generated type must be a concrete type".to_string())?
+                .name
+                .as_ref()
+                .ok_or_else(|| format!("Generated type must have name: {type_name}"))?;
+            if name != &type_name {
+                return Err(format!(
+                    "Generated type name mismatch: expected {}, got {}",
+                    type_name, name
                 )
-                .prop(
-                    "_sum",
-                    self.generate(&NumberAggregateOutput::new(model_id, false))?,
-                )
-                .prop(
-                    "_min",
-                    self.generate(&NumberAggregateOutput::new(model_id, false))?,
-                )
-                .prop(
-                    "_max",
-                    self.generate(&NumberAggregateOutput::new(model_id, false))?,
-                )
-                .min(1)
-                .build()?,
-        })
-    }
+                .into());
+            }
 
-    pub fn count(&mut self, model_id: TypeId) -> Result<OperationTypes> {
-        self.registry.manage(model_id)?;
-
-        Ok(OperationTypes {
-            input: self.generate(&QueryInputType::new(model_id, false))?,
-            output: self.generate(&CountOutput::new(model_id))?,
-        })
-    }
-
-    pub fn group_by(&mut self, model_id: TypeId) -> Result<OperationTypes> {
-        self.registry.manage(model_id)?;
-
-        Ok(OperationTypes {
-            input: self.generate(&QueryInputType::new(model_id, true))?,
-            output: self.generate(&GroupByResult::new(model_id))?,
-        })
-    }
-
-    pub fn create_one(&mut self, model_id: TypeId) -> Result<OperationTypes> {
-        self.registry.manage(model_id)?;
-
-        Ok(OperationTypes {
-            input: t::struct_()
-                .prop("data", self.generate(&InputType::for_create(model_id))?)
-                .build()?,
-            output: self.generate(&OutType::new(model_id))?,
-        })
-    }
-
-    pub fn create_many(&mut self, model_id: TypeId) -> Result<OperationTypes> {
-        self.registry.manage(model_id)?;
-
-        Ok(OperationTypes {
-            input: t::struct_()
-                .propx(
-                    "data",
-                    t::array(self.generate(&InputType::for_create(model_id))?),
-                )?
-                .build()?,
-            // TODO typegen: BatchOutput
-            output: t::struct_().propx("count", t::integer())?.build()?,
-        })
-    }
-
-    pub fn update_one(&mut self, model_id: TypeId) -> Result<OperationTypes> {
-        self.registry.manage(model_id)?;
-
-        Ok(OperationTypes {
-            input: t::struct_()
-                .prop("data", self.generate(&InputType::for_update(model_id))?)
-                .prop(
-                    "where",
-                    self.generate(&QueryUniqueWhereExpr::new(model_id))?,
-                )
-                .build()?,
-            output: self.generate(&OutType::new(model_id))?,
-        })
-    }
-
-    pub fn update_many(&mut self, model_id: TypeId) -> Result<OperationTypes> {
-        self.registry.manage(model_id)?;
-
-        Ok(OperationTypes {
-            input: t::struct_()
-                .prop("data", self.generate(&UpdateInput::new(model_id))?)
-                .prop(
-                    "where",
-                    t::optional(self.generate(&QueryWhereExpr::new(model_id))?).build()?,
-                )
-                .build()?,
-            output: t::struct_().propx("count", t::integer())?.build()?,
-        })
-    }
-
-    pub fn upsert_one(&mut self, model_id: TypeId) -> Result<OperationTypes> {
-        self.registry.manage(model_id)?;
-
-        Ok(OperationTypes {
-            input: t::struct_()
-                .prop(
-                    "where",
-                    self.generate(&QueryUniqueWhereExpr::new(model_id))?,
-                )
-                .prop("create", self.generate(&InputType::for_create(model_id))?)
-                .prop("update", self.generate(&UpdateInput::new(model_id))?)
-                // .prop("update", self.generate(&InputType::for_update(model_id))?)
-                .build()?,
-            output: self.generate(&OutType::new(model_id))?,
-        })
-    }
-
-    pub fn delete_one(&mut self, model_id: TypeId) -> Result<OperationTypes> {
-        self.registry.manage(model_id)?;
-        Ok(OperationTypes {
-            input: t::struct_()
-                .prop(
-                    "where",
-                    self.generate(&QueryUniqueWhereExpr::new(model_id))?,
-                )
-                .build()?,
-            output: self.generate(&OutType::new(model_id))?,
-        })
-    }
-
-    pub fn delete_many(&mut self, model_id: TypeId) -> Result<OperationTypes> {
-        self.registry.manage(model_id)?;
-        Ok(OperationTypes {
-            input: t::struct_()
-                .prop(
-                    "where",
-                    t::optional(self.generate(&QueryWhereExpr::new(model_id))?).build()?,
-                )
-                .build()?,
-            output: t::struct_().propx("count", t::integer())?.build()?,
-        })
-    }
-
-    fn get_cache(&mut self) -> Result<Rc<RefCell<HashMap<String, TypeId>>>> {
-        match self.cache.upgrade() {
-            Some(cache) => Ok(cache),
-            None => with_tg_mut(|tg| {
-                let cache = tg.get_prisma_typegen_cache();
-                self.cache = Rc::downgrade(&cache);
-                cache
-            }),
+            // insert new entry into cache
+            let cache = self.typegen_cache.get().unwrap();
+            let cache = cache
+                .upgrade()
+                .ok_or_else(|| "Typegen cache not available".to_string())?;
+            let mut cache = cache.borrow_mut();
+            cache.insert(type_name, type_id);
+            Ok(type_id)
         }
     }
 
+    pub fn generate_types(
+        &mut self,
+        op: impl PrismaOperation,
+        model_id: TypeId,
+    ) -> Result<OperationTypes> {
+        self.manage(model_id)?;
+
+        Ok(OperationTypes {
+            input: op.generate_input_type(self, model_id)?,
+            output: op.generate_output_type(self, model_id)?,
+        })
+    }
+}
+
+pub trait PrismaOperation {
+    fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId>;
+    fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId>;
+}
+
+pub struct FindUnique;
+pub struct FindMany;
+pub struct FindFirst;
+pub struct Aggregate;
+pub struct GroupBy;
+pub struct CreateOne;
+pub struct CreateMany;
+pub struct UpdateOne;
+pub struct UpdateMany;
+pub struct UpsertOne;
+pub struct DeleteOne;
+pub struct DeleteMany;
+
+impl PrismaOperation for FindUnique {
+    fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        t::struct_()
+            .propx(
+                "where",
+                t::optional(context.generate(&QueryUniqueWhereExpr::new(model_id))?),
+            )?
+            .build()
+    }
+
+    fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        t::optional(context.generate(&WithNestedCount::new(model_id))?).build()
+    }
+}
+
+impl PrismaOperation for FindMany {
+    fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        context.generate(&QueryInputType::new(model_id, false))
+    }
+
+    fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        t::array(context.generate(&WithNestedCount::new(model_id))?).build()
+    }
+}
+
+impl PrismaOperation for FindFirst {
+    fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        context.generate(&QueryInputType::new(model_id, false))
+    }
+    fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        t::optional(context.generate(&OutType::new(model_id))?).build()
+    }
+}
+
+impl PrismaOperation for Aggregate {
+    fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        context.generate(&QueryInputType::new(model_id, false))
+    }
+    fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        t::struct_()
+            .prop("_count", context.generate(&CountOutput::new(model_id))?)
+            .prop(
+                "_avg",
+                context.generate(&NumberAggregateOutput::new(model_id, true))?,
+            )
+            .prop(
+                "_sum",
+                context.generate(&NumberAggregateOutput::new(model_id, false))?,
+            )
+            .prop(
+                "_min",
+                context.generate(&NumberAggregateOutput::new(model_id, false))?,
+            )
+            .prop(
+                "_max",
+                context.generate(&NumberAggregateOutput::new(model_id, false))?,
+            )
+            .min(1)
+            .build()
+    }
+}
+
+pub struct Count;
+
+impl PrismaOperation for Count {
+    fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        context.generate(&QueryInputType::new(model_id, false))
+    }
+    fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        context.generate(&CountOutput::new(model_id))
+    }
+}
+
+impl PrismaOperation for GroupBy {
+    fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        context.generate(&QueryInputType::new(model_id, true))
+    }
+    fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        context.generate(&GroupByResult::new(model_id))
+    }
+}
+
+impl PrismaOperation for CreateOne {
+    fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        t::struct_()
+            .prop("data", context.generate(&InputType::for_create(model_id))?)
+            .build()
+    }
+    fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        context.generate(&OutType::new(model_id))
+    }
+}
+
+impl PrismaOperation for CreateMany {
+    fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        t::struct_()
+            .propx(
+                "data",
+                t::array(context.generate(&InputType::for_create(model_id))?),
+            )?
+            .build()
+    }
+    fn generate_output_type(&self, _context: &PrismaContext, _model_id: TypeId) -> Result<TypeId> {
+        t::struct_().propx("count", t::integer())?.build()
+    }
+}
+
+impl PrismaOperation for UpdateOne {
+    fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        t::struct_()
+            .prop("data", context.generate(&InputType::for_update(model_id))?)
+            .prop(
+                "where",
+                context.generate(&QueryUniqueWhereExpr::new(model_id))?,
+            )
+            .build()
+    }
+    fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        context.generate(&OutType::new(model_id))
+    }
+}
+
+impl PrismaOperation for UpdateMany {
+    fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        t::struct_()
+            .prop("data", context.generate(&InputType::for_update(model_id))?)
+            .prop(
+                "where",
+                t::optional(context.generate(&QueryWhereExpr::new(model_id))?).build()?,
+            )
+            .build()
+    }
+    fn generate_output_type(&self, _context: &PrismaContext, _model_id: TypeId) -> Result<TypeId> {
+        t::struct_().propx("count", t::integer())?.build()
+    }
+}
+
+impl PrismaOperation for UpsertOne {
+    fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        t::struct_()
+            .prop(
+                "where",
+                context.generate(&QueryUniqueWhereExpr::new(model_id))?,
+            )
+            .prop(
+                "create",
+                context.generate(&InputType::for_create(model_id))?,
+            )
+            .prop(
+                "update",
+                context.generate(&InputType::for_update(model_id))?,
+            )
+            .build()
+    }
+    fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        context.generate(&OutType::new(model_id))
+    }
+}
+
+impl PrismaOperation for DeleteOne {
+    fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        t::struct_()
+            .prop(
+                "where",
+                context.generate(&QueryUniqueWhereExpr::new(model_id))?,
+            )
+            .build()
+    }
+    fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        context.generate(&OutType::new(model_id))
+    }
+}
+
+impl PrismaOperation for DeleteMany {
+    fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
+        t::struct_()
+            .prop(
+                "where",
+                t::optional(context.generate(&QueryWhereExpr::new(model_id))?).build()?,
+            )
+            .build()
+    }
+    fn generate_output_type(&self, _context: &PrismaContext, _model_id: TypeId) -> Result<TypeId> {
+        t::struct_().propx("count", t::integer())?.build()
+    }
+}
+
+impl PrismaContext {
     pub fn execute_raw(&mut self, param: TypeId) -> Result<OperationTypes> {
         let param = param.as_struct()?;
         Ok(OperationTypes {
@@ -304,40 +372,6 @@ impl TypeGenContext {
             output: out,
         })
     }
-
-    fn generate(&mut self, generator: &impl TypeGen) -> Result<TypeId> {
-        //! Generates a type and caches it, or returns the cached type if it
-        //! already exists.
-
-        let cache = self.get_cache()?;
-
-        let type_name = generator.name();
-        let cached_type = {
-            let cache = cache.borrow();
-            cache.get(&type_name).copied()
-        };
-        if let Some(type_id) = cached_type {
-            Ok(type_id)
-        } else {
-            let type_id = generator.generate(self)?;
-            let typ = type_id.as_type()?;
-            let name = typ
-                .get_base()
-                .ok_or_else(|| "Generated type must be a concrete type".to_string())?
-                .name
-                .as_ref()
-                .ok_or_else(|| format!("Generated type must have name: {type_name}"))?;
-            if name != &type_name {
-                return Err(format!(
-                    "Generated type name mismatch: expected {}, got {}",
-                    type_name, name
-                )
-                .into());
-            }
-            cache.borrow_mut().insert(type_name, type_id);
-            Ok(type_id)
-        }
-    }
 }
 
 #[cfg(test)]
@@ -346,11 +380,13 @@ mod test {
     use crate::test_utils::*;
     use paste::paste;
 
+    /// generate a test for the operation:
+    /// snapshot for the input type and/or the output type as specified
     macro_rules! test_op {
         ( $op_name:ident, $test_inp:expr, $test_out:expr ) => {
             paste! {
                 #[test]
-                fn [<test _ $op_name>]() -> Result<()> {
+                fn [<test _ $op_name:snake>]() -> Result<()> {
                     test_op_body!($op_name, $test_inp, $test_out)
                 }
             }
@@ -372,53 +408,56 @@ mod test {
     macro_rules! test_op_body {
         ( $op_name:ident, $test_inp:expr, $test_out:expr ) => {{
             setup(None)?;
-            let mut context = TypeGenContext::default();
+            let mut context = PrismaContext::default();
 
             let record = models::simple_record()?;
-            context.registry.manage(record)?;
-            let types = context.$op_name(record)?;
+            context.manage(record)?;
             if $test_inp {
+                let inp = $op_name.generate_input_type(&context, record)?;
                 insta::assert_snapshot!(
-                    concat!(stringify!($op_name), " Record inp"),
-                    tree::print(types.input)
+                    paste! { concat!(stringify!([<$op_name:snake>]), " Record inp") },
+                    tree::print(inp)
                 );
             }
             if $test_out {
+                let out = $op_name.generate_output_type(&context, record)?;
                 insta::assert_snapshot!(
-                    concat!(stringify!($op_name), " Record out"),
-                    tree::print(types.output)
+                    paste! { concat!(stringify!([<$op_name:snake>]), " Record out") },
+                    tree::print(out)
                 );
             }
 
             let (user, post) = models::simple_relationship()?;
-            context.registry.manage(user)?;
+            context.manage(user)?;
 
-            let types = context.$op_name(user)?;
             if $test_inp {
+                let inp = $op_name.generate_input_type(&context, user)?;
                 insta::assert_snapshot!(
-                    concat!(stringify!($op_name), " User inp"),
-                    tree::print(types.input)
+                    paste! { concat!(stringify!([<$op_name:snake>]), " User inp") },
+                    tree::print(inp)
                 );
             }
 
             if $test_out {
+                let out = $op_name.generate_output_type(&context, user)?;
                 insta::assert_snapshot!(
-                    concat!(stringify!($op_name), " User out"),
-                    tree::print(types.output)
+                    paste! { concat!(stringify!([<$op_name:snake>]), " User out") },
+                    tree::print(out)
                 );
             }
 
-            let types = context.$op_name(post)?;
             if $test_inp {
+                let inp = $op_name.generate_input_type(&context, post)?;
                 insta::assert_snapshot!(
-                    concat!(stringify!($op_name), " Post inp"),
-                    tree::print(types.input)
+                    paste! { concat!(stringify!([<$op_name:snake>]), " Post inp") },
+                    tree::print(inp)
                 );
             }
             if $test_out {
+                let out = $op_name.generate_output_type(&context, post)?;
                 insta::assert_snapshot!(
-                    concat!(stringify!($op_name), " Post out"),
-                    tree::print(types.output)
+                    paste! { concat!(stringify!([<$op_name:snake>]), " Post out") },
+                    tree::print(out)
                 );
             }
 
@@ -426,18 +465,18 @@ mod test {
         }};
     }
 
-    test_op!(find_unique);
-    test_op!(find_many);
-    test_op!(find_first, output_only);
-    test_op!(aggregate, output_only);
-    test_op!(group_by);
-    test_op!(create_one, input_only);
-    test_op!(create_many);
-    test_op!(update_one, input_only);
-    test_op!(update_many, input_only);
+    test_op!(FindUnique);
+    test_op!(FindMany);
+    test_op!(FindFirst, output_only);
+    test_op!(Aggregate, output_only);
+    test_op!(GroupBy);
+    test_op!(CreateOne, input_only);
+    test_op!(CreateMany);
+    test_op!(UpdateOne, input_only);
+    test_op!(UpdateMany, input_only);
     // the following operations reuse already tests types, so no need to test them
-    // test_op!(count);
-    // test_op!(upsert_one);
-    // test_op!(delete_one);
-    // test_op!(delete_many);
+    // test_op!(Count);
+    // test_op!(UpsertOne);
+    // test_op!(DeleteOne);
+    // test_op!(DeleteMany);
 }

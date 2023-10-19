@@ -60,6 +60,15 @@ thread_local! {
 
 static TYPEGRAPH_VERSION: &str = "0.0.3";
 
+pub fn with_tg<T>(f: impl FnOnce(&TypegraphContext) -> T) -> Result<T> {
+    TG.with(|tg| {
+        let tg = tg.borrow();
+        tg.as_ref()
+            .map(f)
+            .ok_or_else(errors::expected_typegraph_context)
+    })
+}
+
 pub fn with_tg_mut<T>(f: impl FnOnce(&mut TypegraphContext) -> T) -> Result<T> {
     TG.with(|tg| {
         let mut tg = tg.borrow_mut();

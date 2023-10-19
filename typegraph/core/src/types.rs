@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use common::typegraph::TypeNode;
+use common::typegraph::{Injection, TypeNode};
 use enum_dispatch::enum_dispatch;
 
 use crate::conversion::types::TypeConversion;
@@ -276,7 +276,7 @@ pub struct TypeAttributes {
     pub name: Option<String>,
     pub proxy_data: HashMap<String, String>,
     pub policy_chain: Vec<PolicySpec>,
-    pub injection: Option<String>,
+    pub injection: Option<Injection>,
 }
 
 impl TypeId {
@@ -335,7 +335,7 @@ impl TypeId {
         let mut type_id = *self;
         let mut proxy_data: HashMap<String, String> = HashMap::new();
         let mut policy_chain = Vec::new();
-        let mut injection: Option<String> = None;
+        let mut injection: Option<Injection> = None;
         let mut name = None;
 
         loop {
@@ -358,7 +358,9 @@ impl TypeId {
                     if injection.is_some() {
                         return Err("multiple injections not supported".to_string().into());
                     }
-                    injection = Some(inner.data.injection.clone());
+                    injection = Some(
+                        serde_json::from_str(&inner.data.injection).map_err(|e| e.to_string())?,
+                    );
                     type_id = inner.data.tpe.into();
                     continue;
                 }

@@ -1,7 +1,7 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(types.output)"
+expression: "tree::print(out)"
 ---
-root: struct #50
-└─ [count]: integer #49
+root: struct #108
+└─ [count]: integer #107
 

@@ -1,14 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{
-    errors::Result,
-    runtimes::prisma::type_generation::{where_::Where, with_filters::WithFilters},
-    t::{self, ConcreteTypeBuilder, TypeBuilder},
-    types::{Type, TypeId},
-};
+use crate::errors::Result;
+use crate::runtimes::prisma::context::PrismaContext;
+use crate::runtimes::prisma::model::{Property, ScalarType};
+use crate::runtimes::prisma::type_generation::where_::Where;
+use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+use crate::types::TypeId;
 
-use super::{aggregate::CountOutput, TypeGen, TypeGenContext};
+use super::{aggregate::CountOutput, TypeGen};
 
 pub struct GroupingFields {
     model_id: TypeId,
@@ -21,26 +21,17 @@ impl GroupingFields {
 }
 
 impl TypeGen for GroupingFields {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let mut fields = vec![];
-        for (k, type_id) in self.model_id.as_struct()?.iter_props() {
-            if context
-                .registry
-                .find_relationship_on(self.model_id, k)
-                .is_some()
-            {
-                continue;
-            }
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+        let model = context.model(self.model_id)?;
+        let model = model.borrow();
 
-            match type_id.non_optional_concrete_type()?.as_type()? {
-                Type::Boolean(_)
-                | Type::Integer(_)
-                | Type::Float(_)
-                | Type::String(_)
-                | Type::Array(_) => fields.push(k.to_string()),
-                _ => {}
-            }
-        }
+        let fields = model
+            .iter_props()
+            .filter_map(|(k, prop)| match prop {
+                Property::Scalar(_) => Some(k.to_string()),
+                _ => None,
+            })
+            .collect();
 
         t::arrayx(t::string().enum_(fields))?
             .named(self.name())
@@ -64,17 +55,15 @@ impl Having {
 }
 
 impl TypeGen for Having {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         // TODO relations??
-        let where_type = context.generate(&Where::new(self.model_id, false))?;
-        let extended_type = context
-            .generate(&WithFilters::new(where_type, self.model_id, true).with_aggregates())?;
+        let where_type = context.generate(&Where::new(self.model_id).with_aggregates())?;
 
         let name = self.name();
         let self_ref = t::proxy(&name).build()?;
 
         t::unionx![
-            extended_type,
+            where_type,
             t::struct_().propx("AND", t::array(self_ref))?,
             t::struct_().propx("OR", t::array(self_ref))?,
             t::struct_().prop("NOT", self_ref)
@@ -100,7 +89,7 @@ impl GroupByResult {
 }
 
 impl TypeGen for GroupByResult {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let model_id = self.model_id;
         t::array(
             t::struct_extends(model_id)?
@@ -151,7 +140,7 @@ impl SelectNumbers {
 }
 
 impl TypeGen for SelectNumbers {
-    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
         let opt_float = t::optional(t::float().build()?).build()?;
         let for_int = if self.promote_to_float {
@@ -159,16 +148,23 @@ impl TypeGen for SelectNumbers {
         } else {
             t::optional(t::integer().build()?).build()?
         };
-        for (k, type_id) in self.model_id.as_struct()?.iter_props() {
-            let type_id = type_id.non_optional_concrete_type()?;
-            match type_id.as_type()? {
-                Type::Integer(_) => {
-                    builder.prop(k, for_int);
-                }
-                Type::Float(_) => {
-                    builder.prop(k, opt_float);
-                }
-                _ => {}
+
+        let model = context.model(self.model_id)?;
+        let model = model.borrow();
+
+        for (k, prop) in model.iter_props() {
+            match prop {
+                Property::Scalar(prop) => match prop.prop_type {
+                    ScalarType::Integer => {
+                        builder.prop(k, for_int);
+                    }
+                    ScalarType::Float => {
+                        builder.prop(k, opt_float);
+                    }
+                    _ => {}
+                },
+                Property::Model(_) => {}
+                Property::Unmanaged(_) => {}
             }
         }
 

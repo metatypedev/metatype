@@ -62,6 +62,7 @@ def prisma(g: Graph):
         findFirstUser=db.find_first(user),
         createOneUser=db.create(user),
         createManyUsers=db.create_many(user),
+        updateUser=db.update(user),
         upsertOneUser=db.upsert(user),
         findManyPosts=db.find_many(post),
         findFirstPost=db.find_first(post),
