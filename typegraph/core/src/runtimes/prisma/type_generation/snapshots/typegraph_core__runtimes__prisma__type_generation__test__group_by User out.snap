@@ -2,31 +2,31 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(out)"
 ---
-root: array '_User_GroupByResult' #177
-└─ item: struct #176
+root: array '_User_GroupByResult' #191
+└─ item: struct #190
    ├─ [id]: integer #109
    ├─ [name]: string #110
    ├─ [posts]: array '_112_Post[]' #112
    │  └─ item: &Post #111
-   ├─ [_count]: struct '_User_AggrCount' #167
-   │  ├─ [_all]: optional #166
-   │  │  └─ item: integer #165
-   │  ├─ [id]: optional #166
-   │  │  └─ item: integer #165
-   │  ├─ [name]: optional #166
-   │  │  └─ item: integer #165
-   │  └─ [posts]: optional #166
-   │     └─ item: integer #165
-   ├─ [_avg]: struct '_User_SelectNumbers__1' #170
-   │  └─ [id]: optional #169
-   │     └─ item: float #168
-   ├─ [_sum]: struct '_User_SelectNumbers_' #175
-   │  └─ [id]: optional #174
-   │     └─ item: integer #173
-   ├─ [_min]: struct '_User_SelectNumbers_' #175
-   │  └─ [id]: optional #174
-   │     └─ item: integer #173
-   └─ [_max]: struct '_User_SelectNumbers_' #175
-      └─ [id]: optional #174
-         └─ item: integer #173
+   ├─ [_count]: struct '_User_AggrCount' #181
+   │  ├─ [_all]: optional #180
+   │  │  └─ item: integer #179
+   │  ├─ [id]: optional #180
+   │  │  └─ item: integer #179
+   │  ├─ [name]: optional #180
+   │  │  └─ item: integer #179
+   │  └─ [posts]: optional #180
+   │     └─ item: integer #179
+   ├─ [_avg]: struct '_User_SelectNumbers__1' #184
+   │  └─ [id]: optional #183
+   │     └─ item: float #182
+   ├─ [_sum]: struct '_User_SelectNumbers_' #189
+   │  └─ [id]: optional #188
+   │     └─ item: integer #187
+   ├─ [_min]: struct '_User_SelectNumbers_' #189
+   │  └─ [id]: optional #188
+   │     └─ item: integer #187
+   └─ [_max]: struct '_User_SelectNumbers_' #189
+      └─ [id]: optional #188
+         └─ item: integer #187
 

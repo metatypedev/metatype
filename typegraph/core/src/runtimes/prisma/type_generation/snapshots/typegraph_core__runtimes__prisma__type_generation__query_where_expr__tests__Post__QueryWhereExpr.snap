@@ -2,8 +2,8 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/query_where_expr.rs
 expression: "tree::print(post_where_expr)"
 ---
-root: struct 'QueryPostWhereInput' #64
-├─ [id]: optional '_51__integer_filter_c?' #51
+root: struct 'QueryPostWhereInput' #78
+├─ [id]: optional '_58__integer_filter_c?' #58
 │  └─ item: optional '_integer_filter_c' #20
 │     └─ item: union #19
 │        ├─ variant_0: either '_integer_filter' #17
@@ -49,7 +49,7 @@ root: struct 'QueryPostWhereInput' #64
 │              └─ variant_5: struct #16
 │                 └─ [notIn]: array #11
 │                    └─ item: integer #9
-├─ [title]: optional '_52__string_filter_c?' #52
+├─ [title]: optional '_59__string_filter_c?' #59
 │  └─ item: optional '_string_filter_c' #37
 │     └─ item: union #36
 │        ├─ variant_0: union '_string_filter' #34
@@ -99,9 +99,9 @@ root: struct 'QueryPostWhereInput' #64
 │                 │  └─ item: string #22
 │                 └─ [endsWith]: optional #23
 │                    └─ item: string #22
-├─ [author]: optional '_58_UserWhere__skip_8_PostWhere?' #58
-│  └─ item: struct 'UserWhere__skip_8_PostWhere' #57
-│     ├─ [id]: optional '_53__integer_filter_c?' #53
+├─ [author]: optional '_72_UserWhere__skip_8_PostWhere?' #72
+│  └─ item: struct 'UserWhere__skip_8_PostWhere' #71
+│     ├─ [id]: optional '_60__integer_filter_c?' #60
 │     │  └─ item: optional '_integer_filter_c' #20
 │     │     └─ item: union #19
 │     │        ├─ variant_0: either '_integer_filter' #17
@@ -147,7 +147,7 @@ root: struct 'QueryPostWhereInput' #64
 │     │              └─ variant_5: struct #16
 │     │                 └─ [notIn]: array #11
 │     │                    └─ item: integer #9
-│     ├─ [name]: optional '_54__string_filter_c?' #54
+│     ├─ [name]: optional '_61__string_filter_c?' #61
 │     │  └─ item: optional '_string_filter_c' #37
 │     │     └─ item: union #36
 │     │        ├─ variant_0: union '_string_filter' #34
@@ -197,14 +197,23 @@ root: struct 'QueryPostWhereInput' #64
 │     │                 │  └─ item: string #22
 │     │                 └─ [endsWith]: optional #23
 │     │                    └─ item: string #22
-│     └─ [posts]: optional '_56_PostWhere?' #56
-│        └─ item: &PostWhere #55
-├─ [AND]: optional '_62__61_QueryPostWhereInput[]?' #62
-│  └─ item: array '_61_QueryPostWhereInput[]' #61
-│     └─ item: &QueryPostWhereInput #60
-├─ [OR]: optional '_62__61_QueryPostWhereInput[]?' #62
-│  └─ item: array '_61_QueryPostWhereInput[]' #61
-│     └─ item: &QueryPostWhereInput #60
-└─ [NOT]: optional '_63_QueryPostWhereInput?' #63
-   └─ item: &QueryPostWhereInput #60
+│     └─ [posts]: optional #70
+│        └─ item: union #69
+│           ├─ variant_0: struct #64
+│           │  └─ [every]: optional '_63_PostWhere?' #63
+│           │     └─ item: &PostWhere #62
+│           ├─ variant_1: struct #66
+│           │  └─ [some]: optional '_65_PostWhere?' #65
+│           │     └─ item: &PostWhere #62
+│           └─ variant_2: struct #68
+│              └─ [none]: optional '_67_PostWhere?' #67
+│                 └─ item: &PostWhere #62
+├─ [AND]: optional '_76__75_QueryPostWhereInput[]?' #76
+│  └─ item: array '_75_QueryPostWhereInput[]' #75
+│     └─ item: &QueryPostWhereInput #74
+├─ [OR]: optional '_76__75_QueryPostWhereInput[]?' #76
+│  └─ item: array '_75_QueryPostWhereInput[]' #75
+│     └─ item: &QueryPostWhereInput #74
+└─ [NOT]: optional '_77_QueryPostWhereInput?' #77
+   └─ item: &QueryPostWhereInput #74
 

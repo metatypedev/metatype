@@ -2,10 +2,10 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(inp)"
 ---
-root: struct '_Post_QueryInput_group_by' #225
-├─ [where]: optional '_192_QueryPostWhereInput?' #192
-│  └─ item: struct 'QueryPostWhereInput' #191
-│     ├─ [id]: optional '_178__integer_filter_c?' #178
+root: struct '_Post_QueryInput_group_by' #253
+├─ [where]: optional '_213_QueryPostWhereInput?' #213
+│  └─ item: struct 'QueryPostWhereInput' #212
+│     ├─ [id]: optional '_192__integer_filter_c?' #192
 │     │  └─ item: optional '_integer_filter_c' #34
 │     │     └─ item: union #33
 │     │        ├─ variant_0: either '_integer_filter' #31
@@ -51,7 +51,7 @@ root: struct '_Post_QueryInput_group_by' #225
 │     │              └─ variant_5: struct #30
 │     │                 └─ [notIn]: array #25
 │     │                    └─ item: integer #23
-│     ├─ [title]: optional '_179__string_filter_c?' #179
+│     ├─ [title]: optional '_193__string_filter_c?' #193
 │     │  └─ item: optional '_string_filter_c' #20
 │     │     └─ item: union #19
 │     │        ├─ variant_0: union '_string_filter' #17
@@ -101,9 +101,9 @@ root: struct '_Post_QueryInput_group_by' #225
 │     │                 │  └─ item: string #5
 │     │                 └─ [endsWith]: optional #6
 │     │                    └─ item: string #5
-│     ├─ [author]: optional '_185_UserWhere__skip_117_PostWhere?' #185
-│     │  └─ item: struct 'UserWhere__skip_117_PostWhere' #184
-│     │     ├─ [id]: optional '_180__integer_filter_c?' #180
+│     ├─ [author]: optional '_206_UserWhere__skip_117_PostWhere?' #206
+│     │  └─ item: struct 'UserWhere__skip_117_PostWhere' #205
+│     │     ├─ [id]: optional '_194__integer_filter_c?' #194
 │     │     │  └─ item: optional '_integer_filter_c' #34
 │     │     │     └─ item: union #33
 │     │     │        ├─ variant_0: either '_integer_filter' #31
@@ -149,7 +149,7 @@ root: struct '_Post_QueryInput_group_by' #225
 │     │     │              └─ variant_5: struct #30
 │     │     │                 └─ [notIn]: array #25
 │     │     │                    └─ item: integer #23
-│     │     ├─ [name]: optional '_181__string_filter_c?' #181
+│     │     ├─ [name]: optional '_195__string_filter_c?' #195
 │     │     │  └─ item: optional '_string_filter_c' #20
 │     │     │     └─ item: union #19
 │     │     │        ├─ variant_0: union '_string_filter' #17
@@ -199,21 +199,30 @@ root: struct '_Post_QueryInput_group_by' #225
 │     │     │                 │  └─ item: string #5
 │     │     │                 └─ [endsWith]: optional #6
 │     │     │                    └─ item: string #5
-│     │     └─ [posts]: optional '_183_PostWhere?' #183
-│     │        └─ item: &PostWhere #182
-│     ├─ [AND]: optional '_189__188_QueryPostWhereInput[]?' #189
-│     │  └─ item: array '_188_QueryPostWhereInput[]' #188
-│     │     └─ item: &QueryPostWhereInput #187
-│     ├─ [OR]: optional '_189__188_QueryPostWhereInput[]?' #189
-│     │  └─ item: array '_188_QueryPostWhereInput[]' #188
-│     │     └─ item: &QueryPostWhereInput #187
-│     └─ [NOT]: optional '_190_QueryPostWhereInput?' #190
-│        └─ item: &QueryPostWhereInput #187
-├─ [orderBy]: optional '_203__Post_OrderBy_with_aggregates?' #203
-│  └─ item: array '_Post_OrderBy_with_aggregates' #202
-│     └─ item: struct #201
-│        ├─ [_count]: optional #194
-│        │  └─ item: struct #193
+│     │     └─ [posts]: optional #204
+│     │        └─ item: union #203
+│     │           ├─ variant_0: struct #198
+│     │           │  └─ [every]: optional '_197_PostWhere?' #197
+│     │           │     └─ item: &PostWhere #196
+│     │           ├─ variant_1: struct #200
+│     │           │  └─ [some]: optional '_199_PostWhere?' #199
+│     │           │     └─ item: &PostWhere #196
+│     │           └─ variant_2: struct #202
+│     │              └─ [none]: optional '_201_PostWhere?' #201
+│     │                 └─ item: &PostWhere #196
+│     ├─ [AND]: optional '_210__209_QueryPostWhereInput[]?' #210
+│     │  └─ item: array '_209_QueryPostWhereInput[]' #209
+│     │     └─ item: &QueryPostWhereInput #208
+│     ├─ [OR]: optional '_210__209_QueryPostWhereInput[]?' #210
+│     │  └─ item: array '_209_QueryPostWhereInput[]' #209
+│     │     └─ item: &QueryPostWhereInput #208
+│     └─ [NOT]: optional '_211_QueryPostWhereInput?' #211
+│        └─ item: &QueryPostWhereInput #208
+├─ [orderBy]: optional '_224__Post_OrderBy_with_aggregates?' #224
+│  └─ item: array '_Post_OrderBy_with_aggregates' #223
+│     └─ item: struct #222
+│        ├─ [_count]: optional #215
+│        │  └─ item: struct #214
 │        │     ├─ [id]: optional '_Sort' #47
 │        │     │  └─ item: union #46
 │        │     │     ├─ variant_0: struct #45
@@ -229,29 +238,29 @@ root: struct '_Post_QueryInput_group_by' #225
 │        │           ├─ variant_0: struct #45
 │        │           │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│        ├─ [_avg]: optional #196
-│        │  └─ item: struct #195
+│        ├─ [_avg]: optional #217
+│        │  └─ item: struct #216
 │        │     └─ [id]: optional '_Sort' #47
 │        │        └─ item: union #46
 │        │           ├─ variant_0: struct #45
 │        │           │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│        ├─ [_sum]: optional #196
-│        │  └─ item: struct #195
+│        ├─ [_sum]: optional #217
+│        │  └─ item: struct #216
 │        │     └─ [id]: optional '_Sort' #47
 │        │        └─ item: union #46
 │        │           ├─ variant_0: struct #45
 │        │           │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│        ├─ [_min]: optional #196
-│        │  └─ item: struct #195
+│        ├─ [_min]: optional #217
+│        │  └─ item: struct #216
 │        │     └─ [id]: optional '_Sort' #47
 │        │        └─ item: union #46
 │        │           ├─ variant_0: struct #45
 │        │           │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│        ├─ [_max]: optional #196
-│        │  └─ item: struct #195
+│        ├─ [_max]: optional #217
+│        │  └─ item: struct #216
 │        │     └─ [id]: optional '_Sort' #47
 │        │        └─ item: union #46
 │        │           ├─ variant_0: struct #45
@@ -267,9 +276,9 @@ root: struct '_Post_QueryInput_group_by' #225
 │        │     ├─ variant_0: struct #45
 │        │     │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
 │        │     └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│        └─ [author]: optional '_200__User_OrderBy_excluding___rel_Post_User_1?' #200
-│           └─ item: array '_User_OrderBy_excluding___rel_Post_User_1' #199
-│              └─ item: struct #198
+│        └─ [author]: optional '_221__User_OrderBy_excluding___rel_Post_User_1?' #221
+│           └─ item: array '_User_OrderBy_excluding___rel_Post_User_1' #220
+│              └─ item: struct #219
 │                 ├─ [id]: optional '_Sort' #47
 │                 │  └─ item: union #46
 │                 │     ├─ variant_0: struct #45
@@ -280,16 +289,16 @@ root: struct '_Post_QueryInput_group_by' #225
 │                       ├─ variant_0: struct #45
 │                       │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
 │                       └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-├─ [take]: optional '_204__Take?' #204
+├─ [take]: optional '_225__Take?' #225
 │  └─ item: integer '_Take' #59
-├─ [skip]: optional '_205__Skip?' #205
+├─ [skip]: optional '_226__Skip?' #226
 │  └─ item: integer '_Skip' #61
-├─ [by]: array '_Post_GroupingFields' #207
-│  └─ item: string #206 enum{ '"id"', '"title"' }
-└─ [having]: optional '_224__Post_Having?' #224
-   └─ item: union '_Post_Having' #223
-      ├─ variant_0: struct 'PostWhere__agg' #216
-      │  ├─ [id]: optional '_208__integer_filter_with_aggregates_c?' #208
+├─ [by]: array '_Post_GroupingFields' #228
+│  └─ item: string #227 enum{ '"id"', '"title"' }
+└─ [having]: optional '_252__Post_Having?' #252
+   └─ item: union '_Post_Having' #251
+      ├─ variant_0: struct 'PostWhere__agg' #244
+      │  ├─ [id]: optional '_229__integer_filter_with_aggregates_c?' #229
       │  │  └─ item: optional '_integer_filter_with_aggregates_c' #84
       │  │     └─ item: union #83
       │  │        ├─ variant_0: union '_integer_filter_with_aggregates' #81
@@ -557,7 +566,7 @@ root: struct '_Post_QueryInput_group_by' #225
       │  │                    └─ variant_5: struct #30
       │  │                       └─ [notIn]: array #25
       │  │                          └─ item: integer #23
-      │  ├─ [title]: optional '_209__string_filter_c?' #209
+      │  ├─ [title]: optional '_230__string_filter_c?' #230
       │  │  └─ item: optional '_string_filter_c' #20
       │  │     └─ item: union #19
       │  │        ├─ variant_0: union '_string_filter' #17
@@ -607,9 +616,9 @@ root: struct '_Post_QueryInput_group_by' #225
       │  │                 │  └─ item: string #5
       │  │                 └─ [endsWith]: optional #6
       │  │                    └─ item: string #5
-      │  └─ [author]: optional '_215_UserWhere__agg__skip_117_PostWhere__agg?' #215
-      │     └─ item: struct 'UserWhere__agg__skip_117_PostWhere__agg' #214
-      │        ├─ [id]: optional '_210__integer_filter_with_aggregates_c?' #210
+      │  └─ [author]: optional '_243_UserWhere__agg__skip_117_PostWhere__agg?' #243
+      │     └─ item: struct 'UserWhere__agg__skip_117_PostWhere__agg' #242
+      │        ├─ [id]: optional '_231__integer_filter_with_aggregates_c?' #231
       │        │  └─ item: optional '_integer_filter_with_aggregates_c' #84
       │        │     └─ item: union #83
       │        │        ├─ variant_0: union '_integer_filter_with_aggregates' #81
@@ -877,7 +886,7 @@ root: struct '_Post_QueryInput_group_by' #225
       │        │                    └─ variant_5: struct #30
       │        │                       └─ [notIn]: array #25
       │        │                          └─ item: integer #23
-      │        ├─ [name]: optional '_211__string_filter_c?' #211
+      │        ├─ [name]: optional '_232__string_filter_c?' #232
       │        │  └─ item: optional '_string_filter_c' #20
       │        │     └─ item: union #19
       │        │        ├─ variant_0: union '_string_filter' #17
@@ -927,14 +936,23 @@ root: struct '_Post_QueryInput_group_by' #225
       │        │                 │  └─ item: string #5
       │        │                 └─ [endsWith]: optional #6
       │        │                    └─ item: string #5
-      │        └─ [posts]: optional '_213_PostWhere__agg?' #213
-      │           └─ item: &PostWhere__agg #212
-      ├─ variant_1: struct #219
-      │  └─ [AND]: array '_218__Post_Having[]' #218
-      │     └─ item: &_Post_Having #217
-      ├─ variant_2: struct #221
-      │  └─ [OR]: array '_220__Post_Having[]' #220
-      │     └─ item: &_Post_Having #217
-      └─ variant_3: struct #222
-         └─ [NOT]: &_Post_Having #217
+      │        └─ [posts]: optional #241
+      │           └─ item: union #240
+      │              ├─ variant_0: struct #235
+      │              │  └─ [every]: optional '_234_PostWhere__agg?' #234
+      │              │     └─ item: &PostWhere__agg #233
+      │              ├─ variant_1: struct #237
+      │              │  └─ [some]: optional '_236_PostWhere__agg?' #236
+      │              │     └─ item: &PostWhere__agg #233
+      │              └─ variant_2: struct #239
+      │                 └─ [none]: optional '_238_PostWhere__agg?' #238
+      │                    └─ item: &PostWhere__agg #233
+      ├─ variant_1: struct #247
+      │  └─ [AND]: array '_246__Post_Having[]' #246
+      │     └─ item: &_Post_Having #245
+      ├─ variant_2: struct #249
+      │  └─ [OR]: array '_248__Post_Having[]' #248
+      │     └─ item: &_Post_Having #245
+      └─ variant_3: struct #250
+         └─ [NOT]: &_Post_Having #245
 

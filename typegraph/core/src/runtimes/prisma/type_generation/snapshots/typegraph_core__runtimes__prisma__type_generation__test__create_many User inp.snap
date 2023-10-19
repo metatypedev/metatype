@@ -2,20 +2,20 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(inp)"
 ---
-root: struct #68
-└─ [data]: array '_67__User_CreateInput[]' #67
-   └─ item: struct '_User_CreateInput' #66
+root: struct #75
+└─ [data]: array '_74__User_CreateInput[]' #74
+   └─ item: struct '_User_CreateInput' #73
       ├─ [id]: integer #11
       ├─ [name]: string #12
-      └─ [posts]: optional #65
-         └─ item: struct #64
-            ├─ [create]: optional '_59__Post_CreateInput_excluding___rel_Post_User_1?' #59
+      └─ [posts]: optional #72
+         └─ item: struct #71
+            ├─ [create]: optional '_66__Post_CreateInput_excluding___rel_Post_User_1?' #66
             │  └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #21
             │     ├─ [id]: optional #20
             │     │  └─ item: integer #16
             │     └─ [title]: string #17
-            ├─ [connect]: optional '_60_PostWhere?' #60
-            │  └─ item: struct 'PostWhere' #58
+            ├─ [connect]: optional '_67_PostWhere?' #67
+            │  └─ item: struct 'PostWhere' #65
             │     ├─ [id]: optional '_34__integer_filter_c?' #34
             │     │  └─ item: optional '_integer_filter_c' #33
             │     │     └─ item: union #32
@@ -112,8 +112,8 @@ root: struct #68
             │     │                 │  └─ item: string #35
             │     │                 └─ [endsWith]: optional #36
             │     │                    └─ item: string #35
-            │     └─ [author]: optional '_57_UserWhere__skip_19_PostWhere?' #57
-            │        └─ item: struct 'UserWhere__skip_19_PostWhere' #56
+            │     └─ [author]: optional '_64_UserWhere__skip_19_PostWhere?' #64
+            │        └─ item: struct 'UserWhere__skip_19_PostWhere' #63
             │           ├─ [id]: optional '_52__integer_filter_c?' #52
             │           │  └─ item: optional '_integer_filter_c' #33
             │           │     └─ item: union #32
@@ -210,11 +210,20 @@ root: struct #68
             │           │                 │  └─ item: string #35
             │           │                 └─ [endsWith]: optional #36
             │           │                    └─ item: string #35
-            │           └─ [posts]: optional '_55_PostWhere?' #55
-            │              └─ item: &PostWhere #54
-            └─ [createMany]: optional #63
-               └─ item: struct #62
-                  └─ [data]: array '_61__Post_CreateInput_excluding___rel_Post_User_1[]' #61
+            │           └─ [posts]: optional #62
+            │              └─ item: union #61
+            │                 ├─ variant_0: struct #56
+            │                 │  └─ [every]: optional '_55_PostWhere?' #55
+            │                 │     └─ item: &PostWhere #54
+            │                 ├─ variant_1: struct #58
+            │                 │  └─ [some]: optional '_57_PostWhere?' #57
+            │                 │     └─ item: &PostWhere #54
+            │                 └─ variant_2: struct #60
+            │                    └─ [none]: optional '_59_PostWhere?' #59
+            │                       └─ item: &PostWhere #54
+            └─ [createMany]: optional #70
+               └─ item: struct #69
+                  └─ [data]: array '_68__Post_CreateInput_excluding___rel_Post_User_1[]' #68
                      └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #21
                         ├─ [id]: optional #20
                         │  └─ item: integer #16

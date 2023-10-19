@@ -60,15 +60,28 @@ impl TypeGen for Where {
 
         for (key, prop) in model.iter_props() {
             match prop {
-                Property::Model(prop) => match self.skip_models.get(&prop.model_id) {
-                    Some(name) => {
-                        builder.propx(key, t::optionalx(t::proxy(name.clone()))?)?;
+                Property::Model(prop) => {
+                    let inner = match self.skip_models.get(&prop.model_id) {
+                        Some(name) => t::proxy(name.clone()).build()?,
+                        None => context.generate(&self.nested(&name, prop.model_id))?,
+                    };
+                    match prop.quantifier {
+                        Cardinality::Many => {
+                            builder.propx(
+                                key,
+                                t::optionalx(t::unionx!(
+                                    t::struct_().propx("every", t::optional(inner))?,
+                                    t::struct_().propx("some", t::optional(inner))?,
+                                    t::struct_().propx("none", t::optional(inner))?,
+                                ))?,
+                            )?;
+                        }
+                        _ => {
+                            builder.propx(key, t::optional(inner))?;
+                        }
                     }
-                    None => {
-                        let inner = context.generate(&self.nested(&name, prop.model_id))?;
-                        builder.propx(key, t::optional(inner))?;
-                    }
-                },
+                }
+
                 Property::Scalar(prop) => {
                     let generated = if let Cardinality::Many = prop.quantifier {
                         context.generate(&CompleteFilter(ScalarListFilter(prop.type_id)))?
