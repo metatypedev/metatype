@@ -167,7 +167,8 @@ interface Dependencies {
  *      array_arg: [  # o -> collectArg() -> collectArrayArg()
  *          'hello',  # -> collectArg()
  *          'world',  # -> collectArg()
- *      ]
+ *      ],
+ *      explicit_null_arg: null,  # o -> collectArg() => ((_) => null)
  *  ) {
  *      selection1
  *     selection2
