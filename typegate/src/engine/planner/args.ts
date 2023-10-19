@@ -167,7 +167,8 @@ interface Dependencies {
  *      array_arg: [  # o -> collectArg() -> collectArrayArg()
  *          'hello',  # -> collectArg()
  *          'world',  # -> collectArg()
- *      ]
+ *      ],
+ *      explicit_null_arg: null,  # o -> collectArg() => ((_) => null)
  *  ) {
  *      selection1
  *     selection2
@@ -242,7 +243,7 @@ class ArgumentCollector {
       // fallthrough: the user provided value
     }
 
-    // in case the argument node of the query is null,
+    // in case the argument node of the query is not defined
     // try to get a default value for it, else throw an error
     if (astNode == null) {
       if (typ.type === Type.OPTIONAL) {
@@ -272,6 +273,13 @@ class ArgumentCollector {
       } = valueNode;
       this.deps.variables.add(varName);
       return ({ variables: vars }) => vars[varName];
+    }
+
+    // Note: this occurs when the graphql query arg has an *explicit* null value
+    // func( .., node: null, ..) { .. }
+    // https://spec.graphql.org/June2018/#sec-Null-Value
+    if (valueNode.kind === Kind.NULL) {
+      return (_args) => null;
     }
 
     switch (typ.type) {

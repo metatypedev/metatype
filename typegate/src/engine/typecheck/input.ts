@@ -59,7 +59,7 @@ export function generateWeakValidator(
   switch (node.type) {
     case "object":
       return (value: unknown) => {
-        const filtered = filterDeclaredFields(tg, value, node, {});
+        const filtered = filterDeclaredFields(tg, value, node);
         validator(filtered);
       };
     case "optional":
@@ -74,28 +74,29 @@ function filterDeclaredFields(
   tg: TypeGraph,
   value: any,
   node: TypeNode,
-  result: Record<string, unknown>,
 ): unknown {
   switch (node.type) {
     case "object": {
       const explicitlyDeclared = Object.entries(node.properties);
+      const result = {} as Record<string, unknown>;
       for (const [field, idx] of explicitlyDeclared) {
         const nextNode = tg.type(idx);
         result[field] = filterDeclaredFields(
           tg,
-          value[field],
+          value?.[field],
           nextNode,
-          {},
         );
       }
       return result;
     }
     case "optional":
+      if (value === undefined || value === null) {
+        return null;
+      }
       return filterDeclaredFields(
         tg,
         value,
         tg.type(node.item),
-        {},
       );
     default:
       return value;
