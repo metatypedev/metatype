@@ -564,9 +564,7 @@ class ArgumentCollector {
       // fallthrough
     }
     if (typ.type != Type.OPTIONAL) {
-      throw new Error(
-        `Expected value for non-optional type argument ${this.currentNodeDetails}`,
-      );
+      throw new MandatoryArgumentError(this.currentNodeDetails);
     } else {
       this.addPoliciesFrom(typ.item);
     }
