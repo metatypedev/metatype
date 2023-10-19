@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use common::typegraph::runtimes::prisma::ScalarType;
+
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::model::{InjectionHandler, Property};
@@ -14,15 +16,6 @@ use super::TypeGen;
 enum Operation {
     Create,
     Update,
-}
-
-impl Operation {
-    fn is_update(&self) -> bool {
-        match self {
-            Operation::Create => false,
-            Operation::Update => true,
-        }
-    }
 }
 
 pub struct InputType {
@@ -144,34 +137,59 @@ impl TypeGen for InputType {
                 }
 
                 Property::Scalar(prop) => {
-                    if let Some(inj) = &prop.injection {
-                        match self.operation {
-                            Operation::Create => {
-                                if let Some(inj) = &inj.create {
-                                    if !matches!(inj, &InjectionHandler::Typegate) {
-                                        // value inserted by the prisma engine
-                                        continue;
-                                    }
+                    match self.operation {
+                        Operation::Create => {
+                            if let Some(inj) = &prop.injection {
+                                if let Some(InjectionHandler::Typegate) = &inj.create {
+                                    // value inserted by the prisma engine
+                                    continue;
                                 }
                             }
-                            Operation::Update => {
-                                if let Some(inj) = &inj.update {
-                                    if !matches!(inj, &InjectionHandler::Typegate) {
-                                        // value inserted by the prisma engine
-                                        continue;
-                                    }
+                            builder.prop(
+                                k,
+                                if prop.auto {
+                                    t::optional(prop.type_id).build()?
+                                } else {
+                                    prop.wrapper_type_id
+                                },
+                            );
+                        }
+                        Operation::Update => {
+                            if let Some(inj) = &prop.injection {
+                                if let Some(InjectionHandler::Typegate) = &inj.update {
+                                    // value inserted by the prisma engine
+                                    continue;
                                 }
                             }
+                            let mutation_type = if prop.quantifier == Cardinality::Many {
+                                t::unionx![
+                                    prop.wrapper_type_id,
+                                    t::struct_().prop("set", prop.wrapper_type_id),
+                                    t::struct_().prop("push", prop.type_id),
+                                    // "unset": mongo only
+                                ]
+                                .build()?
+                            } else {
+                                let wrapper_type_id = prop.wrapper_type_id;
+                                match prop.prop_type {
+                                    ScalarType::Boolean | ScalarType::String { .. } => t::unionx![
+                                        wrapper_type_id,
+                                        t::struct_().prop("set", wrapper_type_id)
+                                    ]
+                                    .build()?,
+                                    ScalarType::Integer | ScalarType::Float => t::unionx![
+                                        wrapper_type_id,
+                                        t::struct_().prop("set", wrapper_type_id),
+                                        t::struct_().prop("multiply", prop.type_id),
+                                        t::struct_().prop("decrement", prop.type_id),
+                                        t::struct_().prop("increment", prop.type_id),
+                                    ]
+                                    .build()?,
+                                }
+                            };
+                            builder.propx(k, t::optional(mutation_type))?;
                         }
                     }
-                    builder.prop(
-                        k,
-                        if self.operation.is_update() || prop.auto {
-                            t::optional(prop.type_id).build()?
-                        } else {
-                            prop.wrapper_type_id
-                        },
-                    );
                 }
 
                 Property::Unmanaged(_) => continue,

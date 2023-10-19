@@ -715,6 +715,34 @@ Meta.test("prisma full mapping", async (t) => {
       .on(e);
   });
 
+  await t.should("delete extended profile", async () => {
+    await gql`
+      mutation {
+        updateUser(
+          where: { id: 1 },
+          data: {
+            extended_profile: {
+              delete: true
+            }
+          }
+        ) {
+          id
+          extended_profile {
+            id
+            bio
+          }
+        }
+      }
+    `
+      .expectData({
+        updateUser: {
+          id: 1,
+          extended_profile: null,
+        },
+      })
+      .on(e);
+  });
+
   await t.should(
     "do a nested count with findUniqueUser",
     async () => {

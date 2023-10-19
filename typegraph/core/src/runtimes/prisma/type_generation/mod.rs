@@ -19,7 +19,6 @@ use self::out_type::OutType;
 use self::query_input_type::QueryInputType;
 use self::query_unique_where_expr::QueryUniqueWhereExpr;
 use self::query_where_expr::QueryWhereExpr;
-use self::update_input::UpdateInput;
 use self::with_nested_count::WithNestedCount;
 
 use super::context::PrismaContext;
@@ -40,7 +39,6 @@ mod out_type;
 pub mod query_input_type;
 mod query_unique_where_expr;
 mod query_where_expr;
-mod update_input;
 mod where_;
 mod with_nested_count;
 
@@ -296,7 +294,7 @@ impl PrismaOperation for UpdateOne {
 impl PrismaOperation for UpdateMany {
     fn generate_input_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
         t::struct_()
-            .prop("data", context.generate(&UpdateInput::new(model_id))?)
+            .prop("data", context.generate(&InputType::for_update(model_id))?)
             .prop(
                 "where",
                 t::optional(context.generate(&QueryWhereExpr::new(model_id))?).build()?,
@@ -319,7 +317,10 @@ impl PrismaOperation for UpsertOne {
                 "create",
                 context.generate(&InputType::for_create(model_id))?,
             )
-            .prop("update", context.generate(&UpdateInput::new(model_id))?)
+            .prop(
+                "update",
+                context.generate(&InputType::for_update(model_id))?,
+            )
             .build()
     }
     fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
