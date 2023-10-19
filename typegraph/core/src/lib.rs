@@ -346,7 +346,6 @@ mod tests {
                     allow_credentials: false,
                     max_age_sec: None,
                 },
-                auths: vec![],
                 rate: None,
             }
         }

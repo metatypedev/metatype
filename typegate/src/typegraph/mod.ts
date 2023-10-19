@@ -40,7 +40,6 @@ import type {
 } from "./types.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { Protocol } from "../services/auth/protocols/protocol.ts";
-import { OAuth2Auth } from "../services/auth/protocols/oauth2.ts";
 import { initRuntime } from "../runtimes/mod.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
@@ -223,14 +222,6 @@ export class TypeGraph {
     const denoRuntimeIdx = runtimes.findIndex((r) => r.name === "deno");
     ensure(denoRuntimeIdx !== -1, "cannot find deno runtime");
 
-    const additionnalAuthMaterializers = meta.auths.filter((auth) =>
-      auth.auth_data.profiler !== null
-    ).map((
-      auth,
-    ) =>
-      OAuth2Auth.materializerForProfiler(auth.auth_data.profiler! as string)
-    );
-
     const runtimeReferences = await Promise.all(
       runtimes.map((runtime, idx) => {
         if (runtime.name in staticReference) {
@@ -240,11 +231,6 @@ export class TypeGraph {
         const materializers = typegraph.materializers.filter(
           (mat) => mat.runtime === idx,
         );
-
-        if (idx === denoRuntimeIdx) {
-          // register auth materializer
-          materializers.push(...additionnalAuthMaterializers);
-        }
 
         return initRuntime(runtime.name, {
           typegraph,
@@ -257,24 +243,11 @@ export class TypeGraph {
     );
 
     const denoRuntime = runtimeReferences[denoRuntimeIdx];
+
     ensureNonNullable(denoRuntime, "cannot find deno runtime");
 
     const auths = new Map<string, Protocol>();
-    for (const auth of meta.auths) {
-      auths.set(
-        auth.name,
-        await initAuth(
-          typegraphName,
-          auth,
-          secretManager,
-          denoRuntime as DenoRuntime,
-        ),
-      );
-    }
-    // override "internal" to enforce internal auth
-    auths.set(internalAuthName, await InternalAuth.init(typegraphName));
-
-    return new TypeGraph(
+    const tg = new TypeGraph(
       typegraph,
       secretManager,
       denoRuntimeIdx,
@@ -283,6 +256,27 @@ export class TypeGraph {
       auths,
       introspection,
     );
+
+    for (const auth of meta.auths) {
+      auths.set(
+        auth.name,
+        await initAuth(
+          typegraphName,
+          auth,
+          secretManager,
+          denoRuntime as DenoRuntime,
+          {
+            tg: tg, // required for validation
+            runtimeReferences,
+          },
+        ),
+      );
+    }
+
+    // override "internal" to enforce internal auth
+    auths.set(internalAuthName, await InternalAuth.init(typegraphName));
+
+    return tg;
   }
 
   async deinit(): Promise<void> {

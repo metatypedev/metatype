@@ -23,7 +23,6 @@ interface TypegraphArgs {
   prefix?: string;
   secrets?: Array<string>;
   cors?: Cors;
-  auths?: Array<Auth>;
   rate?: Rate;
 }
 
@@ -31,6 +30,7 @@ interface TypegraphBuilderArgs {
   expose: (exports: Exports, defaultPolicy?: Policy) => void;
   inherit: () => InheritDef;
   rest: (graphql: string) => number;
+  auth: (value: Auth | RawAuth) => number;
 }
 
 export class InheritDef {
@@ -63,6 +63,10 @@ export class InheritDef {
 
 type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
 
+export class RawAuth {
+  constructor(readonly jsonStr: string) {}
+}
+
 export function typegraph(
   name: string,
   builder: TypegraphBuilder,
@@ -85,7 +89,6 @@ export function typegraph(
   const {
     name,
     dynamic,
-    auths,
     cors,
     prefix,
     rate,
@@ -118,7 +121,6 @@ export function typegraph(
       exposeHeaders: [],
       maxAgeSec: undefined,
     } as Cors,
-    auths: auths ?? [],
     rate,
   };
 
@@ -136,6 +138,12 @@ export function typegraph(
     },
     rest: (graphql: string) => {
       return wit_utils.addGraphqlEndpoint(graphql);
+    },
+    auth: (value: Auth | RawAuth) => {
+      if (value instanceof RawAuth) {
+        return wit_utils.addRawAuth(value.jsonStr);
+      }
+      return wit_utils.addAuth(value);
     },
   };
 

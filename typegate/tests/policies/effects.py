@@ -3,10 +3,7 @@ from typegraph.graph.params import Auth
 from typegraph.runtimes.deno import DenoRuntime
 
 
-@typegraph(
-    name="effects",
-    auths=[Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
-)
+@typegraph(name="effects")
 def tg_effects(g: Graph):
     deno = DenoRuntime()
     public = Policy.public()
@@ -22,6 +19,8 @@ def tg_effects(g: Graph):
         },
         name="User",
     ).with_policy(Policy.on(read=public, update=admin_only, delete=admin_only))
+
+    g.auth(Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}}))
 
     g.expose(
         public,

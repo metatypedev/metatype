@@ -12,7 +12,6 @@ from typegraph.wit import runtimes, store
 
 
 @typegraph(
-    auths=[Auth.basic(["admin"])],
     cors=Cors(
         allow_origin=["*"],
         allow_credentials=True,
@@ -30,6 +29,8 @@ def typegate(g: Graph):
     admin_only = deno.policy(
         "admin_only", code="(_args, { context }) => context.username === 'admin'"
     )
+
+    g.auth(Auth.basic(["admin"]))
 
     list_typegraphs_mat_id = runtimes.register_typegate_materializer(
         store, TypegateOperation.LIST_TYPEGRAPHS

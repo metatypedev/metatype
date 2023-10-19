@@ -2,16 +2,13 @@
 import re
 
 from typegraph import Graph, Policy, t, typegraph
-from typegraph.graph.params import Cors, Rate, oauth2
+from typegraph.graph.params import Auth, Cors, Rate
 from typegraph.providers import PrismaRuntime
 from typegraph.runtimes import HttpRuntime
 
 
 # skip:end
 @typegraph(
-    # skip:next-line
-    # out of the box authenfication support
-    auths=[oauth2.github("openid email")],
     # skip:start
     rate=Rate(window_limit=2000, window_sec=60, query_limit=200),
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
@@ -49,6 +46,10 @@ def homepage(g: Graph):
             ),
         }
     )
+
+    # skip:next-line
+    # out of the box authenfication support
+    g.auth(Auth.oauth2_github("openid email"))
 
     # expose part of the graph for queries
     g.expose(

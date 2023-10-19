@@ -43,14 +43,13 @@ typegraph(
       exposeHeaders: [],
       maxAgeSec: 120,
     },
-    auths: [
-      Auth.basic(["testBasicAuth"]),
-      Auth.hmac256("testHmacAuth"),
-    ],
   },
   (g) => {
     const deno = new DenoRuntime();
     const pub = Policy.public();
+
+    g.auth(Auth.basic(["testBasicAuth"]));
+    g.auth(Auth.hmac256("testHmacAuth"));
 
     g.expose({
       test: deno.func(

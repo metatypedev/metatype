@@ -3,7 +3,7 @@
 
 import { getLogger } from "../../log.ts";
 import { Runtime } from "../Runtime.ts";
-import { RuntimeInitParams } from "../../types.ts";
+import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { ComputeStage } from "../../engine/query_engine.ts";
 import { PythonWasmMessenger } from "./python_wasm_messenger.ts";
 import { path } from "compress/deps.ts";
@@ -145,12 +145,8 @@ export class PythonWasiRuntime extends Runtime {
 
     if (stage.props.materializer != null) {
       const mat = stage.props.materializer;
-      const { name } = mat.data ?? {};
-      const vmId = generateVmIdentifier(mat);
       return [
-        stage.withResolver((args) =>
-          this.w.execute(name as string, { vmId, args })
-        ),
+        stage.withResolver(this.delegate(mat)),
       ];
     }
 
@@ -165,5 +161,11 @@ export class PythonWasiRuntime extends Runtime {
       const resolver = parent[stage.props.node];
       return typeof resolver === "function" ? resolver() : resolver;
     })];
+  }
+
+  delegate(mat: Materializer): Resolver {
+    const { name } = mat.data ?? {};
+    const vmId = generateVmIdentifier(mat);
+    return (args: unknown) => this.w.execute(name as string, { vmId, args });
   }
 }

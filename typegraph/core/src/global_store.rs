@@ -5,6 +5,8 @@ use crate::errors::{self, Result};
 use crate::runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime};
 use crate::types::{Struct, Type, TypeFun, TypeId, WrapperTypeData};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
+use crate::wit::utils::Auth as WitAuth;
+
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
@@ -48,6 +50,7 @@ pub struct Store {
     typegate_runtime: RuntimeId,
     typegraph_runtime: RuntimeId,
     graphql_endpoints: Vec<String>,
+    auths: Vec<common::typegraph::Auth>,
 }
 
 impl Store {
@@ -284,7 +287,7 @@ impl Store {
         }
     }
 
-    pub fn add_graphql_endpoint(graphql: String) -> Result<()> {
+    pub fn add_graphql_endpoint(graphql: String) -> Result<u32> {
         with_store_mut(|s| {
             let ast = parse_query::<&str>(&graphql).map_err(|e| e.to_string())?;
             let endpoints = ast
@@ -299,12 +302,31 @@ impl Store {
                 .collect::<Vec<_>>();
 
             s.graphql_endpoints.extend(endpoints);
-            Ok(())
+            Ok(s.graphql_endpoints.len() as u32)
         })
     }
 
     pub fn get_graphql_endpoints() -> Vec<String> {
         with_store(|s| s.graphql_endpoints.clone())
+    }
+
+    pub fn add_auth(auth: WitAuth) -> Result<u32> {
+        with_store_mut(|s| {
+            let auth = auth.convert()?;
+            s.auths.push(auth);
+            Ok(s.auths.len() as u32)
+        })
+    }
+
+    pub fn add_raw_auth(auth: common::typegraph::Auth) -> Result<u32> {
+        with_store_mut(|s| {
+            s.auths.push(auth);
+            Ok(s.auths.len() as u32)
+        })
+    }
+
+    pub fn get_auths() -> Vec<common::typegraph::Auth> {
+        with_store(|s| s.auths.clone())
     }
 }
 

@@ -45,6 +45,12 @@ impl From<TypeId> for CoreTypeId {
     }
 }
 
+impl From<TypeId> for serde_json::Value {
+    fn from(id: TypeId) -> Self {
+        id.0.into()
+    }
+}
+
 pub trait TypeData {
     fn get_display_params_into(&self, params: &mut Vec<String>);
     fn variant_name(&self) -> String;
