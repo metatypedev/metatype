@@ -69,7 +69,7 @@ dev:
     TYPEGRAPH_VERSION: 0.0.3
     PRISMA_VERSION: 5.4.2
     METATYPE_VERSION: 0.2.3
-    WASM_OPT_VERSION: 0.114.1
+    WASM_OPT_VERSION: 0.116.0
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with
       zero-trust and less code, no matter where and how your (legacy) systems
