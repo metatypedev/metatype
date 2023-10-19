@@ -125,8 +125,6 @@ pub fn prisma_linkn(name: impl Into<String>) -> PrismaLink {
     }
 }
 
-// use registry::RelationshipRegistry;
-
 #[cfg(test)]
 mod test {
     use super::{prisma_linkn, prisma_linkx};
@@ -144,7 +142,11 @@ mod test {
         let mut ctx = PrismaContext::default();
         ctx.manage(user)?;
 
-        insta::assert_debug_snapshot!("implicit relationship", ctx);
+        assert_eq!(ctx.relationships.len(), 1);
+        let (name, rel) = ctx.relationships.iter().next().unwrap();
+        assert_eq!(name, "__rel_Post_User_1");
+        assert_eq!(rel.left.model_name, "User");
+        assert_eq!(rel.right.model_name, "Post");
 
         Ok(())
     }
@@ -170,7 +172,12 @@ mod test {
         ctx.manage(user)?;
         ctx.manage(post)?;
 
-        insta::assert_debug_snapshot!("explicitly named relationship", ctx);
+        let relationships = ctx.relationships;
+        assert_eq!(relationships.len(), 1);
+        let (name, rel) = relationships.iter().next().unwrap();
+        assert_eq!(name, "PostAuthor");
+        assert_eq!(rel.left.model_name, "User");
+        assert_eq!(rel.right.model_name, "Post");
 
         Ok(())
     }
@@ -197,7 +204,12 @@ mod test {
         ctx.manage(user)?;
         ctx.manage(profile)?;
 
-        insta::assert_debug_snapshot!("fkey attribute", ctx);
+        let relationships = ctx.relationships;
+        assert_eq!(relationships.len(), 1);
+        let (name, rel) = relationships.iter().next().unwrap();
+        assert_eq!(name, "__rel_User_Profile_1");
+        assert_eq!(rel.left.model_name, "Profile");
+        assert_eq!(rel.right.model_name, "User");
 
         Ok(())
     }
@@ -224,7 +236,11 @@ mod test {
         ctx.manage(user)?;
         ctx.manage(profile)?;
 
-        insta::assert_debug_snapshot!("unique attribute", ctx);
+        assert_eq!(ctx.relationships.len(), 1);
+        let (name, rel) = ctx.relationships.iter().next().unwrap();
+        assert_eq!(name, "__rel_User_Profile_1");
+        assert_eq!(rel.left.model_name, "Profile");
+        assert_eq!(rel.right.model_name, "User");
 
         Ok(())
     }
@@ -242,7 +258,11 @@ mod test {
         let mut ctx = PrismaContext::default();
         ctx.manage(node)?;
 
-        insta::assert_debug_snapshot!("self relationship", ctx);
+        assert_eq!(ctx.relationships.len(), 1);
+        let (name, rel) = ctx.relationships.iter().next().unwrap();
+        assert_eq!(name, "__rel_Node_Node_1");
+        assert_eq!(rel.left.model_name, "Node");
+        assert_eq!(rel.right.model_name, "Node");
 
         Ok(())
     }

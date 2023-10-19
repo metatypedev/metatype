@@ -411,8 +411,8 @@ Meta.test("schema generation", async (t) => {
           model User {
               id String @db.Uuid @default(uuid()) @id
               email String @db.Text @unique
-              posts Post[] @relation(name: "__rel_Post_User_2")
-              favorite_post Post? @relation(name: "__rel_User_Post_3", fields: [favorite_postId], references: [id])
+              posts Post[] @relation(name: "__rel_Post_User_1")
+              favorite_post Post? @relation(name: "__rel_User_Post_2", fields: [favorite_postId], references: [id])
               favorite_postId String? @db.Uuid
           }
 
@@ -420,9 +420,9 @@ Meta.test("schema generation", async (t) => {
               id String @db.Uuid @default(uuid()) @id
               title String @db.VarChar(256)
               content String @db.Text
-              author User @relation(name: "__rel_Post_User_2", fields: [authorId], references: [id])
+              author User @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
               authorId String @db.Uuid
-              favorite_of User[] @relation(name: "__rel_User_Post_3")
+              favorite_of User[] @relation(name: "__rel_User_Post_2")
           }
         `,
       );
@@ -433,9 +433,9 @@ Meta.test("schema generation", async (t) => {
           model User {
               id String @db.Uuid @default(uuid()) @id
               email String @db.Text @unique
-              posts Post[] @relation(name: "__rel_Post_User_3")
+              posts Post[] @relation(name: "__rel_Post_User_1")
               published_posts Post[] @relation(name: "PostPublisher")
-              favorite_post Post? @relation(name: "__rel_User_Post_5", fields: [favorite_postId], references: [id])
+              favorite_post Post? @relation(name: "__rel_User_Post_3", fields: [favorite_postId], references: [id])
               favorite_postId String? @db.Uuid
           }
 
@@ -443,11 +443,11 @@ Meta.test("schema generation", async (t) => {
               id String @db.Uuid @default(uuid()) @id
               title String @db.VarChar(256)
               content String @db.Text
-              author User @relation(name: "__rel_Post_User_3", fields: [authorId], references: [id])
+              author User @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
               authorId String @db.Uuid
               publisher User? @relation(name: "PostPublisher", fields: [publisherId], references: [id])
               publisherId String? @db.Uuid
-              favorite_of User[] @relation(name: "__rel_User_Post_5")
+              favorite_of User[] @relation(name: "__rel_User_Post_3")
           }
         `,
       );
@@ -460,9 +460,9 @@ Meta.test("schema generation", async (t) => {
               personal_hero Person? @relation(name: "__rel_Person_Person_1", fields: [personal_heroId], references: [id])
               personal_heroId String? @db.Uuid
               hero_of Person? @relation(name: "__rel_Person_Person_1")
-              mother Person? @relation(name: "__rel_Person_Person_3", fields: [motherId], references: [id])
+              mother Person? @relation(name: "__rel_Person_Person_2", fields: [motherId], references: [id])
               motherId String? @db.Uuid
-              children Person[] @relation(name: "__rel_Person_Person_3")
+              children Person[] @relation(name: "__rel_Person_Person_2")
       
               @@unique(personal_heroId)
           }

@@ -11,13 +11,9 @@ use crate::{typegraph::TypegraphContext, wit::runtimes as wit};
 use common::typegraph::runtimes::prisma as cm;
 use indexmap::{map::Entry, IndexMap, IndexSet};
 
-use super::{
-    model::{InjectionHandler, Property, RelationshipProperty, ScalarProperty},
-    relationship::{
-        discovery::{Candidate, CandidatePair},
-        RelationshipModel,
-    },
-};
+use super::model::{InjectionHandler, Property, RelationshipProperty, ScalarProperty};
+use super::relationship::discovery::CandidatePair;
+use super::relationship::RelationshipModel;
 use crate::errors::Result;
 use crate::types::TypeId;
 
@@ -71,62 +67,73 @@ impl PrismaContext {
         Ok(model.clone())
     }
 
-    pub fn is_registered(&self, candidate: &Candidate) -> bool {
-        let model = candidate.model.borrow();
-        self.models.contains_key(&model.type_id)
-            && self.models_by_name.contains_key(&model.type_name)
-            && model.relationships.contains_key(&candidate.field_name)
-    }
+    pub fn is_registered(&self, pair: &CandidatePair) -> Result<bool> {
+        let left_model = pair.0.model.borrow();
+        let right_model = pair.1.model.borrow();
 
-    pub fn register_pair(&mut self, pair: CandidatePair) -> Result<bool> {
-        match (self.is_registered(&pair.0), self.is_registered(&pair.1)) {
-            (true, true) => Ok(false),
+        let left = self.models.contains_key(&left_model.type_id)
+            && self.models_by_name.contains_key(&left_model.type_name)
+            && left_model.relationships.contains_key(&pair.1.field_name);
+
+        let right = self.models.contains_key(&right_model.type_id)
+            && self.models_by_name.contains_key(&right_model.type_name)
+            && right_model.relationships.contains_key(&pair.0.field_name);
+
+        match (left, right) {
+            (true, true) => Ok(true),
             (true, false) | (false, true) => {
                 Err(format!("Pair partially registered: pair={pair:?}").into())
             }
-            (false, false) => {
-                let id = self.next_id();
-                let pair = pair.ordered()?;
+            (false, false) => Ok(false),
+        }
+    }
 
-                let rel_name = pair.rel_name(id)?;
-                let CandidatePair(left, right) = pair;
+    pub fn register_pair(&mut self, pair: CandidatePair) -> Result<bool> {
+        if !self.is_registered(&pair)? {
+            println!("registering");
+            let id = self.next_id();
+            let pair = pair.ordered()?;
 
-                let relationship = Relationship {
-                    name: rel_name.clone(),
-                    left: RelationshipModel {
-                        model_type: left.model.type_id(),
-                        model_name: left.model.type_name(),
-                        wrapper_type: left.property.wrapper_type_id,
-                        cardinality: left.property.quantifier,
-                        field: right.field_name.clone(),
-                    },
-                    right: RelationshipModel {
-                        model_type: right.model.type_id(),
-                        model_name: right.model.type_name(),
-                        wrapper_type: right.property.wrapper_type_id,
-                        cardinality: right.property.quantifier,
-                        field: left.field_name.clone(),
-                    },
-                };
+            let rel_name = pair.rel_name(id)?;
+            let CandidatePair(left, right) = pair;
 
-                self.relationships.insert(rel_name.clone(), relationship);
+            let relationship = Relationship {
+                name: rel_name.clone(),
+                left: RelationshipModel {
+                    model_type: left.model.type_id(),
+                    model_name: left.model.type_name(),
+                    wrapper_type: left.property.wrapper_type_id,
+                    cardinality: left.property.quantifier,
+                    field: right.field_name.clone(),
+                },
+                right: RelationshipModel {
+                    model_type: right.model.type_id(),
+                    model_name: right.model.type_name(),
+                    wrapper_type: right.property.wrapper_type_id,
+                    cardinality: right.property.quantifier,
+                    field: left.field_name.clone(),
+                },
+            };
 
-                {
-                    let mut left_model = left.model.borrow_mut();
-                    left_model
-                        .relationships
-                        .insert(right.field_name.clone(), rel_name.clone());
-                }
+            self.relationships.insert(rel_name.clone(), relationship);
 
-                {
-                    let mut right_model = right.model.borrow_mut();
-                    right_model
-                        .relationships
-                        .insert(left.field_name.clone(), rel_name.clone());
-                }
-
-                Ok(true)
+            {
+                let mut left_model = left.model.borrow_mut();
+                left_model
+                    .relationships
+                    .insert(right.field_name.clone(), rel_name.clone());
             }
+
+            {
+                let mut right_model = right.model.borrow_mut();
+                right_model
+                    .relationships
+                    .insert(left.field_name.clone(), rel_name.clone());
+            }
+
+            Ok(true)
+        } else {
+            Ok(false)
         }
     }
 
@@ -162,6 +169,8 @@ impl PrismaContext {
         if let Entry::Vacant(e) = self.models.entry(model_id) {
             let model: ModelRef = Rc::new(RefCell::new(model_id.try_into()?)).into();
             e.insert(model.clone());
+            self.models_by_name
+                .insert(model.borrow().type_name.clone(), model_id);
 
             let mut res = vec![model_id];
 
@@ -180,8 +189,8 @@ impl PrismaContext {
     }
 
     fn next_id(&self) -> usize {
-        let id = self.counter.get();
-        self.counter.set(id + 1);
+        let id = self.counter.get() + 1;
+        self.counter.set(id);
         id
     }
 

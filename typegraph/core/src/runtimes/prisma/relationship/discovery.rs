@@ -71,11 +71,6 @@ impl PrismaContext {
             })
             .collect::<Result<Vec<_>>>()?;
 
-        eprintln!(
-            "exhaustive candidates: {:?}",
-            candidates.iter().map(|c| &c.field_name).collect::<Vec<_>>()
-        );
-
         let match_by_name = candidates
             .iter()
             .enumerate()
