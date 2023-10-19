@@ -92,6 +92,17 @@ def typecheck(g: Graph):
         }
     )
 
+    product = t.struct(
+        {
+            "name": t.string(),
+            "equivalent": t.array(t.ref("Product")).optional(),
+            "score": t.either(
+                [t.string(enum=["bad", "decent", "good"]), t.integer()]
+            ).optional(),
+        },
+        name="Product",
+    )
+
     g.expose(
         my_policy,
         createUser=create_user,
@@ -99,4 +110,5 @@ def typecheck(g: Graph):
         findPost=find_post,
         createPost=create_post,
         enums=deno.identity(enums),
+        findProduct=deno.identity(product),
     )
