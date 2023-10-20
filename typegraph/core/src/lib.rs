@@ -25,7 +25,6 @@ use types::{
     Array, Boolean, Either, File, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
     TypeBoolean, TypeId, Union, WithInjection, WithPolicy,
 };
-use validation::validate_name;
 use wit::core::{
     ContextCheck, Policy, PolicyId, PolicySpec, TypeArray, TypeBase, TypeEither, TypeFile,
     TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy,
@@ -183,9 +182,6 @@ impl wit::core::Guest for Lib {
     fn structb(data: TypeStruct, base: TypeBase) -> Result<CoreTypeId> {
         let mut prop_names = HashSet::new();
         for (name, _) in data.props.iter() {
-            if !validate_name(name) {
-                return Err(errors::invalid_prop_key(name));
-            }
             if prop_names.contains(name) {
                 return Err(errors::duplicate_key(name));
             }
