@@ -29,6 +29,7 @@ def iam_provider(g: Graph):
     url = f"{host}/iam-provider/auth/github?redirect_uri={quote_plus(host)}"
 
     g.expose(
+        public,
         loginUrl=deno.static(t.string(), url),
         logoutUrl=deno.static(t.string(), f"{url}&clear"),
         context=deno.func(
@@ -36,5 +37,4 @@ def iam_provider(g: Graph):
             t.struct({"username": t.string()}).optional(),
             code="(_, { context }) => Object.keys(context).length === 0 ? null : context",
         ),
-        default_policy=[public],
     )
