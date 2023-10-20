@@ -20,6 +20,7 @@ async function genSecretKey(): Promise<Record<string, string>> {
 Meta.test("Policies", async (t) => {
   const e = await t.engine("policies/policies.py", {
     secrets: await genSecretKey(),
+    typegraph: "policies",
   });
 
   await t.should("have public access", async () => {
@@ -195,6 +196,7 @@ Meta.test("Role jwt policy access", async (t) => {
 Meta.test("Namespace policies", async (t) => {
   const e = await t.engine("policies/policies.py", {
     secrets: await genSecretKey(),
+    typegraph: "policies",
   });
 
   await t.should("fail when no policy", async () => {

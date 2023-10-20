@@ -221,6 +221,14 @@ impl wit::core::Guest for Lib {
         Store::register_policy(pol.into())
     }
 
+    fn get_public_policy() -> Result<(PolicyId, String)> {
+        Ok({
+            let policy_id = Store::get_public_policy_id();
+            let policy = Store::get_policy(policy_id)?;
+            (policy_id, policy.name.clone())
+        })
+    }
+
     fn register_context_policy(key: String, check: ContextCheck) -> Result<(PolicyId, String)> {
         let name = match &check {
             ContextCheck::Value(v) => format!("__ctx_{}_{}", key, v),

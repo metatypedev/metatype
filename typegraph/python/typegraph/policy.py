@@ -22,16 +22,12 @@ from typegraph.gen.exports.core import (
 from typegraph.gen.exports.core import (
     PolicySpec as WitPolicySpec,
 )
-from typegraph.gen.exports.runtimes import MaterializerDenoPredefined
-from typegraph.wit import core, runtimes, store
+from typegraph.wit import core, store
 
 
 class Policy:
     id: int
     name: str
-
-    # class attributes
-    __public: Optional["Policy"] = None
 
     def __init__(self, id: int, name: str):
         self.id = id
@@ -39,17 +35,10 @@ class Policy:
 
     @classmethod
     def public(cls):
-        res = runtimes.get_predefined_deno_func(
-            store, MaterializerDenoPredefined(name="true")
-        )
+        res = core.get_public_policy(store)
         if isinstance(res, Err):
             raise Exception(res.value)
-        mat_id = res.value
-
-        if cls.__public is None:
-            cls.__public = cls.create("__public", mat_id)
-
-        return cls.__public
+        return cls(id=res.value[0], name=res.value[1])
 
     @classmethod
     def context(cls, key: str, check: Union[str, Pattern]) -> "Policy":
