@@ -2,18 +2,27 @@
 from os import environ
 from urllib.parse import quote_plus
 
-from typegraph import TypeGraph, policies, t
-from typegraph.graph.auth import oauth2
-from typegraph.runtimes.deno import DenoRuntime, PureFunMat
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.graph.params import Cors, Auth
+from typegraph.runtimes import DenoRuntime
+
 
 # skip:end
-with TypeGraph(
-    "iam-provider",
-    auths=[oauth2.github("openid profile email")],
+@typegraph(
     # skip:next-line
-    cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
-) as g:
-    public = policies.public()
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+)
+def iam_provider(g: Graph):
+    g.auth(
+        Auth.oauth2(
+            "github",
+            "https://github.com/login/oauth/authorize",
+            "https://github.com/login/oauth/access_token",
+            "openid profile email",
+        )
+    )
+
+    public = Policy.public()
 
     deno = DenoRuntime()
     host = environ.get("TG_URL", "http://localhost:7890")
@@ -22,12 +31,10 @@ with TypeGraph(
     g.expose(
         loginUrl=deno.static(t.string(), url),
         logoutUrl=deno.static(t.string(), f"{url}&clear"),
-        context=t.func(
+        context=deno.func(
             t.struct({}),
             t.struct({"username": t.string()}).optional(),
-            PureFunMat(
-                "(_, { context }) => Object.keys(context).length === 0 ? null : context"
-            ),
+            code="(_, { context }) => Object.keys(context).length === 0 ? null : context",
         ),
         default_policy=[public],
     )
