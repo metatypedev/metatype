@@ -9,10 +9,8 @@ export default class Policy {
   constructor(public readonly _id: number, public readonly name: string) {}
 
   static public(): Policy {
-    return Policy.create(
-      "__public",
-      runtimes.getPredefinedDenoFunc({ name: "true" }),
-    );
+    const [id, name] = core.getPublicPolicy();
+    return new Policy(id, name);
   }
 
   static context(key: string, check: string | RegExp): Policy {
