@@ -134,7 +134,7 @@ install:
     JCO_VERSION: "0.12.1"
     CARGO_INSTA_VERSION: "1.33.0"
     WASMEDGE_VERSION: "0.12.1"
-    WASM_OPT_VERSION: "0.114.1"
+    WASM_OPT_VERSION: "0.116.0"
     DENO_VERSION: "1.37.1"
   command: |
     set -e
