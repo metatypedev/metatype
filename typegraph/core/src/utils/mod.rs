@@ -16,7 +16,7 @@ use crate::wit::runtimes::MaterializerDenoFunc;
 use crate::wit::utils::Auth as WitAuth;
 use crate::{t, Lib};
 
-mod apply;
+pub mod apply;
 
 fn find_missing_props(
     supertype_id: TypeId,
@@ -109,8 +109,8 @@ impl crate::wit::utils::Guest for crate::Lib {
 
             if item.node.is_leaf() {
                 let path_infos = item.node.path_infos.clone();
-                let apply_value = path_infos.value;
-                let id = Store::get_type_by_path(supertype_id.into(), &path_infos.path)?.1;
+                let apply_value = path_infos.value.clone();
+                let id = Store::get_type_by_path(supertype_id.into(), &path_infos.clone())?.1;
 
                 if apply_value.inherit && apply_value.payload.is_none() {
                     // if inherit and no injection, keep original id

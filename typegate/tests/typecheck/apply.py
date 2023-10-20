@@ -3,7 +3,7 @@ from typegraph.runtimes.deno import DenoRuntime
 
 simple_tpe = t.struct(
     {
-        "one": t.string(),
+        "one": t.union([t.string(), t.integer()]),
         "two": t.struct(
             {
                 "apply": t.integer(),

@@ -5,8 +5,9 @@ use crate::errors::{self, Result};
 use crate::runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime};
 use crate::types::{Struct, Type, TypeFun, TypeId, WrapperTypeData};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
-use crate::wit::utils::Auth as WitAuth;
+use crate::wit::utils::{ApplyPath, Auth as WitAuth};
 
+use crate::utils::apply;
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
@@ -143,12 +144,13 @@ impl Store {
         })
     }
 
-    pub fn get_type_by_path(struct_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
+    pub fn get_type_by_path(struct_id: TypeId, path_infos: &ApplyPath) -> Result<(Type, TypeId)> {
+        let path = &path_infos.path;
         let mut ret = (struct_id.as_type()?, struct_id);
 
         let mut curr_path = vec![];
         for (pos, chunk) in path.iter().enumerate() {
-            let unwrapped_id = ret.1.resolve_wrapper()?;
+            let unwrapped_id = ret.1.resolve_wrapper(path_infos)?;
             // let unwrapped_id = self.resolve_wrapper(ret.1)?;
             match unwrapped_id.as_type()? {
                 Type::Struct(t) => {
@@ -362,7 +364,7 @@ impl TypeId {
     }
 
     /// unwrap type id inside array, optional, or WithInjection
-    pub fn resolve_wrapper(&self) -> Result<TypeId> {
+    pub fn resolve_wrapper(&self, path_infos: &ApplyPath) -> Result<TypeId> {
         let mut id = self.resolve_proxy()?;
         loop {
             let tpe = id.as_type()?;
@@ -371,6 +373,13 @@ impl TypeId {
                 Type::Optional(t) => t.data.of.into(),
                 Type::WithInjection(t) => t.data.tpe.into(),
                 Type::Proxy(t) => t.id.resolve_proxy()?,
+                Type::Union(_) => {
+                    // TODO:
+                    // iter variant
+                    let _hint = apply::infer_type(path_infos)?;
+                    // pick best matching variant relative to hint
+                    todo!()
+                }
                 _ => id,
             };
             if id == new_id {
