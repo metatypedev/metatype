@@ -42,6 +42,7 @@ dev:
       '(    CARGO_INSTA_VERSION: ").+(")': CARGO_INSTA_VERSION
       '(    JCO_VERSION: ").+(")': JCO_VERSION
       '(    WASMEDGE_VERSION: ").+(")': WASMEDGE_VERSION
+      '(    WASM_OPT_VERSION: ").+(")': WASM_OPT_VERSION
       '(    DENO_VERSION: ").+(")': DENO_VERSION
     website/docusaurus.config.js:
       '(  tagline: ").+(",)': TAGLINE
