@@ -1,20 +1,21 @@
 # skip:start
-from typegraph import TypeGraph, fx, t
-from typegraph.runtimes.deno import PureFunMat
-from typegraph.runtimes.http import HTTPRuntime, RESTMat
+from typegraph import typegraph, t, Graph
+from typegraph.runtimes import DenoRuntime, HttpRuntime
 
-http = HTTPRuntime("https://random.org/api")
 
-with TypeGraph("functions") as g:
+@typegraph()
+def functions(g: Graph):
     # skip:end
-    t.func(
+    deno = DenoRuntime()
+    deno.func(
         t.struct({"input": t.string()}),
         t.string(),
-        PureFunMat("({ input }) => `hello ${input}`"),  # with logic
+        code="({ input }) => `hello ${input}`",  # with logic
     )
 
-    t.func(
+    http = HttpRuntime("https://random.org/api")
+    http.get(
+        "/flip_coin",
         t.struct({}),
         t.enum(["head", "tail"]),
-        RESTMat(http, "GET", "/flip_coin", effect=fx.read()),  # where the logic is
     )
