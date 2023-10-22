@@ -1,0 +1,102 @@
+---
+sidebar_position: 2
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import TGExample from "@site/src/components/TGExample";
+
+# Metatype Basics
+
+Before you jump into coding, a brief introduction. The typegraphs - virtual graphs of types - are the secret sauce of the ecosystem. They establish the foundation for all the abstraction that will be introduced later. Similar to programming languages, they let the developer describe with a type system:
+
+1. _what_ data types exists
+2. _how_ these data get transformed
+3. _where_ these data and transformations run
+4. _who_ can access them
+
+## Zooming on the types
+
+There is no "object" or "primitive" type, only 4 main categories of types:
+
+- value types: `t.integer()`, `t.string()`, `t.uuid()`, etc.
+- quantifier types: `t.optional(·)`, `t.array(·)`, etc.
+- consolidator types: `t.struct(·, ·)`, `t.union(·, ·)`, etc.
+- function types: `t.func(· → ·)`, `t.policy(· → ·)`, etc.
+
+You can combine them with each other to describe almost any data type you may need. The typegate enforces the data validation when data flows through it. Some syntactic sugar is available to make the type definition shorter:
+
+<CodeBlock language="python">{require("./types.py").content}</CodeBlock>
+
+## The typegraph package
+
+The typegraph package is a Python package that allows to describe a full typegraph. It's a thin wrapper around the type system, and provides a few helpers to make the typegraph definition easier. It builds on the type system to provide some more building blocks:
+
+1. _what_ data types exists → value, quantifier, consolidator **types**
+2. _how_ these data get transformed → function types and **materializers** that specify the transformation
+3. _where_ these data and transformations run → **runtimes** that describe materializers operate
+4. _who_ can access them → a special case of function types named **policies** that control accesses
+
+This tutorial will cover these abstractions concept by concept and show how to use them by example.
+
+:::info Code sample are interactive
+You can interact with most of the typegraph in the documentation. Press command/ctrl + enter to submit the selected query or use the "play" button. Some parts might be voluntarily hidden and full source can be found by clicking on the link.
+:::
+
+A complete typegraph definition may look like the following:
+
+<TGExample
+  typegraph="first-typegraph"
+  python={require("./t.py")}
+  query={require("./query.graphql")}
+/>
+
+To start with the chat app design, copy the typegraph into the file named `example.py` next to your `compose.yml` file.
+
+## The meta CLI
+
+The meta CLI use a YAML configuration file to source some information and avoid typing the same arguments over and over again. Copy the following into named `metatype.yml` also next to previous files:
+
+```yaml
+typegates:
+  dev:
+    url: "http://localhost:7890"
+    # default values
+    username: admin
+    password: password
+typegraphs:
+  python:
+    include: "**/*.py"
+```
+
+At this point, you should have everything ready for your first typegraph. Run the following command in your terminal:
+
+```shell
+$ ls -1a
+./
+../
+.venv/
+api/
+compose.yml
+metatype.yml
+pyproject.toml
+
+$ ls -1a api
+./
+../
+example.py
+
+$ meta dev
+Loaded 1 typegraph from ./api/example.py:
+  → Pushing typegraph first-typegraph...
+  ✓ Success!
+```
+
+You can now open [http://localhost:7890/first-typegraph](http://localhost:7890/first-typegraph) in your browser. The CLI will automatically watch for changes in the typegraph and reload the typegraph. You should see a GraphQL playground with a query editor and some auto-generated documentation clicking the top-left menu item. **Congrats**, you can now to play with your first typegraph!
+
+<div className="text-center">
+  <img
+    src={require("./playground.png").default}
+    width="600"
+    alt="typegate playground"
+  />
+</div>

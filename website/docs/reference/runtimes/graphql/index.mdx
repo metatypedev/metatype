@@ -1,0 +1,26 @@
+# GraphQL
+
+## GraphQL runtime
+
+You currently have a single model to describe messages sent in the chat-based app. A reasonable next step is to add a user model and make a link between the two. While you can store users in the same database, it's wiser to avoid data duplication and re-use your service for user management available at [GraphQLZero](https://graphqlzero.almansi.me) endpoint. Let's introduce the GraphQL runtime that allows remote GraphQL queries.
+
+Update `typegraph.py` with the highlighted lines below:
+
+<TGExample
+  typegraph="graphql"
+  python={require("./graphql.py")}
+  query={require("./graphql.graphql")}
+/>
+
+Again, a few interesting happened here:
+
+1. No migration has been run. The field `user` comes from another runtime and doesn't exist in the database. The typegate will orchestrate the query execution in all runtimes and minimize the work done.
+2. The `from_parent` rule automatically fills the input type with the parent field named `uid`. The `g(·)` rule allows making named reference to another type and avoid circular reference.
+
+Other type enforcement rules also exists:
+
+- `from_secret(key)` to fill the input type with the secret in the `TG_[typegraph name]_[key]` format
+- `from_context(·)` to fill the input type with content from the request context, such as JSON Web Token (JWT), etc.
+- `set(x)` to fill the input type with content `x`
+
+You should now start to see the power provided by Metatype and might wonder how to integrate it step by step with your existing systems. Writing all those types by hand is tedious and error-prone. The next section will show you how to generate types from existing sources.

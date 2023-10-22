@@ -109,20 +109,6 @@ website:
   depends_on:
     - install
 
-docgen:
-  workdir: website
-  watch:
-    - "../typegraph/**/*.py"
-  command: |
-    set -v
-    set -e
-    poetry run pydoc-markdown
-    npx docusaurus docs:generate:graphql:typegate
-    npx docusaurus docs:generate:graphql:prisma-migration
-    npx docusaurus docs:generate:changelog
-  depends_on:
-    - typegate_native
-
 install:
   workdir: .
   watch:

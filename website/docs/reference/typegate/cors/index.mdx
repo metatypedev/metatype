@@ -1,0 +1,15 @@
+# CORS
+
+Cross-Origin Resource Sharing (CORS) on the one hand is a mechanism that allows or denies cross-origin requests in the browser. It avoids that other websites use your API without explicitly allowing it. Note that it doesn't protect other servers or a mobile app from using your typegraphs, only browsers implements the CORS mechanism. See this [documentation](https://developer.mozilla.org/en/docs/Web/HTTP/CORS) for the details.
+
+<TGExample
+  typegraph="cors"
+  python={require("./cors.py")}
+  query={require("./cors.graphql")}
+/>
+
+If your browser support well CORS, you should see an error and even more if you try to run the interactive demo. By the way, there is a hidden core header in all interactive demos you have met so far:
+
+```python
+TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"])
+```
