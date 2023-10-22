@@ -1,9 +1,44 @@
-Create (and activate) the virtual environment (a local folder where you install the dependency of a project) for your project. Then install the `typegraph` package from PyPi using pip.
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
+
+<SDKTabs>
+  <TabItem value="typescript">
+
+Install the `@typegraph/sdk` package from npm using your preferred package manager and runtime. The SDK requires Node 16+ with Typescript 4.7+, Deno 1.28+ or Bun 1+.
 
 ```bash
+# using pnpm
+pnpm add @typegraph/sdk
+
+# using npm
+npm install @typegraph/sdk
+
+# using yarn
+yarn add @typegraph/sdk
+
+# using Deno
+import { ... } from "npm:@typegraph/sdk/mod.ts";
+
+# using Bun
+bun add @typegraph/sdk
+```
+
+  </TabItem>
+  <TabItem value="python">
+
+Create (and activate) your virtual environment with Python 3.8+ for your project. Then install the `typegraph` package from Python Package Index (PyPI) using your preferred method.
+
+```bash
+# virtual env
 python3 -m venv .venv
 source .venv/bin/activate
-pip3 install typegraph --upgrade
 
-meta doctor # to check version
+# using pip
+pip3 install typegraph
+
+# using poetry
+poetry add typegraph
 ```
+
+  </TabItem>
+</SDKTabs>

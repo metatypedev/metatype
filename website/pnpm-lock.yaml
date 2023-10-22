@@ -49,9 +49,6 @@ dependencies:
   docusaurus-theme-frontmatter:
     specifier: ^1.3.0
     version: 1.3.0(@docusaurus/plugin-content-docs@2.4.3)
-  gleap:
-    specifier: ^12.1.1
-    version: 12.1.1
   graphiql:
     specifier: 3.0.6
     version: 3.0.6(@codemirror/language@6.0.0)(@types/react@18.2.31)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
@@ -7237,10 +7234,6 @@ packages:
 
   /github-slugger@1.5.0:
     resolution: {integrity: sha512-wIh+gKBI9Nshz2o46B0B3f5k/W+WI9ZAv6y5Dn5WJ5SK1t0TnDimB4WE5rmTD05ZAIn8HALCZVmCsvj0w0v0lw==}
-
-  /gleap@12.1.1:
-    resolution: {integrity: sha512-G83a1TswXvWVX40oKmyOc4MOHDhUL9xJrnFKR7mQA9XtiiVZ9YGfOQa5eJl20H4m8qMRC1wSMb6RJUgVY7Av2g==}
-    dev: false
 
   /glob-parent@3.1.0:
     resolution: {integrity: sha512-E8Ak/2+dZY6fnzlR7+ueWvhsH1SjHr4jjss4YS/h4py44jY9MhK/VFdaZJAWDz6BbL21KeteKxFSFpq8OS5gVA==}

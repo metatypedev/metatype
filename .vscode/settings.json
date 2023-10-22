@@ -61,4 +61,5 @@
   "python.analysis.extraPaths": [
     "typegraph/python"
   ],
+  "mdx.experimentalLanguageServer": true,
 }
