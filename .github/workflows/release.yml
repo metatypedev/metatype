@@ -24,19 +24,21 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v${{ env.DENO_VERSION }}
-      - name: Check version
+      - uses: kenji-miyake/setup-git-cliff@v1
+      - id: checks
         run: |
           VERSION=$(deno run -A dev/lock.ts --version)
           if [[ "${{ github.ref_name }}" != "v$VERSION" ]]; then
-            echo "Tag does not match code version, stopping."
+            echo "Tag ${{ github.ref_name }} does not match code version v$VERSION, stopping."
             exit -1
           fi
           echo "Releasing v$VERSION"
+          echo "release_note=$(git cliff --latest --strip header)" >> $GITHUB_OUTPUT
       - uses: ncipollo/release-action@v1
         with:
           tag: ${{ github.ref_name }}
           makeLatest: true
-          generateReleaseNotes: true
+          body: ${{ steps.checks.outputs.release_note }}
           discussionCategory: "Announcements"
 
   meta-cli:
@@ -223,18 +225,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: dsherret/rust-toolchain-file@v1
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v${{ env.DENO_VERSION }}
+      - uses: kenji-miyake/setup-git-cliff@v1
       - id: bump
         run: |
           deno run -A dev/lock.ts --bump prerelease
           echo "version=$(deno run -A dev/lock.ts --version)" >> $GITHUB_OUTPUT
+          git cliff --output CHANGELOG.md
       - uses: peter-evans/create-pull-request@v5
         with:
           branch: bump-${{ steps.bump.outputs.version }}
           delete-branch: true
-          commit-message: "chore: prepare release ${{ steps.bump.outputs.version }}"
-          title: "chore: prepare release ${{ steps.bump.outputs.version }}"
+          commit-message: "chore(release): prepare for ${{ steps.bump.outputs.version }}"
+          title: "chore(release): prepare for ${{ steps.bump.outputs.version }}"
           body: "Automatic suggested bump"
           base: main

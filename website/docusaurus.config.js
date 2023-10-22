@@ -33,7 +33,6 @@ const config = {
     "docusaurus-plugin-sass",
     require("./packages/tailwindcss"),
     require("./packages/code-loader"),
-    require("./packages/changelog"),
     [
       "docusaurus-graphql-plugin",
       {

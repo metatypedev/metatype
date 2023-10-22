@@ -91,7 +91,7 @@ const sidebars = {
             },
           ],
         },
-        "reference/specifications",
+        //"reference/specifications",
         "reference/changelog",
       ],
     },
