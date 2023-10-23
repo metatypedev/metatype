@@ -1,5 +1,5 @@
 # skip:start
-from typegraph import typegraph, Policy
+from typegraph import typegraph
 from typegraph.runtimes.deno import DenoRuntime
 
 
@@ -7,5 +7,5 @@ from typegraph.runtimes.deno import DenoRuntime
 def policies(g):
     # skip:end
     deno = DenoRuntime()
-    public = deno.policy("public", "() => true")
-    team_only = deno.policy("team", "(ctx) => ctx.user.role === 'admin'")
+    public = deno.policy("public", "() => true")  # noqa
+    team_only = deno.policy("team", "(ctx) => ctx.user.role === 'admin'")  # noqa
