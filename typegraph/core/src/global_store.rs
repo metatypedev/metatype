@@ -228,6 +228,7 @@ impl Store {
                 }
                 Type::Union(..) | Type::Either(..) => {
                     ret = Store::get_reduced_branching(unwrapped_id, &path[pos..])?;
+                    break;
                 }
                 _ => return Err(errors::expect_object_at_path(&curr_path)),
             }
