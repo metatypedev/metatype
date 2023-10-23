@@ -1,5 +1,6 @@
 env:
   TYPEGRAPH_VERSION: "0.0.3"
+  PATH: "$PATH:~/.deno/bin"
 
 typegate1: &tp
   workdir: typegate
@@ -141,9 +142,9 @@ install:
     deno --version | grep -q $DENO_VERSION || (echo "require deno upgrade to $DENO_VERSION" && exit 1)
     poetry install --sync
     ~/.wasmedge/bin/wasmedge --version | grep -q $WASMEDGE_VERSION || curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
-    cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
-    cargo install wasm-opt --version $WASM_OPT_VERSION --locked
-    cargo install cargo-insta --version $CARGO_INSTA_VERSION --locked
+    cargo binstall wasm-tools --version $WASM_TOOLS_VERSION --locked -y
+    cargo binstall wasm-opt --version $WASM_OPT_VERSION --locked -y
+    cargo binstall cargo-insta --version $CARGO_INSTA_VERSION --locked -y
     deno install --allow-all --force -n deno_bindgen $DENO_BINDGEN_URL
     npm install --global @bytecodealliance/jco@$JCO_VERSION
     [ -d .venv ] || python3 -m venv .venv

@@ -1,0 +1,64 @@
+[package]
+name = "deno"
+version = "0.2.4-0+dev"
+edition = "2021"
+
+[features]
+
+[[bin]]
+name = "deno"
+path = "main.rs"
+
+[dependencies]
+deno_core = "0.222"
+deno_runtime = "0.129"
+deno_ast = {version = "0.29.5", features = ["cjs"]}
+deno_graph = "0.56.3"
+deno_npm = "0.15.2"
+deno_semver = "0.5.1"
+deno_lockfile = "0.17.1"
+deno_cache_dir = "0.6.0"
+deno_config = "=0.3.1"
+import_map = "0.15.0"
+
+thiserror = "1"
+educe = "0.4.23"
+
+hex = "0.4"
+encoding_rs = "=0.8.33"
+base32 = "=0.4.0"
+percent-encoding = "=2.3.0"
+
+async-trait = "0.1"
+tokio = { workspace = true, features = ["full"] }
+tokio-util = "0.7.9"
+fs3 = "0.5.0"
+walkdir = "=2.3.2"
+
+log = "0.4.20"
+env_logger = "0.10.0"
+
+data-url = "0.3.0"
+cache_control = "0.2.0"
+chrono = { version = "0.4", default-features = false, features = [
+  "std",
+  "serde",
+  "clock",
+] }
+twox-hash = "=1.6.3"
+
+anyhow.workspace = true
+futures.workspace = true
+bytes.workspace = true
+tar.workspace = true
+flate2.workspace = true
+ring.workspace = true
+console_static_text.workspace = true
+glob.workspace = true
+libc.workspace = true
+once_cell.workspace = true
+base64.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true
+test_util.workspace = true
