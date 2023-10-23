@@ -174,7 +174,7 @@ impl Store {
                                 compatible.push(solution.1)
                             }
                         }
-                        _ => {} // skip
+                        _ => compatible.push(variant), // do not skip, validation is done elsewhere
                     }
                 }
                 if compatible.is_empty() {

@@ -218,6 +218,37 @@ Meta.test("python(sdk): apply", async (t) => {
   );
 
   await t.should(
+    "work with nested union/either",
+    async () => {
+      await gql`
+        query {
+          testBranching {
+            branching {
+              a {
+                b {
+                  c
+                }
+              }
+            }
+          }
+        }
+      `
+        .expectData({
+          simpleInjection: {
+            branching: {
+              a: {
+                b: {
+                  c: "nested",
+                },
+              },
+            },
+          },
+        })
+        .on(e);
+    },
+  );
+
+  await t.should(
     "work with self-refering type",
     async () => {
       await gql`
