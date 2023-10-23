@@ -3,10 +3,8 @@
 
 use std::collections::HashMap;
 
-use common::typegraph::{Injection, InjectionData};
-
 use crate::{
-    errors::{expect_inferable_type, Result},
+    errors::Result,
     wit::utils::{Apply, ApplyPath, ApplyValue},
 };
 
@@ -15,24 +13,6 @@ pub struct PathTree {
     pub entries: Vec<PathTree>,
     pub name: String,
     pub path_infos: ApplyPath,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Eq)]
-pub enum ApplyTypeHint {
-    Number,
-    String,
-    Boolean,
-    Object,
-    Struct,
-    Array(Box<ApplyTypeHint>),
-    Relative,
-}
-
-impl PartialEq for ApplyTypeHint {
-    fn eq(&self, other: &Self) -> bool {
-        format!("{:?}", self) == format!("{:?}", other)
-    }
 }
 
 impl PathTree {
@@ -216,89 +196,4 @@ pub fn build_parent_to_child_indices(item_list: &Vec<ItemNode>) -> HashMap<u32, 
         }
     }
     map
-}
-
-pub fn get_hint_from_json_value(
-    value: &serde_json::Value,
-    path: &[String],
-) -> Result<ApplyTypeHint> {
-    match value {
-        serde_json::Value::Bool(_) => Ok(ApplyTypeHint::Boolean),
-        serde_json::Value::Number(_) => Ok(ApplyTypeHint::Number),
-        serde_json::Value::String(_) => Ok(ApplyTypeHint::Boolean),
-        serde_json::Value::Object(_) => Ok(ApplyTypeHint::Struct),
-        serde_json::Value::Array(v) => {
-            // top level information is enough
-            if let Some(first) = v.first() {
-                let of = get_hint_from_json_value(first, path)?;
-                return Ok(ApplyTypeHint::Array(Box::new(of)));
-            }
-            Err(expect_inferable_type(
-                format!("{:?} (empty list)", value.to_string()),
-                path,
-            ))
-        }
-        serde_json::Value::Null => Err(expect_inferable_type(value.to_string(), path)),
-    }
-}
-
-pub fn get_hint_from_injection_string(
-    data: InjectionData<String>,
-    path: &[String],
-) -> Result<ApplyTypeHint> {
-    match data {
-        InjectionData::SingleValue(single) => {
-            let value: serde_json::Value =
-                serde_json::from_str(&single.value).map_err(|e| e.to_string())?;
-            get_hint_from_json_value(&value, path)
-        }
-        InjectionData::ValueByEffect(per_effect) => {
-            if per_effect.is_empty() {
-                return Err(format!(
-                    "invalid state: per effect object cannot be empty at {:?}",
-                    path.join("."),
-                )
-                .into());
-            }
-            let mut hint: Option<ApplyTypeHint> = None;
-            for (_, v) in per_effect.iter() {
-                let value: serde_json::Value =
-                    serde_json::from_str(v).map_err(|e| e.to_string())?;
-                let curr_hint = get_hint_from_json_value(&value, path)?;
-                if let Some(hint) = hint {
-                    if !hint.eq(&curr_hint) {
-                        return Err(format!(
-                            "unable to infer type, per effect object has ambiguous values at {:?}",
-                            path.join("."),
-                        )
-                        .into());
-                    }
-                }
-                hint = Some(curr_hint);
-            }
-            Ok(hint.unwrap())
-        }
-    }
-}
-
-/// Tries to infer the type.
-/// Return `Relative` if type deduction depends on a given supertype
-pub fn infer_type(apply_path: &ApplyPath) -> Result<ApplyTypeHint> {
-    let path_str = apply_path.path.join(".");
-    let payload = apply_path
-        .value
-        .clone()
-        .payload
-        .ok_or_else(|| format!("cannot infer type from a null payload {path_str}"))?;
-    let injection: Injection = serde_json::from_str(&payload).map_err(|e| e.to_string())?;
-
-    match injection {
-        Injection::Static(value) => get_hint_from_injection_string(value, &apply_path.path),
-        Injection::Context(value) => get_hint_from_injection_string(value, &apply_path.path),
-        // walk the path and retrieve first compatible union variant
-        // if two variants has the same field but different type, return ambiguous error
-        Injection::Secret(_) => Ok(ApplyTypeHint::Relative),
-        Injection::Dynamic(_) => todo!(),
-        Injection::Parent(_) => todo!(),
-    }
 }

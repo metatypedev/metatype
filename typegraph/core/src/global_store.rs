@@ -3,11 +3,11 @@
 
 use crate::errors::{self, Result};
 use crate::runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime};
+use crate::t::{self, TypeBuilder};
 use crate::types::{Struct, Type, TypeFun, TypeId, WrapperTypeData};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
-use crate::wit::utils::{ApplyPath, Auth as WitAuth};
+use crate::wit::utils::Auth as WitAuth;
 
-use crate::utils::apply;
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
@@ -144,13 +144,68 @@ impl Store {
         })
     }
 
-    pub fn get_type_by_path(struct_id: TypeId, path_infos: &ApplyPath) -> Result<(Type, TypeId)> {
-        let path = &path_infos.path;
+    pub fn get_reduced_branching(supertype_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
+        let supertype = supertype_id.as_type()?;
+        let map_reduce = |variants: Vec<u32>| match path.len() {
+            0 => Ok((supertype.clone(), supertype_id)), // terminal node
+            _ => {
+                let mut compatible = vec![];
+                let chunk = path.first().unwrap();
+                for variant in variants.iter() {
+                    let variant: TypeId = variant.into();
+                    let unwrapped_variant = variant.resolve_wrapper()?.as_type()?;
+                    match unwrapped_variant {
+                        Type::Struct(t) => {
+                            for (prop_name, prop_id) in t.iter_props() {
+                                if prop_name.eq(chunk) {
+                                    // variant is compatible with the path
+                                    // try expanding it, if it fails, just skip
+                                    let resolution = Store::get_type_by_path(prop_id, &path[1..]);
+                                    if let Ok(solution) = resolution {
+                                        compatible.push(solution.1)
+                                    }
+                                }
+                            }
+                        }
+                        Type::Either(..) | Type::Union(..) => {
+                            // get_type_by_path => get_reduced_branching
+                            let resolution = Store::get_type_by_path(variant, &path[1..]);
+                            if let Ok(solution) = resolution {
+                                compatible.push(solution.1)
+                            }
+                        }
+                        _ => {} // skip
+                    }
+                }
+                if compatible.is_empty() {
+                    return Err(
+                        format!("unable to expand variant with **.{}", path.join("."),).into(),
+                    );
+                }
+                let ret_id = match &supertype {
+                    Type::Union(..) => t::union(compatible.clone()).build()?,
+                    Type::Either(..) => t::either(compatible.clone()).build()?,
+                    _ => {
+                        return Err("invalid state: either or union expected as supertype".into());
+                    }
+                };
+                Ok((ret_id.as_type()?, ret_id))
+            }
+        };
+
+        match &supertype {
+            Type::Either(t) => map_reduce(t.data.variants.clone()),
+            Type::Union(t) => map_reduce(t.data.variants.clone()),
+            _ => Store::get_type_by_path(supertype_id, path), // no branching, trivial case
+        }
+    }
+
+    pub fn get_type_by_path(struct_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
         let mut ret = (struct_id.as_type()?, struct_id);
 
         let mut curr_path = vec![];
         for (pos, chunk) in path.iter().enumerate() {
-            let unwrapped_id = ret.1.resolve_wrapper(path_infos)?;
+            let unwrapped_id = ret.1.resolve_wrapper()?;
             // let unwrapped_id = self.resolve_wrapper(ret.1)?;
             match unwrapped_id.as_type()? {
                 Type::Struct(t) => {
@@ -170,6 +225,9 @@ impl Store {
                             ));
                         }
                     };
+                }
+                Type::Union(..) | Type::Either(..) => {
+                    ret = Store::get_reduced_branching(unwrapped_id, &path[pos..])?;
                 }
                 _ => return Err(errors::expect_object_at_path(&curr_path)),
             }
@@ -364,7 +422,7 @@ impl TypeId {
     }
 
     /// unwrap type id inside array, optional, or WithInjection
-    pub fn resolve_wrapper(&self, path_infos: &ApplyPath) -> Result<TypeId> {
+    pub fn resolve_wrapper(&self) -> Result<TypeId> {
         let mut id = self.resolve_proxy()?;
         loop {
             let tpe = id.as_type()?;
@@ -373,13 +431,6 @@ impl TypeId {
                 Type::Optional(t) => t.data.of.into(),
                 Type::WithInjection(t) => t.data.tpe.into(),
                 Type::Proxy(t) => t.id.resolve_proxy()?,
-                Type::Union(_) => {
-                    // TODO:
-                    // iter variant
-                    let _hint = apply::infer_type(path_infos)?;
-                    // pick best matching variant relative to hint
-                    todo!()
-                }
                 _ => id,
             };
             if id == new_id {

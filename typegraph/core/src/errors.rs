@@ -118,15 +118,6 @@ pub fn expect_object_at_path(path: &[String]) -> TgError {
     format!("object was expected at path {:?}", path.join(".")).into()
 }
 
-pub fn expect_inferable_type(value: String, path: &[String]) -> TgError {
-    format!(
-        "ambiguous value: cannot assign a type for {:?}, at {:?}",
-        value,
-        path.join(".")
-    )
-    .into()
-}
-
 pub fn unknown_predefined_function(name: &str, runtime: &str) -> TgError {
     format!("unknown predefined function {name} for runtime {runtime}").into()
 }
