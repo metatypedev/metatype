@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::{self, Result};
-use crate::runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime};
+use crate::runtimes::{
+    DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
+};
 use crate::t::{self, TypeBuilder};
 use crate::types::{Struct, Type, TypeFun, TypeId, WrapperTypeData};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
@@ -47,6 +49,8 @@ pub struct Store {
     predefined_deno_functions: HashMap<String, MaterializerId>,
     deno_modules: HashMap<String, MaterializerId>,
 
+    public_policy_id: PolicyId,
+
     prisma_migration_runtime: RuntimeId,
     typegate_runtime: RuntimeId,
     typegraph_runtime: RuntimeId,
@@ -56,6 +60,7 @@ pub struct Store {
 
 impl Store {
     fn new() -> Self {
+        let deno_runtime = 0;
         Self {
             runtimes: vec![
                 Runtime::Deno,
@@ -63,10 +68,26 @@ impl Store {
                 Runtime::Typegate,
                 Runtime::Typegraph,
             ],
-            deno_runtime: 0,
+            deno_runtime,
             prisma_migration_runtime: 1,
             typegate_runtime: 2,
             typegraph_runtime: 3,
+
+            materializers: vec![Materializer {
+                runtime_id: deno_runtime,
+                effect: Effect::Read,
+                data: MaterializerData::Deno(Rc::new(DenoMaterializer::Predefined(
+                    crate::wit::runtimes::MaterializerDenoPredefined {
+                        name: "true".to_string(),
+                    },
+                ))),
+            }],
+
+            policies: vec![Rc::new(CorePolicy {
+                name: "__public".to_string(),
+                materializer: 0,
+            })],
+            public_policy_id: 0,
             ..Default::default()
         }
     }
@@ -306,6 +327,10 @@ impl Store {
                 .cloned()
                 .ok_or_else(|| errors::object_not_found("policy", id))
         })
+    }
+
+    pub fn get_public_policy_id() -> PolicyId {
+        with_store(|s| s.public_policy_id)
     }
 
     pub fn get_predefined_deno_function(name: String) -> Result<MaterializerId> {

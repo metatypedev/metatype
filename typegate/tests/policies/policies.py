@@ -1,4 +1,4 @@
-from typegraph import typegraph, t, Graph
+from typegraph import typegraph, t, Graph, Policy
 from typegraph.graph.params import Auth
 from typegraph.runtimes.deno import DenoRuntime
 
@@ -35,5 +35,26 @@ def policies(g: Graph):
                     code="() => ({ id: 12 })",
                 )
             }
+        ),
+    )
+
+
+@typegraph()
+def multiple_public_policies(g: Graph):
+    deno = DenoRuntime()
+
+    record = t.struct(
+        {
+            "id": t.integer(),
+        },
+        name="Record",
+    )
+
+    g.expose(
+        record1=deno.static(record, {"id": 1}).with_policy(
+            Policy.public(),
+        ),
+        record2=deno.static(record, {"id": 2}).with_policy(
+            Policy.public(),
         ),
     )
