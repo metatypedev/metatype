@@ -25,7 +25,6 @@ repos:
     rev: "v0.0.292"
     hooks:
       - id: ruff
-        exclude: website/docs
   - repo: https://github.com/psf/black
     rev: 23.9.1
     hooks:
