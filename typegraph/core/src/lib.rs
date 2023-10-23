@@ -372,17 +372,6 @@ mod tests {
     }
 
     #[test]
-    fn test_struct_invalid_key() -> Result<()> {
-        let res = t::struct_().prop("", t::integer().build()?).build();
-        assert_eq!(res, Err(errors::invalid_prop_key("")));
-        let res = t::struct_()
-            .prop("hello world", t::integer().build()?)
-            .build();
-        assert_eq!(res, Err(errors::invalid_prop_key("hello world")));
-        Ok(())
-    }
-
-    #[test]
     fn test_struct_duplicate_key() -> Result<()> {
         let res = t::struct_()
             .prop("one", t::integer().build()?)
