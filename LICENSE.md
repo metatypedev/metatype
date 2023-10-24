@@ -11,6 +11,8 @@ Portions of this repository are licensed as follows:
   [Mozilla Public License 2.0 (MPL-2.0)](./dev/LICENSE-MPL-2.0.md)
 - all content outside the above-mentioned files or restrictions is available
   under the [Elastic License 2.0 (Elastic-2.0)](./dev/LICENSE-Elastic-2.0.md)
+- all content under `deno/` is licensed under [MIT License](./dev/LICENSE-MIT-Deno.md) 
+  by the Deno authors.
 - alternatively, the Metatype Commercial Licensing can take precedence in case
   your usage requires ad-hoc clarifications (reach out!)
 
