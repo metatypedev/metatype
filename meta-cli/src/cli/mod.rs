@@ -16,6 +16,7 @@ mod ui;
 
 pub(crate) mod codegen;
 pub(crate) mod completion;
+pub(crate) mod deno;
 pub(crate) mod deploy;
 pub(crate) mod dev;
 pub(crate) mod doctor;
@@ -78,6 +79,8 @@ pub(crate) enum Commands {
     Doctor(doctor::Doctor),
     /// Create a new Metatype project
     New(new::New),
+    /// Access a minimal deno CLI
+    Deno(deno::Deno),
 }
 
 #[async_trait]

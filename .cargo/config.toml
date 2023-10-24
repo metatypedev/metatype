@@ -4,3 +4,9 @@ OUT_DIR = { value = "target", relative = true }
 [profile.typegraph_core.release]
 opt-level = "z"
 lto = true
+
+# [target.'cfg(all())']
+# rustflags = [
+#   "--cfg",
+#   "tokio_unstable",
+# ]

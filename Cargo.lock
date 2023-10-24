@@ -4954,6 +4954,7 @@ dependencies = [
  "colored",
  "common",
  "crossbeam-channel",
+ "deno",
  "dialoguer",
  "directories 5.0.1",
  "enum_dispatch",

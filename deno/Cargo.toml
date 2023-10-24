@@ -3,11 +3,10 @@ name = "deno"
 version = "0.2.4-0+dev"
 edition = "2021"
 
-[features]
+[lib]
+path = "lib.rs"
 
-[[bin]]
-name = "deno"
-path = "main.rs"
+[features]
 
 [dependencies]
 deno_core = "0.222"

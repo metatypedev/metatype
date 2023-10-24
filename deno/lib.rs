@@ -15,70 +15,39 @@ mod resolver;
 mod util;
 mod version;
 // mod worker;
+use crate::file_fetcher::FileFetcher;
 
 use std::sync::Arc;
 
+pub(crate) use deno_runtime::colors;
+#[allow(unused_imports)]
+pub(crate) use log::{debug, error, info, trace, warn};
+
 use deno_runtime::{deno_core, deno_fs, deno_node};
+use std::path::{Path, PathBuf};
 
-pub use log::{debug, error, info, trace, warn};
-
-use crate::file_fetcher::FileFetcher;
-pub use deno_runtime::colors;
-
-pub use deno_core::{ModuleSpecifier, Op};
-
-fn setup_panic_hook() {
-    // This function does two things inside of the panic hook:
-    // - Tokio does not exit the process when a task panics, so we define a custom
-    //   panic hook to implement this behaviour.
-    // - We print a message to stderr to indicate that this is a bug in Deno, and
-    //   should be reported to us.
-    let orig_hook = std::panic::take_hook();
-    std::panic::set_hook(Box::new(move |panic_info| {
-        eprintln!("\n============================================================");
-        eprintln!(
-            "The custom Deno runtime has panicked. This is a bug in either Metatype or Deno."
-        );
-        eprintln!("Please report this");
-        eprintln!("at https://github.com/metatypedev/metatype/issues/new.");
-        eprintln!("If you can reliably reproduce this panic, include the");
-        eprintln!("reproduction steps and re-run with the RUST_BACKTRACE=1 env");
-        eprintln!("var set and include the backtrace in your report.");
-        eprintln!();
-        eprintln!(
-            "Platform: {} {}",
-            std::env::consts::OS,
-            std::env::consts::ARCH
-        );
-        eprintln!("Version: {}", version::deno());
-        eprintln!("Args: {:?}", std::env::args().collect::<Vec<_>>());
-        eprintln!();
-        orig_hook(panic_info);
-        std::process::exit(1);
-    }));
+pub fn start_sync(main_mod: PathBuf, config_file: PathBuf) {
+    deno_runtime::tokio_util::create_and_run_current_thread_with_maybe_metrics(async move {
+        start(&main_mod, &config_file).await.unwrap();
+    });
 }
 
-fn main() -> anyhow::Result<()> {
-    setup_panic_hook();
-    env_logger::init();
+pub async fn start(main_mod: &Path, config_file: &Path) -> anyhow::Result<()> {
     deno_runtime::permissions::set_prompt_callbacks(
         Box::new(util::draw_thread::DrawThread::hide),
         Box::new(util::draw_thread::DrawThread::show),
     );
-    deno_runtime::tokio_util::create_and_run_current_thread_with_maybe_metrics(start())
-}
-
-async fn start() -> anyhow::Result<()> {
     let cwd = std::env::current_dir()?;
     let main_module = deno_core::resolve_url_or_path(
         // "../metatype/typegate/src/main.ts",
-        "main.ts",
-        cwd.as_path(),
+        // "main.ts",
+        "", main_mod,
     )?;
     let config_file = deno_core::resolve_url_or_path(
         // "../metatype/typegate/deno.json",
-        "deno.json",
-        cwd.as_path(),
+        // "deno.json",
+        "",
+        config_file,
     )?;
 
     // for displaying download progresses
