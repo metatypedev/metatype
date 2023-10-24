@@ -4,7 +4,8 @@ env:
 
 typegate1: &tp
   workdir: typegate
-  watch: "src/**/*.ts"
+  watch: 
+    - "src/**/*.ts"
   env: &tpenv
     TG_PORT: "7891"
     PACKAGED: "false"
@@ -12,7 +13,7 @@ typegate1: &tp
     DYLD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$DYLD_LIBRARY_PATH" # macOS
     LD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$LD_LIBRARY_PATH" # linux
     DEBUG: "true"
-    REDIS_URL: "redis://:password@localhost:6379/0"
+    REDIS_URL: "redis://:password@0:6379"
     TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
     TG_ADMIN_PASSWORD: "password"
   # https://github.com/denoland/deno/issues/18445
@@ -34,7 +35,7 @@ typegate3:
   env:
     <<: *tpenv
     CLICOLOR_FORCE: "1"
-  command: "cargo run -p meta-cli -- deno"
+  command: "cargo run -p meta-cli -- typegate"
   depends_on:
     - typegate_native
   pipe:

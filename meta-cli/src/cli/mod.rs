@@ -16,13 +16,13 @@ mod ui;
 
 pub(crate) mod codegen;
 pub(crate) mod completion;
-pub(crate) mod deno;
 pub(crate) mod deploy;
 pub(crate) mod dev;
 pub(crate) mod doctor;
 pub(crate) mod new;
 pub(crate) mod prisma;
 pub(crate) mod serialize;
+pub(crate) mod typegate;
 pub(crate) mod upgrade;
 
 #[derive(Parser, Debug)]
@@ -80,7 +80,7 @@ pub(crate) enum Commands {
     /// Create a new Metatype project
     New(new::New),
     /// Access a minimal deno CLI
-    Deno(deno::Deno),
+    Typegate(typegate::Typegate),
 }
 
 #[async_trait]

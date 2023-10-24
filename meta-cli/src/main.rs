@@ -45,8 +45,8 @@ fn main() -> Result<()> {
     }
 
     match args.command {
-        // the deno task uses a single thread runtime which it'll spawn itself
-        Some(Commands::Deno(deno_args)) => cli::deno::start_sync(deno_args, args.gen)?,
+        // the deno task requires use of a single thread runtime which it'll spawn itself
+        Some(Commands::Typegate(cmd_args)) => cli::typegate::start_sync(cmd_args, args.gen)?,
         Some(command) => rt.block_on(command.run(args.gen))?,
         None => Args::command().print_help()?,
     }
