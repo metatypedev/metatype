@@ -164,9 +164,9 @@ impl Store {
         })
     }
 
-    pub fn get_reduced_branching(supertype_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
+    pub fn pick_branch_by_path(supertype_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
         let supertype = supertype_id.as_type()?;
-        let map_reduce = |variants: Vec<u32>| match path.len() {
+        let filter_and_reduce = |variants: Vec<u32>| match path.len() {
             0 => Ok((supertype.clone(), supertype_id)), // terminal node
             _ => {
                 let mut compatible = vec![];
@@ -192,7 +192,7 @@ impl Store {
                             }
                         }
                         Type::Either(..) | Type::Union(..) => {
-                            // get_type_by_path => get_reduced_branching
+                            // get_type_by_path => pick_branch_by_path
                             match Store::get_type_by_path(variant, &path[1..]) {
                                 Ok((_, solution)) => compatible.push(solution),
                                 Err(e) => failures
@@ -218,7 +218,7 @@ impl Store {
                     Type::Either(..) => {
                         if compatible.len() > 1 {
                             return Err(format!(
-                                    "either node with more than one compatible variant encoutered at path {:?}",
+                                    "either node with more than one compatible variant encoutered at path **.{}",
                                     path.join("."),
                                 ).into(),
                             );
@@ -235,8 +235,8 @@ impl Store {
         };
 
         match &supertype {
-            Type::Either(t) => map_reduce(t.data.variants.clone()),
-            Type::Union(t) => map_reduce(t.data.variants.clone()),
+            Type::Either(t) => filter_and_reduce(t.data.variants.clone()),
+            Type::Union(t) => filter_and_reduce(t.data.variants.clone()),
             _ => Store::get_type_by_path(supertype_id, path), // no branching, trivial case
         }
     }
@@ -268,7 +268,7 @@ impl Store {
                     };
                 }
                 Type::Union(..) | Type::Either(..) => {
-                    ret = Store::get_reduced_branching(unwrapped_id, &path[pos..])?;
+                    ret = Store::pick_branch_by_path(unwrapped_id, &path[pos..])?;
                     break;
                 }
                 _ => return Err(errors::expect_object_at_path(&curr_path)),
