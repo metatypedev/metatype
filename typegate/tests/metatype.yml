@@ -8,6 +8,7 @@ typegates:
     password: password
     env:
       TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e"
+      TG_MIGRATION_FAILURE_TEST_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e2"
 
   with_prefix:
     url: "http://localhost:7895"
@@ -17,9 +18,17 @@ typegates:
       TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e"
     prefix: pref-
 
+  dev:
+    url: "http://localhost:7890"
+    username: admin
+    password: password
+    env: 
+      TG_MIGRATION_FAILURE_TEST_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e2"
+
 typegraphs:
   python:
     include: "**/*.py"
+    exclude: "**/templates/*.py"
   materializers:
     prisma:
       migrations_path: "prisma-migrations"

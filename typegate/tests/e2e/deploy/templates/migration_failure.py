@@ -11,7 +11,8 @@ def migration_failure_test(g: Graph):
             "id": t.integer(as_id=True, config=["auto"]),
             # "age": t.string(),  # option:1
             # "age": t.integer(),  # option:2
-        }
+        },
+        name="Record",
     )
 
     g.expose(Policy.public(), createRecord=db.create(record))

@@ -51,7 +51,7 @@ export const runMigrations: PushHandler = async (
 
         const { reset_reason, applied_migrations } = applyRes.Ok;
         if (reset_reason != null) {
-          response.info(`Database reset: {reset_reason}`);
+          response.info(`Database reset: ${reset_reason}`);
         }
         if (applied_migrations.length === 0) {
           response.info(`${prefix} No migration applied.`);
