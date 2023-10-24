@@ -5,7 +5,6 @@ use crate::errors::{self, Result};
 use crate::runtimes::{
     DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
 };
-use crate::t::{self, TypeBuilder};
 use crate::types::{Struct, Type, TypeFun, TypeId, WrapperTypeData};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
@@ -171,8 +170,9 @@ impl Store {
             0 => Ok((supertype.clone(), supertype_id)), // terminal node
             _ => {
                 let mut compatible = vec![];
+                let mut failures = vec![];
                 let chunk = path.first().unwrap();
-                for variant in variants.iter() {
+                for (i, variant) in variants.iter().enumerate() {
                     let variant: TypeId = variant.into();
                     let unwrapped_variant = variant.resolve_wrapper()?.as_type()?;
                     match unwrapped_variant {
@@ -181,35 +181,55 @@ impl Store {
                                 if prop_name.eq(chunk) {
                                     // variant is compatible with the path
                                     // try expanding it, if it fails, just skip
-                                    let resolution = Store::get_type_by_path(prop_id, &path[1..]);
-                                    if let Ok(solution) = resolution {
-                                        compatible.push(solution.1)
+                                    match Store::get_type_by_path(prop_id, &path[1..]) {
+                                        Ok((_, solution)) => compatible.push(solution),
+                                        Err(e) => failures.push(format!(
+                                            "[v{i} → {prop_name}]: {}",
+                                            e.stack.first().unwrap().clone()
+                                        )),
                                     }
                                 }
                             }
                         }
                         Type::Either(..) | Type::Union(..) => {
                             // get_type_by_path => get_reduced_branching
-                            let resolution = Store::get_type_by_path(variant, &path[1..]);
-                            if let Ok(solution) = resolution {
-                                compatible.push(solution.1)
+                            match Store::get_type_by_path(variant, &path[1..]) {
+                                Ok((_, solution)) => compatible.push(solution),
+                                Err(e) => failures
+                                    .push(format!("[v{i}]: {}", e.stack.first().unwrap().clone())),
                             }
                         }
-                        _ => compatible.push(variant), // do not skip, validation is done elsewhere
+                        _ => {} // skip
                     }
                 }
+
                 if compatible.is_empty() {
-                    return Err(
-                        format!("unable to expand variant with **.{}", path.join("."),).into(),
-                    );
+                    return Err(format!(
+                        "unable to expand variant with **.{}\nDetails:\n{}",
+                        path.join("."),
+                        failures.join("\n")
+                    )
+                    .into());
                 }
+
+                let first = compatible.first().unwrap().to_owned();
                 let ret_id = match &supertype {
-                    Type::Union(..) => t::union(compatible.clone()).build()?,
-                    Type::Either(..) => t::either(compatible.clone()).build()?,
+                    Type::Union(..) => first,
+                    Type::Either(..) => {
+                        if compatible.len() > 1 {
+                            return Err(format!(
+                                    "encountered an either node with more than one compatible variant to the path {:?}",
+                                    path.join("."),
+                                ).into(),
+                            );
+                        }
+                        first
+                    }
                     _ => {
                         return Err("invalid state: either or union expected as supertype".into());
                     }
                 };
+
                 Ok((ret_id.as_type()?, ret_id))
             }
         };

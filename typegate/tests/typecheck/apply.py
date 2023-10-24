@@ -15,23 +15,25 @@ simple_tpe = t.struct(
         "branching": t.union(
             [
                 # *.a.b
-                t.struct({"a": t.struct({"b": t.integer()})}),
-                t.struct({"a": t.struct({"b": t.string()})}),
+                t.struct({"a": t.struct({"b": t.string()})}, name="V1"),
                 # *.a.b.c
                 #      .d
                 t.struct(
                     {
                         "a": t.struct(
                             {
-                                "b": t.either(
+                                "b": t.union(
                                     [
-                                        t.struct({"c": t.string()}),
-                                        t.struct({"d": t.string()}),
+                                        t.struct({"c": t.string()}, name="A"),
+                                        t.struct(
+                                            {"c": t.string(), "d": t.string()}, name="B"
+                                        ),
                                     ]
                                 )
                             }
                         )
-                    }
+                    },
+                    name="V2",
                 ),
             ]
         ).optional(),

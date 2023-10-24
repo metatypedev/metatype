@@ -222,11 +222,14 @@ Meta.test("python(sdk): apply", async (t) => {
     async () => {
       await gql`
         query {
-          testBranching {
-            branching {
-              a {
-                b {
-                  c
+            testBranching {
+              branching {
+                ... on V1 { a { b } }
+                ... on V2 { a { 
+                    b {
+                      ... on A { c }
+                      ... on B { c }
+                    }
                 }
               }
             }
@@ -234,7 +237,7 @@ Meta.test("python(sdk): apply", async (t) => {
         }
       `
         .expectData({
-          simpleInjection: {
+          testBranching: {
             branching: {
               a: {
                 b: {
