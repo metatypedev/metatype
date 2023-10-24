@@ -14,12 +14,32 @@ export interface ShellOutput {
   stderr: string;
 }
 
+async function readOutput(p: Deno.ChildProcess): Promise<ShellOutput> {
+  const [stdout, stderr] = await Promise.all([
+    (async () => {
+      let stdout = "";
+      for await (const l of p.stdout.pipeThrough(new TextDecoderStream())) {
+        stdout += l;
+      }
+      return stdout;
+    })(),
+    (async () => {
+      let stderr = "";
+      for await (const l of p.stderr.pipeThrough(new TextDecoderStream())) {
+        stderr += l;
+      }
+      return stderr;
+    })(),
+  ]);
+  return { stdout, stderr };
+}
+
 export async function shell(
   cmd: string[],
   options: ShellOptions = {},
 ): Promise<ShellOutput> {
   const { stdin = null, env = {}, currentDir = null } = options;
-  console.log(cmd);
+  console.log("shell:", cmd.map((c) => `${JSON.stringify(c)}`).join(" "));
   const p = new Deno.Command(cmd[0], {
     cwd: currentDir ?? testDir,
     args: cmd.slice(1),
@@ -37,24 +57,14 @@ export async function shell(
     p.stdin.close();
   }
 
-  console.log(">> end");
-
-  let stdout = "";
-  for await (const l of p.stdout.pipeThrough(new TextDecoderStream())) {
-    stdout += l;
-  }
-
-  let stderr = "";
-  for await (const l of p.stderr.pipeThrough(new TextDecoderStream())) {
-    stderr += l;
-  }
+  const res = await readOutput(p);
 
   const { code, success } = await p.status;
 
   if (!success) {
-    const err = `-- start STDERR --\n${stderr}\n-- end STDERR --`;
+    const err = `-- start STDERR --\n${res.stderr}\n-- end STDERR --`;
     throw new Error(`Command "${cmd.join(" ")}" failed with ${code}:\n${err}`);
   }
 
-  return { stdout, stderr };
+  return res;
 }
