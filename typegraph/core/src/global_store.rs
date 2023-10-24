@@ -218,7 +218,7 @@ impl Store {
                     Type::Either(..) => {
                         if compatible.len() > 1 {
                             return Err(format!(
-                                    "encountered an either node with more than one compatible variant to the path {:?}",
+                                    "either node with more than one compatible variant encoutered at path {:?}",
                                     path.join("."),
                                 ).into(),
                             );
