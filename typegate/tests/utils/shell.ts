@@ -5,6 +5,7 @@ import { testDir } from "./dir.ts";
 
 export interface ShellOptions {
   stdin?: string;
+  currentDir?: string;
 }
 
 export async function shell(
@@ -13,7 +14,7 @@ export async function shell(
 ): Promise<string> {
   const { stdin = null } = options;
   const p = new Deno.Command(cmd[0], {
-    cwd: testDir,
+    cwd: options.currentDir ?? testDir,
     args: cmd.slice(1),
     stdout: "piped",
     stderr: "inherit",
