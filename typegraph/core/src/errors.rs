@@ -49,16 +49,6 @@ pub fn duplicate_key(name: &str) -> TgError {
     format!("duplicate key '{name}' in properties").into()
 }
 
-pub fn invalid_prop_key(name: &str) -> TgError {
-    format!(
-        "'{name}' is not a valid property key: allowed characters are ascii letters and underscores",
-    ).into()
-}
-
-// pub fn property_not_found_in(ty: &str, prop_name: &str) -> TgError {
-//     format!("property '{prop_name}' not found in type '{ty}'")
-// }
-
 pub fn invalid_input_type(got: &str) -> TgError {
     format!("expected a Struct as input type but got {got}").into()
 }
