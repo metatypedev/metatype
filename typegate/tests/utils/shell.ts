@@ -9,17 +9,22 @@ export interface ShellOptions {
   env?: Record<string, string>;
 }
 
+export interface ShellOutput {
+  stdout: string;
+  stderr: string;
+}
+
 export async function shell(
   cmd: string[],
   options: ShellOptions = {},
-): Promise<string> {
+): Promise<ShellOutput> {
   const { stdin = null, env = {}, currentDir = null } = options;
   console.log(cmd);
   const p = new Deno.Command(cmd[0], {
     cwd: currentDir ?? testDir,
     args: cmd.slice(1),
     stdout: "piped",
-    stderr: "inherit",
+    stderr: "piped",
     stdin: "piped",
     env,
   }).spawn();
@@ -32,16 +37,24 @@ export async function shell(
     p.stdin.close();
   }
 
-  let out = "";
+  console.log(">> end");
+
+  let stdout = "";
   for await (const l of p.stdout.pipeThrough(new TextDecoderStream())) {
-    out += l;
+    stdout += l;
+  }
+
+  let stderr = "";
+  for await (const l of p.stderr.pipeThrough(new TextDecoderStream())) {
+    stderr += l;
   }
 
   const { code, success } = await p.status;
 
   if (!success) {
-    throw new Error(`Command "${cmd.join(" ")}" failed with ${code}: "${out}"`);
+    const err = `-- start STDERR --\n${stderr}\n-- end STDERR --`;
+    throw new Error(`Command "${cmd.join(" ")}" failed with ${code}:\n${err}`);
   }
 
-  return out;
+  return { stdout, stderr };
 }

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { dirname, fromFileUrl } from "std/path/mod.ts";
-import { shell, ShellOptions } from "./shell.ts";
+import { shell, ShellOptions, ShellOutput } from "./shell.ts";
 import { meta } from "./meta.ts";
 
 export class TestModule {
@@ -19,9 +19,9 @@ export class TestModule {
     });
   }
 
-  async cli(...args: string[]): Promise<string>;
-  async cli(options: ShellOptions, ...args: string[]): Promise<string>;
-  async cli(...args: any[]): Promise<string> {
+  async cli(...args: string[]): Promise<ShellOutput>;
+  async cli(options: ShellOptions, ...args: string[]): Promise<ShellOutput>;
+  async cli(...args: any[]): Promise<ShellOutput> {
     let options: ShellOptions = { currentDir: this.currentDir };
     if (typeof args[0] === "object" && args[0] !== null) {
       options = { ...options, ...args.shift() };

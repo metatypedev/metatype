@@ -4,6 +4,7 @@
 import { gql, Meta } from "@test-utils/mod.ts";
 import { TestModule } from "@test-utils/test_module.ts";
 import { removeMigrations } from "@test-utils/migrations.ts";
+import { assertStringIncludes } from "std/assert/mod.ts";
 import pg from "npm:pg";
 
 const m = new TestModule(import.meta);
@@ -12,28 +13,43 @@ const port = 7895;
 
 const tgName = "migration-failure-test";
 
-async function selectVersion(version: number) {
-  await m.shell([
-    "bash",
-    "select.sh",
-    "templates/migration_failure.py",
-    `${version}`,
-    "migration_failure.py",
-  ]);
+async function writeTypegraph(version: number | null) {
+  if (version == null) {
+    await m.shell([
+      "bash",
+      "-c",
+      "cp ./templates/migration_failure.py migration_failure.py",
+    ]);
+  } else {
+    await m.shell([
+      "bash",
+      "select.sh",
+      "templates/migration_failure.py",
+      `${version}`,
+      "migration_failure.py",
+    ]);
+  }
 }
 
 async function deploy(noMigration = false) {
   const migrationOpts = noMigration ? [] : ["--create-migration"];
-  await m.cli(
-    "deploy",
-    "-t",
-    "deploy",
-    "-f",
-    "migration_failure.py",
-    "--allow-dirty",
-    ...migrationOpts,
-    "--allow-destructive",
-  );
+
+  try {
+    const out = await m.cli(
+      "deploy",
+      "-t",
+      "deploy",
+      "-f",
+      "migration_failure.py",
+      "--allow-dirty",
+      ...migrationOpts,
+      "--allow-destructive",
+    );
+    console.log(out);
+  } catch (e) {
+    console.log(e.toString());
+    throw e;
+  }
 }
 
 async function reset() {
@@ -48,42 +64,52 @@ async function reset() {
   await client.end();
 }
 
-Meta.test("meta deploy: migration failure", async (t) => {
-  await t.should("load first version of the typegraph", async () => {
-    await reset();
-    await selectVersion(1);
-  });
+Meta.test(
+  "meta deploy: fails migration for new columns without default value",
+  async (t) => {
+    await t.should("load first version of the typegraph", async () => {
+      await reset();
+      await writeTypegraph(null);
+    });
 
-  // `deploy` must be run outside of the `should` block,
-  // otherwise this would fail by leaking ops.
-  // That is expected since it creates new engine that persists beyond the
-  // `should` block.
-  await deploy();
-  await t.should("insert records", async () => {
-    const e = t.getTypegraphEngine(tgName);
-    if (!e) {
-      throw new Error("typegraph not found");
-    }
-    await gql`
-      mutation {
-        createRecord(data: { age: "12" }) {
-          id
-          age
-        }
+    // `deploy` must be run outside of the `should` block,
+    // otherwise this would fail by leaking ops.
+    // That is expected since it creates new engine that persists beyond the
+    // `should` block.
+    await deploy();
+
+    await t.should("insert records", async () => {
+      const e = t.getTypegraphEngine(tgName);
+      if (!e) {
+        throw new Error("typegraph not found");
       }
-    `
-      .expectData({
-        createRecord: {
-          id: 1,
-          age: "12",
-        },
-      })
-      .on(e);
-  });
+      await gql`
+        mutation {
+          createRecord(data: {}) {
+            id
+          }
+        }
+      `
+        .expectData({
+          createRecord: {
+            id: 1,
+          },
+        })
+        .on(e);
+    });
 
-  await t.should("load second version of the typegraph", async () => {
-    await selectVersion(2);
-  });
+    await t.should("load second version of the typegraph", async () => {
+      await writeTypegraph(2);
+    });
 
-  await deploy();
-}, { port, systemTypegraphs: true });
+    try {
+      await deploy();
+    } catch (e) {
+      assertStringIncludes(
+        e.message,
+        'column "age" of relation "Record" contains null values: set a default value.',
+      );
+    }
+  },
+  { port, systemTypegraphs: true },
+);
