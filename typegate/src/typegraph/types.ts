@@ -287,6 +287,7 @@ export type Property = {
   injection?: ManagedInjection | null;
   unique: boolean;
   auto: boolean;
+  defaultValue?: any;
 } | {
   type: "relationship";
   key: string;

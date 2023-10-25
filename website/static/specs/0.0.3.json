@@ -1787,7 +1787,8 @@
             },
             "auto": {
               "type": "boolean"
-            }
+            },
+            "defaultValue": true
           }
         },
         {

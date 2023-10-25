@@ -45,7 +45,16 @@ async function deploy(noMigration = false) {
       ...migrationOpts,
       "--allow-destructive",
     );
-    console.log(out);
+    if (out.stdout.length > 0) {
+      console.log(
+        `-- deploy STDOUT start --\n${out.stdout}-- deploy STDOUT end --`,
+      );
+    }
+    if (out.stderr.length > 0) {
+      console.log(
+        `-- deploy STDERR start --\n${out.stderr}-- deploy STDERR end --`,
+      );
+    }
   } catch (e) {
     console.log(e.toString());
     throw e;
@@ -99,7 +108,7 @@ Meta.test(
     });
 
     await t.should("load second version of the typegraph", async () => {
-      await writeTypegraph(2);
+      await writeTypegraph(1);
     });
 
     try {
@@ -110,6 +119,51 @@ Meta.test(
         'column "age" of relation "Record" contains null values: set a default value.',
       );
     }
+  },
+  { port, systemTypegraphs: true },
+);
+
+Meta.test(
+  "meta deploy: succeeds migration for new columns with default value",
+  async (t) => {
+    await t.should("load first version of the typegraph", async () => {
+      await reset();
+      await writeTypegraph(null);
+    });
+
+    await deploy();
+
+    await t.should("insert records", async () => {
+      const e = t.getTypegraphEngine(tgName);
+      if (!e) {
+        throw new Error("typegraph not found");
+      }
+      await gql`
+        mutation {
+          createRecord(data: {}) {
+            id
+          }
+        }
+      `
+        .expectData({
+          createRecord: {
+            id: 1,
+          },
+        })
+        .on(e);
+    });
+
+    await t.should("load second version of the typegraph", async () => {
+      await writeTypegraph(3); // int
+    });
+
+    await deploy();
+
+    await t.should("load third version of the typegraph", async () => {
+      await writeTypegraph(4); // string
+    });
+
+    await deploy();
   },
   { port, systemTypegraphs: true },
 );

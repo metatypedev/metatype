@@ -27,7 +27,6 @@ export async function meta(
       ? shell([metaCli, first, ...input])
       : shell([metaCli, ...input], first));
 
-  console.log({ res });
   return res;
 }
 

@@ -145,6 +145,8 @@ impl Property {
         let runtime_config = RuntimeConfig::new(typ.get_base().unwrap().runtime_config.as_ref());
         let unique = runtime_config.get("unique")?.unwrap_or(false);
         let auto = runtime_config.get("auto")?.unwrap_or(false);
+        let default_value = runtime_config.get("default")?;
+
         let (type_id, card) = match typ {
             Type::Optional(inner) => (
                 TypeId(inner.data.of).attrs()?.concrete_type,
@@ -166,6 +168,7 @@ impl Property {
                 quantifier: card,
                 unique,
                 auto,
+                default_value,
             })
         };
 
@@ -316,4 +319,5 @@ pub struct ScalarProperty {
     pub quantifier: Cardinality,
     pub unique: bool,
     pub auto: bool,
+    pub default_value: Option<serde_json::Value>,
 }
