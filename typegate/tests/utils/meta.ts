@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { testDir } from "@test-utils/dir.ts";
-import { shell, ShellOptions, ShellOutput } from "@test-utils/shell.ts";
+import { testDir } from "test-utils/dir.ts";
+import { shell, ShellOptions, ShellOutput } from "test-utils/shell.ts";
 import { resolve } from "std/path/mod.ts";
 
 const metaCli = resolve(testDir, "../../target/debug/meta");

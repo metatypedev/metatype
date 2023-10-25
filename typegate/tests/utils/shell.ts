@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { testDir } from "@test-utils/dir.ts";
+import { testDir } from "test-utils/dir.ts";
 
 export interface ShellOptions {
   stdin?: string;

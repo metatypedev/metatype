@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, Meta } from "@test-utils/mod.ts";
-import { TestModule } from "@test-utils/test_module.ts";
-import { removeMigrations } from "@test-utils/migrations.ts";
+import { gql, Meta } from "test-utils/mod.ts";
+import { TestModule } from "test-utils/test_module.ts";
+import { removeMigrations } from "test-utils/migrations.ts";
 import { assertStringIncludes } from "std/assert/mod.ts";
 import pg from "npm:pg";
 
