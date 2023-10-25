@@ -164,6 +164,83 @@ impl Store {
         })
     }
 
+    pub fn pick_branch_by_path(supertype_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
+        let supertype = supertype_id.as_type()?;
+        let filter_and_reduce = |variants: Vec<u32>| match path.len() {
+            0 => Ok((supertype.clone(), supertype_id)), // terminal node
+            _ => {
+                let mut compatible = vec![];
+                let mut failures = vec![];
+                let chunk = path.first().unwrap();
+                for (i, variant) in variants.iter().enumerate() {
+                    let variant: TypeId = variant.into();
+                    let unwrapped_variant = variant.resolve_wrapper()?.as_type()?;
+                    match unwrapped_variant {
+                        Type::Struct(t) => {
+                            for (prop_name, prop_id) in t.iter_props() {
+                                if prop_name.eq(chunk) {
+                                    // variant is compatible with the path
+                                    // try expanding it, if it fails, just skip
+                                    match Store::get_type_by_path(prop_id, &path[1..]) {
+                                        Ok((_, solution)) => compatible.push(solution),
+                                        Err(e) => failures.push(format!(
+                                            "[v{i} → {prop_name}]: {}",
+                                            e.stack.first().unwrap().clone()
+                                        )),
+                                    }
+                                }
+                            }
+                        }
+                        Type::Either(..) | Type::Union(..) => {
+                            // get_type_by_path => pick_branch_by_path
+                            match Store::get_type_by_path(variant, &path[1..]) {
+                                Ok((_, solution)) => compatible.push(solution),
+                                Err(e) => failures
+                                    .push(format!("[v{i}]: {}", e.stack.first().unwrap().clone())),
+                            }
+                        }
+                        _ => {} // skip
+                    }
+                }
+
+                if compatible.is_empty() {
+                    return Err(format!(
+                        "unable to expand variant with **.{}\nDetails:\n{}",
+                        path.join("."),
+                        failures.join("\n")
+                    )
+                    .into());
+                }
+
+                let first = compatible.first().unwrap().to_owned();
+                let ret_id = match &supertype {
+                    Type::Union(..) => first,
+                    Type::Either(..) => {
+                        if compatible.len() > 1 {
+                            return Err(format!(
+                                    "either node with more than one compatible variant encoutered at path **.{}",
+                                    path.join("."),
+                                ).into(),
+                            );
+                        }
+                        first
+                    }
+                    _ => {
+                        return Err("invalid state: either or union expected as supertype".into());
+                    }
+                };
+
+                Ok((ret_id.as_type()?, ret_id))
+            }
+        };
+
+        match &supertype {
+            Type::Either(t) => filter_and_reduce(t.data.variants.clone()),
+            Type::Union(t) => filter_and_reduce(t.data.variants.clone()),
+            _ => Store::get_type_by_path(supertype_id, path), // no branching, trivial case
+        }
+    }
+
     pub fn get_type_by_path(struct_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
         let mut ret = (struct_id.as_type()?, struct_id);
 
@@ -189,6 +266,10 @@ impl Store {
                             ));
                         }
                     };
+                }
+                Type::Union(..) | Type::Either(..) => {
+                    ret = Store::pick_branch_by_path(unwrapped_id, &path[pos..])?;
+                    break;
                 }
                 _ => return Err(errors::expect_object_at_path(&curr_path)),
             }
