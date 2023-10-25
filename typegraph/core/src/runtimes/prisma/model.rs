@@ -9,6 +9,7 @@ use crate::errors::Result;
 use crate::runtimes::prisma::errors;
 use crate::runtimes::prisma::type_utils::RuntimeConfig;
 use crate::types::{Type, TypeAttributes, TypeFun};
+use crate::validation::types::validate_value;
 use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
 
 #[derive(Debug)]
@@ -146,6 +147,13 @@ impl Property {
         let unique = runtime_config.get("unique")?.unwrap_or(false);
         let auto = runtime_config.get("auto")?.unwrap_or(false);
         let default_value = runtime_config.get("default")?;
+        if let Some(default_value) = default_value.as_ref() {
+            validate_value(
+                default_value,
+                wrapper_type_id,
+                "<default value>".to_string(),
+            )?;
+        }
 
         let (type_id, card) = match typ {
             Type::Optional(inner) => (

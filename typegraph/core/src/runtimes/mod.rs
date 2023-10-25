@@ -236,7 +236,7 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         type_id: CoreTypeId,
     ) -> Result<wit::MaterializerId> {
         validate_value(
-            serde_json::from_str::<serde_json::Value>(&data.value).map_err(|e| e.to_string())?,
+            &serde_json::from_str::<serde_json::Value>(&data.value).map_err(|e| e.to_string())?,
             type_id.into(),
             "<V>".to_string(),
         )?;

@@ -22,7 +22,7 @@ impl TypeFunc {
     }
 }
 
-pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -> Result<()> {
+pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) -> Result<()> {
     let attrs = type_id.attrs()?;
     let typ = attrs.concrete_type.as_type()?;
     match typ {
@@ -38,7 +38,7 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
             };
             for (key, type_id) in inner.iter_props() {
                 validate_value(
-                    value.get(key).unwrap_or(&serde_json::Value::Null).clone(),
+                    value.get(key).unwrap_or(&serde_json::Value::Null),
                     type_id,
                     format!("{path}.{key}"),
                 )?;
@@ -56,7 +56,7 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
                 .into());
             };
             for (i, value) in value.iter().enumerate() {
-                validate_value(value.clone(), inner.data.of.into(), format!("{path}[{i}]"))?;
+                validate_value(value, inner.data.of.into(), format!("{path}[{i}]"))?;
             }
             // TODO min max?
             Ok(())
@@ -73,7 +73,7 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
         Type::Either(inner) => {
             let mut match_count = 0;
             for type_id in inner.data.variants.iter() {
-                match validate_value(value.clone(), type_id.into(), path.clone()) {
+                match validate_value(value, type_id.into(), path.clone()) {
                     Ok(()) => match_count += 1,
                     Err(_) => continue,
                 }
@@ -95,7 +95,7 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
 
         Type::Union(inner) => {
             for type_id in inner.data.variants.iter() {
-                match validate_value(value.clone(), type_id.into(), path.clone()) {
+                match validate_value(value, type_id.into(), path.clone()) {
                     Ok(()) => return Ok(()),
                     Err(_) => continue,
                 }
