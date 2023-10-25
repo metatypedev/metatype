@@ -22,20 +22,13 @@ impl Action for Typegate {
 }
 
 pub fn start_sync(args: Typegate, gen_args: GenArgs) -> Result<()> {
-    // let w = 60;
-    // let c = 20;
-    //
-    // ui::title("Deno: TODO", w);
     let cwd = match args.root_dir {
         Some(path) => path.parse()?,
         None => gen_args.dir()?,
     };
     let main_module = cwd.join("src/main.ts");
     let config_file = cwd.join("deno.json");
-    // let rt = tokio::runtime::Builder::new_current_thread()
-    //     .enable_all()
-    //     .build()?;
-    // rt.block_on(deno::start(&cwd, &main_module, &config_file))
-    meta_deno::start_sync(main_module, config_file);
+    let lock_file = cwd.join("deno.lock");
+    meta_deno::start_sync(main_module, config_file, lock_file);
     Ok(())
 }
