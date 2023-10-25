@@ -1,6 +1,6 @@
 [package]
 name = "native"
-version = "0.2.5"
+version = "0.2.4"
 edition = "2021"
 
 [lib]
