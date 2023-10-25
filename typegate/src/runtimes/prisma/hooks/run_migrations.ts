@@ -100,7 +100,9 @@ export const runMigrations: PushHandler = async (
             .map((err) => {
               const match = NULL_CONSTRAINT_ERROR_REGEX.exec(err);
               if (match != null) {
-                return `${err}: set a default value.`;
+                // TODO detect used for the typegraph language and write
+                // the message accordingly.
+                return `${err}: set a default value: add \`config={ "default": defaultValue }\` attribute to the type.`;
               }
               return err;
             });

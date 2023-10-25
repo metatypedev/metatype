@@ -116,7 +116,7 @@ Meta.test(
     } catch (e) {
       assertStringIncludes(
         e.message,
-        'column "age" of relation "Record" contains null values: set a default value.',
+        'column "age" of relation "Record" contains null values: set a default value:',
       );
     }
   },
