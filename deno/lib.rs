@@ -2,9 +2,15 @@
 
 pub use deno;
 
-use deno::*;
+use deno::{
+    deno_runtime::{
+        deno_core::{futures::FutureExt, unsync::JoinHandle},
+        tokio_util::create_and_run_current_thread_with_maybe_metrics,
+    },
+    *,
+};
 
-use std::sync::Arc;
+use std::{future::Future, sync::Arc};
 
 #[allow(unused_imports)]
 pub(crate) use log::{debug, error, info, trace, warn};
@@ -14,9 +20,20 @@ use deno_runtime::deno_core as deno_core; // necessary for re-exported macros to
 
 use std::path::{Path, PathBuf};
 
+/// Ensure that the subcommand runs in a task, rather than being directly executed. Since some of these
+/// futures are very large, this prevents the stack from getting blown out from passing them by value up
+/// the callchain (especially in debug mode when Rust doesn't have a chance to elide copies!).
+#[inline(always)]
+fn spawn_subcommand<F: Future<Output = ()> + 'static>(f: F) -> JoinHandle<()> {
+    // the boxed_local() is important in order to get windows to not blow the stack in debug
+    deno_core::unsync::spawn(f.boxed_local())
+}
+
 pub fn run_sync(main_mod: PathBuf) {
-    deno_runtime::tokio_util::create_and_run_current_thread_with_maybe_metrics(async move {
-        run(&main_mod).await.unwrap();
+    create_and_run_current_thread_with_maybe_metrics(async move {
+        spawn_subcommand(async move { run(&main_mod).await.unwrap() })
+            .await
+            .unwrap()
     });
 }
 
@@ -73,13 +90,15 @@ pub async fn run(main_mod: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn test_sync(files: deno_config::FilesConfig) {
-    deno_runtime::tokio_util::create_and_run_current_thread_with_maybe_metrics(async move {
-        test(files).await.unwrap();
+pub fn test_sync(files: deno_config::FilesConfig, config_file: PathBuf) {
+    create_and_run_current_thread_with_maybe_metrics(async move {
+        spawn_subcommand(async move { test(files, config_file).await.unwrap() })
+            .await
+            .unwrap()
     });
 }
 
-pub async fn test(files: deno_config::FilesConfig) -> anyhow::Result<()> {
+pub async fn test(files: deno_config::FilesConfig, config_file: PathBuf) -> anyhow::Result<()> {
     use deno::tools::test::*;
 
     deno_runtime::permissions::set_prompt_callbacks(
@@ -88,6 +107,7 @@ pub async fn test(files: deno_config::FilesConfig) -> anyhow::Result<()> {
     );
     let flags = args::Flags {
         unstable: true,
+        config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
         allow_run: Some(
             [
                 "cargo",
@@ -113,10 +133,10 @@ pub async fn test(files: deno_config::FilesConfig) -> anyhow::Result<()> {
         ),
         allow_ffi: Some(vec![]),
         allow_read: Some(
-            ["."]
-                .into_iter()
-                .map(std::str::FromStr::from_str)
-                .collect::<Result<_, _>>()?,
+            vec![], // ["."]
+                    //     .into_iter()
+                    //     .map(std::str::FromStr::from_str)
+                    //     .collect::<Result<_, _>>()?,
         ),
         allow_net: Some(vec![]),
         ..Default::default()
@@ -130,6 +150,7 @@ pub async fn test(files: deno_config::FilesConfig) -> anyhow::Result<()> {
 
     let test_options = args::TestOptions {
         doc: false,
+        trace_ops: true,
         ..args::TestOptions::resolve(Some(deno_config::TestConfig { files }), None)?
     };
     let file_fetcher = cli_factory.file_fetcher()?;

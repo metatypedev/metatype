@@ -314,7 +314,7 @@ jobs:
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
           sudo apt update
-          sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev perl make
+          sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev perl make protobuf-compiler libprotobuf-dev
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate

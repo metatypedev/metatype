@@ -29,19 +29,24 @@ pub enum Commands {
 #[derive(Parser, Debug)]
 pub struct Test {
     /// Files to test
-    #[clap(long)]
     files: Option<Vec<PathBuf>>,
     /// Test files to ignore
     #[clap(long)]
     ignore: Option<Vec<PathBuf>>,
+    /// Path to `deno.json`
+    #[clap(long)]
+    config: PathBuf,
 }
 
 impl Test {
     fn run(self) -> Result<()> {
-        mt_deno::test_sync(mt_deno::deno::deno_config::FilesConfig {
-            include: self.files,
-            exclude: self.ignore.unwrap_or_default(),
-        });
+        mt_deno::test_sync(
+            mt_deno::deno::deno_config::FilesConfig {
+                include: self.files,
+                exclude: self.ignore.unwrap_or_default(),
+            },
+            self.config,
+        );
         Ok(())
     }
 }
