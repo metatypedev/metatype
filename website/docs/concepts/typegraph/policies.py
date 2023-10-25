@@ -1,9 +1,11 @@
 # skip:start
-from typegraph import TypeGraph
-from typegraph.policies import Policy
-from typegraph.runtimes.deno import PureFunMat
+from typegraph import typegraph
+from typegraph.runtimes.deno import DenoRuntime
 
-with TypeGraph("policies") as g:
+
+@typegraph()
+def policies(g):
     # skip:end
-    public = Policy(PureFunMat("() => true"))
-    team_only = Policy(PureFunMat("(ctx) => ctx.user.role === 'admin'"))
+    deno = DenoRuntime()
+    public = deno.policy("public", "() => true")  # noqa
+    team_only = deno.policy("team", "(ctx) => ctx.user.role === 'admin'")  # noqa

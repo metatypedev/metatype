@@ -1,7 +1,9 @@
 # skip:start
-from typegraph import TypeGraph, t
+from typegraph import typegraph, t, Graph
 
-with TypeGraph("types") as g:
+
+@typegraph()
+def types(g: Graph):
     # skip:end
     t.struct(
         {

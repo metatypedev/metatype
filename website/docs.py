@@ -21,7 +21,7 @@ def docs(g):
             }
         ),
         t.struct({"id": t.integer().optional()}),
-    ).add_policy(public)
+    ).with_policy(public)
 
     g.expose(
         newsletterSignUp=newsletterSignUp,
