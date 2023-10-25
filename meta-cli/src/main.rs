@@ -19,16 +19,18 @@ use clap::Parser;
 use cli::upgrade::upgrade_check;
 use cli::Action;
 use cli::Args;
+use cli::Commands;
 use log::warn;
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
+    setup_panic_hook();
     logger::init();
 
-    upgrade_check()
-        .await
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?;
+    rt.block_on(upgrade_check())
         .unwrap_or_else(|e| warn!("cannot check for update: {}", e));
-
     let args = match Args::try_parse() {
         Ok(cli) => cli,
         Err(e) => {
@@ -43,11 +45,42 @@ async fn main() -> Result<()> {
     }
 
     match args.command {
-        Some(command) => command.run(args.gen).await?,
+        // the deno task requires use of a single thread runtime which it'll spawn itself
+        Some(Commands::Typegate(cmd_args)) => cli::typegate::start_sync(cmd_args, args.gen)?,
+        Some(command) => rt.block_on(command.run(args.gen))?,
         None => Args::command().print_help()?,
     }
 
     Ok(())
+}
+
+fn setup_panic_hook() {
+    // This function does two things inside of the panic hook:
+    // - Tokio does not exit the process when a task panics, so we define a custom
+    //   panic hook to implement this behaviour.
+    // - We print a message to stderr to indicate that this is a bug in Deno, and
+    //   should be reported to us.
+    let orig_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic_info| {
+        eprintln!("\n============================================================");
+        eprintln!("Metatype has panicked. This is a bug, please report this");
+        eprintln!("at https://github.com/metatypedev/metatype/issues/new.");
+        eprintln!("If you can reliably reproduce this panic, include the");
+        eprintln!("reproduction steps and re-run with the RUST_BACKTRACE=1 env");
+        eprintln!("var set and include the backtrace in your report.");
+        eprintln!();
+        eprintln!(
+            "Platform: {} {}",
+            std::env::consts::OS,
+            std::env::consts::ARCH
+        );
+        // TODO: use shadow_rs
+        // eprintln!("Version: {}", version::deno());
+        eprintln!("Args: {:?}", std::env::args().collect::<Vec<_>>());
+        eprintln!();
+        orig_hook(panic_info);
+        std::process::exit(1);
+    }));
 }
 
 #[test]

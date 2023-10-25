@@ -6,7 +6,8 @@ members = [
   "libs/typescript",
   "libs/xtask",
   "libs/macros",
-  "typegraph/core"
+  "typegraph/core",
+  "deno/"
 ]
 
 resolver = "2"
