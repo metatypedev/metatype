@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 mod codegen;
+mod deno;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use codegen::Codegen;
+use deno::Deno;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -16,6 +18,7 @@ struct Args {
 #[derive(Subcommand, Debug)]
 enum Command {
     Codegen(Codegen),
+    Deno(Deno),
 }
 
 fn main() -> Result<()> {
@@ -23,5 +26,6 @@ fn main() -> Result<()> {
 
     match args.command {
         Command::Codegen(cg) => cg.run(),
+        Command::Deno(cmd) => cmd.run(),
     }
 }

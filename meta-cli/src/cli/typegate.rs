@@ -4,6 +4,7 @@
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
+use normpath::PathExt;
 
 use crate::cli::{Action, GenArgs};
 
@@ -11,7 +12,7 @@ use crate::cli::{Action, GenArgs};
 pub struct Typegate {
     /// The root directory where typegate source files are located
     #[clap(long)]
-    root_dir: Option<String>,
+    root_dir: Option<std::path::PathBuf>,
 }
 
 #[async_trait]
@@ -21,14 +22,12 @@ impl Action for Typegate {
     }
 }
 
-pub fn start_sync(args: Typegate, gen_args: GenArgs) -> Result<()> {
-    let cwd = match args.root_dir {
-        Some(path) => path.parse()?,
+pub fn command(cmd: Typegate, gen_args: GenArgs) -> Result<()> {
+    let cwd = match cmd.root_dir {
+        Some(path) => path.clone().normalize()?.into_path_buf(),
         None => gen_args.dir()?,
     };
-    let main_module = cwd.join("src/main.ts");
-    let config_file = cwd.join("deno.json");
-    let lock_file = cwd.join("deno.lock");
-    meta_deno::start_sync(main_module, config_file, lock_file);
+    let main_module = cwd.join("typegate/src/main.ts");
+    mt_deno::run_sync(main_module);
     Ok(())
 }

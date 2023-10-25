@@ -11,3 +11,15 @@ members = [
 ]
 
 resolver = "2"
+
+[workspace.package]
+version = "0.2.4-0+dev"
+edition = "2021"
+
+[workspace.dependencies]
+mt_deno = { path = "deno/"}
+
+# [profile.xtask]
+# inherits = 'dev'
+# opt-level = 0
+# debug = 0

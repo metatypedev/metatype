@@ -1,7 +1,7 @@
 [package]
 name = "meta-cli"
-version = "0.2.4-0+dev"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 
 description = "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are."
 authors = ["Metatype Contributors <support@metatype.dev>"]
@@ -75,7 +75,7 @@ directories = "5.0.1"
 grep = "0.2.12"
 semver = "1.0.20"
 textwrap = "0.16.0"
-meta_deno = { path = "../deno"}
+mt_deno.workspace = true
 
 [dev-dependencies]
 assert_cmd = "2.0.12"

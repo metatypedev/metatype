@@ -1,14 +1,14 @@
 [package]
-name = "meta_deno"
-version = "0.2.4-0+dev"
-edition = "2021"
+name = "mt_deno"
+edition.workspace = true
+version.workspace = true
 
 [lib]
-name = "meta_deno"
+name = "mt_deno"
 path = "lib.rs"
 
 [dependencies]
-# deno = { path =  "../../deno/cli"}
-deno = { git =  "https://github.com/metatypedev/deno.git", branch = "librarify-cli" }
+deno = { path =  "../../deno/cli"}
+# deno = { git =  "https://github.com/metatypedev/deno.git", branch = "librarify-cli" }
 log = "0.4.20"
 anyhow = "1.0.75"
