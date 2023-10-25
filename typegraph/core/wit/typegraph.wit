@@ -468,6 +468,7 @@ interface utils {
     // ]
     record apply-value {
         inherit: bool,
+        // json string
         payload: option<string>
     }
 

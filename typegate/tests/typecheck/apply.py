@@ -3,7 +3,7 @@ from typegraph.runtimes.deno import DenoRuntime
 
 simple_tpe = t.struct(
     {
-        "one": t.string(),
+        "one": t.union([t.string(), t.integer()]).optional(),
         "two": t.struct(
             {
                 "apply": t.integer(),
@@ -11,7 +11,32 @@ simple_tpe = t.struct(
                 "set": t.integer().optional(),
                 "context": t.string().optional(),
             }
-        ),
+        ).optional(),
+        "branching": t.union(
+            [
+                # *.a.b
+                t.struct({"a": t.struct({"b": t.string()})}, name="V1"),
+                # *.a.b.c
+                #      .d
+                t.struct(
+                    {
+                        "a": t.struct(
+                            {
+                                "b": t.union(
+                                    [
+                                        t.struct({"c": t.string()}, name="A"),
+                                        t.struct(
+                                            {"c": t.string(), "d": t.string()}, name="B"
+                                        ),
+                                    ]
+                                )
+                            }
+                        )
+                    },
+                    name="V2",
+                ),
+            ]
+        ).optional(),
     }
 )
 
@@ -61,6 +86,9 @@ def test_apply_python(g: Graph):
             }
         )
         .with_policy(public),
+        testBranching=identity_simple.apply(
+            {"branching": {"a": {"b": {"c": "nested"}}}}
+        ).with_policy(public),
         selfReferingType=identity_self_ref.apply(
             {
                 "a": g.inherit(),  # A1
