@@ -4,7 +4,7 @@
 import json
 from typing import Callable, Dict, Union
 from typegraph.effects import EffectType
-from typegraph import t
+from typegraph.graph.typegraph import gen_ref
 
 
 def serialize_injection(
@@ -41,7 +41,7 @@ def serialize_generic_injection(source: str, value: Union[any, Dict[EffectType, 
 def serialize_parent_injection(value: Union[str, Dict[EffectType, str]]):
     correct_value = None
     if isinstance(value, str):
-        correct_value = t.proxy(value).id
+        correct_value = gen_ref(value).id
     else:
         if not isinstance(value, dict):
             raise Exception("type not supported")
@@ -56,7 +56,7 @@ def serialize_parent_injection(value: Union[str, Dict[EffectType, str]]):
         for k, v in value.items():
             if not isinstance(v, str):
                 raise Exception(f"value for field {k.name} must be a string")
-            correct_value[k] = t.proxy(v).id
+            correct_value[k] = gen_ref(v).id
 
     assert correct_value is not None
 

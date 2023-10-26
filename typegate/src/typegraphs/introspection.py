@@ -46,7 +46,7 @@ def introspection(g: Graph):
         {
             "name": t.string(),
             "description": t.string().optional(),
-            "type": t.ref("type"),
+            "type": g.ref("type"),
             "defaultValue": t.string().optional(),
             "isDeprecated": t.boolean(),
             "deprecationReason": t.string().optional(),
@@ -70,7 +70,7 @@ def introspection(g: Graph):
                 t.array(input_value),
                 resolver_mat,
             ),
-            "type": t.ref("type"),
+            "type": g.ref("type"),
             "isDeprecated": t.boolean(),
             "deprecationReason": t.string().optional(),
         },
@@ -102,8 +102,8 @@ def introspection(g: Graph):
                 t.array(field).optional(),
                 resolver_mat,
             ),
-            "interfaces": t.array(t.ref("type")).optional(),
-            "possibleTypes": t.array(t.ref("type")).optional(),
+            "interfaces": t.array(g.ref("type")).optional(),
+            "possibleTypes": t.array(g.ref("type")).optional(),
             "enumValues": t.func(
                 t.struct({"includeDeprecated": t.boolean().optional()}),
                 t.array(enum_value).optional(),
@@ -114,7 +114,7 @@ def introspection(g: Graph):
                 t.array(input_value).optional(),
                 resolver_mat,
             ),
-            "ofType": t.ref("type").optional(),
+            "ofType": g.ref("type").optional(),
         },
         name="type",
     )

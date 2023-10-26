@@ -18,7 +18,6 @@ from typegraph.gen.exports.core import (
     TypeInteger,
     TypeOptional,
     TypePolicy,
-    TypeProxy,
     TypeString,
     TypeStruct,
     TypeUnion,
@@ -150,21 +149,6 @@ class _TypeWrapper(typedef):
         if name == "id":
             return self.id
         return getattr(self.base, name)
-
-
-class ref(typedef):
-    name: str
-
-    def __init__(self, name: str):
-        res = core.proxyb(store, TypeProxy(name=name, extras=[]))
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        super().__init__(res.value)
-        self.name = name
-
-
-class proxy(ref):
-    pass
 
 
 class integer(typedef):

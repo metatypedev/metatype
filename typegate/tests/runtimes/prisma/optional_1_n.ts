@@ -22,7 +22,7 @@ typegraph("prisma_opt_1", (g) => {
       id: t.integer({}, { asId: true }),
       time: t.integer(),
       message: t.string(),
-      sender: db.link(t.ref("users").optional(), "messageSender"),
+      sender: db.link(g.ref("users").optional(), "messageSender"),
     },
     { name: "messages" },
   );
@@ -32,7 +32,7 @@ typegraph("prisma_opt_1", (g) => {
       id: t.integer({}, { asId: true, config: { auto: true } }),
       email: t.string(),
       name: t.string(),
-      messages: db.link(t.array(t.ref("messages")), "messageSender"),
+      messages: db.link(t.array(g.ref("messages")), "messageSender"),
     },
     { name: "users" },
   );

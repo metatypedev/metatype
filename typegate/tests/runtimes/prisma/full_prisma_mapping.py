@@ -18,8 +18,8 @@ def prisma(g: Graph):
             "age": t.integer().optional(),
             "coinflips": t.array(t.boolean()),
             "city": t.string(),
-            "posts": t.array(t.ref("Post")),
-            "extended_profile": t.ref("ExtendedProfile").optional(),
+            "posts": t.array(g.ref("Post")),
+            "extended_profile": g.ref("ExtendedProfile").optional(),
         },
         name="User",
     )
@@ -31,8 +31,8 @@ def prisma(g: Graph):
             "views": t.integer(),
             "likes": t.integer(),
             "published": t.boolean(),
-            "author": t.ref("User"),
-            "comments": t.array(t.ref("Comment")),
+            "author": g.ref("User"),
+            "comments": t.array(g.ref("Comment")),
         },
         name="Post",
     )
@@ -41,7 +41,7 @@ def prisma(g: Graph):
         {
             "id": t.integer(as_id=True),
             "content": t.string(),
-            "related_post": t.ref("Post"),
+            "related_post": g.ref("Post"),
         },
         name="Comment",
     )
@@ -50,7 +50,7 @@ def prisma(g: Graph):
         {
             "id": t.integer(as_id=True),
             "bio": t.string(),
-            "user": t.ref("User"),
+            "user": g.ref("User"),
         },
         name="ExtendedProfile",
     )

@@ -95,7 +95,7 @@ def typecheck(g: Graph):
     product = t.struct(
         {
             "name": t.string(),
-            "equivalent": t.array(t.ref("Product")).optional(),
+            "equivalent": t.array(g.ref("Product")).optional(),
             "score": t.either(
                 [t.string(enum=["bad", "decent", "good"]), t.integer()]
             ).optional(),

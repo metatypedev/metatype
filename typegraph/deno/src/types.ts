@@ -169,20 +169,6 @@ export class Typedef {
   }
 }
 
-class TypeProxy<T extends Typedef = Typedef> extends Typedef {
-  constructor(_id: number, name: string) {
-    super(_id, { name });
-  }
-}
-
-export function proxy<T extends Typedef = Typedef>(name: string) {
-  return new TypeProxy<T>(core.proxyb({ name, extras: [] }), name);
-}
-
-export function ref<T extends Typedef = Typedef>(name: string) {
-  return proxy<T>(name);
-}
-
 class Boolean extends Typedef {
   constructor(_id: number, base: TypeBase) {
     super(_id, base);

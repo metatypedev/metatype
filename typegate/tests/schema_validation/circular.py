@@ -13,22 +13,22 @@ def circular(g: Graph):
         {
             "name": t.string(),
             # Edgecase #1: optional that holds a self-reference
-            "professor": t.ref("User").optional(),
+            "professor": g.ref("User").optional(),
             # Edgecase #2: array that holds a self-reference
-            "parents": t.array(t.ref("User")),
+            "parents": t.array(g.ref("User")),
             # Edgecase #3: optional array that holds a self-reference
-            "friends": t.array(t.ref("User")).optional(),
+            "friends": t.array(g.ref("User")).optional(),
             # Edgecase #4: optional object that holds a self-reference
             "paper": t.struct(
-                {"title": t.string(), "author": t.ref("User")}, name="Paper"
+                {"title": t.string(), "author": g.ref("User")}, name="Paper"
             ).optional(),
             # Edgecase #5: optional nested object with multiple references
             "root": t.struct(
                 {
                     "some_field": t.string(),
-                    "depth_one": t.ref("User").optional(),
-                    "depth_one_2": t.ref("User"),
-                    "depth_two": t.struct({"depth_three": t.ref("User")}),
+                    "depth_one": g.ref("User").optional(),
+                    "depth_one_2": g.ref("User"),
+                    "depth_two": t.struct({"depth_three": g.ref("User")}),
                 },
                 name="Speciality",
             ).optional(),

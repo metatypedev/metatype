@@ -29,8 +29,8 @@ def prisma_multi(g: Graph):
             "id": t.integer(as_id=True),
             "email": t.string(),
             "name": t.string(),
-            "sentMessages": db.link(t.array(t.ref("messages")), "messageSender"),
-            "receivedMessages": db.link(t.array(t.ref("messages")), "messageRecipient"),
+            "sentMessages": db.link(t.array(g.ref("messages")), "messageSender"),
+            "receivedMessages": db.link(t.array(g.ref("messages")), "messageRecipient"),
             # "favoriteMessage": favoriteMessage.owned(),  ## optional
         },
         name="users",

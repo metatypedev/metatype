@@ -11,7 +11,7 @@ def prisma_normal(g: Graph):
     user = t.struct(
         {
             "id": t.integer(as_id=True),
-            "profile": db.link(t.ref("Profile").optional(), "userProfile"),
+            "profile": db.link(g.ref("Profile").optional(), "userProfile"),
         },
         name="User",
     )

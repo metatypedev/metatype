@@ -10,20 +10,20 @@ const s1 = t.struct({ a, b: t.integer({ min: 12 }) });
 
 const b = t.integer({ min: 12, max: 43 });
 
-const user = t.struct({
-  id: t.integer(),
-  post: t.proxy("Post"),
-}, { name: "User" });
-
-const post = t.struct({
-  id: t.integer(),
-  author: user,
-}, { name: "Post" });
-
 typegraph("test-types", (g) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
   const internal = Policy.internal();
+
+  const user = t.struct({
+    id: t.integer(),
+    post: g.ref("Post"),
+  }, { name: "User" });
+
+  const post = t.struct({
+    id: t.integer(),
+    author: user,
+  }, { name: "Post" });
 
   g.expose({
     one: deno.func(s1, b, {

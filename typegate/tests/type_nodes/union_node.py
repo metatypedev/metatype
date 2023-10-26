@@ -75,7 +75,7 @@ def union(g: Graph):
                                 },
                                 name="A2",
                             ),
-                            t.ref("B"),
+                            g.ref("B"),
                         ],
                     ),
                 },

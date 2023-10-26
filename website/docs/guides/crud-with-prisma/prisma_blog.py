@@ -10,8 +10,8 @@ def blog(g: Graph):
         {
             "id": t.integer(as_id=True),
             "name": t.string(),
-            "posts": t.array(t.ref("Post")),
-            "profile": t.ref("Profile").optional(),
+            "posts": t.array(g.ref("Post")),
+            "profile": g.ref("Profile").optional(),
         },
         name="User",
     )
@@ -20,7 +20,7 @@ def blog(g: Graph):
         {
             "id": t.integer(as_id=True),
             "profilePic": t.string(),
-            "user": t.ref("User"),
+            "user": g.ref("User"),
         },
         name="Profile",
     )
@@ -29,7 +29,7 @@ def blog(g: Graph):
         {
             "id": t.integer(as_id=True),
             "content": t.string(),
-            "author": t.ref("User"),
+            "author": g.ref("User"),
         },
         name="Post",
     )
