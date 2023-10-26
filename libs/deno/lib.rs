@@ -1,5 +1,8 @@
 #![allow(dead_code, clippy::let_and_return)]
 
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
+
 pub use deno;
 
 use deno::{
@@ -209,6 +212,7 @@ pub async fn test(files: deno_config::FilesConfig, config_file: PathBuf) -> anyh
             },
         },
     )
+    .boxed_local()
     .await?;
 
     Ok(())
