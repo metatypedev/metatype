@@ -7,9 +7,9 @@ import { ensure } from "../utils.ts";
 import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
 import {
-  isArray,
   isEither,
   isFunction,
+  isList,
   isObject,
   isOptional,
   isQuantifier,
@@ -305,7 +305,7 @@ export class TypeGraphRuntime extends Runtime {
       };
     }
 
-    if (isArray(type)) {
+    if (isList(type)) {
       return {
         ...common,
         kind: () => TypeKind.LIST,

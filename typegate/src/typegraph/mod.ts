@@ -15,11 +15,11 @@ import {
 } from "../services/auth/mod.ts";
 
 import {
-  isArray,
   isBoolean,
   isEither,
   isFunction,
   isInteger,
+  isList,
   isNumber,
   isObject,
   isOptional,
@@ -358,7 +358,7 @@ export class TypeGraph {
       return x;
     };
 
-    if (isArray(type)) {
+    if (isList(type)) {
       if (isOptional(this.type(type.items))) {
         return (x: any) => {
           return x.flat().filter((c: any) => !!c);
@@ -369,7 +369,7 @@ export class TypeGraph {
       };
     }
     if (isOptional(type)) {
-      if (isArray(this.type(type.item))) {
+      if (isList(this.type(type.item))) {
         return (x: any) => {
           return ensureArray(x)
             .flat()
@@ -414,7 +414,7 @@ export class TypeGraph {
       return `${this.getGraphQLType(typeNode, true)}!`;
     }
 
-    if (typeNode.type === Type.ARRAY) {
+    if (typeNode.type === Type.LIST) {
       return `[${this.getGraphQLType(this.type(typeNode.items))}]`;
     }
 
@@ -461,7 +461,7 @@ export class TypeGraph {
     if (typeNode.type === Type.OPTIONAL) {
       return this.getPossibleSelectionFields(typeNode.item);
     }
-    if (typeNode.type === Type.ARRAY) {
+    if (typeNode.type === Type.LIST) {
       return this.getPossibleSelectionFields(typeNode.items);
     }
 
@@ -529,7 +529,7 @@ export class TypeGraph {
     if (typeNode.type === Type.OPTIONAL) {
       return this.typeWithoutQuantifiers(typeNode.item);
     }
-    if (typeNode.type === Type.ARRAY) {
+    if (typeNode.type === Type.LIST) {
       return this.typeWithoutQuantifiers(typeNode.items);
     }
     return typeNode;

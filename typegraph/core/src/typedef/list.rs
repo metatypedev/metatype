@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::{ArrayTypeData, TypeNode};
+use common::typegraph::{ListTypeData, TypeNode};
 
 use crate::{
     conversion::types::{gen_base, TypeConversion},
@@ -13,7 +13,7 @@ use crate::{
 
 impl TypeConversion for Array {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
-        Ok(TypeNode::Array {
+        Ok(TypeNode::List {
             base: gen_base(
                 self.base
                     .name
@@ -23,7 +23,7 @@ impl TypeConversion for Array {
                 runtime_id.unwrap(),
             )
             .build(),
-            data: ArrayTypeData {
+            data: ListTypeData {
                 items: ctx
                     .register_type(TypeId(self.data.of).resolve_proxy()?, runtime_id)?
                     .into(),
@@ -50,7 +50,7 @@ impl TypeData for TypeArray {
     }
 
     fn variant_name(&self) -> String {
-        "array".to_string()
+        "list".to_string()
     }
 
     super::impl_into_type!(concrete, Array);

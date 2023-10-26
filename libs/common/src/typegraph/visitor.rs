@@ -60,7 +60,7 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
             VisitResult::Continue(deeper) if deeper => match type_node {
                 TypeNode::Optional { data, .. } => self.visit_optional(type_idx, data.item),
                 TypeNode::Object { data, .. } => self.visit_object(type_idx, &data.properties),
-                TypeNode::Array { data, .. } => self.visit_array(type_idx, data.items),
+                TypeNode::List { data, .. } => self.visit_array(type_idx, data.items),
                 TypeNode::Union { data, .. } => self.visit_union(type_idx, &data.any_of),
                 TypeNode::Either { data, .. } => self.visit_either(type_idx, &data.one_of),
                 TypeNode::Function { data, .. } => {
