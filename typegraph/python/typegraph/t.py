@@ -25,7 +25,7 @@ from typegraph.gen.exports.core import (
     TypeWithInjection,
 )
 from typegraph.gen.exports.runtimes import EffectRead
-from typegraph.gen.exports.utils import Apply
+from typegraph.gen.exports.utils import Reduce
 from typegraph.gen.types import Err
 from typegraph.graph.typegraph import core, store
 from typegraph.injection import (
@@ -37,7 +37,7 @@ from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_cha
 from typegraph.runtimes.deno import Materializer
 from typegraph.utils import (
     ConfigSpec,
-    build_apply_data,
+    build_reduce_data,
     serialize_config,
 )
 from typegraph.wit import wit_utils
@@ -648,14 +648,14 @@ class func(typedef):
         out = self.out.extend(props)
         return func(self.inp, out, self.mat)
 
-    def apply(self, value: Dict[str, any]) -> "func":
-        data = Apply(paths=build_apply_data(value, [], []))
-        apply_id = wit_utils.gen_applyb(store, self.inp.id, data=data)
+    def reduce(self, value: Dict[str, any]) -> "func":
+        data = Reduce(paths=build_reduce_data(value, [], []))
+        reduced_id = wit_utils.gen_reduceb(store, self.inp.id, data=data)
 
-        if isinstance(apply_id, Err):
-            raise Exception(apply_id.value)
+        if isinstance(reduced_id, Err):
+            raise Exception(reduced_id.value)
 
-        return func(typedef(id=apply_id.value), self.out, self.mat)
+        return func(typedef(id=reduced_id.value), self.out, self.mat)
 
     def from_type_func(
         data: FuncParams, rate_calls: bool = False, rate_weight: Optional[int] = None

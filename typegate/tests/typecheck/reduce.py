@@ -6,7 +6,7 @@ simple_tpe = t.struct(
         "one": t.union([t.string(), t.integer()]).optional(),
         "two": t.struct(
             {
-                "apply": t.integer(),
+                "reduce": t.integer(),
                 "user": t.integer(),
                 "set": t.integer().optional(),
                 "context": t.string().optional(),
@@ -52,7 +52,7 @@ self_ref_tpe = t.struct(
 
 
 @typegraph()
-def test_apply_python(g: Graph):
+def test_reduce_python(g: Graph):
     deno = DenoRuntime()
     public = Policy.public()
     identity_simple = deno.func(
@@ -64,10 +64,10 @@ def test_apply_python(g: Graph):
     )
 
     g.expose(
-        invariantApply=identity_simple.apply(
+        invariantReduce=identity_simple.reduce(
             {
                 "two": {
-                    "apply": g.inherit(),
+                    "reduce": g.inherit(),
                     "user": g.inherit(),
                     "set": g.inherit(),
                     "context": g.inherit(),
@@ -75,8 +75,8 @@ def test_apply_python(g: Graph):
                 # "one": g.inherit()  # implicit
             }
         ).with_policy(public),
-        simpleInjection=identity_simple.apply({"one": "ONE!"})
-        .apply(
+        simpleInjection=identity_simple.reduce({"one": "ONE!"})
+        .reduce(
             {
                 "two": {
                     "user": g.inherit(),
@@ -86,10 +86,10 @@ def test_apply_python(g: Graph):
             }
         )
         .with_policy(public),
-        testBranching=identity_simple.apply(
+        testBranching=identity_simple.reduce(
             {"branching": {"a": {"b": {"c": "nested"}}}}
         ).with_policy(public),
-        selfReferingType=identity_self_ref.apply(
+        selfReferingType=identity_self_ref.reduce(
             {
                 "a": g.inherit(),  # A1
                 "b": {

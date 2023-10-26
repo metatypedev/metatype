@@ -32,7 +32,7 @@ const grades = t.struct({
 
 const tpe = t.struct({ student, grades: grades.optional() });
 
-typegraph("test-apply-deno", (g) => {
+typegraph("test-reduce-deno", (g) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
   const identityStudent = deno.func(
@@ -42,7 +42,7 @@ typegraph("test-apply-deno", (g) => {
   );
 
   g.expose({
-    testInvariant: identityStudent.apply({
+    testInvariant: identityStudent.reduce({
       student: {
         id: g.inherit(),
         name: g.inherit(),
@@ -53,8 +53,8 @@ typegraph("test-apply-deno", (g) => {
       },
       // grades: g.inherit(), // implicit
     }).withPolicy(pub),
-    applyComposition: identityStudent
-      .apply({
+    reduceComposition: identityStudent
+      .reduce({
         student: {
           id: 1234,
           name: g.inherit(),
@@ -69,7 +69,7 @@ typegraph("test-apply-deno", (g) => {
         },
         // grades: g.inherit(), // implicit
       })
-      .apply({
+      .reduce({
         // student: g.inherit(), // implicit
         grades: {
           year: g.inherit(),
@@ -81,7 +81,7 @@ typegraph("test-apply-deno", (g) => {
       .withPolicy(pub),
 
     injectionInherit: identityStudent
-      .apply({
+      .reduce({
         student: {
           id: 1234,
           name: g.inherit(),

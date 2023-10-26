@@ -459,29 +459,29 @@ interface utils {
 
 
     // Example:
-    // apply({a: 1, { b: {c: g.inherit(), d: [1, 2, 3]}})
-    // produces a list of apply-path
+    // reduce({a: 1, { b: {c: g.inherit(), d: [1, 2, 3]}})
+    // produces a list of reduce-path
     // [ 
     //  { path: [a], value: { inherit: false, payload: 1 } } 
     //  { path: [a, b, c], value: { inherit: true } } 
     //  { path: [a, b, d], value: { inherit: false, payload: [1, 2, 3] } } 
     // ]
-    record apply-value {
+    record reduce-value {
         inherit: bool,
         // json string
         payload: option<string>
     }
 
-    record apply-path {
+    record reduce-path {
         path: list<string>,
-        value: apply-value,
+        value: reduce-value,
     }
 
-    record apply {
-        paths: list<apply-path>
+    record reduce {
+        paths: list<reduce-path>
     }
 
-    gen-applyb: func(supertype-id: type-id, data: apply) -> result<type-id, error>
+    gen-reduceb: func(supertype-id: type-id, data: reduce) -> result<type-id, error>
 
     add-graphql-endpoint: func(graphql: string) -> result<u32, error>
 

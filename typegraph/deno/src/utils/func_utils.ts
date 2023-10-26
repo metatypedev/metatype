@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { InheritDef } from "../typegraph.ts";
-import { ApplyPath } from "../gen/interfaces/metatype-typegraph-utils.d.ts";
+import { ReducePath } from "../gen/interfaces/metatype-typegraph-utils.d.ts";
 import { serializeStaticInjection } from "./injection_utils.ts";
 
 export function stringifySymbol(symbol: symbol) {
@@ -19,11 +19,11 @@ export function serializeRecordValues<T>(
   return Object.entries(obj).map(([k, v]) => [k, JSON.stringify(v)]);
 }
 
-export function buildApplyData(
+export function buildReduceData(
   node: InheritDef | unknown,
-  paths: ApplyPath[] = [],
+  paths: ReducePath[] = [],
   currPath: string[] = [],
-): ApplyPath[] {
+): ReducePath[] {
   if (node === null || node === undefined) {
     throw new Error(
       `unsupported value "${node}" at ${currPath.join(".")}`,
@@ -46,7 +46,7 @@ export function buildApplyData(
       return paths;
     }
     for (const [k, v] of Object.entries(node)) {
-      buildApplyData(v, paths, [...currPath, k]);
+      buildReduceData(v, paths, [...currPath, k]);
     }
     return paths;
   }

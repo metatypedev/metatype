@@ -15,12 +15,12 @@ import {
   TypeString,
   TypeUnion,
 } from "./gen/interfaces/metatype-typegraph-core.d.ts";
-import { Apply } from "./gen/interfaces/metatype-typegraph-utils.d.ts";
+import { Reduce } from "./gen/interfaces/metatype-typegraph-utils.d.ts";
 import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.d.ts";
 import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps.ts";
 import Policy from "./policy.ts";
-import { buildApplyData, serializeRecordValues } from "./utils/func_utils.ts";
+import { buildReduceData, serializeRecordValues } from "./utils/func_utils.ts";
 import {
   serializeFromParentInjection,
   serializeGenericInjection,
@@ -536,18 +536,18 @@ export class Func<
     this.mat = mat;
   }
 
-  apply(value: Record<string, unknown | InheritDef>) {
-    const data: Apply = {
-      paths: buildApplyData(value),
+  reduce(value: Record<string, unknown | InheritDef>) {
+    const data: Reduce = {
+      paths: buildReduceData(value),
     };
 
-    const applyId = wit_utils.genApplyb(
+    const reducedId = wit_utils.genReduceb(
       this.inp._id,
       data,
     );
 
     return func(
-      new Typedef(applyId, {}) as Struct<P>,
+      new Typedef(reducedId, {}) as Struct<P>,
       this.out,
       this.mat,
     );

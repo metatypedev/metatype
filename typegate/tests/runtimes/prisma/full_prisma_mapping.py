@@ -76,7 +76,7 @@ def prisma(g: Graph):
         findManyExtendedProfile=db.find_many(extended_profile),
         createOneExtendedProfile=db.create(extended_profile),
         createOneComment=db.create(comment),
-        findFirstPostWithApply=db.find_first(post).apply(
+        findFirstPostWithReduce=db.find_first(post).reduce(
             {
                 "where": {"id": 10007},
             }
@@ -117,7 +117,7 @@ def prisma(g: Graph):
                     }
                 )
             ),
-        ).apply(
+        ).reduce(
             {
                 "title": "%Title 2%",
                 "one": 10002,
