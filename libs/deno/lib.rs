@@ -8,6 +8,7 @@ pub use deno;
 use deno::{
     deno_runtime::{
         deno_core::{futures::FutureExt, unsync::JoinHandle},
+        permissions::PermissionsOptions,
         tokio_util::create_and_run_current_thread_with_maybe_metrics,
     },
     *,
@@ -32,15 +33,15 @@ fn spawn_subcommand<F: Future<Output = ()> + 'static>(f: F) -> JoinHandle<()> {
     deno_core::unsync::spawn(f.boxed_local())
 }
 
-pub fn run_sync(main_mod: PathBuf) {
+pub fn run_sync(main_mod: PathBuf, permissions: PermissionsOptions) {
     create_and_run_current_thread_with_maybe_metrics(async move {
-        spawn_subcommand(async move { run(&main_mod).await.unwrap() })
+        spawn_subcommand(async move { run(&main_mod, permissions).await.unwrap() })
             .await
             .unwrap()
     });
 }
 
-pub async fn run(main_mod: &Path) -> anyhow::Result<()> {
+pub async fn run(main_mod: &Path, permissions: PermissionsOptions) -> anyhow::Result<()> {
     deno_runtime::permissions::set_prompt_callbacks(
         Box::new(util::draw_thread::DrawThread::hide),
         Box::new(util::draw_thread::DrawThread::show),
@@ -53,24 +54,6 @@ pub async fn run(main_mod: &Path) -> anyhow::Result<()> {
             watch: None,
         }),
         unstable: true,
-        allow_run: Some(["hostname"].into_iter().map(str::to_owned).collect()),
-        allow_sys: Some(vec![]),
-        allow_env: Some(vec![]),
-        allow_hrtime: true,
-        allow_write: Some(
-            ["tmp"]
-                .into_iter()
-                .map(std::str::FromStr::from_str)
-                .collect::<Result<_, _>>()?,
-        ),
-        allow_ffi: Some(vec![]),
-        allow_read: Some(
-            ["."]
-                .into_iter()
-                .map(std::str::FromStr::from_str)
-                .collect::<Result<_, _>>()?,
-        ),
-        allow_net: Some(vec![]),
         ..Default::default()
     };
     let options = args::CliOptions::from_flags(flags)?;
@@ -82,7 +65,7 @@ pub async fn run(main_mod: &Path) -> anyhow::Result<()> {
 
     let worker_factory = cli_factory.create_cli_main_worker_factory().await?;
     let permissions = deno_runtime::permissions::PermissionsContainer::new(
-        deno_runtime::permissions::Permissions::from_options(&options.permissions_options())?,
+        deno_runtime::permissions::Permissions::from_options(&permissions)?,
     );
     let mut worker = worker_factory
         .create_main_worker(main_module, permissions)
@@ -93,15 +76,32 @@ pub async fn run(main_mod: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn test_sync(files: deno_config::FilesConfig, config_file: PathBuf) {
-    create_and_run_current_thread_with_maybe_metrics(async move {
-        spawn_subcommand(async move { test(files, config_file).await.unwrap() })
-            .await
-            .unwrap()
-    });
+pub fn test_sync(
+    files: deno_config::FilesConfig,
+    config_file: PathBuf,
+    permissions: PermissionsOptions,
+) {
+    std::thread::Builder::new()
+        .stack_size(4 * 1024 * 1024)
+        .spawn(|| {
+            create_and_run_current_thread_with_maybe_metrics(async move {
+                spawn_subcommand(
+                    async move { test(files, config_file, permissions).await.unwrap() },
+                )
+                .await
+                .unwrap()
+            })
+        })
+        .unwrap()
+        .join()
+        .unwrap();
 }
 
-pub async fn test(files: deno_config::FilesConfig, config_file: PathBuf) -> anyhow::Result<()> {
+pub async fn test(
+    files: deno_config::FilesConfig,
+    config_file: PathBuf,
+    permissions: PermissionsOptions,
+) -> anyhow::Result<()> {
     use deno::tools::test::*;
 
     deno_runtime::permissions::set_prompt_callbacks(
@@ -111,37 +111,6 @@ pub async fn test(files: deno_config::FilesConfig, config_file: PathBuf) -> anyh
     let flags = args::Flags {
         unstable: true,
         config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
-        allow_run: Some(
-            [
-                "cargo",
-                "hostname",
-                "target/debug/meta",
-                "git",
-                "python3",
-                "rm",
-                "mkdir",
-            ]
-            .into_iter()
-            .map(str::to_owned)
-            .collect(),
-        ),
-        allow_sys: Some(vec![]),
-        allow_env: Some(vec![]),
-        allow_hrtime: true,
-        allow_write: Some(
-            ["tmp", "typegate/tests"]
-                .into_iter()
-                .map(std::str::FromStr::from_str)
-                .collect::<Result<_, _>>()?,
-        ),
-        allow_ffi: Some(vec![]),
-        allow_read: Some(
-            vec![], // ["."]
-                    //     .into_iter()
-                    //     .map(std::str::FromStr::from_str)
-                    //     .collect::<Result<_, _>>()?,
-        ),
-        allow_net: Some(vec![]),
         ..Default::default()
     };
     let options = args::CliOptions::from_flags(flags)?;
@@ -162,8 +131,7 @@ pub async fn test(files: deno_config::FilesConfig, config_file: PathBuf) -> anyh
     // Various test files should not share the same permissions in terms of
     // `PermissionsContainer` - otherwise granting/revoking permissions in one
     // file would have impact on other files, which is undesirable.
-    let permissions =
-        deno_runtime::permissions::Permissions::from_options(&options.permissions_options())?;
+    let permissions = deno_runtime::permissions::Permissions::from_options(&permissions)?;
 
     let specifiers_with_mode =
         fetch_specifiers_with_test_mode(file_fetcher, &test_options.files, &test_options.doc)
@@ -212,9 +180,95 @@ pub async fn test(files: deno_config::FilesConfig, config_file: PathBuf) -> anyh
             },
         },
     )
-    .boxed_local()
     .await?;
 
+    Ok(())
+}
+
+pub fn bench_sync(
+    files: deno_config::FilesConfig,
+    config_file: PathBuf,
+    permissions: PermissionsOptions,
+) {
+    std::thread::Builder::new()
+        .stack_size(4 * 1024 * 1024)
+        .spawn(|| {
+            create_and_run_current_thread_with_maybe_metrics(async move {
+                spawn_subcommand(
+                    async move { bench(files, config_file, permissions).await.unwrap() },
+                )
+                .await
+                .unwrap()
+            })
+        })
+        .unwrap()
+        .join()
+        .unwrap();
+}
+
+pub async fn bench(
+    files: deno_config::FilesConfig,
+    config_file: PathBuf,
+    permissions: PermissionsOptions,
+) -> anyhow::Result<()> {
+    use deno::tools::bench::*;
+    use deno::tools::test::TestFilter;
+
+    deno_runtime::permissions::set_prompt_callbacks(
+        Box::new(util::draw_thread::DrawThread::hide),
+        Box::new(util::draw_thread::DrawThread::show),
+    );
+    let flags = args::Flags {
+        unstable: true,
+        config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
+        ..Default::default()
+    };
+    let options = args::CliOptions::from_flags(flags)?;
+    let options = Arc::new(options);
+
+    let bench_options = args::BenchOptions {
+        ..args::BenchOptions::resolve(Some(deno_config::BenchConfig { files }), None)?
+    };
+    let cli_factory = factory::CliFactoryBuilder::new()
+        .build_from_cli_options(options.clone())
+        .with_custom_ext_cb(Arc::new(|| vec![i_metatype_ext::init_ops_and_esm()]));
+    let options = cli_factory.cli_options();
+
+    // Various bench files should not share the same permissions in terms of
+    // `PermissionsContainer` - otherwise granting/revoking permissions in one
+    // file would have impact on other files, which is undesirable.
+    let permissions = deno_runtime::permissions::Permissions::from_options(&permissions)?;
+
+    let specifiers = util::fs::collect_specifiers(&bench_options.files, is_supported_bench_path)?;
+
+    if specifiers.is_empty() {
+        return Err(deno_core::error::generic_error("No bench modules found"));
+    }
+
+    check_specifiers(
+        options,
+        cli_factory.module_load_preparer().await?,
+        specifiers.clone(),
+    )
+    .await?;
+
+    if bench_options.no_run {
+        return Ok(());
+    }
+
+    let log_level = options.log_level();
+    let worker_factory = Arc::new(cli_factory.create_cli_main_worker_factory().await?);
+    bench_specifiers(
+        worker_factory,
+        &permissions,
+        specifiers,
+        BenchSpecifierOptions {
+            filter: TestFilter::from_flag(&bench_options.filter),
+            json: bench_options.json,
+            log_level,
+        },
+    )
+    .await?;
     Ok(())
 }
 

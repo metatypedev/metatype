@@ -11574,6 +11574,8 @@ dependencies = [
  "anyhow",
  "clap",
  "common",
+ "env_logger",
+ "log",
  "mt_deno",
  "project-root",
  "schemars",

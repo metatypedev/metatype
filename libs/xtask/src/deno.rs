@@ -15,6 +15,7 @@ impl Deno {
     pub fn run(self) -> Result<()> {
         match self.command {
             Commands::Test(cmd) => cmd.run()?,
+            Commands::Bench(cmd) => cmd.run()?,
         }
         Ok(())
     }
@@ -24,6 +25,8 @@ impl Deno {
 pub enum Commands {
     // Run deno tests with the metatype extension support
     Test(Test),
+    // Run deno benches with the metatype extension support
+    Bench(Bench),
 }
 
 #[derive(Parser, Debug)]
@@ -46,6 +49,99 @@ impl Test {
                 exclude: self.ignore.unwrap_or_default(),
             },
             self.config,
+            mt_deno::deno::deno_runtime::permissions::PermissionsOptions {
+                allow_run: Some(
+                    [
+                        "cargo",
+                        "hostname",
+                        "target/debug/meta",
+                        "git",
+                        "python3",
+                        "rm",
+                        "mkdir",
+                    ]
+                    .into_iter()
+                    .map(str::to_owned)
+                    .collect(),
+                ),
+                allow_sys: Some(vec![]),
+                allow_env: Some(vec![]),
+                allow_hrtime: true,
+                allow_write: Some(
+                    ["tmp", "typegate/tests"]
+                        .into_iter()
+                        .map(std::str::FromStr::from_str)
+                        .collect::<Result<_, _>>()?,
+                ),
+                allow_ffi: Some(vec![]),
+                allow_read: Some(
+                    vec![], // ["."]
+                            //     .into_iter()
+                            //     .map(std::str::FromStr::from_str)
+                            //     .collect::<Result<_, _>>()?,
+                ),
+                allow_net: Some(vec![]),
+                ..Default::default()
+            },
+        );
+        Ok(())
+    }
+}
+
+#[derive(Parser, Debug)]
+pub struct Bench {
+    /// Files to bench
+    files: Option<Vec<PathBuf>>,
+    /// Bench files to ignore
+    #[clap(long)]
+    ignore: Option<Vec<PathBuf>>,
+    /// Path to `deno.json`
+    #[clap(long)]
+    config: PathBuf,
+}
+
+impl Bench {
+    fn run(self) -> Result<()> {
+        mt_deno::bench_sync(
+            mt_deno::deno::deno_config::FilesConfig {
+                include: self.files,
+                exclude: self.ignore.unwrap_or_default(),
+            },
+            self.config,
+            mt_deno::deno::deno_runtime::permissions::PermissionsOptions {
+                allow_run: Some(
+                    [
+                        "cargo",
+                        "hostname",
+                        "target/debug/meta",
+                        "git",
+                        "python3",
+                        "rm",
+                        "mkdir",
+                    ]
+                    .into_iter()
+                    .map(str::to_owned)
+                    .collect(),
+                ),
+                allow_sys: Some(vec![]),
+                allow_env: Some(vec![]),
+                allow_hrtime: true,
+                allow_write: Some(
+                    ["tmp", "typegate/tests"]
+                        .into_iter()
+                        .map(std::str::FromStr::from_str)
+                        .collect::<Result<_, _>>()?,
+                ),
+                allow_ffi: Some(vec![]),
+                allow_read: Some(
+                    vec![], // ["."]
+                            //     .into_iter()
+                            //     .map(std::str::FromStr::from_str)
+                            //     .collect::<Result<_, _>>()?,
+                ),
+                allow_net: Some(vec![]),
+                ..Default::default()
+            },
         );
         Ok(())
     }

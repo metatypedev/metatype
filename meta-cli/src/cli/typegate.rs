@@ -28,6 +28,29 @@ pub fn command(cmd: Typegate, gen_args: GenArgs) -> Result<()> {
         None => gen_args.dir()?,
     };
     let main_module = cwd.join("typegate/src/main.ts");
-    mt_deno::run_sync(main_module);
+    mt_deno::run_sync(
+        main_module,
+        mt_deno::deno::deno_runtime::permissions::PermissionsOptions {
+            allow_run: Some(["hostname"].into_iter().map(str::to_owned).collect()),
+            allow_sys: Some(vec![]),
+            allow_env: Some(vec![]),
+            allow_hrtime: true,
+            allow_write: Some(
+                ["tmp"]
+                    .into_iter()
+                    .map(std::str::FromStr::from_str)
+                    .collect::<Result<_, _>>()?,
+            ),
+            allow_ffi: Some(vec![]),
+            allow_read: Some(
+                ["."]
+                    .into_iter()
+                    .map(std::str::FromStr::from_str)
+                    .collect::<Result<_, _>>()?,
+            ),
+            allow_net: Some(vec![]),
+            ..Default::default()
+        },
+    );
     Ok(())
 }
