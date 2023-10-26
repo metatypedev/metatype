@@ -9,6 +9,6 @@ path = "lib.rs"
 
 [dependencies]
 # deno = { path =  "../../../deno/cli"}
-deno = { git =  "https://github.com/metatypedev/deno.git", branch = "librarify-cli" }
+deno = { git = "https://github.com/metatypedev/deno.git", rev = "f223aa828993febb5d205f1501bc2fe46c30e999" }
 log = "0.4.20"
 anyhow = "1.0.75"
