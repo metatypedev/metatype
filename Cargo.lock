@@ -1863,6 +1863,7 @@ dependencies = [
 [[package]]
 name = "deno"
 version = "1.37.2"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "async-trait",
  "base32",
@@ -2044,6 +2045,7 @@ dependencies = [
 [[package]]
 name = "deno_broadcast_channel"
 version = "0.115.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "async-trait",
  "deno_core",
@@ -2054,6 +2056,7 @@ dependencies = [
 [[package]]
 name = "deno_cache"
 version = "0.53.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "async-trait",
  "deno_core",
@@ -2102,6 +2105,7 @@ dependencies = [
 [[package]]
 name = "deno_console"
 version = "0.121.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "deno_core",
 ]
@@ -2136,6 +2140,7 @@ dependencies = [
 [[package]]
 name = "deno_crypto"
 version = "0.135.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "aes",
  "aes-gcm",
@@ -2205,6 +2210,7 @@ dependencies = [
 [[package]]
 name = "deno_fetch"
 version = "0.145.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "bytes",
  "data-url",
@@ -2221,6 +2227,7 @@ dependencies = [
 [[package]]
 name = "deno_ffi"
 version = "0.108.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "deno_core",
  "dlopen",
@@ -2237,6 +2244,7 @@ dependencies = [
 [[package]]
 name = "deno_fs"
 version = "0.31.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "async-trait",
  "deno_core",
@@ -2279,6 +2287,7 @@ dependencies = [
 [[package]]
 name = "deno_http"
 version = "0.116.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "async-compression",
  "async-trait",
@@ -2314,6 +2323,7 @@ dependencies = [
 [[package]]
 name = "deno_io"
 version = "0.31.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "async-trait",
  "deno_core",
@@ -2327,6 +2337,7 @@ dependencies = [
 [[package]]
 name = "deno_kv"
 version = "0.29.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2394,6 +2405,7 @@ dependencies = [
 [[package]]
 name = "deno_napi"
 version = "0.51.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "deno_core",
  "libloading",
@@ -2402,6 +2414,7 @@ dependencies = [
 [[package]]
 name = "deno_net"
 version = "0.113.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "deno_core",
  "deno_tls",
@@ -2418,6 +2431,7 @@ dependencies = [
 [[package]]
 name = "deno_node"
 version = "0.58.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "aead-gcm-stream",
  "aes",
@@ -2517,6 +2531,7 @@ dependencies = [
 [[package]]
 name = "deno_runtime"
 version = "0.129.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "console_static_text",
  "deno_ast",
@@ -2600,6 +2615,7 @@ dependencies = [
 [[package]]
 name = "deno_tls"
 version = "0.108.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "deno_core",
  "once_cell",
@@ -2632,6 +2648,7 @@ dependencies = [
 [[package]]
 name = "deno_url"
 version = "0.121.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "deno_core",
  "serde 1.0.188",
@@ -2641,6 +2658,7 @@ dependencies = [
 [[package]]
 name = "deno_web"
 version = "0.152.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "async-trait",
  "base64-simd",
@@ -2658,6 +2676,7 @@ dependencies = [
 [[package]]
 name = "deno_webidl"
 version = "0.121.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "deno_core",
 ]
@@ -2665,6 +2684,7 @@ dependencies = [
 [[package]]
 name = "deno_websocket"
 version = "0.126.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "bytes",
  "deno_core",
@@ -2682,6 +2702,7 @@ dependencies = [
 [[package]]
 name = "deno_webstorage"
 version = "0.116.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "deno_core",
  "deno_web",
@@ -5637,7 +5658,7 @@ dependencies = [
 
 [[package]]
 name = "mt_deno"
-version = "0.2.4-0+dev"
+version = "0.2.4"
 dependencies = [
  "anyhow",
  "deno",
@@ -5731,6 +5752,7 @@ dependencies = [
 [[package]]
 name = "napi_sym"
 version = "0.51.0"
+source = "git+https://github.com/metatypedev/deno.git?branch=librarify-cli#dac012b461699942114c3e33014022ce631307e8"
 dependencies = [
  "proc-macro2 1.0.69",
  "quote 1.0.33",
