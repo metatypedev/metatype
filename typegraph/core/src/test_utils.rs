@@ -43,7 +43,7 @@ pub mod models {
         let user = t::struct_()
             .prop("id", t::integer().as_id(true).build()?)
             .propx("name", t::string())?
-            .propx("posts", t::arrayx(t::proxy("Post"))?)?
+            .propx("posts", t::listx(t::proxy("Post"))?)?
             .named("User")
             .build()?;
 
@@ -191,7 +191,7 @@ pub mod tree {
                             parents,
                         },
                     ]),
-                    Type::Array(ty) => Cow::Owned(vec![Node {
+                    Type::List(ty) => Cow::Owned(vec![Node {
                         label: "item".to_string(),
                         type_id: ty.data.of.into(),
                         parents,

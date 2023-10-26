@@ -461,7 +461,7 @@ impl TypeId {
     pub fn resolve_quant(&self) -> Result<TypeId> {
         let type_id = *self;
         match type_id.as_type()? {
-            Type::Array(a) => Ok(a.data.of.into()),
+            Type::List(a) => Ok(a.data.of.into()),
             Type::Optional(o) => Ok(o.data.of.into()),
             _ => Ok(type_id),
         }
@@ -473,7 +473,7 @@ impl TypeId {
         loop {
             let tpe = id.as_type()?;
             let new_id = match tpe {
-                Type::Array(t) => t.data.of.into(),
+                Type::List(t) => t.data.of.into(),
                 Type::Optional(t) => t.data.of.into(),
                 Type::WithInjection(t) => t.data.tpe.into(),
                 Type::Proxy(t) => t.id.resolve_proxy()?,

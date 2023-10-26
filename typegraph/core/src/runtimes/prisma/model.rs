@@ -150,7 +150,7 @@ impl Property {
                 TypeId(inner.data.of).attrs()?.concrete_type,
                 Cardinality::Optional,
             ),
-            Type::Array(inner) => (
+            Type::List(inner) => (
                 TypeId(inner.data.of).attrs()?.concrete_type,
                 Cardinality::Many,
             ),
@@ -188,7 +188,7 @@ impl Property {
                         unique,
                     }))
                 }
-                Type::Optional(_) | Type::Array(_) => {
+                Type::Optional(_) | Type::List(_) => {
                     Err("nested optional/list not supported".into())
                 }
                 Type::Integer(_) => Ok(scalar(ScalarType::Integer, injection)),
@@ -215,7 +215,7 @@ impl Property {
             },
             Err(_) => match type_id.as_type()? {
                 Type::Func(_) => Err("injection not supported on t::struct()".into()),
-                Type::Optional(_) | Type::Array(_) => {
+                Type::Optional(_) | Type::List(_) => {
                     Err("nested optional/list not supported".into())
                 }
                 Type::Struct(_)

@@ -59,7 +59,7 @@ impl TypeGen for WithNestedCount {
                                 model_id: prop.model_id,
                                 skip: [self.skip.as_slice(), &[rel_name.clone()]].concat(),
                             })?;
-                            builder.propx(key, t::array(inner))?;
+                            builder.propx(key, t::list(inner))?;
                             countable.push(key.to_string());
                         }
 

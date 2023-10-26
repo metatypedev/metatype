@@ -22,12 +22,12 @@ use global_store::Store;
 use indoc::formatdoc;
 use regex::Regex;
 use types::{
-    Array, Boolean, Either, File, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
+    Boolean, Either, File, Float, Func, Integer, List, Optional, Proxy, StringT, Struct, Type,
     TypeBoolean, TypeId, Union, WithInjection, WithPolicy,
 };
 use wit::core::{
-    ContextCheck, Policy, PolicyId, PolicySpec, TypeArray, TypeBase, TypeEither, TypeFile,
-    TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy,
+    ContextCheck, Policy, PolicyId, PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat,
+    TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList, TypeOptional, TypePolicy, TypeProxy,
     TypeString, TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
 };
 use wit::runtimes::{Guest, MaterializerDenoFunc};
@@ -130,7 +130,7 @@ impl wit::core::Guest for Lib {
         .into())
     }
 
-    fn arrayb(data: TypeArray, base: TypeBase) -> Result<CoreTypeId> {
+    fn listb(data: TypeList, base: TypeBase) -> Result<CoreTypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
             if min > max {
                 return Err(errors::invalid_max_value());
@@ -148,7 +148,7 @@ impl wit::core::Guest for Lib {
                 },
                 None => base,
             };
-            Type::Array(Array { id, base, data }.into())
+            Type::List(List { id, base, data }.into())
         })?
         .into())
     }
@@ -156,12 +156,12 @@ impl wit::core::Guest for Lib {
     fn optionalb(data: TypeOptional, base: TypeBase) -> Result<CoreTypeId> {
         let inner_name = match base.name {
             Some(_) => None,
-            None => TypeId(data.of).type_name()?,
+            None => Some(TypeId(data.of).type_name()?),
         };
         Ok(Store::register_type(|id| {
             let base = match inner_name {
                 Some(n) => TypeBase {
-                    name: Some(format!("_{}_{}?", id.0, n)),
+                    name: Some(format!("_{}_{}?", id.0, n.unwrap_or("".to_string()))),
                     ..base
                 },
                 None => base,
@@ -293,7 +293,7 @@ impl wit::core::Guest for Lib {
             Type::String(inner) => Ok(inner.rename(new_name)?.into()),
             Type::File(inner) => Ok(inner.rename(new_name)?.into()),
             Type::Optional(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Array(inner) => Ok(inner.rename(new_name)?.into()),
+            Type::List(inner) => Ok(inner.rename(new_name)?.into()),
             Type::Union(inner) => Ok(inner.rename(new_name)?.into()),
             Type::Either(inner) => Ok(inner.rename(new_name)?.into()),
             Type::Struct(inner) => Ok(inner.rename(new_name)?.into()),
@@ -493,10 +493,10 @@ mod tests {
         Store::reset();
         let a = t::integer().build()?;
         let b = t::integer().min(12).max(44).build()?;
-        // -- optional(array(float))
+        // -- optional(list(float))
         let num_idx = t::float().build()?;
-        let array_idx = t::array(num_idx).build()?;
-        let c = t::optional(array_idx).build()?;
+        let list_idx = t::list(num_idx).build()?;
+        let c = t::optional(list_idx).build()?;
         // --
 
         let s = t::struct_()

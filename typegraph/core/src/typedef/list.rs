@@ -7,11 +7,11 @@ use crate::{
     conversion::types::{gen_base, TypeConversion},
     errors::Result,
     typegraph::TypegraphContext,
-    types::{Array, TypeData, TypeId},
-    wit::core::TypeArray,
+    types::{List, TypeData, TypeId},
+    wit::core::TypeList,
 };
 
-impl TypeConversion for Array {
+impl TypeConversion for List {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::List {
             base: gen_base(
@@ -35,7 +35,7 @@ impl TypeConversion for Array {
     }
 }
 
-impl TypeData for TypeArray {
+impl TypeData for TypeList {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         params.push(format!("items={}", self.of));
         if let Some(min) = self.min {
@@ -53,5 +53,5 @@ impl TypeData for TypeArray {
         "list".to_string()
     }
 
-    super::impl_into_type!(concrete, Array);
+    super::impl_into_type!(concrete, List);
 }

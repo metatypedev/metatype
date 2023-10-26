@@ -124,7 +124,7 @@ impl TypeGen for InputType {
                     if let Cardinality::Many = prop.quantifier {
                         inner.addx(t::struct_().propx(
                             "createMany",
-                            t::optionalx(t::struct_().propx("data", t::array(create))?)?,
+                            t::optionalx(t::struct_().propx("data", t::list(create))?)?,
                         )?)?;
                     }
 
