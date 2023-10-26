@@ -30,7 +30,7 @@ users = t.struct(
 
 list = t.struct(
     {
-        "array_of_array_of_names": t.array(t.array(t.string(config={"gen": "name"}))),
+        "array_of_array_of_names": t.list(t.list(t.string(config={"gen": "name"}))),
     }
 )
 

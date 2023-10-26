@@ -28,7 +28,7 @@ def one_to_many(g: Graph):
     user = t.struct(
         {
             "id": t.integer(as_id=True),
-            "posts": db.link(t.array(g.ref("Post")), "postAuthor"),
+            "posts": db.link(t.list(g.ref("Post")), "postAuthor"),
         },
         name="User",
     )
@@ -54,7 +54,7 @@ def implicit_one_to_many(g: Graph):
     user = t.struct(
         {
             "id": t.integer(as_id=True, config={"auto": True}),
-            "posts": t.array(g.ref("Post")),
+            "posts": t.list(g.ref("Post")),
         },
         name="User",
     )
@@ -80,7 +80,7 @@ def optional_one_to_many(g: Graph):
     user = t.struct(
         {
             "id": t.integer(as_id=True, config={"auto": True}),
-            "posts": t.array(g.ref("Post")),
+            "posts": t.list(g.ref("Post")),
         },
         name="User",
     )
@@ -233,7 +233,7 @@ def one_to_many_self(g: Graph):
     tree_node = t.struct(
         {
             "id": t.integer(as_id=True, config={"auto": True}),
-            "children": t.array(g.ref("TreeNode")),
+            "children": t.list(g.ref("TreeNode")),
             "parent": g.ref("TreeNode"),
         },
         name="TreeNode",
@@ -251,7 +251,7 @@ def explicit_one_to_many_self(g: Graph):
     tree_node = t.struct(
         {
             "id": t.integer(as_id=True, config={"auto": True}),
-            "children": db.link(t.array(g.ref("TreeNode")), field="parent"),
+            "children": db.link(t.list(g.ref("TreeNode")), field="parent"),
             "parent": db.link(g.ref("TreeNode"), field="children"),
         },
         name="TreeNode",
@@ -270,7 +270,7 @@ def one_to_many_self_2(g: Graph):
         {
             "id": t.integer(as_id=True, config={"auto": True}),
             "parent": g.ref("TreeNode"),
-            "children": t.array(g.ref("TreeNode")),
+            "children": t.list(g.ref("TreeNode")),
         },
         name="TreeNode",
     )
@@ -288,7 +288,7 @@ def explicit_one_to_many_self_2(g: Graph):
         {
             "id": t.integer(as_id=True, config={"auto": True}),
             "parent": db.link(g.ref("TreeNode"), field="children"),
-            "children": db.link(t.array(g.ref("TreeNode")), field="parent"),
+            "children": db.link(t.list(g.ref("TreeNode")), field="parent"),
         },
         name="TreeNode",
     )
@@ -342,7 +342,7 @@ def multiple_relationships(g: Graph):
         {
             "id": t.uuid(as_id=True, config={"auto": True}),
             "email": t.email(config={"unique": True}),
-            "posts": db.link(t.array(g.ref("Post")), field="author"),
+            "posts": db.link(t.list(g.ref("Post")), field="author"),
             "favorite_post": t.optional(g.ref("Post"), config={"unique": True}),
         },
         name="User",
@@ -354,7 +354,7 @@ def multiple_relationships(g: Graph):
             "title": t.string(min=10, max=256),
             "content": t.string(min=1000),
             "author": g.ref("User"),
-            "favorite_of": db.link(t.array(g.ref("User")), field="favorite_post"),
+            "favorite_of": db.link(t.list(g.ref("User")), field="favorite_post"),
         },
         name="Post",
     )
@@ -373,8 +373,8 @@ def multiple_relationships_2(g: Graph):
         {
             "id": t.uuid(as_id=True, config={"auto": True}),
             "email": t.email(config={"unique": True}),
-            "posts": db.link(t.array(g.ref("Post")), field="author"),
-            "published_posts": db.link(t.array(g.ref("Post")), name="PostPublisher"),
+            "posts": db.link(t.list(g.ref("Post")), field="author"),
+            "published_posts": db.link(t.list(g.ref("Post")), name="PostPublisher"),
             "favorite_post": t.optional(g.ref("Post"), config={"unique": True}),
         },
         name="User",
@@ -387,7 +387,7 @@ def multiple_relationships_2(g: Graph):
             "content": t.string(min=1000),
             "author": g.ref("User"),
             "publisher": db.link(g.ref("User").optional(), name="PostPublisher"),
-            "favorite_of": db.link(t.array(g.ref("User")), field="favorite_post"),
+            "favorite_of": db.link(t.list(g.ref("User")), field="favorite_post"),
         },
         name="Post",
     )
@@ -410,7 +410,7 @@ def multiple_self_relationships(g: Graph):
             ),
             "hero_of": g.ref("Person").optional(),
             "mother": g.ref("Person").optional(),
-            "children": db.link(t.array(g.ref("Person")), field="mother"),
+            "children": db.link(t.list(g.ref("Person")), field="mother"),
         },
         name="Person",
     )

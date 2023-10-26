@@ -20,7 +20,7 @@
 #                 )
 #             }
 #         ),
-#         t.array(message),
+#         t.list(message),
 #         PrismaOperationMat(
 #             db,
 #             "Message",

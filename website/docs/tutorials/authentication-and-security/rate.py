@@ -33,7 +33,7 @@ def rate(g: Graph):
         medium_call=random.gen(t.string()).rate(calls=True, weight=5),
         heavy_call=random.gen(t.string()).rate(calls=True, weight=15),
         by_result_count=random.gen(
-            t.array(t.string()),
+            t.list(t.string()),
         ).rate(
             calls=False, weight=2
         ),  # increment by # of results returned

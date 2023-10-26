@@ -67,7 +67,7 @@ def introspection(g: Graph):
                         # "parent": g.proxy("type", lambda x: x.name),
                     }
                 ),
-                t.array(input_value),
+                t.list(input_value),
                 resolver_mat,
             ),
             "type": g.ref("type"),
@@ -99,19 +99,19 @@ def introspection(g: Graph):
             "specifiedByURL": t.string().optional(),
             "fields": t.func(
                 t.struct({"includeDeprecated": t.boolean().optional()}),
-                t.array(field).optional(),
+                t.list(field).optional(),
                 resolver_mat,
             ),
-            "interfaces": t.array(g.ref("type")).optional(),
-            "possibleTypes": t.array(g.ref("type")).optional(),
+            "interfaces": t.list(g.ref("type")).optional(),
+            "possibleTypes": t.list(g.ref("type")).optional(),
             "enumValues": t.func(
                 t.struct({"includeDeprecated": t.boolean().optional()}),
-                t.array(enum_value).optional(),
+                t.list(enum_value).optional(),
                 resolver_mat,
             ),
             "inputFields": t.func(
                 t.struct({"includeDeprecated": t.boolean().optional()}),
-                t.array(input_value).optional(),
+                t.list(input_value).optional(),
                 resolver_mat,
             ),
             "ofType": g.ref("type").optional(),
@@ -149,10 +149,10 @@ def introspection(g: Graph):
             "name": t.string(),
             "description": t.string().optional(),
             "isRepeatable": t.boolean(),
-            "locations": t.array(directive_location),
+            "locations": t.list(directive_location),
             "args": t.func(
                 t.struct({"includeDeprecated": t.boolean().optional()}),
-                t.array(input_value),
+                t.list(input_value),
                 resolver_mat,
             ),
         },
@@ -169,11 +169,11 @@ def introspection(g: Graph):
     schema = t.struct(
         {
             "description": t.string().optional(),
-            "types": t.array(type),
+            "types": t.list(type),
             "queryType": type,
             "mutationType": type.optional(),
             "subscriptionType": type.optional(),
-            "directives": t.array(directive),
+            "directives": t.list(directive),
         },
         name="schema",
     )

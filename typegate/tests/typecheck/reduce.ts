@@ -12,7 +12,7 @@ const student = t.struct({
     school: t.string().optional(),
   }),
   distinctions: t.struct({
-    awards: t.array(t.struct({
+    awards: t.list(t.struct({
       name: t.string(),
       points: t.integer(),
     })).optional(),
@@ -22,7 +22,7 @@ const student = t.struct({
 
 const grades = t.struct({
   year: t.integer({ min: 2000 }),
-  subjects: t.array(
+  subjects: t.list(
     t.struct({
       name: t.string(),
       score: t.integer(),

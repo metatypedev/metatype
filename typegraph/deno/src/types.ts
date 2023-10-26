@@ -5,12 +5,12 @@ import { core, wit_utils } from "./wit.ts";
 import {
   PolicyPerEffect,
   PolicySpec as WitPolicySpec,
-  TypeArray,
   TypeBase,
   TypeEither,
   TypeFile,
   TypeFloat,
   TypeInteger,
+  TypeList,
   TypeOptional,
   TypeString,
   TypeUnion,
@@ -351,13 +351,13 @@ export function file(
   return new File(core.fileb(data, completeBase), data, completeBase);
 }
 
-class ArrayT extends Typedef {
+class List extends Typedef {
   readonly min?: number;
   readonly max?: number;
   readonly items?: number;
   readonly uniqueItems?: boolean;
 
-  constructor(_id: number, data: TypeArray, base: TypeBase) {
+  constructor(_id: number, data: TypeList, base: TypeBase) {
     super(_id, base);
     this.min = data.min;
     this.max = data.max;
@@ -366,22 +366,22 @@ class ArrayT extends Typedef {
   }
 }
 
-export function array(
+export function list(
   variant: Typedef,
-  data: Simplified<TypeArray> = {},
+  data: Simplified<TypeList> = {},
   base: SimplifiedBase<TypeBase> = {},
 ) {
   const completeData = {
     of: variant._id,
     ...data,
-  } as TypeArray;
+  } as TypeList;
   const completeBase = {
     ...base,
     asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
-  return new ArrayT(
-    core.arrayb(completeData, completeBase),
+  return new List(
+    core.listb(completeData, completeBase),
     completeData,
     completeBase,
   );

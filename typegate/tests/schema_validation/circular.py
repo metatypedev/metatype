@@ -15,9 +15,9 @@ def circular(g: Graph):
             # Edgecase #1: optional that holds a self-reference
             "professor": g.ref("User").optional(),
             # Edgecase #2: array that holds a self-reference
-            "parents": t.array(g.ref("User")),
+            "parents": t.list(g.ref("User")),
             # Edgecase #3: optional array that holds a self-reference
-            "friends": t.array(g.ref("User")).optional(),
+            "friends": t.list(g.ref("User")).optional(),
             # Edgecase #4: optional object that holds a self-reference
             "paper": t.struct(
                 {"title": t.string(), "author": g.ref("User")}, name="Paper"

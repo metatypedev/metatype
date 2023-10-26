@@ -9,7 +9,7 @@ from typing_extensions import Self
 from typegraph.effects import EffectType
 from typegraph.gen.exports.core import (
     FuncParams,
-    TypeArray,
+    TypeList,
     TypeBase,
     TypeEither,
     TypeFile,
@@ -40,6 +40,9 @@ from typegraph.utils import (
     serialize_config,
 )
 from typegraph.wit import wit_utils
+
+# TODO: better approach?
+og_list = list
 
 
 class typedef:
@@ -283,7 +286,7 @@ class string(typedef):
     ):
         enum_variants = None
         if enum is not None:
-            enum_variants = list(JsonLib.dumps(variant) for variant in enum)
+            enum_variants = og_list(JsonLib.dumps(variant) for variant in enum)
 
         data = TypeString(
             min=min, max=max, pattern=pattern, format=format, enumeration=enum_variants
@@ -390,7 +393,7 @@ class file(typedef):
         self.allow = allow
 
 
-class array(typedef):
+class list(typedef):
     items: typedef = None
     min: Optional[int] = None
     max: Optional[int] = None
@@ -405,7 +408,7 @@ class array(typedef):
         name: Optional[str] = None,
         config: Optional[ConfigSpec] = None,
     ):
-        data = TypeArray(
+        data = TypeList(
             of=items.id,
             min=min,
             max=max,
@@ -413,7 +416,7 @@ class array(typedef):
         )
 
         runtime_config = serialize_config(config)
-        res = core.arrayb(
+        res = core.listb(
             store,
             data,
             TypeBase(name=name, runtime_config=runtime_config, as_id=False),
@@ -467,7 +470,7 @@ class union(typedef):
         name: Optional[str] = None,
         config: Optional[ConfigSpec] = None,
     ):
-        data = TypeUnion(variants=list(map(lambda v: v.id, variants)))
+        data = TypeUnion(variants=og_list(map(lambda v: v.id, variants)))
 
         runtime_config = serialize_config(config)
         res = core.unionb(
@@ -491,7 +494,7 @@ class either(typedef):
         name: Optional[str] = None,
         config: Optional[ConfigSpec] = None,
     ):
-        data = TypeEither(variants=list(map(lambda v: v.id, variants)))
+        data = TypeEither(variants=og_list(map(lambda v: v.id, variants)))
 
         runtime_config = serialize_config(config)
         res = core.eitherb(
@@ -565,7 +568,7 @@ class struct(typedef):
             props = props or {}
 
         data = TypeStruct(
-            props=list((name, tpe.id) for (name, tpe) in props.items()),
+            props=og_list((name, tpe.id) for (name, tpe) in props.items()),
             additional_props=additional_props,
             min=min,
             max=max,

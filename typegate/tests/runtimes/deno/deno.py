@@ -8,7 +8,7 @@ def deno(g: Graph):
 
     deno = DenoRuntime()
 
-    number_input = t.struct({"numbers": t.array(t.float())})
+    number_input = t.struct({"numbers": t.list(t.float())})
 
     g.expose(
         public,
@@ -18,7 +18,7 @@ def deno(g: Graph):
             code="({ first, second }) => first + second",
         ),
         sum=deno.import_(
-            t.struct({"numbers": t.array(t.integer())}),
+            t.struct({"numbers": t.list(t.integer())}),
             t.integer(),
             module="ts/deno.ts",
             name="sum",
@@ -38,7 +38,7 @@ def deno(g: Graph):
             module="ts/math-npm.ts",
             name="log",
         ),
-        static=deno.static(t.struct({"x": t.array(t.integer())}), {"x": [1]}),
+        static=deno.static(t.struct({"x": t.list(t.integer())}), {"x": [1]}),
         infiniteLoop=deno.func(
             t.struct({"enable": t.boolean()}),
             t.boolean(),

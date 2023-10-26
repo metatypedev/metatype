@@ -31,7 +31,7 @@ def test_complex_types(g: Graph):
 
     someType = t.struct(
         {
-            "one": t.array(t.integer(), min=3, name="Two"),
+            "one": t.list(t.integer(), min=3, name="Two"),
             "two": t.optional(g.ref("SomeType")),
         },
         name="SomeType",
@@ -45,7 +45,7 @@ def test_complex_types(g: Graph):
             "an_integer_enum": t.integer(enum=[1, 2], config={"key": "value"}),
             "a_float_enum": t.float(enum=[1.5, 2.5]),
             "a_struct": t.struct({"value": t.float()}),
-            "nested": t.array(t.either([t.string(), t.integer()])).optional(),
+            "nested": t.list(t.either([t.string(), t.integer()])).optional(),
             "nested_with_ref": someType,
             "an_email": t.email(),
         },

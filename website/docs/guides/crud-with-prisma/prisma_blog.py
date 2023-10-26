@@ -10,7 +10,7 @@ def blog(g: Graph):
         {
             "id": t.integer(as_id=True),
             "name": t.string(),
-            "posts": t.array(g.ref("Post")),
+            "posts": t.list(g.ref("Post")),
             "profile": g.ref("Profile").optional(),
         },
         name="User",

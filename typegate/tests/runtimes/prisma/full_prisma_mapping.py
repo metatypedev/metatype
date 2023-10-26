@@ -16,9 +16,9 @@ def prisma(g: Graph):
             "id": t.integer(as_id=True),
             "name": t.string(),
             "age": t.integer().optional(),
-            "coinflips": t.array(t.boolean()),
+            "coinflips": t.list(t.boolean()),
             "city": t.string(),
-            "posts": t.array(g.ref("Post")),
+            "posts": t.list(g.ref("Post")),
             "extended_profile": g.ref("ExtendedProfile").optional(),
         },
         name="User",
@@ -32,7 +32,7 @@ def prisma(g: Graph):
             "likes": t.integer(),
             "published": t.boolean(),
             "author": g.ref("User"),
-            "comments": t.array(g.ref("Comment")),
+            "comments": t.list(g.ref("Comment")),
         },
         name="Post",
     )
@@ -105,10 +105,10 @@ def prisma(g: Graph):
                     "one": t.integer(),
                     "two": t.integer(),
                     "title": t.string(),
-                    "idlist": t.array(t.integer()),
+                    "idlist": t.list(t.integer()),
                 }
             ),
-            t.array(
+            t.list(
                 t.struct(
                     {
                         "id": t.integer(),

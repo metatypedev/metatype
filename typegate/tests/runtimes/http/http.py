@@ -45,12 +45,12 @@ def blog(g: Graph):
         auth_token_field="authToken",
     ).with_policy(public)
 
-    get_posts = remote.get("/posts", t.struct({}), t.array(g.ref("Post"))).with_policy(
+    get_posts = remote.get("/posts", t.struct({}), t.list(g.ref("Post"))).with_policy(
         public
     )
 
     get_posts_by_tags = remote.get(
-        "/posts", t.struct({"tags": t.array(t.string())}), t.array(g.ref("Post"))
+        "/posts", t.struct({"tags": t.list(t.string())}), t.list(g.ref("Post"))
     ).with_policy(public)
 
     delete_post = remote.delete(
@@ -60,7 +60,7 @@ def blog(g: Graph):
     ).with_policy(public)
 
     get_comments = remote.get(
-        "/comments", t.struct({"postId": t.integer()}), t.array(g.ref("Comment"))
+        "/comments", t.struct({"postId": t.integer()}), t.list(g.ref("Comment"))
     ).with_policy(public)
 
     post_comment = remote.post(

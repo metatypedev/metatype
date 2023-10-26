@@ -9,6 +9,6 @@ from typegraph.runtime.http import HTTPRuntime
     remote.get(
         '/test',
         t.struct({}),
-        t.array(t.struct({'a': t.integer()})),
+        t.list(t.struct({'a': t.integer()})),
     )
 ```

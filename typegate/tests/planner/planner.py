@@ -40,7 +40,7 @@ def test(g: Graph):
             "nested": t.struct(
                 {
                     "first": t.string(),
-                    "second": t.array(t.float()),
+                    "second": t.list(t.float()),
                     "third": t.boolean().optional(),
                 }
             ),
