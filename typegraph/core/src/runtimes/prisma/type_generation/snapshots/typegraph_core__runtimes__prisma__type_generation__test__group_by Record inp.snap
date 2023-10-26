@@ -15,10 +15,10 @@ root: struct '_Record_QueryInput_group_by' #95
 │     │        │  ├─ variant_2: struct #9
 │     │        │  │  └─ [not]: string #5
 │     │        │  ├─ variant_3: struct #10
-│     │        │  │  └─ [in]: array #7
+│     │        │  │  └─ [in]: list #7
 │     │        │  │     └─ item: string #5
 │     │        │  ├─ variant_4: struct #11
-│     │        │  │  └─ [notIn]: array #7
+│     │        │  │  └─ [notIn]: list #7
 │     │        │  │     └─ item: string #5
 │     │        │  ├─ variant_5: struct #14
 │     │        │  │  ├─ [contains]: string #5
@@ -39,10 +39,10 @@ root: struct '_Record_QueryInput_group_by' #95
 │     │              ├─ variant_2: struct #9
 │     │              │  └─ [not]: string #5
 │     │              ├─ variant_3: struct #10
-│     │              │  └─ [in]: array #7
+│     │              │  └─ [in]: list #7
 │     │              │     └─ item: string #5
 │     │              ├─ variant_4: struct #11
-│     │              │  └─ [notIn]: array #7
+│     │              │  └─ [notIn]: list #7
 │     │              │     └─ item: string #5
 │     │              ├─ variant_5: struct #14
 │     │              │  ├─ [contains]: string #5
@@ -65,10 +65,10 @@ root: struct '_Record_QueryInput_group_by' #95
 │     │        │  ├─ variant_2: struct #9
 │     │        │  │  └─ [not]: string #5
 │     │        │  ├─ variant_3: struct #10
-│     │        │  │  └─ [in]: array #7
+│     │        │  │  └─ [in]: list #7
 │     │        │  │     └─ item: string #5
 │     │        │  ├─ variant_4: struct #11
-│     │        │  │  └─ [notIn]: array #7
+│     │        │  │  └─ [notIn]: list #7
 │     │        │  │     └─ item: string #5
 │     │        │  ├─ variant_5: struct #14
 │     │        │  │  ├─ [contains]: string #5
@@ -89,10 +89,10 @@ root: struct '_Record_QueryInput_group_by' #95
 │     │              ├─ variant_2: struct #9
 │     │              │  └─ [not]: string #5
 │     │              ├─ variant_3: struct #10
-│     │              │  └─ [in]: array #7
+│     │              │  └─ [in]: list #7
 │     │              │     └─ item: string #5
 │     │              ├─ variant_4: struct #11
-│     │              │  └─ [notIn]: array #7
+│     │              │  └─ [notIn]: list #7
 │     │              │     └─ item: string #5
 │     │              ├─ variant_5: struct #14
 │     │              │  ├─ [contains]: string #5
@@ -124,10 +124,10 @@ root: struct '_Record_QueryInput_group_by' #95
 │     │        │  │  └─ [gte]: optional #24
 │     │        │  │     └─ item: integer #23
 │     │        │  ├─ variant_4: struct #29
-│     │        │  │  └─ [in]: array #25
+│     │        │  │  └─ [in]: list #25
 │     │        │  │     └─ item: integer #23
 │     │        │  └─ variant_5: struct #30
-│     │        │     └─ [notIn]: array #25
+│     │        │     └─ [notIn]: list #25
 │     │        │        └─ item: integer #23
 │     │        └─ variant_1: struct #32
 │     │           └─ [not]: either '_integer_filter' #31
@@ -146,21 +146,21 @@ root: struct '_Record_QueryInput_group_by' #95
 │     │              │  └─ [gte]: optional #24
 │     │              │     └─ item: integer #23
 │     │              ├─ variant_4: struct #29
-│     │              │  └─ [in]: array #25
+│     │              │  └─ [in]: list #25
 │     │              │     └─ item: integer #23
 │     │              └─ variant_5: struct #30
-│     │                 └─ [notIn]: array #25
+│     │                 └─ [notIn]: list #25
 │     │                    └─ item: integer #23
 │     ├─ [AND]: optional '_39__38_QueryRecordWhereInput[]?' #39
-│     │  └─ item: array '_38_QueryRecordWhereInput[]' #38
+│     │  └─ item: list '_38_QueryRecordWhereInput[]' #38
 │     │     └─ item: &QueryRecordWhereInput #37
 │     ├─ [OR]: optional '_39__38_QueryRecordWhereInput[]?' #39
-│     │  └─ item: array '_38_QueryRecordWhereInput[]' #38
+│     │  └─ item: list '_38_QueryRecordWhereInput[]' #38
 │     │     └─ item: &QueryRecordWhereInput #37
 │     └─ [NOT]: optional '_40_QueryRecordWhereInput?' #40
 │        └─ item: &QueryRecordWhereInput #37
 ├─ [orderBy]: optional '_58__Record_OrderBy_with_aggregates?' #58
-│  └─ item: array '_Record_OrderBy_with_aggregates' #57
+│  └─ item: list '_Record_OrderBy_with_aggregates' #57
 │     └─ item: struct #56
 │        ├─ [_count]: optional #52
 │        │  └─ item: struct #51
@@ -232,7 +232,7 @@ root: struct '_Record_QueryInput_group_by' #95
 │  └─ item: integer '_Take' #59
 ├─ [skip]: optional '_62__Skip?' #62
 │  └─ item: integer '_Skip' #61
-├─ [by]: array '_Record_GroupingFields' #64
+├─ [by]: list '_Record_GroupingFields' #64
 │  └─ item: string #63 enum{ '"id"', '"name"', '"age"' }
 └─ [having]: optional '_94__Record_Having?' #94
    └─ item: union '_Record_Having' #93
@@ -247,10 +247,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │  │        │  ├─ variant_2: struct #9
       │  │        │  │  └─ [not]: string #5
       │  │        │  ├─ variant_3: struct #10
-      │  │        │  │  └─ [in]: array #7
+      │  │        │  │  └─ [in]: list #7
       │  │        │  │     └─ item: string #5
       │  │        │  ├─ variant_4: struct #11
-      │  │        │  │  └─ [notIn]: array #7
+      │  │        │  │  └─ [notIn]: list #7
       │  │        │  │     └─ item: string #5
       │  │        │  ├─ variant_5: struct #14
       │  │        │  │  ├─ [contains]: string #5
@@ -271,10 +271,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │  │              ├─ variant_2: struct #9
       │  │              │  └─ [not]: string #5
       │  │              ├─ variant_3: struct #10
-      │  │              │  └─ [in]: array #7
+      │  │              │  └─ [in]: list #7
       │  │              │     └─ item: string #5
       │  │              ├─ variant_4: struct #11
-      │  │              │  └─ [notIn]: array #7
+      │  │              │  └─ [notIn]: list #7
       │  │              │     └─ item: string #5
       │  │              ├─ variant_5: struct #14
       │  │              │  ├─ [contains]: string #5
@@ -297,10 +297,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │  │        │  ├─ variant_2: struct #9
       │  │        │  │  └─ [not]: string #5
       │  │        │  ├─ variant_3: struct #10
-      │  │        │  │  └─ [in]: array #7
+      │  │        │  │  └─ [in]: list #7
       │  │        │  │     └─ item: string #5
       │  │        │  ├─ variant_4: struct #11
-      │  │        │  │  └─ [notIn]: array #7
+      │  │        │  │  └─ [notIn]: list #7
       │  │        │  │     └─ item: string #5
       │  │        │  ├─ variant_5: struct #14
       │  │        │  │  ├─ [contains]: string #5
@@ -321,10 +321,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │  │              ├─ variant_2: struct #9
       │  │              │  └─ [not]: string #5
       │  │              ├─ variant_3: struct #10
-      │  │              │  └─ [in]: array #7
+      │  │              │  └─ [in]: list #7
       │  │              │     └─ item: string #5
       │  │              ├─ variant_4: struct #11
-      │  │              │  └─ [notIn]: array #7
+      │  │              │  └─ [notIn]: list #7
       │  │              │     └─ item: string #5
       │  │              ├─ variant_5: struct #14
       │  │              │  ├─ [contains]: string #5
@@ -357,10 +357,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │           │  │  │  └─ [gte]: optional #24
       │           │  │  │     └─ item: integer #23
       │           │  │  ├─ variant_4: struct #29
-      │           │  │  │  └─ [in]: array #25
+      │           │  │  │  └─ [in]: list #25
       │           │  │  │     └─ item: integer #23
       │           │  │  └─ variant_5: struct #30
-      │           │  │     └─ [notIn]: array #25
+      │           │  │     └─ [notIn]: list #25
       │           │  │        └─ item: integer #23
       │           │  ├─ variant_1: struct #76
       │           │  │  └─ [_count]: either '_integer_filter' #31
@@ -379,10 +379,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │           │  │     │  └─ [gte]: optional #24
       │           │  │     │     └─ item: integer #23
       │           │  │     ├─ variant_4: struct #29
-      │           │  │     │  └─ [in]: array #25
+      │           │  │     │  └─ [in]: list #25
       │           │  │     │     └─ item: integer #23
       │           │  │     └─ variant_5: struct #30
-      │           │  │        └─ [notIn]: array #25
+      │           │  │        └─ [notIn]: list #25
       │           │  │           └─ item: integer #23
       │           │  ├─ variant_2: struct #77
       │           │  │  └─ [_sum]: either '_integer_filter' #31
@@ -401,10 +401,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │           │  │     │  └─ [gte]: optional #24
       │           │  │     │     └─ item: integer #23
       │           │  │     ├─ variant_4: struct #29
-      │           │  │     │  └─ [in]: array #25
+      │           │  │     │  └─ [in]: list #25
       │           │  │     │     └─ item: integer #23
       │           │  │     └─ variant_5: struct #30
-      │           │  │        └─ [notIn]: array #25
+      │           │  │        └─ [notIn]: list #25
       │           │  │           └─ item: integer #23
       │           │  ├─ variant_3: struct #78
       │           │  │  └─ [_avg]: either '_float_filter' #75
@@ -423,10 +423,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │           │  │     │  └─ [gte]: optional #68
       │           │  │     │     └─ item: float #67
       │           │  │     ├─ variant_4: struct #73
-      │           │  │     │  └─ [in]: array #69
+      │           │  │     │  └─ [in]: list #69
       │           │  │     │     └─ item: float #67
       │           │  │     └─ variant_5: struct #74
-      │           │  │        └─ [notIn]: array #69
+      │           │  │        └─ [notIn]: list #69
       │           │  │           └─ item: float #67
       │           │  ├─ variant_4: struct #79
       │           │  │  └─ [_min]: either '_integer_filter' #31
@@ -445,10 +445,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │           │  │     │  └─ [gte]: optional #24
       │           │  │     │     └─ item: integer #23
       │           │  │     ├─ variant_4: struct #29
-      │           │  │     │  └─ [in]: array #25
+      │           │  │     │  └─ [in]: list #25
       │           │  │     │     └─ item: integer #23
       │           │  │     └─ variant_5: struct #30
-      │           │  │        └─ [notIn]: array #25
+      │           │  │        └─ [notIn]: list #25
       │           │  │           └─ item: integer #23
       │           │  └─ variant_5: struct #80
       │           │     └─ [_max]: either '_integer_filter' #31
@@ -467,10 +467,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │           │        │  └─ [gte]: optional #24
       │           │        │     └─ item: integer #23
       │           │        ├─ variant_4: struct #29
-      │           │        │  └─ [in]: array #25
+      │           │        │  └─ [in]: list #25
       │           │        │     └─ item: integer #23
       │           │        └─ variant_5: struct #30
-      │           │           └─ [notIn]: array #25
+      │           │           └─ [notIn]: list #25
       │           │              └─ item: integer #23
       │           └─ variant_1: struct #82
       │              └─ [not]: union '_integer_filter_with_aggregates' #81
@@ -490,10 +490,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │                 │  │  └─ [gte]: optional #24
       │                 │  │     └─ item: integer #23
       │                 │  ├─ variant_4: struct #29
-      │                 │  │  └─ [in]: array #25
+      │                 │  │  └─ [in]: list #25
       │                 │  │     └─ item: integer #23
       │                 │  └─ variant_5: struct #30
-      │                 │     └─ [notIn]: array #25
+      │                 │     └─ [notIn]: list #25
       │                 │        └─ item: integer #23
       │                 ├─ variant_1: struct #76
       │                 │  └─ [_count]: either '_integer_filter' #31
@@ -512,10 +512,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │                 │     │  └─ [gte]: optional #24
       │                 │     │     └─ item: integer #23
       │                 │     ├─ variant_4: struct #29
-      │                 │     │  └─ [in]: array #25
+      │                 │     │  └─ [in]: list #25
       │                 │     │     └─ item: integer #23
       │                 │     └─ variant_5: struct #30
-      │                 │        └─ [notIn]: array #25
+      │                 │        └─ [notIn]: list #25
       │                 │           └─ item: integer #23
       │                 ├─ variant_2: struct #77
       │                 │  └─ [_sum]: either '_integer_filter' #31
@@ -534,10 +534,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │                 │     │  └─ [gte]: optional #24
       │                 │     │     └─ item: integer #23
       │                 │     ├─ variant_4: struct #29
-      │                 │     │  └─ [in]: array #25
+      │                 │     │  └─ [in]: list #25
       │                 │     │     └─ item: integer #23
       │                 │     └─ variant_5: struct #30
-      │                 │        └─ [notIn]: array #25
+      │                 │        └─ [notIn]: list #25
       │                 │           └─ item: integer #23
       │                 ├─ variant_3: struct #78
       │                 │  └─ [_avg]: either '_float_filter' #75
@@ -556,10 +556,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │                 │     │  └─ [gte]: optional #68
       │                 │     │     └─ item: float #67
       │                 │     ├─ variant_4: struct #73
-      │                 │     │  └─ [in]: array #69
+      │                 │     │  └─ [in]: list #69
       │                 │     │     └─ item: float #67
       │                 │     └─ variant_5: struct #74
-      │                 │        └─ [notIn]: array #69
+      │                 │        └─ [notIn]: list #69
       │                 │           └─ item: float #67
       │                 ├─ variant_4: struct #79
       │                 │  └─ [_min]: either '_integer_filter' #31
@@ -578,10 +578,10 @@ root: struct '_Record_QueryInput_group_by' #95
       │                 │     │  └─ [gte]: optional #24
       │                 │     │     └─ item: integer #23
       │                 │     ├─ variant_4: struct #29
-      │                 │     │  └─ [in]: array #25
+      │                 │     │  └─ [in]: list #25
       │                 │     │     └─ item: integer #23
       │                 │     └─ variant_5: struct #30
-      │                 │        └─ [notIn]: array #25
+      │                 │        └─ [notIn]: list #25
       │                 │           └─ item: integer #23
       │                 └─ variant_5: struct #80
       │                    └─ [_max]: either '_integer_filter' #31
@@ -600,16 +600,16 @@ root: struct '_Record_QueryInput_group_by' #95
       │                       │  └─ [gte]: optional #24
       │                       │     └─ item: integer #23
       │                       ├─ variant_4: struct #29
-      │                       │  └─ [in]: array #25
+      │                       │  └─ [in]: list #25
       │                       │     └─ item: integer #23
       │                       └─ variant_5: struct #30
-      │                          └─ [notIn]: array #25
+      │                          └─ [notIn]: list #25
       │                             └─ item: integer #23
       ├─ variant_1: struct #89
-      │  └─ [AND]: array '_88__Record_Having[]' #88
+      │  └─ [AND]: list '_88__Record_Having[]' #88
       │     └─ item: &_Record_Having #87
       ├─ variant_2: struct #91
-      │  └─ [OR]: array '_90__Record_Having[]' #90
+      │  └─ [OR]: list '_90__Record_Having[]' #90
       │     └─ item: &_Record_Having #87
       └─ variant_3: struct #92
          └─ [NOT]: &_Record_Having #87

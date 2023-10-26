@@ -39,10 +39,10 @@ root: struct #56
       │        │  ├─ variant_2: struct #22
       │        │  │  └─ [not]: string #18
       │        │  ├─ variant_3: struct #23
-      │        │  │  └─ [in]: array #20
+      │        │  │  └─ [in]: list #20
       │        │  │     └─ item: string #18
       │        │  ├─ variant_4: struct #24
-      │        │  │  └─ [notIn]: array #20
+      │        │  │  └─ [notIn]: list #20
       │        │  │     └─ item: string #18
       │        │  ├─ variant_5: struct #27
       │        │  │  ├─ [contains]: string #18
@@ -63,10 +63,10 @@ root: struct #56
       │              ├─ variant_2: struct #22
       │              │  └─ [not]: string #18
       │              ├─ variant_3: struct #23
-      │              │  └─ [in]: array #20
+      │              │  └─ [in]: list #20
       │              │     └─ item: string #18
       │              ├─ variant_4: struct #24
-      │              │  └─ [notIn]: array #20
+      │              │  └─ [notIn]: list #20
       │              │     └─ item: string #18
       │              ├─ variant_5: struct #27
       │              │  ├─ [contains]: string #18
@@ -89,10 +89,10 @@ root: struct #56
       │        │  ├─ variant_2: struct #22
       │        │  │  └─ [not]: string #18
       │        │  ├─ variant_3: struct #23
-      │        │  │  └─ [in]: array #20
+      │        │  │  └─ [in]: list #20
       │        │  │     └─ item: string #18
       │        │  ├─ variant_4: struct #24
-      │        │  │  └─ [notIn]: array #20
+      │        │  │  └─ [notIn]: list #20
       │        │  │     └─ item: string #18
       │        │  ├─ variant_5: struct #27
       │        │  │  ├─ [contains]: string #18
@@ -113,10 +113,10 @@ root: struct #56
       │              ├─ variant_2: struct #22
       │              │  └─ [not]: string #18
       │              ├─ variant_3: struct #23
-      │              │  └─ [in]: array #20
+      │              │  └─ [in]: list #20
       │              │     └─ item: string #18
       │              ├─ variant_4: struct #24
-      │              │  └─ [notIn]: array #20
+      │              │  └─ [notIn]: list #20
       │              │     └─ item: string #18
       │              ├─ variant_5: struct #27
       │              │  ├─ [contains]: string #18
@@ -148,10 +148,10 @@ root: struct #56
       │        │  │  └─ [gte]: optional #37
       │        │  │     └─ item: integer #36
       │        │  ├─ variant_4: struct #42
-      │        │  │  └─ [in]: array #38
+      │        │  │  └─ [in]: list #38
       │        │  │     └─ item: integer #36
       │        │  └─ variant_5: struct #43
-      │        │     └─ [notIn]: array #38
+      │        │     └─ [notIn]: list #38
       │        │        └─ item: integer #36
       │        └─ variant_1: struct #45
       │           └─ [not]: either '_integer_filter' #44
@@ -170,16 +170,16 @@ root: struct #56
       │              │  └─ [gte]: optional #37
       │              │     └─ item: integer #36
       │              ├─ variant_4: struct #42
-      │              │  └─ [in]: array #38
+      │              │  └─ [in]: list #38
       │              │     └─ item: integer #36
       │              └─ variant_5: struct #43
-      │                 └─ [notIn]: array #38
+      │                 └─ [notIn]: list #38
       │                    └─ item: integer #36
       ├─ [AND]: optional '_52__51_QueryRecordWhereInput[]?' #52
-      │  └─ item: array '_51_QueryRecordWhereInput[]' #51
+      │  └─ item: list '_51_QueryRecordWhereInput[]' #51
       │     └─ item: &QueryRecordWhereInput #50
       ├─ [OR]: optional '_52__51_QueryRecordWhereInput[]?' #52
-      │  └─ item: array '_51_QueryRecordWhereInput[]' #51
+      │  └─ item: list '_51_QueryRecordWhereInput[]' #51
       │     └─ item: &QueryRecordWhereInput #50
       └─ [NOT]: optional '_53_QueryRecordWhereInput?' #53
          └─ item: &QueryRecordWhereInput #50

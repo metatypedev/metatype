@@ -156,12 +156,12 @@ impl wit::core::Guest for Lib {
     fn optionalb(data: TypeOptional, base: TypeBase) -> Result<CoreTypeId> {
         let inner_name = match base.name {
             Some(_) => None,
-            None => Some(TypeId(data.of).type_name()?),
+            None => TypeId(data.of).type_name()?,
         };
         Ok(Store::register_type(|id| {
             let base = match inner_name {
                 Some(n) => TypeBase {
-                    name: Some(format!("_{}_{}?", id.0, n.unwrap_or("".to_string()))),
+                    name: Some(format!("_{}_{}?", id.0, n)),
                     ..base
                 },
                 None => base,
