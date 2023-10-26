@@ -19,14 +19,7 @@ export class TestModule {
     });
   }
 
-  async cli(...args: string[]): Promise<ShellOutput>;
-  async cli(options: ShellOptions, ...args: string[]): Promise<ShellOutput>;
-  async cli(...args: any[]): Promise<ShellOutput> {
-    let options: ShellOptions = { currentDir: this.currentDir };
-    if (typeof args[0] === "object" && args[0] !== null) {
-      options = { ...options, ...args.shift() };
-    }
-
-    return await meta(options, ...args);
+  async cli(options: ShellOptions, ...args: any[]): Promise<ShellOutput> {
+    return await meta({ currentDir: this.currentDir, ...options }, ...args);
   }
 }

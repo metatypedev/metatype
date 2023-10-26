@@ -38,6 +38,7 @@ async function deploy(noMigration = false) {
 
   try {
     const out = await m.cli(
+      {},
       "deploy",
       "-t",
       "deploy",
@@ -136,10 +137,7 @@ Meta.test(
     await deploy();
 
     await t.should("insert records", async () => {
-      const e = t.getTypegraphEngine(tgName);
-      if (!e) {
-        throw new Error("typegraph not found");
-      }
+      const e = t.getTypegraphEngine(tgName)!;
       await gql`
         mutation {
           createRecord(data: {}) {
