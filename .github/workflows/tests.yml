@@ -144,6 +144,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: arduino/setup-protoc@v2
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -197,6 +201,10 @@ jobs:
           #  activate: '.venv\Scripts\activate.bat'
     steps:
       - uses: actions/checkout@v4
+      - uses: arduino/setup-protoc@v2
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -279,6 +287,10 @@ jobs:
       DENO_DIR: deno-dir
     steps:
       - uses: actions/checkout@v4
+      - uses: arduino/setup-protoc@v2
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -314,7 +326,7 @@ jobs:
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
           sudo apt update
-          sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev perl make protobuf-compiler libprotobuf-dev
+          sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev perl make
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
@@ -353,6 +365,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: arduino/setup-protoc@v2
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
