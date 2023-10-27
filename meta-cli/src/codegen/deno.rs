@@ -422,7 +422,7 @@ impl<'a> Codegen<'a> {
             TypeNode::Optional { data, .. } => {
                 Ok(format!("null | {}", self.get_typespec(data.item)?))
             }
-            TypeNode::List { data, .. } => Ok(format!("List<{}>", self.get_typespec(data.items)?)),
+            TypeNode::List { data, .. } => Ok(format!("Array<{}>", self.get_typespec(data.items)?)),
             TypeNode::Boolean { .. } => Ok("boolean".to_owned()),
             TypeNode::Float { .. } | TypeNode::Integer { .. } => Ok("number".to_owned()),
             TypeNode::String { base, .. } => {

@@ -9,7 +9,7 @@ interface Get_rgbInput {
 export function get_rgb({ color }: Get_rgbInput,
   { context }: { context: Record<string, unknown> }
 ): {
-  rgb: List<number>;
+  rgb: Array<number>;
 } {
   return { rgb: [] };
 }
