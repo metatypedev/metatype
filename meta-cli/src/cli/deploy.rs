@@ -12,13 +12,13 @@ use crate::typegraph::dependency_graph::DependencyGraph;
 use crate::typegraph::loader::discovery::FileFilter;
 use crate::typegraph::loader::queue::Queue;
 use crate::typegraph::loader::watch::Watcher;
+use crate::typegraph::loader::Discovery;
 use crate::typegraph::loader::Loader;
-use crate::typegraph::loader::{Discovery, LoaderResult};
 use crate::typegraph::postprocess::prisma_rt::EmbedPrismaMigrations;
 use crate::typegraph::postprocess::{self, EmbeddedPrismaMigrationOptionsPatch};
 use crate::typegraph::push::{PushConfig, PushResult, RetryId, RetryManager, RetryState};
 use crate::utils::{ensure_venv, plural_suffix};
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use async_recursion::async_recursion;
 use async_trait::async_trait;
 use clap::Parser;
@@ -194,8 +194,13 @@ impl Deploy<DefaultModeData> {
         for path in paths.into_iter() {
             let rel_path = diff_paths(&path, &self.base_dir).unwrap();
             info!("Loading typegraphs from {}.", rel_path.display());
-            let tgs =
-                Self::load_typegraphs(&path, &self.base_dir, &self.loader, OnRewrite::Reload).await;
+            let tgs = Self::load_typegraphs(
+                &path,
+                &self.base_dir,
+                &self.loader,
+                // OnRewrite::Reload
+            )
+            .await;
             let tgs = match tgs {
                 Err(e) => {
                     error!("{e:?}");
@@ -286,35 +291,39 @@ where
             .await
     }
 
-    #[async_recursion]
+    // #[async_recursion]
     async fn load_typegraphs(
         path: &Path,
         base_dir: &Path,
         loader: &Loader,
-        on_rewrite: OnRewrite,
+        // on_rewrite: OnRewrite,
     ) -> Result<Vec<Typegraph>> {
         let rel_path = diff_paths(path, base_dir).unwrap();
-        match loader.load_file(path).await {
-            LoaderResult::Loaded(tgs) => Ok(tgs),
-            LoaderResult::Rewritten(_) => {
-                info!("Typegraph definition at {rel_path:?} has been rewritten.");
-                match on_rewrite {
-                    OnRewrite::Skip => Ok(vec![]),
-                    OnRewrite::Reload => {
-                        Self::load_typegraphs(path, base_dir, loader, OnRewrite::Fail).await
-                    }
-                    OnRewrite::Fail => {
-                        bail!("Typegraph definition module at {rel_path:?} has been rewritten unexpectedly");
-                    }
-                }
-            }
-            LoaderResult::Error(e) => {
-                bail!(
-                    "Failed to load typegraph(s) from {rel_path:?}: {}",
-                    e.to_string()
-                );
-            }
-        }
+        loader
+            .load_module(path)
+            .await
+            .map_err(|e| anyhow!("Failed to load typegraph(s) from {rel_path:?}: {e:?}",))
+        // match loader.load_file(path).await {
+        //     LoaderResult::Loaded(tgs) => Ok(tgs),
+        //     LoaderResult::Rewritten(_) => {
+        //         info!("Typegraph definition at {rel_path:?} has been rewritten.");
+        //         match on_rewrite {
+        //             OnRewrite::Skip => Ok(vec![]),
+        //             OnRewrite::Reload => {
+        //                 Self::load_typegraphs(path, base_dir, loader, OnRewrite::Fail).await
+        //             }
+        //             OnRewrite::Fail => {
+        //                 bail!("Typegraph definition module at {rel_path:?} has been rewritten unexpectedly");
+        //             }
+        //         }
+        //     }
+        //     LoaderResult::Error(e) => {
+        //         bail!(
+        //             "Failed to load typegraph(s) from {rel_path:?}: {}",
+        //             e.to_string()
+        //         );
+        //     }
+        // }
     }
 
     fn handle_push_result(&self, mut res: PushResult) -> HandlePushResult {
@@ -403,12 +412,6 @@ impl Action for DeploySubcommand {
         }
         Ok(())
     }
-}
-
-enum OnRewrite {
-    Skip,
-    Reload,
-    Fail,
 }
 
 #[derive(Debug)]
@@ -585,7 +588,11 @@ impl Deploy<WatchModeData> {
                 }
 
                 Some(path) = self.mode_data.queue.next() => {
-                    let tgs = Self::load_typegraphs(&path, &self.base_dir, &self.loader, OnRewrite::Skip).await;
+                    let tgs = Self::load_typegraphs(
+                        &path, &self.base_dir,
+                        &self.loader,
+                        // OnRewrite::Skip
+                    ).await;
                     match tgs {
                         Err(e) => error!("{e:?}"),
                         Ok(tgs) => {

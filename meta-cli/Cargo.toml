@@ -75,6 +75,7 @@ directories = "5.0.1"
 grep = "0.2.12"
 semver = "1.0.20"
 textwrap = "0.16.0"
+actix = "0.13.1"
 
 [dev-dependencies]
 assert_cmd = "2.0.12"

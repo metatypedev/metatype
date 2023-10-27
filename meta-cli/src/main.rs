@@ -4,6 +4,7 @@
 mod cli;
 mod codegen;
 mod config;
+pub mod deploy;
 mod fs;
 mod global_config;
 mod logger;

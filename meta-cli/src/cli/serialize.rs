@@ -3,15 +3,14 @@
 
 use super::{Action, GenArgs};
 use crate::config::Config;
-use crate::typegraph::loader::{Discovery, Loader, LoaderResult};
+use crate::typegraph::loader::{Discovery, Loader};
 use crate::typegraph::postprocess;
 use crate::utils::ensure_venv;
-use anyhow::bail;
-use anyhow::{Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
+use common::typegraph::Typegraph;
 use core::fmt::Debug;
-use log::warn;
 use std::io::{self, Write};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -85,25 +84,29 @@ impl Action for Serialize {
             bail!("No typegraph definition module found.");
         }
 
-        let mut loaded = vec![];
+        let mut loaded: Vec<Typegraph> = vec![];
         for path in paths {
-            match loader.load_file(&path).await {
-                LoaderResult::Loaded(tgs) => {
-                    if tgs.is_empty() {
-                        log::warn!("no typegraph in {path:?}");
-                    }
-                    for tg in tgs.into_iter() {
-                        loaded.push(tg);
-                    }
-                }
-                LoaderResult::Rewritten(_) => {
-                    // ? reload?
-                    warn!("Typegraph definition at {path:?} has been rewritten.");
-                }
-                LoaderResult::Error(e) => {
-                    bail!("{}", e.to_string());
-                }
-            }
+            loader
+                .load_module(&path)
+                .await
+                .map_err(|e| anyhow!("{}", e.to_string()))?;
+            // match loader.load_file(&path).await {
+            //     LoaderResult::Loaded(tgs) => {
+            //         if tgs.is_empty() {
+            //             log::warn!("no typegraph in {path:?}");
+            //         }
+            //         for tg in tgs.into_iter() {
+            //             loaded.push(tg);
+            //         }
+            //     }
+            //     LoaderResult::Rewritten(_) => {
+            //         // ? reload?
+            //         warn!("Typegraph definition at {path:?} has been rewritten.");
+            //     }
+            //     LoaderResult::Error(e) => {
+            //         bail!("{}", e.to_string());
+            //     }
+            // }
         }
 
         if let Some(prefix) = self.prefix.as_ref() {

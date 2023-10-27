@@ -24,18 +24,13 @@ use crate::config::{Config, ModuleType};
 
 use super::postprocess::{self, apply_all, PostProcessorWrapper};
 
+pub type LoaderResult = Result<Vec<Typegraph>, LoaderError>;
+
 #[derive(Clone)]
 pub struct Loader {
     config: Arc<Config>,
     skip_deno_modules: bool,
     postprocessors: Vec<PostProcessorWrapper>,
-}
-
-pub enum LoaderResult {
-    Loaded(Vec<Typegraph>),
-    #[allow(dead_code)]
-    Rewritten(PathBuf),
-    Error(LoaderError),
 }
 
 impl Loader {
@@ -60,19 +55,12 @@ impl Loader {
         self
     }
 
-    pub async fn load_file(&self, path: &Path) -> LoaderResult {
+    pub async fn load_module(&self, path: &Path) -> LoaderResult {
         let command = Self::get_load_command(path.try_into().unwrap(), path);
-        match self.load_command(command, path).await {
-            Ok(tgs) => LoaderResult::Loaded(tgs),
-            Err(e) => LoaderResult::Error(e),
-        }
+        self.load_command(command, path).await
     }
 
-    async fn load_command(
-        &self,
-        mut command: Command,
-        path: &Path,
-    ) -> Result<Vec<Typegraph>, LoaderError> {
+    async fn load_command(&self, mut command: Command, path: &Path) -> LoaderResult {
         let p = command
             .current_dir(&self.config.base_dir)
             .stdout(Stdio::piped())

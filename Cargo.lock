@@ -25,6 +25,62 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cba56612922b907719d4a01cf11c8d5b458e7d3dba946d0435f20f58d6795ed2"
+dependencies = [
+ "actix-macros",
+ "actix-rt",
+ "actix_derive",
+ "bitflags 2.4.0",
+ "bytes",
+ "crossbeam-channel",
+ "futures-core",
+ "futures-sink",
+ "futures-task",
+ "futures-util",
+ "log",
+ "once_cell",
+ "parking_lot 0.12.1",
+ "pin-project-lite",
+ "smallvec",
+ "tokio",
+ "tokio-util 0.7.9",
+]
+
+[[package]]
+name = "actix-macros"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e01ed3140b2f8d422c68afa1ed2e85d996ea619c988ac834d255db32138655cb"
+dependencies = [
+ "quote",
+ "syn 2.0.38",
+]
+
+[[package]]
+name = "actix-rt"
+version = "2.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28f32d40287d3f402ae0028a9d54bef51af15c8769492826a69d28f81893151d"
+dependencies = [
+ "futures-core",
+ "tokio",
+]
+
+[[package]]
+name = "actix_derive"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c7db3d5a9718568e4cf4a537cfd7070e6e6ff7481510d0237fb529ac850f6d3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.38",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -992,7 +1048,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
  "anyhow",
  "base64 0.21.4",
@@ -3238,7 +3294,7 @@ dependencies = [
 
 [[package]]
 name = "macros"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3331,8 +3387,9 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
+ "actix",
  "anyhow",
  "assert_cmd",
  "async-recursion",
@@ -3741,7 +3798,7 @@ dependencies = [
 
 [[package]]
 name = "native"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
  "anyhow",
  "base64 0.21.4",
@@ -7594,7 +7651,7 @@ dependencies = [
 
 [[package]]
 name = "typegraph_core"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
  "common",
  "enum_dispatch",
@@ -7621,7 +7678,7 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 
 [[package]]
 name = "typescript"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
  "anyhow",
  "dprint-plugin-typescript",
@@ -8469,7 +8526,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
  "anyhow",
  "clap",
