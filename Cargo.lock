@@ -1277,7 +1277,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
  "anyhow",
  "base64 0.21.5",
@@ -1862,7 +1862,7 @@ dependencies = [
 [[package]]
 name = "deno"
 version = "1.37.2"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "async-trait",
  "base32",
@@ -2044,7 +2044,7 @@ dependencies = [
 [[package]]
 name = "deno_broadcast_channel"
 version = "0.115.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "async-trait",
  "deno_core",
@@ -2055,7 +2055,7 @@ dependencies = [
 [[package]]
 name = "deno_cache"
 version = "0.53.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "async-trait",
  "deno_core",
@@ -2104,7 +2104,7 @@ dependencies = [
 [[package]]
 name = "deno_console"
 version = "0.121.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "deno_core",
 ]
@@ -2139,7 +2139,7 @@ dependencies = [
 [[package]]
 name = "deno_crypto"
 version = "0.135.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "aes",
  "aes-gcm",
@@ -2209,7 +2209,7 @@ dependencies = [
 [[package]]
 name = "deno_fetch"
 version = "0.145.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "bytes",
  "data-url",
@@ -2226,7 +2226,7 @@ dependencies = [
 [[package]]
 name = "deno_ffi"
 version = "0.108.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "deno_core",
  "dlopen",
@@ -2243,7 +2243,7 @@ dependencies = [
 [[package]]
 name = "deno_fs"
 version = "0.31.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "async-trait",
  "deno_core",
@@ -2286,7 +2286,7 @@ dependencies = [
 [[package]]
 name = "deno_http"
 version = "0.116.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "async-compression",
  "async-trait",
@@ -2322,7 +2322,7 @@ dependencies = [
 [[package]]
 name = "deno_io"
 version = "0.31.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "async-trait",
  "deno_core",
@@ -2336,7 +2336,7 @@ dependencies = [
 [[package]]
 name = "deno_kv"
 version = "0.29.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2404,7 +2404,7 @@ dependencies = [
 [[package]]
 name = "deno_napi"
 version = "0.51.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "deno_core",
  "libloading",
@@ -2413,7 +2413,7 @@ dependencies = [
 [[package]]
 name = "deno_net"
 version = "0.113.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "deno_core",
  "deno_tls",
@@ -2430,7 +2430,7 @@ dependencies = [
 [[package]]
 name = "deno_node"
 version = "0.58.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "aead-gcm-stream",
  "aes",
@@ -2530,7 +2530,7 @@ dependencies = [
 [[package]]
 name = "deno_runtime"
 version = "0.129.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "console_static_text",
  "deno_ast",
@@ -2614,7 +2614,7 @@ dependencies = [
 [[package]]
 name = "deno_tls"
 version = "0.108.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "deno_core",
  "once_cell",
@@ -2647,7 +2647,7 @@ dependencies = [
 [[package]]
 name = "deno_url"
 version = "0.121.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "deno_core",
  "serde 1.0.190",
@@ -2657,7 +2657,7 @@ dependencies = [
 [[package]]
 name = "deno_web"
 version = "0.152.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "async-trait",
  "base64-simd",
@@ -2675,7 +2675,7 @@ dependencies = [
 [[package]]
 name = "deno_webidl"
 version = "0.121.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "deno_core",
 ]
@@ -2683,7 +2683,7 @@ dependencies = [
 [[package]]
 name = "deno_websocket"
 version = "0.126.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "bytes",
  "deno_core",
@@ -2701,7 +2701,7 @@ dependencies = [
 [[package]]
 name = "deno_webstorage"
 version = "0.116.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "deno_core",
  "deno_web",
@@ -5193,7 +5193,7 @@ dependencies = [
 
 [[package]]
 name = "macros"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
  "proc-macro2 1.0.69",
  "quote 1.0.33",
@@ -5325,7 +5325,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -5658,7 +5658,7 @@ dependencies = [
 
 [[package]]
 name = "mt_deno"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
  "anyhow",
  "deno",
@@ -5752,7 +5752,7 @@ dependencies = [
 [[package]]
 name = "napi_sym"
 version = "0.51.0"
-source = "git+https://github.com/metatypedev/deno.git?rev=f223aa828993febb5d205f1501bc2fe46c30e999#f223aa828993febb5d205f1501bc2fe46c30e999"
+source = "git+https://github.com/metatypedev/deno.git?rev=d68e2fac48748d59a6a646f25e87f2988ddf8220#d68e2fac48748d59a6a646f25e87f2988ddf8220"
 dependencies = [
  "proc-macro2 1.0.69",
  "quote 1.0.33",
@@ -5763,7 +5763,7 @@ dependencies = [
 
 [[package]]
 name = "native"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
  "anyhow",
  "base64 0.21.5",
@@ -10568,7 +10568,7 @@ dependencies = [
 
 [[package]]
 name = "typegraph_core"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
  "common",
  "enum_dispatch",
@@ -10595,7 +10595,7 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 
 [[package]]
 name = "typescript"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
  "anyhow",
  "dprint-plugin-typescript 0.87.1",
@@ -11636,7 +11636,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.2.4"
+version = "0.2.5-0+dev"
 dependencies = [
  "anyhow",
  "clap",
