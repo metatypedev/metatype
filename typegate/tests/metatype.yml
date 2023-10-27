@@ -18,8 +18,6 @@ typegates:
     prefix: pref-
 
 typegraphs:
-  python:
-    include: "**/*.py"
   materializers:
     prisma:
       migrations_path: "prisma-migrations"

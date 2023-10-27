@@ -63,8 +63,6 @@ typegates:
       TG_RETREND_S3_SECRET_KEY: password
 
 typegraphs:
-  python:
-    include: "**/*.py"
   materializers:
     prisma:
       migrations_path: "migrations"
