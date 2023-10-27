@@ -4,7 +4,7 @@ expression: "&module_codes[0].code"
 ---
 interface ConvertInput {
   color:
-    | Array<number>
+    | List<number>
     | string
     | "red"
     | "black"
@@ -17,7 +17,7 @@ interface ConvertInput {
 }
 
 type ConvertOutput =
-  | Array<number>
+  | List<number>
   | string
   | "red"
   | "black"
@@ -32,3 +32,4 @@ export function convert({ color, to }: ConvertInput,
 {
   return "";
 }
+
