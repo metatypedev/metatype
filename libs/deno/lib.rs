@@ -33,15 +33,27 @@ fn spawn_subcommand<F: Future<Output = ()> + 'static>(f: F) -> JoinHandle<()> {
     deno_core::unsync::spawn(f.boxed_local())
 }
 
-pub fn run_sync(main_mod: PathBuf, permissions: PermissionsOptions) {
+pub fn run_sync(
+    main_mod: PathBuf,
+    permissions: PermissionsOptions,
+    custom_extensions: Arc<worker::CustomExtensionsCb>,
+) {
     create_and_run_current_thread_with_maybe_metrics(async move {
-        spawn_subcommand(async move { run(&main_mod, permissions).await.unwrap() })
-            .await
-            .unwrap()
+        spawn_subcommand(async move {
+            run(&main_mod, permissions, custom_extensions)
+                .await
+                .unwrap()
+        })
+        .await
+        .unwrap()
     });
 }
 
-pub async fn run(main_mod: &Path, permissions: PermissionsOptions) -> anyhow::Result<()> {
+pub async fn run(
+    main_mod: &Path,
+    permissions: PermissionsOptions,
+    custom_extensions: Arc<worker::CustomExtensionsCb>,
+) -> anyhow::Result<()> {
     deno_runtime::permissions::set_prompt_callbacks(
         Box::new(util::draw_thread::DrawThread::hide),
         Box::new(util::draw_thread::DrawThread::show),
@@ -56,12 +68,10 @@ pub async fn run(main_mod: &Path, permissions: PermissionsOptions) -> anyhow::Re
         unstable: true,
         ..Default::default()
     };
-    let options = args::CliOptions::from_flags(flags)?;
-    let options = Arc::new(options);
 
-    let cli_factory = factory::CliFactoryBuilder::new()
-        .build_from_cli_options(options.clone())
-        .with_custom_ext_cb(Arc::new(|| vec![i_metatype_ext::init_ops_and_esm()]));
+    let cli_factory = factory::CliFactory::from_flags(flags)
+        .await?
+        .with_custom_ext_cb(custom_extensions);
 
     let worker_factory = cli_factory.create_cli_main_worker_factory().await?;
     let permissions = deno_runtime::permissions::PermissionsContainer::new(
@@ -80,14 +90,23 @@ pub fn test_sync(
     files: deno_config::FilesConfig,
     config_file: PathBuf,
     permissions: PermissionsOptions,
+    coverage_dir: Option<String>,
+    custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) {
     std::thread::Builder::new()
-        .stack_size(4 * 1024 * 1024)
         .spawn(|| {
             create_and_run_current_thread_with_maybe_metrics(async move {
-                spawn_subcommand(
-                    async move { test(files, config_file, permissions).await.unwrap() },
-                )
+                spawn_subcommand(async move {
+                    test(
+                        files,
+                        config_file,
+                        permissions,
+                        coverage_dir,
+                        custom_extensions,
+                    )
+                    .await
+                    .unwrap()
+                })
                 .await
                 .unwrap()
             })
@@ -101,6 +120,8 @@ pub async fn test(
     files: deno_config::FilesConfig,
     config_file: PathBuf,
     permissions: PermissionsOptions,
+    coverage_dir: Option<String>,
+    custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) -> anyhow::Result<()> {
     use deno::tools::test::*;
 
@@ -113,17 +134,21 @@ pub async fn test(
         config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
         ..Default::default()
     };
-    let options = args::CliOptions::from_flags(flags)?;
-    let options = Arc::new(options);
 
-    let cli_factory = factory::CliFactoryBuilder::new()
-        .build_from_cli_options(options.clone())
-        .with_custom_ext_cb(Arc::new(|| vec![i_metatype_ext::init_ops_and_esm()]));
+    let cli_factory = factory::CliFactory::from_flags(flags)
+        .await?
+        .with_custom_ext_cb(custom_extensions);
+
+    let options = cli_factory.cli_options().clone();
 
     let test_options = args::TestOptions {
-        doc: false,
-        trace_ops: true,
-        ..args::TestOptions::resolve(Some(deno_config::TestConfig { files }), None)?
+        files,
+        ..options.resolve_test_options(args::TestFlags {
+            doc: false,
+            trace_ops: true,
+            coverage_dir,
+            ..Default::default()
+        })?
     };
     let file_fetcher = cli_factory.file_fetcher()?;
     let module_load_preparer = cli_factory.module_load_preparer().await?;
@@ -189,14 +214,16 @@ pub fn bench_sync(
     files: deno_config::FilesConfig,
     config_file: PathBuf,
     permissions: PermissionsOptions,
+    custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) {
     std::thread::Builder::new()
-        .stack_size(4 * 1024 * 1024)
         .spawn(|| {
             create_and_run_current_thread_with_maybe_metrics(async move {
-                spawn_subcommand(
-                    async move { bench(files, config_file, permissions).await.unwrap() },
-                )
+                spawn_subcommand(async move {
+                    bench(files, config_file, permissions, custom_extensions)
+                        .await
+                        .unwrap()
+                })
                 .await
                 .unwrap()
             })
@@ -210,6 +237,7 @@ pub async fn bench(
     files: deno_config::FilesConfig,
     config_file: PathBuf,
     permissions: PermissionsOptions,
+    custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) -> anyhow::Result<()> {
     use deno::tools::bench::*;
     use deno::tools::test::TestFilter;
@@ -223,15 +251,13 @@ pub async fn bench(
         config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
         ..Default::default()
     };
-    let options = args::CliOptions::from_flags(flags)?;
-    let options = Arc::new(options);
 
     let bench_options = args::BenchOptions {
         ..args::BenchOptions::resolve(Some(deno_config::BenchConfig { files }), None)?
     };
-    let cli_factory = factory::CliFactoryBuilder::new()
-        .build_from_cli_options(options.clone())
-        .with_custom_ext_cb(Arc::new(|| vec![i_metatype_ext::init_ops_and_esm()]));
+    let cli_factory = factory::CliFactory::from_flags(flags)
+        .await?
+        .with_custom_ext_cb(custom_extensions);
     let options = cli_factory.cli_options();
 
     // Various bench files should not share the same permissions in terms of
@@ -271,17 +297,3 @@ pub async fn bench(
     .await?;
     Ok(())
 }
-
-#[deno_core::op2(async)]
-#[string]
-async fn op_foobar() -> anyhow::Result<String> {
-    Ok("making up a song 'bout Coraline".to_string())
-}
-
-deno_core::extension!(
-    i_metatype_ext,
-    ops = [op_foobar],
-    esm_entry_point = "ext:i_metatype_ext/runtime.js",
-    esm = ["runtime.js"],
-    docs = "Metatype internal extension"
-);

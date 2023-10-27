@@ -39,50 +39,51 @@ pub struct Test {
     /// Path to `deno.json`
     #[clap(long)]
     config: PathBuf,
+    /// The directory in which to put the coverage profiles
+    #[clap(long)]
+    coverage: Option<String>,
 }
 
 impl Test {
     fn run(self) -> Result<()> {
+        let permissions = mt_deno::deno::deno_runtime::permissions::PermissionsOptions {
+            allow_run: Some(
+                [
+                    "cargo",
+                    "hostname",
+                    "target/debug/meta",
+                    "git",
+                    "python3",
+                    "rm",
+                    "mkdir",
+                ]
+                .into_iter()
+                .map(str::to_owned)
+                .collect(),
+            ),
+            allow_sys: Some(vec![]),
+            allow_env: Some(vec![]),
+            allow_hrtime: true,
+            allow_write: Some(
+                ["tmp", "typegate/tests"]
+                    .into_iter()
+                    .map(std::str::FromStr::from_str)
+                    .collect::<Result<_, _>>()?,
+            ),
+            allow_ffi: Some(vec![]),
+            allow_read: Some(vec![]),
+            allow_net: Some(vec![]),
+            ..Default::default()
+        };
         mt_deno::test_sync(
             mt_deno::deno::deno_config::FilesConfig {
                 include: self.files,
                 exclude: self.ignore.unwrap_or_default(),
             },
             self.config,
-            mt_deno::deno::deno_runtime::permissions::PermissionsOptions {
-                allow_run: Some(
-                    [
-                        "cargo",
-                        "hostname",
-                        "target/debug/meta",
-                        "git",
-                        "python3",
-                        "rm",
-                        "mkdir",
-                    ]
-                    .into_iter()
-                    .map(str::to_owned)
-                    .collect(),
-                ),
-                allow_sys: Some(vec![]),
-                allow_env: Some(vec![]),
-                allow_hrtime: true,
-                allow_write: Some(
-                    ["tmp", "typegate/tests"]
-                        .into_iter()
-                        .map(std::str::FromStr::from_str)
-                        .collect::<Result<_, _>>()?,
-                ),
-                allow_ffi: Some(vec![]),
-                allow_read: Some(
-                    vec![], // ["."]
-                            //     .into_iter()
-                            //     .map(std::str::FromStr::from_str)
-                            //     .collect::<Result<_, _>>()?,
-                ),
-                allow_net: Some(vec![]),
-                ..Default::default()
-            },
+            permissions,
+            self.coverage,
+            std::sync::Arc::new(Vec::new),
         );
         Ok(())
     }
@@ -102,46 +103,43 @@ pub struct Bench {
 
 impl Bench {
     fn run(self) -> Result<()> {
+        let permissions = mt_deno::deno::deno_runtime::permissions::PermissionsOptions {
+            allow_run: Some(
+                [
+                    "cargo",
+                    "hostname",
+                    "target/debug/meta",
+                    "git",
+                    "python3",
+                    "rm",
+                    "mkdir",
+                ]
+                .into_iter()
+                .map(str::to_owned)
+                .collect(),
+            ),
+            allow_sys: Some(vec![]),
+            allow_env: Some(vec![]),
+            allow_hrtime: true,
+            allow_write: Some(
+                ["tmp", "typegate/tests"]
+                    .into_iter()
+                    .map(std::str::FromStr::from_str)
+                    .collect::<Result<_, _>>()?,
+            ),
+            allow_ffi: Some(vec![]),
+            allow_read: Some(vec![]),
+            allow_net: Some(vec![]),
+            ..Default::default()
+        };
         mt_deno::bench_sync(
             mt_deno::deno::deno_config::FilesConfig {
                 include: self.files,
                 exclude: self.ignore.unwrap_or_default(),
             },
             self.config,
-            mt_deno::deno::deno_runtime::permissions::PermissionsOptions {
-                allow_run: Some(
-                    [
-                        "cargo",
-                        "hostname",
-                        "target/debug/meta",
-                        "git",
-                        "python3",
-                        "rm",
-                        "mkdir",
-                    ]
-                    .into_iter()
-                    .map(str::to_owned)
-                    .collect(),
-                ),
-                allow_sys: Some(vec![]),
-                allow_env: Some(vec![]),
-                allow_hrtime: true,
-                allow_write: Some(
-                    ["tmp", "typegate/tests"]
-                        .into_iter()
-                        .map(std::str::FromStr::from_str)
-                        .collect::<Result<_, _>>()?,
-                ),
-                allow_ffi: Some(vec![]),
-                allow_read: Some(
-                    vec![], // ["."]
-                            //     .into_iter()
-                            //     .map(std::str::FromStr::from_str)
-                            //     .collect::<Result<_, _>>()?,
-                ),
-                allow_net: Some(vec![]),
-                ..Default::default()
-            },
+            permissions,
+            std::sync::Arc::new(Vec::new),
         );
         Ok(())
     }
