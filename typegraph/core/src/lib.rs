@@ -21,6 +21,7 @@ use errors::Result;
 use global_store::Store;
 use indoc::formatdoc;
 use regex::Regex;
+use runtimes::{DenoMaterializer, Materializer};
 use types::{
     Boolean, Either, File, Float, Func, Integer, List, Optional, Proxy, StringT, Struct, Type,
     TypeBoolean, TypeId, Union, WithInjection, WithPolicy,
@@ -220,6 +221,25 @@ impl wit::core::Guest for Lib {
     fn get_public_policy() -> Result<(PolicyId, String)> {
         Ok({
             let policy_id = Store::get_public_policy_id();
+            let policy = Store::get_policy(policy_id)?;
+            (policy_id, policy.name.clone())
+        })
+    }
+
+    fn get_internal_policy() -> Result<(PolicyId, String)> {
+        let deno_mat = DenoMaterializer::Inline(MaterializerDenoFunc {
+            code: "(_, { context }) => context.provider === 'internal'".to_string(),
+            secrets: vec![],
+        });
+        let mat = Materializer::deno(deno_mat, crate::wit::runtimes::Effect::Read);
+        let policy_id = Store::register_policy(
+            Policy {
+                materializer: Store::register_materializer(mat),
+                name: "__internal".to_string(),
+            }
+            .into(),
+        )?;
+        Ok({
             let policy = Store::get_policy(policy_id)?;
             (policy_id, policy.name.clone())
         })

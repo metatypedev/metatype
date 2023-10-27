@@ -171,6 +171,7 @@ interface core {
 
     // policy-id, policy-name
     get-public-policy: func() -> result<tuple<policy-id, string>, error>
+    get-internal-policy: func() -> result<tuple<policy-id, string>, error>
 
     variant context-check {
         value(string),
