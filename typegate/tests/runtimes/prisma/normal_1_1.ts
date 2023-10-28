@@ -11,7 +11,7 @@ typegraph("prisma_normal", (g) => {
   const user = t.struct(
     {
       id: t.integer({}, { asId: true }),
-      profile: db.link(t.ref("Profile").optional(), "userProfile"),
+      profile: db.link(g.ref("Profile").optional(), "userProfile"),
     },
     { name: "User" },
   );

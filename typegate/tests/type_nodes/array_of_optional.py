@@ -8,19 +8,19 @@ def array_optional(g: Graph):
         {
             "a": t.string(),
             "b": t.integer(),
-            "c": t.struct({"c1": t.string(), "inner": t.array(t.string().optional())}),
+            "c": t.struct({"c1": t.string(), "inner": t.list(t.string().optional())}),
         }
     )
 
     rec = t.struct(
         {
-            "struct_array": t.array(nested.optional()).optional(),
-            "string_array": t.array(t.string().optional()).optional(),
-            "integer_array": t.array(t.integer().optional()).optional(),
+            "struct_array": t.list(nested.optional()).optional(),
+            "string_array": t.list(t.string().optional()).optional(),
+            "integer_array": t.list(t.integer().optional()).optional(),
             # TODO:
             # should we support null value for enum/union/either arrays ?
-            "enum_array": t.array(t.enum(["A", "B"]).optional()).optional(),
-            "union_array": t.array(
+            "enum_array": t.list(t.enum(["A", "B"]).optional()).optional(),
+            "union_array": t.list(
                 t.union([t.string(), t.integer()]).optional()
             ).optional(),
         }
@@ -28,9 +28,9 @@ def array_optional(g: Graph):
 
     rec_not_null = t.struct(
         {
-            "struct_array": t.array(t.struct({"x": t.string()})).optional(),
-            "string_array": t.array(t.string()).optional(),
-            "integer_array": t.array(t.integer()).optional(),
+            "struct_array": t.list(t.struct({"x": t.string()})).optional(),
+            "string_array": t.list(t.string()).optional(),
+            "integer_array": t.list(t.integer()).optional(),
         }
     )
 

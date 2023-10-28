@@ -1,6 +1,6 @@
-import { Policy, t, typegraph } from "@metatypedev/typegraph";
-import { DenoRuntime } from "@metatypedev/typegraph/runtimes/deno";
-import { PythonRuntime } from "@metatypedev/typegraph/runtimes/python";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
+import { PythonRuntime } from "@typegraph/sdk/runtimes/python";
 
 typegraph("test-multiple-runtimes", (g) => {
   const pub = Policy.public();

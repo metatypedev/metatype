@@ -58,14 +58,12 @@ class Policy:
         (policy_id, name) = res.value
         return cls(id=policy_id, name=name)
 
-    # TODO implement in Rust for the Guest wasm
     @classmethod
     def internal(cls) -> "Policy":
-        from typegraph.runtimes.deno import DenoRuntime
-
-        return DenoRuntime().policy(
-            "__internal", "(_, { context }) => context.provider === 'internal'"
-        )
+        res = core.get_internal_policy(store)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return cls(id=res.value[0], name=res.value[1])
 
     @classmethod
     def create(cls, name: str, mat_id: MaterializerId) -> "Policy":

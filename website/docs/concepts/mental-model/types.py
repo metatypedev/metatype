@@ -1,13 +1,15 @@
 # skip:start
-from typegraph import TypeGraph, t
+from typegraph import typegraph, t, Graph
 
-with TypeGraph("types") as g:
+
+@typegraph()
+def types(g: Graph):
     # skip:end
     t.struct(
         {
             "id": t.uuid(),
             "age": t.integer(),
-            "cars": t.array(
+            "cars": t.list(
                 t.struct(
                     {
                         "model": t.string(),

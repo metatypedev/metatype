@@ -14,8 +14,8 @@ import {
 } from "../../types.ts";
 import { JSONValue } from "../../utils.ts";
 import {
-  ArrayNode,
   getVariantTypesIndexes,
+  ListNode,
   ObjectNode,
   Type,
   TypeNode,
@@ -164,7 +164,7 @@ interface Dependencies {
  *      object_arg: {  # o -> collectArg() -> collectObjectArg()
  *          nested1: 12  # -> collectArg()
  *      },
- *      array_arg: [  # o -> collectArg() -> collectArrayArg()
+ *      list_arg: [  # o -> collectArg() -> collectListArg()
  *          'hello',  # -> collectArg()
  *          'world',  # -> collectArg()
  *      ],
@@ -287,8 +287,8 @@ class ArgumentCollector {
         return this.collectObjectArg(valueNode, typ);
       }
 
-      case Type.ARRAY:
-        return this.collectArrayArg(valueNode, typ);
+      case Type.LIST:
+        return this.collectListArg(valueNode, typ);
 
       case Type.INTEGER: {
         if (valueNode.kind !== Kind.INT) {
@@ -457,9 +457,9 @@ class ArgumentCollector {
   }
 
   /** Collect the value of a parameter of type 'array'. */
-  private collectArrayArg(
+  private collectListArg(
     valueNode: ast.ValueNode,
-    typ: ArrayNode,
+    typ: ListNode,
   ): ComputeArg {
     if (valueNode.kind !== Kind.LIST) {
       throw new TypeMismatchError(

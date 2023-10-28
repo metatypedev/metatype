@@ -15,10 +15,10 @@ root: struct '_Record_QueryInput' #61
 │     │        │  ├─ variant_2: struct #9
 │     │        │  │  └─ [not]: string #5
 │     │        │  ├─ variant_3: struct #10
-│     │        │  │  └─ [in]: array #7
+│     │        │  │  └─ [in]: list #7
 │     │        │  │     └─ item: string #5
 │     │        │  ├─ variant_4: struct #11
-│     │        │  │  └─ [notIn]: array #7
+│     │        │  │  └─ [notIn]: list #7
 │     │        │  │     └─ item: string #5
 │     │        │  ├─ variant_5: struct #14
 │     │        │  │  ├─ [contains]: string #5
@@ -39,10 +39,10 @@ root: struct '_Record_QueryInput' #61
 │     │              ├─ variant_2: struct #9
 │     │              │  └─ [not]: string #5
 │     │              ├─ variant_3: struct #10
-│     │              │  └─ [in]: array #7
+│     │              │  └─ [in]: list #7
 │     │              │     └─ item: string #5
 │     │              ├─ variant_4: struct #11
-│     │              │  └─ [notIn]: array #7
+│     │              │  └─ [notIn]: list #7
 │     │              │     └─ item: string #5
 │     │              ├─ variant_5: struct #14
 │     │              │  ├─ [contains]: string #5
@@ -65,10 +65,10 @@ root: struct '_Record_QueryInput' #61
 │     │        │  ├─ variant_2: struct #9
 │     │        │  │  └─ [not]: string #5
 │     │        │  ├─ variant_3: struct #10
-│     │        │  │  └─ [in]: array #7
+│     │        │  │  └─ [in]: list #7
 │     │        │  │     └─ item: string #5
 │     │        │  ├─ variant_4: struct #11
-│     │        │  │  └─ [notIn]: array #7
+│     │        │  │  └─ [notIn]: list #7
 │     │        │  │     └─ item: string #5
 │     │        │  ├─ variant_5: struct #14
 │     │        │  │  ├─ [contains]: string #5
@@ -89,10 +89,10 @@ root: struct '_Record_QueryInput' #61
 │     │              ├─ variant_2: struct #9
 │     │              │  └─ [not]: string #5
 │     │              ├─ variant_3: struct #10
-│     │              │  └─ [in]: array #7
+│     │              │  └─ [in]: list #7
 │     │              │     └─ item: string #5
 │     │              ├─ variant_4: struct #11
-│     │              │  └─ [notIn]: array #7
+│     │              │  └─ [notIn]: list #7
 │     │              │     └─ item: string #5
 │     │              ├─ variant_5: struct #14
 │     │              │  ├─ [contains]: string #5
@@ -124,10 +124,10 @@ root: struct '_Record_QueryInput' #61
 │     │        │  │  └─ [gte]: optional #24
 │     │        │  │     └─ item: integer #23
 │     │        │  ├─ variant_4: struct #29
-│     │        │  │  └─ [in]: array #25
+│     │        │  │  └─ [in]: list #25
 │     │        │  │     └─ item: integer #23
 │     │        │  └─ variant_5: struct #30
-│     │        │     └─ [notIn]: array #25
+│     │        │     └─ [notIn]: list #25
 │     │        │        └─ item: integer #23
 │     │        └─ variant_1: struct #32
 │     │           └─ [not]: either '_integer_filter' #31
@@ -146,21 +146,21 @@ root: struct '_Record_QueryInput' #61
 │     │              │  └─ [gte]: optional #24
 │     │              │     └─ item: integer #23
 │     │              ├─ variant_4: struct #29
-│     │              │  └─ [in]: array #25
+│     │              │  └─ [in]: list #25
 │     │              │     └─ item: integer #23
 │     │              └─ variant_5: struct #30
-│     │                 └─ [notIn]: array #25
+│     │                 └─ [notIn]: list #25
 │     │                    └─ item: integer #23
 │     ├─ [AND]: optional '_39__38_QueryRecordWhereInput[]?' #39
-│     │  └─ item: array '_38_QueryRecordWhereInput[]' #38
+│     │  └─ item: list '_38_QueryRecordWhereInput[]' #38
 │     │     └─ item: &QueryRecordWhereInput #37
 │     ├─ [OR]: optional '_39__38_QueryRecordWhereInput[]?' #39
-│     │  └─ item: array '_38_QueryRecordWhereInput[]' #38
+│     │  └─ item: list '_38_QueryRecordWhereInput[]' #38
 │     │     └─ item: &QueryRecordWhereInput #37
 │     └─ [NOT]: optional '_40_QueryRecordWhereInput?' #40
 │        └─ item: &QueryRecordWhereInput #37
 ├─ [orderBy]: optional '_53__Record_OrderBy?' #53
-│  └─ item: array '_Record_OrderBy' #52
+│  └─ item: list '_Record_OrderBy' #52
 │     └─ item: struct #51
 │        ├─ [id]: optional '_Sort' #47
 │        │  └─ item: union #46
@@ -183,6 +183,6 @@ root: struct '_Record_QueryInput' #61
 ├─ [skip]: optional '_57__Skip?' #57
 │  └─ item: integer '_Skip' #56
 └─ [distinct]: optional '_60__KeysOf_Record?' #60
-   └─ item: array '_KeysOf_Record' #59
+   └─ item: list '_KeysOf_Record' #59
       └─ item: string #58 enum{ '"id"', '"name"', '"age"' }
 

@@ -5,22 +5,22 @@ import { core, wit_utils } from "./wit.ts";
 import {
   PolicyPerEffect,
   PolicySpec as WitPolicySpec,
-  TypeArray,
   TypeBase,
   TypeEither,
   TypeFile,
   TypeFloat,
   TypeInteger,
+  TypeList,
   TypeOptional,
   TypeString,
   TypeUnion,
 } from "./gen/interfaces/metatype-typegraph-core.d.ts";
-import { Apply } from "./gen/interfaces/metatype-typegraph-utils.d.ts";
+import { Reduce } from "./gen/interfaces/metatype-typegraph-utils.d.ts";
 import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.d.ts";
 import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps.ts";
 import Policy from "./policy.ts";
-import { buildApplyData, serializeRecordValues } from "./utils/func_utils.ts";
+import { buildReduceData, serializeRecordValues } from "./utils/func_utils.ts";
 import {
   serializeFromParentInjection,
   serializeGenericInjection,
@@ -167,20 +167,6 @@ export class Typedef {
       serializeFromParentInjection(value),
     );
   }
-}
-
-class TypeProxy<T extends Typedef = Typedef> extends Typedef {
-  constructor(_id: number, name: string) {
-    super(_id, { name });
-  }
-}
-
-export function proxy<T extends Typedef = Typedef>(name: string) {
-  return new TypeProxy<T>(core.proxyb({ name, extras: [] }), name);
-}
-
-export function ref<T extends Typedef = Typedef>(name: string) {
-  return proxy<T>(name);
 }
 
 class Boolean extends Typedef {
@@ -365,13 +351,13 @@ export function file(
   return new File(core.fileb(data, completeBase), data, completeBase);
 }
 
-class ArrayT extends Typedef {
+class List extends Typedef {
   readonly min?: number;
   readonly max?: number;
   readonly items?: number;
   readonly uniqueItems?: boolean;
 
-  constructor(_id: number, data: TypeArray, base: TypeBase) {
+  constructor(_id: number, data: TypeList, base: TypeBase) {
     super(_id, base);
     this.min = data.min;
     this.max = data.max;
@@ -380,22 +366,22 @@ class ArrayT extends Typedef {
   }
 }
 
-export function array(
+export function list(
   variant: Typedef,
-  data: Simplified<TypeArray> = {},
+  data: Simplified<TypeList> = {},
   base: SimplifiedBase<TypeBase> = {},
 ) {
   const completeData = {
     of: variant._id,
     ...data,
-  } as TypeArray;
+  } as TypeList;
   const completeBase = {
     ...base,
     asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
-  return new ArrayT(
-    core.arrayb(completeData, completeBase),
+  return new List(
+    core.listb(completeData, completeBase),
     completeData,
     completeBase,
   );
@@ -536,18 +522,18 @@ export class Func<
     this.mat = mat;
   }
 
-  apply(value: Record<string, unknown | InheritDef>) {
-    const data: Apply = {
-      paths: buildApplyData(value),
+  reduce(value: Record<string, unknown | InheritDef>) {
+    const data: Reduce = {
+      paths: buildReduceData(value),
     };
 
-    const applyId = wit_utils.genApplyb(
+    const reducedId = wit_utils.genReduceb(
       this.inp._id,
       data,
     );
 
     return func(
-      new Typedef(applyId, {}) as Struct<P>,
+      new Typedef(reducedId, {}) as Struct<P>,
       this.out,
       this.mat,
     );

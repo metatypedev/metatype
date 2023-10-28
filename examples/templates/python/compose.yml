@@ -1,6 +1,6 @@
 services:
   typegate:
-    image: ghcr.io/metatypedev/typegate:v0.2.4-0+dev
+    image: ghcr.io/metatypedev/typegate:v0.2.5-0+dev
     restart: always
     ports:
       - "7890:7890"
@@ -24,7 +24,7 @@ services:
   # postgresql://postgres:password@localhost:5432/db
   # see metatype.yml
   postgres:
-    image: postgres:15
+    image: postgres:16
     restart: always
     environment:
       POSTGRES_DB: db

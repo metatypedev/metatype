@@ -113,8 +113,8 @@ class S3Runtime(Runtime):
             t.struct({"path": t.string().optional()}),
             t.struct(
                 {
-                    "keys": t.array(t.struct({"key": t.string(), "size": t.integer()})),
-                    "prefix": t.array(t.string()),
+                    "keys": t.list(t.struct({"key": t.string(), "size": t.integer()})),
+                    "prefix": t.list(t.string()),
                 }
             ),
             S3ListMat(mat_id.value, bucket=bucket, effect=EffectRead()),
@@ -149,7 +149,7 @@ class S3Runtime(Runtime):
             t.struct(
                 {
                     "prefix": t.string().optional(""),
-                    "files": t.array(file_type),
+                    "files": t.list(file_type),
                 }
             ),
             t.boolean(),

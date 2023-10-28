@@ -24,10 +24,10 @@ root: struct '_Post_QueryInput' #146
 │     │        │  │  └─ [gte]: optional #24
 │     │        │  │     └─ item: integer #23
 │     │        │  ├─ variant_4: struct #29
-│     │        │  │  └─ [in]: array #25
+│     │        │  │  └─ [in]: list #25
 │     │        │  │     └─ item: integer #23
 │     │        │  └─ variant_5: struct #30
-│     │        │     └─ [notIn]: array #25
+│     │        │     └─ [notIn]: list #25
 │     │        │        └─ item: integer #23
 │     │        └─ variant_1: struct #32
 │     │           └─ [not]: either '_integer_filter' #31
@@ -46,10 +46,10 @@ root: struct '_Post_QueryInput' #146
 │     │              │  └─ [gte]: optional #24
 │     │              │     └─ item: integer #23
 │     │              ├─ variant_4: struct #29
-│     │              │  └─ [in]: array #25
+│     │              │  └─ [in]: list #25
 │     │              │     └─ item: integer #23
 │     │              └─ variant_5: struct #30
-│     │                 └─ [notIn]: array #25
+│     │                 └─ [notIn]: list #25
 │     │                    └─ item: integer #23
 │     ├─ [title]: optional '_114__string_filter_c?' #114
 │     │  └─ item: optional '_string_filter_c' #20
@@ -61,10 +61,10 @@ root: struct '_Post_QueryInput' #146
 │     │        │  ├─ variant_2: struct #9
 │     │        │  │  └─ [not]: string #5
 │     │        │  ├─ variant_3: struct #10
-│     │        │  │  └─ [in]: array #7
+│     │        │  │  └─ [in]: list #7
 │     │        │  │     └─ item: string #5
 │     │        │  ├─ variant_4: struct #11
-│     │        │  │  └─ [notIn]: array #7
+│     │        │  │  └─ [notIn]: list #7
 │     │        │  │     └─ item: string #5
 │     │        │  ├─ variant_5: struct #14
 │     │        │  │  ├─ [contains]: string #5
@@ -85,10 +85,10 @@ root: struct '_Post_QueryInput' #146
 │     │              ├─ variant_2: struct #9
 │     │              │  └─ [not]: string #5
 │     │              ├─ variant_3: struct #10
-│     │              │  └─ [in]: array #7
+│     │              │  └─ [in]: list #7
 │     │              │     └─ item: string #5
 │     │              ├─ variant_4: struct #11
-│     │              │  └─ [notIn]: array #7
+│     │              │  └─ [notIn]: list #7
 │     │              │     └─ item: string #5
 │     │              ├─ variant_5: struct #14
 │     │              │  ├─ [contains]: string #5
@@ -122,10 +122,10 @@ root: struct '_Post_QueryInput' #146
 │     │     │        │  │  └─ [gte]: optional #24
 │     │     │        │  │     └─ item: integer #23
 │     │     │        │  ├─ variant_4: struct #29
-│     │     │        │  │  └─ [in]: array #25
+│     │     │        │  │  └─ [in]: list #25
 │     │     │        │  │     └─ item: integer #23
 │     │     │        │  └─ variant_5: struct #30
-│     │     │        │     └─ [notIn]: array #25
+│     │     │        │     └─ [notIn]: list #25
 │     │     │        │        └─ item: integer #23
 │     │     │        └─ variant_1: struct #32
 │     │     │           └─ [not]: either '_integer_filter' #31
@@ -144,10 +144,10 @@ root: struct '_Post_QueryInput' #146
 │     │     │              │  └─ [gte]: optional #24
 │     │     │              │     └─ item: integer #23
 │     │     │              ├─ variant_4: struct #29
-│     │     │              │  └─ [in]: array #25
+│     │     │              │  └─ [in]: list #25
 │     │     │              │     └─ item: integer #23
 │     │     │              └─ variant_5: struct #30
-│     │     │                 └─ [notIn]: array #25
+│     │     │                 └─ [notIn]: list #25
 │     │     │                    └─ item: integer #23
 │     │     ├─ [name]: optional '_116__string_filter_c?' #116
 │     │     │  └─ item: optional '_string_filter_c' #20
@@ -159,10 +159,10 @@ root: struct '_Post_QueryInput' #146
 │     │     │        │  ├─ variant_2: struct #9
 │     │     │        │  │  └─ [not]: string #5
 │     │     │        │  ├─ variant_3: struct #10
-│     │     │        │  │  └─ [in]: array #7
+│     │     │        │  │  └─ [in]: list #7
 │     │     │        │  │     └─ item: string #5
 │     │     │        │  ├─ variant_4: struct #11
-│     │     │        │  │  └─ [notIn]: array #7
+│     │     │        │  │  └─ [notIn]: list #7
 │     │     │        │  │     └─ item: string #5
 │     │     │        │  ├─ variant_5: struct #14
 │     │     │        │  │  ├─ [contains]: string #5
@@ -183,10 +183,10 @@ root: struct '_Post_QueryInput' #146
 │     │     │              ├─ variant_2: struct #9
 │     │     │              │  └─ [not]: string #5
 │     │     │              ├─ variant_3: struct #10
-│     │     │              │  └─ [in]: array #7
+│     │     │              │  └─ [in]: list #7
 │     │     │              │     └─ item: string #5
 │     │     │              ├─ variant_4: struct #11
-│     │     │              │  └─ [notIn]: array #7
+│     │     │              │  └─ [notIn]: list #7
 │     │     │              │     └─ item: string #5
 │     │     │              ├─ variant_5: struct #14
 │     │     │              │  ├─ [contains]: string #5
@@ -211,15 +211,15 @@ root: struct '_Post_QueryInput' #146
 │     │              └─ [none]: optional '_122_PostWhere?' #122
 │     │                 └─ item: &PostWhere #117
 │     ├─ [AND]: optional '_131__130_QueryPostWhereInput[]?' #131
-│     │  └─ item: array '_130_QueryPostWhereInput[]' #130
+│     │  └─ item: list '_130_QueryPostWhereInput[]' #130
 │     │     └─ item: &QueryPostWhereInput #129
 │     ├─ [OR]: optional '_131__130_QueryPostWhereInput[]?' #131
-│     │  └─ item: array '_130_QueryPostWhereInput[]' #130
+│     │  └─ item: list '_130_QueryPostWhereInput[]' #130
 │     │     └─ item: &QueryPostWhereInput #129
 │     └─ [NOT]: optional '_132_QueryPostWhereInput?' #132
 │        └─ item: &QueryPostWhereInput #129
 ├─ [orderBy]: optional '_140__Post_OrderBy?' #140
-│  └─ item: array '_Post_OrderBy' #139
+│  └─ item: list '_Post_OrderBy' #139
 │     └─ item: struct #138
 │        ├─ [id]: optional '_Sort' #47
 │        │  └─ item: union #46
@@ -232,7 +232,7 @@ root: struct '_Post_QueryInput' #146
 │        │     │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
 │        │     └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
 │        └─ [author]: optional '_137__User_OrderBy_excluding___rel_Post_User_1?' #137
-│           └─ item: array '_User_OrderBy_excluding___rel_Post_User_1' #136
+│           └─ item: list '_User_OrderBy_excluding___rel_Post_User_1' #136
 │              └─ item: struct #135
 │                 ├─ [id]: optional '_Sort' #47
 │                 │  └─ item: union #46
@@ -249,6 +249,6 @@ root: struct '_Post_QueryInput' #146
 ├─ [skip]: optional '_142__Skip?' #142
 │  └─ item: integer '_Skip' #56
 └─ [distinct]: optional '_145__KeysOf_Post?' #145
-   └─ item: array '_KeysOf_Post' #144
+   └─ item: list '_KeysOf_Post' #144
       └─ item: string #143 enum{ '"id"', '"title"', '"author"' }
 

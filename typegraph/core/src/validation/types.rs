@@ -47,7 +47,7 @@ pub fn validate_value(value: serde_json::Value, type_id: TypeId, path: String) -
             Ok(())
         }
 
-        Type::Array(inner) => {
+        Type::List(inner) => {
             let Some(value) = value.as_array() else {
                 return Err(format!(
                     "expected array at {path:?}, got: {}",

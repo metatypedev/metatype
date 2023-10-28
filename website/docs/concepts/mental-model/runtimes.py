@@ -1,10 +1,12 @@
 # skip:start
-from typegraph import TypeGraph, t
-from typegraph.runtimes.http import HTTPRuntime
+from typegraph import typegraph, t, Graph
+from typegraph.runtimes import HttpRuntime
 
-with TypeGraph("runtimes") as g:
+
+@typegraph()
+def runtimes(g: Graph):
     # skip:end
-    http = HTTPRuntime("https://random.org/api")
+    http = HttpRuntime("https://random.org/api")
 
     # same func as above
     http.get(

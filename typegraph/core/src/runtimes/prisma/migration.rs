@@ -79,7 +79,7 @@ pub fn prisma_apply() -> Result<(TypeId, TypeId)> {
             .build()?,
         t::struct_()
             .propx("databaseReset", t::boolean())?
-            .propx("appliedMigrations", t::arrayx(t::string())?)?
+            .propx("appliedMigrations", t::listx(t::string())?)?
             .build()?,
     ))
 }
@@ -89,7 +89,7 @@ pub fn prisma_deploy() -> Result<(TypeId, TypeId)> {
         inp_base()?.propx("migrations", t::string())?.build()?,
         t::struct_()
             .propx("migrationCount", t::integer())?
-            .propx("appliedMigrations", t::arrayx(t::string())?)?
+            .propx("appliedMigrations", t::listx(t::string())?)?
             .build()?,
     ))
 }

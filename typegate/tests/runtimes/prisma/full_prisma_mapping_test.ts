@@ -78,22 +78,25 @@ Meta.test("prisma full mapping", async (t) => {
       .on(e);
   });
 
-  await t.should("work with apply syntax and find the first item", async () => {
-    await gql`
+  await t.should(
+    "work with reduce syntax and find the first item",
+    async () => {
+      await gql`
         query {
-          findFirstPostWithApply {
+          findFirstPostWithReduce {
             id
             title
           }
         }
     `.expectData({
-      findFirstPostWithApply: {
-        id: 10007,
-        title: "Some title",
-      },
-    })
-      .on(e);
-  });
+        findFirstPostWithReduce: {
+          id: 10007,
+          title: "Some title",
+        },
+      })
+        .on(e);
+    },
+  );
 
   await t.should("paginate correctly with findManyPosts", async () => {
     await gql`

@@ -2,7 +2,7 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(out)"
 ---
-root: array '_Post_GroupByResult' #266
+root: list '_Post_GroupByResult' #266
 └─ item: struct #265
    ├─ [id]: integer #114
    ├─ [title]: string #115

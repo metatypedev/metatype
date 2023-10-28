@@ -47,7 +47,7 @@
       "required": []
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "_7_Typegraph[]",
       "runtime": 1,
       "policies": [],
@@ -254,7 +254,7 @@
       "as_id": false
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "array_22",
       "runtime": 1,
       "policies": [],
@@ -297,7 +297,7 @@
       "as_id": false
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "array_26",
       "runtime": 1,
       "policies": [],
@@ -335,7 +335,7 @@
       "as_id": false
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "array_28",
       "runtime": 1,
       "policies": [],

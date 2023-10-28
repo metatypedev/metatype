@@ -307,7 +307,7 @@ impl<'a> Codegen<'a> {
         let tpe = &self.tg.types[idx as usize];
         match tpe {
             TypeNode::Optional { .. } => Ok("null".to_owned()),
-            TypeNode::Array { .. } => Ok("[]".to_owned()),
+            TypeNode::List { .. } => Ok("[]".to_owned()),
             TypeNode::Boolean { .. } => Ok("false".to_owned()),
             TypeNode::Float { .. } | TypeNode::Integer { .. } => Ok("0".to_owned()),
             TypeNode::String { .. } => Ok("\"\"".to_owned()),
@@ -422,9 +422,7 @@ impl<'a> Codegen<'a> {
             TypeNode::Optional { data, .. } => {
                 Ok(format!("null | {}", self.get_typespec(data.item)?))
             }
-            TypeNode::Array { data, .. } => {
-                Ok(format!("Array<{}>", self.get_typespec(data.items)?))
-            }
+            TypeNode::List { data, .. } => Ok(format!("Array<{}>", self.get_typespec(data.items)?)),
             TypeNode::Boolean { .. } => Ok("boolean".to_owned()),
             TypeNode::Float { .. } | TypeNode::Integer { .. } => Ok("number".to_owned()),
             TypeNode::String { base, .. } => {

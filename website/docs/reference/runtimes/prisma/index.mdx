@@ -99,7 +99,7 @@ g.expose(
     countUsers=db.raw_query(
         "SELECT COUNT(*) as total FROM User",
         t.struct({}),
-        t.array(t.struct({"total": t.integer()}))
+        t.list(t.struct({"total": t.integer()}))
     )
 )
 ```
@@ -134,7 +134,7 @@ Here is the list of all the available configs for model fields:
 
 Relationship fields must be defined on both sides of the relationship.
 A relationship is always defined for `t.struct` types and `t.optional` or
-`t.array` of `t.struct`.
+`t.list` of `t.struct`.
 
 Relationships can also be defined implicitly using the [`link`](#link) instance method
 of `PrismaRuntime`.
@@ -146,7 +146,7 @@ user = t.struct(
     {
         "id": t.uuid().config("id", "auto"),
         "email": t.email().config("unique"),
-        "posts": t.array(g("Post")),
+        "posts": t.list(g("Post")),
     }
 ).named("User")
 
@@ -183,8 +183,8 @@ A one-to-many relationship must be in one of these two variants.
 
 | Cardinality | Field type in Model1     | Field type in Model2   |
 | ----------- | ------------------------ | ---------------------- |
-| 1..1 ↔ 0..n | `g("Model2")`            | `t.array(g("Model1"))` |
-| 0..1 ↔ 0..n | `g("Model2").optional()` | `t.array(g("Model1"))` |
+| 1..1 ↔ 0..n | `g("Model2")`            | `t.list(g("Model1"))` |
+| 0..1 ↔ 0..n | `g("Model2").optional()` | `t.list(g("Model1"))` |
 
 ### Many-to-many relationships
 
@@ -204,7 +204,7 @@ user = t.struct(
     {
         "id": t.uuid().config("id", "auto"),
         "email": t.email().config("unique"),
-        "posts": runtime.link(t.array(g("Post")), "postAuthor"),
+        "posts": runtime.link(t.list(g("Post")), "postAuthor"),
     }
 ).named("User")
 
