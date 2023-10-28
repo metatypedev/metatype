@@ -211,3 +211,22 @@ Pre-commit hooks enforce some basic checks, namely that all commit messages
 follow the [conventional commit](https://www.conventionalcommits.org/en/v1.0.0/)
 format. This is a simple set of rules that makes review easier and help us to
 generate a changelog.
+
+#### Faster linking
+
+We recommend using [mold](https://github.com/rui314/mold) for Linux targets and
+macOS new parallel linker for faster linking. You can use them as aliases or
+configure them in your `.cargo/config.toml` file.
+
+```toml
+[target.aarch64-apple-darwin]
+rustflags = [
+    "-C", "link-arg=-fuse-ld=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld",
+    "-C", "link-arg=-ld_new" # makes sure the new parallel linker is used
+]
+
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+    "-C", "link-arg=-fuse-ld=mold"
+]
+```
