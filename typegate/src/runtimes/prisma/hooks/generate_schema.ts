@@ -122,6 +122,10 @@ class FieldBuilder {
           }
         }
 
+        if (prop.defaultValue != null) {
+          tags.push(`@default(${JSON.stringify(prop.defaultValue)})`);
+        }
+
         const field = new ModelField(prop.key, typeName + quant, tags);
         return field;
       }

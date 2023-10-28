@@ -90,6 +90,7 @@ pub struct ScalarProperty {
     pub injection: Option<ManagedInjection>,
     pub unique: bool,
     pub auto: bool,
+    pub default_value: Option<serde_json::Value>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
