@@ -1,19 +1,19 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::{ArrayTypeData, TypeNode};
+use common::typegraph::{ListTypeData, TypeNode};
 
 use crate::{
     conversion::types::{gen_base, TypeConversion},
     errors::Result,
     typegraph::TypegraphContext,
-    types::{Array, TypeData, TypeId},
-    wit::core::TypeArray,
+    types::{List, TypeData, TypeId},
+    wit::core::TypeList,
 };
 
-impl TypeConversion for Array {
+impl TypeConversion for List {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
-        Ok(TypeNode::Array {
+        Ok(TypeNode::List {
             base: gen_base(
                 self.base
                     .name
@@ -23,7 +23,7 @@ impl TypeConversion for Array {
                 runtime_id.unwrap(),
             )
             .build(),
-            data: ArrayTypeData {
+            data: ListTypeData {
                 items: ctx
                     .register_type(TypeId(self.data.of).resolve_proxy()?, runtime_id)?
                     .into(),
@@ -35,7 +35,7 @@ impl TypeConversion for Array {
     }
 }
 
-impl TypeData for TypeArray {
+impl TypeData for TypeList {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         params.push(format!("items={}", self.of));
         if let Some(min) = self.min {
@@ -50,8 +50,8 @@ impl TypeData for TypeArray {
     }
 
     fn variant_name(&self) -> String {
-        "array".to_string()
+        "list".to_string()
     }
 
-    super::impl_into_type!(concrete, Array);
+    super::impl_into_type!(concrete, List);
 }

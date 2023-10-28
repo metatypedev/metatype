@@ -85,7 +85,7 @@ def typegate(g: Graph):
     g.expose(
         typegraphs=t.func(
             t.struct({}),
-            t.array(typegraph),
+            t.list(typegraph),
             list_typegraphs_mat,
             rate_calls=True,
         ),
@@ -102,7 +102,7 @@ def typegate(g: Graph):
             t.struct(
                 {
                     "name": t.string(),
-                    "messages": t.array(
+                    "messages": t.list(
                         t.struct(
                             {
                                 "type": t.enum(["info", "warning", "error"]),
@@ -110,7 +110,7 @@ def typegate(g: Graph):
                             }
                         )
                     ),
-                    "migrations": t.array(
+                    "migrations": t.list(
                         t.struct(
                             {
                                 "runtime": t.string(),
@@ -118,7 +118,7 @@ def typegate(g: Graph):
                             }
                         )
                     ),
-                    "resetRequired": t.array(t.string()),
+                    "resetRequired": t.list(t.string()),
                 }
             ),
             add_typegraph_mat,

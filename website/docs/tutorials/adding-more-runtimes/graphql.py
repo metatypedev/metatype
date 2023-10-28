@@ -49,5 +49,5 @@ def graphql(g: Graph):
         create_message=db.create(message),
         messages=db.find_many(message),
         # highlight-next-line
-        users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
+        users=gql.query(t.struct({}), t.struct({"data": t.list(user)})),
     )

@@ -190,7 +190,7 @@ impl PrismaOperation for FindMany {
     }
 
     fn generate_output_type(&self, context: &PrismaContext, model_id: TypeId) -> Result<TypeId> {
-        t::array(context.generate(&WithNestedCount::new(model_id))?).build()
+        t::list(context.generate(&WithNestedCount::new(model_id))?).build()
     }
 }
 
@@ -267,7 +267,7 @@ impl PrismaOperation for CreateMany {
         t::struct_()
             .propx(
                 "data",
-                t::array(context.generate(&InputType::for_create(model_id))?),
+                t::list(context.generate(&InputType::for_create(model_id))?),
             )?
             .build()
     }

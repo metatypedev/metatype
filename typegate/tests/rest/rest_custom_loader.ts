@@ -18,7 +18,7 @@ const complexType = t.struct({
   a: t.integer(),
   b: t.struct({ c: t.integer() }),
   d: t.email(),
-  e: t.array(t.either([t.string(), t.integer()])).optional(),
+  e: t.list(t.either([t.string(), t.integer()])).optional(),
   f: t.float({ enumeration: [1.0, 2.5] }),
 }, { name: "ComplexType" });
 

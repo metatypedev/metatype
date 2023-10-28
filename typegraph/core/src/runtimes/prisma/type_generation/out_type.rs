@@ -56,7 +56,7 @@ impl TypeGen for OutType {
                     let out_type = match prop.quantifier {
                         Cardinality::Optional => t::optional(out_type).build()?,
                         Cardinality::One => out_type,
-                        Cardinality::Many => t::array(out_type).build()?,
+                        Cardinality::Many => t::list(out_type).build()?,
                     };
 
                     builder.prop(key, out_type);

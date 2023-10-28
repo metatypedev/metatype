@@ -11,7 +11,7 @@ def prisma_opt_1(g: Graph):
     user = t.struct(
         {
             "id": t.integer(as_id=True),
-            "profile": db.link(t.ref("Profile").optional(), "userProfile"),
+            "profile": db.link(g.ref("Profile").optional(), "userProfile"),
         },
         name="User",
     )
@@ -19,7 +19,7 @@ def prisma_opt_1(g: Graph):
     profile = t.struct(
         {
             "id": t.integer(as_id=True),
-            "user": db.link(t.ref("User").optional(), "userProfile", fkey=True),
+            "user": db.link(g.ref("User").optional(), "userProfile", fkey=True),
         },
         name="Profile",
     )

@@ -57,7 +57,7 @@ def homepage(g: Graph):
         stargazers=github.get(
             "/repos/metatypedev/metatype/stargazers?per_page=2",
             t.struct({}),
-            t.array(stargazer),
+            t.list(stargazer),
         ),
         # automatically generate crud operations
         send_feedback=db.create(feedback),

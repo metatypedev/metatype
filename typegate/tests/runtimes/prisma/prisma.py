@@ -33,7 +33,7 @@ def prisma(g: Graph):
             "id": t.integer(as_id=True, config={"auto": True}),
             "email": t.string(),
             "name": t.string(),
-            "messages": db.link(t.array(t.ref("messages")), "messageSender"),
+            "messages": db.link(t.list(g.ref("messages")), "messageSender"),
         },
         name="users",
     )

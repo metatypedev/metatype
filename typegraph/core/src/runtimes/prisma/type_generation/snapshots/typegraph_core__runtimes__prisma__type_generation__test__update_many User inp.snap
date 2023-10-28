@@ -48,10 +48,10 @@ root: struct #143
 │        │     │        │  │  └─ [gte]: optional #37
 │        │     │        │  │     └─ item: integer #36
 │        │     │        │  ├─ variant_4: struct #42
-│        │     │        │  │  └─ [in]: array #38
+│        │     │        │  │  └─ [in]: list #38
 │        │     │        │  │     └─ item: integer #36
 │        │     │        │  └─ variant_5: struct #43
-│        │     │        │     └─ [notIn]: array #38
+│        │     │        │     └─ [notIn]: list #38
 │        │     │        │        └─ item: integer #36
 │        │     │        └─ variant_1: struct #45
 │        │     │           └─ [not]: either '_integer_filter' #44
@@ -70,10 +70,10 @@ root: struct #143
 │        │     │              │  └─ [gte]: optional #37
 │        │     │              │     └─ item: integer #36
 │        │     │              ├─ variant_4: struct #42
-│        │     │              │  └─ [in]: array #38
+│        │     │              │  └─ [in]: list #38
 │        │     │              │     └─ item: integer #36
 │        │     │              └─ variant_5: struct #43
-│        │     │                 └─ [notIn]: array #38
+│        │     │                 └─ [notIn]: list #38
 │        │     │                    └─ item: integer #36
 │        │     ├─ [title]: optional '_78__string_filter_c?' #78
 │        │     │  └─ item: optional '_string_filter_c' #33
@@ -85,10 +85,10 @@ root: struct #143
 │        │     │        │  ├─ variant_2: struct #22
 │        │     │        │  │  └─ [not]: string #18
 │        │     │        │  ├─ variant_3: struct #23
-│        │     │        │  │  └─ [in]: array #20
+│        │     │        │  │  └─ [in]: list #20
 │        │     │        │  │     └─ item: string #18
 │        │     │        │  ├─ variant_4: struct #24
-│        │     │        │  │  └─ [notIn]: array #20
+│        │     │        │  │  └─ [notIn]: list #20
 │        │     │        │  │     └─ item: string #18
 │        │     │        │  ├─ variant_5: struct #27
 │        │     │        │  │  ├─ [contains]: string #18
@@ -109,10 +109,10 @@ root: struct #143
 │        │     │              ├─ variant_2: struct #22
 │        │     │              │  └─ [not]: string #18
 │        │     │              ├─ variant_3: struct #23
-│        │     │              │  └─ [in]: array #20
+│        │     │              │  └─ [in]: list #20
 │        │     │              │     └─ item: string #18
 │        │     │              ├─ variant_4: struct #24
-│        │     │              │  └─ [notIn]: array #20
+│        │     │              │  └─ [notIn]: list #20
 │        │     │              │     └─ item: string #18
 │        │     │              ├─ variant_5: struct #27
 │        │     │              │  ├─ [contains]: string #18
@@ -146,10 +146,10 @@ root: struct #143
 │        │           │        │  │  └─ [gte]: optional #37
 │        │           │        │  │     └─ item: integer #36
 │        │           │        │  ├─ variant_4: struct #42
-│        │           │        │  │  └─ [in]: array #38
+│        │           │        │  │  └─ [in]: list #38
 │        │           │        │  │     └─ item: integer #36
 │        │           │        │  └─ variant_5: struct #43
-│        │           │        │     └─ [notIn]: array #38
+│        │           │        │     └─ [notIn]: list #38
 │        │           │        │        └─ item: integer #36
 │        │           │        └─ variant_1: struct #45
 │        │           │           └─ [not]: either '_integer_filter' #44
@@ -168,10 +168,10 @@ root: struct #143
 │        │           │              │  └─ [gte]: optional #37
 │        │           │              │     └─ item: integer #36
 │        │           │              ├─ variant_4: struct #42
-│        │           │              │  └─ [in]: array #38
+│        │           │              │  └─ [in]: list #38
 │        │           │              │     └─ item: integer #36
 │        │           │              └─ variant_5: struct #43
-│        │           │                 └─ [notIn]: array #38
+│        │           │                 └─ [notIn]: list #38
 │        │           │                    └─ item: integer #36
 │        │           ├─ [name]: optional '_80__string_filter_c?' #80
 │        │           │  └─ item: optional '_string_filter_c' #33
@@ -183,10 +183,10 @@ root: struct #143
 │        │           │        │  ├─ variant_2: struct #22
 │        │           │        │  │  └─ [not]: string #18
 │        │           │        │  ├─ variant_3: struct #23
-│        │           │        │  │  └─ [in]: array #20
+│        │           │        │  │  └─ [in]: list #20
 │        │           │        │  │     └─ item: string #18
 │        │           │        │  ├─ variant_4: struct #24
-│        │           │        │  │  └─ [notIn]: array #20
+│        │           │        │  │  └─ [notIn]: list #20
 │        │           │        │  │     └─ item: string #18
 │        │           │        │  ├─ variant_5: struct #27
 │        │           │        │  │  ├─ [contains]: string #18
@@ -207,10 +207,10 @@ root: struct #143
 │        │           │              ├─ variant_2: struct #22
 │        │           │              │  └─ [not]: string #18
 │        │           │              ├─ variant_3: struct #23
-│        │           │              │  └─ [in]: array #20
+│        │           │              │  └─ [in]: list #20
 │        │           │              │     └─ item: string #18
 │        │           │              ├─ variant_4: struct #24
-│        │           │              │  └─ [notIn]: array #20
+│        │           │              │  └─ [notIn]: list #20
 │        │           │              │     └─ item: string #18
 │        │           │              ├─ variant_5: struct #27
 │        │           │              │  ├─ [contains]: string #18
@@ -260,10 +260,10 @@ root: struct #143
 │        │        │        │  │  └─ [gte]: optional #37
 │        │        │        │  │     └─ item: integer #36
 │        │        │        │  ├─ variant_4: struct #42
-│        │        │        │  │  └─ [in]: array #38
+│        │        │        │  │  └─ [in]: list #38
 │        │        │        │  │     └─ item: integer #36
 │        │        │        │  └─ variant_5: struct #43
-│        │        │        │     └─ [notIn]: array #38
+│        │        │        │     └─ [notIn]: list #38
 │        │        │        │        └─ item: integer #36
 │        │        │        └─ variant_1: struct #45
 │        │        │           └─ [not]: either '_integer_filter' #44
@@ -282,10 +282,10 @@ root: struct #143
 │        │        │              │  └─ [gte]: optional #37
 │        │        │              │     └─ item: integer #36
 │        │        │              ├─ variant_4: struct #42
-│        │        │              │  └─ [in]: array #38
+│        │        │              │  └─ [in]: list #38
 │        │        │              │     └─ item: integer #36
 │        │        │              └─ variant_5: struct #43
-│        │        │                 └─ [notIn]: array #38
+│        │        │                 └─ [notIn]: list #38
 │        │        │                    └─ item: integer #36
 │        │        ├─ [title]: optional '_78__string_filter_c?' #78
 │        │        │  └─ item: optional '_string_filter_c' #33
@@ -297,10 +297,10 @@ root: struct #143
 │        │        │        │  ├─ variant_2: struct #22
 │        │        │        │  │  └─ [not]: string #18
 │        │        │        │  ├─ variant_3: struct #23
-│        │        │        │  │  └─ [in]: array #20
+│        │        │        │  │  └─ [in]: list #20
 │        │        │        │  │     └─ item: string #18
 │        │        │        │  ├─ variant_4: struct #24
-│        │        │        │  │  └─ [notIn]: array #20
+│        │        │        │  │  └─ [notIn]: list #20
 │        │        │        │  │     └─ item: string #18
 │        │        │        │  ├─ variant_5: struct #27
 │        │        │        │  │  ├─ [contains]: string #18
@@ -321,10 +321,10 @@ root: struct #143
 │        │        │              ├─ variant_2: struct #22
 │        │        │              │  └─ [not]: string #18
 │        │        │              ├─ variant_3: struct #23
-│        │        │              │  └─ [in]: array #20
+│        │        │              │  └─ [in]: list #20
 │        │        │              │     └─ item: string #18
 │        │        │              ├─ variant_4: struct #24
-│        │        │              │  └─ [notIn]: array #20
+│        │        │              │  └─ [notIn]: list #20
 │        │        │              │     └─ item: string #18
 │        │        │              ├─ variant_5: struct #27
 │        │        │              │  ├─ [contains]: string #18
@@ -358,10 +358,10 @@ root: struct #143
 │        │              │        │  │  └─ [gte]: optional #37
 │        │              │        │  │     └─ item: integer #36
 │        │              │        │  ├─ variant_4: struct #42
-│        │              │        │  │  └─ [in]: array #38
+│        │              │        │  │  └─ [in]: list #38
 │        │              │        │  │     └─ item: integer #36
 │        │              │        │  └─ variant_5: struct #43
-│        │              │        │     └─ [notIn]: array #38
+│        │              │        │     └─ [notIn]: list #38
 │        │              │        │        └─ item: integer #36
 │        │              │        └─ variant_1: struct #45
 │        │              │           └─ [not]: either '_integer_filter' #44
@@ -380,10 +380,10 @@ root: struct #143
 │        │              │              │  └─ [gte]: optional #37
 │        │              │              │     └─ item: integer #36
 │        │              │              ├─ variant_4: struct #42
-│        │              │              │  └─ [in]: array #38
+│        │              │              │  └─ [in]: list #38
 │        │              │              │     └─ item: integer #36
 │        │              │              └─ variant_5: struct #43
-│        │              │                 └─ [notIn]: array #38
+│        │              │                 └─ [notIn]: list #38
 │        │              │                    └─ item: integer #36
 │        │              ├─ [name]: optional '_80__string_filter_c?' #80
 │        │              │  └─ item: optional '_string_filter_c' #33
@@ -395,10 +395,10 @@ root: struct #143
 │        │              │        │  ├─ variant_2: struct #22
 │        │              │        │  │  └─ [not]: string #18
 │        │              │        │  ├─ variant_3: struct #23
-│        │              │        │  │  └─ [in]: array #20
+│        │              │        │  │  └─ [in]: list #20
 │        │              │        │  │     └─ item: string #18
 │        │              │        │  ├─ variant_4: struct #24
-│        │              │        │  │  └─ [notIn]: array #20
+│        │              │        │  │  └─ [notIn]: list #20
 │        │              │        │  │     └─ item: string #18
 │        │              │        │  ├─ variant_5: struct #27
 │        │              │        │  │  ├─ [contains]: string #18
@@ -419,10 +419,10 @@ root: struct #143
 │        │              │              ├─ variant_2: struct #22
 │        │              │              │  └─ [not]: string #18
 │        │              │              ├─ variant_3: struct #23
-│        │              │              │  └─ [in]: array #20
+│        │              │              │  └─ [in]: list #20
 │        │              │              │     └─ item: string #18
 │        │              │              ├─ variant_4: struct #24
-│        │              │              │  └─ [notIn]: array #20
+│        │              │              │  └─ [notIn]: list #20
 │        │              │              │     └─ item: string #18
 │        │              │              ├─ variant_5: struct #27
 │        │              │              │  ├─ [contains]: string #18
@@ -487,10 +487,10 @@ root: struct #143
 │        │     │     │        │  │  └─ [gte]: optional #37
 │        │     │     │        │  │     └─ item: integer #36
 │        │     │     │        │  ├─ variant_4: struct #42
-│        │     │     │        │  │  └─ [in]: array #38
+│        │     │     │        │  │  └─ [in]: list #38
 │        │     │     │        │  │     └─ item: integer #36
 │        │     │     │        │  └─ variant_5: struct #43
-│        │     │     │        │     └─ [notIn]: array #38
+│        │     │     │        │     └─ [notIn]: list #38
 │        │     │     │        │        └─ item: integer #36
 │        │     │     │        └─ variant_1: struct #45
 │        │     │     │           └─ [not]: either '_integer_filter' #44
@@ -509,10 +509,10 @@ root: struct #143
 │        │     │     │              │  └─ [gte]: optional #37
 │        │     │     │              │     └─ item: integer #36
 │        │     │     │              ├─ variant_4: struct #42
-│        │     │     │              │  └─ [in]: array #38
+│        │     │     │              │  └─ [in]: list #38
 │        │     │     │              │     └─ item: integer #36
 │        │     │     │              └─ variant_5: struct #43
-│        │     │     │                 └─ [notIn]: array #38
+│        │     │     │                 └─ [notIn]: list #38
 │        │     │     │                    └─ item: integer #36
 │        │     │     ├─ [title]: optional '_78__string_filter_c?' #78
 │        │     │     │  └─ item: optional '_string_filter_c' #33
@@ -524,10 +524,10 @@ root: struct #143
 │        │     │     │        │  ├─ variant_2: struct #22
 │        │     │     │        │  │  └─ [not]: string #18
 │        │     │     │        │  ├─ variant_3: struct #23
-│        │     │     │        │  │  └─ [in]: array #20
+│        │     │     │        │  │  └─ [in]: list #20
 │        │     │     │        │  │     └─ item: string #18
 │        │     │     │        │  ├─ variant_4: struct #24
-│        │     │     │        │  │  └─ [notIn]: array #20
+│        │     │     │        │  │  └─ [notIn]: list #20
 │        │     │     │        │  │     └─ item: string #18
 │        │     │     │        │  ├─ variant_5: struct #27
 │        │     │     │        │  │  ├─ [contains]: string #18
@@ -548,10 +548,10 @@ root: struct #143
 │        │     │     │              ├─ variant_2: struct #22
 │        │     │     │              │  └─ [not]: string #18
 │        │     │     │              ├─ variant_3: struct #23
-│        │     │     │              │  └─ [in]: array #20
+│        │     │     │              │  └─ [in]: list #20
 │        │     │     │              │     └─ item: string #18
 │        │     │     │              ├─ variant_4: struct #24
-│        │     │     │              │  └─ [notIn]: array #20
+│        │     │     │              │  └─ [notIn]: list #20
 │        │     │     │              │     └─ item: string #18
 │        │     │     │              ├─ variant_5: struct #27
 │        │     │     │              │  ├─ [contains]: string #18
@@ -585,10 +585,10 @@ root: struct #143
 │        │     │           │        │  │  └─ [gte]: optional #37
 │        │     │           │        │  │     └─ item: integer #36
 │        │     │           │        │  ├─ variant_4: struct #42
-│        │     │           │        │  │  └─ [in]: array #38
+│        │     │           │        │  │  └─ [in]: list #38
 │        │     │           │        │  │     └─ item: integer #36
 │        │     │           │        │  └─ variant_5: struct #43
-│        │     │           │        │     └─ [notIn]: array #38
+│        │     │           │        │     └─ [notIn]: list #38
 │        │     │           │        │        └─ item: integer #36
 │        │     │           │        └─ variant_1: struct #45
 │        │     │           │           └─ [not]: either '_integer_filter' #44
@@ -607,10 +607,10 @@ root: struct #143
 │        │     │           │              │  └─ [gte]: optional #37
 │        │     │           │              │     └─ item: integer #36
 │        │     │           │              ├─ variant_4: struct #42
-│        │     │           │              │  └─ [in]: array #38
+│        │     │           │              │  └─ [in]: list #38
 │        │     │           │              │     └─ item: integer #36
 │        │     │           │              └─ variant_5: struct #43
-│        │     │           │                 └─ [notIn]: array #38
+│        │     │           │                 └─ [notIn]: list #38
 │        │     │           │                    └─ item: integer #36
 │        │     │           ├─ [name]: optional '_80__string_filter_c?' #80
 │        │     │           │  └─ item: optional '_string_filter_c' #33
@@ -622,10 +622,10 @@ root: struct #143
 │        │     │           │        │  ├─ variant_2: struct #22
 │        │     │           │        │  │  └─ [not]: string #18
 │        │     │           │        │  ├─ variant_3: struct #23
-│        │     │           │        │  │  └─ [in]: array #20
+│        │     │           │        │  │  └─ [in]: list #20
 │        │     │           │        │  │     └─ item: string #18
 │        │     │           │        │  ├─ variant_4: struct #24
-│        │     │           │        │  │  └─ [notIn]: array #20
+│        │     │           │        │  │  └─ [notIn]: list #20
 │        │     │           │        │  │     └─ item: string #18
 │        │     │           │        │  ├─ variant_5: struct #27
 │        │     │           │        │  │  ├─ [contains]: string #18
@@ -646,10 +646,10 @@ root: struct #143
 │        │     │           │              ├─ variant_2: struct #22
 │        │     │           │              │  └─ [not]: string #18
 │        │     │           │              ├─ variant_3: struct #23
-│        │     │           │              │  └─ [in]: array #20
+│        │     │           │              │  └─ [in]: list #20
 │        │     │           │              │     └─ item: string #18
 │        │     │           │              ├─ variant_4: struct #24
-│        │     │           │              │  └─ [notIn]: array #20
+│        │     │           │              │  └─ [notIn]: list #20
 │        │     │           │              │     └─ item: string #18
 │        │     │           │              ├─ variant_5: struct #27
 │        │     │           │              │  ├─ [contains]: string #18
@@ -713,10 +713,10 @@ root: struct #143
 │        │           │        │  │  └─ [gte]: optional #37
 │        │           │        │  │     └─ item: integer #36
 │        │           │        │  ├─ variant_4: struct #42
-│        │           │        │  │  └─ [in]: array #38
+│        │           │        │  │  └─ [in]: list #38
 │        │           │        │  │     └─ item: integer #36
 │        │           │        │  └─ variant_5: struct #43
-│        │           │        │     └─ [notIn]: array #38
+│        │           │        │     └─ [notIn]: list #38
 │        │           │        │        └─ item: integer #36
 │        │           │        └─ variant_1: struct #45
 │        │           │           └─ [not]: either '_integer_filter' #44
@@ -735,10 +735,10 @@ root: struct #143
 │        │           │              │  └─ [gte]: optional #37
 │        │           │              │     └─ item: integer #36
 │        │           │              ├─ variant_4: struct #42
-│        │           │              │  └─ [in]: array #38
+│        │           │              │  └─ [in]: list #38
 │        │           │              │     └─ item: integer #36
 │        │           │              └─ variant_5: struct #43
-│        │           │                 └─ [notIn]: array #38
+│        │           │                 └─ [notIn]: list #38
 │        │           │                    └─ item: integer #36
 │        │           ├─ [title]: optional '_78__string_filter_c?' #78
 │        │           │  └─ item: optional '_string_filter_c' #33
@@ -750,10 +750,10 @@ root: struct #143
 │        │           │        │  ├─ variant_2: struct #22
 │        │           │        │  │  └─ [not]: string #18
 │        │           │        │  ├─ variant_3: struct #23
-│        │           │        │  │  └─ [in]: array #20
+│        │           │        │  │  └─ [in]: list #20
 │        │           │        │  │     └─ item: string #18
 │        │           │        │  ├─ variant_4: struct #24
-│        │           │        │  │  └─ [notIn]: array #20
+│        │           │        │  │  └─ [notIn]: list #20
 │        │           │        │  │     └─ item: string #18
 │        │           │        │  ├─ variant_5: struct #27
 │        │           │        │  │  ├─ [contains]: string #18
@@ -774,10 +774,10 @@ root: struct #143
 │        │           │              ├─ variant_2: struct #22
 │        │           │              │  └─ [not]: string #18
 │        │           │              ├─ variant_3: struct #23
-│        │           │              │  └─ [in]: array #20
+│        │           │              │  └─ [in]: list #20
 │        │           │              │     └─ item: string #18
 │        │           │              ├─ variant_4: struct #24
-│        │           │              │  └─ [notIn]: array #20
+│        │           │              │  └─ [notIn]: list #20
 │        │           │              │     └─ item: string #18
 │        │           │              ├─ variant_5: struct #27
 │        │           │              │  ├─ [contains]: string #18
@@ -811,10 +811,10 @@ root: struct #143
 │        │                 │        │  │  └─ [gte]: optional #37
 │        │                 │        │  │     └─ item: integer #36
 │        │                 │        │  ├─ variant_4: struct #42
-│        │                 │        │  │  └─ [in]: array #38
+│        │                 │        │  │  └─ [in]: list #38
 │        │                 │        │  │     └─ item: integer #36
 │        │                 │        │  └─ variant_5: struct #43
-│        │                 │        │     └─ [notIn]: array #38
+│        │                 │        │     └─ [notIn]: list #38
 │        │                 │        │        └─ item: integer #36
 │        │                 │        └─ variant_1: struct #45
 │        │                 │           └─ [not]: either '_integer_filter' #44
@@ -833,10 +833,10 @@ root: struct #143
 │        │                 │              │  └─ [gte]: optional #37
 │        │                 │              │     └─ item: integer #36
 │        │                 │              ├─ variant_4: struct #42
-│        │                 │              │  └─ [in]: array #38
+│        │                 │              │  └─ [in]: list #38
 │        │                 │              │     └─ item: integer #36
 │        │                 │              └─ variant_5: struct #43
-│        │                 │                 └─ [notIn]: array #38
+│        │                 │                 └─ [notIn]: list #38
 │        │                 │                    └─ item: integer #36
 │        │                 ├─ [name]: optional '_80__string_filter_c?' #80
 │        │                 │  └─ item: optional '_string_filter_c' #33
@@ -848,10 +848,10 @@ root: struct #143
 │        │                 │        │  ├─ variant_2: struct #22
 │        │                 │        │  │  └─ [not]: string #18
 │        │                 │        │  ├─ variant_3: struct #23
-│        │                 │        │  │  └─ [in]: array #20
+│        │                 │        │  │  └─ [in]: list #20
 │        │                 │        │  │     └─ item: string #18
 │        │                 │        │  ├─ variant_4: struct #24
-│        │                 │        │  │  └─ [notIn]: array #20
+│        │                 │        │  │  └─ [notIn]: list #20
 │        │                 │        │  │     └─ item: string #18
 │        │                 │        │  ├─ variant_5: struct #27
 │        │                 │        │  │  ├─ [contains]: string #18
@@ -872,10 +872,10 @@ root: struct #143
 │        │                 │              ├─ variant_2: struct #22
 │        │                 │              │  └─ [not]: string #18
 │        │                 │              ├─ variant_3: struct #23
-│        │                 │              │  └─ [in]: array #20
+│        │                 │              │  └─ [in]: list #20
 │        │                 │              │     └─ item: string #18
 │        │                 │              ├─ variant_4: struct #24
-│        │                 │              │  └─ [notIn]: array #20
+│        │                 │              │  └─ [notIn]: list #20
 │        │                 │              │     └─ item: string #18
 │        │                 │              ├─ variant_5: struct #27
 │        │                 │              │  ├─ [contains]: string #18
@@ -902,7 +902,7 @@ root: struct #143
 │        └─ variant_6: struct #117
 │           └─ [createMany]: optional #116
 │              └─ item: struct #115
-│                 └─ [data]: array '_114__Post_CreateInput_excluding___rel_Post_User_1[]' #114
+│                 └─ [data]: list '_114__Post_CreateInput_excluding___rel_Post_User_1[]' #114
 │                    └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #76
 │                       ├─ [id]: optional #75
 │                       │  └─ item: integer #62
@@ -928,10 +928,10 @@ root: struct #143
       │        │  │  └─ [gte]: optional #37
       │        │  │     └─ item: integer #36
       │        │  ├─ variant_4: struct #42
-      │        │  │  └─ [in]: array #38
+      │        │  │  └─ [in]: list #38
       │        │  │     └─ item: integer #36
       │        │  └─ variant_5: struct #43
-      │        │     └─ [notIn]: array #38
+      │        │     └─ [notIn]: list #38
       │        │        └─ item: integer #36
       │        └─ variant_1: struct #45
       │           └─ [not]: either '_integer_filter' #44
@@ -950,10 +950,10 @@ root: struct #143
       │              │  └─ [gte]: optional #37
       │              │     └─ item: integer #36
       │              ├─ variant_4: struct #42
-      │              │  └─ [in]: array #38
+      │              │  └─ [in]: list #38
       │              │     └─ item: integer #36
       │              └─ variant_5: struct #43
-      │                 └─ [notIn]: array #38
+      │                 └─ [notIn]: list #38
       │                    └─ item: integer #36
       ├─ [name]: optional '_122__string_filter_c?' #122
       │  └─ item: optional '_string_filter_c' #33
@@ -965,10 +965,10 @@ root: struct #143
       │        │  ├─ variant_2: struct #22
       │        │  │  └─ [not]: string #18
       │        │  ├─ variant_3: struct #23
-      │        │  │  └─ [in]: array #20
+      │        │  │  └─ [in]: list #20
       │        │  │     └─ item: string #18
       │        │  ├─ variant_4: struct #24
-      │        │  │  └─ [notIn]: array #20
+      │        │  │  └─ [notIn]: list #20
       │        │  │     └─ item: string #18
       │        │  ├─ variant_5: struct #27
       │        │  │  ├─ [contains]: string #18
@@ -989,10 +989,10 @@ root: struct #143
       │              ├─ variant_2: struct #22
       │              │  └─ [not]: string #18
       │              ├─ variant_3: struct #23
-      │              │  └─ [in]: array #20
+      │              │  └─ [in]: list #20
       │              │     └─ item: string #18
       │              ├─ variant_4: struct #24
-      │              │  └─ [notIn]: array #20
+      │              │  └─ [notIn]: list #20
       │              │     └─ item: string #18
       │              ├─ variant_5: struct #27
       │              │  ├─ [contains]: string #18
@@ -1029,10 +1029,10 @@ root: struct #143
       │     │        │        │  │  └─ [gte]: optional #37
       │     │        │        │  │     └─ item: integer #36
       │     │        │        │  ├─ variant_4: struct #42
-      │     │        │        │  │  └─ [in]: array #38
+      │     │        │        │  │  └─ [in]: list #38
       │     │        │        │  │     └─ item: integer #36
       │     │        │        │  └─ variant_5: struct #43
-      │     │        │        │     └─ [notIn]: array #38
+      │     │        │        │     └─ [notIn]: list #38
       │     │        │        │        └─ item: integer #36
       │     │        │        └─ variant_1: struct #45
       │     │        │           └─ [not]: either '_integer_filter' #44
@@ -1051,10 +1051,10 @@ root: struct #143
       │     │        │              │  └─ [gte]: optional #37
       │     │        │              │     └─ item: integer #36
       │     │        │              ├─ variant_4: struct #42
-      │     │        │              │  └─ [in]: array #38
+      │     │        │              │  └─ [in]: list #38
       │     │        │              │     └─ item: integer #36
       │     │        │              └─ variant_5: struct #43
-      │     │        │                 └─ [notIn]: array #38
+      │     │        │                 └─ [notIn]: list #38
       │     │        │                    └─ item: integer #36
       │     │        ├─ [title]: optional '_124__string_filter_c?' #124
       │     │        │  └─ item: optional '_string_filter_c' #33
@@ -1066,10 +1066,10 @@ root: struct #143
       │     │        │        │  ├─ variant_2: struct #22
       │     │        │        │  │  └─ [not]: string #18
       │     │        │        │  ├─ variant_3: struct #23
-      │     │        │        │  │  └─ [in]: array #20
+      │     │        │        │  │  └─ [in]: list #20
       │     │        │        │  │     └─ item: string #18
       │     │        │        │  ├─ variant_4: struct #24
-      │     │        │        │  │  └─ [notIn]: array #20
+      │     │        │        │  │  └─ [notIn]: list #20
       │     │        │        │  │     └─ item: string #18
       │     │        │        │  ├─ variant_5: struct #27
       │     │        │        │  │  ├─ [contains]: string #18
@@ -1090,10 +1090,10 @@ root: struct #143
       │     │        │              ├─ variant_2: struct #22
       │     │        │              │  └─ [not]: string #18
       │     │        │              ├─ variant_3: struct #23
-      │     │        │              │  └─ [in]: array #20
+      │     │        │              │  └─ [in]: list #20
       │     │        │              │     └─ item: string #18
       │     │        │              ├─ variant_4: struct #24
-      │     │        │              │  └─ [notIn]: array #20
+      │     │        │              │  └─ [notIn]: list #20
       │     │        │              │     └─ item: string #18
       │     │        │              ├─ variant_5: struct #27
       │     │        │              │  ├─ [contains]: string #18
@@ -1130,10 +1130,10 @@ root: struct #143
       │     │        │        │  │  └─ [gte]: optional #37
       │     │        │        │  │     └─ item: integer #36
       │     │        │        │  ├─ variant_4: struct #42
-      │     │        │        │  │  └─ [in]: array #38
+      │     │        │        │  │  └─ [in]: list #38
       │     │        │        │  │     └─ item: integer #36
       │     │        │        │  └─ variant_5: struct #43
-      │     │        │        │     └─ [notIn]: array #38
+      │     │        │        │     └─ [notIn]: list #38
       │     │        │        │        └─ item: integer #36
       │     │        │        └─ variant_1: struct #45
       │     │        │           └─ [not]: either '_integer_filter' #44
@@ -1152,10 +1152,10 @@ root: struct #143
       │     │        │              │  └─ [gte]: optional #37
       │     │        │              │     └─ item: integer #36
       │     │        │              ├─ variant_4: struct #42
-      │     │        │              │  └─ [in]: array #38
+      │     │        │              │  └─ [in]: list #38
       │     │        │              │     └─ item: integer #36
       │     │        │              └─ variant_5: struct #43
-      │     │        │                 └─ [notIn]: array #38
+      │     │        │                 └─ [notIn]: list #38
       │     │        │                    └─ item: integer #36
       │     │        ├─ [title]: optional '_124__string_filter_c?' #124
       │     │        │  └─ item: optional '_string_filter_c' #33
@@ -1167,10 +1167,10 @@ root: struct #143
       │     │        │        │  ├─ variant_2: struct #22
       │     │        │        │  │  └─ [not]: string #18
       │     │        │        │  ├─ variant_3: struct #23
-      │     │        │        │  │  └─ [in]: array #20
+      │     │        │        │  │  └─ [in]: list #20
       │     │        │        │  │     └─ item: string #18
       │     │        │        │  ├─ variant_4: struct #24
-      │     │        │        │  │  └─ [notIn]: array #20
+      │     │        │        │  │  └─ [notIn]: list #20
       │     │        │        │  │     └─ item: string #18
       │     │        │        │  ├─ variant_5: struct #27
       │     │        │        │  │  ├─ [contains]: string #18
@@ -1191,10 +1191,10 @@ root: struct #143
       │     │        │              ├─ variant_2: struct #22
       │     │        │              │  └─ [not]: string #18
       │     │        │              ├─ variant_3: struct #23
-      │     │        │              │  └─ [in]: array #20
+      │     │        │              │  └─ [in]: list #20
       │     │        │              │     └─ item: string #18
       │     │        │              ├─ variant_4: struct #24
-      │     │        │              │  └─ [notIn]: array #20
+      │     │        │              │  └─ [notIn]: list #20
       │     │        │              │     └─ item: string #18
       │     │        │              ├─ variant_5: struct #27
       │     │        │              │  ├─ [contains]: string #18
@@ -1231,10 +1231,10 @@ root: struct #143
       │              │        │  │  └─ [gte]: optional #37
       │              │        │  │     └─ item: integer #36
       │              │        │  ├─ variant_4: struct #42
-      │              │        │  │  └─ [in]: array #38
+      │              │        │  │  └─ [in]: list #38
       │              │        │  │     └─ item: integer #36
       │              │        │  └─ variant_5: struct #43
-      │              │        │     └─ [notIn]: array #38
+      │              │        │     └─ [notIn]: list #38
       │              │        │        └─ item: integer #36
       │              │        └─ variant_1: struct #45
       │              │           └─ [not]: either '_integer_filter' #44
@@ -1253,10 +1253,10 @@ root: struct #143
       │              │              │  └─ [gte]: optional #37
       │              │              │     └─ item: integer #36
       │              │              ├─ variant_4: struct #42
-      │              │              │  └─ [in]: array #38
+      │              │              │  └─ [in]: list #38
       │              │              │     └─ item: integer #36
       │              │              └─ variant_5: struct #43
-      │              │                 └─ [notIn]: array #38
+      │              │                 └─ [notIn]: list #38
       │              │                    └─ item: integer #36
       │              ├─ [title]: optional '_124__string_filter_c?' #124
       │              │  └─ item: optional '_string_filter_c' #33
@@ -1268,10 +1268,10 @@ root: struct #143
       │              │        │  ├─ variant_2: struct #22
       │              │        │  │  └─ [not]: string #18
       │              │        │  ├─ variant_3: struct #23
-      │              │        │  │  └─ [in]: array #20
+      │              │        │  │  └─ [in]: list #20
       │              │        │  │     └─ item: string #18
       │              │        │  ├─ variant_4: struct #24
-      │              │        │  │  └─ [notIn]: array #20
+      │              │        │  │  └─ [notIn]: list #20
       │              │        │  │     └─ item: string #18
       │              │        │  ├─ variant_5: struct #27
       │              │        │  │  ├─ [contains]: string #18
@@ -1292,10 +1292,10 @@ root: struct #143
       │              │              ├─ variant_2: struct #22
       │              │              │  └─ [not]: string #18
       │              │              ├─ variant_3: struct #23
-      │              │              │  └─ [in]: array #20
+      │              │              │  └─ [in]: list #20
       │              │              │     └─ item: string #18
       │              │              ├─ variant_4: struct #24
-      │              │              │  └─ [notIn]: array #20
+      │              │              │  └─ [notIn]: list #20
       │              │              │     └─ item: string #18
       │              │              ├─ variant_5: struct #27
       │              │              │  ├─ [contains]: string #18
@@ -1311,10 +1311,10 @@ root: struct #143
       │              └─ [author]: optional '_126_UserWhere?' #126
       │                 └─ item: &UserWhere #125
       ├─ [AND]: optional '_139__138_QueryUserWhereInput[]?' #139
-      │  └─ item: array '_138_QueryUserWhereInput[]' #138
+      │  └─ item: list '_138_QueryUserWhereInput[]' #138
       │     └─ item: &QueryUserWhereInput #137
       ├─ [OR]: optional '_139__138_QueryUserWhereInput[]?' #139
-      │  └─ item: array '_138_QueryUserWhereInput[]' #138
+      │  └─ item: list '_138_QueryUserWhereInput[]' #138
       │     └─ item: &QueryUserWhereInput #137
       └─ [NOT]: optional '_140_QueryUserWhereInput?' #140
          └─ item: &QueryUserWhereInput #137

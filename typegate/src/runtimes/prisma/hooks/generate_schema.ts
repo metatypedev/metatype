@@ -301,7 +301,7 @@ class FieldBuilder {
     switch (typeNode.type) {
       case Type.OPTIONAL:
         return [typeNode.item, "?"];
-      case Type.ARRAY:
+      case Type.LIST:
         return [typeNode.items, "[]"];
       default:
         return [typeIdx, ""];

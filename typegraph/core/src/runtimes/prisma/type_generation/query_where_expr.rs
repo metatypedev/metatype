@@ -25,7 +25,7 @@ impl TypeGen for QueryWhereExpr {
 
         let name = self.name();
         let self_ref = t::proxy(&name).build()?;
-        let and = t::optionalx(t::array(self_ref))?.build()?;
+        let and = t::optionalx(t::list(self_ref))?.build()?;
 
         let mut builder = t::struct_();
         builder.named(name);

@@ -10,16 +10,15 @@ s1 = t.struct({"a": a, "b": t.integer(min=12)})
 
 b = t.integer(min=12, max=43)
 
-user = t.struct({"id": t.integer(), "post": t.ref("Post")}, name="User")
-
-post = t.struct({"id": t.integer(), "author": t.ref("User")}, name="Post")
-
 
 @typegraph()
 def test_types(g: Graph):
     deno = DenoRuntime()
     public = Policy.public()
     internal = Policy.internal()
+
+    user = t.struct({"id": t.integer(), "post": g.ref("Post")}, name="User")
+    post = t.struct({"id": t.integer(), "author": g.ref("User")}, name="Post")
 
     g.expose(
         one=deno.func(s1, b, code="() => 12").with_policy(internal),

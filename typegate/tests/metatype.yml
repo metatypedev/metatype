@@ -26,9 +26,6 @@ typegates:
       TG_MIGRATION_FAILURE_TEST_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e2"
 
 typegraphs:
-  python:
-    include: "**/*.py"
-    exclude: "**/templates/*.py"
   materializers:
     prisma:
       migrations_path: "prisma-migrations"
