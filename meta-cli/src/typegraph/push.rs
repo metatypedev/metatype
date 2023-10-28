@@ -42,7 +42,7 @@ pub struct Migrations {
 #[serde(rename_all = "camelCase")]
 pub struct PushResult {
     name: String,
-    messages: Vec<MessageEntry>,
+    pub messages: Vec<MessageEntry>,
     migrations: Vec<Migrations>,
     reset_required: Vec<String>,
     #[serde(skip)]

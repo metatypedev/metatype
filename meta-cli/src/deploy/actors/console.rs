@@ -42,21 +42,21 @@ pub struct Warning(pub String);
 #[rtype(result = "()")]
 pub struct Error(pub String);
 
-// impl Handler<Info> for ConsoleActor {
-//     type Result = ();
-//
-//     fn handle(&mut self, msg: Info, _ctx: &mut Context<Self>) -> Self::Result {
-//         log::info!("{}", msg.0);
-//     }
-// }
-//
-// impl Handler<Warning> for ConsoleActor {
-//     type Result = ();
-//
-//     fn handle(&mut self, msg: Warning, _ctx: &mut Context<Self>) -> Self::Result {
-//         log::warn!("{}", msg.0);
-//     }
-// }
+impl Handler<Info> for ConsoleActor {
+    type Result = ();
+
+    fn handle(&mut self, msg: Info, _ctx: &mut Context<Self>) -> Self::Result {
+        log::info!("{}", msg.0);
+    }
+}
+
+impl Handler<Warning> for ConsoleActor {
+    type Result = ();
+
+    fn handle(&mut self, msg: Warning, _ctx: &mut Context<Self>) -> Self::Result {
+        log::warn!("{}", msg.0);
+    }
+}
 
 impl Handler<Error> for ConsoleActor {
     type Result = ();
@@ -66,17 +66,17 @@ impl Handler<Error> for ConsoleActor {
     }
 }
 
-// macro_rules! info {
-//     ($addr:expr, $($arg:tt)*) => {
-//         $addr.do_send($crate::deploy::actors::console::Info(format!($($arg)*)))
-//     };
-// }
-//
-// macro_rules! warning {
-//     ($addr:expr, $($arg:tt)*) => {
-//         $addr.do_send($crate::deploy::actors::console::Warning(format!($($arg)*)))
-//     };
-// }
+macro_rules! info {
+    ($addr:expr, $($arg:tt)*) => {
+        $addr.do_send($crate::deploy::actors::console::Info(format!($($arg)*)))
+    };
+}
+
+macro_rules! warning {
+    ($addr:expr, $($arg:tt)*) => {
+        $addr.do_send($crate::deploy::actors::console::Warning(format!($($arg)*)))
+    };
+}
 
 macro_rules! error {
     ($addr:expr, $($arg:tt)*) => {
@@ -84,6 +84,6 @@ macro_rules! error {
     };
 }
 
-// pub(crate) use info;
-// pub(crate) use warning;
 pub(crate) use error;
+pub(crate) use info;
+pub(crate) use warning;
