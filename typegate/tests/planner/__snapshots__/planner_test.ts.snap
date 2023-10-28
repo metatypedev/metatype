@@ -74,7 +74,7 @@ snapshot[`planner 1`] = `
     ],
     type: {
       title: "array_12",
-      type: "array",
+      type: "list",
     },
   },
   {
@@ -139,7 +139,7 @@ snapshot[`planner 2`] = `
       "one.nested.second": [
         {
           title: "array_12",
-          type: "array",
+          type: "list",
         },
         {
           title: "float_11",

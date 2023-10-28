@@ -3,8 +3,8 @@
 
 import { gql, Meta } from "../utils/mod.ts";
 
-Meta.test("deno(sdk): apply", async (t) => {
-  const e = await t.engine("typecheck/apply.ts");
+Meta.test("deno(sdk): reduce", async (t) => {
+  const e = await t.engine("typecheck/reduce.ts");
 
   await t.should(
     "work as normal if all nodes have g.inherit() flag",
@@ -39,11 +39,11 @@ Meta.test("deno(sdk): apply", async (t) => {
   );
 
   await t.should(
-    "compose apply and work with partial static injections",
+    "compose reduce and work with partial static injections",
     async () => {
       await gql`
         query {
-          applyComposition (
+          reduceComposition (
             student: {
               name: "Jake"
               infos: { age: 15 }
@@ -67,13 +67,13 @@ Meta.test("deno(sdk): apply", async (t) => {
           }
         }
       `.expectData({
-        applyComposition: {
+        reduceComposition: {
           student: {
-            id: 1234, // from apply 1
+            id: 1234, // from reduce 1
             name: "Jake", // from user
             infos: { age: 15 }, // from user
             distinctions: {
-              awards: [ // from apply 1
+              awards: [ // from reduce 1
                 { name: "Chess", points: 1000 },
                 { name: "Math Olympiad", points: 100 },
               ],
@@ -82,7 +82,7 @@ Meta.test("deno(sdk): apply", async (t) => {
           },
           grades: {
             year: 2023, // from user
-            subjects: [ // from apply 2
+            subjects: [ // from reduce 2
               { name: "Math", score: 60 },
             ],
           },
@@ -124,7 +124,7 @@ Meta.test("deno(sdk): apply", async (t) => {
         .expectData({
           injectionInherit: {
             student: {
-              id: 1234, // from apply
+              id: 1234, // from reduce
               name: "Kyle", // from user
               infos: { age: 17 }, // from context
             },
@@ -142,17 +142,17 @@ Meta.test("deno(sdk): apply", async (t) => {
   );
 });
 
-Meta.test("python(sdk): apply", async (t) => {
-  const e = await t.engine("typecheck/apply.py");
+Meta.test("python(sdk): reduce", async (t) => {
+  const e = await t.engine("typecheck/reduce.py");
   await t.should(
     "work as normal if all nodes have g.inherit() flag",
     async () => {
       await gql`
         query {
-          invariantApply (
+          invariantReduce (
             one: "1"
             two: {
-              apply: 2
+              reduce: 2
               set: 3
               user: 4
               context: "5"
@@ -160,7 +160,7 @@ Meta.test("python(sdk): apply", async (t) => {
           ) {
             one
             two {
-              apply
+              reduce
               set
               user
               context
@@ -169,10 +169,10 @@ Meta.test("python(sdk): apply", async (t) => {
         }
       `
         .expectData({
-          invariantApply: {
+          invariantReduce: {
             one: "1",
             two: {
-              apply: 2,
+              reduce: 2,
               set: 3,
               user: 4,
               context: "5",
@@ -184,7 +184,7 @@ Meta.test("python(sdk): apply", async (t) => {
   );
 
   await t.should(
-    "work with apply composition and injections",
+    "work with reduce composition and injections",
     async () => {
       await gql`
         query {
@@ -205,7 +205,7 @@ Meta.test("python(sdk): apply", async (t) => {
         })
         .expectData({
           simpleInjection: {
-            one: "ONE!", // apply
+            one: "ONE!", // reduce
             two: {
               set: 2,
               user: 4444,

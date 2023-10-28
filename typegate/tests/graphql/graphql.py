@@ -15,7 +15,7 @@ def graphql(g: Graph):
         name="User",
     )
 
-    user_by_id = gql.query(t.struct({"id": t.integer()}), t.ref("User")).with_policy(
+    user_by_id = gql.query(t.struct({"id": t.integer()}), g.ref("User")).with_policy(
         Policy.public()
     )
     update_user = gql.mutation(
@@ -32,7 +32,7 @@ def graphql(g: Graph):
                 ),
             }
         ),
-        t.ref("User"),
+        g.ref("User"),
         effect=effects.update(idempotent=True),
     ).with_policy(Policy.public())
 

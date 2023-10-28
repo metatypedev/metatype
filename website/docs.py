@@ -16,7 +16,7 @@ def docs(g):
         t.struct(
             {
                 "email": t.email(),
-                "listIds": t.array(t.integer()).set([8]),
+                "listIds": t.list(t.integer()).set([8]),
                 "header#api-key": t.string().from_secret("SENDINBLUE_KEY"),
             }
         ),

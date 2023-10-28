@@ -13,10 +13,10 @@ root: struct 'RecordWhere' #36
 │        │  ├─ variant_2: struct #9
 │        │  │  └─ [not]: string #5
 │        │  ├─ variant_3: struct #10
-│        │  │  └─ [in]: array #7
+│        │  │  └─ [in]: list #7
 │        │  │     └─ item: string #5
 │        │  ├─ variant_4: struct #11
-│        │  │  └─ [notIn]: array #7
+│        │  │  └─ [notIn]: list #7
 │        │  │     └─ item: string #5
 │        │  ├─ variant_5: struct #14
 │        │  │  ├─ [contains]: string #5
@@ -37,10 +37,10 @@ root: struct 'RecordWhere' #36
 │              ├─ variant_2: struct #9
 │              │  └─ [not]: string #5
 │              ├─ variant_3: struct #10
-│              │  └─ [in]: array #7
+│              │  └─ [in]: list #7
 │              │     └─ item: string #5
 │              ├─ variant_4: struct #11
-│              │  └─ [notIn]: array #7
+│              │  └─ [notIn]: list #7
 │              │     └─ item: string #5
 │              ├─ variant_5: struct #14
 │              │  ├─ [contains]: string #5
@@ -63,10 +63,10 @@ root: struct 'RecordWhere' #36
 │        │  ├─ variant_2: struct #9
 │        │  │  └─ [not]: string #5
 │        │  ├─ variant_3: struct #10
-│        │  │  └─ [in]: array #7
+│        │  │  └─ [in]: list #7
 │        │  │     └─ item: string #5
 │        │  ├─ variant_4: struct #11
-│        │  │  └─ [notIn]: array #7
+│        │  │  └─ [notIn]: list #7
 │        │  │     └─ item: string #5
 │        │  ├─ variant_5: struct #14
 │        │  │  ├─ [contains]: string #5
@@ -87,10 +87,10 @@ root: struct 'RecordWhere' #36
 │              ├─ variant_2: struct #9
 │              │  └─ [not]: string #5
 │              ├─ variant_3: struct #10
-│              │  └─ [in]: array #7
+│              │  └─ [in]: list #7
 │              │     └─ item: string #5
 │              ├─ variant_4: struct #11
-│              │  └─ [notIn]: array #7
+│              │  └─ [notIn]: list #7
 │              │     └─ item: string #5
 │              ├─ variant_5: struct #14
 │              │  ├─ [contains]: string #5
@@ -122,10 +122,10 @@ root: struct 'RecordWhere' #36
          │  │  └─ [gte]: optional #24
          │  │     └─ item: integer #23
          │  ├─ variant_4: struct #29
-         │  │  └─ [in]: array #25
+         │  │  └─ [in]: list #25
          │  │     └─ item: integer #23
          │  └─ variant_5: struct #30
-         │     └─ [notIn]: array #25
+         │     └─ [notIn]: list #25
          │        └─ item: integer #23
          └─ variant_1: struct #32
             └─ [not]: either '_integer_filter' #31
@@ -144,9 +144,9 @@ root: struct 'RecordWhere' #36
                │  └─ [gte]: optional #24
                │     └─ item: integer #23
                ├─ variant_4: struct #29
-               │  └─ [in]: array #25
+               │  └─ [in]: list #25
                │     └─ item: integer #23
                └─ variant_5: struct #30
-                  └─ [notIn]: array #25
+                  └─ [notIn]: list #25
                      └─ item: integer #23
 

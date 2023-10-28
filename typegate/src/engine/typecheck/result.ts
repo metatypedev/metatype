@@ -149,7 +149,7 @@ export class ResultValidationCompiler {
             break;
           }
 
-          case "array": {
+          case "list": {
             const itemValidatorName = this.validatorName(
               typeNode.items,
               entry.selectionSet != null,

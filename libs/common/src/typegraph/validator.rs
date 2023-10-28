@@ -9,7 +9,7 @@ use serde_json::Value;
 
 use super::{
     visitor::{Path, PathSegment, TypeVisitor, VisitResult},
-    ArrayTypeData, EitherTypeData, FloatTypeData, Injection, IntegerTypeData, ObjectTypeData,
+    EitherTypeData, FloatTypeData, Injection, IntegerTypeData, ListTypeData, ObjectTypeData,
     StringTypeData, UnionTypeData,
 };
 
@@ -97,7 +97,7 @@ impl TypeVisitor for Validator {
                             | TypeNode::String { .. } => {
                                 // scalar
                             }
-                            TypeNode::Array { data, .. } => {
+                            TypeNode::List { data, .. } => {
                                 let item_type = tg.types.get(data.items as usize).unwrap();
                                 if !item_type.is_scalar() {
                                     self.push_error(
@@ -221,7 +221,7 @@ impl Typegraph {
                     self.validate_value(data.item, value)
                 }
             }
-            TypeNode::Array { data, .. } => self.validate_array(data, value),
+            TypeNode::List { data, .. } => self.validate_array(data, value),
             TypeNode::Object { data, .. } => self.validate_object(data, value),
             TypeNode::Function { .. } => Err(anyhow!("Unexpected function type")),
             TypeNode::Union { data, .. } => self.validate_union(data, value),
@@ -308,7 +308,7 @@ impl Typegraph {
         Ok(())
     }
 
-    fn validate_array(&self, data: &ArrayTypeData, value: &Value) -> Result<()> {
+    fn validate_array(&self, data: &ListTypeData, value: &Value) -> Result<()> {
         let array = value
             .as_array()
             .ok_or_else(|| anyhow!("Expected an array got '{}'", to_string(value)))?;

@@ -14,7 +14,7 @@ def typename_test(g: Graph):
     prisma = PrismaRuntime("prisma", "POSTGRES")
 
     random = RandomRuntime(seed=1)
-    randomUser = random.gen(t.ref("user")).with_policy(public)
+    randomUser = random.gen(g.ref("user")).with_policy(public)
 
     deno_user = deno.func(
         t.struct(),
