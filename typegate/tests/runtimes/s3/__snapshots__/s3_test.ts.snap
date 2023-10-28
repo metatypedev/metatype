@@ -85,7 +85,7 @@ snapshot[`s3 typegraphs 1`] = `
       "required": []
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "array_6",
       "runtime": 1,
       "policies": [],
@@ -123,7 +123,7 @@ snapshot[`s3 typegraphs 1`] = `
       "as_id": false
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "array_8",
       "runtime": 1,
       "policies": [],
@@ -348,7 +348,7 @@ snapshot[`s3 typegraphs 1`] = `
       "as_id": false
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "_29__26_file[]",
       "runtime": 1,
       "policies": [],

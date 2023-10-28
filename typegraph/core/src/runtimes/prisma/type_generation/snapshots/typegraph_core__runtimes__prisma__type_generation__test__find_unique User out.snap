@@ -1,12 +1,12 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(types.output)"
+expression: "tree::print(out)"
 ---
 root: optional '_30_UserWithNestedCount?' #30
 └─ item: struct 'UserWithNestedCount' #29
    ├─ [id]: integer #11
    ├─ [name]: string #12
-   ├─ [posts]: array '_25_PostWithNestedCount_excluding___rel_Post_User_1[]' #25
+   ├─ [posts]: list '_25_PostWithNestedCount_excluding___rel_Post_User_1[]' #25
    │  └─ item: struct 'PostWithNestedCount_excluding___rel_Post_User_1' #24
    │     ├─ [id]: integer #16
    │     └─ [title]: string #17

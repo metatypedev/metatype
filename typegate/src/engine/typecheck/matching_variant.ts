@@ -114,7 +114,7 @@ class VariantMatcherCompiler {
             cg.generateOptionalValidator(typeNode, functionName(typeNode.item));
             queue.push(typeNode.item);
             break;
-          case "array":
+          case "list":
             cg.generateArrayValidator(typeNode, functionName(typeNode.items));
             queue.push(typeNode.items);
             break;

@@ -4,7 +4,7 @@
 import config from "../../../config.ts";
 import { OAuth2Client, OAuth2ClientConfig, Tokens } from "oauth2_client";
 import { encrypt, randomUUID, signJWT, verifyJWT } from "../../../crypto.ts";
-import { JWTClaims } from "../mod.ts";
+import { AdditionalAuthParams, JWTClaims } from "../mod.ts";
 import { getLogger } from "../../../log.ts";
 import { SecretManager } from "../../../typegraph/mod.ts";
 import {
@@ -13,17 +13,84 @@ import {
   setEncryptedSessionCookie,
 } from "../cookies.ts";
 import { Protocol } from "./protocol.ts";
-import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
-import { Auth, Materializer } from "../../../typegraph/types.ts";
+import { Auth } from "../../../typegraph/types.ts";
+import { Type } from "../../../typegraph/type_node.ts";
+import { ComputeStage } from "../../../engine/query_engine.ts";
+import * as ast from "graphql/ast";
+import {
+  generateValidator,
+  generateWeakValidator,
+} from "../../../engine/typecheck/input.ts";
 
 const logger = getLogger(import.meta);
+
+class AuthProfiler {
+  constructor(
+    private authParameters: AdditionalAuthParams,
+    private funcIndex: number,
+  ) {}
+
+  private getComputeStage(): ComputeStage {
+    const { tg, runtimeReferences } = this.authParameters;
+    const funcNode = tg.type(this.funcIndex, Type.FUNCTION);
+    const mat = tg.materializer(funcNode.materializer);
+    const runtime = runtimeReferences[mat.runtime];
+
+    return new ComputeStage({
+      operationName: "",
+      dependencies: [],
+      args: (x: any) => x,
+      operationType: ast.OperationTypeNode.QUERY,
+      outType: tg.type(funcNode.output),
+      typeIdx: funcNode.input,
+      runtime: runtime,
+      materializer: mat,
+      node: "",
+      path: [],
+      batcher: (x) => x,
+      rateCalls: false,
+      rateWeight: 0,
+      effect: null,
+    });
+  }
+
+  async transform(profile: any, url: string) {
+    const { tg, runtimeReferences } = this.authParameters;
+    const funcNode = tg.type(this.funcIndex, Type.FUNCTION);
+    const mat = tg.materializer(funcNode.materializer);
+    const runtime = runtimeReferences[mat.runtime];
+    const validatorInputWeak = generateWeakValidator(tg, funcNode.input);
+    const validatorOutput = generateValidator(tg, funcNode.output);
+
+    const input = { ...profile, _: { info: { url } } };
+    validatorInputWeak(input);
+
+    // Note: this assumes func is a simple t.func(inp, out, mat)
+    const stages = runtime.materialize(
+      this.getComputeStage(),
+      [],
+      true,
+    );
+    const resolver = stages.pop()?.props.resolver;
+    if (typeof resolver != "function") {
+      throw Error(
+        `invalid resolver, function was expected but got ${typeof resolver} instead`,
+      );
+    }
+
+    const ret = await resolver(input);
+    validatorOutput(ret);
+
+    return ret;
+  }
+}
 
 export class OAuth2Auth extends Protocol {
   static init(
     typegraphName: string,
     auth: Auth,
     secretManager: SecretManager,
-    denoRuntime: DenoRuntime,
+    authParameters: AdditionalAuthParams,
   ): Promise<Protocol> {
     const clientId = secretManager.secretOrFail(`${auth.name}_CLIENT_ID`);
     const clientSecret = secretManager.secretOrFail(
@@ -46,28 +113,14 @@ export class OAuth2Auth extends Protocol {
         auth.name,
         clientData,
         profile_url as string | null,
-        denoRuntime,
-        profiler
-          ? OAuth2Auth.materializerForProfiler(profiler as string)
+        profiler !== undefined
+          ? new AuthProfiler(
+            authParameters,
+            profiler as number,
+          )
           : null,
       ),
     );
-  }
-
-  static materializerForProfiler(
-    profiler: string,
-  ): Materializer {
-    return {
-      name: "function",
-      runtime: -1, // dummy
-      effect: {
-        effect: "read",
-        idempotent: true,
-      },
-      data: {
-        script: `var _my_lambda = ${profiler};`,
-      },
-    } as Materializer;
   }
 
   private constructor(
@@ -75,8 +128,7 @@ export class OAuth2Auth extends Protocol {
     private authName: string,
     private clientData: Omit<OAuth2ClientConfig, "redirectUri">,
     private profileUrl: string | null,
-    private denoRuntime: DenoRuntime,
-    private profiler: Materializer | null,
+    private authProfiler: AuthProfiler | null,
   ) {
     super(typegraphName);
   }
@@ -216,11 +268,8 @@ export class OAuth2Auth extends Protocol {
       });
       let profile = await res.json();
 
-      if (this.profiler) {
-        profile = await this.denoRuntime.delegate(this.profiler, false)(
-          // dummy values
-          { ...profile, _: { info: { url } } },
-        );
+      if (this.authProfiler) {
+        profile = await this.authProfiler!.transform(profile, url);
       }
 
       return profile;

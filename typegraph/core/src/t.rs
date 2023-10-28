@@ -4,7 +4,7 @@
 use crate::errors::Result;
 use crate::types::TypeId;
 use crate::wit::core::{
-    Guest, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeOptional,
+    Guest, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
     TypeProxy, TypeString, TypeStruct, TypeUnion,
 };
 
@@ -237,12 +237,12 @@ pub fn optionalx(item_builder: impl TypeBuilder) -> Result<OptionalBuilder> {
 }
 
 #[derive(Default)]
-pub struct ArrayBuilder {
+pub struct ListBuilder {
     base: TypeBase,
-    data: TypeArray,
+    data: TypeList,
 }
 
-impl Default for TypeArray {
+impl Default for TypeList {
     fn default() -> Self {
         Self {
             of: u32::max_value(),
@@ -253,18 +253,18 @@ impl Default for TypeArray {
     }
 }
 
-pub fn array(ty: TypeId) -> ArrayBuilder {
-    ArrayBuilder {
+pub fn list(ty: TypeId) -> ListBuilder {
+    ListBuilder {
         base: TypeBase::default(),
-        data: TypeArray {
+        data: TypeList {
             of: ty.into(),
             ..Default::default()
         },
     }
 }
 
-pub fn arrayx(item_builder: impl TypeBuilder) -> Result<ArrayBuilder> {
-    Ok(array(item_builder.build()?))
+pub fn listx(item_builder: impl TypeBuilder) -> Result<ListBuilder> {
+    Ok(list(item_builder.build()?))
 }
 
 #[derive(Default)]
@@ -279,6 +279,18 @@ impl Default for TypeUnion {
         Self {
             variants: Default::default(),
         }
+    }
+}
+
+impl UnionBuilder {
+    pub fn add(&mut self, ty: TypeId) -> &mut Self {
+        self.data.variants.push(ty.0);
+        self
+    }
+
+    pub fn addx(&mut self, ty: impl TypeBuilder) -> Result<&mut Self> {
+        self.add(ty.build()?);
+        Ok(self)
     }
 }
 
@@ -358,16 +370,6 @@ impl Default for TypeStruct {
 
 pub fn struct_() -> StructBuilder {
     Default::default()
-}
-
-pub fn struct_from(props: impl Iterator<Item = (String, TypeId)>) -> StructBuilder {
-    StructBuilder {
-        data: TypeStruct {
-            props: props.map(|(k, ty)| (k, ty.into())).collect(),
-            ..Default::default()
-        },
-        ..Default::default()
-    }
 }
 
 pub fn struct_extends(ty: TypeId) -> Result<StructBuilder> {
@@ -518,7 +520,7 @@ impl_type_builder!(IntegerBuilder, integerb);
 impl_type_builder!(FloatBuilder, floatb);
 impl_type_builder!(OptionalBuilder, optionalb);
 impl_type_builder!(StringBuilder, stringb);
-impl_type_builder!(ArrayBuilder, arrayb);
+impl_type_builder!(ListBuilder, listb);
 impl_type_builder!(UnionBuilder, unionb);
 impl_type_builder!(EitherBuilder, eitherb);
 impl_type_builder!(StructBuilder, structb);

@@ -7,15 +7,16 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
 from typegraph.gen.exports.core import (
-    Auth,
     Rate,
+    TypeProxy,
     TypegraphInitParams,
 )
 from typegraph.gen.exports.core import (
     Cors as CoreCors,
 )
+
 from typegraph.gen.types import Err
-from typegraph.graph.params import Cors
+from typegraph.graph.params import Auth, Cors, RawAuth
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph.wit import core, store, wit_utils
 
@@ -32,7 +33,6 @@ class Typegraph:
     dynamic: Optional[bool]
     path: str
     _context: List["Typegraph"] = []
-    auths: Optional[List[Auth]]
     rate: Optional[Rate]
     cors: Optional[CoreCors]
     prefix: Optional[str]
@@ -42,7 +42,6 @@ class Typegraph:
         name: str,
         dynamic: Optional[bool] = None,
         *,
-        auths: Optional[List[Auth]] = None,
         rate: Optional[Rate] = None,
         cors: Optional[Cors] = None,
         prefix: Optional[str] = None,
@@ -51,7 +50,6 @@ class Typegraph:
         self.dynamic = dynamic
         self.path = str(Path(inspect.stack()[2].filename).resolve().parent)
 
-        self.auths = auths or []
         self.rate = rate
 
         cors = cors or Cors()
@@ -108,12 +106,24 @@ class Graph:
             raise Exception(res.value)
         return res.value
 
+    def auth(self, value: Union[Auth, RawAuth]):
+        res = (
+            wit_utils.add_raw_auth(store, value.json_str)
+            if isinstance(value, RawAuth)
+            else wit_utils.add_auth(store, value)
+        )
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return res.value
+
+    def ref(self, name: str) -> "t.typedef":
+        return gen_ref(name)
+
 
 def typegraph(
     name: Optional[str] = None,
     *,
     dynamic: Optional[bool] = None,
-    auths: Optional[List[Auth]] = None,
     rate: Optional[Rate] = None,
     cors: Optional[Cors] = None,
     prefix: Optional[str] = None,
@@ -129,7 +139,6 @@ def typegraph(
         tg = Typegraph(
             name=actual_name,
             dynamic=dynamic,
-            auths=auths,
             rate=rate,
             cors=cors,
             prefix=prefix,
@@ -143,7 +152,6 @@ def typegraph(
                 name=tg.name,
                 dynamic=tg.dynamic,
                 path=tg.path,
-                auths=tg.auths,
                 rate=tg.rate,
                 cors=tg.cors,
                 prefix=tg.prefix,
@@ -164,3 +172,12 @@ def typegraph(
         return tg
 
     return decorator
+
+
+def gen_ref(name: str) -> "t.typedef":
+    res = core.proxyb(store, TypeProxy(name=name, extras=[]))
+    if isinstance(res, Err):
+        raise Exception(res.value)
+    from typegraph.t import typedef
+
+    return typedef(res.value)

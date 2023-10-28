@@ -12,7 +12,7 @@ def temporal(g: Graph):
         public,
         start=temporal.start_workflow("<workflow_type>", arg),
         query=temporal.query_workflow("<query_type>", arg),
-        signal=temporal.signal_workflow("<signal_name>", arg).apply(
+        signal=temporal.signal_workflow("<signal_name>", arg).reduce(
             {"workflow_id": "1234"}
         ),
         describe=temporal.describe_workflow(),

@@ -16,10 +16,10 @@ def prisma(g: Graph):
             "id": t.integer(as_id=True),
             "name": t.string(),
             "age": t.integer().optional(),
-            "coinflips": t.array(t.boolean()),
+            "coinflips": t.list(t.boolean()),
             "city": t.string(),
-            "posts": t.array(t.ref("Post")),
-            "extended_profile": t.ref("ExtendedProfile").optional(),
+            "posts": t.list(g.ref("Post")),
+            "extended_profile": g.ref("ExtendedProfile").optional(),
         },
         name="User",
     )
@@ -31,8 +31,8 @@ def prisma(g: Graph):
             "views": t.integer(),
             "likes": t.integer(),
             "published": t.boolean(),
-            "author": t.ref("User"),
-            "comments": t.array(t.ref("Comment")),
+            "author": g.ref("User"),
+            "comments": t.list(g.ref("Comment")),
         },
         name="Post",
     )
@@ -41,7 +41,7 @@ def prisma(g: Graph):
         {
             "id": t.integer(as_id=True),
             "content": t.string(),
-            "related_post": t.ref("Post"),
+            "related_post": g.ref("Post"),
         },
         name="Comment",
     )
@@ -50,7 +50,7 @@ def prisma(g: Graph):
         {
             "id": t.integer(as_id=True),
             "bio": t.string(),
-            "user": t.ref("User"),
+            "user": g.ref("User"),
         },
         name="ExtendedProfile",
     )
@@ -62,6 +62,7 @@ def prisma(g: Graph):
         findFirstUser=db.find_first(user),
         createOneUser=db.create(user),
         createManyUsers=db.create_many(user),
+        updateUser=db.update(user),
         upsertOneUser=db.upsert(user),
         findManyPosts=db.find_many(post),
         findFirstPost=db.find_first(post),
@@ -75,7 +76,7 @@ def prisma(g: Graph):
         findManyExtendedProfile=db.find_many(extended_profile),
         createOneExtendedProfile=db.create(extended_profile),
         createOneComment=db.create(comment),
-        findFirstPostWithApply=db.find_first(post).apply(
+        findFirstPostWithReduce=db.find_first(post).reduce(
             {
                 "where": {"id": 10007},
             }
@@ -104,10 +105,10 @@ def prisma(g: Graph):
                     "one": t.integer(),
                     "two": t.integer(),
                     "title": t.string(),
-                    "idlist": t.array(t.integer()),
+                    "idlist": t.list(t.integer()),
                 }
             ),
-            t.array(
+            t.list(
                 t.struct(
                     {
                         "id": t.integer(),
@@ -116,7 +117,7 @@ def prisma(g: Graph):
                     }
                 )
             ),
-        ).apply(
+        ).reduce(
             {
                 "title": "%Title 2%",
                 "one": 10002,

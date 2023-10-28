@@ -1,12 +1,12 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(types.output)"
+expression: "tree::print(out)"
 ---
-root: optional '_146__PostOutputType?' #146
-└─ item: struct '_PostOutputType' #145
-   ├─ [id]: integer #73
-   ├─ [title]: string #74
-   └─ [author]: struct '_UserOutputType_excluding___rel_Post_User_1' #144
-      ├─ [id]: integer #68
-      └─ [name]: string #69
+root: optional '_22__PostOutputType?' #22
+└─ item: struct '_PostOutputType' #21
+   ├─ [id]: integer #12
+   ├─ [title]: string #13
+   └─ [author]: struct '_UserOutputType_excluding___rel_Post_User_1' #20
+      ├─ [id]: integer #7
+      └─ [name]: string #8
 

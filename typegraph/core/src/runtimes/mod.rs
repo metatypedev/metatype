@@ -12,6 +12,7 @@ pub mod typegate;
 pub mod typegraph;
 pub mod wasi;
 
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::conversion::runtimes::MaterializerConverter;
@@ -19,7 +20,6 @@ use crate::global_store::Store;
 use crate::runtimes::prisma::migration::{
     prisma_apply, prisma_create, prisma_deploy, prisma_diff, prisma_reset,
 };
-use crate::runtimes::prisma::with_prisma_runtime;
 use crate::runtimes::typegraph::TypegraphOperation;
 use crate::t::TypeBuilder;
 use crate::validation::types::validate_value;
@@ -36,9 +36,11 @@ use enum_dispatch::enum_dispatch;
 use self::aws::S3Materializer;
 pub use self::deno::{DenoMaterializer, MaterializerDenoImport, MaterializerDenoModule};
 pub use self::graphql::GraphqlMaterializer;
+use self::prisma::context::PrismaContext;
+use self::prisma::get_prisma_context;
 use self::prisma::relationship::prisma_link;
 use self::prisma::type_generation::replace_variables_to_indices;
-use self::prisma::{PrismaMaterializer, PrismaRuntimeContext};
+use self::prisma::PrismaMaterializer;
 pub use self::python::PythonMaterializer;
 pub use self::random::RandomMaterializer;
 use self::temporal::temporal_operation;
@@ -56,7 +58,7 @@ pub enum Runtime {
     Python,
     Random(Rc<RandomRuntimeData>),
     WasmEdge,
-    Prisma(Rc<PrismaRuntimeData>, Rc<PrismaRuntimeContext>),
+    Prisma(Rc<PrismaRuntimeData>, Rc<RefCell<PrismaContext>>),
     PrismaMigration,
     Temporal(Rc<TemporalRuntimeData>),
     Typegate,
@@ -72,7 +74,7 @@ pub struct Materializer {
 }
 
 impl Materializer {
-    fn deno(data: DenoMaterializer, effect: wit::Effect) -> Self {
+    pub fn deno(data: DenoMaterializer, effect: wit::Effect) -> Self {
         Self {
             runtime_id: Store::get_deno_runtime(),
             effect,
@@ -183,8 +185,15 @@ pub enum MaterializerData {
 }
 
 macro_rules! prisma_op {
-    ( $rt:expr, $model:expr, $fn:ident, $name:expr, $effect:expr ) => {{
-        let types = with_prisma_runtime($rt, |ctx| ctx.$fn($model.into()))?;
+    ( $rt:expr, $model:expr, $op:ident, $name:expr, $effect:expr ) => {{
+        let types = {
+            let ctx = get_prisma_context($rt);
+            let mut ctx = ctx.borrow_mut();
+            ctx.generate_types(
+                $crate::runtimes::prisma::type_generation::$op,
+                $model.into(),
+            )?
+        };
 
         let mat = PrismaMaterializer {
             table: $crate::types::TypeId($model)
@@ -366,34 +375,34 @@ impl crate::wit::runtimes::Guest for crate::Lib {
     }
 
     fn prisma_find_unique(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
-        prisma_op!(runtime, model, find_unique, "findUnique")
+        prisma_op!(runtime, model, FindUnique, "findUnique")
     }
 
     fn prisma_find_many(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
-        prisma_op!(runtime, model, find_many, "findMany")
+        prisma_op!(runtime, model, FindMany, "findMany")
     }
 
     fn prisma_find_first(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
-        prisma_op!(runtime, model, find_first, "findFirst")
+        prisma_op!(runtime, model, FindFirst, "findFirst")
     }
 
     fn prisma_aggregate(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
-        prisma_op!(runtime, model, aggregate, "aggregate")
+        prisma_op!(runtime, model, Aggregate, "aggregate")
     }
 
     fn prisma_group_by(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
-        prisma_op!(runtime, model, group_by, "groupBy")
+        prisma_op!(runtime, model, GroupBy, "groupBy")
     }
 
     fn prisma_count(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
-        prisma_op!(runtime, model, count, "count")
+        prisma_op!(runtime, model, Count, "count")
     }
 
     fn prisma_create_one(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(
             runtime,
             model,
-            create_one,
+            CreateOne,
             "createOne",
             WitEffect::Create(false)
         )
@@ -403,7 +412,7 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         prisma_op!(
             runtime,
             model,
-            create_many,
+            CreateMany,
             "createMany",
             WitEffect::Create(false)
         )
@@ -413,7 +422,7 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         prisma_op!(
             runtime,
             model,
-            update_one,
+            UpdateOne,
             "updateOne",
             WitEffect::Update(false)
         )
@@ -423,7 +432,7 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         prisma_op!(
             runtime,
             model,
-            update_many,
+            UpdateMany,
             "updateMany",
             WitEffect::Update(false)
         )
@@ -433,7 +442,7 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         prisma_op!(
             runtime,
             model,
-            upsert_one,
+            UpsertOne,
             "upsertOne",
             WitEffect::Update(true)
         )
@@ -443,7 +452,7 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         prisma_op!(
             runtime,
             model,
-            delete_one,
+            DeleteOne,
             "deleteOne",
             WitEffect::Delete(true)
         )
@@ -453,7 +462,7 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         prisma_op!(
             runtime,
             model,
-            delete_many,
+            DeleteMany,
             "deleteMany",
             WitEffect::Delete(true)
         )
@@ -465,7 +474,11 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         param: CoreTypeId,
         effect: WitEffect,
     ) -> Result<FuncParams, wit::Error> {
-        let types = with_prisma_runtime(runtime, |ctx| ctx.execute_raw(param.into()))?;
+        let types = {
+            let ctx = get_prisma_context(runtime);
+            let mut ctx = ctx.borrow_mut();
+            ctx.execute_raw(param.into())?
+        };
         let proc = replace_variables_to_indices(query, types.input)?;
         let mat = PrismaMaterializer {
             table: proc.query,
@@ -486,9 +499,11 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         param: Option<CoreTypeId>,
         out: CoreTypeId,
     ) -> Result<FuncParams, wit::Error> {
-        let types = with_prisma_runtime(runtime, |ctx| {
-            ctx.query_raw(param.map(|v| v.into()), out.into())
-        })?;
+        let types = {
+            let ctx = get_prisma_context(runtime);
+            let mut ctx = ctx.borrow_mut();
+            ctx.query_raw(param.map(|v| v.into()), out.into())?
+        };
         let proc = replace_variables_to_indices(query, types.input)?;
         let mat = PrismaMaterializer {
             table: proc.query,

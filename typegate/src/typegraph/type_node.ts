@@ -9,7 +9,7 @@ export const Type = {
   STRING: "string",
   FILE: "file",
   OBJECT: "object",
-  ARRAY: "array",
+  LIST: "list",
   FUNCTION: "function",
   UNION: "union",
   EITHER: "either",
@@ -18,13 +18,13 @@ export const Type = {
 
 import type {
   AnyNode,
-  ArrayNode,
   BooleanNode,
   EitherNode,
   FileNode,
   FloatNode,
   FunctionNode,
   IntegerNode,
+  ListNode,
   ObjectNode,
   OptionalNode,
   StringNode,
@@ -34,12 +34,12 @@ import type {
 
 export type {
   AnyNode,
-  ArrayNode,
   BooleanNode,
   FileNode,
   FloatNode,
   FunctionNode,
   IntegerNode,
+  ListNode,
   ObjectNode,
   OptionalNode,
   StringNode,
@@ -53,7 +53,7 @@ export type ScalarNode =
   | FloatNode
   | StringNode
   | FileNode;
-export type QuantifierNode = OptionalNode | ArrayNode;
+export type QuantifierNode = OptionalNode | ListNode;
 
 //
 // Type utils
@@ -90,8 +90,8 @@ export function isOptional(t: TypeNode): t is OptionalNode {
   return t.type === Type.OPTIONAL;
 }
 
-export function isArray(t: TypeNode): t is ArrayNode {
-  return t.type === Type.ARRAY;
+export function isList(t: TypeNode): t is ListNode {
+  return t.type === Type.LIST;
 }
 
 export function isScalar(t: TypeNode): t is ScalarNode {
@@ -100,7 +100,7 @@ export function isScalar(t: TypeNode): t is ScalarNode {
 }
 
 export function isQuantifier(t: TypeNode): t is QuantifierNode {
-  return isOptional(t) || isArray(t);
+  return isOptional(t) || isList(t);
 }
 
 export function isFunction(t: TypeNode): t is FunctionNode {

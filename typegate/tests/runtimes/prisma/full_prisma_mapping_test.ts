@@ -78,22 +78,25 @@ Meta.test("prisma full mapping", async (t) => {
       .on(e);
   });
 
-  await t.should("work with apply syntax and find the first item", async () => {
-    await gql`
+  await t.should(
+    "work with reduce syntax and find the first item",
+    async () => {
+      await gql`
         query {
-          findFirstPostWithApply {
+          findFirstPostWithReduce {
             id
             title
           }
         }
     `.expectData({
-      findFirstPostWithApply: {
-        id: 10007,
-        title: "Some title",
-      },
-    })
-      .on(e);
-  });
+        findFirstPostWithReduce: {
+          id: 10007,
+          title: "Some title",
+        },
+      })
+        .on(e);
+    },
+  );
 
   await t.should("paginate correctly with findManyPosts", async () => {
     await gql`
@@ -460,6 +463,72 @@ Meta.test("prisma full mapping", async (t) => {
     },
   );
 
+  await t.should("accept nested relationship filters", async () => {
+    await gql`
+      query {
+        findManyPosts (
+          where: {
+            author: {
+              posts: {
+                some: {
+                  id: 10001
+                }
+              }
+            }
+          }
+        ) {
+          id
+          title
+        }
+      }
+   `.expectData({
+        findManyPosts: [
+          { id: 10001, title: "Some Title 1" },
+          { id: 10002, title: "Some Title 2" },
+          { id: 10003, title: "Some Title 3" },
+          { id: 10004, title: "Some Title 4" },
+          { id: 10005, title: "Some Title 4" },
+          { id: 10006, title: "Some Title 5" },
+          { id: 10007, title: "Some title" },
+          { id: 10008, title: "Yet another" },
+        ],
+      })
+      .on(e);
+
+    await gql`
+       query {
+         findManyPosts (
+           where: {
+             author: {
+               posts: {
+                 some: {
+                   author: {
+                     id: 1
+                   }
+                 }
+               }
+             }
+           }
+         ) {
+           id
+           title
+         }
+       }
+    `.expectData({
+      findManyPosts: [
+        { id: 10001, title: "Some Title 1" },
+        { id: 10002, title: "Some Title 2" },
+        { id: 10003, title: "Some Title 3" },
+        { id: 10004, title: "Some Title 4" },
+        { id: 10005, title: "Some Title 4" },
+        { id: 10006, title: "Some Title 5" },
+        { id: 10007, title: "Some title" },
+        { id: 10008, title: "Yet another" },
+      ],
+    })
+      .on(e);
+  });
+
   await t.should(
     "update matching rows and return the count affected",
     async () => {
@@ -646,6 +715,34 @@ Meta.test("prisma full mapping", async (t) => {
         },
       },
     })
+      .on(e);
+  });
+
+  await t.should("delete extended profile", async () => {
+    await gql`
+      mutation {
+        updateUser(
+          where: { id: 1 },
+          data: {
+            extended_profile: {
+              delete: true
+            }
+          }
+        ) {
+          id
+          extended_profile {
+            id
+            bio
+          }
+        }
+      }
+    `
+      .expectData({
+        updateUser: {
+          id: 1,
+          extended_profile: null,
+        },
+      })
       .on(e);
   });
 

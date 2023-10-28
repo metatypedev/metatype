@@ -14,8 +14,8 @@ import {
 } from "../../types.ts";
 import { JSONValue } from "../../utils.ts";
 import {
-  ArrayNode,
   getVariantTypesIndexes,
+  ListNode,
   ObjectNode,
   Type,
   TypeNode,
@@ -164,10 +164,11 @@ interface Dependencies {
  *      object_arg: {  # o -> collectArg() -> collectObjectArg()
  *          nested1: 12  # -> collectArg()
  *      },
- *      array_arg: [  # o -> collectArg() -> collectArrayArg()
+ *      list_arg: [  # o -> collectArg() -> collectListArg()
  *          'hello',  # -> collectArg()
  *          'world',  # -> collectArg()
- *      ]
+ *      ],
+ *      explicit_null_arg: null,  # o -> collectArg() => ((_) => null)
  *  ) {
  *      selection1
  *     selection2
@@ -242,7 +243,7 @@ class ArgumentCollector {
       // fallthrough: the user provided value
     }
 
-    // in case the argument node of the query is null,
+    // in case the argument node of the query is not defined
     // try to get a default value for it, else throw an error
     if (astNode == null) {
       if (typ.type === Type.OPTIONAL) {
@@ -274,13 +275,20 @@ class ArgumentCollector {
       return ({ variables: vars }) => vars[varName];
     }
 
+    // Note: this occurs when the graphql query arg has an *explicit* null value
+    // func( .., node: null, ..) { .. }
+    // https://spec.graphql.org/June2018/#sec-Null-Value
+    if (valueNode.kind === Kind.NULL) {
+      return (_args) => null;
+    }
+
     switch (typ.type) {
       case Type.OBJECT: {
         return this.collectObjectArg(valueNode, typ);
       }
 
-      case Type.ARRAY:
-        return this.collectArrayArg(valueNode, typ);
+      case Type.LIST:
+        return this.collectListArg(valueNode, typ);
 
       case Type.INTEGER: {
         if (valueNode.kind !== Kind.INT) {
@@ -449,9 +457,9 @@ class ArgumentCollector {
   }
 
   /** Collect the value of a parameter of type 'array'. */
-  private collectArrayArg(
+  private collectListArg(
     valueNode: ast.ValueNode,
-    typ: ArrayNode,
+    typ: ListNode,
   ): ComputeArg {
     if (valueNode.kind !== Kind.LIST) {
       throw new TypeMismatchError(
@@ -564,9 +572,7 @@ class ArgumentCollector {
       // fallthrough
     }
     if (typ.type != Type.OPTIONAL) {
-      throw new Error(
-        `Expected value for non-optional type argument ${this.currentNodeDetails}`,
-      );
+      throw new MandatoryArgumentError(this.currentNodeDetails);
     } else {
       this.addPoliciesFrom(typ.item);
     }

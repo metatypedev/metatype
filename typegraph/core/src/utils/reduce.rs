@@ -5,18 +5,18 @@ use std::collections::HashMap;
 
 use crate::{
     errors::Result,
-    wit::utils::{Apply, ApplyPath, ApplyValue},
+    wit::utils::{Reduce, ReducePath, ReduceValue},
 };
 
 #[derive(Debug, Clone)]
 pub struct PathTree {
     pub entries: Vec<PathTree>,
     pub name: String,
-    pub path_infos: ApplyPath,
+    pub path_infos: ReducePath,
 }
 
 impl PathTree {
-    fn new(name: String, path_infos: ApplyPath) -> PathTree {
+    fn new(name: String, path_infos: ReducePath) -> PathTree {
         Self {
             entries: vec![],
             name,
@@ -30,7 +30,7 @@ impl PathTree {
 
     fn build_helper(
         parent: &mut PathTree,
-        description: &ApplyPath,
+        description: &ReducePath,
         depth: usize,
     ) -> Result<(), String> {
         if depth < description.path.len() {
@@ -49,18 +49,18 @@ impl PathTree {
         Ok(())
     }
 
-    pub fn build_from(apply: &Apply) -> Result<PathTree, String> {
+    pub fn build_from(reduce: &Reduce) -> Result<PathTree, String> {
         let mut root = PathTree::new(
             "root".to_string(),
-            ApplyPath {
+            ReducePath {
                 path: vec![],
-                value: ApplyValue {
+                value: ReduceValue {
                     inherit: false,
                     payload: None,
                 },
             },
         );
-        for descr in apply.paths.iter() {
+        for descr in reduce.paths.iter() {
             PathTree::build_helper(&mut root, descr, 0)?;
         }
         Ok(root)

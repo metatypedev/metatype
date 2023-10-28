@@ -2,16 +2,32 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(inp)"
 ---
-root: struct #11
-├─ [data]: struct '_Record_UpdateInput' #8
-│  ├─ [id]: optional #5
-│  │  └─ item: string #0
-│  ├─ [name]: optional #6
-│  │  └─ item: string #1
-│  └─ [age]: optional #7
-│     └─ item: optional #3
-│        └─ item: integer #2
-└─ [where]: struct 'QueryUniqueRecordWhereInput' #10
-   └─ [id]: optional #9
+root: struct #20
+├─ [data]: struct '_Record_UpdateInput' #17
+│  ├─ [id]: optional #7
+│  │  └─ item: union #6
+│  │     ├─ variant_0: string #0
+│  │     └─ variant_1: struct #5
+│  │        └─ [set]: string #0
+│  ├─ [name]: optional #10
+│  │  └─ item: union #9
+│  │     ├─ variant_0: string #1
+│  │     └─ variant_1: struct #8
+│  │        └─ [set]: string #1
+│  └─ [age]: optional #16
+│     └─ item: union #15
+│        ├─ variant_0: optional #3
+│        │  └─ item: integer #2
+│        ├─ variant_1: struct #11
+│        │  └─ [set]: optional #3
+│        │     └─ item: integer #2
+│        ├─ variant_2: struct #12
+│        │  └─ [multiply]: integer #2
+│        ├─ variant_3: struct #13
+│        │  └─ [decrement]: integer #2
+│        └─ variant_4: struct #14
+│           └─ [increment]: integer #2
+└─ [where]: struct 'QueryUniqueRecordWhereInput' #19
+   └─ [id]: optional #18
       └─ item: string #0
 

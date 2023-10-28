@@ -22,7 +22,7 @@ def prisma_opt_n(g: Graph):
             "id": t.integer(as_id=True),
             "time": t.integer(),
             "message": t.string(),
-            "sender": db.link(t.ref("users").optional(), name="messageSender"),
+            "sender": db.link(g.ref("users").optional(), name="messageSender"),
         },
         name="messages",
     )
@@ -32,7 +32,7 @@ def prisma_opt_n(g: Graph):
             "id": t.integer(as_id=True, config={"auto": True}),
             "email": t.string(),
             "name": t.string(),
-            "messages": db.link(t.array(t.ref("messages")), "messageSender"),
+            "messages": db.link(t.list(g.ref("messages")), "messageSender"),
         },
         name="users",
     )

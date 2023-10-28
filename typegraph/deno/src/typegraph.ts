@@ -23,7 +23,6 @@ interface TypegraphArgs {
   prefix?: string;
   secrets?: Array<string>;
   cors?: Cors;
-  auths?: Array<Auth>;
   rate?: Rate;
 }
 
@@ -31,6 +30,8 @@ interface TypegraphBuilderArgs {
   expose: (exports: Exports, defaultPolicy?: Policy) => void;
   inherit: () => InheritDef;
   rest: (graphql: string) => number;
+  auth: (value: Auth | RawAuth) => number;
+  ref: (name: string) => t.Typedef;
 }
 
 export class InheritDef {
@@ -63,6 +64,10 @@ export class InheritDef {
 
 type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
 
+export class RawAuth {
+  constructor(readonly jsonStr: string) {}
+}
+
 export function typegraph(
   name: string,
   builder: TypegraphBuilder,
@@ -85,7 +90,6 @@ export function typegraph(
   const {
     name,
     dynamic,
-    auths,
     cors,
     prefix,
     rate,
@@ -118,7 +122,6 @@ export function typegraph(
       exposeHeaders: [],
       maxAgeSec: undefined,
     } as Cors,
-    auths: auths ?? [],
     rate,
   };
 
@@ -137,9 +140,26 @@ export function typegraph(
     rest: (graphql: string) => {
       return wit_utils.addGraphqlEndpoint(graphql);
     },
+    auth: (value: Auth | RawAuth) => {
+      if (value instanceof RawAuth) {
+        return wit_utils.addRawAuth(value.jsonStr);
+      }
+      return wit_utils.addAuth(value);
+    },
+    ref: (name: string) => {
+      return genRef(name);
+    },
   };
 
   builder(g);
 
   console.log(core.finalizeTypegraph());
+}
+
+export function genRef(name: string) {
+  const value = core.proxyb({ name, extras: [] });
+  if (typeof value == "object") {
+    throw new Error(JSON.stringify(value));
+  }
+  return new t.Typedef(value, { name });
 }

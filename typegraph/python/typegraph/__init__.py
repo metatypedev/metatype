@@ -5,4 +5,4 @@ from typegraph.graph.typegraph import typegraph, Graph  # noqa
 from typegraph.policy import Policy  # noqa
 from typegraph import effects as fx  # noqa
 
-version = "0.2.3-0+dev"
+version = "0.2.5-0+dev"

@@ -19,7 +19,7 @@ def type_alias(g: Graph):
             "id": t.integer(),
             "title": t.string(),
             "user_id": t.integer(),
-            "info": t.array(infos),
+            "info": t.list(infos),
         }
     )
 

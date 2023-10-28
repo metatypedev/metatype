@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Meta } from "../utils/mod.ts";
+import { gql, Meta } from "../utils/mod.ts";
 import { assertThrows } from "std/assert/mod.ts";
 import { findOperation } from "../../src/transports/graphql/graphql.ts";
 import { parse } from "graphql";
@@ -199,5 +199,41 @@ Meta.test("typecheck", async (t) => {
         },
       }],
     });
+  });
+
+  await t.should("accept explicit null value", async () => {
+    await gql`
+      query {
+        findProduct(
+            name: "A"
+            equivalent: [
+              { name: "B", equivalent: null },
+              { name: "C", score: null },
+              { name: "D", score: 10 },
+            ],
+            score: null
+        ) {
+          name
+          equivalent {
+            name
+            equivalent { name }
+            score
+          }
+          score
+        }
+      }
+    `
+      .expectData({
+        findProduct: {
+          name: "A",
+          equivalent: [
+            { name: "B" },
+            { name: "C" },
+            { name: "D", score: 10 },
+          ],
+          score: null,
+        },
+      })
+      .on(e);
   });
 });

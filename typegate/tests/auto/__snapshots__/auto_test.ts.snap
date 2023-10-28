@@ -327,40 +327,40 @@ snapshot[`Auto-tests for database 3`] = `
         },
         {
           description: "union type
-_integer_filter, object_22",
+_integer_filter, object_18",
           fields: null,
           inputFields: null,
-          name: "union_23In",
+          name: "union_19In",
         },
         {
           description: "either type
-integer_13, object_16, object_17, object_18, object_19, object_20",
+integer_9, object_12, object_13, object_14, object_15, object_16",
           fields: null,
           inputFields: null,
           name: "_integer_filterIn",
         },
         {
-          description: "object_16 input type",
+          description: "object_12 input type",
           fields: null,
           inputFields: [
             {
               name: "equals",
             },
           ],
-          name: "object_16Inp",
+          name: "object_12Inp",
         },
         {
-          description: "object_17 input type",
+          description: "object_13 input type",
           fields: null,
           inputFields: [
             {
               name: "not",
             },
           ],
-          name: "object_17Inp",
+          name: "object_13Inp",
         },
         {
-          description: "object_18 input type",
+          description: "object_14 input type",
           fields: null,
           inputFields: [
             {
@@ -376,94 +376,94 @@ integer_13, object_16, object_17, object_18, object_19, object_20",
               name: "gte",
             },
           ],
-          name: "object_18Inp",
+          name: "object_14Inp",
         },
         {
-          description: "object_19 input type",
+          description: "object_15 input type",
           fields: null,
           inputFields: [
             {
               name: "in",
             },
           ],
-          name: "object_19Inp",
+          name: "object_15Inp",
         },
         {
-          description: "object_20 input type",
+          description: "object_16 input type",
           fields: null,
           inputFields: [
             {
               name: "notIn",
             },
           ],
-          name: "object_20Inp",
+          name: "object_16Inp",
         },
         {
-          description: "object_22 input type",
+          description: "object_18 input type",
           fields: null,
           inputFields: [
             {
               name: "not",
             },
           ],
-          name: "object_22Inp",
+          name: "object_18Inp",
         },
         {
           description: "union type
-_string_filter, object_39",
+_string_filter, object_35",
           fields: null,
           inputFields: null,
-          name: "union_40In",
+          name: "union_36In",
         },
         {
           description: "union type
-string_26, object_29, object_30, object_31, object_32, object_35, object_36, object_37",
+string_22, object_25, object_26, object_27, object_28, object_31, object_32, object_33",
           fields: null,
           inputFields: null,
           name: "_string_filterIn",
         },
         {
-          description: "object_29 input type",
+          description: "object_25 input type",
           fields: null,
           inputFields: [
             {
               name: "equals",
             },
           ],
-          name: "object_29Inp",
+          name: "object_25Inp",
         },
         {
-          description: "object_30 input type",
+          description: "object_26 input type",
           fields: null,
           inputFields: [
             {
               name: "not",
             },
           ],
-          name: "object_30Inp",
+          name: "object_26Inp",
         },
         {
-          description: "object_31 input type",
+          description: "object_27 input type",
           fields: null,
           inputFields: [
             {
               name: "in",
             },
           ],
-          name: "object_31Inp",
+          name: "object_27Inp",
         },
         {
-          description: "object_32 input type",
+          description: "object_28 input type",
           fields: null,
           inputFields: [
             {
               name: "notIn",
             },
           ],
-          name: "object_32Inp",
+          name: "object_28Inp",
         },
         {
-          description: "object_35 input type",
+          description: "object_31 input type",
           fields: null,
           inputFields: [
             {
@@ -473,20 +473,20 @@ string_26, object_29, object_30, object_31, object_32, object_35, object_36, obj
               name: "mode",
             },
           ],
-          name: "object_35Inp",
+          name: "object_31Inp",
         },
         {
-          description: "object_36 input type",
+          description: "object_32 input type",
           fields: null,
           inputFields: [
             {
               name: "search",
             },
           ],
-          name: "object_36Inp",
+          name: "object_32Inp",
         },
         {
-          description: "object_37 input type",
+          description: "object_33 input type",
           fields: null,
           inputFields: [
             {
@@ -496,20 +496,20 @@ string_26, object_29, object_30, object_31, object_32, object_35, object_36, obj
               name: "endsWith",
             },
           ],
-          name: "object_37Inp",
+          name: "object_33Inp",
         },
         {
-          description: "object_39 input type",
+          description: "object_35 input type",
           fields: null,
           inputFields: [
             {
               name: "not",
             },
           ],
-          name: "object_39Inp",
+          name: "object_35Inp",
         },
         {
-          description: "object_56 input type",
+          description: "object_52 input type",
           fields: null,
           inputFields: [
             {
@@ -522,24 +522,24 @@ string_26, object_29, object_30, object_31, object_32, object_35, object_36, obj
               name: "body",
             },
           ],
-          name: "object_56Inp",
+          name: "object_52Inp",
         },
         {
           description: "union type
-object_53, _SortOrder",
+object_49, _SortOrder",
           fields: null,
           inputFields: null,
-          name: "union_54In",
+          name: "union_50In",
         },
         {
-          description: "object_53 input type",
+          description: "object_49 input type",
           fields: null,
           inputFields: [
             {
               name: "sort",
             },
           ],
-          name: "object_53Inp",
+          name: "object_49Inp",
         },
         {
           description: "_message_CreateInput input type",
@@ -722,14 +722,14 @@ snapshot[`Auto-tests for graphql 4`] = `
           name: "object_2",
         },
         {
-          description: "object_81 type",
+          description: "object_77 type",
           fields: [
             {
               name: "data",
             },
           ],
           inputFields: null,
-          name: "object_81",
+          name: "object_77",
         },
         {
           description: "Mutation type",
@@ -744,6 +744,9 @@ snapshot[`Auto-tests for graphql 4`] = `
         {
           description: "_messageOutputType type",
           fields: [
+            {
+              name: "user",
+            },
             {
               name: "user_id",
             },
@@ -784,40 +787,40 @@ snapshot[`Auto-tests for graphql 4`] = `
         },
         {
           description: "union type
-_integer_filter, object_31",
+_integer_filter, object_27",
           fields: null,
           inputFields: null,
-          name: "union_32In",
+          name: "union_28In",
         },
         {
           description: "either type
-integer_22, object_25, object_26, object_27, object_28, object_29",
+integer_18, object_21, object_22, object_23, object_24, object_25",
           fields: null,
           inputFields: null,
           name: "_integer_filterIn",
         },
         {
-          description: "object_25 input type",
+          description: "object_21 input type",
           fields: null,
           inputFields: [
             {
               name: "equals",
             },
           ],
-          name: "object_25Inp",
+          name: "object_21Inp",
         },
         {
-          description: "object_26 input type",
+          description: "object_22 input type",
           fields: null,
           inputFields: [
             {
               name: "not",
             },
           ],
-          name: "object_26Inp",
+          name: "object_22Inp",
         },
         {
-          description: "object_27 input type",
+          description: "object_23 input type",
           fields: null,
           inputFields: [
             {
@@ -833,94 +836,94 @@ integer_22, object_25, object_26, object_27, object_28, object_29",
               name: "gte",
             },
           ],
-          name: "object_27Inp",
+          name: "object_23Inp",
         },
         {
-          description: "object_28 input type",
+          description: "object_24 input type",
           fields: null,
           inputFields: [
             {
               name: "in",
             },
           ],
-          name: "object_28Inp",
+          name: "object_24Inp",
         },
         {
-          description: "object_29 input type",
+          description: "object_25 input type",
           fields: null,
           inputFields: [
             {
               name: "notIn",
             },
           ],
-          name: "object_29Inp",
+          name: "object_25Inp",
         },
         {
-          description: "object_31 input type",
+          description: "object_27 input type",
           fields: null,
           inputFields: [
             {
               name: "not",
             },
           ],
-          name: "object_31Inp",
+          name: "object_27Inp",
         },
         {
           description: "union type
-_string_filter, object_48",
+_string_filter, object_44",
           fields: null,
           inputFields: null,
-          name: "union_49In",
+          name: "union_45In",
         },
         {
           description: "union type
-string_35, object_38, object_39, object_40, object_41, object_44, object_45, object_46",
+string_31, object_34, object_35, object_36, object_37, object_40, object_41, object_42",
           fields: null,
           inputFields: null,
           name: "_string_filterIn",
         },
         {
-          description: "object_38 input type",
+          description: "object_34 input type",
           fields: null,
           inputFields: [
             {
               name: "equals",
             },
           ],
-          name: "object_38Inp",
+          name: "object_34Inp",
         },
         {
-          description: "object_39 input type",
+          description: "object_35 input type",
           fields: null,
           inputFields: [
             {
               name: "not",
             },
           ],
-          name: "object_39Inp",
+          name: "object_35Inp",
         },
         {
-          description: "object_40 input type",
+          description: "object_36 input type",
           fields: null,
           inputFields: [
             {
               name: "in",
             },
           ],
-          name: "object_40Inp",
+          name: "object_36Inp",
         },
         {
-          description: "object_41 input type",
+          description: "object_37 input type",
           fields: null,
           inputFields: [
             {
               name: "notIn",
             },
           ],
-          name: "object_41Inp",
+          name: "object_37Inp",
         },
         {
-          description: "object_44 input type",
+          description: "object_40 input type",
           fields: null,
           inputFields: [
             {
@@ -930,20 +933,20 @@ string_35, object_38, object_39, object_40, object_41, object_44, object_45, obj
               name: "mode",
             },
           ],
-          name: "object_44Inp",
+          name: "object_40Inp",
         },
         {
-          description: "object_45 input type",
+          description: "object_41 input type",
           fields: null,
           inputFields: [
             {
               name: "search",
             },
           ],
-          name: "object_45Inp",
+          name: "object_41Inp",
         },
         {
-          description: "object_46 input type",
+          description: "object_42 input type",
           fields: null,
           inputFields: [
             {
@@ -953,20 +956,20 @@ string_35, object_38, object_39, object_40, object_41, object_44, object_45, obj
               name: "endsWith",
             },
           ],
-          name: "object_46Inp",
+          name: "object_42Inp",
         },
         {
-          description: "object_48 input type",
+          description: "object_44 input type",
           fields: null,
           inputFields: [
             {
               name: "not",
             },
           ],
-          name: "object_48Inp",
+          name: "object_44Inp",
         },
         {
-          description: "object_65 input type",
+          description: "object_61 input type",
           fields: null,
           inputFields: [
             {
@@ -979,24 +982,24 @@ string_35, object_38, object_39, object_40, object_41, object_44, object_45, obj
               name: "user_id",
             },
           ],
-          name: "object_65Inp",
+          name: "object_61Inp",
         },
         {
           description: "union type
-object_62, _SortOrder",
+object_58, _SortOrder",
           fields: null,
           inputFields: null,
-          name: "union_63In",
+          name: "union_59In",
         },
         {
-          description: "object_62 input type",
+          description: "object_58 input type",
           fields: null,
           inputFields: [
             {
               name: "sort",
             },
           ],
-          name: "object_62Inp",
+          name: "object_58Inp",
         },
         {
           description: "_message_CreateInput input type",
@@ -1516,34 +1519,24 @@ snapshot[`Auto-tests for index 4`] = `
         },
         {
           description: "union type
-_string_filter, object_40",
+_string_filter, object_41",
           fields: null,
           inputFields: null,
-          name: "union_41In",
+          name: "union_42In",
         },
         {
           description: "union type
-string_27, object_30, object_31, object_32, object_33, object_36, object_37, object_38",
+string_28, object_31, object_32, object_33, object_34, object_37, object_38, object_39",
           fields: null,
           inputFields: null,
           name: "_string_filterIn",
-        },
-        {
-          description: "object_30 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "equals",
-            },
-          ],
-          name: "object_30Inp",
         },
         {
           description: "object_31 input type",
           fields: null,
           inputFields: [
             {
-              name: "not",
+              name: "equals",
             },
           ],
           name: "object_31Inp",
@@ -1553,7 +1546,7 @@ string_27, object_30, object_31, object_32, object_33, object_36, object_37, obj
           fields: null,
           inputFields: [
             {
-              name: "in",
+              name: "not",
             },
           ],
           name: "object_32Inp",
@@ -1563,13 +1556,23 @@ string_27, object_30, object_31, object_32, object_33, object_36, object_37, obj
           fields: null,
           inputFields: [
             {
-              name: "notIn",
+              name: "in",
             },
           ],
           name: "object_33Inp",
         },
         {
-          description: "object_36 input type",
+          description: "object_34 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "notIn",
+            },
+          ],
+          name: "object_34Inp",
+        },
+        {
+          description: "object_37 input type",
           fields: null,
           inputFields: [
             {
@@ -1579,20 +1582,20 @@ string_27, object_30, object_31, object_32, object_33, object_36, object_37, obj
               name: "mode",
             },
           ],
-          name: "object_36Inp",
+          name: "object_37Inp",
         },
         {
-          description: "object_37 input type",
+          description: "object_38 input type",
           fields: null,
           inputFields: [
             {
               name: "search",
             },
           ],
-          name: "object_37Inp",
+          name: "object_38Inp",
         },
         {
-          description: "object_38 input type",
+          description: "object_39 input type",
           fields: null,
           inputFields: [
             {
@@ -1602,47 +1605,50 @@ string_27, object_30, object_31, object_32, object_33, object_36, object_37, obj
               name: "endsWith",
             },
           ],
-          name: "object_38Inp",
+          name: "object_39Inp",
         },
         {
-          description: "object_40 input type",
+          description: "object_41 input type",
           fields: null,
           inputFields: [
             {
               name: "not",
             },
           ],
-          name: "object_40Inp",
+          name: "object_41Inp",
         },
         {
-          description: "object_58 input type",
+          description: "object_59 input type",
           fields: null,
           inputFields: [
             {
               name: "id",
             },
             {
+              name: "email",
+            },
+            {
               name: "message",
             },
           ],
-          name: "object_58Inp",
+          name: "object_59Inp",
         },
         {
           description: "union type
-object_55, _SortOrder",
+object_56, _SortOrder",
           fields: null,
           inputFields: null,
-          name: "union_56In",
+          name: "union_57In",
         },
         {
-          description: "object_55 input type",
+          description: "object_56 input type",
           fields: null,
           inputFields: [
             {
               name: "sort",
             },
           ],
-          name: "object_55Inp",
+          name: "object_56Inp",
         },
         {
           description: "_feedback_CreateInput input type",
@@ -1825,60 +1831,60 @@ snapshot[`Auto-tests for prisma 3`] = `
         },
         {
           description: "union type
-_string_filter, object_26",
+_string_filter, object_22",
           fields: null,
           inputFields: null,
-          name: "union_27In",
+          name: "union_23In",
         },
         {
           description: "union type
-string_13, object_16, object_17, object_18, object_19, object_22, object_23, object_24",
+string_9, object_12, object_13, object_14, object_15, object_18, object_19, object_20",
           fields: null,
           inputFields: null,
           name: "_string_filterIn",
         },
         {
-          description: "object_16 input type",
+          description: "object_12 input type",
           fields: null,
           inputFields: [
             {
               name: "equals",
             },
           ],
-          name: "object_16Inp",
+          name: "object_12Inp",
         },
         {
-          description: "object_17 input type",
+          description: "object_13 input type",
           fields: null,
           inputFields: [
             {
               name: "not",
             },
           ],
-          name: "object_17Inp",
+          name: "object_13Inp",
         },
         {
-          description: "object_18 input type",
+          description: "object_14 input type",
           fields: null,
           inputFields: [
             {
               name: "in",
             },
           ],
-          name: "object_18Inp",
+          name: "object_14Inp",
         },
         {
-          description: "object_19 input type",
+          description: "object_15 input type",
           fields: null,
           inputFields: [
             {
               name: "notIn",
             },
           ],
-          name: "object_19Inp",
+          name: "object_15Inp",
         },
         {
-          description: "object_22 input type",
+          description: "object_18 input type",
           fields: null,
           inputFields: [
             {
@@ -1888,20 +1894,20 @@ string_13, object_16, object_17, object_18, object_19, object_22, object_23, obj
               name: "mode",
             },
           ],
-          name: "object_22Inp",
+          name: "object_18Inp",
         },
         {
-          description: "object_23 input type",
+          description: "object_19 input type",
           fields: null,
           inputFields: [
             {
               name: "search",
             },
           ],
-          name: "object_23Inp",
+          name: "object_19Inp",
         },
         {
-          description: "object_24 input type",
+          description: "object_20 input type",
           fields: null,
           inputFields: [
             {
@@ -1911,20 +1917,20 @@ string_13, object_16, object_17, object_18, object_19, object_22, object_23, obj
               name: "endsWith",
             },
           ],
-          name: "object_24Inp",
+          name: "object_20Inp",
         },
         {
-          description: "object_26 input type",
+          description: "object_22 input type",
           fields: null,
           inputFields: [
             {
               name: "not",
             },
           ],
-          name: "object_26Inp",
+          name: "object_22Inp",
         },
         {
-          description: "object_44 input type",
+          description: "object_40 input type",
           fields: null,
           inputFields: [
             {
@@ -1937,24 +1943,24 @@ string_13, object_16, object_17, object_18, object_19, object_22, object_23, obj
               name: "firstname",
             },
           ],
-          name: "object_44Inp",
+          name: "object_40Inp",
         },
         {
           description: "union type
-object_41, _SortOrder",
+object_37, _SortOrder",
           fields: null,
           inputFields: null,
-          name: "union_42In",
+          name: "union_38In",
         },
         {
-          description: "object_41 input type",
+          description: "object_37 input type",
           fields: null,
           inputFields: [
             {
               name: "sort",
             },
           ],
-          name: "object_41Inp",
+          name: "object_37Inp",
         },
         {
           description: "_user_CreateInput input type",

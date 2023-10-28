@@ -2,9 +2,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::{self, Result};
-use crate::runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime};
+use crate::runtimes::{
+    DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
+};
 use crate::types::{Struct, Type, TypeFun, TypeId, WrapperTypeData};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
+use crate::wit::utils::Auth as WitAuth;
+
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
@@ -44,14 +48,18 @@ pub struct Store {
     predefined_deno_functions: HashMap<String, MaterializerId>,
     deno_modules: HashMap<String, MaterializerId>,
 
+    public_policy_id: PolicyId,
+
     prisma_migration_runtime: RuntimeId,
     typegate_runtime: RuntimeId,
     typegraph_runtime: RuntimeId,
     graphql_endpoints: Vec<String>,
+    auths: Vec<common::typegraph::Auth>,
 }
 
 impl Store {
     fn new() -> Self {
+        let deno_runtime = 0;
         Self {
             runtimes: vec![
                 Runtime::Deno,
@@ -59,10 +67,26 @@ impl Store {
                 Runtime::Typegate,
                 Runtime::Typegraph,
             ],
-            deno_runtime: 0,
+            deno_runtime,
             prisma_migration_runtime: 1,
             typegate_runtime: 2,
             typegraph_runtime: 3,
+
+            materializers: vec![Materializer {
+                runtime_id: deno_runtime,
+                effect: Effect::Read,
+                data: MaterializerData::Deno(Rc::new(DenoMaterializer::Predefined(
+                    crate::wit::runtimes::MaterializerDenoPredefined {
+                        name: "true".to_string(),
+                    },
+                ))),
+            }],
+
+            policies: vec![Rc::new(CorePolicy {
+                name: "__public".to_string(),
+                materializer: 0,
+            })],
+            public_policy_id: 0,
             ..Default::default()
         }
     }
@@ -140,6 +164,83 @@ impl Store {
         })
     }
 
+    pub fn pick_branch_by_path(supertype_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
+        let supertype = supertype_id.as_type()?;
+        let filter_and_reduce = |variants: Vec<u32>| match path.len() {
+            0 => Ok((supertype.clone(), supertype_id)), // terminal node
+            _ => {
+                let mut compatible = vec![];
+                let mut failures = vec![];
+                let chunk = path.first().unwrap();
+                for (i, variant) in variants.iter().enumerate() {
+                    let variant: TypeId = variant.into();
+                    let unwrapped_variant = variant.resolve_wrapper()?.as_type()?;
+                    match unwrapped_variant {
+                        Type::Struct(t) => {
+                            for (prop_name, prop_id) in t.iter_props() {
+                                if prop_name.eq(chunk) {
+                                    // variant is compatible with the path
+                                    // try expanding it, if it fails, just skip
+                                    match Store::get_type_by_path(prop_id, &path[1..]) {
+                                        Ok((_, solution)) => compatible.push(solution),
+                                        Err(e) => failures.push(format!(
+                                            "[v{i} → {prop_name}]: {}",
+                                            e.stack.first().unwrap().clone()
+                                        )),
+                                    }
+                                }
+                            }
+                        }
+                        Type::Either(..) | Type::Union(..) => {
+                            // get_type_by_path => pick_branch_by_path
+                            match Store::get_type_by_path(variant, &path[1..]) {
+                                Ok((_, solution)) => compatible.push(solution),
+                                Err(e) => failures
+                                    .push(format!("[v{i}]: {}", e.stack.first().unwrap().clone())),
+                            }
+                        }
+                        _ => {} // skip
+                    }
+                }
+
+                if compatible.is_empty() {
+                    return Err(format!(
+                        "unable to expand variant with **.{}\nDetails:\n{}",
+                        path.join("."),
+                        failures.join("\n")
+                    )
+                    .into());
+                }
+
+                let first = compatible.first().unwrap().to_owned();
+                let ret_id = match &supertype {
+                    Type::Union(..) => first,
+                    Type::Either(..) => {
+                        if compatible.len() > 1 {
+                            return Err(format!(
+                                    "either node with more than one compatible variant encountered at path **.{}",
+                                    path.join("."),
+                                ).into(),
+                            );
+                        }
+                        first
+                    }
+                    _ => {
+                        return Err("invalid state: either or union expected as supertype".into());
+                    }
+                };
+
+                Ok((ret_id.as_type()?, ret_id))
+            }
+        };
+
+        match &supertype {
+            Type::Either(t) => filter_and_reduce(t.data.variants.clone()),
+            Type::Union(t) => filter_and_reduce(t.data.variants.clone()),
+            _ => Store::get_type_by_path(supertype_id, path), // no branching, trivial case
+        }
+    }
+
     pub fn get_type_by_path(struct_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
         let mut ret = (struct_id.as_type()?, struct_id);
 
@@ -165,6 +266,10 @@ impl Store {
                             ));
                         }
                     };
+                }
+                Type::Union(..) | Type::Either(..) => {
+                    ret = Store::pick_branch_by_path(unwrapped_id, &path[pos..])?;
+                    break;
                 }
                 _ => return Err(errors::expect_object_at_path(&curr_path)),
             }
@@ -244,6 +349,10 @@ impl Store {
         })
     }
 
+    pub fn get_public_policy_id() -> PolicyId {
+        with_store(|s| s.public_policy_id)
+    }
+
     pub fn get_predefined_deno_function(name: String) -> Result<MaterializerId> {
         if let Some(mat) = with_store(|s| s.predefined_deno_functions.get(&name).cloned()) {
             Ok(mat)
@@ -284,7 +393,7 @@ impl Store {
         }
     }
 
-    pub fn add_graphql_endpoint(graphql: String) -> Result<()> {
+    pub fn add_graphql_endpoint(graphql: String) -> Result<u32> {
         with_store_mut(|s| {
             let ast = parse_query::<&str>(&graphql).map_err(|e| e.to_string())?;
             let endpoints = ast
@@ -299,12 +408,31 @@ impl Store {
                 .collect::<Vec<_>>();
 
             s.graphql_endpoints.extend(endpoints);
-            Ok(())
+            Ok(s.graphql_endpoints.len() as u32)
         })
     }
 
     pub fn get_graphql_endpoints() -> Vec<String> {
         with_store(|s| s.graphql_endpoints.clone())
+    }
+
+    pub fn add_auth(auth: WitAuth) -> Result<u32> {
+        with_store_mut(|s| {
+            let auth = auth.convert()?;
+            s.auths.push(auth);
+            Ok(s.auths.len() as u32)
+        })
+    }
+
+    pub fn add_raw_auth(auth: common::typegraph::Auth) -> Result<u32> {
+        with_store_mut(|s| {
+            s.auths.push(auth);
+            Ok(s.auths.len() as u32)
+        })
+    }
+
+    pub fn get_auths() -> Vec<common::typegraph::Auth> {
+        with_store(|s| s.auths.clone())
     }
 }
 
@@ -333,7 +461,7 @@ impl TypeId {
     pub fn resolve_quant(&self) -> Result<TypeId> {
         let type_id = *self;
         match type_id.as_type()? {
-            Type::Array(a) => Ok(a.data.of.into()),
+            Type::List(a) => Ok(a.data.of.into()),
             Type::Optional(o) => Ok(o.data.of.into()),
             _ => Ok(type_id),
         }
@@ -345,7 +473,7 @@ impl TypeId {
         loop {
             let tpe = id.as_type()?;
             let new_id = match tpe {
-                Type::Array(t) => t.data.of.into(),
+                Type::List(t) => t.data.of.into(),
                 Type::Optional(t) => t.data.of.into(),
                 Type::WithInjection(t) => t.data.tpe.into(),
                 Type::Proxy(t) => t.id.resolve_proxy()?,

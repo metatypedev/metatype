@@ -1,10 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::runtimes::prisma::context::PrismaContext;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::{errors::Result, types::TypeId};
 
-use super::{where_::Where, with_filters::WithFilters, TypeGen};
+use super::{where_::Where, TypeGen};
 
 pub struct QueryWhereExpr {
     model_id: TypeId,
@@ -17,16 +18,14 @@ impl QueryWhereExpr {
 }
 
 impl TypeGen for QueryWhereExpr {
-    fn generate(&self, context: &mut super::TypeGenContext) -> Result<TypeId> {
-        let where_type = context.generate(&Where::new(self.model_id, true))?;
-        let extended_type =
-            context.generate(&WithFilters::new(where_type, self.model_id, false))?;
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+        let where_type = context.generate(&Where::new(self.model_id))?;
 
-        let props = extended_type.as_struct().unwrap().data.props.to_vec();
+        let props = where_type.as_struct().unwrap().data.props.to_vec();
 
         let name = self.name();
         let self_ref = t::proxy(&name).build()?;
-        let and = t::optionalx(t::array(self_ref))?.build()?;
+        let and = t::optionalx(t::list(self_ref))?.build()?;
 
         let mut builder = t::struct_();
         builder.named(name);
@@ -45,5 +44,28 @@ impl TypeGen for QueryWhereExpr {
             "Query{}WhereInput",
             self.model_id.type_name().unwrap().unwrap()
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::*;
+    #[test]
+    fn test_query_where_expr() -> Result<()> {
+        setup(None)?;
+
+        let mut ctx = PrismaContext::default();
+
+        let (user, post) = models::simple_relationship()?;
+
+        ctx.manage(user)?;
+        let user_where_expr = ctx.generate(&QueryWhereExpr::new(user))?;
+        insta::assert_snapshot!("User/QueryWhereExpr", tree::print(user_where_expr));
+
+        let post_where_expr = ctx.generate(&QueryWhereExpr::new(post))?;
+        insta::assert_snapshot!("Post/QueryWhereExpr", tree::print(post_where_expr));
+
+        Ok(())
     }
 }

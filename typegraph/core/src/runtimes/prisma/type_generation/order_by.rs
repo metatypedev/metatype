@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::Result;
+use crate::runtimes::prisma::context::PrismaContext;
+use crate::runtimes::prisma::errors;
+use crate::runtimes::prisma::model::{Property, ScalarType};
 use crate::runtimes::prisma::relationship::Cardinality;
 use crate::t::{ConcreteTypeBuilder, TypeBuilder};
-use crate::types::Type;
 use crate::{t, types::TypeId};
 
-use super::{TypeGen, TypeGenContext};
+use super::TypeGen;
 
 pub struct OrderBy {
     model_id: TypeId,
@@ -38,61 +40,59 @@ impl OrderBy {
 }
 
 impl TypeGen for OrderBy {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = if self.aggregates {
             t::struct_extends(context.generate(&AggregateSorting::new(self.model_id))?)?
         } else {
             t::struct_()
         };
 
-        for (k, type_id) in self.model_id.as_struct()?.iter_props() {
-            let registry_entry = context.registry.models.get(&self.model_id).unwrap();
-            let rel = registry_entry.relationships.get(k);
-            if let Some(rel_name) = rel {
-                if self.skip_rel.contains(rel_name) {
-                    continue;
+        let model = context.model(self.model_id)?;
+        let model = model.borrow();
+
+        for (k, prop) in model.iter_props() {
+            match prop {
+                Property::Model(prop) => {
+                    let rel_name = model
+                        .relationships
+                        .get(k)
+                        .ok_or_else(|| errors::unregistered_relationship(&model.type_name, k))?;
+
+                    if self.skip_rel.contains(rel_name) {
+                        continue;
+                    }
+
+                    // TODO does this work for self relationship?
+                    match prop.quantifier {
+                        Cardinality::Many => {
+                            builder.prop(k, context.generate(&SortByAggregates)?);
+                        }
+                        Cardinality::Optional | Cardinality::One => {
+                            let mut skip_rel = self.skip_rel.clone();
+                            skip_rel.push(rel_name.clone());
+                            let inner =
+                                context.generate(&OrderBy::new(prop.model_id).skip(skip_rel))?;
+                            builder.propx(k, t::optional(inner))?;
+                        }
+                    }
                 }
 
-                let rel = context
-                    .registry
-                    .relationships
-                    .get(rel_name)
-                    .cloned()
-                    .unwrap();
+                Property::Scalar(prop) => {
+                    if prop.quantifier != Cardinality::Many {
+                        builder.prop(
+                            k,
+                            context.generate(&Sort {
+                                nullable: prop.quantifier == Cardinality::Optional,
+                            })?,
+                        );
+                    }
+                }
 
-                // TODO does this work for self relationship?
-                let relationship_model = rel.get_opposite_of(self.model_id, k).unwrap();
-                match relationship_model.cardinality {
-                    Cardinality::Many => {
-                        builder.prop(k, context.generate(&SortByAggregates)?);
-                    }
-                    Cardinality::Optional | Cardinality::One => {
-                        let mut skip_rel = self.skip_rel.clone();
-                        skip_rel.push(rel_name.clone());
-                        let inner = context.generate(
-                            &OrderBy::new(relationship_model.model_type).skip(skip_rel),
-                        )?;
-                        builder.propx(k, t::optional(inner))?;
-                    }
-                }
-            } else {
-                let typ = type_id.as_type()?;
-                let (typ, nullable) = if let Type::Optional(inner) = typ {
-                    (inner.item().as_type()?, true)
-                } else {
-                    (typ, false)
-                };
-                match typ {
-                    Type::Boolean(_) | Type::Integer(_) | Type::Float(_) | Type::String(_) => {
-                        builder.prop(k, context.generate(&Sort { nullable })?);
-                    }
-                    Type::Array(_) => {}
-                    _ => {}
-                }
+                Property::Unmanaged(_) => {}
             }
         }
 
-        t::arrayx(builder)?.named(self.name()).build()
+        t::listx(builder)?.named(self.name()).build()
     }
 
     fn name(&self) -> String {
@@ -114,7 +114,7 @@ impl TypeGen for OrderBy {
 struct SortOrder;
 
 impl TypeGen for SortOrder {
-    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
         t::string()
             .enum_(vec!["asc".to_string(), "desc".to_string()])
             .named(self.name())
@@ -129,7 +129,7 @@ impl TypeGen for SortOrder {
 struct NullsOrder;
 
 impl TypeGen for NullsOrder {
-    fn generate(&self, _context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
         t::string()
             .enum_(vec!["first".to_string(), "last".to_string()])
             .named(self.name())
@@ -146,7 +146,7 @@ struct Sort {
 }
 
 impl TypeGen for Sort {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let sort_order = context.generate(&SortOrder)?;
         let nulls_order = context.generate(&NullsOrder)?;
         let mut builder = t::struct_();
@@ -169,7 +169,7 @@ impl TypeGen for Sort {
 struct SortByAggregates;
 
 impl TypeGen for SortByAggregates {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
         let sort = context.generate(&Sort { nullable: false })?;
         builder.prop("_count", sort);
@@ -197,51 +197,51 @@ impl AggregateSorting {
 }
 
 impl TypeGen for AggregateSorting {
-    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        use AggregateSortingProp as Prop;
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+        let model = context.model(self.model_id)?;
+        let model = model.borrow();
 
-        let props = self
-            .model_id
-            .as_struct()?
-            .iter_props()
-            .map(|(k, type_id)| -> Result<_> {
-                let attrs = type_id.attrs()?;
-                let typ = attrs.concrete_type.as_type()?;
-                let (typ, is_optional) = match typ {
-                    Type::Optional(inner) => (
-                        TypeId(inner.data.of).attrs()?.concrete_type.as_type()?,
-                        true,
-                    ),
-                    _ => (typ, false),
-                };
-                match typ {
-                    Type::Integer(_) | Type::Float(_) => Ok(Prop {
-                        key: k.to_string(),
-                        number_type: true,
-                        optional: is_optional,
-                    }),
-                    _ => Ok(Prop {
-                        key: k.to_string(),
-                        number_type: false,
-                        optional: is_optional,
-                    }),
+        let mut agg_builder = t::struct_();
+        let mut count_builder = t::struct_();
+
+        for (k, prop) in model.iter_props() {
+            match prop {
+                Property::Scalar(prop) => {
+                    count_builder.prop(
+                        k,
+                        context.generate(&Sort {
+                            nullable: prop.quantifier == Cardinality::Optional,
+                        })?,
+                    );
+                    match prop.prop_type {
+                        ScalarType::Integer | ScalarType::Float => {
+                            agg_builder.prop(
+                                k,
+                                context.generate(&Sort {
+                                    nullable: prop.quantifier == Cardinality::Optional,
+                                })?,
+                            );
+                        }
+                        // skip
+                        _ => {}
+                    }
                 }
-            })
-            .collect::<Result<Vec<_>>>()?;
+                Property::Model(prop) => {
+                    count_builder.prop(
+                        k,
+                        context.generate(&Sort {
+                            nullable: prop.quantifier == Cardinality::Optional,
+                        })?,
+                    );
+                }
+
+                Property::Unmanaged(_) => {}
+            }
+        }
 
         let mut builder = t::struct_();
-        let count = t::optionalx(t::struct_from(props.iter().filter_map(|p| {
-            p.generate(context, true)
-                .unwrap()
-                .map(|ty| (p.key.clone(), ty))
-        })))?
-        .build()?;
-        let others = t::optionalx(t::struct_from(props.iter().filter_map(|p| {
-            p.generate(context, false)
-                .unwrap()
-                .map(|ty| (p.key.clone(), ty))
-        })))?
-        .build()?;
+        let count = t::optionalx(count_builder)?.build()?;
+        let others = t::optionalx(agg_builder)?.build()?;
         builder
             .prop("_count", count)
             .prop("_avg", others)
@@ -255,30 +255,5 @@ impl TypeGen for AggregateSorting {
     fn name(&self) -> String {
         let model_name = self.model_id.type_name().unwrap().unwrap();
         format!("_{model_name}_AggregateSorting")
-    }
-}
-
-struct AggregateSortingProp {
-    key: String,
-    number_type: bool,
-    optional: bool,
-}
-
-impl AggregateSortingProp {
-    fn generate(&self, context: &mut TypeGenContext, count: bool) -> Result<Option<TypeId>> {
-        Ok(match count {
-            true => Some(context.generate(&Sort {
-                nullable: self.optional,
-            })?),
-            false => {
-                if self.number_type {
-                    Some(context.generate(&Sort {
-                        nullable: self.optional,
-                    })?)
-                } else {
-                    None
-                }
-            }
-        })
     }
 }

@@ -42,8 +42,8 @@ pub mod models {
     pub fn simple_relationship() -> Result<(TypeId, TypeId)> {
         let user = t::struct_()
             .prop("id", t::integer().as_id(true).build()?)
-            .prop("name", t::string().build()?)
-            .prop("posts", t::array(t::proxy("Post").build()?).build()?)
+            .propx("name", t::string())?
+            .propx("posts", t::listx(t::proxy("Post"))?)?
             .named("User")
             .build()?;
 
@@ -191,7 +191,7 @@ pub mod tree {
                             parents,
                         },
                     ]),
-                    Type::Array(ty) => Cow::Owned(vec![Node {
+                    Type::List(ty) => Cow::Owned(vec![Node {
                         label: "item".to_string(),
                         type_id: ty.data.of.into(),
                         parents,

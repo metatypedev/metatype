@@ -229,7 +229,7 @@
       "as_id": false
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "array_20",
       "runtime": 1,
       "policies": [],
@@ -488,7 +488,7 @@
       "as_id": false
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "array_48",
       "runtime": 1,
       "policies": [],

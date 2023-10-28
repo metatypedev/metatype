@@ -1,14 +1,19 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ObjectNode, Type, TypeNode } from "../../../typegraph/type_node.ts";
+import { Type, TypeNode } from "../../../typegraph/type_node.ts";
 import { PushHandler } from "../../../typegate/hooks.ts";
 import { SecretManager, TypeGraphDS } from "../../../typegraph/mod.ts";
-import { Relationship, StringNode } from "../../../typegraph/types.ts";
-import { ensure, ensureNonNullable } from "../../../utils.ts";
+import {
+  Cardinality,
+  Model,
+  Property,
+  Relationship,
+  StringNode,
+} from "../../../typegraph/types.ts";
+import { ensureNonNullable } from "../../../utils.ts";
 import { PrismaRT } from "../mod.ts";
 import { validate_prisma_runtime_data } from "native";
-import { isUuid } from "../../../typegraph/type_node.ts";
 
 type QuantifierSuffix = "" | "?" | "[]";
 
@@ -52,67 +57,145 @@ class ModelField {
 }
 
 class FieldBuilder {
+  static #quantifier(cardinality: Cardinality) {
+    switch (cardinality) {
+      case "optional":
+        return "?";
+      case "one":
+        return "";
+      case "many":
+        return "[]";
+    }
+  }
+
   constructor(
     private typegraph: TypeGraphDS,
     private relationships: Relationship[],
+    private models: Model[],
     private provider: Provider,
     private source = "db", // datasource name in the .prisma file
   ) {}
 
-  build(field: string, parentTypeIdx: number): ModelField {
-    const parentType = this.#type(parentTypeIdx);
-    if (parentType.type !== Type.OBJECT) {
-      throw new Error("parent type must be object");
-    }
+  build(prop: Property): ModelField {
+    switch (prop.type) {
+      case "scalar": {
+        const quant = FieldBuilder.#quantifier(prop.cardinality);
+        let typeName: string = prop.propType.type;
+        let tags: string[] = [];
+        if (prop.propType.type === "String") {
+          const [typeIdx, _] = this.#unwrapQuantifier(prop.typeIdx);
+          const typeNode = this.typegraph.types[typeIdx];
 
-    const [typeIdx, quant] = this.#unwrapQuantifier(
-      parentType.properties[field],
-    );
-    const typeNode = this.#type(typeIdx);
+          if (typeNode.type !== Type.STRING) {
+            throw new Error("expected string type");
+          }
+          [typeName, tags] = this.#getStringTypeAndTags(typeNode);
+        }
 
-    ensure(
-      typeNode.type !== Type.OPTIONAL && typeNode.type !== Type.ARRAY,
-      "nested quantifier not supported",
-    );
+        if (prop.unique) {
+          tags.push("@unique");
+        }
 
-    const fromScalarType = this.fieldFromScalarType(field, typeNode, quant);
-    const modelField: ModelField = fromScalarType ?? this.fieldFromObjectType(
-      field,
-      typeIdx,
-      typeNode as ObjectNode,
-      parentTypeIdx,
-      parentType,
-      quant,
-    );
+        if (prop.auto) {
+          switch (prop.propType.type) {
+            case "String":
+              switch (prop.propType.format) {
+                case "DateTime":
+                  tags.push("@default(now())");
+                  break;
+                case "Uuid":
+                  tags.push("@default(uuid())");
+                  break;
+                default:
+                  throw new Error(
+                    "unsupported auto attribute on type string",
+                  );
+              }
+              break;
+            case "Int":
+              tags.push("@default(autoincrement())");
+              break;
+            default:
+              throw new Error(
+                `unsupported auto attribute on type ${prop.propType.type}}`,
+              );
+          }
+        }
 
-    modelField.tags.push(...this.#getAdditionalTags(typeNode));
-
-    return modelField;
-  }
-
-  #getAdditionalTags(typeNode: TypeNode): string[] {
-    const tags: string[] = [];
-
-    if (typeNode.as_id) {
-      tags.push("@id");
-    }
-
-    if (typeNode.config?.unique) {
-      tags.push("@unique");
-    }
-
-    if (typeNode.config?.auto) {
-      // TODO check database support
-      if (typeNode.type === Type.INTEGER) {
-        tags.push("@default(autoincrement())");
-      } else if (isUuid(typeNode)) {
-        tags.push("@default(uuid())");
-      } else {
-        throw new Error("auto not supported for this type");
+        const field = new ModelField(prop.key, typeName + quant, tags);
+        return field;
       }
-    }
 
-    return tags;
+      case "relationship": {
+        const quant = FieldBuilder.#quantifier(prop.cardinality);
+        const rel = this.relationships.find((r) =>
+          r.name === prop.relationshipName
+        );
+        const tags: string[] = [];
+        if (rel == null) {
+          throw new Error(`relationship not found: ${prop.relationshipName}`);
+        }
+        switch (prop.relationshipSide) {
+          case "right": {
+            tags.push(
+              `@relation(name: ${toPrismaString(prop.relationshipName)})`,
+            );
+            const field = new ModelField(
+              prop.key,
+              prop.modelName + quant,
+              tags,
+            );
+            return field;
+          }
+
+          case "left": {
+            const toPascalCase = (s: string) => s[0].toUpperCase() + s.slice(1);
+            const leftModel = this.models.find((m) =>
+              m.typeIdx === rel.left.type_idx
+            );
+            if (leftModel == null) {
+              throw new Error("left model not found");
+            }
+            const fields = leftModel.idFields.map((key) =>
+              `${prop.key}${toPascalCase(key)}`
+            );
+            const fkeys = leftModel.idFields.map((key) => {
+              const idProp = leftModel.props.find((p) => p.key === key)!;
+              const modelField = this.build(
+                { ...idProp, cardinality: prop.cardinality },
+              );
+              modelField.name = `${prop.key}${toPascalCase(modelField.name)}`;
+              modelField.tags = modelField.tags.filter(
+                (t) => !t.startsWith("@default"),
+              );
+              return modelField;
+            });
+
+            const name = toPrismaString(prop.relationshipName);
+            const formattedFields = toPrismaList(fields);
+            const references = toPrismaList(leftModel.idFields);
+
+            tags.push(
+              `@relation(name: ${name}, fields: ${formattedFields}, references: ${references})`,
+            );
+            const field = new ModelField(
+              prop.key,
+              prop.modelName + quant,
+              tags,
+            );
+            field.fkeys = fkeys;
+            field.fkeysUnique = rel.right.cardinality !== "many";
+            return field;
+          }
+
+          default:
+            throw new Error("");
+        }
+      }
+
+      default:
+        throw new Error("");
+    }
   }
 
   fieldFromScalarType(
@@ -157,13 +240,34 @@ class FieldBuilder {
     const src = this.source;
     switch (this.provider) {
       case "postgresql":
+      // deno-lint-ignore no-fallthrough
       case "mysql":
         switch (typeNode.format) {
           case "uuid":
             tags.push(`@${src}.Uuid`);
             return ["String", [`@${src}.Uuid`]];
 
-          // TODO date-time
+          case "date":
+          case "date-time": {
+            const injection = typeNode.injection;
+            const tags = [];
+            if (injection) {
+              if (injection.source === "dynamic") {
+                if ("value" in injection.data) {
+                  throw new Error("");
+                }
+                const onCreate = injection.data.create;
+                if (onCreate === "now") {
+                  tags.push("@default(now())");
+                }
+                const onUpdate = injection.data.update;
+                if (onUpdate === "now") {
+                  tags.push("@updatedAt");
+                }
+              }
+            }
+            return ["DateTime", tags];
+          }
 
           // TODO json -- needs a dedicated ticket
 
@@ -188,146 +292,16 @@ class FieldBuilder {
     }
   }
 
-  fieldFromObjectType(
-    name: string,
-    typeIdx: number,
-    typeNode: ObjectNode,
-    parentIdx: number,
-    _parentNode: ObjectNode,
-    quant: QuantifierSuffix,
-  ): ModelField {
-    // TODO might be more than one, or less
-    const found = this.#findRelationship(typeIdx, parentIdx, name);
-    if (found == null) {
-      throw new Error(`relationship not found: ${name}`);
-    }
-    const [rel, side] = found;
-    switch (side) {
-      case "left":
-        return new ModelField(name, typeNode.title + quant, [
-          `@relation(name: ${toPrismaString(rel.name)})`,
-        ]);
-
-      case "right": {
-        const [tag, fkeys] = this.#getRelationTagAndFkeys(
-          name,
-          typeNode,
-          rel,
-          quant === "?",
-        );
-        const modelField = new ModelField(name, typeNode.title + quant, [tag]);
-        // additional tags??
-        modelField.fkeys = fkeys;
-        modelField.fkeysUnique = rel.right.cardinality !== "many";
-        return modelField;
-      }
-
-      default:
-        throw new Error(`invalid side: ${side}`);
-    }
-  }
-
-  #getRelationTagAndFkeys(
-    field: string,
-    type: TypeNode,
-    relationship: Relationship,
-    optional: boolean,
-  ): [string, ModelField[]] {
-    const toPascalCase = (s: string) => s[0].toUpperCase() + s.slice(1);
-
-    if (type.type !== Type.OBJECT) {
-      throw new Error("type must be object");
-    }
-    const ids = Object.entries(type.properties).flatMap(([name, idx]) => {
-      const t = this.#type(idx);
-      return t.as_id ? [name] : [];
-    });
-    const fields = ids.map((id) => `${field}${toPascalCase(id)}`);
-
-    const typeNameSuffix = optional ? "?" : "";
-
-    const fkeys = fields.map((field, i) => {
-      const [typeIdx, _quant] = this.#unwrapQuantifier(
-        type.properties[ids[i]],
-      );
-      const typeNode = this.#type(typeIdx);
-      const r = this.#getScalarTypeNameAndTags(typeNode);
-      ensureNonNullable(r, "invalid scalar type");
-      const [typeName, tags] = r;
-      const modelField = new ModelField(field, typeName + typeNameSuffix, tags);
-      modelField.tags = modelField.tags.filter((tag) =>
-        tag !== "@id" && !tag.startsWith("@default")
-      );
-      return modelField;
-    });
-
-    const name = toPrismaString(relationship.name);
-    const formattedFields = toPrismaList(fields);
-    const references = toPrismaList(ids);
-
-    return [
-      `@relation(name: ${name}, fields: ${formattedFields}, references: ${references})`,
-      fkeys,
-    ];
-  }
-
-  #findRelationship(
-    idx: number,
-    parentIdx: number,
-    parentField: string,
-  ): [rel: Relationship, parentSide: "left" | "right"] | null {
-    type T = [Relationship, "left" | "right"];
-
-    const relationships = this
-      .relationships.flatMap((rel) => {
-        if (
-          rel.left.type_idx === idx && rel.right.type_idx === parentIdx &&
-          rel.right.field === parentField
-        ) {
-          return [[rel, "right"]] as T[];
-        }
-        if (
-          rel.right.type_idx === idx && rel.left.type_idx === parentIdx &&
-          rel.left.field === parentField
-        ) {
-          return [[rel, "left"]] as T[];
-        }
-        return [] as T[];
-      });
-
-    if (relationships.length === 0) {
-      const typeName = this.#type(idx).title;
-      const parentName = this.#type(parentIdx).title;
-      const types = `${typeName} and ${parentName}`;
-      throw new Error(`relationship not found between types ${types}`);
-    }
-
-    if (relationships.length > 1) {
-      const typeName = this.#type(idx).title;
-      const parentName = this.#type(parentIdx).title;
-      const types = `${typeName} and ${parentName}`;
-      throw new Error(`multiple relationships found between types ${types}`);
-    }
-
-    return relationships[0];
-  }
-
   #unwrapQuantifier(typeIdx: number): [number, QuantifierSuffix] {
-    const typeNode = this.#type(typeIdx);
+    const typeNode = this.typegraph.types[typeIdx];
     switch (typeNode.type) {
       case Type.OPTIONAL:
         return [typeNode.item, "?"];
-      case Type.ARRAY:
+      case Type.LIST:
         return [typeNode.items, "[]"];
       default:
         return [typeIdx, ""];
     }
-  }
-
-  #type(idx: number): TypeNode {
-    const typeNode = this.typegraph.types[idx];
-    ensureNonNullable(typeNode, `type not found, idx=${idx}`);
-    return typeNode;
   }
 }
 
@@ -337,7 +311,7 @@ type Provider = typeof SUPPORTED_PROVIDERS[number];
 export class SchemaGenerator {
   #provider: Provider;
   #fieldBuilder: FieldBuilder;
-  #models: number[];
+  #models: Model[];
 
   constructor(
     private readonly typegraph: TypeGraphDS,
@@ -356,6 +330,7 @@ export class SchemaGenerator {
     this.#fieldBuilder = new FieldBuilder(
       typegraph,
       runtimeData.relationships,
+      runtimeData.models,
       this.#provider,
     );
     this.#models = runtimeData.models;
@@ -367,27 +342,13 @@ export class SchemaGenerator {
     return typeNode;
   }
 
-  generateModel(typeIdx: number): string {
-    const typeNode = this.#type(typeIdx);
-    if (typeNode.type !== Type.OBJECT) {
-      throw new Error("type must be object");
-    }
-
+  generateModel(model: Model): string {
     const tags: string[] = [];
     const modelFields: ModelField[] = [];
-    for (const [name, idx] of Object.entries(typeNode.properties)) {
-      // TODO check runtime
 
-      const fieldNode = this.#type(idx);
-      switch (fieldNode.type) {
-        case Type.FUNCTION:
-          continue;
-        default:
-      }
-
-      const field = this.#fieldBuilder.build(name, typeIdx);
+    for (const prop of model.props) {
+      const field = this.#fieldBuilder.build(prop);
       modelFields.push(field);
-
       modelFields.push(...field.fkeys);
       if (field.fkeysUnique) {
         const fieldNames = field.fkeys.map((fkey) => fkey.name);
@@ -395,15 +356,17 @@ export class SchemaGenerator {
       }
     }
 
-    const idFields = modelFields.filter((field) => field.tags.includes("@id"));
-    ensure(idFields.length > 0, "no @id field found");
-
-    if (idFields.length > 1) {
-      const names = idFields.map((field) => field.name).join(", ");
+    // set @id tag
+    const ids = model.idFields;
+    if (ids.length === 0) {
+      // unreachable
+      throw new Error("no @id field found");
+    } else if (ids.length === 1) {
+      const id = ids[0];
+      modelFields.find((field) => field.name === id)!.tags.push("@id");
+    } else {
+      const names = ids.join(", ");
       tags.push(`@@id([${names}])`);
-      for (const field of idFields) {
-        field.tags = field.tags.filter((tag) => tag !== "@id");
-      }
     }
 
     const formattedFields = modelFields.map((field) =>
@@ -414,11 +377,11 @@ export class SchemaGenerator {
       ? "\n" + tags.map((tag) => `    ${tag}\n`).join("")
       : "";
 
-    return `model ${typeNode.title} {\n${formattedFields}${formattedTags}}`;
+    return `model ${model.typeName} {\n${formattedFields}${formattedTags}}`;
   }
 
   generate() {
-    return this.#models.map((modelIdx) => this.generateModel(modelIdx)).join(
+    return this.#models.map((model) => this.generateModel(model)).join(
       "\n\n",
     );
   }

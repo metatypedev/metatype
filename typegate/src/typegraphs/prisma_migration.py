@@ -12,7 +12,6 @@ from typegraph.wit import runtimes, store
 
 @typegraph(
     name="typegate/prisma_migration",
-    auths=[Auth.basic(["admin"])],
     rate=Rate(
         window_sec=60,
         window_limit=128,
@@ -26,6 +25,8 @@ def prisma_migration(g: Graph):
     admin_only = deno.policy(
         "admin_only", code="(_args, { context }) => context.username === 'admin'"
     )
+
+    g.auth(Auth.basic(["admin"]))
 
     def _get_operation_func(op: PrismaMigrationOperation):
         params = runtimes.prisma_migration(store, op)

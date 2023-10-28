@@ -18,7 +18,7 @@ def math(g: Graph):
     g.expose(
         fib=deno.import_(
             t.struct({"size": t.integer()}),
-            t.array(t.float()),
+            t.list(t.float()),
             module="fib.ts",
             name="default",
         ).with_policy(restrict_referer),
@@ -28,7 +28,7 @@ def math(g: Graph):
             code="() => Math.random()",
         ).with_policy(public),
         randomItem=deno.func(
-            t.struct({"items": t.array(t.string())}),
+            t.struct({"items": t.list(t.string())}),
             t.string(),
             code=random_item_fn,
         ).with_policy(public),

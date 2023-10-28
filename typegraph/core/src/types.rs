@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use common::typegraph::TypeNode;
+use common::typegraph::{Injection, TypeNode};
 use enum_dispatch::enum_dispatch;
 
 use crate::conversion::types::TypeConversion;
@@ -12,9 +12,9 @@ use crate::errors::{self, ErrorContext, Result};
 use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
-    PolicySpec, TypeArray, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc,
-    TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct,
-    TypeUnion, TypeWithInjection,
+    PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId,
+    TypeInteger, TypeList, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
+    TypeWithInjection,
 };
 use std::rc::Rc;
 
@@ -42,6 +42,12 @@ impl From<&CoreTypeId> for TypeId {
 impl From<TypeId> for CoreTypeId {
     fn from(id: TypeId) -> Self {
         id.0
+    }
+}
+
+impl From<TypeId> for serde_json::Value {
+    fn from(id: TypeId) -> Self {
+        id.0.into()
     }
 }
 
@@ -104,7 +110,7 @@ pub type Func = ConcreteType<TypeFunc>;
 pub type Boolean = ConcreteType<TypeBoolean>;
 pub type StringT = ConcreteType<TypeString>;
 pub type File = ConcreteType<TypeFile>;
-pub type Array = ConcreteType<TypeArray>;
+pub type List = ConcreteType<TypeList>;
 pub type Optional = ConcreteType<TypeOptional>;
 pub type Union = ConcreteType<TypeUnion>;
 pub type Either = ConcreteType<TypeEither>;
@@ -124,7 +130,7 @@ pub enum Type {
     Boolean(Rc<Boolean>),
     String(Rc<StringT>),
     File(Rc<File>),
-    Array(Rc<Array>),
+    List(Rc<List>),
     Optional(Rc<Optional>),
     Union(Rc<Union>),
     Either(Rc<Either>),
@@ -270,7 +276,7 @@ pub struct TypeAttributes {
     pub name: Option<String>,
     pub proxy_data: HashMap<String, String>,
     pub policy_chain: Vec<PolicySpec>,
-    pub injection: Option<String>,
+    pub injection: Option<Injection>,
 }
 
 impl TypeId {
@@ -329,7 +335,7 @@ impl TypeId {
         let mut type_id = *self;
         let mut proxy_data: HashMap<String, String> = HashMap::new();
         let mut policy_chain = Vec::new();
-        let mut injection: Option<String> = None;
+        let mut injection: Option<Injection> = None;
         let mut name = None;
 
         loop {
@@ -352,7 +358,9 @@ impl TypeId {
                     if injection.is_some() {
                         return Err("multiple injections not supported".to_string().into());
                     }
-                    injection = Some(inner.data.injection.clone());
+                    injection = Some(
+                        serde_json::from_str(&inner.data.injection).map_err(|e| e.to_string())?,
+                    );
                     type_id = inner.data.tpe.into();
                     continue;
                 }
@@ -365,7 +373,7 @@ impl TypeId {
                 | Type::String(_)
                 | Type::File(_)
                 | Type::Optional(_)
-                | Type::Array(_)
+                | Type::List(_)
                 | Type::Struct(_)
                 | Type::Union(_)
                 | Type::Either(_)

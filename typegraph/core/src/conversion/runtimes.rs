@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::errors::Result;
-use crate::runtimes::prisma::{with_prisma_runtime, ConversionContext};
+use crate::runtimes::prisma::get_prisma_context;
 use crate::runtimes::{
     DenoMaterializer, Materializer as RawMaterializer, PythonMaterializer, RandomMaterializer,
     Runtime, TemporalMaterializer, WasiMaterializer,
@@ -17,7 +17,6 @@ use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
 use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
 use common::typegraph::runtimes::http::HTTPRuntimeData;
-use common::typegraph::runtimes::prisma::PrismaRuntimeData;
 use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
 use common::typegraph::runtimes::s3::S3RuntimeData;
@@ -411,36 +410,15 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
             Ok(TGRuntime::Known(Rt::WasmEdge(WasmEdgeRuntimeData { config: None })).into())
         }
         Runtime::Prisma(d, _) => Ok(ConvertedRuntime::Lazy(Box::new(
-            move |runtime_id, runtime_idx, tg| {
-                with_prisma_runtime(runtime_id, |ctx| {
-                    let reg = &ctx.registry;
-                    let models: Vec<_> = reg.models.keys().cloned().collect();
-                    let relationships = reg.relationships.clone();
-                    let mut conversion_context = ConversionContext {
-                        runtime_id,
-                        tg_context: tg,
-                    };
-                    Ok(TGRuntime::Known(Rt::Prisma(PrismaRuntimeData {
-                        name: d.name.clone(),
-                        connection_string_secret: d.connection_string_secret.clone(),
-                        models: models
-                            .into_iter()
-                            .map(|id| {
-                                Ok(conversion_context
-                                    .tg_context
-                                    .register_type(id, Some(runtime_idx))?
-                                    .into())
-                            })
-                            .collect::<Result<Vec<_>>>()?,
-                        relationships: relationships
-                            .into_values()
-                            .map(|rel| -> Result<_> {
-                                conversion_context.convert_relationship(&rel)
-                            })
-                            .collect::<Result<Vec<_>>>()?,
-                        migration_options: None,
-                    })))
-                })
+            move |runtime_id, runtime_idx, tg| -> Result<_> {
+                let ctx = get_prisma_context(runtime_id);
+                let ctx = ctx.borrow();
+
+                Ok(TGRuntime::Known(Rt::Prisma(ctx.convert(
+                    tg,
+                    runtime_idx,
+                    d,
+                )?)))
             },
         ))),
         Runtime::PrismaMigration => {

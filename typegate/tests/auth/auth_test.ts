@@ -17,8 +17,6 @@ import { JWTClaims } from "../../src/services/auth/mod.ts";
 import { getSetCookies } from "std/http/cookie.ts";
 import { b64decode } from "../../src/utils.ts";
 
-mf.install();
-
 Meta.test("Auth", async (t) => {
   const clientId = "client_id_1";
   const clientSecret = "client_secret_1";
@@ -73,6 +71,8 @@ Meta.test("Auth", async (t) => {
       })
       .on(e);
   });
+
+  mf.install();
 
   await t.should(
     "refuse to oauth2 flow without redirect uri",

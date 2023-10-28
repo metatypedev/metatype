@@ -1,27 +1,27 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(types.output)"
+expression: "tree::print(out)"
 ---
-root: struct #129
-├─ [_count]: struct '_User_AggrCount' #120
-│  ├─ [_all]: optional #119
-│  │  └─ item: integer #118
-│  ├─ [id]: optional #119
-│  │  └─ item: integer #118
-│  ├─ [name]: optional #119
-│  │  └─ item: integer #118
-│  └─ [posts]: optional #119
-│     └─ item: integer #118
-├─ [_avg]: struct '_User_NumberAgg_avg' #123
-│  └─ [id]: optional #122
-│     └─ item: float #121
-├─ [_sum]: struct '_User_NumberAgg' #128
-│  └─ [id]: optional #127
-│     └─ item: integer #126
-├─ [_min]: struct '_User_NumberAgg' #128
-│  └─ [id]: optional #127
-│     └─ item: integer #126
-└─ [_max]: struct '_User_NumberAgg' #128
-   └─ [id]: optional #127
-      └─ item: integer #126
+root: struct #37
+├─ [_count]: struct '_User_AggrCount' #28
+│  ├─ [_all]: optional #27
+│  │  └─ item: integer #26
+│  ├─ [id]: optional #27
+│  │  └─ item: integer #26
+│  ├─ [name]: optional #27
+│  │  └─ item: integer #26
+│  └─ [posts]: optional #27
+│     └─ item: integer #26
+├─ [_avg]: struct '_User_NumberAgg_avg' #31
+│  └─ [id]: optional #30
+│     └─ item: float #29
+├─ [_sum]: struct '_User_NumberAgg' #36
+│  └─ [id]: optional #35
+│     └─ item: integer #34
+├─ [_min]: struct '_User_NumberAgg' #36
+│  └─ [id]: optional #35
+│     └─ item: integer #34
+└─ [_max]: struct '_User_NumberAgg' #36
+   └─ [id]: optional #35
+      └─ item: integer #34
 

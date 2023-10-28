@@ -21,14 +21,14 @@ use errors::Result;
 use global_store::Store;
 use indoc::formatdoc;
 use regex::Regex;
+use runtimes::{DenoMaterializer, Materializer};
 use types::{
-    Array, Boolean, Either, File, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
+    Boolean, Either, File, Float, Func, Integer, List, Optional, Proxy, StringT, Struct, Type,
     TypeBoolean, TypeId, Union, WithInjection, WithPolicy,
 };
-use validation::validate_name;
 use wit::core::{
-    ContextCheck, Policy, PolicyId, PolicySpec, TypeArray, TypeBase, TypeEither, TypeFile,
-    TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy,
+    ContextCheck, Policy, PolicyId, PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat,
+    TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList, TypeOptional, TypePolicy, TypeProxy,
     TypeString, TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
 };
 use wit::runtimes::{Guest, MaterializerDenoFunc};
@@ -131,7 +131,7 @@ impl wit::core::Guest for Lib {
         .into())
     }
 
-    fn arrayb(data: TypeArray, base: TypeBase) -> Result<CoreTypeId> {
+    fn listb(data: TypeList, base: TypeBase) -> Result<CoreTypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
             if min > max {
                 return Err(errors::invalid_max_value());
@@ -149,7 +149,7 @@ impl wit::core::Guest for Lib {
                 },
                 None => base,
             };
-            Type::Array(Array { id, base, data }.into())
+            Type::List(List { id, base, data }.into())
         })?
         .into())
     }
@@ -183,9 +183,6 @@ impl wit::core::Guest for Lib {
     fn structb(data: TypeStruct, base: TypeBase) -> Result<CoreTypeId> {
         let mut prop_names = HashSet::new();
         for (name, _) in data.props.iter() {
-            if !validate_name(name) {
-                return Err(errors::invalid_prop_key(name));
-            }
             if prop_names.contains(name) {
                 return Err(errors::duplicate_key(name));
             }
@@ -219,6 +216,33 @@ impl wit::core::Guest for Lib {
 
     fn register_policy(pol: Policy) -> Result<PolicyId> {
         Store::register_policy(pol.into())
+    }
+
+    fn get_public_policy() -> Result<(PolicyId, String)> {
+        Ok({
+            let policy_id = Store::get_public_policy_id();
+            let policy = Store::get_policy(policy_id)?;
+            (policy_id, policy.name.clone())
+        })
+    }
+
+    fn get_internal_policy() -> Result<(PolicyId, String)> {
+        let deno_mat = DenoMaterializer::Inline(MaterializerDenoFunc {
+            code: "(_, { context }) => context.provider === 'internal'".to_string(),
+            secrets: vec![],
+        });
+        let mat = Materializer::deno(deno_mat, crate::wit::runtimes::Effect::Read);
+        let policy_id = Store::register_policy(
+            Policy {
+                materializer: Store::register_materializer(mat),
+                name: "__internal".to_string(),
+            }
+            .into(),
+        )?;
+        Ok({
+            let policy = Store::get_policy(policy_id)?;
+            (policy_id, policy.name.clone())
+        })
     }
 
     fn register_context_policy(key: String, check: ContextCheck) -> Result<(PolicyId, String)> {
@@ -289,7 +313,7 @@ impl wit::core::Guest for Lib {
             Type::String(inner) => Ok(inner.rename(new_name)?.into()),
             Type::File(inner) => Ok(inner.rename(new_name)?.into()),
             Type::Optional(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Array(inner) => Ok(inner.rename(new_name)?.into()),
+            Type::List(inner) => Ok(inner.rename(new_name)?.into()),
             Type::Union(inner) => Ok(inner.rename(new_name)?.into()),
             Type::Either(inner) => Ok(inner.rename(new_name)?.into()),
             Type::Struct(inner) => Ok(inner.rename(new_name)?.into()),
@@ -346,7 +370,6 @@ mod tests {
                     allow_credentials: false,
                     max_age_sec: None,
                 },
-                auths: vec![],
                 rate: None,
             }
         }
@@ -366,17 +389,6 @@ mod tests {
         assert_eq!(res, Err(errors::invalid_max_value()));
         let res = t::float().x_min(12.34).x_max(12.34).build();
         assert_eq!(res, Err(errors::invalid_max_value()));
-    }
-
-    #[test]
-    fn test_struct_invalid_key() -> Result<()> {
-        let res = t::struct_().prop("", t::integer().build()?).build();
-        assert_eq!(res, Err(errors::invalid_prop_key("")));
-        let res = t::struct_()
-            .prop("hello world", t::integer().build()?)
-            .build();
-        assert_eq!(res, Err(errors::invalid_prop_key("hello world")));
-        Ok(())
     }
 
     #[test]
@@ -501,10 +513,10 @@ mod tests {
         Store::reset();
         let a = t::integer().build()?;
         let b = t::integer().min(12).max(44).build()?;
-        // -- optional(array(float))
+        // -- optional(list(float))
         let num_idx = t::float().build()?;
-        let array_idx = t::array(num_idx).build()?;
-        let c = t::optional(array_idx).build()?;
+        let list_idx = t::list(num_idx).build()?;
+        let c = t::optional(list_idx).build()?;
         // --
 
         let s = t::struct_()

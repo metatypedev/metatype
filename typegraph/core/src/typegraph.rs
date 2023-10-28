@@ -60,6 +60,15 @@ thread_local! {
 
 static TYPEGRAPH_VERSION: &str = "0.0.3";
 
+pub fn with_tg<T>(f: impl FnOnce(&TypegraphContext) -> T) -> Result<T> {
+    TG.with(|tg| {
+        let tg = tg.borrow();
+        tg.as_ref()
+            .map(f)
+            .ok_or_else(errors::expected_typegraph_context)
+    })
+}
+
 pub fn with_tg_mut<T>(f: impl FnOnce(&mut TypegraphContext) -> T) -> Result<T> {
     TG.with(|tg| {
         let mut tg = tg.borrow_mut();
@@ -91,11 +100,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             },
 
             cors: params.cors.into(),
-            auths: params
-                .auths
-                .iter()
-                .map(|auth| auth.convert())
-                .collect::<Result<Vec<_>>>()?,
+            auths: vec![],
             prefix: params.prefix,
             rate: params.rate.map(|v| v.into()),
             secrets: vec![],
@@ -123,15 +128,54 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     Ok(())
 }
 
+pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegraph::Auth>> {
+    Store::get_auths()
+        .iter()
+        .map(|auth| match auth.protocol {
+            common::typegraph::AuthProtocol::OAuth2 => {
+                let profiler_key = "profiler";
+                match auth.auth_data.get(profiler_key) {
+                    Some(value) => match value {
+                        serde_json::Value::Null => Ok(auth.to_owned()),
+                        _ => {
+                            let func_store_idx = value
+                                .as_number()
+                                .ok_or_else(|| "profiler has invalid type index".to_string())
+                                .and_then(|n| {
+                                    n.as_u64().ok_or_else(|| {
+                                        "unable to convert profiler index".to_string()
+                                    })
+                                })? as u32;
+
+                            let type_idx = ctx.register_type(func_store_idx.into(), None)?;
+
+                            let mut auth_processed = auth.clone();
+                            auth_processed
+                                .auth_data
+                                .insert_full(profiler_key.to_string(), type_idx.into());
+
+                            Ok(auth_processed)
+                        }
+                    },
+                    None => Ok(auth.to_owned()),
+                }
+            }
+            _ => Ok(auth.to_owned()),
+        })
+        .collect::<Result<Vec<_>>>()
+}
+
 pub fn finalize() -> Result<String> {
     #[cfg(test)]
     eprintln!("Finalizing typegraph...");
 
-    let ctx = TG.with(|tg| {
+    let mut ctx = TG.with(|tg| {
         tg.borrow_mut()
             .take()
             .ok_or_else(errors::expected_typegraph_context)
     })?;
+
+    let auths = finalize_auths(&mut ctx)?;
 
     let tg = Typegraph {
         id: format!("https://metatype.dev/specs/{TYPEGRAPH_VERSION}.json"),
@@ -151,6 +195,7 @@ pub fn finalize() -> Result<String> {
                 dynamic: ctx.meta.queries.dynamic,
                 endpoints: Store::get_graphql_endpoints(),
             },
+            auths,
             ..ctx.meta
         },
         path: None,

@@ -15,3 +15,4 @@ export function div({ dividend, divisor }: DivInput,
 } {
   return { quotient: 0, remainder: 0 };
 }
+

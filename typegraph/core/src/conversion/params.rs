@@ -18,16 +18,6 @@ impl From<crate::wit::core::Cors> for Cors {
     }
 }
 
-impl From<crate::wit::core::AuthProtocol> for AuthProtocol {
-    fn from(value: crate::wit::core::AuthProtocol) -> Self {
-        match value {
-            crate::wit::core::AuthProtocol::Oauth2 => AuthProtocol::OAuth2,
-            crate::wit::core::AuthProtocol::Jwt => AuthProtocol::Jwt,
-            crate::wit::core::AuthProtocol::Basic => AuthProtocol::Basic,
-        }
-    }
-}
-
 impl From<crate::wit::core::Rate> for Rate {
     fn from(value: crate::wit::core::Rate) -> Self {
         Rate {
@@ -40,7 +30,17 @@ impl From<crate::wit::core::Rate> for Rate {
     }
 }
 
-impl crate::wit::core::Auth {
+impl From<crate::wit::utils::AuthProtocol> for AuthProtocol {
+    fn from(value: crate::wit::utils::AuthProtocol) -> Self {
+        match value {
+            crate::wit::utils::AuthProtocol::Oauth2 => AuthProtocol::OAuth2,
+            crate::wit::utils::AuthProtocol::Jwt => AuthProtocol::Jwt,
+            crate::wit::utils::AuthProtocol::Basic => AuthProtocol::Basic,
+        }
+    }
+}
+
+impl crate::wit::utils::Auth {
     pub fn convert(&self) -> Result<Auth> {
         let mut auth_data = IndexMap::new();
         for (k, v) in self.auth_data.iter() {

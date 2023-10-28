@@ -8,6 +8,7 @@ import * as PrismaRT from "../../../src/runtimes/prisma/types.ts";
 import { assertEquals } from "std/assert/mod.ts";
 import outdent from "outdent";
 import { SecretManager, TypeGraph } from "../../../src/typegraph/mod.ts";
+import { Model } from "../../../src/typegraph/types.ts";
 
 interface Permutation<T> {
   (arr: T[]): T[];
@@ -16,7 +17,7 @@ interface Permutation<T> {
 async function assertGeneratedSchema(
   tgName: string,
   schema: string,
-  reorderModels?: Permutation<number>,
+  reorderModels?: Permutation<Model>,
 ) {
   const tg = await TypeGraph.parseJson(
     await serialize("runtimes/prisma/schema_generation.py", {
@@ -57,7 +58,7 @@ Meta.test("schema generation", async (t) => {
       "simple-model",
       outdent`
         model User {
-            id Int @id @default(autoincrement())
+            id Int @default(autoincrement()) @id
             name String @db.Text
         }
       `,
@@ -87,12 +88,12 @@ Meta.test("schema generation", async (t) => {
         "implicit-one-to-many",
         outdent`
           model User {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               posts Post[] @relation(name: "__rel_Post_User_1")
           }
       
           model Post {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               author User @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
               authorId Int
           }
@@ -103,13 +104,13 @@ Meta.test("schema generation", async (t) => {
         "implicit-one-to-many",
         outdent`
           model Post {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               author User @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
               authorId Int
           }
 
           model User {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               posts Post[] @relation(name: "__rel_Post_User_1")
           }
         `,
@@ -125,12 +126,12 @@ Meta.test("schema generation", async (t) => {
         "optional-one-to-many",
         outdent`
           model User {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               posts Post[] @relation(name: "__rel_Post_User_1")
           }
   
           model Post {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               author User? @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
               authorId Int?
           }
@@ -141,13 +142,13 @@ Meta.test("schema generation", async (t) => {
         "optional-one-to-many",
         outdent`
           model Post {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               author User? @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
               authorId Int?
           }
   
           model User {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               posts Post[] @relation(name: "__rel_Post_User_1")
           }
         `,
@@ -168,7 +169,7 @@ Meta.test("schema generation", async (t) => {
           }
 
           model Profile {
-              id String @db.Uuid @id @default(uuid())
+              id String @db.Uuid @default(uuid()) @id
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
   
@@ -181,12 +182,12 @@ Meta.test("schema generation", async (t) => {
         "implicit-one-to-one",
         outdent`
           model User {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               profile Profile? @relation(name: "__rel_Profile_User_1")
           }
       
           model Profile {
-              id String @db.Uuid @id @default(uuid())
+              id String @db.Uuid @default(uuid()) @id
               user User @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int
       
@@ -199,7 +200,7 @@ Meta.test("schema generation", async (t) => {
         "implicit-one-to-one",
         outdent`
           model Profile {
-              id String @db.Uuid @id @default(uuid())
+              id String @db.Uuid @default(uuid()) @id
               user User @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int
       
@@ -207,7 +208,7 @@ Meta.test("schema generation", async (t) => {
           }
       
           model User {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               profile Profile? @relation(name: "__rel_Profile_User_1")
           }
         `,
@@ -223,12 +224,12 @@ Meta.test("schema generation", async (t) => {
         "optional-one-to-one",
         outdent`
           model User {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               profile Profile? @relation(name: "__rel_Profile_User_1")
           }
 
           model Profile {
-              id String @db.Uuid @id @default(uuid())
+              id String @db.Uuid @default(uuid()) @id
               user User? @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int?
   
@@ -241,7 +242,7 @@ Meta.test("schema generation", async (t) => {
         "optional-one-to-one",
         outdent`
           model Profile {
-              id String @db.Uuid @id @default(uuid())
+              id String @db.Uuid @default(uuid()) @id
               user User? @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int?
   
@@ -249,7 +250,7 @@ Meta.test("schema generation", async (t) => {
           }
 
           model User {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               profile Profile? @relation(name: "__rel_Profile_User_1")
           }
         `,
@@ -270,7 +271,7 @@ Meta.test("schema generation", async (t) => {
           }
 
           model Profile {
-              id String @db.Uuid @id @default(uuid())
+              id String @db.Uuid @default(uuid()) @id
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
   
@@ -288,7 +289,7 @@ Meta.test("schema generation", async (t) => {
           }
 
           model Profile {
-              id String @db.Uuid @id @default(uuid())
+              id String @db.Uuid @default(uuid()) @id
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
   
@@ -301,7 +302,7 @@ Meta.test("schema generation", async (t) => {
         "semi-implicit-one-to-one-2",
         outdent`
           model Profile {
-              id String @db.Uuid @id @default(uuid())
+              id String @db.Uuid @default(uuid()) @id
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
   
@@ -325,7 +326,7 @@ Meta.test("schema generation", async (t) => {
         "one-to-many-self",
         outdent`
           model TreeNode {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_1")
               parent TreeNode @relation(name: "__rel_TreeNode_TreeNode_1", fields: [parentId], references: [id])
               parentId Int
@@ -337,7 +338,7 @@ Meta.test("schema generation", async (t) => {
         "explicit-one-to-many-self",
         outdent`
           model TreeNode {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_1")
               parent TreeNode @relation(name: "__rel_TreeNode_TreeNode_1", fields: [parentId], references: [id])
               parentId Int
@@ -349,7 +350,7 @@ Meta.test("schema generation", async (t) => {
         "one-to-many-self-2",
         outdent`
           model TreeNode {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               parent TreeNode @relation(name: "__rel_TreeNode_TreeNode_1", fields: [parentId], references: [id])
               parentId Int
               children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_1")
@@ -361,7 +362,7 @@ Meta.test("schema generation", async (t) => {
         "explicit-one-to-many-self-2",
         outdent`
           model TreeNode {
-              id Int @id @default(autoincrement())
+              id Int @default(autoincrement()) @id
               parent TreeNode @relation(name: "__rel_TreeNode_TreeNode_1", fields: [parentId], references: [id])
               parentId Int
               children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_1")
@@ -376,7 +377,7 @@ Meta.test("schema generation", async (t) => {
       "one-to-one-self",
       outdent`
         model ListNode {
-            id String @db.Uuid @id @default(uuid())
+            id String @db.Uuid @default(uuid()) @id
             next ListNode? @relation(name: "__rel_ListNode_ListNode_1", fields: [nextId], references: [id])
             nextId String? @db.Uuid
             prev ListNode? @relation(name: "__rel_ListNode_ListNode_1")
@@ -390,7 +391,7 @@ Meta.test("schema generation", async (t) => {
       "one-to-one-self-2",
       outdent`
         model ListNode {
-            id String @db.Uuid @id @default(uuid())
+            id String @db.Uuid @default(uuid()) @id
             prev ListNode? @relation(name: "__rel_ListNode_ListNode_1")
             next ListNode? @relation(name: "__rel_ListNode_ListNode_1", fields: [nextId], references: [id])
             nextId String? @db.Uuid
@@ -408,7 +409,7 @@ Meta.test("schema generation", async (t) => {
         "multiple-relationships",
         outdent`
           model User {
-              id String @db.Uuid @id @default(uuid())
+              id String @db.Uuid @default(uuid()) @id
               email String @db.Text @unique
               posts Post[] @relation(name: "__rel_Post_User_1")
               favorite_post Post? @relation(name: "__rel_User_Post_2", fields: [favorite_postId], references: [id])
@@ -416,7 +417,7 @@ Meta.test("schema generation", async (t) => {
           }
 
           model Post {
-              id String @db.Uuid @id @default(uuid())
+              id String @db.Uuid @default(uuid()) @id
               title String @db.VarChar(256)
               content String @db.Text
               author User @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
@@ -430,7 +431,7 @@ Meta.test("schema generation", async (t) => {
         "multiple-relationships-2",
         outdent`
           model User {
-              id String @db.Uuid @id @default(uuid())
+              id String @db.Uuid @default(uuid()) @id
               email String @db.Text @unique
               posts Post[] @relation(name: "__rel_Post_User_1")
               published_posts Post[] @relation(name: "PostPublisher")
@@ -439,7 +440,7 @@ Meta.test("schema generation", async (t) => {
           }
 
           model Post {
-              id String @db.Uuid @id @default(uuid())
+              id String @db.Uuid @default(uuid()) @id
               title String @db.VarChar(256)
               content String @db.Text
               author User @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
@@ -455,7 +456,7 @@ Meta.test("schema generation", async (t) => {
         "multiple-self-relationships",
         outdent`
           model Person {
-              id String @db.Uuid @id @default(uuid())
+              id String @db.Uuid @default(uuid()) @id
               personal_hero Person? @relation(name: "__rel_Person_Person_1", fields: [personal_heroId], references: [id])
               personal_heroId String? @db.Uuid
               hero_of Person? @relation(name: "__rel_Person_Person_1")
@@ -464,6 +465,24 @@ Meta.test("schema generation", async (t) => {
               children Person[] @relation(name: "__rel_Person_Person_2")
       
               @@unique(personal_heroId)
+          }
+        `,
+      );
+    },
+  );
+
+  await t.should(
+    "typegraph with injections and nested function",
+    async () => {
+      await assertGeneratedSchema(
+        "injection",
+        outdent`
+          model User {
+              id String @db.Uuid @default(uuid()) @id
+              email String @db.Text @unique
+              date_of_birth DateTime?
+              createAt DateTime @default(now())
+              updatedAt DateTime @updatedAt
           }
         `,
       );

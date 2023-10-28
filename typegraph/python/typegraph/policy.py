@@ -22,16 +22,12 @@ from typegraph.gen.exports.core import (
 from typegraph.gen.exports.core import (
     PolicySpec as WitPolicySpec,
 )
-from typegraph.gen.exports.runtimes import MaterializerDenoPredefined
-from typegraph.wit import core, runtimes, store
+from typegraph.wit import core, store
 
 
 class Policy:
     id: int
     name: str
-
-    # class attributes
-    __public: Optional["Policy"] = None
 
     def __init__(self, id: int, name: str):
         self.id = id
@@ -39,17 +35,10 @@ class Policy:
 
     @classmethod
     def public(cls):
-        res = runtimes.get_predefined_deno_func(
-            store, MaterializerDenoPredefined(name="true")
-        )
+        res = core.get_public_policy(store)
         if isinstance(res, Err):
             raise Exception(res.value)
-        mat_id = res.value
-
-        if cls.__public is None:
-            cls.__public = cls.create("__public", mat_id)
-
-        return cls.__public
+        return cls(id=res.value[0], name=res.value[1])
 
     @classmethod
     def context(cls, key: str, check: Union[str, Pattern]) -> "Policy":
@@ -66,14 +55,12 @@ class Policy:
         (policy_id, name) = res.value
         return cls(id=policy_id, name=name)
 
-    # TODO implement in Rust for the Guest wasm
     @classmethod
     def internal(cls) -> "Policy":
-        from typegraph.runtimes.deno import DenoRuntime
-
-        return DenoRuntime().policy(
-            "__internal", "(_, { context }) => context.provider === 'internal'"
-        )
+        res = core.get_internal_policy(store)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return cls(id=res.value[0], name=res.value[1])
 
     @classmethod
     def create(cls, name: str, mat_id: MaterializerId) -> "Policy":

@@ -42,6 +42,7 @@ dev:
       '(    CARGO_INSTA_VERSION: ").+(")': CARGO_INSTA_VERSION
       '(    JCO_VERSION: ").+(")': JCO_VERSION
       '(    WASMEDGE_VERSION: ").+(")': WASMEDGE_VERSION
+      '(    WASM_OPT_VERSION: ").+(")': WASM_OPT_VERSION
       '(    DENO_VERSION: ").+(")': DENO_VERSION
     website/docusaurus.config.js:
       '(  tagline: ").+(",)': TAGLINE
@@ -68,8 +69,8 @@ dev:
     WASMEDGE_VERSION: 0.12.1
     TYPEGRAPH_VERSION: 0.0.3
     PRISMA_VERSION: 5.4.2
-    METATYPE_VERSION: 0.2.3-0+dev
-    WASM_OPT_VERSION: 0.114.1
+    METATYPE_VERSION: 0.2.5-0+dev
+    WASM_OPT_VERSION: 0.116.0
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with
       zero-trust and less code, no matter where and how your (legacy) systems

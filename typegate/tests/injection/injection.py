@@ -90,10 +90,10 @@ def injection(g: Graph):
             t.struct({"id": t.integer()}),
             user.extend(
                 {
-                    "from_parent": deno.identity(t.struct({"email": t.email()})).apply(
+                    "from_parent": deno.identity(t.struct({"email": t.email()})).reduce(
                         {"email": g.inherit().from_parent("UserEmail")}
                     ),
-                    "messagesSent": find_messages.apply(
+                    "messagesSent": find_messages.reduce(
                         {
                             "where": {
                                 "senderId": g.inherit().from_parent("UserId"),

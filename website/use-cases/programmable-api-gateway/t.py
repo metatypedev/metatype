@@ -1,20 +1,22 @@
 # skip:start
 import yaml
 
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.deno import DenoRuntime, PureFunMat
+from typegraph import typegraph, Policy, t, Graph
+from typegraph.graph.params import Cors
+from typegraph.runtimes.deno import DenoRuntime
 
 # skip:end
 
-with TypeGraph(
-    "programmable-api-gateway",
+
+@typegraph(
     # skip:next-line
-    cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
-) as g:
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+)
+def programmable_api_gateway(g: Graph):
     deno = DenoRuntime()
 
-    public = policies.public()
-    roulette_access = policies.Policy(PureFunMat("() => Math.random() < 0.5"))
+    public = Policy.public()
+    roulette_access = deno.policy("roulette", "() => Math.random() < 0.5")
 
     my_api_format = """
     static_a:
@@ -25,11 +27,8 @@ with TypeGraph(
         foo: bar
     """
 
-    exposition = {}
     for field, static_vals in yaml.safe_load(my_api_format).items():
         g.expose(
+            public if static_vals.pop("access") == "public" else roulette_access,
             **{field: deno.static(t.struct({"foo": t.string()}), static_vals)},
-            default_policy=public
-            if static_vals.pop("access") == "public"
-            else roulette_access
         )
