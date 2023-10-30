@@ -22,11 +22,12 @@ struct Stop;
 impl Actor for DiscoveryActor {
     type Context = Context<Self>;
 
-    fn started(&mut self, _ctx: &mut Self::Context) {
+    fn started(&mut self, ctx: &mut Self::Context) {
         let config = Arc::clone(&self.config);
         let dir = self.directory.clone();
         let loader = self.loader.clone();
         let console = self.console.clone();
+        let discovery = ctx.address();
         Arbiter::current().spawn(async move {
             match Discovery::new(config, dir.clone())
                 .start(|path| match path {
@@ -46,6 +47,24 @@ impl Actor for DiscoveryActor {
                 Ok(_) => (),
                 Err(err) => error!(console, "Error while discovering modules: {}", err),
             }
+
+                discovery.do_send(Stop);
         });
     }
+
+    fn stopping(&mut self, _: &mut Self::Context) -> Running {
+        info!(self.console, "Discovery actor stopped");
+        Running::Stop
+    }
 }
+
+impl Handler<Stop> for DiscoveryActor {
+    type Result = ();
+
+    fn handle(&mut self, msg: Stop, ctx: &mut Self::Context) -> Self::Result {
+        match msg {
+            Stop => ctx.stop(),
+        }
+    }
+}
+
