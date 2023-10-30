@@ -14,6 +14,11 @@ pub struct DiscoveryActor {
     directory: PathBuf,
 }
 
+
+#[derive(Message)]
+#[rtype(result = "()")]
+struct Stop;
+
 impl Actor for DiscoveryActor {
     type Context = Context<Self>;
 
