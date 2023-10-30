@@ -8,7 +8,7 @@ def union(g: Graph):
 
     rgb_array = t.struct(
         {
-            "rgb": t.array(channel_of_8_bits, min=3, max=3),
+            "rgb": t.list(channel_of_8_bits, min=3, max=3),
         },
         name="RGBArray",
     )
@@ -75,7 +75,7 @@ def union(g: Graph):
                                 },
                                 name="A2",
                             ),
-                            t.ref("B"),
+                            g.ref("B"),
                         ],
                     ),
                 },
@@ -119,18 +119,18 @@ def union(g: Graph):
         public,
         convert=convert,
         nested=deno.func(
-            t.struct({"inp": t.array(nested_unions)}),
-            t.array(nested_unions),
+            t.struct({"inp": t.list(nested_unions)}),
+            t.list(nested_unions),
             code="({ inp }) => inp",
         ),
         scalar=deno.func(
-            t.struct({"inp": t.array(scalar_union)}),
-            t.array(scalar_union),
+            t.struct({"inp": t.list(scalar_union)}),
+            t.list(scalar_union),
             code="({ inp }) => inp",
         ),
         multilevel=deno.func(
-            t.struct({"inp": t.array(multilevel_union)}),
-            t.array(multilevel_union),
+            t.struct({"inp": t.list(multilevel_union)}),
+            t.list(multilevel_union),
             code="({ inp }) => inp",
         ),
     )

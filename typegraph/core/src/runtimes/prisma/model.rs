@@ -9,6 +9,7 @@ use crate::errors::Result;
 use crate::runtimes::prisma::errors;
 use crate::runtimes::prisma::type_utils::RuntimeConfig;
 use crate::types::{Type, TypeAttributes, TypeFun};
+use crate::validation::types::validate_value;
 use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
 
 #[derive(Debug)]
@@ -145,12 +146,21 @@ impl Property {
         let runtime_config = RuntimeConfig::new(typ.get_base().unwrap().runtime_config.as_ref());
         let unique = runtime_config.get("unique")?.unwrap_or(false);
         let auto = runtime_config.get("auto")?.unwrap_or(false);
+        let default_value = runtime_config.get("default")?;
+        if let Some(default_value) = default_value.as_ref() {
+            validate_value(
+                default_value,
+                wrapper_type_id,
+                "<default value>".to_string(),
+            )?;
+        }
+
         let (type_id, card) = match typ {
             Type::Optional(inner) => (
                 TypeId(inner.data.of).attrs()?.concrete_type,
                 Cardinality::Optional,
             ),
-            Type::Array(inner) => (
+            Type::List(inner) => (
                 TypeId(inner.data.of).attrs()?.concrete_type,
                 Cardinality::Many,
             ),
@@ -166,6 +176,7 @@ impl Property {
                 quantifier: card,
                 unique,
                 auto,
+                default_value,
             })
         };
 
@@ -188,7 +199,7 @@ impl Property {
                         unique,
                     }))
                 }
-                Type::Optional(_) | Type::Array(_) => {
+                Type::Optional(_) | Type::List(_) => {
                     Err("nested optional/list not supported".into())
                 }
                 Type::Integer(_) => Ok(scalar(ScalarType::Integer, injection)),
@@ -215,7 +226,7 @@ impl Property {
             },
             Err(_) => match type_id.as_type()? {
                 Type::Func(_) => Err("injection not supported on t::struct()".into()),
-                Type::Optional(_) | Type::Array(_) => {
+                Type::Optional(_) | Type::List(_) => {
                     Err("nested optional/list not supported".into())
                 }
                 Type::Struct(_)
@@ -316,4 +327,5 @@ pub struct ScalarProperty {
     pub quantifier: Cardinality,
     pub unique: bool,
     pub auto: bool,
+    pub default_value: Option<serde_json::Value>,
 }

@@ -24,10 +24,8 @@ export default class Policy {
   }
 
   static internal(): Policy {
-    return new DenoRuntime().policy( // TODO move those defs in core
-      "__internal",
-      "(_, { context }) => context.provider === 'internal'",
-    );
+    const [id, name] = core.getInternalPolicy();
+    return new Policy(id, name);
   }
 
   static create(name: string, materializerId: MaterializerId): Policy {

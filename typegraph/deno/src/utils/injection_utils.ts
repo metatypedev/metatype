@@ -4,7 +4,7 @@
 import { CREATE, DELETE, READ, UPDATE } from "../effects.ts";
 import { InjectionSource, InjectionValue } from "./type_utils.ts";
 import { stringifySymbol } from "./func_utils.ts";
-import * as t from "../types.ts";
+import { genRef } from "./../typegraph.ts";
 
 export function serializeInjection(
   source: InjectionSource,
@@ -66,7 +66,7 @@ export function serializeStaticInjection(value: InjectionValue<unknown>) {
 export function serializeFromParentInjection(value: InjectionValue<string>) {
   let correctValue: any = null;
   if (typeof value === "string") {
-    correctValue = t.proxy(value)._id;
+    correctValue = genRef(value)._id;
   } else {
     const isObject = typeof value === "object" && !Array.isArray(value) &&
       value !== null;
@@ -95,7 +95,7 @@ export function serializeFromParentInjection(value: InjectionValue<string>) {
           `value for field ${symbol.toString()} must be a string`,
         );
       }
-      correctValue[symbol] = t.proxy(v)._id;
+      correctValue[symbol] = genRef(v)._id;
     }
   }
 

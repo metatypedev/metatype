@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import {
-  ArrayNode,
   BooleanNode,
   FileNode,
   FloatNode,
   IntegerNode,
+  ListNode,
   ObjectNode,
   OptionalNode,
   StringNode,
@@ -176,7 +176,7 @@ export class CodeGenerator {
   }
 
   generateArrayValidator(
-    typeNode: ArrayNode,
+    typeNode: ListNode,
     itemValidatorName: string,
   ) {
     this.validation(

@@ -2,11 +2,11 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(out)"
 ---
-root: array '_User_GroupByResult' #191
+root: list '_User_GroupByResult' #191
 └─ item: struct #190
    ├─ [id]: integer #109
    ├─ [name]: string #110
-   ├─ [posts]: array '_112_Post[]' #112
+   ├─ [posts]: list '_112_Post[]' #112
    │  └─ item: &Post #111
    ├─ [_count]: struct '_User_AggrCount' #181
    │  ├─ [_all]: optional #180

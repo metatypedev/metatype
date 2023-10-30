@@ -29,7 +29,7 @@ def blog(g: Graph):
     )
 
     post_by_id = remote.get(
-        "/posts/{id}", t.struct({"id": t.integer()}), t.optional(t.ref("Post"))
+        "/posts/{id}", t.struct({"id": t.integer()}), t.optional(g.ref("Post"))
     ).with_policy(public)
 
     update_post = remote.patch(
@@ -45,12 +45,12 @@ def blog(g: Graph):
         auth_token_field="authToken",
     ).with_policy(public)
 
-    get_posts = remote.get("/posts", t.struct({}), t.array(t.ref("Post"))).with_policy(
+    get_posts = remote.get("/posts", t.struct({}), t.list(g.ref("Post"))).with_policy(
         public
     )
 
     get_posts_by_tags = remote.get(
-        "/posts", t.struct({"tags": t.array(t.string())}), t.array(t.ref("Post"))
+        "/posts", t.struct({"tags": t.list(t.string())}), t.list(g.ref("Post"))
     ).with_policy(public)
 
     delete_post = remote.delete(
@@ -60,13 +60,13 @@ def blog(g: Graph):
     ).with_policy(public)
 
     get_comments = remote.get(
-        "/comments", t.struct({"postId": t.integer()}), t.array(t.ref("Comment"))
+        "/comments", t.struct({"postId": t.integer()}), t.list(g.ref("Comment"))
     ).with_policy(public)
 
     post_comment = remote.post(
         "/comments",
         t.struct({"postId": t.integer(), "content": t.string()}),
-        t.ref("Comment"),
+        g.ref("Comment"),
         query_fields=("postId",),
     ).with_policy(public)
 

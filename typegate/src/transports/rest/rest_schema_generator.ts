@@ -88,7 +88,7 @@ export class RestSchemaGenerator {
           }
           break;
         }
-        case "array": {
+        case "list": {
           const itemsIdx = typeNode.items;
           const schema = this.#generateHelper(itemsIdx, inProgress);
           outputSchema = { type: "array", items: schema };

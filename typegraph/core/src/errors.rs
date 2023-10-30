@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::wit::core::Error as TgError;
+pub use crate::wit::core::Error as TgError;
 
 pub type Result<T, E = TgError> = std::result::Result<T, E>;
 

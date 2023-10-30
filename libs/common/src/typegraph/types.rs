@@ -147,7 +147,7 @@ pub struct ObjectTypeData {
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ArrayTypeData {
+pub struct ListTypeData {
     pub items: u32,
     pub max_items: Option<u32>,
     pub min_items: Option<u32>,
@@ -231,11 +231,11 @@ pub enum TypeNode {
         #[serde(flatten)]
         data: ObjectTypeData,
     },
-    Array {
+    List {
         #[serde(flatten)]
         base: TypeNodeBase,
         #[serde(flatten)]
-        data: ArrayTypeData,
+        data: ListTypeData,
     },
     Function {
         #[serde(flatten)]
@@ -273,7 +273,7 @@ impl TypeNode {
             | String { base, .. }
             | File { base, .. }
             | Object { base, .. }
-            | Array { base, .. }
+            | List { base, .. }
             | Function { base, .. }
             | Union { base, .. }
             | Either { base, .. }
@@ -291,7 +291,7 @@ impl TypeNode {
             | String { base, .. }
             | File { base, .. }
             | Object { base, .. }
-            | Array { base, .. }
+            | List { base, .. }
             | Function { base, .. }
             | Union { base, .. }
             | Either { base, .. }
@@ -309,7 +309,7 @@ impl TypeNode {
             String { .. } => "string",
             File { .. } => "file",
             Object { .. } => "object",
-            Array { .. } => "array",
+            List { .. } => "list",
             Function { .. } => "function",
             Union { .. } => "union",
             Either { .. } => "either",

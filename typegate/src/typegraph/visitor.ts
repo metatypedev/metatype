@@ -43,7 +43,7 @@ export function getChildTypes(type: TypeNode): number[] {
   switch (type.type) {
     case Type.OPTIONAL:
       return [type.item];
-    case Type.ARRAY:
+    case Type.LIST:
       return [type.items];
     case Type.OBJECT:
       return Object.values(type.properties);
@@ -71,7 +71,7 @@ export function getEdges(type: TypeNode): Record<string, number> {
   switch (type.type) {
     case Type.OPTIONAL:
       return { [Edge.OPTIONAL_ITEM]: type.item };
-    case Type.ARRAY:
+    case Type.LIST:
       return { [Edge.ARRAY_ITEMS]: type.items };
     case Type.UNION:
     case Type.EITHER: {

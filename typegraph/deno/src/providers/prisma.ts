@@ -6,6 +6,7 @@ import { runtimes } from "../wit.ts";
 import { Typedef } from "../types.ts";
 import { t } from "../mod.ts";
 import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
+import { genRef } from "./../typegraph.ts";
 
 type PrismaLinkArg = {
   fkey?: boolean;
@@ -28,7 +29,7 @@ export class PrismaRuntime extends Runtime {
 
   findUnique(model: string | Typedef) {
     if (typeof model == "string") {
-      model = t.ref(model);
+      model = genRef(model);
     }
     const type = runtimes.prismaFindUnique(this._id, model._id);
     return t.Func.fromTypeFunc(type);
@@ -36,7 +37,7 @@ export class PrismaRuntime extends Runtime {
 
   findMany(model: string | Typedef) {
     if (typeof model == "string") {
-      model = t.ref(model);
+      model = genRef(model);
     }
     const type = runtimes.prismaFindMany(this._id, model._id);
     return t.Func.fromTypeFunc(type);
@@ -44,7 +45,7 @@ export class PrismaRuntime extends Runtime {
 
   findFirst(model: string | Typedef) {
     if (typeof model == "string") {
-      model = t.ref(model);
+      model = genRef(model);
     }
     const type = runtimes.prismaFindFirst(this._id, model._id);
     return t.Func.fromTypeFunc(type);
@@ -52,7 +53,7 @@ export class PrismaRuntime extends Runtime {
 
   aggregate(model: string | Typedef) {
     if (typeof model == "string") {
-      model = t.ref(model);
+      model = genRef(model);
     }
     const type = runtimes.prismaAggregate(this._id, model._id);
     return t.Func.fromTypeFunc(type);
@@ -60,7 +61,7 @@ export class PrismaRuntime extends Runtime {
 
   count(model: string | Typedef) {
     if (typeof model == "string") {
-      model = t.ref(model);
+      model = genRef(model);
     }
     const type = runtimes.prismaCount(this._id, model._id);
     return t.Func.fromTypeFunc(type);
@@ -68,7 +69,7 @@ export class PrismaRuntime extends Runtime {
 
   groupBy(model: string | Typedef) {
     if (typeof model == "string") {
-      model = t.ref(model);
+      model = genRef(model);
     }
     const type = runtimes.prismaGroupBy(this._id, model._id);
     return t.Func.fromTypeFunc(type);
@@ -76,7 +77,7 @@ export class PrismaRuntime extends Runtime {
 
   create(model: string | Typedef) {
     if (typeof model == "string") {
-      model = t.ref(model);
+      model = genRef(model);
     }
     const type = runtimes.prismaCreateOne(this._id, model._id);
     return t.Func.fromTypeFunc(type);
@@ -84,7 +85,7 @@ export class PrismaRuntime extends Runtime {
 
   createMany(model: string | Typedef) {
     if (typeof model == "string") {
-      model = t.ref(model);
+      model = genRef(model);
     }
     const type = runtimes.prismaCreateMany(this._id, model._id);
     return t.Func.fromTypeFunc(type);
@@ -92,7 +93,7 @@ export class PrismaRuntime extends Runtime {
 
   update(model: string | Typedef) {
     if (typeof model == "string") {
-      model = t.ref(model);
+      model = genRef(model);
     }
     const type = runtimes.prismaUpdateOne(this._id, model._id);
     return t.Func.fromTypeFunc(type);
@@ -100,7 +101,7 @@ export class PrismaRuntime extends Runtime {
 
   updateMany(model: string | Typedef) {
     if (typeof model == "string") {
-      model = t.ref(model);
+      model = genRef(model);
     }
     const type = runtimes.prismaUpdateMany(this._id, model._id);
     return t.Func.fromTypeFunc(type);
@@ -108,7 +109,7 @@ export class PrismaRuntime extends Runtime {
 
   upsert(model: string | Typedef) {
     if (typeof model == "string") {
-      model = t.ref(model);
+      model = genRef(model);
     }
     const type = runtimes.prismaUpsertOne(this._id, model._id);
     return t.Func.fromTypeFunc(type);
@@ -116,7 +117,7 @@ export class PrismaRuntime extends Runtime {
 
   delete(model: string | Typedef) {
     if (typeof model == "string") {
-      model = t.ref(model);
+      model = genRef(model);
     }
     const type = runtimes.prismaDeleteOne(this._id, model._id);
     return t.Func.fromTypeFunc(type);
@@ -124,7 +125,7 @@ export class PrismaRuntime extends Runtime {
 
   deleteMany(model: string | Typedef) {
     if (typeof model == "string") {
-      model = t.ref(model);
+      model = genRef(model);
     }
     const type = runtimes.prismaDeleteMany(this._id, model._id);
     return t.Func.fromTypeFunc(type);
@@ -165,7 +166,7 @@ function prismaLink(
   arg?: PrismaLinkArg,
 ) {
   if (typeof targetType == "string") {
-    targetType = t.ref(targetType);
+    targetType = genRef(targetType);
   }
   arg = arg ?? {};
   const typeId = runtimes.prismaLink({

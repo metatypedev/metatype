@@ -22,10 +22,10 @@ root: struct 'QueryPostWhereInput' #78
 │        │  │  └─ [gte]: optional #10
 │        │  │     └─ item: integer #9
 │        │  ├─ variant_4: struct #15
-│        │  │  └─ [in]: array #11
+│        │  │  └─ [in]: list #11
 │        │  │     └─ item: integer #9
 │        │  └─ variant_5: struct #16
-│        │     └─ [notIn]: array #11
+│        │     └─ [notIn]: list #11
 │        │        └─ item: integer #9
 │        └─ variant_1: struct #18
 │           └─ [not]: either '_integer_filter' #17
@@ -44,10 +44,10 @@ root: struct 'QueryPostWhereInput' #78
 │              │  └─ [gte]: optional #10
 │              │     └─ item: integer #9
 │              ├─ variant_4: struct #15
-│              │  └─ [in]: array #11
+│              │  └─ [in]: list #11
 │              │     └─ item: integer #9
 │              └─ variant_5: struct #16
-│                 └─ [notIn]: array #11
+│                 └─ [notIn]: list #11
 │                    └─ item: integer #9
 ├─ [title]: optional '_59__string_filter_c?' #59
 │  └─ item: optional '_string_filter_c' #37
@@ -59,10 +59,10 @@ root: struct 'QueryPostWhereInput' #78
 │        │  ├─ variant_2: struct #26
 │        │  │  └─ [not]: string #22
 │        │  ├─ variant_3: struct #27
-│        │  │  └─ [in]: array #24
+│        │  │  └─ [in]: list #24
 │        │  │     └─ item: string #22
 │        │  ├─ variant_4: struct #28
-│        │  │  └─ [notIn]: array #24
+│        │  │  └─ [notIn]: list #24
 │        │  │     └─ item: string #22
 │        │  ├─ variant_5: struct #31
 │        │  │  ├─ [contains]: string #22
@@ -83,10 +83,10 @@ root: struct 'QueryPostWhereInput' #78
 │              ├─ variant_2: struct #26
 │              │  └─ [not]: string #22
 │              ├─ variant_3: struct #27
-│              │  └─ [in]: array #24
+│              │  └─ [in]: list #24
 │              │     └─ item: string #22
 │              ├─ variant_4: struct #28
-│              │  └─ [notIn]: array #24
+│              │  └─ [notIn]: list #24
 │              │     └─ item: string #22
 │              ├─ variant_5: struct #31
 │              │  ├─ [contains]: string #22
@@ -120,10 +120,10 @@ root: struct 'QueryPostWhereInput' #78
 │     │        │  │  └─ [gte]: optional #10
 │     │        │  │     └─ item: integer #9
 │     │        │  ├─ variant_4: struct #15
-│     │        │  │  └─ [in]: array #11
+│     │        │  │  └─ [in]: list #11
 │     │        │  │     └─ item: integer #9
 │     │        │  └─ variant_5: struct #16
-│     │        │     └─ [notIn]: array #11
+│     │        │     └─ [notIn]: list #11
 │     │        │        └─ item: integer #9
 │     │        └─ variant_1: struct #18
 │     │           └─ [not]: either '_integer_filter' #17
@@ -142,10 +142,10 @@ root: struct 'QueryPostWhereInput' #78
 │     │              │  └─ [gte]: optional #10
 │     │              │     └─ item: integer #9
 │     │              ├─ variant_4: struct #15
-│     │              │  └─ [in]: array #11
+│     │              │  └─ [in]: list #11
 │     │              │     └─ item: integer #9
 │     │              └─ variant_5: struct #16
-│     │                 └─ [notIn]: array #11
+│     │                 └─ [notIn]: list #11
 │     │                    └─ item: integer #9
 │     ├─ [name]: optional '_61__string_filter_c?' #61
 │     │  └─ item: optional '_string_filter_c' #37
@@ -157,10 +157,10 @@ root: struct 'QueryPostWhereInput' #78
 │     │        │  ├─ variant_2: struct #26
 │     │        │  │  └─ [not]: string #22
 │     │        │  ├─ variant_3: struct #27
-│     │        │  │  └─ [in]: array #24
+│     │        │  │  └─ [in]: list #24
 │     │        │  │     └─ item: string #22
 │     │        │  ├─ variant_4: struct #28
-│     │        │  │  └─ [notIn]: array #24
+│     │        │  │  └─ [notIn]: list #24
 │     │        │  │     └─ item: string #22
 │     │        │  ├─ variant_5: struct #31
 │     │        │  │  ├─ [contains]: string #22
@@ -181,10 +181,10 @@ root: struct 'QueryPostWhereInput' #78
 │     │              ├─ variant_2: struct #26
 │     │              │  └─ [not]: string #22
 │     │              ├─ variant_3: struct #27
-│     │              │  └─ [in]: array #24
+│     │              │  └─ [in]: list #24
 │     │              │     └─ item: string #22
 │     │              ├─ variant_4: struct #28
-│     │              │  └─ [notIn]: array #24
+│     │              │  └─ [notIn]: list #24
 │     │              │     └─ item: string #22
 │     │              ├─ variant_5: struct #31
 │     │              │  ├─ [contains]: string #22
@@ -209,10 +209,10 @@ root: struct 'QueryPostWhereInput' #78
 │              └─ [none]: optional '_67_PostWhere?' #67
 │                 └─ item: &PostWhere #62
 ├─ [AND]: optional '_76__75_QueryPostWhereInput[]?' #76
-│  └─ item: array '_75_QueryPostWhereInput[]' #75
+│  └─ item: list '_75_QueryPostWhereInput[]' #75
 │     └─ item: &QueryPostWhereInput #74
 ├─ [OR]: optional '_76__75_QueryPostWhereInput[]?' #76
-│  └─ item: array '_75_QueryPostWhereInput[]' #75
+│  └─ item: list '_75_QueryPostWhereInput[]' #75
 │     └─ item: &QueryPostWhereInput #74
 └─ [NOT]: optional '_77_QueryPostWhereInput?' #77
    └─ item: &QueryPostWhereInput #74

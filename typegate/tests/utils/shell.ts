@@ -1,24 +1,52 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { testDir } from "./dir.ts";
+import { testDir } from "test-utils/dir.ts";
 
 export interface ShellOptions {
   stdin?: string;
+  currentDir?: string;
+  env?: Record<string, string>;
+}
+
+export interface ShellOutput {
+  stdout: string;
+  stderr: string;
+}
+
+async function readOutput(p: Deno.ChildProcess): Promise<ShellOutput> {
+  const [stdout, stderr] = await Promise.all([
+    (async () => {
+      let stdout = "";
+      for await (const l of p.stdout.pipeThrough(new TextDecoderStream())) {
+        stdout += l;
+      }
+      return stdout;
+    })(),
+    (async () => {
+      let stderr = "";
+      for await (const l of p.stderr.pipeThrough(new TextDecoderStream())) {
+        stderr += l;
+      }
+      return stderr;
+    })(),
+  ]);
+  return { stdout, stderr };
 }
 
 export async function shell(
   cmd: string[],
   options: ShellOptions = {},
-): Promise<string> {
-  const { stdin = null } = options;
+): Promise<ShellOutput> {
+  const { stdin = null, env = {}, currentDir = null } = options;
+  console.log("shell:", cmd.map((c) => `${JSON.stringify(c)}`).join(" "));
   const p = new Deno.Command(cmd[0], {
-    cwd: testDir,
+    cwd: currentDir ?? testDir,
     args: cmd.slice(1),
     stdout: "piped",
-    stderr: "inherit",
+    stderr: "piped",
     stdin: "piped",
-    env: {},
+    env,
   }).spawn();
 
   if (stdin != null) {
@@ -29,16 +57,14 @@ export async function shell(
     p.stdin.close();
   }
 
-  let out = "";
-  for await (const l of p.stdout.pipeThrough(new TextDecoderStream())) {
-    out += l;
-  }
+  const res = await readOutput(p);
 
   const { code, success } = await p.status;
 
   if (!success) {
-    throw new Error(`Command "${cmd.join(" ")}" failed with ${code}: "${out}"`);
+    const err = `-- start STDERR --\n${res.stderr}\n-- end STDERR --`;
+    throw new Error(`Command "${cmd.join(" ")}" failed with ${code}:\n${err}`);
   }
 
-  return out;
+  return res;
 }

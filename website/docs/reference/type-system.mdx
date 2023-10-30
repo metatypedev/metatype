@@ -34,7 +34,7 @@ The following scalar types are [aliases](#tstring-aliases) to a `t.string()` typ
 |Type|GraphQL type|Description|
 |---|---|---|
 |[`t.optional()`](#toptional)|nullable|Represents a value that may be `null`.|
-|[`t.array()`](#tarray)|list|Represents a list of values.|
+|[`t.list()`](#tlist)|list|Represents a list of values.|
 |[`t.struct()`](#tstruct)|interface|Represents a structured data value, consisting of fields which map to typed values.|
 |[`t.union()`](#tunion-and-teither)|union|Represents a value which can be one of a set of specified types.|
 |[`t.either()`](#tunion-and-teither)|union|Represents a value which can match one and only one of a set of specified types.|
@@ -248,15 +248,15 @@ t.string().optional().default("default value")
 ```
 
 
-### `t.array()`
+### `t.list()`
 
 ```python
 from typegraph import t
 
-t.array(t.string())
+t.list(t.string())
 ```
 
-The `t.array()` type represents a sequence of values of the same type.
+The `t.list()` type represents a sequence of values of the same type.
 
 #### Constraints
 
@@ -272,14 +272,14 @@ The `t.array()` type represents a sequence of values of the same type.
 from typegraph import t
 
 # A list of strings
-t.array(t.string())
+t.list(t.string())
 
 # A list of unique strings
-t.array(t.string()).unique_items()
+t.list(t.string()).unique_items()
 
 # A list of strings with at least 3 items
 # and at most 10 items
-t.array(t.string()).min(3).max(10)
+t.list(t.string()).min(3).max(10)
 ```
 
 

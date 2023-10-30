@@ -33,7 +33,7 @@ impl TypeGen for GroupingFields {
             })
             .collect();
 
-        t::arrayx(t::string().enum_(fields))?
+        t::listx(t::string().enum_(fields))?
             .named(self.name())
             .build()
     }
@@ -64,8 +64,8 @@ impl TypeGen for Having {
 
         t::unionx![
             where_type,
-            t::struct_().propx("AND", t::array(self_ref))?,
-            t::struct_().propx("OR", t::array(self_ref))?,
+            t::struct_().propx("AND", t::list(self_ref))?,
+            t::struct_().propx("OR", t::list(self_ref))?,
             t::struct_().prop("NOT", self_ref)
         ]
         .named(name)
@@ -91,7 +91,7 @@ impl GroupByResult {
 impl TypeGen for GroupByResult {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let model_id = self.model_id;
-        t::array(
+        t::list(
             t::struct_extends(model_id)?
                 .prop(
                     "_count",

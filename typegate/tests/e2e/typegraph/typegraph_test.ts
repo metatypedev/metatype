@@ -17,7 +17,12 @@ async function testSerializeAll(t: MetaTest, path: string) {
     })
   ) {
     await t.should(`serialize ${file.name}`, async () => {
-      const tg = await Meta.cli("serialize", "--pretty", "-f", file.path);
+      const { stdout: tg } = await Meta.cli(
+        "serialize",
+        "--pretty",
+        "-f",
+        file.path,
+      );
       await t.assertSnapshot(tg);
     });
   }

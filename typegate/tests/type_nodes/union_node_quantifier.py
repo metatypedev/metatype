@@ -18,7 +18,7 @@ def union_quantifier(g: Graph):
             "camera": t.integer(),
             "battery": t.integer(),
             "os": t.enum(["Android", "iOS"]),
-            "metadatas": t.array(metadata).optional(),
+            "metadatas": t.list(metadata).optional(),
         },
         name="SmartPhone",
     )
@@ -29,7 +29,7 @@ def union_quantifier(g: Graph):
             "camera": t.integer().optional(),
             "battery": t.integer(),
             "os": t.enum(["Android", "iOS"]).optional(),
-            "metadatas": t.array(metadata).optional(),
+            "metadatas": t.list(metadata).optional(),
         },
         name="BasicPhone",
     )

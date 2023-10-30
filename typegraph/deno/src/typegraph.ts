@@ -31,6 +31,7 @@ interface TypegraphBuilderArgs {
   inherit: () => InheritDef;
   rest: (graphql: string) => number;
   auth: (value: Auth | RawAuth) => number;
+  ref: (name: string) => t.Typedef;
 }
 
 export class InheritDef {
@@ -145,9 +146,20 @@ export function typegraph(
       }
       return wit_utils.addAuth(value);
     },
+    ref: (name: string) => {
+      return genRef(name);
+    },
   };
 
   builder(g);
 
   console.log(core.finalizeTypegraph());
+}
+
+export function genRef(name: string) {
+  const value = core.proxyb({ name, extras: [] });
+  if (typeof value == "object") {
+    throw new Error(JSON.stringify(value));
+  }
+  return new t.Typedef(value, { name });
 }
