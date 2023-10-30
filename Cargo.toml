@@ -2,6 +2,7 @@
 members = [
   "libs/*",
   "typegate/native",
+  "typegate/tg_core",
   "meta-cli",
   "typegraph/core",
 ]
@@ -13,7 +14,10 @@ version = "0.2.5-0+dev"
 edition = "2021"
 
 [workspace.dependencies]
+# internal crates
 mt_deno = { path = "libs/deno/"}
+common = { path = "libs/common/"}
+typescript = { path = "libs/typescript/"}
 
 # [profile.xtask]
 # inherits = 'dev'

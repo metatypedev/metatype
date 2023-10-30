@@ -9,6 +9,6 @@ path = "lib.rs"
 
 [dependencies]
 # deno = { path =  "../../../deno/cli"}
-deno = { git = "https://github.com/metatypedev/deno.git", rev = "d68e2fac48748d59a6a646f25e87f2988ddf8220" }
+deno = { git = "https://github.com/metatypedev/deno.git", rev = "21e167212342fca3c8b8e028e3ab673894655699" }
 log = "0.4.20"
 anyhow = "1.0.75"
