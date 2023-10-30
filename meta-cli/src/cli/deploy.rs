@@ -286,8 +286,8 @@ where
     }
 
     async fn discovery(&self) -> Result<Vec<PathBuf>> {
-        Discovery::new(Arc::clone(&self.config), self.base_dir.clone(), false)
-            .get_all()
+        Discovery::new(Arc::clone(&self.config), self.base_dir.clone())
+            .get_all(false)
             .await
     }
 

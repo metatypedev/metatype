@@ -4,3 +4,4 @@
 pub mod console;
 pub mod loader;
 pub mod pusher;
+pub mod discovery;

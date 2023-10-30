@@ -73,8 +73,8 @@ impl Action for Serialize {
             .with_postprocessor(postprocess::WasmdegeModules::default());
 
         let paths = if self.files.is_empty() {
-            Discovery::new(Arc::clone(&config), dir.clone(), false)
-                .get_all()
+            Discovery::new(Arc::clone(&config), dir.clone())
+                .get_all(false)
                 .await?
         } else {
             self.files.iter().map(PathBuf::from).collect()
