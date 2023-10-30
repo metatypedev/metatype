@@ -6,43 +6,70 @@ use std::sync::Arc;
 
 use anyhow::Result;
 
-use actix::prelude::Context as ActixContext;
+use actix::prelude::Context;
 use actix::prelude::*;
 
 use crate::config::Config;
+use crate::deploy::actors::pusher::CancelPush;
 use crate::typegraph::loader::{Loader, LoaderError};
 
-use super::console::{error, ConsoleActor};
+use super::console::{error, info, ConsoleActor};
+use super::pusher::PusherActor;
 
 pub struct LoaderActor {
     config: Arc<Config>,
     console: Addr<ConsoleActor>,
+    pusher: Addr<PusherActor>,
 }
 
 impl LoaderActor {
-    pub fn new(config: Arc<Config>, console: Addr<ConsoleActor>) -> Self {
-        Self { config, console }
+    pub fn new(
+        config: Arc<Config>,
+        console: Addr<ConsoleActor>,
+        pusher: Addr<PusherActor>,
+    ) -> Self {
+        Self {
+            config,
+            console,
+            pusher,
+        }
     }
 
-    async fn handle_load_module(loader: Loader, path: &Path) -> Result<(), LoaderError> {
+    async fn load_module(loader: Loader, path: &Path) -> Result<(), LoaderError> {
         let _result = loader.load_module(path).await?;
         // TODO push
         Ok(())
     }
+
+    fn loader(&self) -> Loader {
+        Loader::new(Arc::clone(&self.config))
+        // .skip_deno_modules(true)
+        // .with_postprocessor(postprocess::DenoModules::default().codegen(true));
+    }
+}
+
+pub enum ReloadReason {
+    FileChanged,
+    FileCreated,
+    DependencyChanged(PathBuf),
 }
 
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct LoadModule(pub PathBuf);
 
-impl Actor for LoaderActor {
-    type Context = ActixContext<Self>;
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct ReloadModule(pub PathBuf, pub ReloadReason);
 
-    fn started(&mut self, _ctx: &mut ActixContext<Self>) {
+impl Actor for LoaderActor {
+    type Context = Context<Self>;
+
+    fn started(&mut self, _ctx: &mut Context<Self>) {
         log::info!("loader started");
     }
 
-    fn stopped(&mut self, _ctx: &mut ActixContext<Self>) {
+    fn stopped(&mut self, _ctx: &mut Context<Self>) {
         log::info!("loader stopped");
     }
 }
@@ -50,16 +77,38 @@ impl Actor for LoaderActor {
 impl Handler<LoadModule> for LoaderActor {
     type Result = ();
 
-    fn handle(&mut self, msg: LoadModule, _ctx: &mut ActixContext<Self>) -> Self::Result {
-        let config = Arc::clone(&self.config);
-        let loader = Loader::new(config);
+    fn handle(&mut self, msg: LoadModule, _ctx: &mut Context<Self>) -> Self::Result {
+        info!(self.console, "Loading module {:?}", msg.0);
+
+        let loader = self.loader();
         let console = self.console.clone();
-        // .skip_deno_modules(true)
-        // .with_postprocessor(postprocess::DenoModules::default().codegen(true));
         Arbiter::current().spawn(async move {
-            match Self::handle_load_module(loader, &msg.0).await {
+            match Self::load_module(loader, &msg.0).await {
                 Ok(_) => (),
-                // TODO send to console
+                Err(e) => error!(console, "loader error: {:?}", e),
+            }
+        });
+    }
+}
+
+impl Handler<ReloadModule> for LoaderActor {
+    type Result = ();
+
+    fn handle(&mut self, msg: ReloadModule, _ctx: &mut Context<Self>) -> Self::Result {
+        let reason = match msg.1 {
+            ReloadReason::FileChanged => "file changed".to_string(),
+            ReloadReason::FileCreated => "file created".to_string(),
+            ReloadReason::DependencyChanged(path) => format!("dependency changed: {:?}", path),
+        };
+        info!(self.console, "Reloading module {:?}: {reason}", msg.0);
+
+        self.pusher.do_send(CancelPush(msg.0.clone()));
+
+        let loader = self.loader();
+        let console = self.console.clone();
+        Arbiter::current().spawn(async move {
+            match Self::load_module(loader, &msg.0).await {
+                Ok(_) => (),
                 Err(e) => error!(console, "loader error: {:?}", e),
             }
         });

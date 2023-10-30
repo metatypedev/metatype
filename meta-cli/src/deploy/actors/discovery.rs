@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use actix::prelude::*;
 use pathdiff::diff_paths;
 use std::{path::PathBuf, sync::Arc};
@@ -13,7 +16,6 @@ pub struct DiscoveryActor {
     console: Addr<ConsoleActor>,
     directory: PathBuf,
 }
-
 
 #[derive(Message)]
 #[rtype(result = "()")]
@@ -48,7 +50,7 @@ impl Actor for DiscoveryActor {
                 Err(err) => error!(console, "Error while discovering modules: {}", err),
             }
 
-                discovery.do_send(Stop);
+            discovery.do_send(Stop);
         });
     }
 
@@ -67,4 +69,3 @@ impl Handler<Stop> for DiscoveryActor {
         }
     }
 }
-

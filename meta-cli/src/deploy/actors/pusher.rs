@@ -19,7 +19,6 @@ use crate::typegraph::push::{MessageEntry, PushResult};
 use crate::utils::{graphql::Query, Node};
 
 use super::console::{error, info, warning, ConsoleActor};
-use super::loader::LoaderActor;
 
 type Secrets = HashMap<String, String>;
 type SecretsTx = watch::Sender<Weak<Secrets>>;
@@ -27,7 +26,6 @@ type SecretsRx = watch::Receiver<Weak<Secrets>>;
 
 pub struct PusherActor {
     config: Arc<Config>,
-    loader: Addr<LoaderActor>,
     console: Addr<ConsoleActor>,
     base_dir: Arc<Path>,
     node: Arc<Node>,
@@ -38,7 +36,6 @@ pub struct PusherActor {
 /// Can be moved into async blocks.
 pub struct Pusher {
     config: Arc<Config>,
-    loader: Addr<LoaderActor>,
     console: Addr<ConsoleActor>,
     base_dir: Arc<Path>,
     node: Arc<Node>,
@@ -47,13 +44,13 @@ pub struct Pusher {
 
 enum Retry {
     Later,
+    #[allow(dead_code)]
     WithPatch(Box<dyn Fn(Typegraph) -> Typegraph>),
 }
 
 impl PusherActor {
     pub fn new(
         config: Arc<Config>,
-        loader: Addr<LoaderActor>,
         console: Addr<ConsoleActor>,
         base_dir: PathBuf,
         node: Node,
@@ -61,7 +58,6 @@ impl PusherActor {
         let (secrets_tx, _) = watch::channel(Weak::new());
         Self {
             config,
-            loader,
             console,
             base_dir: base_dir.as_path().into(),
             node: Arc::new(node),
@@ -72,7 +68,6 @@ impl PusherActor {
     fn pusher(&self) -> Pusher {
         Pusher {
             config: self.config.clone(),
-            loader: self.loader.clone(),
             console: self.console.clone(),
             base_dir: self.base_dir.clone(),
             node: self.node.clone(),
@@ -212,6 +207,10 @@ impl Pusher {
 #[rtype(result = "()")]
 pub struct PushTypegraph(pub Arc<Typegraph>);
 
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct CancelPush(pub PathBuf);
+
 // TODO message CancelPush
 
 impl Actor for PusherActor {
@@ -243,5 +242,13 @@ impl Handler<PushTypegraph> for PusherActor {
                 }
             }
         });
+    }
+}
+
+impl Handler<CancelPush> for PusherActor {
+    type Result = ();
+
+    fn handle(&mut self, _msg: CancelPush, _ctx: &mut Self::Context) -> Self::Result {
+        // TODO cancel pending push/re-push
     }
 }
