@@ -220,6 +220,7 @@ impl PrismaContext {
             }),
             unique: prop.unique,
             auto: prop.auto,
+            default_value: prop.default_value.clone(),
         })
     }
 
