@@ -36,6 +36,7 @@
     "outdent": "https://deno.land/x/outdent@v0.8.0/mod.ts",
     "json-schema-faker": "npm:json-schema-faker@0.5.3",
     "ajv": "https://esm.sh/ajv@8.12.0?pin=v131",
-    "@typegraph/sdk/": "../typegraph/deno/src/"
+    "@typegraph/sdk/": "../typegraph/deno/src/",
+    "test-utils/": "./tests/utils/"
   }
 }

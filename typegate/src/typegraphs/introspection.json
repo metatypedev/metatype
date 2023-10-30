@@ -209,7 +209,7 @@
       "default_value": null
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "_40_field[]",
       "runtime": 1,
       "policies": [],
@@ -304,7 +304,7 @@
       "as_id": false
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "_23_input_value[]",
       "runtime": 1,
       "policies": [],
@@ -436,7 +436,7 @@
       "default_value": null
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "_44_type[]",
       "runtime": 1,
       "policies": [],
@@ -455,7 +455,7 @@
       "default_value": null
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "_47_type[]",
       "runtime": 1,
       "policies": [],
@@ -517,7 +517,7 @@
       "default_value": null
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "_52_enum_value[]",
       "runtime": 1,
       "policies": [],
@@ -646,7 +646,7 @@
       "default_value": null
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "_58_input_value[]",
       "runtime": 1,
       "policies": [],
@@ -725,7 +725,7 @@
       "as_id": false
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "_83_type[]",
       "runtime": 1,
       "policies": [],
@@ -754,7 +754,7 @@
       "default_value": null
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "_86_directive[]",
       "runtime": 1,
       "policies": [],
@@ -813,7 +813,7 @@
       "as_id": false
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "_69_directive_location[]",
       "runtime": 1,
       "policies": [],
@@ -894,7 +894,7 @@
       "as_id": false
     },
     {
-      "type": "array",
+      "type": "list",
       "title": "_73_input_value[]",
       "runtime": 1,
       "policies": [],

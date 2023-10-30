@@ -12,9 +12,9 @@ use crate::errors::{self, ErrorContext, Result};
 use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
-    PolicySpec, TypeArray, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc,
-    TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct,
-    TypeUnion, TypeWithInjection,
+    PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId,
+    TypeInteger, TypeList, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
+    TypeWithInjection,
 };
 use std::rc::Rc;
 
@@ -110,7 +110,7 @@ pub type Func = ConcreteType<TypeFunc>;
 pub type Boolean = ConcreteType<TypeBoolean>;
 pub type StringT = ConcreteType<TypeString>;
 pub type File = ConcreteType<TypeFile>;
-pub type Array = ConcreteType<TypeArray>;
+pub type List = ConcreteType<TypeList>;
 pub type Optional = ConcreteType<TypeOptional>;
 pub type Union = ConcreteType<TypeUnion>;
 pub type Either = ConcreteType<TypeEither>;
@@ -130,7 +130,7 @@ pub enum Type {
     Boolean(Rc<Boolean>),
     String(Rc<StringT>),
     File(Rc<File>),
-    Array(Rc<Array>),
+    List(Rc<List>),
     Optional(Rc<Optional>),
     Union(Rc<Union>),
     Either(Rc<Either>),
@@ -373,7 +373,7 @@ impl TypeId {
                 | Type::String(_)
                 | Type::File(_)
                 | Type::Optional(_)
-                | Type::Array(_)
+                | Type::List(_)
                 | Type::Struct(_)
                 | Type::Union(_)
                 | Type::Either(_)

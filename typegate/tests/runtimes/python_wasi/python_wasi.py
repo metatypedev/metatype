@@ -29,7 +29,7 @@ def infinite_loop(x):
     return x["enable"]
 
 
-tpe = t.struct({"a": t.integer(), "b": t.struct({"c": t.array(t.string())})})
+tpe = t.struct({"a": t.integer(), "b": t.struct({"c": t.list(t.string())})})
 
 
 @typegraph()

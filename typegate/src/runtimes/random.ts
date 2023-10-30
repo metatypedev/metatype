@@ -109,7 +109,7 @@ export class RandomRuntime extends Runtime {
         return this.chance.string();
       case "boolean":
         return this.chance.bool();
-      case "array": {
+      case "list": {
         const res = [];
         let size = this.chance.integer({ min: 1, max: 10 });
         const childNodeName = this.getTgTypeNameByIndex(typ.items);

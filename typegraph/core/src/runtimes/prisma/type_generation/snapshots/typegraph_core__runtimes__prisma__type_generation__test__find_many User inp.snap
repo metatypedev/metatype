@@ -24,10 +24,10 @@ root: struct '_User_QueryInput' #105
 │     │        │  │  └─ [gte]: optional #24
 │     │        │  │     └─ item: integer #23
 │     │        │  ├─ variant_4: struct #29
-│     │        │  │  └─ [in]: array #25
+│     │        │  │  └─ [in]: list #25
 │     │        │  │     └─ item: integer #23
 │     │        │  └─ variant_5: struct #30
-│     │        │     └─ [notIn]: array #25
+│     │        │     └─ [notIn]: list #25
 │     │        │        └─ item: integer #23
 │     │        └─ variant_1: struct #32
 │     │           └─ [not]: either '_integer_filter' #31
@@ -46,10 +46,10 @@ root: struct '_User_QueryInput' #105
 │     │              │  └─ [gte]: optional #24
 │     │              │     └─ item: integer #23
 │     │              ├─ variant_4: struct #29
-│     │              │  └─ [in]: array #25
+│     │              │  └─ [in]: list #25
 │     │              │     └─ item: integer #23
 │     │              └─ variant_5: struct #30
-│     │                 └─ [notIn]: array #25
+│     │                 └─ [notIn]: list #25
 │     │                    └─ item: integer #23
 │     ├─ [name]: optional '_74__string_filter_c?' #74
 │     │  └─ item: optional '_string_filter_c' #20
@@ -61,10 +61,10 @@ root: struct '_User_QueryInput' #105
 │     │        │  ├─ variant_2: struct #9
 │     │        │  │  └─ [not]: string #5
 │     │        │  ├─ variant_3: struct #10
-│     │        │  │  └─ [in]: array #7
+│     │        │  │  └─ [in]: list #7
 │     │        │  │     └─ item: string #5
 │     │        │  ├─ variant_4: struct #11
-│     │        │  │  └─ [notIn]: array #7
+│     │        │  │  └─ [notIn]: list #7
 │     │        │  │     └─ item: string #5
 │     │        │  ├─ variant_5: struct #14
 │     │        │  │  ├─ [contains]: string #5
@@ -85,10 +85,10 @@ root: struct '_User_QueryInput' #105
 │     │              ├─ variant_2: struct #9
 │     │              │  └─ [not]: string #5
 │     │              ├─ variant_3: struct #10
-│     │              │  └─ [in]: array #7
+│     │              │  └─ [in]: list #7
 │     │              │     └─ item: string #5
 │     │              ├─ variant_4: struct #11
-│     │              │  └─ [notIn]: array #7
+│     │              │  └─ [notIn]: list #7
 │     │              │     └─ item: string #5
 │     │              ├─ variant_5: struct #14
 │     │              │  ├─ [contains]: string #5
@@ -125,10 +125,10 @@ root: struct '_User_QueryInput' #105
 │     │     │        │        │  │  └─ [gte]: optional #24
 │     │     │        │        │  │     └─ item: integer #23
 │     │     │        │        │  ├─ variant_4: struct #29
-│     │     │        │        │  │  └─ [in]: array #25
+│     │     │        │        │  │  └─ [in]: list #25
 │     │     │        │        │  │     └─ item: integer #23
 │     │     │        │        │  └─ variant_5: struct #30
-│     │     │        │        │     └─ [notIn]: array #25
+│     │     │        │        │     └─ [notIn]: list #25
 │     │     │        │        │        └─ item: integer #23
 │     │     │        │        └─ variant_1: struct #32
 │     │     │        │           └─ [not]: either '_integer_filter' #31
@@ -147,10 +147,10 @@ root: struct '_User_QueryInput' #105
 │     │     │        │              │  └─ [gte]: optional #24
 │     │     │        │              │     └─ item: integer #23
 │     │     │        │              ├─ variant_4: struct #29
-│     │     │        │              │  └─ [in]: array #25
+│     │     │        │              │  └─ [in]: list #25
 │     │     │        │              │     └─ item: integer #23
 │     │     │        │              └─ variant_5: struct #30
-│     │     │        │                 └─ [notIn]: array #25
+│     │     │        │                 └─ [notIn]: list #25
 │     │     │        │                    └─ item: integer #23
 │     │     │        ├─ [title]: optional '_76__string_filter_c?' #76
 │     │     │        │  └─ item: optional '_string_filter_c' #20
@@ -162,10 +162,10 @@ root: struct '_User_QueryInput' #105
 │     │     │        │        │  ├─ variant_2: struct #9
 │     │     │        │        │  │  └─ [not]: string #5
 │     │     │        │        │  ├─ variant_3: struct #10
-│     │     │        │        │  │  └─ [in]: array #7
+│     │     │        │        │  │  └─ [in]: list #7
 │     │     │        │        │  │     └─ item: string #5
 │     │     │        │        │  ├─ variant_4: struct #11
-│     │     │        │        │  │  └─ [notIn]: array #7
+│     │     │        │        │  │  └─ [notIn]: list #7
 │     │     │        │        │  │     └─ item: string #5
 │     │     │        │        │  ├─ variant_5: struct #14
 │     │     │        │        │  │  ├─ [contains]: string #5
@@ -186,10 +186,10 @@ root: struct '_User_QueryInput' #105
 │     │     │        │              ├─ variant_2: struct #9
 │     │     │        │              │  └─ [not]: string #5
 │     │     │        │              ├─ variant_3: struct #10
-│     │     │        │              │  └─ [in]: array #7
+│     │     │        │              │  └─ [in]: list #7
 │     │     │        │              │     └─ item: string #5
 │     │     │        │              ├─ variant_4: struct #11
-│     │     │        │              │  └─ [notIn]: array #7
+│     │     │        │              │  └─ [notIn]: list #7
 │     │     │        │              │     └─ item: string #5
 │     │     │        │              ├─ variant_5: struct #14
 │     │     │        │              │  ├─ [contains]: string #5
@@ -226,10 +226,10 @@ root: struct '_User_QueryInput' #105
 │     │     │        │        │  │  └─ [gte]: optional #24
 │     │     │        │        │  │     └─ item: integer #23
 │     │     │        │        │  ├─ variant_4: struct #29
-│     │     │        │        │  │  └─ [in]: array #25
+│     │     │        │        │  │  └─ [in]: list #25
 │     │     │        │        │  │     └─ item: integer #23
 │     │     │        │        │  └─ variant_5: struct #30
-│     │     │        │        │     └─ [notIn]: array #25
+│     │     │        │        │     └─ [notIn]: list #25
 │     │     │        │        │        └─ item: integer #23
 │     │     │        │        └─ variant_1: struct #32
 │     │     │        │           └─ [not]: either '_integer_filter' #31
@@ -248,10 +248,10 @@ root: struct '_User_QueryInput' #105
 │     │     │        │              │  └─ [gte]: optional #24
 │     │     │        │              │     └─ item: integer #23
 │     │     │        │              ├─ variant_4: struct #29
-│     │     │        │              │  └─ [in]: array #25
+│     │     │        │              │  └─ [in]: list #25
 │     │     │        │              │     └─ item: integer #23
 │     │     │        │              └─ variant_5: struct #30
-│     │     │        │                 └─ [notIn]: array #25
+│     │     │        │                 └─ [notIn]: list #25
 │     │     │        │                    └─ item: integer #23
 │     │     │        ├─ [title]: optional '_76__string_filter_c?' #76
 │     │     │        │  └─ item: optional '_string_filter_c' #20
@@ -263,10 +263,10 @@ root: struct '_User_QueryInput' #105
 │     │     │        │        │  ├─ variant_2: struct #9
 │     │     │        │        │  │  └─ [not]: string #5
 │     │     │        │        │  ├─ variant_3: struct #10
-│     │     │        │        │  │  └─ [in]: array #7
+│     │     │        │        │  │  └─ [in]: list #7
 │     │     │        │        │  │     └─ item: string #5
 │     │     │        │        │  ├─ variant_4: struct #11
-│     │     │        │        │  │  └─ [notIn]: array #7
+│     │     │        │        │  │  └─ [notIn]: list #7
 │     │     │        │        │  │     └─ item: string #5
 │     │     │        │        │  ├─ variant_5: struct #14
 │     │     │        │        │  │  ├─ [contains]: string #5
@@ -287,10 +287,10 @@ root: struct '_User_QueryInput' #105
 │     │     │        │              ├─ variant_2: struct #9
 │     │     │        │              │  └─ [not]: string #5
 │     │     │        │              ├─ variant_3: struct #10
-│     │     │        │              │  └─ [in]: array #7
+│     │     │        │              │  └─ [in]: list #7
 │     │     │        │              │     └─ item: string #5
 │     │     │        │              ├─ variant_4: struct #11
-│     │     │        │              │  └─ [notIn]: array #7
+│     │     │        │              │  └─ [notIn]: list #7
 │     │     │        │              │     └─ item: string #5
 │     │     │        │              ├─ variant_5: struct #14
 │     │     │        │              │  ├─ [contains]: string #5
@@ -327,10 +327,10 @@ root: struct '_User_QueryInput' #105
 │     │              │        │  │  └─ [gte]: optional #24
 │     │              │        │  │     └─ item: integer #23
 │     │              │        │  ├─ variant_4: struct #29
-│     │              │        │  │  └─ [in]: array #25
+│     │              │        │  │  └─ [in]: list #25
 │     │              │        │  │     └─ item: integer #23
 │     │              │        │  └─ variant_5: struct #30
-│     │              │        │     └─ [notIn]: array #25
+│     │              │        │     └─ [notIn]: list #25
 │     │              │        │        └─ item: integer #23
 │     │              │        └─ variant_1: struct #32
 │     │              │           └─ [not]: either '_integer_filter' #31
@@ -349,10 +349,10 @@ root: struct '_User_QueryInput' #105
 │     │              │              │  └─ [gte]: optional #24
 │     │              │              │     └─ item: integer #23
 │     │              │              ├─ variant_4: struct #29
-│     │              │              │  └─ [in]: array #25
+│     │              │              │  └─ [in]: list #25
 │     │              │              │     └─ item: integer #23
 │     │              │              └─ variant_5: struct #30
-│     │              │                 └─ [notIn]: array #25
+│     │              │                 └─ [notIn]: list #25
 │     │              │                    └─ item: integer #23
 │     │              ├─ [title]: optional '_76__string_filter_c?' #76
 │     │              │  └─ item: optional '_string_filter_c' #20
@@ -364,10 +364,10 @@ root: struct '_User_QueryInput' #105
 │     │              │        │  ├─ variant_2: struct #9
 │     │              │        │  │  └─ [not]: string #5
 │     │              │        │  ├─ variant_3: struct #10
-│     │              │        │  │  └─ [in]: array #7
+│     │              │        │  │  └─ [in]: list #7
 │     │              │        │  │     └─ item: string #5
 │     │              │        │  ├─ variant_4: struct #11
-│     │              │        │  │  └─ [notIn]: array #7
+│     │              │        │  │  └─ [notIn]: list #7
 │     │              │        │  │     └─ item: string #5
 │     │              │        │  ├─ variant_5: struct #14
 │     │              │        │  │  ├─ [contains]: string #5
@@ -388,10 +388,10 @@ root: struct '_User_QueryInput' #105
 │     │              │              ├─ variant_2: struct #9
 │     │              │              │  └─ [not]: string #5
 │     │              │              ├─ variant_3: struct #10
-│     │              │              │  └─ [in]: array #7
+│     │              │              │  └─ [in]: list #7
 │     │              │              │     └─ item: string #5
 │     │              │              ├─ variant_4: struct #11
-│     │              │              │  └─ [notIn]: array #7
+│     │              │              │  └─ [notIn]: list #7
 │     │              │              │     └─ item: string #5
 │     │              │              ├─ variant_5: struct #14
 │     │              │              │  ├─ [contains]: string #5
@@ -407,15 +407,15 @@ root: struct '_User_QueryInput' #105
 │     │              └─ [author]: optional '_78_UserWhere?' #78
 │     │                 └─ item: &UserWhere #77
 │     ├─ [AND]: optional '_91__90_QueryUserWhereInput[]?' #91
-│     │  └─ item: array '_90_QueryUserWhereInput[]' #90
+│     │  └─ item: list '_90_QueryUserWhereInput[]' #90
 │     │     └─ item: &QueryUserWhereInput #89
 │     ├─ [OR]: optional '_91__90_QueryUserWhereInput[]?' #91
-│     │  └─ item: array '_90_QueryUserWhereInput[]' #90
+│     │  └─ item: list '_90_QueryUserWhereInput[]' #90
 │     │     └─ item: &QueryUserWhereInput #89
 │     └─ [NOT]: optional '_92_QueryUserWhereInput?' #92
 │        └─ item: &QueryUserWhereInput #89
 ├─ [orderBy]: optional '_99__User_OrderBy?' #99
-│  └─ item: array '_User_OrderBy' #98
+│  └─ item: list '_User_OrderBy' #98
 │     └─ item: struct #97
 │        ├─ [id]: optional '_Sort' #47
 │        │  └─ item: union #46
@@ -459,6 +459,6 @@ root: struct '_User_QueryInput' #105
 ├─ [skip]: optional '_101__Skip?' #101
 │  └─ item: integer '_Skip' #56
 └─ [distinct]: optional '_104__KeysOf_User?' #104
-   └─ item: array '_KeysOf_User' #103
+   └─ item: list '_KeysOf_User' #103
       └─ item: string #102 enum{ '"id"', '"name"', '"posts"' }
 

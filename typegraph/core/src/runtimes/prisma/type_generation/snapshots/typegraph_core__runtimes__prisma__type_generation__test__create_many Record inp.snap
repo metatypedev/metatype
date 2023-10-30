@@ -1,9 +1,9 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(types.input)"
+expression: "tree::print(inp)"
 ---
 root: struct #8
-└─ [data]: array '_7__Record_CreateInput[]' #7
+└─ [data]: list '_7__Record_CreateInput[]' #7
    └─ item: struct '_Record_CreateInput' #6
       ├─ [id]: optional #5
       │  └─ item: string #0

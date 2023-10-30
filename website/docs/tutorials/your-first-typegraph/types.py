@@ -9,7 +9,7 @@ def typecheck(g: Graph):
         {
             "name": t.string(max=200),
             "age": t.optional(t.integer()),  # or t.integer().optional()
-            "messages": t.array(t.struct({"text": t.string(), "sentAt": t.datetime()})),
+            "messages": t.list(t.struct({"text": t.string(), "sentAt": t.datetime()})),
         }
     )
 

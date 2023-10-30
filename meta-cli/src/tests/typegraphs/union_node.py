@@ -4,7 +4,7 @@ from typegraph.runtimes import DenoRuntime
 
 @typegraph()
 def union(g: Graph):
-    rgb = t.array(t.integer(min=0, max=255), min=3, max=3, name="RGBArray")
+    rgb = t.list(t.integer(min=0, max=255), min=3, max=3, name="RGBArray")
     hex = t.string(pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", name="HexColor")
     colorName = t.enum(
         [

@@ -14,6 +14,7 @@ typegate1: &tp
     REDIS_URL: "redis://:password@localhost:6379/0"
     TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
     TG_ADMIN_PASSWORD: "password"
+    CLICOLOR_FORCE: "1"
   # https://github.com/denoland/deno/issues/18445
   # command: "deno task run"
   command: "deno run --config=deno.jsonc --unstable --allow-run=hostname --allow-sys --allow-env --allow-hrtime --allow-write=tmp --allow-ffi --allow-read=. --allow-net src/main.ts"
@@ -33,7 +34,6 @@ typegate3:
   workdir: .
   env:
     <<: *tpenv
-    CLICOLOR_FORCE: "1"
   command: "cargo run -p meta-cli -- typegate"
   depends_on:
     - typegate_native

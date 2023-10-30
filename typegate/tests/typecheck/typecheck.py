@@ -37,7 +37,7 @@ def typecheck(g: Graph):
 
     post_filter = t.struct(
         {
-            "tag": t.union([tag, t.array(tag)]).optional(),
+            "tag": t.union([tag, t.list(tag)]).optional(),
             "authorId": t.uuid().optional(),
             "search": t.either(
                 [
@@ -45,7 +45,7 @@ def typecheck(g: Graph):
                     t.struct(
                         {
                             "content": t.either(
-                                [t.string(min=3), t.array(t.string(min=3), max=3)]
+                                [t.string(min=3), t.list(t.string(min=3), max=3)]
                             )
                         }
                     ),
@@ -54,7 +54,7 @@ def typecheck(g: Graph):
         }
     )
 
-    posts = deno.func(post_filter, t.array(post, max=20), code="() => []")
+    posts = deno.func(post_filter, t.list(post, max=20), code="() => []")
     find_post = deno.func(
         t.struct({"id": t.uuid()}), post.optional(), code="() => null"
     )
@@ -67,7 +67,7 @@ def typecheck(g: Graph):
                 "title": t.string(min=10, max=200),
                 "content": t.string(min=100),
                 "authorId": t.uuid(),
-                "tags": t.array(t.string(max=10), min=2).optional(),
+                "tags": t.list(t.string(max=10), min=2).optional(),
             }
         ),
         post,
@@ -78,7 +78,7 @@ def typecheck(g: Graph):
     enums = t.struct(
         {
             "userRole": t.enum(["admin", "moderator"]).optional(),
-            "availableItems": t.array(
+            "availableItems": t.list(
                 t.struct(
                     {"name": t.string(), "unitPrice": t.float()},
                     enum=[
@@ -95,7 +95,7 @@ def typecheck(g: Graph):
     product = t.struct(
         {
             "name": t.string(),
-            "equivalent": t.array(t.ref("Product")).optional(),
+            "equivalent": t.list(g.ref("Product")).optional(),
             "score": t.either(
                 [t.string(enum=["bad", "decent", "good"]), t.integer()]
             ).optional(),

@@ -9,7 +9,7 @@ def types(g: Graph):
         {
             "id": t.uuid(),
             "age": t.integer(),
-            "cars": t.array(
+            "cars": t.list(
                 t.struct(
                     {
                         "model": t.string(),

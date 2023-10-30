@@ -7,7 +7,7 @@ import outdent from "outdent";
 
 const tpe = t.struct({
   "a": t.string(),
-  "b": t.array(t.either([t.integer(), t.string()])),
+  "b": t.list(t.either([t.integer(), t.string()])),
 });
 
 typegraph("python_wasi", (g) => {

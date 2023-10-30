@@ -4,15 +4,15 @@
 import { fx, Policy, t, typegraph } from "../../../typegraph/deno/src/mod.ts";
 import { DenoRuntime } from "../../../typegraph/deno/src/runtimes/deno.ts";
 
-const complexType = t.struct({
-  a: t.integer(),
-  b: t.struct({ c: t.integer(), d: t.proxy("ComplexType") }),
-  e: t.proxy("ComplexType"),
-}, { name: "ComplexType" });
-
 typegraph("rest_schema", (g) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
+
+  const complexType = t.struct({
+    a: t.integer(),
+    b: t.struct({ c: t.integer(), d: g.ref("ComplexType") }),
+    e: g.ref("ComplexType"),
+  }, { name: "ComplexType" });
 
   const identity = deno.func(
     t.struct({

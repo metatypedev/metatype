@@ -28,7 +28,7 @@ def nesting(g: Graph):
             "author": remote.get(
                 "/users/{id}",
                 t.struct({"id": t.integer().from_parent("Post_authorId")}),
-                t.optional(t.ref("User")),
+                t.optional(g.ref("User")),
             ),
             "title": t.string(),
             "summary": t.string(),
@@ -38,11 +38,11 @@ def nesting(g: Graph):
     )
 
     user_by_id = remote.get(
-        "/users/{id}", t.struct({"id": t.integer()}), t.optional(t.ref("User"))
+        "/users/{id}", t.struct({"id": t.integer()}), t.optional(g.ref("User"))
     )
 
     post_by_id = remote.get(
-        "/posts/{id}", t.struct({"id": t.integer()}), t.optional(t.ref("Post"))
+        "/posts/{id}", t.struct({"id": t.integer()}), t.optional(g.ref("Post"))
     )
 
     g.expose(

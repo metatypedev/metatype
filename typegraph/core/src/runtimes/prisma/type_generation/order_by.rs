@@ -92,7 +92,7 @@ impl TypeGen for OrderBy {
             }
         }
 
-        t::arrayx(builder)?.named(self.name()).build()
+        t::listx(builder)?.named(self.name()).build()
     }
 
     fn name(&self) -> String {

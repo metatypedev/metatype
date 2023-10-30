@@ -62,7 +62,7 @@ snapshot[`Typegraph using temporal 1`] = `
         "as_id": false
       },
       {
-        "type": "array",
+        "type": "list",
         "title": "array_3",
         "runtime": 1,
         "policies": [],
@@ -144,7 +144,7 @@ snapshot[`Typegraph using temporal 1`] = `
         "as_id": false
       },
       {
-        "type": "array",
+        "type": "list",
         "title": "array_9",
         "runtime": 1,
         "policies": [],
@@ -212,7 +212,7 @@ snapshot[`Typegraph using temporal 1`] = `
         "as_id": false
       },
       {
-        "type": "array",
+        "type": "list",
         "title": "array_15",
         "runtime": 1,
         "policies": [],
@@ -443,7 +443,7 @@ snapshot[`Typegraph using temporal 2`] = `
         "as_id": false
       },
       {
-        "type": "array",
+        "type": "list",
         "title": "array_3",
         "runtime": 1,
         "policies": [],
@@ -525,7 +525,7 @@ snapshot[`Typegraph using temporal 2`] = `
         "as_id": false
       },
       {
-        "type": "array",
+        "type": "list",
         "title": "array_10",
         "runtime": 1,
         "policies": [],
@@ -593,7 +593,7 @@ snapshot[`Typegraph using temporal 2`] = `
         "as_id": false
       },
       {
-        "type": "array",
+        "type": "list",
         "title": "array_17",
         "runtime": 1,
         "policies": [],
