@@ -10,12 +10,12 @@ export const projectDir = resolve(
 
 export async function runOrExit(
   cmd: string[],
-  cwd: string = Deno.cwd(),
+  cwd?: string,
   env: Record<string, string> = {},
 ) {
   const p = new Deno.Command(cmd[0], {
     args: cmd.slice(1),
-    cwd: cwd,
+    cwd,
     stdout: "piped",
     stderr: "piped",
     env: { ...Deno.env.toObject(), ...env },
