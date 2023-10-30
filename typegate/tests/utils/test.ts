@@ -101,7 +101,7 @@ export class MetaTest {
       cmd.push("--deploy");
     }
 
-    const stdout = await meta(...cmd);
+    const { stdout } = await meta(...cmd);
     if (stdout.length == 0) {
       throw new Error("No typegraph");
     }

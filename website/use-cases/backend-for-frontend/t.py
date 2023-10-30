@@ -29,6 +29,6 @@ def backend_for_frontend(g: Graph):
         stargazers=github.get(
             "/repos/metatypedev/metatype/stargazers?per_page=2",
             t.struct({}),
-            t.array(stargazer),
+            t.list(stargazer),
         ),
     )

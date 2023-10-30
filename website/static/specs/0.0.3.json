@@ -685,7 +685,7 @@
             "type": {
               "type": "string",
               "enum": [
-                "array"
+                "list"
               ]
             },
             "title": {
@@ -1787,7 +1787,8 @@
             },
             "auto": {
               "type": "boolean"
-            }
+            },
+            "defaultValue": true
           }
         },
         {

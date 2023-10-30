@@ -253,13 +253,13 @@ export class QueryEngine {
           return { type: "array", items: toJSONSchema(v.type) };
         }
         const name = v.name.value;
-        const schema = {
+        const schema = ({
           "Integer": { type: "number" },
           "Float": { type: "number" },
           "Boolean": { type: "boolean" },
           "String": { type: "string" },
           "ID": { type: "string" },
-        }?.[name];
+        } as any)?.[name];
         if (schema) {
           return schema;
         }

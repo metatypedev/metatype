@@ -24,8 +24,8 @@ def class_syntax(g: Graph):
         id = t.string()
         content = t.string()
         likes = t.integer(min=0).optional()
-        comments = t.array(Comment(), name="Comments")
-        metadatas = t.array(metadata).optional()
+        comments = t.list(Comment(), name="Comments")
+        metadatas = t.list(metadata).optional()
 
     # mix
     class A(t.struct):

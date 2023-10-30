@@ -16,7 +16,7 @@ use crate::wit::runtimes::MaterializerDenoFunc;
 use crate::wit::utils::Auth as WitAuth;
 use crate::{t, Lib};
 
-pub mod apply;
+pub mod reduce;
 
 fn find_missing_props(
     supertype_id: TypeId,
@@ -91,13 +91,16 @@ macro_rules! gen_profiler_func {
 }
 
 impl crate::wit::utils::Guest for crate::Lib {
-    fn gen_applyb(supertype_id: CoreTypeId, apply: crate::wit::utils::Apply) -> Result<CoreTypeId> {
-        if apply.paths.is_empty() {
-            return Err("apply object is empty".into());
+    fn gen_reduceb(
+        supertype_id: CoreTypeId,
+        reduce: crate::wit::utils::Reduce,
+    ) -> Result<CoreTypeId> {
+        if reduce.paths.is_empty() {
+            return Err("reduce object is empty".into());
         }
-        let apply_tree = apply::PathTree::build_from(&apply)?;
-        let mut item_list = apply::flatten_to_sorted_items_array(&apply_tree)?;
-        let p2c_indices = apply::build_parent_to_child_indices(&item_list);
+        let reduce_tree = reduce::PathTree::build_from(&reduce)?;
+        let mut item_list = reduce::flatten_to_sorted_items_array(&reduce_tree)?;
+        let p2c_indices = reduce::build_parent_to_child_indices(&item_list);
         // item_list index => (node name, store id)
         let mut idx_to_store_id_cache: HashMap<u32, (String, u32)> = HashMap::new();
 
@@ -109,15 +112,15 @@ impl crate::wit::utils::Guest for crate::Lib {
 
             if item.node.is_leaf() {
                 let path_infos = item.node.path_infos.clone();
-                let apply_value = path_infos.value.clone();
+                let reduce_value = path_infos.value.clone();
                 let id = Store::get_type_by_path(supertype_id.into(), &path_infos.path)?.1;
 
-                if apply_value.inherit && apply_value.payload.is_none() {
+                if reduce_value.inherit && reduce_value.payload.is_none() {
                     // if inherit and no injection, keep original id
                     idx_to_store_id_cache.insert(item.index, (item.node.name.clone(), id.into()));
                 } else {
                     // has injection
-                    let payload = apply_value.payload.ok_or(format!(
+                    let payload = reduce_value.payload.ok_or(format!(
                         "cannot set undefined value at {:?}",
                         path_infos.path.join(".")
                     ))?;

@@ -5,7 +5,7 @@ import json
 from functools import reduce
 from typing import Dict, List, Union, Tuple, Optional, Any
 from typegraph.injection import InheritDef
-from typegraph.gen.exports.utils import ApplyPath, ApplyValue
+from typegraph.gen.exports.utils import ReducePath, ReduceValue
 from typegraph.injection import serialize_static_injection
 
 
@@ -32,23 +32,23 @@ def serialize_config(config: Optional[ConfigSpec]) -> Optional[List[Tuple[str, s
     return [(k, json.dumps(v)) for k, v in config.items()]
 
 
-def build_apply_data(node: any, paths: List[ApplyPath], curr_path: List[str]):
+def build_reduce_data(node: any, paths: List[ReducePath], curr_path: List[str]):
     if node is None:
         raise Exception(f"unsupported value {str(node)} at {'.'.join(curr_path)},")
 
     if isinstance(node, InheritDef):
         paths.append(
-            ApplyPath(
-                path=curr_path, value=ApplyValue(inherit=True, payload=node.payload)
+            ReducePath(
+                path=curr_path, value=ReduceValue(inherit=True, payload=node.payload)
             )
         )
         return paths
 
     if isinstance(node, list):
         paths.append(
-            ApplyPath(
+            ReducePath(
                 path=curr_path,
-                value=ApplyValue(
+                value=ReduceValue(
                     inherit=False, payload=serialize_static_injection(node)
                 ),
             )
@@ -57,14 +57,14 @@ def build_apply_data(node: any, paths: List[ApplyPath], curr_path: List[str]):
 
     if isinstance(node, dict):
         for k, v in node.items():
-            build_apply_data(v, paths, curr_path + [k])
+            build_reduce_data(v, paths, curr_path + [k])
         return paths
 
     if isinstance(node, int) or isinstance(node, str) or isinstance(node, bool):
         paths.append(
-            ApplyPath(
+            ReducePath(
                 path=curr_path,
-                value=ApplyValue(
+                value=ReduceValue(
                     inherit=False, payload=serialize_static_injection(node)
                 ),
             )

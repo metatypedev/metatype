@@ -47,7 +47,7 @@ impl TypeGen for Distinct {
             })
             .collect();
 
-        t::arrayx(t::string().enum_(cols))?
+        t::listx(t::string().enum_(cols))?
             .named(self.name())
             .build()
     }

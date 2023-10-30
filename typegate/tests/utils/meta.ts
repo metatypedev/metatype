@@ -1,22 +1,22 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { testDir } from "./dir.ts";
-import { shell, ShellOptions } from "./shell.ts";
+import { testDir } from "test-utils/dir.ts";
+import { shell, ShellOptions, ShellOutput } from "test-utils/shell.ts";
 import { resolve } from "std/path/mod.ts";
 
 const metaCli = resolve(testDir, "../../target/debug/meta");
 let compiled = false;
 
-export async function meta(...args: string[]): Promise<string>;
+export async function meta(...args: string[]): Promise<ShellOutput>;
 export async function meta(
   options: ShellOptions,
   ...args: string[]
-): Promise<string>;
+): Promise<ShellOutput>;
 export async function meta(
   first: string | ShellOptions,
   ...input: string[]
-): Promise<string> {
+): Promise<ShellOutput> {
   if (!compiled) {
     await shell(["cargo", "build", "--package", "meta-cli"]);
     compiled = true;
@@ -35,7 +35,7 @@ export interface SerializeOptions {
   typegraph?: string;
 }
 
-export function serialize(
+export async function serialize(
   tg: string,
   options: SerializeOptions = {},
 ): Promise<string> {
@@ -47,5 +47,6 @@ export function serialize(
     cmd.push("-t", options.typegraph);
   }
 
-  return shell(cmd);
+  const res = await shell(cmd);
+  return res.stdout;
 }

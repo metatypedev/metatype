@@ -157,7 +157,7 @@ mod test {
         let user = t::struct_()
             .propx("id", t::integer().as_id(true))?
             .propx("name", t::string())?
-            .propx("posts", t::arrayx(t::proxy("Post"))?)?
+            .propx("posts", t::listx(t::proxy("Post"))?)?
             .named("User")
             .build()?;
 
@@ -250,7 +250,7 @@ mod test {
         Store::reset();
         let node = t::struct_()
             .propx("id", t::string().as_id(true))?
-            .propx("children", t::arrayx(t::proxy("Node"))?)?
+            .propx("children", t::listx(t::proxy("Node"))?)?
             .propx("parent", t::proxy("Node"))?
             .named("Node")
             .build()?;

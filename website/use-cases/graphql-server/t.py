@@ -30,6 +30,6 @@ def graphql_server(g: Graph):
         stargazers=github.get(
             "/repos/metatypedev/metatype/stargazers?per_page=2",
             t.struct({}),
-            t.array(stargazer),
+            t.list(stargazer),
         ),
     )

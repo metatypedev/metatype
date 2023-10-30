@@ -12,6 +12,7 @@ from typegraph.gen.exports.runtimes import (
     PrismaLinkData,
 )
 from typegraph import t
+from typegraph.graph.typegraph import gen_ref
 
 
 class PrismaRuntime(Runtime):
@@ -31,7 +32,7 @@ class PrismaRuntime(Runtime):
 
     def find_unique(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
-            model = t.ref(model)
+            model = gen_ref(model)
         type = runtimes.prisma_find_unique(store, self.id, model.id)
         if isinstance(type, Err):
             raise Exception(type.value)
@@ -39,7 +40,7 @@ class PrismaRuntime(Runtime):
 
     def find_many(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
-            model = t.ref(model)
+            model = gen_ref(model)
         type = runtimes.prisma_find_many(store, self.id, model.id)
         if isinstance(type, Err):
             raise Exception(type.value)
@@ -47,7 +48,7 @@ class PrismaRuntime(Runtime):
 
     def find_first(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
-            model = t.ref(model)
+            model = gen_ref(model)
         type = runtimes.prisma_find_first(store, self.id, model.id)
         if isinstance(type, Err):
             raise Exception(type.value)
@@ -55,7 +56,7 @@ class PrismaRuntime(Runtime):
 
     def aggregate(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
-            model = t.ref(model)
+            model = gen_ref(model)
         type = runtimes.prisma_aggregate(store, self.id, model.id)
         if isinstance(type, Err):
             raise Exception(type.value)
@@ -63,7 +64,7 @@ class PrismaRuntime(Runtime):
 
     def count(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
-            model = t.ref(model)
+            model = gen_ref(model)
         type = runtimes.prisma_count(store, self.id, model.id)
         if isinstance(type, Err):
             raise Exception(type.value)
@@ -71,7 +72,7 @@ class PrismaRuntime(Runtime):
 
     def group_by(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
-            model = t.ref(model)
+            model = gen_ref(model)
         type = runtimes.prisma_group_by(store, self.id, model.id)
         if isinstance(type, Err):
             raise Exception(type.value)
@@ -79,7 +80,7 @@ class PrismaRuntime(Runtime):
 
     def create(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
-            model = t.ref(model)
+            model = gen_ref(model)
         type = runtimes.prisma_create_one(store, self.id, model.id)
         if isinstance(type, Err):
             raise Exception(type.value)
@@ -87,7 +88,7 @@ class PrismaRuntime(Runtime):
 
     def create_many(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
-            model = t.ref(model)
+            model = gen_ref(model)
         type = runtimes.prisma_create_many(store, self.id, model.id)
         if isinstance(type, Err):
             raise Exception(type.value)
@@ -95,7 +96,7 @@ class PrismaRuntime(Runtime):
 
     def update(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
-            model = t.ref(model)
+            model = gen_ref(model)
         type = runtimes.prisma_update_one(store, self.id, model.id)
         if isinstance(type, Err):
             raise Exception(type.value)
@@ -103,7 +104,7 @@ class PrismaRuntime(Runtime):
 
     def update_many(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
-            model = t.ref(model)
+            model = gen_ref(model)
         type = runtimes.prisma_update_many(store, self.id, model.id)
         if isinstance(type, Err):
             raise Exception(type.value)
@@ -111,7 +112,7 @@ class PrismaRuntime(Runtime):
 
     def upsert(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
-            model = t.ref(model)
+            model = gen_ref(model)
         type = runtimes.prisma_upsert_one(store, self.id, model.id)
         if isinstance(type, Err):
             raise Exception(type.value)
@@ -119,7 +120,7 @@ class PrismaRuntime(Runtime):
 
     def delete(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
-            model = t.ref(model)
+            model = gen_ref(model)
         type = runtimes.prisma_delete_one(store, self.id, model.id)
         if isinstance(type, Err):
             raise Exception(type.value)
@@ -127,7 +128,7 @@ class PrismaRuntime(Runtime):
 
     def delete_many(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
-            model = t.ref(model)
+            model = gen_ref(model)
         type = runtimes.prisma_delete_many(store, self.id, model.id)
         if isinstance(type, Err):
             raise Exception(type.value)
@@ -171,7 +172,7 @@ def prisma_link(
     unique: Optional[bool] = None,
 ):
     if isinstance(target_type, str):
-        target_type = t.ref(target_type)
+        target_type = gen_ref(target_type)
     type_id = runtimes.prisma_link(
         store,
         PrismaLinkData(

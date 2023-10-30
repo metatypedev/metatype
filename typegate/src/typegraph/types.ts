@@ -117,8 +117,8 @@ export type ObjectNode = {
   };
   required?: string[];
 };
-export type ArrayNode = {
-  type: "array";
+export type ListNode = {
+  type: "list";
   title: string;
   runtime: number;
   policies: PolicyIndices[];
@@ -201,7 +201,7 @@ export type TypeNode =
   | StringNode
   | FileNode
   | ObjectNode
-  | ArrayNode
+  | ListNode
   | FunctionNode
   | UnionNode
   | EitherNode
@@ -287,6 +287,7 @@ export type Property = {
   injection?: ManagedInjection | null;
   unique: boolean;
   auto: boolean;
+  defaultValue?: any;
 } | {
   type: "relationship";
   key: string;

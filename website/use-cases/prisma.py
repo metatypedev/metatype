@@ -46,7 +46,7 @@ def prisma_runtime(g: Graph):
                     "term": t.string(),
                 }
             ),
-            t.array(user),
+            t.list(user),
         ),
         default_policy=[public],
     )

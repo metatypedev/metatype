@@ -10,7 +10,7 @@ def enum(g: Graph):
 
     get_rgb = deno.import_(
         t.struct({"color": color}),
-        t.struct({"rgb": t.array(t.integer(), name="RGB")}),
+        t.struct({"rgb": t.list(t.integer(), name="RGB")}),
         module="ts/rgb.ts",
         name="get_rgb",
     )

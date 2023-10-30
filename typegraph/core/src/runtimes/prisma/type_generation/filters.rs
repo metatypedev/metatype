@@ -84,7 +84,7 @@ impl TypeGen for NumberFilter {
                 NumberType::Float => t::float().build()?,
             };
             let opt_type_id = t::optional(type_id).build()?;
-            let array_type_id = t::array(type_id).build()?;
+            let list_type_id = t::list(type_id).build()?;
             t::eitherx![
                 type_id,
                 t::struct_().prop("equals", type_id),
@@ -95,8 +95,8 @@ impl TypeGen for NumberFilter {
                     .prop("lte", opt_type_id)
                     .prop("gte", opt_type_id)
                     .min(1),
-                t::struct_().prop("in", array_type_id),
-                t::struct_().prop("notIn", array_type_id),
+                t::struct_().prop("in", list_type_id),
+                t::struct_().prop("notIn", list_type_id),
             ]
             .named(self.name())
             .build()
@@ -122,14 +122,14 @@ impl TypeGen for StringFilter {
     fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
         let type_id = t::string().build()?;
         let opt_type_id = t::optional(type_id).build()?;
-        let array_type_id = t::array(type_id).build()?;
+        let list_type_id = t::list(type_id).build()?;
 
         t::unionx![
             type_id,
             t::struct_().prop("equals", type_id),
             t::struct_().prop("not", type_id),
-            t::struct_().prop("in", array_type_id),
-            t::struct_().prop("notIn", array_type_id),
+            t::struct_().prop("in", list_type_id),
+            t::struct_().prop("notIn", list_type_id),
             t::struct_().prop("contains", type_id).prop(
                 "mode",
                 t::optional(t::string().enum_(vec!["insensitive".to_string()]).build()?).build()?,
@@ -163,11 +163,11 @@ impl TypeGen for ScalarListFilter {
         // Union validation is more efficient.
         t::unionx![
             t::struct_().prop("has", self.0),
-            t::struct_().propx("hasEvery", t::array(self.0))?,
-            t::struct_().propx("hasSome", t::array(self.0))?,
+            t::struct_().propx("hasEvery", t::list(self.0))?,
+            t::struct_().propx("hasSome", t::list(self.0))?,
             t::struct_().propx("isEmpty", t::boolean())?,
             // TODO "isSet": mongo only
-            t::struct_().propx("equals", t::array(self.0))?,
+            t::struct_().propx("equals", t::list(self.0))?,
         ]
         .named(self.name())
         .build()

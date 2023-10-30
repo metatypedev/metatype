@@ -7,6 +7,9 @@ import { PrismaRT } from "../mod.ts";
 import * as native from "native";
 import { nativeResult, pluralSuffix } from "../../../utils.ts";
 
+const NULL_CONSTRAINT_ERROR_REGEX =
+  /column (?<col>".+") of relation (?<table>".+") contains null values/;
+
 export const runMigrations: PushHandler = async (
   typegraph,
   secretManager,
@@ -51,7 +54,7 @@ export const runMigrations: PushHandler = async (
 
         const { reset_reason, applied_migrations } = applyRes.Ok;
         if (reset_reason != null) {
-          response.info(`Database reset: {reset_reason}`);
+          response.info(`Database reset: ${reset_reason}`);
         }
         if (applied_migrations.length === 0) {
           response.info(`${prefix} No migration applied.`);
@@ -90,7 +93,26 @@ export const runMigrations: PushHandler = async (
           );
 
         if (apply_err != null) {
-          response.error(apply_err);
+          const errors = apply_err.split(/\r?\n/).filter(
+            (line) => line.startsWith("ERROR: "),
+          )
+            .map((line) => line.slice("ERROR: ".length))
+            .map((err) => {
+              const match = NULL_CONSTRAINT_ERROR_REGEX.exec(err);
+              if (match != null) {
+                // TODO detect used for the typegraph language and write
+                // the message accordingly.
+                return `${err}: set a default value: add \`config={ "default": defaultValue }\` attribute to the type.`;
+              }
+              return err;
+            });
+
+          if (errors.length === 0) {
+            response.error(apply_err);
+          } else {
+            const formattedErrors = errors.map((err) => `\n- ${err}`).join("");
+            response.error(`Could not apply migration: ${formattedErrors}`);
+          }
         }
 
         if (created_migration_name != null) {
