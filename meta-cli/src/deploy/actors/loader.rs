@@ -14,7 +14,7 @@ use crate::deploy::actors::pusher::CancelPush;
 use crate::typegraph::loader::{Loader, LoaderError};
 
 use super::console::{error, info, ConsoleActor};
-use super::pusher::PusherActor;
+use super::pusher::{PushTypegraph, PusherActor};
 
 pub struct LoaderActor {
     config: Arc<Config>,
@@ -35,9 +35,15 @@ impl LoaderActor {
         }
     }
 
-    async fn load_module(loader: Loader, path: &Path) -> Result<(), LoaderError> {
-        let _result = loader.load_module(path).await?;
-        // TODO push
+    async fn load_module(
+        loader: Loader,
+        path: &Path,
+        pusher: Addr<PusherActor>,
+    ) -> Result<(), LoaderError> {
+        let typegraphs = loader.load_module(path).await?;
+        for tg in typegraphs.into_iter() {
+            pusher.do_send(PushTypegraph(tg.into()));
+        }
         Ok(())
     }
 
@@ -82,8 +88,9 @@ impl Handler<LoadModule> for LoaderActor {
 
         let loader = self.loader();
         let console = self.console.clone();
+        let pusher = self.pusher.clone();
         Arbiter::current().spawn(async move {
-            match Self::load_module(loader, &msg.0).await {
+            match Self::load_module(loader, &msg.0, pusher).await {
                 Ok(_) => (),
                 Err(e) => error!(console, "loader error: {:?}", e),
             }
@@ -106,8 +113,9 @@ impl Handler<ReloadModule> for LoaderActor {
 
         let loader = self.loader();
         let console = self.console.clone();
+        let pusher = self.pusher.clone();
         Arbiter::current().spawn(async move {
-            match Self::load_module(loader, &msg.0).await {
+            match Self::load_module(loader, &msg.0, pusher).await {
                 Ok(_) => (),
                 Err(e) => error!(console, "loader error: {:?}", e),
             }
