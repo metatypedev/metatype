@@ -3,15 +3,18 @@
 
 mod config;
 mod ext;
+mod typegraph;
 mod typescript;
-// mod typegraph;
 
 mod interlude {
     pub use anyhow::{Context, Result};
     pub use log::{debug, error, info, trace, warn};
     pub use mt_deno::deno::{
         self,
-        deno_runtime::{self, deno_core},
+        deno_runtime::{
+            self,
+            deno_core::{self, serde, serde_json, serde_v8, v8},
+        },
     };
     pub use std::{borrow::Cow, path::Path, path::PathBuf, sync::Arc};
 }

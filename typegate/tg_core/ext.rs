@@ -3,9 +3,6 @@
 
 use crate::interlude::*;
 
-use std::{cell::RefCell, rc::Rc};
-
-use deno_core::OpState;
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
 
@@ -25,6 +22,8 @@ deno_core::extension!(
         op_get_version,
         op_obj_go_round,
         crate::typescript::op_typescript_format_code,
+        crate::typegraph::op_typegraph_validate,
+        crate::typegraph::op_validate_prisma_runtime_data,
     ],
     esm_entry_point = "ext:tg_metatype_ext/runtime.js",
     esm = ["runtime.js"],
@@ -44,21 +43,21 @@ fn op_get_version() -> &'static str {
 }
 
 #[derive(serde::Serialize)]
+#[serde(crate = "serde")]
 struct Out {
     a: usize,
     b: String,
 }
 #[derive(serde::Deserialize)]
+#[serde(crate = "serde")]
 struct In {
     a: usize,
     b: String,
 }
 
-#[deno_core::op2(async)]
+#[deno_core::op2]
 #[serde]
-async fn op_obj_go_round(state: Rc<RefCell<OpState>>, #[serde] incoming: In) -> Result<Out> {
-    let state = state.borrow(); // borrow OpState from from ref cell
-    let ctx = state.borrow::<Context>(); //borrow from GothamState
+fn op_obj_go_round(#[state] ctx: &Context, #[serde] incoming: In) -> Result<Out> {
     Ok(Out {
         a: incoming.a + ctx.val,
         b: incoming.b,
@@ -89,8 +88,7 @@ mod tests {
         worker.execute_script_static(
             deno_core::located_script_name!(),
             r#"
-
-Meta.obj_go_round({ a: 10, b: "hey"}).then(obj => Meta.assert(obj.a == 20))
+Meta.assert(Meta.obj_go_round({ a: 10, b: "hey"}).a == 20)
 "#,
         )?;
         Ok(())

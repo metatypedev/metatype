@@ -10117,7 +10117,6 @@ dependencies = [
  "mt_deno",
  "once_cell",
  "sentry",
- "serde 1.0.190",
  "thiserror",
  "tokio",
  "typescript",
