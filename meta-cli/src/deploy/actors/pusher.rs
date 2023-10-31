@@ -132,14 +132,32 @@ pub struct PushResult {
     pub original_name: Option<String>,
 }
 
+#[derive(Message)]
+#[rtype(result = "()")]
+struct LoadedSecrets(HashMap<String, String>);
+
 // TODO message CancelPush
 
 impl Actor for PusherActor {
     type Context = Context<Self>;
 
-    fn started(&mut self, _ctx: &mut Self::Context) {
-        println!("Pusher started");
-        // TODO load secrets
+    fn started(&mut self, ctx: &mut Self::Context) {
+        let env = self.node.env.clone();
+        let dir = self.base_dir.clone();
+        let self_addr = ctx.address();
+        let console = self.console.clone();
+
+        Arbiter::current().spawn(async move {
+            match lade_sdk::hydrate(env.clone(), dir.to_path_buf()).await {
+                Ok(secrets) => {
+                    self_addr.do_send(LoadedSecrets(secrets));
+                }
+                Err(e) => {
+                    error!(console, "Error loading secrets: {e:?}");
+                    // TODO exit
+                }
+            }
+        });
     }
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
@@ -269,6 +287,20 @@ impl Handler<PushResult> for PusherActor {
             self.queue.push_front(Arc::new(tg));
             let _ = self.current.take().unwrap();
             self.next(ctx);
+        }
+    }
+}
+
+impl Handler<LoadedSecrets> for PusherActor {
+    type Result = ();
+
+    fn handle(&mut self, msg: LoadedSecrets, _ctx: &mut Self::Context) -> Self::Result {
+        match self.secrets_tx.send(Some(Arc::new(msg.0))) {
+            Ok(_) => {}
+            Err(e) => {
+                error!(self.console, "Error setting secrets: {e:?}");
+                // TODO exit
+            }
         }
     }
 }
