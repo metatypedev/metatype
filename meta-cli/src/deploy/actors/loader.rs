@@ -42,7 +42,7 @@ impl LoaderActor {
     ) -> Result<(), LoaderError> {
         let typegraphs = loader.load_module(path).await?;
         for tg in typegraphs.into_iter() {
-            pusher.do_send(PushTypegraph(tg.into()));
+            pusher.do_send(PushTypegraph::new(tg.into()));
         }
         Ok(())
     }
