@@ -7,7 +7,7 @@ edition = "2021"
 anyhow = "1.0.75"
 string_cache = "0.8.7"
 lazy_static = "1.4.0"
-dprint-plugin-typescript = "0.87.1"
+dprint-plugin-typescript = "0.88.3"
 
 # https://github.com/denoland/deno_ast/blob/main/Cargo.toml#L42 via dprint deps
 swc_common = { version = "=0.32.0", features = ["tty-emitter"] }
