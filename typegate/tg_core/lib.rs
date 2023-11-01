@@ -3,6 +3,7 @@
 
 mod config;
 mod ext;
+mod runtimes;
 mod typegraph;
 mod typescript;
 
@@ -13,15 +14,59 @@ mod interlude {
         self,
         deno_runtime::{
             self,
-            deno_core::{self, serde, serde_json, serde_v8, v8},
+            deno_core::{
+                self,
+                serde::{self, Deserialize, Serialize},
+                serde_json, serde_v8, url, v8,
+            },
         },
     };
-    pub use std::{borrow::Cow, path::Path, path::PathBuf, sync::Arc};
+    pub use std::{borrow::Cow, cell::RefCell, path::Path, path::PathBuf, rc::Rc, sync::Arc};
+    pub use tap::prelude::*;
 }
 
 use config::Config;
+#[rustfmt::skip]
+use deno_core as deno_core; // necessary for re-exported macros to work
 
 use crate::interlude::*;
+
+pub struct OpDepInjector {
+    #[cfg(test)]
+    pub test: ext::tests::TestCtx,
+    pub temporal: runtimes::temporal::Ctx,
+    pub python: runtimes::python::python_bindings::Ctx,
+    pub prisma: runtimes::prisma::Ctx,
+    // rt: tokio::runtime::Runtime,
+}
+
+impl OpDepInjector {
+    pub fn new() -> Self {
+        use std::str::FromStr;
+        Self {
+            #[cfg(test)]
+            test: ext::tests::TestCtx { val: 10 },
+            temporal: Default::default(),
+            python: Default::default(),
+            prisma: runtimes::prisma::Ctx::new(
+                std::env::var("TMP_DIR")
+                    .map(|p| PathBuf::from_str(&p).expect("invalid TMP_DIR"))
+                    .unwrap_or_else(|_| {
+                        std::env::current_dir().expect("no current dir").join("tmp")
+                    })
+                    .into(),
+            ),
+        }
+    }
+
+    pub fn inject(self, state: &mut deno_core::OpState) {
+        #[cfg(test)]
+        state.put(self.test);
+        state.put(self.temporal);
+        state.put(self.python);
+        state.put(self.prisma);
+    }
+}
 
 pub fn start(mut config: Config) -> Result<()> {
     let tg_source_dir = config
@@ -91,9 +136,15 @@ async fn launch_typegate_deno(main_mod: PathBuf) -> Result<()> {
     mt_deno::run(
         &main_mod,
         permissions,
-        Arc::new(|| ext::extensions(ext::Context { val: 10 })),
+        Arc::new(|| ext::extensions(OpDepInjector::new())),
     )
     .await
+}
+
+#[deno_core::op2]
+#[string]
+fn op_get_version() -> &'static str {
+    common::get_version()
 }
 
 #[cfg(test)]
@@ -112,6 +163,7 @@ mod tests {
             std::process::exit(1);
         }));
         let permissions = PermissionsOptions {
+            allow_read: Some(vec![]),
             ..Default::default()
         };
         mt_deno::test_sync(
@@ -122,7 +174,7 @@ mod tests {
             "deno.test.jsonc".parse()?,
             permissions,
             None,
-            Arc::new(|| crate::ext::extensions(crate::ext::Context { val: 10 })),
+            Arc::new(|| crate::ext::extensions(crate::OpDepInjector::new())),
         );
         Ok(())
     }
