@@ -17,8 +17,9 @@ use self::migration::{
     MigrationContextBuilder, PrismaApplyResult, PrismaCreateResult, PrismaDeployOut,
 };
 
+#[derive(Clone)]
 pub struct Ctx {
-    pub engines: DashMap<String, engine_import::QueryEngine>,
+    pub engines: Arc<DashMap<String, engine_import::QueryEngine>>,
     pub tmp_dir: Arc<Path>,
 }
 
@@ -54,10 +55,12 @@ pub async fn op_prisma_register_engine(
 ) -> Result<()> {
     let datamodel = reformat_datamodel(&input.datamodel).context("Error formatting datamodel")?;
 
-    let state = state.borrow();
-    let ctx = state.borrow::<Ctx>();
+    let ctx = {
+        let state = state.borrow();
+        state.borrow::<Ctx>().clone()
+    };
 
-    engine::register_engine(ctx, datamodel, input.engine_name)
+    engine::register_engine(&ctx, datamodel, input.engine_name)
         .await
         .tap_err(|e| log::error!("Error registering engine: {:?}", e))
 }
@@ -69,13 +72,15 @@ pub async fn op_prisma_unregister_engine(
     state: Rc<RefCell<OpState>>,
     #[string] engine_name: String,
 ) -> Result<()> {
-    let state = state.borrow();
-    let ctx = state.borrow::<Ctx>();
-    let (_, engine) = ctx.engines.remove(&engine_name).with_context(|| {
-        format!("Could not remove engine {:?}: entry not found.", {
-            engine_name
-        })
-    })?;
+    let (_, engine) = {
+        let state = state.borrow();
+        let ctx = state.borrow::<Ctx>();
+        ctx.engines.remove(&engine_name).with_context(|| {
+            format!("Could not remove engine {:?}: entry not found.", {
+                engine_name
+            })
+        })?
+    };
     engine.disconnect().await?;
     Ok(())
 }
@@ -97,9 +102,11 @@ pub async fn op_prisma_query(
     state: Rc<RefCell<OpState>>,
     #[serde] input: PrismaQueryInp,
 ) -> Result<String> {
-    let state = state.borrow();
-    let ctx = state.borrow::<Ctx>();
-    engine::query(ctx, input.engine_name, input.query).await
+    let ctx = {
+        let state = state.borrow();
+        state.borrow::<Ctx>().clone()
+    };
+    engine::query(&ctx, input.engine_name, input.query).await
 }
 
 #[derive(Deserialize)]
@@ -117,9 +124,11 @@ pub async fn op_prisma_diff(
     #[serde] input: PrismaDiffInp,
 ) -> Result<Option<String>> {
     let datamodel = reformat_datamodel(&input.datamodel).context("Error formatting datamodel")?;
-    let state = state.borrow();
-    let ctx = state.borrow::<Ctx>();
-    migration::diff(&ctx.tmp_dir, input.datasource, datamodel, input.script).await
+    let tmp_dir = {
+        let state = state.borrow();
+        state.borrow::<Ctx>().tmp_dir.clone()
+    };
+    migration::diff(&tmp_dir, input.datasource, datamodel, input.script).await
 }
 
 #[derive(Deserialize)]
@@ -138,10 +147,12 @@ pub async fn op_prisma_apply(
     #[serde] input: PrismaDevInp,
 ) -> Result<PrismaApplyResult> {
     let datamodel = reformat_datamodel(&input.datamodel).context("Error formatting datamodel")?;
-    let state = state.borrow();
-    let ctx = state.borrow::<Ctx>();
+    let tmp_dir = {
+        let state = state.borrow();
+        state.borrow::<Ctx>().tmp_dir.clone()
+    };
     migration::apply(
-        MigrationContextBuilder::new(input.datasource, datamodel, ctx.tmp_dir.clone())
+        MigrationContextBuilder::new(input.datasource, datamodel, tmp_dir)
             .with_migrations(input.migrations),
         input.reset_database,
     )
@@ -163,10 +174,12 @@ pub async fn op_prisma_deploy(
     #[serde] input: PrismaDeployInp,
 ) -> Result<PrismaDeployOut> {
     let datamodel = reformat_datamodel(&input.datamodel).context("Error formatting datamodel")?;
-    let state = state.borrow();
-    let ctx = state.borrow::<Ctx>();
+    let tmp_dir = {
+        let state = state.borrow();
+        state.borrow::<Ctx>().tmp_dir.clone()
+    };
     migration::deploy(
-        MigrationContextBuilder::new(input.datasource, datamodel, ctx.tmp_dir.clone())
+        MigrationContextBuilder::new(input.datasource, datamodel, tmp_dir)
             .with_migrations(Some(input.migrations)),
     )
     .await
@@ -189,10 +202,12 @@ pub async fn op_prisma_create(
     #[serde] input: PrismaCreateInp,
 ) -> Result<PrismaCreateResult> {
     let datamodel = reformat_datamodel(&input.datamodel).context("Error formatting datamodel")?;
-    let state = state.borrow();
-    let ctx = state.borrow::<Ctx>();
+    let tmp_dir = {
+        let state = state.borrow();
+        state.borrow::<Ctx>().tmp_dir.clone()
+    };
     migration::create(
-        MigrationContextBuilder::new(input.datasource, datamodel, ctx.tmp_dir.clone())
+        MigrationContextBuilder::new(input.datasource, datamodel, tmp_dir)
             .with_migrations(input.migrations),
         input.migration_name,
         input.apply,
@@ -205,12 +220,14 @@ pub async fn op_prisma_reset(
     state: Rc<RefCell<OpState>>,
     #[string] datasource: String,
 ) -> Result<bool> {
-    let state = state.borrow();
-    let ctx = state.borrow::<Ctx>();
+    let tmp_dir = {
+        let state = state.borrow();
+        state.borrow::<Ctx>().tmp_dir.clone()
+    };
     migration::reset(MigrationContextBuilder::new(
         datasource,
         "".to_string(),
-        ctx.tmp_dir.clone(),
+        tmp_dir,
     ))
     .await
 }

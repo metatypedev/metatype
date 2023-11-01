@@ -14,8 +14,8 @@ pub fn op_typegraph_validate(#[string] input: &str) -> Result<String> {
 }
 
 #[deno_core::op2]
-pub fn op_validate_prisma_runtime_data<'scope>(
-    scope: &mut v8::HandleScope<'scope>,
+pub fn op_validate_prisma_runtime_data(
+    scope: &mut v8::HandleScope,
     inp: v8::Local<v8::Value>,
 ) -> Result<()> {
     serde_v8::from_v8::<PrismaRuntimeData>(scope, inp)?;

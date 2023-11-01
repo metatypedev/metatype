@@ -17,7 +17,7 @@ use url::Url;
 
 #[derive(Default)]
 pub struct Ctx {
-    clients: DashMap<String, RetryClient<Client>>,
+    clients: Arc<DashMap<String, RetryClient<Client>>>,
 }
 
 #[derive(Deserialize)]
@@ -76,11 +76,13 @@ pub async fn op_temporal_workflow_start(
     state: Rc<RefCell<OpState>>,
     #[serde] input: TemporalWorkflowStartInput,
 ) -> Result<String> {
-    let state = state.borrow();
-    let ctx = state.borrow::<Ctx>();
+    let clients = {
+        let state = state.borrow();
+        let ctx = state.borrow::<Ctx>();
+        ctx.clients.clone()
+    };
     let client_id = input.client_id;
-    let client = ctx
-        .clients
+    let client = clients
         .get(&client_id)
         .with_context(|| format!("Could not find engine '{client_id}"))?;
 
@@ -127,11 +129,13 @@ pub async fn op_temporal_workflow_signal(
     state: Rc<RefCell<OpState>>,
     #[serde] input: TemporalWorkflowSignalInput,
 ) -> Result<()> {
-    let state = state.borrow();
-    let ctx = state.borrow::<Ctx>();
+    let clients = {
+        let state = state.borrow();
+        let ctx = state.borrow::<Ctx>();
+        ctx.clients.clone()
+    };
     let client_id = input.client_id;
-    let client = ctx
-        .clients
+    let client = clients
         .get(&client_id)
         .with_context(|| format!("Could not find engine '{client_id}"))?;
 
@@ -168,12 +172,14 @@ pub async fn op_temporal_workflow_query(
     #[serde] input: TemporalWorkflowQueryInput,
 ) -> Result<Vec<String>> {
     use temporal_sdk_core_protos::temporal::api::query::v1::WorkflowQuery;
-    let state = state.borrow();
-    let ctx = state.borrow::<Ctx>();
+    let clients = {
+        let state = state.borrow();
+        let ctx = state.borrow::<Ctx>();
+        ctx.clients.clone()
+    };
 
     let client_id = input.client_id;
-    let client = ctx
-        .clients
+    let client = clients
         .get(&client_id)
         .with_context(|| format!("Could not find engine '{client_id}"))?;
 
@@ -225,11 +231,13 @@ pub async fn op_temporal_workflow_describe(
     state: Rc<RefCell<OpState>>,
     #[serde] input: TemporalWorkflowDescribeInput,
 ) -> Result<TemporalWorkflowDescribeOutput> {
-    let state = state.borrow();
-    let ctx = state.borrow::<Ctx>();
+    let clients = {
+        let state = state.borrow();
+        let ctx = state.borrow::<Ctx>();
+        ctx.clients.clone()
+    };
     let client_id = input.client_id;
-    let client = ctx
-        .clients
+    let client = clients
         .get(&client_id)
         .with_context(|| format!("Could not find engine '{client_id}"))?;
 

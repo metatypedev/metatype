@@ -25,46 +25,37 @@ mod interlude {
     pub use tap::prelude::*;
 }
 
-use config::Config;
+pub use config::Config;
+pub use ext::extensions;
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
 
 use crate::interlude::*;
 
+// This is uded to populate the deno_core::OpState with dependencies
+// used by the different ops
+#[derive(Clone)]
 pub struct OpDepInjector {
-    #[cfg(test)]
-    pub test: ext::tests::TestCtx,
-    pub temporal: runtimes::temporal::Ctx,
-    pub python: runtimes::python::python_bindings::Ctx,
-    pub prisma: runtimes::prisma::Ctx,
-    // rt: tokio::runtime::Runtime,
+    tmp_dir: Arc<Path>,
 }
 
 impl OpDepInjector {
-    pub fn new() -> Self {
+    pub fn from_env() -> Self {
         use std::str::FromStr;
         Self {
-            #[cfg(test)]
-            test: ext::tests::TestCtx { val: 10 },
-            temporal: Default::default(),
-            python: Default::default(),
-            prisma: runtimes::prisma::Ctx::new(
-                std::env::var("TMP_DIR")
-                    .map(|p| PathBuf::from_str(&p).expect("invalid TMP_DIR"))
-                    .unwrap_or_else(|_| {
-                        std::env::current_dir().expect("no current dir").join("tmp")
-                    })
-                    .into(),
-            ),
+            tmp_dir: std::env::var("TMP_DIR")
+                .map(|p| PathBuf::from_str(&p).expect("invalid TMP_DIR"))
+                .unwrap_or_else(|_| std::env::current_dir().expect("no current dir").join("tmp"))
+                .into(),
         }
     }
 
     pub fn inject(self, state: &mut deno_core::OpState) {
         #[cfg(test)]
-        state.put(self.test);
-        state.put(self.temporal);
-        state.put(self.python);
-        state.put(self.prisma);
+        state.put(ext::tests::TestCtx { val: 10 });
+        state.put(runtimes::temporal::Ctx::default());
+        state.put(runtimes::python::python_bindings::Ctx::default());
+        state.put(runtimes::prisma::Ctx::new(self.tmp_dir));
     }
 }
 
@@ -112,7 +103,7 @@ pub fn init_sentry(config: &Config) -> sentry::ClientInitGuard {
 }
 
 async fn launch_typegate_deno(main_mod: PathBuf) -> Result<()> {
-    let permissions = mt_deno::deno::deno_runtime::permissions::PermissionsOptions {
+    let permissions = deno_runtime::permissions::PermissionsOptions {
         allow_run: Some(["hostname"].into_iter().map(str::to_owned).collect()),
         allow_sys: Some(vec![]),
         allow_env: Some(vec![]),
@@ -136,7 +127,7 @@ async fn launch_typegate_deno(main_mod: PathBuf) -> Result<()> {
     mt_deno::run(
         &main_mod,
         permissions,
-        Arc::new(|| ext::extensions(OpDepInjector::new())),
+        Arc::new(|| ext::extensions(OpDepInjector::from_env())),
     )
     .await
 }
@@ -155,6 +146,38 @@ mod tests {
     use deno_runtime::permissions::PermissionsOptions;
 
     #[test]
+    fn run_typegate() -> Result<()> {
+        env_logger::init();
+        std::env::set_var("RUST_MIN_STACK", "8388608");
+        std::panic::set_hook(Box::new(move |info| {
+            error!("{info} {}:{}", std::file!(), std::line!());
+            std::process::exit(1);
+        }));
+        let permissions = PermissionsOptions {
+            allow_run: Some(["hostname"].into_iter().map(str::to_owned).collect()),
+            allow_sys: Some(vec![]),
+            allow_env: Some(vec![]),
+            allow_hrtime: true,
+            allow_write: Some(
+                ["tmp"]
+                    .into_iter()
+                    .map(std::str::FromStr::from_str)
+                    .collect::<Result<_, _>>()?,
+            ),
+            allow_ffi: Some(vec![]),
+            allow_read: Some(vec![]),
+            allow_net: Some(vec![]),
+            ..Default::default()
+        };
+        mt_deno::run_sync(
+            std::env::current_dir()?.join("../src/main.ts"),
+            permissions,
+            Arc::new(|| crate::ext::extensions(crate::OpDepInjector::from_env())),
+        );
+        Ok(())
+    }
+
+    #[test]
     fn bindings_ts_test() -> Result<()> {
         env_logger::init();
         std::env::set_var("RUST_MIN_STACK", "8388608");
@@ -168,13 +191,13 @@ mod tests {
         };
         mt_deno::test_sync(
             deno_config::FilesConfig {
-                include: Some(vec!["bindings.ts".parse()?]),
+                include: Some(vec!["bindings.test.ts".parse()?]),
                 ..Default::default()
             },
             "deno.test.jsonc".parse()?,
             permissions,
             None,
-            Arc::new(|| crate::ext::extensions(crate::OpDepInjector::new())),
+            Arc::new(|| crate::ext::extensions(crate::OpDepInjector::from_env())),
         );
         Ok(())
     }

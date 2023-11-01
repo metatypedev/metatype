@@ -8,8 +8,8 @@ use crate::{
 };
 
 use crate::OpDepInjector;
-pub fn extensions(root: OpDepInjector) -> Vec<deno_core::Extension> {
-    vec![tg_metatype_ext::init_ops_and_esm(root)]
+pub fn extensions(seed: OpDepInjector) -> Vec<deno_core::Extension> {
+    vec![tg_metatype_ext::init_ops_and_esm(seed)]
 }
 
 // NOTE: this is not a proc macro so ordering of sections is important
@@ -53,10 +53,10 @@ deno_core::extension!(
     esm_entry_point = "ext:tg_metatype_ext/runtime.js",
     esm = ["runtime.js"],
     // parameters for when we initialize our extensions
-    options = { root: OpDepInjector, },
+    options = { seed: OpDepInjector, },
     // initialize the OpState
-    state = |mut state, opt| {
-        opt.root.inject(&mut state);
+    state = |state, opt| {
+        opt.seed.inject(state);
     },
     docs = "Internal metatype extension for typegate usage.",
 );
@@ -104,7 +104,7 @@ pub mod tests {
             ..Default::default()
         })
         .await?
-        .with_custom_ext_cb(Arc::new(|| extensions(OpDepInjector::new())));
+        .with_custom_ext_cb(Arc::new(|| extensions(OpDepInjector::from_env())));
         let worker_factory = deno_factory.create_cli_main_worker_factory().await?;
         let main_module = "data:application/javascript;Meta.get_version()".parse()?;
         let permissions = PermissionsContainer::allow_all();

@@ -1,8 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import * as base64 from "https://deno.land/std@0.202.0/encoding/base64.ts";
-
 export function get_version() {
   return Meta.version();
 }
@@ -433,12 +431,6 @@ export async function prisma_register_engine(
   } catch (err) {
     return { Err: { message: err.toString() } };
   }
-  /*
-  try {
-  } catch (err) {
-    return { Err: { message: err.toString() } };
-  }
-   * */
 }
 
 export type PrismaUnregisterEngineInp = {
@@ -465,6 +457,7 @@ export async function prisma_unregister_engine(
 
 export type PrismaQueryInp = {
   engine_name: string;
+  // deno-lint-ignore no-explicit-any
   query: any;
   datamodel: string;
 };
@@ -479,7 +472,48 @@ export type PrismaQueryOut =
       message: string;
     };
   };
+export async function prisma_query(
+  a0: PrismaQueryInp,
+): Promise<PrismaQueryOut> {
+  try {
+    const res = await Meta.prisma.query(a0);
+    return { Ok: { res } };
+  } catch (err) {
+    return { Err: { message: err.toString() } };
+  }
+  /*
+  try {
+  } catch (err) {
+    return { Err: { message: err.toString() } };
+  }
+   * */
+}
 
+export type PrismaDiffInp = {
+  datasource: string;
+  datamodel: string;
+  script: boolean;
+};
+export type PrismaDiffOut =
+  | {
+    Ok: {
+      diff: string | undefined | null;
+    };
+  }
+  | {
+    Err: {
+      message: string;
+    };
+  };
+
+export async function prisma_diff(a0: PrismaDiffInp) {
+  try {
+    const res = await Meta.prisma.diff(a0);
+    return { Ok: { diff: res } };
+  } catch (err) {
+    return { Err: { message: err.toString() } };
+  }
+}
 export type PrismaApplyResult =
   | {
     Err: {
@@ -497,6 +531,51 @@ export type PrismaApplyResult =
       reset_reason: string | undefined | null;
     };
   };
+export type PrismaDevInp = {
+  datasource: string;
+  datamodel: string;
+  migrations: string | undefined | null;
+  reset_database: boolean;
+};
+
+export async function prisma_apply(
+  a0: PrismaDevInp,
+): Promise<PrismaApplyResult> {
+  try {
+    return await Meta.prisma.apply(a0) as PrismaApplyResult;
+  } catch (err) {
+    return { Err: { message: err.toString() } };
+  }
+}
+export type PrismaDeployInp = {
+  datasource: string;
+  datamodel: string;
+  migrations: string;
+};
+export type PrismaDeployOut =
+  | {
+    Err: {
+      message: string;
+    };
+  }
+  | {
+    Ok: {
+      migration_count: number;
+      applied_migrations: Array<string>;
+    };
+  };
+
+export async function prisma_deploy(
+  a0: PrismaDeployInp,
+): Promise<PrismaDeployOut> {
+  try {
+    const res = await Meta.prisma.deploy(a0);
+    return { Ok: res };
+  } catch (err) {
+    return { Err: { message: err.toString() } };
+  }
+}
+
 export type PrismaCreateInp = {
   datasource: string;
   datamodel: string;
@@ -517,45 +596,17 @@ export type PrismaCreateResult =
       apply_err: string | undefined | null;
     };
   };
-export type PrismaDeployInp = {
-  datasource: string;
-  datamodel: string;
-  migrations: string;
-};
-export type PrismaDeployOut =
-  | {
-    Err: {
-      message: string;
-    };
+
+export async function prisma_create(
+  a0: PrismaCreateInp,
+): Promise<PrismaCreateResult> {
+  try {
+    const res = await Meta.prisma.create(a0);
+    return { Ok: res };
+  } catch (err) {
+    return { Err: { message: err.toString() } };
   }
-  | {
-    Ok: {
-      migration_count: number;
-      applied_migrations: Array<string>;
-    };
-  };
-export type PrismaDevInp = {
-  datasource: string;
-  datamodel: string;
-  migrations: string | undefined | null;
-  reset_database: boolean;
-};
-export type PrismaDiffInp = {
-  datasource: string;
-  datamodel: string;
-  script: boolean;
-};
-export type PrismaDiffOut =
-  | {
-    Ok: {
-      diff: string | undefined | null;
-    };
-  }
-  | {
-    Err: {
-      message: string;
-    };
-  };
+}
 export type PrismaResetInp = {
   datasource: string;
 };
@@ -570,229 +621,55 @@ export type PrismaResetResult =
       reset: boolean;
     };
   };
-// TESTS
-function assert<T>(val: T) {
-  if (!val) throw Error("assertion failed");
-}
-// deno-lint-ignore no-unused-vars
-function dbg<T>(val: T) {
-  console.log("DBG: ", val);
-  return val;
-}
-
-Deno.test("version", () => {
-  assert(
-    typeof Meta.version() === "string",
-  );
-
-  assert(
-    typeof get_version() === "string",
-  );
-});
-
-Deno.test("typescriptFormatCode", () => {
-  const source = "console.log( {hello: 'world'})";
-
-  assert(
-    Meta.typescriptFormatCode(source) ===
-      `console.log({ hello: "world" });\n`,
-  );
-
-  const out = typescript_format_code({ source });
-  assert(out!.Ok!.formatted_code === `console.log({ hello: "world" });\n`);
-});
-
-Deno.test("validatePrismaRuntimeData", () => {
-  const json = {
-    name: "my_prisma",
-    connection_string_secret: "secret",
-    models: [],
-    relationships: [],
-  };
-  Meta.validatePrismaRuntimeData(json);
-
-  const out = validate_prisma_runtime_data({ obj: json });
-  assert(!out.error);
-});
-
-Deno.test("typegraphValidate", () => {
-  const json = {
-    "$id": "https://metatype.dev/specs/0.0.3.json",
-    "types": [
-      {
-        "type": "object",
-        "title": "introspection",
-        "runtime": 0,
-        "policies": [],
-        "config": {},
-        "as_id": false,
-        "properties": {
-          "__type": 1,
-          "__schema": 64,
-        },
-        "required": [
-          "__type",
-          "__schema",
-        ],
-      },
-      {
-        "type": "function",
-        "title": "func_79",
-        "runtime": 1,
-        "policies": [
-          0,
-        ],
-        "config": {},
-        "as_id": false,
-        "input": 2,
-        "output": 4,
-        "materializer": 0,
-        "rate_weight": null,
-        "rate_calls": false,
-      },
-    ],
-    "materializers": [
-      {
-        "name": "getType",
-        "runtime": 1,
-        "effect": {
-          "effect": "read",
-          "idempotent": true,
-        },
-        "data": {},
-      },
-    ],
-    "runtimes": [
-      {
-        "name": "deno",
-        "data": {
-          "worker": "default",
-          "permissions": {},
-        },
-      },
-      {
-        "name": "typegraph",
-        "data": {},
-      },
-    ],
-    "policies": [
-      {
-        "name": "__public",
-        "materializer": 2,
-      },
-    ],
-    "meta": {
-      "prefix": null,
-      "secrets": [],
-      "queries": {
-        "dynamic": true,
-        "endpoints": [],
-      },
-      "cors": {
-        "allow_origin": [],
-        "allow_headers": [],
-        "expose_headers": [],
-        "allow_methods": [],
-        "allow_credentials": true,
-        "max_age_sec": null,
-      },
-      "auths": [],
-      "rate": null,
-      "version": "0.0.3",
-    },
-  };
-  const str = JSON.stringify(json);
-  assert(JSON.stringify(JSON.parse(Meta.typegraphValidate(str))) == str);
-
-  const out = typegraph_validate({ json: str });
-  assert("Valid" in out && JSON.stringify(JSON.parse(out.Valid.json)) == str);
-});
-
-Deno.test("wasmedgeWasi", async () => {
-  const input: WasiInput = {
-    wasm: base64.encode(
-      await Deno.readFile(
-        new URL(import.meta.resolve("../tests/runtimes/wasmedge/rust.wasm")),
-      ),
-    ),
-    func: "add",
-    out: "integer",
-    args: [JSON.stringify(1), JSON.stringify(2)],
-  };
-  assert(Meta.wasmedgeWasi(input) == "3");
-
-  const out = await wasmedge_wasi(input);
-  assert("Ok" in out && out.Ok.res == "3");
-});
-
-Deno.test("temporal", async () => {
-  // TODO
-  /*
-  {
-    const client: TemporalRegisterInput = {
-      url: "<host>",
-      namespace: "default",
-      client_id: `$mytg_TemporalRuntime_${crypto.randomUUID()}`,
-    };
-    await Meta.temporal.clientRegister(client);
-    const workflow: TemporalWorkflowStartInput = {
-      client_id: client.client_id,
-    };
-    const run_id = await Meta.temporal.workflowStart(workflow);
-
-    const query: TemporalWorkflowQueryInput = {
-      client_id: client.client_id,
-      workflow_id: workflow.workflow_id,
-      run_id,
-    };
-    const queryRes = await Meta.temporal.workflowQuery(query);
-    assert(Array.isArray(queryRes));
-
-    const signal: TemporalWorkflowSignalInput = {
-      client_id: client.client_id,
-      workflow_id: workflow.workflow_id,
-      request_id: workflow.request_id,
-      run_id,
-    };
-    await Meta.temporal.workflowSignal(signal);
-    Meta.temporal.clientUnregister(client);
+export async function prisma_reset(
+  a0: PrismaResetInp,
+): Promise<PrismaResetResult> {
+  try {
+    const res = await Meta.prisma.reset(a0.datasource);
+    return { Ok: { reset: res } };
+  } catch (err) {
+    return { Err: { message: err.toString() } };
   }
-  {
-    const client: TemporalRegisterInput = {
-      url: "<host>",
-      namespace: "default",
-      client_id: `$mytg_TemporalRuntime_${crypto.randomUUID()}`,
+}
+export type UnpackInp = {
+  dest: string;
+  migrations: string;
+};
+export type UnpackResult =
+  | "Ok"
+  | {
+    Err: {
+      message: string;
     };
-    assert(await temporal_register(client) === "Ok");
-    let run_id: string;
-    const workflow: TemporalWorkflowStartInput = {
-      client_id: client.client_id,
-    };
-    {
-      const out = await temporal_workflow_start(workflow);
-      assert("Ok" in out);
-      run_id = out.Ok.run_id;
-    }
-    {
-      const query: TemporalWorkflowQueryInput = {
-        client_id: client.client_id,
-        workflow_id: workflow.workflow_id,
-        run_id,
-      };
-      const out = await temporal_workflow_query(query);
-      assert("Ok" in out);
-    }
-    const signal: TemporalWorkflowSignalInput = {
-      client_id: client.client_id,
-      workflow_id: workflow.workflow_id,
-      request_id: workflow.request_id,
-      run_id,
-    };
-    assert(await temporal_workflow_signal(signal) === "Ok");
-    assert(await temporal_unregister(client) === "Ok");
-  }*/
-});
+  };
+export function unpack(a0: UnpackInp): UnpackResult {
+  try {
+    Meta.prisma.unpack(a0);
+    return "Ok";
+  } catch (err) {
+    return { Err: { message: err.toString() } };
+  }
+}
 
-Deno.test("python", () => {
-  // TODO
-});
+export type ArchiveInp = {
+  path: string;
+};
+export type ArchiveResult =
+  | {
+    Ok: {
+      base64: string | undefined | null;
+    };
+  }
+  | {
+    Err: {
+      message: string;
+    };
+  };
+export function archive(a0: ArchiveInp): ArchiveResult {
+  try {
+    const res = Meta.prisma.archive(a0);
+    return { Ok: { base64: res } };
+  } catch (err) {
+    return { Err: { message: err.toString() } };
+  }
+}

@@ -17,7 +17,8 @@ edition = "2021"
 # internal crates
 mt_deno = { path = "libs/deno/"}
 common = { path = "libs/common/"}
-typescript = { path = "libs/typescript/"}
+typescript = { path = "libs/typescript/" }
+tg_core = { path = "typegate/tg_core" }
 
 # [profile.xtask]
 # inherits = 'dev'
