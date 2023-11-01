@@ -10,7 +10,7 @@ lazy_static = "1.4.0"
 dprint-plugin-typescript = "0.87.1"
 
 # https://github.com/denoland/deno_ast/blob/main/Cargo.toml#L42 via dprint deps
-swc_common = { version = "=0.32.0", features = ["tty-emitter"] }
+swc_common = { version = "=0.33.2", features = ["tty-emitter"] }
 swc_ecma_ast = "=0.109.0"
 swc_ecma_codegen = "=0.144.1"
 swc_ecma_parser = "=0.139.0"
