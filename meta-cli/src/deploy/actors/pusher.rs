@@ -97,50 +97,104 @@ impl PusherActor {
             );
             // TODO panic?? -- exit??
         }
-        if let Some((push, instant)) = self.queue.pop_front() {
-            // cancelled after push
-            let cancelled = self
-                .cancellations
-                .range(instant..)
-                .any(|(_, path)| push.typegraph.path.as_ref().unwrap() == path);
-            if cancelled {
-                return self.next(ctx);
-            }
 
-            if let Some(retry) = push.retry.as_ref() {
-                // remove cancellations before the retry instant
-                self.remove_cancellations_before(retry.instant);
-
-                // cancelled after retry
+        loop {
+            if let Some((push, instant)) = self.queue.pop_front() {
+                // cancelled after push
                 let cancelled = self
                     .cancellations
-                    .iter()
+                    .range(instant..)
                     .any(|(_, path)| push.typegraph.path.as_ref().unwrap() == path);
                 if cancelled {
-                    return self.next(ctx);
+                    continue; // next
                 }
-            } else {
-                self.remove_cancellations_before(instant - self.retry_interval * 2);
+
+                if let Some(retry) = push.retry.as_ref() {
+                    // remove cancellations before the retry instant
+                    self.remove_cancellations_before(retry.instant);
+
+                    // cancelled after retry
+                    let cancelled = self
+                        .cancellations
+                        .iter()
+                        .any(|(_, path)| push.typegraph.path.as_ref().unwrap() == path);
+                    if cancelled {
+                        continue;
+                    }
+                } else {
+                    self.remove_cancellations_before(instant - self.retry_interval * 2);
+                }
+
+                self.current = Some(push.clone());
+                let secrets_rx = self.secrets_tx.subscribe();
+                let node = Arc::clone(&self.node);
+                let self_addr = ctx.address();
+                // let console = self.console.clone();
+
+                Arbiter::current().spawn(async move {
+                    // TODO logging
+                    match Self::push(Arc::clone(&push.typegraph), node, secrets_rx).await {
+                        Ok(res) => {
+                            self_addr.do_send(res);
+                        }
+                        Err(e) => {
+                            self_addr.do_send(Error(e));
+                        }
+                    }
+                });
+
+                break;
             }
-
-            self.current = Some(push.clone());
-            let secrets_rx = self.secrets_tx.subscribe();
-            let node = Arc::clone(&self.node);
-            let self_addr = ctx.address();
-            // let console = self.console.clone();
-
-            Arbiter::current().spawn(async move {
-                // TODO logging
-                match Self::push(Arc::clone(&push.typegraph), node, secrets_rx).await {
-                    Ok(res) => {
-                        self_addr.do_send(res);
-                    }
-                    Err(e) => {
-                        self_addr.do_send(Error(e));
-                    }
-                }
-            });
         }
+    }
+
+    async fn push(
+        tg: Arc<Typegraph>,
+        node: Arc<Node>,
+        mut secrets_rx: SecretsRx,
+    ) -> Result<PushResult> {
+        // wait for secrets to be loaded
+        // this will return immediately if the secrets are already loaded
+        secrets_rx.changed().await?;
+        let secrets = secrets_rx
+            .borrow()
+            .as_ref()
+            .map(Arc::clone)
+            .ok_or_else(|| anyhow!("Secrets not loaded. This is a bug. Please report it."))?;
+
+        // TODO can we set the prefix before the push? // in the loader??
+        // so we wont need to clone
+        let tg = &*tg;
+        let tg = match node.prefix.as_ref() {
+            Some(prefix) => tg.with_prefix(prefix.clone())?,
+            None => tg.clone(),
+        };
+        let res = node
+            .post("/typegate")?
+            .gql(
+                indoc! {"
+                    mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
+                        addTypegraph(fromString: $tg, secrets: $secrets, cliVersion: $cliVersion) {
+                            name
+                            messages { type text }
+                            migrations { runtime migrations }
+                            resetRequired
+                        }
+                    }"}
+                .to_string(),
+                Some(serde_json::json!({
+                    "tg": serde_json::to_string(&tg)?,
+                    "secrets": serde_json::to_string(&secrets)?,
+                    "cliVersion": common::get_version()
+                })),
+            )
+            .await?;
+
+        let res: PushResult = res
+            .data("addTypegraph")
+            .context("addTypegraph field in the response")?;
+
+        Ok(res)
     }
 }
 
@@ -200,8 +254,6 @@ struct LoadedSecrets(HashMap<String, String>);
 #[rtype(result = "()")]
 struct Error(anyhow::Error);
 
-// TODO message CancelPush
-
 impl Actor for PusherActor {
     type Context = Context<Self>;
 
@@ -222,61 +274,6 @@ impl Actor for PusherActor {
                 }
             }
         });
-    }
-
-    fn stopped(&mut self, _ctx: &mut Self::Context) {
-        println!("Pusher stopped");
-    }
-}
-
-impl PusherActor {
-    async fn push(
-        tg: Arc<Typegraph>,
-        node: Arc<Node>,
-        mut secrets_rx: SecretsRx,
-    ) -> Result<PushResult> {
-        // wait for secrets to be loaded
-        // this will return immediately if the secrets are already loaded
-        secrets_rx.changed().await?;
-        let secrets = secrets_rx
-            .borrow()
-            .as_ref()
-            .map(Arc::clone)
-            .ok_or_else(|| anyhow!("Secrets not loaded. This is a bug. Please report it."))?;
-
-        // TODO can we set the prefix before the push? // in the loader??
-        // so we wont need to clone
-        let tg = &*tg;
-        let tg = match node.prefix.as_ref() {
-            Some(prefix) => tg.with_prefix(prefix.clone())?,
-            None => tg.clone(),
-        };
-        let res = node
-            .post("/typegate")?
-            .gql(
-                indoc! {"
-                    mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
-                        addTypegraph(fromString: $tg, secrets: $secrets, cliVersion: $cliVersion) {
-                            name
-                            messages { type text }
-                            migrations { runtime migrations }
-                            resetRequired
-                        }
-                    }"}
-                .to_string(),
-                Some(serde_json::json!({
-                    "tg": serde_json::to_string(&tg)?,
-                    "secrets": serde_json::to_string(&secrets)?,
-                    "cliVersion": common::get_version()
-                })),
-            )
-            .await?;
-
-        let res: PushResult = res
-            .data("addTypegraph")
-            .context("addTypegraph field in the response")?;
-
-        Ok(res)
     }
 }
 
