@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::{HashMap, VecDeque};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use colored::Colorize;
 use common::typegraph::Typegraph;
@@ -19,7 +19,7 @@ use tokio::sync::watch;
 
 use crate::config::Config;
 use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
-use crate::typegraph::push::{MessageEntry, Migrations, RetryId, RetryManager, RetryState};
+use crate::typegraph::push::{MessageEntry, Migrations};
 use crate::utils::plural_suffix;
 use crate::utils::{graphql::Query, Node};
 
@@ -39,11 +39,11 @@ pub struct PusherActor {
     base_dir: Arc<Path>,
     node: Arc<Node>,
     secrets_tx: SecretsTx,
-    queue: VecDeque<PushTypegraph>,
-    current: Option<PushTypegraph>,
-    retry_manager: RetryManager,
+    queue: VecDeque<(Push, Instant)>,
+    current: Option<Push>,
     max_retry_count: u32,
     retry_interval: Duration,
+    cancellations: BTreeMap<Instant, PathBuf>,
 }
 
 impl PusherActor {
@@ -62,9 +62,9 @@ impl PusherActor {
             secrets_tx,
             queue: VecDeque::new(),
             current: None,
-            retry_manager: Default::default(),
             max_retry_count: 3,
             retry_interval: Duration::from_secs(5),
+            cancellations: BTreeMap::new(),
         }
     }
 
@@ -85,6 +85,10 @@ impl PusherActor {
         }
     }
 
+    fn remove_cancellations_before(&mut self, instant: Instant) {
+        self.cancellations = self.cancellations.split_off(&instant);
+    }
+
     fn next(&mut self, ctx: &mut Context<Self>) {
         if self.current.is_some() {
             error!(
@@ -93,24 +97,37 @@ impl PusherActor {
             );
             // TODO panic?? -- exit??
         }
-        if let Some(push) = self.queue.pop_front() {
+        if let Some((push, instant)) = self.queue.pop_front() {
+            // cancelled after push
+            let cancelled = self
+                .cancellations
+                .range(instant..)
+                .any(|(_, path)| push.typegraph.path.as_ref().unwrap() == path);
+            if cancelled {
+                return self.next(ctx);
+            }
+
+            if let Some(retry) = push.retry.as_ref() {
+                // remove cancellations before the retry instant
+                self.remove_cancellations_before(retry.instant);
+
+                // cancelled after retry
+                let cancelled = self
+                    .cancellations
+                    .iter()
+                    .any(|(_, path)| push.typegraph.path.as_ref().unwrap() == path);
+                if cancelled {
+                    return self.next(ctx);
+                }
+            } else {
+                self.remove_cancellations_before(instant - self.retry_interval * 2);
+            }
+
             self.current = Some(push.clone());
             let secrets_rx = self.secrets_tx.subscribe();
             let node = Arc::clone(&self.node);
             let self_addr = ctx.address();
             // let console = self.console.clone();
-
-            // TODO check other cancellation points
-
-            if let Some(retry) = push.retry {
-                let state = self
-                    .retry_manager
-                    .remove(retry.id, push.typegraph.path.as_ref().unwrap())
-                    .expect("Invalid state: retry not found"); // TODO error handling
-                if let RetryState::Cancelled = state {
-                    return;
-                }
-            }
 
             Arbiter::current().spawn(async move {
                 // TODO logging
@@ -129,18 +146,18 @@ impl PusherActor {
 
 #[derive(Message, Clone)]
 #[rtype(result = "()")]
-pub struct PushTypegraph {
+pub struct Push {
     typegraph: Arc<Typegraph>,
     retry: Option<Retry>,
 }
 
 #[derive(Clone, Debug)]
 struct Retry {
-    id: RetryId,
+    instant: Instant,
     retry_no: u32,
 }
 
-impl PushTypegraph {
+impl Push {
     pub fn new(typegraph: Arc<Typegraph>) -> Self {
         Self {
             typegraph,
@@ -148,9 +165,12 @@ impl PushTypegraph {
         }
     }
 
-    fn retry(self, id: RetryId, retry_no: u32) -> Self {
+    fn retry(self, retry_no: u32) -> Self {
         Self {
-            retry: Some(Retry { id, retry_no }),
+            retry: Some(Retry {
+                instant: Instant::now(),
+                retry_no,
+            }),
             ..self
         }
     }
@@ -260,11 +280,11 @@ impl PusherActor {
     }
 }
 
-impl Handler<PushTypegraph> for PusherActor {
+impl Handler<Push> for PusherActor {
     type Result = ();
 
-    fn handle(&mut self, msg: PushTypegraph, ctx: &mut Self::Context) -> Self::Result {
-        self.queue.push_back(msg);
+    fn handle(&mut self, push: Push, ctx: &mut Self::Context) -> Self::Result {
+        self.queue.push_back((push, Instant::now()));
         if self.current.is_none() {
             self.next(ctx);
         }
@@ -274,8 +294,8 @@ impl Handler<PushTypegraph> for PusherActor {
 impl Handler<CancelPush> for PusherActor {
     type Result = ();
 
-    fn handle(&mut self, _msg: CancelPush, _ctx: &mut Self::Context) -> Self::Result {
-        // TODO cancel pending push/re-push
+    fn handle(&mut self, msg: CancelPush, _ctx: &mut Self::Context) -> Self::Result {
+        self.cancellations.insert(Instant::now(), msg.0);
     }
 }
 
@@ -322,13 +342,14 @@ impl Handler<PushResult> for PusherActor {
                 .interact()
                 .unwrap()
         {
-            let tg = self.queue.pop_front().unwrap();
-            let mut tg = (*tg.typegraph).clone();
+            let push = self.current.take().unwrap();
+            let mut tg = (*push.typegraph).clone();
             EmbeddedPrismaMigrationOptionsPatch::default()
                 .reset_on_drift(true)
                 .apply(&mut tg, res.reset_required)
                 .unwrap();
-            self.queue.push_front(PushTypegraph::new(tg.into()));
+            self.queue
+                .push_front((Push::new(tg.into()), Instant::now()));
             let _ = self.current.take().unwrap();
             self.next(ctx);
         }
@@ -340,9 +361,8 @@ impl Handler<Error> for PusherActor {
 
     fn handle(&mut self, err: Error, ctx: &mut Self::Context) -> Self::Result {
         error!(self.console, "{e:?}", e = err.0);
-        let tg = self.current.take().unwrap();
-        let next_retry_no = tg.retry.clone().map(|r| r.retry_no + 1).unwrap_or(1);
-        let retry_id = self.retry_manager.add(tg.typegraph.path.clone().unwrap());
+        let push = self.current.take().unwrap();
+        let next_retry_no = push.retry.clone().map(|r| r.retry_no + 1).unwrap_or(1);
 
         if next_retry_no <= self.max_retry_count {
             let console = self.console.clone();
@@ -356,7 +376,7 @@ impl Handler<Error> for PusherActor {
             let self_addr = ctx.address();
             Arbiter::current().spawn(async move {
                 tokio::time::sleep(retry_interval).await;
-                self_addr.do_send(tg.retry(retry_id, next_retry_no));
+                self_addr.do_send(push.retry(next_retry_no));
             });
         }
 

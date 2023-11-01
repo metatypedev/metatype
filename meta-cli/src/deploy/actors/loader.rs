@@ -14,7 +14,7 @@ use crate::deploy::actors::pusher::CancelPush;
 use crate::typegraph::loader::{Loader, LoaderError};
 
 use super::console::{error, info, ConsoleActor};
-use super::pusher::{PushTypegraph, PusherActor};
+use super::pusher::{Push, PusherActor};
 
 pub struct LoaderActor {
     config: Arc<Config>,
@@ -42,7 +42,7 @@ impl LoaderActor {
     ) -> Result<(), LoaderError> {
         let typegraphs = loader.load_module(path).await?;
         for tg in typegraphs.into_iter() {
-            pusher.do_send(PushTypegraph::new(tg.into()));
+            pusher.do_send(Push::new(tg.into()));
         }
         Ok(())
     }
