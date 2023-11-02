@@ -22,7 +22,7 @@ use cli::Action;
 use cli::Args;
 use log::warn;
 
-#[tokio::main]
+#[actix::main]
 async fn main() -> Result<()> {
     logger::init();
 

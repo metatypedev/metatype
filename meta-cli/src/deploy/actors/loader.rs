@@ -21,6 +21,8 @@ use crate::typegraph::postprocess;
 use super::console::{error, info, ConsoleActor};
 use super::pusher::{Push, PusherActor};
 use super::watcher::{UpdateDependencies, WatcherActor};
+#[cfg(debug_assertions)]
+use crate::deploy::actors::console::trace;
 
 pub trait Watcher: Sized + Unpin + 'static {
     fn update_deps(&mut self, tg: Arc<Typegraph>);
@@ -148,6 +150,11 @@ struct SetStoppedTx(oneshot::Sender<StopBehavior>);
 
 impl<W: Watcher + std::marker::Unpin + 'static> Actor for LoaderActor<W> {
     type Context = Context<Self>;
+
+    #[cfg(debug_assertions)]
+    fn started(&mut self, _ctx: &mut Self::Context) {
+        trace!(self.console, "loader started");
+    }
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
         if let Some(tx) = self.stopped_tx.take() {
