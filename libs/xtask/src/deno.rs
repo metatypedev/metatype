@@ -75,7 +75,7 @@ impl Test {
             allow_net: Some(vec![]),
             ..Default::default()
         };
-        let inj = tg_core::OpDepInjector::from_env();
+        let inj = typegate_core::OpDepInjector::from_env();
         mt_deno::test_sync(
             mt_deno::deno::deno_config::FilesConfig {
                 include: self.files,
@@ -84,7 +84,7 @@ impl Test {
             self.config,
             permissions,
             self.coverage,
-            std::sync::Arc::new(move || tg_core::extensions(inj.clone())),
+            std::sync::Arc::new(move || typegate_core::extensions(inj.clone())),
         );
         Ok(())
     }

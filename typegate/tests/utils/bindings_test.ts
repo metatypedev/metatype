@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import * as base64 from "https://deno.land/std@0.202.0/encoding/base64.ts";
+import * as base64 from "std/encoding/base64.ts";
 import {
   get_version,
   typegraph_validate,
@@ -9,7 +9,7 @@ import {
   validate_prisma_runtime_data,
   WasiInput,
   wasmedge_wasi,
-} from "./bindings.ts";
+} from "native";
 
 function assert<T>(val: T) {
   if (!val) throw Error("assertion failed");
@@ -152,7 +152,7 @@ Deno.test("wasmedgeWasi", async () => {
   const input: WasiInput = {
     wasm: base64.encode(
       await Deno.readFile(
-        new URL(import.meta.resolve("../tests/runtimes/wasmedge/rust.wasm")),
+        new URL(import.meta.resolve("../runtimes/wasmedge/rust.wasm")),
       ),
     ),
     func: "add",
@@ -163,76 +163,4 @@ Deno.test("wasmedgeWasi", async () => {
 
   const out = await wasmedge_wasi(input);
   assert("Ok" in out && out.Ok.res == "3");
-});
-
-Deno.test("temporal", async () => {
-  // TODO
-  /*
-  {
-    const client: TemporalRegisterInput = {
-      url: "<host>",
-      namespace: "default",
-      client_id: `$mytg_TemporalRuntime_${crypto.randomUUID()}`,
-    };
-    await Meta.temporal.clientRegister(client);
-    const workflow: TemporalWorkflowStartInput = {
-      client_id: client.client_id,
-    };
-    const run_id = await Meta.temporal.workflowStart(workflow);
-
-    const query: TemporalWorkflowQueryInput = {
-      client_id: client.client_id,
-      workflow_id: workflow.workflow_id,
-      run_id,
-    };
-    const queryRes = await Meta.temporal.workflowQuery(query);
-    assert(Array.isArray(queryRes));
-
-    const signal: TemporalWorkflowSignalInput = {
-      client_id: client.client_id,
-      workflow_id: workflow.workflow_id,
-      request_id: workflow.request_id,
-      run_id,
-    };
-    await Meta.temporal.workflowSignal(signal);
-    Meta.temporal.clientUnregister(client);
-  }
-  {
-    const client: TemporalRegisterInput = {
-      url: "<host>",
-      namespace: "default",
-      client_id: `$mytg_TemporalRuntime_${crypto.randomUUID()}`,
-    };
-    assert(await temporal_register(client) === "Ok");
-    let run_id: string;
-    const workflow: TemporalWorkflowStartInput = {
-      client_id: client.client_id,
-    };
-    {
-      const out = await temporal_workflow_start(workflow);
-      assert("Ok" in out);
-      run_id = out.Ok.run_id;
-    }
-    {
-      const query: TemporalWorkflowQueryInput = {
-        client_id: client.client_id,
-        workflow_id: workflow.workflow_id,
-        run_id,
-      };
-      const out = await temporal_workflow_query(query);
-      assert("Ok" in out);
-    }
-    const signal: TemporalWorkflowSignalInput = {
-      client_id: client.client_id,
-      workflow_id: workflow.workflow_id,
-      request_id: workflow.request_id,
-      run_id,
-    };
-    assert(await temporal_workflow_signal(signal) === "Ok");
-    assert(await temporal_unregister(client) === "Ok");
-  }*/
-});
-
-Deno.test("python", () => {
-  // TODO
 });

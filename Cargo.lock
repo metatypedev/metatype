@@ -9936,48 +9936,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tg_core"
-version = "0.2.5-0+dev"
-dependencies = [
- "anyhow",
- "base64 0.21.5",
- "common",
- "connection-string",
- "convert_case 0.6.0",
- "dashmap 5.5.3",
- "datamodel-renderer",
- "deno_bindgen",
- "env_logger",
- "envconfig",
- "futures",
- "log",
- "mt_deno",
- "num-derive 0.4.1",
- "num-traits 0.2.17",
- "once_cell",
- "prisma-models",
- "psl",
- "query-connector",
- "query-core",
- "query-engine-metrics",
- "request-handlers",
- "schema-connector",
- "schema-core",
- "sentry",
- "tap",
- "tempfile",
- "temporal-client",
- "temporal-sdk-core-protos",
- "thiserror",
- "tokio",
- "typescript",
- "user-facing-errors",
- "wasmedge-sdk",
- "wasmedge-sys",
- "wasmedge-types",
-]
-
-[[package]]
 name = "thiserror"
 version = "1.0.50"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -10670,6 +10628,48 @@ dependencies = [
  "proc-macro2 1.0.69",
  "quote 1.0.33",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "typegate_core"
+version = "0.2.5-0+dev"
+dependencies = [
+ "anyhow",
+ "base64 0.21.5",
+ "common",
+ "connection-string",
+ "convert_case 0.6.0",
+ "dashmap 5.5.3",
+ "datamodel-renderer",
+ "deno_bindgen",
+ "env_logger",
+ "envconfig",
+ "futures",
+ "log",
+ "mt_deno",
+ "num-derive 0.4.1",
+ "num-traits 0.2.17",
+ "once_cell",
+ "prisma-models",
+ "psl",
+ "query-connector",
+ "query-core",
+ "query-engine-metrics",
+ "request-handlers",
+ "schema-connector",
+ "schema-core",
+ "sentry",
+ "tap",
+ "tempfile",
+ "temporal-client",
+ "temporal-sdk-core-protos",
+ "thiserror",
+ "tokio",
+ "typescript",
+ "user-facing-errors",
+ "wasmedge-sdk",
+ "wasmedge-sys",
+ "wasmedge-types",
 ]
 
 [[package]]
@@ -11753,7 +11753,7 @@ dependencies = [
  "project-root",
  "schemars",
  "serde_json",
- "tg_core",
+ "typegate_core",
  "typescript",
 ]
 

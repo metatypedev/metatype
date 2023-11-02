@@ -176,29 +176,4 @@ mod tests {
         );
         Ok(())
     }
-
-    #[test]
-    fn bindings_ts_test() -> Result<()> {
-        env_logger::init();
-        std::env::set_var("RUST_MIN_STACK", "8388608");
-        std::panic::set_hook(Box::new(move |info| {
-            error!("{info} {}:{}", std::file!(), std::line!());
-            std::process::exit(1);
-        }));
-        let permissions = PermissionsOptions {
-            allow_read: Some(vec![]),
-            ..Default::default()
-        };
-        mt_deno::test_sync(
-            deno_config::FilesConfig {
-                include: Some(vec!["bindings.test.ts".parse()?]),
-                ..Default::default()
-            },
-            "deno.test.jsonc".parse()?,
-            permissions,
-            None,
-            Arc::new(|| crate::ext::extensions(crate::OpDepInjector::from_env())),
-        );
-        Ok(())
-    }
 }

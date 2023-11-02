@@ -1,6 +1,5 @@
 env:
   TYPEGRAPH_VERSION: "0.0.3"
-  PATH: "$PATH:~/.deno/bin"
 
 typegate1: &tp
   workdir: typegate

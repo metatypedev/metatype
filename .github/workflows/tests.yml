@@ -393,6 +393,8 @@ jobs:
           source .venv/bin/activate
           cd typegraph/python
           poetry install --sync
+          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
+          export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
           cd ../..
           cargo test --locked --exclude meta-cli --exclude native --exclude typegraph_core --workspace
 

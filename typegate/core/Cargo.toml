@@ -1,10 +1,10 @@
 [package]
-name = "tg_core"
+name = "typegate_core"
 edition.workspace = true
 version.workspace = true
 
 [lib]
-name = "tg_core"
+name = "typegate_core"
 path = "lib.rs"
 
 [dependencies]
