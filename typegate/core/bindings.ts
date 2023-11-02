@@ -310,7 +310,7 @@ export function unregister_virtual_machine(
   a0: WasiVmUnregisterInp,
 ): WasiVmSetupOut {
   try {
-    Meta.python.unregisterVm(a0);
+    Meta.python.unregisterVm(a0.vm_name);
     return "Ok";
   } catch (err) {
     return { Err: { message: err.toString() } };
@@ -667,7 +667,7 @@ export type ArchiveResult =
   };
 export function archive(a0: ArchiveInp): ArchiveResult {
   try {
-    const res = Meta.prisma.archive(a0);
+    const res = Meta.prisma.archive(a0.path);
     return { Ok: { base64: res } };
   } catch (err) {
     return { Err: { message: err.toString() } };

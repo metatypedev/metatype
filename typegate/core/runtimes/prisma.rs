@@ -151,12 +151,11 @@ pub async fn op_prisma_apply(
         let state = state.borrow();
         state.borrow::<Ctx>().tmp_dir.clone()
     };
-    migration::apply(
-        MigrationContextBuilder::new(input.datasource, datamodel, tmp_dir)
-            .with_migrations(input.migrations),
-        input.reset_database,
-    )
-    .await
+    MigrationContextBuilder::new(input.datasource, datamodel, tmp_dir)
+        .with_migrations(input.migrations)
+        .build()?
+        .apply(input.reset_database)
+        .await
 }
 
 #[derive(Deserialize)]
@@ -178,11 +177,11 @@ pub async fn op_prisma_deploy(
         let state = state.borrow();
         state.borrow::<Ctx>().tmp_dir.clone()
     };
-    migration::deploy(
-        MigrationContextBuilder::new(input.datasource, datamodel, tmp_dir)
-            .with_migrations(Some(input.migrations)),
-    )
-    .await
+    MigrationContextBuilder::new(input.datasource, datamodel, tmp_dir)
+        .with_migrations(Some(input.migrations))
+        .build()?
+        .deploy()
+        .await
 }
 
 #[derive(Deserialize)]
@@ -206,13 +205,11 @@ pub async fn op_prisma_create(
         let state = state.borrow();
         state.borrow::<Ctx>().tmp_dir.clone()
     };
-    migration::create(
-        MigrationContextBuilder::new(input.datasource, datamodel, tmp_dir)
-            .with_migrations(input.migrations),
-        input.migration_name,
-        input.apply,
-    )
-    .await
+    MigrationContextBuilder::new(input.datasource, datamodel, tmp_dir)
+        .with_migrations(input.migrations)
+        .build()?
+        .create(input.migration_name, input.apply)
+        .await
 }
 
 #[deno_core::op2(async)]
@@ -224,12 +221,10 @@ pub async fn op_prisma_reset(
         let state = state.borrow();
         state.borrow::<Ctx>().tmp_dir.clone()
     };
-    migration::reset(MigrationContextBuilder::new(
-        datasource,
-        "".to_string(),
-        tmp_dir,
-    ))
-    .await
+    MigrationContextBuilder::new(datasource, "".to_string(), tmp_dir)
+        .build()?
+        .reset()
+        .await
 }
 
 #[derive(Deserialize)]

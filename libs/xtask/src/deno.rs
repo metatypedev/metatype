@@ -56,6 +56,7 @@ impl Test {
                     "python3",
                     "rm",
                     "mkdir",
+                    "bash",
                 ]
                 .into_iter()
                 .map(str::to_owned)

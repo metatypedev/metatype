@@ -64,7 +64,7 @@ impl MigrationContextBuilder {
         Self { migrations, ..self }
     }
 
-    fn build(self) -> Result<MigrationContext> {
+    pub fn build(self) -> Result<MigrationContext> {
         let api = schema_core::schema_api(Some(self.datasource.clone()), None)
             .tap_err(|e| error!("{e:?}"))?;
         let migrations_dir = MigrationsFolder::from(&self.tmp_dir_path, self.migrations.as_ref())
@@ -77,7 +77,7 @@ impl MigrationContextBuilder {
     }
 }
 
-struct MigrationContext {
+pub struct MigrationContext {
     builder: MigrationContextBuilder,
     migrations_dir: MigrationsFolder,
     api: Box<dyn GenericApi>,
@@ -115,7 +115,7 @@ pub enum PrismaApplyResult {
 }
 
 impl MigrationContext {
-    async fn apply(&self, reset_database: bool) -> Result<PrismaApplyResult> {
+    pub async fn apply(&self, reset_database: bool) -> Result<PrismaApplyResult> {
         trace!("Migrations::apply");
 
         let res = self.dev_diagnostic().await.tap_err(|e| error!("{e:?}"))?;
@@ -145,14 +145,6 @@ impl MigrationContext {
             reset_reason,
         })
     }
-}
-
-pub async fn apply(
-    ctx: MigrationContextBuilder,
-    reset_database: bool,
-) -> Result<PrismaApplyResult> {
-    let ctx = ctx.build()?;
-    ctx.apply(reset_database).await
 }
 
 #[derive(Serialize)]
@@ -209,15 +201,6 @@ impl MigrationContext {
     }
 }
 
-pub async fn create(
-    ctx: MigrationContextBuilder,
-    name: String,
-    apply: bool,
-) -> Result<PrismaCreateResult> {
-    let ctx = ctx.build().map_err(|e| anyhow::anyhow!(e))?;
-    ctx.create(name, apply).await
-}
-
 pub async fn diff(
     tmp_dir_path: &Path,
     datasource: String,
@@ -270,7 +253,7 @@ pub struct PrismaDeployOut {
 }
 
 impl MigrationContext {
-    async fn deploy(&self) -> Result<PrismaDeployOut> {
+    pub async fn deploy(&self) -> Result<PrismaDeployOut> {
         let res = self
             .api
             .list_migration_directories(ListMigrationDirectoriesInput {
@@ -296,17 +279,12 @@ impl MigrationContext {
     }
 }
 
-pub async fn deploy(ctx: MigrationContextBuilder) -> Result<PrismaDeployOut> {
-    let ctx = ctx.build()?;
-    ctx.deploy().await
-}
-
 fn err_to_string(err: CoreError) -> String {
     err.to_user_facing().message().to_string()
 }
 
 impl MigrationContext {
-    async fn reset(&self) -> Result<bool> {
+    pub async fn reset(&self) -> Result<bool> {
         match self.api.reset().await {
             Err(e) => Err(anyhow::format_err!(e
                 .to_user_facing()
@@ -315,11 +293,6 @@ impl MigrationContext {
             Ok(_) => Ok(true),
         }
     }
-}
-
-pub async fn reset(ctx: MigrationContextBuilder) -> Result<bool> {
-    let ctx = ctx.build()?;
-    ctx.reset().await
 }
 
 struct MigrationsFolder {
