@@ -45,6 +45,8 @@ impl Watcher for Addr<WatcherActor> {
     }
 }
 
+pub type WatchingLoaderActor = LoaderActor<Addr<WatcherActor>>;
+
 pub struct LoaderActor<W: Watcher = NoWatch> {
     config: Arc<Config>,
     directory: Arc<Path>,
@@ -69,7 +71,7 @@ impl LoaderActor {
         }
     }
 
-    pub fn start_in_watch_mode(self) -> Addr<LoaderActor<Addr<WatcherActor>>> {
+    pub fn start_in_watch_mode(self) -> Addr<WatchingLoaderActor> {
         Actor::create(|ctx| {
             let self_addr = ctx.address();
             let watcher_actor = WatcherActor::new(
@@ -150,7 +152,7 @@ impl<W: Watcher + Unpin + 'static> Handler<LoadModule> for LoaderActor<W> {
     }
 }
 
-impl Handler<ReloadModule> for LoaderActor<Addr<WatcherActor>> {
+impl Handler<ReloadModule> for WatchingLoaderActor {
     type Result = ();
 
     fn handle(&mut self, msg: ReloadModule, _ctx: &mut Context<Self>) -> Self::Result {
