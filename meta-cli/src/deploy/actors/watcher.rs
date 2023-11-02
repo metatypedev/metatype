@@ -3,11 +3,12 @@
 
 use actix::prelude::*;
 use anyhow::{Context as AnyhowContext, Result};
+use common::typegraph::Typegraph;
 use grep::searcher::{BinaryDetection, SearcherBuilder};
 use notify_debouncer_mini::notify::{INotifyWatcher, RecursiveMode};
 use notify_debouncer_mini::{new_debouncer, notify, DebounceEventResult, Debouncer};
 use pathdiff::diff_paths;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::{sync::Arc, time::Duration};
 
 use crate::config::Config;
@@ -17,12 +18,12 @@ use crate::typegraph::dependency_graph::DependencyGraph;
 use crate::typegraph::loader::discovery::FileFilter;
 
 use super::console::warning;
-use super::{console::ConsoleActor, loader::LoaderActor};
+use super::console::ConsoleActor;
 
 pub struct WatcherActor {
     config: Arc<Config>,
-    directory: PathBuf,
-    loader: Addr<LoaderActor>,
+    directory: Arc<Path>,
+    loader: Recipient<ReloadModule>,
     console: Addr<ConsoleActor>,
     debouncer: Option<Debouncer<INotifyWatcher>>,
     dependency_graph: DependencyGraph,
@@ -35,7 +36,11 @@ pub struct Stop;
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct File(PathBuf);
+struct File(PathBuf);
+
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct UpdateDependencies(pub Arc<Typegraph>);
 
 impl Actor for WatcherActor {
     type Context = Context<Self>;
@@ -57,8 +62,8 @@ impl Actor for WatcherActor {
 impl WatcherActor {
     pub fn new(
         config: Arc<Config>,
-        directory: PathBuf,
-        loader: Addr<LoaderActor>,
+        directory: Arc<Path>,
+        loader: Recipient<ReloadModule>,
         console: Addr<ConsoleActor>,
     ) -> Result<Self> {
         let file_filter = FileFilter::new(&config)?;
@@ -149,5 +154,13 @@ impl Handler<File> for WatcherActor {
                 }
             }
         }
+    }
+}
+
+impl Handler<UpdateDependencies> for WatcherActor {
+    type Result = ();
+
+    fn handle(&mut self, msg: UpdateDependencies, _ctx: &mut Self::Context) -> Self::Result {
+        self.dependency_graph.update_typegraph(&msg.0)
     }
 }

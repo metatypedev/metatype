@@ -8,33 +8,89 @@ use anyhow::Result;
 
 use actix::prelude::Context;
 use actix::prelude::*;
+use async_trait::async_trait;
+use common::typegraph::Typegraph;
 
 use crate::config::Config;
 use crate::deploy::actors::pusher::CancelPush;
+use crate::deploy::actors::watcher;
 use crate::typegraph::loader::{Loader, LoaderError};
+use crate::typegraph::postprocess;
 
 use super::console::{error, info, ConsoleActor};
 use super::pusher::{Push, PusherActor};
+use super::watcher::{UpdateDependencies, WatcherActor};
 
-pub struct LoaderActor {
+pub trait Watcher: Sized + Unpin + 'static {
+    fn update_deps(&mut self, tg: Arc<Typegraph>);
+    fn stop(&self);
+}
+
+pub struct NoWatch;
+
+impl Watcher for NoWatch {
+    fn update_deps(&mut self, _tg: Arc<Typegraph>) {}
+    fn stop(&self) {}
+}
+
+#[async_trait]
+impl Watcher for Addr<WatcherActor> {
+    fn update_deps(&mut self, tg: Arc<Typegraph>) {
+        self.do_send(UpdateDependencies(tg));
+    }
+
+    fn stop(&self) {
+        // TODO wait for watcher to stop
+        self.do_send(watcher::Stop);
+    }
+}
+
+pub struct LoaderActor<W: Watcher = NoWatch> {
     config: Arc<Config>,
+    directory: Arc<Path>,
     console: Addr<ConsoleActor>,
     pusher: Addr<PusherActor>,
+    watcher: W,
 }
 
 impl LoaderActor {
     pub fn new(
         config: Arc<Config>,
+        directory: Arc<Path>,
         console: Addr<ConsoleActor>,
         pusher: Addr<PusherActor>,
     ) -> Self {
         Self {
             config,
+            directory,
             console,
             pusher,
+            watcher: NoWatch,
         }
     }
 
+    pub fn start_in_watch_mode(self) -> Addr<LoaderActor<Addr<WatcherActor>>> {
+        Actor::create(|ctx| {
+            let self_addr = ctx.address();
+            let watcher_actor = WatcherActor::new(
+                Arc::clone(&self.config),
+                self.directory.clone(),
+                self_addr.recipient(),
+                self.console.clone(),
+            )
+            .expect("");
+            LoaderActor {
+                config: self.config,
+                directory: self.directory,
+                console: self.console,
+                pusher: self.pusher,
+                watcher: watcher_actor.start(),
+            }
+        })
+    }
+}
+
+impl<W: Watcher> LoaderActor<W> {
     async fn load_module(
         loader: Loader,
         path: &Path,
@@ -49,8 +105,8 @@ impl LoaderActor {
 
     fn loader(&self) -> Loader {
         Loader::new(Arc::clone(&self.config))
-        // .skip_deno_modules(true)
-        // .with_postprocessor(postprocess::DenoModules::default().codegen(true));
+            // .skip_deno_modules(true)
+            .with_postprocessor(postprocess::DenoModules::default().codegen(true))
     }
 }
 
@@ -68,19 +124,15 @@ pub struct LoadModule(pub PathBuf);
 #[rtype(result = "()")]
 pub struct ReloadModule(pub PathBuf, pub ReloadReason);
 
-impl Actor for LoaderActor {
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct Stop;
+
+impl<W: Watcher + std::marker::Unpin + 'static> Actor for LoaderActor<W> {
     type Context = Context<Self>;
-
-    fn started(&mut self, _ctx: &mut Context<Self>) {
-        log::info!("loader started");
-    }
-
-    fn stopped(&mut self, _ctx: &mut Context<Self>) {
-        log::info!("loader stopped");
-    }
 }
 
-impl Handler<LoadModule> for LoaderActor {
+impl<W: Watcher + Unpin + 'static> Handler<LoadModule> for LoaderActor<W> {
     type Result = ();
 
     fn handle(&mut self, msg: LoadModule, _ctx: &mut Context<Self>) -> Self::Result {
@@ -98,7 +150,7 @@ impl Handler<LoadModule> for LoaderActor {
     }
 }
 
-impl Handler<ReloadModule> for LoaderActor {
+impl Handler<ReloadModule> for LoaderActor<Addr<WatcherActor>> {
     type Result = ();
 
     fn handle(&mut self, msg: ReloadModule, _ctx: &mut Context<Self>) -> Self::Result {
@@ -120,5 +172,20 @@ impl Handler<ReloadModule> for LoaderActor {
                 Err(e) => error!(console, "loader error: {:?}", e),
             }
         });
+    }
+}
+
+impl<W: Watcher + Unpin + 'static> Handler<Stop> for LoaderActor<W> {
+    type Result = ();
+
+    fn handle(&mut self, _msg: Stop, ctx: &mut Context<Self>) -> Self::Result {
+        self.watcher.stop();
+        ctx.stop();
+
+        // let self_addr = ctx.address();
+        // Arbiter::current().spawn(async move {
+        //     self.watcher.stop().await;
+        //     self_addr.do_send(Stop);
+        // });
     }
 }
