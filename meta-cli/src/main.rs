@@ -19,7 +19,6 @@ use clap::Parser;
 use cli::upgrade::upgrade_check;
 use cli::Action;
 use cli::Args;
-use cli::Commands;
 use log::warn;
 
 fn main() -> Result<()> {
@@ -46,7 +45,8 @@ fn main() -> Result<()> {
 
     match args.command {
         // the deno task requires use of a single thread runtime which it'll spawn itself
-        Some(Commands::Typegate(cmd_args)) => cli::typegate::command(cmd_args, args.gen)?,
+        #[cfg(typegate)]
+        Some(cli::Commands::Typegate(cmd_args)) => cli::typegate::command(cmd_args, args.gen)?,
         Some(command) => rt.block_on(command.run(args.gen))?,
         None => Args::command().print_help()?,
     }
