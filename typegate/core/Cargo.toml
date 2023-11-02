@@ -3,10 +3,6 @@ name = "typegate_core"
 edition.workspace = true
 version.workspace = true
 
-[lib]
-name = "typegate_core"
-path = "lib.rs"
-
 [dependencies]
 anyhow = "1.0"
 deno_bindgen = "0.8.1"

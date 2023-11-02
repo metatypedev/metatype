@@ -142,7 +142,6 @@ fn op_get_version() -> &'static str {
 mod tests {
     use crate::interlude::*;
 
-    use deno::deno_config;
     use deno_runtime::permissions::PermissionsOptions;
 
     #[test]
