@@ -10,9 +10,6 @@ use crate::deploy::actors::console::ConsoleActor;
 use crate::deploy::actors::discovery::DiscoveryActor;
 use crate::deploy::actors::loader::{self, LoaderActor, StopBehavior};
 use crate::deploy::actors::pusher::PusherActor;
-use crate::typegraph::loader::Loader;
-use crate::typegraph::postprocess::prisma_rt::EmbedPrismaMigrations;
-use crate::typegraph::postprocess::{self};
 use crate::utils::{ensure_venv, Node};
 use actix::prelude::*;
 use anyhow::{bail, Result};
@@ -85,7 +82,6 @@ pub struct Deploy {
     config: Arc<Config>,
     base_dir: Arc<Path>,
     options: DeployOptions,
-    loader: Loader,
     node: Node,
 }
 
@@ -98,18 +94,18 @@ impl Deploy {
 
         let options = deploy.options.clone();
 
-        let mut loader = Loader::new(Arc::clone(&config))
-            .skip_deno_modules(true)
-            .with_postprocessor(postprocess::DenoModules::default().codegen(options.codegen))
-            .with_postprocessor(postprocess::PythonModules::default())
-            .with_postprocessor(postprocess::WasmdegeModules::default());
+        // let mut loader = Loader::new(Arc::clone(&config))
+        //     .skip_deno_modules(true)
+        //     .with_postprocessor(postprocess::DenoModules::default().codegen(options.codegen))
+        //     .with_postprocessor(postprocess::PythonModules::default())
+        //     .with_postprocessor(postprocess::WasmdegeModules::default());
 
         if !options.no_migration {
-            loader = loader.with_postprocessor(
-                EmbedPrismaMigrations::default()
-                    .reset_on_drift(options.allow_destructive)
-                    .create_migration(options.create_migration),
-            );
+            // loader = loader.with_postprocessor(
+            //     EmbedPrismaMigrations::default()
+            //         .reset_on_drift(options.allow_destructive)
+            //         .create_migration(options.create_migration),
+            // );
         }
 
         let node_config = config.node(&deploy.node, &deploy.target);
@@ -119,7 +115,6 @@ impl Deploy {
             config,
             base_dir: dir.into(),
             options,
-            loader,
             node,
         })
     }
@@ -370,7 +365,7 @@ impl Action for DeploySubcommand {
                 )
                 .start_in_watch_mode();
 
-                let discovery = DiscoveryActor::new(
+                let _discovery = DiscoveryActor::new(
                     Arc::clone(&deploy.config),
                     loader.clone(),
                     console.clone(),

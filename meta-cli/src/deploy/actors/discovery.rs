@@ -44,7 +44,7 @@ impl<W: Watcher + Unpin + 'static> Actor for DiscoveryActor<W> {
 
     fn started(&mut self, ctx: &mut Self::Context) {
         trace!(self.console, "DiscoveryActor started");
-        
+
         let config = Arc::clone(&self.config);
         let dir = self.directory.clone();
         let loader = self.loader.clone();
@@ -74,7 +74,7 @@ impl<W: Watcher + Unpin + 'static> Actor for DiscoveryActor<W> {
         });
     }
 
-    fn stopped(&mut self, ctx: &mut Self::Context) {
+    fn stopped(&mut self, _ctx: &mut Self::Context) {
         trace!(self.console, "DiscoveryActor stopped");
     }
 }

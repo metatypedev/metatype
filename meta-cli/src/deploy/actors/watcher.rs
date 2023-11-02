@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::{sync::Arc, time::Duration};
 
 use crate::config::Config;
-use crate::deploy::actors::console::{error, info, trace, debug};
+use crate::deploy::actors::console::{error, info, trace};
 use crate::deploy::actors::loader::{ReloadModule, ReloadReason};
 use crate::typegraph::dependency_graph::DependencyGraph;
 use crate::typegraph::loader::discovery::FileFilter;
@@ -104,8 +104,6 @@ impl WatcherActor {
         Ok(())
     }
 }
-
-struct StopResponse;
 
 impl Handler<Stop> for WatcherActor {
     type Result = ();

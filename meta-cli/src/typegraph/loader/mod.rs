@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 pub mod discovery;
-pub mod queue;
-pub mod watch;
 
 pub use discovery::Discovery;
 use tokio::process::Command;

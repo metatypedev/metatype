@@ -10,12 +10,11 @@ use colored::Colorize;
 use common::typegraph::Typegraph;
 
 use actix::prelude::*;
-use anyhow::{anyhow, Context as AnyhowContext, Result};
+use anyhow::{Context as AnyhowContext, Result};
 use dialoguer::Confirm;
 use indoc::indoc;
 use pathdiff::diff_paths;
 use serde::Deserialize;
-use tokio::sync::watch;
 
 use crate::config::Config;
 use crate::deploy::actors::console::trace;
@@ -256,7 +255,7 @@ impl Actor for PusherActor {
     type Context = Context<Self>;
 
     #[cfg(debug_assertions)]
-    fn started(&mut self, ctx: &mut Self::Context) {
+    fn started(&mut self, _ctx: &mut Self::Context) {
         trace!(self.console, "PusherActor started");
     }
 }

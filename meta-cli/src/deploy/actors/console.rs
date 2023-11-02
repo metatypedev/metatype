@@ -4,7 +4,6 @@
 use std::sync::Arc;
 
 use actix::prelude::*;
-use log::Record;
 
 use crate::config::Config;
 
@@ -116,6 +115,7 @@ macro_rules! error {
     };
 }
 
+#[allow(unused_macros)]
 macro_rules! debug {
     ($addr:expr, $($arg:tt)*) => {
         #[cfg(debug_assertions)]
@@ -131,6 +131,7 @@ macro_rules! debug {
     };
 }
 
+#[allow(unused_macros)]
 macro_rules! trace {
     ($addr:expr, $($arg:tt)*) => {
         #[cfg(debug_assertions)]
@@ -146,10 +147,13 @@ macro_rules! trace {
     };
 }
 
+
 #[cfg(debug_assertions)]
+#[allow(unused_imports)]
 pub(crate) use debug;
 pub(crate) use error;
 pub(crate) use info;
 #[cfg(debug_assertions)]
+#[allow(unused_imports)]
 pub(crate) use trace;
 pub(crate) use warning;
