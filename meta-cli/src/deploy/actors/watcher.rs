@@ -107,6 +107,8 @@ impl WatcherActor {
     }
 }
 
+struct StopResponse;
+
 impl Handler<Stop> for WatcherActor {
     type Result = ();
 

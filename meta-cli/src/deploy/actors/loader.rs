@@ -8,10 +8,11 @@ use anyhow::Result;
 
 use actix::prelude::Context;
 use actix::prelude::*;
-use async_trait::async_trait;
 use common::typegraph::Typegraph;
+use tokio::sync::oneshot;
 
 use crate::config::Config;
+use crate::deploy::actors::console::warning;
 use crate::deploy::actors::pusher::CancelPush;
 use crate::deploy::actors::watcher;
 use crate::typegraph::loader::{Loader, LoaderError};
@@ -33,7 +34,6 @@ impl Watcher for NoWatch {
     fn stop(&self) {}
 }
 
-#[async_trait]
 impl Watcher for Addr<WatcherActor> {
     fn update_deps(&mut self, tg: Arc<Typegraph>) {
         self.do_send(UpdateDependencies(tg));
@@ -47,11 +47,19 @@ impl Watcher for Addr<WatcherActor> {
 
 pub type WatchingLoaderActor = LoaderActor<Addr<WatcherActor>>;
 
+#[derive(Clone, Copy, Debug)]
+pub enum StopBehavior {
+    Stop,
+    Restart,
+}
+
 pub struct LoaderActor<W: Watcher = NoWatch> {
     config: Arc<Config>,
     directory: Arc<Path>,
     console: Addr<ConsoleActor>,
     pusher: Addr<PusherActor>,
+    stopped_tx: Option<oneshot::Sender<StopBehavior>>,
+    stop_behavior: StopBehavior,
     watcher: W,
 }
 
@@ -67,7 +75,9 @@ impl LoaderActor {
             directory,
             console,
             pusher,
+            stopped_tx: None,
             watcher: NoWatch,
+            stop_behavior: StopBehavior::Stop, // N/A for non-watch mode
         }
     }
 
@@ -86,6 +96,8 @@ impl LoaderActor {
                 directory: self.directory,
                 console: self.console,
                 pusher: self.pusher,
+                stopped_tx: self.stopped_tx,
+                stop_behavior: StopBehavior::Restart,
                 watcher: watcher_actor.start(),
             }
         })
@@ -128,10 +140,22 @@ pub struct ReloadModule(pub PathBuf, pub ReloadReason);
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct Stop;
+pub struct TryStop(pub StopBehavior);
+
+#[derive(Message)]
+#[rtype(result = "()")]
+struct SetStoppedTx(oneshot::Sender<StopBehavior>);
 
 impl<W: Watcher + std::marker::Unpin + 'static> Actor for LoaderActor<W> {
     type Context = Context<Self>;
+
+    fn stopped(&mut self, _ctx: &mut Self::Context) {
+        if let Some(tx) = self.stopped_tx.take() {
+            if let Err(e) = tx.send(self.stop_behavior) {
+                warning!(self.console, "failed to send stop signal: {:?}", e);
+            }
+        }
+    }
 }
 
 impl<W: Watcher + Unpin + 'static> Handler<LoadModule> for LoaderActor<W> {
@@ -177,10 +201,13 @@ impl Handler<ReloadModule> for WatchingLoaderActor {
     }
 }
 
-impl<W: Watcher + Unpin + 'static> Handler<Stop> for LoaderActor<W> {
+impl<W: Watcher + Unpin + 'static> Handler<TryStop> for LoaderActor<W> {
     type Result = ();
 
-    fn handle(&mut self, _msg: Stop, ctx: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, msg: TryStop, ctx: &mut Context<Self>) -> Self::Result {
+        if let StopBehavior::Restart = msg.0 {
+            self.stop_behavior = StopBehavior::Restart;
+        }
         self.watcher.stop();
         ctx.stop();
 
@@ -190,4 +217,18 @@ impl<W: Watcher + Unpin + 'static> Handler<Stop> for LoaderActor<W> {
         //     self_addr.do_send(Stop);
         // });
     }
+}
+
+impl<W: Watcher + Unpin + 'static> Handler<SetStoppedTx> for LoaderActor<W> {
+    type Result = ();
+
+    fn handle(&mut self, msg: SetStoppedTx, _ctx: &mut Context<Self>) -> Self::Result {
+        self.stopped_tx = Some(msg.0);
+    }
+}
+
+pub fn stopped(addr: Addr<WatchingLoaderActor>) -> oneshot::Receiver<StopBehavior> {
+    let (tx, rx) = oneshot::channel();
+    addr.do_send(SetStoppedTx(tx));
+    rx
 }

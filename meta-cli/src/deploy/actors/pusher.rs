@@ -50,14 +50,14 @@ impl PusherActor {
     pub fn new(
         config: Arc<Config>,
         console: Addr<ConsoleActor>,
-        base_dir: PathBuf,
+        base_dir: Arc<Path>,
         node: Node,
     ) -> Self {
         let (secrets_tx, _) = watch::channel(None);
         Self {
             config,
             console,
-            base_dir: base_dir.as_path().into(),
+            base_dir,
             node: Arc::new(node),
             secrets_tx,
             queue: VecDeque::new(),
