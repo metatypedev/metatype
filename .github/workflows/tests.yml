@@ -108,7 +108,7 @@ jobs:
       - uses: pnpm/action-setup@v2.4.0
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
@@ -313,7 +313,7 @@ jobs:
         with:
           version: ${{ env.PROTOC_VERSION }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - uses: actions/cache@v3
@@ -348,6 +348,8 @@ jobs:
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
 
           deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
+          cargo build -p meta-cli
+          cargo xtask # xtask and meta-cli are used by the test suite
           deno run -A dev/test.ts --threads 2 -- --coverage=coverage
           deno --unstable coverage ./coverage --lcov > coverage.lcov
 
