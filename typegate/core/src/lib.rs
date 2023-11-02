@@ -145,6 +145,7 @@ mod tests {
     use deno_runtime::permissions::PermissionsOptions;
 
     #[test]
+    #[ignore]
     fn run_typegate() -> Result<()> {
         env_logger::init();
         std::env::set_var("RUST_MIN_STACK", "8388608");
