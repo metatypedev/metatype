@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::{sync::Arc, time::Duration};
 
 use crate::config::Config;
-use crate::deploy::actors::console::{error, info};
+use crate::deploy::actors::console::{error, info, trace, debug};
 use crate::deploy::actors::loader::{ReloadModule, ReloadReason};
 use crate::typegraph::dependency_graph::DependencyGraph;
 use crate::typegraph::loader::discovery::FileFilter;
@@ -50,12 +50,12 @@ impl Actor for WatcherActor {
             error!(self.console, "Failed to start watcher: {}", e);
             ctx.stop();
         }
-        info!(self.console, "Watcher actor started");
+        trace!(self.console, "Watcher actor started");
     }
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
         let _ = self.debouncer.take();
-        info!(self.console, "Watcher actor stopped");
+        trace!(self.console, "Watcher actor stopped");
     }
 }
 
@@ -80,12 +80,10 @@ impl WatcherActor {
 
     fn start_watcher(&mut self, ctx: &mut <WatcherActor as actix::Actor>::Context) -> Result<()> {
         let self_addr = ctx.address();
-        let console = self.console.clone();
         let mut debouncer =
             new_debouncer(Duration::from_secs(1), move |res: DebounceEventResult| {
                 let events = res.unwrap();
                 for path in events.into_iter().map(|e| e.path) {
-                    info!(console, "File changed: {}", path.display());
                     self_addr.do_send(File(path));
                 }
             })?;

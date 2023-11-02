@@ -116,9 +116,9 @@ macro_rules! error {
     };
 }
 
-#[cfg(debug_assertions)]
 macro_rules! debug {
     ($addr:expr, $($arg:tt)*) => {
+        #[cfg(debug_assertions)]
         {
             use colored::Colorize;
             let text = format!("[{level} {module_path}] {args}",
@@ -131,9 +131,9 @@ macro_rules! debug {
     };
 }
 
-#[cfg(debug_assertions)]
 macro_rules! trace {
     ($addr:expr, $($arg:tt)*) => {
+        #[cfg(debug_assertions)]
         {
             use colored::Colorize;
             let text = format!("[{level} {module_path}] {args}",

@@ -18,6 +18,7 @@ use serde::Deserialize;
 use tokio::sync::watch;
 
 use crate::config::Config;
+use crate::deploy::actors::console::trace;
 use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use crate::typegraph::push::{MessageEntry, Migrations};
 use crate::utils::plural_suffix;
@@ -26,8 +27,6 @@ use crate::utils::{graphql::Query, Node};
 use super::console::{error, info, warning, ConsoleActor};
 
 type Secrets = HashMap<String, String>;
-type SecretsTx = watch::Sender<Option<Arc<Secrets>>>;
-type SecretsRx = watch::Receiver<Option<Arc<Secrets>>>;
 
 // TODO generic
 // no retry vs with retry
@@ -38,7 +37,7 @@ pub struct PusherActor {
     console: Addr<ConsoleActor>,
     base_dir: Arc<Path>,
     node: Arc<Node>,
-    secrets_tx: SecretsTx,
+    secrets: Arc<Secrets>,
     queue: VecDeque<(Push, Instant)>,
     current: Option<Push>,
     max_retry_count: u32,
@@ -52,14 +51,14 @@ impl PusherActor {
         console: Addr<ConsoleActor>,
         base_dir: Arc<Path>,
         node: Node,
+        secrets: Secrets,
     ) -> Self {
-        let (secrets_tx, _) = watch::channel(None);
         Self {
             config,
             console,
             base_dir,
             node: Arc::new(node),
-            secrets_tx,
+            secrets: secrets.into(),
             queue: VecDeque::new(),
             current: None,
             max_retry_count: 3,
@@ -126,15 +125,25 @@ impl PusherActor {
                 }
 
                 self.current = Some(push.clone());
-                let secrets_rx = self.secrets_tx.subscribe();
                 let node = Arc::clone(&self.node);
                 let self_addr = ctx.address();
-                // let console = self.console.clone();
+                let console = self.console.clone();
+
+                let secrets = Arc::clone(&self.secrets);
+                let retry_max = self.max_retry_count;
 
                 Arbiter::current().spawn(async move {
-                    // TODO logging
-                    match Self::push(Arc::clone(&push.typegraph), node, secrets_rx).await {
-                        Ok(res) => {
+                    let retry_no = push.retry.map(|r| r.retry_no).unwrap_or(0);
+                    let retry = if retry_no > 0 {
+                        format!(" (retry {}/{})", retry_no, retry_max).dimmed()
+                    } else {
+                        "".dimmed()
+                    };
+                    let tg_name = push.typegraph.name().unwrap().cyan();
+                    info!(console, "Pushing typegraph {tg_name}{retry}");
+                    match Self::push(Arc::clone(&push.typegraph), node, secrets).await {
+                        Ok(mut res) => {
+                            res.original_name = Some(push.typegraph.name().unwrap().clone());
                             self_addr.do_send(res);
                         }
                         Err(e) => {
@@ -151,17 +160,8 @@ impl PusherActor {
     async fn push(
         tg: Arc<Typegraph>,
         node: Arc<Node>,
-        mut secrets_rx: SecretsRx,
+        secrets: Arc<Secrets>,
     ) -> Result<PushResult> {
-        // wait for secrets to be loaded
-        // this will return immediately if the secrets are already loaded
-        secrets_rx.changed().await?;
-        let secrets = secrets_rx
-            .borrow()
-            .as_ref()
-            .map(Arc::clone)
-            .ok_or_else(|| anyhow!("Secrets not loaded. This is a bug. Please report it."))?;
-
         // TODO can we set the prefix before the push? // in the loader??
         // so we wont need to clone
         let tg = &*tg;
@@ -169,6 +169,8 @@ impl PusherActor {
             Some(prefix) => tg.with_prefix(prefix.clone())?,
             None => tg.clone(),
         };
+
+        let secrets: &Secrets = &secrets;
         let res = node
             .post("/typegate")?
             .gql(
@@ -184,7 +186,7 @@ impl PusherActor {
                 .to_string(),
                 Some(serde_json::json!({
                     "tg": serde_json::to_string(&tg)?,
-                    "secrets": serde_json::to_string(&secrets)?,
+                    "secrets": serde_json::to_string(secrets)?,
                     "cliVersion": common::get_version()
                 })),
             )
@@ -248,32 +250,14 @@ pub struct PushResult {
 
 #[derive(Message)]
 #[rtype(result = "()")]
-struct LoadedSecrets(HashMap<String, String>);
-
-#[derive(Message)]
-#[rtype(result = "()")]
 struct Error(anyhow::Error);
 
 impl Actor for PusherActor {
     type Context = Context<Self>;
 
+    #[cfg(debug_assertions)]
     fn started(&mut self, ctx: &mut Self::Context) {
-        let env = self.node.env.clone();
-        let dir = self.base_dir.clone();
-        let self_addr = ctx.address();
-        let console = self.console.clone();
-
-        Arbiter::current().spawn(async move {
-            match lade_sdk::hydrate(env.clone(), dir.to_path_buf()).await {
-                Ok(secrets) => {
-                    self_addr.do_send(LoadedSecrets(secrets));
-                }
-                Err(e) => {
-                    error!(console, "Error loading secrets: {e:?}");
-                    // TODO exit
-                }
-            }
-        });
+        trace!(self.console, "PusherActor started");
     }
 }
 
@@ -378,19 +362,5 @@ impl Handler<Error> for PusherActor {
         }
 
         self.next(ctx);
-    }
-}
-
-impl Handler<LoadedSecrets> for PusherActor {
-    type Result = ();
-
-    fn handle(&mut self, msg: LoadedSecrets, _ctx: &mut Self::Context) -> Self::Result {
-        match self.secrets_tx.send(Some(Arc::new(msg.0))) {
-            Ok(_) => {}
-            Err(e) => {
-                error!(self.console, "Error setting secrets: {e:?}");
-                // TODO exit
-            }
-        }
     }
 }

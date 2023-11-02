@@ -7,6 +7,7 @@ use std::sync::Arc;
 use super::{Action, CommonArgs, GenArgs};
 use crate::config::Config;
 use crate::deploy::actors::console::ConsoleActor;
+use crate::deploy::actors::discovery::DiscoveryActor;
 use crate::deploy::actors::loader::{self, LoaderActor, StopBehavior};
 use crate::deploy::actors::pusher::PusherActor;
 use crate::typegraph::loader::Loader;
@@ -348,11 +349,16 @@ impl Action for DeploySubcommand {
             let console = ConsoleActor::new(Arc::clone(&deploy.config)).start();
 
             loop {
+                let secrets =
+                    lade_sdk::hydrate(deploy.node.env.clone(), deploy.base_dir.to_path_buf())
+                        .await?;
+
                 let pusher = PusherActor::new(
                     Arc::clone(&deploy.config),
                     console.clone(),
                     deploy.base_dir.clone(),
                     deploy.node.clone(),
+                    secrets,
                 )
                 .start();
 
@@ -363,6 +369,13 @@ impl Action for DeploySubcommand {
                     pusher.clone(),
                 )
                 .start_in_watch_mode();
+
+                let discovery = DiscoveryActor::new(
+                    Arc::clone(&deploy.config),
+                    loader.clone(),
+                    console.clone(),
+                    Arc::clone(&deploy.base_dir),
+                ).start();
 
                 match loader::stopped(loader).await {
                     Ok(StopBehavior::Stop) => {
