@@ -21,8 +21,6 @@ use crate::typegraph::postprocess;
 use super::console::{error, info, ConsoleActor};
 use super::pusher::{Push, PusherActor};
 use super::watcher::{UpdateDependencies, WatcherActor};
-#[cfg(debug_assertions)]
-use crate::deploy::actors::console::trace;
 
 pub trait Watcher: Sized + Unpin + 'static {
     fn update_deps(&mut self, tg: Arc<Typegraph>);
@@ -49,6 +47,14 @@ impl Watcher for Addr<WatcherActor> {
 
 pub type WatchingLoaderActor = LoaderActor<Addr<WatcherActor>>;
 
+#[derive(Debug)]
+pub struct PostProcessOptions {
+    pub deno_codegen: bool,
+    pub prisma_run_migrations: bool,
+    pub prisma_create_migration: bool,
+    pub allow_destructive: bool,
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum StopBehavior {
     Stop,
@@ -58,6 +64,7 @@ pub enum StopBehavior {
 pub struct LoaderActor<W: Watcher = NoWatch> {
     config: Arc<Config>,
     directory: Arc<Path>,
+    postprocess_options: PostProcessOptions,
     console: Addr<ConsoleActor>,
     pusher: Addr<PusherActor>,
     stopped_tx: Option<oneshot::Sender<StopBehavior>>,
@@ -69,12 +76,14 @@ impl LoaderActor {
     pub fn new(
         config: Arc<Config>,
         directory: Arc<Path>,
+        postprocess_options: PostProcessOptions,
         console: Addr<ConsoleActor>,
         pusher: Addr<PusherActor>,
     ) -> Self {
         Self {
             config,
             directory,
+            postprocess_options,
             console,
             pusher,
             stopped_tx: None,
@@ -96,6 +105,7 @@ impl LoaderActor {
             LoaderActor {
                 config: self.config,
                 directory: self.directory,
+                postprocess_options: self.postprocess_options,
                 console: self.console,
                 pusher: self.pusher,
                 stopped_tx: self.stopped_tx,
@@ -120,9 +130,23 @@ impl<W: Watcher> LoaderActor<W> {
     }
 
     fn loader(&self) -> Loader {
-        Loader::new(Arc::clone(&self.config))
-            // .skip_deno_modules(true)
-            .with_postprocessor(postprocess::DenoModules::default().codegen(true))
+        let mut loader = Loader::new(Arc::clone(&self.config))
+            .skip_deno_modules(true)
+            .with_postprocessor(
+                postprocess::DenoModules::default().codegen(self.postprocess_options.deno_codegen),
+            )
+            .with_postprocessor(postprocess::PythonModules::default())
+            .with_postprocessor(postprocess::WasmdegeModules::default());
+
+        if self.postprocess_options.prisma_run_migrations {
+            loader = loader.with_postprocessor(
+                postprocess::EmbedPrismaMigrations::default()
+                    .reset_on_drift(self.postprocess_options.allow_destructive)
+                    .create_migration(self.postprocess_options.prisma_create_migration),
+            );
+        }
+
+        loader
     }
 }
 
@@ -153,7 +177,7 @@ impl<W: Watcher + std::marker::Unpin + 'static> Actor for LoaderActor<W> {
 
     #[cfg(debug_assertions)]
     fn started(&mut self, _ctx: &mut Self::Context) {
-        trace!(self.console, "loader started");
+        log::trace!("loader started");
     }
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {

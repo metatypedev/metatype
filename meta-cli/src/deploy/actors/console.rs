@@ -43,16 +43,6 @@ pub struct Warning(pub String);
 #[rtype(result = "()")]
 pub struct Error(pub String);
 
-#[cfg(debug_assertions)]
-#[derive(Message)]
-#[rtype(result = "()")]
-pub struct Debug(pub String);
-
-#[cfg(debug_assertions)]
-#[derive(Message)]
-#[rtype(result = "()")]
-pub struct Trace(pub String);
-
 impl Handler<Info> for ConsoleActor {
     type Result = ();
 
@@ -77,26 +67,6 @@ impl Handler<Error> for ConsoleActor {
     }
 }
 
-#[cfg(debug_assertions)]
-impl Handler<Debug> for ConsoleActor {
-    type Result = ();
-
-    fn handle(&mut self, msg: Debug, _ctx: &mut Context<Self>) -> Self::Result {
-        // log::debug!("{}", msg.0);
-        eprintln!("{}", msg.0);
-    }
-}
-
-#[cfg(debug_assertions)]
-impl Handler<Trace> for ConsoleActor {
-    type Result = ();
-
-    fn handle(&mut self, msg: Trace, _ctx: &mut Context<Self>) -> Self::Result {
-        // log::trace!("{}", msg.0);
-        eprintln!("{}", msg.0);
-    }
-}
-
 macro_rules! info {
     ($addr:expr, $($arg:tt)*) => {
         $addr.do_send($crate::deploy::actors::console::Info(format!($($arg)*)))
@@ -115,45 +85,6 @@ macro_rules! error {
     };
 }
 
-#[allow(unused_macros)]
-macro_rules! debug {
-    ($addr:expr, $($arg:tt)*) => {
-        #[cfg(debug_assertions)]
-        {
-            use colored::Colorize;
-            let text = format!("[{level} {module_path}] {args}",
-                level = log::Level::Debug,
-                module_path = module_path!(),
-                args = format_args!($($arg)*),
-            ).dimmed();
-            $addr.do_send($crate::deploy::actors::console::Debug(text.to_string()))
-        }
-    };
-}
-
-#[allow(unused_macros)]
-macro_rules! trace {
-    ($addr:expr, $($arg:tt)*) => {
-        #[cfg(debug_assertions)]
-        {
-            use colored::Colorize;
-            let text = format!("[{level} {module_path}] {args}",
-                level = log::Level::Trace,
-                module_path = module_path!(),
-                args = format_args!($($arg)*),
-            ).dimmed();
-            $addr.do_send($crate::deploy::actors::console::Trace(text.to_string()))
-        }
-    };
-}
-
-
-#[cfg(debug_assertions)]
-#[allow(unused_imports)]
-pub(crate) use debug;
 pub(crate) use error;
 pub(crate) use info;
-#[cfg(debug_assertions)]
-#[allow(unused_imports)]
-pub(crate) use trace;
 pub(crate) use warning;

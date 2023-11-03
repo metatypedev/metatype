@@ -17,10 +17,9 @@ use pathdiff::diff_paths;
 use serde::Deserialize;
 
 use crate::config::Config;
-use crate::deploy::actors::console::trace;
 use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use crate::typegraph::push::{MessageEntry, Migrations};
-use crate::utils::plural_suffix;
+use crate::utils::{graphql, plural_suffix};
 use crate::utils::{graphql::Query, Node};
 
 use super::console::{error, info, warning, ConsoleActor};
@@ -96,82 +95,103 @@ impl PusherActor {
             // TODO panic?? -- exit??
         }
 
-        loop {
-            if let Some((push, instant)) = self.queue.pop_front() {
-                // cancelled after push
+        while let Some((push, instant)) = self.queue.pop_front() {
+            // cancelled after push
+            let cancelled = self
+                .cancellations
+                .range(instant..)
+                .any(|(_, path)| push.typegraph.path.as_ref().unwrap() == path);
+            if cancelled {
+                continue; // next
+            }
+
+            if let Some(retry) = push.retry.as_ref() {
+                // remove cancellations before the retry instant
+                self.remove_cancellations_before(retry.instant);
+
+                // cancelled after retry
                 let cancelled = self
                     .cancellations
-                    .range(instant..)
+                    .iter()
                     .any(|(_, path)| push.typegraph.path.as_ref().unwrap() == path);
                 if cancelled {
-                    continue; // next
+                    continue;
                 }
-
-                if let Some(retry) = push.retry.as_ref() {
-                    // remove cancellations before the retry instant
-                    self.remove_cancellations_before(retry.instant);
-
-                    // cancelled after retry
-                    let cancelled = self
-                        .cancellations
-                        .iter()
-                        .any(|(_, path)| push.typegraph.path.as_ref().unwrap() == path);
-                    if cancelled {
-                        continue;
-                    }
-                } else {
-                    self.remove_cancellations_before(instant - self.retry_interval * 2);
-                }
-
-                self.current = Some(push.clone());
-                let node = Arc::clone(&self.node);
-                let self_addr = ctx.address();
-                let console = self.console.clone();
-
-                let secrets = Arc::clone(&self.secrets);
-                let retry_max = self.max_retry_count;
-
-                Arbiter::current().spawn(async move {
-                    let retry_no = push.retry.map(|r| r.retry_no).unwrap_or(0);
-                    let retry = if retry_no > 0 {
-                        format!(" (retry {}/{})", retry_no, retry_max).dimmed()
-                    } else {
-                        "".dimmed()
-                    };
-                    let tg_name = push.typegraph.name().unwrap().cyan();
-                    info!(console, "Pushing typegraph {tg_name}{retry}");
-                    match Self::push(Arc::clone(&push.typegraph), node, secrets).await {
-                        Ok(mut res) => {
-                            res.original_name = Some(push.typegraph.name().unwrap().clone());
-                            self_addr.do_send(res);
-                        }
-                        Err(e) => {
-                            self_addr.do_send(Error(e));
-                        }
-                    }
-                });
-
-                break;
+            } else {
+                self.remove_cancellations_before(instant - self.retry_interval * 2);
             }
+
+            self.current = Some(push.clone());
+            let node = Arc::clone(&self.node);
+            let self_addr = ctx.address();
+            let console = self.console.clone();
+
+            let secrets = Arc::clone(&self.secrets);
+            let retry_max = self.max_retry_count;
+
+            Arbiter::current().spawn(async move {
+                let retry_no = push.retry.map(|r| r.retry_no).unwrap_or(0);
+                let retry = if retry_no > 0 {
+                    format!(" (retry {}/{})", retry_no, retry_max).dimmed()
+                } else {
+                    "".dimmed()
+                };
+                let tg_name = push.typegraph.name().unwrap().cyan();
+                let file_name = push
+                    .typegraph
+                    .path
+                    .as_ref()
+                    .unwrap()
+                    .display()
+                    .to_string()
+                    .dimmed();
+                info!(
+                    console,
+                    "Pushing typegraph {tg_name}{retry} (from '{file_name}')"
+                );
+                match Self::push(Arc::clone(&push.typegraph), node, secrets).await {
+                    Ok(mut res) => {
+                        res.original_name = Some(push.typegraph.name().unwrap().clone());
+                        self_addr.do_send(res);
+                    }
+                    Err(e) => {
+                        self_addr.try_send(e).unwrap();
+                    }
+                }
+            });
+
+            break;
         }
+    }
+
+    fn graphql_vars(tg: &Typegraph, secrets: &Secrets) -> Result<serde_json::Value> {
+        Ok(serde_json::json!({
+            "tg": serde_json::to_string(&tg)?,
+            "secrets": serde_json::to_string(secrets)?,
+            "cliVersion": common::get_version()
+        }))
     }
 
     async fn push(
         tg: Arc<Typegraph>,
         node: Arc<Node>,
         secrets: Arc<Secrets>,
-    ) -> Result<PushResult> {
+    ) -> Result<PushResult, Error> {
         // TODO can we set the prefix before the push? // in the loader??
         // so we wont need to clone
         let tg = &*tg;
         let tg = match node.prefix.as_ref() {
-            Some(prefix) => tg.with_prefix(prefix.clone())?,
+            Some(prefix) => tg
+                .with_prefix(prefix.clone())
+                .map_err(|e| Error::Other(e.into()))?,
             None => tg.clone(),
         };
 
         let secrets: &Secrets = &secrets;
-        let res = node
-            .post("/typegate")?
+
+        let res =  node
+            .post("/typegate").map_err(|e| { Error::Other(e.into()) })?
+            .timeout(Duration::from_secs(10))
             .gql(
                 indoc! {"
                     mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
@@ -183,17 +203,14 @@ impl PusherActor {
                         }
                     }"}
                 .to_string(),
-                Some(serde_json::json!({
-                    "tg": serde_json::to_string(&tg)?,
-                    "secrets": serde_json::to_string(secrets)?,
-                    "cliVersion": common::get_version()
-                })),
-            )
-            .await?;
+                Some(Self::graphql_vars(&tg, secrets).map_err(|e| { Error::Other(e) })?
+            ))
+            .await.map_err(|e| { Error::Graphql(e) })?;
 
         let res: PushResult = res
             .data("addTypegraph")
-            .context("addTypegraph field in the response")?;
+            .context("addTypegraph field in the response")
+            .map_err(|e| Error::Other(e))?;
 
         Ok(res)
     }
@@ -235,7 +252,7 @@ impl Push {
 #[rtype(result = "()")]
 pub struct CancelPush(pub PathBuf);
 
-#[derive(Message, Deserialize)]
+#[derive(Message, Deserialize, Debug)]
 #[rtype(result = "()")]
 #[serde(rename_all = "camelCase")]
 pub struct PushResult {
@@ -247,16 +264,19 @@ pub struct PushResult {
     pub original_name: Option<String>,
 }
 
-#[derive(Message)]
-#[rtype(result = "()")]
-struct Error(anyhow::Error);
+#[derive(Message, Debug)]
+#[rtype(result = "Result<()>")]
+enum Error {
+    Graphql(graphql::Error),
+    Other(anyhow::Error),
+}
 
 impl Actor for PusherActor {
     type Context = Context<Self>;
 
     #[cfg(debug_assertions)]
     fn started(&mut self, _ctx: &mut Self::Context) {
-        trace!(self.console, "PusherActor started");
+        log::trace!("PusherActor started");
     }
 }
 
@@ -283,8 +303,29 @@ impl Handler<PushResult> for PusherActor {
     type Result = ();
 
     fn handle(&mut self, res: PushResult, ctx: &mut Self::Context) -> Self::Result {
+        log::trace!("PushResult: {:?}", res);
         let name = res.name.clone();
         self.print_messages(&name, &res.messages);
+
+        let success = res
+            .messages
+            .iter()
+            .any(|m| matches!(m, MessageEntry::Error(_)));
+
+        if success {
+            info!(
+                self.console,
+                "{} Successfully pushed typegraph {name}.",
+                "✓".green(),
+                name = name.cyan()
+            );
+        } else {
+            error!(
+                self.console,
+                "Some errors occured while pushing the typegraph {tg_name}",
+                tg_name = name.cyan()
+            );
+        }
 
         let migdir = self
             .config
@@ -297,7 +338,7 @@ impl Handler<PushResult> for PusherActor {
                 error!(
                     self.console,
                     "Error while unpacking migrations into {:?}",
-                    diff_paths(dest, &self.base_dir)
+                    diff_paths(&dest, &self.base_dir)
                 );
                 error!(self.console, "{e:?}");
             } else {
@@ -337,29 +378,63 @@ impl Handler<PushResult> for PusherActor {
 }
 
 impl Handler<Error> for PusherActor {
-    type Result = ();
+    type Result = Result<()>;
 
     fn handle(&mut self, err: Error, ctx: &mut Self::Context) -> Self::Result {
-        error!(self.console, "{e:?}", e = err.0);
-        let push = self.current.take().unwrap();
-        let next_retry_no = push.retry.clone().map(|r| r.retry_no + 1).unwrap_or(1);
+        match err {
+            Error::Graphql(e) => match e {
+                graphql::Error::EndpointNotReachable(e) => {
+                    error!(
+                        self.console,
+                        "Could not push typegraph: target endpoint not reachable."
+                    );
+                    error!(self.console, "{e}");
 
-        if next_retry_no <= self.max_retry_count {
-            let console = self.console.clone();
-            warning!(
-                console,
-                "Retrying in {} seconds...",
-                self.retry_interval.as_secs()
-            );
+                    let push = self.current.take().unwrap();
+                    let next_retry_no = push.retry.clone().map(|r| r.retry_no + 1).unwrap_or(1);
 
-            let retry_interval = self.retry_interval;
-            let self_addr = ctx.address();
-            Arbiter::current().spawn(async move {
-                tokio::time::sleep(retry_interval).await;
-                self_addr.do_send(push.retry(next_retry_no));
-            });
+                    if next_retry_no <= self.max_retry_count {
+                        let console = self.console.clone();
+                        warning!(
+                            console,
+                            "Retrying in {} seconds...",
+                            self.retry_interval.as_secs()
+                        );
+
+                        let retry_interval = self.retry_interval;
+                        let self_addr = ctx.address();
+                        Arbiter::current().spawn(async move {
+                            tokio::time::sleep(retry_interval).await;
+                            self_addr.do_send(push.retry(next_retry_no));
+                        });
+                    }
+
+                    self.next(ctx);
+                }
+
+                graphql::Error::InvalidResponse(e) => {
+                    error!(self.console, "Invalid response from server:");
+                    error!(self.console, "{e}");
+                    self.next(ctx);
+                }
+
+                graphql::Error::FailedQuery(errs) => {
+                    error!(self.console, "Failed to push typegraph:");
+                    for e in errs {
+                        error!(self.console, "{}", e.message);
+                    }
+                    // TODO
+                    let _ = self.current.take().unwrap();
+
+                    self.next(ctx);
+                }
+            },
+            Error::Other(e) => {
+                error!(self.console, "Unexpected error: {e}", e = e.to_string());
+                self.next(ctx);
+            }
         }
 
-        self.next(ctx);
+        Ok(())
     }
 }

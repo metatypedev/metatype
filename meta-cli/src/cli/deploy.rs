@@ -8,7 +8,7 @@ use super::{Action, CommonArgs, GenArgs};
 use crate::config::Config;
 use crate::deploy::actors::console::ConsoleActor;
 use crate::deploy::actors::discovery::DiscoveryActor;
-use crate::deploy::actors::loader::{self, LoaderActor, StopBehavior};
+use crate::deploy::actors::loader::{self, LoaderActor, PostProcessOptions, StopBehavior};
 use crate::deploy::actors::pusher::PusherActor;
 use crate::utils::{ensure_venv, Node};
 use actix::prelude::*;
@@ -360,6 +360,12 @@ impl Action for DeploySubcommand {
                 let loader = LoaderActor::new(
                     Arc::clone(&deploy.config),
                     deploy.base_dir.clone(),
+                    PostProcessOptions {
+                        deno_codegen: deploy.options.codegen,
+                        prisma_run_migrations: !deploy.options.no_migration,
+                        prisma_create_migration: deploy.options.create_migration,
+                        allow_destructive: deploy.options.allow_destructive,
+                    },
                     console.clone(),
                     pusher.clone(),
                 )
@@ -370,7 +376,8 @@ impl Action for DeploySubcommand {
                     loader.clone(),
                     console.clone(),
                     Arc::clone(&deploy.base_dir),
-                ).start();
+                )
+                .start();
 
                 match loader::stopped(loader).await {
                     Ok(StopBehavior::Stop) => {

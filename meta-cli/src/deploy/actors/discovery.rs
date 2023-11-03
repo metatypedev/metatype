@@ -6,7 +6,6 @@ use pathdiff::diff_paths;
 use std::path::Path;
 use std::sync::Arc;
 
-use crate::deploy::actors::console::trace;
 use crate::{config::Config, typegraph::loader::Discovery};
 
 use super::console::{error, info, ConsoleActor};
@@ -43,7 +42,7 @@ impl<W: Watcher + Unpin + 'static> Actor for DiscoveryActor<W> {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
-        trace!(self.console, "DiscoveryActor started");
+        log::trace!("DiscoveryActor started");
 
         let config = Arc::clone(&self.config);
         let dir = self.directory.clone();
@@ -75,7 +74,7 @@ impl<W: Watcher + Unpin + 'static> Actor for DiscoveryActor<W> {
     }
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
-        trace!(self.console, "DiscoveryActor stopped");
+        log::trace!("DiscoveryActor stopped");
     }
 }
 

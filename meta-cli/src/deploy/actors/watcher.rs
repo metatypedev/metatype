@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::{sync::Arc, time::Duration};
 
 use crate::config::Config;
-use crate::deploy::actors::console::{error, info, trace};
+use crate::deploy::actors::console::{error, info};
 use crate::deploy::actors::loader::{ReloadModule, ReloadReason};
 use crate::typegraph::dependency_graph::DependencyGraph;
 use crate::typegraph::loader::discovery::FileFilter;
@@ -50,12 +50,12 @@ impl Actor for WatcherActor {
             error!(self.console, "Failed to start watcher: {}", e);
             ctx.stop();
         }
-        trace!(self.console, "Watcher actor started");
+        log::trace!("Watcher actor started");
     }
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
         let _ = self.debouncer.take();
-        trace!(self.console, "Watcher actor stopped");
+        log::trace!("Watcher actor stopped");
     }
 }
 
