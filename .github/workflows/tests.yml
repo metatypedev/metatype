@@ -349,7 +349,7 @@ jobs:
 
           deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
           cargo build -p meta-cli
-          cargo xtask # xtask and meta-cli are used by the test suite
+          cargo build -p xtask # xtask and meta-cli are used by the test suite
           deno run -A dev/test.ts --threads 2 -- --coverage=coverage
           deno --unstable coverage ./coverage --lcov > coverage.lcov
 
