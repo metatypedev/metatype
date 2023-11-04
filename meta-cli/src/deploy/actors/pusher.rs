@@ -310,12 +310,19 @@ enum Error {
     Other(anyhow::Error),
 }
 
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct Stop;
+
 impl Actor for PusherActor {
     type Context = Context<Self>;
 
-    #[cfg(debug_assertions)]
     fn started(&mut self, _ctx: &mut Self::Context) {
         log::trace!("PusherActor started");
+    }
+
+    fn stopped(&mut self, ctx: &mut Self::Context) {
+        log::trace!("PusherActor stopped");
     }
 }
 
@@ -490,5 +497,13 @@ impl Handler<Error> for PusherActor {
         }
 
         Ok(())
+    }
+}
+
+impl Handler<Stop> for PusherActor {
+    type Result = ();
+
+    fn handle(&mut self, _msg: Stop, ctx: &mut Self::Context) -> Self::Result {
+        ctx.stop();
     }
 }

@@ -7,12 +7,12 @@ use std::sync::Arc;
 use super::{Action, CommonArgs, GenArgs};
 use crate::config::Config;
 use crate::deploy::actors;
-use crate::deploy::actors::console::ConsoleActor;
+use crate::deploy::actors::console::{warning, ConsoleActor};
 use crate::deploy::actors::discovery::DiscoveryActor;
 use crate::deploy::actors::loader::{
     self, LoaderActor, PostProcessOptions, ReloadModule, ReloadReason, StopBehavior,
 };
-use crate::deploy::actors::pusher::{CancelPush, Push, PusherActor};
+use crate::deploy::actors::pusher::{CancelPush, Push, PusherActor, Stop as PusherStop};
 use crate::deploy::actors::watcher::WatcherActor;
 use crate::utils::{ensure_venv, Node};
 use actix::prelude::*;
@@ -387,7 +387,7 @@ impl Action for DeploySubcommand {
 
                 let (watch_event_tx, watch_event_rx) = mpsc::unbounded_channel();
 
-                let _watcher = WatcherActor::new(
+                let watcher = WatcherActor::new(
                     Arc::clone(&deploy.config),
                     deploy.base_dir.clone(),
                     watch_event_tx,
@@ -397,24 +397,32 @@ impl Action for DeploySubcommand {
 
                 let pusher_clone = pusher.clone();
                 Arbiter::current().spawn(async move {
+                    let pusher = pusher_clone;
                     let mut typegraph_rx = typegraph_rx;
                     while let Some(tg) = typegraph_rx.recv().await {
                         // TODO await -- no queue
-                        pusher_clone.try_send(Push::new(tg.into())).unwrap();
+                        pusher.do_send(Push::new(tg.into()));
                     }
+                    log::trace!("Typegraph channel closed.");
+                    // pusher address will be dropped when both loops are done
                 });
 
                 let loader_clone = loader.clone();
+                let console_clone = console.clone();
+                let watcher_clone = watcher.clone();
                 Arbiter::current().spawn(async move {
                     let loader = loader_clone;
+                    let console = console_clone;
+                    let watcher = watcher_clone;
                     let mut watch_event_rx = watch_event_rx;
                     while let Some(event) = watch_event_rx.recv().await {
                         use actors::watcher::Event as E;
-                        // use actors::watcher::Stop as WatcherStop;
                         match event {
                             E::ConfigChanged => {
-                                // watcher.do_send(WatcherStop);
+                                warning!(console, "Metatype configuration file changed.");
+                                warning!(console, "Reloading everything.");
                                 loader.do_send(loader::TryStop(StopBehavior::Restart));
+                                watcher.do_send(actors::watcher::Stop);
                             }
                             E::TypegraphModuleChanged { typegraph_module } => {
                                 loader.do_send(ReloadModule(
@@ -439,7 +447,16 @@ impl Action for DeploySubcommand {
                             }
                         }
                     }
+                    log::debug!("Watcher event channel closed.");
                 });
+
+                {
+                    let loader = loader.clone();
+                    ctrlc::set_handler(move || {
+                        watcher.do_send(actors::watcher::Stop);
+                        loader.do_send(loader::TryStop(StopBehavior::Stop));
+                    })?;
+                }
 
                 match loader::stopped(loader).await {
                     Ok(StopBehavior::Stop) => {

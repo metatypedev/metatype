@@ -17,7 +17,6 @@ use crate::deploy::actors::console::{error, info};
 use crate::typegraph::dependency_graph::DependencyGraph;
 use crate::typegraph::loader::discovery::FileFilter;
 
-use super::console::warning;
 use super::console::ConsoleActor;
 
 #[derive(Debug)]
@@ -133,9 +132,7 @@ impl Handler<File> for WatcherActor {
 
     fn handle(&mut self, msg: File, _ctx: &mut Self::Context) -> Self::Result {
         if &msg.0 == self.config.path.as_ref().unwrap() {
-            warning!(self.console, "Metatype configuration file changed.");
-            warning!(self.console, "Reloading everything.");
-            // TODO
+            self.event_tx.send(Event::ConfigChanged).unwrap();
         } else {
             let reverse_deps = self.dependency_graph.get_rdeps(&msg.0);
             if !reverse_deps.is_empty() {
