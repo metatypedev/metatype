@@ -9,19 +9,19 @@ use std::sync::Arc;
 use crate::{config::Config, typegraph::loader::Discovery};
 
 use super::console::{error, info, ConsoleActor};
-use super::loader::{LoadModule, LoaderActor, Watcher};
+use super::loader::{LoadModule, LoaderActor};
 
-pub struct DiscoveryActor<W: Watcher + Unpin + 'static> {
+pub struct DiscoveryActor {
     config: Arc<Config>,
-    loader: Addr<LoaderActor<W>>,
+    loader: Addr<LoaderActor>,
     console: Addr<ConsoleActor>,
     directory: Arc<Path>,
 }
 
-impl<W: Watcher + Unpin + 'static> DiscoveryActor<W> {
+impl DiscoveryActor {
     pub fn new(
         config: Arc<Config>,
-        loader: Addr<LoaderActor<W>>,
+        loader: Addr<LoaderActor>,
         console: Addr<ConsoleActor>,
         directory: Arc<Path>,
     ) -> Self {
@@ -38,7 +38,7 @@ impl<W: Watcher + Unpin + 'static> DiscoveryActor<W> {
 #[rtype(result = "()")]
 struct Stop;
 
-impl<W: Watcher + Unpin + 'static> Actor for DiscoveryActor<W> {
+impl Actor for DiscoveryActor {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
@@ -78,7 +78,7 @@ impl<W: Watcher + Unpin + 'static> Actor for DiscoveryActor<W> {
     }
 }
 
-impl<W: Watcher + Unpin + 'static> Handler<Stop> for DiscoveryActor<W> {
+impl Handler<Stop> for DiscoveryActor {
     type Result = ();
 
     fn handle(&mut self, msg: Stop, ctx: &mut Self::Context) -> Self::Result {

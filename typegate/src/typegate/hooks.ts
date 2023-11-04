@@ -10,11 +10,20 @@ const Message = {
   ERROR: "error",
 } as const;
 
+type PushFailure = {
+  reason: "DatabaseResetRequired";
+  message: string;
+  runtimeName: string;
+} | {
+  reason: "Unknown";
+  message: string;
+};
+
 export class PushResponse {
   tgName?: string;
   messages: MessageEntry[] = [];
   migrations: Migrations[] = [];
-  resetRequired: string[] = [];
+  failure: PushFailure | undefined;
 
   constructor() {}
 
@@ -41,8 +50,12 @@ export class PushResponse {
     });
   }
 
-  resetDb(rtName: string) {
-    this.resetRequired.push(rtName);
+  setFailure(reason: PushFailure) {
+    this.failure = reason;
+  }
+
+  hasFailed() {
+    return this.failure != null;
   }
 
   hasError() {

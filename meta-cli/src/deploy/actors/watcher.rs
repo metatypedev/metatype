@@ -10,20 +10,35 @@ use notify_debouncer_mini::{new_debouncer, notify, DebounceEventResult, Debounce
 use pathdiff::diff_paths;
 use std::path::{Path, PathBuf};
 use std::{sync::Arc, time::Duration};
+use tokio::sync::mpsc;
 
 use crate::config::Config;
 use crate::deploy::actors::console::{error, info};
-use crate::deploy::actors::loader::{ReloadModule, ReloadReason};
 use crate::typegraph::dependency_graph::DependencyGraph;
 use crate::typegraph::loader::discovery::FileFilter;
 
 use super::console::warning;
 use super::console::ConsoleActor;
 
+#[derive(Debug)]
+pub enum Event {
+    DependencyChanged {
+        typegraph_module: PathBuf,
+        dependency_path: PathBuf,
+    },
+    TypegraphModuleChanged {
+        typegraph_module: PathBuf,
+    },
+    TypegraphModuleDeleted {
+        typegraph_module: PathBuf,
+    },
+    ConfigChanged,
+}
+
 pub struct WatcherActor {
     config: Arc<Config>,
     directory: Arc<Path>,
-    loader: Recipient<ReloadModule>,
+    event_tx: mpsc::UnboundedSender<Event>,
     console: Addr<ConsoleActor>,
     debouncer: Option<Debouncer<INotifyWatcher>>,
     dependency_graph: DependencyGraph,
@@ -63,14 +78,14 @@ impl WatcherActor {
     pub fn new(
         config: Arc<Config>,
         directory: Arc<Path>,
-        loader: Recipient<ReloadModule>,
+        event_tx: mpsc::UnboundedSender<Event>,
         console: Addr<ConsoleActor>,
     ) -> Result<Self> {
         let file_filter = FileFilter::new(&config)?;
         Ok(Self {
             config,
             directory,
-            loader,
+            event_tx,
             console,
             debouncer: None,
             dependency_graph: DependencyGraph::default(),
@@ -134,10 +149,14 @@ impl Handler<File> for WatcherActor {
                         "  -> {rel_path}",
                         rel_path = rel_path.display()
                     );
-                    self.loader.do_send(ReloadModule(
-                        path,
-                        ReloadReason::DependencyChanged(dependency_path),
-                    ));
+
+                    if let Err(e) = self.event_tx.send(Event::DependencyChanged {
+                        typegraph_module: path,
+                        dependency_path,
+                    }) {
+                        error!(self.console, "Failed to send event: {}", e);
+                        // panic??
+                    }
                 }
             } else {
                 let mut searcher = SearcherBuilder::new()
@@ -147,8 +166,12 @@ impl Handler<File> for WatcherActor {
                 if !self.file_filter.is_excluded(&msg.0, &mut searcher) {
                     let rel_path = diff_paths(&msg.0, &self.directory).unwrap();
                     info!(self.console, "File modified: {rel_path:?}");
-                    self.loader
-                        .do_send(ReloadModule(msg.0, ReloadReason::FileChanged));
+                    if let Err(e) = self.event_tx.send(Event::TypegraphModuleChanged {
+                        typegraph_module: msg.0,
+                    }) {
+                        error!(self.console, "Failed to send event: {}", e);
+                        // panic??
+                    }
                 }
             }
         }

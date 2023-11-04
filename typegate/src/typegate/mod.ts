@@ -32,6 +32,7 @@ import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { resolveIdentifier } from "../services/middlewares.ts";
 import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
+import { DatabaseResetRequiredError } from "../runtimes/prisma/hooks/run_migrations.ts";
 
 const logger = getLogger("typegate");
 
@@ -74,7 +75,21 @@ export class Typegate {
     let res = typegraph;
 
     for (const handler of this.#onPushHooks) {
-      res = await handler(res, secretManager, response);
+      try {
+        res = await handler(res, secretManager, response);
+      } catch (e) {
+        if (e instanceof DatabaseResetRequiredError) {
+          response.setFailure({
+            reason: "DatabaseResetRequired",
+            message: e.reason,
+          });
+        } else {
+          response.setFailure({
+            reason: "Unknown",
+            message: e.toString(),
+          });
+        }
+      }
     }
 
     return res;

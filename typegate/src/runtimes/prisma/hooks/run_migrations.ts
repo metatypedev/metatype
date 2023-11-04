@@ -7,6 +7,12 @@ import { PrismaRT } from "../mod.ts";
 import * as native from "native";
 import { nativeResult, pluralSuffix } from "../../../utils.ts";
 
+export class DatabaseResetRequiredError extends Error {
+  constructor(public reason: string, public runtimeName: string) {
+    super("Database reset required: " + reason);
+  }
+}
+
 const NULL_CONSTRAINT_ERROR_REGEX =
   /column (?<col>".+") of relation (?<table>".+") contains null values/;
 
@@ -46,9 +52,9 @@ export const runMigrations: PushHandler = async (
           throw new Error(applyRes.Err.message);
         }
         if ("ResetRequired" in applyRes) {
-          response.resetDb(rt.data.name);
-          throw new Error(
-            `Database reset required: ${applyRes.ResetRequired.reset_reason}`,
+          throw new DatabaseResetRequiredError(
+            applyRes.ResetRequired.reset_reason,
+            rt.data.name,
           );
         }
 

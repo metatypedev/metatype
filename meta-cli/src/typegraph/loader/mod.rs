@@ -72,10 +72,14 @@ impl Loader {
 
         if p.status.success() {
             #[cfg(debug_assertions)]
-            eprintln!(
-                "{}",
-                std::str::from_utf8(&p.stderr).expect("invalid utf-8 on stderr")
-            );
+            {
+                if p.stderr.len() > 0 {
+                    eprintln!(
+                        "{}",
+                        std::str::from_utf8(&p.stderr).expect("invalid utf-8 on stderr")
+                    );
+                }
+            }
 
             std::str::from_utf8(&p.stdout)
                 .with_context(|| "invalid utf-8 on stdout")

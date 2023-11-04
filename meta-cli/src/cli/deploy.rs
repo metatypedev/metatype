@@ -6,16 +6,21 @@ use std::sync::Arc;
 
 use super::{Action, CommonArgs, GenArgs};
 use crate::config::Config;
+use crate::deploy::actors;
 use crate::deploy::actors::console::ConsoleActor;
 use crate::deploy::actors::discovery::DiscoveryActor;
-use crate::deploy::actors::loader::{self, LoaderActor, PostProcessOptions, StopBehavior};
-use crate::deploy::actors::pusher::PusherActor;
+use crate::deploy::actors::loader::{
+    self, LoaderActor, PostProcessOptions, ReloadModule, ReloadReason, StopBehavior,
+};
+use crate::deploy::actors::pusher::{CancelPush, Push, PusherActor};
+use crate::deploy::actors::watcher::WatcherActor;
 use crate::utils::{ensure_venv, Node};
 use actix::prelude::*;
 use anyhow::{bail, Result};
 use async_trait::async_trait;
 use clap::Parser;
 use log::warn;
+use tokio::sync::mpsc;
 
 #[derive(Parser, Debug)]
 pub struct DeploySubcommand {
@@ -348,6 +353,21 @@ impl Action for DeploySubcommand {
                     lade_sdk::hydrate(deploy.node.env.clone(), deploy.base_dir.to_path_buf())
                         .await?;
 
+                let (typegraph_tx, typegraph_rx) = mpsc::unbounded_channel();
+
+                let loader = LoaderActor::new(
+                    Arc::clone(&deploy.config),
+                    PostProcessOptions {
+                        deno_codegen: deploy.options.codegen,
+                        prisma_run_migrations: !deploy.options.no_migration,
+                        prisma_create_migration: deploy.options.create_migration,
+                        allow_destructive: deploy.options.allow_destructive,
+                    },
+                    console.clone(),
+                    typegraph_tx,
+                )
+                .start();
+
                 let pusher = PusherActor::new(
                     Arc::clone(&deploy.config),
                     console.clone(),
@@ -357,20 +377,6 @@ impl Action for DeploySubcommand {
                 )
                 .start();
 
-                let loader = LoaderActor::new(
-                    Arc::clone(&deploy.config),
-                    deploy.base_dir.clone(),
-                    PostProcessOptions {
-                        deno_codegen: deploy.options.codegen,
-                        prisma_run_migrations: !deploy.options.no_migration,
-                        prisma_create_migration: deploy.options.create_migration,
-                        allow_destructive: deploy.options.allow_destructive,
-                    },
-                    console.clone(),
-                    pusher.clone(),
-                )
-                .start_in_watch_mode();
-
                 let _discovery = DiscoveryActor::new(
                     Arc::clone(&deploy.config),
                     loader.clone(),
@@ -378,6 +384,62 @@ impl Action for DeploySubcommand {
                     Arc::clone(&deploy.base_dir),
                 )
                 .start();
+
+                let (watch_event_tx, watch_event_rx) = mpsc::unbounded_channel();
+
+                let _watcher = WatcherActor::new(
+                    Arc::clone(&deploy.config),
+                    deploy.base_dir.clone(),
+                    watch_event_tx,
+                    console.clone(),
+                )?
+                .start();
+
+                let pusher_clone = pusher.clone();
+                Arbiter::current().spawn(async move {
+                    let mut typegraph_rx = typegraph_rx;
+                    while let Some(tg) = typegraph_rx.recv().await {
+                        // TODO await -- no queue
+                        pusher_clone.try_send(Push::new(tg.into())).unwrap();
+                    }
+                });
+
+                let loader_clone = loader.clone();
+                Arbiter::current().spawn(async move {
+                    let loader = loader_clone;
+                    let mut watch_event_rx = watch_event_rx;
+                    while let Some(event) = watch_event_rx.recv().await {
+                        use actors::watcher::Event as E;
+                        // use actors::watcher::Stop as WatcherStop;
+                        match event {
+                            E::ConfigChanged => {
+                                // watcher.do_send(WatcherStop);
+                                loader.do_send(loader::TryStop(StopBehavior::Restart));
+                            }
+                            E::TypegraphModuleChanged { typegraph_module } => {
+                                loader.do_send(ReloadModule(
+                                    typegraph_module.clone(),
+                                    ReloadReason::FileChanged,
+                                ));
+                                pusher.do_send(CancelPush(typegraph_module))
+                            }
+                            E::TypegraphModuleDeleted { typegraph_module } => {
+                                pusher.do_send(CancelPush(typegraph_module));
+                                todo!("delete module")
+                            }
+                            E::DependencyChanged {
+                                typegraph_module,
+                                dependency_path,
+                            } => {
+                                loader.do_send(ReloadModule(
+                                    typegraph_module.clone(),
+                                    ReloadReason::DependencyChanged(dependency_path),
+                                ));
+                                pusher.do_send(CancelPush(typegraph_module));
+                            }
+                        }
+                    }
+                });
 
                 match loader::stopped(loader).await {
                     Ok(StopBehavior::Stop) => {

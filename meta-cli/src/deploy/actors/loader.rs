@@ -1,51 +1,23 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
-
-use anyhow::Result;
 
 use actix::prelude::Context;
 use actix::prelude::*;
+use colored::Colorize;
 use common::typegraph::Typegraph;
-use tokio::sync::oneshot;
+use tokio::sync::{mpsc, oneshot};
 
 use crate::config::Config;
 use crate::deploy::actors::console::warning;
-use crate::deploy::actors::pusher::CancelPush;
-use crate::deploy::actors::watcher;
-use crate::typegraph::loader::{Loader, LoaderError};
+use crate::typegraph::loader::Loader;
 use crate::typegraph::postprocess;
+use crate::utils::plural_suffix;
 
 use super::console::{error, info, ConsoleActor};
-use super::pusher::{Push, PusherActor};
-use super::watcher::{UpdateDependencies, WatcherActor};
-
-pub trait Watcher: Sized + Unpin + 'static {
-    fn update_deps(&mut self, tg: Arc<Typegraph>);
-    fn stop(&self);
-}
-
-pub struct NoWatch;
-
-impl Watcher for NoWatch {
-    fn update_deps(&mut self, _tg: Arc<Typegraph>) {}
-    fn stop(&self) {}
-}
-
-impl Watcher for Addr<WatcherActor> {
-    fn update_deps(&mut self, tg: Arc<Typegraph>) {
-        self.do_send(UpdateDependencies(tg));
-    }
-
-    fn stop(&self) {
-        // TODO wait for watcher to stop
-        self.do_send(watcher::Stop);
-    }
-}
-
-pub type WatchingLoaderActor = LoaderActor<Addr<WatcherActor>>;
 
 #[derive(Debug)]
 pub struct PostProcessOptions {
@@ -61,74 +33,43 @@ pub enum StopBehavior {
     Restart,
 }
 
-pub struct LoaderActor<W: Watcher = NoWatch> {
+pub struct LoaderActor {
     config: Arc<Config>,
-    directory: Arc<Path>,
     postprocess_options: PostProcessOptions,
     console: Addr<ConsoleActor>,
-    pusher: Addr<PusherActor>,
     stopped_tx: Option<oneshot::Sender<StopBehavior>>,
     stop_behavior: StopBehavior,
-    watcher: W,
+    typegraph_tx: mpsc::UnboundedSender<Typegraph>,
+    counter: Option<Arc<AtomicU32>>,
 }
 
 impl LoaderActor {
     pub fn new(
         config: Arc<Config>,
-        directory: Arc<Path>,
         postprocess_options: PostProcessOptions,
         console: Addr<ConsoleActor>,
-        pusher: Addr<PusherActor>,
+        typegraph_tx: mpsc::UnboundedSender<Typegraph>,
     ) -> Self {
         Self {
             config,
-            directory,
             postprocess_options,
             console,
-            pusher,
             stopped_tx: None,
-            watcher: NoWatch,
-            stop_behavior: StopBehavior::Stop, // N/A for non-watch mode
+            stop_behavior: StopBehavior::Stop,
+            typegraph_tx,
+            counter: None,
         }
     }
 
-    pub fn start_in_watch_mode(self) -> Addr<WatchingLoaderActor> {
-        Actor::create(|ctx| {
-            let self_addr = ctx.address();
-            let watcher_actor = WatcherActor::new(
-                Arc::clone(&self.config),
-                self.directory.clone(),
-                self_addr.recipient(),
-                self.console.clone(),
-            )
-            .expect("");
-            LoaderActor {
-                config: self.config,
-                directory: self.directory,
-                postprocess_options: self.postprocess_options,
-                console: self.console,
-                pusher: self.pusher,
-                stopped_tx: self.stopped_tx,
-                stop_behavior: StopBehavior::Restart,
-                watcher: watcher_actor.start(),
-            }
-        })
+    pub fn auto_stop(self) -> Self {
+        Self {
+            counter: Some(Arc::new(AtomicU32::new(0))),
+            ..self
+        }
     }
 }
 
-impl<W: Watcher> LoaderActor<W> {
-    async fn load_module(
-        loader: Loader,
-        path: &Path,
-        pusher: Addr<PusherActor>,
-    ) -> Result<(), LoaderError> {
-        let typegraphs = loader.load_module(path).await?;
-        for tg in typegraphs.into_iter() {
-            pusher.do_send(Push::new(tg.into()));
-        }
-        Ok(())
-    }
-
+impl LoaderActor {
     fn loader(&self) -> Loader {
         let mut loader = Loader::new(Arc::clone(&self.config))
             .skip_deno_modules(true)
@@ -147,6 +88,24 @@ impl<W: Watcher> LoaderActor<W> {
         }
 
         loader
+    }
+
+    fn load_module(&self, self_addr: Addr<Self>, path: PathBuf) {
+        let loader = self.loader();
+        let console = self.console.clone();
+        let counter = self.counter.clone();
+        Arbiter::current().spawn(async move {
+            match loader.load_module(&path).await {
+                Ok(tgs) => self_addr.do_send(LoadedModule(path, tgs)),
+                Err(e) => {
+                    error!(console, "loader error: {:?}", e);
+                    if counter.is_some() {
+                        // auto stop
+                        self_addr.do_send(TryStop(StopBehavior::Stop));
+                    }
+                }
+            }
+        });
     }
 }
 
@@ -172,12 +131,16 @@ pub struct TryStop(pub StopBehavior);
 #[rtype(result = "()")]
 struct SetStoppedTx(oneshot::Sender<StopBehavior>);
 
-impl<W: Watcher + std::marker::Unpin + 'static> Actor for LoaderActor<W> {
+#[derive(Message)]
+#[rtype(result = "()")]
+struct LoadedModule(pub PathBuf, Vec<Typegraph>);
+
+impl Actor for LoaderActor {
     type Context = Context<Self>;
 
     #[cfg(debug_assertions)]
     fn started(&mut self, _ctx: &mut Self::Context) {
-        log::trace!("loader started");
+        log::trace!("LoaderActor started");
     }
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
@@ -186,31 +149,23 @@ impl<W: Watcher + std::marker::Unpin + 'static> Actor for LoaderActor<W> {
                 warning!(self.console, "failed to send stop signal: {:?}", e);
             }
         }
+        log::trace!("LoaderActor stopped")
     }
 }
 
-impl<W: Watcher + Unpin + 'static> Handler<LoadModule> for LoaderActor<W> {
+impl Handler<LoadModule> for LoaderActor {
     type Result = ();
 
-    fn handle(&mut self, msg: LoadModule, _ctx: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, msg: LoadModule, ctx: &mut Context<Self>) -> Self::Result {
         info!(self.console, "Loading module {:?}", msg.0);
-
-        let loader = self.loader();
-        let console = self.console.clone();
-        let pusher = self.pusher.clone();
-        Arbiter::current().spawn(async move {
-            match Self::load_module(loader, &msg.0, pusher).await {
-                Ok(_) => (),
-                Err(e) => error!(console, "loader error: {:?}", e),
-            }
-        });
+        self.load_module(ctx.address(), msg.0);
     }
 }
 
-impl Handler<ReloadModule> for WatchingLoaderActor {
+impl Handler<ReloadModule> for LoaderActor {
     type Result = ();
 
-    fn handle(&mut self, msg: ReloadModule, _ctx: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, msg: ReloadModule, ctx: &mut Context<Self>) -> Self::Result {
         let reason = match msg.1 {
             ReloadReason::FileChanged => "file changed".to_string(),
             ReloadReason::FileCreated => "file created".to_string(),
@@ -218,39 +173,60 @@ impl Handler<ReloadModule> for WatchingLoaderActor {
         };
         info!(self.console, "Reloading module {:?}: {reason}", msg.0);
 
-        self.pusher.do_send(CancelPush(msg.0.clone()));
-
-        let loader = self.loader();
-        let console = self.console.clone();
-        let pusher = self.pusher.clone();
-        Arbiter::current().spawn(async move {
-            match Self::load_module(loader, &msg.0, pusher).await {
-                Ok(_) => (),
-                Err(e) => error!(console, "loader error: {:?}", e),
-            }
-        });
+        self.load_module(ctx.address(), msg.0);
     }
 }
 
-impl<W: Watcher + Unpin + 'static> Handler<TryStop> for LoaderActor<W> {
+impl Handler<LoadedModule> for LoaderActor {
+    type Result = ();
+
+    fn handle(&mut self, msg: LoadedModule, ctx: &mut Context<Self>) -> Self::Result {
+        let LoadedModule(path, tgs) = msg;
+        let count = tgs.len();
+        info!(
+            self.console,
+            "Loaded {count} typegraph{s} from {path:?}: {tgs}",
+            s = plural_suffix(count),
+            tgs = tgs
+                .iter()
+                .map(|tg| tg.name().unwrap().cyan().to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+        for tg in tgs.into_iter() {
+            if let Err(e) = self.typegraph_tx.send(tg) {
+                error!(self.console, "failed to send typegraph: {:?}", e);
+                if self.counter.is_some() {
+                    // auto stop
+                    ctx.stop();
+                }
+            }
+        }
+        if let Some(counter) = self.counter.as_ref() {
+            let count = counter.fetch_sub(1, Ordering::SeqCst);
+            if count == 0 {
+                info!(
+                    self.console,
+                    "All modules have been loaded. Stopping the loader."
+                );
+                ctx.notify(TryStop(StopBehavior::Stop));
+            }
+        }
+    }
+}
+
+impl Handler<TryStop> for LoaderActor {
     type Result = ();
 
     fn handle(&mut self, msg: TryStop, ctx: &mut Context<Self>) -> Self::Result {
         if let StopBehavior::Restart = msg.0 {
             self.stop_behavior = StopBehavior::Restart;
         }
-        self.watcher.stop();
         ctx.stop();
-
-        // let self_addr = ctx.address();
-        // Arbiter::current().spawn(async move {
-        //     self.watcher.stop().await;
-        //     self_addr.do_send(Stop);
-        // });
     }
 }
 
-impl<W: Watcher + Unpin + 'static> Handler<SetStoppedTx> for LoaderActor<W> {
+impl Handler<SetStoppedTx> for LoaderActor {
     type Result = ();
 
     fn handle(&mut self, msg: SetStoppedTx, _ctx: &mut Context<Self>) -> Self::Result {
@@ -258,7 +234,7 @@ impl<W: Watcher + Unpin + 'static> Handler<SetStoppedTx> for LoaderActor<W> {
     }
 }
 
-pub fn stopped(addr: Addr<WatchingLoaderActor>) -> oneshot::Receiver<StopBehavior> {
+pub fn stopped(addr: Addr<LoaderActor>) -> oneshot::Receiver<StopBehavior> {
     let (tx, rx) = oneshot::channel();
     addr.do_send(SetStoppedTx(tx));
     rx

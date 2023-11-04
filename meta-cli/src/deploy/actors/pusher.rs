@@ -19,7 +19,7 @@ use serde::Deserialize;
 use crate::config::Config;
 use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use crate::typegraph::push::{MessageEntry, Migrations};
-use crate::utils::{graphql, plural_suffix};
+use crate::utils::graphql;
 use crate::utils::{graphql::Query, Node};
 
 use super::console::{error, info, warning, ConsoleActor};
@@ -199,7 +199,7 @@ impl PusherActor {
                             name
                             messages { type text }
                             migrations { runtime migrations }
-                            resetRequired
+
                         }
                     }"}
                 .to_string(),
@@ -207,12 +207,12 @@ impl PusherActor {
             ))
             .await.map_err(|e| { Error::Graphql(e) })?;
 
-        let res: PushResult = res
+        let res: PushResultRaw = res
             .data("addTypegraph")
             .context("addTypegraph field in the response")
             .map_err(|e| Error::Other(e))?;
 
-        Ok(res)
+        Ok(res.try_into().map_err(|e| Error::Other(e))?)
     }
 }
 
@@ -252,16 +252,55 @@ impl Push {
 #[rtype(result = "()")]
 pub struct CancelPush(pub PathBuf);
 
-#[derive(Message, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
+#[serde(tag = "reason")]
+enum PushFailure {
+    Unknown {
+        message: String,
+    },
+    DatabaseResetRequired {
+        message: String,
+        #[serde(rename = "runtimeName")]
+        runtime_name: String,
+    },
+}
+
+#[derive(Message, Debug)]
 #[rtype(result = "()")]
-#[serde(rename_all = "camelCase")]
 pub struct PushResult {
     name: String,
     pub messages: Vec<MessageEntry>,
     migrations: Vec<Migrations>,
-    reset_required: Vec<String>,
-    #[serde(skip)]
+    failure: Option<PushFailure>,
     pub original_name: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PushResultRaw {
+    pub name: String,
+    pub messages: Vec<MessageEntry>,
+    pub migrations: Vec<Migrations>,
+    pub failure: Option<String>,
+}
+
+impl TryFrom<PushResultRaw> for PushResult {
+    type Error = anyhow::Error;
+
+    fn try_from(raw: PushResultRaw) -> Result<Self, Self::Error> {
+        let failure = match raw.failure {
+            Some(failure) => Some(serde_json::from_str(&failure)?),
+            None => None,
+        };
+
+        Ok(Self {
+            name: raw.name,
+            messages: raw.messages,
+            migrations: raw.migrations,
+            failure,
+            original_name: None,
+        })
+    }
 }
 
 #[derive(Message, Debug)]
@@ -303,29 +342,10 @@ impl Handler<PushResult> for PusherActor {
     type Result = ();
 
     fn handle(&mut self, res: PushResult, ctx: &mut Self::Context) -> Self::Result {
-        log::trace!("PushResult: {:?}", res);
+        let _ = self.current.take().unwrap();
+
         let name = res.name.clone();
         self.print_messages(&name, &res.messages);
-
-        let success = res
-            .messages
-            .iter()
-            .any(|m| matches!(m, MessageEntry::Error(_)));
-
-        if success {
-            info!(
-                self.console,
-                "{} Successfully pushed typegraph {name}.",
-                "✓".green(),
-                name = name.cyan()
-            );
-        } else {
-            error!(
-                self.console,
-                "Some errors occured while pushing the typegraph {tg_name}",
-                tg_name = name.cyan()
-            );
-        }
 
         let migdir = self
             .config
@@ -351,29 +371,63 @@ impl Handler<PushResult> for PusherActor {
             }
         }
 
-        if !res.reset_required.is_empty()
-            && Confirm::new()
-                .with_prompt(format!(
-                    "{} Do you want to reset the database{s} for {runtimes} on {name}?",
-                    "[confirm]".yellow(),
-                    s = plural_suffix(res.reset_required.len()),
-                    runtimes = res.reset_required.join(", ").magenta(),
-                    name = name.cyan(),
-                ))
-                .interact()
-                .unwrap()
-        {
-            let push = self.current.take().unwrap();
-            let mut tg = (*push.typegraph).clone();
-            EmbeddedPrismaMigrationOptionsPatch::default()
-                .reset_on_drift(true)
-                .apply(&mut tg, res.reset_required)
-                .unwrap();
-            self.queue
-                .push_front((Push::new(tg.into()), Instant::now()));
-            let _ = self.current.take().unwrap();
-            self.next(ctx);
+        if let Some(failure) = res.failure {
+            match failure {
+                PushFailure::Unknown { message } => {
+                    error!(
+                        self.console,
+                        "Unknown error while pushing typegraph {tg_name}",
+                        tg_name = name.cyan(),
+                    );
+                    error!(self.console, "{message}");
+                }
+                PushFailure::DatabaseResetRequired {
+                    message,
+                    runtime_name,
+                } => {
+                    error!(
+                        self.console,
+                        "Database reset required for typegraph {tg_name}",
+                        tg_name = name.cyan(),
+                    );
+                    error!(self.console, "{message}");
+
+                    if Confirm::new()
+                        .with_prompt(format!(
+                            "{} Do you want to reset the database for runtime {runtime} on {name}?",
+                            "[confirm]".yellow(),
+                            runtime = runtime_name.magenta(),
+                            name = name.cyan(),
+                        ))
+                        .interact()
+                        .unwrap()
+                    {
+                        let push = self.current.take().unwrap();
+                        let mut tg = (*push.typegraph).clone();
+                        EmbeddedPrismaMigrationOptionsPatch::default()
+                            .reset_on_drift(true)
+                            .apply(&mut tg, vec![runtime_name])
+                            .unwrap();
+                        self.queue
+                            .push_front((Push::new(tg.into()), Instant::now()));
+                        let _ = self.current.take().unwrap();
+                        self.next(ctx);
+                    }
+                }
+            }
+        } else {
+            info!(
+                self.console,
+                "{} Successfully pushed typegraph {name}.",
+                "✓".green(),
+                name = name.cyan()
+            );
         }
+
+        // let success = res
+        //     .messages
+        //     .iter()
+        //     .any(|m| matches!(m, MessageEntry::Error(_)));
     }
 }
 

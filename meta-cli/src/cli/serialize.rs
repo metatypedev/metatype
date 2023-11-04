@@ -3,10 +3,11 @@
 
 use super::{Action, GenArgs};
 use crate::config::Config;
-use crate::typegraph::loader::{Discovery, Loader};
-use crate::typegraph::postprocess;
+use crate::deploy::actors::console::ConsoleActor;
+use crate::deploy::actors::loader::{LoadModule, LoaderActor, PostProcessOptions};
 use crate::utils::ensure_venv;
-use anyhow::{anyhow, bail, Context, Result};
+use actix::prelude::*;
+use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
 use common::typegraph::Typegraph;
@@ -15,13 +16,14 @@ use std::io::{self, Write};
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
+use tokio::sync::mpsc;
 
 #[derive(Parser, Debug)]
 pub struct Serialize {
     /// The python source file that defines the typegraph(s).
     /// Default: All the python files descending from the current directory.
     #[clap(short, long = "file", value_parser)]
-    files: Vec<String>,
+    files: Vec<PathBuf>,
 
     /// Name of the typegraph to serialize.
     #[clap(short, long, value_parser)]
@@ -62,51 +64,32 @@ impl Action for Serialize {
         };
         let config = Arc::new(config);
 
-        let mut loader = Loader::new(Arc::clone(&config));
-        if self.deploy {
-            loader = loader.with_postprocessor(postprocess::EmbedPrismaMigrations::default());
-        }
+        let console = ConsoleActor::new(Arc::clone(&config)).start();
 
-        loader = loader
-            .with_postprocessor(postprocess::DenoModules::default())
-            .with_postprocessor(postprocess::PythonModules::default())
-            .with_postprocessor(postprocess::WasmdegeModules::default());
+        let (typegraph_tx, typegraph_rx) = mpsc::unbounded_channel();
 
-        let paths = if self.files.is_empty() {
-            Discovery::new(Arc::clone(&config), dir.clone())
-                .get_all(false)
-                .await?
-        } else {
-            self.files.iter().map(PathBuf::from).collect()
-        };
+        let loader = LoaderActor::new(
+            Arc::clone(&config),
+            PostProcessOptions {
+                deno_codegen: false,
+                prisma_run_migrations: false,
+                prisma_create_migration: false,
+                allow_destructive: false,
+            },
+            console.clone(),
+            typegraph_tx,
+        )
+        .auto_stop()
+        .start();
 
-        if paths.is_empty() {
-            bail!("No typegraph definition module found.");
+        for path in self.files.iter() {
+            loader.do_send(LoadModule(path.clone()));
         }
 
         let mut loaded: Vec<Typegraph> = vec![];
-        for path in paths {
-            loader
-                .load_module(&path)
-                .await
-                .map_err(|e| anyhow!("{}", e.to_string()))?;
-            // match loader.load_file(&path).await {
-            //     LoaderResult::Loaded(tgs) => {
-            //         if tgs.is_empty() {
-            //             log::warn!("no typegraph in {path:?}");
-            //         }
-            //         for tg in tgs.into_iter() {
-            //             loaded.push(tg);
-            //         }
-            //     }
-            //     LoaderResult::Rewritten(_) => {
-            //         // ? reload?
-            //         warn!("Typegraph definition at {path:?} has been rewritten.");
-            //     }
-            //     LoaderResult::Error(e) => {
-            //         bail!("{}", e.to_string());
-            //     }
-            // }
+        let mut typegraph_rx = typegraph_rx;
+        while let Some(tg) = typegraph_rx.recv().await {
+            loaded.push(tg);
         }
 
         if let Some(prefix) = self.prefix.as_ref() {
