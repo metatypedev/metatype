@@ -16,7 +16,7 @@ use crate::deploy::actors::pusher::{CancelPush, Push, PusherActor};
 use crate::deploy::actors::watcher::WatcherActor;
 use crate::utils::{ensure_venv, Node};
 use actix::prelude::*;
-use anyhow::{bail, Result, Context};
+use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
 use common::typegraph::Typegraph;
@@ -363,7 +363,8 @@ impl Action for DeploySubcommand {
                     watcher.do_send(actors::watcher::Stop);
                     loader.do_send(loader::TryStop(StopBehavior::Stop));
                 }
-            }).context("setting Ctrl-C handler")?;
+            })
+            .context("setting Ctrl-C handler")?;
 
             loop {
                 let secrets =
@@ -485,8 +486,9 @@ impl ActorSystem {
                         pusher.do_send(CancelPush(typegraph_module))
                     }
                     E::TypegraphModuleDeleted { typegraph_module } => {
+                        watcher.do_send(actors::watcher::RemoveTypegraph(typegraph_module.clone()));
                         pusher.do_send(CancelPush(typegraph_module));
-                        todo!("delete module")
+                        // TODO delete typegraph in typegate??
                     }
                     E::DependencyChanged {
                         typegraph_module,

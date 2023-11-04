@@ -56,6 +56,10 @@ struct File(PathBuf);
 #[rtype(result = "()")]
 pub struct UpdateDependencies(pub Arc<Typegraph>);
 
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct RemoveTypegraph(pub PathBuf);
+
 impl Actor for WatcherActor {
     type Context = Context<Self>;
 
@@ -131,15 +135,16 @@ impl Handler<File> for WatcherActor {
     type Result = ();
 
     fn handle(&mut self, msg: File, _ctx: &mut Self::Context) -> Self::Result {
-        if &msg.0 == self.config.path.as_ref().unwrap() {
+        let path = msg.0;
+        if &path == self.config.path.as_ref().unwrap() {
             self.event_tx.send(Event::ConfigChanged).unwrap();
         } else {
-            let reverse_deps = self.dependency_graph.get_rdeps(&msg.0);
+            let reverse_deps = self.dependency_graph.get_rdeps(&path);
             if !reverse_deps.is_empty() {
-                let rel_path = diff_paths(&msg.0, &self.directory).unwrap();
+                let rel_path = diff_paths(&path, &self.directory).unwrap();
                 info!(self.console, "File modified: {rel_path:?}; dependency of:");
                 for path in reverse_deps {
-                    let dependency_path = msg.0.clone();
+                    let dependency_path = path.clone();
                     let rel_path = diff_paths(&path, &self.directory).unwrap();
                     info!(
                         self.console,
@@ -156,15 +161,24 @@ impl Handler<File> for WatcherActor {
                     }
                 }
             } else {
-                let mut searcher = SearcherBuilder::new()
-                    .binary_detection(BinaryDetection::none())
-                    .build();
+                if path.try_exists().unwrap() {
+                    let mut searcher = SearcherBuilder::new()
+                        .binary_detection(BinaryDetection::none())
+                        .build();
 
-                if !self.file_filter.is_excluded(&msg.0, &mut searcher) {
-                    let rel_path = diff_paths(&msg.0, &self.directory).unwrap();
-                    info!(self.console, "File modified: {rel_path:?}");
-                    if let Err(e) = self.event_tx.send(Event::TypegraphModuleChanged {
-                        typegraph_module: msg.0,
+                    if !self.file_filter.is_excluded(&path, &mut searcher) {
+                        let rel_path = diff_paths(&path, &self.directory).unwrap();
+                        info!(self.console, "File modified: {rel_path:?}");
+                        if let Err(e) = self.event_tx.send(Event::TypegraphModuleChanged {
+                            typegraph_module: path,
+                        }) {
+                            error!(self.console, "Failed to send event: {}", e);
+                            // panic??
+                        }
+                    }
+                } else {
+                    if let Err(e) = self.event_tx.send(Event::TypegraphModuleDeleted {
+                        typegraph_module: path,
                     }) {
                         error!(self.console, "Failed to send event: {}", e);
                         // panic??
@@ -180,5 +194,13 @@ impl Handler<UpdateDependencies> for WatcherActor {
 
     fn handle(&mut self, msg: UpdateDependencies, _ctx: &mut Self::Context) -> Self::Result {
         self.dependency_graph.update_typegraph(&msg.0)
+    }
+}
+
+impl Handler<RemoveTypegraph> for WatcherActor {
+    type Result = ();
+
+    fn handle(&mut self, msg: RemoveTypegraph, _ctx: &mut Self::Context) -> Self::Result {
+        self.dependency_graph.remove_typegraph_at(&msg.0)
     }
 }
