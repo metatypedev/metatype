@@ -181,16 +181,14 @@ impl PusherActor {
         // so we wont need to clone
         let tg = &*tg;
         let tg = match node.prefix.as_ref() {
-            Some(prefix) => tg
-                .with_prefix(prefix.clone())
-                .map_err(|e| Error::Other(e.into()))?,
+            Some(prefix) => tg.with_prefix(prefix.clone()).map_err(Error::Other)?,
             None => tg.clone(),
         };
 
         let secrets: &Secrets = &secrets;
 
         let res =  node
-            .post("/typegate").map_err(|e| { Error::Other(e.into()) })?
+            .post("/typegate").map_err(|e| { Error::Other(e) })?
             .timeout(Duration::from_secs(10))
             .gql(
                 indoc! {"
@@ -210,9 +208,9 @@ impl PusherActor {
         let res: PushResultRaw = res
             .data("addTypegraph")
             .context("addTypegraph field in the response")
-            .map_err(|e| Error::Other(e))?;
+            .map_err(Error::Other)?;
 
-        Ok(res.try_into().map_err(|e| Error::Other(e))?)
+        res.try_into().map_err(Error::Other)
     }
 }
 

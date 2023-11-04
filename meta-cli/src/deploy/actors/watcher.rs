@@ -160,30 +160,26 @@ impl Handler<File> for WatcherActor {
                         // panic??
                     }
                 }
-            } else {
-                if path.try_exists().unwrap() {
-                    let mut searcher = SearcherBuilder::new()
-                        .binary_detection(BinaryDetection::none())
-                        .build();
+            } else if path.try_exists().unwrap() {
+                let mut searcher = SearcherBuilder::new()
+                    .binary_detection(BinaryDetection::none())
+                    .build();
 
-                    if !self.file_filter.is_excluded(&path, &mut searcher) {
-                        let rel_path = diff_paths(&path, &self.directory).unwrap();
-                        info!(self.console, "File modified: {rel_path:?}");
-                        if let Err(e) = self.event_tx.send(Event::TypegraphModuleChanged {
-                            typegraph_module: path,
-                        }) {
-                            error!(self.console, "Failed to send event: {}", e);
-                            // panic??
-                        }
-                    }
-                } else {
-                    if let Err(e) = self.event_tx.send(Event::TypegraphModuleDeleted {
+                if !self.file_filter.is_excluded(&path, &mut searcher) {
+                    let rel_path = diff_paths(&path, &self.directory).unwrap();
+                    info!(self.console, "File modified: {rel_path:?}");
+                    if let Err(e) = self.event_tx.send(Event::TypegraphModuleChanged {
                         typegraph_module: path,
                     }) {
                         error!(self.console, "Failed to send event: {}", e);
                         // panic??
                     }
                 }
+            } else if let Err(e) = self.event_tx.send(Event::TypegraphModuleDeleted {
+                typegraph_module: path,
+            }) {
+                error!(self.console, "Failed to send event: {}", e);
+                // panic??
             }
         }
     }
