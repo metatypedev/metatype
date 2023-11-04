@@ -321,7 +321,7 @@ impl Actor for PusherActor {
         log::trace!("PusherActor started");
     }
 
-    fn stopped(&mut self, ctx: &mut Self::Context) {
+    fn stopped(&mut self, _ctx: &mut Self::Context) {
         log::trace!("PusherActor stopped");
     }
 }

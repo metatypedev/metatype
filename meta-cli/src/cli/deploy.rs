@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use super::{Action, CommonArgs, GenArgs};
 use crate::config::Config;
@@ -12,13 +12,14 @@ use crate::deploy::actors::discovery::DiscoveryActor;
 use crate::deploy::actors::loader::{
     self, LoaderActor, PostProcessOptions, ReloadModule, ReloadReason, StopBehavior,
 };
-use crate::deploy::actors::pusher::{CancelPush, Push, PusherActor, Stop as PusherStop};
+use crate::deploy::actors::pusher::{CancelPush, Push, PusherActor};
 use crate::deploy::actors::watcher::WatcherActor;
 use crate::utils::{ensure_venv, Node};
 use actix::prelude::*;
-use anyhow::{bail, Result};
+use anyhow::{bail, Result, Context};
 use async_trait::async_trait;
 use clap::Parser;
+use common::typegraph::Typegraph;
 use log::warn;
 use tokio::sync::mpsc;
 
@@ -323,6 +324,11 @@ impl Deploy {
 
 // struct WatchModeRestart(bool);
 
+struct CtrlCHandlerData {
+    watcher: Addr<WatcherActor>,
+    loader: Addr<LoaderActor>,
+}
+
 #[async_trait]
 impl Action for DeploySubcommand {
     async fn run(&self, args: GenArgs) -> Result<()> {
@@ -347,6 +353,17 @@ impl Action for DeploySubcommand {
 
         if deploy.options.watch {
             let console = ConsoleActor::new(Arc::clone(&deploy.config)).start();
+
+            let ctrlc_handler_data = Arc::new(Mutex::new(None));
+
+            let data = ctrlc_handler_data.clone();
+            ctrlc::set_handler(move || {
+                let mut data = data.lock().unwrap();
+                if let Some(CtrlCHandlerData { watcher, loader }) = data.take() {
+                    watcher.do_send(actors::watcher::Stop);
+                    loader.do_send(loader::TryStop(StopBehavior::Stop));
+                }
+            }).context("setting Ctrl-C handler")?;
 
             loop {
                 let secrets =
@@ -395,68 +412,16 @@ impl Action for DeploySubcommand {
                 )?
                 .start();
 
-                let pusher_clone = pusher.clone();
-                Arbiter::current().spawn(async move {
-                    let pusher = pusher_clone;
-                    let mut typegraph_rx = typegraph_rx;
-                    while let Some(tg) = typegraph_rx.recv().await {
-                        // TODO await -- no queue
-                        pusher.do_send(Push::new(tg.into()));
-                    }
-                    log::trace!("Typegraph channel closed.");
-                    // pusher address will be dropped when both loops are done
-                });
+                let actor_system = ActorSystem {
+                    console: console.clone(),
+                    watcher,
+                    loader: loader.clone(),
+                    pusher,
+                };
 
-                let loader_clone = loader.clone();
-                let console_clone = console.clone();
-                let watcher_clone = watcher.clone();
-                Arbiter::current().spawn(async move {
-                    let loader = loader_clone;
-                    let console = console_clone;
-                    let watcher = watcher_clone;
-                    let mut watch_event_rx = watch_event_rx;
-                    while let Some(event) = watch_event_rx.recv().await {
-                        use actors::watcher::Event as E;
-                        match event {
-                            E::ConfigChanged => {
-                                warning!(console, "Metatype configuration file changed.");
-                                warning!(console, "Reloading everything.");
-                                loader.do_send(loader::TryStop(StopBehavior::Restart));
-                                watcher.do_send(actors::watcher::Stop);
-                            }
-                            E::TypegraphModuleChanged { typegraph_module } => {
-                                loader.do_send(ReloadModule(
-                                    typegraph_module.clone(),
-                                    ReloadReason::FileChanged,
-                                ));
-                                pusher.do_send(CancelPush(typegraph_module))
-                            }
-                            E::TypegraphModuleDeleted { typegraph_module } => {
-                                pusher.do_send(CancelPush(typegraph_module));
-                                todo!("delete module")
-                            }
-                            E::DependencyChanged {
-                                typegraph_module,
-                                dependency_path,
-                            } => {
-                                loader.do_send(ReloadModule(
-                                    typegraph_module.clone(),
-                                    ReloadReason::DependencyChanged(dependency_path),
-                                ));
-                                pusher.do_send(CancelPush(typegraph_module));
-                            }
-                        }
-                    }
-                    log::debug!("Watcher event channel closed.");
-                });
-
-                {
-                    let loader = loader.clone();
-                    ctrlc::set_handler(move || {
-                        watcher.do_send(actors::watcher::Stop);
-                        loader.do_send(loader::TryStop(StopBehavior::Stop));
-                    })?;
-                }
+                actor_system.push_loaded_typegraphs(typegraph_rx);
+                actor_system.handle_watch_events(watch_event_rx);
+                actor_system.update_ctrlc_handler(ctrlc_handler_data.clone());
 
                 match loader::stopped(loader).await {
                     Ok(StopBehavior::Stop) => {
@@ -472,6 +437,78 @@ impl Action for DeploySubcommand {
             todo!("non watch mode");
         }
         Ok(())
+    }
+}
+
+struct ActorSystem {
+    console: Addr<ConsoleActor>,
+    watcher: Addr<WatcherActor>,
+    loader: Addr<LoaderActor>,
+    pusher: Addr<PusherActor>,
+}
+
+impl ActorSystem {
+    fn push_loaded_typegraphs(&self, typegraph_rx: mpsc::UnboundedReceiver<Typegraph>) {
+        let pusher = self.pusher.clone();
+        Arbiter::current().spawn(async move {
+            let mut typegraph_rx = typegraph_rx;
+            while let Some(tg) = typegraph_rx.recv().await {
+                // TODO await -- no queue
+                pusher.do_send(Push::new(tg.into()));
+            }
+            log::trace!("Typegraph channel closed.");
+            // pusher address will be dropped when both loops are done
+        });
+    }
+
+    fn handle_watch_events(&self, watch_event_rx: mpsc::UnboundedReceiver<actors::watcher::Event>) {
+        let console = self.console.clone();
+        let watcher = self.watcher.clone();
+        let loader = self.loader.clone();
+        let pusher = self.pusher.clone();
+        Arbiter::current().spawn(async move {
+            let mut watch_event_rx = watch_event_rx;
+            while let Some(event) = watch_event_rx.recv().await {
+                use actors::watcher::Event as E;
+                match event {
+                    E::ConfigChanged => {
+                        warning!(console, "Metatype configuration file changed.");
+                        warning!(console, "Reloading everything.");
+                        loader.do_send(loader::TryStop(StopBehavior::Restart));
+                        watcher.do_send(actors::watcher::Stop);
+                    }
+                    E::TypegraphModuleChanged { typegraph_module } => {
+                        loader.do_send(ReloadModule(
+                            typegraph_module.clone(),
+                            ReloadReason::FileChanged,
+                        ));
+                        pusher.do_send(CancelPush(typegraph_module))
+                    }
+                    E::TypegraphModuleDeleted { typegraph_module } => {
+                        pusher.do_send(CancelPush(typegraph_module));
+                        todo!("delete module")
+                    }
+                    E::DependencyChanged {
+                        typegraph_module,
+                        dependency_path,
+                    } => {
+                        loader.do_send(ReloadModule(
+                            typegraph_module.clone(),
+                            ReloadReason::DependencyChanged(dependency_path),
+                        ));
+                        pusher.do_send(CancelPush(typegraph_module));
+                    }
+                }
+            }
+            log::trace!("Watcher event channel closed.");
+        });
+    }
+
+    fn update_ctrlc_handler(&self, data: Arc<Mutex<Option<CtrlCHandlerData>>>) {
+        *data.lock().unwrap() = Some(CtrlCHandlerData {
+            watcher: self.watcher.clone(),
+            loader: self.loader.clone(),
+        });
     }
 }
 
