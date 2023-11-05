@@ -23,7 +23,6 @@ FROM lukechannings/deno:v${DENO_VERSION} AS deno-bin
 FROM base AS builder
 
 ARG WASMEDGE_VERSION=0.12.1
-ARG DENO_BINDGEN_URL=https://raw.githubusercontent.com/Natoandro/deno_bindgen/main/cli.ts
 
 ENV DENO_DIR /deno-dir/
 ENV DENO_INSTALL /root/.deno
@@ -46,21 +45,18 @@ RUN apt-get update \
     # wasmedge
     libclang-dev \
     && rm -rf /var/lib/apt/lists/* \
-    && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL \
     && curl -fsS https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh -o wasmedge.sh \
     && bash wasmedge.sh -v $WASMEDGE_VERSION \
     && rm wasmedge.sh
 
 COPY --from=plan /app/recipe.json recipe.json
 
-RUN cargo chef cook --recipe-path recipe.json --release --package native --features deno \
+RUN cargo chef cook --recipe-path recipe.json --release --package typegate_prod --features deno \
     && rm recipe.json
 
 COPY . .
 
-RUN OUT_DIR=target deno_bindgen --release -- --locked --package native --features deno \
-    && mv /app/target/release/libnative.so . \
-    && deno run -A dev/update.ts --cache-only --src-only \
+RUN deno run -A dev/update.ts --cache-only --src-only \
     && mkdir -p typegate/tmp
 
 #
@@ -99,8 +95,6 @@ COPY --from=runtime-bin /lib/sym /lib/sym
 COPY --from=deno-bin /usr/bin/deno /bin/deno
 COPY --from=builder /root/.wasmedge /nonroot/.wasmedge
 COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
-# COPY --from=builder /app/bindings/bindings.ts ./bindings/
-COPY --from=builder /app/libnative.so ./target/release/
 COPY --from=builder /app/typegate/deno.jsonc ./typegate/
 COPY --from=builder /app/typegate/src ./typegate/src/
 COPY dev/LICENSE-Elastic-2.0.md LICENSE.md

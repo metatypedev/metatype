@@ -1,8 +1,8 @@
 [workspace]
 members = [
   "libs/*",
-  "typegate/native",
   "typegate/core",
+  "typegate/prod",
   "meta-cli",
   "typegraph/core",
 ]
