@@ -35,13 +35,16 @@ fn spawn_subcommand<F: Future<Output = ()> + 'static>(f: F) -> JoinHandle<()> {
 
 pub fn run_sync(
     main_mod: ModuleSpecifier,
+    import_map_url: Option<String>,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) {
     create_and_run_current_thread_with_maybe_metrics(async move {
-        spawn_subcommand(
-            async move { run(main_mod, permissions, custom_extensions).await.unwrap() },
-        )
+        spawn_subcommand(async move {
+            run(main_mod, import_map_url, permissions, custom_extensions)
+                .await
+                .unwrap()
+        })
         .await
         .unwrap()
     });
@@ -49,6 +52,7 @@ pub fn run_sync(
 
 pub async fn run(
     main_module: ModuleSpecifier,
+    import_map_url: Option<String>,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) -> anyhow::Result<()> {
@@ -62,6 +66,7 @@ pub async fn run(
             script: main_module.path().to_owned(),
             watch: None,
         }),
+        import_map_path: import_map_url,
         unstable: true,
         ..Default::default()
     };

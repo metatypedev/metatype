@@ -95,7 +95,10 @@ pub fn runtime() -> tokio::runtime::Runtime {
 
 /// Either run this on a single threaded executor or `spawn_local`
 /// it on a [`LocalSet`](tokio::task::LocalSet)
-pub async fn launch_typegate_deno(main_mod: deno_core::ModuleSpecifier) -> Result<()> {
+pub async fn launch_typegate_deno(
+    main_mod: deno_core::ModuleSpecifier,
+    import_map_url: Option<String>,
+) -> Result<()> {
     let permissions = deno_runtime::permissions::PermissionsOptions {
         allow_run: Some(["hostname"].into_iter().map(str::to_owned).collect()),
         allow_sys: Some(vec![]),
@@ -119,6 +122,7 @@ pub async fn launch_typegate_deno(main_mod: deno_core::ModuleSpecifier) -> Resul
     };
     mt_deno::run(
         main_mod,
+        import_map_url,
         permissions,
         Arc::new(|| ext::extensions(OpDepInjector::from_env())),
     )
@@ -164,6 +168,12 @@ mod tests {
         };
         mt_deno::run_sync(
             super::resolve_url_or_path("", &std::env::current_dir()?.join("../src/main.ts"))?,
+            Some(
+                std::env::current_dir()?
+                    .join("../import_map.json")
+                    .to_string_lossy()
+                    .into(),
+            ),
             permissions,
             Arc::new(|| crate::ext::extensions(crate::OpDepInjector::from_env())),
         );
