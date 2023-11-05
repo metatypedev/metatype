@@ -32,8 +32,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _sentry_guard = init_sentry(&config);
     let runtime = typegate_core::runtime();
     runtime.block_on(typegate_core::launch_typegate_deno(
-        typegate_core::resolve_url_or_path("", &std::env::current_dir()?.join("./src/main.ts"))?,
-        // typegate_core::resolve_url("https://github.com/metatypedev/metatype/raw/feat/MET-250/refactor-ffi/typegate/src/main.ts")?,
+        typegate_core::resolve_url_or_path(
+            "",
+            &std::env::current_dir()?.join("./typegate/src/main.ts"),
+        )?,
+        // typegate_core::resolve_url("https://github.com/metatypedev/metatype/raw/feat/MET-250/tale-of-three-binries/typegate/src/main.ts")?,
     ))?;
     Ok(())
 }
