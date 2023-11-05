@@ -45,7 +45,7 @@ fn main() -> Result<()> {
 
     match args.command {
         // the deno task requires use of a single thread runtime which it'll spawn itself
-        #[cfg(typegate)]
+        #[cfg(feature = "typegate")]
         Some(cli::Commands::Typegate(cmd_args)) => cli::typegate::command(cmd_args, args.gen)?,
         Some(command) => rt.block_on(command.run(args.gen))?,
         None => Args::command().print_help()?,

@@ -4,15 +4,17 @@
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
-use normpath::PathExt;
 
 use crate::cli::{Action, GenArgs};
 
 #[derive(Parser, Debug)]
 pub struct Typegate {
-    /// The root directory where typegate source files are located
+    /// The url to the `main.ts` module of typegate deno
     #[clap(long)]
-    root_dir: Option<std::path::PathBuf>,
+    main_url: Option<String>,
+    /// The url to the `import_map.json` manifest for typegate
+    #[clap(long)]
+    import_map_url: Option<String>,
 }
 
 #[async_trait]
@@ -22,33 +24,23 @@ impl Action for Typegate {
     }
 }
 
-pub fn command(cmd: Typegate, gen_args: GenArgs) -> Result<()> {
-    let cwd = match cmd.root_dir {
-        Some(path) => path.clone().normalize()?.into_path_buf(),
-        None => gen_args.dir()?,
-    };
-    let main_module = cwd.join("typegate/src/main.ts");
-    let permissions = mt_deno::deno::deno_runtime::permissions::PermissionsOptions {
-        allow_run: Some(["hostname"].into_iter().map(str::to_owned).collect()),
-        allow_sys: Some(vec![]),
-        allow_env: Some(vec![]),
-        allow_hrtime: true,
-        allow_write: Some(
-            ["tmp"]
-                .into_iter()
-                .map(std::str::FromStr::from_str)
-                .collect::<Result<_, _>>()?,
-        ),
-        allow_ffi: Some(vec![]),
-        allow_read: Some(
-            ["."]
-                .into_iter()
-                .map(std::str::FromStr::from_str)
-                .collect::<Result<_, _>>()?,
-        ),
-        allow_net: Some(vec![]),
-        ..Default::default()
-    };
-    mt_deno::run_sync(main_module, permissions, std::sync::Arc::new(Vec::new));
+pub fn command(cmd: Typegate, _gen_args: GenArgs) -> Result<()> {
+    let runtime = typegate_core::runtime();
+    const BASE_URL: &str =
+        "https://github.com/metatypedev/metatype/raw/feat/MET-250/tale-of-three-binries/";
+    let main_url = cmd
+        .main_url
+        .unwrap_or_else(|| BASE_URL.to_owned() + "typegate/src/main.ts");
+    let import_map_url = cmd
+        .import_map_url
+        .unwrap_or_else(|| BASE_URL.to_owned() + "typegate/import_map.json");
+    runtime.block_on(typegate_core::launch_typegate_deno(
+        // typegate_core::resolve_url_or_path(
+        //     "",
+        //     &std::env::current_dir()?.join("./typegate/src/main.ts"),
+        // )?,
+        typegate_core::resolve_url(&main_url)?,
+        Some(import_map_url),
+    ))?;
     Ok(())
 }

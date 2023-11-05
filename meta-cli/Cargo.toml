@@ -25,7 +25,7 @@ path = "src/main.rs"
 
 [features]
 default = []
-typegate = ["typegate_core"]
+typegate = ["dep:typegate_core"]
 
 [dependencies]
 self_update = { version = "0.38.0", features = [
