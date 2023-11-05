@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-mod config;
 mod ext;
 mod runtimes;
 mod typegraph;
@@ -25,7 +24,7 @@ mod interlude {
     pub use tap::prelude::*;
 }
 
-pub use config::Config;
+pub use deno_core::{resolve_url, resolve_url_or_path};
 pub use ext::extensions;
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
@@ -59,50 +58,44 @@ impl OpDepInjector {
     }
 }
 
-pub fn start(mut config: Config) -> Result<()> {
-    let tg_source_dir = config
-        .tg_source_dir
-        .take()
-        .context("tg_source_dir is None")?;
-    let rt = tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()?;
-    let _sentry_guard = init_sentry(&config);
-    rt.block_on(async {
-        // we use a LocalSet to run the deno runtime (it's single threaded)
-        let local = tokio::task::LocalSet::new();
-        local.spawn_local(async move {
-            launch_typegate_deno(tg_source_dir.join("src/main.ts"))
-                .await
-                .context("error from typegate_deno")
-                .unwrap()
-        });
+/// The runtime is single threaded and configured using environment vars from deno  
+pub fn runtime() -> tokio::runtime::Runtime {
+    let (event_interval, global_queue_interval, max_io_events_per_tick) = (61, 31, 1024);
 
-        // drive the local set
-        local.await;
-        Ok(())
-    })
+    tokio::runtime::Builder::new_current_thread()
+        .enable_io()
+        .enable_time()
+        .event_interval(
+            std::env::var("DENO_TOKIO_EVENT_INTERVAL")
+                .map_err(|_| ())
+                .and_then(|str| str.parse().map_err(|_| ()))
+                .unwrap_or(event_interval),
+        )
+        .global_queue_interval(
+            std::env::var("DENO_TOKIO_GLOBAL_QUEUE_INTERVAL")
+                .map_err(|_| ())
+                .and_then(|str| str.parse().map_err(|_| ()))
+                .unwrap_or(global_queue_interval),
+        )
+        .max_io_events_per_tick(
+            std::env::var("DENO_TOKIO_MAX_IO_EVENTS_PER_TICK")
+                .map_err(|_| ())
+                .and_then(|str| str.parse().map_err(|_| ()))
+                .unwrap_or(max_io_events_per_tick),
+        )
+        // This limits the number of threads for blocking operations (like for
+        // synchronous fs ops) or CPU bound tasks like when we run dprint in
+        // parallel for deno fmt.
+        // The default value is 512, which is an unhelpfully large thread pool. We
+        // don't ever want to have more than a couple dozen threads.
+        .max_blocking_threads(32)
+        .build()
+        .unwrap()
 }
 
-pub fn init_sentry(config: &Config) -> sentry::ClientInitGuard {
-    let env = if config.debug {
-        "development".to_string()
-    } else {
-        "production".to_string()
-    };
-    sentry::init((
-        config.sentry_dsn.clone(),
-        sentry::ClientOptions {
-            release: Some(Cow::from(common::get_version())),
-            environment: Some(Cow::from(env)),
-            sample_rate: config.sentry_sample_rate,
-            traces_sample_rate: config.sentry_traces_sample_rate,
-            ..Default::default()
-        },
-    ))
-}
-
-async fn launch_typegate_deno(main_mod: PathBuf) -> Result<()> {
+/// Either run this on a single threaded executor or `spawn_local`
+/// it on a [`LocalSet`](tokio::task::LocalSet)
+pub async fn launch_typegate_deno(main_mod: deno_core::ModuleSpecifier) -> Result<()> {
     let permissions = deno_runtime::permissions::PermissionsOptions {
         allow_run: Some(["hostname"].into_iter().map(str::to_owned).collect()),
         allow_sys: Some(vec![]),
@@ -125,7 +118,7 @@ async fn launch_typegate_deno(main_mod: PathBuf) -> Result<()> {
         ..Default::default()
     };
     mt_deno::run(
-        &main_mod,
+        main_mod,
         permissions,
         Arc::new(|| ext::extensions(OpDepInjector::from_env())),
     )
@@ -165,12 +158,12 @@ mod tests {
                     .collect::<Result<_, _>>()?,
             ),
             allow_ffi: Some(vec![]),
-            allow_read: Some(vec![]),
+            // allow_read: Some(vec![]),
             allow_net: Some(vec![]),
             ..Default::default()
         };
         mt_deno::run_sync(
-            std::env::current_dir()?.join("../src/main.ts"),
+            super::resolve_url_or_path("", &std::env::current_dir()?.join("../src/main.ts"))?,
             permissions,
             Arc::new(|| crate::ext::extensions(crate::OpDepInjector::from_env())),
         );

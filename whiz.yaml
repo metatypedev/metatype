@@ -15,11 +15,7 @@ typegate1: &tp
     TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
     TG_ADMIN_PASSWORD: "password"
     CLICOLOR_FORCE: "1"
-  # https://github.com/denoland/deno/issues/18445
-  # command: "deno task run"
-  command: "deno run --config=deno.jsonc --unstable --allow-run=hostname --allow-sys --allow-env --allow-hrtime --allow-write=tmp --allow-ffi --allow-read=. --allow-net src/main.ts"
-  depends_on:
-    - typegate_native
+  command: "cargo --color always run -p typegate_prod"
   pipe:
     "^.+DEBUG http .*$": whiz://http
 
@@ -29,29 +25,8 @@ typegate2:
     <<: *tpenv
     TG_PORT: "7892"
 
-typegate3:
-  <<: *tp
-  workdir: .
-  env:
-    <<: *tpenv
-  command: "cargo run -p meta-cli -- typegate"
-  depends_on:
-    - typegate_native
-    - meta-cli
-
 http:
   entrypoint: "/dev/null"
-
-typegate_native:
-  watch:
-    - "typegate/native/src/**/*.rs"
-  env:
-    OUT_DIR: "target"
-  command: |
-    rm -rfv $(deno info --json | jq -r .denoDir)/plug/file typegate/native/bindings.json
-    deno_bindgen -- -p native -F deno
-  depends_on:
-    - libs
 
 meta-cli:
   workdir: .
@@ -112,7 +87,7 @@ codegen:
     LD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$LD_LIBRARY_PATH" # linux
     TG_JSONSCHEMA_OUT: website/static/specs/$TYPEGRAPH_VERSION.json
     TG_TYPESCRIPT_OUT: typegate/src/typegraph/types.ts
-  command: "cargo run --package xtask -- codegen"
+  command: "cargo xtask codegen"
   depends_on:
     - libs
 
@@ -135,8 +110,6 @@ docgen:
     npx docusaurus docs:generate:graphql:typegate
     npx docusaurus docs:generate:graphql:prisma-migration
     npx docusaurus docs:generate:changelog
-  depends_on:
-    - typegate_native
 
 install:
   workdir: .
@@ -144,7 +117,6 @@ install:
     - typegraph/python/pyproject.toml
     - website/package.json
   env:
-    DENO_BINDGEN_URL: "https://raw.githubusercontent.com/Natoandro/deno_bindgen/main/cli.ts"
     WASM_TOOLS_VERSION: "1.0.45"
     JCO_VERSION: "0.12.1"
     CARGO_INSTA_VERSION: "1.33.0"
@@ -156,10 +128,10 @@ install:
     deno --version | grep -q $DENO_VERSION || (echo "require deno upgrade to $DENO_VERSION" && exit 1)
     poetry install --sync
     ~/.wasmedge/bin/wasmedge --version | grep -q $WASMEDGE_VERSION || curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
+    curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
     cargo binstall wasm-tools --version $WASM_TOOLS_VERSION --locked -y
     cargo binstall wasm-opt --version $WASM_OPT_VERSION --locked -y
     cargo binstall cargo-insta --version $CARGO_INSTA_VERSION --locked -y
-    deno install --allow-all --force -n deno_bindgen $DENO_BINDGEN_URL
     npm install --global @bytecodealliance/jco@$JCO_VERSION
     [ -d .venv ] || python3 -m venv .venv
     poetry install

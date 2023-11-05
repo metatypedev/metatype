@@ -1,11 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dirname, fromFileUrl, resolve } from "std/path/mod.ts";
 import { Runtime } from "./Runtime.ts";
 import { RuntimeInit, RuntimeInitParams } from "../types.ts";
-
-const localDir = dirname(fromFileUrl(import.meta.url));
 
 const registeredRuntimes: Map<string, RuntimeInit> = new Map();
 
@@ -38,9 +35,18 @@ export async function initRuntime(
 }
 
 export async function init_runtimes(): Promise<void> {
-  for await (const file of Deno.readDir(localDir)) {
-    if (file.isFile && file.name.endsWith(".ts") && file.name !== "mod.ts") {
-      await import(resolve(localDir, file.name));
-    }
-  }
+  await Promise.allSettled([
+    import("./Runtime.ts"),
+    import("./deno.ts"),
+    import("./graphql.ts"),
+    import("./http.ts"),
+    import("./prisma.ts"),
+    import("./python_wasi.ts"),
+    import("./random.ts"),
+    import("./s3.ts"),
+    import("./temporal.ts"),
+    import("./typegate.ts"),
+    import("./typegraph.ts"),
+    import("./wasmedge.ts"),
+  ]);
 }

@@ -25,7 +25,7 @@ path = "src/main.rs"
 
 [features]
 default = []
-typegate = ["mt_deno"]
+typegate = ["typegate_core"]
 
 [dependencies]
 self_update = { version = "0.38.0", features = [
@@ -79,7 +79,7 @@ directories = "5.0.1"
 grep = "0.2.12"
 semver = "1.0.20"
 textwrap = "0.16.0"
-mt_deno =  { workspace = true, optional = true }
+typegate_core =  { workspace = true, optional = true }
 
 [dev-dependencies]
 assert_cmd = "2.0.12"

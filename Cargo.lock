@@ -2014,31 +2014,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "deno_bindgen"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b7bd470e900d698b2a500b7ee5375a47a33e22f2332df3750a2f3e39b8297f2"
-dependencies = [
- "deno_bindgen_macro",
- "serde 1.0.190",
- "serde_json",
-]
-
-[[package]]
-name = "deno_bindgen_macro"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6b684807ba0d2c9d09e1769811d5b0552032f82edf27b3b77baf0840ad6d520"
-dependencies = [
- "Inflector",
- "proc-macro2 1.0.69",
- "quote 1.0.33",
- "serde 1.0.190",
- "serde_json",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "deno_broadcast_channel"
 version = "0.115.0"
 source = "git+https://github.com/metatypedev/deno.git?rev=21e167212342fca3c8b8e028e3ab673894655699#21e167212342fca3c8b8e028e3ab673894655699"
@@ -5339,7 +5314,6 @@ dependencies = [
  "lade-sdk",
  "lazy_static 1.4.0",
  "log",
- "mt_deno",
  "normpath",
  "notify-debouncer-mini",
  "openssl",
@@ -5357,6 +5331,7 @@ dependencies = [
  "textwrap",
  "tiny_http",
  "tokio",
+ "typegate_core",
  "typescript",
 ]
 
@@ -5732,13 +5707,6 @@ dependencies = [
  "serde 1.0.190",
  "serde_json",
  "syn 2.0.38",
-]
-
-[[package]]
-name = "native"
-version = "0.2.5-0+dev"
-dependencies = [
- "deno_bindgen",
 ]
 
 [[package]]
@@ -10641,9 +10609,7 @@ dependencies = [
  "convert_case 0.6.0",
  "dashmap 5.5.3",
  "datamodel-renderer",
- "deno_bindgen",
  "env_logger",
- "envconfig",
  "futures",
  "log",
  "mt_deno",
@@ -10658,7 +10624,6 @@ dependencies = [
  "request-handlers",
  "schema-connector",
  "schema-core",
- "sentry",
  "tap",
  "tempfile",
  "temporal-client",
@@ -10670,6 +10635,19 @@ dependencies = [
  "wasmedge-sdk",
  "wasmedge-sys",
  "wasmedge-types",
+]
+
+[[package]]
+name = "typegate_prod"
+version = "0.2.5-0+dev"
+dependencies = [
+ "colored",
+ "common",
+ "env_logger",
+ "envconfig",
+ "log",
+ "sentry",
+ "typegate_core",
 ]
 
 [[package]]
