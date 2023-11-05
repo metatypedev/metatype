@@ -34,7 +34,7 @@ globalThis.Meta = {
     applyLambda: ops.op_apply_lambda,
     registerDef: ops.op_register_def,
     unregisterDef: ops.op_unregister_def,
-    applyDef: ops.op_apply_lambda,
+    applyDef: ops.op_apply_def,
     registerModule: ops.op_register_module,
     unregisterModule: ops.op_unregister_module,
   },

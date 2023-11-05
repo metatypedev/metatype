@@ -69,7 +69,7 @@ pub fn op_unregister_virtual_machine(
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PythonRegisterInp {
     vm: String,
@@ -77,14 +77,14 @@ pub struct PythonRegisterInp {
     code: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PythonUnregisterInp {
     vm: String,
     name: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PythonApplyInp {
     vm: String,

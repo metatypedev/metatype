@@ -108,6 +108,8 @@ codegen:
   watch:
     - "libs/xtask/src/**/*.rs"
   env:
+    DYLD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$DYLD_LIBRARY_PATH" # macOS
+    LD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$LD_LIBRARY_PATH" # linux
     TG_JSONSCHEMA_OUT: website/static/specs/$TYPEGRAPH_VERSION.json
     TG_TYPESCRIPT_OUT: typegate/src/typegraph/types.ts
   command: "cargo run --package xtask -- codegen"
