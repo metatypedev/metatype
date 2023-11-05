@@ -14,6 +14,7 @@ use crate::deploy::actors::loader::{
 };
 use crate::deploy::actors::pusher::{CancelPush, Push, PusherActor};
 use crate::deploy::actors::watcher::WatcherActor;
+use crate::typegraph::postprocess::EmbedPrismaMigrations;
 use crate::utils::{ensure_venv, Node};
 use actix::prelude::*;
 use anyhow::{bail, Context, Result};
@@ -375,12 +376,15 @@ impl Action for DeploySubcommand {
 
                 let loader = LoaderActor::new(
                     Arc::clone(&deploy.config),
-                    PostProcessOptions {
-                        deno_codegen: deploy.options.codegen,
-                        prisma_run_migrations: !deploy.options.no_migration,
-                        prisma_create_migration: deploy.options.create_migration,
-                        allow_destructive: deploy.options.allow_destructive,
-                    },
+                    PostProcessOptions::default()
+                        .deno_codegen(deploy.options.codegen)
+                        .prisma(
+                            (!deploy.options.no_migration).then_some(
+                                EmbedPrismaMigrations::default()
+                                    .create_migration(deploy.options.create_migration),
+                            ),
+                        )
+                        .allow_destructive(deploy.options.allow_destructive),
                     console.clone(),
                     typegraph_tx,
                 )

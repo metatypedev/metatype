@@ -70,12 +70,7 @@ impl Action for Serialize {
 
         let loader = LoaderActor::new(
             Arc::clone(&config),
-            PostProcessOptions {
-                deno_codegen: false,
-                prisma_run_migrations: false,
-                prisma_create_migration: false,
-                allow_destructive: false,
-            },
+            PostProcessOptions::default(),
             console.clone(),
             typegraph_tx,
         )

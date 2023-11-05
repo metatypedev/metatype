@@ -14,17 +14,48 @@ use tokio::sync::{mpsc, oneshot};
 use crate::config::Config;
 use crate::deploy::actors::console::warning;
 use crate::typegraph::loader::Loader;
-use crate::typegraph::postprocess;
+use crate::typegraph::postprocess::{self, DenoModules, EmbedPrismaMigrations};
 use crate::utils::plural_suffix;
 
 use super::console::{error, info, ConsoleActor};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PostProcessOptions {
-    pub deno_codegen: bool,
-    pub prisma_run_migrations: bool,
-    pub prisma_create_migration: bool,
+    pub deno: Option<DenoModules>,
+    pub prisma: Option<EmbedPrismaMigrations>,
     pub allow_destructive: bool,
+}
+
+impl Default for PostProcessOptions {
+    fn default() -> Self {
+        Self {
+            deno: Some(DenoModules::default()),
+            prisma: None,
+            allow_destructive: false,
+        }
+    }
+}
+
+impl PostProcessOptions {
+    pub fn no_deno(mut self) -> Self {
+        self.deno = None;
+        self
+    }
+
+    pub fn deno_codegen(mut self, codegen: bool) -> Self {
+        self.deno = Some(DenoModules::default().codegen(codegen));
+        self
+    }
+
+    pub fn allow_destructive(mut self, allow: bool) -> Self {
+        self.allow_destructive = allow;
+        self
+    }
+
+    pub fn prisma(mut self, prisma: Option<EmbedPrismaMigrations>) -> Self {
+        self.prisma = prisma;
+        self
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -71,19 +102,20 @@ impl LoaderActor {
 
 impl LoaderActor {
     fn loader(&self) -> Loader {
-        let mut loader = Loader::new(Arc::clone(&self.config))
-            .skip_deno_modules(true)
-            .with_postprocessor(
-                postprocess::DenoModules::default().codegen(self.postprocess_options.deno_codegen),
-            )
+        let mut loader = Loader::new(Arc::clone(&self.config));
+        if let Some(deno) = &self.postprocess_options.deno {
+            loader = loader.with_postprocessor(deno.clone());
+        }
+        // .skip_deno_modules(true)
+        loader = loader
             .with_postprocessor(postprocess::PythonModules::default())
             .with_postprocessor(postprocess::WasmdegeModules::default());
 
-        if self.postprocess_options.prisma_run_migrations {
+        if let Some(prisma) = &self.postprocess_options.prisma {
             loader = loader.with_postprocessor(
-                postprocess::EmbedPrismaMigrations::default()
-                    .reset_on_drift(self.postprocess_options.allow_destructive)
-                    .create_migration(self.postprocess_options.prisma_create_migration),
+                prisma
+                    .clone()
+                    .reset_on_drift(self.postprocess_options.allow_destructive),
             );
         }
 
