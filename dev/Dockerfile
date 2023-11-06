@@ -51,7 +51,7 @@ RUN apt-get update \
 
 COPY --from=plan /app/recipe.json recipe.json
 
-RUN cargo chef cook --recipe-path recipe.json --release --package typegate_prod --features deno \
+RUN cargo chef cook --recipe-path recipe.json --release --package typegate_prod \
     && rm recipe.json
 
 COPY . .
@@ -97,6 +97,7 @@ COPY --from=builder /root/.wasmedge /nonroot/.wasmedge
 COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 COPY --from=builder /app/typegate/deno.jsonc ./typegate/
 COPY --from=builder /app/typegate/src ./typegate/src/
+COPY --from=builder /app/target/release/typegate_prod ./target/release/
 COPY dev/LICENSE-Elastic-2.0.md LICENSE.md
 
 # writeable
@@ -109,4 +110,4 @@ EXPOSE 7890
 
 WORKDIR /app/typegate
 ENTRYPOINT ["/tini", "--"]
-CMD ["/bin/deno", "task", "run"]
+CMD ["/target/release/typegate_prod"]
