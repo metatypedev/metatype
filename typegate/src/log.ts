@@ -3,6 +3,7 @@
 
 import { handlers, LevelName, Logger } from "std/log/mod.ts";
 import { basename, extname } from "std/url/mod.ts";
+import { extname } from "std/path/mod.ts";
 import { z } from "zod";
 import { deepMerge } from "std/collections/deep_merge.ts";
 
