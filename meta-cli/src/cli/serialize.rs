@@ -4,7 +4,9 @@
 use super::{Action, GenArgs};
 use crate::config::Config;
 use crate::deploy::actors::console::ConsoleActor;
-use crate::deploy::actors::loader::{LoadModule, LoaderActor, PostProcessOptions};
+use crate::deploy::actors::loader::{
+    LoadModule, LoaderActor, LoaderEvent, PostProcessOptions, StopBehavior,
+};
 use crate::utils::ensure_venv;
 use actix::prelude::*;
 use anyhow::{bail, Context, Result};
@@ -66,13 +68,13 @@ impl Action for Serialize {
 
         let console = ConsoleActor::new(Arc::clone(&config)).start();
 
-        let (typegraph_tx, typegraph_rx) = mpsc::unbounded_channel();
+        let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
 
         let loader = LoaderActor::new(
             Arc::clone(&config),
             PostProcessOptions::default(),
             console.clone(),
-            typegraph_tx,
+            loader_event_tx,
         )
         .auto_stop()
         .start();
@@ -81,10 +83,19 @@ impl Action for Serialize {
             loader.do_send(LoadModule(path.clone()));
         }
 
-        let mut loaded: Vec<Typegraph> = vec![];
-        let mut typegraph_rx = typegraph_rx;
-        while let Some(tg) = typegraph_rx.recv().await {
-            loaded.push(tg);
+        let mut loaded: Vec<Box<Typegraph>> = vec![];
+        let mut event_rx = loader_event_rx;
+        while let Some(event) = event_rx.recv().await {
+            log::debug!("event");
+            match event {
+                LoaderEvent::Typegraph(tg) => loaded.push(tg),
+                LoaderEvent::Stopped(b) => {
+                    log::debug!("event: {b:?}");
+                    if let StopBehavior::ExitFailure(e) = b {
+                        bail!(e);
+                    }
+                }
+            }
         }
 
         if let Some(prefix) = self.prefix.as_ref() {

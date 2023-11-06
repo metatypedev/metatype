@@ -58,10 +58,17 @@ impl PostProcessOptions {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub enum StopBehavior {
-    Stop,
+    ExitSuccess,
+    ExitFailure(String),
     Restart,
+}
+
+#[derive(Clone, Debug)]
+pub enum LoaderEvent {
+    Typegraph(Box<Typegraph>),
+    Stopped(StopBehavior),
 }
 
 pub struct LoaderActor {
@@ -70,7 +77,7 @@ pub struct LoaderActor {
     console: Addr<ConsoleActor>,
     stopped_tx: Option<oneshot::Sender<StopBehavior>>,
     stop_behavior: StopBehavior,
-    typegraph_tx: mpsc::UnboundedSender<Typegraph>,
+    event_tx: mpsc::UnboundedSender<LoaderEvent>,
     counter: Option<Arc<AtomicU32>>,
 }
 
@@ -79,15 +86,15 @@ impl LoaderActor {
         config: Arc<Config>,
         postprocess_options: PostProcessOptions,
         console: Addr<ConsoleActor>,
-        typegraph_tx: mpsc::UnboundedSender<Typegraph>,
+        event_tx: mpsc::UnboundedSender<LoaderEvent>,
     ) -> Self {
         Self {
             config,
             postprocess_options,
             console,
             stopped_tx: None,
-            stop_behavior: StopBehavior::Stop,
-            typegraph_tx,
+            stop_behavior: StopBehavior::ExitSuccess,
+            event_tx,
             counter: None,
         }
     }
@@ -130,10 +137,11 @@ impl LoaderActor {
             match loader.load_module(&path).await {
                 Ok(tgs) => self_addr.do_send(LoadedModule(path, tgs)),
                 Err(e) => {
-                    error!(console, "loader error: {:?}", e);
                     if counter.is_some() {
                         // auto stop
-                        self_addr.do_send(TryStop(StopBehavior::Stop));
+                        self_addr.do_send(TryStop(StopBehavior::ExitFailure(e.to_string())));
+                    } else {
+                        error!(console, "{}", e.to_string());
                     }
                 }
             }
@@ -177,9 +185,15 @@ impl Actor for LoaderActor {
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
         if let Some(tx) = self.stopped_tx.take() {
-            if let Err(e) = tx.send(self.stop_behavior) {
+            if let Err(e) = tx.send(self.stop_behavior.clone()) {
                 warning!(self.console, "failed to send stop signal: {:?}", e);
             }
+        }
+        if let Err(e) = self
+            .event_tx
+            .send(LoaderEvent::Stopped(self.stop_behavior.clone()))
+        {
+            warning!(self.console, "failed to send stop event: {:?}", e);
         }
         log::trace!("LoaderActor stopped")
     }
@@ -226,11 +240,12 @@ impl Handler<LoadedModule> for LoaderActor {
                 .join(", ")
         );
         for tg in tgs.into_iter() {
-            if let Err(e) = self.typegraph_tx.send(tg) {
+            if let Err(e) = self.event_tx.send(LoaderEvent::Typegraph(Box::new(tg))) {
                 error!(self.console, "failed to send typegraph: {:?}", e);
                 if self.counter.is_some() {
                     // auto stop
                     ctx.stop();
+                    return;
                 }
             }
         }
@@ -241,7 +256,7 @@ impl Handler<LoadedModule> for LoaderActor {
                     self.console,
                     "All modules have been loaded. Stopping the loader."
                 );
-                ctx.notify(TryStop(StopBehavior::Stop));
+                ctx.notify(TryStop(StopBehavior::ExitSuccess));
             }
         }
     }
@@ -251,9 +266,7 @@ impl Handler<TryStop> for LoaderActor {
     type Result = ();
 
     fn handle(&mut self, msg: TryStop, ctx: &mut Context<Self>) -> Self::Result {
-        if let StopBehavior::Restart = msg.0 {
-            self.stop_behavior = StopBehavior::Restart;
-        }
+        self.stop_behavior = msg.0;
         ctx.stop();
     }
 }

@@ -10,7 +10,7 @@ use crate::deploy::actors;
 use crate::deploy::actors::console::{warning, ConsoleActor};
 use crate::deploy::actors::discovery::DiscoveryActor;
 use crate::deploy::actors::loader::{
-    self, LoaderActor, PostProcessOptions, ReloadModule, ReloadReason, StopBehavior,
+    self, LoaderActor, LoaderEvent, PostProcessOptions, ReloadModule, ReloadReason, StopBehavior,
 };
 use crate::deploy::actors::pusher::{CancelPush, Push, PusherActor};
 use crate::deploy::actors::watcher::WatcherActor;
@@ -20,7 +20,6 @@ use actix::prelude::*;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
-use common::typegraph::Typegraph;
 use log::warn;
 use tokio::sync::mpsc;
 
@@ -362,7 +361,7 @@ impl Action for DeploySubcommand {
                 let mut data = data.lock().unwrap();
                 if let Some(CtrlCHandlerData { watcher, loader }) = data.take() {
                     watcher.do_send(actors::watcher::Stop);
-                    loader.do_send(loader::TryStop(StopBehavior::Stop));
+                    loader.do_send(loader::TryStop(StopBehavior::ExitSuccess));
                 }
             })
             .context("setting Ctrl-C handler")?;
@@ -372,7 +371,7 @@ impl Action for DeploySubcommand {
                     lade_sdk::hydrate(deploy.node.env.clone(), deploy.base_dir.to_path_buf())
                         .await?;
 
-                let (typegraph_tx, typegraph_rx) = mpsc::unbounded_channel();
+                let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
 
                 let loader = LoaderActor::new(
                     Arc::clone(&deploy.config),
@@ -386,7 +385,7 @@ impl Action for DeploySubcommand {
                         )
                         .allow_destructive(deploy.options.allow_destructive),
                     console.clone(),
-                    typegraph_tx,
+                    loader_event_tx,
                 )
                 .start();
 
@@ -424,15 +423,18 @@ impl Action for DeploySubcommand {
                     pusher,
                 };
 
-                actor_system.push_loaded_typegraphs(typegraph_rx);
+                actor_system.push_loaded_typegraphs(loader_event_rx);
                 actor_system.handle_watch_events(watch_event_rx);
                 actor_system.update_ctrlc_handler(ctrlc_handler_data.clone());
 
                 match loader::stopped(loader).await {
-                    Ok(StopBehavior::Stop) => {
+                    Ok(StopBehavior::ExitSuccess) => {
                         break;
                     }
                     Ok(StopBehavior::Restart) => continue,
+                    Ok(StopBehavior::ExitFailure(_)) => {
+                        break;
+                    }
                     Err(e) => {
                         panic!("Loader actor stopped unexpectedly: {e:?}");
                     }
@@ -453,13 +455,22 @@ struct ActorSystem {
 }
 
 impl ActorSystem {
-    fn push_loaded_typegraphs(&self, typegraph_rx: mpsc::UnboundedReceiver<Typegraph>) {
+    fn push_loaded_typegraphs(&self, event_rx: mpsc::UnboundedReceiver<LoaderEvent>) {
         let pusher = self.pusher.clone();
         Arbiter::current().spawn(async move {
-            let mut typegraph_rx = typegraph_rx;
-            while let Some(tg) = typegraph_rx.recv().await {
-                // TODO await -- no queue
-                pusher.do_send(Push::new(tg.into()));
+            let mut event_rx = event_rx;
+            while let Some(event) = event_rx.recv().await {
+                match event {
+                    LoaderEvent::Typegraph(tg) => {
+                        // TODO await -- no queue
+                        pusher.do_send(Push::new(tg.into()));
+                    }
+                    LoaderEvent::Stopped(b) => {
+                        if let StopBehavior::ExitFailure(msg) = b {
+                            panic!("{msg}");
+                        }
+                    }
+                }
             }
             log::trace!("Typegraph channel closed.");
             // pusher address will be dropped when both loops are done

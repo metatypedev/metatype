@@ -482,7 +482,7 @@ mod tests {
     use super::*;
     use crate::config::Config;
     use crate::deploy::actors::console::ConsoleActor;
-    use crate::deploy::actors::loader::{LoadModule, LoaderActor, PostProcessOptions};
+    use crate::deploy::actors::loader::{LoadModule, LoaderActor, LoaderEvent, PostProcessOptions};
     use crate::tests::utils::ensure_venv;
     use actix::prelude::*;
 
@@ -516,7 +516,9 @@ mod tests {
             loader.do_send(LoadModule(typegraph_test.clone()));
 
             let mut typegraph_rx = typegraph_rx;
-            let tg = typegraph_rx.recv().await.unwrap();
+            let LoaderEvent::Typegraph(tg) = typegraph_rx.recv().await.unwrap() else {
+                bail!("error");
+            };
             let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
             assert_eq!(module_codes.len(), 1);
 
