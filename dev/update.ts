@@ -11,7 +11,7 @@ import {
 } from "./deps.ts";
 import { projectDir, relPath, runOrExit } from "./utils.ts";
 
-const denoConfigPath = resolve(projectDir, "typegate/deno.json");
+const denoConfigPath = resolve(projectDir, "typegate/deno.jsonc");
 const devConfigPath = resolve(projectDir, "dev/deps.ts");
 
 const flags = parseFlags(Deno.args, {

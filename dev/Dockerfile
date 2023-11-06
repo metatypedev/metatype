@@ -101,7 +101,7 @@ COPY --from=builder /root/.wasmedge /nonroot/.wasmedge
 COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 COPY --from=builder /app/bindings/bindings.ts ./bindings/
 COPY --from=builder /app/libnative.so ./target/release/
-COPY --from=builder /app/typegate/deno.json ./typegate/
+COPY --from=builder /app/typegate/deno.jsonc ./typegate/
 COPY --from=builder /app/typegate/src ./typegate/src/
 COPY dev/LICENSE-Elastic-2.0.md LICENSE.md
 

@@ -144,6 +144,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: arduino/setup-protoc@v2
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -197,6 +201,10 @@ jobs:
           #  activate: '.venv\Scripts\activate.bat'
     steps:
       - uses: actions/checkout@v4
+      - uses: arduino/setup-protoc@v2
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -279,6 +287,11 @@ jobs:
       DENO_DIR: deno-dir
     steps:
       - uses: actions/checkout@v4
+      - uses: arduino/setup-protoc@v2
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: lukka/get-cmake@latest
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -335,6 +348,8 @@ jobs:
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
 
           deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
+          cargo build -p meta-cli
+          cargo build -p xtask # xtask and meta-cli are used by the test suite
           deno run -A dev/test.ts --threads 2 -- --coverage=coverage
           deno --unstable coverage ./coverage --lcov > coverage.lcov
 
@@ -353,6 +368,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: arduino/setup-protoc@v2
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:

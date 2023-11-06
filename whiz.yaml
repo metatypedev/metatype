@@ -14,9 +14,10 @@ typegate1: &tp
     REDIS_URL: "redis://:password@localhost:6379/0"
     TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
     TG_ADMIN_PASSWORD: "password"
+    CLICOLOR_FORCE: "1"
   # https://github.com/denoland/deno/issues/18445
   # command: "deno task run"
-  command: "deno run --config=deno.json --unstable --allow-run=hostname --allow-sys --allow-env --allow-hrtime --allow-write=tmp --allow-ffi --allow-read=. --allow-net src/main.ts"
+  command: "deno run --config=deno.jsonc --unstable --allow-run=hostname --allow-sys --allow-env --allow-hrtime --allow-write=tmp --allow-ffi --allow-read=. --allow-net src/main.ts"
   depends_on:
     - typegate_native
   pipe:
@@ -27,6 +28,16 @@ typegate2:
   env:
     <<: *tpenv
     TG_PORT: "7892"
+
+typegate3:
+  <<: *tp
+  workdir: .
+  env:
+    <<: *tpenv
+  command: "cargo run -p meta-cli -- typegate"
+  depends_on:
+    - typegate_native
+    - meta-cli
 
 http:
   entrypoint: "/dev/null"
@@ -143,9 +154,9 @@ install:
     deno --version | grep -q $DENO_VERSION || (echo "require deno upgrade to $DENO_VERSION" && exit 1)
     poetry install --sync
     ~/.wasmedge/bin/wasmedge --version | grep -q $WASMEDGE_VERSION || curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
-    cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
-    cargo install wasm-opt --version $WASM_OPT_VERSION --locked
-    cargo install cargo-insta --version $CARGO_INSTA_VERSION --locked
+    cargo binstall wasm-tools --version $WASM_TOOLS_VERSION --locked -y
+    cargo binstall wasm-opt --version $WASM_OPT_VERSION --locked -y
+    cargo binstall cargo-insta --version $CARGO_INSTA_VERSION --locked -y
     deno install --allow-all --force -n deno_bindgen $DENO_BINDGEN_URL
     npm install --global @bytecodealliance/jco@$JCO_VERSION
     [ -d .venv ] || python3 -m venv .venv
