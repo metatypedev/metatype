@@ -80,8 +80,7 @@ libs:
   watch:
     - common/**/*.rs
     - typescript/**/*.rs
-    - macros/**/*.rs
-  command: "cargo build -p common -p typescript -p macros"
+  command: "cargo build -p common -p typescript"
 
 codegen:
   workdir: .
