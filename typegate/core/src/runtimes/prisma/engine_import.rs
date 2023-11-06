@@ -17,6 +17,8 @@
 
 // https://github.com/prisma/prisma-engines/blob/main/query-engine/query-engine-node-api/src/engine.rs
 
+use crate::interlude::*;
+
 use psl::diagnostics::Diagnostics;
 use query_connector::error::ConnectorError;
 use query_core::CoreError;
@@ -74,7 +76,7 @@ pub struct ConnectedEngine {
 
 /// Returned from the `serverInfo` method in javascript.
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(crate = "serde", rename_all = "camelCase")]
 pub struct ServerInfo {
     commit: String,
     version: String,
@@ -99,7 +101,7 @@ impl ConnectedEngine {
 
 /// Parameters defining the construction of an engine.
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(crate = "serde", rename_all = "camelCase")]
 pub struct ConstructorOptions {
     pub datamodel: String,
     pub log_level: String,

@@ -13,7 +13,8 @@
   "nodeModulesDir": false,
   "lock": "deno.lock",
   "imports": {
-    "native": "../bindings/bindings.ts",
+    // "native": "../bindings/bindings.ts",
+    "native": "./core/bindings.ts",
     "std/": "https://deno.land/std@0.202.0/",
     "compress/": "https://deno.land/x/compress@v0.4.5/",
     "graphql": "npm:graphql@16.8.1",

@@ -1,12 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
-
+use crate::interlude::*;
 use std::{collections::BTreeMap, path::PathBuf, str::FromStr};
 
 use anyhow::{Context, Result};
 use query_core::protocol::EngineProtocol;
 
-pub async fn register_engine(datamodel: String, engine_name: String) -> Result<()> {
+pub async fn register_engine(
+    ctx: &super::Ctx,
+    datamodel: String,
+    engine_name: String,
+) -> Result<()> {
     let conf = super::engine_import::ConstructorOptions {
         datamodel,
         log_level: "info".to_string(),
@@ -20,12 +24,17 @@ pub async fn register_engine(datamodel: String, engine_name: String) -> Result<(
     let engine = super::engine_import::QueryEngine::new(conf)
         .with_context(|| format!("Error while registering engine {engine_name}"))?;
     // do not check connection here as on typegate reload this could crash the whole system
-    super::ENGINES.insert(engine_name, engine);
+    ctx.engines.insert(engine_name, engine);
     Ok(())
 }
 
-pub async fn query(engine_name: String, query: serde_json::Value) -> Result<String> {
-    let engine = super::ENGINES
+pub async fn query(
+    ctx: &super::Ctx,
+    engine_name: String,
+    query: serde_json::Value,
+) -> Result<String> {
+    let engine = ctx
+        .engines
         .get(&engine_name)
         .with_context(|| format!("Could not find engine '{engine_name}"))?;
     if !engine.is_connected().await {

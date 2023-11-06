@@ -20,6 +20,7 @@ env:
   JCO_VERSION: "0.12.1"
   WASMEDGE_VERSION: "0.12.1"
   RUST_BACKTRACE: "full"
+  RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
 
 jobs:
   changes:
@@ -395,7 +396,9 @@ jobs:
           source .venv/bin/activate
           cd typegraph/python
           poetry install --sync
+          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
           cd ../..
+          export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
           cargo test --locked --exclude meta-cli --exclude native --exclude typegraph_core --workspace
 
   test-docker:
