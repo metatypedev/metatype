@@ -33,13 +33,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let runtime = typegate_core::runtime();
     const BASE_URL: &str =
         "https://github.com/metatypedev/metatype/raw/feat/MET-250/tale-of-three-binries/";
+    let main_url = config
+        .main_url
+        .unwrap_or_else(|| BASE_URL.to_owned() + "typegate/src/main.ts");
+    let import_map_url = config
+        .import_map_url
+        .unwrap_or_else(|| BASE_URL.to_owned() + "typegate/import_map.json");
     runtime.block_on(typegate_core::launch_typegate_deno(
-        // typegate_core::resolve_url_or_path(
-        //     "",
-        //     &std::env::current_dir()?.join("./typegate/src/main.ts"),
-        // )?,
-        typegate_core::resolve_url(&(BASE_URL.to_owned() + "typegate/src/main.ts"))?,
-        Some(BASE_URL.to_owned() + "typegate/import_map.json"),
+        typegate_core::resolve_url(&main_url)?,
+        Some(import_map_url),
     ))?;
     Ok(())
 }

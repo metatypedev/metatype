@@ -3,10 +3,6 @@ name = "mt_deno"
 edition.workspace = true
 version.workspace = true
 
-[lib]
-name = "mt_deno"
-path = "lib.rs"
-
 [dependencies]
 # deno = { path =  "../../../deno/cli"}
 deno = { git = "https://github.com/metatypedev/deno.git", rev = "21e167212342fca3c8b8e028e3ab673894655699" }

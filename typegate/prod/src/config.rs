@@ -13,6 +13,8 @@ pub struct Config {
     pub sentry_sample_rate: f32,
     #[envconfig(from = "SENTRY_TRACES_SAMPLE_RATE", default = "1.0")]
     pub sentry_traces_sample_rate: f32,
-    #[envconfig(from = "TG_SOURCE_DIR")]
-    pub tg_source_dir: Option<std::path::PathBuf>,
+    #[envconfig(from = "TG_MAIN_URL")]
+    pub main_url: Option<String>,
+    #[envconfig(from = "TG_IMPORT_MAP_URL")]
+    pub import_map_url: Option<String>,
 }

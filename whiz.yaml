@@ -1,9 +1,12 @@
 env:
   TYPEGRAPH_VERSION: "0.0.3"
+  RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
 
 typegate1: &tp
-  workdir: typegate
-  watch: "src/**/*.ts"
+  watch: 
+    - "typegate/src/**/*.ts"
+    - "typegate/core/**/*.rs"
+    - "libs/{xtask,deno}/**/*.rs"
   env: &tpenv
     TG_PORT: "7891"
     PACKAGED: "false"
@@ -15,7 +18,7 @@ typegate1: &tp
     TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
     TG_ADMIN_PASSWORD: "password"
     CLICOLOR_FORCE: "1"
-  command: "cargo --color always run -p typegate_prod"
+  command: "cargo --color always x typegate"
   pipe:
     "^.+DEBUG http .*$": whiz://http
 
@@ -33,6 +36,8 @@ meta-cli:
   watch:
     - "meta-cli/src/**/*.rs"
     - "typegate/src/**/*.ts"
+    - "typegate/core/**/*.rs"
+    - "libs/deno/**/*"
   command: "cargo run --color always -p meta-cli -- -C website dev --run-destructive-migrations"
   #command: "cargo run -p meta-cli -- -C website deploy --allow-dirty --gate http://localhost:7890 --username admin --password password"
   env:
