@@ -1,5 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
+/// <reference types="./runtime.d.ts" />
 
 export function get_version() {
   return Meta.version();
@@ -91,12 +92,6 @@ export function typegraph_validate(
     };
   }
 }
-export type WasiInput = {
-  func: string;
-  wasm: string;
-  args: Array<string>;
-  out: string;
-};
 export type WasiOutput =
   | {
     Ok: {
@@ -118,11 +113,6 @@ export function wasmedge_wasi(a0: WasiInput): Promise<WasiOutput> {
   }
 }
 
-export type TemporalRegisterInput = {
-  url: string;
-  namespace: string;
-  client_id: string;
-};
 export type TemporalRegisterOutput =
   | "Ok"
   | {
@@ -164,14 +154,6 @@ export function temporal_unregister(
   }
 }
 
-export type TemporalWorkflowStartInput = {
-  client_id: string;
-  workflow_id: string;
-  workflow_type: string;
-  task_queue: string;
-  request_id: string | undefined | null;
-  args: Array<string>;
-};
 export type TemporalWorkflowStartOutput =
   | {
     Ok: {
@@ -194,14 +176,6 @@ export async function temporal_workflow_start(
   }
 }
 
-export type TemporalWorkflowSignalInput = {
-  client_id: string;
-  workflow_id: string;
-  run_id: string;
-  signal_name: string;
-  request_id: string | undefined | null;
-  args: string | undefined | null;
-};
 export type TemporalWorkflowSignalOutput =
   | "Ok"
   | {
@@ -221,18 +195,9 @@ export async function temporal_workflow_signal(
   }
 }
 
-export type TemporalWorkflowDescribeInput = {
-  client_id: string;
-  workflow_id: string;
-  run_id: string;
-};
-export type TemporalWorkflowDescribeOutput =
+export type TemporalWorkflowDescribeRes =
   | {
-    Ok: {
-      start_time: number | undefined | null;
-      close_time: number | undefined | null;
-      state: number | undefined | null;
-    };
+    Ok: TemporalWorkflowDescribeOutput;
   }
   | {
     Err: {
@@ -242,7 +207,7 @@ export type TemporalWorkflowDescribeOutput =
 
 export async function temporal_workflow_describe(
   a0: TemporalWorkflowDescribeInput,
-): Promise<TemporalWorkflowDescribeOutput> {
+): Promise<TemporalWorkflowDescribeRes> {
   try {
     const out = await Meta.temporal.workflowDescribe(a0);
     return { Ok: out };
@@ -251,13 +216,6 @@ export async function temporal_workflow_describe(
   }
 }
 
-export type TemporalWorkflowQueryInput = {
-  client_id: string;
-  workflow_id: string;
-  run_id: string;
-  query_type: string;
-  args: string | undefined | null;
-};
 export type TemporalWorkflowQueryOutput =
   | {
     Ok: {
@@ -280,12 +238,6 @@ export async function temporal_workflow_query(
     return { Err: { message: err.toString() } };
   }
 }
-export type WasiVmInitConfig = {
-  vm_name: string;
-  pylib_path: string;
-  wasi_mod_path: string;
-  preopens: Array<string>;
-};
 export type WasiVmSetupOut =
   | "Ok"
   | {
@@ -328,24 +280,6 @@ export type WasiReactorOut =
       message: string;
     };
   };
-export type PythonApplyInp = {
-  vm: string;
-  id: number;
-  name: string;
-  /**
-   * stringified json array
-   */
-  args: string;
-};
-export type PythonRegisterInp = {
-  vm: string;
-  name: string;
-  code: string;
-};
-export type PythonUnregisterInp = {
-  vm: string;
-  name: string;
-};
 export function register_lambda(a0: PythonRegisterInp): WasiReactorOut {
   try {
     const res = Meta.python.registerLambda(a0);
@@ -410,10 +344,6 @@ export function unregister_module(a0: PythonUnregisterInp): WasiReactorOut {
     return { Err: { message: err.toString() } };
   }
 }
-export type PrismaRegisterEngineInp = {
-  datamodel: string;
-  engine_name: string;
-};
 export type PrismaRegisterEngineOut =
   | "Ok"
   | {
@@ -455,12 +385,6 @@ export async function prisma_unregister_engine(
   }
 }
 
-export type PrismaQueryInp = {
-  engine_name: string;
-  // deno-lint-ignore no-explicit-any
-  query: any;
-  datamodel: string;
-};
 export type PrismaQueryOut =
   | {
     Ok: {
@@ -520,17 +444,7 @@ export type PrismaApplyResult =
       message: string;
     };
   }
-  | {
-    ResetRequired: {
-      reset_reason: string;
-    };
-  }
-  | {
-    Ok: {
-      applied_migrations: Array<string>;
-      reset_reason: string | undefined | null;
-    };
-  };
+  | PrismaApplyOut;
 export type PrismaDevInp = {
   datasource: string;
   datamodel: string;
@@ -552,22 +466,17 @@ export type PrismaDeployInp = {
   datamodel: string;
   migrations: string;
 };
-export type PrismaDeployOut =
+export type PrismaDeployRes =
   | {
     Err: {
       message: string;
     };
   }
-  | {
-    Ok: {
-      migration_count: number;
-      applied_migrations: Array<string>;
-    };
-  };
+  | { Ok: PrismaDeployOut };
 
 export async function prisma_deploy(
   a0: PrismaDeployInp,
-): Promise<PrismaDeployOut> {
+): Promise<PrismaDeployRes> {
   try {
     const res = await Meta.prisma.deploy(a0);
     return { Ok: res };
@@ -589,13 +498,7 @@ export type PrismaCreateResult =
       message: string;
     };
   }
-  | {
-    Ok: {
-      created_migration_name: string | undefined | null;
-      migrations: string | undefined | null;
-      apply_err: string | undefined | null;
-    };
-  };
+  | { Ok: PrismaCreateOut };
 
 export async function prisma_create(
   a0: PrismaCreateInp,
