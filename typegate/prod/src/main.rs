@@ -31,16 +31,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::init_from_env()?;
     let _sentry_guard = init_sentry(&config);
     let runtime = typegate_core::runtime();
-    const BASE_URL: &str =
-        "https://github.com/metatypedev/metatype/raw/feat/MET-250/tale-of-three-binries/";
+    let cwd = std::env::current_dir()?;
     let main_url = config
         .main_url
-        .unwrap_or_else(|| BASE_URL.to_owned() + "typegate/src/main.ts");
-    let import_map_url = config
-        .import_map_url
-        .unwrap_or_else(|| BASE_URL.to_owned() + "typegate/import_map.json");
+        .unwrap_or_else(|| cwd.join("typegate/src/main.ts").to_string_lossy().into());
+    let import_map_url = config.import_map_url.unwrap_or_else(|| {
+        cwd.join("typegate/import_map.json")
+            .to_string_lossy()
+            .into()
+    });
     runtime.block_on(typegate_core::launch_typegate_deno(
-        typegate_core::resolve_url(&main_url)?,
+        typegate_core::resolve_url_or_path(&main_url, &cwd)?,
         Some(import_map_url),
     ))?;
     Ok(())
