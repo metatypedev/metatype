@@ -25,7 +25,7 @@ impl Action for Typegate {
 }
 
 pub fn command(cmd: Typegate, _gen_args: GenArgs) -> Result<()> {
-    let runtime = typegate_core::runtime();
+    let runtime = typegate_engine::runtime();
     const BASE_URL: &str =
         "https://github.com/metatypedev/metatype/raw/feat/MET-250/tale-of-three-binries/";
     let main_url = cmd
@@ -34,12 +34,12 @@ pub fn command(cmd: Typegate, _gen_args: GenArgs) -> Result<()> {
     let import_map_url = cmd
         .import_map_url
         .unwrap_or_else(|| BASE_URL.to_owned() + "typegate/import_map.json");
-    runtime.block_on(typegate_core::launch_typegate_deno(
+    runtime.block_on(typegate_engine::launch_typegate_deno(
         // typegate_core::resolve_url_or_path(
         //     "",
         //     &std::env::current_dir()?.join("./typegate/src/main.ts"),
         // )?,
-        typegate_core::resolve_url(&main_url)?,
+        typegate_engine::resolve_url(&main_url)?,
         Some(import_map_url),
     ))?;
     Ok(())

@@ -44,6 +44,7 @@ RUN apt-get update \
     libssl-dev \
     # wasmedge
     libclang-dev \
+    cmake \
     && rm -rf /var/lib/apt/lists/* \
     && curl -fsS https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh -o wasmedge.sh \
     && bash wasmedge.sh -v $WASMEDGE_VERSION \
@@ -51,7 +52,7 @@ RUN apt-get update \
 
 COPY --from=plan /app/recipe.json recipe.json
 
-RUN cargo chef cook --recipe-path recipe.json --release --package typegate_prod \
+RUN cargo chef cook --recipe-path recipe.json --release --package typegate \
     && rm recipe.json
 
 COPY . .
@@ -97,7 +98,7 @@ COPY --from=builder /root/.wasmedge /nonroot/.wasmedge
 COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 COPY --from=builder /app/typegate/deno.jsonc ./typegate/
 COPY --from=builder /app/typegate/src ./typegate/src/
-COPY --from=builder /app/target/release/typegate_prod ./target/release/
+COPY --from=builder /app/target/release/typegate ./target/release/
 COPY dev/LICENSE-Elastic-2.0.md LICENSE.md
 
 # writeable
@@ -110,4 +111,4 @@ EXPOSE 7890
 
 WORKDIR /app/typegate
 ENTRYPOINT ["/tini", "--"]
-CMD ["/target/release/typegate_prod"]
+CMD ["/target/release/typegate"]

@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     logger::init();
     let config = Config::init_from_env()?;
     let _sentry_guard = init_sentry(&config);
-    let runtime = typegate_core::runtime();
+    let runtime = typegate_engine::runtime();
     let cwd = std::env::current_dir()?;
     let main_url = config
         .main_url
@@ -40,8 +40,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .to_string_lossy()
             .into()
     });
-    runtime.block_on(typegate_core::launch_typegate_deno(
-        typegate_core::resolve_url_or_path(&main_url, &cwd)?,
+    runtime.block_on(typegate_engine::launch_typegate_deno(
+        typegate_engine::resolve_url_or_path(&main_url, &cwd)?,
         Some(import_map_url),
     ))?;
     Ok(())

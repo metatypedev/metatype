@@ -1,5 +1,5 @@
 [package]
-name = "typegate_prod"
+name = "typegate"
 edition.workspace = true
 version.workspace = true
 
@@ -9,5 +9,5 @@ envconfig = "0.10.0"
 sentry = { version = "0.31.7", features = ["anyhow"] }
 env_logger = "0.10.0"
 log = "0.4.20"
-typegate_core.workspace = true
+typegate_engine.workspace = true
 common.workspace = true

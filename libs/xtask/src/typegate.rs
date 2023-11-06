@@ -9,12 +9,12 @@ pub struct Typegate {}
 
 impl Typegate {
     pub fn run(self) -> Result<()> {
-        let runtime = typegate_core::runtime();
+        let runtime = typegate_engine::runtime();
         let cwd = std::env::current_dir()?;
         let main_url = cwd.join("typegate/src/main.ts");
         let import_map_url = cwd.join("typegate/import_map.json");
-        runtime.block_on(typegate_core::launch_typegate_deno(
-            typegate_core::resolve_url_or_path("", &main_url)?,
+        runtime.block_on(typegate_engine::launch_typegate_deno(
+            typegate_engine::resolve_url_or_path("", &main_url)?,
             Some(import_map_url.to_string_lossy().into()),
         ))?;
         Ok(())
