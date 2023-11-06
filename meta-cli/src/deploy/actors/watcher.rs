@@ -12,12 +12,11 @@ use std::path::{Path, PathBuf};
 use std::{sync::Arc, time::Duration};
 use tokio::sync::mpsc;
 
+use super::console::Console;
 use crate::config::Config;
-use crate::deploy::actors::console::{error, info};
+use crate::deploy::actors::console::ConsoleActor;
 use crate::typegraph::dependency_graph::DependencyGraph;
 use crate::typegraph::loader::discovery::FileFilter;
-
-use super::console::ConsoleActor;
 
 #[derive(Debug)]
 pub enum Event {
@@ -65,7 +64,8 @@ impl Actor for WatcherActor {
 
     fn started(&mut self, ctx: &mut Self::Context) {
         if let Err(e) = self.start_watcher(ctx) {
-            error!(self.console, "Failed to start watcher: {}", e);
+            self.console
+                .error(format!("Failed to start watcher: {}", e));
             ctx.stop();
         }
         log::trace!("Watcher actor started");
@@ -112,7 +112,8 @@ impl WatcherActor {
         )?;
 
         let watcher = debouncer.watcher();
-        info!(self.console, "Watching {path:?}...", path = self.directory);
+        self.console
+            .info(format!("Watching {path:?}...", path = self.directory));
         watcher
             .watch(&self.directory, RecursiveMode::Recursive)
             .with_context(|| format!("Watching {path:?}", path = self.directory))?;
@@ -142,21 +143,19 @@ impl Handler<File> for WatcherActor {
             let reverse_deps = self.dependency_graph.get_rdeps(&path);
             if !reverse_deps.is_empty() {
                 let rel_path = diff_paths(&path, &self.directory).unwrap();
-                info!(self.console, "File modified: {rel_path:?}; dependency of:");
+                self.console
+                    .info(format!("File modified: {rel_path:?}; dependency of:"));
                 for path in reverse_deps {
                     let dependency_path = path.clone();
                     let rel_path = diff_paths(&path, &self.directory).unwrap();
-                    info!(
-                        self.console,
-                        "  -> {rel_path}",
-                        rel_path = rel_path.display()
-                    );
+                    self.console
+                        .info(format!("  -> {rel_path}", rel_path = rel_path.display()));
 
                     if let Err(e) = self.event_tx.send(Event::DependencyChanged {
                         typegraph_module: path,
                         dependency_path,
                     }) {
-                        error!(self.console, "Failed to send event: {}", e);
+                        self.console.error(format!("Failed to send event: {}", e));
                         // panic??
                     }
                 }
@@ -167,18 +166,18 @@ impl Handler<File> for WatcherActor {
 
                 if !self.file_filter.is_excluded(&path, &mut searcher) {
                     let rel_path = diff_paths(&path, &self.directory).unwrap();
-                    info!(self.console, "File modified: {rel_path:?}");
+                    self.console.info(format!("File modified: {rel_path:?}"));
                     if let Err(e) = self.event_tx.send(Event::TypegraphModuleChanged {
                         typegraph_module: path,
                     }) {
-                        error!(self.console, "Failed to send event: {}", e);
+                        self.console.error(format!("Failed to send event: {}", e));
                         // panic??
                     }
                 }
             } else if let Err(e) = self.event_tx.send(Event::TypegraphModuleDeleted {
                 typegraph_module: path,
             }) {
-                error!(self.console, "Failed to send event: {}", e);
+                self.console.error(format!("Failed to send event: {}", e));
                 // panic??
             }
         }

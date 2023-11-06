@@ -33,15 +33,15 @@ impl Actor for ConsoleActor {
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct Info(pub String);
+struct Info(pub String);
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct Warning(pub String);
+struct Warning(pub String);
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct Error(pub String);
+struct Error(pub String);
 
 impl Handler<Info> for ConsoleActor {
     type Result = ();
@@ -67,24 +67,22 @@ impl Handler<Error> for ConsoleActor {
     }
 }
 
-macro_rules! info {
-    ($addr:expr, $($arg:tt)*) => {
-        $addr.do_send($crate::deploy::actors::console::Info(format!($($arg)*)))
-    };
+pub trait Console {
+    fn info(&self, msg: String);
+    fn warning(&self, msg: String);
+    fn error(&self, msg: String);
 }
 
-macro_rules! warning {
-    ($addr:expr, $($arg:tt)*) => {
-        $addr.do_send($crate::deploy::actors::console::Warning(format!($($arg)*)))
-    };
-}
+impl Console for Addr<ConsoleActor> {
+    fn info(&self, msg: String) {
+        self.do_send(Info(msg));
+    }
 
-macro_rules! error {
-    ($addr:expr, $($arg:tt)*) => {
-        $addr.do_send($crate::deploy::actors::console::Error(format!($($arg)*)))
-    };
-}
+    fn warning(&self, msg: String) {
+        self.do_send(Warning(msg));
+    }
 
-pub(crate) use error;
-pub(crate) use info;
-pub(crate) use warning;
+    fn error(&self, msg: String) {
+        self.do_send(Error(msg));
+    }
+}

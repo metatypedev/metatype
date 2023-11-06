@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use crate::{config::Config, typegraph::loader::Discovery};
 
-use super::console::{error, info, ConsoleActor};
+use super::console::{Console, ConsoleActor};
 use super::loader::{LoadModule, LoaderActor};
 
 pub struct DiscoveryActor {
@@ -54,19 +54,18 @@ impl Actor for DiscoveryActor {
                 .start(|path| match path {
                     Ok(path) => {
                         let rel_path = diff_paths(&path, &dir).unwrap();
-                        info!(
-                            console,
+                        console.info(format!(
                             "Found typegraph definition module at {}",
                             rel_path.display()
-                        );
+                        ));
                         loader.do_send(LoadModule(path));
                     }
-                    Err(err) => error!(console, "Error while discovering modules: {}", err),
+                    Err(err) => console.error(format!("Error while discovering modules: {}", err)),
                 })
                 .await
             {
                 Ok(_) => (),
-                Err(err) => error!(console, "Error while discovering modules: {}", err),
+                Err(err) => console.error(format!("Error while discovering modules: {}", err)),
             }
 
             discovery.do_send(Stop);

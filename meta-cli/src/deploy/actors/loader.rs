@@ -12,12 +12,11 @@ use common::typegraph::Typegraph;
 use tokio::sync::{mpsc, oneshot};
 
 use crate::config::Config;
-use crate::deploy::actors::console::warning;
 use crate::typegraph::loader::Loader;
 use crate::typegraph::postprocess::{self, DenoModules, EmbedPrismaMigrations};
 use crate::utils::plural_suffix;
 
-use super::console::{error, info, ConsoleActor};
+use super::console::{Console, ConsoleActor};
 
 #[derive(Debug, Clone)]
 pub struct PostProcessOptions {
@@ -141,7 +140,7 @@ impl LoaderActor {
                         // auto stop
                         self_addr.do_send(TryStop(StopBehavior::ExitFailure(e.to_string())));
                     } else {
-                        error!(console, "{}", e.to_string());
+                        console.error(e.to_string());
                     }
                 }
             }
@@ -186,16 +185,18 @@ impl Actor for LoaderActor {
     fn stopped(&mut self, _ctx: &mut Self::Context) {
         if let Some(tx) = self.stopped_tx.take() {
             if let Err(e) = tx.send(self.stop_behavior.clone()) {
-                warning!(self.console, "failed to send stop signal: {:?}", e);
+                self.console
+                    .warning(format!("failed to send stop signal: {:?}", e));
             }
         }
         if let Err(e) = self
             .event_tx
             .send(LoaderEvent::Stopped(self.stop_behavior.clone()))
         {
-            warning!(self.console, "failed to send stop event: {:?}", e);
+            self.console
+                .warning(format!("failed to send stop event: {:?}", e));
         }
-        log::trace!("LoaderActor stopped")
+        log::trace!("LoaderActor stopped");
     }
 }
 
@@ -203,7 +204,8 @@ impl Handler<LoadModule> for LoaderActor {
     type Result = ();
 
     fn handle(&mut self, msg: LoadModule, ctx: &mut Context<Self>) -> Self::Result {
-        info!(self.console, "Loading module {:?}", msg.0);
+        self.console.info(format!("Loading module {:?}", msg.0));
+
         self.load_module(ctx.address(), msg.0);
     }
 }
@@ -217,7 +219,8 @@ impl Handler<ReloadModule> for LoaderActor {
             ReloadReason::FileCreated => "file created".to_string(),
             ReloadReason::DependencyChanged(path) => format!("dependency changed: {:?}", path),
         };
-        info!(self.console, "Reloading module {:?}: {reason}", msg.0);
+        self.console
+            .info(format!("Reloading module {:?}: {reason}", msg.0));
 
         self.load_module(ctx.address(), msg.0);
     }
@@ -229,8 +232,7 @@ impl Handler<LoadedModule> for LoaderActor {
     fn handle(&mut self, msg: LoadedModule, ctx: &mut Context<Self>) -> Self::Result {
         let LoadedModule(path, tgs) = msg;
         let count = tgs.len();
-        info!(
-            self.console,
+        self.console.info(format!(
             "Loaded {count} typegraph{s} from {path:?}: {tgs}",
             s = plural_suffix(count),
             tgs = tgs
@@ -238,10 +240,11 @@ impl Handler<LoadedModule> for LoaderActor {
                 .map(|tg| tg.name().unwrap().cyan().to_string())
                 .collect::<Vec<_>>()
                 .join(", ")
-        );
+        ));
         for tg in tgs.into_iter() {
             if let Err(e) = self.event_tx.send(LoaderEvent::Typegraph(Box::new(tg))) {
-                error!(self.console, "failed to send typegraph: {:?}", e);
+                self.console
+                    .error(format!("failed to send typegraph: {:?}", e));
                 if self.counter.is_some() {
                     // auto stop
                     ctx.stop();
@@ -252,10 +255,8 @@ impl Handler<LoadedModule> for LoaderActor {
         if let Some(counter) = self.counter.as_ref() {
             let count = counter.fetch_sub(1, Ordering::SeqCst);
             if count == 0 {
-                info!(
-                    self.console,
-                    "All modules have been loaded. Stopping the loader."
-                );
+                self.console
+                    .info("All modules have been loaded. Stopping the loader.".to_string());
                 ctx.notify(TryStop(StopBehavior::ExitSuccess));
             }
         }

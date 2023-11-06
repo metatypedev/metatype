@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 use super::{Action, CommonArgs, GenArgs};
 use crate::config::Config;
 use crate::deploy::actors;
-use crate::deploy::actors::console::{warning, ConsoleActor};
+use crate::deploy::actors::console::{Console, ConsoleActor};
 use crate::deploy::actors::discovery::DiscoveryActor;
 use crate::deploy::actors::loader::{
     self, LoaderActor, LoaderEvent, PostProcessOptions, ReloadModule, ReloadReason, StopBehavior,
@@ -488,8 +488,9 @@ impl ActorSystem {
                 use actors::watcher::Event as E;
                 match event {
                     E::ConfigChanged => {
-                        warning!(console, "Metatype configuration file changed.");
-                        warning!(console, "Reloading everything.");
+                        console.warning("Metatype configuration file changed.".to_string());
+                        console.warning("Reloading everything.".to_string());
+
                         loader.do_send(loader::TryStop(StopBehavior::Restart));
                         watcher.do_send(actors::watcher::Stop);
                     }

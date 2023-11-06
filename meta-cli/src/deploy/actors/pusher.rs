@@ -22,7 +22,7 @@ use crate::typegraph::push::{MessageEntry, Migrations};
 use crate::utils::graphql;
 use crate::utils::{graphql::Query, Node};
 
-use super::console::{error, info, warning, ConsoleActor};
+use super::console::{Console, ConsoleActor};
 
 type Secrets = HashMap<String, String>;
 
@@ -70,13 +70,13 @@ impl PusherActor {
         for msg in messages.iter() {
             match msg {
                 MessageEntry::Info(txt) => {
-                    info!(self.console, "[{name}] {txt}");
+                    self.console.info(format!("[{name}] {txt}"));
                 }
                 MessageEntry::Warning(txt) => {
-                    warning!(self.console, "[{name}] {txt}");
+                    self.console.warning(format!("[{name}] {txt}"));
                 }
                 MessageEntry::Error(txt) => {
-                    error!(self.console, "[{name}] {txt}");
+                    self.console.error(format!("[{name}] {txt}"));
                 }
             }
         }
@@ -88,10 +88,8 @@ impl PusherActor {
 
     fn next(&mut self, ctx: &mut Context<Self>) {
         if self.current.is_some() {
-            error!(
-                self.console,
-                "Invalid state: next() called while currently busy."
-            );
+            self.console
+                .error("Invalid state: next() called while currently busy.".to_string());
             // TODO panic?? -- exit??
         }
 
@@ -145,10 +143,9 @@ impl PusherActor {
                     .display()
                     .to_string()
                     .dimmed();
-                info!(
-                    console,
+                console.info(format!(
                     "Pushing typegraph {tg_name}{retry} (from '{file_name}')"
-                );
+                ));
                 match Self::push(Arc::clone(&push.typegraph), node, secrets).await {
                     Ok(mut res) => {
                         res.original_name = Some(push.typegraph.name().unwrap().clone());
@@ -360,42 +357,37 @@ impl Handler<PushResult> for PusherActor {
             let dest = migdir.join(&migrations.runtime);
             // TODO async??
             if let Err(e) = common::archive::unpack(&dest, Some(migrations.migrations)) {
-                error!(
-                    self.console,
+                self.console.error(format!(
                     "Error while unpacking migrations into {:?}",
                     diff_paths(&dest, &self.base_dir)
-                );
-                error!(self.console, "{e:?}");
+                ));
+                self.console.error(format!("{e:?}"));
             } else {
-                info!(
-                    self.console,
+                self.console.info(format!(
                     "Successfully unpacked migrations for {name}/{} at {:?}!",
-                    migrations.runtime,
-                    dest
-                );
+                    migrations.runtime, dest
+                ));
             }
         }
 
         if let Some(failure) = res.failure {
             match failure {
                 PushFailure::Unknown { message } => {
-                    error!(
-                        self.console,
+                    self.console.error(format!(
                         "Unknown error while pushing typegraph {tg_name}",
                         tg_name = name.cyan(),
-                    );
-                    error!(self.console, "{message}");
+                    ));
+                    self.console.error(message);
                 }
                 PushFailure::DatabaseResetRequired {
                     message,
                     runtime_name,
                 } => {
-                    error!(
-                        self.console,
+                    self.console.error(format!(
                         "Database reset required for typegraph {tg_name}",
                         tg_name = name.cyan(),
-                    );
-                    error!(self.console, "{message}");
+                    ));
+                    self.console.error(message);
 
                     if Confirm::new()
                         .with_prompt(format!(
@@ -421,12 +413,11 @@ impl Handler<PushResult> for PusherActor {
                 }
             }
         } else {
-            info!(
-                self.console,
+            self.console.info(format!(
                 "{} Successfully pushed typegraph {name}.",
                 "✓".green(),
                 name = name.cyan()
-            );
+            ));
         }
 
         // let success = res
@@ -443,22 +434,20 @@ impl Handler<Error> for PusherActor {
         match err {
             Error::Graphql(e) => match e {
                 graphql::Error::EndpointNotReachable(e) => {
-                    error!(
-                        self.console,
-                        "Could not push typegraph: target endpoint not reachable."
+                    self.console.error(
+                        "Could not push typegraph: target endpoint not reachable.".to_string(),
                     );
-                    error!(self.console, "{e}");
+                    self.console.error(e);
 
                     let push = self.current.take().unwrap();
                     let next_retry_no = push.retry.clone().map(|r| r.retry_no + 1).unwrap_or(1);
 
                     if next_retry_no <= self.max_retry_count {
                         let console = self.console.clone();
-                        warning!(
-                            console,
+                        console.warning(format!(
                             "Retrying in {} seconds...",
                             self.retry_interval.as_secs()
-                        );
+                        ));
 
                         let retry_interval = self.retry_interval;
                         let self_addr = ctx.address();
@@ -472,15 +461,16 @@ impl Handler<Error> for PusherActor {
                 }
 
                 graphql::Error::InvalidResponse(e) => {
-                    error!(self.console, "Invalid response from server:");
-                    error!(self.console, "{e}");
+                    self.console
+                        .error("Invalid response from server:".to_string());
+                    self.console.error(e);
                     self.next(ctx);
                 }
 
                 graphql::Error::FailedQuery(errs) => {
-                    error!(self.console, "Failed to push typegraph:");
+                    self.console.error("Failed to push typegraph:".to_string());
                     for e in errs {
-                        error!(self.console, "{}", e.message);
+                        self.console.error(e.message);
                     }
                     // TODO
                     let _ = self.current.take().unwrap();
@@ -489,7 +479,7 @@ impl Handler<Error> for PusherActor {
                 }
             },
             Error::Other(e) => {
-                error!(self.console, "Unexpected error: {e}", e = e.to_string());
+                self.console.error(format!("Unexpected error: {e}", e = e));
                 self.next(ctx);
             }
         }
