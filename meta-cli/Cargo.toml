@@ -41,7 +41,7 @@ tokio = { version = "1.33.0", features = ["full"] }
 futures = "0.3.28"
 log = "0.4.20"
 env_logger = "0.10.0"
-clap = { version = "=4.3.3", features = ["derive", "env"] }
+clap = { version = "=4.3.3", features = ["derive", "env"] } # pinned to match version brought in by deno
 clap_complete = "4.3.1"
 clap-verbosity-flag = "2.0.1"
 crossbeam-channel = "0.5.8"
