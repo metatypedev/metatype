@@ -5,7 +5,7 @@ use anyhow::{bail, Context, Result};
 use colored::Colorize;
 use common::typegraph::runtimes::{KnownRuntime, TGRuntime};
 use common::typegraph::{TypeNode, Typegraph};
-use log::{info, trace};
+use log::info;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::cell::RefCell;
@@ -175,7 +175,6 @@ impl<'a> Codegen<'a> {
                         if self.ts_modules.contains_key(path)
                             && self.check_func(path, &mat_data.name)
                         {
-                            trace!("Entry[{path:?}]: {:?}", self.ts_modules.get(path).unwrap());
                             gen_list.push(GenItem {
                                 input: data.input,
                                 output: data.output,
@@ -195,7 +194,6 @@ impl<'a> Codegen<'a> {
             .map(|(name, code)| -> Result<ModuleCode> {
                 log::debug!("Codegen::codegen: name={name:?}");
                 let path = self.ts_modules.remove(&name).unwrap().path;
-                trace!("Code path: {path:?}");
                 let code = ts::format_text(&path, &code)
                     .context(format!("could not format code: {code:#?}"))?;
                 Ok(ModuleCode { path, code })
@@ -205,7 +203,6 @@ impl<'a> Codegen<'a> {
 
     fn generate(&self, gen_list: Vec<GenItem>) -> HashMap<String, String> {
         let mut map: HashMap<String, Vec<Result<String>>> = HashMap::default();
-        let current_dir = std::env::current_dir().unwrap();
         for GenItem {
             input,
             output,
@@ -213,7 +210,6 @@ impl<'a> Codegen<'a> {
             name,
         } in gen_list.into_iter()
         {
-            trace!("Codegen::generate: path={path:?}, current-dir={current_dir:?}");
             // let rel_path = diff_paths(&path, &current_dir).unwrap();
             info!("Generating missing function {} for {:?}", name.blue(), path);
             let functions = map.entry(path).or_default();
@@ -492,7 +488,6 @@ mod tests {
         ensure_venv()?;
         let test_folder = Path::new("./src/tests/typegraphs").normalize()?;
         std::env::set_current_dir(&test_folder)?;
-        trace!("Test folder: {:?}", test_folder.as_path());
         let tests = fs::read_dir(&test_folder).unwrap();
         let config = Config::default_in(".");
         let config = Arc::new(config);
@@ -500,33 +495,34 @@ mod tests {
         for typegraph_test in tests {
             let typegraph_test = typegraph_test.unwrap().path();
             let typegraph_test = diff_paths(&typegraph_test, &test_folder).unwrap();
-            trace!("test: {typegraph_test:?}");
 
             let console = ConsoleActor::new(Arc::clone(&config)).start();
-            let (typegraph_tx, typegraph_rx) = mpsc::unbounded_channel();
+            let (event_tx, event_rx) = mpsc::unbounded_channel();
             let loader = LoaderActor::new(
                 Arc::clone(&config),
                 PostProcessOptions::default().no_deno(),
                 console,
-                typegraph_tx,
+                event_tx,
             )
             .auto_stop()
             .start();
 
             loader.do_send(LoadModule(typegraph_test.clone()));
 
-            let mut typegraph_rx = typegraph_rx;
-            let LoaderEvent::Typegraph(tg) = typegraph_rx.recv().await.unwrap() else {
+            let mut event_rx = event_rx;
+            let LoaderEvent::Typegraph(tg) = event_rx.recv().await.unwrap() else {
                 bail!("error");
             };
             let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
             assert_eq!(module_codes.len(), 1);
 
             let test_name = typegraph_test.to_string_lossy().to_string();
-            trace!("test-name={test_name:?}");
             insta::assert_snapshot!(test_name, &module_codes[0].code);
 
-            assert!(typegraph_rx.recv().await.is_none());
+            assert!(matches!(
+                event_rx.recv().await,
+                Some(LoaderEvent::Stopped(_))
+            ));
         }
 
         Ok(())
