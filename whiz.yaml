@@ -28,6 +28,12 @@ typegate2:
     <<: *tpenv
     TG_PORT: "7892"
 
+typegate3:
+  <<: *tp
+  env:
+    <<: *tpenv
+  command: "cargo --color always run -p meta-cli -F typegate -- typegate"
+
 http:
   entrypoint: "/dev/null"
 

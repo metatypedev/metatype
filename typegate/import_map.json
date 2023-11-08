@@ -1,6 +1,6 @@
 {
   "imports": {
-    "native": "./core/bindings.ts",
+    "native": "./engine/bindings.ts",
     "std/": "https://deno.land/std@0.202.0/",
     "compress/": "https://deno.land/x/compress@v0.4.5/",
     "graphql": "npm:graphql@16.8.1",
