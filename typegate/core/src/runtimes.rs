@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-mod prisma;
-mod python;
-mod temporal;
-mod wasmedge;
+pub mod prisma;
+pub mod python;
+pub mod temporal;
+pub mod wasmedge;

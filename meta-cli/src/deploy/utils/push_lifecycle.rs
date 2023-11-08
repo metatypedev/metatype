@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
@@ -287,7 +290,11 @@ impl<R: RetryScheduler + Sync + Send + 'static> PushLifecycle<R> {
     }
 
     pub async fn cancel_pending_push(&mut self, path: &Path) {
-        self.0.retry_scheduler.lock().await.cancel_pending_retry(path);
+        self.0
+            .retry_scheduler
+            .lock()
+            .await
+            .cancel_pending_retry(path);
     }
 
     pub fn send(&self, push: Push) {

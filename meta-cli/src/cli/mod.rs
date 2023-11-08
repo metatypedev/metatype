@@ -22,6 +22,8 @@ pub(crate) mod doctor;
 pub(crate) mod new;
 pub(crate) mod prisma;
 pub(crate) mod serialize;
+#[cfg(typegate)]
+pub(crate) mod typegate;
 pub(crate) mod upgrade;
 
 #[derive(Parser, Debug)]
@@ -78,6 +80,9 @@ pub(crate) enum Commands {
     Doctor(doctor::Doctor),
     /// Create a new Metatype project
     New(new::New),
+    /// Access a minimal deno CLI
+    #[cfg(typegate)]
+    Typegate(typegate::Typegate),
 }
 
 #[async_trait]
