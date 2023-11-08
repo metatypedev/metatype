@@ -25,7 +25,7 @@ path = "src/main.rs"
 
 [features]
 default = []
-typegate = ["mt_deno"]
+typegate = ["dep:mt_deno"]
 
 [dependencies]
 self_update = { version = "0.38.0", features = [

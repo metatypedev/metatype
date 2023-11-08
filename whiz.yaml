@@ -2,8 +2,8 @@ env:
   TYPEGRAPH_VERSION: "0.0.3"
 
 typegate1: &tp
-  workdir: typegate
-  watch: "src/**/*.ts"
+  workdir: .
+  watch: "meta-cli/src/**/*.rs"
   env: &tpenv
     TG_PORT: "7891"
     PACKAGED: "false"
@@ -17,9 +17,10 @@ typegate1: &tp
     CLICOLOR_FORCE: "1"
   # https://github.com/denoland/deno/issues/18445
   # command: "deno task run"
-  command: "deno run --config=deno.jsonc --unstable --allow-run=hostname --allow-sys --allow-env --allow-hrtime --allow-write=tmp --allow-ffi --allow-read=. --allow-net src/main.ts"
+  command: "cargo run -p meta-cli -F typegate -- typegate"
   depends_on:
     - typegate_native
+    # - meta-cli
   pipe:
     "^.+DEBUG http .*$": whiz://http
 
@@ -28,16 +29,6 @@ typegate2:
   env:
     <<: *tpenv
     TG_PORT: "7892"
-
-typegate3:
-  <<: *tp
-  workdir: .
-  env:
-    <<: *tpenv
-  command: "cargo run -p meta-cli -- typegate"
-  depends_on:
-    - typegate_native
-    - meta-cli
 
 http:
   entrypoint: "/dev/null"
