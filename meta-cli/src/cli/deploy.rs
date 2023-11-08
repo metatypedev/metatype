@@ -152,7 +152,9 @@ impl Action for DeploySubcommand {
 mod default_mode {
     //! non-watch mode
 
-    use crate::deploy::actors::pusher::PusherEvent;
+    // use crate::deploy::actors::pusher::PusherEvent;
+
+    use crate::deploy::utils::push_lifecycle::PushLifecycle;
 
     use super::*;
 
@@ -161,8 +163,7 @@ mod default_mode {
         console: Addr<ConsoleActor>,
         loader: Addr<LoaderActor>,
         loader_event_rx: mpsc::UnboundedReceiver<LoaderEvent>,
-        pusher: Addr<PusherActor>,
-        pusher_event_rx: mpsc::UnboundedReceiver<PusherEvent>,
+        pusher: PushLifecycle,
     }
 
     impl DefaultMode {
@@ -202,13 +203,14 @@ mod default_mode {
             )
             .start();
 
+            let push_lifecycle = PushLifecycle::builder(pusher_event_rx, pusher).start();
+
             Ok(Self {
                 deploy,
                 console,
                 loader,
                 loader_event_rx,
-                pusher,
-                pusher_event_rx,
+                pusher: push_lifecycle,
             })
         }
 
@@ -241,7 +243,7 @@ mod default_mode {
                     match event {
                         LoaderEvent::Typegraph(tg) => {
                             // TODO await -- no queue
-                            pusher.do_send(Push::new(tg.into()));
+                            pusher.send(Push::new(tg.into())).await;
                         }
                         LoaderEvent::Stopped(b) => {
                             if let StopBehavior::ExitFailure(msg) = b {
@@ -378,7 +380,7 @@ mod watch_mode {
                 while let Some(event) = event_rx.recv().await {
                     match event {
                         LoaderEvent::Typegraph(tg) => {
-                            pusher.send(Push::new(tg.into()));
+                            pusher.send(Push::new(tg.into())).await;
                         }
                         LoaderEvent::Stopped(b) => {
                             if let StopBehavior::ExitFailure(msg) = b {
@@ -413,14 +415,15 @@ mod watch_mode {
                             watcher.do_send(actors::watcher::Stop);
                         }
                         E::TypegraphModuleChanged { typegraph_module } => {
-                            pusher.cancel_pending_push(&typegraph_module);
+                            pusher.cancel_pending_push(&typegraph_module).await;
                             loader.do_send(ReloadModule(
                                 typegraph_module.clone(),
                                 ReloadReason::FileChanged,
                             ));
                         }
                         E::TypegraphModuleDeleted { typegraph_module } => {
-                            pusher.cancel_pending_push(&typegraph_module);
+                            // TODO registry
+                            pusher.cancel_pending_push(&typegraph_module).await;
                             // TODO internally by the watcher??
                             watcher.do_send(actors::watcher::RemoveTypegraph(
                                 typegraph_module.clone(),
@@ -431,7 +434,7 @@ mod watch_mode {
                             typegraph_module,
                             dependency_path,
                         } => {
-                            pusher.cancel_pending_push(&typegraph_module);
+                            pusher.cancel_pending_push(&typegraph_module).await;
                             loader.do_send(ReloadModule(
                                 typegraph_module.clone(),
                                 ReloadReason::DependencyChanged(dependency_path),

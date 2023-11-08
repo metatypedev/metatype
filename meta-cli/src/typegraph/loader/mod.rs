@@ -110,7 +110,7 @@ impl Loader {
                     "{}",
                     String::from_utf8(p.stderr).map_err(|e| LoaderError::Unknown {
                         error: e.into(),
-                        path: path
+                        path,
                     })?
                 ),
             })

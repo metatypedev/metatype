@@ -48,7 +48,13 @@ fn main() -> Result<()> {
         // the deno task requires use of a single thread runtime which it'll spawn itself
         #[cfg(typegate)]
         Some(cli::Commands::Typegate(cmd_args)) => cli::typegate::command(cmd_args, args.gen)?,
-        Some(command) => rt.block_on(command.run(args.gen))?,
+        Some(command) => {
+            // let _ = actix::System::with_tokio_rt(move || rt);
+            let _ = actix::System::new();
+            actix::run(async move {
+                command.run(args.gen).await.unwrap();
+            })?
+        }
         None => Args::command().print_help()?,
     }
 

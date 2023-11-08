@@ -36,7 +36,7 @@ impl Sender {
 #[async_trait]
 pub trait RetryScheduler: Clone {
     fn schedule_retry(&mut self, push: Push, send: Sender);
-    async fn cancel_pending_retry(&mut self, path: &Path);
+    async fn cancel_pending_retry(&mut self, path: &Path) -> bool;
     fn max_retry_count(&self) -> u32 {
         0
     }
@@ -48,7 +48,9 @@ pub struct NoRetry;
 #[async_trait]
 impl RetryScheduler for NoRetry {
     fn schedule_retry(&mut self, _push: Push, _send: Sender) {}
-    async fn cancel_pending_retry(&mut self, _path: &Path) {}
+    async fn cancel_pending_retry(&mut self, _path: &Path) -> bool {
+        false
+    }
 }
 
 #[derive(Clone)]
@@ -73,6 +75,7 @@ fn id(typegraph: &Typegraph) -> TypegraphId {
 
 #[derive(Debug)]
 struct PushStatus {
+    /// when true, follow-up pushes are not scheduled
     cancelled: bool,
 }
 
@@ -102,17 +105,16 @@ impl RetryScheduler for LinearBackoff {
                 .contains_key(push.typegraph.path.as_ref().unwrap())
             {
                 // not cancelled
-                sender.send(push);
+                sender.send(push).await;
             }
         });
     }
 
-    async fn cancel_pending_retry(&mut self, path: &Path) {
+    async fn cancel_pending_retry(&mut self, path: &Path) -> bool {
         let state = self.state.clone();
         let path = path.to_owned();
-        Arbiter::current().spawn(async move {
-            state.lock().await.pending_retries.remove(path.as_path());
-        });
+        let mut state = state.lock().await;
+        state.pending_retries.remove(path.as_path()).is_some()
     }
 
     fn max_retry_count(&self) -> u32 {
@@ -141,8 +143,17 @@ impl State {
         }
     }
 
-    fn set_cancelled(&mut self, id: TypegraphId) {
-        self.active_pushes.get_mut(&id).unwrap().cancelled = true;
+    fn set_all_cancelled(&mut self, path: &Path) {
+        // TODO this is not very efficient - use a different data structure
+        for (id, status) in self.active_pushes.iter_mut() {
+            if &*id.path == path {
+                status.cancelled = true;
+            }
+        }
+    }
+
+    fn is_cancelled(&self, tg: &Typegraph) -> bool {
+        self.active_pushes.get(&id(tg)).unwrap().cancelled
     }
 }
 
@@ -150,7 +161,6 @@ impl State {
 pub struct PushLifecycle<R: RetryScheduler + Sync + Send = NoRetry>(Arc<PushLifecycleInner<R>>);
 
 struct PushLifecycleInner<R: RetryScheduler + Sync + Send = NoRetry> {
-    pusher: Addr<PusherActor>,
     retry_scheduler: Arc<Mutex<R>>,
     state: Arc<Mutex<State>>, // independently shared
     pub sender: Sender,
@@ -187,7 +197,6 @@ impl<R: RetryScheduler + Sync + Send + 'static> PushLifecycleBuilder<R> {
     pub fn start(self) -> PushLifecycle<R> {
         let state = Arc::new(Mutex::new(State::default()));
         let lifecycle = PushLifecycle(Arc::new(PushLifecycleInner {
-            pusher: self.pusher.clone(),
             retry_scheduler: Arc::new(Mutex::new(self.retry_scheduler)),
             state: state.clone(),
             sender: Sender {
@@ -253,14 +262,13 @@ impl<R: RetryScheduler + Sync + Send + 'static> PushLifecycle<R> {
                         state.lock().await.unset_active(&push.typegraph);
                     }
                     PusherEvent::TypegateHookError(push, e) => {
-                                    state.lock().await.unset_active(&push.typegraph);
+                        state.lock().await.unset_active(&push.typegraph);
                         match e {
                             PushFailure::DatabaseResetRequired {
                                 message: _,
                                 runtime_name,
                             } => {
-                                // TODO check cancellation??
-                                if dialoguer::Confirm::new()
+                                if !state.lock().await.is_cancelled(&push.typegraph) && dialoguer::Confirm::new()
                                     .with_prompt(format!(
                                         "{} Do you want to reset the database for runtime {runtime} on {name}?",
                                         "[confirm]".yellow(),
@@ -275,8 +283,7 @@ impl<R: RetryScheduler + Sync + Send + 'static> PushLifecycle<R> {
                                         .reset_on_drift(true)
                                         .apply(&mut tg, vec![runtime_name])
                                         .unwrap();
-                                    sender.send(Push::new(tg.into()));
-                                } else {
+                                    sender.send(Push::new(tg.into())).await;
                                 }
                             }
                             PushFailure::Unknown { .. }=> {
@@ -290,15 +297,20 @@ impl<R: RetryScheduler + Sync + Send + 'static> PushLifecycle<R> {
     }
 
     pub async fn cancel_pending_push(&mut self, path: &Path) {
+        // prevent follow-up push (from interactive push)
+        self.0.state.lock().await.set_all_cancelled(path);
+
+        // prevent retries
         self.0
             .retry_scheduler
             .lock()
             .await
-            .cancel_pending_retry(path);
+            .cancel_pending_retry(path)
+            .await;
     }
 
-    pub fn send(&self, push: Push) {
+    pub async fn send(&self, push: Push) {
         let sender = self.0.sender.clone();
-        sender.send(push);
+        sender.send(push).await;
     }
 }

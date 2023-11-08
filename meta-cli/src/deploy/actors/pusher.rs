@@ -38,7 +38,7 @@ pub enum PusherEvent {
 }
 
 type EventTx = mpsc::UnboundedSender<PusherEvent>;
-type EventRx = mpsc::UnboundedReceiver<PusherEvent>;
+// type EventRx = mpsc::UnboundedReceiver<PusherEvent>;
 
 #[derive(Clone, Debug)]
 struct Retry {
