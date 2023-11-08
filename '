@@ -6,7 +6,13 @@ pub mod discovery;
 pub use discovery::Discovery;
 use tokio::process::Command;
 
-use std::{collections::HashMap, env, path::Path, process::Stdio, sync::Arc};
+use std::{
+    collections::HashMap,
+    env,
+    path::{Path, PathBuf},
+    process::Stdio,
+    sync::Arc,
+};
 
 use anyhow::{Context, Error, Result};
 use colored::Colorize;
@@ -91,10 +97,10 @@ impl Loader {
                             error: e,
                         })
                         .and_then(|mut tg| {
-                            tg.path = Some(path.clone());
+                            tg.path = Some(path.into());
                             apply_all(self.postprocessors.iter(), &mut tg, &self.config).map_err(
                                 |e| LoaderError::PostProcessingError {
-                                    path: path.clone(),
+                                    path: path.to_owned(),
                                     typegraph_name: tg.name().unwrap(),
                                     error: e,
                                 },
@@ -110,7 +116,7 @@ impl Loader {
                     "{}",
                     String::from_utf8(p.stderr).map_err(|e| LoaderError::Unknown {
                         error: e.into(),
-                        path: path
+                        path: path.to_owned()
                     })?
                 ),
             })
