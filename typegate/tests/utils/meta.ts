@@ -5,7 +5,7 @@ import { testDir } from "test-utils/dir.ts";
 import { shell, ShellOptions, ShellOutput } from "test-utils/shell.ts";
 import { resolve } from "std/path/mod.ts";
 
-const metaCli = resolve(testDir, "../../target/debug/meta");
+const metaCliExe = resolve(testDir, "../../target/debug/meta");
 let compiled = false;
 
 export async function meta(...args: string[]): Promise<ShellOutput>;
@@ -24,10 +24,18 @@ export async function meta(
 
   const res =
     await (typeof first === "string"
-      ? shell([metaCli, first, ...input])
-      : shell([metaCli, ...input], first));
+      ? shell([metaCliExe, first, ...input])
+      : shell([metaCliExe, ...input], first));
 
   return res;
+}
+
+type MetaCli = (args: string[], options?: ShellOptions) => Promise<ShellOutput>;
+
+export function createMetaCli(
+  shell: (args: string[], options?: ShellOptions) => Promise<ShellOutput>,
+): MetaCli {
+  return (args, options) => shell([metaCliExe, ...args], options);
 }
 
 export interface SerializeOptions {

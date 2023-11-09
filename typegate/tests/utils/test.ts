@@ -14,7 +14,7 @@ import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 
 import { NoLimiter } from "./no_limiter.ts";
-import { meta } from "./meta.ts";
+import { createMetaCli, meta } from "./meta.ts";
 import { SecretManager, TypeGraph } from "../../src/typegraph/mod.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
@@ -54,6 +54,8 @@ type MetaTestCleanupFn = () => void | Promise<void>;
 
 export class MetaTest {
   private cleanups: MetaTestCleanupFn[] = [];
+  shell = shell;
+  cli = createMetaCli(shell);
 
   constructor(
     public t: Deno.TestContext,
@@ -212,13 +214,17 @@ export class MetaTest {
   }
 }
 
+interface TempGitRepo {
+  content: Record<string, string>;
+}
+
 interface TestConfig {
   systemTypegraphs?: boolean;
   introspection?: boolean;
   // port on which the typegate instance will be exposed on expose the typegate instance
   port?: number;
   // create a temporary clean git repo for the tests
-  cleanGitRepo?: boolean;
+  gitRepo?: TempGitRepo;
 }
 
 interface Test {
@@ -241,7 +247,7 @@ export const test = ((name, fn, opts = {}): void => {
       const typegate = new Typegate(new MemoryRegister(), new NoLimiter());
       const {
         systemTypegraphs = false,
-        cleanGitRepo = false,
+        gitRepo = null,
         introspection = false,
       } = opts;
       if (systemTypegraphs) {
@@ -249,17 +255,19 @@ export const test = ((name, fn, opts = {}): void => {
       }
 
       const mt = new MetaTest(t, typegate, introspection, opts.port ?? null);
+      let dir: string | null = null;
 
       try {
-        if (cleanGitRepo) {
-          await Deno.remove(join(testDir, ".git"), { recursive: true }).catch(
-            () => {},
-          );
-          await shell(["git", "init"]);
-          await shell(["git", "config", "user.name", "user"]);
-          await shell(["git", "config", "user.email", "user@example.com"]);
-          await shell(["git", "add", "."]);
-          await shell(["git", "commit", "-m", "Initial commit"]);
+        if (gitRepo != null) {
+          dir = await Deno.makeTempDir();
+          const sh = (args: string[]) => shell(args, { currentDir: dir! });
+          mt.shell = sh;
+          mt.cli = createMetaCli(sh);
+          await sh(["git", "init"]);
+          await sh(["git", "config", "user.name", "user"]);
+          await sh(["git", "config", "user.email", "user@example.com"]);
+          await sh(["git", "add", "."]);
+          await sh(["git", "commit", "-m", "Initial commit"]);
           mt.addCleanup(() =>
             Deno.remove(join(testDir, ".git"), { recursive: true })
           );
