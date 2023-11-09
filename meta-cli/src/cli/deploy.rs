@@ -348,6 +348,7 @@ mod watch_mode {
             actor_system.handle_watch_events(watch_event_rx);
             actor_system.update_ctrlc_handler(ctrlc_handler_data.clone());
 
+            // TODO wait for push lifecycle
             match loader::stopped(loader).await {
                 Ok(StopBehavior::ExitSuccess) => {
                     break;
@@ -381,6 +382,7 @@ mod watch_mode {
                     match event {
                         LoaderEvent::Typegraph(tg) => {
                             pusher.send(Push::new(tg.into())).await;
+                            // TODO update deps
                         }
                         LoaderEvent::Stopped(b) => {
                             if let StopBehavior::ExitFailure(msg) = b {
