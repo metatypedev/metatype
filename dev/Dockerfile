@@ -1,6 +1,6 @@
 ARG RUST_VERSION=1.73.0
 ARG DENO_VERSION=1.37.1
-ARG DISTROLESS_TAG=nonroot
+ARG DISTROLESS_TAG=debug-nonroot
 
 # must match distroless version
 FROM rust:${RUST_VERSION}-slim-bullseye AS base
@@ -9,7 +9,6 @@ WORKDIR /app
 
 RUN cargo install cargo-chef --locked
 
-#
 FROM base as plan
 
 COPY . .
@@ -36,6 +35,8 @@ RUN apt-get update \
     git \
     curl \
     python3 \
+    make \
+    cmake \
     # grpc
     protobuf-compiler \
     libprotobuf-dev \
@@ -44,7 +45,6 @@ RUN apt-get update \
     libssl-dev \
     # wasmedge
     libclang-dev \
-    cmake \
     && rm -rf /var/lib/apt/lists/* \
     && curl -fsS https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh -o wasmedge.sh \
     && bash wasmedge.sh -v $WASMEDGE_VERSION \
@@ -56,6 +56,8 @@ RUN cargo chef cook --recipe-path recipe.json --release --package typegate \
     && rm recipe.json
 
 COPY . .
+
+RUN cargo build --release --package typegate
 
 RUN deno run -A dev/update.ts --cache-only --src-only \
     && mkdir -p typegate/tmp
@@ -96,9 +98,12 @@ COPY --from=runtime-bin /lib/sym /lib/sym
 COPY --from=deno-bin /usr/bin/deno /bin/deno
 COPY --from=builder /root/.wasmedge /nonroot/.wasmedge
 COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
-COPY --from=builder /app/typegate/deno.jsonc ./typegate/
+
+COPY --from=builder /app/target/release/typegate /bin/typegate
+# the typegate ecma sources 
+COPY --from=builder /app/typegate/deno.jsonc /app/typegate/import_map.json ./typegate/
+COPY --from=builder /app/typegate/engine/*.js /app/typegate/engine/*.ts ./typegate/engine/
 COPY --from=builder /app/typegate/src ./typegate/src/
-COPY --from=builder /app/target/release/typegate ./target/release/
 COPY dev/LICENSE-Elastic-2.0.md LICENSE.md
 
 # writeable
@@ -109,6 +114,5 @@ COPY --from=builder --chown=nonroot:nonroot /app/typegate/tmp ./
 USER nonroot
 EXPOSE 7890
 
-WORKDIR /app/typegate
 ENTRYPOINT ["/tini", "--"]
-CMD ["/target/release/typegate"]
+CMD ["/bin/typegate"]
