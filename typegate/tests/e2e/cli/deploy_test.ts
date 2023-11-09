@@ -32,7 +32,6 @@ async function writeTypegraph(version: number | null) {
   }
 }
 
-// TODO
 async function deploy(noMigration = false) {
   const migrationOpts = noMigration ? [] : ["--create-migration"];
 
