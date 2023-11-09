@@ -1,8 +1,8 @@
 [workspace]
 members = [
   "libs/*",
-  "typegate/native",
-  "typegate/core",
+  "typegate/engine",
+  "typegate/standalone",
   "meta-cli",
   "typegraph/core",
 ]
@@ -18,7 +18,7 @@ edition = "2021"
 mt_deno = { path = "libs/deno/"}
 common = { path = "libs/common/"}
 typescript = { path = "libs/typescript/" }
-typegate_core = { path = "typegate/core" }
+typegate_engine = { path = "typegate/engine" }
 
 # [profile.xtask]
 # inherits = 'dev'

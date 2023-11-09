@@ -18,6 +18,7 @@ categories = [
   "development-tools",
   "wasm",
 ]
+build = "build.rs"
 
 [[bin]]
 name = "meta"
@@ -25,7 +26,7 @@ path = "src/main.rs"
 
 [features]
 default = []
-typegate = ["mt_deno"]
+typegate = ["dep:typegate_engine"]
 
 [dependencies]
 self_update = { version = "0.38.0", features = [
@@ -79,9 +80,13 @@ directories = "5.0.1"
 grep = "0.2.12"
 semver = "1.0.20"
 textwrap = "0.16.0"
-mt_deno =  { workspace = true, optional = true }
+typegate_engine =  { workspace = true, optional = true }
+shadow-rs = "0.24"
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
 insta = "1.34.0"
 project-root = "0.2.2"
+
+[build-dependencies]
+shadow-rs = "0.24"
