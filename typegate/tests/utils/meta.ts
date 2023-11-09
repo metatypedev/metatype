@@ -32,10 +32,17 @@ export async function meta(
 
 type MetaCli = (args: string[], options?: ShellOptions) => Promise<ShellOutput>;
 
-export function createMetaCli(
+export async function createMetaCli(
   shell: (args: string[], options?: ShellOptions) => Promise<ShellOutput>,
-): MetaCli {
-  return (args, options) => shell([metaCliExe, ...args], options);
+): Promise<MetaCli> {
+  if (!compiled) {
+    await shell(["cargo", "build", "--package", "meta-cli"]);
+    compiled = true;
+  }
+  return (args, options) => {
+    console.log({ options });
+    return shell([metaCliExe, ...args], options);
+  };
 }
 
 export interface SerializeOptions {

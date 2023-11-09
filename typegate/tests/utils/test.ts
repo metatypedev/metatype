@@ -3,9 +3,9 @@
 
 import { SystemTypegraph } from "../../src/system_typegraphs.ts";
 import { MemoryRegister } from "./memory_register.ts";
-import { join } from "std/path/mod.ts";
-import { testDir } from "./dir.ts";
-import { shell } from "./shell.ts";
+import { dirname, join } from "std/path/mod.ts";
+import { repoDir, testDir } from "./dir.ts";
+import { shell, ShellOptions } from "./shell.ts";
 
 import { Server } from "std/http/server.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
@@ -52,10 +52,13 @@ function serve(typegate: Typegate, port: number): () => void {
 
 type MetaTestCleanupFn = () => void | Promise<void>;
 
+const defaultCli = await createMetaCli(shell);
+
 export class MetaTest {
   private cleanups: MetaTestCleanupFn[] = [];
   shell = shell;
-  cli = createMetaCli(shell);
+  cli = defaultCli;
+  workingDir = testDir;
 
   constructor(
     public t: Deno.TestContext,
@@ -255,22 +258,37 @@ export const test = ((name, fn, opts = {}): void => {
       }
 
       const mt = new MetaTest(t, typegate, introspection, opts.port ?? null);
-      let dir: string | null = null;
 
       try {
         if (gitRepo != null) {
-          dir = await Deno.makeTempDir();
-          const sh = (args: string[]) => shell(args, { currentDir: dir! });
+          const dir = await Deno.makeTempDir({
+            dir: join(repoDir, "tmp"),
+          });
+          mt.workingDir = dir;
+
+          for (const [path, srcPath] of Object.entries(gitRepo.content)) {
+            const destPath = join(dir, path);
+            await Deno.mkdir(dirname(destPath), { recursive: true });
+            // console.log(await Deno.lstat(join(testDir, srcPath)));
+            await Deno.copyFile(
+              join(testDir, srcPath),
+              destPath,
+            );
+          }
+          console.log(dir);
+
+          const sh = (args: string[], options?: ShellOptions) => {
+            return shell(args, { currentDir: dir!, ...options });
+          };
+
           mt.shell = sh;
-          mt.cli = createMetaCli(sh);
+          mt.cli = await createMetaCli(sh);
           await sh(["git", "init"]);
+          console.log(await Deno.lstat(dir!));
           await sh(["git", "config", "user.name", "user"]);
           await sh(["git", "config", "user.email", "user@example.com"]);
           await sh(["git", "add", "."]);
           await sh(["git", "commit", "-m", "Initial commit"]);
-          mt.addCleanup(() =>
-            Deno.remove(join(testDir, ".git"), { recursive: true })
-          );
         }
 
         await fn(mt);

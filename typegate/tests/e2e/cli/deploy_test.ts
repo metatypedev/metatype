@@ -33,6 +33,7 @@ async function writeTypegraph(version: number | null) {
   }
 }
 
+// TODO
 async function deploy(noMigration = false) {
   const migrationOpts = noMigration ? [] : ["--create-migration"];
 
@@ -204,8 +205,10 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
   });
 
   await t.should("fail on dirty repo", async () => {
-    await assertRejects(() =>
-      t.cli(["deploy", "-t", "deploy", "-f", "prisma/prisma.py"])
+    await assertRejects(
+      () => t.cli(["deploy", "-t", "deploy", "-f", "prisma.py"]),
+      Error,
+      "Dirty repository not allowed",
     );
   });
 
@@ -219,7 +222,7 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
     "deploy",
     ...nodeConfigs,
     "-f",
-    "runtimes/prisma/prisma.py",
+    "prisma.py",
   ]);
 
   await t.should(
@@ -258,7 +261,7 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
   port,
   gitRepo: {
     content: {
-      "prisma.py": "prisma/prisma.py",
+      "prisma.py": "runtimes/prisma/prisma.py",
       "metatype.yml": "metatype.yml",
     },
   },
@@ -320,7 +323,8 @@ Meta.test("cli:deploy - with prefix", async (t) => {
   });
 
   await t.should("commit changes 2", async () => {
-    await shell(["git", "add", "."]);
+    const out = await shell(["git", "add", "."]);
+    console.log(out);
     await shell(["git", "commit", "-m", "create migrations"]);
   });
 
