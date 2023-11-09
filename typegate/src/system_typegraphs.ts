@@ -1,7 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { basename, dirname, fromFileUrl, join } from "std/path/mod.ts";
+import { basename } from "std/url/mod.ts";
+import { fromFileUrl, toFileUrl } from "std/path/mod.ts";
 
 import { Register } from "./typegate/register.ts";
 import { PrismaMigrationRuntime } from "./runtimes/prisma/mod.ts";
@@ -11,7 +12,6 @@ import { TypeGateRuntime } from "./runtimes/typegate.ts";
 import { Typegate } from "./typegate/mod.ts";
 
 const logger = getLogger();
-const localDir = dirname(fromFileUrl(import.meta.url));
 
 const NAME_PREFIX = "typegate/";
 
@@ -30,8 +30,8 @@ export class SystemTypegraph {
     this.name = id === "typegate" ? "typegate" : `${NAME_PREFIX}${id}`;
   }
 
-  getPath() {
-    return join(localDir, `typegraphs/${this.id}.json`);
+  getUrl() {
+    return import.meta.resolve(`./typegraphs/${this.id}.json`);
   }
 
   static check(name: string) {
@@ -40,10 +40,13 @@ export class SystemTypegraph {
   }
 
   static async loadAll(typegate: Typegate, watch = false) {
-    const reload = async (paths: string[]) => {
-      for await (const path of paths) {
-        logger.info(`reloading system graph ${basename(path)}`);
-        const tgString = await Deno.readTextFile(path);
+    const reload = async (urls: string[]) => {
+      for await (const url of urls) {
+        logger.info(`reloading system graph ${basename(url)}`);
+        const json = (await import(url, {
+          with: { type: "json" },
+        })).default;
+        const tgString = JSON.stringify(json);
         const tgJson = await TypeGraph.parseJson(tgString);
         await typegate.pushTypegraph(
           tgJson,
@@ -54,15 +57,15 @@ export class SystemTypegraph {
       }
     };
 
-    const paths = SystemTypegraph.all.map((stg) => stg.getPath());
-    await reload(paths);
+    const urls = SystemTypegraph.all.map((stg) => stg.getUrl());
+    await reload(urls);
 
-    if (watch) {
+    if (watch && new URL(import.meta.url).protocol == "file:") {
       void (async () => {
-        const watcher = Deno.watchFs(paths);
+        const watcher = Deno.watchFs(urls.map(fromFileUrl));
         for await (const event of watcher) {
           if (event.kind === "modify") {
-            await reload(event.paths);
+            await reload(event.paths.map(toFileUrl).map((url) => url.href));
           }
         }
       })(); // no await
