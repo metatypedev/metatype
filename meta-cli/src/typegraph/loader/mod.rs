@@ -16,7 +16,7 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::{Context, Error, Result};
+use anyhow::{anyhow, Context, Error, Result};
 use colored::Colorize;
 use common::typegraph::Typegraph;
 
@@ -61,6 +61,21 @@ impl Loader {
     }
 
     pub async fn load_file(&self, path: &Path) -> LoaderResult {
+        match tokio::fs::try_exists(path).await {
+            Ok(exists) => {
+                if !exists {
+                    return LoaderResult::Error(LoaderError::ModuleFileNotFound {
+                        path: path.to_owned(),
+                    });
+                }
+            }
+            Err(e) => {
+                return LoaderResult::Error(LoaderError::Unknown {
+                    path: path.to_owned(),
+                    error: anyhow!("failed to check if file exists: {}", e.to_string()),
+                })
+            }
+        }
         let command = Self::get_load_command(path.try_into().unwrap(), path);
         match self.load_command(command, path).await {
             Ok(tgs) => LoaderResult::Loaded(tgs),
@@ -176,6 +191,9 @@ pub enum LoaderError {
         path: PathBuf,
         error: Error,
     },
+    ModuleFileNotFound {
+        path: PathBuf,
+    },
     Unknown {
         path: PathBuf,
         error: Error,
@@ -207,6 +225,9 @@ impl ToString for LoaderError {
             }
             Self::Unknown { path, error } => {
                 format!("error while loading typegraph(s) from {path:?}: {error:?}")
+            }
+            Self::ModuleFileNotFound { path } => {
+                format!("module file not found: {path:?}")
             }
         }
     }
