@@ -42,7 +42,6 @@ export async function shell(
   console.log(
     "shell:",
     cmd.map((c) => `${JSON.stringify(c)}`).join(" "),
-    { stdin, env, currentDir },
   );
   const p = new Deno.Command(cmd[0], {
     cwd: currentDir ?? testDir,
@@ -65,12 +64,9 @@ export async function shell(
 
   const { code, success } = await p.status;
 
-  const out = `-- start STDOUT --\n${res.stdout}\n-- end STDOUT --`;
-  const err = `-- start STDERR --\n${res.stderr}\n-- end STDERR --`;
-  console.log(out);
-  console.log(err);
-
   if (!success) {
+    const err = `-- start STDERR --\n${res.stderr}\n-- end STDERR --`;
+    console.log(err);
     const command = cmd.map((s) => JSON.stringify(s)).join(" ");
     throw new Error(
       `Command '${command}' failed with ${code}:\n${err}`,

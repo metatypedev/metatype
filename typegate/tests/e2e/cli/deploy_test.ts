@@ -196,7 +196,7 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
   });
 
   await t.should("create migrations", async () => {
-    await t.cli(
+    await t.meta(
       ["prisma", "dev", ...nodeConfigs, ...prismaConfigs, "--create-only"],
       { stdin: "initial_migration\n" },
     );
@@ -204,7 +204,7 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
 
   await t.should("fail on dirty repo", async () => {
     await assertRejects(
-      () => t.cli(["deploy", "-t", "deploy", "-f", "prisma.py"]),
+      () => t.meta(["deploy", "-t", "deploy", "-f", "prisma.py"]),
       Error,
       "Dirty repository not allowed",
     );
@@ -216,7 +216,7 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
   });
 
   // not in t.should because it creates a worker that will not be closed
-  await t.cli([
+  await t.meta([
     "deploy",
     ...nodeConfigs,
     "-f",
@@ -298,7 +298,7 @@ Meta.test("cli:deploy - with prefix", async (t) => {
   });
 
   await t.should("create migrations", async () => {
-    await t.cli(
+    await t.meta(
       ["prisma", "dev", ...nodeConfigs, ...prismaConfigs, "--create-only"],
       { stdin: "initial_migration\n" },
     );
@@ -306,7 +306,7 @@ Meta.test("cli:deploy - with prefix", async (t) => {
 
   await t.should("fail on dirty repo", async () => {
     await assertRejects(() =>
-      t.cli(["deploy", "-t", "with_prefix", "-f", "prisma/prisma.py"])
+      t.meta(["deploy", "-t", "with_prefix", "-f", "prisma/prisma.py"])
     );
   });
 
@@ -316,7 +316,7 @@ Meta.test("cli:deploy - with prefix", async (t) => {
   });
 
   // not in t.should because it creates a worker that will not be closed
-  await t.cli(
+  await t.meta(
     ["deploy", ...nodeConfigs, "-f", "prisma.py"],
   );
 

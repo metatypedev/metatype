@@ -57,7 +57,7 @@ const defaultCli = await createMetaCli(shell);
 export class MetaTest {
   private cleanups: MetaTestCleanupFn[] = [];
   shell = shell;
-  cli = defaultCli;
+  meta = defaultCli;
   workingDir = testDir;
 
   constructor(
@@ -282,7 +282,7 @@ export const test = ((name, fn, opts = {}): void => {
           };
 
           mt.shell = sh;
-          mt.cli = await createMetaCli(sh);
+          mt.meta = await createMetaCli(sh);
           await sh(["git", "init"]);
           console.log(await Deno.lstat(dir!));
           await sh(["git", "config", "user.name", "user"]);
