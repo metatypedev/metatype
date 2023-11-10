@@ -24,7 +24,7 @@ pub struct Skip;
 
 impl TypeGen for Skip {
     fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
-        t::integer().x_min(0).named(self.name()).build()
+        t::integer().named(self.name()).build()
     }
 
     fn name(&self) -> String {
