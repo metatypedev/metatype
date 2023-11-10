@@ -21,6 +21,7 @@ use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
 use log::warn;
+use normpath::PathExt;
 use tokio::sync::mpsc;
 
 #[derive(Parser, Debug)]
@@ -89,6 +90,7 @@ pub struct Deploy {
     base_dir: Arc<Path>,
     options: DeployOptions,
     node: Node,
+    file: Option<Arc<Path>>,
 }
 
 impl Deploy {
@@ -108,6 +110,12 @@ impl Deploy {
             base_dir: dir.into(),
             options,
             node,
+            file: deploy
+                .file
+                .as_ref()
+                .map(|f| f.normalize())
+                .transpose()?
+                .map(|f| f.into_path_buf().into()),
         })
     }
 }
@@ -140,6 +148,9 @@ impl Action for DeploySubcommand {
         }
 
         if deploy.options.watch {
+            if self.file.is_some() {
+                bail!("Cannot use --file in watch mode");
+            }
             watch_mode::enter_watch_mode(deploy).await?;
         } else {
             let deploy = default_mode::DefaultMode::init(deploy).await?;
@@ -152,9 +163,7 @@ impl Action for DeploySubcommand {
 mod default_mode {
     //! non-watch mode
 
-    // use crate::deploy::actors::pusher::PusherEvent;
-
-    use crate::deploy::utils::push_lifecycle::PushLifecycle;
+    use crate::deploy::{actors::loader::LoadModule, utils::push_lifecycle::PushLifecycle};
 
     use super::*;
 
@@ -215,13 +224,21 @@ mod default_mode {
         }
 
         pub async fn run(self) -> Result<()> {
-            let _discovery = DiscoveryActor::new(
-                Arc::clone(&self.deploy.config),
-                self.loader.clone(),
-                self.console.clone(),
-                Arc::clone(&self.deploy.base_dir),
-            )
-            .start();
+            log::debug!("file: {:?}", self.deploy.file);
+            let _discovery = if let Some(file) = self.deploy.file.clone() {
+                self.loader.do_send(LoadModule(file));
+                None
+            } else {
+                Some(
+                    DiscoveryActor::new(
+                        Arc::clone(&self.deploy.config),
+                        self.loader.clone(),
+                        self.console.clone(),
+                        Arc::clone(&self.deploy.base_dir),
+                    )
+                    .start(),
+                )
+            };
 
             let loader = self.loader.clone();
             self.push_loaded_typegraphs();
