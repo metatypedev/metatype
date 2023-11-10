@@ -7,7 +7,7 @@ pub use deno;
 
 use deno::{
     deno_runtime::{
-        deno_core::{futures::FutureExt, unsync::JoinHandle},
+        deno_core::{futures::FutureExt, unsync::JoinHandle, ModuleSpecifier},
         permissions::PermissionsOptions,
         tokio_util::create_and_run_current_thread_with_maybe_metrics,
     },
@@ -19,10 +19,10 @@ use std::{future::Future, sync::Arc};
 #[allow(unused_imports)]
 pub(crate) use log::{debug, error, info, trace, warn};
 
-#[rustfmt::skip] 
+#[rustfmt::skip]
 use deno_runtime::deno_core as deno_core; // necessary for re-exported macros to work
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// Ensure that the subcommand runs in a task, rather than being directly executed. Since some of these
 /// futures are very large, this prevents the stack from getting blown out from passing them by value up
@@ -34,13 +34,14 @@ fn spawn_subcommand<F: Future<Output = ()> + 'static>(f: F) -> JoinHandle<()> {
 }
 
 pub fn run_sync(
-    main_mod: PathBuf,
+    main_mod: ModuleSpecifier,
+    import_map_url: Option<String>,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) {
     create_and_run_current_thread_with_maybe_metrics(async move {
         spawn_subcommand(async move {
-            run(&main_mod, permissions, custom_extensions)
+            run(main_mod, import_map_url, permissions, custom_extensions)
                 .await
                 .unwrap()
         })
@@ -50,7 +51,8 @@ pub fn run_sync(
 }
 
 pub async fn run(
-    main_mod: &Path,
+    main_module: ModuleSpecifier,
+    import_map_url: Option<String>,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) -> anyhow::Result<()> {
@@ -58,13 +60,13 @@ pub async fn run(
         Box::new(util::draw_thread::DrawThread::hide),
         Box::new(util::draw_thread::DrawThread::show),
     );
-    let main_module = deno_core::resolve_url_or_path("", main_mod)?;
 
     let flags = args::Flags {
         subcommand: args::DenoSubcommand::Run(args::RunFlags {
             script: main_module.path().to_owned(),
             watch: None,
         }),
+        import_map_path: import_map_url,
         unstable: true,
         ..Default::default()
     };

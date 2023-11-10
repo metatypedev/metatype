@@ -3,11 +3,13 @@
 
 mod codegen;
 mod deno;
+mod typegate;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use codegen::Codegen;
 use deno::Deno;
+use typegate::Typegate;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -19,6 +21,7 @@ struct Args {
 enum Command {
     Codegen(Codegen),
     Deno(Deno),
+    Typegate(Typegate),
 }
 
 fn main() -> Result<()> {
@@ -28,5 +31,6 @@ fn main() -> Result<()> {
     match args.command {
         Command::Codegen(cg) => cg.run(),
         Command::Deno(cmd) => cmd.run(),
+        Command::Typegate(cmd) => cmd.run(),
     }
 }

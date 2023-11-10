@@ -12,7 +12,6 @@ env:
   PYTHON_VERSION: "3.8"
   PROTOC_VERSION: "v24.x"
   POETRY_VERSION: "1.6.1"
-  DENO_BINDGEN_URL: https://raw.githubusercontent.com/Natoandro/deno_bindgen/main/cli.ts
   DENO_VERSION: "1.37.1"
   PNPM_VERSION: "8.8.0"
   NODE_VERSION: "20.8.0"
@@ -53,7 +52,6 @@ jobs:
             rust:
               - '.github/workflows/tests.yml'
               - 'libs/**'
-              - 'typegate/native/**'
               - 'Cargo.lock'
     outputs:
       website: ${{ steps.filter.outputs.website }}
@@ -345,16 +343,12 @@ jobs:
           rm -rf typegraph/python/typegraph/gen
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
-          deno install -A -n deno_bindgen $DENO_BINDGEN_URL
-          OUT_DIR=target deno_bindgen -- --locked --package native -F deno
-
           deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
           cargo build -p meta-cli
           cargo build -p xtask # xtask and meta-cli are used by the test suite
           deno run -A dev/test.ts --threads 2 -- --coverage=coverage
           deno --unstable coverage ./coverage --lcov > coverage.lcov
 
-          cargo test --locked --package native
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -399,7 +393,7 @@ jobs:
           curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
           cd ../..
           export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
-          cargo test --locked --exclude meta-cli --exclude native --exclude typegraph_core --workspace
+          cargo test --locked --exclude meta-cli --exclude typegate --exclude typegraph_engine --workspace
 
   test-docker:
     needs: changes

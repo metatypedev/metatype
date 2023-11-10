@@ -22,6 +22,10 @@ use cli::Action;
 use cli::Args;
 use log::warn;
 
+use shadow_rs::shadow;
+
+shadow!(build);
+
 fn main() -> Result<()> {
     setup_panic_hook();
     logger::init();
@@ -46,7 +50,6 @@ fn main() -> Result<()> {
 
     match args.command {
         // the deno task requires use of a single thread runtime which it'll spawn itself
-        #[cfg(feature = "typegate")]
         Some(cli::Commands::Typegate(cmd_args)) => cli::typegate::command(cmd_args, args.gen)?,
         Some(command) => {
             // let _ = actix::System::with_tokio_rt(move || rt);
@@ -82,8 +85,7 @@ fn setup_panic_hook() {
             std::env::consts::OS,
             std::env::consts::ARCH
         );
-        // TODO: use shadow_rs
-        // eprintln!("Version: {}", version::deno());
+        eprintln!("Version: {}", build::VERSION);
         eprintln!("Args: {:?}", std::env::args().collect::<Vec<_>>());
         eprintln!();
         orig_hook(panic_info);
