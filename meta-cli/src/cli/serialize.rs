@@ -80,7 +80,7 @@ impl Action for Serialize {
         .start();
 
         for path in self.files.iter() {
-            loader.do_send(LoadModule(path.clone()));
+            loader.do_send(LoadModule(path.clone().into()));
         }
 
         let mut loaded: Vec<Box<Typegraph>> = vec![];

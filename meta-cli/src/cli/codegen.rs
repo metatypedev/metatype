@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use crate::typegraph::loader::Loader;
@@ -63,10 +63,11 @@ impl Action for Deno {
             .with_postprocessor(postprocess::PythonModules::default())
             .with_postprocessor(postprocess::WasmdegeModules::default());
 
-        loader.load_module(&self.file).await.map_err(|e| {
+        let file: Arc<Path> = self.file.clone().into();
+        loader.load_module(file.clone()).await.map_err(|e| {
             anyhow!(
                 "An error occured while loading typegraphs from the {:?}: {}",
-                self.file,
+                file,
                 e.to_string()
             )
         })?;

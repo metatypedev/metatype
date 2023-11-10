@@ -419,7 +419,7 @@ mod watch_mode {
                         E::TypegraphModuleChanged { typegraph_module } => {
                             pusher.cancel_pending_push(&typegraph_module).await;
                             loader.do_send(ReloadModule(
-                                typegraph_module.clone(),
+                                typegraph_module.into(),
                                 ReloadReason::FileChanged,
                             ));
                         }
@@ -438,7 +438,7 @@ mod watch_mode {
                         } => {
                             pusher.cancel_pending_push(&typegraph_module).await;
                             loader.do_send(ReloadModule(
-                                typegraph_module.clone(),
+                                typegraph_module.into(),
                                 ReloadReason::DependencyChanged(dependency_path),
                             ));
                         }

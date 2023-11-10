@@ -58,7 +58,7 @@ impl Actor for DiscoveryActor {
                             "Found typegraph definition module at {}",
                             rel_path.display()
                         ));
-                        loader.do_send(LoadModule(path));
+                        loader.do_send(LoadModule(path.into()));
                     }
                     Err(err) => console.error(format!("Error while discovering modules: {}", err)),
                 })

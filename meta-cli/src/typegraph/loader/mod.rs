@@ -8,7 +8,7 @@ use tokio::process::Command;
 
 use std::{collections::HashMap, env, path::Path, process::Stdio, sync::Arc};
 
-use anyhow::{Context, Error, Result};
+use anyhow::{anyhow, Context, Error, Result};
 use colored::Colorize;
 use common::typegraph::Typegraph;
 
@@ -47,9 +47,22 @@ impl Loader {
         self
     }
 
-    pub async fn load_module(&self, path: &Path) -> LoaderResult {
-        let command = Self::get_load_command(path.try_into().unwrap(), path);
-        self.load_command(command, path).await
+    pub async fn load_module(&self, path: Arc<Path>) -> LoaderResult {
+        match tokio::fs::try_exists(&path).await {
+            Ok(exists) => {
+                if !exists {
+                    return Err(LoaderError::ModuleFileNotFound { path });
+                }
+            }
+            Err(e) => {
+                return Err(LoaderError::Unknown {
+                    path,
+                    error: anyhow!("failed to check if file exists: {}", e.to_string()),
+                });
+            }
+        }
+        let command = Self::get_load_command(ModuleType::try_from(&*path).unwrap(), &path);
+        self.load_command(command, &path).await
     }
 
     async fn load_command(&self, mut command: Command, path: &Path) -> LoaderResult {
@@ -161,6 +174,9 @@ pub enum LoaderError {
         path: Arc<Path>,
         error: Error,
     },
+    ModuleFileNotFound {
+        path: Arc<Path>,
+    },
     Unknown {
         path: Arc<Path>,
         error: Error,
@@ -192,6 +208,9 @@ impl ToString for LoaderError {
             }
             Self::Unknown { path, error } => {
                 format!("error while loading typegraph(s) from {path:?}: {error:?}")
+            }
+            Self::ModuleFileNotFound { path } => {
+                format!("module file not found: {path:?}")
             }
         }
     }

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 
@@ -128,12 +128,12 @@ impl LoaderActor {
         loader
     }
 
-    fn load_module(&self, self_addr: Addr<Self>, path: PathBuf) {
+    fn load_module(&self, self_addr: Addr<Self>, path: Arc<Path>) {
         let loader = self.loader();
         let console = self.console.clone();
         let counter = self.counter.clone();
         Arbiter::current().spawn(async move {
-            match loader.load_module(&path).await {
+            match loader.load_module(path.clone()).await {
                 Ok(tgs) => self_addr.do_send(LoadedModule(path, tgs)),
                 Err(e) => {
                     if counter.is_some() {
@@ -156,11 +156,11 @@ pub enum ReloadReason {
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct LoadModule(pub PathBuf);
+pub struct LoadModule(pub Arc<Path>);
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct ReloadModule(pub PathBuf, pub ReloadReason);
+pub struct ReloadModule(pub Arc<Path>, pub ReloadReason);
 
 #[derive(Message)]
 #[rtype(result = "()")]
@@ -172,7 +172,7 @@ struct SetStoppedTx(oneshot::Sender<StopBehavior>);
 
 #[derive(Message)]
 #[rtype(result = "()")]
-struct LoadedModule(pub PathBuf, Vec<Typegraph>);
+struct LoadedModule(pub Arc<Path>, Vec<Typegraph>);
 
 impl Actor for LoaderActor {
     type Context = Context<Self>;

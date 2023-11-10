@@ -4,3 +4,4 @@
 import { dirname, fromFileUrl } from "std/path/mod.ts";
 
 export const testDir = dirname(dirname(fromFileUrl(import.meta.url)));
+export const repoDir = dirname(dirname(testDir));
