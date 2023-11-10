@@ -76,6 +76,7 @@ if (flags._.length === 0) {
 const cwd = resolve(projectDir, "typegate");
 const tmpDir = join(projectDir, "tmp");
 const env: Record<string, string> = {
+  "RUST_LOG": "off,xtask=debug,meta=debug",
   "LOG_LEVEL": "DEBUG",
   "NO_COLOR": "true",
   "DEBUG": "true",

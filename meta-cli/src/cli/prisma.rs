@@ -215,9 +215,9 @@ impl Action for Deploy {
         let result: PrismaDeployResult = res.data("deploy")?;
 
         if result.migration_count == 0 {
-            println!("No migration found.")
+            log::info!("No migration found.")
         } else {
-            println!(
+            log::info!(
                 "{len} migration{s} found.",
                 len = result.migration_count,
                 s = if result.migration_count > 1 { "s" } else { "" }
@@ -225,16 +225,16 @@ impl Action for Deploy {
         }
 
         if result.applied_migrations.is_empty() {
-            println!("No pending migrations to apply.")
+            log::info!("No pending migrations to apply.")
         } else {
             let plural = result.applied_migrations.len() > 1;
-            println!(
+            log::info!(
                 "The following migration{s} {have} been applied:",
                 s = if plural { "s" } else { "" },
                 have = if plural { "have" } else { "has" }
             );
             for mig in result.applied_migrations {
-                println!("{}", format!(" - {mig}").blue())
+                log::info!("{}", format!(" - {mig}").blue())
             }
         }
 
@@ -414,8 +414,7 @@ impl PrismaMigrate {
 
         match res {
             ApplyResponse::ResetRequired(reason) => {
-                println!("Database reset required:");
-                println!("{}", reason.dimmed());
+                log::warn!("Database reset required:\n{}", reason.dimmed());
 
                 let ans = Question::new("Do you want to reset the database?").confirm();
                 match ans {
@@ -438,20 +437,20 @@ impl PrismaMigrate {
 
                 let res: Res = res.data("apply")?;
                 if res.database_reset {
-                    println!("Database has been reset.");
+                    log::info!("Database has been reset.");
                 }
 
                 if res.applied_migrations.is_empty() {
-                    println!("{}", "No pending migrations to apply.".dimmed());
+                    log::info!("{}", "No pending migrations to apply.".dimmed());
                 } else {
                     let plural = res.applied_migrations.len() > 1;
-                    println!(
+                    log::info!(
                         "The following migration{s} {have} been applied:",
                         s = if plural { "s" } else { "" },
                         have = if plural { "have" } else { "has" }
                     );
                     for mig in res.applied_migrations {
-                        println!("{}", format!(" - {mig}").blue())
+                        log::info!("{}", format!(" - {mig}").blue())
                     }
                 }
             }
@@ -551,13 +550,13 @@ impl PrismaMigrate {
 
         let res: Res = res.data("diff")?;
 
-        println!("Diff for runtime '{}'", res.runtime_name);
+        log::info!("Diff for runtime '{}'", res.runtime_name);
 
         if let Some(diff) = res.diff.as_ref() {
-            println!("{}", diff.blue());
+            log::info!("{}", diff.blue());
             Ok((res.runtime_name, true))
         } else {
-            println!("{}", "No changes.".dimmed());
+            log::info!("{}", "No changes.".dimmed());
             Ok((res.runtime_name, false))
         }
     }
@@ -585,9 +584,9 @@ impl PrismaMigrate {
         let res: bool = res.data("reset")?;
 
         if res {
-            println!("Database has been reset successfully!");
+            log::info!("Database has been reset successfully!");
         } else {
-            eprintln!("Some error occured");
+            log::info!("Some error occured");
         }
 
         Ok(())

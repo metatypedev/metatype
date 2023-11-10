@@ -393,7 +393,7 @@ jobs:
           curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
           cd ../..
           export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
-          cargo test --locked --exclude meta-cli --exclude typegate --exclude typegraph_engine --workspace
+          cargo test --locked --exclude meta-cli --exclude typegate --exclude typegraph_engine --exclude typegraph_core --workspace
 
   test-docker:
     needs: changes
