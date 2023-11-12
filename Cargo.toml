@@ -1,12 +1,26 @@
 [workspace]
 members = [
-  "typegate/native",
+  "libs/*",
+  "typegate/engine",
+  "typegate/standalone",
   "meta-cli",
-  "libs/common",
-  "libs/typescript",
-  "libs/xtask",
-  "libs/macros",
-  "typegraph/core"
+  "typegraph/core",
 ]
 
 resolver = "2"
+
+[workspace.package]
+version = "0.2.5-0+dev"
+edition = "2021"
+
+[workspace.dependencies]
+# internal crates
+mt_deno = { path = "libs/deno/"}
+common = { path = "libs/common/"}
+typescript = { path = "libs/typescript/" }
+typegate_engine = { path = "typegate/engine" }
+
+# [profile.xtask]
+# inherits = 'dev'
+# opt-level = 0
+# debug = 0

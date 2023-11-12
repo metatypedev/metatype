@@ -6,7 +6,6 @@ import { TestModule } from "test-utils/test_module.ts";
 import { dropSchemas, removeMigrations } from "test-utils/migrations.ts";
 import { assertStringIncludes } from "std/assert/mod.ts";
 import { assertRejects } from "std/assert/mod.ts";
-import { shell } from "test-utils/shell.ts";
 import pg from "npm:pg";
 
 const m = new TestModule(import.meta);
@@ -197,34 +196,32 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
   });
 
   await t.should("create migrations", async () => {
-    await Meta.cli(
+    await t.meta(
+      ["prisma", "dev", ...nodeConfigs, ...prismaConfigs, "--create-only"],
       { stdin: "initial_migration\n" },
-      "prisma",
-      "dev",
-      ...nodeConfigs,
-      ...prismaConfigs,
-      "--create-only",
     );
   });
 
   await t.should("fail on dirty repo", async () => {
-    await assertRejects(() =>
-      Meta.cli("deploy", "-t", "deploy", "-f", "prisma/prisma.py")
+    await assertRejects(
+      () => t.meta(["deploy", "-t", "deploy", "-f", "prisma.py"]),
+      Error,
+      "Dirty repository not allowed",
     );
   });
 
   await t.should("commit changes", async () => {
-    await shell(["git", "add", "."]);
-    await shell(["git", "commit", "-m", "create migrations"]);
+    await t.shell(["git", "add", "."]);
+    await t.shell(["git", "commit", "-m", "create migrations"]);
   });
 
   // not in t.should because it creates a worker that will not be closed
-  await Meta.cli(
+  await t.meta([
     "deploy",
     ...nodeConfigs,
     "-f",
-    "runtimes/prisma/prisma.py",
-  );
+    "prisma.py",
+  ]);
 
   await t.should(
     "succeed have replaced and terminated the previous engine",
@@ -257,7 +254,16 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
       })
       .on(e2);
   });
-}, { systemTypegraphs: true, port, cleanGitRepo: true });
+}, {
+  systemTypegraphs: true,
+  port,
+  gitRepo: {
+    content: {
+      "prisma.py": "runtimes/prisma/prisma.py",
+      "metatype.yml": "metatype.yml",
+    },
+  },
+});
 
 Meta.test("cli:deploy - with prefix", async (t) => {
   const e = await t.engine("runtimes/prisma/prisma.py", {
@@ -292,39 +298,26 @@ Meta.test("cli:deploy - with prefix", async (t) => {
   });
 
   await t.should("create migrations", async () => {
-    await Meta.cli(
+    await t.meta(
+      ["prisma", "dev", ...nodeConfigs, ...prismaConfigs, "--create-only"],
       { stdin: "initial_migration\n" },
-      "prisma",
-      "dev",
-      ...nodeConfigs,
-      ...prismaConfigs,
-      "--create-only",
     );
   });
 
   await t.should("fail on dirty repo", async () => {
     await assertRejects(() =>
-      Meta.cli(
-        "deploy",
-        "-t",
-        "with_prefix",
-        "-f",
-        "prisma/prisma.py",
-      )
+      t.meta(["deploy", "-t", "with_prefix", "-f", "prisma/prisma.py"])
     );
   });
 
   await t.should("commit changes 2", async () => {
-    await shell(["git", "add", "."]);
-    await shell(["git", "commit", "-m", "create migrations"]);
+    await t.shell(["git", "add", "."]);
+    await t.shell(["git", "commit", "-m", "create migrations"]);
   });
 
   // not in t.should because it creates a worker that will not be closed
-  await Meta.cli(
-    "deploy",
-    ...nodeConfigs,
-    "-f",
-    "runtimes/prisma/prisma.py",
+  await t.meta(
+    ["deploy", ...nodeConfigs, "-f", "prisma.py"],
   );
 
   await t.should(
@@ -358,4 +351,13 @@ Meta.test("cli:deploy - with prefix", async (t) => {
       })
       .on(e2);
   });
-}, { systemTypegraphs: true, port, cleanGitRepo: true });
+}, {
+  systemTypegraphs: true,
+  port,
+  gitRepo: {
+    content: {
+      "prisma.py": "runtimes/prisma/prisma.py",
+      "metatype.yml": "metatype.yml",
+    },
+  },
+});

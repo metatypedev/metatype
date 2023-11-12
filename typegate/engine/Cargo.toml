@@ -1,0 +1,41 @@
+[package]
+name = "typegate_engine"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+anyhow = "1.0"
+thiserror = "1.0.49"
+tokio = { version = "1.33.0", features = ["full"] }
+log = "0.4.20"
+futures = "0.3"
+once_cell = "1.18.0"
+wasmedge-sdk = "=0.8.1"
+wasmedge-sys = "=0.13.1"
+wasmedge-types = "=0.4.1"
+base64 = "0.21.4"
+dashmap = "5.5.3"
+num-traits = "0.2.17"
+num-derive = "0.4.1"
+temporal-client = { git = "https://github.com/temporalio/sdk-core", rev = "7f9755b" }
+temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core", rev = "7f9755b" }
+query-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
+query-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
+request-handlers = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
+prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
+datamodel-renderer = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
+user-facing-errors = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
+query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
+schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
+psl = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
+schema-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
+tempfile = "3.8.0"
+tap = "1.0.1"
+convert_case = "0.6.0"
+connection-string = "0.2.0"
+mt_deno.workspace = true
+common.workspace = true
+typescript.workspace = true
+
+[dev-dependencies]
+env_logger = "0.10.0"

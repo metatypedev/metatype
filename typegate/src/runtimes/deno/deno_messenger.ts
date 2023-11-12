@@ -4,11 +4,8 @@
 import * as Sentry from "sentry";
 import { envSharedWithWorkers } from "../../log.ts";
 import { Task } from "./shared_types.ts";
-import { dirname, fromFileUrl, resolve, toFileUrl } from "std/path/mod.ts";
 import { LazyAsyncMessenger } from "../patterns/messenger/lazy_async_messenger.ts";
 
-const localDir = dirname(fromFileUrl(import.meta.url));
-const workerFile = toFileUrl(resolve(localDir, "./worker.ts"));
 export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
   constructor(
     name: string,
@@ -18,7 +15,7 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
   ) {
     super(
       (receive) => {
-        const worker = new Worker(workerFile, {
+        const worker = new Worker(import.meta.resolve("./worker.ts"), {
           type: "module",
           deno: {
             namespace: false,

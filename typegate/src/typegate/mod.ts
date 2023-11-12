@@ -28,10 +28,14 @@ import {
 } from "../typegraph/mod.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphRuntime } from "../runtimes/typegraph.ts";
-import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { resolveIdentifier } from "../services/middlewares.ts";
 import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
+import introspectionJson from "../typegraphs/introspection.json" with {
+  type: "json",
+};
+
+const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
 const logger = getLogger("typegate");
 
@@ -46,8 +50,6 @@ function parsePath(pathname: string): [string, string | undefined] {
   }
   return [engineName, serviceName];
 }
-
-const localDir = dirname(fromFileUrl(import.meta.url));
 
 export class Typegate {
   #onPushHooks: PushHandler[] = [];
@@ -222,11 +224,7 @@ export class Typegate {
     enableIntrospection: boolean,
   ): Promise<QueryEngine> {
     const introspectionDef = parseGraphQLTypeGraph(
-      await TypeGraph.parseJson(
-        await Deno.readTextFile(
-          join(localDir, "../typegraphs/introspection.json"),
-        ),
-      ),
+      await TypeGraph.parseJson(INTROSPECTION_JSON_STR),
     );
 
     const introspection = enableIntrospection

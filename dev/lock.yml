@@ -9,7 +9,6 @@ dev:
     .github/*/*.yml:
       '(  PYTHON_VERSION: ").+(")': PYTHON_VERSION
       '(  POETRY_VERSION: ").+(")': POETRY_VERSION
-      '(  DENO_BINDGEN_URL: ).+()': DENO_BINDGEN_URL
       '(  DENO_VERSION: ").+(")': DENO_VERSION
       '(  PNPM_VERSION: ").+(")': PNPM_VERSION
       '(  NODE_VERSION: ").+(")': NODE_VERSION
@@ -28,7 +27,6 @@ dev:
       '([\w-]+\s*=\s*\{\s*git\s*=\s*"https:\/\/github\.com\/prisma\/prisma-engines"\s*,\s*tag\s*=\s*").+("\s*\})': PRISMA_VERSION
     dev/Dockerfile:
       (ARG DENO_VERSION=).*(): DENO_VERSION
-      (ARG DENO_BINDGEN_URL=).*(): DENO_BINDGEN_URL
       (ARG RUST_VERSION=).*(): RUST_VERSION
       (ARG WASMEDGE_VERSION=).*(): WASMEDGE_VERSION
     typegate/src/typegraph/versions.ts:
@@ -37,7 +35,6 @@ dev:
       '(static TYPEGRAPH_VERSION: &str = ").*(";)': TYPEGRAPH_VERSION
     whiz.yaml:
       '(  TYPEGRAPH_VERSION: ").+(")': TYPEGRAPH_VERSION
-      '(    DENO_BINDGEN_URL: ").+(")': DENO_BINDGEN_URL
       '(    WASM_TOOLS_VERSION: ").+(")': WASM_TOOLS_VERSION
       '(    CARGO_INSTA_VERSION: ").+(")': CARGO_INSTA_VERSION
       '(    JCO_VERSION: ").+(")': JCO_VERSION
@@ -58,8 +55,7 @@ dev:
     POETRY_VERSION: 1.6.1
     PROTOC_VERSION: v24.x
     RUST_VERSION: 1.73.0
-    DENO_BINDGEN_URL: 'https://raw.githubusercontent.com/Natoandro/deno_bindgen/main/cli.ts'
-    DENO_VERSION: 1.38.0
+    DENO_VERSION: 1.37.1
     NODE_VERSION: 20.8.0
     PNPM_VERSION: 8.8.0
     CARGO_INSTA_VERSION: 1.33.0

@@ -1,11 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+use crate::interlude::*;
+
 use std::any::Any;
 
 use anyhow::bail;
-use anyhow::Result;
-use macros::deno;
+
+#[rustfmt::skip]
+use deno_core as deno_core; // necessary for re-exported macros to work
 
 use base64::{engine::general_purpose, Engine as _};
 use wasmedge_sdk::VmBuilder;
@@ -15,8 +18,9 @@ use wasmedge_sdk::{
     Module,
 };
 
-#[deno]
-struct WasiInput {
+#[derive(Deserialize)]
+#[serde(crate = "serde")]
+pub struct WasiInput {
     func: String,
     wasm: String,
     args: Vec<String>,
@@ -45,14 +49,9 @@ fn param_cast(out: &str, res: &mut Vec<Box<dyn Any + Send + Sync>>) -> Result<St
     Ok(json)
 }
 
-#[deno]
-enum WasiOutput {
-    Ok { res: String },
-    Err { message: String },
-}
-
-#[deno]
-fn wasmedge_wasi(input: WasiInput) -> WasiOutput {
+#[deno_core::op2]
+#[string]
+pub fn op_wasmedge_wasi(#[serde] input: WasiInput) -> Result<String> {
     // https://github.com/second-state/wasmedge-rustsdk-examples
 
     let bytes = general_purpose::STANDARD
@@ -83,9 +82,7 @@ fn wasmedge_wasi(input: WasiInput) -> WasiOutput {
     let run = vm.run_func(&input.func, params).unwrap();
 
     match run {
-        Ok(mut res) => WasiOutput::Ok {
-            res: param_cast(&input.out, &mut res).unwrap(),
-        },
-        Err(e) => WasiOutput::Err { message: e },
+        Ok(mut res) => Ok(param_cast(&input.out, &mut res).unwrap()),
+        Err(e) => Err(anyhow::anyhow!(e)),
     }
 }
