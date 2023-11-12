@@ -78,7 +78,7 @@ const tmpDir = join(projectDir, "tmp");
 const env: Record<string, string> = {
   "RUST_LOG": "off,xtask=debug,meta=debug",
   "LOG_LEVEL": "DEBUG",
-  "NO_COLOR": "true",
+  "NO_COLOR": "1",
   "DEBUG": "true",
   "PACKAGED": "false",
   "TG_SECRET":
@@ -164,6 +164,7 @@ function createRun(testFile: string): Run {
 
 const queues = [...testFiles];
 const runs: Record<string, Run> = {};
+const globalStart = Date.now();
 
 void (async () => {
   while (queues.length > 0) {
@@ -198,18 +199,23 @@ do {
 
   const { duration } = await run.promise;
   console.log(
-    `${prefix} Completed ${relPath(file)} in ${duration / 1000}ms`,
+    `${prefix} Completed ${relPath(file)} in ${duration / 1_000}s`,
   );
 
   nexts = Object.keys(runs).filter((f) => !runs[f].streamed);
 } while (nexts.length > 0);
 
+const globalDuration = Date.now() - globalStart;
 const finished = await Promise.all(Object.values(runs).map((r) => r.promise));
 const successes = finished.filter((r) => r.success);
 const failures = finished.filter((r) => !r.success);
 
 console.log("\n");
-console.log(`Tests completed:`);
+console.log(
+  `Tests completed in ${Math.floor(globalDuration / 60_000)}m${
+    Math.floor(globalDuration / 1_000) % 60
+  }s:`,
+);
 console.log(
   `  succcesses: ${successes.length}/${testFiles.length}`,
 );

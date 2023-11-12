@@ -52,7 +52,7 @@ jobs:
         run: |
           python3 -m venv .venv
           source .venv/bin/activate
-          poetry install
+          poetry install --no-root
           cd website
           pnpm install --frozen-lockfile
           pnpm build

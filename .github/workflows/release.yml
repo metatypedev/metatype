@@ -6,7 +6,7 @@ on:
 env:
   PYTHON_VERSION: "3.8"
   POETRY_VERSION: "1.6.1"
-  DENO_VERSION: "1.37.1"
+  DENO_VERSION: "1.38.1"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
   WASM_TOOLS_VERSION: "1.0.45"
   JCO_VERSION: "0.12.1"
@@ -130,11 +130,11 @@ jobs:
           wasm-opt -Oz target/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE.opt
           wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
 
-          poetry install
+          poetry install --no-root
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
           cd typegraph/python
-          poetry install --sync
+          poetry install
           poetry build
           poetry publish
           cd ../..

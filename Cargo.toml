@@ -1,4 +1,5 @@
 [workspace]
+resolver = "2"
 members = [
   "libs/*",
   "typegate/engine",
@@ -7,20 +8,33 @@ members = [
   "typegraph/core",
 ]
 
-resolver = "2"
-
 [workspace.package]
 version = "0.2.5-0+dev"
 edition = "2021"
 
 [workspace.dependencies]
+#deno = { path =  "../../../deno/cli"}
+deno = { git = "https://github.com/metatypedev/deno", branch = "v1.38.1-embeddable" }
+
 # internal crates
 mt_deno = { path = "libs/deno/"}
 common = { path = "libs/common/"}
 typescript = { path = "libs/typescript/" }
 typegate_engine = { path = "typegate/engine" }
 
-# [profile.xtask]
-# inherits = 'dev'
-# opt-level = 0
-# debug = 0
+# pinned to match version brought in
+# https://github.com/metatypedev/deno/blob/librarify-cli/cli/Cargo.toml#L51
+env_logger = "=0.10.0"
+clap = "=4.3.3"
+clap_complete = "=4.3.1"
+# https://github.com/WasmEdge/wasmedge-rust-sdk
+wasmedge-sdk = "=0.8.1"
+wasmedge-sys = "=0.13.1"
+wasmedge-types = "=0.4.1"
+# https://github.com/denoland/deno_ast/blob/main/Cargo.toml
+swc_common = "=0.32.0"
+swc_ecma_ast = "=0.109.0"
+swc_ecma_codegen = "=0.144.1"
+swc_ecma_parser = "=0.139.0"
+swc_ecma_transforms_typescript = "=0.182.3"
+swc_ecma_visit = "=0.95.0"

@@ -25,6 +25,7 @@ dev:
       (version = ").+("): METATYPE_VERSION
       (description = ").+("): TAGLINE
       '([\w-]+\s*=\s*\{\s*git\s*=\s*"https:\/\/github\.com\/prisma\/prisma-engines"\s*,\s*tag\s*=\s*").+("\s*\})': PRISMA_VERSION
+      '(deno\s*=\s*\{\s*git\s*=\s*"https:\/\/github\.com\/metatypedev\/deno"\s*,\s*branch\s*=\s*"v).+(-embeddable"\s*\})': DENO_VERSION
     dev/Dockerfile:
       (ARG DENO_VERSION=).*(): DENO_VERSION
       (ARG RUST_VERSION=).*(): RUST_VERSION
@@ -40,7 +41,6 @@ dev:
       '(    JCO_VERSION: ").+(")': JCO_VERSION
       '(    WASMEDGE_VERSION: ").+(")': WASMEDGE_VERSION
       '(    WASM_OPT_VERSION: ").+(")': WASM_OPT_VERSION
-      '(    DENO_VERSION: ").+(")': DENO_VERSION
     website/docusaurus.config.js:
       '(  tagline: ").+(",)': TAGLINE
     examples/**/compose.yml:
@@ -55,7 +55,7 @@ dev:
     POETRY_VERSION: 1.6.1
     PROTOC_VERSION: v24.x
     RUST_VERSION: 1.73.0
-    DENO_VERSION: 1.37.1
+    DENO_VERSION: 1.38.1
     NODE_VERSION: 20.8.0
     PNPM_VERSION: 8.8.0
     CARGO_INSTA_VERSION: 1.33.0

@@ -1,5 +1,5 @@
 ARG RUST_VERSION=1.73.0
-ARG DENO_VERSION=1.37.1
+ARG DENO_VERSION=1.38.1
 ARG DISTROLESS_TAG=debug-nonroot
 
 # must match distroless version
@@ -95,7 +95,6 @@ WORKDIR /app
 
 COPY --from=runtime-bin /tini /tini
 COPY --from=runtime-bin /lib/sym /lib/sym
-COPY --from=deno-bin /usr/bin/deno /bin/deno
 COPY --from=builder /root/.wasmedge /nonroot/.wasmedge
 COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 
