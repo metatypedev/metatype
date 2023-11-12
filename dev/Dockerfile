@@ -1,5 +1,5 @@
 ARG RUST_VERSION=1.73.0
-ARG DENO_VERSION=1.37.1
+ARG DENO_VERSION=1.38.0
 ARG DISTROLESS_TAG=nonroot
 
 # must match distroless version

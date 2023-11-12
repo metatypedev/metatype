@@ -123,7 +123,7 @@ install:
     CARGO_INSTA_VERSION: "1.33.0"
     WASMEDGE_VERSION: "0.12.1"
     WASM_OPT_VERSION: "0.116.0"
-    DENO_VERSION: "1.37.1"
+    DENO_VERSION: "1.38.0"
   command: |
     set -e
     deno --version | grep -q $DENO_VERSION || (echo "require deno upgrade to $DENO_VERSION" && exit 1)

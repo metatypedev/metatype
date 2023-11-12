@@ -7,7 +7,6 @@ authors = []
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
 typegraph = { path = "typegraph/python", develop = true }
-# typegraph-std = "^0.0.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.3"
