@@ -52,7 +52,7 @@ dev:
       (typegraph = ").+("): METATYPE_VERSION
   lock:
     PYTHON_VERSION: '3.8'
-    POETRY_VERSION: 1.6.1
+    POETRY_VERSION: 1.7.0
     PROTOC_VERSION: v24.x
     RUST_VERSION: 1.73.0
     DENO_VERSION: 1.38.1
