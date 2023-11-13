@@ -6,7 +6,7 @@
     "start": "tsx api.ts"
   },
   "dependencies": {
-    "@typegraph/sdk": "^0.2.2"
+    "@typegraph/sdk": "^0.2.5-0+dev"
   },
   "devDependencies": {
     "tsx": "^3.13.0",

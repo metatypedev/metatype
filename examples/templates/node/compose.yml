@@ -1,0 +1,54 @@
+services:
+  typegate:
+    image: ghcr.io/metatypedev/typegate:v0.2.5-0+dev
+    restart: always
+    ports:
+      - "7890:7890"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      # only for dev, generate secure values for production
+      TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
+      TG_ADMIN_PASSWORD: password
+      REDIS_URL: redis://:password@redis:6379/0
+      DEBUG: "true"
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7
+    restart: always
+    command: --requirepass password
+
+  # for prisma runtime with postgres
+  # postgresql://postgres:password@localhost:5432/db
+  # see metatype.yml
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # for prisma runtime with mongo
+  # mongodb://root:password@mongo:27017/db
+  # see metatype.yml
+  mongo:
+    image: mongo:7
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+
+volumes:
+  pgdata:
+  mongodata:

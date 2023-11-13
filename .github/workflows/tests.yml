@@ -176,8 +176,8 @@ jobs:
           curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
           export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
           cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
-          cargo build -p typegraph_core --target wasm32-unknown-unknown
-          wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+          cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
+          wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
           rm -rf typegraph/python/typegraph/gen
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
@@ -233,8 +233,8 @@ jobs:
           curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
           export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
           cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
-          cargo build -p typegraph_core --target wasm32-unknown-unknown
-          wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+          cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
+          wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
           rm -rf typegraph/python/typegraph/gen
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
@@ -339,8 +339,8 @@ jobs:
           export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
           cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
           npm install --global @bytecodealliance/jco@$JCO_VERSION
-          cargo build -p typegraph_core --target wasm32-unknown-unknown
-          wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+          cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
+          wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
           rm -rf typegraph/deno/src/gen
           jco transpile $WASM_FILE -o typegraph/deno/src/gen
           deno run -A typegraph/deno/dev/fix-declarations.ts

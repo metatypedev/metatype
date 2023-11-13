@@ -216,7 +216,7 @@ generate a changelog.
 
 We recommend using [mold](https://github.com/rui314/mold) for Linux targets and
 macOS new parallel linker for faster linking. You can use them as aliases or
-configure them in your `.cargo/config.toml` file.
+configure them in your `~/.cargo/config.toml` file.
 
 ```toml
 [target.aarch64-apple-darwin]

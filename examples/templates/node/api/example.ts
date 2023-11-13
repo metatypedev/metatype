@@ -2,7 +2,7 @@ import { Policy, t, typegraph } from "@typegraph/sdk";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
 import { PythonRuntime } from "@typegraph/sdk/runtimes/python";
 
-typegraph("test-multiple-runtimes", (g) => {
+typegraph("example", (g) => {
   const pub = Policy.public();
   const deno = new DenoRuntime();
   const python = new PythonRuntime();

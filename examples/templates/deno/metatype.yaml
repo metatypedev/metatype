@@ -1,0 +1,17 @@
+typegates:
+  dev:
+    url: "http://localhost:7890"
+    username: admin
+    password: password
+    env:
+      TG_EXAMPLE_POSTGRES: "postgresql://postgres:password@postgres:5432/db"
+      TG_EXAMPLE_MONGO: "mongodb://root:password@mongo:27017/db"
+      TG_EXAMPLE_ENV_VAR: "example"
+  deploy:
+    url: "https://cloud.metatype.dev"
+    username: admin
+    password: password
+    env:
+      TG_EXAMPLE_ENV_VAR: "example"
+      TG_EXAMPLE_POSTGRES: "postgresql://postgres:password@localhost:5432/db"
+      TG_EXAMPLE_MONGO: "mongodb://root:password@mongo:27017/db"

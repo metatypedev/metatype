@@ -50,6 +50,10 @@ dev:
       (wasmtime = "\^).+("): WASMTIME_VERSION
     examples/**/pyproject.toml:
       (typegraph = ").+("): METATYPE_VERSION
+    examples/**/package.json:
+      '(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)': METATYPE_VERSION
+    examples/**/*.ts:
+      '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': METATYPE_VERSION
   lock:
     PYTHON_VERSION: '3.8'
     POETRY_VERSION: 1.7.0

@@ -51,8 +51,8 @@ typegraph:
     WASM_FILE: target/debug/typegraph_core.wasm
   command: |
     set -e
-    cargo build -p typegraph_core --target wasm32-unknown-unknown
-    wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+    cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
+    wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
 
     rm -rf typegraph/deno/src/gen
     jco transpile $WASM_FILE -o typegraph/deno/src/gen
