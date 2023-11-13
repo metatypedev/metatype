@@ -269,7 +269,6 @@ export const test = ((name, fn, opts = {}): void => {
           for (const [path, srcPath] of Object.entries(gitRepo.content)) {
             const destPath = join(dir, path);
             await Deno.mkdir(dirname(destPath), { recursive: true });
-            // console.log(await Deno.lstat(join(testDir, srcPath)));
             await Deno.copyFile(
               join(testDir, srcPath),
               destPath,
@@ -284,7 +283,6 @@ export const test = ((name, fn, opts = {}): void => {
           mt.shell = sh;
           mt.meta = await createMetaCli(sh);
           await sh(["git", "init"]);
-          console.log(await Deno.lstat(dir!));
           await sh(["git", "config", "user.name", "user"]);
           await sh(["git", "config", "user.email", "user@example.com"]);
           await sh(["git", "add", "."]);

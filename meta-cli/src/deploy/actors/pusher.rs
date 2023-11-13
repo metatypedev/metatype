@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use colored::Colorize;
 use common::typegraph::Typegraph;
@@ -22,6 +22,7 @@ use crate::utils::graphql;
 use crate::utils::{graphql::Query, Node};
 
 use super::console::{Console, ConsoleActor};
+use super::push_manager::{PushFinished, PushFollowUp, PushManagerActor};
 
 type Secrets = HashMap<String, String>;
 
@@ -55,8 +56,8 @@ pub struct PusherActor {
     console: Addr<ConsoleActor>,
     base_dir: Arc<Path>,
     node: Arc<Node>,
+    push_manager: Addr<PushManagerActor>,
     secrets: Arc<Secrets>,
-    event_tx: EventTx,
 }
 
 impl PusherActor {
@@ -66,7 +67,7 @@ impl PusherActor {
         base_dir: Arc<Path>,
         node: Node,
         secrets: Secrets,
-        event_tx: EventTx,
+        push_manager: Addr<PushManagerActor>,
     ) -> Self {
         Self {
             config,
@@ -74,7 +75,7 @@ impl PusherActor {
             base_dir,
             node: Arc::new(node),
             secrets: secrets.into(),
-            event_tx,
+            push_manager,
         }
     }
 
@@ -227,29 +228,35 @@ impl PusherActor {
         PushResult::from_raw(res, push).map_err(|e| Error::invalid_response(e.to_string()))
     }
 
-    fn handle_error(push: Push, error: Error, console: Addr<ConsoleActor>, event_tx: EventTx) {
+    fn handle_error(
+        push: Push,
+        error: Error,
+        console: Addr<ConsoleActor>,
+        push_manager: Addr<PushManagerActor>,
+    ) {
         match error {
             Error::Graphql(e) => match e {
                 graphql::Error::EndpointNotReachable(e) => {
                     console.error(format!("Failed to push typegraph:\n{e}"));
-                    event_tx.send(PusherEvent::TransportFailure(push)).unwrap();
+                    push_manager.do_send(PushFinished::new(push, false).schedule_retry());
                 }
                 graphql::Error::InvalidResponse(e) => {
                     console.error(format!("Invalid resposes from typegate:\n{e}"));
-                    event_tx.send(PusherEvent::InvalidResponse(push)).unwrap();
+                    push_manager.do_send(PushFinished::new(push, false));
                 }
                 graphql::Error::FailedQuery(errs) => {
+                    // TODO interaction
                     console.error("Failed to push typegraph:".to_string());
                     for err in errs {
                         // TODO format error
                         console.error(format!(" * {}", err.message));
                     }
-                    event_tx.send(PusherEvent::Error(push)).unwrap();
+                    push_manager.do_send(PushFinished::new(push, false));
                 }
             },
             Error::Other(e) => {
                 console.error(format!("Unexpected error: {e}"));
-                event_tx.send(PusherEvent::Error(push)).unwrap();
+                push_manager.do_send(PushFinished::new(push, false));
             }
         }
     }
@@ -268,7 +275,7 @@ impl PusherActor {
 #[rtype(result = "()")]
 pub struct Push {
     pub typegraph: Arc<Typegraph>,
-    pub created_at: Instant,
+    // pub created_at: Instant,
     retry: Option<Retry>,
 }
 
@@ -277,7 +284,6 @@ impl Push {
         Self {
             typegraph,
             retry: None,
-            created_at: Instant::now(),
         }
     }
 
@@ -288,7 +294,6 @@ impl Push {
                 num: retry_num,
                 max,
             }),
-            created_at: Instant::now(),
             typegraph: self.typegraph,
         })
     }
@@ -386,7 +391,7 @@ impl Handler<Push> for PusherActor {
         let self_addr = ctx.address();
         let console = self.console.clone();
         let secrets = Arc::clone(&self.secrets);
-        let event_tx = self.event_tx.clone();
+        let push_manager = self.push_manager.clone();
 
         Arbiter::current().spawn(async move {
             let retry = if let Some(retry) = &push.retry {
@@ -415,7 +420,7 @@ impl Handler<Push> for PusherActor {
                     self_addr.do_send(res);
                 }
                 Err(e) => {
-                    Self::handle_error(push, e, console, event_tx);
+                    Self::handle_error(push, e, console, push_manager);
                 }
             }
         });
@@ -491,22 +496,12 @@ impl Handler<PushResult> for PusherActor {
                     // }
                 }
             }
-            self.event_tx
-                .send(PusherEvent::TypegateHookError(res.push, failure))
-                .unwrap();
+            // TODO follow-up question/interaction??
+            self.push_manager
+                .do_send(PushFinished::new(res.push, false))
         } else {
-            self.console.info(format!(
-                "{} Successfully pushed typegraph {name}.",
-                "✓".green(),
-                name = name.cyan()
-            ));
-            self.event_tx.send(PusherEvent::Success(res.push)).unwrap();
+            self.push_manager.do_send(PushFinished::new(res.push, true))
         }
-
-        // let success = res
-        //     .messages
-        //     .iter()
-        //     .any(|m| matches!(m, MessageEntry::Error(_)));
     }
 }
 

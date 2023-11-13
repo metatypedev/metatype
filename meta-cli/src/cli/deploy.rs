@@ -12,7 +12,7 @@ use crate::deploy::actors::discovery::DiscoveryActor;
 use crate::deploy::actors::loader::{
     self, LoaderActor, LoaderEvent, PostProcessOptions, ReloadModule, ReloadReason, StopBehavior,
 };
-use crate::deploy::actors::pusher::{Push, PusherActor};
+use crate::deploy::actors::pusher::Push;
 use crate::deploy::actors::watcher::WatcherActor;
 use crate::typegraph::postprocess::EmbedPrismaMigrations;
 use crate::utils::{ensure_venv, Node};
@@ -163,7 +163,10 @@ impl Action for DeploySubcommand {
 mod default_mode {
     //! non-watch mode
 
-    use crate::deploy::{actors::loader::LoadModule, utils::push_lifecycle::PushLifecycle};
+    use crate::deploy::actors::{
+        loader::LoadModule,
+        push_manager::{PushManager, PushManagerActor, PushManagerBuilder},
+    };
 
     use super::*;
 
@@ -172,7 +175,7 @@ mod default_mode {
         console: Addr<ConsoleActor>,
         loader: Addr<LoaderActor>,
         loader_event_rx: mpsc::UnboundedReceiver<LoaderEvent>,
-        pusher: PushLifecycle,
+        pusher: Addr<PushManagerActor>,
     }
 
     impl DefaultMode {
@@ -200,26 +203,19 @@ mod default_mode {
             .auto_stop()
             .start();
 
-            let (pusher_event_tx, pusher_event_rx) = mpsc::unbounded_channel();
-
-            let pusher = PusherActor::new(
+            let pusher = PushManagerBuilder::new(console.clone()).start(
                 Arc::clone(&deploy.config),
-                console.clone(),
                 deploy.base_dir.clone(),
                 deploy.node.clone(),
                 secrets,
-                pusher_event_tx,
-            )
-            .start();
-
-            let push_lifecycle = PushLifecycle::builder(pusher_event_rx, pusher).start();
+            );
 
             Ok(Self {
                 deploy,
                 console,
                 loader,
                 loader_event_rx,
-                pusher: push_lifecycle,
+                pusher,
             })
         }
 
@@ -241,14 +237,19 @@ mod default_mode {
             };
 
             let loader = self.loader.clone();
+            let pusher = self.pusher.clone();
             self.push_loaded_typegraphs();
 
-            match loader::stopped(loader).await {
+            let ret = match loader::stopped(loader).await {
                 Ok(StopBehavior::Restart) => unreachable!("LoaderActor should not restart"),
                 Ok(StopBehavior::ExitSuccess) => Ok(()),
                 Ok(StopBehavior::ExitFailure(msg)) => bail!("{msg}"),
                 Err(e) => panic!("Loader actor stopped unexpectedly: {e:?}"),
-            }
+            };
+
+            log::debug!("loader stopped, stopping pusher");
+            pusher.stop().await?;
+            ret
         }
 
         fn push_loaded_typegraphs(self) {
@@ -260,7 +261,7 @@ mod default_mode {
                     match event {
                         LoaderEvent::Typegraph(tg) => {
                             // TODO await -- no queue
-                            pusher.send(Push::new(tg.into())).await;
+                            pusher.do_send(Push::new(tg.into()));
                         }
                         LoaderEvent::Stopped(b) => {
                             if let StopBehavior::ExitFailure(msg) = b {
@@ -279,7 +280,7 @@ mod default_mode {
 mod watch_mode {
     use std::time::Duration;
 
-    use crate::deploy::utils::push_lifecycle::{LinearBackoff, PushLifecycle};
+    use crate::deploy::actors::push_manager::{PushManager, PushManagerActor, PushManagerBuilder};
 
     use super::*;
 
@@ -320,18 +321,6 @@ mod watch_mode {
             )
             .start();
 
-            let (pusher_event_tx, pusher_event_rx) = mpsc::unbounded_channel();
-
-            let pusher = PusherActor::new(
-                Arc::clone(&deploy.config),
-                console.clone(),
-                deploy.base_dir.clone(),
-                deploy.node.clone(),
-                secrets,
-                pusher_event_tx,
-            )
-            .start();
-
             let _discovery = DiscoveryActor::new(
                 Arc::clone(&deploy.config),
                 loader.clone(),
@@ -350,15 +339,20 @@ mod watch_mode {
             )?
             .start();
 
-            let push_scheduler = PushLifecycle::builder(pusher_event_rx, pusher)
+            let pusher = PushManagerBuilder::new(console.clone())
                 .linear_backoff(Duration::from_secs(5), 3)
-                .start();
+                .start(
+                    Arc::clone(&deploy.config),
+                    deploy.base_dir.clone(),
+                    deploy.node.clone(),
+                    secrets,
+                );
 
             let actor_system = ActorSystem {
                 console: console.clone(),
                 watcher,
                 loader: loader.clone(),
-                pusher: push_scheduler.clone(),
+                pusher: pusher.clone(),
             };
 
             actor_system.push_loaded_typegraphs(loader_event_rx);
@@ -368,10 +362,15 @@ mod watch_mode {
             // TODO wait for push lifecycle
             match loader::stopped(loader).await {
                 Ok(StopBehavior::ExitSuccess) => {
+                    pusher.stop().await?;
                     break;
                 }
-                Ok(StopBehavior::Restart) => continue,
+                Ok(StopBehavior::Restart) => {
+                    pusher.stop().await?;
+                    continue;
+                }
                 Ok(StopBehavior::ExitFailure(_)) => {
+                    pusher.stop().await?;
                     break;
                 }
                 Err(e) => {
@@ -387,7 +386,7 @@ mod watch_mode {
         console: Addr<ConsoleActor>,
         watcher: Addr<WatcherActor>,
         loader: Addr<LoaderActor>,
-        pusher: PushLifecycle<LinearBackoff>,
+        pusher: Addr<PushManagerActor>,
     }
 
     impl ActorSystem {
@@ -398,7 +397,7 @@ mod watch_mode {
                 while let Some(event) = event_rx.recv().await {
                     match event {
                         LoaderEvent::Typegraph(tg) => {
-                            pusher.send(Push::new(tg.into())).await;
+                            pusher.do_send(Push::new(tg.into()));
                             // TODO update deps
                         }
                         LoaderEvent::Stopped(b) => {
@@ -420,7 +419,7 @@ mod watch_mode {
             let console = self.console.clone();
             let watcher = self.watcher.clone();
             let loader = self.loader.clone();
-            let mut pusher = self.pusher.clone();
+            let pusher = self.pusher.clone();
             Arbiter::current().spawn(async move {
                 let mut watch_event_rx = watch_event_rx;
                 while let Some(event) = watch_event_rx.recv().await {
@@ -434,7 +433,7 @@ mod watch_mode {
                             watcher.do_send(actors::watcher::Stop);
                         }
                         E::TypegraphModuleChanged { typegraph_module } => {
-                            pusher.cancel_pending_push(&typegraph_module).await;
+                            pusher.cancel_all_from(&typegraph_module).await.unwrap();
                             loader.do_send(ReloadModule(
                                 typegraph_module.into(),
                                 ReloadReason::FileChanged,
@@ -442,7 +441,7 @@ mod watch_mode {
                         }
                         E::TypegraphModuleDeleted { typegraph_module } => {
                             // TODO registry
-                            pusher.cancel_pending_push(&typegraph_module).await;
+                            pusher.cancel_all_from(&typegraph_module).await.unwrap();
                             // TODO internally by the watcher??
                             watcher.do_send(actors::watcher::RemoveTypegraph(
                                 typegraph_module.clone(),
@@ -453,7 +452,7 @@ mod watch_mode {
                             typegraph_module,
                             dependency_path,
                         } => {
-                            pusher.cancel_pending_push(&typegraph_module).await;
+                            pusher.cancel_all_from(&typegraph_module).await.unwrap();
                             loader.do_send(ReloadModule(
                                 typegraph_module.into(),
                                 ReloadReason::DependencyChanged(dependency_path),
