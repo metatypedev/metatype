@@ -29,9 +29,10 @@ const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
       );
     }
   },
+  "node": () => {},
 };
 
-for (const template of ["python", "deno"]) {
+for (const template of ["python", "deno", "node"]) {
   Meta.test(
     `${template} template`,
     async (t) => {

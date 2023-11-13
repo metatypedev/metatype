@@ -51,9 +51,9 @@ dev:
     examples/**/pyproject.toml:
       (typegraph = ").+("): METATYPE_VERSION
     examples/**/package.json:
-      '(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)': METATYPE_VERSION
+      '(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)': PUBLISHED_VERSION
     examples/**/*.ts:
-      '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': METATYPE_VERSION
+      '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': PUBLISHED_VERSION
   lock:
     PYTHON_VERSION: '3.8'
     POETRY_VERSION: 1.7.0
@@ -70,6 +70,7 @@ dev:
     TYPEGRAPH_VERSION: 0.0.3
     PRISMA_VERSION: 5.5.2
     METATYPE_VERSION: 0.2.5-0+dev
+    PUBLISHED_VERSION: 0.2.4
     WASM_OPT_VERSION: 0.116.0
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with
