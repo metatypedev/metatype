@@ -84,6 +84,7 @@ actix = "0.13.1"
 ctrlc = "3.4.1"
 typegate_engine =  { workspace = true, optional = true }
 shadow-rs = "0.24"
+derive_more = "0.99.17"
 
 [dev-dependencies]
 assert_cmd = "2.0.12"

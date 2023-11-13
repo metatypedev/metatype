@@ -5429,6 +5429,7 @@ dependencies = [
  "common",
  "crossbeam-channel 0.5.8",
  "ctrlc",
+ "derive_more",
  "dialoguer",
  "directories 5.0.1",
  "enum_dispatch",

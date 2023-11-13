@@ -1,8 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+mod state;
+
+use state::*;
 use std::collections::hash_map::Entry;
-use std::collections::HashSet;
 use std::convert::Infallible;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -24,215 +26,6 @@ use super::pusher::{Push, PusherActor};
 enum RetryConfig {
     Disable,
     LinearBackoff { interval: Duration, max_count: u32 },
-}
-
-#[derive(Debug, Default)]
-struct ModuleStatus {
-    // when some, follow-up pushes are cancelled,
-    // and the sender is notified to resume loading
-    on_cancellation_complete: Option<oneshot::Sender<()>>,
-    active_push_count: usize,
-}
-
-#[derive(Debug)]
-enum State {
-    Idle,
-    Running {
-        // typegraph names
-        typegraphs: HashSet<String>,
-        modules: HashMap<PathBuf, ModuleStatus>,
-    },
-    Ending {
-        // typegraph names
-        typegraphs: HashSet<String>,
-        modules: HashMap<PathBuf, ModuleStatus>,
-        ended_tx: oneshot::Sender<()>,
-    },
-    Ended,
-}
-
-enum AddTypegraphError {
-    ActivePushExists(State),
-    StatusEnding(State),
-    StatusEnded(State),
-}
-
-enum RemoveTypegraphError {
-    PushNotActive(State),
-    StatusIdle(State),
-    StatusEnded(State),
-}
-
-struct CancelationStatus(bool);
-
-impl State {
-    fn reduce<R, E>(&mut self, action: impl FnOnce(Self) -> Result<(Self, R), E>) -> Result<R, E> {
-        let old_state = std::mem::replace(self, State::Idle); // temp
-        let (new_state, ret) = action(old_state)?;
-        *self = new_state;
-        Ok(ret)
-    }
-
-    fn reduce2<E>(&mut self, action: impl FnOnce(Self) -> Result<Self, E>) -> Result<(), E> {
-        let old_state = std::mem::replace(self, State::Idle); // temp
-        let new_state = action(old_state)?;
-        *self = new_state;
-        Ok(())
-    }
-
-    fn add_typegraph(self, path: &Path, name: String) -> Result<Self, AddTypegraphError> {
-        match self {
-            Self::Idle => {
-                let mut typegraphs = HashSet::new();
-                let mut modules = HashMap::new();
-                typegraphs.insert(name);
-                let module_status = ModuleStatus {
-                    on_cancellation_complete: None,
-                    active_push_count: 1,
-                };
-                modules.insert(path.to_owned(), module_status);
-                Ok(Self::Running {
-                    typegraphs,
-                    modules,
-                })
-            }
-
-            Self::Running {
-                mut typegraphs,
-                mut modules,
-            } => {
-                if !typegraphs.insert(name) {
-                    // logical bug
-                    return Err(AddTypegraphError::ActivePushExists(Self::Running {
-                        typegraphs,
-                        modules,
-                    }));
-                }
-
-                modules.get_mut(path).unwrap().active_push_count += 1;
-
-                Ok(Self::Running {
-                    typegraphs,
-                    modules,
-                })
-            }
-
-            Self::Ending {
-                typegraphs,
-                modules,
-                ended_tx,
-            } => Err(AddTypegraphError::StatusEnding(Self::Ending {
-                typegraphs,
-                modules,
-                ended_tx,
-            })),
-
-            Self::Ended => Err(AddTypegraphError::StatusEnded(Self::Ended)),
-        }
-    }
-
-    fn remove_typegraph(
-        self,
-        path: &Path,
-        name: String,
-    ) -> Result<(Self, CancelationStatus), RemoveTypegraphError> {
-        match self {
-            Self::Idle => Err(RemoveTypegraphError::StatusIdle(Self::Idle)),
-
-            Self::Running {
-                mut typegraphs,
-                mut modules,
-            } => {
-                if !typegraphs.remove(&name) {
-                    // logical bug
-                    return Err(RemoveTypegraphError::PushNotActive(Self::Running {
-                        typegraphs,
-                        modules,
-                    }));
-                }
-
-                let push_count = {
-                    let active_push_count = &mut modules.get_mut(path).unwrap().active_push_count;
-                    *active_push_count -= 1;
-                    *active_push_count
-                };
-                if push_count == 0 {
-                    let status = modules.remove(path).unwrap();
-                    let is_cancelled = if let Some(tx) = status.on_cancellation_complete {
-                        tx.send(()).unwrap();
-                        true
-                    } else {
-                        false
-                    };
-                    Ok((Self::Idle, CancelationStatus(is_cancelled)))
-                } else {
-                    let is_cancelled = modules
-                        .get(path)
-                        .unwrap()
-                        .on_cancellation_complete
-                        .is_some();
-                    Ok((
-                        Self::Running {
-                            typegraphs,
-                            modules,
-                        },
-                        CancelationStatus(is_cancelled),
-                    ))
-                }
-            }
-
-            Self::Ending {
-                mut typegraphs,
-                mut modules,
-                ended_tx,
-            } => {
-                if !typegraphs.remove(&name) {
-                    // logical bug
-                    return Err(RemoveTypegraphError::PushNotActive(Self::Ending {
-                        typegraphs,
-                        modules,
-                        ended_tx,
-                    }));
-                }
-
-                let push_count = {
-                    let active_push_count = &mut modules.get_mut(path).unwrap().active_push_count;
-                    *active_push_count -= 1;
-                    *active_push_count
-                };
-                if push_count == 0 {
-                    let status = modules.remove(path).unwrap();
-                    let cancellation_status =
-                        CancelationStatus(status.on_cancellation_complete.is_some());
-                    // on_cancellation_complete is ignored
-                    if typegraphs.is_empty() {
-                        ended_tx.send(()).unwrap();
-                        Ok((Self::Ended, cancellation_status))
-                    } else {
-                        Ok((
-                            Self::Ending {
-                                typegraphs,
-                                modules,
-                                ended_tx,
-                            },
-                            cancellation_status,
-                        ))
-                    }
-                } else {
-                    Ok((
-                        Self::Ending {
-                            typegraphs,
-                            modules,
-                            ended_tx,
-                        },
-                        CancelationStatus(false),
-                    ))
-                }
-            }
-
-            Self::Ended => Err(RemoveTypegraphError::StatusEnded(Self::Ended)),
-        }
-    }
 }
 
 pub struct PushManagerBuilder {
@@ -272,7 +65,7 @@ impl PushManagerBuilder {
             PushManagerActor {
                 console: self.console,
                 pusher,
-                state: State::Idle,
+                state: State::default(),
                 retry_config: self.retry_config,
                 typegraph_paths: HashMap::new(),
             }
@@ -532,23 +325,24 @@ impl Handler<Stop> for PushManagerActor {
         self.state
             .reduce2(move |state| -> Result<State> {
                 match state {
-                    State::Idle { .. } => {
+                    State::Idle(_) => {
                         msg.tx.send(()).unwrap();
-                        Ok(State::Ended)
+                        Ok(StateEnded.into())
                     }
 
-                    State::Running {
+                    State::Running(StateRunning {
                         modules,
                         typegraphs,
-                    } => Ok(State::Ending {
+                    }) => Ok(StateEnding {
                         typegraphs,
                         modules,
                         ended_tx: msg.tx,
-                    }),
+                    }
+                    .into()),
 
-                    State::Ending { .. } => bail!("PushManager is already 'stopping'"),
+                    State::Ending(_) => bail!("PushManager is already 'stopping'"),
 
-                    State::Ended => bail!("PushManager is already 'stopped'"),
+                    State::Ended(_) => bail!("PushManager is already 'stopped'"),
                 }
             })
             .unwrap();
@@ -570,16 +364,16 @@ impl Handler<CancelAllFromModule> for PushManagerActor {
 
         self.state.reduce2(move |state| -> Result<State> {
             match state {
-                State::Idle => {
+                State::Idle(_) => {
                     // TODO cancel pending retries
                     msg.tx.send(()).unwrap();
-                    Ok(State::Idle)
+                    Ok(StateIdle.into())
                 }
 
-                State::Running {
+                State::Running(StateRunning {
                     mut modules,
                     typegraphs,
-                } => {
+                }) => {
                     if let Some(status) = modules.get_mut(&msg.path) {
                         if status.on_cancellation_complete.is_some() {
                             panic!("todo: handle multiple concurrent cancellations");
@@ -587,34 +381,34 @@ impl Handler<CancelAllFromModule> for PushManagerActor {
                             status.on_cancellation_complete = Some(msg.tx);
                         }
                     }
-                    Ok(State::Running {
+                    Ok(StateRunning {
                         modules,
                         typegraphs,
-                    })
+                    }.into())
                 }
 
-                State::Ending { modules, typegraphs, ended_tx } => {
+                State::Ending (StateEnding{ modules, typegraphs, ended_tx }) => {
                     console.warning(
                         format!(
                             "PushManager is in 'stopping' state, ignoring cancellation for module {:?}.",
                             msg.path
                         )
                     );
-                    Ok(State::Ending {
+                    Ok(StateEnding {
                         modules,
                         typegraphs,
                         ended_tx,
-                    })
+                    }.into())
                 },
 
-                State::Ended => {
+                State::Ended(_) => {
                     console.warning(
                         format!(
                             "PushManager is in 'stopped' state, ignoring cancellation for module {:?}.",
                             msg.path
                         )
                     );
-                    Ok(State::Ended)
+                    Ok(State::Ended(StateEnded))
                 },
             }
         }).unwrap();
