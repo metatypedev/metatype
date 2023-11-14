@@ -196,7 +196,7 @@ impl PusherActor {
                             name
                             messages { type text }
                             migrations { runtime migrations }
-
+                            failure
                         }
                     }"}
                 .to_string(),
@@ -297,6 +297,13 @@ pub enum PushFailure {
         message: String,
         #[serde(rename = "runtimeName")]
         runtime_name: String,
+    },
+    NullConstraintViolation {
+        message: String,
+        #[serde(rename = "runtimeName")]
+        runtime_name: String,
+        column: String,
+        table: String,
     },
 }
 
@@ -439,7 +446,9 @@ impl Handler<PushResult> for PusherActor {
             }
         }
 
+        log::debug!("push result: {:#?}", res.failure);
         if let Some(failure) = res.failure {
+            // log::debug!("push failure: {:?}", failure);
             match &failure {
                 PushFailure::Unknown { message } => {
                     self.console.error(format!(
@@ -457,6 +466,8 @@ impl Handler<PushResult> for PusherActor {
                         tg_name = name.cyan(),
                     ));
                     self.console.error(message.clone());
+
+                    todo!("confirm");
 
                     // if Confirm::new()
                     //     .with_prompt(format!(
@@ -478,6 +489,10 @@ impl Handler<PushResult> for PusherActor {
                     //     let _ = self.current.take().unwrap();
                     //     self.next(ctx);
                     // }
+                }
+
+                PushFailure::NullConstraintViolation { message, .. } => {
+                    self.console.error(message.clone());
                 }
             }
             // TODO follow-up question/interaction??

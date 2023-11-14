@@ -118,7 +118,7 @@ impl PushManagerActor {
             Ok(_) => true,
             Err(E::ActivePushExists) => {
                 console.error(format!(
-                    "There is an active push for typegraph {:?}, ignoring.",
+                    "There is an active push for typegraph {}, ignoring.",
                     name.cyan()
                 ));
                 false
@@ -353,8 +353,9 @@ pub trait PushManager {
 impl PushManager for Addr<PushManagerActor> {
     async fn stop(&self) -> Result<()> {
         let (tx, rx) = oneshot::channel();
-        self.send(Stop { tx }).await?;
+        self.do_send(Stop { tx });
         rx.await?;
+        log::trace!("PushManager stopped");
         Ok(())
     }
 

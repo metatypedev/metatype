@@ -1,15 +1,56 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { PushHandler } from "../../../typegate/hooks.ts";
+import { PushFailure, PushHandler } from "../../../typegate/hooks.ts";
 import { makeDatasource } from "../prisma.ts";
 import { PrismaRT } from "../mod.ts";
 import * as native from "native";
-import { nativeResult, pluralSuffix } from "../../../utils.ts";
+import {
+  nativeResult as nativeResultOriginal,
+  pluralSuffix,
+} from "../../../utils.ts";
 
-export class DatabaseResetRequiredError extends Error {
-  constructor(public reason: string, public runtimeName: string) {
-    super("Database reset required: " + reason);
+function nativeResult<R>(res: { Ok: R } | { Err: { message: string } }) {
+  try {
+    return nativeResultOriginal(res);
+  } catch (e) {
+    throw new MigrationFailure(e.message, "<>");
+  }
+}
+
+export class MigrationFailure extends Error {
+  errors: PushFailure[];
+  constructor(message: string, runtimeName: string) {
+    super(message);
+
+    const prefix = "ERROR: ";
+    const prefixLen = prefix.length;
+    const errors: PushFailure[] = message.split("\n")
+      .filter((line) => line.startsWith(prefix))
+      .map((line) => line.slice(prefixLen))
+      .map((err) => {
+        const match = NULL_CONSTRAINT_ERROR_REGEX.exec(err);
+        if (match != null) {
+          const { table, col } = match.groups!;
+          return {
+            reason: "NullConstraintViolation",
+            message: [
+              "Could not apply migration:",
+              err,
+              'Suggestion: set a default value: add `config={ "default": defaultValue }`',
+            ].join("\n"),
+            runtimeName,
+            column: col,
+            table,
+          };
+        } else {
+          return {
+            reason: "Unknown",
+            message: ["Could not apply migration:", err].join(" "),
+          };
+        }
+      });
+    this.errors = errors;
   }
 }
 
@@ -40,6 +81,7 @@ export const runMigrations: PushHandler = async (
     const prefix = `[prisma runtime: '${rt.data.name}']`;
 
     if (create) { // same as `meta prisma dev`
+      response.info(`${prefix} option: reset=${reset}`);
       if (migration_files != null) {
         const applyRes = await native.prisma_apply({
           datasource,
@@ -48,12 +90,11 @@ export const runMigrations: PushHandler = async (
           reset_database: reset,
         });
         if ("Err" in applyRes) {
-          console.error(`prisma apply failed: ${applyRes.Err}`);
-          throw new Error(applyRes.Err.message);
+          throw new MigrationFailure(applyRes.Err.message, rt.data.name);
         }
         if ("ResetRequired" in applyRes) {
-          throw new DatabaseResetRequiredError(
-            applyRes.ResetRequired.reset_reason,
+          throw new MigrationFailure(
+            `Reset required: ${applyRes.ResetRequired.reset_reason}`,
             rt.data.name,
           );
         }
@@ -99,26 +140,7 @@ export const runMigrations: PushHandler = async (
           );
 
         if (apply_err != null) {
-          const errors = apply_err.split(/\r?\n/).filter(
-            (line) => line.startsWith("ERROR: "),
-          )
-            .map((line) => line.slice("ERROR: ".length))
-            .map((err) => {
-              const match = NULL_CONSTRAINT_ERROR_REGEX.exec(err);
-              if (match != null) {
-                // TODO detect used for the typegraph language and write
-                // the message accordingly.
-                return `${err}: set a default value: add \`config={ "default": defaultValue }\` attribute to the type.`;
-              }
-              return err;
-            });
-
-          if (errors.length === 0) {
-            response.error(apply_err);
-          } else {
-            const formattedErrors = errors.map((err) => `\n- ${err}`).join("");
-            response.error(`Could not apply migration: ${formattedErrors}`);
-          }
+          throw new MigrationFailure(apply_err, rt.data.name);
         }
 
         if (created_migration_name != null) {
@@ -139,7 +161,13 @@ export const runMigrations: PushHandler = async (
           script: false,
         }),
       );
-      response.info(`Changes dectected: ${diff}`);
+      if (diff == null) {
+        response.info(`${prefix} No changes detected in the database schema.`);
+      } else {
+        response.info(
+          `${prefix} Changes detected in the database schema: ${diff}`,
+        );
+      }
 
       if (migration_files == null) {
         // TODO how to graciously fail??

@@ -12,7 +12,7 @@
         "typegraphs": 1,
         "typegraph": 7,
         "addTypegraph": 15,
-        "removeTypegraph": 38
+        "removeTypegraph": 32
       },
       "required": [
         "typegraphs",
@@ -177,7 +177,7 @@
     },
     {
       "type": "function",
-      "title": "func_36",
+      "title": "func_30",
       "runtime": 1,
       "policies": [
         0
@@ -232,7 +232,7 @@
     },
     {
       "type": "object",
-      "title": "object_35",
+      "title": "object_29",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -335,73 +335,49 @@
       "as_id": false
     },
     {
-      "type": "either",
-      "title": "either_34",
+      "type": "optional",
+      "title": "optional_28",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
-      "oneOf": [
-        31,
-        34
-      ]
-    },
-    {
-      "type": "object",
-      "title": "object_29",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "properties": {
-        "reason": 32,
-        "message": 33
-      },
-      "required": []
+      "item": 31,
+      "default_value": null
     },
     {
       "type": "string",
       "title": "string_27",
       "runtime": 1,
       "policies": [],
-      "enum": [
-        "\"Unknown\""
-      ],
       "config": {},
       "as_id": false
     },
     {
-      "type": "string",
-      "title": "string_28",
+      "type": "function",
+      "title": "func_34",
       "runtime": 1,
-      "policies": [],
+      "policies": [
+        0
+      ],
       "config": {},
-      "as_id": false
+      "as_id": false,
+      "input": 33,
+      "output": 35,
+      "materializer": 5,
+      "rate_weight": null,
+      "rate_calls": true
     },
     {
       "type": "object",
-      "title": "object_33",
+      "title": "object_32",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "reason": 35,
-        "message": 36,
-        "runtimeName": 37
+        "name": 34
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_30",
-      "runtime": 1,
-      "policies": [],
-      "enum": [
-        "\"DatabaseResetRequired\""
-      ],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "string",
@@ -412,51 +388,8 @@
       "as_id": false
     },
     {
-      "type": "string",
-      "title": "string_32",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "function",
-      "title": "func_40",
-      "runtime": 1,
-      "policies": [
-        0
-      ],
-      "config": {},
-      "as_id": false,
-      "input": 39,
-      "output": 41,
-      "materializer": 5,
-      "rate_weight": null,
-      "rate_calls": true
-    },
-    {
-      "type": "object",
-      "title": "object_38",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "properties": {
-        "name": 40
-      },
-      "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_37",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
       "type": "integer",
-      "title": "integer_39",
+      "title": "integer_33",
       "runtime": 1,
       "policies": [],
       "config": {},

@@ -10,10 +10,16 @@ const Message = {
   ERROR: "error",
 } as const;
 
-type PushFailure = {
+export type PushFailure = {
   reason: "DatabaseResetRequired";
   message: string;
   runtimeName: string;
+} | {
+  reason: "NullConstraintViolation";
+  message: string;
+  runtimeName: string;
+  column: string;
+  table: string;
 } | {
   reason: "Unknown";
   message: string;

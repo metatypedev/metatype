@@ -31,7 +31,10 @@ import { TypeGraphRuntime } from "../runtimes/typegraph.ts";
 import { resolveIdentifier } from "../services/middlewares.ts";
 import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
-import { DatabaseResetRequiredError } from "../runtimes/prisma/hooks/run_migrations.ts";
+import {
+  DatabaseResetRequiredError,
+  MigrationFailure,
+} from "../runtimes/prisma/hooks/run_migrations.ts";
 import introspectionJson from "../typegraphs/introspection.json" with {
   type: "json",
 };
@@ -80,11 +83,9 @@ export class Typegate {
       try {
         res = await handler(res, secretManager, response);
       } catch (e) {
-        if (e instanceof DatabaseResetRequiredError) {
-          response.setFailure({
-            reason: "DatabaseResetRequired",
-            message: e.reason,
-          });
+        logger.error(`Error in onPush hook: ${e}`);
+        if (e instanceof MigrationFailure) {
+          response.setFailure(e.errors[0]);
         } else {
           response.setFailure({
             reason: "Unknown",
