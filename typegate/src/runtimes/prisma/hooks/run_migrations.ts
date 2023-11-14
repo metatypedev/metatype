@@ -135,6 +135,11 @@ export const runMigrations: PushHandler = async (
       );
       response.info(`Changes dectected: ${diff}`);
 
+      if (migration_files == null) {
+        // TODO how to graciously fail??
+        throw new Error("Unexpected: migration_files is null");
+      }
+
       const { migration_count, applied_migrations } = nativeResult(
         await native.prisma_deploy({
           datasource,
