@@ -350,7 +350,8 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false
+      "as_id": false,
+      "format": "json"
     },
     {
       "type": "function",
