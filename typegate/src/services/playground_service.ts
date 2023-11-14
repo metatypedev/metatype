@@ -91,7 +91,7 @@ export const handlePlaygroundGraphQL = (
               headers={headers}
             >
               <GraphiQL.Logo>
-                <a href="https://metatype.dev/docs/reference" target="_blank">
+                <a href="https://metatype.dev/docs" target="_blank">
                   <div className="graphiql-logo-link">
                     <img src="https://metatype.dev/images/logo.svg" alt="Metatype logo" />
                     <div>Docs</div>

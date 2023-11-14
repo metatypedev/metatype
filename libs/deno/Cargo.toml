@@ -4,7 +4,6 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-# deno = { path =  "../../../deno/cli"}
-deno = { git = "https://github.com/metatypedev/deno.git", rev = "21e167212342fca3c8b8e028e3ab673894655699" }
+deno.workspace = true
 log = "0.4.20"
 anyhow = "1.0.75"

@@ -1,0 +1,39 @@
+---
+sidebar_position: 1
+---
+
+import InstallMetaCli from "../../../shared/install/meta-cli.mdx";
+import InstallTypegate from "../../../shared/install/typegate.mdx";
+import InstallTypegraph from "../../../shared/install/typegraph.mdx";
+
+# Quick start
+
+**This page will show you how to install the different components used by Metatype.**
+
+:::note You will learn
+
+- how to install the meta CLI
+- how to install the typegraph SDK
+- how to run a typegate node
+
+:::
+
+## 1. Meta CLI
+
+<InstallMetaCli />
+
+## 2. Typegraph SDK
+
+<InstallTypegraph />
+
+## 3. Typegate node
+
+<InstallTypegate />
+
+## 4. Verify your installation
+
+The doctor subcommand will attempt to detect all the components and report any potential issue. Please make sure to run it before opening an issue and include the output in your report.
+
+```bash
+meta doctor
+```

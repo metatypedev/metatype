@@ -35,6 +35,9 @@ class Policy:
 
     @classmethod
     def public(cls):
+        """
+        Public access
+        """
         res = core.get_public_policy(store)
         if isinstance(res, Err):
             raise Exception(res.value)

@@ -1,0 +1,42 @@
+---
+sidebar_position: 3
+---
+
+# Policies
+
+## Context
+
+
+
+
+## Generics policies
+
+### Public
+
+
+import CodeBlock from "@theme/CodeBlock";
+import TGExample from "@site/src/components/TGExample";
+
+# Policies and materializers
+
+This section also makes use of toy typegraph for the sake of clarity. You will continue the chat-based app on the next one.
+
+
+## Policy based access control (PBAC)
+
+The Deno runtime enable to understand the last abstraction. Policies are a way to verify for each type whether the user is authorized or not to access it. It's a very powerful concept that can be for instance used to guarantee a given type is never accidentally exposed to the outside world.
+
+Metatype comes with some built-in policies, but you can use the Deno runtime to define your own:
+
+- `policies.public()` is an alias for `Policy(PureFunMat("() => true"))` providing everyone open access.
+- `policies.ctx("role_value", "role_field")` is a companion policy for the authentication strategy you learned in the previous section. It will verify the context and give adequate access to the user.
+
+Policies are hierarchical in the sense that the request starts with a denial, and the root materializers must explicitly provide an access or not. Once access granted, any further types can either inherit or override the access. Policies evaluate in order in case multiple ones are defined.
+
+<TGExample
+  typegraph="policies"
+  python={require("./policies.py")}
+  query={require("./policies.graphql")}
+/>
+
+Enough studied, let's go back to your app and finalize it.

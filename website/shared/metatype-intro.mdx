@@ -1,17 +1,13 @@
-Metatype is an open source platform for developers to **declaratively build APIs**. It offers a unique approach to building backends, where the focus is all on data modelling and the platform takes care of the rest.
+Metatype is an open platform for developers to **declaratively build APIs**. It offers a new approach to creating backends, where the developers focus on data modelling and delegate the implementation to the platform.
 
-The intent is to find a convenient computing model that tackles the following challenges:
+The intent is to address the following challenges:
 
-- most developers still spend too much time on tasks with low-value (crud, data validation, compliance, etc.)
-- when growing a product, it is hard to keep up with business needs and remain innovative with technology
-- managing server and infrastructure shall never be a concern for developers nor slow them down
+- developers are often a bottleneck, and may spend less than 50% of their time on tasks that matter
+- most of the developments needs are similar, yet most of the systems are not interoperable
+- infrastructure management takes time and slows down the deployment velocity
 
-In that respect, Metatype can be seen as an alternative to Hasura, Strapi, Firebase, or even web frameworks like Django or NestJS. You can see how Metatype differs reading the [conceptual overview](/docs/concepts/overview) or the [comparison summary](/docs/concepts/comparisons).
+The platform is composed of the following components:
 
-The platform consists of the following components:
-
-- [**Typegraph**](/docs/concepts/typegraph): a package to describe typegraphs - virtual graphs of types - and compose them
-- [**Typegate**](/docs/concepts/typegate): a distributed REST/GraphQL query engine to execute queries over typegraphs
-- [**Meta CLI**](/docs/concepts/meta-cli): a command-line tool to provide great developer experience and serverless deployment
-
-A vast range of [runtimes](/docs/reference/runtimes) is implemented by the platform and provides out of the box support for storing data in databases/S3, connecting to third-party/internal APIs and running business logic in Deno/Python/WebAssembly.
+- [**Typegraph**](/docs/reference/typegraph): a multi-language SDK to manage typegraphs - virtual graphs of types - and compose them
+- [**Typegate**](/docs/reference/typegate): a serverless REST/GraphQL gateway to execute queries over typegraphs
+- [**Meta CLI**](/docs/reference/meta-cli): a command-line tool to offer a great developer experience and fast deployment

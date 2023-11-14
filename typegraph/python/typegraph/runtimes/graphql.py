@@ -60,7 +60,7 @@ class GraphQLRuntime(Runtime):
         out: "t.typedef",
         effect: Effect,
         *,
-        path: Optional[List[str]] = None
+        path: Optional[List[str]] = None,
     ):
         mat_id = runtimes.graphql_mutation(
             store,

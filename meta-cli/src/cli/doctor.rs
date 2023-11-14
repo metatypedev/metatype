@@ -189,8 +189,7 @@ impl Action for Doctor {
 
         println!();
         ui::print_box(
-            "Check that all versions match.",
-            "In case of issue or question, please raise a ticket on:\nhttps://github.com/metatypedev/metatype/issues\nOr browse the documentation:\nhttps://metatype.dev/docs/reference",
+            "In case of issue or question, please raise a ticket on:\nhttps://github.com/metatypedev/metatype/issues\nOr browse the documentation:\nhttps://metatype.dev/docs",
             w + 2,
         );
         Ok(())

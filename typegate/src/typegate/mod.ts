@@ -31,10 +31,7 @@ import { TypeGraphRuntime } from "../runtimes/typegraph.ts";
 import { resolveIdentifier } from "../services/middlewares.ts";
 import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
-import {
-  DatabaseResetRequiredError,
-  MigrationFailure,
-} from "../runtimes/prisma/hooks/run_migrations.ts";
+import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
 import introspectionJson from "../typegraphs/introspection.json" with {
   type: "json",
 };

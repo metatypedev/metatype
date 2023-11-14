@@ -66,7 +66,6 @@ export async function shell(
 
   if (!success) {
     const err = `-- start STDERR --\n${res.stderr}\n-- end STDERR --`;
-    console.log(err);
     const command = cmd.map((s) => JSON.stringify(s)).join(" ");
     throw new Error(
       `Command '${command}' failed with ${code}:\n${err}`,

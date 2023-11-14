@@ -11,8 +11,8 @@ on:
 env:
   PYTHON_VERSION: "3.8"
   PROTOC_VERSION: "v24.x"
-  POETRY_VERSION: "1.6.1"
-  DENO_VERSION: "1.37.1"
+  POETRY_VERSION: "1.7.0"
+  DENO_VERSION: "1.38.1"
   PNPM_VERSION: "8.8.0"
   NODE_VERSION: "20.8.0"
   WASM_TOOLS_VERSION: "1.0.45"
@@ -75,6 +75,7 @@ jobs:
           version: ${{ env.PROTOC_VERSION }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dsherret/rust-toolchain-file@v1
+      - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
@@ -115,7 +116,7 @@ jobs:
       - run: |
           python3 -m venv .venv
           source .venv/bin/activate
-          poetry install
+          poetry install --no-root
           cd website
           pnpm install --frozen-lockfile
           pnpm lint
@@ -129,6 +130,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
+      - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
@@ -148,6 +150,7 @@ jobs:
           version: ${{ env.PROTOC_VERSION }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dsherret/rust-toolchain-file@v1
+      - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
@@ -167,14 +170,14 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           cd typegraph/python
-          poetry install --sync
+          poetry install --no-root
           cd ../..
 
           curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
           export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
           cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
-          cargo build -p typegraph_core --target wasm32-unknown-unknown
-          wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+          cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
+          wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
           rm -rf typegraph/python/typegraph/gen
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
@@ -224,14 +227,14 @@ jobs:
           python3 -m venv .venv
           ${{ matrix.activate }}
           cd typegraph/python
-          poetry install --sync
+          poetry install --no-root
           cd ../..
 
           curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
           export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
           cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
-          cargo build -p typegraph_core --target wasm32-unknown-unknown
-          wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+          cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
+          wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
           rm -rf typegraph/python/typegraph/gen
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
@@ -292,6 +295,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: lukka/get-cmake@latest
       - uses: dsherret/rust-toolchain-file@v1
+      - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
@@ -330,13 +334,13 @@ jobs:
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
-          poetry install --sync
+          poetry install --no-root
           curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
           export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
           cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
           npm install --global @bytecodealliance/jco@$JCO_VERSION
-          cargo build -p typegraph_core --target wasm32-unknown-unknown
-          wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+          cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
+          wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
           rm -rf typegraph/deno/src/gen
           jco transpile $WASM_FILE -o typegraph/deno/src/gen
           deno run -A typegraph/deno/dev/fix-declarations.ts
@@ -368,6 +372,7 @@ jobs:
           version: ${{ env.PROTOC_VERSION }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dsherret/rust-toolchain-file@v1
+      - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
@@ -389,7 +394,7 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           cd typegraph/python
-          poetry install --sync
+          poetry install --no-root
           curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
           cd ../..
           export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"

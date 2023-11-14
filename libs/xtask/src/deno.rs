@@ -57,6 +57,7 @@ impl Test {
                     "rm",
                     "mkdir",
                     "bash",
+                    "npm",
                 ]
                 .into_iter()
                 .map(str::to_owned)
