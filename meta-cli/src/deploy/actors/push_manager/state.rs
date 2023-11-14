@@ -1,21 +1,13 @@
+use anyhow::{anyhow, Result};
 use derive_more::From;
-use enum_dispatch::enum_dispatch;
-use std::{
-    collections::{HashMap, HashSet},
-    path::{Path, PathBuf},
-};
+use std::collections::{HashMap, HashSet};
+use std::path::PathBuf;
 use tokio::sync::oneshot;
 
-pub trait StateEx {
-    fn add_typegraph(self, path: &Path, name: String) -> Result<State, AddTypegraphError>;
-    fn remove_typegraph(
-        self,
-        path: &Path,
-        name: String,
-    ) -> Result<(State, CancelationStatus), RemoveTypegraphError>;
-}
-
-// TODO remove pub
+// trait Action<S> {
+//     type Result;
+//     fn reduce(self, state: S) -> (S, Self::Result);
+// }
 
 #[derive(Debug, Default)]
 pub struct ModuleStatus {
@@ -28,7 +20,7 @@ pub struct ModuleStatus {
 #[derive(Debug)]
 pub struct StateIdle;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct StateRunning {
     // typegraph names
     pub typegraphs: HashSet<String>,
@@ -47,7 +39,6 @@ pub struct StateEnding {
 pub struct StateEnded;
 
 #[derive(Debug, From)]
-#[enum_dispatch(StateEx)]
 pub enum State {
     Idle(StateIdle),
     Running(StateRunning),
@@ -62,230 +53,271 @@ impl Default for State {
 }
 
 impl State {
-    // TODO private
-    pub fn reduce<R, E>(&mut self, action: impl FnOnce(Self) -> Result<(Self, R), E>) -> Result<R, E> {
-        let old_state = std::mem::replace(self, State::default()); // temp
-        let (new_state, ret) = action(old_state)?;
-        *self = new_state;
-        Ok(ret)
+    pub fn reduce<A: Action>(&mut self, action: A) -> A::Result {
+        let state = std::mem::replace(self, State::default());
+        let (state, result) = action.reduce(state);
+        *self = state;
+        result
     }
 
-    // TODO private
-    pub fn reduce2<E>(&mut self, action: impl FnOnce(Self) -> Result<Self, E>) -> Result<(), E> {
-        let old_state = std::mem::replace(self, State::default()); // temp
-        let new_state = action(old_state)?;
-        *self = new_state;
-        Ok(())
-    }
-
-    pub fn add_typegraph(self, path: &Path, name: String) -> Result<Self, AddTypegraphError> {
-        match self {
-            Self::Idle(_) => {
-                let mut typegraphs = HashSet::new();
-                let mut modules = HashMap::new();
-                typegraphs.insert(name);
-                let module_status = ModuleStatus {
-                    on_cancellation_complete: None,
-                    active_push_count: 1,
-                };
-                modules.insert(path.to_owned(), module_status);
-                Ok(StateRunning {
-                    typegraphs,
-                    modules,
-                }
-                .into())
-            }
-
-            Self::Running(StateRunning {
-                mut typegraphs,
-                mut modules,
-            }) => {
-                if !typegraphs.insert(name) {
-                    // logical bug
-                    return Err(AddTypegraphError::ActivePushExists(
-                        StateRunning {
-                            typegraphs,
-                            modules,
-                        }
-                        .into(),
-                    ));
-                }
-
-                modules.get_mut(path).unwrap().active_push_count += 1;
-
-                Ok(StateRunning {
-                    typegraphs,
-                    modules,
-                }
-                .into())
-            }
-
-            Self::Ending(StateEnding {
-                typegraphs,
-                modules,
-                ended_tx,
-            }) => Err(AddTypegraphError::StatusEnding(
-                StateEnding {
-                    typegraphs,
-                    modules,
-                    ended_tx,
-                }
-                .into(),
-            )),
-
-            Self::Ended(_) => Err(AddTypegraphError::StatusEnded(Self::Ended(StateEnded))),
-        }
+    pub fn add_typegraph(
+        &mut self,
+        path: PathBuf,
+        name: String,
+    ) -> Result<bool, AddTypegraphError> {
+        self.reduce(AddTypegraph { path, name })
     }
 
     pub fn remove_typegraph(
-        self,
-        path: &Path,
+        &mut self,
+        path: PathBuf,
         name: String,
-    ) -> Result<(Self, CancelationStatus), RemoveTypegraphError> {
-        match self {
-            Self::Idle(_) => Err(RemoveTypegraphError::StatusIdle(Self::Idle(StateIdle))),
+    ) -> Result<CancelationStatus, RemoveTypegraphError> {
+        self.reduce(RemoveTypegraph { path, name })
+    }
+}
 
-            Self::Running(StateRunning {
-                mut typegraphs,
-                mut modules,
-            }) => {
-                if !typegraphs.remove(&name) {
-                    // logical bug
-                    return Err(RemoveTypegraphError::PushNotActive(
-                        StateRunning {
-                            typegraphs,
-                            modules,
-                        }
-                        .into(),
-                    ));
-                }
+pub trait Action: Sized {
+    type Result;
 
-                let push_count = {
-                    let active_push_count = &mut modules.get_mut(path).unwrap().active_push_count;
-                    *active_push_count -= 1;
-                    *active_push_count
-                };
-                if push_count == 0 {
-                    let status = modules.remove(path).unwrap();
-                    let is_cancelled = if let Some(tx) = status.on_cancellation_complete {
-                        tx.send(()).unwrap();
-                        true
-                    } else {
-                        false
-                    };
-                    Ok((Self::Idle(StateIdle), CancelationStatus(is_cancelled)))
-                } else {
-                    let is_cancelled = modules
-                        .get(path)
-                        .unwrap()
-                        .on_cancellation_complete
-                        .is_some();
-                    Ok((
-                        StateRunning {
-                            typegraphs,
-                            modules,
-                        }
-                        .into(),
-                        CancelationStatus(is_cancelled),
-                    ))
-                }
-            }
+    fn reduce_idle(self, state: StateIdle) -> (State, Self::Result);
+    fn reduce_running(self, state: StateRunning) -> (State, Self::Result);
+    fn reduce_ending(self, state: StateEnding) -> (State, Self::Result);
+    fn reduce_ended(self, state: StateEnded) -> (State, Self::Result);
 
-            Self::Ending(StateEnding {
-                mut typegraphs,
-                mut modules,
-                ended_tx,
-            }) => {
-                if !typegraphs.remove(&name) {
-                    // logical bug
-                    return Err(RemoveTypegraphError::PushNotActive(
-                        StateEnding {
-                            typegraphs,
-                            modules,
-                            ended_tx,
-                        }
-                        .into(),
-                    ));
-                }
-
-                let push_count = {
-                    let active_push_count = &mut modules.get_mut(path).unwrap().active_push_count;
-                    *active_push_count -= 1;
-                    *active_push_count
-                };
-                if push_count == 0 {
-                    let status = modules.remove(path).unwrap();
-                    let cancellation_status =
-                        CancelationStatus(status.on_cancellation_complete.is_some());
-                    // on_cancellation_complete is ignored
-                    if typegraphs.is_empty() {
-                        ended_tx.send(()).unwrap();
-                        Ok((StateEnded.into(), cancellation_status))
-                    } else {
-                        Ok((
-                            StateEnding {
-                                typegraphs,
-                                modules,
-                                ended_tx,
-                            }
-                            .into(),
-                            cancellation_status,
-                        ))
-                    }
-                } else {
-                    Ok((
-                        StateEnding {
-                            typegraphs,
-                            modules,
-                            ended_tx,
-                        }
-                        .into(),
-                        CancelationStatus(false),
-                    ))
-                }
-            }
-
-            Self::Ended(_) => Err(RemoveTypegraphError::StatusEnded(Self::Ended(StateEnded))),
+    fn reduce(self, state: State) -> (State, Self::Result) {
+        match state {
+            State::Idle(state) => self.reduce_idle(state),
+            State::Running(state) => self.reduce_running(state),
+            State::Ending(state) => self.reduce_ending(state),
+            State::Ended(state) => self.reduce_ended(state),
         }
     }
+}
+
+pub enum AddTypegraphError {
+    ActivePushExists,
+    StatusEnding,
+    StatusEnded,
+}
+
+struct AddTypegraph {
+    path: PathBuf,
+    name: String,
+}
+
+impl Action for AddTypegraph {
+    type Result = Result<bool, AddTypegraphError>;
+
+    fn reduce_idle(self, _state: StateIdle) -> (State, Self::Result) {
+        let mut state = StateRunning::default();
+        state.typegraphs.insert(self.name);
+        let module_status = ModuleStatus {
+            active_push_count: 1,
+            ..Default::default()
+        };
+        state.modules.insert(self.path, module_status);
+
+        (state.into(), Ok(true))
+    }
+
+    fn reduce_running(self, mut state: StateRunning) -> (State, Self::Result) {
+        if !state.typegraphs.insert(self.name) {
+            // logical bug?
+            return (state.into(), Err(AddTypegraphError::ActivePushExists));
+        }
+
+        state
+            .modules
+            .entry(self.path)
+            .or_default()
+            .active_push_count += 1;
+
+        (state.into(), Ok(true))
+    }
+
+    fn reduce_ending(self, state: StateEnding) -> (State, Self::Result) {
+        (state.into(), Err(AddTypegraphError::StatusEnding))
+    }
+
+    fn reduce_ended(self, state: StateEnded) -> (State, Self::Result) {
+        (state.into(), Err(AddTypegraphError::StatusEnded))
+    }
+}
+
+pub enum RemoveTypegraphError {
+    PushNotActive,
+    StatusIdle,
+    StatusEnded,
 }
 
 pub struct CancelationStatus(pub bool);
 
-pub enum AddTypegraphError {
-    ActivePushExists(State),
-    StatusEnding(State),
-    StatusEnded(State),
+struct RemoveTypegraph {
+    path: PathBuf,
+    name: String,
 }
 
-pub enum RemoveTypegraphError {
-    PushNotActive(State),
-    StatusIdle(State),
-    StatusEnded(State),
-}
+impl Action for RemoveTypegraph {
+    type Result = Result<CancelationStatus, RemoveTypegraphError>;
 
-impl StateEx for StateIdle {
-    fn add_typegraph(self, path: &Path, name: String) -> Result<State, AddTypegraphError> {
-        let mut typegraphs = HashSet::new();
-        let mut modules = HashMap::new();
-        typegraphs.insert(name);
-        let module_status = ModuleStatus {
-            on_cancellation_complete: None,
-            active_push_count: 1,
-        };
-        modules.insert(path.to_owned(), module_status);
-        Ok(StateRunning {
-            typegraphs,
-            modules,
-        }
-        .into())
+    fn reduce_idle(self, state: StateIdle) -> (State, Self::Result) {
+        (state.into(), Err(RemoveTypegraphError::StatusIdle))
     }
 
-    fn remove_typegraph(
-        self,
-        path: &Path,
-        name: String,
-    ) -> Result<(State, CancelationStatus), RemoveTypegraphError> {
-        Err(RemoveTypegraphError::PushNotActive(self.into()))
+    fn reduce_running(self, mut state: StateRunning) -> (State, Self::Result) {
+        if !state.typegraphs.remove(&self.name) {
+            // logical bug?
+            return (state.into(), Err(RemoveTypegraphError::PushNotActive));
+        }
+
+        let mut state = state;
+        let push_count = {
+            let push_count = &mut state.modules.get_mut(&self.path).unwrap().active_push_count;
+            *push_count -= 1;
+            *push_count
+        };
+
+        if push_count == 0 {
+            let status = state.modules.remove(&self.path).unwrap();
+            let state = if state.modules.is_empty() {
+                StateIdle.into()
+            } else {
+                state.into()
+            };
+
+            match status.on_cancellation_complete {
+                Some(tx) => {
+                    tx.send(()).unwrap();
+                    (state, Ok(CancelationStatus(true)))
+                }
+                None => (state, Ok(CancelationStatus(false))),
+            }
+        } else {
+            let is_cancelled = state
+                .modules
+                .get(&self.path)
+                .unwrap()
+                .on_cancellation_complete
+                .is_some();
+            (state.into(), Ok(CancelationStatus(is_cancelled)))
+        }
+    }
+
+    fn reduce_ending(self, mut state: StateEnding) -> (State, Self::Result) {
+        if !state.typegraphs.remove(&self.name) {
+            // logical bug?
+            return (state.into(), Err(RemoveTypegraphError::PushNotActive));
+        }
+
+        let push_count = {
+            let push_count = &mut state.modules.get_mut(&self.path).unwrap().active_push_count;
+            *push_count -= 1;
+            *push_count
+        };
+
+        if push_count == 0 {
+            let status = state.modules.remove(&self.path).unwrap();
+            let state: State = if state.modules.is_empty() {
+                state.ended_tx.send(()).unwrap();
+                StateEnded.into()
+            } else {
+                state.into()
+            };
+
+            match status.on_cancellation_complete {
+                Some(_tx) => {
+                    // on_cancellation_complete is ignored
+                    (state, Ok(CancelationStatus(true)))
+                }
+                None => (state, Ok(CancelationStatus(false))),
+            }
+        } else {
+            let is_cancelled = state
+                .modules
+                .get(&self.path)
+                .unwrap()
+                .on_cancellation_complete
+                .is_some();
+            (state.into(), Ok(CancelationStatus(is_cancelled)))
+        }
+    }
+
+    fn reduce_ended(self, state: StateEnded) -> (State, Self::Result) {
+        (state.into(), Err(RemoveTypegraphError::StatusEnded))
+    }
+}
+
+impl Action for super::Stop {
+    type Result = Result<()>;
+
+    fn reduce_idle(self, _state: StateIdle) -> (State, Self::Result) {
+        self.tx.send(()).unwrap();
+        (StateEnded.into(), Ok(()))
+    }
+
+    fn reduce_running(self, state: StateRunning) -> (State, Self::Result) {
+        (
+            StateEnding {
+                typegraphs: state.typegraphs,
+                modules: state.modules,
+                ended_tx: self.tx,
+            }
+            .into(),
+            Ok(()),
+        )
+    }
+
+    fn reduce_ending(self, state: StateEnding) -> (State, Self::Result) {
+        (state.into(), Err(anyhow!("already stopping")))
+    }
+
+    fn reduce_ended(self, state: StateEnded) -> (State, Self::Result) {
+        (state.into(), Err(anyhow!("already stopped")))
+    }
+}
+
+impl Action for super::CancelAllFromModule {
+    type Result = ();
+
+    fn reduce_idle(self, state: StateIdle) -> (State, Self::Result) {
+        // TODO cancel pending retries
+        self.tx.send(()).unwrap();
+        (state.into(), ())
+    }
+
+    fn reduce_running(self, mut state: StateRunning) -> (State, Self::Result) {
+        if let Some(status) = state.modules.get_mut(&self.path) {
+            if status.on_cancellation_complete.is_some() {
+                panic!(
+                    "on_cancellation_complete is already set: concurrent cancelations not allowed"
+                );
+            } else {
+                status.on_cancellation_complete = Some(self.tx);
+            }
+        } // logical bug?
+
+        (state.into(), ())
+    }
+
+    fn reduce_ending(self, mut state: StateEnding) -> (State, Self::Result) {
+        // TODO warning
+        if let Some(status) = state.modules.get_mut(&self.path) {
+            if status.on_cancellation_complete.is_some() {
+                panic!(
+                    "on_cancellation_complete is already set: concurrent cancelations not allowed"
+                );
+            } else {
+                status.on_cancellation_complete = Some(self.tx);
+            }
+        }
+
+        (state.into(), ())
+    }
+
+    fn reduce_ended(self, state: StateEnded) -> (State, Self::Result) {
+        // TODO warning
+        self.tx.send(()).unwrap();
+        (state.into(), ())
     }
 }

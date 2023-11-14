@@ -14,7 +14,6 @@ use anyhow::{Context as AnyhowContext, Result};
 use indoc::indoc;
 use pathdiff::diff_paths;
 use serde::Deserialize;
-use tokio::sync::mpsc;
 
 use crate::config::Config;
 use crate::typegraph::push::{MessageEntry, Migrations};
@@ -22,24 +21,9 @@ use crate::utils::graphql;
 use crate::utils::{graphql::Query, Node};
 
 use super::console::{Console, ConsoleActor};
-use super::push_manager::{PushFinished, PushFollowUp, PushManagerActor};
+use super::push_manager::{PushFinished, PushManagerActor};
 
 type Secrets = HashMap<String, String>;
-
-#[derive(Debug, Clone)]
-pub enum PusherEvent {
-    Success(Push),
-    /// can retry
-    TransportFailure(Push),
-    /// bug: typegate did not property encode the response?
-    InvalidResponse(Push),
-    /// error from the typegate
-    Error(Push),
-    TypegateHookError(Push, PushFailure),
-}
-
-type EventTx = mpsc::UnboundedSender<PusherEvent>;
-// type EventRx = mpsc::UnboundedReceiver<PusherEvent>;
 
 #[derive(Clone, Debug)]
 struct Retry {
