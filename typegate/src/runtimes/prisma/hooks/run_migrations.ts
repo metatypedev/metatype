@@ -1,31 +1,43 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { PushFailure, PushHandler } from "../../../typegate/hooks.ts";
+import {
+  PushFailure,
+  PushHandler,
+  PushResponse,
+} from "../../../typegate/hooks.ts";
 import { makeDatasource } from "../prisma.ts";
 import { PrismaRT } from "../mod.ts";
 import * as native from "native";
-import {
-  nativeResult as nativeResultOriginal,
-  pluralSuffix,
-} from "../../../utils.ts";
-
-function nativeResult<R>(res: { Ok: R } | { Err: { message: string } }) {
-  try {
-    return nativeResultOriginal(res);
-  } catch (e) {
-    throw new MigrationFailure(e.message, "<>");
-  }
-}
+import { nativeResult, pluralSuffix } from "../../../utils.ts";
+import { MigrationOptions } from "../../../typegraph/types.ts";
+import { SecretManager } from "../../../typegraph/mod.ts";
 
 export class MigrationFailure extends Error {
-  errors: PushFailure[];
-  constructor(message: string, runtimeName: string) {
+  errors: PushFailure[] = [];
+  private constructor(message: string, public runtimeName?: string) {
     super(message);
+  }
+
+  static resetRequired(runtimeName: string, reason: string) {
+    const err = new MigrationFailure(
+      `Database reset required:\n${reason}`,
+      runtimeName,
+    );
+    err.errors.push({
+      reason: "DatabaseResetRequired",
+      message: reason,
+      runtimeName,
+    });
+    return err;
+  }
+
+  static fromErrorMessage(message: string, runtimeName: string) {
+    const err = new MigrationFailure(message, runtimeName);
 
     const prefix = "ERROR: ";
     const prefixLen = prefix.length;
-    const errors: PushFailure[] = message.split("\n")
+    err.errors = message.split("\n")
       .filter((line) => line.startsWith(prefix))
       .map((line) => line.slice(prefixLen))
       .map((err) => {
@@ -46,11 +58,12 @@ export class MigrationFailure extends Error {
         } else {
           return {
             reason: "Unknown",
-            message: ["Could not apply migration:", err].join(" "),
+            message:
+              `Could not apply migration for runtime ${runtimeName}: \n{message}`,
           };
         }
       });
-    this.errors = errors;
+    return err;
   }
 }
 
@@ -62,148 +75,224 @@ export const runMigrations: PushHandler = async (
   secretManager,
   response,
 ) => {
+  // TODO simpler: Use only one type for prisma runtime data, with some optional fields that would be set by hooks
   const runtimes = typegraph.runtimes.filter((rt) =>
     rt.name === "prisma"
   ) as PrismaRT.DS<PrismaRT.DataWithDatamodel>[];
 
   for (const rt of runtimes) {
-    const { connection_string_secret, datamodel, migration_options } = rt
-      .data;
-    if (migration_options == null) {
+    if (rt.data.migration_options == null) {
+      // migrations disabled
       continue;
     }
-    const { migration_files, create, reset } = migration_options;
 
-    const datasource = makeDatasource(
-      secretManager.secretOrFail(connection_string_secret),
-    );
+    const migration = new Migration(rt.data, secretManager, response);
 
-    const prefix = `[prisma runtime: '${rt.data.name}']`;
-
-    if (create) { // same as `meta prisma dev`
-      response.info(`${prefix} option: reset=${reset}`);
-      if (migration_files != null) {
-        const applyRes = await native.prisma_apply({
-          datasource,
-          datamodel,
-          migrations: migration_files!,
-          reset_database: reset,
-        });
-        if ("Err" in applyRes) {
-          throw new MigrationFailure(applyRes.Err.message, rt.data.name);
-        }
-        if ("ResetRequired" in applyRes) {
-          throw new MigrationFailure(
-            `Reset required: ${applyRes.ResetRequired.reset_reason}`,
-            rt.data.name,
-          );
-        }
-
-        const { reset_reason, applied_migrations } = applyRes.Ok;
-        if (reset_reason != null) {
-          response.info(`Database reset: ${reset_reason}`);
-        }
-        if (applied_migrations.length === 0) {
-          response.info(`${prefix} No migration applied.`);
-        } else {
-          const count = applied_migrations.length;
-          response.info(
-            `${prefix} ${count} migration${pluralSuffix(count)} applied:`,
-          );
-          for (const migrationName of applied_migrations) {
-            response.info(`  - ${migrationName}`);
-          }
-        }
-      }
-
-      // diff
-      const { diff } = nativeResult(
-        await native.prisma_diff({
-          datasource,
-          datamodel,
-          script: false,
-        }),
-      );
-
-      if (diff != null) {
-        response.info(`Changes detected in the schema: ${diff}`);
-        // create
-        const { created_migration_name, migrations: newMigrations, apply_err } =
-          nativeResult(
-            await native.prisma_create({
-              datasource,
-              datamodel,
-              migrations: migration_files,
-              migration_name: "generated",
-              apply: true,
-            }),
-          );
-
-        if (apply_err != null) {
-          throw new MigrationFailure(apply_err, rt.data.name);
-        }
-
-        if (created_migration_name != null) {
-          response.info(`Migration created: ${created_migration_name}`);
-          if (apply_err == null) {
-            response.info(`New migration applied: ${created_migration_name}`);
-          }
-          response.migration(rt.data.name, newMigrations!);
-          rt.data.migration_options!.migration_files = newMigrations;
-        }
-      }
-    } else { // like `meta prisma deploy`
-      // diff
-      const { diff } = nativeResult(
-        await native.prisma_diff({
-          datasource,
-          datamodel,
-          script: false,
-        }),
-      );
-      if (diff == null) {
-        response.info(`${prefix} No changes detected in the database schema.`);
-      } else {
-        response.info(
-          `${prefix} Changes detected in the database schema: ${diff}`,
-        );
-      }
-
-      if (migration_files == null) {
-        // TODO how to graciously fail??
-        throw new Error("Unexpected: migration_files is null");
-      }
-
-      const { migration_count, applied_migrations } = nativeResult(
-        await native.prisma_deploy({
-          datasource,
-          datamodel,
-          migrations: migration_files!,
-        }),
-      );
-
-      if (migration_count === 0) {
-        response.info(`${prefix} No migration found.`);
-      } else {
-        response.info(
-          `${prefix} ${migration_count} migration${
-            pluralSuffix(migration_count)
-          } found.`,
-        );
-      }
-      if (applied_migrations.length === 0) {
-        response.info(`${prefix} No migration applied.`);
-      } else {
-        const count = applied_migrations.length;
-        response.info(
-          `${prefix} ${count} migration${pluralSuffix(count)} applied:`,
-        );
-        for (const migrationName of applied_migrations) {
-          response.info(`  - ${migrationName}`);
-        }
-      }
+    try {
+      await migration.run();
+    } catch (err) {
+      const error = (err instanceof MigrationFailure)
+        ? err
+        : MigrationFailure.fromErrorMessage(err.message, rt.data.name);
+      response.setFailure(error.errors[0]);
+      throw error;
     }
   }
 
   return typegraph;
 };
+
+class Migration {
+  #options: MigrationOptions;
+  #runtimeName: string;
+  #datasource: string;
+  #datamodel: string;
+  #logPrefix: string;
+
+  constructor(
+    private rtData: PrismaRT.DataWithDatamodel,
+    secretManager: SecretManager,
+    private response: PushResponse,
+  ) {
+    this.#options = rtData.migration_options!;
+    this.#runtimeName = rtData.name;
+    const connectionString = secretManager.secretOrFail(
+      rtData.connection_string_secret,
+    );
+    this.#datasource = makeDatasource(connectionString);
+    this.#datamodel = rtData.datamodel;
+    this.#logPrefix = `[prisma runtime: '${this.#runtimeName}']`;
+  }
+
+  async run() {
+    const migrations = this.#options.migration_files;
+    if (this.#options.create) { // like `prisma dev`
+      // apply pending migrations
+      if (migrations != null) {
+        await this.#opApply(migrations);
+      }
+
+      if (await this.#opDiff()) {
+        // create new migrations
+        this.#opCreate();
+      }
+    } else { // like `prisma deploy`
+      if (migrations == null) {
+        this.#warn(
+          [
+            "No migration files.",
+            "Please re-run with the --create-migrations flag to automatically create migrations.",
+          ].join(" "),
+        );
+        return;
+      }
+
+      // display diff
+      if (await this.#opDiff()) {
+        this.#warn(
+          [
+            "No migration will be created for those changes.",
+            "Please re-run with the --create-migrations flag to automatically create migrations.",
+          ].join(" "),
+        );
+      }
+
+      // apply migrations
+      await this.#opApply(migrations);
+    }
+  }
+
+  async #opApply(migrations: string, forceReset = false) {
+    const res = await native.prisma_apply({
+      datasource: this.#datasource,
+      datamodel: this.#datamodel,
+      migrations,
+      reset: forceReset,
+    });
+
+    if ("Err" in res) {
+      throw MigrationFailure.fromErrorMessage(
+        res.Err.message,
+        this.#runtimeName,
+      );
+    }
+
+    if ("ResetRequired" in res) {
+      if (this.#options.reset) {
+        this.#warn(
+          `Database reset required: ${res.ResetRequired.reset_reason}`,
+        );
+        this.#warn("Re-running the migrations with the `reset` flag");
+        this.#opApply(migrations, true);
+        return;
+      } else {
+        // TODO --> question
+        throw MigrationFailure.resetRequired(
+          this.#runtimeName,
+          res.ResetRequired.reset_reason,
+        );
+      }
+    }
+
+    const { reset_reason, applied_migrations } = res.Ok;
+
+    if (reset_reason != null) {
+      this.#warn(`Database was reset:`);
+      this.#warn(reset_reason);
+    }
+
+    if (applied_migrations.length === 0) {
+      this.#info(`No migration applied.`);
+    } else {
+      const count = applied_migrations.length;
+      this.#info(`${count} migration${pluralSuffix(count)} applied:`);
+      for (const migrationName of applied_migrations) {
+        this.#info(`  - ${migrationName}`);
+      }
+    }
+  }
+
+  async #opDeploy(migrations: string) {
+    const { migration_count, applied_migrations } = nativeResult(
+      await native.prisma_deploy({
+        datasource: this.#datasource,
+        datamodel: this.#datamodel,
+        migrations,
+      }),
+    );
+
+    if (migration_count === 0) {
+      this.#info(`No migration found.`);
+    } else {
+      const s = pluralSuffix(migration_count);
+      this.#info(`${migration_count} migration${s} found.`);
+    }
+
+    if (applied_migrations.length === 0) {
+      if (migration_count > 0) {
+        this.#info(`No migration applied.`);
+      }
+    } else {
+      const count = applied_migrations.length;
+      const s = pluralSuffix(count);
+      this.#info(`${count} migration${s} applied:`);
+      for (const migrationName of applied_migrations) {
+        this.#info(`  - ${migrationName}`);
+      }
+    }
+  }
+
+  async #opDiff(): Promise<boolean> {
+    const { diff } = nativeResult(
+      await native.prisma_diff({
+        datasource: this.#datasource,
+        datamodel: this.#datamodel,
+        script: false,
+      }),
+    );
+
+    if (diff != null) {
+      this.#info(`Changes detected in the schema: ${diff}`);
+      return true;
+    } else {
+      this.#info(`No changes detected in the schema.`);
+      return false;
+    }
+  }
+
+  async #opCreate() {
+    const res = nativeResult(
+      await native.prisma_create({
+        datasource: this.#datasource,
+        datamodel: this.#datamodel,
+        migrations: this.#options.migration_files,
+        // TODO customizable??
+        migration_name: "generated",
+        apply: true,
+      }),
+    );
+
+    const { created_migration_name, migrations, apply_err } = res;
+
+    if (created_migration_name != null) {
+      this.#info(`Migration created: ${created_migration_name}`);
+      if (apply_err == null) {
+        this.#info(`New migration applied: ${created_migration_name}`);
+      }
+      this.response.migration(this.#runtimeName, migrations!);
+      this.rtData.migration_options!.migration_files = migrations;
+    }
+
+    if (apply_err != null) {
+      throw MigrationFailure.fromErrorMessage(apply_err, this.#runtimeName);
+    }
+  }
+
+  #info(message: string) {
+    this.response.info(`${this.#logPrefix} ${message}`);
+  }
+
+  #warn(message: string) {
+    this.response.warn(`${this.#logPrefix} ${message}`);
+  }
+}
