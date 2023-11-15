@@ -4,10 +4,11 @@ sidebar_position: 3
 import SDKTabs from "@site/src/components/SDKTabs";
 import TabItem from "@theme/TabItem";
 import TGExample from "@site/src/components/TGExample";
+import InstallMetaCli from "../../../shared/install/meta-cli.mdx";
 
 # Build a feature roadmap API
 
-**This page will walk you through a real world API with data storage, third-party integration, authentication and authorization.**
+**This page will walk you through a real world API with data storage and authorization.**
 
 :::note You will learn
 
@@ -27,7 +28,7 @@ For this tutorial, we'll be implementing an API to power a simple feature roadma
 Looking through the app we can see tha the api should allow:
  - Unauthenticated users to submit new "ideas" or vote on any of those already listed.
  - Specify or vote on the importance of an "idea" from "medium" to "critical" or even submit text with more description.
- - Admns will be able to move ideas across buckets like "Backlog", "Planned", "In Progress".
+ - Admins will be able to move ideas across buckets like "Backlog", "Planned", "In Progress".
 
         {/* TODO: consider emailing people interested in an idea when things change */}
 
@@ -45,7 +46,7 @@ This include allowing you to run them locally for development, push them to prod
 ### Create a new project
 
 Metatype projects are composed of modular bundles of types, logic and policies called typegraphs.
-We author typegraphs using modern programming langauges & environments. 
+We author typegraphs using modern programming languages & environments. 
 Python and ECMAScript are currently availaible for use.
 The meta-cli allows us to create a new project based on pre-existing templates.
 
@@ -60,7 +61,7 @@ Run one the following commands to create a new project under a new directory tit
 # using Node/Bun runtimes
 meta new --template node tg_roadmap 
 #                        ^ project name 
-#                   ^  Use `meta new --help` find out more availabile templates. 
+#                   ^  Use `meta new --help` find out more availaible templates. 
 
 # using Deno
 meta new --template deno tg_roadmap 
@@ -95,7 +96,7 @@ Run the following command to create a new project under a new directory titled `
 ```bash
 meta new --template python tg_roadmap 
 #                          ^ project name 
-#                   ^  Use `meta new --help` find out more availabile templates. 
+#                   ^  Use `meta new --help` find out more availaible templates. 
 ```
 
 When using python, the `typegraph` package exposes all the necessary functions and types we'll need to describe our typegraph.
@@ -111,7 +112,8 @@ source .venv/bin/activate
 pip3 install typegraph
 
 # using poetry
-poetry install # the template has included `typegraph` in the poetry manifest
+# the template has included `typegraph` in the poetry manifest
+poetry install 
 ```
 
       </TabItem>
@@ -221,15 +223,19 @@ typegraph("roadmap", (g) => {
     "name": t.string(),
   });
   const idea = t.struct({
-    "id": t.uuid({ asId: true }), // uuid is just a shorthand alias for `t.string({format: "uuid"})`
+    // uuid is just a shorthand alias for `t.string({format: "uuid"})`
+    "id": t.uuid({ asId: true }), 
     "name": t.string(),
-    "authorEmail": t.email(), // another string shorthand
+    // another string shorthand
+    "authorEmail": t.email(), 
   });
   const vote = t.struct({
     "id": t.uuid(),
     "authorEmail": t.email(),
-    "importance": t.enum_(["medium", "important", "critical"]).optional(), // `enum_` is also a shorthand over `t.string`
-    "desc": t.string().optional(), // makes it optional
+    // `enum_` is also a shorthand over `t.string`
+    "importance": t.enum_(["medium", "important", "critical"]).optional(), 
+    // makes it optional
+    "desc": t.string().optional(), 
   });
 });
 ```
@@ -253,22 +259,26 @@ def roadmap(g: Graph):
         "name": t.string(),
     });
     idea = t.struct({
-        "id": t.uuid(as_id=True), # email is just a shorthand alias for `t.string({format: "uuid"})`
+        # email is just a shorthand alias for `t.string({format: "uuid"})`
+        "id": t.uuid(as_id=True), 
         "name": t.string(),
-        "authorEmail": t.email(), # another string shorthand
+        # another string shorthand
+        "authorEmail": t.email(), 
     });
     vote = t.struct({
         "id": t.uuid(),
         "authorEmail": t.email(),
-        "importance": t.enum(["medium", "important", "critical"]).optional(), # `enum` is also a shorthand over `t.string`
-        "desc": t.string().optional(), # makes it optional
+        # `enum` is also a shorthand over `t.string`
+        "importance": t.enum(["medium", "important", "critical"]).optional(), 
+        # makes it optional
+        "desc": t.string().optional(), 
     });
 
 ```
       </TabItem>
           </SDKTabs>
 
-The types here are very simple and we haven't yet added any thing that models their relationships but they should do for our puropses.
+The types here are very simple and we haven't yet added any thing that models their relationships but they should do for our purposes.
 
 ## Materializers
 
@@ -288,7 +298,8 @@ import { RandomRuntime } from "@typegraph/sdk/runtimes/random";
 typegraph("roadmap", (g) => {
   // ...
   // every exposed materializer requires access control policies
-  const pub = Policy.public(); // for now, just use the public policy, anyone can access it 
+  // for now, just use the public policy, anyone can access it 
+  const pub = Policy.public(); 
   const random = new RandomRuntime({});
   g.expose(
     {
@@ -308,7 +319,8 @@ from typegraph.runtimes.random import RandomRuntime
 @typegraph()
 def roadmap(g: Graph):
     # every exposed materializer requires access control policies
-    pub = Policy.public() # for now, just use the public policy, anyone can access it
+    # for now, just use the public policy, anyone can access it
+    pub = Policy.public() 
     random = RandomRuntime()
     g.expose(
       # generates a random object in the shape of idea
@@ -322,11 +334,12 @@ At this point, we can push our typegraph to the locally running typegate node an
 Run the following command in your project root:
 
 ```bash
-meta dev # features auto-reload on any changes to your source files
+# features auto-reload on any changes to your source files
+meta dev 
 ```
 
 Typegate has first-class support for consuming the API through a GraphQl interface and it's enabled by default.
-It also bundles the GrapiQl API explorer and you should be able to access it at [http://localhost:7890/roadmap](http://localhost:7890/roadmap) once meta-cli has succesfully pushed your typegraph.
+It also bundles the GrapiQl API explorer and you should be able to access it at [http://localhost:7890/roadmap](http://localhost:7890/roadmap) once meta-cli has successfully pushed your typegraph.
 
 
     <TGExample
@@ -345,7 +358,7 @@ For this tutorial, we'll be making use of the PostgreSQL database.
 If you made use of the `compose.yml` to run typegate as outlined in this tutorial, there should be an instance of Postgres already up.
 You can check if postgres container is currently running by using the `meta doctor` command.
 
-If a typegraph needs to access a database, it first needs to be made aware of its adress.
+If a typegraph needs to access a database, it first needs to be made aware of its address.
 This is done through environment variables. 
 In the root of your project directory, you'll find a file titled `metatype.yaml`.
 It contains metatype specific configuration for our project such as the top level `typegates` object which we use to specify the location and credentials of the different typegate nodes we'll be using.
@@ -430,16 +443,21 @@ typegraph("roadmap", (g) => {
       config: { auto: true }
     }),
     "name": t.string(),
-    "ideas": t.list(g.ref("idea")), // one-to many relationship
-  }).rename("bucket"); // explicitly naming our types makes reference later easier
+    // one-to many relationship
+    "ideas": t.list(g.ref("idea")), 
+  })
+    // explicitly naming our types makes reference later easier
+    .rename("bucket"); 
   
   const idea = t.struct({
     "id": t.uuid({ asId: true, config: { auto: true } }),
     "name": t.string(),
     "authorEmail": t.email(),
-    "bucket": g.ref("bucket"), // we need to specify the relationships on both types
+    // we need to specify the relationships on both types
+    "bucket": g.ref("bucket"), 
     "votes": t.list(g.ref("vote")),
-  }).rename("idea");
+  })
+    .rename("idea");
 
   const vote = t.struct({
     "id": t.uuid({ asId: true, config: { auto: true } }),
@@ -447,7 +465,8 @@ typegraph("roadmap", (g) => {
     "importance": t.enum_(["medium", "important", "critical"]).optional(),
     "desc": t.string().optional(),
     "idea": g.ref("idea")
-  }).rename("vote");
+  })
+    .rename("vote");
 
   // ...
 });
@@ -473,9 +492,11 @@ def roadmap(g: Graph):
               config={"auto": True}
             ),
             "name": t.string(),
-            "ideas": t.list(g.ref("idea")), # one-to many relationship
+            # one-to many relationship
+            "ideas": t.list(g.ref("idea")), 
         },
-        name="bucket"  # explicitly naming our types makes reference later easier
+        # explicitly naming our types makes reference later easier
+        name="bucket"  
     )
     idea = t.struct(
         {
@@ -517,7 +538,7 @@ If you mess something up in the migrations and want a clean slate, you can reset
 docker compose down -v 
 # launch 
 docker compose up --detach
-# meta dev will auto aply any pending changes to databases
+# meta dev will auto apply any pending changes to databases
 meta dev
 ```
 
@@ -594,7 +615,7 @@ Policies are small functions that get the context of a request as input and retu
 There are different kinds of extractors availaible that primarily work on HTTP request headers including `jwt`, `hmac`, `basic` and `oauth2` with support for different providers. 
 We register any extractors we're interested in for the entire typegraph.
 Any policies running within it can then access their extracted values in the context.  
-Metatype currently supports policies based on javasctipt functions that are run on the Deno runtime.
+Metatype currently supports policies based on javascript functions that are run on the Deno runtime.
 
 For this tutorial, we'll be making use of the basic auth extractor.
 It expects a string in the format "Basic token" to be set in the `Authorization` http header.
@@ -617,8 +638,8 @@ typegraph("roadmap", (g) => {
   // it recognizes the username and the secret matches
   g.auth(Auth.basic(["andim", /*more users*/]))
 
-  // the `username` value is only availabile if the basic
-  // extractor was sucessful 
+  // the `username` value is only availaible if the basic
+  // extractor was successful 
   const admins = deno.policy("admins", `
   (_args, { context }) => !!context.username
 `);
@@ -654,8 +675,8 @@ def roadmap(g: Graph):
 
     deno = DenoRuntime()
 
-    # the username value is only availabile if the basic
-    # extractor was sucessful 
+    # the username value is only availaible if the basic
+    # extractor was successful 
     admins = deno.policy("admins", """
   (_args, { context }) => !!context.username
 """)
@@ -687,16 +708,16 @@ typegates:
 ```
 
 When you save the files, meta-cli will reload the new additions to your typegraph.
-`create_bucket` is now only acessible to requests bearing the right tokens. 
+`create_bucket` is now only accessible to requests bearing the right tokens. 
 (For the provided example, `Basic YW5kaW06aHVudGVyMg==` should work)
 If you're using the GraphiQl interface from earlier, there should be a panel in the bottom left called "Headers" for setting http headers 
 
 
-<TGExample
-      typegraph="roadmap-policies"
-      python={require("./policies.py")}
-      query={require("./policies.graphql")}
-    />
+    <TGExample
+          typegraph="roadmap-policies"
+          python={require("./policies.py")}
+          query={require("./policies.graphql")}
+        />
 
 ## More
 
@@ -739,7 +760,8 @@ typegraph("roadmap", (g) => {
       // ..
       "create_idea": db.create(idea).reduce({
         "data": {
-          // `g.inherit` specifys that we keep the member type from the type we're reducing 
+          // `g.inherit` specifies that we keep the member 
+          // type of the original 
           "name": g.inherit(),
           "authorEmail": g.inherit(),
           "votes": g.inherit(),
@@ -769,7 +791,8 @@ def roadmap(g: Graph):
         # ..
         create_idea=db.create(idea).reduce({
             "data": {
-                # `g.inherit` specifys that we keep the member type from the type we're reducing
+                # `g.inherit` specifies that we keep the member 
+                # type of the original
                 "name": g.inherit(),
                 "authorEmail": g.inherit(),
                 "votes": g.inherit(),
@@ -788,16 +811,16 @@ def roadmap(g: Graph):
 
 Requests are now only able to `connect` new ideas with pre-existing buckets and won't be able to create them.
 
-<TGExample
-      typegraph="roadmap-reduce"
-      python={require("./reduce.py")}
-      query={require("./reduce.graphql")}
-    />
+    <TGExample
+          typegraph="roadmap-reduce"
+          python={require("./reduce.py")}
+          query={require("./reduce.graphql")}
+        />
 
 ### `execute`
 
 You'll notice that we had set the `importance` field on votes as optional.
-This is to allow users to just upvote an idea from the main list without opening a form.
+This is to allow users to just up-vote an idea from the main list without opening a form.
 If they want to add importance or a description to their vote at a later point, we want to update their already existing vote.
 It should be easy to expose a materializer for this using Prisma's `db.update` helper and `reduce` to restrict changes to only those field.
 But we'll take this opportunity to explore the feature of the Prisma runtime to execute raw queries.
@@ -825,7 +848,8 @@ typegraph("roadmap", (g) => {
         }),
         // we use effects to signal what kind of operation we're doing
         // updates and creates will be exposed as mutations in GraphQl
-        effects.update(true), // the boolean signals that the query is idempotent
+        // the boolean signals that the query is idempotent
+        effects.update(true), 
       )
       // ..
     }, pub
@@ -857,7 +881,8 @@ def roadmap(g: Graph):
             }),
             # we use effects to signal what kind of operation we're doing
             # updates and creates will be exposed as mutations in GraphQl
-            EffectUpdate(True), # the boolean signals that the query is idempotent
+            # the boolean signals that the query is idempotent
+            EffectUpdate(True),
         ),
         # ..
     )
@@ -868,11 +893,11 @@ def roadmap(g: Graph):
 
 Our query is exposed like any other materializer in the GraphQl api.
 
-<TGExample
-      typegraph="roadmap-execute"
-      python={require("./execute.py")}
-      query={require("./execute.graphql")}
-    />
+    <TGExample
+          typegraph="roadmap-execute"
+          python={require("./execute.py")}
+          query={require("./execute.graphql")}
+        />
 
 ### `rest`
 
@@ -973,16 +998,16 @@ def roadmap(g: Graph):
 
 The exposed query is served at the path `{typegate_url}/{typegraph_name}/rest/{query_name}`.
 Any parameters that the query takes are processed from the search params of the request.
-{/*TODO: provide a link to the sample typegraph*/}
+    {/*TODO: provide a link to the sample typegraph*/}
 
-## `func`
+### `func`
 
-So far, the materializers we've looked at have been generatred by helpers like the CRUD helpers from the Prisma runtime or the the Random runtimes's `generate helper.
-All these helpers do is generate functions for speicifc usecases and now we'll look at how to roll a custom function ourselves.
+So far, the materializers we've looked at have been generated by helpers like the CRUD helpers from the Prisma runtime or the the Random runtimes's `generate` helper.
+All these helpers are shorthands for creating function objects and now we'll look at how to roll a custom function ourselves.
 
 
-<SDKTabs>
-  <TabItem value="typescript">
+    <SDKTabs>
+          <TabItem value="typescript">
               {/**/}
 We'll be using the Python runtime to run our code.
 
@@ -993,7 +1018,7 @@ typegraph("roadmap", (g) => {
 });
 ```
 
-  </TabItem>
+      </TabItem>
   <TabItem value="python">
 
           {/*  */}
@@ -1006,11 +1031,11 @@ def roadmap(g: Graph):
     # ..
 
 ```
-  </TabItem>
-</SDKTabs>
+      </TabItem>
+          </SDKTabs>
 
-{/*
-*/}
-{/*
-- func as a service
-*/}
+    {/*
+                                */}
+    {/*
+                                - func as a service
+                                */}
