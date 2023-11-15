@@ -41,7 +41,7 @@ There is no "object" or "primitive" type, only 4 main categories of types:
 
 You can combine them with each other to describe almost any data type you may need. The typegate enforces the data validation when data flows through it. Some syntactic sugar is available to make the type definition shorter:
 
-<CodeBlock language="python">{require("./types.py").content}</CodeBlock>
+    <CodeBlock language="python">{require("./types.py").content}</CodeBlock>
 
 ## The typegraph package
 
@@ -60,11 +60,11 @@ You can interact with most of the typegraph in the documentation. Press command/
 
 A complete typegraph definition may look like the following:
 
-<TGExample
-  typegraph="first-typegraph"
-  python={require("./t.py")}
-  query={require("./query.graphql")}
-/>
+    <TGExample
+          typegraph="first-typegraph"
+          python={require("./t.py")}
+          query={require("./query.graphql")}
+        />
 
 To start with the chat app design, copy the typegraph into the file named `example.py` next to your `compose.yml` file.
 
@@ -109,19 +109,10 @@ Loaded 1 typegraph from ./api/example.py:
 
 You can now open [http://localhost:7890/first-typegraph](http://localhost:7890/first-typegraph) in your browser. The CLI will automatically watch for changes in the typegraph and reload the typegraph. You should see a GraphQL playground with a query editor and some auto-generated documentation clicking the top-left menu item. **Congrats**, you can now to play with your first typegraph!
 
-<div className="text-center">
-  <img
-    src={require("./playground.png").default}
-    width="600"
-    alt="typegate playground"
-  />
-</div>
-
-- model random runtime
-- crud/prisma
-- policies
-- authentification
-- func as a service
-- http api
-- custom query
-- apply
+    <div className="text-center">
+          <img
+              src={require("./playground.png").default}
+              width="600"
+              alt="typegate playground"
+            />
+          </div>
