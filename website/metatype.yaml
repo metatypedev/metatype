@@ -30,6 +30,8 @@ typegates:
       TG_RETREND_S3_REGION: local
       TG_RETREND_S3_ACCESS_KEY: minio
       TG_RETREND_S3_SECRET_KEY: password
+      TG_ROADMAP_POSTGRES: "postgresql://postgres:password@postgres:5432/db"
+      TG_ROADMAP_BASIC_ANDIM: hunter2
   prd:
     url: https://demo.metatype.dev
     username: admin
@@ -61,6 +63,8 @@ typegates:
       TG_RETREND_S3_REGION: local
       TG_RETREND_S3_ACCESS_KEY: minio
       TG_RETREND_S3_SECRET_KEY: password
+      TG_ROADMAP_POSTGRES: "postgresql://postgres:password@postgres:5432/db"
+      TG_ROADMAP_BASIC_ANDIM: hunter2
 
 typegraphs:
   materializers:

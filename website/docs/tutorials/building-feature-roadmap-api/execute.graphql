@@ -1,0 +1,6 @@
+mutation UVote {
+  set_vote_importance(
+    vote_id: "2f3207e0-6cb6-4aaf-a759-037cdfe48f0c",
+    importance: "medium"
+  )
+}
