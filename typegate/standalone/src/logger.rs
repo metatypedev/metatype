@@ -8,9 +8,17 @@ use colored::Colorize;
 use log::Level;
 use std::io::Write;
 
+fn optional_module_path(path: &str) -> String {
+    if path.starts_with("typegate") {
+        "".to_string()
+    } else {
+        format!(" {path}")
+    }
+}
+
 pub fn init() {
     if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var("RUST_LOG", "info,swc_ecma_codegen=off,tracing::span=off");
+        std::env::set_var("RUST_LOG", "info,quaint=off,swc_ecma_codegen=off,tracing::span=off");
     }
     let mut builder = env_logger::Builder::from_default_env();
     builder
@@ -18,9 +26,9 @@ pub fn init() {
             let level = rec.level();
             let module_path = rec.module_path().unwrap_or("");
             let level = match level {
-                Level::Error => format!("[{level}]").red(),
-                Level::Warn => format!("[{level}]").yellow(),
-                Level::Info => format!("[{level}]").blue(),
+                Level::Error => format!("[{level}{p}]", p = optional_module_path(module_path)).red(),
+                Level::Warn => format!("[{level}{p}]", p = optional_module_path(module_path)).yellow(),
+                Level::Info => format!("[{level}{p}]", p = optional_module_path(module_path)).blue(),
                 Level::Debug => format!("[{level} {module_path}]").dimmed(),
                 Level::Trace => format!("[{level} {module_path}]").dimmed(),
             };

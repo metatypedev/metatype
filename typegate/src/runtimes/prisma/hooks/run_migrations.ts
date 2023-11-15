@@ -82,7 +82,7 @@ export const runMigrations: PushHandler = async (
 
   for (const rt of runtimes) {
     if (rt.data.migration_options == null) {
-      // migrations disabled
+      response.warn(`Migrations disabled for runtime ${rt.data.name}`);
       continue;
     }
 
@@ -121,11 +121,12 @@ class Migration {
     );
     this.#datasource = makeDatasource(connectionString);
     this.#datamodel = rtData.datamodel;
-    this.#logPrefix = `[prisma runtime: '${this.#runtimeName}']`;
+    this.#logPrefix = `(runtime: '${this.#runtimeName}')`;
   }
 
   async run() {
     const migrations = this.#options.migration_files;
+
     if (this.#options.create) { // like `prisma dev`
       // apply pending migrations
       if (migrations != null) {
@@ -133,8 +134,8 @@ class Migration {
       }
 
       if (await this.#opDiff()) {
-        // create new migrations
-        this.#opCreate();
+        // create new migration
+        await this.#opCreate();
       }
     } else { // like `prisma deploy`
       if (migrations == null) {
@@ -158,7 +159,7 @@ class Migration {
       }
 
       // apply migrations
-      await this.#opApply(migrations);
+      await this.#opDeploy(migrations);
     }
   }
 
@@ -167,7 +168,7 @@ class Migration {
       datasource: this.#datasource,
       datamodel: this.#datamodel,
       migrations,
-      reset: forceReset,
+      reset_database: forceReset,
     });
 
     if ("Err" in res) {
@@ -179,9 +180,8 @@ class Migration {
 
     if ("ResetRequired" in res) {
       if (this.#options.reset) {
-        this.#warn(
-          `Database reset required: ${res.ResetRequired.reset_reason}`,
-        );
+        this.#warn(`Database reset required`);
+        this.#warn(res.ResetRequired.reset_reason);
         this.#warn("Re-running the migrations with the `reset` flag");
         this.#opApply(migrations, true);
         return;
@@ -261,6 +261,7 @@ class Migration {
   }
 
   async #opCreate() {
+    this.#warn(`Creating migration for the changes.`);
     const res = nativeResult(
       await native.prisma_create({
         datasource: this.#datasource,
@@ -281,6 +282,8 @@ class Migration {
       }
       this.response.migration(this.#runtimeName, migrations!);
       this.rtData.migration_options!.migration_files = migrations;
+    } else {
+      this.#warn(`No migration created.`);
     }
 
     if (apply_err != null) {
