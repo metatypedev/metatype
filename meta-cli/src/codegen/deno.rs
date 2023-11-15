@@ -507,7 +507,7 @@ mod tests {
             .auto_stop()
             .start();
 
-            loader.do_send(LoadModule(typegraph_test.clone()));
+            loader.do_send(LoadModule(typegraph_test.clone().into()));
 
             let mut event_rx = event_rx;
             let LoaderEvent::Typegraph(tg) = event_rx.recv().await.unwrap() else {
