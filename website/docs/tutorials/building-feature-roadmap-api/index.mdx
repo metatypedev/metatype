@@ -1,6 +1,10 @@
 ---
 sidebar_position: 3
 ---
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
+import TGExample from "@site/src/components/TGExample";
+
 # Build a feature roadmap API
 
 **This page will walk you through a real world API with data storage, third-party integration, authentication and authorization.**
@@ -45,9 +49,6 @@ We author typegraphs using modern programming langauges & environments.
 Python and ECMAScript are currently availaible for use.
 The meta-cli allows us to create a new project based on pre-existing templates.
 
-
-import SDKTabs from "@site/src/components/SDKTabs";
-import TabItem from "@theme/TabItem";
 
         <SDKTabs>
               <TabItem value="typescript">
@@ -974,29 +975,27 @@ The exposed query is served at the path `{typegate_url}/{typegraph_name}/rest/{q
 Any parameters that the query takes are processed from the search params of the request.
 {/*TODO: provide a link to the sample typegraph*/}
 
-{/*
 ## `func`
 
 So far, the materializers we've looked at have been generatred by helpers like the CRUD helpers from the Prisma runtime or the the Random runtimes's `generate helper.
 All these helpers do is generate functions for speicifc usecases and now we'll look at how to roll a custom function ourselves.
 
 
-        <SDKTabs>
-              <TabItem value="typescript">
+<SDKTabs>
+  <TabItem value="typescript">
               {/**/}
-
 We'll be using the Python runtime to run our code.
 
 ```typescript
-
 typegraph("roadmap", (g) => {
   // ...
 
 });
 ```
 
-      </TabItem>
+  </TabItem>
   <TabItem value="python">
+
           {/*  */}
 
 We'll be using the Deno runtime to run our code.
@@ -1007,9 +1006,10 @@ def roadmap(g: Graph):
     # ..
 
 ```
-      </TabItem>
-          </SDKTabs>
+  </TabItem>
+</SDKTabs>
 
+{/*
 */}
 {/*
 - func as a service
