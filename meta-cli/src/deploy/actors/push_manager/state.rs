@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use anyhow::{anyhow, Result};
 use derive_more::From;
 use std::collections::{HashMap, HashSet};
@@ -54,7 +57,7 @@ impl Default for State {
 
 impl State {
     pub fn reduce<A: Action>(&mut self, action: A) -> A::Result {
-        let state = std::mem::replace(self, State::default());
+        let state = std::mem::take(self);
         let (state, result) = action.reduce(state);
         *self = state;
         result

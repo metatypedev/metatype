@@ -351,9 +351,7 @@ impl Handler<PushResult> for PusherActor {
             }
         }
 
-        log::debug!("push result: {:#?}", res.failure);
         if let Some(failure) = res.failure {
-            // log::debug!("push failure: {:?}", failure);
             match &failure {
                 PushFailure::Unknown { message } => {
                     self.console.error(format!(

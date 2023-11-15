@@ -249,7 +249,7 @@ impl Handler<Push> for PushManagerActor {
 
 pub trait ConfirmHandler: std::fmt::Debug {
     fn on_confirm(&self, push_manager: Addr<PushManagerActor>);
-    fn on_deny(&self, push_manager: Addr<PushManagerActor>) {}
+    fn on_deny(&self, _push_manager: Addr<PushManagerActor>) {}
 }
 
 #[derive(Debug)]
@@ -289,7 +289,7 @@ impl PushFinished {
     }
 
     pub(super) fn confirm(
-        mut self,
+        self,
         question: String,
         handler: impl ConfirmHandler + Send + 'static,
     ) -> Self {
