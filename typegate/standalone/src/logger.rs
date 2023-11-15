@@ -18,10 +18,7 @@ fn optional_module_path(path: &str) -> String {
 
 pub fn init() {
     if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var(
-            "RUST_LOG",
-            "info,quaint=off,swc_ecma_codegen=off,tracing::span=off",
-        );
+        std::env::set_var("RUST_LOG", "info,swc_ecma_codegen=off,tracing::span=off");
     }
     let mut builder = env_logger::Builder::from_default_env();
     builder
