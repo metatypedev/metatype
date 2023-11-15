@@ -62,6 +62,7 @@ fn main() -> Result<()> {
         Some(command) => actix::run(async move {
             command.run(args.gen).await.unwrap_or_else(|e| {
                 error!("{}", e.to_string());
+                std::process::exit(1);
             });
         })?,
         None => Args::command().print_help()?,

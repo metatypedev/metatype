@@ -32,10 +32,6 @@ struct Retry {
     max: u32,
 }
 
-// TODO generic
-// no retry vs with retry
-// no retry: for default (non-watch) mode: -> collect all push errors
-// with retry: for watch mode: -> retry on error
 pub struct PusherActor {
     config: Arc<Config>,
     console: Addr<ConsoleActor>,
@@ -143,10 +139,8 @@ impl PusherActor {
                     push_manager.do_send(PushFinished::new(push, false));
                 }
                 graphql::Error::FailedQuery(errs) => {
-                    // TODO interaction
                     console.error("Failed to push typegraph:".to_string());
                     for err in errs {
-                        // TODO format error
                         console.error(format!(" * {}", err.message));
                     }
                     push_manager.do_send(PushFinished::new(push, false));

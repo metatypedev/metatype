@@ -44,20 +44,17 @@ impl Discovery {
             .follow_links(true)
             .build()
         {
-            let entry = match result {
-                Ok(entry) => entry,
+            match result {
+                Ok(entry) => {
+                    let path = entry.path();
+                    if !self.filter.is_excluded(path, &mut searcher) {
+                        handler(Ok(path.to_path_buf()));
+                    }
+                }
                 Err(err) => {
                     handler(Err(err.into()));
-                    // debug!("{}", err);
-                    continue;
                 }
-            };
-            let path = entry.path();
-            if self.filter.is_excluded(path, &mut searcher) {
-                continue;
             }
-
-            handler(Ok(path.to_path_buf()));
         }
 
         Ok(())
