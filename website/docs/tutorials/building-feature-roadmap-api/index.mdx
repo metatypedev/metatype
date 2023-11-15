@@ -329,7 +329,7 @@ It also bundles the GrapiQl API explorer and you should be able to access it at 
 
 
     <TGExample
-          typegraph="random-runtime"
+          typegraph="roadmap-random"
           python={require("./random.py")}
           query={require("./random.graphql")}
         />
@@ -577,7 +577,7 @@ def roadmap(g: Graph):
 We should be able to add a few buckets and ideas now.
 
     <TGExample
-          typegraph="prisma-crud"
+          typegraph="roadmap-prisma"
           python={require("./prisma.py")}
           query={require("./prisma.graphql")}
         />
@@ -692,7 +692,7 @@ If you're using the GraphiQl interface from earlier, there should be a panel in 
 
 
 <TGExample
-      typegraph="policies"
+      typegraph="roadmap-policies"
       python={require("./policies.py")}
       query={require("./policies.graphql")}
     />
@@ -788,7 +788,7 @@ def roadmap(g: Graph):
 Requests are now only able to `connect` new ideas with pre-existing buckets and won't be able to create them.
 
 <TGExample
-      typegraph="reduce"
+      typegraph="roadmap-reduce"
       python={require("./reduce.py")}
       query={require("./reduce.graphql")}
     />
@@ -868,7 +868,7 @@ def roadmap(g: Graph):
 Our query is exposed like any other materializer in the GraphQl api.
 
 <TGExample
-      typegraph="execute"
+      typegraph="roadmap-execute"
       python={require("./execute.py")}
       query={require("./execute.graphql")}
     />
@@ -876,9 +876,105 @@ Our query is exposed like any other materializer in the GraphQl api.
 ### `rest`
 
 We can easily expose an HTTP API for our typegraph using the `g.rest` method.
+It takes a string describe a graphql query to be executed when the http path is requested.
 
-TODO:
+        <SDKTabs>
+              <TabItem value="typescript">
+              {/**/}
 
+```typescript
+typegraph("roadmap", (g) => {
+  // ...
+  
+  g.rest(
+    `
+        query get_buckets {
+            get_buckets {
+                id
+                name
+                ideas {
+                    id
+                    name
+                    authorEmail
+                }
+            }
+        }
+    `
+  )
+  g.rest(
+    // query parameters present
+    // expects a request of the type `roadmap/rest/get_bucket?id=uuidstr`
+    `
+        query get_bucket($id: Integer) {
+            get_bucket(where:{
+                id: $id
+            }) {
+                id
+                name
+                ideas {
+                    id
+                    name
+                    authorEmail
+                }
+            }
+        }
+    `
+  )
+});
+```
+
+      </TabItem>
+  <TabItem value="python">
+          {/*  */}
+
+```python
+@typegraph()
+def roadmap(g: Graph):
+    # ..
+    g.rest(
+        """
+        query get_buckets {
+            get_buckets {
+                id 
+                name
+                ideas {
+                    id
+                    name
+                    authorEmail
+                }
+            }
+        }
+        """
+    )
+    g.rest(
+        # query parameters present
+        # expects a request of the type `roadmap/rest/get_bucket?id=uuidstr`
+        """
+        query get_bucket($id: Integer) {
+            get_bucket(where:{
+                id: $id
+            }) {
+                id 
+                name
+                ideas {
+                    id
+                    name
+                    authorEmail
+                }
+            }
+        }
+        """
+    )
+
+```
+      </TabItem>
+          </SDKTabs>
+
+The exposed query is served at the path `{typegate_url}/{typegraph_name}/rest/{query_name}`.
+Any parameters that the query takes are processed from the search params of the request.
+{/*TODO: provide a link to the sample typegraph*/}
+
+{/*
 ## `func`
 
 So far, the materializers we've looked at have been generatred by helpers like the CRUD helpers from the Prisma runtime or the the Random runtimes's `generate helper.
@@ -914,7 +1010,7 @@ def roadmap(g: Graph):
       </TabItem>
           </SDKTabs>
 
+*/}
 {/*
 - func as a service
-- http api
 */}
