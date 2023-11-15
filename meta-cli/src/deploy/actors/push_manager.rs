@@ -224,8 +224,6 @@ impl Actor for PushManagerActor {
 
     fn started(&mut self, _ctx: &mut Self::Context) {
         log::trace!("PushManagerActor started");
-        // self.state = State::Idle;
-        // self.pusher.do_send(super::pusher::Init);
     }
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {

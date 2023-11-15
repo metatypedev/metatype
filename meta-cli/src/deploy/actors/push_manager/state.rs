@@ -7,11 +7,6 @@ use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use tokio::sync::oneshot;
 
-// trait Action<S> {
-//     type Result;
-//     fn reduce(self, state: S) -> (S, Self::Result);
-// }
-
 #[derive(Debug, Default)]
 pub struct ModuleStatus {
     // when some, follow-up pushes are cancelled,

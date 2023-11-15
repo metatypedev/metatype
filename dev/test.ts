@@ -78,7 +78,7 @@ const tmpDir = join(projectDir, "tmp");
 const env: Record<string, string> = {
   "RUST_LOG": "off,xtask=debug,meta=debug",
   "LOG_LEVEL": "DEBUG",
-  "NO_COLOR": "1",
+  // "NO_COLOR": "1",
   "DEBUG": "true",
   "PACKAGED": "false",
   "TG_SECRET":

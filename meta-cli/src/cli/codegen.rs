@@ -71,22 +71,6 @@ impl Action for Deno {
                 e.to_string()
             )
         })?;
-        // match loader.load_file(&self.file).await {
-        //     LoaderResult::Loaded(_) => {
-        //         // ok
-        //     }
-        //     LoaderResult::Rewritten(_) => {
-        //         warn!("Typegraph definition module has been rewritten");
-        //         bail!("Typegraph definition module has been rewritten");
-        //     }
-        //     LoaderResult::Error(e) => {
-        //         bail!(
-        //             "An error occured while loading typegraphs from the {:?}: {}",
-        //             self.file,
-        //             e.to_string()
-        //         );
-        //     }
-        // }
 
         Ok(())
     }
