@@ -1,17 +1,18 @@
 from typegraph import typegraph, Policy, t, Graph
-from typegraph.runtimes.random import RandomRuntime
 from typegraph.runtimes.deno import DenoRuntime
 from typegraph.graph.params import Auth
 from typegraph.providers.prisma import PrismaRuntime
+from typegraph.graph.params import Cors
 
 
 @typegraph(
     # skip:next-line
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:next-line
+    name="roadmap-reduce",
 )
 def roadmap(g: Graph):
     pub = Policy.public()
-    random = RandomRuntime()
     db = PrismaRuntime("db", "POSTGRES")
     deno = DenoRuntime()
 
@@ -19,7 +20,7 @@ def roadmap(g: Graph):
         {
             "id": t.integer(as_id=True, config={"auto": True}),
             "name": t.string(),
-            "ideas": t.array(t.ref("idea")),
+            "ideas": t.list(g.ref("idea")),
         },
         name="bucket",
     )
@@ -29,8 +30,8 @@ def roadmap(g: Graph):
             "id": t.uuid(as_id=True, config={"auto": True}),
             "name": t.string(),
             "authorEmail": t.email(),
-            "votes": t.array(t.ref("vote")),
-            "bucket": t.ref("bucket"),
+            "votes": t.list(g.ref("vote")),
+            "bucket": g.ref("bucket"),
         },
         name="idea",
     )
@@ -41,7 +42,7 @@ def roadmap(g: Graph):
             "authorEmail": t.email(),
             "importance": t.enum(["medium", "important", "critical"]).optional(),
             "desc": t.string().optional(),
-            "idea": t.ref("idea"),
+            "idea": g.ref("idea"),
         },
         name="vote",
     )
@@ -61,7 +62,7 @@ def roadmap(g: Graph):
         get_buckets=db.find_many(bucket),
         get_bucket=db.find_first(bucket),
         get_idea=db.find_many(idea),
-        create_idea=db.create(idea).apply(
+        create_idea=db.create(idea).reduce(
             {
                 "data": {
                     "name": g.inherit(),

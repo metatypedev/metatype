@@ -1,14 +1,16 @@
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import typegraph, t, Graph
 from typegraph.runtimes.random import RandomRuntime
-from typegraph.runtimes import PythonRuntime
+from typegraph.graph.params import Cors
 
 
 @typegraph(
     # skip:next-line
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:next-line
+    name="roadmap-random",
 )
 def roadmap(g: Graph):
-    bucket = t.struct(
+    _bucket = t.struct(
         {
             "id": t.integer(as_id=True),
             "name": t.string(),
@@ -23,7 +25,7 @@ def roadmap(g: Graph):
             "authorEmail": t.email(),  # another string shorthand
         }
     )
-    vote = t.struct(
+    _vote = t.struct(
         {
             "id": t.uuid(),
             "authorEmail": t.email(),

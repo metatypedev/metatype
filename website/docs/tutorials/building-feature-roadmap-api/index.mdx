@@ -429,15 +429,15 @@ typegraph("roadmap", (g) => {
       config: { auto: true }
     }),
     "name": t.string(),
-    "ideas": t.array(t.ref("idea")), // one-to many relationship
+    "ideas": t.list(g.ref("idea")), // one-to many relationship
   }).rename("bucket"); // explicitly naming our types makes reference later easier
   
   const idea = t.struct({
     "id": t.uuid({ asId: true, config: { auto: true } }),
     "name": t.string(),
     "authorEmail": t.email(),
-    "bucket": t.ref("bucket"), // we need to specify the relationships on both types
-    "votes": t.array(t.ref("vote")),
+    "bucket": g.ref("bucket"), // we need to specify the relationships on both types
+    "votes": t.list(g.ref("vote")),
   }).rename("idea");
 
   const vote = t.struct({
@@ -445,7 +445,7 @@ typegraph("roadmap", (g) => {
     "authorEmail": t.email(),
     "importance": t.enum_(["medium", "important", "critical"]).optional(),
     "desc": t.string().optional(),
-    "idea": t.ref("idea")
+    "idea": g.ref("idea")
   }).rename("vote");
 
   // ...
@@ -472,7 +472,7 @@ def roadmap(g: Graph):
               config={"auto": True}
             ),
             "name": t.string(),
-            "ideas": t.array(t.ref("idea")), # one-to many relationship
+            "ideas": t.list(g.ref("idea")), # one-to many relationship
         },
         name="bucket"  # explicitly naming our types makes reference later easier
     )
@@ -481,8 +481,8 @@ def roadmap(g: Graph):
             "id": t.uuid(as_id=True, config={"auto": True}),
             "name": t.string(),
             "authorEmail": t.email(),
-            "votes": t.array(t.ref("vote")),
-            "bucket": t.ref("bucket"), 
+            "votes": t.list(g.ref("vote")),
+            "bucket": g.ref("bucket"), 
         },
         name="idea"
     )
@@ -492,7 +492,7 @@ def roadmap(g: Graph):
             "authorEmail": t.email(),
             "importance": t.enum(["medium", "important", "critical"]).optional(),
             "desc": t.string().optional(),
-            "idea": t.ref("idea"),
+            "idea": g.ref("idea"),
         },
         name="vote"
     )
@@ -501,7 +501,7 @@ def roadmap(g: Graph):
       </TabItem>
           </SDKTabs>
 
-`t.ref` declares logical relationships between our types which the Prisma runtime will be able to pick up.
+`g.ref` declares logical relationships between our types which the Prisma runtime will be able to pick up.
 If you need more control on what the relationships will look like on the database, you can use the `db.link` function.
 More information can be found on the Prisma runtime [reference](/reference/runtimes/prisma).
 
@@ -596,7 +596,7 @@ Any policies running within it can then access their extracted values in the con
 Metatype currently supports policies based on javasctipt functions that are run on the Deno runtime.
 
 For this tutorial, we'll be making use of the basic auth extractor.
-It expects a string in the format "Basic <token>" to be set in the `Authorization` http header.
+It expects a string in the format "Basic token" to be set in the `Authorization` http header.
 The token is expected to be a base64 encoded string in the format `username:secret`.
 
         <SDKTabs>
@@ -699,9 +699,9 @@ If you're using the GraphiQl interface from earlier, there should be a panel in 
 
 ## More
 
-### `apply`
+### `reduce`
 
-We can use the `apply` method to modify the input types of functions.
+We can use the `reduce` method to modify the input types of functions.
 This comes especially handy when dealing with generated functions like those from the CRUD helpers from the Prisma runtime.
 By default, Prisma generates types that supports the whole suite of usecases one might have on a CRUD operation such as allowing creation of objects of related types in a single operation.
 We don't always want this and in our case, we want to prevent users from being able to create buckets, which are protected, through the `create_idea` materializer which's public.
@@ -724,7 +724,7 @@ mutation CIdea {
 }
 ```
 
-Even though the `apply` method doesn't allow us to change the shape of the type, we can change the types of members and importantly here, hide the ones we don't need.
+Even though the `reduce` method doesn't allow us to change the shape of the type, we can change the types of members and importantly here, hide the ones we don't need.
 
         <SDKTabs>
               <TabItem value="typescript">
@@ -736,7 +736,7 @@ typegraph("roadmap", (g) => {
   g.expose(
     {
       // ..
-      "create_idea": db.create(idea).apply({
+      "create_idea": db.create(idea).reduce({
         "data": {
           // `g.inherit` specifys that we keep the member type from the type we're reducing 
           "name": g.inherit(),
@@ -766,7 +766,7 @@ def roadmap(g: Graph):
     g.expose(
         pub,
         # ..
-        create_idea=db.create(idea).apply({
+        create_idea=db.create(idea).reduce({
             "data": {
                 # `g.inherit` specifys that we keep the member type from the type we're reducing
                 "name": g.inherit(),
@@ -788,9 +788,9 @@ def roadmap(g: Graph):
 Requests are now only able to `connect` new ideas with pre-existing buckets and won't be able to create them.
 
 <TGExample
-      typegraph="apply"
-      python={require("./apply.py")}
-      query={require("./apply.graphql")}
+      typegraph="reduce"
+      python={require("./reduce.py")}
+      query={require("./reduce.graphql")}
     />
 
 ### `execute`
@@ -798,7 +798,7 @@ Requests are now only able to `connect` new ideas with pre-existing buckets and 
 You'll notice that we had set the `importance` field on votes as optional.
 This is to allow users to just upvote an idea from the main list without opening a form.
 If they want to add importance or a description to their vote at a later point, we want to update their already existing vote.
-It should be easy to expose a materializer for this using Prisma's `db.update` helper and `apply` to restrict changes to only those field.
+It should be easy to expose a materializer for this using Prisma's `db.update` helper and `reduce` to restrict changes to only those field.
 But we'll take this opportunity to explore the feature of the Prisma runtime to execute raw queries.
 
 
