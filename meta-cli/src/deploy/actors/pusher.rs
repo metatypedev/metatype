@@ -16,12 +16,13 @@ use pathdiff::diff_paths;
 use serde::Deserialize;
 
 use crate::config::Config;
+use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use crate::typegraph::push::{MessageEntry, Migrations};
 use crate::utils::graphql;
 use crate::utils::{graphql::Query, Node};
 
 use super::console::{Console, ConsoleActor};
-use super::push_manager::{PushFinished, PushManagerActor};
+use super::push_manager::{ConfirmHandler, PushFinished, PushManagerActor};
 
 type Secrets = HashMap<String, String>;
 
@@ -79,93 +80,6 @@ impl PusherActor {
             }
         }
     }
-
-    // fn reduce(&self, push: Push, instant: Instant, ctx: &mut Context<Self>) -> bool {
-    //     // cancelled after push
-    //     let cancelled = self
-    //         .cancellations
-    //         .range(instant..)
-    //         .any(|(_, path)| push.typegraph.path.as_ref().unwrap() == path);
-    //     if cancelled {
-    //         let mut response_tx = push.response_tx;
-    //         response_tx.send(PushResponse::Cancelled).unwrap();
-    //         return false;
-    //     }
-    //
-    //     if let Some(retry) = push.retry.as_ref() {
-    //         // remove cancellations before the retry instant
-    //         self.remove_cancellations_before(retry.instant);
-    //
-    //         // cancelled after retry
-    //         let cancelled = self
-    //             .cancellations
-    //             .iter()
-    //             .any(|(_, path)| push.typegraph.path.as_ref().unwrap() == path);
-    //         if cancelled {
-    //             let mut response_tx = push.response_tx;
-    //             response_tx.send(PushResponse::Cancelled).unwrap();
-    //             return false;
-    //         }
-    //     } else {
-    //         self.remove_cancellations_before(instant - self.retry_interval * 2);
-    //     }
-    //
-    //     self.current = Some(push.clone());
-    //     let node = Arc::clone(&self.node);
-    //     let self_addr = ctx.address();
-    //     let console = self.console.clone();
-    //
-    //     let secrets = Arc::clone(&self.secrets);
-    //     let retry_max = self.max_retry_count;
-    //
-    //     Arbiter::current().spawn(async move {
-    //         let retry_no = push.retry.map(|r| r.retry_no).unwrap_or(0);
-    //         let retry = if retry_no > 0 {
-    //             format!(" (retry {}/{})", retry_no, retry_max).dimmed()
-    //         } else {
-    //             "".dimmed()
-    //         };
-    //         let tg_name = push.typegraph.name().unwrap().cyan();
-    //         let file_name = push
-    //             .typegraph
-    //             .path
-    //             .as_ref()
-    //             .unwrap()
-    //             .display()
-    //             .to_string()
-    //             .dimmed();
-    //         console.info(format!(
-    //             "Pushing typegraph {tg_name}{retry} (from '{file_name}')"
-    //         ));
-    //         match Self::push(Arc::clone(&push.typegraph), node, secrets).await {
-    //             Ok(res) => {
-    //                 let mut res = PushResponse::from_raw(res);
-    //                 res.original_name = Some(push.typegraph.name().unwrap().clone());
-    //                 self_addr.do_send(res);
-    //             }
-    //             Err(e) => {
-    //                 push.response_tx.send(PushResponse::Failure).unwrap();
-    //                 self_addr.try_send(e).unwrap();
-    //             }
-    //         }
-    //     });
-    //
-    //     true
-    // }
-
-    // fn next(&mut self, ctx: &mut Context<Self>) {
-    //     if self.current.is_some() {
-    //         self.console
-    //             .error("Invalid state: next() called while currently busy.".to_string());
-    //         // TODO panic?? -- exit??
-    //     }
-    //
-    //     while let Some((push, instant)) = self.queue.pop_front() {
-    //         if self.reduce(push, instant, ctx) {
-    //             break;
-    //         }
-    //     }
-    // }
 
     fn graphql_vars(tg: &Typegraph, secrets: &Secrets) -> Result<serde_json::Value> {
         Ok(serde_json::json!({
@@ -245,15 +159,6 @@ impl PusherActor {
         }
     }
 }
-
-// #[derive(Debug)]
-// enum PushResponse {
-//     Cancelled,
-//     Success,
-//     NetworkError,
-//     Error,
-//     // Interactive??
-// }
 
 #[derive(Message, Clone, Debug)]
 #[rtype(result = "()")]
@@ -456,7 +361,10 @@ impl Handler<PushResult> for PusherActor {
                         tg_name = name.cyan(),
                     ));
                     self.console.error(message.clone());
+                    self.push_manager
+                        .do_send(PushFinished::new(res.push, false))
                 }
+
                 PushFailure::DatabaseResetRequired {
                     message,
                     runtime_name,
@@ -467,40 +375,47 @@ impl Handler<PushResult> for PusherActor {
                     ));
                     self.console.error(message.clone());
 
-                    todo!("confirm");
-
-                    // if Confirm::new()
-                    //     .with_prompt(format!(
-                    //         "{} Do you want to reset the database for runtime {runtime} on {name}?",
-                    //         "[confirm]".yellow(),
-                    //         runtime = runtime_name.magenta(),
-                    //         name = name.cyan(),
-                    //     ))
-                    //     .interact()
-                    //     .unwrap()
-                    // {
-                    //     let mut tg = (*push.typegraph).clone();
-                    //     EmbeddedPrismaMigrationOptionsPatch::default()
-                    //         .reset_on_drift(true)
-                    //         .apply(&mut tg, vec![runtime_name])
-                    //         .unwrap();
-                    //     self.queue
-                    //         .push_front((Push::new(tg.into()), Instant::now()));
-                    //     let _ = self.current.take().unwrap();
-                    //     self.next(ctx);
-                    // }
+                    let typegraph = res.push.typegraph.clone();
+                    self.push_manager
+                        .do_send(PushFinished::new(res.push, false).confirm(
+                            format!(
+                                "Do you want to reset the database for runtime {rt} on {name}?",
+                                rt = runtime_name.magenta(),
+                                name = name.cyan()
+                            ),
+                            ConfirmDatabaseRequired {
+                                runtime_name: runtime_name.clone(),
+                                typegraph,
+                            },
+                        ));
                 }
 
                 PushFailure::NullConstraintViolation { message, .. } => {
                     self.console.error(message.clone());
+                    self.push_manager
+                        .do_send(PushFinished::new(res.push, false))
                 }
             }
-            // TODO follow-up question/interaction??
-            self.push_manager
-                .do_send(PushFinished::new(res.push, false))
         } else {
             self.push_manager.do_send(PushFinished::new(res.push, true))
         }
+    }
+}
+
+#[derive(Debug)]
+struct ConfirmDatabaseRequired {
+    runtime_name: String,
+    typegraph: Arc<Typegraph>,
+}
+
+impl ConfirmHandler for ConfirmDatabaseRequired {
+    fn on_confirm(&self, push_manager: Addr<PushManagerActor>) {
+        let mut typegraph = (*self.typegraph).clone();
+        EmbeddedPrismaMigrationOptionsPatch::default()
+            .reset_on_drift(true)
+            .apply(&mut typegraph, vec![self.runtime_name.clone()])
+            .unwrap();
+        push_manager.do_send(Push::new(typegraph.into()))
     }
 }
 

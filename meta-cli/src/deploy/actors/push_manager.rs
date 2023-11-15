@@ -3,6 +3,7 @@
 
 mod state;
 
+use dialoguer::Confirm;
 use state::{AddTypegraphError, CancelationStatus, RemoveTypegraphError, State};
 use std::collections::hash_map::Entry;
 use std::path::PathBuf;
@@ -200,6 +201,22 @@ impl PushManagerActor {
             }
         }
     }
+
+    fn interact(&mut self, interaction: Interaction, self_addr: Addr<Self>) {
+        match interaction {
+            Interaction::Confirm { question, handler } => {
+                // TODO console
+                let answer = Confirm::new()
+                    .with_prompt(format!("{} {question}", "[confirm]".yellow()))
+                    .interact()
+                    .unwrap();
+                match answer {
+                    true => handler.on_confirm(self_addr),
+                    false => handler.on_deny(self_addr),
+                }
+            }
+        }
+    }
 }
 
 impl Actor for PushManagerActor {
@@ -230,8 +247,18 @@ impl Handler<Push> for PushManagerActor {
     }
 }
 
+pub trait ConfirmHandler: std::fmt::Debug {
+    fn on_confirm(&self, push_manager: Addr<PushManagerActor>);
+    fn on_deny(&self, push_manager: Addr<PushManagerActor>) {}
+}
+
 #[derive(Debug)]
-pub enum Interaction {}
+pub enum Interaction {
+    Confirm {
+        question: String,
+        handler: Box<dyn ConfirmHandler + Send + 'static>,
+    },
+}
 
 #[derive(Debug)]
 pub(super) enum PushFollowUp {
@@ -259,6 +286,17 @@ impl PushFinished {
     pub(super) fn schedule_retry(mut self) -> Self {
         self.follow_up = Some(PushFollowUp::ScheduleRetry);
         self
+    }
+
+    pub(super) fn confirm(
+        mut self,
+        question: String,
+        handler: impl ConfirmHandler + Send + 'static,
+    ) -> Self {
+        self.interact(Interaction::Confirm {
+            question,
+            handler: Box::new(handler),
+        })
     }
 
     pub(super) fn interact(mut self, interaction: Interaction) -> Self {
@@ -296,7 +334,7 @@ impl Handler<PushFinished> for PushManagerActor {
                 }
                 F::Interact(interaction) => {
                     if !is_cancelled {
-                        todo!("interaction");
+                        self.interact(interaction, ctx.address());
                     }
                 }
             }
@@ -337,8 +375,7 @@ impl Handler<CancelAllFromModule> for PushManagerActor {
     type Result = ();
 
     fn handle(&mut self, msg: CancelAllFromModule, _ctx: &mut Self::Context) -> Self::Result {
-        let console = self.console.clone();
-
+        // let console = self.console.clone();
         self.state.reduce(msg);
     }
 }
