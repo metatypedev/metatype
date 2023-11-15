@@ -1,8 +1,10 @@
 from typegraph import typegraph, Policy, t, Graph
 from typegraph.runtimes.deno import DenoRuntime
+# skip:start
 from typegraph.graph.params import Auth
 from typegraph.providers.prisma import PrismaRuntime
 from typegraph.graph.params import Cors
+# skip:end
 
 
 @typegraph(
@@ -12,10 +14,13 @@ from typegraph.graph.params import Cors
     # skip:end
 )
 def roadmap(g: Graph):
+    # skip:start
     pub = Policy.public()
     db = PrismaRuntime("db", "POSTGRES")
+    # skip:end
     deno = DenoRuntime()
 
+    # skip:start
     bucket = t.struct(
         {
             "id": t.integer(as_id=True, config={"auto": True}),
@@ -55,9 +60,11 @@ def roadmap(g: Graph):
   (_args, { context }) => !!context.username
 """,
     )
+    # skip:end
 
     g.expose(
         pub,
+        # skip:start
         create_bucket=db.create(bucket).with_policy(admins),
         get_buckets=db.find_many(bucket),
         get_bucket=db.find_first(bucket),
@@ -73,6 +80,7 @@ def roadmap(g: Graph):
             }
         ),
         create_vote=db.create(vote),
+        # skip:end
         parse_markdown=deno.import_(
             t.struct({"raw": t.string()}),
             t.string(),
@@ -81,6 +89,7 @@ def roadmap(g: Graph):
         ),
     )
 
+    # skip:start
     g.rest(
         """
         query get_buckets {
@@ -114,3 +123,4 @@ def roadmap(g: Graph):
         }
         """
     )
+    # skip:end

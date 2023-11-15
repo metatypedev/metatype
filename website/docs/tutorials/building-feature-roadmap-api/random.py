@@ -4,10 +4,10 @@ from typegraph.graph.params import Cors
 
 
 @typegraph(
-    # skip:next-line
+    # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
-    # skip:next-line
     name="roadmap-random",
+    # skip:end
 )
 def roadmap(g: Graph):
     _bucket = t.struct(
