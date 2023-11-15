@@ -186,7 +186,6 @@ class Migration {
         this.#opApply(migrations, true);
         return;
       } else {
-        // TODO --> question
         throw MigrationFailure.resetRequired(
           this.#runtimeName,
           res.ResetRequired.reset_reason,
