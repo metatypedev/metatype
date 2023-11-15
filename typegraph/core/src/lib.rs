@@ -24,7 +24,7 @@ use regex::Regex;
 use runtimes::{DenoMaterializer, Materializer};
 use types::{
     Boolean, Either, File, Float, Func, Integer, List, Optional, Proxy, StringT, Struct, Type,
-    TypeBoolean, TypeId, Union, WithInjection, WithPolicy,
+    TypeBoolean, TypeFun, TypeId, Union, WithInjection, WithPolicy,
 };
 use wit::core::{
     ContextCheck, Policy, PolicyId, PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat,
@@ -297,28 +297,7 @@ impl wit::core::Guest for Lib {
 
     fn rename_type(type_id: CoreTypeId, new_name: String) -> Result<CoreTypeId, wit::core::Error> {
         let typ = TypeId(type_id).as_type()?;
-        match typ {
-            Type::Proxy(_) => Err("cannot rename proxy".into()),
-            Type::WithPolicy(inner) => Self::with_policy(TypePolicy {
-                tpe: Self::rename_type(inner.data.tpe, new_name)?,
-                chain: inner.data.chain.clone(),
-            }),
-            Type::WithInjection(inner) => Self::with_injection(TypeWithInjection {
-                tpe: Self::rename_type(inner.data.tpe, new_name)?,
-                injection: inner.data.injection.clone(),
-            }),
-            Type::Boolean(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Integer(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Float(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::String(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::File(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Optional(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::List(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Union(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Either(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Struct(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Func(inner) => Ok(inner.rename(new_name)?.into()),
-        }
+        Ok(typ.rename(new_name)?.into())
     }
 
     fn get_type_repr(type_id: CoreTypeId) -> Result<String> {

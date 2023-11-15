@@ -74,10 +74,27 @@ pub struct ConcreteType<T: TypeData> {
 }
 
 impl<T: TypeData + Clone> ConcreteType<T> {
+    fn with_base(&self, id: TypeId, base: impl FnOnce(&TypeBase) -> TypeBase) -> Self {
+        Self {
+            id,
+            base: base(&self.base),
+            data: self.data.clone(),
+        }
+    }
+}
+
+impl<T: TypeData + Clone> ConcreteType<T>
+where
+    Rc<ConcreteType<T>>: Into<Type>,
+{
     pub fn rename(&self, new_name: String) -> Result<TypeId> {
-        let mut base = self.base.clone();
-        base.name = Some(new_name);
-        Store::register_type(|id| self.data.clone().into_type(id, Some(base)).unwrap())
+        Store::register_type(move |id| {
+            Rc::new(self.with_base(id, move |base| TypeBase {
+                name: Some(new_name),
+                ..base.clone()
+            }))
+            .into()
+        })
     }
 }
 
@@ -169,6 +186,17 @@ pub trait TypeFun {
     fn is_concrete_type(&self) -> bool {
         self.as_wrapper_type().is_none()
     }
+
+    fn with_base(&self, id: TypeId, base: TypeBase) -> Type;
+
+    fn rename(&self, new_name: String) -> Result<TypeId> {
+        let mut base = self
+            .get_base()
+            .cloned()
+            .ok_or_else(|| errors::TgError::from("cannot rename wrapper type"))?;
+        base.name = Some(new_name);
+        Store::register_type(move |id| self.with_base(id, base))
+    }
 }
 
 impl<T: TypeFun> TypeFun for Rc<T> {
@@ -195,11 +223,16 @@ impl<T: TypeFun> TypeFun for Rc<T> {
     fn get_concrete_type(&self) -> Option<TypeId> {
         (**self).get_concrete_type()
     }
+
+    fn with_base(&self, id: TypeId, base: TypeBase) -> Type {
+        (**self).with_base(id, base)
+    }
 }
 
 impl<T> TypeFun for ConcreteType<T>
 where
-    T: TypeData,
+    T: TypeData + Clone,
+    Rc<ConcreteType<T>>: Into<Type>,
 {
     fn get_id(&self) -> TypeId {
         self.id
@@ -222,6 +255,15 @@ where
 
     fn get_base(&self) -> Option<&TypeBase> {
         Some(&self.base)
+    }
+
+    fn with_base(&self, id: TypeId, base: TypeBase) -> Type {
+        Rc::new(Self {
+            id,
+            base,
+            data: self.data.clone(),
+        })
+        .into()
     }
 }
 
@@ -261,6 +303,10 @@ where
 
     fn as_wrapper_type(&self) -> Option<&dyn WrapperTypeData> {
         Some(&self.data)
+    }
+
+    fn with_base(&self, _id: TypeId, _base: TypeBase) -> Type {
+        unreachable!("setting base on wrapper type")
     }
 }
 
