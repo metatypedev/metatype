@@ -35,11 +35,13 @@ typegates:
       TG_ROADMAP_REDUCE_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_reduce"
       TG_ROADMAP_EXECUTE_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_execute"
       TG_ROADMAP_REST_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_rest"
+      TG_ROADMAP_FUNC_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_func"
       TG_ROADMAP_BASIC_ANDIM: hunter2
       TG_ROADMAP_POLICIES_BASIC_ANDIM: hunter2
       TG_ROADMAP_REDUCE_BASIC_ANDIM: hunter2
       TG_ROADMAP_EXECUTE_BASIC_ANDIM: hunter2
       TG_ROADMAP_REST_BASIC_ANDIM: hunter2
+      TG_ROADMAP_FUNC_BASIC_ANDIM: hunter2
   prd:
     url: https://demo.metatype.dev
     username: admin
