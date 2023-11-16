@@ -14,7 +14,6 @@ use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
     PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId,
     TypeInteger, TypeList, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
-    TypeWithInjection,
 };
 use std::rc::Rc;
 
@@ -66,36 +65,17 @@ pub trait WrapperTypeData {
     }
 }
 
+#[derive(Default, Debug, Clone)]
+pub struct ExtendedTypeBase {
+    pub injection: Option<Box<Injection>>,
+}
+
 #[derive(Debug)]
 pub struct ConcreteType<T: TypeData> {
     pub id: TypeId,
     pub base: TypeBase,
+    pub extended_base: ExtendedTypeBase,
     pub data: T,
-}
-
-impl<T: TypeData + Clone> ConcreteType<T> {
-    fn with_base(&self, id: TypeId, base: impl FnOnce(&TypeBase) -> TypeBase) -> Self {
-        Self {
-            id,
-            base: base(&self.base),
-            data: self.data.clone(),
-        }
-    }
-}
-
-impl<T: TypeData + Clone> ConcreteType<T>
-where
-    Rc<ConcreteType<T>>: Into<Type>,
-{
-    pub fn rename(&self, new_name: String) -> Result<TypeId> {
-        Store::register_type(move |id| {
-            Rc::new(self.with_base(id, move |base| TypeBase {
-                name: Some(new_name),
-                ..base.clone()
-            }))
-            .into()
-        })
-    }
 }
 
 #[derive(Debug)]
@@ -110,7 +90,6 @@ impl Default for TypeBase {
         Self {
             name: None,
             runtime_config: None,
-
             as_id: false,
         }
     }
@@ -134,7 +113,6 @@ pub type Either = ConcreteType<TypeEither>;
 
 // Note: TypePolicy|TypeWithInjection|Proxy => Struct | Integer | ...
 pub type WithPolicy = WrapperType<TypePolicy>;
-pub type WithInjection = WrapperType<TypeWithInjection>;
 
 #[derive(Debug, Clone)]
 #[enum_dispatch(TypeFun, TypeConversion)]
@@ -152,7 +130,6 @@ pub enum Type {
     Union(Rc<Union>),
     Either(Rc<Either>),
     WithPolicy(Rc<WithPolicy>),
-    WithInjection(Rc<WithInjection>),
 }
 
 impl Type {
@@ -168,6 +145,7 @@ impl Type {
 pub trait TypeFun {
     fn get_id(&self) -> TypeId;
     fn get_base(&self) -> Option<&TypeBase>;
+    fn get_extended_base(&self) -> Option<&ExtendedTypeBase>;
     fn get_data(&self) -> &dyn TypeData;
     fn get_concrete_type(&self) -> Option<TypeId>;
     fn to_string(&self) -> String;
@@ -188,6 +166,7 @@ pub trait TypeFun {
     }
 
     fn with_base(&self, id: TypeId, base: TypeBase) -> Type;
+    fn with_extended_base(&self, id: TypeId, base: ExtendedTypeBase) -> Type;
 
     fn rename(&self, new_name: String) -> Result<TypeId> {
         let mut base = self
@@ -197,11 +176,27 @@ pub trait TypeFun {
         base.name = Some(new_name);
         Store::register_type(move |id| self.with_base(id, base))
     }
+
+    fn with_injection(&self, injection: String) -> Result<TypeId> {
+        // TODO try to resolve the proxy?
+        let mut extended_base = self
+            .get_extended_base()
+            .cloned()
+            .ok_or_else(|| errors::TgError::from("cannot add injection to wrapper type"))?;
+        extended_base.injection = Some(
+            serde_json::from_str(&injection).map_err(|e| errors::TgError::from(e.to_string()))?,
+        );
+        Store::register_type(move |id| self.with_extended_base(id, extended_base))
+    }
 }
 
 impl<T: TypeFun> TypeFun for Rc<T> {
     fn get_base(&self) -> Option<&TypeBase> {
         (**self).get_base()
+    }
+
+    fn get_extended_base(&self) -> Option<&ExtendedTypeBase> {
+        (**self).get_extended_base()
     }
 
     fn get_concrete_type_name(&self) -> Result<String> {
@@ -226,6 +221,10 @@ impl<T: TypeFun> TypeFun for Rc<T> {
 
     fn with_base(&self, id: TypeId, base: TypeBase) -> Type {
         (**self).with_base(id, base)
+    }
+
+    fn with_extended_base(&self, id: TypeId, base: ExtendedTypeBase) -> Type {
+        (**self).with_extended_base(id, base)
     }
 }
 
@@ -257,10 +256,25 @@ where
         Some(&self.base)
     }
 
+    fn get_extended_base(&self) -> Option<&ExtendedTypeBase> {
+        Some(&self.extended_base)
+    }
+
     fn with_base(&self, id: TypeId, base: TypeBase) -> Type {
         Rc::new(Self {
             id,
             base,
+            extended_base: self.extended_base.clone(),
+            data: self.data.clone(),
+        })
+        .into()
+    }
+
+    fn with_extended_base(&self, id: TypeId, base: ExtendedTypeBase) -> Type {
+        Rc::new(Self {
+            id,
+            base: self.base.clone(),
+            extended_base: base,
             data: self.data.clone(),
         })
         .into()
@@ -301,12 +315,20 @@ where
         None
     }
 
+    fn get_extended_base(&self) -> Option<&ExtendedTypeBase> {
+        None
+    }
+
     fn as_wrapper_type(&self) -> Option<&dyn WrapperTypeData> {
         Some(&self.data)
     }
 
     fn with_base(&self, _id: TypeId, _base: TypeBase) -> Type {
         unreachable!("setting base on wrapper type")
+    }
+
+    fn with_extended_base(&self, _id: TypeId, _base: ExtendedTypeBase) -> Type {
+        unreachable!("setting extended base on wrapper type")
     }
 }
 
@@ -322,7 +344,6 @@ pub struct TypeAttributes {
     pub name: Option<String>,
     pub proxy_data: HashMap<String, String>,
     pub policy_chain: Vec<PolicySpec>,
-    pub injection: Option<Injection>,
 }
 
 impl TypeId {
@@ -381,7 +402,6 @@ impl TypeId {
         let mut type_id = *self;
         let mut proxy_data: HashMap<String, String> = HashMap::new();
         let mut policy_chain = Vec::new();
-        let mut injection: Option<Injection> = None;
         let mut name = None;
 
         loop {
@@ -396,17 +416,6 @@ impl TypeId {
 
                 Type::WithPolicy(inner) => {
                     policy_chain.extend(inner.data.chain.clone());
-                    type_id = inner.data.tpe.into();
-                    continue;
-                }
-
-                Type::WithInjection(inner) => {
-                    if injection.is_some() {
-                        return Err("multiple injections not supported".to_string().into());
-                    }
-                    injection = Some(
-                        serde_json::from_str(&inner.data.injection).map_err(|e| e.to_string())?,
-                    );
                     type_id = inner.data.tpe.into();
                     continue;
                 }
@@ -431,7 +440,6 @@ impl TypeId {
                             name,
                             proxy_data,
                             policy_chain,
-                            injection,
                         })
                     }
                 }

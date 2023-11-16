@@ -475,7 +475,6 @@ impl TypeId {
             let new_id = match tpe {
                 Type::List(t) => t.data.of.into(),
                 Type::Optional(t) => t.data.of.into(),
-                Type::WithInjection(t) => t.data.tpe.into(),
                 Type::Proxy(t) => t.id.resolve_proxy()?,
                 _ => id,
             };

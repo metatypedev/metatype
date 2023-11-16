@@ -155,8 +155,8 @@ impl Property {
             )?;
         }
 
-        let (type_id, card) = match typ {
-            Type::Optional(inner) => (
+        let (type_id, card) = match &typ {
+            Type::Optional(ref inner) => (
                 TypeId(inner.data.of).attrs()?.concrete_type,
                 Cardinality::Optional,
             ),
@@ -180,9 +180,12 @@ impl Property {
             })
         };
 
-        match attrs
+        match typ
+            .get_extended_base()
+            .unwrap()
             .injection
             .as_ref()
+            .map(|i| i.as_ref())
             .map(Injection::try_from)
             .transpose()
         {

@@ -13,7 +13,6 @@ pub mod proxy;
 pub mod string;
 pub mod struct_;
 pub mod union;
-pub mod with_injection;
 pub mod with_policy;
 
 macro_rules! impl_into_type {
@@ -28,6 +27,7 @@ macro_rules! impl_into_type {
                     id: type_id,
                     base: base
                         .ok_or_else(|| $crate::errors::base_required(stringify!($variant)))?,
+                    extended_base: Default::default(),
                     data: self,
                 },
             )))
