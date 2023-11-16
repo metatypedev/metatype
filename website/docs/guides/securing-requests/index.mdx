@@ -2,6 +2,8 @@
 sidebar_position: 50
 ---
 
+import TGExample from "@site/src/components/TGExample";
+
 # Secure your requests
 
 ## Authentication
@@ -10,15 +12,15 @@ Metatype supports multiple [authentication schemes](/docs/guides/authentication)
 
 For your app, you will use basic authentication in order to restrict some actions for admin users. In order to do so, adding the following secret to your `metatype.yml` file: `TG_AUTHENTICATION_BASIC_ADMIN=password`.
 
-<TGExample
-  typegraph="authentication"
-  python={require("./authentication.py")}
-  query={require("./authentication.graphql")}
-  headers={{
-    Authorization: "Basic YWRtaW46cGFzc3dvcmQ=",
-  }}
-  tab="headers"
-/>
+    <TGExample
+          typegraph="authentication"
+          python={require("./authentication.py")}
+          query={require("./authentication.graphql")}
+          headers={{
+            Authorization: "Basic YWRtaW46cGFzc3dvcmQ=",
+          }}
+          tab="headers"
+        />
 
 ## CORS
 
