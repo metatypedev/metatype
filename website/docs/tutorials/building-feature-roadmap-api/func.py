@@ -1,5 +1,6 @@
 from typegraph import typegraph, Policy, t, Graph
 from typegraph.runtimes.deno import DenoRuntime
+
 # skip:start
 from typegraph.graph.params import Auth
 from typegraph.providers.prisma import PrismaRuntime
