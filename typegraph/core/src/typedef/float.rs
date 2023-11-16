@@ -5,7 +5,7 @@ use common::typegraph::types::{FloatTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base, TypeConversion},
+    conversion::types::{gen_base_concrete, TypeConversion},
     errors,
     typegraph::TypegraphContext,
     types::{Float, TypeData},
@@ -14,22 +14,8 @@ use crate::{
 
 impl TypeConversion for Float {
     fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
-        let enumeration = self
-            .data
-            .enumeration
-            .clone()
-            .map(|enums| enums.iter().map(|v| format!("{}", v)).collect());
         Ok(TypeNode::Float {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("float_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .enum_(enumeration)
-            .build(),
+            base: gen_base_concrete!("float", self, runtime_id.unwrap(), enum, injection),
             data: FloatTypeData {
                 minimum: self.data.min,
                 maximum: self.data.max,

@@ -3,6 +3,7 @@
 
 import json as JsonLib
 from typing import Any, Dict, List, Optional, Tuple, Union
+import copy
 
 from typing_extensions import Self
 
@@ -21,7 +22,6 @@ from typegraph.gen.exports.core import (
     TypeString,
     TypeStruct,
     TypeUnion,
-    TypeWithInjection,
 )
 from typegraph.gen.exports.runtimes import EffectRead
 from typegraph.gen.exports.utils import Reduce
@@ -48,10 +48,12 @@ og_list = list
 class typedef:
     id: int
     runtime_config: Optional[List[Tuple[str, str]]]
+    injection: Optional[str]
 
     def __init__(self, id: int):
         self.id = id
         self.runtime_config = None
+        self.injection = None
 
     def __repr__(self):
         res = core.get_type_repr(store, self.id)
@@ -82,13 +84,14 @@ class typedef:
         return _TypeWrapper(res.value, self)
 
     def _with_injection(self, injection: str) -> Self:
-        res = core.with_injection(
-            store, TypeWithInjection(tpe=self.id, injection=injection)
-        )
+        res = core.with_injection(store, self.id, injection)
         if isinstance(res, Err):
             raise Exception(res.value)
 
-        return _TypeWrapper(res.value, self)
+        ret = copy.copy(self)
+        ret.id = res.value
+        ret.injection = injection
+        return ret
 
     def optional(
         self,

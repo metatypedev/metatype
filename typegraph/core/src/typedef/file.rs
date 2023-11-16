@@ -3,7 +3,7 @@
 
 use common::typegraph::{FileTypeData, TypeNode};
 
-use crate::conversion::types::{gen_base, TypeConversion};
+use crate::conversion::types::{gen_base_concrete, TypeConversion};
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
 use crate::types::{File, TypeData};
@@ -37,16 +37,8 @@ impl TypeData for TypeFile {
 impl TypeConversion for File {
     fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::File {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("file_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .id(self.base.as_id)
-            .build(),
+            // TODO should `as_id` be supported?
+            base: gen_base_concrete!("file", self, runtime_id.unwrap()),
             data: FileTypeData {
                 min_size: self.data.min,
                 max_size: self.data.max,

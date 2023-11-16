@@ -183,6 +183,11 @@ pub trait TypeFun {
             .get_extended_base()
             .cloned()
             .ok_or_else(|| errors::TgError::from("cannot add injection to wrapper type"))?;
+        if extended_base.injection.is_some() {
+            return Err(errors::TgError::from(
+                "injection already exists for this type",
+            ));
+        }
         extended_base.injection = Some(
             serde_json::from_str(&injection).map_err(|e| errors::TgError::from(e.to_string()))?,
         );

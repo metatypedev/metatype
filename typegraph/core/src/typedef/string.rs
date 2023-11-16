@@ -5,7 +5,7 @@ use common::typegraph::{StringFormat, StringTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base, TypeConversion},
+    conversion::types::{gen_base_concrete, TypeConversion},
     errors,
     typegraph::TypegraphContext,
     types::{StringT, TypeData},
@@ -24,17 +24,7 @@ impl TypeConversion for StringT {
         };
 
         Ok(TypeNode::String {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("string_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .enum_(self.data.enumeration.clone())
-            .id(self.base.as_id)
-            .build(),
+            base: gen_base_concrete!("string", self, runtime_id.unwrap(), enum, injection, as_id),
             data: StringTypeData {
                 min_length: self.data.min,
                 max_length: self.data.max,

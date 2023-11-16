@@ -5,7 +5,7 @@ use common::typegraph::TypeNode;
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base, TypeConversion},
+    conversion::types::{gen_base_concrete, TypeConversion},
     errors,
     typegraph::TypegraphContext,
     types::{Boolean, TypeBoolean, TypeData},
@@ -14,15 +14,7 @@ use crate::{
 impl TypeConversion for Boolean {
     fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Boolean {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("boolean_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .build(),
+            base: gen_base_concrete!("boolean", self, runtime_id.unwrap()),
         })
     }
 }

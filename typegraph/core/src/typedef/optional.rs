@@ -5,7 +5,7 @@ use common::typegraph::{OptionalTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base, TypeConversion},
+    conversion::types::{gen_base_concrete, TypeConversion},
     errors,
     typegraph::TypegraphContext,
     types::{Optional, TypeData, TypeId},
@@ -23,15 +23,7 @@ impl TypeConversion for Optional {
         };
 
         Ok(TypeNode::Optional {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("optional_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .build(),
+            base: gen_base_concrete!("optional", self, runtime_id.unwrap(), injection),
             data: OptionalTypeData {
                 item: ctx
                     .register_type(TypeId(self.data.of).resolve_proxy()?, runtime_id)?

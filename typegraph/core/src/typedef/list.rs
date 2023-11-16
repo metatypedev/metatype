@@ -4,7 +4,7 @@
 use common::typegraph::{ListTypeData, TypeNode};
 
 use crate::{
-    conversion::types::{gen_base, TypeConversion},
+    conversion::types::{gen_base_concrete, TypeConversion},
     errors::Result,
     typegraph::TypegraphContext,
     types::{List, TypeData, TypeId},
@@ -14,15 +14,7 @@ use crate::{
 impl TypeConversion for List {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::List {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("array_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .build(),
+            base: gen_base_concrete!("list", self, runtime_id.unwrap(), injection),
             data: ListTypeData {
                 items: ctx
                     .register_type(TypeId(self.data.of).resolve_proxy()?, runtime_id)?

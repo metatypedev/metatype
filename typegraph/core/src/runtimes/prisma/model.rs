@@ -332,3 +332,40 @@ pub struct ScalarProperty {
     pub auto: bool,
     pub default_value: Option<serde_json::Value>,
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+
+    impl Property {
+        fn as_scalar(&self) -> Option<&ScalarProperty> {
+            match self {
+                Property::Scalar(s) => Some(s),
+                _ => None,
+            }
+        }
+    }
+
+    #[test]
+    fn test_injection() -> Result<()> {
+        let type1 = t::struct_()
+            .propx("one", t::string().as_id(true))?
+            .propx("two", t::string().set_value("Hello".to_string()))?
+            .named("A")
+            .build()?;
+        let model = Model::try_from(type1)?;
+
+        let one = model.props.get("one");
+        assert!(matches!(model.props.get("one"), Some(Property::Scalar(_))));
+        let one = one.unwrap().as_scalar().unwrap();
+        assert!(one.injection.is_none());
+
+        assert!(matches!(
+            model.props.get("two"),
+            Some(Property::Unmanaged(_))
+        ));
+
+        Ok(())
+    }
+}

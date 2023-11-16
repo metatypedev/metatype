@@ -6,7 +6,7 @@ use errors::Result;
 use indexmap::IndexMap;
 
 use crate::{
-    conversion::types::{gen_base, TypeConversion},
+    conversion::types::{gen_base_concrete, TypeConversion},
     errors,
     global_store::Store,
     typegraph::TypegraphContext,
@@ -27,27 +27,21 @@ impl TypeStruct {
 
 impl TypeConversion for Struct {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+        let runtime_id = match runtime_id {
+            Some(runtime_id) => runtime_id,
+            None => ctx.register_runtime(Store::get_deno_runtime())?,
+        };
         Ok(TypeNode::Object {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("object_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                match runtime_id {
-                    Some(id) => id,
-                    // namespace
-                    None => ctx.register_runtime(Store::get_deno_runtime())?,
-                },
-            )
-            .enum_(self.data.enumeration.clone())
-            .build(),
+            base: gen_base_concrete!("object", self, runtime_id, enum, injection),
             data: ObjectTypeData {
                 properties: self
                     .iter_props()
                     .map(|(name, type_id)| -> Result<(String, u32)> {
                         let id = type_id.resolve_proxy()?;
-                        Ok((name.to_string(), ctx.register_type(id, runtime_id)?.into()))
+                        Ok((
+                            name.to_string(),
+                            ctx.register_type(id, Some(runtime_id))?.into(),
+                        ))
                     })
                     .collect::<Result<IndexMap<_, _>>>()?,
                 required: Vec::new(),

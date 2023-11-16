@@ -5,7 +5,7 @@ use common::typegraph::{TypeNode, UnionTypeData};
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base, TypeConversion},
+    conversion::types::{gen_base_concrete, TypeConversion},
     errors,
     typegraph::TypegraphContext,
     types::{TypeData, TypeId, Union},
@@ -15,15 +15,7 @@ use crate::{
 impl TypeConversion for Union {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Union {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("union_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .build(),
+            base: gen_base_concrete!("union", self, runtime_id.unwrap()),
             data: UnionTypeData {
                 any_of: self
                     .data
