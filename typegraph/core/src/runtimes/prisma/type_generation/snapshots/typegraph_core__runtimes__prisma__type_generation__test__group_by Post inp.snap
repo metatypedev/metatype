@@ -2,10 +2,10 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(inp)"
 ---
-root: struct '_Post_QueryInput_group_by' #253
-├─ [where]: optional '_213_QueryPostWhereInput?' #213
-│  └─ item: struct 'QueryPostWhereInput' #212
-│     ├─ [id]: optional '_192__integer_filter_c?' #192
+root: struct '_Post_QueryInput_group_by' #266
+├─ [where]: optional '_222_QueryPostWhereInput?' #222
+│  └─ item: struct 'QueryPostWhereInput' #221
+│     ├─ [id]: optional '_201__integer_filter_c?' #201
 │     │  └─ item: optional '_integer_filter_c' #34
 │     │     └─ item: union #33
 │     │        ├─ variant_0: either '_integer_filter' #31
@@ -51,7 +51,7 @@ root: struct '_Post_QueryInput_group_by' #253
 │     │              └─ variant_5: struct #30
 │     │                 └─ [notIn]: list #25
 │     │                    └─ item: integer #23
-│     ├─ [title]: optional '_193__string_filter_c?' #193
+│     ├─ [title]: optional '_202__string_filter_c?' #202
 │     │  └─ item: optional '_string_filter_c' #20
 │     │     └─ item: union #19
 │     │        ├─ variant_0: union '_string_filter' #17
@@ -101,9 +101,9 @@ root: struct '_Post_QueryInput_group_by' #253
 │     │                 │  └─ item: string #5
 │     │                 └─ [endsWith]: optional #6
 │     │                    └─ item: string #5
-│     ├─ [author]: optional '_206_UserWhere__skip_117_PostWhere?' #206
-│     │  └─ item: struct 'UserWhere__skip_117_PostWhere' #205
-│     │     ├─ [id]: optional '_194__integer_filter_c?' #194
+│     ├─ [author]: optional '_215_UserWhere__skip_122_PostWhere?' #215
+│     │  └─ item: struct 'UserWhere__skip_122_PostWhere' #214
+│     │     ├─ [id]: optional '_203__integer_filter_c?' #203
 │     │     │  └─ item: optional '_integer_filter_c' #34
 │     │     │     └─ item: union #33
 │     │     │        ├─ variant_0: either '_integer_filter' #31
@@ -149,7 +149,7 @@ root: struct '_Post_QueryInput_group_by' #253
 │     │     │              └─ variant_5: struct #30
 │     │     │                 └─ [notIn]: list #25
 │     │     │                    └─ item: integer #23
-│     │     ├─ [name]: optional '_195__string_filter_c?' #195
+│     │     ├─ [name]: optional '_204__string_filter_c?' #204
 │     │     │  └─ item: optional '_string_filter_c' #20
 │     │     │     └─ item: union #19
 │     │     │        ├─ variant_0: union '_string_filter' #17
@@ -199,30 +199,30 @@ root: struct '_Post_QueryInput_group_by' #253
 │     │     │                 │  └─ item: string #5
 │     │     │                 └─ [endsWith]: optional #6
 │     │     │                    └─ item: string #5
-│     │     └─ [posts]: optional #204
-│     │        └─ item: union #203
-│     │           ├─ variant_0: struct #198
-│     │           │  └─ [every]: optional '_197_PostWhere?' #197
-│     │           │     └─ item: &PostWhere #196
-│     │           ├─ variant_1: struct #200
-│     │           │  └─ [some]: optional '_199_PostWhere?' #199
-│     │           │     └─ item: &PostWhere #196
-│     │           └─ variant_2: struct #202
-│     │              └─ [none]: optional '_201_PostWhere?' #201
-│     │                 └─ item: &PostWhere #196
-│     ├─ [AND]: optional '_210__209_QueryPostWhereInput[]?' #210
-│     │  └─ item: list '_209_QueryPostWhereInput[]' #209
-│     │     └─ item: &QueryPostWhereInput #208
-│     ├─ [OR]: optional '_210__209_QueryPostWhereInput[]?' #210
-│     │  └─ item: list '_209_QueryPostWhereInput[]' #209
-│     │     └─ item: &QueryPostWhereInput #208
-│     └─ [NOT]: optional '_211_QueryPostWhereInput?' #211
-│        └─ item: &QueryPostWhereInput #208
-├─ [orderBy]: optional '_224__Post_OrderBy_with_aggregates?' #224
-│  └─ item: list '_Post_OrderBy_with_aggregates' #223
-│     └─ item: struct #222
-│        ├─ [_count]: optional #215
-│        │  └─ item: struct #214
+│     │     └─ [posts]: optional #213
+│     │        └─ item: union #212
+│     │           ├─ variant_0: struct #207
+│     │           │  └─ [every]: optional '_206_PostWhere?' #206
+│     │           │     └─ item: &PostWhere #205
+│     │           ├─ variant_1: struct #209
+│     │           │  └─ [some]: optional '_208_PostWhere?' #208
+│     │           │     └─ item: &PostWhere #205
+│     │           └─ variant_2: struct #211
+│     │              └─ [none]: optional '_210_PostWhere?' #210
+│     │                 └─ item: &PostWhere #205
+│     ├─ [AND]: optional '_219__218_QueryPostWhereInput[]?' #219
+│     │  └─ item: list '_218_QueryPostWhereInput[]' #218
+│     │     └─ item: &QueryPostWhereInput #217
+│     ├─ [OR]: optional '_219__218_QueryPostWhereInput[]?' #219
+│     │  └─ item: list '_218_QueryPostWhereInput[]' #218
+│     │     └─ item: &QueryPostWhereInput #217
+│     └─ [NOT]: optional '_220_QueryPostWhereInput?' #220
+│        └─ item: &QueryPostWhereInput #217
+├─ [orderBy]: optional '_233__Post_OrderBy_with_aggregates?' #233
+│  └─ item: list '_Post_OrderBy_with_aggregates' #232
+│     └─ item: struct #231
+│        ├─ [_count]: optional #224
+│        │  └─ item: struct #223
 │        │     ├─ [id]: optional '_Sort' #47
 │        │     │  └─ item: union #46
 │        │     │     ├─ variant_0: struct #45
@@ -238,29 +238,29 @@ root: struct '_Post_QueryInput_group_by' #253
 │        │           ├─ variant_0: struct #45
 │        │           │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│        ├─ [_avg]: optional #217
-│        │  └─ item: struct #216
+│        ├─ [_avg]: optional #226
+│        │  └─ item: struct #225
 │        │     └─ [id]: optional '_Sort' #47
 │        │        └─ item: union #46
 │        │           ├─ variant_0: struct #45
 │        │           │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│        ├─ [_sum]: optional #217
-│        │  └─ item: struct #216
+│        ├─ [_sum]: optional #226
+│        │  └─ item: struct #225
 │        │     └─ [id]: optional '_Sort' #47
 │        │        └─ item: union #46
 │        │           ├─ variant_0: struct #45
 │        │           │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│        ├─ [_min]: optional #217
-│        │  └─ item: struct #216
+│        ├─ [_min]: optional #226
+│        │  └─ item: struct #225
 │        │     └─ [id]: optional '_Sort' #47
 │        │        └─ item: union #46
 │        │           ├─ variant_0: struct #45
 │        │           │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│        ├─ [_max]: optional #217
-│        │  └─ item: struct #216
+│        ├─ [_max]: optional #226
+│        │  └─ item: struct #225
 │        │     └─ [id]: optional '_Sort' #47
 │        │        └─ item: union #46
 │        │           ├─ variant_0: struct #45
@@ -276,9 +276,9 @@ root: struct '_Post_QueryInput_group_by' #253
 │        │     ├─ variant_0: struct #45
 │        │     │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
 │        │     └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│        └─ [author]: optional '_221__User_OrderBy_excluding___rel_Post_User_1?' #221
-│           └─ item: list '_User_OrderBy_excluding___rel_Post_User_1' #220
-│              └─ item: struct #219
+│        └─ [author]: optional '_230__User_OrderBy_excluding___rel_Post_User_1?' #230
+│           └─ item: list '_User_OrderBy_excluding___rel_Post_User_1' #229
+│              └─ item: struct #228
 │                 ├─ [id]: optional '_Sort' #47
 │                 │  └─ item: union #46
 │                 │     ├─ variant_0: struct #45
@@ -289,19 +289,25 @@ root: struct '_Post_QueryInput_group_by' #253
 │                       ├─ variant_0: struct #45
 │                       │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
 │                       └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-├─ [take]: optional '_225__Take?' #225
+├─ [take]: optional '_234__Take?' #234
 │  └─ item: integer '_Take' #59
-├─ [skip]: optional '_226__Skip?' #226
+├─ [skip]: optional '_235__Skip?' #235
 │  └─ item: integer '_Skip' #61
-├─ [by]: list '_Post_GroupingFields' #228
-│  └─ item: string #227 enum{ '"id"', '"title"' }
-└─ [having]: optional '_252__Post_Having?' #252
-   └─ item: union '_Post_Having' #251
-      ├─ variant_0: struct 'PostWhere__agg' #244
-      │  ├─ [id]: optional '_229__integer_filter_with_aggregates_c?' #229
-      │  │  └─ item: optional '_integer_filter_with_aggregates_c' #84
-      │  │     └─ item: union #83
-      │  │        ├─ variant_0: union '_integer_filter_with_aggregates' #81
+├─ [cursor]: optional '_239__Post_Cursor?' #239
+│  └─ item: union '_Post_Cursor' #238
+│     ├─ variant_0: struct #236
+│     │  └─ [id]: integer #119
+│     └─ variant_1: struct #237
+│        └─ [title]: string #120
+├─ [by]: list '_Post_GroupingFields' #241
+│  └─ item: string #240 enum{ '"id"', '"title"' }
+└─ [having]: optional '_265__Post_Having?' #265
+   └─ item: union '_Post_Having' #264
+      ├─ variant_0: struct 'PostWhere__agg' #257
+      │  ├─ [id]: optional '_242__integer_filter_with_aggregates_c?' #242
+      │  │  └─ item: optional '_integer_filter_with_aggregates_c' #89
+      │  │     └─ item: union #88
+      │  │        ├─ variant_0: union '_integer_filter_with_aggregates' #86
       │  │        │  ├─ variant_0: either '_integer_filter' #31
       │  │        │  │  ├─ variant_0: integer #23
       │  │        │  │  ├─ variant_1: struct #26
@@ -323,7 +329,7 @@ root: struct '_Post_QueryInput_group_by' #253
       │  │        │  │  └─ variant_5: struct #30
       │  │        │  │     └─ [notIn]: list #25
       │  │        │  │        └─ item: integer #23
-      │  │        │  ├─ variant_1: struct #76
+      │  │        │  ├─ variant_1: struct #81
       │  │        │  │  └─ [_count]: either '_integer_filter' #31
       │  │        │  │     ├─ variant_0: integer #23
       │  │        │  │     ├─ variant_1: struct #26
@@ -345,7 +351,7 @@ root: struct '_Post_QueryInput_group_by' #253
       │  │        │  │     └─ variant_5: struct #30
       │  │        │  │        └─ [notIn]: list #25
       │  │        │  │           └─ item: integer #23
-      │  │        │  ├─ variant_2: struct #77
+      │  │        │  ├─ variant_2: struct #82
       │  │        │  │  └─ [_sum]: either '_integer_filter' #31
       │  │        │  │     ├─ variant_0: integer #23
       │  │        │  │     ├─ variant_1: struct #26
@@ -367,29 +373,29 @@ root: struct '_Post_QueryInput_group_by' #253
       │  │        │  │     └─ variant_5: struct #30
       │  │        │  │        └─ [notIn]: list #25
       │  │        │  │           └─ item: integer #23
-      │  │        │  ├─ variant_3: struct #78
-      │  │        │  │  └─ [_avg]: either '_float_filter' #75
-      │  │        │  │     ├─ variant_0: float #67
-      │  │        │  │     ├─ variant_1: struct #70
-      │  │        │  │     │  └─ [equals]: float #67
-      │  │        │  │     ├─ variant_2: struct #71
-      │  │        │  │     │  └─ [not]: float #67
-      │  │        │  │     ├─ variant_3: struct #72
-      │  │        │  │     │  ├─ [lt]: optional #68
-      │  │        │  │     │  │  └─ item: float #67
-      │  │        │  │     │  ├─ [gt]: optional #68
-      │  │        │  │     │  │  └─ item: float #67
-      │  │        │  │     │  ├─ [lte]: optional #68
-      │  │        │  │     │  │  └─ item: float #67
-      │  │        │  │     │  └─ [gte]: optional #68
-      │  │        │  │     │     └─ item: float #67
-      │  │        │  │     ├─ variant_4: struct #73
-      │  │        │  │     │  └─ [in]: list #69
-      │  │        │  │     │     └─ item: float #67
-      │  │        │  │     └─ variant_5: struct #74
-      │  │        │  │        └─ [notIn]: list #69
-      │  │        │  │           └─ item: float #67
-      │  │        │  ├─ variant_4: struct #79
+      │  │        │  ├─ variant_3: struct #83
+      │  │        │  │  └─ [_avg]: either '_float_filter' #80
+      │  │        │  │     ├─ variant_0: float #72
+      │  │        │  │     ├─ variant_1: struct #75
+      │  │        │  │     │  └─ [equals]: float #72
+      │  │        │  │     ├─ variant_2: struct #76
+      │  │        │  │     │  └─ [not]: float #72
+      │  │        │  │     ├─ variant_3: struct #77
+      │  │        │  │     │  ├─ [lt]: optional #73
+      │  │        │  │     │  │  └─ item: float #72
+      │  │        │  │     │  ├─ [gt]: optional #73
+      │  │        │  │     │  │  └─ item: float #72
+      │  │        │  │     │  ├─ [lte]: optional #73
+      │  │        │  │     │  │  └─ item: float #72
+      │  │        │  │     │  └─ [gte]: optional #73
+      │  │        │  │     │     └─ item: float #72
+      │  │        │  │     ├─ variant_4: struct #78
+      │  │        │  │     │  └─ [in]: list #74
+      │  │        │  │     │     └─ item: float #72
+      │  │        │  │     └─ variant_5: struct #79
+      │  │        │  │        └─ [notIn]: list #74
+      │  │        │  │           └─ item: float #72
+      │  │        │  ├─ variant_4: struct #84
       │  │        │  │  └─ [_min]: either '_integer_filter' #31
       │  │        │  │     ├─ variant_0: integer #23
       │  │        │  │     ├─ variant_1: struct #26
@@ -411,7 +417,7 @@ root: struct '_Post_QueryInput_group_by' #253
       │  │        │  │     └─ variant_5: struct #30
       │  │        │  │        └─ [notIn]: list #25
       │  │        │  │           └─ item: integer #23
-      │  │        │  └─ variant_5: struct #80
+      │  │        │  └─ variant_5: struct #85
       │  │        │     └─ [_max]: either '_integer_filter' #31
       │  │        │        ├─ variant_0: integer #23
       │  │        │        ├─ variant_1: struct #26
@@ -433,8 +439,8 @@ root: struct '_Post_QueryInput_group_by' #253
       │  │        │        └─ variant_5: struct #30
       │  │        │           └─ [notIn]: list #25
       │  │        │              └─ item: integer #23
-      │  │        └─ variant_1: struct #82
-      │  │           └─ [not]: union '_integer_filter_with_aggregates' #81
+      │  │        └─ variant_1: struct #87
+      │  │           └─ [not]: union '_integer_filter_with_aggregates' #86
       │  │              ├─ variant_0: either '_integer_filter' #31
       │  │              │  ├─ variant_0: integer #23
       │  │              │  ├─ variant_1: struct #26
@@ -456,7 +462,7 @@ root: struct '_Post_QueryInput_group_by' #253
       │  │              │  └─ variant_5: struct #30
       │  │              │     └─ [notIn]: list #25
       │  │              │        └─ item: integer #23
-      │  │              ├─ variant_1: struct #76
+      │  │              ├─ variant_1: struct #81
       │  │              │  └─ [_count]: either '_integer_filter' #31
       │  │              │     ├─ variant_0: integer #23
       │  │              │     ├─ variant_1: struct #26
@@ -478,7 +484,7 @@ root: struct '_Post_QueryInput_group_by' #253
       │  │              │     └─ variant_5: struct #30
       │  │              │        └─ [notIn]: list #25
       │  │              │           └─ item: integer #23
-      │  │              ├─ variant_2: struct #77
+      │  │              ├─ variant_2: struct #82
       │  │              │  └─ [_sum]: either '_integer_filter' #31
       │  │              │     ├─ variant_0: integer #23
       │  │              │     ├─ variant_1: struct #26
@@ -500,29 +506,29 @@ root: struct '_Post_QueryInput_group_by' #253
       │  │              │     └─ variant_5: struct #30
       │  │              │        └─ [notIn]: list #25
       │  │              │           └─ item: integer #23
-      │  │              ├─ variant_3: struct #78
-      │  │              │  └─ [_avg]: either '_float_filter' #75
-      │  │              │     ├─ variant_0: float #67
-      │  │              │     ├─ variant_1: struct #70
-      │  │              │     │  └─ [equals]: float #67
-      │  │              │     ├─ variant_2: struct #71
-      │  │              │     │  └─ [not]: float #67
-      │  │              │     ├─ variant_3: struct #72
-      │  │              │     │  ├─ [lt]: optional #68
-      │  │              │     │  │  └─ item: float #67
-      │  │              │     │  ├─ [gt]: optional #68
-      │  │              │     │  │  └─ item: float #67
-      │  │              │     │  ├─ [lte]: optional #68
-      │  │              │     │  │  └─ item: float #67
-      │  │              │     │  └─ [gte]: optional #68
-      │  │              │     │     └─ item: float #67
-      │  │              │     ├─ variant_4: struct #73
-      │  │              │     │  └─ [in]: list #69
-      │  │              │     │     └─ item: float #67
-      │  │              │     └─ variant_5: struct #74
-      │  │              │        └─ [notIn]: list #69
-      │  │              │           └─ item: float #67
-      │  │              ├─ variant_4: struct #79
+      │  │              ├─ variant_3: struct #83
+      │  │              │  └─ [_avg]: either '_float_filter' #80
+      │  │              │     ├─ variant_0: float #72
+      │  │              │     ├─ variant_1: struct #75
+      │  │              │     │  └─ [equals]: float #72
+      │  │              │     ├─ variant_2: struct #76
+      │  │              │     │  └─ [not]: float #72
+      │  │              │     ├─ variant_3: struct #77
+      │  │              │     │  ├─ [lt]: optional #73
+      │  │              │     │  │  └─ item: float #72
+      │  │              │     │  ├─ [gt]: optional #73
+      │  │              │     │  │  └─ item: float #72
+      │  │              │     │  ├─ [lte]: optional #73
+      │  │              │     │  │  └─ item: float #72
+      │  │              │     │  └─ [gte]: optional #73
+      │  │              │     │     └─ item: float #72
+      │  │              │     ├─ variant_4: struct #78
+      │  │              │     │  └─ [in]: list #74
+      │  │              │     │     └─ item: float #72
+      │  │              │     └─ variant_5: struct #79
+      │  │              │        └─ [notIn]: list #74
+      │  │              │           └─ item: float #72
+      │  │              ├─ variant_4: struct #84
       │  │              │  └─ [_min]: either '_integer_filter' #31
       │  │              │     ├─ variant_0: integer #23
       │  │              │     ├─ variant_1: struct #26
@@ -544,7 +550,7 @@ root: struct '_Post_QueryInput_group_by' #253
       │  │              │     └─ variant_5: struct #30
       │  │              │        └─ [notIn]: list #25
       │  │              │           └─ item: integer #23
-      │  │              └─ variant_5: struct #80
+      │  │              └─ variant_5: struct #85
       │  │                 └─ [_max]: either '_integer_filter' #31
       │  │                    ├─ variant_0: integer #23
       │  │                    ├─ variant_1: struct #26
@@ -566,7 +572,7 @@ root: struct '_Post_QueryInput_group_by' #253
       │  │                    └─ variant_5: struct #30
       │  │                       └─ [notIn]: list #25
       │  │                          └─ item: integer #23
-      │  ├─ [title]: optional '_230__string_filter_c?' #230
+      │  ├─ [title]: optional '_243__string_filter_c?' #243
       │  │  └─ item: optional '_string_filter_c' #20
       │  │     └─ item: union #19
       │  │        ├─ variant_0: union '_string_filter' #17
@@ -616,12 +622,12 @@ root: struct '_Post_QueryInput_group_by' #253
       │  │                 │  └─ item: string #5
       │  │                 └─ [endsWith]: optional #6
       │  │                    └─ item: string #5
-      │  └─ [author]: optional '_243_UserWhere__agg__skip_117_PostWhere__agg?' #243
-      │     └─ item: struct 'UserWhere__agg__skip_117_PostWhere__agg' #242
-      │        ├─ [id]: optional '_231__integer_filter_with_aggregates_c?' #231
-      │        │  └─ item: optional '_integer_filter_with_aggregates_c' #84
-      │        │     └─ item: union #83
-      │        │        ├─ variant_0: union '_integer_filter_with_aggregates' #81
+      │  └─ [author]: optional '_256_UserWhere__agg__skip_122_PostWhere__agg?' #256
+      │     └─ item: struct 'UserWhere__agg__skip_122_PostWhere__agg' #255
+      │        ├─ [id]: optional '_244__integer_filter_with_aggregates_c?' #244
+      │        │  └─ item: optional '_integer_filter_with_aggregates_c' #89
+      │        │     └─ item: union #88
+      │        │        ├─ variant_0: union '_integer_filter_with_aggregates' #86
       │        │        │  ├─ variant_0: either '_integer_filter' #31
       │        │        │  │  ├─ variant_0: integer #23
       │        │        │  │  ├─ variant_1: struct #26
@@ -643,7 +649,7 @@ root: struct '_Post_QueryInput_group_by' #253
       │        │        │  │  └─ variant_5: struct #30
       │        │        │  │     └─ [notIn]: list #25
       │        │        │  │        └─ item: integer #23
-      │        │        │  ├─ variant_1: struct #76
+      │        │        │  ├─ variant_1: struct #81
       │        │        │  │  └─ [_count]: either '_integer_filter' #31
       │        │        │  │     ├─ variant_0: integer #23
       │        │        │  │     ├─ variant_1: struct #26
@@ -665,7 +671,7 @@ root: struct '_Post_QueryInput_group_by' #253
       │        │        │  │     └─ variant_5: struct #30
       │        │        │  │        └─ [notIn]: list #25
       │        │        │  │           └─ item: integer #23
-      │        │        │  ├─ variant_2: struct #77
+      │        │        │  ├─ variant_2: struct #82
       │        │        │  │  └─ [_sum]: either '_integer_filter' #31
       │        │        │  │     ├─ variant_0: integer #23
       │        │        │  │     ├─ variant_1: struct #26
@@ -687,29 +693,29 @@ root: struct '_Post_QueryInput_group_by' #253
       │        │        │  │     └─ variant_5: struct #30
       │        │        │  │        └─ [notIn]: list #25
       │        │        │  │           └─ item: integer #23
-      │        │        │  ├─ variant_3: struct #78
-      │        │        │  │  └─ [_avg]: either '_float_filter' #75
-      │        │        │  │     ├─ variant_0: float #67
-      │        │        │  │     ├─ variant_1: struct #70
-      │        │        │  │     │  └─ [equals]: float #67
-      │        │        │  │     ├─ variant_2: struct #71
-      │        │        │  │     │  └─ [not]: float #67
-      │        │        │  │     ├─ variant_3: struct #72
-      │        │        │  │     │  ├─ [lt]: optional #68
-      │        │        │  │     │  │  └─ item: float #67
-      │        │        │  │     │  ├─ [gt]: optional #68
-      │        │        │  │     │  │  └─ item: float #67
-      │        │        │  │     │  ├─ [lte]: optional #68
-      │        │        │  │     │  │  └─ item: float #67
-      │        │        │  │     │  └─ [gte]: optional #68
-      │        │        │  │     │     └─ item: float #67
-      │        │        │  │     ├─ variant_4: struct #73
-      │        │        │  │     │  └─ [in]: list #69
-      │        │        │  │     │     └─ item: float #67
-      │        │        │  │     └─ variant_5: struct #74
-      │        │        │  │        └─ [notIn]: list #69
-      │        │        │  │           └─ item: float #67
-      │        │        │  ├─ variant_4: struct #79
+      │        │        │  ├─ variant_3: struct #83
+      │        │        │  │  └─ [_avg]: either '_float_filter' #80
+      │        │        │  │     ├─ variant_0: float #72
+      │        │        │  │     ├─ variant_1: struct #75
+      │        │        │  │     │  └─ [equals]: float #72
+      │        │        │  │     ├─ variant_2: struct #76
+      │        │        │  │     │  └─ [not]: float #72
+      │        │        │  │     ├─ variant_3: struct #77
+      │        │        │  │     │  ├─ [lt]: optional #73
+      │        │        │  │     │  │  └─ item: float #72
+      │        │        │  │     │  ├─ [gt]: optional #73
+      │        │        │  │     │  │  └─ item: float #72
+      │        │        │  │     │  ├─ [lte]: optional #73
+      │        │        │  │     │  │  └─ item: float #72
+      │        │        │  │     │  └─ [gte]: optional #73
+      │        │        │  │     │     └─ item: float #72
+      │        │        │  │     ├─ variant_4: struct #78
+      │        │        │  │     │  └─ [in]: list #74
+      │        │        │  │     │     └─ item: float #72
+      │        │        │  │     └─ variant_5: struct #79
+      │        │        │  │        └─ [notIn]: list #74
+      │        │        │  │           └─ item: float #72
+      │        │        │  ├─ variant_4: struct #84
       │        │        │  │  └─ [_min]: either '_integer_filter' #31
       │        │        │  │     ├─ variant_0: integer #23
       │        │        │  │     ├─ variant_1: struct #26
@@ -731,7 +737,7 @@ root: struct '_Post_QueryInput_group_by' #253
       │        │        │  │     └─ variant_5: struct #30
       │        │        │  │        └─ [notIn]: list #25
       │        │        │  │           └─ item: integer #23
-      │        │        │  └─ variant_5: struct #80
+      │        │        │  └─ variant_5: struct #85
       │        │        │     └─ [_max]: either '_integer_filter' #31
       │        │        │        ├─ variant_0: integer #23
       │        │        │        ├─ variant_1: struct #26
@@ -753,8 +759,8 @@ root: struct '_Post_QueryInput_group_by' #253
       │        │        │        └─ variant_5: struct #30
       │        │        │           └─ [notIn]: list #25
       │        │        │              └─ item: integer #23
-      │        │        └─ variant_1: struct #82
-      │        │           └─ [not]: union '_integer_filter_with_aggregates' #81
+      │        │        └─ variant_1: struct #87
+      │        │           └─ [not]: union '_integer_filter_with_aggregates' #86
       │        │              ├─ variant_0: either '_integer_filter' #31
       │        │              │  ├─ variant_0: integer #23
       │        │              │  ├─ variant_1: struct #26
@@ -776,7 +782,7 @@ root: struct '_Post_QueryInput_group_by' #253
       │        │              │  └─ variant_5: struct #30
       │        │              │     └─ [notIn]: list #25
       │        │              │        └─ item: integer #23
-      │        │              ├─ variant_1: struct #76
+      │        │              ├─ variant_1: struct #81
       │        │              │  └─ [_count]: either '_integer_filter' #31
       │        │              │     ├─ variant_0: integer #23
       │        │              │     ├─ variant_1: struct #26
@@ -798,7 +804,7 @@ root: struct '_Post_QueryInput_group_by' #253
       │        │              │     └─ variant_5: struct #30
       │        │              │        └─ [notIn]: list #25
       │        │              │           └─ item: integer #23
-      │        │              ├─ variant_2: struct #77
+      │        │              ├─ variant_2: struct #82
       │        │              │  └─ [_sum]: either '_integer_filter' #31
       │        │              │     ├─ variant_0: integer #23
       │        │              │     ├─ variant_1: struct #26
@@ -820,29 +826,29 @@ root: struct '_Post_QueryInput_group_by' #253
       │        │              │     └─ variant_5: struct #30
       │        │              │        └─ [notIn]: list #25
       │        │              │           └─ item: integer #23
-      │        │              ├─ variant_3: struct #78
-      │        │              │  └─ [_avg]: either '_float_filter' #75
-      │        │              │     ├─ variant_0: float #67
-      │        │              │     ├─ variant_1: struct #70
-      │        │              │     │  └─ [equals]: float #67
-      │        │              │     ├─ variant_2: struct #71
-      │        │              │     │  └─ [not]: float #67
-      │        │              │     ├─ variant_3: struct #72
-      │        │              │     │  ├─ [lt]: optional #68
-      │        │              │     │  │  └─ item: float #67
-      │        │              │     │  ├─ [gt]: optional #68
-      │        │              │     │  │  └─ item: float #67
-      │        │              │     │  ├─ [lte]: optional #68
-      │        │              │     │  │  └─ item: float #67
-      │        │              │     │  └─ [gte]: optional #68
-      │        │              │     │     └─ item: float #67
-      │        │              │     ├─ variant_4: struct #73
-      │        │              │     │  └─ [in]: list #69
-      │        │              │     │     └─ item: float #67
-      │        │              │     └─ variant_5: struct #74
-      │        │              │        └─ [notIn]: list #69
-      │        │              │           └─ item: float #67
-      │        │              ├─ variant_4: struct #79
+      │        │              ├─ variant_3: struct #83
+      │        │              │  └─ [_avg]: either '_float_filter' #80
+      │        │              │     ├─ variant_0: float #72
+      │        │              │     ├─ variant_1: struct #75
+      │        │              │     │  └─ [equals]: float #72
+      │        │              │     ├─ variant_2: struct #76
+      │        │              │     │  └─ [not]: float #72
+      │        │              │     ├─ variant_3: struct #77
+      │        │              │     │  ├─ [lt]: optional #73
+      │        │              │     │  │  └─ item: float #72
+      │        │              │     │  ├─ [gt]: optional #73
+      │        │              │     │  │  └─ item: float #72
+      │        │              │     │  ├─ [lte]: optional #73
+      │        │              │     │  │  └─ item: float #72
+      │        │              │     │  └─ [gte]: optional #73
+      │        │              │     │     └─ item: float #72
+      │        │              │     ├─ variant_4: struct #78
+      │        │              │     │  └─ [in]: list #74
+      │        │              │     │     └─ item: float #72
+      │        │              │     └─ variant_5: struct #79
+      │        │              │        └─ [notIn]: list #74
+      │        │              │           └─ item: float #72
+      │        │              ├─ variant_4: struct #84
       │        │              │  └─ [_min]: either '_integer_filter' #31
       │        │              │     ├─ variant_0: integer #23
       │        │              │     ├─ variant_1: struct #26
@@ -864,7 +870,7 @@ root: struct '_Post_QueryInput_group_by' #253
       │        │              │     └─ variant_5: struct #30
       │        │              │        └─ [notIn]: list #25
       │        │              │           └─ item: integer #23
-      │        │              └─ variant_5: struct #80
+      │        │              └─ variant_5: struct #85
       │        │                 └─ [_max]: either '_integer_filter' #31
       │        │                    ├─ variant_0: integer #23
       │        │                    ├─ variant_1: struct #26
@@ -886,7 +892,7 @@ root: struct '_Post_QueryInput_group_by' #253
       │        │                    └─ variant_5: struct #30
       │        │                       └─ [notIn]: list #25
       │        │                          └─ item: integer #23
-      │        ├─ [name]: optional '_232__string_filter_c?' #232
+      │        ├─ [name]: optional '_245__string_filter_c?' #245
       │        │  └─ item: optional '_string_filter_c' #20
       │        │     └─ item: union #19
       │        │        ├─ variant_0: union '_string_filter' #17
@@ -936,23 +942,23 @@ root: struct '_Post_QueryInput_group_by' #253
       │        │                 │  └─ item: string #5
       │        │                 └─ [endsWith]: optional #6
       │        │                    └─ item: string #5
-      │        └─ [posts]: optional #241
-      │           └─ item: union #240
-      │              ├─ variant_0: struct #235
-      │              │  └─ [every]: optional '_234_PostWhere__agg?' #234
-      │              │     └─ item: &PostWhere__agg #233
-      │              ├─ variant_1: struct #237
-      │              │  └─ [some]: optional '_236_PostWhere__agg?' #236
-      │              │     └─ item: &PostWhere__agg #233
-      │              └─ variant_2: struct #239
-      │                 └─ [none]: optional '_238_PostWhere__agg?' #238
-      │                    └─ item: &PostWhere__agg #233
-      ├─ variant_1: struct #247
-      │  └─ [AND]: list '_246__Post_Having[]' #246
-      │     └─ item: &_Post_Having #245
-      ├─ variant_2: struct #249
-      │  └─ [OR]: list '_248__Post_Having[]' #248
-      │     └─ item: &_Post_Having #245
-      └─ variant_3: struct #250
-         └─ [NOT]: &_Post_Having #245
+      │        └─ [posts]: optional #254
+      │           └─ item: union #253
+      │              ├─ variant_0: struct #248
+      │              │  └─ [every]: optional '_247_PostWhere__agg?' #247
+      │              │     └─ item: &PostWhere__agg #246
+      │              ├─ variant_1: struct #250
+      │              │  └─ [some]: optional '_249_PostWhere__agg?' #249
+      │              │     └─ item: &PostWhere__agg #246
+      │              └─ variant_2: struct #252
+      │                 └─ [none]: optional '_251_PostWhere__agg?' #251
+      │                    └─ item: &PostWhere__agg #246
+      ├─ variant_1: struct #260
+      │  └─ [AND]: list '_259__Post_Having[]' #259
+      │     └─ item: &_Post_Having #258
+      ├─ variant_2: struct #262
+      │  └─ [OR]: list '_261__Post_Having[]' #261
+      │     └─ item: &_Post_Having #258
+      └─ variant_3: struct #263
+         └─ [NOT]: &_Post_Having #258
 
