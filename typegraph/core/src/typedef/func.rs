@@ -29,8 +29,10 @@ impl TypeConversion for Func {
         let out_id = TypeId(self.data.out).resolve_proxy()?;
         let output = ctx.register_type(out_id, Some(runtime_id))?.into();
 
+        let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
+
         Ok(TypeNode::Function {
-            base: gen_base_concrete!("func", self, runtime_id),
+            base: gen_base_concrete!("func", self, runtime_id, policies),
             data: FunctionTypeData {
                 input,
                 output,

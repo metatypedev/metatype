@@ -155,14 +155,9 @@ interface core {
         per-effect(policy-per-effect),
     }
 
-    record type-policy {
-        tpe: type-id,
-        chain: list<policy-spec>,
-    }
-
     register-policy: func(pol: policy) -> result<policy-id, error>
 
-    with-policy: func(data: type-policy) -> result<type-id, error>
+    with-policy: func(type-id: type-id, policy-chain: list<policy-spec>) -> result<type-id, error>
 
     // policy-id, policy-name
     get-public-policy: func() -> result<tuple<policy-id, string>, error>

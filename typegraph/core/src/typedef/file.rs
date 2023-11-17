@@ -35,10 +35,11 @@ impl TypeData for TypeFile {
 }
 
 impl TypeConversion for File {
-    fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+        let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
         Ok(TypeNode::File {
             // TODO should `as_id` be supported?
-            base: gen_base_concrete!("file", self, runtime_id.unwrap()),
+            base: gen_base_concrete!("file", self, runtime_id.unwrap(), policies),
             data: FileTypeData {
                 min_size: self.data.min,
                 max_size: self.data.max,

@@ -22,8 +22,10 @@ impl TypeConversion for Optional {
             None => None,
         };
 
+        let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
+
         Ok(TypeNode::Optional {
-            base: gen_base_concrete!("optional", self, runtime_id.unwrap(), injection),
+            base: gen_base_concrete!("optional", self, runtime_id.unwrap(), policies, [injection]),
             data: OptionalTypeData {
                 item: ctx
                     .register_type(TypeId(self.data.of).resolve_proxy()?, runtime_id)?

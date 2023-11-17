@@ -12,9 +12,10 @@ use crate::{
 };
 
 impl TypeConversion for Boolean {
-    fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+        let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
         Ok(TypeNode::Boolean {
-            base: gen_base_concrete!("boolean", self, runtime_id.unwrap()),
+            base: gen_base_concrete!("boolean", self, runtime_id.unwrap(), policies, [injection]),
         })
     }
 }

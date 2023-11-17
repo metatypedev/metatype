@@ -13,7 +13,7 @@ use crate::{
 };
 
 impl TypeConversion for StringT {
-    fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         let format: Option<StringFormat> = match self.data.format.clone() {
             Some(format) => {
                 let ret =
@@ -23,8 +23,10 @@ impl TypeConversion for StringT {
             None => None,
         };
 
+        let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
+
         Ok(TypeNode::String {
-            base: gen_base_concrete!("string", self, runtime_id.unwrap(), enum, injection, as_id),
+            base: gen_base_concrete!("string", self, runtime_id.unwrap(), policies, [enum, injection, as_id]),
             data: StringTypeData {
                 min_length: self.data.min,
                 max_length: self.data.max,

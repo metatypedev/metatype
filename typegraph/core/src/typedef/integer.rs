@@ -13,9 +13,16 @@ use crate::{
 };
 
 impl TypeConversion for Integer {
-    fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+        let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
         Ok(TypeNode::Integer {
-            base: gen_base_concrete!("integer", self, runtime_id.unwrap(), enum, as_id, injection),
+            base: gen_base_concrete!(
+                "integer",
+                self,
+                runtime_id.unwrap(),
+                policies,
+                [enum, as_id, injection]
+            ),
             data: IntegerTypeData {
                 minimum: self.data.min,
                 maximum: self.data.max,

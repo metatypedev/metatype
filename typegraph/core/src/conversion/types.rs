@@ -37,11 +37,13 @@ pub fn gen_base(
     name: String,
     runtime_config: Option<Vec<(String, String)>>,
     runtime_id: u32,
+    policies: Vec<PolicyIndices>,
 ) -> TypeNodeBaseBuilder {
     TypeNodeBaseBuilder {
         name,
         runtime: runtime_id,
         runtime_config,
+        policies,
         ..Default::default()
     }
 }
@@ -88,7 +90,7 @@ impl TypeNodeBaseBuilder {
 ///
 /// E.g. gen_base_builder!("boolean", typ, runtime_id.unwrap())
 macro_rules! gen_base_builder {
-    ( $name:expr, $type:expr, $rt:expr ) => {{
+    ( $name:literal, $type:expr, $rt:expr, $policies:expr ) => {{
         let base = $crate::conversion::types::gen_base(
             $type
                 .base
@@ -97,6 +99,7 @@ macro_rules! gen_base_builder {
                 .unwrap_or_else(|| format!(concat!($name, "_{}"), $type.id.0)),
             $type.base.runtime_config.clone(),
             $rt,
+            $policies,
         );
         base
     }};
@@ -104,13 +107,18 @@ macro_rules! gen_base_builder {
 
 /// Generate TypeNodeBase from a concrete type.
 macro_rules! gen_base_concrete {
-    ( $name:expr, $type:expr, $rt:expr ) => {{
-        let builder = $crate::conversion::types::gen_base_builder!($name, $type, $rt);
+    ( $name:literal, $type:expr, $rt:expr, $policies:expr ) => {{
+        let builder = $crate::conversion::types::gen_base_builder!($name, $type, $rt, $policies);
+        builder.build()
+    }};
+    ( $name:literal, $type:expr, $rt:expr, $policies:expr ) => {{
+        let builder = $crate::conversion::types::gen_base_builder!($name, $type, $rt, $policies);
         builder.build()
     }};
 
-    ( $name:expr, $type:expr, $rt:expr, $( $attr:ident ),* ) => {{
-        let builder = $crate::conversion::types::gen_base_builder!($name, $type, $rt);
+
+    ( $name:literal, $type:expr, $rt:expr, $policies:expr, [ $( $attr:ident ),* ] ) => {{
+        let builder = $crate::conversion::types::gen_base_builder!($name, $type, $rt, $policies);
 
         $(
             let builder = $crate::conversion::types::set_type_attribute!(builder, $type, $attr);

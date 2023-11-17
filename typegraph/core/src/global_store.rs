@@ -106,6 +106,10 @@ fn with_store_mut<T, F: FnOnce(&mut Store) -> T>(f: F) -> T {
     STORE.with(|s| f(&mut s.borrow_mut()))
 }
 
+/// Option to register or not a type name.
+/// Should be disabled for type extensions, because they inherit the name.
+pub struct NameRegistration(pub bool);
+
 #[cfg(test)]
 impl Store {
     pub fn reset() {
@@ -139,13 +143,20 @@ impl Store {
         with_store(|s| s.type_by_names.get(name).copied())
     }
 
-    pub fn register_type(build: impl FnOnce(TypeId) -> Type) -> Result<TypeId> {
+    pub fn register_type(
+        build: impl FnOnce(TypeId) -> Type,
+        name_registration: NameRegistration,
+    ) -> Result<TypeId> {
         // this works since the store is thread local
         let id = with_store(|s| s.types.len()) as u32;
         let typ = build(id.into());
-        if let Some(name) = typ.get_base().and_then(|b| b.name.clone()) {
-            Self::register_type_name(name, id.into())?;
+
+        if name_registration.0 {
+            if let Some(name) = typ.get_base().and_then(|b| b.name.clone()) {
+                Self::register_type_name(name, id.into())?;
+            }
         }
+
         with_store_mut(move |s| -> Result<()> {
             s.types.push(typ);
             Ok(())

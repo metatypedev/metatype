@@ -13,8 +13,9 @@ use crate::{
 
 impl TypeConversion for List {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+        let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
         Ok(TypeNode::List {
-            base: gen_base_concrete!("list", self, runtime_id.unwrap(), injection),
+            base: gen_base_concrete!("list", self, runtime_id.unwrap(), policies, [injection]),
             data: ListTypeData {
                 items: ctx
                     .register_type(TypeId(self.data.of).resolve_proxy()?, runtime_id)?

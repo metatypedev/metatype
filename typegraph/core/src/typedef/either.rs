@@ -14,11 +14,12 @@ use crate::{
 
 impl TypeConversion for Either {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+        let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
         Ok(TypeNode::Either {
             // TODO do we need to support injection??
             // TODO or emit an error if injection is set?
             // idem for as_id, and enum
-            base: gen_base_concrete!("either", self, runtime_id.unwrap()),
+            base: gen_base_concrete!("either", self, runtime_id.unwrap(), policies),
             data: EitherTypeData {
                 one_of: self
                     .data

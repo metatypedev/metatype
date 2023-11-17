@@ -18,10 +18,10 @@ from typegraph.gen.exports.core import (
     TypeFunc,
     TypeInteger,
     TypeOptional,
-    TypePolicy,
     TypeString,
     TypeStruct,
     TypeUnion,
+    PolicySpec as WitPolicySpec,
 )
 from typegraph.gen.exports.runtimes import EffectRead
 from typegraph.gen.exports.utils import Reduce
@@ -49,11 +49,15 @@ class typedef:
     id: int
     runtime_config: Optional[List[Tuple[str, str]]]
     injection: Optional[str]
+    policy_chain: Optional[List[WitPolicySpec]]
+    name: Optional[str]
 
     def __init__(self, id: int):
         self.id = id
         self.runtime_config = None
         self.injection = None
+        self.policy_chain = None
+        self.name = None
 
     def __repr__(self):
         res = core.get_type_repr(store, self.id)
@@ -62,18 +66,15 @@ class typedef:
         return res.value
 
     def with_policy(self, *policies: Optional[PolicySpec]) -> Self:
-        res = core.with_policy(
-            store,
-            TypePolicy(
-                tpe=self.id,
-                chain=get_policy_chain(policies),
-            ),
-        )
-
+        policy_chain = get_policy_chain(policies)
+        res = core.with_policy(store, self.id, policy_chain)
         if isinstance(res, Err):
             raise Exception(res.value)
 
-        return _TypeWithPolicy(res.value, self, policies)
+        ret = copy.copy(self)
+        ret.id = res.value
+        ret.policy_chain = policy_chain
+        return ret
 
     def rename(self, name: str) -> Self:
         res = core.rename_type(store, self.id, name)
@@ -81,7 +82,10 @@ class typedef:
         if isinstance(res, Err):
             raise Exception(res.value)
 
-        return _TypeWrapper(res.value, self)
+        ret = copy.copy(self)
+        ret.id = res.value
+        ret.name = name
+        return ret
 
     def _with_injection(self, injection: str) -> Self:
         res = core.with_injection(store, self.id, injection)

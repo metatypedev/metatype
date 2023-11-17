@@ -80,10 +80,7 @@ export class Typedef {
   }
 
   withPolicy(policy: PolicySpec[] | PolicySpec): this {
-    const id = core.withPolicy({
-      tpe: this._id,
-      chain: getPolicyChain(policy),
-    });
+    const id = core.withPolicy(this._id, getPolicyChain(policy));
 
     const chain = Array.isArray(policy) ? policy : [policy];
     return new Proxy(this, {

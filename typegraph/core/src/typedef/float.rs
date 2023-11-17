@@ -13,9 +13,16 @@ use crate::{
 };
 
 impl TypeConversion for Float {
-    fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+        let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
         Ok(TypeNode::Float {
-            base: gen_base_concrete!("float", self, runtime_id.unwrap(), enum, injection),
+            base: gen_base_concrete!(
+                "float",
+                self,
+                runtime_id.unwrap(),
+                policies,
+                [enum, injection]
+            ),
             data: FloatTypeData {
                 minimum: self.data.min,
                 maximum: self.data.max,

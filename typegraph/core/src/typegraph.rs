@@ -4,7 +4,7 @@
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::{gen_base, TypeConversion};
 use crate::global_store::SavedState;
-use crate::types::{Type, TypeId};
+use crate::types::{Type, TypeFun, TypeId};
 use crate::validation::validate_name;
 use crate::Lib;
 use crate::{
@@ -24,8 +24,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::wit::core::{
-    Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypePolicy,
-    TypegraphInitParams,
+    Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypegraphInitParams,
 };
 
 #[derive(Default)]
@@ -114,7 +113,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     let default_runtime_idx = ctx.register_runtime(Store::get_deno_runtime())?;
 
     ctx.types.push(Some(TypeNode::Object {
-        base: gen_base(params.name, None, default_runtime_idx).build(),
+        base: gen_base(params.name, None, default_runtime_idx, vec![]).build(),
         data: ObjectTypeData {
             properties: IndexMap::new(),
             required: vec![],
@@ -232,17 +231,16 @@ pub fn expose(
         .into_iter()
         .map(|(key, type_id)| -> Result<_> {
             let attrs = type_id.attrs()?;
-
-            let has_policy = !attrs.policy_chain.is_empty();
+            let concrete_type = attrs.concrete_type.as_type()?;
+            let policy_chain = &concrete_type.get_extended_base().unwrap().policies;
+            let has_policy = !policy_chain.is_empty();
 
             // TODO how to set default policy on a namespace? Or will it inherit
             // the policies of the namespace?
             let type_id: TypeId = match (has_policy, default_policy.as_ref()) {
-                (false, Some(default_policy)) => Lib::with_policy(TypePolicy {
-                    tpe: type_id.into(),
-                    chain: default_policy.to_vec(),
-                })?
-                .into(),
+                (false, Some(default_policy)) => {
+                    Lib::with_policy(type_id.into(), default_policy.to_vec())?.into()
+                }
                 _ => type_id,
             };
 

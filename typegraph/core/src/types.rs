@@ -9,11 +9,11 @@ use enum_dispatch::enum_dispatch;
 
 use crate::conversion::types::TypeConversion;
 use crate::errors::{self, ErrorContext, Result};
-use crate::global_store::Store;
+use crate::global_store::{NameRegistration, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
     PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId,
-    TypeInteger, TypeList, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
+    TypeInteger, TypeList, TypeOptional, TypeProxy, TypeString, TypeStruct, TypeUnion,
 };
 use std::rc::Rc;
 
@@ -68,6 +68,13 @@ pub trait WrapperTypeData {
 #[derive(Default, Debug, Clone)]
 pub struct ExtendedTypeBase {
     pub injection: Option<Box<Injection>>,
+    pub policies: Vec<PolicySpec>,
+}
+
+impl ExtendedTypeBase {
+    pub fn is_empty(&self) -> bool {
+        self.injection.is_none() && self.policies.is_empty()
+    }
 }
 
 #[derive(Debug)]
@@ -111,9 +118,6 @@ pub type Optional = ConcreteType<TypeOptional>;
 pub type Union = ConcreteType<TypeUnion>;
 pub type Either = ConcreteType<TypeEither>;
 
-// Note: TypePolicy|TypeWithInjection|Proxy => Struct | Integer | ...
-pub type WithPolicy = WrapperType<TypePolicy>;
-
 #[derive(Debug, Clone)]
 #[enum_dispatch(TypeFun, TypeConversion)]
 pub enum Type {
@@ -129,7 +133,6 @@ pub enum Type {
     Optional(Rc<Optional>),
     Union(Rc<Union>),
     Either(Rc<Either>),
-    WithPolicy(Rc<WithPolicy>),
 }
 
 impl Type {
@@ -174,24 +177,7 @@ pub trait TypeFun {
             .cloned()
             .ok_or_else(|| errors::TgError::from("cannot rename wrapper type"))?;
         base.name = Some(new_name);
-        Store::register_type(move |id| self.with_base(id, base))
-    }
-
-    fn with_injection(&self, injection: String) -> Result<TypeId> {
-        // TODO try to resolve the proxy?
-        let mut extended_base = self
-            .get_extended_base()
-            .cloned()
-            .ok_or_else(|| errors::TgError::from("cannot add injection to wrapper type"))?;
-        if extended_base.injection.is_some() {
-            return Err(errors::TgError::from(
-                "injection already exists for this type",
-            ));
-        }
-        extended_base.injection = Some(
-            serde_json::from_str(&injection).map_err(|e| errors::TgError::from(e.to_string()))?,
-        );
-        Store::register_type(move |id| self.with_extended_base(id, extended_base))
+        Store::register_type(move |id| self.with_base(id, base), NameRegistration(true))
     }
 }
 
@@ -348,7 +334,6 @@ pub struct TypeAttributes {
     pub concrete_type: TypeId,
     pub name: Option<String>,
     pub proxy_data: HashMap<String, String>,
-    pub policy_chain: Vec<PolicySpec>,
 }
 
 impl TypeId {
@@ -406,7 +391,6 @@ impl TypeId {
 
         let mut type_id = *self;
         let mut proxy_data: HashMap<String, String> = HashMap::new();
-        let mut policy_chain = Vec::new();
         let mut name = None;
 
         loop {
@@ -416,12 +400,6 @@ impl TypeId {
                     proxy_data.extend(p.data.extras.clone());
                     type_id = Store::get_type_by_name(&p.data.name)
                         .ok_or_else(|| errors::unregistered_type_name(&p.data.name))?;
-                    continue;
-                }
-
-                Type::WithPolicy(inner) => {
-                    policy_chain.extend(inner.data.chain.clone());
-                    type_id = inner.data.tpe.into();
                     continue;
                 }
 
@@ -444,7 +422,6 @@ impl TypeId {
                             concrete_type: type_id,
                             name,
                             proxy_data,
-                            policy_chain,
                         })
                     }
                 }

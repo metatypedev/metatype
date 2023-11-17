@@ -13,7 +13,6 @@ pub mod proxy;
 pub mod string;
 pub mod struct_;
 pub mod union;
-pub mod with_policy;
 
 macro_rules! impl_into_type {
     ( concrete, $variant:ident ) => {

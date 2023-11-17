@@ -31,8 +31,9 @@ impl TypeConversion for Struct {
             Some(runtime_id) => runtime_id,
             None => ctx.register_runtime(Store::get_deno_runtime())?,
         };
+        let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
         Ok(TypeNode::Object {
-            base: gen_base_concrete!("object", self, runtime_id, enum, injection),
+            base: gen_base_concrete!("object", self, runtime_id, policies, [enum, injection]),
             data: ObjectTypeData {
                 properties: self
                     .iter_props()

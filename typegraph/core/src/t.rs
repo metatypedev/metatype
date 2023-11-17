@@ -2,18 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::Result;
-use crate::global_store::Store;
+use crate::global_store::{NameRegistration, Store};
 use crate::types::{ExtendedTypeBase, TypeFun, TypeId};
 use crate::wit::core::{
     Guest, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
     TypeProxy, TypeString, TypeStruct, TypeUnion,
 };
-
-impl ExtendedTypeBase {
-    fn is_empty(&self) -> bool {
-        self.injection.is_none()
-    }
-}
 
 pub trait TypeBuilder {
     fn build(&self) -> Result<TypeId>;
@@ -519,9 +513,10 @@ macro_rules! impl_type_builder {
                 let res = $crate::Lib::$build(self.data.clone(), self.base.clone())?;
                 if !self.extended_base.is_empty() {
                     let typ = TypeId(res).as_type()?;
-                    Store::register_type(move |id| {
-                        typ.with_extended_base(id, self.extended_base.clone())
-                    })
+                    Store::register_type(
+                        move |id| typ.with_extended_base(id, self.extended_base.clone()),
+                        NameRegistration(false),
+                    )
                     .into()
                 } else {
                     Ok(res.into())
@@ -554,7 +549,11 @@ impl TypeBuilder for BooleanBuilder {
         let res = crate::Lib::booleanb(self.base.clone())?;
         if !self.extended_base.is_empty() {
             let typ = TypeId(res).as_type()?;
-            Store::register_type(move |id| typ.with_extended_base(id, self.extended_base.clone()))
+            Store::register_type(
+                move |id| typ.with_extended_base(id, self.extended_base.clone()),
+                // TODO
+                NameRegistration(false),
+            )
         } else {
             Ok(res.into())
         }

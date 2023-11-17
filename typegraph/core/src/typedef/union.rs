@@ -14,8 +14,9 @@ use crate::{
 
 impl TypeConversion for Union {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+        let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
         Ok(TypeNode::Union {
-            base: gen_base_concrete!("union", self, runtime_id.unwrap()),
+            base: gen_base_concrete!("union", self, runtime_id.unwrap(), policies),
             data: UnionTypeData {
                 any_of: self
                     .data
