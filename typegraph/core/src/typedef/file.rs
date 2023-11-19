@@ -30,8 +30,6 @@ impl TypeDefData for TypeFile {
     fn variant_name(&self) -> &'static str {
         "file"
     }
-
-    // super::impl_into_type!(concrete, File);
 }
 
 impl TypeConversion for File {

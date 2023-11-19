@@ -26,6 +26,4 @@ impl TypeDefData for TypeBoolean {
     fn variant_name(&self) -> &'static str {
         "boolean"
     }
-
-    // super::impl_into_type!(concrete, Boolean);
 }

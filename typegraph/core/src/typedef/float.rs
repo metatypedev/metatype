@@ -56,6 +56,4 @@ impl TypeDefData for TypeFloat {
     fn variant_name(&self) -> &'static str {
         "float"
     }
-
-    // super::impl_into_type!(concrete, Float);
 }

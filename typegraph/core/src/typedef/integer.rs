@@ -56,6 +56,4 @@ impl TypeDefData for TypeInteger {
     fn variant_name(&self) -> &'static str {
         "integer"
     }
-
-    // super::impl_into_type!(concrete, Integer);
 }
