@@ -8,7 +8,7 @@ use crate::{
     conversion::types::{gen_base_concrete, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{Float, TypeData},
+    types::{Float, TypeDefData},
     wit::core::TypeFloat,
 };
 
@@ -34,7 +34,7 @@ impl TypeConversion for Float {
     }
 }
 
-impl TypeData for TypeFloat {
+impl TypeDefData for TypeFloat {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         if let Some(min) = self.min {
             params.push(format!("min={}", min));
@@ -53,9 +53,9 @@ impl TypeData for TypeFloat {
         }
     }
 
-    fn variant_name(&self) -> String {
-        "float".to_string()
+    fn variant_name(&self) -> &'static str {
+        "float"
     }
 
-    super::impl_into_type!(concrete, Float);
+    // super::impl_into_type!(concrete, Float);
 }

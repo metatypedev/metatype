@@ -43,7 +43,7 @@ pub mod models {
         let user = t::struct_()
             .prop("id", t::integer().as_id(true).build()?)
             .propx("name", t::string())?
-            .propx("posts", t::listx(t::proxy("Post"))?)?
+            .propx("posts", t::listx(t::ref_("Post"))?)?
             .named("User")
             .build()?;
 
@@ -53,7 +53,7 @@ pub mod models {
                 t::integer().as_id(true).config("auto", "true").build()?,
             )
             .prop("title", t::string().build()?)
-            .prop("author", t::proxy("User").build()?)
+            .prop("author", t::ref_("User").build()?)
             .named("Post")
             .build()?;
 
@@ -78,7 +78,7 @@ pub mod tree {
 
     use ptree::{Style, TreeItem};
 
-    use crate::types::{Type, TypeFun, TypeId};
+    use crate::types::{Type, TypeDef, TypeDefExt, TypeId};
 
     #[derive(Clone)]
     struct Node {
@@ -106,31 +106,36 @@ pub mod tree {
         fn write_self<W: Write>(&self, f: &mut W, _style: &Style) -> std::io::Result<()> {
             let ty = self.type_id.as_type().unwrap();
             let (name, title) = match &ty {
-                Type::Proxy(p) => (format!("&{}", p.data.name), None),
-                _ => (
-                    ty.get_data().variant_name(),
-                    ty.get_base().and_then(|b| b.name.clone()),
+                Type::Ref(p) => (format!("&{}", p.name), None),
+                Type::Def(def) => (
+                    def.data().variant_name().to_owned(),
+                    def.base().name.clone(),
                 ),
             };
 
-            let enum_variants: Option<Vec<String>> = match ty {
-                Type::Integer(typ) => typ
-                    .data
-                    .enumeration
-                    .clone()
-                    .map(|v| v.iter().map(|v| v.to_string()).collect()),
-                Type::Float(typ) => typ
-                    .data
-                    .enumeration
-                    .clone()
-                    .map(|v| v.iter().map(|v| v.to_string()).collect()),
-                Type::String(typ) => typ
-                    .data
-                    .enumeration
-                    .clone()
-                    .map(|v| v.iter().map(|v| format!("'{v}'")).collect()),
-                _ => None,
-            };
+            let enum_variants: Option<Vec<String>> = self
+                .type_id
+                .as_type_def()
+                .unwrap()
+                .map(|type_def| match type_def {
+                    TypeDef::Integer(typ) => typ
+                        .data
+                        .enumeration
+                        .clone()
+                        .map(|v| v.iter().map(|v| v.to_string()).collect()),
+                    TypeDef::Float(typ) => typ
+                        .data
+                        .enumeration
+                        .clone()
+                        .map(|v| v.iter().map(|v| v.to_string()).collect()),
+                    TypeDef::String(typ) => typ
+                        .data
+                        .enumeration
+                        .clone()
+                        .map(|v| v.iter().map(|v| format!("'{v}'")).collect()),
+                    _ => None,
+                })
+                .flatten();
 
             let enum_variants = enum_variants
                 .map(|v| format!(" enum{{ {} }}", v.join(", ")))
@@ -161,14 +166,17 @@ pub mod tree {
                     Rc::new(p)
                 };
 
-                match self.type_id.as_type().unwrap() {
-                    Type::Proxy(_)
-                    | Type::Integer(_)
-                    | Type::Float(_)
-                    | Type::String(_)
-                    | Type::File(_)
-                    | Type::Boolean(_) => Cow::Owned(vec![]),
-                    Type::Struct(ty) => Cow::Owned(
+                let Type::Def(type_def) = self.type_id.as_type().unwrap() else {
+                    return Cow::Owned(vec![]);
+                };
+
+                match type_def {
+                    TypeDef::Integer(_)
+                    | TypeDef::Float(_)
+                    | TypeDef::String(_)
+                    | TypeDef::File(_)
+                    | TypeDef::Boolean(_) => Cow::Owned(vec![]),
+                    TypeDef::Struct(ty) => Cow::Owned(
                         ty.data
                             .props
                             .iter()
@@ -179,7 +187,7 @@ pub mod tree {
                             })
                             .collect(),
                     ),
-                    Type::Func(ty) => Cow::Owned(vec![
+                    TypeDef::Func(ty) => Cow::Owned(vec![
                         Node {
                             label: "input".to_string(),
                             type_id: ty.data.inp.into(),
@@ -191,17 +199,17 @@ pub mod tree {
                             parents,
                         },
                     ]),
-                    Type::List(ty) => Cow::Owned(vec![Node {
+                    TypeDef::List(ty) => Cow::Owned(vec![Node {
                         label: "item".to_string(),
                         type_id: ty.data.of.into(),
                         parents,
                     }]),
-                    Type::Optional(ty) => Cow::Owned(vec![Node {
+                    TypeDef::Optional(ty) => Cow::Owned(vec![Node {
                         label: "item".to_string(),
                         type_id: ty.data.of.into(),
                         parents,
                     }]),
-                    Type::Union(ty) => Cow::Owned(
+                    TypeDef::Union(ty) => Cow::Owned(
                         ty.data
                             .variants
                             .iter()
@@ -213,7 +221,7 @@ pub mod tree {
                             })
                             .collect(),
                     ),
-                    Type::Either(ty) => Cow::Owned(
+                    TypeDef::Either(ty) => Cow::Owned(
                         ty.data
                             .variants
                             .iter()
@@ -225,11 +233,6 @@ pub mod tree {
                             })
                             .collect(),
                     ),
-                    Type::WithPolicy(ty) => Cow::Owned(vec![Node {
-                        label: "item".to_string(),
-                        type_id: ty.data.tpe.into(),
-                        parents,
-                    }]),
                 }
             }
         }

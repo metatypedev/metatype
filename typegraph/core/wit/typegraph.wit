@@ -51,7 +51,7 @@ interface core {
         name: string,
         extras: list<tuple<string, string>>,
     }
-    proxyb: func(data: type-proxy) -> result<type-id, error>
+    refb: func(name: string, attributes: list<tuple<string, string>>) -> result<type-id, error>
 
     record type-integer {
         min: option<s32>,

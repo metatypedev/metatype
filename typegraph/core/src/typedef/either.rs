@@ -8,7 +8,7 @@ use crate::{
     conversion::types::{gen_base_concrete, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{Either, TypeData, TypeId},
+    types::{Either, TypeDefData, TypeId},
     wit::core::TypeEither,
 };
 
@@ -26,8 +26,8 @@ impl TypeConversion for Either {
                     .variants
                     .iter()
                     .map(|&vid| -> Result<_> {
-                        let id = TypeId(vid).resolve_proxy()?;
-                        Ok(ctx.register_type(id, runtime_id)?.into())
+                        let (_, type_def) = TypeId(vid).resolve_ref()?;
+                        Ok(ctx.register_type(type_def, runtime_id)?.into())
                     })
                     .collect::<Result<Vec<_>>>()?,
             },
@@ -35,16 +35,14 @@ impl TypeConversion for Either {
     }
 }
 
-impl TypeData for TypeEither {
+impl TypeDefData for TypeEither {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         for (i, tpe_id) in self.variants.iter().enumerate() {
             params.push(format!("[v{}] => #{}", i, tpe_id));
         }
     }
 
-    fn variant_name(&self) -> String {
-        "either".to_string()
+    fn variant_name(&self) -> &'static str {
+        "either"
     }
-
-    super::impl_into_type!(concrete, Either);
 }

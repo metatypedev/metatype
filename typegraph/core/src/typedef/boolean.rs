@@ -8,7 +8,7 @@ use crate::{
     conversion::types::{gen_base_concrete, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{Boolean, TypeBoolean, TypeData},
+    types::{Boolean, TypeBoolean, TypeDefData},
 };
 
 impl TypeConversion for Boolean {
@@ -20,12 +20,12 @@ impl TypeConversion for Boolean {
     }
 }
 
-impl TypeData for TypeBoolean {
+impl TypeDefData for TypeBoolean {
     fn get_display_params_into(&self, _params: &mut Vec<String>) {}
 
-    fn variant_name(&self) -> String {
-        "boolean".to_string()
+    fn variant_name(&self) -> &'static str {
+        "boolean"
     }
 
-    super::impl_into_type!(concrete, Boolean);
+    // super::impl_into_type!(concrete, Boolean);
 }

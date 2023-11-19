@@ -8,7 +8,7 @@ use crate::{
     conversion::types::{gen_base_concrete, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{Func, Type, TypeData, TypeId},
+    types::{Func, TypeDef, TypeDefData, TypeId},
     wit::core::TypeFunc,
 };
 
@@ -18,16 +18,15 @@ impl TypeConversion for Func {
 
         let input = {
             let inp_id = TypeId(self.data.inp);
-            let concrete_type = TypeId(self.data.inp).attrs()?.concrete_type;
-            match concrete_type.as_type()? {
-                Type::Struct(_) => Ok(ctx.register_type(inp_id, Some(runtime_id))?),
+            match TypeId(self.data.inp).resolve_ref()?.1 {
+                TypeDef::Struct(_) => Ok(ctx.register_type(inp_id.try_into()?, Some(runtime_id))?),
                 _ => Err(errors::invalid_input_type(&inp_id.repr()?)),
             }
         }?
         .into();
 
-        let out_id = TypeId(self.data.out).resolve_proxy()?;
-        let output = ctx.register_type(out_id, Some(runtime_id))?.into();
+        let out_type = TypeId(self.data.out).resolve_ref()?.1;
+        let output = ctx.register_type(out_type, Some(runtime_id))?.into();
 
         let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
 
@@ -44,14 +43,12 @@ impl TypeConversion for Func {
     }
 }
 
-impl TypeData for TypeFunc {
+impl TypeDefData for TypeFunc {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         params.push(format!("#{} => #{}", self.inp, self.out));
     }
 
-    fn variant_name(&self) -> String {
-        "func".to_string()
+    fn variant_name(&self) -> &'static str {
+        "func"
     }
-
-    super::impl_into_type!(concrete, Func);
 }

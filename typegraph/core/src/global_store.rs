@@ -5,7 +5,8 @@ use crate::errors::{self, Result};
 use crate::runtimes::{
     DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
 };
-use crate::types::{Struct, Type, TypeFun, TypeId, WrapperTypeData};
+use crate::types::type_ref::TypeRef;
+use crate::types::{Struct, Type, TypeDef, TypeDefExt, TypeId};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
 
@@ -143,22 +144,34 @@ impl Store {
         with_store(|s| s.type_by_names.get(name).copied())
     }
 
-    pub fn register_type(
-        build: impl FnOnce(TypeId) -> Type,
+    pub fn register_type_ref(name: String, attributes: Vec<(String, String)>) -> Result<TypeId> {
+        let id = with_store(|s| s.types.len()) as u32;
+        let type_ref = TypeRef::new(id.into(), name, attributes);
+
+        with_store_mut(move |s| -> Result<()> {
+            s.types.push(Type::Ref(type_ref));
+            Ok(())
+        })?;
+
+        Ok(id.into())
+    }
+
+    pub fn register_type_def(
+        build: impl FnOnce(TypeId) -> TypeDef,
         name_registration: NameRegistration,
     ) -> Result<TypeId> {
         // this works since the store is thread local
         let id = with_store(|s| s.types.len()) as u32;
-        let typ = build(id.into());
+        let type_def = build(id.into());
 
         if name_registration.0 {
-            if let Some(name) = typ.get_base().and_then(|b| b.name.clone()) {
+            if let Some(name) = type_def.base().name.clone() {
                 Self::register_type_name(name, id.into())?;
             }
         }
 
         with_store_mut(move |s| -> Result<()> {
-            s.types.push(typ);
+            s.types.push(Type::Def(type_def));
             Ok(())
         })?;
         Ok(id.into())
@@ -176,18 +189,19 @@ impl Store {
     }
 
     pub fn pick_branch_by_path(supertype_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
-        let supertype = supertype_id.as_type()?;
+        let (_, supertype) = supertype_id.resolve_ref()?;
+        let supertype = &supertype;
         let filter_and_reduce = |variants: Vec<u32>| match path.len() {
-            0 => Ok((supertype.clone(), supertype_id)), // terminal node
+            0 => Ok((Type::Def(supertype.clone()), supertype_id)), // terminal node
             _ => {
                 let mut compatible = vec![];
                 let mut failures = vec![];
                 let chunk = path.first().unwrap();
                 for (i, variant) in variants.iter().enumerate() {
                     let variant: TypeId = variant.into();
-                    let unwrapped_variant = variant.resolve_wrapper()?.as_type()?;
-                    match unwrapped_variant {
-                        Type::Struct(t) => {
+                    let (_, type_def) = variant.resolve_ref()?;
+                    match type_def {
+                        TypeDef::Struct(t) => {
                             for (prop_name, prop_id) in t.iter_props() {
                                 if prop_name.eq(chunk) {
                                     // variant is compatible with the path
@@ -202,7 +216,7 @@ impl Store {
                                 }
                             }
                         }
-                        Type::Either(..) | Type::Union(..) => {
+                        TypeDef::Either(..) | TypeDef::Union(..) => {
                             // get_type_by_path => pick_branch_by_path
                             match Store::get_type_by_path(variant, &path[1..]) {
                                 Ok((_, solution)) => compatible.push(solution),
@@ -225,8 +239,8 @@ impl Store {
 
                 let first = compatible.first().unwrap().to_owned();
                 let ret_id = match &supertype {
-                    Type::Union(..) => first,
-                    Type::Either(..) => {
+                    TypeDef::Union(..) => first,
+                    TypeDef::Either(..) => {
                         if compatible.len() > 1 {
                             return Err(format!(
                                     "either node with more than one compatible variant encountered at path **.{}",
@@ -245,9 +259,9 @@ impl Store {
             }
         };
 
-        match &supertype {
-            Type::Either(t) => filter_and_reduce(t.data.variants.clone()),
-            Type::Union(t) => filter_and_reduce(t.data.variants.clone()),
+        match supertype {
+            TypeDef::Either(t) => filter_and_reduce(t.data.variants.clone()),
+            TypeDef::Union(t) => filter_and_reduce(t.data.variants.clone()),
             _ => Store::get_type_by_path(supertype_id, path), // no branching, trivial case
         }
     }
@@ -257,10 +271,10 @@ impl Store {
 
         let mut curr_path = vec![];
         for (pos, chunk) in path.iter().enumerate() {
-            let unwrapped_id = ret.1.resolve_wrapper()?;
-            // let unwrapped_id = self.resolve_wrapper(ret.1)?;
-            match unwrapped_id.as_type()? {
-                Type::Struct(t) => {
+            let (_, type_def) = ret.1.resolve_ref()?;
+            let type_def = type_def.resolve_quantifier()?;
+            match &type_def {
+                TypeDef::Struct(t) => {
                     let result = t.data.props.iter().find(|(k, _)| k.eq(chunk));
                     curr_path.push(chunk.clone());
                     ret = match result {
@@ -278,11 +292,11 @@ impl Store {
                         }
                     };
                 }
-                Type::Union(..) | Type::Either(..) => {
-                    ret = Store::pick_branch_by_path(unwrapped_id, &path[pos..])?;
+                TypeDef::Union(..) | TypeDef::Either(..) => {
+                    ret = Store::pick_branch_by_path(type_def.id(), &path[pos..])?;
                     break;
                 }
-                _ => return Err(errors::expect_object_at_path(&curr_path)),
+                _ => return Err(errors::expect_object_at_path(&curr_path, &type_def.repr())),
             }
         }
 
@@ -459,41 +473,22 @@ impl TypeId {
 
     pub fn as_struct(&self) -> Result<Rc<Struct>> {
         match self.as_type()? {
-            Type::Struct(s) => Ok(s),
-            Type::Proxy(inner) => inner.data.try_resolve()?.as_struct(),
+            Type::Def(TypeDef::Struct(inner)) => Ok(inner),
+            Type::Ref(type_ref) => type_ref.try_resolve()?.id().as_struct(),
             _ => Err(errors::invalid_type("Struct", &self.repr()?)),
         }
     }
 
     pub fn is_func(&self) -> Result<bool> {
-        Ok(matches!(self.as_type()?, Type::Func(_)))
+        Ok(matches!(self.as_type_def()?, Some(TypeDef::Func(_))))
     }
 
     pub fn resolve_quant(&self) -> Result<TypeId> {
         let type_id = *self;
-        match type_id.as_type()? {
-            Type::List(a) => Ok(a.data.of.into()),
-            Type::Optional(o) => Ok(o.data.of.into()),
+        match type_id.as_type_def()? {
+            Some(TypeDef::List(a)) => Ok(a.data.of.into()),
+            Some(TypeDef::Optional(o)) => Ok(o.data.of.into()),
             _ => Ok(type_id),
         }
-    }
-
-    /// unwrap type id inside array, optional, or WithInjection
-    pub fn resolve_wrapper(&self) -> Result<TypeId> {
-        let mut id = self.resolve_proxy()?;
-        loop {
-            let tpe = id.as_type()?;
-            let new_id = match tpe {
-                Type::List(t) => t.data.of.into(),
-                Type::Optional(t) => t.data.of.into(),
-                Type::Proxy(t) => t.id.resolve_proxy()?,
-                _ => id,
-            };
-            if id == new_id {
-                break;
-            }
-            id = new_id;
-        }
-        Ok(id)
     }
 }

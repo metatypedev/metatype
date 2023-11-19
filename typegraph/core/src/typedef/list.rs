@@ -7,7 +7,7 @@ use crate::{
     conversion::types::{gen_base_concrete, TypeConversion},
     errors::Result,
     typegraph::TypegraphContext,
-    types::{List, TypeData, TypeId},
+    types::{List, TypeDefData, TypeId},
     wit::core::TypeList,
 };
 
@@ -18,7 +18,7 @@ impl TypeConversion for List {
             base: gen_base_concrete!("list", self, runtime_id.unwrap(), policies, [injection]),
             data: ListTypeData {
                 items: ctx
-                    .register_type(TypeId(self.data.of).resolve_proxy()?, runtime_id)?
+                    .register_type(TypeId(self.data.of).try_into()?, runtime_id)?
                     .into(),
                 max_items: self.data.max,
                 min_items: self.data.min,
@@ -28,7 +28,7 @@ impl TypeConversion for List {
     }
 }
 
-impl TypeData for TypeList {
+impl TypeDefData for TypeList {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         params.push(format!("items={}", self.of));
         if let Some(min) = self.min {
@@ -42,9 +42,7 @@ impl TypeData for TypeList {
         }
     }
 
-    fn variant_name(&self) -> String {
-        "list".to_string()
+    fn variant_name(&self) -> &'static str {
+        "list"
     }
-
-    super::impl_into_type!(concrete, List);
 }

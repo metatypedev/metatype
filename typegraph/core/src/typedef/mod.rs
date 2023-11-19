@@ -9,48 +9,6 @@ pub mod func;
 pub mod integer;
 pub mod list;
 pub mod optional;
-pub mod proxy;
 pub mod string;
 pub mod struct_;
 pub mod union;
-
-macro_rules! impl_into_type {
-    ( concrete, $variant:ident ) => {
-        fn into_type(
-            self,
-            type_id: $crate::types::TypeId,
-            base: Option<$crate::wit::core::TypeBase>,
-        ) -> $crate::errors::Result<$crate::types::Type> {
-            Ok($crate::types::Type::$variant(std::rc::Rc::new(
-                $crate::types::ConcreteType {
-                    id: type_id,
-                    base: base
-                        .ok_or_else(|| $crate::errors::base_required(stringify!($variant)))?,
-                    extended_base: Default::default(),
-                    data: self,
-                },
-            )))
-        }
-    };
-
-    ( wrapper, $variant:ident ) => {
-        fn into_type(
-            self,
-            type_id: $crate::types::TypeId,
-            base: Option<$crate::wit::core::TypeBase>,
-        ) -> $crate::errors::Result<$crate::types::Type> {
-            if base.is_some() {
-                Err($crate::errors::base_not_allowed(stringify!($variant)))
-            } else {
-                Ok($crate::types::Type::$variant(std::rc::Rc::new(
-                    $crate::types::WrapperType {
-                        id: type_id,
-                        data: self,
-                    },
-                )))
-            }
-        }
-    };
-}
-
-pub(crate) use impl_into_type;

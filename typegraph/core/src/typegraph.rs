@@ -4,7 +4,7 @@
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::{gen_base, TypeConversion};
 use crate::global_store::SavedState;
-use crate::types::{Type, TypeFun, TypeId};
+use crate::types::{TypeDef, TypeDefExt, TypeId};
 use crate::validation::validate_name;
 use crate::Lib;
 use crate::{
@@ -146,7 +146,8 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
                                     })
                                 })? as u32;
 
-                            let type_idx = ctx.register_type(func_store_idx.into(), None)?;
+                            let type_idx =
+                                ctx.register_type(TypeId(func_store_idx).try_into()?, None)?;
 
                             let mut auth_processed = auth.clone();
                             auth_processed
@@ -203,20 +204,22 @@ pub fn finalize() -> Result<String> {
 
     Store::restore(ctx.saved_store_state.unwrap());
 
-    serde_json::to_string(&tg).map_err(|e| e.to_string().into())
+    #[cfg(test)]
+    return serde_json::to_string_pretty(&tg).map_err(|e| e.to_string().into());
+
+    #[cfg(not(test))]
+    return serde_json::to_string(&tg).map_err(|e| e.to_string().into());
 }
 
 fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
-    let attrs = type_id.attrs()?;
-
-    match attrs.concrete_type.as_type()? {
-        Type::Struct(inner) => {
+    match type_id.resolve_ref()?.1 {
+        TypeDef::Struct(inner) => {
             // namespace
             for (prop_name, prop_type_id) in inner.iter_props() {
                 ensure_valid_export(format!("{export_key}::{prop_name}"), prop_type_id)?;
             }
         }
-        Type::Func(_) => {}
+        TypeDef::Func(_) => {}
         _ => return Err(errors::invalid_export_type(&export_key, &type_id.repr()?)),
     }
 
@@ -230,9 +233,8 @@ pub fn expose(
     let fields = fields
         .into_iter()
         .map(|(key, type_id)| -> Result<_> {
-            let attrs = type_id.attrs()?;
-            let concrete_type = attrs.concrete_type.as_type()?;
-            let policy_chain = &concrete_type.get_extended_base().unwrap().policies;
+            let concrete_type = type_id.resolve_ref()?.1;
+            let policy_chain = &concrete_type.x_base().policies;
             let has_policy = !policy_chain.is_empty();
 
             // TODO how to set default policy on a namespace? Or will it inherit
@@ -265,7 +267,7 @@ pub fn expose(
                 }
                 ensure_valid_export(key.clone(), type_id)?;
 
-                let type_idx = ctx.register_type(type_id, None)?;
+                let type_idx = ctx.register_type(type_id.try_into()?, None)?;
                 root_data.properties.insert(key.clone(), type_idx.into());
                 root_data.required.push(key);
                 Ok(())
@@ -280,10 +282,10 @@ pub fn expose(
 impl TypegraphContext {
     pub fn register_type(
         &mut self,
-        id: TypeId,
+        type_def: TypeDef,
         runtime_id: Option<u32>,
     ) -> Result<TypeId, TgError> {
-        match self.mapping.types.entry(id.into()) {
+        match self.mapping.types.entry(type_def.id().into()) {
             Entry::Vacant(e) => {
                 // to prevent infinite loop from circular dependencies,
                 // we allocate first a slot in the array for the type with None
@@ -294,9 +296,9 @@ impl TypegraphContext {
                 e.insert(idx as u32);
                 self.types.push(None);
 
-                let tpe = id.as_type()?;
+                // let tpe = id.as_type()?;
 
-                let type_node = tpe.convert(self, runtime_id)?;
+                let type_node = type_def.convert(self, runtime_id)?;
 
                 self.types[idx] = Some(type_node);
                 Ok((idx as u32).into())
@@ -400,7 +402,7 @@ impl TypegraphContext {
     }
 
     pub fn get_correct_id(&self, id: TypeId) -> Result<u32> {
-        let id = id.resolve_proxy()?;
+        let id = id.resolve_ref()?.1.id();
         self.find_type_index_by_store_id(id)
             .ok_or(format!("unable to find type for store id {}", u32::from(id)).into())
     }

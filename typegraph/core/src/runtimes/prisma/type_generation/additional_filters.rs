@@ -53,7 +53,7 @@ impl TypeGen for Distinct {
     }
 
     fn name(&self) -> String {
-        let model_name = self.0.type_name().unwrap().unwrap();
+        let model_name = self.0.name().unwrap().unwrap();
         format!("_KeysOf_{model_name}")
     }
 }

@@ -3,10 +3,10 @@
 
 use crate::errors::Result;
 use crate::global_store::{NameRegistration, Store};
-use crate::types::{ExtendedTypeBase, TypeFun, TypeId};
+use crate::types::{ExtendedTypeBase, TypeDefExt, TypeId};
 use crate::wit::core::{
     Guest, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
-    TypeProxy, TypeString, TypeStruct, TypeUnion,
+    TypeString, TypeStruct, TypeUnion,
 };
 
 pub trait TypeBuilder {
@@ -475,34 +475,23 @@ pub fn func(inp: TypeId, out: TypeId, mat: u32) -> Result<TypeId> {
     .build()
 }
 
-#[derive(Default)]
-pub struct ProxyBuilder {
-    data: TypeProxy,
+pub struct RefBuilder {
+    name: String,
+    attributes: Vec<(String, String)>,
 }
 
-impl Default for TypeProxy {
-    fn default() -> Self {
-        Self {
-            name: "".to_string(),
-            extras: vec![],
-        }
-    }
-}
-
-impl ProxyBuilder {
+impl RefBuilder {
     /// Adds extra data entry in the proxy
     pub fn set(&mut self, key: impl Into<String>, value: impl Into<String>) -> &mut Self {
-        self.data.extras.push((key.into(), value.into()));
+        self.attributes.push((key.into(), value.into()));
         self
     }
 }
 
-pub fn proxy(name: impl Into<String>) -> ProxyBuilder {
-    ProxyBuilder {
-        data: TypeProxy {
-            name: name.into(),
-            ..Default::default()
-        },
+pub fn ref_(name: impl Into<String>) -> RefBuilder {
+    RefBuilder {
+        name: name.into(),
+        attributes: Vec::new(),
     }
 }
 
@@ -512,9 +501,9 @@ macro_rules! impl_type_builder {
             fn build(&self) -> Result<TypeId> {
                 let res = $crate::Lib::$build(self.data.clone(), self.base.clone())?;
                 if !self.extended_base.is_empty() {
-                    let typ = TypeId(res).as_type()?;
-                    Store::register_type(
-                        move |id| typ.with_extended_base(id, self.extended_base.clone()),
+                    let type_def = TypeId(res).as_type_def()?.unwrap();
+                    Store::register_type_def(
+                        move |id| type_def.with_x_base(id, self.extended_base.clone()),
                         NameRegistration(false),
                     )
                     .into()
@@ -548,9 +537,9 @@ impl TypeBuilder for BooleanBuilder {
     fn build(&self) -> Result<TypeId> {
         let res = crate::Lib::booleanb(self.base.clone())?;
         if !self.extended_base.is_empty() {
-            let typ = TypeId(res).as_type()?;
-            Store::register_type(
-                move |id| typ.with_extended_base(id, self.extended_base.clone()),
+            let type_def = TypeId(res).as_type_def()?.unwrap();
+            Store::register_type_def(
+                move |id| type_def.with_x_base(id, self.extended_base.clone()),
                 // TODO
                 NameRegistration(false),
             )
@@ -579,4 +568,9 @@ impl_type_builder!(UnionBuilder, unionb);
 impl_type_builder!(EitherBuilder, eitherb);
 impl_type_builder!(StructBuilder, structb);
 impl_type_builder!(FuncBuilder, funcb, true);
-impl_type_builder!(ProxyBuilder, proxyb, true);
+
+impl TypeBuilder for RefBuilder {
+    fn build(&self) -> Result<TypeId> {
+        Ok(crate::Lib::refb(self.name.clone(), self.attributes.clone())?.into())
+    }
+}

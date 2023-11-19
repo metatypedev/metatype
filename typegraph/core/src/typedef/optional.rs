@@ -8,7 +8,7 @@ use crate::{
     conversion::types::{gen_base_concrete, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{Optional, TypeData, TypeId},
+    types::{Optional, TypeDefData, TypeId},
     wit::core::TypeOptional,
 };
 
@@ -28,7 +28,7 @@ impl TypeConversion for Optional {
             base: gen_base_concrete!("optional", self, runtime_id.unwrap(), policies, [injection]),
             data: OptionalTypeData {
                 item: ctx
-                    .register_type(TypeId(self.data.of).resolve_proxy()?, runtime_id)?
+                    .register_type(TypeId(self.data.of).try_into()?, runtime_id)?
                     .into(),
                 default_value,
             },
@@ -42,7 +42,7 @@ impl Optional {
     }
 }
 
-impl TypeData for TypeOptional {
+impl TypeDefData for TypeOptional {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         params.push(format!("item={}", self.of));
         if let Some(default) = self.default_item.clone() {
@@ -50,9 +50,7 @@ impl TypeData for TypeOptional {
         }
     }
 
-    fn variant_name(&self) -> String {
-        "optional".to_string()
+    fn variant_name(&self) -> &'static str {
+        "optional"
     }
-
-    super::impl_into_type!(concrete, Optional);
 }

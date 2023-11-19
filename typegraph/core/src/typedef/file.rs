@@ -6,10 +6,10 @@ use common::typegraph::{FileTypeData, TypeNode};
 use crate::conversion::types::{gen_base_concrete, TypeConversion};
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
-use crate::types::{File, TypeData};
+use crate::types::{File, TypeDefData};
 use crate::wit::core::TypeFile;
 
-impl TypeData for TypeFile {
+impl TypeDefData for TypeFile {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         if let Some(min) = self.min {
             params.push(format!("min={}", min));
@@ -27,11 +27,11 @@ impl TypeData for TypeFile {
         }
     }
 
-    fn variant_name(&self) -> String {
-        "file".to_string()
+    fn variant_name(&self) -> &'static str {
+        "file"
     }
 
-    super::impl_into_type!(concrete, File);
+    // super::impl_into_type!(concrete, File);
 }
 
 impl TypeConversion for File {

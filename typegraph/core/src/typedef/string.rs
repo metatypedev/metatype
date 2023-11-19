@@ -8,7 +8,7 @@ use crate::{
     conversion::types::{gen_base_concrete, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{StringT, TypeData},
+    types::{StringT, TypeDefData},
     wit::core::TypeString,
 };
 
@@ -37,7 +37,7 @@ impl TypeConversion for StringT {
     }
 }
 
-impl TypeData for TypeString {
+impl TypeDefData for TypeString {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         if let Some(min) = self.min {
             params.push(format!("min={}", min));
@@ -53,9 +53,7 @@ impl TypeData for TypeString {
         }
     }
 
-    fn variant_name(&self) -> String {
-        "string".to_string()
+    fn variant_name(&self) -> &'static str {
+        "string"
     }
-
-    super::impl_into_type!(concrete, String);
 }

@@ -8,7 +8,7 @@ use crate::{
     conversion::types::{gen_base_concrete, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{TypeData, TypeId, Union},
+    types::{TypeDefData, TypeId, Union},
     wit::core::TypeUnion,
 };
 
@@ -23,8 +23,9 @@ impl TypeConversion for Union {
                     .variants
                     .iter()
                     .map(|vid| -> Result<_> {
-                        let id = TypeId(*vid).resolve_proxy()?;
-                        Ok(ctx.register_type(id, runtime_id)?.into())
+                        Ok(ctx
+                            .register_type(TypeId(*vid).try_into()?, runtime_id)?
+                            .into())
                     })
                     .collect::<Result<Vec<_>>>()?,
             },
@@ -32,16 +33,14 @@ impl TypeConversion for Union {
     }
 }
 
-impl TypeData for TypeUnion {
+impl TypeDefData for TypeUnion {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         for (i, tpe_id) in self.variants.iter().enumerate() {
             params.push(format!("[v{}] => #{}", i, tpe_id));
         }
     }
 
-    fn variant_name(&self) -> String {
-        "union".to_string()
+    fn variant_name(&self) -> &'static str {
+        "union"
     }
-
-    super::impl_into_type!(concrete, Union);
 }

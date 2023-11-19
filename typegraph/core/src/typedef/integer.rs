@@ -8,7 +8,7 @@ use crate::{
     conversion::types::{gen_base_concrete, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{Integer, TypeData},
+    types::{Integer, TypeDefData},
     wit::core::TypeInteger,
 };
 
@@ -34,7 +34,7 @@ impl TypeConversion for Integer {
     }
 }
 
-impl TypeData for TypeInteger {
+impl TypeDefData for TypeInteger {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         if let Some(min) = self.min {
             params.push(format!("min={}", min));
@@ -53,9 +53,9 @@ impl TypeData for TypeInteger {
         }
     }
 
-    fn variant_name(&self) -> String {
-        "integer".to_string()
+    fn variant_name(&self) -> &'static str {
+        "integer"
     }
 
-    super::impl_into_type!(concrete, Integer);
+    // super::impl_into_type!(concrete, Integer);
 }

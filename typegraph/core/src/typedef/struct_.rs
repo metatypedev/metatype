@@ -10,7 +10,7 @@ use crate::{
     errors,
     global_store::Store,
     typegraph::TypegraphContext,
-    types::{Struct, TypeData, TypeId},
+    types::{Struct, TypeDefData, TypeId},
     wit::core::TypeStruct,
 };
 
@@ -38,10 +38,10 @@ impl TypeConversion for Struct {
                 properties: self
                     .iter_props()
                     .map(|(name, type_id)| -> Result<(String, u32)> {
-                        let id = type_id.resolve_proxy()?;
                         Ok((
                             name.to_string(),
-                            ctx.register_type(id, Some(runtime_id))?.into(),
+                            ctx.register_type(type_id.try_into()?, Some(runtime_id))?
+                                .into(),
                         ))
                     })
                     .collect::<Result<IndexMap<_, _>>>()?,
@@ -57,18 +57,16 @@ impl Struct {
     }
 }
 
-impl TypeData for TypeStruct {
+impl TypeDefData for TypeStruct {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         for (name, tpe_id) in self.props.iter() {
             params.push(format!("[{}] => #{}", name, tpe_id));
         }
     }
 
-    fn variant_name(&self) -> String {
-        "struct".to_string()
+    fn variant_name(&self) -> &'static str {
+        "struct"
     }
-
-    super::impl_into_type!(concrete, Struct);
 }
 
 impl TypeStruct {
