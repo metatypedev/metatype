@@ -7,7 +7,6 @@ use crate::deploy::actors::console::ConsoleActor;
 use crate::deploy::actors::loader::{
     LoadModule, LoaderActor, LoaderEvent, PostProcessOptions, StopBehavior,
 };
-use crate::utils::ensure_venv;
 use actix::prelude::*;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
@@ -55,7 +54,6 @@ impl Action for Serialize {
     async fn run(&self, args: GenArgs) -> Result<()> {
         let dir = &args.dir()?;
         let config_path = args.config;
-        ensure_venv(dir)?;
 
         // config file is not used when `TypeGraph` files
         // are provided in the CLI by flags

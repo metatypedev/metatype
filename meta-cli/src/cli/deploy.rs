@@ -15,7 +15,7 @@ use crate::deploy::actors::loader::{
 use crate::deploy::actors::pusher::Push;
 use crate::deploy::actors::watcher::WatcherActor;
 use crate::typegraph::postprocess::EmbedPrismaMigrations;
-use crate::utils::{ensure_venv, Node};
+use crate::utils::Node;
 use actix::prelude::*;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
@@ -96,7 +96,7 @@ pub struct Deploy {
 impl Deploy {
     pub async fn new(deploy: &DeploySubcommand, args: &GenArgs) -> Result<Self> {
         let dir = args.dir()?;
-        ensure_venv(&dir)?;
+
         let config_path = args.config.clone();
         let config = Arc::new(Config::load_or_find(config_path, &dir)?);
 

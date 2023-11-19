@@ -5,7 +5,6 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use crate::typegraph::loader::Loader;
-use crate::utils::ensure_venv;
 use crate::{config::Config, typegraph::postprocess};
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
@@ -56,7 +55,7 @@ impl Action for Deno {
         let config = Arc::new(
             Config::load_or_find(args.config, &dir).unwrap_or_else(|_| Config::default_in(&dir)),
         );
-        ensure_venv(&dir)?;
+
         let loader = Loader::new(config)
             .skip_deno_modules(true)
             .with_postprocessor(postprocess::DenoModules::default().codegen(true))
