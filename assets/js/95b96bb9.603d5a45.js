@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwebsite=self.webpackChunkwebsite||[]).push([[3561],{24577:e=>{e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"Adding a typegraph SDK for Node","permalink":"/blog/2023/10/23/index","unlisted":false},{"title":"Programmable glue for developers","permalink":"/blog/2023/06/18/programmable-glue","unlisted":false}]}')}}]);
