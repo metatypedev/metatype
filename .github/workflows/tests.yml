@@ -165,7 +165,7 @@ jobs:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - env:
-          WASM_FILE: target/debug/typegraph_core.wasm
+          WASM_FILE: target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm
         run: |
           python3 -m venv .venv
           source .venv/bin/activate
@@ -327,7 +327,7 @@ jobs:
         with:
           name: meta
       - env:
-          WASM_FILE: target/debug/typegraph_core.wasm
+          WASM_FILE: target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm
         run: |
           sudo apt update
           sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev perl make

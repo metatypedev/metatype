@@ -1012,7 +1012,13 @@ Instead of including the code inline through a string, the Deno runtime allows u
 Our modules are allowed to use ESM imports to access libraries on different registries like `npm` and `deno.land`.
 We'll use these features to write a simple materializer that converts markdown to html.
 
-    <CodeBlock language="typescript">{require("./md2html.ts").content}</CodeBlock>
+```typescript
+import * as marked from "https://deno.land/x/marked/mod.ts";
+
+export function parse({ raw }: { raw: string }): string {
+  return marked.parse(raw);
+}
+```
 
 We'll expose our module using the deno runtime.
 
