@@ -11,7 +11,8 @@ const projectName = "metatype";
 const config = {
   title: "Metatype",
   // prettier-ignore
-  tagline: "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are.",
+  tagline:
+    "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are.",
   url: "https://metatype.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
@@ -25,7 +26,8 @@ const config = {
   },
   stylesheets: [
     {
-      href: "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
+      href:
+        "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
       type: "text/css",
     },
   ],
@@ -142,11 +144,11 @@ const config = {
             items: [
               {
                 label: "Getting started",
-                to: "/docs/tutorials/getting-started",
+                to: "/docs/tutorials/metatype-basics",
               },
               {
                 label: "Concepts",
-                to: "/docs/concepts/overview",
+                to: "/docs/concepts/mental-model",
               },
               {
                 label: "Changelog",
