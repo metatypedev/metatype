@@ -4,7 +4,7 @@
 import { SystemTypegraph } from "../../src/system_typegraphs.ts";
 import { MemoryRegister } from "./memory_register.ts";
 import { dirname, join } from "std/path/mod.ts";
-import { repoDir, testDir } from "./dir.ts";
+import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
 
 import { Server } from "std/http/server.ts";
@@ -14,7 +14,7 @@ import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 
 import { NoLimiter } from "./no_limiter.ts";
-import { createMetaCli, meta } from "./meta.ts";
+import { createMetaCli, metaCli } from "./meta.ts";
 import { SecretManager, TypeGraph } from "../../src/typegraph/mod.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
@@ -106,7 +106,7 @@ export class MetaTest {
       cmd.push("--deploy");
     }
 
-    const { stdout } = await meta(...cmd);
+    const { stdout } = await metaCli(...cmd);
     if (stdout.length == 0) {
       throw new Error("No typegraph");
     }
@@ -261,15 +261,12 @@ export const test = ((name, fn, opts = {}): void => {
 
       try {
         if (gitRepo != null) {
-          const dir = await Deno.makeTempDir({
-            dir: join(repoDir, "tmp"),
-          });
+          const dir = await newTempDir();
           mt.workingDir = dir;
 
           for (const [path, srcPath] of Object.entries(gitRepo.content)) {
             const destPath = join(dir, path);
             await Deno.mkdir(dirname(destPath), { recursive: true });
-            // console.log(await Deno.lstat(join(testDir, srcPath)));
             await Deno.copyFile(
               join(testDir, srcPath),
               destPath,

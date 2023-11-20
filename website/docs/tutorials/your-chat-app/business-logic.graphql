@@ -1,7 +1,0 @@
-query {
-  list_messages(take: 2) {
-    title
-  }
-
-  # your turn
-}

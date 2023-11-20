@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { expandGlobSync, parseFlags, resolve, semver, yaml } from "./deps.ts";
-import { getLockfile, lockfileUrl, projectDir, relPath } from "./utils.ts";
+import {
+  getLockfile,
+  lockfileUrl,
+  projectDir,
+  relPath,
+  runOrExit,
+} from "./utils.ts";
 
 const args = parseFlags(Deno.args, {
   boolean: ["version", "check"],
@@ -40,8 +46,6 @@ if (args.bump) {
   const newVersion = semver.format(semver.increment(
     semver.parse(version),
     args.bump as semver.ReleaseType,
-    undefined,
-    "dev",
   ));
   lockfile.dev.lock.METATYPE_VERSION = newVersion;
   console.log(`Bumping ${version} → ${newVersion}`);
@@ -127,6 +131,8 @@ for (const [channel, { files, lines, lock }] of Object.entries(lockfile)) {
     }
   }
 }
+
+await runOrExit(["cargo", "generate-lockfile"]);
 
 if (args.check) {
   Deno.exit(dirty ? 1 : 0);

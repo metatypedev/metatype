@@ -1,0 +1,15 @@
+# Functions
+
+## Effects
+
+Effects are a property of materializers and help categorization what happens to data when it gets transformed. Although they are similar to REST verbs and SQL statements, there is no direct one-to-one mapping.
+
+| Effects  | REST verbs | SQL statements       |
+| -------- | ---------- | -------------------- |
+| `none`   | GET        | `SELECT`             |
+| `create` | POST       | `INSERT`             |
+| `update` | PUT/PATCH  | `UPDATE`             |
+| `upsert` | PUT        | `INSERT ON CONFLICT` |
+| `delete` | DELETE     | `DELETE`             |
+
+They provide hints to the typegates for the query orchestration by splitting the queries and mutations. For example, the `create` effect is exposed as a mutation. They also allow setting different policies based on them, that's for the next page.

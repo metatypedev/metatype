@@ -11,7 +11,7 @@ import { Typegate } from "../../src/typegate/mod.ts";
 import { RestQuery } from "./query/rest_query.ts";
 import { GraphQLQuery } from "./query/graphql_query.ts";
 import { test } from "./test.ts";
-import { meta } from "./meta.ts";
+import { metaCli } from "./meta.ts";
 import { testDir } from "./dir.ts";
 import { autoTest } from "./autotest.ts";
 import { init_runtimes } from "../../src/runtimes/mod.ts";
@@ -39,7 +39,7 @@ export const rest = {
 export const Meta = {
   test,
   autoTest,
-  cli: meta,
+  cli: metaCli,
 };
 
 export async function execute(

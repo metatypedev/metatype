@@ -95,7 +95,7 @@ pub fn test_sync(
     coverage_dir: Option<String>,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) {
-    std::thread::Builder::new()
+    new_thread_builder()
         .spawn(|| {
             create_and_run_current_thread_with_maybe_metrics(async move {
                 spawn_subcommand(async move {
@@ -212,13 +212,26 @@ pub async fn test(
     Ok(())
 }
 
+fn new_thread_builder() -> std::thread::Builder {
+    let builder = std::thread::Builder::new();
+    let builder = if cfg!(debug_assertions) {
+        // deno & swc need 8 MiB with dev profile (release is ok)
+        // https://github.com/swc-project/swc/blob/main/CONTRIBUTING.md
+        builder.stack_size(8 * 1024 * 1024)
+    } else {
+        // leave default: https://doc.rust-lang.org/std/thread/#stack-size
+        builder
+    };
+    builder
+}
+
 pub fn bench_sync(
     files: deno_config::FilesConfig,
     config_file: PathBuf,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) {
-    std::thread::Builder::new()
+    new_thread_builder()
         .spawn(|| {
             create_and_run_current_thread_with_maybe_metrics(async move {
                 spawn_subcommand(async move {

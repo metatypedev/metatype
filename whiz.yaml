@@ -1,9 +1,10 @@
 env:
   TYPEGRAPH_VERSION: "0.0.3"
+  CLICOLOR_FORCE: "1"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
 
-typegate1: &tp
-  watch: 
+gate1: &tp
+  watch:
     - "typegate/src/**/*.ts"
     - "typegate/core/**/*.rs"
     - "libs/{xtask,deno}/**/*.rs"
@@ -17,22 +18,15 @@ typegate1: &tp
     REDIS_URL: "redis://:password@localhost:6379/0"
     TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
     TG_ADMIN_PASSWORD: "password"
-    CLICOLOR_FORCE: "1"
-  command: "cargo --color always x typegate"
+  command: "cargo run -p typegate"
   pipe:
     "^.+DEBUG http .*$": whiz://http
 
-typegate2:
+gate2:
   <<: *tp
   env:
     <<: *tpenv
     TG_PORT: "7892"
-
-typegate3:
-  <<: *tp
-  env:
-    <<: *tpenv
-  command: "cargo --color always run -p meta-cli -F typegate -- typegate"
 
 http:
   entrypoint: "/dev/null"
@@ -44,10 +38,7 @@ meta-cli:
     - "typegate/src/**/*.ts"
     - "typegate/core/**/*.rs"
     - "libs/deno/**/*"
-  command: "cargo run --color always -p meta-cli -- -C website dev --run-destructive-migrations"
-  #command: "cargo run -p meta-cli -- -C website deploy --allow-dirty --gate http://localhost:7890 --username admin --password password"
-  env:
-    CLICOLOR_FORCE: "1"
+  command: "cargo run -p meta-cli -- -C website dev --run-destructive-migrations"
   depends_on:
     - typegraph
 
@@ -60,8 +51,8 @@ typegraph:
     WASM_FILE: target/debug/typegraph_core.wasm
   command: |
     set -e
-    cargo build -p typegraph_core --target wasm32-unknown-unknown
-    wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+    cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
+    wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
 
     rm -rf typegraph/deno/src/gen
     jco transpile $WASM_FILE -o typegraph/deno/src/gen
@@ -97,7 +88,7 @@ codegen:
     LD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$LD_LIBRARY_PATH" # linux
     TG_JSONSCHEMA_OUT: website/static/specs/$TYPEGRAPH_VERSION.json
     TG_TYPESCRIPT_OUT: typegate/src/typegraph/types.ts
-  command: "cargo xtask codegen"
+  command: "cargo x codegen"
   depends_on:
     - libs
 
@@ -106,22 +97,8 @@ website:
   command: "pnpm start --no-open"
   env:
     TG_URL: http://localhost:7890
-  depends_on:
-    - install
 
-docgen:
-  workdir: website
-  watch:
-    - "../typegraph/**/*.py"
-  command: |
-    set -v
-    set -e
-    poetry run pydoc-markdown
-    npx docusaurus docs:generate:graphql:typegate
-    npx docusaurus docs:generate:graphql:prisma-migration
-    npx docusaurus docs:generate:changelog
-
-install:
+setup:
   workdir: .
   watch:
     - typegraph/python/pyproject.toml
@@ -132,19 +109,16 @@ install:
     CARGO_INSTA_VERSION: "1.33.0"
     WASMEDGE_VERSION: "0.12.1"
     WASM_OPT_VERSION: "0.116.0"
-    DENO_VERSION: "1.37.1"
   command: |
     set -e
-    deno --version | grep -q $DENO_VERSION || (echo "require deno upgrade to $DENO_VERSION" && exit 1)
-    poetry install --sync
+    [ -d .venv ] || python3 -m venv .venv
+    poetry install --sync --no-root
     ~/.wasmedge/bin/wasmedge --version | grep -q $WASMEDGE_VERSION || curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
     curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
     cargo binstall wasm-tools --version $WASM_TOOLS_VERSION --locked -y
     cargo binstall wasm-opt --version $WASM_OPT_VERSION --locked -y
     cargo binstall cargo-insta --version $CARGO_INSTA_VERSION --locked -y
     npm install --global @bytecodealliance/jco@$JCO_VERSION
-    [ -d .venv ] || python3 -m venv .venv
-    poetry install
     cd website
     pnpm install
     cd ..
