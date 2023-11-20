@@ -31,19 +31,20 @@ function Header() {
         </h1>
         <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[850px]">
           Build <strong>serverless</strong> backends with{" "}
-          <strong>zero-trust</strong> and <strong>less code</strong>, no matter
-          where and how your (legacy) systems are.
+          <strong>zero-trust</strong> and{" "}
+          <strong>less code</strong>, no matter where and how your (legacy)
+          systems are.
         </p>
         <div className="md:flex md:px-32 justify-center">
           <Link
             className="button button--primary button--lg m-2"
-            to="/docs/tutorials/getting-started"
+            to="/docs/tutorials/quick-start"
           >
-            Getting started
+            Quick Start
           </Link>
           <Link
             className="button bg-slate-400 hover:bg-slate-300  button--lg m-2"
-            to="/docs/concepts/overview"
+            to="/docs/concepts/features-overview"
           >
             Learn more
           </Link>
@@ -76,9 +77,10 @@ function Intro({
           <span className="text-metared">castle</span> building
         </h2>
         <p>
-          And castle building is <strong>hard</strong>. Even the best teams can
-          struggle to build according to the plans, especially with the ever
-          evolving needs and the tech landscape complexities.
+          And castle building is{" "}
+          <strong>hard</strong>. Even the best teams can struggle to build
+          according to the plans, especially with the ever evolving needs and
+          the tech landscape complexities.
         </p>
       </div>
       <BrowserOnly fallback={<div className="h-[300px]"></div>}>
@@ -100,9 +102,9 @@ function Stability(): JSX.Element {
           <span className="text-metared">typegraphs</span>
         </h2>
         <p>
-          Typegraphs are programmable <strong>virtual graphs</strong> describing
-          all the components of your stack. They enable you to compose APIs,
-          storage and business logic in a type safe manner.
+          Typegraphs are programmable <strong>virtual graphs</strong>{" "}
+          describing all the components of your stack. They enable you to
+          compose APIs, storage and business logic in a type safe manner.
         </p>
       </div>
       <BrowserOnly fallback={<div className="h-[300px]"></div>}>
@@ -124,7 +126,8 @@ function Modularity(): JSX.Element {
           <span className="text-metared">typegate</span>
         </h2>
         <p>
-          Typegate is a distributed GraphQL/REST <strong>query engine</strong>{" "}
+          Typegate is a distributed GraphQL/REST <strong>query engine</strong>
+          {" "}
           that compiles, optimizes, runs and caches queries over typegraphs. It
           enforces authentication, authorization and security for you.
         </p>
@@ -148,9 +151,9 @@ function Reusability(): JSX.Element {
           <span className="text-metared">Metatype</span>
         </h2>
         <p>
-          Install third parties as <strong>dependencies</strong> and start
-          reusing components. The Meta CLI offers you live reloading and
-          one-command deployment to Metacloud or your own instance.
+          Install third parties as <strong>dependencies</strong>{" "}
+          and start reusing components. The Meta CLI offers you live reloading
+          and one-command deployment to Metacloud or your own instance.
         </p>
       </div>
       <BrowserOnly fallback={<div className="h-[300px]"></div>}>
@@ -375,9 +378,9 @@ function DemoVideo(): JSX.Element {
           <span className="text-metared">in hours</span>
         </h2>
         <p>
-          Watch the <strong>3 minutes introduction</strong> of the Metatype
-          platform and start designing your own typegraph. Once you have
-          understood the basics, you already feel productive.
+          Watch the <strong>3 minutes introduction</strong>{" "}
+          of the Metatype platform and start designing your own typegraph. Once
+          you have understood the basics, you already feel productive.
         </p>
       </div>
       <div className="flex justify-center">
@@ -454,7 +457,7 @@ const order: Record<Profile, JSX.Element> = {
 export default function Home(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
   const [profile, setProfile] = useState<Profile>(
-    Object.keys(profiles)[0] as Profile
+    Object.keys(profiles)[0] as Profile,
   );
 
   return (

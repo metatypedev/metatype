@@ -351,7 +351,7 @@ It also bundles the GrahpiQl API explorer and you should be able to access it at
 
 ### The Prisma Runtime
 
-A runtime most apps will be depend on is the [Prisma Runtime](/reference/runtimes/prisma).
+A runtime most apps will be depend on is the [Prisma Runtime](/docs/reference/runtimes/prisma).
 It allows you to persist data and run queries on different kinds of databases and has support for popular SQL and NoSQL databases.
 We'll use it to add the CRUD (create, read, update, delete) operations our app needs.
 
@@ -526,7 +526,7 @@ def roadmap(g: Graph):
 
 `g.ref` declares logical relationships between our types which the Prisma runtime will be able to pick up.
 If you need more control on what the relationships will look like on the database, you can use the `db.link` function.
-More information can be found on the Prisma runtime [reference](/reference/runtimes/prisma).
+More information can be found on the Prisma runtime [reference](/docs/reference/runtimes/prisma).
 
 When we save our file at this point, the `meta dev` watcher should automatically create and push the necessary migrations to our database to get it in its intended shape.
 You should see a new subdirectory in your project called `prisma`.
@@ -1012,7 +1012,13 @@ Instead of including the code inline through a string, the Deno runtime allows u
 Our modules are allowed to use ESM imports to access libraries on different registries like `npm` and `deno.land`.
 We'll use these features to write a simple materializer that converts markdown to html.
 
-    <CodeBlock language="typescript">{require("./md2html.ts").content}</CodeBlock>
+```typescript
+import * as marked from "https://deno.land/x/marked/mod.ts";
+
+export function parse({ raw }: { raw: string }): string {
+  return marked.parse(raw);
+}
+```
 
 We'll expose our module using the deno runtime.
 

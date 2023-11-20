@@ -1,5 +1,6 @@
 from typegraph import typegraph, Policy, t, Graph
 from typegraph.runtimes.deno import DenoRuntime
+
 # skip:start
 from typegraph.graph.params import Auth
 from typegraph.providers.prisma import PrismaRuntime
@@ -84,7 +85,7 @@ def roadmap(g: Graph):
         parse_markdown=deno.import_(
             t.struct({"raw": t.string()}),
             t.string(),
-            module="md2html.ts",
+            module="md2html.ts.src",
             name="parse",
         ),
     )
