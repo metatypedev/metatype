@@ -25,7 +25,8 @@ const config = {
   },
   stylesheets: [
     {
-      href: "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
+      href:
+        "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
       type: "text/css",
     },
   ],
@@ -33,23 +34,6 @@ const config = {
     "docusaurus-plugin-sass",
     require("./packages/tailwindcss"),
     require("./packages/code-loader"),
-    require("./packages/changelog"),
-    [
-      "docusaurus-graphql-plugin",
-      {
-        id: "typegate",
-        schema: "http://localhost:7890/typegate",
-        routeBasePath: "/docs/reference/typegate/internal-api/typegate",
-      },
-    ],
-    [
-      "docusaurus-graphql-plugin",
-      {
-        id: "prisma-migration",
-        schema: "http://localhost:7890/typegate/prisma_migration",
-        routeBasePath: "/docs/reference/typegate/internal-api/prisma-migration",
-      },
-    ],
     [
       "posthog-docusaurus",
       {
@@ -68,7 +52,7 @@ const config = {
     [
       "@docusaurus/plugin-content-docs",
       {
-        id: "marketing",
+        id: "use-cases",
         path: "use-cases",
         routeBasePath: "/use-cases",
         sidebarPath: require.resolve("./use-cases/sidebars.js"),
@@ -127,7 +111,7 @@ const config = {
         items: [
           {
             type: "docSidebar",
-            docsPluginId: "marketing",
+            docsPluginId: "use-cases",
             sidebarId: "useCases",
             position: "left",
             label: "Use cases",
@@ -159,11 +143,11 @@ const config = {
             items: [
               {
                 label: "Getting started",
-                to: "/docs/tutorials/getting-started",
+                to: "/docs/tutorials/metatype-basics",
               },
               {
                 label: "Concepts",
-                to: "/docs/concepts/overview",
+                to: "/docs/concepts/mental-model",
               },
               {
                 label: "Changelog",

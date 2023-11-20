@@ -20,7 +20,7 @@ export const handleInfo = (
         <script src="https://unpkg.com/graphiql/graphiql.min.js" type="application/javascript"></script>
         <script data-plugins="transform-es2015-modules-umd" type="text/babel">
           const app = (
-            <a href="https://metatype.dev/docs/reference" target="_blank" class="block">
+            <a href="https://metatype.dev/docs" target="_blank" class="block">
                 <div class="mx-auto my-4 flex flex-col w-min">
                     <img src="https://metatype.dev/images/logo.svg" width="150" height="150" alt="Metatype logo" />
                     <div>Documentation</div>

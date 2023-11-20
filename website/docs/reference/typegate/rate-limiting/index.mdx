@@ -1,0 +1,20 @@
+import TGExample from "@site/src/components/TGExample";
+
+# Rate limiting
+
+The rate limiting algorithm works as follows:
+
+- each function type can either count the # of calls it gets or the # of results returned `rate_calls=False`
+- each function type can have a weight `rate_weight=1`
+- each request is identified by its IP or by one value of its context if set `context_identifier`
+- a single query can score a maximum of `query_limit`
+- multiple queries can sum up to `window_limit` in a `window_sec` window
+- when there is multiple typegates (`N`), you can improve performance by avoiding score synchronizing while the typegate has not reached `local_excess`: the real maximum score is thus `window_limit + min(local_excess, query_limit) * N`
+
+<TGExample
+  typegraph="rate"
+  python={require("./rate.py")}
+  query={require("./rate.graphql")}
+/>
+
+Playing with the above should allow you to quickly hit the limits.

@@ -1,0 +1,44 @@
+# Specifications
+
+## Notations
+
+```
+t.int()
+→ int
+
+t.int(as_id=true)
+→ int(as_id=true)
+
+t.int(...)
+→ int(·)
+
+t.list(t.int())
+→ [int]
+
+t.optional(t.int())
+→ ?int
+
+t.either([t.int(), t.float()])
+→ int ⊕ float
+→ either
+    int
+    float
+
+t.union([t.int(), t.float()])
+→ int | float
+→ union
+    int
+    float
+
+t.int().compose(t.float())
+→ int & float
+→ compose
+    int
+    float
+
+t.struct({"a": t.int(), "b": t.float()})
+→ struct
+    a: int
+    b: float
+
+```

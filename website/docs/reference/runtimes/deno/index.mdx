@@ -1,0 +1,57 @@
+# Deno/typescript
+
+
+import CodeBlock from "@theme/CodeBlock";
+import TGExample from "@site/src/components/TGExample";
+
+
+## Deno runtime
+
+While the tutorial covered already interesting runtimes, allowing you to connect to already a lot of systems and different protocols, there is still one powerful that wasn't covered yet: the typescript or Deno runtime.
+
+This enables to run lightweight and short-lived typescript function in a sandboxed environment. Permissions can be customized per typegraph and by default only include some HTTPs domains. It's a great way to implement custom logic and materializers. All typegraphs can lazily spawn a web worker and get an incredible cold-start and continuous performance thanks to the V8 engine powering Deno.
+
+<TGExample
+  typegraph="deno"
+  python={require("./deno.py")}
+  query={require("./deno.graphql")}
+/>
+
+
+Example:
+```python
+# my_typegraph.py
+
+from typegraph import TypeGraph, policies, t
+from typegraph.runtimes.deno import ModuleMat, PureFunMat
+
+with TypeGraph("deno") as g:
+    public = policies.public()
+
+    g.expose(
+        add=t.func(
+            t.struct({"a": t.number(), "b": t.number()}),
+            t.number(),
+            ModuleMat("main.ts").imp("doAddition"),
+        ),
+        simple=t.func(
+            t.struct({"a": t.number(), "b": t.number()}),
+            t.number(),
+            PureFunMat("({ a, b }) => a + b"),
+        ),
+        default_policy=[public],
+    )
+```
+
+```typescript
+// main.ts
+
+interface AddInput {
+  a: number;
+  b: number;
+}
+export function doAddition({ a, b }: AddInput) {
+  return a + b;
+}
+
+```

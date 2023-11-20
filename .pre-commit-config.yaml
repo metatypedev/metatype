@@ -17,20 +17,17 @@ repos:
         # exclude all generated files
         exclude: (typegate/deno.lock|.*\.snap$|typegate/src/typegraphs/.*\.json|website/docs/reference/)
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.27.0
+    rev: 0.27.1
     hooks:
       - id: check-dependabot
       - id: check-github-workflows
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.0.292"
+    rev: "v0.1.5"
     hooks:
       - id: ruff
-  - repo: https://github.com/psf/black
-    rev: 23.9.1
-    hooks:
-      - id: black
+      - id: ruff-format
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: 3.10.0
+    rev: 3.12.0
     hooks:
       - id: commitizen
         stages:

@@ -1,9 +1,17 @@
-You can download the binary executable from
-[releases page](https://github.com/metatypedev/metatype/releases/) on GitHub, make it
-executable and add it to your `$PATH` or use the method below to automate those steps.
+:::info
+
+Metatype is only supported on macOS and Linux. Windows users should use [Linux on Windows with WSL](https://learn.microsoft.com/windows/wsl/install).
+
+:::
+
+You can download the binary from the
+[releases page](https://github.com/metatypedev/metatype/releases/), make it
+executable and add it to your `PATH` or use the automated method below.
 
 ```bash
+# the installer may ask for your password
 curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/installer.sh | bash
 
-meta upgrade # to upgrade to the latest version
+# (for later) upgrade to a newer version
+meta upgrade
 ```

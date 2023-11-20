@@ -1,0 +1,14 @@
+# HTTP/REST 
+
+Example:
+
+```python
+from typegraph.runtime.http import HTTPRuntime
+
+    remote = HTTPRuntime('https://dev.to/api')
+    remote.get(
+        '/test',
+        t.struct({}),
+        t.list(t.struct({'a': t.integer()})),
+    )
+```

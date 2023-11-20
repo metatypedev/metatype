@@ -8,12 +8,12 @@ import { resolve } from "std/path/mod.ts";
 const metaCliExe = resolve(testDir, "../../target/debug/meta");
 let compiled = false;
 
-export async function meta(...args: string[]): Promise<ShellOutput>;
-export async function meta(
+export async function metaCli(...args: string[]): Promise<ShellOutput>;
+export async function metaCli(
   options: ShellOptions,
   ...args: string[]
 ): Promise<ShellOutput>;
-export async function meta(
+export async function metaCli(
   first: string | ShellOptions,
   ...input: string[]
 ): Promise<ShellOutput> {

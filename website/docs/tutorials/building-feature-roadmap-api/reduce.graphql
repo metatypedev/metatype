@@ -1,0 +1,14 @@
+mutation CIdea {
+  create_idea(
+    data: {
+      bucket: {
+        connect: {id: 1}
+      }, 
+      authorEmail: "deng@xi.ng", 
+      name: "Add support for WASM Gc"
+    }
+  ) {
+    id
+    name
+  }
+}

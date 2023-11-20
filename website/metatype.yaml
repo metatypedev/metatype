@@ -30,6 +30,18 @@ typegates:
       TG_RETREND_S3_REGION: local
       TG_RETREND_S3_ACCESS_KEY: minio
       TG_RETREND_S3_SECRET_KEY: password
+      TG_ROADMAP_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_prisma"
+      TG_ROADMAP_POLICIES_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_policies"
+      TG_ROADMAP_REDUCE_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_reduce"
+      TG_ROADMAP_EXECUTE_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_execute"
+      TG_ROADMAP_REST_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_rest"
+      TG_ROADMAP_FUNC_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_func"
+      TG_ROADMAP_BASIC_ANDIM: hunter2
+      TG_ROADMAP_POLICIES_BASIC_ANDIM: hunter2
+      TG_ROADMAP_REDUCE_BASIC_ANDIM: hunter2
+      TG_ROADMAP_EXECUTE_BASIC_ANDIM: hunter2
+      TG_ROADMAP_REST_BASIC_ANDIM: hunter2
+      TG_ROADMAP_FUNC_BASIC_ANDIM: hunter2
   prd:
     url: https://demo.metatype.dev
     username: admin
@@ -61,6 +73,18 @@ typegates:
       TG_RETREND_S3_REGION: local
       TG_RETREND_S3_ACCESS_KEY: minio
       TG_RETREND_S3_SECRET_KEY: password
+      TG_ROADMAP_PRISMA_POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_PRISMA_POSTGRES
+      TG_ROADMAP_POLICIES_POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_POLICIES_POSTGRES
+      TG_ROADMAP_REDUCE_POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_REDUCE_POSTGRES
+      TG_ROADMAP_EXECUTE_POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_EXECUTE_POSTGRES
+      TG_ROADMAP_REST_POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_REST_POSTGRES
+      TG_ROADMAP_FUNC_POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_FUNC_POSTGRES
+      TG_ROADMAP_BASIC_ANDIM: hunter2
+      TG_ROADMAP_POLICIES_BASIC_ANDIM: hunter2
+      TG_ROADMAP_REDUCE_BASIC_ANDIM: hunter2
+      TG_ROADMAP_EXECUTE_BASIC_ANDIM: hunter2
+      TG_ROADMAP_REST_BASIC_ANDIM: hunter2
+      TG_ROADMAP_FUNC_BASIC_ANDIM: hunter2
 
 typegraphs:
   materializers:

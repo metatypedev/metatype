@@ -6,7 +6,7 @@
 
 <p>
     <h3 align="center">
-        <a href="https://metatype.dev/docs/tutorials/getting-started?utm_source=github&utm_medium=readme&utm_campaign=metatype">Getting started</a> • <a href="https://metatype.dev/docs/concepts/overview?utm_source=github&utm_medium=readme&utm_campaign=metatype">Docs</a> • <a href="https://metatype.dev/use-cases/automatic-crud-validation?utm_source=github&utm_medium=readme&utm_campaign=metatype">Use cases</a> • <a href="https://github.com/metatypedev/metatype/discussions">Community</a>
+        <a href="https://metatype.dev/docs/tutorials/quick-start?utm_source=github&utm_medium=readme&utm_campaign=metatype">Quick-start</a> • <a href="https://metatype.dev/docs?utm_source=github&utm_medium=readme&utm_campaign=metatype">Docs</a> • <a href="https://metatype.dev/use-cases/automatic-crud-validation?utm_source=github&utm_medium=readme&utm_campaign=metatype">Use cases</a> • <a href="https://github.com/metatypedev/metatype/discussions">Community</a>
     </h3>
 </p>
 

@@ -1,0 +1,83 @@
+[changelog]
+header = """
+# Changelog\n
+All notable changes to this project will be documented in this file.\n
+"""
+body = """
+{% if version %}\
+    ## [{{ version }}](https://github.com/metatypedev/metatype/releases/tag/{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+    ## [unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | upper_first }}
+    {% for commit in commits
+    | filter(attribute="scope")
+    | sort(attribute="scope") %}
+          <details {% if commit.breaking -%}open{% endif -%}>
+          <summary>
+            ({{commit.scope}}) {{ commit.message | upper_first }}
+            {% if commit.breaking -%}
+            {% raw %}  {% endraw %}- BREAKING: {{commit.breaking_description}}
+            {% endif -%}
+          </summary>
+
+          {{commit.body}}
+
+        </details>
+    {%- endfor -%}
+    {% raw %}\n{% endraw %}\
+    {%- for commit in commits %}
+        {%- if commit.scope -%}
+        {% else -%}
+            <details {% if commit.breaking -%}open{% endif -%}>
+              <summary>
+                {{ commit.message | upper_first }}
+                {% if commit.breaking -%}
+                {% raw %}  {% endraw %}- BREAKING: {{commit.breaking_description}}
+                {% endif -%}
+              </summary>
+
+              {{commit.body}}
+              
+            </details>
+        {% endif -%}
+    {% endfor -%}
+    {% raw %}\n{% endraw %}\
+{% endfor %}\n
+"""
+# remove the leading and trailing whitespace from the template
+trim = true
+footer = ""
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+commit_preprocessors = [
+  { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](https://github.com/metatypedev/metatype/pull/${2}))"},
+]
+commit_parsers = [
+  { message = "^feat", group = "Features" },
+  { message = "^fix", group = "Bug Fixes" },
+  { message = "^doc", group = "Documentation" },
+  { message = "^perf", group = "Performance" },
+  { message = "^refactor", group = "Refactor" },
+  { message = "^style", group = "Styling" },
+  { message = "^test", group = "Testing" },
+  { message = "^chore: prepare release", skip = true },
+  { message = "^chore\\(release\\): prepare for", skip = true },
+  { message = "^chore\\(deps\\)", skip = true },
+  { message = "^chore\\(deps-dev\\)", skip = true },
+  { message = "^chore|ci", group = "Miscellaneous Tasks" },
+  { body = ".*security", group = "Security" },
+  { message = "^revert", group = "Revert" },
+]
+protect_breaking_commits = false
+filter_commits = false
+tag_pattern = "v[0-9]*"
+# skip_tags = "v0.1.0-beta.1"
+# ignore_tags = ""
+topo_order = false
+sort_commits = "oldest"
+limit_commits = 128
