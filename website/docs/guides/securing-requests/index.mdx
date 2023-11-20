@@ -8,7 +8,7 @@ import TGExample from "@site/src/components/TGExample";
 
 ## Authentication
 
-Metatype supports multiple [authentication schemes](/docs/guides/authentication): Basic authentication, JSON Web Tokens (JWT) and OAuth2. This enables every request to have a context and store some information about the user. You can then use the context to set specific fields with `from_context` or as you will see next step, to restrict accesses via the policies.
+Metatype supports multiple authentication schemes: Basic authentication, JSON Web Tokens (JWT) and OAuth2. This enables every request to have a context and store some information about the user. You can then use the context to set specific fields with `from_context` or as you will see next step, to restrict accesses via the policies.
 
 For your app, you will use basic authentication in order to restrict some actions for admin users. In order to do so, adding the following secret to your `metatype.yml` file: `TG_AUTHENTICATION_BASIC_ADMIN=password`.
 
