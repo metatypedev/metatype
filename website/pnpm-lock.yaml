@@ -1,6 +1,10 @@
 lockfileVersion: '6.0'
 
-packageExtensionsChecksum: 5e3102ff16ea94f6a13680b924775d6b
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+packageExtensionsChecksum: 0819fe8ffbf0746d2fb8cacd8eacad73
 
 dependencies:
   '@apollo/client':
