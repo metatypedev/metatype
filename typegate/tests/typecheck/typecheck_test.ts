@@ -88,7 +88,7 @@ Meta.test("typecheck", async (t) => {
 
     const formattedCode = nativeResult(native.typescript_format_code({
       source: code,
-    })).formatted_code;
+    }))!.formatted_code;
 
     t.assertSnapshot(formattedCode);
   });

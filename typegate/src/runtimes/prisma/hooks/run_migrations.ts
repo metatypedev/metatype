@@ -242,13 +242,11 @@ class Migration {
   }
 
   async #opDiff(): Promise<boolean> {
-    const { diff } = nativeResult(
-      await native.prisma_diff({
-        datasource: this.#datasource,
-        datamodel: this.#datamodel,
-        script: false,
-      }),
-    );
+    const diff = await native.prisma_diff({
+      datasource: this.#datasource,
+      datamodel: this.#datamodel,
+      script: false,
+    });
 
     if (diff != null) {
       this.#info(`Changes detected in the schema: ${diff}`);

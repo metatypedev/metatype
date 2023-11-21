@@ -27,7 +27,7 @@ Meta.test("input validator compiler", async (t) => {
     );
     const code = nativeResult(native.typescript_format_code({
       source: generatedCode,
-    })).formatted_code;
+    }))!.formatted_code;
 
     t.assertSnapshot(code);
   });
@@ -79,7 +79,7 @@ Meta.test("input validator compiler", async (t) => {
     const generatedCode = new InputValidationCompiler(tg).generate(enums.input);
     const code = nativeResult(native.typescript_format_code({
       source: generatedCode,
-    })).formatted_code;
+    }))!.formatted_code;
 
     t.assertSnapshot(code);
   });
@@ -130,7 +130,7 @@ Meta.test("input validator compiler", async (t) => {
     const generatedCode = new InputValidationCompiler(tg).generate(posts.input);
     const code = nativeResult(native.typescript_format_code({
       source: generatedCode,
-    })).formatted_code;
+    }))!.formatted_code;
 
     t.assertSnapshot(code);
   });
