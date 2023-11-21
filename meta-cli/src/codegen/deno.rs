@@ -188,7 +188,6 @@ impl<'a> Codegen<'a> {
         self.generate(gen_list)
             .into_iter()
             .map(|(name, code)| -> Result<ModuleCode> {
-                log::debug!("Codegen::codegen: name={name:?}");
                 let path = self.ts_modules.remove(&name).unwrap().path;
                 let code = ts::format_text(&path, &code)
                     .context(format!("could not format code: {code:#?}"))?;
