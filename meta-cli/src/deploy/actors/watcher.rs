@@ -5,7 +5,7 @@ use actix::prelude::*;
 use anyhow::{Context as AnyhowContext, Result};
 use common::typegraph::Typegraph;
 use grep::searcher::{BinaryDetection, SearcherBuilder};
-use notify_debouncer_mini::notify::{INotifyWatcher, RecursiveMode};
+use notify_debouncer_mini::notify::{RecommendedWatcher, RecursiveMode};
 use notify_debouncer_mini::{new_debouncer, notify, DebounceEventResult, Debouncer};
 use pathdiff::diff_paths;
 use std::path::{Path, PathBuf};
@@ -38,7 +38,7 @@ pub struct WatcherActor {
     directory: Arc<Path>,
     event_tx: mpsc::UnboundedSender<Event>,
     console: Addr<ConsoleActor>,
-    debouncer: Option<Debouncer<INotifyWatcher>>,
+    debouncer: Option<Debouncer<RecommendedWatcher>>,
     dependency_graph: DependencyGraph,
     file_filter: FileFilter,
 }
