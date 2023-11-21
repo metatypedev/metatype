@@ -81,7 +81,6 @@ actix = "0.13.1"
 ctrlc = "3.4.1"
 typegate_engine =  { workspace = true, optional = true }
 shadow-rs = "0.24"
-derive_more = "0.99.17"
 env_logger.workspace = true
 clap = { workspace = true, features = ["derive", "env"] }
 clap_complete.workspace = true

@@ -25,7 +25,8 @@ const config = {
   },
   stylesheets: [
     {
-      href: "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
+      href:
+        "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
       type: "text/css",
     },
   ],
@@ -142,11 +143,11 @@ const config = {
             items: [
               {
                 label: "Getting started",
-                to: "/docs/tutorials/getting-started",
+                to: "/docs/tutorials/metatype-basics",
               },
               {
                 label: "Concepts",
-                to: "/docs/concepts/overview",
+                to: "/docs/concepts/mental-model",
               },
               {
                 label: "Changelog",

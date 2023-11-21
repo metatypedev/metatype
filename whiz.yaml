@@ -1,7 +1,7 @@
 env:
   TYPEGRAPH_VERSION: "0.0.3"
   CLICOLOR_FORCE: "1"
-  RUST_LOG: "error,mt_deno=info,typegate=info,typegate_engine=info,swc_ecma_codegen=off,tracing::span=off"
+  RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
 
 gate1: &tp
   watch:
