@@ -5,7 +5,7 @@ use common::typegraph::{FunctionTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base_concrete, TypeConversion},
+    conversion::types::{BaseBuilderInit, TypeConversion},
     errors,
     typegraph::TypegraphContext,
     types::{Func, TypeDef, TypeDefData, TypeId},
@@ -28,10 +28,18 @@ impl TypeConversion for Func {
         let out_type = TypeId(self.data.out).resolve_ref()?.1;
         let output = ctx.register_type(out_type, Some(runtime_id))?.into();
 
-        let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
-
         Ok(TypeNode::Function {
-            base: gen_base_concrete!("func", self, runtime_id, policies),
+            base: BaseBuilderInit {
+                ctx,
+                base_name: "func",
+                type_id: self.id,
+                name: self.base.name.clone(),
+                runtime_idx: runtime_id,
+                policies: &self.extended_base.policies,
+                runtime_config: self.base.runtime_config.as_deref(),
+            }
+            .init_builder()?
+            .build()?,
             data: FunctionTypeData {
                 input,
                 output,

@@ -6,7 +6,7 @@ use errors::Result;
 use indexmap::IndexMap;
 
 use crate::{
-    conversion::types::{gen_base_concrete, TypeConversion},
+    conversion::types::{BaseBuilderInit, TypeConversion},
     errors,
     global_store::Store,
     typegraph::TypegraphContext,
@@ -31,9 +31,20 @@ impl TypeConversion for Struct {
             Some(runtime_id) => runtime_id,
             None => ctx.register_runtime(Store::get_deno_runtime())?,
         };
-        let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
         Ok(TypeNode::Object {
-            base: gen_base_concrete!("object", self, runtime_id, policies, [enum, injection]),
+            base: BaseBuilderInit {
+                ctx,
+                base_name: "object",
+                type_id: self.id,
+                name: self.base.name.clone(),
+                runtime_idx: runtime_id,
+                policies: &self.extended_base.policies,
+                runtime_config: self.base.runtime_config.as_deref(),
+            }
+            .init_builder()?
+            .enum_(self.data.enumeration.as_deref())
+            .inject(self.extended_base.injection.clone())?
+            .build()?,
             data: ObjectTypeData {
                 properties: self
                     .iter_props()

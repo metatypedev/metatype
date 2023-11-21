@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
-use crate::conversion::types::{gen_base, TypeConversion};
+use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
 use crate::types::{TypeDef, TypeDefExt, TypeId};
 use crate::validation::validate_name;
@@ -14,7 +14,7 @@ use crate::{
 use common::typegraph::runtimes::TGRuntime;
 use common::typegraph::{
     Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TypeMeta,
-    TypeNode, Typegraph,
+    TypeNode, TypeNodeBase, Typegraph,
 };
 use indexmap::IndexMap;
 use std::cell::RefCell;
@@ -113,7 +113,16 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     let default_runtime_idx = ctx.register_runtime(Store::get_deno_runtime())?;
 
     ctx.types.push(Some(TypeNode::Object {
-        base: gen_base(params.name, None, default_runtime_idx, vec![]).build(),
+        base: TypeNodeBase {
+            config: Default::default(),
+            description: None,
+            enumeration: None,
+            injection: None,
+            policies: Default::default(),
+            runtime: default_runtime_idx,
+            title: params.name,
+            as_id: false,
+        },
         data: ObjectTypeData {
             properties: IndexMap::new(),
             required: vec![],

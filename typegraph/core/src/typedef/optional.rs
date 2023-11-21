@@ -5,7 +5,7 @@ use common::typegraph::{OptionalTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base_concrete, TypeConversion},
+    conversion::types::{BaseBuilderInit, TypeConversion},
     errors,
     typegraph::TypegraphContext,
     types::{Optional, TypeDefData, TypeId},
@@ -22,10 +22,19 @@ impl TypeConversion for Optional {
             None => None,
         };
 
-        let policies = ctx.register_policy_chain(&self.extended_base.policies)?;
-
         Ok(TypeNode::Optional {
-            base: gen_base_concrete!("optional", self, runtime_id.unwrap(), policies, [injection]),
+            base: BaseBuilderInit {
+                ctx,
+                base_name: "optional",
+                type_id: self.id,
+                name: self.base.name.clone(),
+                runtime_idx: runtime_id.unwrap(),
+                policies: &self.extended_base.policies,
+                runtime_config: self.base.runtime_config.as_deref(),
+            }
+            .init_builder()?
+            .inject(self.extended_base.injection.clone())?
+            .build()?,
             data: OptionalTypeData {
                 item: ctx
                     .register_type(TypeId(self.data.of).try_into()?, runtime_id)?
