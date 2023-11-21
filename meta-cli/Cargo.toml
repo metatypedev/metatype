@@ -79,6 +79,7 @@ semver = "1.0.20"
 textwrap = "0.16.0"
 actix = "0.13.1"
 ctrlc = "3.4.1"
+derive_more = "0.99.17"
 typegate_engine =  { workspace = true, optional = true }
 shadow-rs = "0.24"
 env_logger.workspace = true
