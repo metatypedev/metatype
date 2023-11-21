@@ -31,11 +31,6 @@ pub struct BaseBuilderInit<'a, 'b> {
     pub runtime_idx: u32,
     pub policies: &'b [PolicySpec],
     pub runtime_config: Option<&'b [(String, String)]>,
-    //
-    // // optional features
-    // enumeration: Option<Vec<String>>,
-    // injection: Option<Injection>,
-    // as_id: bool,
 }
 
 pub struct BaseBuilder<'a> {
