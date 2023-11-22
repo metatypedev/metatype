@@ -96,7 +96,7 @@ impl TypeGen for OrderBy {
     }
 
     fn name(&self) -> String {
-        let name = self.model_id.type_name().unwrap().unwrap();
+        let name = self.model_id.name().unwrap().unwrap();
         let suffix = if self.skip_rel.is_empty() {
             "".to_string()
         } else {
@@ -253,7 +253,7 @@ impl TypeGen for AggregateSorting {
     }
 
     fn name(&self) -> String {
-        let model_name = self.model_id.type_name().unwrap().unwrap();
+        let model_name = self.model_id.name().unwrap().unwrap();
         format!("_{model_name}_AggregateSorting")
     }
 }

@@ -62,7 +62,7 @@ impl TypeGen for Where {
             match prop {
                 Property::Model(prop) => {
                     let inner = match self.skip_models.get(&prop.model_id) {
-                        Some(name) => t::proxy(name.clone()).build()?,
+                        Some(name) => t::ref_(name.clone()).build()?,
                         None => context.generate(&self.nested(&name, prop.model_id))?,
                     };
                     match prop.quantifier {
@@ -112,7 +112,7 @@ impl TypeGen for Where {
     }
 
     fn name(&self) -> String {
-        let model_name = self.model_id.type_name().unwrap().unwrap();
+        let model_name = self.model_id.name().unwrap().unwrap();
 
         let suffix1 = if self.aggregates {
             "__agg".to_string()

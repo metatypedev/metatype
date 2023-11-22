@@ -5,10 +5,10 @@ use common::typegraph::{OptionalTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base, TypeConversion},
+    conversion::types::{BaseBuilderInit, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{Optional, TypeData, TypeId},
+    types::{Optional, TypeDefData, TypeId},
     wit::core::TypeOptional,
 };
 
@@ -23,18 +23,21 @@ impl TypeConversion for Optional {
         };
 
         Ok(TypeNode::Optional {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("optional_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .build(),
+            base: BaseBuilderInit {
+                ctx,
+                base_name: "optional",
+                type_id: self.id,
+                name: self.base.name.clone(),
+                runtime_idx: runtime_id.unwrap(),
+                policies: &self.extended_base.policies,
+                runtime_config: self.base.runtime_config.as_deref(),
+            }
+            .init_builder()?
+            .inject(self.extended_base.injection.clone())?
+            .build()?,
             data: OptionalTypeData {
                 item: ctx
-                    .register_type(TypeId(self.data.of).resolve_proxy()?, runtime_id)?
+                    .register_type(TypeId(self.data.of).try_into()?, runtime_id)?
                     .into(),
                 default_value,
             },
@@ -48,7 +51,7 @@ impl Optional {
     }
 }
 
-impl TypeData for TypeOptional {
+impl TypeDefData for TypeOptional {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         params.push(format!("item={}", self.of));
         if let Some(default) = self.default_item.clone() {
@@ -56,9 +59,7 @@ impl TypeData for TypeOptional {
         }
     }
 
-    fn variant_name(&self) -> String {
-        "optional".to_string()
+    fn variant_name(&self) -> &'static str {
+        "optional"
     }
-
-    super::impl_into_type!(concrete, Optional);
 }

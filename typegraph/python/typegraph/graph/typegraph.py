@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
 from typegraph.gen.exports.core import (
     Rate,
-    TypeProxy,
     TypegraphInitParams,
 )
 from typegraph.gen.exports.core import (
@@ -175,7 +174,7 @@ def typegraph(
 
 
 def gen_ref(name: str) -> "t.typedef":
-    res = core.proxyb(store, TypeProxy(name=name, extras=[]))
+    res = core.refb(store, name, [])
     if isinstance(res, Err):
         raise Exception(res.value)
     from typegraph.t import typedef
