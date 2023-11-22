@@ -7,7 +7,6 @@ import {
   typegraph_validate,
   typescript_format_code,
   validate_prisma_runtime_data,
-  WasiInput,
   wasmedge_wasi,
 } from "native";
 
