@@ -5,31 +5,29 @@ use common::typegraph::types::{FloatTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base, TypeConversion},
+    conversion::types::{BaseBuilderInit, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{Float, TypeData},
+    types::{Float, TypeDefData},
     wit::core::TypeFloat,
 };
 
 impl TypeConversion for Float {
-    fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
-        let enumeration = self
-            .data
-            .enumeration
-            .clone()
-            .map(|enums| enums.iter().map(|v| format!("{}", v)).collect());
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Float {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("float_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .enum_(enumeration)
-            .build(),
+            base: BaseBuilderInit {
+                ctx,
+                base_name: "float",
+                type_id: self.id,
+                name: self.base.name.clone(),
+                runtime_idx: runtime_id.unwrap(),
+                policies: &self.extended_base.policies,
+                runtime_config: self.base.runtime_config.as_deref(),
+            }
+            .init_builder()?
+            .enum_(self.data.enumeration.as_deref())
+            .inject(self.extended_base.injection.clone())?
+            .build()?,
             data: FloatTypeData {
                 minimum: self.data.min,
                 maximum: self.data.max,
@@ -41,7 +39,7 @@ impl TypeConversion for Float {
     }
 }
 
-impl TypeData for TypeFloat {
+impl TypeDefData for TypeFloat {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         if let Some(min) = self.min {
             params.push(format!("min={}", min));
@@ -60,9 +58,7 @@ impl TypeData for TypeFloat {
         }
     }
 
-    fn variant_name(&self) -> String {
-        "float".to_string()
+    fn variant_name(&self) -> &'static str {
+        "float"
     }
-
-    super::impl_into_type!(concrete, Float);
 }
