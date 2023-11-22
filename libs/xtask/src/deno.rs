@@ -42,6 +42,8 @@ pub struct Test {
     /// The directory in which to put the coverage profiles
     #[clap(long)]
     coverage: Option<String>,
+    #[clap(last = true)]
+    argv: Vec<String>,
 }
 
 impl Test {
@@ -87,6 +89,7 @@ impl Test {
             permissions,
             self.coverage,
             std::sync::Arc::new(move || typegate_engine::extensions(inj.clone())),
+            self.argv,
         );
         Ok(())
     }
@@ -102,6 +105,8 @@ pub struct Bench {
     /// Path to `deno.json`
     #[clap(long)]
     config: PathBuf,
+    #[clap(last = true)]
+    argv: Vec<String>,
 }
 
 impl Bench {
@@ -144,6 +149,7 @@ impl Bench {
             self.config,
             permissions,
             std::sync::Arc::new(Vec::new),
+            self.argv,
         );
         Ok(())
     }
