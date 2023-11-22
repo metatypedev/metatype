@@ -12,7 +12,10 @@ use anyhow::{anyhow, Context, Error, Result};
 use colored::Colorize;
 use common::typegraph::Typegraph;
 
-use crate::config::{Config, ModuleType};
+use crate::{
+    config::{Config, ModuleType},
+    utils::ensure_venv,
+};
 
 use super::postprocess::{self, apply_all, PostProcessorWrapper};
 
@@ -61,7 +64,7 @@ impl Loader {
                 });
             }
         }
-        let command = Self::get_load_command(ModuleType::try_from(&*path).unwrap(), &path);
+        let command = Self::get_load_command(ModuleType::try_from(&*path).unwrap(), &path)?;
         self.load_command(command, &path).await
     }
 
@@ -130,10 +133,14 @@ impl Loader {
         }
     }
 
-    fn get_load_command(module_type: ModuleType, path: &Path) -> Command {
+    fn get_load_command(module_type: ModuleType, path: &Path) -> Result<Command, LoaderError> {
         let vars: HashMap<_, _> = env::vars().collect();
         match module_type {
             ModuleType::Python => {
+                // TODO cache result?
+                ensure_venv(path).map_err(|_| LoaderError::PythonVenvNotFound {
+                    path: path.to_owned().into(),
+                })?;
                 let mut command = Command::new("python3");
                 command
                     .arg(path.to_str().unwrap())
@@ -141,7 +148,7 @@ impl Loader {
                     .env("PYTHONUNBUFFERED", "1")
                     .env("PYTHONDONTWRITEBYTECODE", "1")
                     .env("PY_TG_COMPATIBILITY", "1");
-                command
+                Ok(command)
             }
             ModuleType::Deno => {
                 let mut command = Command::new("deno");
@@ -152,7 +159,7 @@ impl Loader {
                     .arg("--check")
                     .arg(path.to_str().unwrap())
                     .envs(vars);
-                command
+                Ok(command)
             }
         }
     }
@@ -180,6 +187,9 @@ pub enum LoaderError {
     Unknown {
         path: Arc<Path>,
         error: Error,
+    },
+    PythonVenvNotFound {
+        path: Arc<Path>,
     },
 }
 
@@ -211,6 +221,9 @@ impl ToString for LoaderError {
             }
             Self::ModuleFileNotFound { path } => {
                 format!("module file not found: {path:?}")
+            }
+            Self::PythonVenvNotFound { path } => {
+                format!("python venv (.venv) not found in parent directories of {path:?}")
             }
         }
     }
