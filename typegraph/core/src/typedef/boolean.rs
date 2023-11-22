@@ -5,34 +5,35 @@ use common::typegraph::TypeNode;
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base, TypeConversion},
+    conversion::types::{BaseBuilderInit, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{Boolean, TypeBoolean, TypeData},
+    types::{Boolean, TypeBoolean, TypeDefData},
 };
 
 impl TypeConversion for Boolean {
-    fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Boolean {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("boolean_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .build(),
+            base: BaseBuilderInit {
+                ctx,
+                base_name: "boolean",
+                type_id: self.id,
+                name: self.base.name.clone(),
+                runtime_idx: runtime_id.unwrap(),
+                policies: &self.extended_base.policies,
+                runtime_config: self.base.runtime_config.as_deref(),
+            }
+            .init_builder()?
+            .inject(self.extended_base.injection.clone())?
+            .build()?,
         })
     }
 }
 
-impl TypeData for TypeBoolean {
+impl TypeDefData for TypeBoolean {
     fn get_display_params_into(&self, _params: &mut Vec<String>) {}
 
-    fn variant_name(&self) -> String {
-        "boolean".to_string()
+    fn variant_name(&self) -> &'static str {
+        "boolean"
     }
-
-    super::impl_into_type!(concrete, Boolean);
 }

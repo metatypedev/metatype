@@ -5,33 +5,38 @@ use common::typegraph::{EitherTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base, TypeConversion},
+    conversion::types::{BaseBuilderInit, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{Either, TypeData, TypeId},
+    types::{Either, TypeDefData, TypeId},
     wit::core::TypeEither,
 };
 
 impl TypeConversion for Either {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Either {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("either_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .build(),
+            // TODO do we need to support injection??
+            // TODO or emit an error if injection is set?
+            // idem for as_id, and enum
+            base: BaseBuilderInit {
+                ctx,
+                base_name: "either",
+                type_id: self.id,
+                name: self.base.name.clone(),
+                runtime_idx: runtime_id.unwrap(),
+                policies: &self.extended_base.policies,
+                runtime_config: self.base.runtime_config.as_deref(),
+            }
+            .init_builder()?
+            .build()?,
             data: EitherTypeData {
                 one_of: self
                     .data
                     .variants
                     .iter()
                     .map(|&vid| -> Result<_> {
-                        let id = TypeId(vid).resolve_proxy()?;
-                        Ok(ctx.register_type(id, runtime_id)?.into())
+                        let (_, type_def) = TypeId(vid).resolve_ref()?;
+                        Ok(ctx.register_type(type_def, runtime_id)?.into())
                     })
                     .collect::<Result<Vec<_>>>()?,
             },
@@ -39,16 +44,14 @@ impl TypeConversion for Either {
     }
 }
 
-impl TypeData for TypeEither {
+impl TypeDefData for TypeEither {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         for (i, tpe_id) in self.variants.iter().enumerate() {
             params.push(format!("[v{}] => #{}", i, tpe_id));
         }
     }
 
-    fn variant_name(&self) -> String {
-        "either".to_string()
+    fn variant_name(&self) -> &'static str {
+        "either"
     }
-
-    super::impl_into_type!(concrete, Either);
 }

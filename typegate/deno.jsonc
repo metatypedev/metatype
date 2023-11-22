@@ -2,6 +2,9 @@
   "compilerOptions": {
     "allowJs": false,
     "strict": true,
+    "types": [
+      "./engine/runtime.d.ts"
+    ],
     "lib": [
       "deno.ns",
       "deno.unstable",

@@ -39,7 +39,7 @@ impl TypeGen for GroupingFields {
     }
 
     fn name(&self) -> String {
-        let model_name = self.model_id.type_name().unwrap().unwrap();
+        let model_name = self.model_id.name().unwrap().unwrap();
         format!("_{}_GroupingFields", model_name)
     }
 }
@@ -60,7 +60,7 @@ impl TypeGen for Having {
         let where_type = context.generate(&Where::new(self.model_id).with_aggregates())?;
 
         let name = self.name();
-        let self_ref = t::proxy(&name).build()?;
+        let self_ref = t::ref_(&name).build()?;
 
         t::unionx![
             where_type,
@@ -73,7 +73,7 @@ impl TypeGen for Having {
     }
 
     fn name(&self) -> String {
-        let model_name = self.model_id.type_name().unwrap().unwrap();
+        let model_name = self.model_id.name().unwrap().unwrap();
         format!("_{}_Having", model_name)
     }
 }
@@ -120,7 +120,7 @@ impl TypeGen for GroupByResult {
     }
 
     fn name(&self) -> String {
-        let model_name = self.model_id.type_name().unwrap().unwrap();
+        let model_name = self.model_id.name().unwrap().unwrap();
         format!("_{}_GroupByResult", model_name)
     }
 }
@@ -172,7 +172,7 @@ impl TypeGen for SelectNumbers {
     }
 
     fn name(&self) -> String {
-        let model_name = self.model_id.type_name().unwrap().unwrap();
+        let model_name = self.model_id.name().unwrap().unwrap();
         let suffix = if self.promote_to_float { "_1" } else { "" };
         format!("_{model_name}_SelectNumbers_{suffix}")
     }

@@ -7,7 +7,7 @@ use crate::runtimes::prisma::model::Property;
 use crate::runtimes::prisma::relationship::Cardinality;
 use crate::runtimes::prisma::type_generation::count::Count;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-use crate::types::{ProxyResolution, TypeId};
+use crate::types::{TypeDefExt, TypeId};
 
 use super::TypeGen;
 
@@ -70,10 +70,7 @@ impl TypeGen for WithNestedCount {
                 }
 
                 Property::Scalar(prop) => {
-                    let type_id = prop
-                        .wrapper_type_id
-                        .concrete_type(ProxyResolution::Force)?
-                        .unwrap();
+                    let type_id = prop.wrapper_type_id.resolve_ref()?.1.id();
                     builder.prop(key, type_id);
                 }
 
@@ -95,7 +92,7 @@ impl TypeGen for WithNestedCount {
     }
 
     fn name(&self) -> String {
-        let model_name = self.model_id.type_name().unwrap().unwrap();
+        let model_name = self.model_id.name().unwrap().unwrap();
         let suffix = if self.skip.is_empty() {
             "".to_string()
         } else {

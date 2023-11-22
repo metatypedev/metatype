@@ -2,16 +2,15 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::global_store::Store;
-use crate::types::{Type, TypeId};
+use crate::types::{Type, TypeDef, TypeDefExt, TypeId};
 use crate::wit::core::TypeFunc;
 use crate::{errors, Result};
 
 impl TypeFunc {
     pub fn validate(&self) -> Result<()> {
-        if let Ok(inp_id) = TypeId(self.inp).resolve_proxy() {
-            let inp_type = inp_id.as_type()?;
-            let Type::Struct(_) = inp_type else {
-                return Err(errors::invalid_input_type(&inp_id.repr()?));
+        if let Ok((_, inp_type)) = TypeId(self.inp).resolve_ref() {
+            let TypeDef::Struct(_) = inp_type else {
+                return Err(errors::invalid_input_type(&inp_type.id().repr()?));
             };
         }
 
@@ -23,12 +22,10 @@ impl TypeFunc {
 }
 
 pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) -> Result<()> {
-    let attrs = type_id.attrs()?;
-    let typ = attrs.concrete_type.as_type()?;
-    match typ {
-        Type::Func(_) => Err("cannot validate function".into()),
+    match TypeDef::try_from(type_id)? {
+        TypeDef::Func(_) => Err("cannot validate function".into()),
 
-        Type::Struct(inner) => {
+        TypeDef::Struct(inner) => {
             let Some(value) = value.as_object() else {
                 return Err(format!(
                     "expected object at {path:?}, got: {}",
@@ -47,7 +44,7 @@ pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) 
             Ok(())
         }
 
-        Type::List(inner) => {
+        TypeDef::List(inner) => {
             let Some(value) = value.as_array() else {
                 return Err(format!(
                     "expected array at {path:?}, got: {}",
@@ -62,7 +59,7 @@ pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) 
             Ok(())
         }
 
-        Type::Optional(inner) => {
+        TypeDef::Optional(inner) => {
             if value.is_null() {
                 return Ok(());
             }
@@ -70,7 +67,7 @@ pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) 
             Ok(())
         }
 
-        Type::Either(inner) => {
+        TypeDef::Either(inner) => {
             let mut match_count = 0;
             for type_id in inner.data.variants.iter() {
                 match validate_value(value, type_id.into(), path.clone()) {
@@ -93,7 +90,7 @@ pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) 
             }
         }
 
-        Type::Union(inner) => {
+        TypeDef::Union(inner) => {
             for type_id in inner.data.variants.iter() {
                 match validate_value(value, type_id.into(), path.clone()) {
                     Ok(()) => return Ok(()),
@@ -107,7 +104,7 @@ pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) 
             .into())
         }
 
-        Type::String(_inner) => {
+        TypeDef::String(_inner) => {
             let Some(_value) = value.as_str() else {
                 return Err(format!(
                     "expected string at {path:?}, got: {}",
@@ -119,7 +116,7 @@ pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) 
             Ok(())
         }
 
-        Type::Integer(_inner) => {
+        TypeDef::Integer(_inner) => {
             let Some(_value) = value.as_i64() else {
                 return Err(format!(
                     "expected integer at {path:?}, got: {}",
@@ -131,7 +128,7 @@ pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) 
             Ok(())
         }
 
-        Type::Float(_inner) => {
+        TypeDef::Float(_inner) => {
             let Some(_value) = value.as_f64() else {
                 return Err(format!(
                     "expected float at {path:?}, got: {}",
@@ -143,7 +140,7 @@ pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) 
             Ok(())
         }
 
-        Type::Boolean(_inner) => {
+        TypeDef::Boolean(_inner) => {
             let Some(_) = value.as_bool() else {
                 return Err(format!(
                     "expected boolean at {path:?}, got: {}",
@@ -167,16 +164,18 @@ pub(super) mod utils {
         if left == right {
             Ok(true)
         } else {
-            match left.resolve_proxy() {
-                Ok(left_id) => Ok(right
-                    .resolve_proxy()
-                    .map_or(left_id == right, |right_id| left_id == right_id)),
+            match left.resolve_ref() {
+                Ok((_, left_type)) => Ok(right
+                    .resolve_ref()
+                    .map_or(left_type.id() == right, |(_, right_type)| {
+                        left_type.id() == right_type.id()
+                    })),
 
                 // left is a proxy that could not be resolved
                 // -> right must be a proxy for the types to be equal
                 Err(_) => match (left.as_type()?, right.as_type()?) {
-                    (Type::Proxy(left_proxy), Type::Proxy(right_proxy)) => {
-                        Ok(left_proxy.data.name == right_proxy.data.name)
+                    (Type::Ref(left_proxy), Type::Ref(right_proxy)) => {
+                        Ok(left_proxy.name == right_proxy.name)
                     }
                     _ => Ok(false),
                 },

@@ -80,10 +80,7 @@ export class Typedef {
   }
 
   withPolicy(policy: PolicySpec[] | PolicySpec): this {
-    const id = core.withPolicy({
-      tpe: this._id,
-      chain: getPolicyChain(policy),
-    });
+    const id = core.withPolicy(this._id, getPolicyChain(policy));
 
     const chain = Array.isArray(policy) ? policy : [policy];
     return new Proxy(this, {
@@ -127,13 +124,17 @@ export class Typedef {
   }
 
   withInjection(injection: string) {
-    const wrapperId = core.withInjection({
-      tpe: this._id,
-      injection,
-    });
+    const wrapperId = core.withInjection(this._id, injection);
     return new Proxy(this, {
       get(target, prop, receiver) {
-        return prop === "_id" ? wrapperId : Reflect.get(target, prop, receiver);
+        switch (prop) {
+          case "_id":
+            return wrapperId;
+          case "injection":
+            return injection;
+          default:
+            return Reflect.get(target, prop, receiver);
+        }
       },
     }) as this;
   }
