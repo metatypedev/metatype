@@ -4,7 +4,7 @@
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-use crate::types::{Type, TypeId};
+use crate::types::{TypeDef, TypeId};
 
 use super::TypeGen;
 
@@ -154,7 +154,7 @@ pub(super) struct ScalarListFilter(pub TypeId);
 
 impl TypeGen for ScalarListFilter {
     fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
-        if let Type::Optional(_) = self.0.as_type()? {
+        if let Some(TypeDef::Optional(_)) = self.0.as_type_def()? {
             return Err("array of optional not supported".into());
         }
 
@@ -199,7 +199,7 @@ impl TypeGen for WithAggregateFilters {
 
     fn name(&self) -> String {
         // TODO model id??
-        let name = self.model_id.type_name().unwrap().unwrap();
+        let name = self.model_id.name().unwrap().unwrap();
         format!("{name}_with_aggregate_filters")
     }
 }
@@ -227,7 +227,7 @@ impl TypeGen for CountFilter {
     }
 
     fn name(&self) -> String {
-        let model_name = self.model_id.type_name().unwrap().unwrap();
+        let model_name = self.model_id.name().unwrap().unwrap();
         format!("_{model_name}_CountFilter")
     }
 }
@@ -250,13 +250,13 @@ impl TypeGen for AvgFilter {
             .unwrap()
             .iter_props()
             .filter_map(|(k, type_id)| {
-                let typ = type_id.as_type().unwrap();
-                let non_opt_type = match typ {
-                    Type::Optional(inner) => inner.item().as_type().unwrap(),
-                    _ => typ,
+                let (_, type_def) = type_id.resolve_ref().unwrap();
+                let non_opt_type = match type_def {
+                    TypeDef::Optional(inner) => inner.item().as_type_def().unwrap().unwrap(),
+                    _ => type_def,
                 };
                 match non_opt_type {
-                    Type::Integer(_) | Type::Float(_) => Some(k.to_string()),
+                    TypeDef::Integer(_) | TypeDef::Float(_) => Some(k.to_string()),
                     _ => None,
                 }
             })
@@ -266,7 +266,7 @@ impl TypeGen for AvgFilter {
     }
 
     fn name(&self) -> String {
-        let model_name = self.model_id.type_name().unwrap().unwrap();
+        let model_name = self.model_id.name().unwrap().unwrap();
         format!("_{model_name}_AvgFilter")
     }
 }
@@ -289,14 +289,14 @@ impl TypeGen for SumFilter {
             .unwrap()
             .iter_props()
             .filter_map(|(k, type_id)| {
-                let typ = type_id.as_type().unwrap();
-                let non_opt_type = match typ {
-                    Type::Optional(inner) => inner.item().as_type().unwrap(),
-                    _ => typ,
+                let (_, type_def) = type_id.resolve_ref().unwrap();
+                let non_opt_type = match type_def {
+                    TypeDef::Optional(inner) => inner.item().resolve_ref().unwrap().1,
+                    _ => type_def,
                 };
                 match non_opt_type {
-                    Type::Integer(_) => Some((k.to_string(), NumberType::Integer)),
-                    Type::Float(_) => Some((k.to_string(), NumberType::Float)),
+                    TypeDef::Integer(_) => Some((k.to_string(), NumberType::Integer)),
+                    TypeDef::Float(_) => Some((k.to_string(), NumberType::Float)),
                     _ => None,
                 }
             })
@@ -306,7 +306,7 @@ impl TypeGen for SumFilter {
     }
 
     fn name(&self) -> String {
-        let model_name = self.model_id.type_name().unwrap().unwrap();
+        let model_name = self.model_id.name().unwrap().unwrap();
         format!("_{model_name}_SumFilter")
     }
 }

@@ -197,7 +197,7 @@ macro_rules! prisma_op {
 
         let mat = PrismaMaterializer {
             table: $crate::types::TypeId($model)
-                .type_name()?
+                .name()?
                 .ok_or_else(|| "prisma model must be named".to_string())?,
             operation: $name.to_string(),
             ordered_keys: None,

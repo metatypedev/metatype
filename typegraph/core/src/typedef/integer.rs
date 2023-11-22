@@ -5,33 +5,30 @@ use common::typegraph::{IntegerTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base, TypeConversion},
+    conversion::types::{BaseBuilderInit, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{Integer, TypeData},
+    types::{Integer, TypeDefData},
     wit::core::TypeInteger,
 };
 
 impl TypeConversion for Integer {
-    fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
-        let enumeration = self
-            .data
-            .enumeration
-            .clone()
-            .map(|enums| enums.iter().map(|v| format!("{}", v)).collect());
-
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Integer {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("integer_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .enum_(enumeration)
+            base: BaseBuilderInit {
+                ctx,
+                base_name: "integer",
+                type_id: self.id,
+                name: self.base.name.clone(),
+                runtime_idx: runtime_id.unwrap(),
+                policies: &self.extended_base.policies,
+                runtime_config: self.base.runtime_config.as_deref(),
+            }
+            .init_builder()?
+            .enum_(self.data.enumeration.as_deref())
+            .inject(self.extended_base.injection.clone())?
             .id(self.base.as_id)
-            .build(),
+            .build()?,
             data: IntegerTypeData {
                 minimum: self.data.min,
                 maximum: self.data.max,
@@ -43,7 +40,7 @@ impl TypeConversion for Integer {
     }
 }
 
-impl TypeData for TypeInteger {
+impl TypeDefData for TypeInteger {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         if let Some(min) = self.min {
             params.push(format!("min={}", min));
@@ -62,9 +59,7 @@ impl TypeData for TypeInteger {
         }
     }
 
-    fn variant_name(&self) -> String {
-        "integer".to_string()
+    fn variant_name(&self) -> &'static str {
+        "integer"
     }
-
-    super::impl_into_type!(concrete, Integer);
 }

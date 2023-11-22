@@ -5,33 +5,36 @@ use common::typegraph::{TypeNode, UnionTypeData};
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base, TypeConversion},
+    conversion::types::{BaseBuilderInit, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{TypeData, TypeId, Union},
+    types::{TypeDefData, TypeId, Union},
     wit::core::TypeUnion,
 };
 
 impl TypeConversion for Union {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Union {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("union_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .build(),
+            base: BaseBuilderInit {
+                ctx,
+                base_name: "union",
+                type_id: self.id,
+                name: self.base.name.clone(),
+                runtime_idx: runtime_id.unwrap(),
+                policies: &self.extended_base.policies,
+                runtime_config: self.base.runtime_config.as_deref(),
+            }
+            .init_builder()?
+            .build()?,
             data: UnionTypeData {
                 any_of: self
                     .data
                     .variants
                     .iter()
                     .map(|vid| -> Result<_> {
-                        let id = TypeId(*vid).resolve_proxy()?;
-                        Ok(ctx.register_type(id, runtime_id)?.into())
+                        Ok(ctx
+                            .register_type(TypeId(*vid).try_into()?, runtime_id)?
+                            .into())
                     })
                     .collect::<Result<Vec<_>>>()?,
             },
@@ -39,16 +42,14 @@ impl TypeConversion for Union {
     }
 }
 
-impl TypeData for TypeUnion {
+impl TypeDefData for TypeUnion {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         for (i, tpe_id) in self.variants.iter().enumerate() {
             params.push(format!("[v{}] => #{}", i, tpe_id));
         }
     }
 
-    fn variant_name(&self) -> String {
-        "union".to_string()
+    fn variant_name(&self) -> &'static str {
+        "union"
     }
-
-    super::impl_into_type!(concrete, Union);
 }
