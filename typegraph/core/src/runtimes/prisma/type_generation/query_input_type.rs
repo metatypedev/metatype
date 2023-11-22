@@ -9,7 +9,7 @@ use crate::{
 };
 
 use super::{
-    additional_filters::{Distinct, Skip, Take},
+    additional_filters::{Cursor, Distinct, Skip, Take},
     group_by::{GroupingFields, Having},
     order_by::OrderBy,
     query_where_expr::QueryWhereExpr,
@@ -49,7 +49,11 @@ impl TypeGen for QueryInputType {
             )?
             .propx("orderBy", t::optional(context.generate(&order_by)?))?
             .propx("take", t::optional(context.generate(&Take)?))?
-            .propx("skip", t::optional(context.generate(&Skip)?))?;
+            .propx("skip", t::optional(context.generate(&Skip)?))?
+            .propx(
+                "cursor",
+                t::optional(context.generate(&Cursor::new(self.model_id))?),
+            )?;
 
         if self.is_group_by {
             builder.prop("by", context.generate(&GroupingFields::new(self.model_id))?);
