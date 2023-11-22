@@ -238,6 +238,14 @@ export async function temporal_workflow_query(
     return { Err: { message: err.toString() } };
   }
 }
+
+export type WasiVmInitConfig = {
+  vm_name: string;
+  pylib_path: string;
+  wasi_mod_path: string;
+  preopens: Array<string>;
+};
+
 export type WasiVmSetupOut =
   | "Ok"
   | {
@@ -248,7 +256,6 @@ export type WasiVmSetupOut =
 export type WasiVmUnregisterInp = {
   vm_name: string;
 };
-
 export function register_virtual_machine(a0: WasiVmInitConfig): WasiVmSetupOut {
   try {
     Meta.python.registerVm(a0);
@@ -418,26 +425,13 @@ export type PrismaDiffInp = {
   datamodel: string;
   script: boolean;
 };
-export type PrismaDiffOut =
-  | {
-    Ok: {
-      diff: string | undefined | null;
-    };
-  }
-  | {
-    Err: {
-      message: string;
-    };
-  };
 
-export async function prisma_diff(a0: PrismaDiffInp) {
-  try {
-    const res = await Meta.prisma.diff(a0);
-    return { Ok: { diff: res } };
-  } catch (err) {
-    return { Err: { message: err.toString() } };
-  }
+export async function prisma_diff(
+  a0: PrismaDiffInp,
+): Promise<string | null | undefined> {
+  return await Meta.prisma.diff(a0);
 }
+
 export type PrismaApplyResult =
   | {
     Err: {

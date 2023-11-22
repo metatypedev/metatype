@@ -195,9 +195,7 @@ export class PrismaMigrationRuntime extends Runtime {
 
           return {
             runtimeName: name,
-            diff: nativeResult(
-              await native.prisma_diff({ datasource, datamodel, script }),
-            ).diff,
+            diff: await native.prisma_diff({ datasource, datamodel, script }),
           };
         }) as Resolver;
         break;

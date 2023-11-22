@@ -84,18 +84,18 @@ impl PrismaLink {
     }
 
     fn build_link(&self) -> Result<TypeId> {
-        let mut proxy = t::proxy(&self.type_name);
+        let mut type_ref = t::ref_(&self.type_name);
         if let Some(rel_name) = self.rel_name.clone() {
-            proxy.set("rel_name", rel_name);
+            type_ref.set("rel_name", rel_name);
         }
         if let Some(fkey) = self.fkey {
-            proxy.set("fkey", format!("{fkey}"));
+            type_ref.set("fkey", format!("{fkey}"));
         }
         if let Some(target_field) = self.target_field.clone() {
-            proxy.set("target_field", target_field);
+            type_ref.set("target_field", target_field);
         }
-        let res = proxy.build()?;
-        eprintln!("proxy: {:?}", res);
+        let res = type_ref.build()?;
+        eprintln!("type_ref: {:?}", res);
         Ok(res)
     }
 }
@@ -113,7 +113,7 @@ pub fn prisma_linkx(typ: impl TypeBuilder) -> Result<PrismaLink> {
 
 pub fn prisma_link(type_id: TypeId) -> Result<PrismaLink> {
     let name = type_id
-        .type_name()?
+        .name()?
         .ok_or_else(|| "Prisma link target must be named".to_string())?;
     Ok(prisma_linkn(name))
 }
@@ -157,7 +157,7 @@ mod test {
         let user = t::struct_()
             .propx("id", t::integer().as_id(true))?
             .propx("name", t::string())?
-            .propx("posts", t::listx(t::proxy("Post"))?)?
+            .propx("posts", t::listx(t::ref_("Post"))?)?
             .named("User")
             .build()?;
 
@@ -189,14 +189,14 @@ mod test {
             .propx("id", t::integer().as_id(true))?
             .propx(
                 "profile",
-                prisma_linkx(t::optionalx(t::proxy("Profile"))?)?.fkey(true),
+                prisma_linkx(t::optionalx(t::ref_("Profile"))?)?.fkey(true),
             )?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
             .propx("id", t::integer().as_id(true))?
-            .propx("user", t::optionalx(t::proxy("User"))?)?
+            .propx("user", t::optionalx(t::ref_("User"))?)?
             .named("Profile")
             .build()?;
 
@@ -221,14 +221,14 @@ mod test {
             .propx("id", t::integer().as_id(true))?
             .propx(
                 "profile",
-                t::optionalx(t::proxy("Profile"))?.config("unique", "true"),
+                t::optionalx(t::ref_("Profile"))?.config("unique", "true"),
             )?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
             .propx("id", t::integer().as_id(true))?
-            .propx("user", t::optionalx(t::proxy("User"))?)?
+            .propx("user", t::optionalx(t::ref_("User"))?)?
             .named("Profile")
             .build()?;
 
@@ -250,8 +250,8 @@ mod test {
         Store::reset();
         let node = t::struct_()
             .propx("id", t::string().as_id(true))?
-            .propx("children", t::listx(t::proxy("Node"))?)?
-            .propx("parent", t::proxy("Node"))?
+            .propx("children", t::listx(t::ref_("Node"))?)?
+            .propx("parent", t::ref_("Node"))?
             .named("Node")
             .build()?;
 
@@ -272,13 +272,13 @@ mod test {
         Store::reset();
         let user = t::struct_()
             .propx("id", t::integer().as_id(true))?
-            .propx("profile", t::proxy("Profile"))?
+            .propx("profile", t::ref_("Profile"))?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
             .propx("id", t::integer().as_id(true))?
-            .propx("user", t::proxy("User"))?
+            .propx("user", t::ref_("User"))?
             .named("Profile")
             .build()?;
 
@@ -297,13 +297,13 @@ mod test {
         Store::reset();
         let user = t::struct_()
             .propx("id", t::integer().as_id(true))?
-            .propx("profile", t::optionalx(t::proxy("Profile"))?)?
+            .propx("profile", t::optionalx(t::ref_("Profile"))?)?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
             .propx("id", t::integer().as_id(true))?
-            .propx("user", t::optionalx(t::proxy("User"))?)?
+            .propx("user", t::optionalx(t::ref_("User"))?)?
             .named("Profile")
             .build()?;
 

@@ -32,6 +32,13 @@ impl<T> InjectionData<T> {
             InjectionData::ValueByEffect(m) => m.values().collect(),
         }
     }
+
+    pub fn values_mut(&mut self) -> Vec<&mut T> {
+        match self {
+            InjectionData::SingleValue(v) => vec![&mut v.value],
+            InjectionData::ValueByEffect(m) => m.values_mut().collect(),
+        }
+    }
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

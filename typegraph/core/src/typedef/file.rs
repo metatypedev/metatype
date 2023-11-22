@@ -3,13 +3,13 @@
 
 use common::typegraph::{FileTypeData, TypeNode};
 
-use crate::conversion::types::{gen_base, TypeConversion};
+use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
-use crate::types::{File, TypeData};
+use crate::types::{File, TypeDefData};
 use crate::wit::core::TypeFile;
 
-impl TypeData for TypeFile {
+impl TypeDefData for TypeFile {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         if let Some(min) = self.min {
             params.push(format!("min={}", min));
@@ -27,26 +27,26 @@ impl TypeData for TypeFile {
         }
     }
 
-    fn variant_name(&self) -> String {
-        "file".to_string()
+    fn variant_name(&self) -> &'static str {
+        "file"
     }
-
-    super::impl_into_type!(concrete, File);
 }
 
 impl TypeConversion for File {
-    fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::File {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("file_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .id(self.base.as_id)
-            .build(),
+            // TODO should `as_id` be supported?
+            base: BaseBuilderInit {
+                ctx,
+                base_name: "file",
+                type_id: self.id,
+                name: self.base.name.clone(),
+                runtime_idx: runtime_id.unwrap(),
+                policies: &self.extended_base.policies,
+                runtime_config: self.base.runtime_config.as_deref(),
+            }
+            .init_builder()?
+            .build()?,
             data: FileTypeData {
                 min_size: self.data.min,
                 max_size: self.data.max,

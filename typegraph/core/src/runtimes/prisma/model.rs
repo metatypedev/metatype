@@ -8,7 +8,8 @@ use indexmap::IndexMap;
 use crate::errors::Result;
 use crate::runtimes::prisma::errors;
 use crate::runtimes::prisma::type_utils::RuntimeConfig;
-use crate::types::{Type, TypeAttributes, TypeFun};
+use crate::types::type_ref::RefData;
+use crate::types::{TypeDef, TypeDefExt};
 use crate::validation::types::validate_value;
 use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
 
@@ -35,7 +36,7 @@ impl TryFrom<TypeId> for Model {
             .collect::<Result<IndexMap<_, _>>>()?;
 
         let type_name = type_id
-            .type_name()?
+            .name()?
             .ok_or_else(|| errors::unnamed_model(&type_id.repr().unwrap()))?;
 
         let id_field = Self::find_id_field(&type_name, &props)?;
@@ -58,10 +59,10 @@ impl Model {
                 Property::Scalar(prop) => match prop.quantifier {
                     Cardinality::One => prop
                         .type_id
-                        .as_type()
+                        .as_type_def()
                         .unwrap()
-                        .get_base()
                         .unwrap()
+                        .base()
                         .as_id
                         .then(|| k.clone()),
                     _ => None,
@@ -107,15 +108,18 @@ pub struct RelationshipAttributes {
     pub fkey: Option<bool>,
 }
 
-impl TryFrom<TypeAttributes> for RelationshipAttributes {
-    type Error = crate::wit::core::Error;
+impl RelationshipAttributes {
+    pub fn new(ref_data: Option<&RefData>) -> Result<Self> {
+        let Some(ref_data) = ref_data else {
+            return Ok(Self::default());
+        };
 
-    fn try_from(attrs: TypeAttributes) -> Result<Self> {
-        let proxy_data = attrs.proxy_data;
+        let attrs = &ref_data.attributes;
+
         Ok(Self {
-            name: proxy_data.get("rel_name").cloned(),
-            target_field: proxy_data.get("target_field").cloned(),
-            fkey: proxy_data
+            name: attrs.get("rel_name").cloned(),
+            target_field: attrs.get("target_field").cloned(),
+            fkey: attrs
                 .get("fkey")
                 .map(|v| serde_json::from_str(v).map_err(|e| e.to_string()))
                 .transpose()?,
@@ -141,9 +145,8 @@ pub struct RelationshipProperty {
 
 impl Property {
     fn new(wrapper_type_id: TypeId) -> Result<Self> {
-        let attrs = wrapper_type_id.attrs()?;
-        let typ = attrs.concrete_type.as_type()?;
-        let runtime_config = RuntimeConfig::new(typ.get_base().unwrap().runtime_config.as_ref());
+        let (ref_data, type_def) = wrapper_type_id.resolve_ref()?;
+        let runtime_config = RuntimeConfig::new(type_def.base().runtime_config.as_ref());
         let unique = runtime_config.get("unique")?.unwrap_or(false);
         let auto = runtime_config.get("auto")?.unwrap_or(false);
         let default_value = runtime_config.get("default")?;
@@ -155,22 +158,19 @@ impl Property {
             )?;
         }
 
-        let (type_id, card) = match typ {
-            Type::Optional(inner) => (
-                TypeId(inner.data.of).attrs()?.concrete_type,
+        let (inner_type_def, card) = match &type_def {
+            TypeDef::Optional(ref inner) => (
+                TypeId(inner.data.of).resolve_ref()?.1,
                 Cardinality::Optional,
             ),
-            Type::List(inner) => (
-                TypeId(inner.data.of).attrs()?.concrete_type,
-                Cardinality::Many,
-            ),
-            _ => (attrs.concrete_type, Cardinality::One),
+            TypeDef::List(inner) => (TypeId(inner.data.of).resolve_ref()?.1, Cardinality::Many),
+            _ => (type_def.clone(), Cardinality::One),
         };
 
         let scalar = |typ, injection| {
             Self::Scalar(ScalarProperty {
                 wrapper_type_id,
-                type_id,
+                type_id: inner_type_def.id(),
                 prop_type: typ,
                 injection,
                 quantifier: card,
@@ -180,32 +180,34 @@ impl Property {
             })
         };
 
-        match attrs
+        match type_def
+            .x_base()
             .injection
             .as_ref()
+            .map(|i| i.as_ref())
             .map(Injection::try_from)
             .transpose()
         {
-            Ok(injection) => match type_id.as_type()? {
-                Type::Struct(_) => {
+            Ok(injection) => match &inner_type_def {
+                TypeDef::Struct(_) => {
                     if injection.is_some() {
                         return Err("injection not supported for models".to_string().into());
                     }
                     Ok(Self::Model(RelationshipProperty {
                         wrapper_type_id,
-                        model_id: type_id,
+                        model_id: inner_type_def.id(),
                         quantifier: card,
-                        relationship_attributes: RelationshipAttributes::try_from(attrs)?,
+                        relationship_attributes: RelationshipAttributes::new(ref_data.as_ref())?,
                         unique,
                     }))
                 }
-                Type::Optional(_) | Type::List(_) => {
+                TypeDef::Optional(_) | TypeDef::List(_) => {
                     Err("nested optional/list not supported".into())
                 }
-                Type::Integer(_) => Ok(scalar(ScalarType::Integer, injection)),
-                Type::Float(_) => Ok(scalar(ScalarType::Float, injection)),
-                Type::Boolean(_) => Ok(scalar(ScalarType::Boolean, injection)),
-                Type::String(inner) => Ok(scalar(
+                TypeDef::Integer(_) => Ok(scalar(ScalarType::Integer, injection)),
+                TypeDef::Float(_) => Ok(scalar(ScalarType::Float, injection)),
+                TypeDef::Boolean(_) => Ok(scalar(ScalarType::Boolean, injection)),
+                TypeDef::String(inner) => Ok(scalar(
                     ScalarType::String {
                         format: match inner.data.format.as_deref() {
                             Some("uuid") => StringType::Uuid,
@@ -215,7 +217,7 @@ impl Property {
                     },
                     injection,
                 )),
-                Type::Func(_) => {
+                TypeDef::Func(_) => {
                     if injection.is_some() {
                         Err("injection not supported for function type".into())
                     } else {
@@ -224,16 +226,16 @@ impl Property {
                 }
                 _ => Err("unsupported property type".into()),
             },
-            Err(_) => match type_id.as_type()? {
-                Type::Func(_) => Err("injection not supported on t::struct()".into()),
-                Type::Optional(_) | Type::List(_) => {
+            Err(_) => match inner_type_def {
+                TypeDef::Func(_) => Err("injection not supported on t::struct()".into()),
+                TypeDef::Optional(_) | TypeDef::List(_) => {
                     Err("nested optional/list not supported".into())
                 }
-                Type::Struct(_)
-                | Type::String(_)
-                | Type::Integer(_)
-                | Type::Float(_)
-                | Type::Boolean(_) => Ok(Self::Unmanaged(wrapper_type_id)),
+                TypeDef::Struct(_)
+                | TypeDef::String(_)
+                | TypeDef::Integer(_)
+                | TypeDef::Float(_)
+                | TypeDef::Boolean(_) => Ok(Self::Unmanaged(wrapper_type_id)),
                 _ => Err("unsupported property type".into()),
             },
         }
@@ -328,4 +330,41 @@ pub struct ScalarProperty {
     pub unique: bool,
     pub auto: bool,
     pub default_value: Option<serde_json::Value>,
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+
+    impl Property {
+        fn as_scalar(&self) -> Option<&ScalarProperty> {
+            match self {
+                Property::Scalar(s) => Some(s),
+                _ => None,
+            }
+        }
+    }
+
+    #[test]
+    fn test_injection() -> Result<()> {
+        let type1 = t::struct_()
+            .propx("one", t::string().as_id(true))?
+            .propx("two", t::string().set_value("Hello".to_string()))?
+            .named("A")
+            .build()?;
+        let model = Model::try_from(type1)?;
+
+        let one = model.props.get("one");
+        assert!(matches!(model.props.get("one"), Some(Property::Scalar(_))));
+        let one = one.unwrap().as_scalar().unwrap();
+        assert!(one.injection.is_none());
+
+        assert!(matches!(
+            model.props.get("two"),
+            Some(Property::Unmanaged(_))
+        ));
+
+        Ok(())
+    }
 }

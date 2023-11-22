@@ -120,7 +120,6 @@ impl<'a> Codegen<'a> {
                     .strip_prefix("file:")
                     .map(|s| s.find(';').map(|i| &s[..i]).unwrap_or(s))
                 {
-                    log::debug!("Found module: {}", relpath);
                     let path = {
                         let mut path = base_dir.clone();
                         // TODO is this necessary?? py-tg yields absolute path!!
@@ -134,11 +133,8 @@ impl<'a> Codegen<'a> {
                             exports: RefCell::new(None), // lazy
                         },
                     );
-                } else {
-                    log::debug!("Not a file: {}", code);
                 }
             }
-            log::debug!("{modules:?}");
             modules
         };
         Codegen {
@@ -192,7 +188,6 @@ impl<'a> Codegen<'a> {
         self.generate(gen_list)
             .into_iter()
             .map(|(name, code)| -> Result<ModuleCode> {
-                log::debug!("Codegen::codegen: name={name:?}");
                 let path = self.ts_modules.remove(&name).unwrap().path;
                 let code = ts::format_text(&path, &code)
                     .context(format!("could not format code: {code:#?}"))?;

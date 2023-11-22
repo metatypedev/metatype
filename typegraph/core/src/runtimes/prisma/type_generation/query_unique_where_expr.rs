@@ -41,7 +41,7 @@ impl TypeGen for QueryUniqueWhereExpr {
     }
 
     fn name(&self) -> String {
-        let name = self.model_id.type_name().unwrap().unwrap();
+        let name = self.model_id.name().unwrap().unwrap();
         format!("QueryUnique{}WhereInput", name)
     }
 }

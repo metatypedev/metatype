@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::Result;
-use crate::types::TypeId;
+use crate::global_store::{NameRegistration, Store};
+use crate::types::{ExtendedTypeBase, TypeDefExt, TypeId};
 use crate::wit::core::{
     Guest, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
-    TypeProxy, TypeString, TypeStruct, TypeUnion,
+    TypeString, TypeStruct, TypeUnion,
 };
 
 pub trait TypeBuilder {
@@ -33,6 +34,7 @@ impl TypeBuilder for TypeId {
 
 pub trait ConcreteTypeBuilder: TypeBuilder {
     fn base_mut(&mut self) -> &mut TypeBase;
+    fn xbase_mut(&mut self) -> &mut ExtendedTypeBase;
 
     fn named(&mut self, name: impl Into<String>) -> &mut Self {
         self.base_mut().name = Some(name.into());
@@ -41,6 +43,19 @@ pub trait ConcreteTypeBuilder: TypeBuilder {
 
     fn as_id(&mut self, as_id: bool) -> &mut Self {
         self.base_mut().as_id = as_id;
+        self
+    }
+
+    fn inject(&mut self, injection: Injection) -> &mut Self {
+        self.xbase_mut().injection = Some(Box::new(injection));
+        self
+    }
+
+    fn set_value<V: serde::ser::Serialize>(&mut self, val: V) -> &mut Self {
+        self.inject(Injection::Static(InjectionData::SingleValue(SingleValue {
+            value: serde_json::to_string(&val).unwrap(),
+        })));
+        eprintln!("set injection: {:?}", self.xbase_mut().injection);
         self
     }
 
@@ -60,6 +75,7 @@ pub trait ConcreteTypeBuilder: TypeBuilder {
 #[derive(Default)]
 pub struct BooleanBuilder {
     base: TypeBase,
+    extended_base: ExtendedTypeBase,
 }
 
 pub fn boolean() -> BooleanBuilder {
@@ -69,6 +85,7 @@ pub fn boolean() -> BooleanBuilder {
 #[derive(Default)]
 pub struct IntegerBuilder {
     base: TypeBase,
+    extended_base: ExtendedTypeBase,
     data: TypeInteger,
 }
 
@@ -119,6 +136,7 @@ pub fn integer() -> IntegerBuilder {
 #[derive(Default)]
 pub struct FloatBuilder {
     base: TypeBase,
+    extended_base: ExtendedTypeBase,
     data: TypeFloat,
 }
 
@@ -169,6 +187,7 @@ pub fn float() -> FloatBuilder {
 #[derive(Default)]
 pub struct StringBuilder {
     base: TypeBase,
+    extended_base: ExtendedTypeBase,
     data: TypeString,
 }
 
@@ -210,6 +229,7 @@ impl StringBuilder {
 #[derive(Default)]
 pub struct OptionalBuilder {
     base: TypeBase,
+    extended_base: ExtendedTypeBase,
     data: TypeOptional,
 }
 
@@ -225,6 +245,7 @@ impl Default for TypeOptional {
 pub fn optional(ty: TypeId) -> OptionalBuilder {
     OptionalBuilder {
         base: TypeBase::default(),
+        extended_base: ExtendedTypeBase::default(),
         data: TypeOptional {
             of: ty.into(),
             default_item: None,
@@ -239,6 +260,7 @@ pub fn optionalx(item_builder: impl TypeBuilder) -> Result<OptionalBuilder> {
 #[derive(Default)]
 pub struct ListBuilder {
     base: TypeBase,
+    extended_base: ExtendedTypeBase,
     data: TypeList,
 }
 
@@ -256,6 +278,7 @@ impl Default for TypeList {
 pub fn list(ty: TypeId) -> ListBuilder {
     ListBuilder {
         base: TypeBase::default(),
+        extended_base: ExtendedTypeBase::default(),
         data: TypeList {
             of: ty.into(),
             ..Default::default()
@@ -270,6 +293,7 @@ pub fn listx(item_builder: impl TypeBuilder) -> Result<ListBuilder> {
 #[derive(Default)]
 pub struct UnionBuilder {
     base: TypeBase,
+    extended_base: ExtendedTypeBase,
     data: TypeUnion,
 }
 
@@ -312,11 +336,13 @@ macro_rules! unionx {
         crate::t::unionx![$($ty),*]
     };
 }
+use common::typegraph::{Injection, InjectionData, SingleValue};
 pub(crate) use unionx;
 
 #[derive(Default)]
 pub struct EitherBuilder {
     base: TypeBase,
+    extended_base: ExtendedTypeBase,
     data: TypeEither,
 }
 
@@ -352,6 +378,7 @@ pub(crate) use eitherx;
 #[derive(Default)]
 pub struct StructBuilder {
     base: TypeBase,
+    extended_base: ExtendedTypeBase,
     data: TypeStruct,
 }
 
@@ -448,34 +475,23 @@ pub fn func(inp: TypeId, out: TypeId, mat: u32) -> Result<TypeId> {
     .build()
 }
 
-#[derive(Default)]
-pub struct ProxyBuilder {
-    data: TypeProxy,
+pub struct RefBuilder {
+    name: String,
+    attributes: Vec<(String, String)>,
 }
 
-impl Default for TypeProxy {
-    fn default() -> Self {
-        Self {
-            name: "".to_string(),
-            extras: vec![],
-        }
-    }
-}
-
-impl ProxyBuilder {
+impl RefBuilder {
     /// Adds extra data entry in the proxy
     pub fn set(&mut self, key: impl Into<String>, value: impl Into<String>) -> &mut Self {
-        self.data.extras.push((key.into(), value.into()));
+        self.attributes.push((key.into(), value.into()));
         self
     }
 }
 
-pub fn proxy(name: impl Into<String>) -> ProxyBuilder {
-    ProxyBuilder {
-        data: TypeProxy {
-            name: name.into(),
-            ..Default::default()
-        },
+pub fn ref_(name: impl Into<String>) -> RefBuilder {
+    RefBuilder {
+        name: name.into(),
+        attributes: Vec::new(),
     }
 }
 
@@ -483,14 +499,27 @@ macro_rules! impl_type_builder {
     ( $ty:ty, $build:ident ) => {
         impl TypeBuilder for $ty {
             fn build(&self) -> Result<TypeId> {
-                let builder = self.clone();
-                Ok($crate::Lib::$build(builder.data.clone(), builder.base.clone())?.into())
+                let res = $crate::Lib::$build(self.data.clone(), self.base.clone())?;
+                if !self.extended_base.is_empty() {
+                    let type_def = TypeId(res).as_type_def()?.unwrap();
+                    Store::register_type_def(
+                        move |id| type_def.with_x_base(id, self.extended_base.clone()),
+                        NameRegistration(false),
+                    )
+                    .into()
+                } else {
+                    Ok(res.into())
+                }
             }
         }
 
         impl ConcreteTypeBuilder for $ty {
             fn base_mut(&mut self) -> &mut TypeBase {
                 &mut self.base
+            }
+
+            fn xbase_mut(&mut self) -> &mut ExtendedTypeBase {
+                &mut self.extended_base
             }
         }
     };
@@ -506,13 +535,27 @@ macro_rules! impl_type_builder {
 }
 impl TypeBuilder for BooleanBuilder {
     fn build(&self) -> Result<TypeId> {
-        Ok(crate::Lib::booleanb(self.base.clone())?.into())
+        let res = crate::Lib::booleanb(self.base.clone())?;
+        if !self.extended_base.is_empty() {
+            let type_def = TypeId(res).as_type_def()?.unwrap();
+            Store::register_type_def(
+                move |id| type_def.with_x_base(id, self.extended_base.clone()),
+                // TODO
+                NameRegistration(false),
+            )
+        } else {
+            Ok(res.into())
+        }
     }
 }
 
 impl ConcreteTypeBuilder for BooleanBuilder {
     fn base_mut(&mut self) -> &mut TypeBase {
         &mut self.base
+    }
+
+    fn xbase_mut(&mut self) -> &mut ExtendedTypeBase {
+        &mut self.extended_base
     }
 }
 
@@ -525,4 +568,9 @@ impl_type_builder!(UnionBuilder, unionb);
 impl_type_builder!(EitherBuilder, eitherb);
 impl_type_builder!(StructBuilder, structb);
 impl_type_builder!(FuncBuilder, funcb, true);
-impl_type_builder!(ProxyBuilder, proxyb, true);
+
+impl TypeBuilder for RefBuilder {
+    fn build(&self) -> Result<TypeId> {
+        Ok(crate::Lib::refb(self.name.clone(), self.attributes.clone())?.into())
+    }
+}

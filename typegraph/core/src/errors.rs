@@ -24,12 +24,13 @@ impl From<&str> for TgError {
 }
 
 pub trait ErrorContext {
-    fn context(self, ctx: String) -> Self;
+    fn context(self, ctx: impl ToString) -> Self;
     fn with_context(self, ctx: impl Fn() -> String) -> Self;
 }
 
 impl<T> ErrorContext for Result<T> {
-    fn context(self, ctx: String) -> Self {
+    fn context(self, ctx: impl ToString) -> Self {
+        let ctx = ctx.to_string();
         self.map_err(|mut e| {
             e.stack.push(ctx);
             e
@@ -104,8 +105,12 @@ pub fn invalid_path(pos: usize, path: &[String], curr_keys: &[String]) -> TgErro
     .into()
 }
 
-pub fn expect_object_at_path(path: &[String]) -> TgError {
-    format!("object was expected at path {:?}", path.join(".")).into()
+pub fn expect_object_at_path(path: &[String], actual: &str) -> TgError {
+    format!(
+        "object was expected at path {:?}; but got: {actual}",
+        path.join(".")
+    )
+    .into()
 }
 
 pub fn unknown_predefined_function(name: &str, runtime: &str) -> TgError {
@@ -116,10 +121,6 @@ pub fn duplicate_policy_name(name: &str) -> TgError {
     format!("duplicate policy name '{name}'").into()
 }
 
-pub fn base_required(name: &str) -> TgError {
-    format!("Concrete type '{name}' must have a base.").into()
-}
-
-pub fn base_not_allowed(name: &str) -> TgError {
-    format!("Wrapper type '{name}' must not have a base.").into()
+pub fn nested_type_ref(name: &str, nested: &str) -> TgError {
+    format!("nested type reference is not allowed: -> '{name}' -> '{nested}'").into()
 }

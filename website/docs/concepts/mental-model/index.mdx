@@ -9,7 +9,7 @@ import Metatype from "../../../shared/metatype-intro.mdx";
 This page gives a high-level view of Metatype's foundations.
 
 :::tip Looking to build?
-For a hands-on introduction, head over to the [getting started page](/docs/tutorials/getting-started) and start build your first typegraph.
+For a hands-on introduction, head over to the [metatype basics page](/docs/tutorials/metatype-basics) and start build your first typegraph.
 :::
 
 ## Why does Metatype exist?
@@ -31,11 +31,11 @@ When developing a feature, the classical approach is to define what data will be
 
 |                       | Classical approach                  | Metatype's computing model                                                                 |
 | --------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------ |
-| What (data)           | fixed response defined by the logic | API clients selects what they need from [types](/docs/concepts/typegraph#types)            |
-| How (transformations) | ad-hoc code logic                   | composed data with interchangeable [materializers](/docs/concepts/typegraph#materializers) |
-| Where (execution)     | 1 code base + 1 database            | orchestrate the request across multiple [runtimes](/docs/concepts/typegraph#runtimes)      |
-| Who (authentication)  | hard-coded rules or system          | request context based and controlled by [policies](/docs/concepts/typegraph#policies)      |
-| When (event)          | request arrival                     | based on [triggers](/docs/concepts/typegraph#triggers)                                     |
+| What (data)           | fixed response defined by the logic | API clients selects what they need from [types](/docs/concepts/mental-model#types)            |
+| How (transformations) | ad-hoc code logic                   | composed data with interchangeable [materializers](/docs/concepts/mental-model#materializers) |
+| Where (execution)     | 1 code base + 1 database            | orchestrate the request across multiple [runtimes](/docs/concepts/mental-model#runtimes)      |
+| Who (authentication)  | hard-coded rules or system          | request context based and controlled by [policies](/docs/concepts/mental-model#policies)      |
+| When (event)          | request arrival                     | based on [triggers](/docs/concepts/mental-model#triggers)                                     |
 
 This computing model brings numerous advantages:
 
@@ -66,7 +66,7 @@ import gql from "graphql-tag";
 
 # Typegraph
 
-Typegraph is a [Python package](https://pypi.org/project/typegraph/) for building virtual graphs of types and managing their metadata. The name also refers to the [typegraph specification](/docs/reference/specifications) which is a file format, currently in JSON, describing all elements of a typegraph.
+Typegraph is a [Python package](https://pypi.org/project/typegraph/) for building virtual graphs of types and managing their metadata. The name also refers to the [typegraph specification](/docs/reference/typegraph) which is a file format, currently in JSON, describing all elements of a typegraph.
 
 :::info Why Python?
 Python was historically chosen during Metatype's prototyping phase and remained since then the default way to describe typegraphs. Its great readability and dynamic typing make it a very accessible language for everyone to pick up quickly.
@@ -102,7 +102,7 @@ In practice, materializers are often not explicitly used and the usage of runtim
 
 ## Policies
 
-Policies are a special type of function `t.func(t.struct({...}), t.boolean().optional())` attachable to any other type. They are evaluated once per request and determine whether one of the polices authorizes the access or not. They receive the request context (see [typegate](./typegate)) as argument allowing you to implement authorization, access control, or any other business logic.
+Policies are a special type of function `t.func(t.struct({...}), t.boolean().optional())` attachable to any other type. They are evaluated once per request and determine whether one of the polices authorizes the access or not. They receive the request context (see [typegate](/docs/reference/typegate)) as argument allowing you to implement authorization, access control, or any other business logic.
 
 The policy decision can be:
 
