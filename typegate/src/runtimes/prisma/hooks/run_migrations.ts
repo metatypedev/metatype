@@ -70,13 +70,11 @@ export const runMigrations: PushHandler = async (
       }
 
       // diff
-      const { diff } = nativeResult(
-        await native.prisma_diff({
-          datasource,
-          datamodel,
-          script: false,
-        }),
-      );
+      const diff = await native.prisma_diff({
+        datasource,
+        datamodel,
+        script: false,
+      });
 
       if (diff != null) {
         response.info(`Changes detected in the schema: ${diff}`);
@@ -126,13 +124,11 @@ export const runMigrations: PushHandler = async (
       }
     } else { // like `meta prisma deploy`
       // diff
-      const { diff } = nativeResult(
-        await native.prisma_diff({
-          datasource,
-          datamodel,
-          script: false,
-        }),
-      );
+      const diff = await native.prisma_diff({
+        datasource,
+        datamodel,
+        script: false,
+      });
       response.info(`Changes dectected: ${diff}`);
 
       if (migration_files == null) {

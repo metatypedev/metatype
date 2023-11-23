@@ -36,15 +36,12 @@ self_update = { version = "0.38.0", features = [
   "compression-zip-deflate",
   "compression-zip-bzip2",
 ] }
-prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.4.2"  }
+prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2"  }
 lazy_static = "1.4.0"
-tokio = { version = "1.33.0", features = ["full"] }
-futures = "0.3.28"
+tokio = { version = "1.34.0", features = ["full"] }
+futures = "0.3.29"
 log = "0.4.20"
-env_logger = "0.10.0"
-clap = { version = "=4.3.3", features = ["derive", "env"] } # pinned to match version brought in by deno
-clap_complete = "4.3.1"
-clap-verbosity-flag = "2.0.1"
+clap-verbosity-flag = "2.1.0"
 crossbeam-channel = "0.5.8"
 notify-debouncer-mini = { version = "0.4.1", default-features = false }
 tiny_http = "0.12.0"
@@ -52,23 +49,23 @@ ignore = "0.4.20"
 globset = "0.4.13"
 anyhow = "1.0.75"
 indoc = "2.0.4"
-serde = { version = "1.0.188", features = ["derive"] }
-serde_json = { version = "1.0.107", features = ["preserve_order"] }
+serde = { version = "1.0.192", features = ["derive"] }
+serde_json = { version = "1.0.108", features = ["preserve_order"] }
 reqwest = { version = "0.11.22", features = ["json"] }
 colored = "2.0.4"
 question = "0.2.2"
 dialoguer = "0.11.0"
-flate2 = "1.0.27"
+flate2 = "1.0.28"
 tar = "0.4.40"
-base64 = "0.21.4"
+base64 = "0.21.5"
 common = { path = "../libs/common" }
 typescript = { path = "../libs/typescript" }
-serde_yaml = "0.9.25"
+serde_yaml = "0.9.27"
 pathdiff = "0.2.1"
-openssl = { version = "0.10.57", features = ["vendored"] }
-indexmap = { version = "2.0.2", features = ["serde"] }
+openssl = { version = "0.10.59", features = ["vendored"] }
+indexmap = { version = "2.1.0", features = ["serde"] }
 lade-sdk = "0.9.1"
-async-trait = "0.1.73"
+async-trait = "0.1.74"
 async-recursion = "1.0.5"
 itertools = "0.11.0"
 enum_dispatch = "0.3.12"
@@ -82,6 +79,9 @@ semver = "1.0.20"
 textwrap = "0.16.0"
 typegate_engine =  { workspace = true, optional = true }
 shadow-rs = "0.24"
+env_logger.workspace = true
+clap = { workspace = true, features = ["derive", "env"] }
+clap_complete.workspace = true
 
 [dev-dependencies]
 assert_cmd = "2.0.12"

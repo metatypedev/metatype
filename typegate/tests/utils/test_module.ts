@@ -3,7 +3,7 @@
 
 import { dirname, fromFileUrl } from "std/path/mod.ts";
 import { shell, ShellOptions, ShellOutput } from "./shell.ts";
-import { meta } from "./meta.ts";
+import { metaCli } from "./meta.ts";
 
 export class TestModule {
   currentDir: string;
@@ -20,6 +20,6 @@ export class TestModule {
   }
 
   async cli(options: ShellOptions, ...args: any[]): Promise<ShellOutput> {
-    return await meta({ currentDir: this.currentDir, ...options }, ...args);
+    return await metaCli({ currentDir: this.currentDir, ...options }, ...args);
   }
 }

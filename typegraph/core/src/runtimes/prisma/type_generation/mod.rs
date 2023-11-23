@@ -26,7 +26,7 @@ use crate::errors::Result;
 use crate::runtimes::prisma::relationship::Cardinality;
 use crate::t::{self, TypeBuilder};
 use crate::typegraph::with_tg;
-use crate::types::{TypeFun, TypeId};
+use crate::types::{TypeDefExt, TypeId};
 
 mod additional_filters;
 mod aggregate;
@@ -111,10 +111,9 @@ impl PrismaContext {
             let type_id = generator.generate(self)?;
 
             // name validation
-            let typ = type_id.as_type()?;
-            let name = typ
-                .get_base()
-                .ok_or_else(|| "Generated type must be a concrete type".to_string())?
+            let type_def = type_id.as_type_def()?.unwrap();
+            let name = type_def
+                .base()
                 .name
                 .as_ref()
                 .ok_or_else(|| format!("Generated type must have name: {type_name}"))?;
@@ -360,7 +359,7 @@ impl PrismaContext {
     pub fn execute_raw(&mut self, param: TypeId) -> Result<OperationTypes> {
         let param = param.as_struct()?;
         Ok(OperationTypes {
-            input: param.get_id(),
+            input: param.id(),
             output: t::integer().build()?,
         })
     }
@@ -368,7 +367,7 @@ impl PrismaContext {
     pub fn query_raw(&mut self, param: Option<TypeId>, out: TypeId) -> Result<OperationTypes> {
         let param = param.unwrap_or(t::struct_().build()?).as_struct()?;
         Ok(OperationTypes {
-            input: param.get_id(),
+            input: param.id(),
             output: out,
         })
     }

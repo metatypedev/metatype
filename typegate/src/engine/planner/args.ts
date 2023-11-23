@@ -657,7 +657,7 @@ class ArgumentCollector {
       (name) => this.parentProps[name] === ref,
     );
     if (name == undefined) {
-      throw new Error(`injection '${typ.title} (${name})' not found in parent`);
+      throw new Error(`injection '${typ.title}' not found in parent`);
     }
 
     this.deps.parent.add(name);

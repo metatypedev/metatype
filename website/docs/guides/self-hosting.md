@@ -1,4 +1,8 @@
-# Self-hosting
+---
+sidebar_position: 99
+---
+
+# Self-host the Typegate
 
 ## Helm
 

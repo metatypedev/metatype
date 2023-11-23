@@ -18,18 +18,18 @@ mod test_utils;
 use std::collections::HashSet;
 
 use errors::Result;
-use global_store::Store;
+use global_store::{NameRegistration, Store};
 use indoc::formatdoc;
 use regex::Regex;
 use runtimes::{DenoMaterializer, Materializer};
 use types::{
-    Boolean, Either, File, Float, Func, Integer, List, Optional, Proxy, StringT, Struct, Type,
-    TypeBoolean, TypeId, Union, WithInjection, WithPolicy,
+    Boolean, Either, File, Float, Func, Integer, List, Optional, StringT, Struct, TypeBoolean,
+    TypeDef, TypeDefExt, TypeId, Union,
 };
 use wit::core::{
     ContextCheck, Policy, PolicyId, PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat,
-    TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList, TypeOptional, TypePolicy, TypeProxy,
-    TypeString, TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
+    TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList, TypeOptional, TypeString, TypeStruct,
+    TypeUnion, TypegraphInitParams,
 };
 use wit::runtimes::{Guest, MaterializerDenoFunc};
 
@@ -60,8 +60,8 @@ impl wit::core::Guest for Lib {
         typegraph::finalize()
     }
 
-    fn proxyb(data: TypeProxy) -> Result<CoreTypeId> {
-        Ok(Store::register_type(|id| Type::Proxy(Proxy { id, data }.into()))?.into())
+    fn refb(name: String, attributes: Vec<(String, String)>) -> Result<CoreTypeId> {
+        Ok(Store::register_type_ref(name, attributes)?.into())
     }
 
     fn integerb(data: TypeInteger, base: TypeBase) -> Result<CoreTypeId> {
@@ -75,7 +75,21 @@ impl wit::core::Guest for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
-        Ok(Store::register_type(|id| Type::Integer(Integer { id, base, data }.into()))?.into())
+        Ok(Store::register_type_def(
+            |id| {
+                TypeDef::Integer(
+                    Integer {
+                        id,
+                        base,
+                        extended_base: Default::default(),
+                        data,
+                    }
+                    .into(),
+                )
+            },
+            NameRegistration(true),
+        )?
+        .into())
     }
 
     fn floatb(data: TypeFloat, base: TypeBase) -> Result<CoreTypeId> {
@@ -89,20 +103,38 @@ impl wit::core::Guest for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
-        Ok(Store::register_type(|id| Type::Float(Float { id, base, data }.into()))?.into())
+        Ok(Store::register_type_def(
+            |id| {
+                TypeDef::Float(
+                    Float {
+                        id,
+                        base,
+                        extended_base: Default::default(),
+                        data,
+                    }
+                    .into(),
+                )
+            },
+            NameRegistration(true),
+        )?
+        .into())
     }
 
     fn booleanb(base: TypeBase) -> Result<CoreTypeId> {
-        Ok(Store::register_type(|id| {
-            Type::Boolean(
-                Boolean {
-                    id,
-                    base,
-                    data: TypeBoolean,
-                }
-                .into(),
-            )
-        })?
+        Ok(Store::register_type_def(
+            |id| {
+                TypeDef::Boolean(
+                    Boolean {
+                        id,
+                        base,
+                        extended_base: Default::default(),
+                        data: TypeBoolean,
+                    }
+                    .into(),
+                )
+            },
+            NameRegistration(true),
+        )?
         .into())
     }
 
@@ -112,7 +144,21 @@ impl wit::core::Guest for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
-        Ok(Store::register_type(|id| Type::String(StringT { id, base, data }.into()))?.into())
+        Ok(Store::register_type_def(
+            |id| {
+                TypeDef::String(
+                    StringT {
+                        id,
+                        base,
+                        extended_base: Default::default(),
+                        data,
+                    }
+                    .into(),
+                )
+            },
+            NameRegistration(true),
+        )?
+        .into())
     }
 
     fn fileb(data: TypeFile, base: TypeBase) -> Result<CoreTypeId> {
@@ -121,13 +167,25 @@ impl wit::core::Guest for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
-        Ok(Store::register_type(|id| {
-            let base = TypeBase {
-                name: Some(format!("_{}_file", id.0)),
-                ..base
-            };
-            Type::File(File { id, base, data }.into())
-        })?
+        Ok(Store::register_type_def(
+            |id| {
+                // TODO why??
+                let base = TypeBase {
+                    name: Some(format!("_{}_file", id.0)),
+                    ..base
+                };
+                TypeDef::File(
+                    File {
+                        id,
+                        base,
+                        extended_base: Default::default(),
+                        data,
+                    }
+                    .into(),
+                )
+            },
+            NameRegistration(true),
+        )?
         .into())
     }
 
@@ -139,45 +197,95 @@ impl wit::core::Guest for Lib {
         }
         let inner_name = match base.name {
             Some(_) => None,
-            None => TypeId(data.of).type_name()?,
+            None => TypeId(data.of).name()?,
         };
-        Ok(Store::register_type(|id| {
-            let base = match inner_name {
-                Some(n) => TypeBase {
-                    name: Some(format!("_{}_{}[]", id.0, n)),
-                    ..base
-                },
-                None => base,
-            };
-            Type::List(List { id, base, data }.into())
-        })?
+        Ok(Store::register_type_def(
+            |id| {
+                let base = match inner_name {
+                    Some(n) => TypeBase {
+                        name: Some(format!("_{}_{}[]", id.0, n)),
+                        ..base
+                    },
+                    None => base,
+                };
+                TypeDef::List(
+                    List {
+                        id,
+                        base,
+                        extended_base: Default::default(),
+                        data,
+                    }
+                    .into(),
+                )
+            },
+            NameRegistration(true),
+        )?
         .into())
     }
 
     fn optionalb(data: TypeOptional, base: TypeBase) -> Result<CoreTypeId> {
         let inner_name = match base.name {
             Some(_) => None,
-            None => TypeId(data.of).type_name()?,
+            None => TypeId(data.of).name()?,
         };
-        Ok(Store::register_type(|id| {
-            let base = match inner_name {
-                Some(n) => TypeBase {
-                    name: Some(format!("_{}_{}?", id.0, n)),
-                    ..base
-                },
-                None => base,
-            };
-            Type::Optional(Optional { id, base, data }.into())
-        })?
+        Ok(Store::register_type_def(
+            |id| {
+                let base = match inner_name {
+                    Some(n) => TypeBase {
+                        name: Some(format!("_{}_{}?", id.0, n)),
+                        ..base
+                    },
+                    None => base,
+                };
+                TypeDef::Optional(
+                    Optional {
+                        id,
+                        base,
+                        extended_base: Default::default(),
+                        data,
+                    }
+                    .into(),
+                )
+            },
+            NameRegistration(true),
+        )?
         .into())
     }
 
     fn unionb(data: TypeUnion, base: TypeBase) -> Result<CoreTypeId> {
-        Ok(Store::register_type(|id| Type::Union(Union { id, base, data }.into()))?.into())
+        Ok(Store::register_type_def(
+            |id| {
+                TypeDef::Union(
+                    Union {
+                        id,
+                        base,
+                        extended_base: Default::default(),
+                        data,
+                    }
+                    .into(),
+                )
+            },
+            NameRegistration(true),
+        )?
+        .into())
     }
 
     fn eitherb(data: TypeEither, base: TypeBase) -> Result<CoreTypeId> {
-        Ok(Store::register_type(|id| Type::Either(Either { id, base, data }.into()))?.into())
+        Ok(Store::register_type_def(
+            |id| {
+                TypeDef::Either(
+                    Either {
+                        id,
+                        base,
+                        extended_base: Default::default(),
+                        data,
+                    }
+                    .into(),
+                )
+            },
+            NameRegistration(true),
+        )?
+        .into())
     }
 
     fn structb(data: TypeStruct, base: TypeBase) -> Result<CoreTypeId> {
@@ -189,29 +297,88 @@ impl wit::core::Guest for Lib {
             prop_names.insert(name.clone());
         }
 
-        Ok(Store::register_type(|id| Type::Struct(Struct { id, base, data }.into()))?.into())
+        Ok(Store::register_type_def(
+            |id| {
+                TypeDef::Struct(
+                    Struct {
+                        id,
+                        base,
+                        extended_base: Default::default(),
+                        data,
+                    }
+                    .into(),
+                )
+            },
+            NameRegistration(true),
+        )?
+        .into())
     }
 
     fn funcb(data: TypeFunc) -> Result<CoreTypeId> {
         let wrapper_type = TypeId(data.inp);
-        let attrs = wrapper_type.attrs()?;
-        let concrete_type = attrs.concrete_type.as_type()?;
-        if !matches!(concrete_type, Type::Struct(_)) {
+        if !matches!(TypeDef::try_from(wrapper_type)?, TypeDef::Struct(_)) {
             return Err(errors::invalid_input_type(&wrapper_type.repr()?));
         }
         let base = TypeBase::default();
-        Ok(Store::register_type(|id| Type::Func(Func { id, base, data }.into()))?.into())
+        Ok(Store::register_type_def(
+            |id| {
+                TypeDef::Func(
+                    Func {
+                        id,
+                        base,
+                        extended_base: Default::default(),
+                        data,
+                    }
+                    .into(),
+                )
+            },
+            NameRegistration(true),
+        )?
+        .into())
     }
 
-    fn with_injection(data: TypeWithInjection) -> Result<CoreTypeId> {
-        Ok(
-            Store::register_type(|id| Type::WithInjection(WithInjection { id, data }.into()))?
-                .into(),
-        )
+    fn with_injection(type_id: CoreTypeId, injection: String) -> Result<CoreTypeId> {
+        // TODO try to resolve proxy?
+        let type_def = TypeId(type_id).as_type_def()?;
+        let Some(type_def) = type_def else {
+            return Err(errors::TgError::from("cannot add injection to ref type"));
+        };
+
+        let mut x_base = type_def.x_base().clone();
+        if x_base.injection.is_some() {
+            return Err(errors::TgError::from(
+                "injection already exists for this type",
+            ));
+        }
+        x_base.injection = Some(
+            serde_json::from_str(&injection).map_err(|e| errors::TgError::from(e.to_string()))?,
+        );
+        Ok(Store::register_type_def(
+            move |id| type_def.with_x_base(id, x_base.clone()),
+            NameRegistration(false),
+        )?
+        .into())
     }
 
-    fn with_policy(data: TypePolicy) -> Result<CoreTypeId> {
-        Ok(Store::register_type(|id| Type::WithPolicy(WithPolicy { id, data }.into()))?.into())
+    fn with_policy(type_id: CoreTypeId, policy_chain: Vec<PolicySpec>) -> Result<CoreTypeId> {
+        let type_def = TypeId(type_id).as_type_def()?;
+
+        let Some(type_def) = type_def else {
+            return Err(errors::TgError::from("cannot add policy to ref type"));
+        };
+
+        let mut x_base = type_def.x_base().clone();
+
+        // TODO extend policy chain?? --> add_policy vs with_policy
+        if !x_base.policies.is_empty() {
+            return Err(errors::TgError::from("policy already exists for this type"));
+        }
+        x_base.policies = policy_chain;
+        Ok(Store::register_type_def(
+            move |id| type_def.with_x_base(id, x_base.clone()),
+            NameRegistration(false),
+        )?
+        .into())
     }
 
     fn register_policy(pol: Policy) -> Result<PolicyId> {
@@ -296,28 +463,17 @@ impl wit::core::Guest for Lib {
     }
 
     fn rename_type(type_id: CoreTypeId, new_name: String) -> Result<CoreTypeId, wit::core::Error> {
-        let typ = TypeId(type_id).as_type()?;
-        match typ {
-            Type::Proxy(_) => Err("cannot rename proxy".into()),
-            Type::WithPolicy(inner) => Self::with_policy(TypePolicy {
-                tpe: Self::rename_type(inner.data.tpe, new_name)?,
-                chain: inner.data.chain.clone(),
-            }),
-            Type::WithInjection(inner) => Self::with_injection(TypeWithInjection {
-                tpe: Self::rename_type(inner.data.tpe, new_name)?,
-                injection: inner.data.injection.clone(),
-            }),
-            Type::Boolean(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Integer(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Float(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::String(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::File(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Optional(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::List(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Union(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Either(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Struct(inner) => Ok(inner.rename(new_name)?.into()),
-            Type::Func(inner) => Ok(inner.rename(new_name)?.into()),
+        match TypeId(type_id).as_type_def()? {
+            Some(type_def) => {
+                let mut base = type_def.base().clone();
+                base.name = Some(new_name);
+                Ok(Store::register_type_def(
+                    move |id| type_def.with_base(id, base.clone()),
+                    NameRegistration(true),
+                )?
+                .into())
+            }
+            None => Err(wit::core::Error::from("cannot rename ref type")),
         }
     }
 

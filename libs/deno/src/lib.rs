@@ -94,8 +94,9 @@ pub fn test_sync(
     permissions: PermissionsOptions,
     coverage_dir: Option<String>,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
+    argv: Vec<String>,
 ) {
-    std::thread::Builder::new()
+    new_thread_builder()
         .spawn(|| {
             create_and_run_current_thread_with_maybe_metrics(async move {
                 spawn_subcommand(async move {
@@ -105,6 +106,7 @@ pub fn test_sync(
                         permissions,
                         coverage_dir,
                         custom_extensions,
+                        argv,
                     )
                     .await
                     .unwrap()
@@ -124,6 +126,7 @@ pub async fn test(
     permissions: PermissionsOptions,
     coverage_dir: Option<String>,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
+    argv: Vec<String>,
 ) -> anyhow::Result<()> {
     use deno::tools::test::*;
 
@@ -133,7 +136,9 @@ pub async fn test(
     );
     let flags = args::Flags {
         unstable: true,
+        type_check_mode: args::TypeCheckMode::Local,
         config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
+        argv,
         ..Default::default()
     };
 
@@ -212,17 +217,31 @@ pub async fn test(
     Ok(())
 }
 
+fn new_thread_builder() -> std::thread::Builder {
+    let builder = std::thread::Builder::new();
+    let builder = if cfg!(debug_assertions) {
+        // deno & swc need 8 MiB with dev profile (release is ok)
+        // https://github.com/swc-project/swc/blob/main/CONTRIBUTING.md
+        builder.stack_size(8 * 1024 * 1024)
+    } else {
+        // leave default: https://doc.rust-lang.org/std/thread/#stack-size
+        builder
+    };
+    builder
+}
+
 pub fn bench_sync(
     files: deno_config::FilesConfig,
     config_file: PathBuf,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
+    argv: Vec<String>,
 ) {
-    std::thread::Builder::new()
+    new_thread_builder()
         .spawn(|| {
             create_and_run_current_thread_with_maybe_metrics(async move {
                 spawn_subcommand(async move {
-                    bench(files, config_file, permissions, custom_extensions)
+                    bench(files, config_file, permissions, custom_extensions, argv)
                         .await
                         .unwrap()
                 })
@@ -240,6 +259,7 @@ pub async fn bench(
     config_file: PathBuf,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
+    argv: Vec<String>,
 ) -> anyhow::Result<()> {
     use deno::tools::bench::*;
     use deno::tools::test::TestFilter;
@@ -250,7 +270,9 @@ pub async fn bench(
     );
     let flags = args::Flags {
         unstable: true,
+        type_check_mode: args::TypeCheckMode::Local,
         config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
+        argv,
         ..Default::default()
     };
 

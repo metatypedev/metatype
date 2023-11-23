@@ -4,28 +4,31 @@
 use common::typegraph::{ListTypeData, TypeNode};
 
 use crate::{
-    conversion::types::{gen_base, TypeConversion},
+    conversion::types::{BaseBuilderInit, TypeConversion},
     errors::Result,
     typegraph::TypegraphContext,
-    types::{List, TypeData, TypeId},
+    types::{List, TypeDefData, TypeId},
     wit::core::TypeList,
 };
 
 impl TypeConversion for List {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::List {
-            base: gen_base(
-                self.base
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| format!("array_{}", self.id.0)),
-                self.base.runtime_config.clone(),
-                runtime_id.unwrap(),
-            )
-            .build(),
+            base: BaseBuilderInit {
+                ctx,
+                base_name: "list",
+                type_id: self.id,
+                name: self.base.name.clone(),
+                runtime_idx: runtime_id.unwrap(),
+                policies: &self.extended_base.policies,
+                runtime_config: self.base.runtime_config.as_deref(),
+            }
+            .init_builder()?
+            .inject(self.extended_base.injection.clone())?
+            .build()?,
             data: ListTypeData {
                 items: ctx
-                    .register_type(TypeId(self.data.of).resolve_proxy()?, runtime_id)?
+                    .register_type(TypeId(self.data.of).try_into()?, runtime_id)?
                     .into(),
                 max_items: self.data.max,
                 min_items: self.data.min,
@@ -35,7 +38,7 @@ impl TypeConversion for List {
     }
 }
 
-impl TypeData for TypeList {
+impl TypeDefData for TypeList {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         params.push(format!("items={}", self.of));
         if let Some(min) = self.min {
@@ -49,9 +52,7 @@ impl TypeData for TypeList {
         }
     }
 
-    fn variant_name(&self) -> String {
-        "list".to_string()
+    fn variant_name(&self) -> &'static str {
+        "list"
     }
-
-    super::impl_into_type!(concrete, List);
 }

@@ -3,10 +3,9 @@
 
 use colored::Colorize;
 
-pub fn print_box(title: &str, content: &str, width: usize) {
+pub fn print_box(content: &str, width: usize) {
     let wrap_width = width - 4;
     println!("┌{}┐", "—".repeat(width - 2));
-    println!("| {} {}|", title, " ".repeat(wrap_width - title.len()),);
     for line in textwrap::wrap(content.trim(), wrap_width) {
         println!("| {} {}|", line, " ".repeat(wrap_width - line.len()),);
     }

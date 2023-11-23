@@ -25,6 +25,7 @@ dev:
       (version = ").+("): METATYPE_VERSION
       (description = ").+("): TAGLINE
       '([\w-]+\s*=\s*\{\s*git\s*=\s*"https:\/\/github\.com\/prisma\/prisma-engines"\s*,\s*tag\s*=\s*").+("\s*\})': PRISMA_VERSION
+      '(deno\s*=\s*\{\s*git\s*=\s*"https:\/\/github\.com\/metatypedev\/deno"\s*,\s*branch\s*=\s*"v).+(-embeddable"\s*\})': DENO_VERSION
     dev/Dockerfile:
       (ARG DENO_VERSION=).*(): DENO_VERSION
       (ARG RUST_VERSION=).*(): RUST_VERSION
@@ -40,7 +41,6 @@ dev:
       '(    JCO_VERSION: ").+(")': JCO_VERSION
       '(    WASMEDGE_VERSION: ").+(")': WASMEDGE_VERSION
       '(    WASM_OPT_VERSION: ").+(")': WASM_OPT_VERSION
-      '(    DENO_VERSION: ").+(")': DENO_VERSION
     website/docusaurus.config.js:
       '(  tagline: ").+(",)': TAGLINE
     examples/**/compose.yml:
@@ -50,12 +50,16 @@ dev:
       (wasmtime = "\^).+("): WASMTIME_VERSION
     examples/**/pyproject.toml:
       (typegraph = ").+("): METATYPE_VERSION
+    examples/**/package.json:
+      '(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)': PUBLISHED_VERSION
+    examples/**/*.ts:
+      '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': PUBLISHED_VERSION
   lock:
     PYTHON_VERSION: '3.8'
-    POETRY_VERSION: 1.6.1
+    POETRY_VERSION: 1.7.0
     PROTOC_VERSION: v24.x
     RUST_VERSION: 1.73.0
-    DENO_VERSION: 1.37.1
+    DENO_VERSION: 1.38.1
     NODE_VERSION: 20.8.0
     PNPM_VERSION: 8.8.0
     CARGO_INSTA_VERSION: 1.33.0
@@ -64,8 +68,9 @@ dev:
     WASMTIME_VERSION: 13.0.2
     WASMEDGE_VERSION: 0.12.1
     TYPEGRAPH_VERSION: 0.0.3
-    PRISMA_VERSION: 5.4.2
+    PRISMA_VERSION: 5.5.2
     METATYPE_VERSION: 0.2.5-0+dev
+    PUBLISHED_VERSION: 0.2.4
     WASM_OPT_VERSION: 0.116.0
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with

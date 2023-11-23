@@ -200,7 +200,7 @@ impl TypeGen for InputType {
     }
 
     fn name(&self) -> String {
-        let model_name = self.model_id.type_name().unwrap().unwrap();
+        let model_name = self.model_id.name().unwrap().unwrap();
         let suffix = if self.skip_rel.is_empty() {
             "".to_string()
         } else {

@@ -11,7 +11,7 @@ use crate::global_store::Store;
 use crate::runtimes::{DenoMaterializer, Materializer};
 use crate::t::TypeBuilder;
 use crate::types::TypeId;
-use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct, TypeWithInjection};
+use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
 use crate::wit::runtimes::MaterializerDenoFunc;
 use crate::wit::utils::Auth as WitAuth;
 use crate::{t, Lib};
@@ -124,10 +124,7 @@ impl crate::wit::utils::Guest for crate::Lib {
                         "cannot set undefined value at {:?}",
                         path_infos.path.join(".")
                     ))?;
-                    let new_id = Lib::with_injection(TypeWithInjection {
-                        tpe: id.into(),
-                        injection: payload,
-                    })?;
+                    let new_id = Lib::with_injection(id.into(), payload)?;
 
                     idx_to_store_id_cache.insert(item.index, (item.node.name.clone(), new_id));
                 }

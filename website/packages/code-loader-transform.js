@@ -22,7 +22,7 @@ module.exports = async function (source) {
 
   if (ext === "py") {
     source = await new Promise((resolve) => {
-      const child = spawn("black", ["-l", "70", "-"]);
+      const child = spawn("ruff", ["format", "--line-length", "70", "-"]);
       child.stdin.write(source);
       child.stdin.end();
       let buffer = "";

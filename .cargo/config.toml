@@ -1,10 +1,6 @@
-[env]
-OUT_DIR = { value = "target", relative = true }
+[alias]
+x = "run --package xtask --"
 
 [profile.typegraph_core.release]
 opt-level = "z"
 lto = true
-
-[alias]
-xtask = "run --package xtask --"
-x = "run --package xtask --"

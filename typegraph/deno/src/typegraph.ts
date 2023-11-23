@@ -157,7 +157,7 @@ export function typegraph(
 }
 
 export function genRef(name: string) {
-  const value = core.proxyb({ name, extras: [] });
+  const value = core.refb(name, []);
   if (typeof value == "object") {
     throw new Error(JSON.stringify(value));
   }
