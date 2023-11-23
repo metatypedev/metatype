@@ -2,7 +2,7 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(inp)"
 ---
-root: struct '_Record_QueryInput' #61
+root: struct '_Record_QueryInput' #66
 ├─ [where]: optional '_42_QueryRecordWhereInput?' #42
 │  └─ item: struct 'QueryRecordWhereInput' #41
 │     ├─ [id]: optional '_21__string_filter_c?' #21
@@ -182,7 +182,15 @@ root: struct '_Record_QueryInput' #61
 │  └─ item: integer '_Take' #54
 ├─ [skip]: optional '_57__Skip?' #57
 │  └─ item: integer '_Skip' #56
-└─ [distinct]: optional '_60__KeysOf_Record?' #60
-   └─ item: list '_KeysOf_Record' #59
-      └─ item: string #58 enum{ '"id"', '"name"', '"age"' }
+├─ [cursor]: optional '_62__Record_Cursor?' #62
+│  └─ item: union '_Record_Cursor' #61
+│     ├─ variant_0: struct #58
+│     │  └─ [id]: string #0
+│     ├─ variant_1: struct #59
+│     │  └─ [name]: string #1
+│     └─ variant_2: struct #60
+│        └─ [age]: integer #2
+└─ [distinct]: optional '_65__KeysOf_Record?' #65
+   └─ item: list '_KeysOf_Record' #64
+      └─ item: string #63 enum{ '"id"', '"name"', '"age"' }
 

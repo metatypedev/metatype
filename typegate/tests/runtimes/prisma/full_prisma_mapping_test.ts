@@ -55,14 +55,17 @@ Meta.test("prisma full mapping", async (t) => {
       .on(e);
   });
 
-  await t.should("find the first item", async () => {
-    await gql`
+  await t.should(
+    "find first item after a skip starting from a cursor",
+    async () => {
+      await gql`
         query {
           findFirstPost(
             where: {
               title: { contains: "Title" }
             },
             skip: 1,
+            cursor: { id: 10004 },
             orderBy: [ {title: "desc"} ]
           ) {
             id
@@ -70,13 +73,14 @@ Meta.test("prisma full mapping", async (t) => {
           }
         }
     `.expectData({
-      findFirstPost: {
-        id: 10004,
-        title: "Some Title 4",
-      },
-    })
-      .on(e);
-  });
+        findFirstPost: {
+          id: 10005,
+          title: "Some Title 4",
+        },
+      })
+        .on(e);
+    },
+  );
 
   await t.should(
     "work with reduce syntax and find the first item",
