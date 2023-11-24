@@ -17,6 +17,8 @@ crash.log
 target
 **/*.rs.bk
 
+dev-tools/**/out/
+
 typegate/workers
 typegate/codegen
 typegate/tests/prisma-migrations

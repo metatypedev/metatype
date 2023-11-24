@@ -1,0 +1,42 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "devtools:build",
+			"type": "shell",
+			"command": "pnpm",
+			"args": ["compile"],
+			"group": "build",
+			"presentation": {
+				"panel": "dedicated",
+				"reveal": "never"
+			},
+			"problemMatcher": [
+				"$tsc"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/dev-tools"
+			}
+		},
+		{
+			"label": "devtools:build:watch",
+			"type": "shell",
+			"command": "pnpm",
+			"args": ["watch"],
+			"isBackground": true,
+			"group": {
+				"kind": "build"
+			},
+			"presentation": {
+				"panel": "dedicated",
+				"reveal": "never"
+			},
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/dev-tools"
+			}
+		}
+	]
+}
