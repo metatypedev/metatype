@@ -1,0 +1,8 @@
+{
+    "imports": {
+        "vscode-languageserver": "npm:vscode-languageserver",
+        "vscode-languageserver/types": "npm:vscode-languageserver-types",
+        "vscode-languageserver/protocol": "npm:vscode-languageserver-protocol",
+        "vscode-languageserver/textdocument": "npm:vscode-languageserver-textdocument"
+    }
+}

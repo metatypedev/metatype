@@ -1,23 +1,25 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
 import {
   CompletionItem,
-  CompletionItemKind,
   createConnection,
   Diagnostic,
+  ProposedFeatures,
+  TextDocuments,
+} from "vscode-languageserver";
+
+import {
+  CompletionItemKind,
   DiagnosticSeverity,
-  DidChangeConfigurationNotification,
   InitializeParams,
   InitializeResult,
-  ProposedFeatures,
   TextDocumentPositionParams,
-  TextDocuments,
-  TextDocumentSyncKind,
-} from "vscode-languageserver/node";
+} from "vscode-languageserver/types";
 
-import { TextDocument } from "vscode-languageserver-textdocument";
+import {
+  DidChangeConfigurationNotification,
+  TextDocumentSyncKind,
+} from "vscode-languageserver/protocol";
+
+import { TextDocument } from "vscode-languageserver/textdocument";
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -100,7 +102,7 @@ connection.onDidChangeConfiguration((change) => {
     // Reset all cached document settings
     documentSettings.clear();
   } else {
-    globalSettings = <ExampleSettings> (
+    globalSettings = <ExampleSettings>(
       change.settings.languageServerExample || defaultSettings
     );
   }
@@ -137,7 +139,8 @@ documents.onDidChangeContent((change) => {
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
   // In this simple example we get the settings for every validate run.
-  const settings = await getDocumentSettings(textDocument.uri) ?? defaultSettings;
+  const settings = await getDocumentSettings(textDocument.uri) ??
+    defaultSettings;
 
   // The validator creates diagnostics for all uppercase words length 2 and more
   const text = textDocument.getText();

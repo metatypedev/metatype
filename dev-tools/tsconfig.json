@@ -14,7 +14,6 @@
         "node_modules"
     ],
     "references": [
-        { "path": "./ts-language-server" },
         { "path": "./vscode-metatype-support" }
     ]
 }

@@ -10,7 +10,7 @@ import {
 
 let client: LanguageClient;
 
-export function activate(_context: ExtensionContext) {
+export function activate(context: ExtensionContext) {
   const tsServerDir = context.asAbsolutePath(
     path.join("..", "ts-language-server"),
   );
@@ -21,8 +21,8 @@ export function activate(_context: ExtensionContext) {
       transport: TransportKind.stdio,
     },
     debug: {
-      command: "node",
-      args: ["out/server.js", "--stdio"],
+      command: "deno",
+      args: ["run", "-A", "src/server.ts"],
       options: {
         cwd: tsServerDir,
       },
