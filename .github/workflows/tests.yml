@@ -75,11 +75,13 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - run: deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
-      - shell: bash -c -i {0}
-        run: ghjk sync
-      - shell: bash -c -i {0}
+      - shell: bash -c {0}
         run: |
+          deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
+          source ~/.bashrc
+          declare -pf
+          init_ghjk
+          ghjk sync
           cd website
           pnpm install --frozen-lockfile
           cd ..
@@ -149,21 +151,22 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - run: deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
-      - shell: bash -c -i {0}
-        run: ghjk sync
-      - shell: bash -c -i {0}
+      - shell: bash -c {0}
+        env:
+          WASM_FILE: target/debug/typegraph_core.wasm
         run: |
+          deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
+          source ~/.bashrc
+          init_ghjk
+          ghjk sync
+
+          python3 -m venv .venv
+          ${{ matrix.activate }}
+
           cd typegraph/python
           poetry install --no-root
           cd ../..
           poetry install --no-root
-      - env:
-          WASM_FILE: target/debug/typegraph_core.wasm
-        shell: bash -c -i {0}
-        run: |
-          python3 -m venv .venv
-          ${{ matrix.activate }}
 
           # curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
           # export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
@@ -279,22 +282,21 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - run: deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
-      - shell: bash -c -i {0}
-        run: ghjk sync
-      - shell: bash -c -i {0}
+      - shell: bash -c {0}
+        env:
+          WASM_FILE: target/debug/typegraph_core.wasm
         run: |
           sudo apt update
           sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev perl make
 
+          deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
+          source ~/.bashrc
+          init_ghjk
+          ghjk sync
+
           python3 -m venv .venv
           source .venv/bin/activate
-
           poetry install --no-root
-      - env:
-          WASM_FILE: target/debug/typegraph_core.wasm
-        run: |
-          source .venv/bin/activate
 
           # curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
           # export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
