@@ -17,7 +17,8 @@ crash.log
 target
 **/*.rs.bk
 
-dev-tools/**/out/
+dev-tools/vscode-metatype-support/out/
+dev-tools/ts-language-server/grammars
 
 typegate/workers
 typegate/codegen

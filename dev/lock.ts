@@ -16,9 +16,10 @@ const args = parseFlags(Deno.args, {
   default: { version: false, check: false },
 });
 
-const ignores = Deno.readTextFileSync(resolve(projectDir, ".gitignore")).split(
-  "\n",
-).map((l) => l.trim()).filter((line) => line.length > 0);
+const ignores = Deno.readTextFileSync(resolve(projectDir, ".gitignore"))
+  .split("\n")
+  .map((l) => l.trim())
+  .filter((line) => line.length > 0);
 
 const lockfile = await getLockfile();
 
@@ -43,10 +44,9 @@ if (args.bump) {
     Deno.exit(1);
   }
 
-  const newVersion = semver.format(semver.increment(
-    semver.parse(version),
-    args.bump as semver.ReleaseType,
-  ));
+  const newVersion = semver.format(
+    semver.increment(semver.parse(version), args.bump as semver.ReleaseType),
+  );
   lockfile.dev.lock.METATYPE_VERSION = newVersion;
   console.log(`Bumping ${version} → ${newVersion}`);
 }
@@ -59,11 +59,13 @@ for (const [channel, { files, lines, lock }] of Object.entries(lockfile)) {
 
   for (const [glob, lookups] of Object.entries(lines)) {
     const url = resolve(projectDir, glob);
-    const paths = Array.from(expandGlobSync(url, {
-      includeDirs: false,
-      globstar: true,
-      exclude: ignores,
-    }));
+    const paths = Array.from(
+      expandGlobSync(url, {
+        includeDirs: false,
+        globstar: true,
+        exclude: ignores,
+      }),
+    );
 
     if (paths.length == 0) {
       console.error(`No files found for ${glob}, please check and retry.`);
@@ -72,9 +74,7 @@ for (const [channel, { files, lines, lock }] of Object.entries(lockfile)) {
 
     const matches = Object.fromEntries(Object.keys(lookups).map((k) => [k, 0]));
 
-    for (
-      const { path } of paths
-    ) {
+    for (const { path } of paths) {
       const text = Deno.readTextFileSync(path);
       const rewrite = [...text.split("\n")];
 
@@ -86,10 +86,7 @@ for (const [channel, { files, lines, lock }] of Object.entries(lockfile)) {
             matches[pattern] += 1;
           }
 
-          rewrite[i] = rewrite[i].replace(
-            regex,
-            `$1${lock[replacement]}$2`,
-          );
+          rewrite[i] = rewrite[i].replace(regex, `$1${lock[replacement]}$2`);
         }
       }
 
@@ -132,7 +129,9 @@ for (const [channel, { files, lines, lock }] of Object.entries(lockfile)) {
   }
 }
 
-await runOrExit(["cargo", "generate-lockfile"]);
+if (dirty) {
+  await runOrExit(["cargo", "generate-lockfile"]);
+}
 
 if (args.check) {
   Deno.exit(dirty ? 1 : 0);
