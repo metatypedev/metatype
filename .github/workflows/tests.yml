@@ -75,13 +75,15 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - shell: bash -c {0}
+      - shell: bash
         run: |
           deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
-          source ~/.bashrc
-          declare -pf
-          init_ghjk
+
+          source ~/.local/share/ghjk/hooks/hook.sh
+          ls -osha
           ghjk sync
+          init_ghjk
+
           cd website
           pnpm install --frozen-lockfile
           cd ..
@@ -156,9 +158,9 @@ jobs:
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
           deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
-          source ~/.bashrc
-          init_ghjk
+          source ~/.local/share/ghjk/hooks/hook.sh
           ghjk sync
+          init_ghjk
 
           python3 -m venv .venv
           ${{ matrix.activate }}
@@ -290,9 +292,9 @@ jobs:
           sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev perl make
 
           deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
-          source ~/.bashrc
-          init_ghjk
+          source ~/.local/share/ghjk/hooks/hook.sh
           ghjk sync
+          init_ghjk
 
           python3 -m venv .venv
           source .venv/bin/activate
@@ -308,7 +310,7 @@ jobs:
           wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
           rm -rf typegraph/deno/src/gen
           jco transpile $WASM_FILE -o typegraph/deno/src/gen
-          deno run -A typegraph/deno/dev/fix-declarations.ts
+          deno run -A typegraph/deno/dev/fix-eeclarations.ts
           rm -rf typegraph/python/typegraph/gen
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
