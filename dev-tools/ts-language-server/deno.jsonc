@@ -1,9 +1,3 @@
 {
-    "importMap": "./import_map.jsonc",
-    "compilerOptions": {
-        "types": [
-            "npm:tree-sitter/tree-sitter.d.ts"
-        ]
-    }
-
+    "importMap": "./import_map.jsonc"
 }

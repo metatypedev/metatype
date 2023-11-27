@@ -1,7 +1,11 @@
 import { assertEquals } from "std/assert/mod.ts";
 import { join } from "std/path/mod.ts";
 import { testDir } from "./utils.ts";
-import Parser from "tree-sitter";
+import Parser from "npm:web-tree-sitter";
+import {
+  findTypegraphDefinitions,
+  TypegraphDefinition,
+} from "../src/parser.ts";
 
 await Parser.init();
 const TypeScript = await Parser.Language.load(
@@ -18,6 +22,10 @@ Deno.test("apply", async (t) => {
   parser.setLanguage(TypeScript);
 
   const tree = parser.parse(code);
-
-  console.log(tree.rootNode.toString());
+  const node = tree.rootNode;
+  const typegraphDefs = findTypegraphDefinitions(node);
+  console.log(typegraphDefs.map((n) => n.text));
+  for (const def of typegraphDefs) {
+    console.log(new TypegraphDefinition(def));
+  }
 });
