@@ -24,8 +24,8 @@ Deno.test("apply", async (t) => {
   const tree = parser.parse(code);
   const node = tree.rootNode;
   const typegraphDefs = findTypegraphDefinitions(node);
-  console.log(typegraphDefs.map((n) => n.text));
   for (const def of typegraphDefs) {
+    console.log(def.text);
     console.log(new TypegraphDefinition(def));
   }
 });

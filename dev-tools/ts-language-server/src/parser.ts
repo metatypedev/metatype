@@ -16,26 +16,30 @@ export function parse(code: string): Parser.Tree {
   return parser.parse(code);
 }
 
+const typegraphDefinitionQuery = TypeScript.query(`
+(call_expression
+  function: (identifier) @function
+  arguments: (arguments) @arguments
+)`);
+
+function withCapture<T>(
+  queryMatch: Parser.QueryMatch,
+  captureName: string,
+  f: (node: Parser.SyntaxNode) => T,
+): T | undefined {
+  const capture = queryMatch.captures.find((c) => c.name == captureName);
+  return capture && f(capture.node);
+}
+
 /// find top level typegraph definitions
+/// return the arguments node
 export function findTypegraphDefinitions(
   node: Parser.SyntaxNode,
 ): Parser.SyntaxNode[] {
-  return node.children
-    .map((node: Parser.SyntaxNode) => {
-      if (node.type == "expression_statement") {
-        const expr = node.namedChildren[0];
-        if (expr.type == "call_expression") {
-          const ident = expr.namedChildren[0];
-          if (ident.type == "identifier") {
-            if (ident.text == "typegraph") {
-              return expr;
-            }
-          }
-        }
-      }
-      return null;
-    })
-    .filter((n: Parser.SyntaxNode | null) => n) as Parser.SyntaxNode[];
+  return typegraphDefinitionQuery
+    .matches(node)
+    .filter((m) => withCapture(m, "function", (n) => n.text === "typegraph"))
+    .map((m) => withCapture(m, "arguments", (n) => n)!);
 }
 
 export class TypegraphDefinition {
@@ -43,11 +47,12 @@ export class TypegraphDefinition {
   builder: Parser.SyntaxNode;
 
   constructor(node: Parser.SyntaxNode) {
-    const args = node.namedChildren[1];
-    if (args.namedChildCount != 2) {
-      throw new Error("typegraph definition must have 2 arguments");
+    if (node.type != "arguments") {
+      throw new Error(
+        "typegraph definition must be constructed from arguments node",
+      );
     }
-    const nameExpr = args.namedChildren[0];
+    const nameExpr = node.namedChildren[0];
     if (nameExpr.type != "string") {
       throw new Error("typegraph definition name must be a string literal");
     }
@@ -58,7 +63,7 @@ export class TypegraphDefinition {
     }
     this.name = nameExpr.namedChildren[0].text;
 
-    const builderExpr = args.namedChildren[1];
+    const builderExpr = node.namedChildren[1];
     if (
       builderExpr.type != "function" &&
       builderExpr.type != "arrow_function"
