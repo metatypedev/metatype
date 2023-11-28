@@ -1,6 +1,8 @@
 import { join } from "https://deno.land/std/path/mod.ts";
 import { existsSync } from "https://deno.land/std/fs/mod.ts";
 
+const outDir = new URL("../grammars", import.meta.url).pathname;
+Deno.mkdirSync(outDir, { recursive: true });
 const outPath =
   new URL("../grammars/typescript.wasm", import.meta.url).pathname;
 

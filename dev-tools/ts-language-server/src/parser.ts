@@ -16,10 +16,20 @@ export function parse(code: string): Parser.Tree {
   return parser.parse(code);
 }
 
+// TODO arrrow funnction vs anonymous function vs named function
 const typegraphDefinitionQuery = TypeScript.query(`
 (call_expression
   function: (identifier) @function
-  arguments: (arguments) @arguments
+  arguments: [
+    (arguments 
+      (string (string_fragment) @name)
+      (arrow_function) @builder
+    )
+    (arguments
+      (object) @args
+      (arrow_function)? @builder
+    )
+  ]
 )`);
 
 function withCapture<T>(
@@ -31,46 +41,47 @@ function withCapture<T>(
   return capture && f(capture.node);
 }
 
+type TypegraphDefinitionCaptures = {
+  name?: Parser.SyntaxNode;
+  builder?: Parser.SyntaxNode;
+  args?: Parser.SyntaxNode;
+};
+
+const typegraphDefinitionCaptureNames = [
+  "name",
+  "builder",
+  "args",
+] as const;
+
 /// find top level typegraph definitions
 /// return the arguments node
 export function findTypegraphDefinitions(
   node: Parser.SyntaxNode,
-): Parser.SyntaxNode[] {
+): TypegraphDefinitionCaptures[] {
   return typegraphDefinitionQuery
     .matches(node)
     .filter((m) => withCapture(m, "function", (n) => n.text === "typegraph"))
-    .map((m) => withCapture(m, "arguments", (n) => n)!);
+    .map((m) =>
+      m.captures.reduce((acc, c) => {
+        if (typegraphDefinitionCaptureNames.includes(c.name as any)) {
+          acc[c.name as keyof TypegraphDefinitionCaptures] = c.node;
+        }
+        return acc;
+      }, {} as TypegraphDefinitionCaptures)
+    );
 }
 
 export class TypegraphDefinition {
   name: string;
   builder: Parser.SyntaxNode;
 
-  constructor(node: Parser.SyntaxNode) {
-    if (node.type != "arguments") {
-      throw new Error(
-        "typegraph definition must be constructed from arguments node",
-      );
+  constructor(captures: TypegraphDefinitionCaptures) {
+    if (captures.name != undefined) {
+      this.name = captures.name.text;
+      this.builder = captures.builder!;
+    } else {
+      // TODO find name in args
+      throw new Error("TODO");
     }
-    const nameExpr = node.namedChildren[0];
-    if (nameExpr.type != "string") {
-      throw new Error("typegraph definition name must be a string literal");
-    }
-
-    if (nameExpr.namedChildCount != 1) {
-      // TODO not supported??
-      throw new Error("string literal must have 1 child");
-    }
-    this.name = nameExpr.namedChildren[0].text;
-
-    const builderExpr = node.namedChildren[1];
-    if (
-      builderExpr.type != "function" &&
-      builderExpr.type != "arrow_function"
-    ) {
-      throw new Error("typegraph definition builder must be a function");
-    }
-
-    this.builder = builderExpr;
   }
 }
