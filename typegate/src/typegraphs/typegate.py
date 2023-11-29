@@ -92,17 +92,23 @@ def typegate(g: Graph):
 
     path = t.list(t.string())
     arg_info_inp = t.struct(
-        {"typegraph": t.string(), "function": t.string(), "argPaths": t.list(path)}
+        {
+            "typegraph": t.string(),
+            "queryType": t.string(),
+            "fn": t.string(),
+            "argPaths": t.list(path),
+        }
     )
 
     arg_info_out = t.struct(
         {
-            "path": path,
-            "enums": t.list(t.json()),
-            "config": t.json(),
-            "data": t.json(),
+            "as_id": t.boolean(),
+            "title": t.string(),
             "type": t.string(),
-            "name": t.string(),
+            "enum": t.list(t.json()).optional(),
+            "runtime": t.string(),
+            "config": t.json().optional(),
+            "default": t.json().optional(),
         }
     )
 

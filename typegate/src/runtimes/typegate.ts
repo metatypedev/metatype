@@ -10,6 +10,8 @@ import config from "../config.ts";
 import * as semver from "std/semver/mod.ts";
 import { Typegate } from "../typegate/mod.ts";
 import { TypeGraph } from "../typegraph/mod.ts";
+import { closestWord } from "../utils.ts";
+import { Type, TypeNode } from "../typegraph/type_node.ts";
 
 const logger = getLogger(import.meta);
 
@@ -55,6 +57,9 @@ export class TypeGateRuntime extends Runtime {
       }
       if (name === "serializedTypegraph") {
         return this.serializedTypegraph;
+      }
+      if (name === "argInfoByPath") {
+        return this.argInfoByPath;
       }
 
       return async ({ _: { parent }, ...args }) => {
@@ -134,5 +139,96 @@ export class TypeGateRuntime extends Runtime {
     }
 
     return this.typegate.register.remove(name);
+  };
+
+  argInfoByPath: Resolver = ({ typegraph, queryType, argPaths, fn }) => {
+    if (queryType != "query" && queryType != "mutation") {
+      throw new Error(`type "${queryType}", "query" or "mutation" expected`);
+    }
+
+    const paths = argPaths as Array<Array<string>>;
+    const tg = this.typegate.register.get(typegraph);
+
+    const root = tg!.tg.type(0, Type.OBJECT).properties[queryType];
+    const exposed = tg!.tg.type(root, Type.OBJECT).properties;
+
+    const funcIdx = exposed[fn];
+    if (funcIdx === undefined) {
+      const available = Object.keys(exposed);
+      const proposition = closestWord(fn ?? "", available, true);
+      console.log("ava", available, JSON.stringify(exposed));
+      throw new Error(
+        `type named "${fn}" not found, did you mean "${proposition ?? ""}"`,
+      );
+    }
+
+    const func = tg!.tg.type(funcIdx, Type.FUNCTION);
+    const input = tg!.tg.type(func.input, Type.OBJECT);
+
+    const walkPath = (path: Array<string>) => {
+      let node = input as TypeNode;
+      let defaultValue;
+      for (let cursor = 0; cursor < path.length; cursor += 1) {
+        const current = path.at(cursor)!;
+
+        // resolve nested optional & current default value
+        let topLevelDefault;
+        if (node.type == Type.OPTIONAL) {
+          while (node.type == Type.OPTIONAL) {
+            if (topLevelDefault == undefined) {
+              topLevelDefault = node.default_value;
+            }
+            node = tg!.tg.type(node.item);
+          }
+          defaultValue = topLevelDefault;
+        }
+
+        const prettyPath = path.map((chunk, i) =>
+          i == cursor ? `[${chunk}]` : chunk
+        ).join(".");
+
+        switch (node.type) {
+          case Type.OBJECT: {
+            const available = Object.keys(node.properties);
+            const currNode = node.properties[current];
+
+            if (currNode === undefined) {
+              throw new Error(
+                `invalid path ${prettyPath}, none of ${
+                  available.join(", ")
+                } match the chunk "${current}"`,
+              );
+            }
+
+            node = tg!.tg.type(currNode);
+
+            // reset, path is not terminated yet!
+            defaultValue = null;
+            break;
+          }
+          default: {
+            // list, float, either, ..etc are considered as leaf
+            if (cursor != path.length) {
+              throw new Error(
+                `cannot extend path ${prettyPath} with type "${node.type}"`,
+              );
+            }
+            break;
+          }
+        }
+      }
+
+      return {
+        as_id: node.as_id,
+        title: node.title,
+        type: node.type,
+        enums: node.enum,
+        runtime: tg!.tg.runtime(node.runtime).name,
+        config: JSON.stringify(node.config ?? {}),
+        default: defaultValue ? JSON.stringify(defaultValue) : null,
+      };
+    };
+
+    return paths.map((path) => walkPath(path));
   };
 }

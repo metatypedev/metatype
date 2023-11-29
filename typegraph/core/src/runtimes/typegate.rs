@@ -35,7 +35,7 @@ impl MaterializerConverter for TypegateOperation {
                 Self::AddTypegraph => "addTypegraph",
                 Self::RemoveTypegraph => "removeTypegraph",
                 Self::GetSerializedTypegraph => "serializedTypegraph",
-                Self::GetArgInfoByPath => "typeInfoByPath",
+                Self::GetArgInfoByPath => "argInfoByPath",
             }
             .to_string(),
             runtime,
