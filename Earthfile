@@ -20,22 +20,32 @@ deno-bin:
   SAVE ARTIFACT /usr/bin/deno
 
 ghjk-deps:
+  # we need deno for ghjk
   COPY +deno-bin/deno /bin/deno
 
+  # deps required to install the ghjk tools
   RUN set -eux; \
       export DEBIAN_FRONTEND=noninteractive; \
       apt update; \
-      apt install --yes \
-      git curl xz-utils unzip \
+      apt install --yes --no-install-recommends \
+      git \
+      curl \
+      xz-utils \
+      unzip \
       # poetry reqs
-      python3 python3-setuptools python3-venv \
+      python3 \
+      python3-setuptools \
+      python3-venv \
       ;\
       apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
   RUN SHELL=bash deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
   COPY ghjk.ts .
-  RUN bash -c 'source ~/.local/share/ghjk/hooks/hook.sh; \
-    init_ghjk; \
+
+  ENV GHJK_HOOK=/root/.local/share/ghjk/hooks/hook.sh
+  ENV BASH_ENV=$GHJK_HOOK
+
+  RUN bash -c '\
     ghjk sync; \
     rm ~/.local/share/ghjk/envs/.app/downloads -r;'
   # TODO: better way clean out ghjk downloads
@@ -44,23 +54,24 @@ ghjk-deps:
 
 COPY_GHJK_DEPS:
   FUNCTION
+  ENV GHJK_HOOK=/root/.local/share/ghjk/hooks/hook.sh
+  ENV BASH_ENV=$GHJK_HOOK
   COPY +ghjk-deps/ghjk /root/.local/share/ghjk
+  COPY ghjk.ts .
 
 test-website:
   FROM +ghjk-deps
 
   COPY --dir typegraph website ruff.toml poetry.lock pyproject.toml CONTRIBUTING.md CHANGELOG.md .
 
-  RUN bash -c 'source ~/.local/share/ghjk/hooks/hook.sh; \
-    init_ghjk; \
+  RUN bash -c '\
     python3 -m venv .venv; \
     source .venv/bin/activate; \
     poetry install --no-root; \
     cd website; \
     pnpm install --frozen-lockfile;'
 
-  RUN bash -c 'source ~/.local/share/ghjk/hooks/hook.sh; \
-    init_ghjk; \
+  RUN bash -c '\
     source .venv/bin/activate; \
     cd website; \
     pnpm lint; \
@@ -72,20 +83,29 @@ rust-builder:
   
   ARG WASMEDGE_VERSION=0.12.1
 
-  RUN apt-get update; \
-      apt-get install -y --no-install-recommends \
+  RUN rustup target add wasm32-unknown-unknown
+
+  RUN set -eux; \
+      export DEBIAN_FRONTEND=noninteractive; \
+      apt update; \
+      apt install --yes --no-install-recommends \
       # base
       git \
       curl \
-      python3 python3-venv \
+      python3 \
+      python3-venv \
       make \
       cmake \
+      # grpc
+      protobuf-compiler \
+      libprotobuf-dev \
       # openssl
       pkg-config \
       libssl-dev \
       # wasmedge
-      libclang-dev; \
-      rm -rf /var/lib/apt/lists/*; \
+      libclang-dev \
+      ;\
+      apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/; \
       curl -fsS \
         https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh -o wasmedge.sh; \
       bash wasmedge.sh -v $WASMEDGE_VERSION; \
@@ -98,6 +118,10 @@ rust-builder:
   SAVE ARTIFACT /root/.wasmedge
   SAVE ARTIFACT /lib/*-linux-gnu/libz.so* 
 
+# FIXME: cargo-chef is broken in earthly :(
+# https://github.com/earthly/earthly/issues/786
+# but we still get to build the dependencies once
+# for all the rust test targets
 chef-recipe:
   FROM +rust-builder
   DO +COPY_SOURCES_RUST
@@ -107,30 +131,40 @@ chef-recipe:
 chef-cook:
   FROM +rust-builder
 
+  COPY +chef-recipe/recipe.json recipe.json
+  RUN bash -c '\
+    cargo chef cook --recipe-path recipe.json --profile $CARGO_PROFILE --package typegate; \
+    rm recipe.json; '
+
+testpre-rust:
+
+  # FROM +chef-cook
+  FROM +rust-builder
+
+  COPY +deno-bin/deno /bin/deno
+
+  WORKDIR /app
   DO +COPY_GHJK_DEPS
 
-  COPY +chef-recipe/recipe.json recipe.json
-  RUN cargo chef cook --recipe-path recipe.json --profile $CARGO_PROFILE --package typegate \
-    && rm recipe.json
-
-test-full:
-  ENV WASM_FILE=target/debug/typegraph_core.wasm
-
-  FROM +chef-cook
+  COPY poetry.lock pyproject.toml .
+  COPY --dir typegraph/python typegraph/python
 
   # install python deps
-  RUN bash -c 'source ~/.local/share/ghjk/hooks/hook.sh; \
-    init_ghjk; \
+  RUN bash -c '\
     python3 -m venv .venv; \
     source .venv/bin/activate; \
     poetry install --no-root;'
 
   DO +COPY_SOURCES_RUST
 
+  # fetch cargo deps
+  RUN cargo fetch
+
+
+  ENV WASM_FILE=target/debug/typegraph_core.wasm
   # generate wasm modules and their binding code
-  RUN bash -c 'source ~/.local/share/ghjk/hooks/hook.sh; \
-    init_ghjk; \
-    cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm;\
+  RUN bash -c '\
+    cargo build --profile $CARGO_PROFILE -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm;\
     mkdir -p $(dirname $WASM_FILE);\
     wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE;\
     rm -rf typegraph/deno/src/gen;\
@@ -139,41 +173,58 @@ test-full:
     rm -rf typegraph/python/typegraph/gen;\
     poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen; '
 
+test-typegraph-core:
+  FROM +testpre-rust
 
-  # from old test-typegraph-core
   # test in native rust, not in wasm for a future rust SDK
   # without --tests, the --doc is causing a link error "syntax error in VERSION script"
-  RUN bash -c 'source ~/.local/share/ghjk/hooks/hook.sh; \
-    init_ghjk; \
+  RUN bash -c '\
     cargo test --locked --package typegraph_core --tests;'
 
-  # from old test-meta-cli
-  RUN bash -c 'source ~/.local/share/ghjk/hooks/hook.sh; \
-    init_ghjk; \
-    cargo run --locked --package meta-cli -- --help; \
+test-meta-cli:
+  FROM +testpre-rust
+
+  RUN bash -c '\
+    cargo run --profile $CARGO_PROFILE --locked --package meta-cli -- --help; \
     cargo test --locked --package meta-cli; '
 
+test-libs:
+  FROM +testpre-rust
+
   # from old test-libs
-  RUN bash -c 'source ~/.local/share/ghjk/hooks/hook.sh; \
-    init_ghjk; \
+  RUN bash -c '\
     cargo test --locked --exclude meta-cli --exclude typegate \
       --exclude typegraph_engine --exclude typegraph_core --workspace;'
 
-  RUN bash -c 'source ~/.local/share/ghjk/hooks/hook.sh; \
-    init_ghjk; \
-    cargo build -p meta-cli; \
-    cargo build -p xtask; ' # xtask and meta-cli are used by the test suite
+test-typegate-image:
+  FROM +test-meta-cli
+
+  RUN bash -c '\
+    cargo build --profile $CARGO_PROFILE -p meta-cli; \
+    cargo build --profile $CARGO_PROFILE -p xtask; ' # xtask and meta-cli are used by the test suite
 
   COPY --dir dev/ .
 
-  RUN bash -c 'source ~/.local/share/ghjk/hooks/hook.sh; \
-    init_ghjk; \
+  RUN bash -c '\
     deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only;'
 
-  RUN bash -c 'source ~/.local/share/ghjk/hooks/hook.sh; \
-    init_ghjk; \
+  ENTRYPOINT ["bash", "-c", "\
     deno run -A dev/test.ts --threads 2 -- --coverage=coverage; \
-    deno --unstable coverage ./coverage --lcov > coverage.lcov; '
+    deno --unstable coverage ./coverage --lcov > coverage.lcov; "]
+  SAVE IMAGE test-typegate:latest
+
+test-typegate:
+  FROM earthly/dind:alpine-3.18-docker-23.0.6-r4
+  WORKDIR /app
+  COPY dev/envs .
+  WITH DOCKER \
+          --compose compose.base.yml \
+          --compose compose.prisma.yml \
+          --compose compose.s3.yml \
+          --load test-typegate:latest=+test-typegate-image
+      RUN docker run test-typegate:latest
+  END
+
 
 build-typegate:
   FROM +chef-cook

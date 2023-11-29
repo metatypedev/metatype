@@ -76,14 +76,15 @@ jobs:
         with:
           deno-version: ${{ env.DENO_VERSION }}
       - shell: bash
+        run: deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
+      - shell: bash
+        env: 
+          BASH_ENV: $HOME/.local/share/ghjk/hooks/hook.sh
+        run: ghjk sync
+      - shell: bash
+        env: 
+          BASH_ENV: $HOME/.local/share/ghjk/hooks/hook.sh
         run: |
-          deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
-
-          source ~/.local/share/ghjk/hooks/hook.sh
-          ls -osha
-          ghjk sync
-          init_ghjk
-
           cd website
           pnpm install --frozen-lockfile
           cd ..
@@ -154,13 +155,16 @@ jobs:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - shell: bash
-        env:
+        run: deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
+      - shell: bash
+        env: 
+          BASH_ENV: $HOME/.local/share/ghjk/hooks/hook.sh
+        run: ghjk sync
+      - shell: bash
+        env: 
+          BASH_ENV: $HOME/.local/share/ghjk/hooks/hook.sh
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
-          deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
-          source ~/.local/share/ghjk/hooks/hook.sh
-          ghjk sync
-          init_ghjk
 
           python3 -m venv .venv
           ${{ matrix.activate }}
@@ -285,16 +289,18 @@ jobs:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - shell: bash
-        env:
+        run: deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
+      - shell: bash
+        env: 
+          BASH_ENV: $HOME/.local/share/ghjk/hooks/hook.sh
+        run: ghjk sync
+      - shell: bash
+        env: 
+          BASH_ENV: $HOME/.local/share/ghjk/hooks/hook.sh
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
           sudo apt update
           sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev perl make
-
-          deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
-          source ~/.local/share/ghjk/hooks/hook.sh
-          ghjk sync
-          init_ghjk
 
           python3 -m venv .venv
           source .venv/bin/activate
