@@ -224,7 +224,7 @@ export class TypeGateRuntime extends Runtime {
         type: node.type,
         enums: node.enum,
         runtime: tg!.tg.runtime(node.runtime).name,
-        config: JSON.stringify(node.config ?? {}),
+        config: node.config ? JSON.stringify(node.config) : null,
         default: defaultValue ? JSON.stringify(defaultValue) : null,
       };
     };
