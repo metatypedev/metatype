@@ -6,7 +6,7 @@ export { Parser };
 const srcDir = new URL(".", import.meta.url).pathname;
 
 await Parser.init();
-const TypeScript = await Parser.Language.load(
+export const TypeScript = await Parser.Language.load(
   join(srcDir, "../grammars/typescript.wasm"),
 );
 
@@ -47,11 +47,7 @@ type TypegraphDefinitionCaptures = {
   args?: Parser.SyntaxNode;
 };
 
-const typegraphDefinitionCaptureNames = [
-  "name",
-  "builder",
-  "args",
-] as const;
+const typegraphDefinitionCaptureNames = ["name", "builder", "args"] as const;
 
 /// find top level typegraph definitions
 /// return the arguments node
@@ -71,9 +67,25 @@ export function findTypegraphDefinitions(
     );
 }
 
+const parameterQuery = TypeScript.query(`
+  (identifier) @graphParameterName
+`);
+
+const methodCallQuery = TypeScript.query(`
+(call_expression
+  function: (
+    member_expression object: (identifier) @object
+    property: (property_identifier) @method
+  )
+  arguments: (arguments (object) @objectArg)
+)
+`);
+
 export class TypegraphDefinition {
   name: string;
   builder: Parser.SyntaxNode;
+  graphParameterName: string;
+  body: Parser.SyntaxNode;
 
   constructor(captures: TypegraphDefinitionCaptures) {
     if (captures.name != undefined) {
@@ -83,5 +95,34 @@ export class TypegraphDefinition {
       // TODO find name in args
       throw new Error("TODO");
     }
+
+    const matches = parameterQuery.matches(this.builder.namedChildren[0]);
+    if (matches.length != 1) {
+      throw new Error("expected one match");
+    }
+    this.graphParameterName = matches[0].captures[0].node.text;
+    this.body = this.builder.namedChildren[1];
+  }
+
+  findExposedFunctions(): [name: string, node: Parser.SyntaxNode][] {
+    const exposeObjects = methodCallQuery
+      .matches(this.body)
+      .filter((m) => {
+        const object = m.captures.find((c) => c.name === "object");
+        const method = m.captures.find((c) => c.name === "method");
+        return object?.node.text === this.graphParameterName &&
+          method?.node.text === "expose";
+      })
+      .map((m) => m.captures.find((c) => c.name === "objectArg")?.node);
+
+    if (exposeObjects.length !== 1) {
+      throw new Error("expected one object argument in expose");
+    }
+
+    return exposeObjects[0]!.namedChildren.map((c) => {
+      const name = c.childForFieldName("key");
+      const value = c.childForFieldName("value");
+      return [name!.text, value!];
+    });
   }
 }
