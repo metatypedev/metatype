@@ -1830,7 +1830,7 @@ dependencies = [
  "quick-junit",
  "rand 0.8.5",
  "regex",
- "ring 0.17.5",
+ "ring 0.17.6",
  "rustyline",
  "rustyline-derive",
  "serde 1.0.193",
@@ -1948,7 +1948,7 @@ dependencies = [
  "log",
  "once_cell",
  "parking_lot 0.12.1",
- "ring 0.17.5",
+ "ring 0.17.6",
  "serde 1.0.193",
  "serde_json",
  "thiserror",
@@ -2040,7 +2040,7 @@ dependencies = [
  "p256",
  "p384",
  "rand 0.8.5",
- "ring 0.17.5",
+ "ring 0.17.6",
  "rsa",
  "serde 1.0.193",
  "serde_bytes",
@@ -2196,7 +2196,7 @@ dependencies = [
  "percent-encoding",
  "phf 0.10.1",
  "pin-project",
- "ring 0.17.5",
+ "ring 0.17.6",
  "scopeguard",
  "serde 1.0.193",
  "slab",
@@ -2276,7 +2276,7 @@ version = "0.17.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8cd29f62e6dec60e585f579df3e9c2fc562aadf881319152974bc442a9042077"
 dependencies = [
- "ring 0.17.5",
+ "ring 0.17.6",
  "serde 1.0.193",
  "serde_json",
  "thiserror",
@@ -2379,7 +2379,7 @@ dependencies = [
  "rand 0.8.5",
  "regex",
  "reqwest",
- "ring 0.17.5",
+ "ring 0.17.6",
  "ripemd",
  "rsa",
  "scrypt",
@@ -2472,7 +2472,7 @@ dependencies = [
  "ntapi",
  "once_cell",
  "regex",
- "ring 0.17.5",
+ "ring 0.17.6",
  "serde 1.0.193",
  "signal-hook-registry",
  "termcolor",
@@ -7690,9 +7690,9 @@ dependencies = [
 
 [[package]]
 name = "ring"
-version = "0.17.5"
+version = "0.17.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb0205304757e5d899b9c2e448b867ffd03ae7f988002e47cd24954391394d0b"
+checksum = "684d5e6e18f669ccebf64a92236bb7db9a34f07be010e3627368182027180866"
 dependencies = [
  "cc",
  "getrandom 0.2.11",
@@ -7901,7 +7901,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "629648aced5775d558af50b2b4c7b02983a04b312126d45eeead26e7caa498b9"
 dependencies = [
  "log",
- "ring 0.17.5",
+ "ring 0.17.6",
  "rustls-webpki",
  "sct",
 ]
@@ -7944,7 +7944,7 @@ version = "0.101.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b6275d1ee7a1cd780b64aca7726599a1dbc893b1e64144529e55c3c2f745765"
 dependencies = [
- "ring 0.17.5",
+ "ring 0.17.6",
  "untrusted 0.9.0",
 ]
 
@@ -8166,7 +8166,7 @@ version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da046153aa2352493d6cb7da4b6e5c0c057d8a1d0a9aa8560baffdd945acd414"
 dependencies = [
- "ring 0.17.5",
+ "ring 0.17.6",
  "untrusted 0.9.0",
 ]
 
@@ -8854,9 +8854,9 @@ checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
 
 [[package]]
 name = "spki"
-version = "0.7.2"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d1e996ef02c474957d681f1b05213dfb0abab947b446a62d37770b23500184a"
+checksum = "d91ed6c858b01f942cd56b37a94b3e0a1798290327d1236e4d9cf4eaca44d29d"
 dependencies = [
  "base64ct",
  "der",
@@ -11396,9 +11396,9 @@ dependencies = [
 
 [[package]]
 name = "web-sys"
-version = "0.3.65"
+version = "0.3.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5db499c5f66323272151db0e666cd34f78617522fb0c1604d31a27c50c206a85"
+checksum = "50c24a44ec86bb68fbecd1b3efed7e85ea5621b39b35ef2766b66cd984f8010f"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
@@ -11410,7 +11410,7 @@ version = "0.22.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed63aea5ce73d0ff405984102c42de94fc55a6b75765d621c65262469b3c9b53"
 dependencies = [
- "ring 0.17.5",
+ "ring 0.17.6",
  "untrusted 0.9.0",
 ]
 
