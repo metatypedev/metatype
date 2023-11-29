@@ -583,7 +583,7 @@ impl crate::wit::runtimes::Guest for crate::Lib {
             WitOp::AddTypegraph => (WitEffect::Create(true), Op::AddTypegraph),
             WitOp::RemoveTypegraph => (WitEffect::Delete(true), Op::RemoveTypegraph),
             WitOp::GetSerializedTypegraph => (WitEffect::Read, Op::GetSerializedTypegraph),
-            WitOp::GetTypeInfoByPath => (WitEffect::Read, Op::GetTypeInfoByPath),
+            WitOp::GetArgInfoByPath => (WitEffect::Read, Op::GetArgInfoByPath),
         };
 
         Ok(Store::register_materializer(Materializer::typegate(

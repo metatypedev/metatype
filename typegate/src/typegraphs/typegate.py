@@ -72,6 +72,14 @@ def typegate(g: Graph):
         serialized_typegraph_mat_id.value, effect=fx.read()
     )
 
+    arg_info_by_path_id = runtimes.register_typegate_materializer(
+        store,
+        TypegateOperation.GET_ARG_INFO_BY_PATH,
+    )
+    if isinstance(arg_info_by_path_id, Err):
+        raise Exception(arg_info_by_path_id.value)
+    arg_info_by_path_mat = Materializer(arg_info_by_path_id.value, effect=fx.read())
+
     serialized = t.gen(t.string(), serialized_typegraph_mat)
 
     typegraph = t.struct(
@@ -80,6 +88,22 @@ def typegate(g: Graph):
             "url": t.uri(),
         },
         name="Typegraph",
+    )
+
+    path = t.list(t.string())
+    arg_info_inp = t.struct(
+        {"typegraph": t.string(), "function": t.string(), "argPaths": t.list(path)}
+    )
+
+    arg_info_out = t.struct(
+        {
+            "path": path,
+            "enums": t.list(t.json()),
+            "config": t.json(),
+            "data": t.json(),
+            "type": t.string(),
+            "name": t.string(),
+        }
     )
 
     g.expose(
@@ -94,6 +118,9 @@ def typegate(g: Graph):
             t.optional(typegraph.extend({"serialized": serialized})),
             find_typegraph_mat,
             rate_calls=True,
+        ),
+        argInfoByPath=t.func(
+            arg_info_inp, t.list(arg_info_out), arg_info_by_path_mat, rate_calls=True
         ),
         addTypegraph=t.func(
             t.struct(
