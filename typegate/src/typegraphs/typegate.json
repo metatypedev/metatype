@@ -12,8 +12,8 @@
         "typegraphs": 1,
         "typegraph": 7,
         "argInfoByPath": 15,
-        "addTypegraph": 36,
-        "removeTypegraph": 53
+        "addTypegraph": 37,
+        "removeTypegraph": 54
       },
       "required": [
         "typegraphs",
@@ -25,7 +25,7 @@
     },
     {
       "type": "function",
-      "title": "func_56",
+      "title": "func_57",
       "runtime": 1,
       "policies": [
         0
@@ -40,7 +40,7 @@
     },
     {
       "type": "object",
-      "title": "object_25",
+      "title": "object_26",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -50,7 +50,7 @@
     },
     {
       "type": "list",
-      "title": "_26_Typegraph[]",
+      "title": "_27_Typegraph[]",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -89,7 +89,7 @@
     },
     {
       "type": "function",
-      "title": "func_57",
+      "title": "func_58",
       "runtime": 1,
       "policies": [
         0
@@ -104,7 +104,7 @@
     },
     {
       "type": "object",
-      "title": "object_29",
+      "title": "object_30",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -116,7 +116,7 @@
     },
     {
       "type": "string",
-      "title": "string_28",
+      "title": "string_29",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -124,7 +124,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_31",
+      "title": "optional_32",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -134,7 +134,7 @@
     },
     {
       "type": "object",
-      "title": "object_30",
+      "title": "object_31",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -179,7 +179,7 @@
     },
     {
       "type": "function",
-      "title": "func_58",
+      "title": "func_59",
       "runtime": 1,
       "policies": [
         0
@@ -259,7 +259,7 @@
     },
     {
       "type": "list",
-      "title": "list_33",
+      "title": "list_34",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -268,19 +268,20 @@
     },
     {
       "type": "object",
-      "title": "object_24",
+      "title": "object_25",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "as_id": 25,
-        "title": 26,
-        "type": 27,
-        "enum": 28,
-        "runtime": 31,
-        "config": 32,
-        "default": 34
+        "optional": 25,
+        "as_id": 26,
+        "title": 27,
+        "type": 28,
+        "enum": 29,
+        "runtime": 32,
+        "config": 33,
+        "default": 35
       },
       "required": []
     },
@@ -293,8 +294,8 @@
       "as_id": false
     },
     {
-      "type": "string",
-      "title": "string_14",
+      "type": "boolean",
+      "title": "boolean_14",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -309,36 +310,8 @@
       "as_id": false
     },
     {
-      "type": "optional",
-      "title": "optional_18",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 29,
-      "default_value": null
-    },
-    {
-      "type": "list",
-      "title": "list_17",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "items": 30
-    },
-    {
       "type": "string",
       "title": "string_16",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "format": "json"
-    },
-    {
-      "type": "string",
-      "title": "string_19",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -346,17 +319,53 @@
     },
     {
       "type": "optional",
-      "title": "optional_21",
+      "title": "optional_19",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 33,
+      "item": 30,
       "default_value": null
+    },
+    {
+      "type": "list",
+      "title": "list_18",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 31
+    },
+    {
+      "type": "string",
+      "title": "string_17",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "format": "json"
     },
     {
       "type": "string",
       "title": "string_20",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "optional",
+      "title": "optional_22",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 34,
+      "default_value": null
+    },
+    {
+      "type": "string",
+      "title": "string_21",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -365,17 +374,17 @@
     },
     {
       "type": "optional",
-      "title": "optional_23",
+      "title": "optional_24",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 35,
+      "item": 36,
       "default_value": null
     },
     {
       "type": "string",
-      "title": "string_22",
+      "title": "string_23",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -384,41 +393,32 @@
     },
     {
       "type": "function",
-      "title": "func_59",
+      "title": "func_60",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
       "as_id": false,
-      "input": 37,
-      "output": 41,
+      "input": 38,
+      "output": 42,
       "materializer": 5,
       "rate_weight": null,
       "rate_calls": true
     },
     {
       "type": "object",
-      "title": "object_38",
+      "title": "object_39",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "fromString": 38,
-        "secrets": 39,
-        "cliVersion": 40
+        "fromString": 39,
+        "secrets": 40,
+        "cliVersion": 41
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_35",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "format": "json"
     },
     {
       "type": "string",
@@ -435,26 +435,35 @@
       "runtime": 1,
       "policies": [],
       "config": {},
+      "as_id": false,
+      "format": "json"
+    },
+    {
+      "type": "string",
+      "title": "string_38",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
       "as_id": false
     },
     {
       "type": "object",
-      "title": "object_50",
+      "title": "object_51",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "name": 42,
-        "messages": 43,
-        "migrations": 47,
-        "resetRequired": 51
+        "name": 43,
+        "messages": 44,
+        "migrations": 48,
+        "resetRequired": 52
       },
       "required": []
     },
     {
       "type": "string",
-      "title": "string_39",
+      "title": "string_40",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -462,29 +471,29 @@
     },
     {
       "type": "list",
-      "title": "list_43",
+      "title": "list_44",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 44
+      "items": 45
     },
     {
       "type": "object",
-      "title": "object_42",
+      "title": "object_43",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "type": 45,
-        "text": 46
+        "type": 46,
+        "text": 47
       },
       "required": []
     },
     {
       "type": "string",
-      "title": "string_40",
+      "title": "string_41",
       "runtime": 1,
       "policies": [],
       "enum": [
@@ -497,7 +506,7 @@
     },
     {
       "type": "string",
-      "title": "string_41",
+      "title": "string_42",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -505,33 +514,25 @@
     },
     {
       "type": "list",
-      "title": "list_47",
+      "title": "list_48",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 48
+      "items": 49
     },
     {
       "type": "object",
-      "title": "object_46",
+      "title": "object_47",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "runtime": 49,
-        "migrations": 50
+        "runtime": 50,
+        "migrations": 51
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_44",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "string",
@@ -542,17 +543,25 @@
       "as_id": false
     },
     {
+      "type": "string",
+      "title": "string_46",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
       "type": "list",
-      "title": "list_49",
+      "title": "list_50",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 52
+      "items": 53
     },
     {
       "type": "string",
-      "title": "string_48",
+      "title": "string_49",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -560,34 +569,34 @@
     },
     {
       "type": "function",
-      "title": "func_60",
+      "title": "func_61",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
       "as_id": false,
-      "input": 54,
-      "output": 56,
+      "input": 55,
+      "output": 57,
       "materializer": 6,
       "rate_weight": null,
       "rate_calls": true
     },
     {
       "type": "object",
-      "title": "object_53",
+      "title": "object_54",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "name": 55
+        "name": 56
       },
       "required": []
     },
     {
       "type": "string",
-      "title": "string_52",
+      "title": "string_53",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -595,7 +604,7 @@
     },
     {
       "type": "integer",
-      "title": "integer_54",
+      "title": "integer_55",
       "runtime": 1,
       "policies": [],
       "config": {},

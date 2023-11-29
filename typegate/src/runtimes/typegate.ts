@@ -143,7 +143,9 @@ export class TypeGateRuntime extends Runtime {
 
   argInfoByPath: Resolver = ({ typegraph, queryType, argPaths, fn }) => {
     if (queryType != "query" && queryType != "mutation") {
-      throw new Error(`type "${queryType}", "query" or "mutation" expected`);
+      throw new Error(
+        `"query" or "mutation" expected, got type "${queryType}"`,
+      );
     }
 
     const paths = argPaths as Array<Array<string>>;
@@ -156,7 +158,6 @@ export class TypeGateRuntime extends Runtime {
     if (funcIdx === undefined) {
       const available = Object.keys(exposed);
       const proposition = closestWord(fn ?? "", available, true);
-      console.log("ava", available, JSON.stringify(exposed));
       throw new Error(
         `type named "${fn}" not found, did you mean "${proposition ?? ""}"`,
       );
@@ -165,23 +166,28 @@ export class TypeGateRuntime extends Runtime {
     const func = tg!.tg.type(funcIdx, Type.FUNCTION);
     const input = tg!.tg.type(func.input, Type.OBJECT);
 
+    const resolveOptional = (node: TypeNode) => {
+      let topLevelDefault;
+      let isOptional = false;
+      if (node.type == Type.OPTIONAL) {
+        while (node.type == Type.OPTIONAL) {
+          if (topLevelDefault == undefined) {
+            topLevelDefault = node.default_value;
+          }
+          isOptional = true;
+          node = tg!.tg.type(node.item);
+        }
+      }
+      return { node, topLevelDefault, isOptional };
+    };
+
     const walkPath = (path: Array<string>) => {
       let node = input as TypeNode;
-      let defaultValue;
       for (let cursor = 0; cursor < path.length; cursor += 1) {
         const current = path.at(cursor)!;
 
-        // resolve nested optional & current default value
-        let topLevelDefault;
-        if (node.type == Type.OPTIONAL) {
-          while (node.type == Type.OPTIONAL) {
-            if (topLevelDefault == undefined) {
-              topLevelDefault = node.default_value;
-            }
-            node = tg!.tg.type(node.item);
-          }
-          defaultValue = topLevelDefault;
-        }
+        // if the type is optional and path has not ended yet, the wrapped type needs to be retrieved
+        node = resolveOptional(node).node;
 
         const prettyPath = path.map((chunk, i) =>
           i == cursor ? `[${chunk}]` : chunk
@@ -201,13 +207,10 @@ export class TypeGateRuntime extends Runtime {
             }
 
             node = tg!.tg.type(currNode);
-
-            // reset, path is not terminated yet!
-            defaultValue = null;
             break;
           }
           default: {
-            // list, float, either, ..etc are considered as leaf
+            // optional, list, float, either, ..etc are considered as leaf
             if (cursor != path.length) {
               throw new Error(
                 `cannot extend path ${prettyPath} with type "${node.type}"`,
@@ -218,7 +221,15 @@ export class TypeGateRuntime extends Runtime {
         }
       }
 
+      // resulting leaf can still be optional
+      const { node: resNode, topLevelDefault: defaultValue, isOptional } =
+        resolveOptional(
+          node,
+        );
+      node = resNode;
+
       return {
+        optional: isOptional,
         as_id: node.as_id,
         title: node.title,
         type: node.type,

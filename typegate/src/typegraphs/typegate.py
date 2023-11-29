@@ -102,6 +102,7 @@ def typegate(g: Graph):
 
     arg_info_out = t.struct(
         {
+            "optional": t.boolean(),
             "as_id": t.boolean(),
             "title": t.string(),
             "type": t.string(),
