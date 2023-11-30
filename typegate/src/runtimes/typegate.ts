@@ -12,6 +12,7 @@ import { Typegate } from "../typegate/mod.ts";
 import { TypeGraph } from "../typegraph/mod.ts";
 import { closestWord } from "../utils.ts";
 import { Type, TypeNode } from "../typegraph/type_node.ts";
+import { StringFormat } from "../typegraph/types.ts";
 
 const logger = getLogger(import.meta);
 
@@ -24,6 +25,7 @@ interface ArgInfoResult {
   enum: string[] | null;
   config: string | null;
   default: string | null;
+  format: StringFormat | null;
 }
 
 export class TypeGateRuntime extends Runtime {
@@ -195,7 +197,8 @@ export class TypeGateRuntime extends Runtime {
           node = tg!.tg.type(node.item);
         }
       }
-      return { node, topLevelDefault, isOptional };
+      const format = node.type == Type.STRING ? node.format : undefined;
+      return { node, format, topLevelDefault, isOptional };
     };
 
     const walkPath = (
@@ -263,10 +266,14 @@ export class TypeGateRuntime extends Runtime {
 
       // resulting leaf can be optional
       // in that case isOptional is true
-      const { node: resNode, topLevelDefault: defaultValue, isOptional } =
-        resolveOptional(
-          node,
-        );
+      const {
+        node: resNode,
+        format,
+        topLevelDefault: defaultValue,
+        isOptional,
+      } = resolveOptional(
+        node,
+      );
       node = resNode;
 
       return {
@@ -278,6 +285,7 @@ export class TypeGateRuntime extends Runtime {
         runtime: tg!.tg.runtime(node.runtime).name,
         config: node.config ? JSON.stringify(node.config) : null,
         default: defaultValue ? JSON.stringify(defaultValue) : null,
+        format: format ?? null,
       };
     };
 

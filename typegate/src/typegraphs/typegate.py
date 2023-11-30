@@ -110,6 +110,7 @@ def typegate(g: Graph):
             "runtime": t.string(),
             "config": t.json().optional(),
             "default": t.json().optional(),
+            "format": t.string().optional(),
         }
     )
 
