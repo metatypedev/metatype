@@ -6,7 +6,7 @@ type ExposedFunction = {
   runtime: Parser.SyntaxNode;
   generator: string;
   generatorArgs: Parser.SyntaxNode;
-  apply?: Parser.SyntaxNode | null;
+  reduce?: Parser.SyntaxNode | null;
   policy?: Parser.SyntaxNode | null;
 };
 
@@ -48,11 +48,11 @@ export function asMethodCall(node: Parser.SyntaxNode): MethodCall | null {
  *   use default LSP to find definition
  *
  * Example:
- * database.findMany(users).apply({ where: { id: 1 } }).withPolicy(policy)
+ * database.findMany(users).reduce({ where: { id: 1 } }).withPolicy(policy)
  * - runtime: database
  * - generator: findMany
  * - generatorArgs: users
- * - apply: { where: { id: 1 } }
+ * - reduce: { where: { id: 1 } }
  * - policy: policy
  */
 export function analyzeExposeExpression(
@@ -63,7 +63,7 @@ export function analyzeExposeExpression(
     throw new Error("expected method call");
   }
   let policy: Parser.SyntaxNode | null = null;
-  let apply: Parser.SyntaxNode | null = null;
+  let reduce: Parser.SyntaxNode | null = null;
   if (methodCall.method === "withPolicy") {
     policy = methodCall.arguments;
     methodCall = asMethodCall(methodCall.object);
@@ -72,9 +72,9 @@ export function analyzeExposeExpression(
     }
   }
 
-  // TODO what if apply is a generator name??
-  if (methodCall.method === "apply") {
-    apply = methodCall.arguments;
+  // TODO what if reduce is a generator name??
+  if (methodCall.method === "reduce") {
+    reduce = methodCall.arguments;
     methodCall = asMethodCall(methodCall.arguments);
     if (methodCall === null) {
       throw new Error("expected method call");
@@ -90,7 +90,7 @@ export function analyzeExposeExpression(
     runtime,
     generator,
     generatorArgs,
-    apply,
+    reduce,
     policy,
   };
 }
