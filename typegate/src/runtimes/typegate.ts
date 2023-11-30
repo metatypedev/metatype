@@ -157,9 +157,15 @@ export class TypeGateRuntime extends Runtime {
     const funcIdx = exposed[fn];
     if (funcIdx === undefined) {
       const available = Object.keys(exposed);
-      const proposition = closestWord(fn ?? "", available, true);
+      const closest = closestWord(fn, available, true);
+      const propositions = closest ? [closest] : available;
+      const prefix = propositions.length > 1 ? " one of " : " ";
       throw new Error(
-        `type named "${fn}" not found, did you mean "${proposition ?? ""}"`,
+        `type named "${fn}" not found, did you mean${prefix}${
+          propositions
+            .map((prop) => `"${prop}"`)
+            .join(", ")
+        }?`,
       );
     }
 
@@ -196,9 +202,9 @@ export class TypeGateRuntime extends Runtime {
         switch (node.type) {
           case Type.OBJECT: {
             const available = Object.keys(node.properties);
-            const currNode = node.properties[current];
+            const currNodeIdx = node.properties[current];
 
-            if (currNode === undefined) {
+            if (currNodeIdx === undefined) {
               throw new Error(
                 `invalid path ${prettyPath}, none of ${
                   available.join(", ")
@@ -206,7 +212,7 @@ export class TypeGateRuntime extends Runtime {
               );
             }
 
-            node = tg!.tg.type(currNode);
+            node = tg!.tg.type(currNodeIdx);
             break;
           }
           default: {
@@ -221,7 +227,8 @@ export class TypeGateRuntime extends Runtime {
         }
       }
 
-      // resulting leaf can still be optional
+      // resulting leaf can be optional
+      // in that case isOptional is true
       const { node: resNode, topLevelDefault: defaultValue, isOptional } =
         resolveOptional(
           node,
@@ -233,7 +240,7 @@ export class TypeGateRuntime extends Runtime {
         as_id: node.as_id,
         title: node.title,
         type: node.type,
-        enums: node.enum,
+        enum: node.enum,
         runtime: tg!.tg.runtime(node.runtime).name,
         config: node.config ? JSON.stringify(node.config) : null,
         default: defaultValue ? JSON.stringify(defaultValue) : null,
