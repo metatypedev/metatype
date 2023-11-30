@@ -3,7 +3,7 @@
 
 import { TestModule } from "test-utils/test_module.ts";
 import { Meta } from "test-utils/mod.ts";
-import { assert } from "std/assert/mod.ts";
+import { fail } from "std/assert/mod.ts";
 
 const m = new TestModule(import.meta);
 
@@ -13,9 +13,11 @@ Meta.test("typegraph validation", async (t) => {
     async () => {
       try {
         await m.cli({}, "serialize", "-f", "typegraphs/python/validator.py");
-        assert(false, "should have thrown");
+        fail("should have thrown");
       } catch (e) {
-        await t.assertSnapshot(e.message);
+        await t.assertSnapshot(
+          e.message.replace(/".*?metatype/, '".'),
+        );
       }
     },
   );
