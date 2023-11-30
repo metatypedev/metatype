@@ -1,7 +1,7 @@
 export const snapshot = {};
 
 snapshot[`typegraph validation 1`] = `
-\`Command '"/home/afmika/dev-env/metatype/target/debug/meta" "serialize" "-f" "typegraphs/python/validator.py"' failed with 1:
+\`Command '"./target/debug/meta" "serialize" "-f" "typegraphs/python/validator.py"' failed with 1:
 -- start STDERR --
 
 [ERROR] at validator:/test/[in]/a: Expected number got '"1"'
