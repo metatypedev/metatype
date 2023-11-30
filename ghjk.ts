@@ -11,6 +11,7 @@ import asdf from "https://raw.github.com/metatypedev/ghjk/feat/mvp/plugs/asdf.ts
 import protoc from "https://raw.github.com/metatypedev/ghjk/feat/mvp/plugs/protoc.ts";
 import act from "https://raw.github.com/metatypedev/ghjk/feat/mvp/plugs/act.ts";
 import earthly from "https://raw.github.com/metatypedev/ghjk/feat/mvp/plugs/earthly.ts";
+import whiz from "https://raw.github.com/metatypedev/ghjk/feat/mvp/plugs/whiz.ts";
 
 const PROTOC_VERSION = "v25.1";
 const POETRY_VERSION = "1.7.0";
@@ -38,6 +39,7 @@ mold({}); // FIXME: pin version
 if (Deno.env.get("GHJK_DEV")) {
   act({});
   earthly({});
+  whiz({});
 }
 
 if (Deno.env.get("GHJK_CI")) {

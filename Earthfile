@@ -11,7 +11,7 @@ ENV DENO_DIR /deno-dir/
 COPY_SOURCES_RUST:
   FUNCTION
   COPY Cargo.toml Cargo.lock  .
-  COPY --dir libs/ meta-cli/ typegate/ typegraph/ .
+  COPY --dir .cargo/ libs/ meta-cli/ examples/ typegate/ typegraph/ .
 
 deno-bin:
   ARG DENO_VERSION=1.38.1
@@ -136,7 +136,7 @@ chef-cook:
     cargo chef cook --recipe-path recipe.json --profile $CARGO_PROFILE --package typegate; \
     rm recipe.json; '
 
-testpre-rust:
+pretest-rust:
 
   # FROM +chef-cook
   FROM +rust-builder
@@ -144,6 +144,12 @@ testpre-rust:
   COPY +deno-bin/deno /bin/deno
 
   WORKDIR /app
+
+  DO +COPY_SOURCES_RUST
+
+  # fetch cargo deps
+  RUN cargo fetch
+
   DO +COPY_GHJK_DEPS
 
   COPY poetry.lock pyproject.toml .
@@ -154,11 +160,6 @@ testpre-rust:
     python3 -m venv .venv; \
     source .venv/bin/activate; \
     poetry install --no-root;'
-
-  DO +COPY_SOURCES_RUST
-
-  # fetch cargo deps
-  RUN cargo fetch
 
 
   ENV WASM_FILE=target/debug/typegraph_core.wasm
@@ -174,7 +175,7 @@ testpre-rust:
     poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen; '
 
 test-typegraph-core:
-  FROM +testpre-rust
+  FROM +pretest-rust
 
   # test in native rust, not in wasm for a future rust SDK
   # without --tests, the --doc is causing a link error "syntax error in VERSION script"
@@ -182,21 +183,21 @@ test-typegraph-core:
     cargo test --locked --package typegraph_core --tests;'
 
 test-meta-cli:
-  FROM +testpre-rust
+  FROM +pretest-rust
 
   RUN bash -c '\
     cargo run --profile $CARGO_PROFILE --locked --package meta-cli -- --help; \
     cargo test --locked --package meta-cli; '
 
 test-libs:
-  FROM +testpre-rust
+  FROM +pretest-rust
 
   # from old test-libs
   RUN bash -c '\
     cargo test --locked --exclude meta-cli --exclude typegate \
       --exclude typegraph_engine --exclude typegraph_core --workspace;'
 
-test-typegate-image:
+img-test-typegate:
   FROM +test-meta-cli
 
   RUN bash -c '\
@@ -221,7 +222,7 @@ test-typegate:
           --compose compose.base.yml \
           --compose compose.prisma.yml \
           --compose compose.s3.yml \
-          --load test-typegate:latest=+test-typegate-image
+          --load test-typegate:latest=+img-test-typegate
       RUN docker run test-typegate:latest
   END
 
