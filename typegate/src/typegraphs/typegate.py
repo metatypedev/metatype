@@ -126,9 +126,6 @@ def typegate(g: Graph):
             find_typegraph_mat,
             rate_calls=True,
         ),
-        argInfoByPath=t.func(
-            arg_info_inp, t.list(arg_info_out), arg_info_by_path_mat, rate_calls=True
-        ),
         addTypegraph=t.func(
             t.struct(
                 {"fromString": t.json(), "secrets": t.json(), "cliVersion": t.string()}
@@ -163,6 +160,9 @@ def typegate(g: Graph):
             t.integer(),
             remove_typegraph_mat,
             rate_calls=True,
+        ),
+        argInfoByPath=t.func(
+            arg_info_inp, t.list(arg_info_out), arg_info_by_path_mat, rate_calls=True
         ),
         default_policy=admin_only,
     )

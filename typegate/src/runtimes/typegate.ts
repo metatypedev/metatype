@@ -15,6 +15,17 @@ import { Type, TypeNode } from "../typegraph/type_node.ts";
 
 const logger = getLogger(import.meta);
 
+interface ArgInfoResult {
+  optional: boolean;
+  as_id: boolean;
+  title: string;
+  type: string;
+  runtime: string;
+  enum: string[] | null;
+  config: string | null;
+  default: string | null;
+}
+
 export class TypeGateRuntime extends Runtime {
   static singleton: TypeGateRuntime | null = null;
 
@@ -187,9 +198,13 @@ export class TypeGateRuntime extends Runtime {
       return { node, topLevelDefault, isOptional };
     };
 
-    const walkPath = (path: Array<string>) => {
-      let node = input as TypeNode;
-      for (let cursor = 0; cursor < path.length; cursor += 1) {
+    const walkPath = (
+      parent: TypeNode,
+      startCursor: number,
+      path: Array<string>,
+    ): ArgInfoResult => {
+      let node = parent as TypeNode;
+      for (let cursor = startCursor; cursor < path.length; cursor += 1) {
         const current = path.at(cursor)!;
 
         // if the type is optional and path has not ended yet, the wrapped type needs to be retrieved
@@ -215,8 +230,27 @@ export class TypeGateRuntime extends Runtime {
             node = tg!.tg.type(currNodeIdx);
             break;
           }
+          case Type.EITHER:
+          case Type.UNION: {
+            const variantsIdx = "anyOf" in node ? node.anyOf : node.oneOf;
+            const failures = new Array(variantsIdx.length);
+            // try to expand each variant, return first compatible with the path
+            const compat = [];
+            for (let i = 0; i < variantsIdx.length; i += 1) {
+              const variant = tg!.tg.type(variantsIdx[i]);
+              try {
+                compat.push(walkPath(variant, cursor, path));
+              } catch (err) {
+                failures[i] = err;
+              }
+            }
+            if (compat.length == 0) {
+              throw failures.shift();
+            }
+            return compat.shift()!;
+          }
           default: {
-            // optional, list, float, either, ..etc are considered as leaf
+            // optional, list, float are considered as leaf
             if (cursor != path.length) {
               throw new Error(
                 `cannot extend path ${prettyPath} with type "${node.type}"`,
@@ -240,13 +274,13 @@ export class TypeGateRuntime extends Runtime {
         as_id: node.as_id,
         title: node.title,
         type: node.type,
-        enum: node.enum,
+        enum: node.enum ?? null,
         runtime: tg!.tg.runtime(node.runtime).name,
         config: node.config ? JSON.stringify(node.config) : null,
         default: defaultValue ? JSON.stringify(defaultValue) : null,
       };
     };
 
-    return paths.map((path) => walkPath(path));
+    return paths.map((path) => walkPath(input, 0, path));
   };
 }

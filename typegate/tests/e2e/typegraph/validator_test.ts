@@ -16,7 +16,7 @@ Meta.test("typegraph validation", async (t) => {
         fail("should have thrown");
       } catch (e) {
         await t.assertSnapshot(
-          e.message.replace(/".*?metatype/, '".'),
+          e.message.replace(/"(.*)?target\/debug/, '"target/debug'),
         );
       }
     },
