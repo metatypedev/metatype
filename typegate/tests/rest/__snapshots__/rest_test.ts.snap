@@ -104,23 +104,6 @@ snapshot[`Rest queries in Deno 1`] = `
         title: "User",
         type: "object",
       },
-      array_11: {
-        items: {
-          oneOf: [
-            {
-              title: "string_8",
-              type: "string",
-            },
-            {
-              title: "integer_9",
-              type: "integer",
-            },
-          ],
-          title: "either_10",
-        },
-        title: "array_11",
-        type: "array",
-      },
       boolean_19: {
         title: "boolean_19",
         type: "boolean",
@@ -164,6 +147,23 @@ snapshot[`Rest queries in Deno 1`] = `
       integer_9: {
         title: "integer_9",
         type: "integer",
+      },
+      list_11: {
+        items: {
+          oneOf: [
+            {
+              title: "string_8",
+              type: "string",
+            },
+            {
+              title: "integer_9",
+              type: "integer",
+            },
+          ],
+          title: "either_10",
+        },
+        title: "list_11",
+        type: "array",
       },
       object_6: {
         properties: {
