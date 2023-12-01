@@ -24,7 +24,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v${{ env.DENO_VERSION }}
-      - uses: kenji-miyake/setup-git-cliff@v1
+      - uses: kenji-miyake/setup-git-cliff@v2
       - id: checks
         run: |
           VERSION=$(deno run -A dev/lock.ts --version)
@@ -229,7 +229,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v${{ env.DENO_VERSION }}
-      - uses: kenji-miyake/setup-git-cliff@v1
+      - uses: kenji-miyake/setup-git-cliff@v2
       - id: bump
         run: |
           deno run -A dev/lock.ts --bump prerelease
