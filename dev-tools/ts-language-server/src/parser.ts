@@ -1,5 +1,10 @@
 import Parser from "npm:web-tree-sitter";
 import { join } from "std/path/mod.ts";
+import {
+  analyzeExposeExpression,
+  ExposedFunction,
+} from "./analysis/exposed_function.ts";
+import { ScopeManager } from "./analysis/typescript-semantic/scope.ts";
 
 export { Parser };
 
@@ -86,8 +91,12 @@ export class TypegraphDefinition {
   builder: Parser.SyntaxNode;
   graphParameterName: string;
   body: Parser.SyntaxNode;
+  #exposedFunctions: Map<string, ExposedFunction> = new Map();
 
-  constructor(captures: TypegraphDefinitionCaptures) {
+  constructor(
+    captures: TypegraphDefinitionCaptures,
+    private scopeManager: ScopeManager,
+  ) {
     if (captures.name != undefined) {
       this.name = captures.name.text;
       this.builder = captures.builder!;
@@ -104,7 +113,7 @@ export class TypegraphDefinition {
     this.body = this.builder.namedChildren[1];
   }
 
-  findExposedFunctions(): [name: string, node: Parser.SyntaxNode][] {
+  #findExposedFunctions(): [name: string, node: Parser.SyntaxNode][] {
     const exposeObjects = methodCallQuery
       .matches(this.body)
       .filter((m) => {
@@ -124,5 +133,17 @@ export class TypegraphDefinition {
       const value = c.childForFieldName("value");
       return [name!.text, value!];
     });
+  }
+
+  get exposedFunctions(): Map<string, ExposedFunction> {
+    if (this.#exposedFunctions.size === 0) {
+      for (const [name, node] of this.#findExposedFunctions()) {
+        this.#exposedFunctions.set(name, {
+          ...analyzeExposeExpression(node, this.scopeManager),
+          name,
+        });
+      }
+    }
+    return this.#exposedFunctions;
   }
 }

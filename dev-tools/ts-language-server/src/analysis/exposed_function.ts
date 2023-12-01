@@ -1,6 +1,7 @@
 import { Parser, TypeScript } from "../parser.ts";
+import { ScopeManager } from "./typescript-semantic/scope.ts";
 
-type ExposedFunction = {
+export type ExposedFunction = {
   name: string;
   node: Parser.SyntaxNode;
   runtime: Parser.SyntaxNode;
@@ -40,6 +41,12 @@ export function asMethodCall(node: Parser.SyntaxNode): MethodCall | null {
   };
 }
 
+const runtimeNameByConstructor = {
+  "PythonRuntime": "python",
+  "DenoRuntime": "deno",
+  "PrismaRuntime": "prisma",
+};
+
 /**
  * Analyze an expose expression
  *
@@ -57,6 +64,7 @@ export function asMethodCall(node: Parser.SyntaxNode): MethodCall | null {
  */
 export function analyzeExposeExpression(
   node: Parser.SyntaxNode,
+  scopeManager: ScopeManager,
 ): Omit<ExposedFunction, "name"> {
   let methodCall = asMethodCall(node);
   if (methodCall === null) {
@@ -81,7 +89,28 @@ export function analyzeExposeExpression(
     }
   }
 
-  const runtime = methodCall.object;
+  let runtime = methodCall.object;
+  if (runtime.type === "identifier") {
+    const variable = scopeManager.findVariable(runtime);
+    if (variable === null) {
+      // TODO diagnostic??
+      throw new Error(`variable ${runtime.text} not found`);
+    }
+    runtime = variable.definition;
+  }
+
+  if (runtime.type !== "new_expression") {
+    throw new Error("expected new expression");
+  }
+  const runtimeConstructor = runtime.childForFieldName("constructor")!.text;
+  const runtimeName =
+    runtimeNameByConstructor[
+    runtimeConstructor as keyof typeof runtimeNameByConstructor
+    ];
+  if (runtimeName === undefined) {
+    throw new Error(`unknown runtime: ${runtimeConstructor}`);
+  }
+
   const generator = methodCall.method;
   const generatorArgs = methodCall.arguments;
 
