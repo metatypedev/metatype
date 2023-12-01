@@ -22,8 +22,8 @@ request-handlers = { git = "https://github.com/prisma/prisma-engines", tag = "5.
 prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
 datamodel-renderer = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
 user-facing-errors = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
+query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
+schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
 psl = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
 schema-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
 tempfile = "3.8.1"

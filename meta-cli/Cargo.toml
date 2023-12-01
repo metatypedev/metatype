@@ -29,7 +29,7 @@ default = []
 typegate = ["dep:typegate_engine"]
 
 [dependencies]
-self_update = { version = "0.38.0", features = [
+self_update = { version = "0.39.0", features = [
   "archive-tar",
   "archive-zip",
   "compression-flate2",
@@ -46,7 +46,7 @@ crossbeam-channel = "0.5.8"
 notify-debouncer-mini = { version = "0.4.1", default-features = false }
 tiny_http = "0.12.0"
 ignore = "0.4.20"
-globset = "0.4.13"
+globset = "0.4.14"
 anyhow = "1.0.75"
 indoc = "2.0.4"
 serde = { version = "1.0.192", features = ["derive"] }
@@ -62,19 +62,19 @@ common = { path = "../libs/common" }
 typescript = { path = "../libs/typescript" }
 serde_yaml = "0.9.27"
 pathdiff = "0.2.1"
-openssl = { version = "0.10.59", features = ["vendored"] }
+openssl = { version = "0.10.60", features = ["vendored"] }
 indexmap = { version = "2.1.0", features = ["serde"] }
 lade-sdk = "0.9.1"
 async-trait = "0.1.74"
 async-recursion = "1.0.5"
-itertools = "0.11.0"
+itertools = "0.12.0"
 enum_dispatch = "0.3.12"
 git2 = { version = "0.18.1", features = ["vendored-libgit2"], default-features = false }
 normpath = "1.1.1"
 include_dir = "0.7.3"
 chrono = { version = "0.4.31", features = ["serde"] }
 directories = "5.0.1"
-grep = "0.2.12"
+grep = "0.3.1"
 semver = "1.0.20"
 textwrap = "0.16.0"
 typegate_engine =  { workspace = true, optional = true }
