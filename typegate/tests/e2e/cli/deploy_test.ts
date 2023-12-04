@@ -12,6 +12,11 @@ const m = new TestModule(import.meta);
 
 const tgName = "migration-failure-test";
 
+/**
+ * These tests use different ports for the virtual typegate instance to avoid
+ * conflicts with one another when running in parallel.
+ */
+
 async function writeTypegraph(version: number | null) {
   if (version == null) {
     await m.shell([
@@ -163,7 +168,7 @@ Meta.test(
 
     await deploy(port);
   },
-  { port: 7986, systemTypegraphs: true },
+  { port: 7896, systemTypegraphs: true },
 );
 
 Meta.test("cli:deploy - automatic migrations", async (t) => {
