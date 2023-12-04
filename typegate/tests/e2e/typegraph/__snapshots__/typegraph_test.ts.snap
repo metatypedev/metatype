@@ -21,7 +21,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "function",
-        "title": "func_20",
+        "title": "func_21",
         "runtime": 0,
         "policies": [
           0
@@ -142,7 +142,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "list",
-        "title": "array_15",
+        "title": "list_15",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -354,7 +354,7 @@ snapshot[`typegraphs creation 2`] = `
       },
       {
         "type": "function",
-        "title": "func_4",
+        "title": "func_5",
         "runtime": 1,
         "policies": [
           0
@@ -406,7 +406,7 @@ snapshot[`typegraphs creation 2`] = `
       },
       {
         "type": "function",
-        "title": "func_10",
+        "title": "func_11",
         "runtime": 0,
         "policies": [
           0
@@ -562,7 +562,7 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "function",
-        "title": "func_10",
+        "title": "func_11",
         "runtime": 0,
         "policies": [
           0
@@ -617,7 +617,7 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "function",
-        "title": "func_12",
+        "title": "func_13",
         "runtime": 0,
         "policies": [
           1
@@ -674,7 +674,7 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "function",
-        "title": "func_14",
+        "title": "func_15",
         "runtime": 0,
         "policies": [
           2
@@ -754,7 +754,7 @@ snapshot[`typegraphs creation 3`] = `
           "idempotent": true
         },
         "data": {
-          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1Y727bNhD3Zz0FoX6ROlXxv3iDNxXb2q4r0GBBmg0DgkCgJdoWKokaSS32DL/J3mYvtiOp/7aTFEuCtfABiUXe8Xh3JI8/XkCTLCYrN1v3Ho36QJPxWP0CdX9Ho9Nxb9AfTwb9YX84kv2DwXAw6fV7T0A5F5gh1Puv1HXuM6Fn6BXN1ixaLAU6IwKLdUbQL//87aA4CkjKSYjyNCQMiSVBZ/SvKI4xOs9nwEXvtQT6jTAe0RQN3b5rPEMfzl///qLgvXgXklRE84iwKTo7f/8CZAxjzmiC5EwLhrMlipKMMoGEU/d1RFz9P8MMJ7yU/yEXSwfMZ9xBF1iQ/WN2pnm7T39GwaF1KXKuWl0ZloMnCeEuuERL0dfwfaEZhmF8X0lbBgIKwDhPWqibknAc0xs/YEQFBsfc+wn+EacjsCQYos69q+suJyFiSUPgmG/fXJo7bAprGaXAfd7kkVVGOdmrNcErHy+Iz0ngDYZ9zbD1D4OwejK2tf03URrCNFJ60ne63XGURALUfFNz/sgJWxeMRndMAxz7ZBUQzr3Tuj+gqSAr4UfVxvHMnBNmVobZRkjmSBAu/EBnL1+GnVuLqV5ce6pE1TJ5zRWybMXI8hn060V2M7WXgaNYnCbkUh4BDwmXC5YHonZ9U31JMmlKzCmIxREXlnAjsHtBmGU7KIEFGDkoxQnxzMsbatpOe6iAPjmUZgIODo6thcvI3DI/FNObdmPEtv7UGiupIiRGsddULO5rPfZBIEoXyg79aXXNxP48plgoEfVlSc8Gbh9czGMRwXw+nXtwpndGpj5J80SNlB/WlQqXo12/3iNehK8eVsZTdnhXAwcNrx25O+bRwtuYH8kapMw/cZwTc3vA8FqZtr5Q5Z6CMvd01wpfx6wMiQzfppiiVmLvzJbCViRhcy+QCNIls64akW14ZF/bdr30+7X5N6DCh00BastNuSfGCY5iHWT5Zd22a17V+6O9cRYuhkxqyXTqzjCHw3BlytP1o/yWvbBe9o7kMsHB8HRiKdGfoaEk7Uqnzjj19pNinjyS7jxPA6vlSmPrtn0U7ozSmOC0G6WAhuCSZSPvJYKFKj1SXrkqdDqjW3C87dLb3pF2qDrH1e328EjwDvw3GH+9g/9Go9HgiP+egPZDMXWNOrcisgdBTIfkszVgnLRSrlp7UVYDC+zs5C4e0Df9nptfMg+DBW2K17bCOpjncBh6eowrvfNjnMxCbHXSWvdyLmmz06NS/TxivHkNd7JhJQeojKbh7YLbVo/dTbh7x2kn0GqKVleFMdfoK9koZry+Jf/Cb0NdsUzrQ3dB4+bd9Xqfh9v7uVDcGBuktDpIK0JbdYWoPvS86DTv5cyXcZ/wgEWZ4CdiyQhxBe89At2R/yHzj7r5fzgaH/P/U9DJyacUAN7EmIvGy1+9+EHFwSd/MUA/+yX+ZXMcEHQpd9u7NMuFynizKQJkPiPsW2jgurE1DJle4QqQeULiZaT2qcwYG4QdNEPbaUOZPJgb6NmUr8gpuoATzcLvNAx3wJWPKb1JX0p4bE/V5Lg5ecOSreIyInKWVrNJm3pfEvFIQu9HLf/dif8mk936X388PJ7/J6D/af3PKUCas79cd3cpDqsaSPXiNgw+aFZFNiYGDAFn2py1ig2qvjEETGEYs5YGzXBktcwbj+yDKPSTK1GHIalKl1AhqNllT4k+ZV2s7VUUttyRiAngqQRRRYXpXLbsbVmc+lVW1gpbgHOnMvn+p6xWp8dX6rT2Q9AYKkAN1MehpDNzWi/5wdBsA67S4QaWg/pRQ4mMgKNMrzTJLqUNsF4UTpFcNRWord3R3sKHSmfBMKGxlsUqbdZcFmiLKHUws7qOtD16F/rKL/mnI6IEQFVCwzyGdhdv3WaS3g3daY91jCMd6UgPQ/8CAEP7twAeAAA="
+          "code": "file:scripts/three.ts;base64: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"
         }
       },
       {
@@ -836,7 +836,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "function",
-        "title": "func_20",
+        "title": "func_21",
         "runtime": 0,
         "policies": [
           0
@@ -957,7 +957,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "list",
-        "title": "array_15",
+        "title": "list_15",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -1169,7 +1169,7 @@ snapshot[`typegraphs creation 5`] = `
       },
       {
         "type": "function",
-        "title": "func_4",
+        "title": "func_5",
         "runtime": 1,
         "policies": [
           0
@@ -1221,7 +1221,7 @@ snapshot[`typegraphs creation 5`] = `
       },
       {
         "type": "function",
-        "title": "func_10",
+        "title": "func_11",
         "runtime": 0,
         "policies": [
           0
@@ -1377,7 +1377,7 @@ snapshot[`typegraphs creation 6`] = `
       },
       {
         "type": "function",
-        "title": "func_9",
+        "title": "func_10",
         "runtime": 0,
         "policies": [
           0
@@ -1432,7 +1432,7 @@ snapshot[`typegraphs creation 6`] = `
       },
       {
         "type": "function",
-        "title": "func_11",
+        "title": "func_12",
         "runtime": 0,
         "policies": [
           1
@@ -1489,7 +1489,7 @@ snapshot[`typegraphs creation 6`] = `
       },
       {
         "type": "function",
-        "title": "func_13",
+        "title": "func_14",
         "runtime": 0,
         "policies": [
           2

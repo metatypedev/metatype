@@ -10,8 +10,6 @@ import pg from "npm:pg";
 
 const m = new TestModule(import.meta);
 
-const port = 7895;
-
 const tgName = "migration-failure-test";
 
 async function writeTypegraph(version: number | null) {
@@ -32,7 +30,7 @@ async function writeTypegraph(version: number | null) {
   }
 }
 
-async function deploy(noMigration = false) {
+async function deploy(port: number, noMigration = false) {
   const migrationOpts = noMigration ? [] : ["--create-migration"];
 
   try {
@@ -40,7 +38,7 @@ async function deploy(noMigration = false) {
       {},
       "deploy",
       "-t",
-      "deploy",
+      `deploy${port}`,
       "-f",
       "migration.py",
       "--allow-dirty",
@@ -87,7 +85,7 @@ Meta.test(
     // otherwise this would fail by leaking ops.
     // That is expected since it creates new engine that persists beyond the
     // `should` block.
-    await deploy();
+    await deploy(7895);
 
     await t.should("insert records", async () => {
       const e = t.getTypegraphEngine(tgName);
@@ -114,7 +112,7 @@ Meta.test(
     });
 
     try {
-      await deploy();
+      await deploy(7895);
     } catch (e) {
       assertStringIncludes(
         e.message,
@@ -122,18 +120,19 @@ Meta.test(
       );
     }
   },
-  { port, systemTypegraphs: true },
+  { port: 7895, systemTypegraphs: true },
 );
 
 Meta.test(
   "meta deploy: succeeds migration for new columns with default value",
   async (t) => {
+    const port = 7896;
     await t.should("load first version of the typegraph", async () => {
       await reset();
       await writeTypegraph(null);
     });
 
-    await deploy();
+    await deploy(port);
 
     await t.should("insert records", async () => {
       const e = t.getTypegraphEngine(tgName)!;
@@ -156,15 +155,15 @@ Meta.test(
       await writeTypegraph(3); // int
     });
 
-    await deploy();
+    await deploy(port);
 
     await t.should("load third version of the typegraph", async () => {
       await writeTypegraph(4); // string
     });
 
-    await deploy();
+    await deploy(port);
   },
-  { port, systemTypegraphs: true },
+  { port: 7986, systemTypegraphs: true },
 );
 
 Meta.test("cli:deploy - automatic migrations", async (t) => {
@@ -177,7 +176,7 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
   await dropSchemas(e);
   await removeMigrations(e);
 
-  const nodeConfigs = ["-t", "deploy"];
+  const nodeConfigs = ["-t", "deploy7897"];
 
   const prismaConfigs = [
     e.name,
@@ -204,7 +203,7 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
 
   await t.should("fail on dirty repo", async () => {
     await assertRejects(
-      () => t.meta(["deploy", "-t", "deploy", "-f", "prisma.py"]),
+      () => t.meta(["deploy", "-t", "deploy7897", "-f", "prisma.py"]),
       Error,
       "Dirty repository not allowed",
     );
@@ -256,7 +255,7 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
   });
 }, {
   systemTypegraphs: true,
-  port,
+  port: 7897,
   gitRepo: {
     content: {
       "prisma.py": "runtimes/prisma/prisma.py",
@@ -353,7 +352,7 @@ Meta.test("cli:deploy - with prefix", async (t) => {
   });
 }, {
   systemTypegraphs: true,
-  port,
+  port: 7894,
   gitRepo: {
     content: {
       "prisma.py": "runtimes/prisma/prisma.py",
