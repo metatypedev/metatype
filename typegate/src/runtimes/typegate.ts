@@ -22,10 +22,21 @@ interface ArgInfoResult {
   title: string;
   type: string;
   runtime: string;
+  /** list of json string */
   enum: string[] | null;
+  /** json string */
   config: string | null;
+  /** json string */
   default: string | null;
+  /** json string */
   format: StringFormat | null;
+  fields: Array<ObjectNodeResult> | null;
+}
+
+interface ObjectNodeResult {
+  /** path starting from the parent node */
+  subPath: Array<string>;
+  termNode: ArgInfoResult;
 }
 
 export class TypeGateRuntime extends Runtime {
@@ -185,110 +196,147 @@ export class TypeGateRuntime extends Runtime {
     const func = tg!.tg.type(funcIdx, Type.FUNCTION);
     const input = tg!.tg.type(func.input, Type.OBJECT);
 
-    const resolveOptional = (node: TypeNode) => {
-      let topLevelDefault;
-      let isOptional = false;
-      if (node.type == Type.OPTIONAL) {
-        while (node.type == Type.OPTIONAL) {
-          if (topLevelDefault == undefined) {
-            topLevelDefault = node.default_value;
-          }
-          isOptional = true;
-          node = tg!.tg.type(node.item);
-        }
+    return paths.map((path) => walkPath(tg!.tg, input, 0, path));
+  };
+}
+
+function resolveOptional(tg: TypeGraph, node: TypeNode) {
+  let topLevelDefault;
+  let isOptional = false;
+  if (node.type == Type.OPTIONAL) {
+    while (node.type == Type.OPTIONAL) {
+      if (topLevelDefault == undefined) {
+        topLevelDefault = node.default_value;
       }
-      const format = node.type == Type.STRING ? node.format : undefined;
-      return { node, format, topLevelDefault, isOptional };
-    };
+      isOptional = true;
+      node = tg.type(node.item);
+    }
+  }
+  const format = node.type == Type.STRING ? node.format : undefined;
+  return { node, format, topLevelDefault, isOptional };
+}
 
-    const walkPath = (
-      parent: TypeNode,
-      startCursor: number,
-      path: Array<string>,
-    ): ArgInfoResult => {
-      let node = parent as TypeNode;
-      for (let cursor = startCursor; cursor < path.length; cursor += 1) {
-        const current = path.at(cursor)!;
+function collectObjectFields(
+  tg: TypeGraph,
+  parent: TypeNode,
+): Array<ObjectNodeResult> {
+  // first generate all possible paths
 
-        // if the type is optional and path has not ended yet, the wrapped type needs to be retrieved
-        node = resolveOptional(node).node;
+  const paths = [] as Array<Array<string>>;
 
-        const prettyPath = path.map((chunk, i) =>
-          i == cursor ? `[${chunk}]` : chunk
-        ).join(".");
+  const collectAllPaths = (
+    parent: TypeNode,
+    currentPath: Array<string> = [],
+  ): void => {
+    const node = resolveOptional(tg, parent).node;
 
-        switch (node.type) {
-          case Type.OBJECT: {
-            const available = Object.keys(node.properties);
-            const currNodeIdx = node.properties[current];
+    if (node.type == Type.OBJECT) {
+      for (const [keyName, fieldIdx] of Object.entries(node.properties)) {
+        collectAllPaths(tg.type(fieldIdx), [...currentPath, keyName]);
+      }
+      return;
+    }
 
-            if (currNodeIdx === undefined) {
-              throw new Error(
-                `invalid path ${prettyPath}, none of ${
-                  available.join(", ")
-                } match the chunk "${current}"`,
-              );
-            }
+    // leaf
+    // TODO: either/union?
+    paths.push(currentPath);
+  };
 
-            node = tg!.tg.type(currNodeIdx);
-            break;
-          }
-          case Type.EITHER:
-          case Type.UNION: {
-            const variantsIdx = "anyOf" in node ? node.anyOf : node.oneOf;
-            const failures = new Array(variantsIdx.length);
-            // try to expand each variant, return first compatible with the path
-            const compat = [];
-            for (let i = 0; i < variantsIdx.length; i += 1) {
-              const variant = tg!.tg.type(variantsIdx[i]);
-              try {
-                compat.push(walkPath(variant, cursor, path));
-              } catch (err) {
-                failures[i] = err;
-              }
-            }
-            if (compat.length == 0) {
-              throw failures.shift();
-            }
-            return compat.shift()!;
-          }
-          default: {
-            // optional, list, float are considered as leaf
-            if (cursor != path.length) {
-              throw new Error(
-                `cannot extend path ${prettyPath} with type "${node.type}"`,
-              );
-            }
-            break;
+  collectAllPaths(parent);
+
+  return paths.map((path) => ({
+    subPath: path,
+    termNode: walkPath(tg, parent, 0, path),
+  }));
+}
+
+function walkPath(
+  tg: TypeGraph,
+  parent: TypeNode,
+  startCursor: number,
+  path: Array<string>,
+): ArgInfoResult {
+  let node = parent as TypeNode;
+  for (let cursor = startCursor; cursor < path.length; cursor += 1) {
+    const current = path.at(cursor)!;
+
+    // if the type is optional and path has not ended yet, the wrapped type needs to be retrieved
+    node = resolveOptional(tg, node).node;
+
+    const prettyPath = path.map((chunk, i) =>
+      i == cursor ? `[${chunk}]` : chunk
+    ).join(".");
+
+    switch (node.type) {
+      case Type.OBJECT: {
+        const available = Object.keys(node.properties);
+        const currNodeIdx = node.properties[current];
+
+        if (currNodeIdx === undefined) {
+          throw new Error(
+            `invalid path ${prettyPath}, none of ${
+              available.join(", ")
+            } match the chunk "${current}"`,
+          );
+        }
+
+        node = tg.type(currNodeIdx);
+        break;
+      }
+      case Type.EITHER:
+      case Type.UNION: {
+        const variantsIdx = "anyOf" in node ? node.anyOf : node.oneOf;
+        const failures = new Array(variantsIdx.length);
+        // try to expand each variant, return first compatible with the path
+        const compat = [];
+        for (let i = 0; i < variantsIdx.length; i += 1) {
+          const variant = tg.type(variantsIdx[i]);
+          try {
+            compat.push(walkPath(tg, variant, cursor, path));
+          } catch (err) {
+            failures[i] = err;
           }
         }
+        if (compat.length == 0) {
+          throw failures.shift();
+        }
+        return compat.shift()!;
       }
+      default: {
+        // optional, list, float are considered as leaf
+        if (cursor != path.length) {
+          throw new Error(
+            `cannot extend path ${prettyPath} with type "${node.type}"`,
+          );
+        }
+        break;
+      }
+    }
+  }
 
-      // resulting leaf can be optional
-      // in that case isOptional is true
-      const {
-        node: resNode,
-        format,
-        topLevelDefault: defaultValue,
-        isOptional,
-      } = resolveOptional(
-        node,
-      );
-      node = resNode;
+  // resulting leaf can be optional
+  // in that case isOptional is true
+  const {
+    node: resNode,
+    format,
+    topLevelDefault: defaultValue,
+    isOptional,
+  } = resolveOptional(
+    tg,
+    node,
+  );
+  node = resNode;
 
-      return {
-        optional: isOptional,
-        as_id: node.as_id,
-        title: node.title,
-        type: node.type,
-        enum: node.enum ?? null,
-        runtime: tg!.tg.runtime(node.runtime).name,
-        config: node.config ? JSON.stringify(node.config) : null,
-        default: defaultValue ? JSON.stringify(defaultValue) : null,
-        format: format ?? null,
-      };
-    };
-
-    return paths.map((path) => walkPath(input, 0, path));
+  return {
+    optional: isOptional,
+    as_id: node.as_id,
+    title: node.title,
+    type: node.type,
+    enum: node.enum ?? null,
+    runtime: tg.runtime(node.runtime).name,
+    config: node.config ? JSON.stringify(node.config) : null,
+    default: defaultValue ? JSON.stringify(defaultValue) : null,
+    format: format ?? null,
+    fields: node.type == "object" ? collectObjectFields(tg, parent) : null,
   };
 }

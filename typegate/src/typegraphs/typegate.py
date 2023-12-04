@@ -1,9 +1,7 @@
 # Copyright Metatype under the Elastic License 2.0.
 
 from typegraph import Graph, fx, t, typegraph
-from typegraph.gen.exports.runtimes import (
-    TypegateOperation,
-)
+from typegraph.gen.exports.runtimes import TypegateOperation
 from typegraph.gen.types import Err
 from typegraph.graph.params import Auth, Cors, Rate
 from typegraph.runtimes.base import Materializer
@@ -111,8 +109,12 @@ def typegate(g: Graph):
             "config": t.json().optional(),
             "default": t.json().optional(),
             "format": t.string().optional(),
+            "fields": t.list(t.struct({
+                "subPath": path,
+                "termNode": g.ref("ArgInfoOut")
+            })).optional(),
         }
-    )
+    ).rename("ArgInfoOut")
 
     g.expose(
         typegraphs=t.func(
