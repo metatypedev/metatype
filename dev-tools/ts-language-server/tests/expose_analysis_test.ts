@@ -40,7 +40,7 @@ Deno.test("semantic analysis of expose", async (_t) => {
   const typegraphDef = new TypegraphDefinition(typegraphDefs[0], scopeManager);
   const exposedFunctions = typegraphDef.exposedFunctions;
   for (const exposed of exposedFunctions.values()) {
-    console.log("expose", exposed.name, exposed.runtime.text);
+    console.log("expose", exposed.name, "input:", exposed.inputType.toString());
   }
   // const exposed = typegraphDef.findExposedFunctions();
   // const analysisResult = exposed.map(([name, node]) => {

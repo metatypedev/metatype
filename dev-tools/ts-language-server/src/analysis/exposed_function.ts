@@ -1,45 +1,19 @@
 import { Parser, TypeScript } from "../parser.ts";
+import { Runtime } from "./runtimes/mod.ts";
 import { ScopeManager } from "./typescript-semantic/scope.ts";
+import { TgType } from "./typescript-semantic/semantic-node.ts";
+import { asMethodCall } from "./typescript-semantic/utils/mod.ts";
 
 export type ExposedFunction = {
   name: string;
   node: Parser.SyntaxNode;
-  runtime: Parser.SyntaxNode;
+  runtime: Runtime;
+  inputType: TgType;
   generator: string;
   generatorArgs: Parser.SyntaxNode;
   reduce?: Parser.SyntaxNode | null;
   policy?: Parser.SyntaxNode | null;
 };
-
-type MethodCall = {
-  object: Parser.SyntaxNode;
-  method: string;
-  arguments: Parser.SyntaxNode;
-};
-
-export function asMethodCall(node: Parser.SyntaxNode): MethodCall | null {
-  if (node.type !== "call_expression") {
-    return null;
-  }
-  const fn = node.childForFieldName("function")!;
-  if (fn.type !== "member_expression") {
-    return null;
-  }
-  const object = fn.childForFieldName("object")!;
-  const property = fn.childForFieldName("property")!;
-  if (property.type !== "property_identifier") {
-    return null;
-  }
-  const argumentsNode = node.childForFieldName("arguments")!;
-  if (argumentsNode.type !== "arguments") {
-    return null;
-  }
-  return {
-    object: object,
-    method: property.text,
-    arguments: argumentsNode,
-  };
-}
 
 const runtimeNameByConstructor = {
   "PythonRuntime": "python",
@@ -83,33 +57,38 @@ export function analyzeExposeExpression(
   // TODO what if reduce is a generator name??
   if (methodCall.method === "reduce") {
     reduce = methodCall.arguments;
-    methodCall = asMethodCall(methodCall.arguments);
+    methodCall = asMethodCall(methodCall.object);
     if (methodCall === null) {
       throw new Error("expected method call");
     }
   }
 
-  let runtime = methodCall.object;
-  if (runtime.type === "identifier") {
-    const variable = scopeManager.findVariable(runtime);
+  let runtimeNode = methodCall.object;
+  if (runtimeNode.type === "identifier") {
+    const variable = scopeManager.findVariable(runtimeNode);
     if (variable === null) {
       // TODO diagnostic??
-      throw new Error(`variable ${runtime.text} not found`);
+      throw new Error(`variable ${runtimeNode.text} not found`);
     }
-    runtime = variable.definition;
+    runtimeNode = variable.definition;
   }
 
-  if (runtime.type !== "new_expression") {
-    throw new Error("expected new expression");
+  const runtime = Runtime.analyze(runtimeNode);
+  if (runtime === null) {
+    throw new Error("expected runtime");
   }
-  const runtimeConstructor = runtime.childForFieldName("constructor")!.text;
-  const runtimeName =
-    runtimeNameByConstructor[
-    runtimeConstructor as keyof typeof runtimeNameByConstructor
-    ];
-  if (runtimeName === undefined) {
-    throw new Error(`unknown runtime: ${runtimeConstructor}`);
-  }
+
+  // if (runtime.type !== "new_expression") {
+  //   throw new Error("expected new expression");
+  // }
+  // const runtimeConstructor = runtime.childForFieldName("constructor")!.text;
+  // const runtimeName = runtimeNameByConstructor[
+  //   runtimeConstructor as keyof typeof runtimeNameByConstructor
+  // ];
+  // if (runtimeName === undefined) {
+  //   throw new Error(`unknown runtime: ${runtimeConstructor}`);
+  // }
+  // console.log(runtimeName);
 
   const generator = methodCall.method;
   const generatorArgs = methodCall.arguments;
@@ -117,6 +96,11 @@ export function analyzeExposeExpression(
   return {
     node,
     runtime,
+    inputType: runtime.getGeneratorInputType(
+      generator,
+      generatorArgs.namedChildren,
+      scopeManager,
+    ),
     generator,
     generatorArgs,
     reduce,

@@ -76,6 +76,10 @@ export class Scope {
           }
           break;
         }
+        case "import_statement": {
+          console.log("import", child.namedChildren.map((c) => c.type));
+          break;
+        }
       }
     }
 
