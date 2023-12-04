@@ -12,7 +12,7 @@ Meta.test("typegraph validation", async (t) => {
     "fail to serialize typegraph with invalid injection",
     async () => {
       try {
-        await m.cli({}, "serialize", "-f", "typegraphs/python/validator.py");
+        await m.cli({}, "serialize", "-f", "validator.py");
         assert(false, "should have thrown");
       } catch (e) {
         await t.assertSnapshot(e.message);
