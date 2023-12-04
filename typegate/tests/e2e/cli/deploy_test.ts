@@ -35,15 +35,17 @@ async function writeTypegraph(version: number | null) {
   }
 }
 
-async function deploy(port: number, noMigration = false) {
+async function deploy(port: number | null, noMigration = false) {
   const migrationOpts = noMigration ? [] : ["--create-migration"];
 
   try {
+    const gate = port == null ? [] : ["--gate", `http://localhost:${port}`];
     const out = await m.cli(
       {},
       "deploy",
-      "-t",
-      `deploy${port}`,
+      "--target",
+      "dev",
+      ...gate,
       "-f",
       "migration.py",
       "--allow-dirty",
@@ -86,11 +88,13 @@ Meta.test(
       await writeTypegraph(null);
     });
 
+    const port = 7895;
+
     // `deploy` must be run outside of the `should` block,
     // otherwise this would fail by leaking ops.
     // That is expected since it creates new engine that persists beyond the
     // `should` block.
-    await deploy(7895);
+    await deploy(port);
 
     await t.should("insert records", async () => {
       const e = t.getTypegraphEngine(tgName);
@@ -117,7 +121,7 @@ Meta.test(
     });
 
     try {
-      await deploy(7895);
+      await deploy(port);
     } catch (e) {
       assertStringIncludes(
         e.message,
@@ -181,7 +185,7 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
   await dropSchemas(e);
   await removeMigrations(e);
 
-  const nodeConfigs = ["-t", "deploy7897"];
+  const nodeConfigs = ["--target", "dev", "--gate", "http://localhost:7897"];
 
   const prismaConfigs = [
     e.name,
@@ -208,7 +212,7 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
 
   await t.should("fail on dirty repo", async () => {
     await assertRejects(
-      () => t.meta(["deploy", "-t", "deploy7897", "-f", "prisma.py"]),
+      () => t.meta(["deploy", ...nodeConfigs, "-f", "prisma.py"]),
       Error,
       "Dirty repository not allowed",
     );
