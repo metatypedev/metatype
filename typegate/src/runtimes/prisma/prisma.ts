@@ -280,7 +280,7 @@ export class PrismaRuntime extends Runtime {
             ? rawValue["prisma__value"]
             : rawValue;
 
-          // Prisma to uses $type tag for formatted strings
+          // Prisma uses $type tag for formatted strings
           // eg. `createAt: { "$type": "DateTime", value: "2023-12-05T14:10:21.840Z" }`
           if (
             !Array.isArray(ret) &&
