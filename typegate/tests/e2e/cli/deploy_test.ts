@@ -39,13 +39,11 @@ async function deploy(port: number | null, noMigration = false) {
   const migrationOpts = noMigration ? [] : ["--create-migration"];
 
   try {
-    const gate = port == null ? [] : ["--gate", `http://localhost:${port}`];
     const out = await m.cli(
       {},
       "deploy",
       "--target",
-      "dev",
-      ...gate,
+      port == null ? "dev" : `dev${port}`,
       "-f",
       "migration.py",
       "--allow-dirty",
@@ -68,7 +66,7 @@ async function deploy(port: number | null, noMigration = false) {
   }
 }
 
-async function reset() {
+async function reset(schema: string) {
   await removeMigrations(tgName);
 
   // remove the database schema
@@ -76,7 +74,7 @@ async function reset() {
     connectionString: "postgres://postgres:password@localhost:5432/db",
   });
   await client.connect();
-  await client.query("DROP SCHEMA IF EXISTS e2e2 CASCADE");
+  await client.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
   await client.end();
 }
 
@@ -84,7 +82,7 @@ Meta.test(
   "meta deploy: fails migration for new columns without default value",
   async (t) => {
     await t.should("load first version of the typegraph", async () => {
-      await reset();
+      await reset("e2e7895alt");
       await writeTypegraph(null);
     });
 
@@ -137,7 +135,7 @@ Meta.test(
   async (t) => {
     const port = 7896;
     await t.should("load first version of the typegraph", async () => {
-      await reset();
+      await reset("e2e7896alt");
       await writeTypegraph(null);
     });
 
@@ -178,14 +176,15 @@ Meta.test(
 Meta.test("cli:deploy - automatic migrations", async (t) => {
   const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
-      POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e",
+      POSTGRES:
+        "postgresql://postgres:password@localhost:5432/db?schema=e2e7897",
     },
   });
 
   await dropSchemas(e);
   await removeMigrations(e);
 
-  const nodeConfigs = ["--target", "dev", "--gate", "http://localhost:7897"];
+  const nodeConfigs = ["--target", "dev7897"];
 
   const prismaConfigs = [
     e.name,
@@ -199,7 +198,7 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
         }
       }
     `
-      .expectErrorContains("table `e2e.record` does not exist")
+      .expectErrorContains("table `e2e7897.record` does not exist")
       .on(e);
   });
 
@@ -276,7 +275,8 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
 Meta.test("cli:deploy - with prefix", async (t) => {
   const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
-      POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e",
+      POSTGRES:
+        "postgresql://postgres:password@localhost:5432/db?schema=e2e7894",
     },
     prefix: "pref-",
   });
@@ -301,7 +301,7 @@ Meta.test("cli:deploy - with prefix", async (t) => {
         }
       }
     `
-      .expectErrorContains("table `e2e.record` does not exist")
+      .expectErrorContains("table `e2e7894.record` does not exist")
       .on(e);
   });
 
