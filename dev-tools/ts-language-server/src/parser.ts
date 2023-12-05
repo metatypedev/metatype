@@ -4,7 +4,7 @@ import {
   analyzeExposeExpression,
   ExposedFunction,
 } from "./analysis/exposed_function.ts";
-import { ScopeManager } from "./analysis/typescript-semantic/scope.ts";
+import { ModuleDiagnosticsContext } from "./analysis/diagnostics/context.ts";
 
 export { Parser };
 
@@ -95,7 +95,7 @@ export class TypegraphDefinition {
 
   constructor(
     captures: TypegraphDefinitionCaptures,
-    private scopeManager: ScopeManager,
+    private ctx: ModuleDiagnosticsContext,
   ) {
     if (captures.name != undefined) {
       this.name = captures.name.text;
@@ -106,10 +106,23 @@ export class TypegraphDefinition {
     }
 
     const matches = parameterQuery.matches(this.builder.namedChildren[0]);
-    if (matches.length != 1) {
-      throw new Error("expected one match");
+    // this is to be checked by the typescript linter.
+    if (matches.length === 0) {
+      this.ctx.error(
+        this.builder.namedChildren[0],
+        "expected one parameter for the typegraph builder",
+      );
+      // throw new Error("expected one match");
+      this.graphParameterName = "g";
+    } else {
+      if (matches.length > 1) {
+        this.ctx.error(
+          this.builder.namedChildren[0],
+          "expected only one parameter for the typegraph builder",
+        );
+      }
+      this.graphParameterName = matches[0].captures[0].node.text;
     }
-    this.graphParameterName = matches[0].captures[0].node.text;
     this.body = this.builder.namedChildren[1];
   }
 
@@ -119,8 +132,10 @@ export class TypegraphDefinition {
       .filter((m) => {
         const object = m.captures.find((c) => c.name === "object");
         const method = m.captures.find((c) => c.name === "method");
-        return object?.node.text === this.graphParameterName &&
-          method?.node.text === "expose";
+        return (
+          object?.node.text === this.graphParameterName &&
+          method?.node.text === "expose"
+        );
       })
       .map((m) => m.captures.find((c) => c.name === "objectArg")?.node);
 
@@ -139,7 +154,7 @@ export class TypegraphDefinition {
     if (this.#exposedFunctions.size === 0) {
       for (const [name, node] of this.#findExposedFunctions()) {
         this.#exposedFunctions.set(name, {
-          ...analyzeExposeExpression(node, this.scopeManager),
+          ...analyzeExposeExpression(node, this.ctx.symbolRegistry),
           name,
         });
       }
