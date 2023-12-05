@@ -44,8 +44,8 @@ export class TypeGateRuntime extends Runtime {
       if (name === "addTypegraph") {
         return this.addTypegraph;
       }
-      if (name === "removeTypegraph") {
-        return this.removeTypegraph;
+      if (name === "removeTypegraphs") {
+        return this.removeTypegraphs;
       }
       if (name === "typegraphs") {
         return this.typegraphs;
@@ -128,11 +128,13 @@ export class TypeGateRuntime extends Runtime {
     };
   };
 
-  removeTypegraph: Resolver = ({ name }) => {
-    if (SystemTypegraph.check(name)) {
-      throw new Error(`Typegraph ${name} cannot be removed`);
+  removeTypegraphs: Resolver = async ({ names }) => {
+    for (const name of names) {
+      if (SystemTypegraph.check(name)) {
+        throw new Error(`Typegraph ${name} cannot be removed`);
+      }
+      await this.typegate.register.remove(name);
     }
-
-    return this.typegate.register.remove(name);
+    return true;
   };
 }

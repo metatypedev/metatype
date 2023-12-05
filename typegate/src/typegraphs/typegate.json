@@ -12,18 +12,18 @@
         "typegraphs": 1,
         "typegraph": 7,
         "addTypegraph": 15,
-        "removeTypegraph": 32
+        "removeTypegraphs": 32
       },
       "required": [
         "typegraphs",
         "typegraph",
         "addTypegraph",
-        "removeTypegraph"
+        "removeTypegraphs"
       ]
     },
     {
       "type": "function",
-      "title": "func_8",
+      "title": "func_36",
       "runtime": 1,
       "policies": [
         0
@@ -87,7 +87,7 @@
     },
     {
       "type": "function",
-      "title": "func_13",
+      "title": "func_37",
       "runtime": 1,
       "policies": [
         0
@@ -177,7 +177,7 @@
     },
     {
       "type": "function",
-      "title": "func_30",
+      "title": "func_38",
       "runtime": 1,
       "policies": [
         0
@@ -255,7 +255,7 @@
     },
     {
       "type": "list",
-      "title": "array_22",
+      "title": "list_22",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -298,7 +298,7 @@
     },
     {
       "type": "list",
-      "title": "array_26",
+      "title": "list_26",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -336,7 +336,7 @@
     },
     {
       "type": "list",
-      "title": "array_28",
+      "title": "list_28",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -353,7 +353,7 @@
     },
     {
       "type": "function",
-      "title": "func_34",
+      "title": "func_39",
       "runtime": 1,
       "policies": [
         0
@@ -361,22 +361,31 @@
       "config": {},
       "as_id": false,
       "input": 33,
-      "output": 35,
+      "output": 36,
       "materializer": 5,
       "rate_weight": null,
       "rate_calls": true
     },
     {
       "type": "object",
-      "title": "object_32",
+      "title": "object_33",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "name": 34
+        "names": 34
       },
       "required": []
+    },
+    {
+      "type": "list",
+      "title": "list_32",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 35
     },
     {
       "type": "string",
@@ -387,8 +396,8 @@
       "as_id": false
     },
     {
-      "type": "integer",
-      "title": "integer_33",
+      "type": "boolean",
+      "title": "boolean_34",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -444,7 +453,7 @@
       "data": {}
     },
     {
-      "name": "removeTypegraph",
+      "name": "removeTypegraphs",
       "runtime": 1,
       "effect": {
         "effect": "delete",
