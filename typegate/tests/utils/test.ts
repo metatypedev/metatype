@@ -7,7 +7,6 @@ import { dirname, join } from "std/path/mod.ts";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
 
-import { Server } from "std/http/server.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
 import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
@@ -33,20 +32,14 @@ export interface ParseOptions {
 }
 
 function serve(typegate: Typegate, port: number): () => void {
-  const server = new Server({
-    port,
-    hostname: "localhost",
-    handler(req) {
-      return typegate.handle(req, {
-        remoteAddr: { hostname: "localhost" },
-      } as Deno.ServeHandlerInfo);
-    },
+  const server = Deno.serve({ port }, (req) => {
+    return typegate.handle(req, {
+      remoteAddr: { hostname: "localhost" },
+    } as Deno.ServeHandlerInfo);
   });
 
-  const listener = server.listenAndServe();
   return async () => {
-    server.close();
-    await listener;
+    await server.shutdown();
   };
 }
 
