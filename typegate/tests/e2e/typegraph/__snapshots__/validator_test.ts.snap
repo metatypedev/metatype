@@ -1,9 +1,7 @@
 export const snapshot = {};
 
 snapshot[`typegraph validation 1`] = `
-\`Command '"/home/natoandro/devel/metatypedev/metatype-3/target/debug/meta" "serialize" "-f" "validator.py"' failed with 1:
--- start STDERR --
-
+\`
 [ERROR] at validator:/test/[in]/a: Expected number got '"1"'
 [ERROR] at validator:/test/[in]/b: Expected a string, got '["h","e","l","l","o"]'
 [ERROR] at validator:/test/[in]/c: Expected a minimum value of 2, got 0
@@ -25,6 +23,5 @@ snapshot[`typegraph validation 1`] = `
 [ERROR] at validator:/testEnums/[out]/a: Expected a string, got '12'
 [ERROR] at validator:/testEnums/[out]/b: Expected float got '"13"'
 Error: error while post processing typegraph validator from "validator.py": Typegraph validator failed validation
-
--- end STDERR --\`
+\`
 `;

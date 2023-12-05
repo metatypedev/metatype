@@ -15,7 +15,7 @@ Meta.test("typegraph validation", async (t) => {
         await m.cli({}, "serialize", "-f", "validator.py");
         assert(false, "should have thrown");
       } catch (e) {
-        await t.assertSnapshot(e.message);
+        await t.assertSnapshot(e.stderr);
       }
     },
   );
