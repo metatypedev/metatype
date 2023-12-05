@@ -22,7 +22,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "function",
-      "title": "func_4",
+      "title": "func_5",
       "runtime": 1,
       "policies": [
         0
@@ -77,7 +77,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "function",
-      "title": "func_8",
+      "title": "func_9",
       "runtime": 1,
       "policies": [
         0

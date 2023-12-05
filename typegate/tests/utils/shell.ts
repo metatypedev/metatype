@@ -34,6 +34,19 @@ async function readOutput(p: Deno.ChildProcess): Promise<ShellOutput> {
   return { stdout, stderr };
 }
 
+export class ShellError extends Error {
+  constructor(
+    public code: number,
+    public command: string[],
+    public stdout: string,
+    public stderr: string,
+  ) {
+    const err = `-- start STDERR --\n${stderr}\n-- end STDERR --`;
+    const cmd = command.map((s) => JSON.stringify(s)).join(" ");
+    super(`Command '${cmd}' failed with code ${code}:\n${err}`);
+  }
+}
+
 export async function shell(
   cmd: string[],
   options: ShellOptions = {},
@@ -65,11 +78,7 @@ export async function shell(
   const { code, success } = await p.status;
 
   if (!success) {
-    const err = `-- start STDERR --\n${res.stderr}\n-- end STDERR --`;
-    const command = cmd.map((s) => JSON.stringify(s)).join(" ");
-    throw new Error(
-      `Command '${command}' failed with ${code}:\n${err}`,
-    );
+    throw new ShellError(code, cmd, res.stdout, res.stderr);
   }
 
   return res;

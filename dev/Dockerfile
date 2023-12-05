@@ -29,26 +29,41 @@ ENV PATH "${DENO_INSTALL}/bin:${PATH}"
 
 COPY --from=deno-bin /usr/bin/deno /bin/deno
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-    # base
-    git \
-    curl \
-    python3 \
-    make \
-    cmake \
-    # grpc
-    protobuf-compiler \
-    libprotobuf-dev \
-    # openssl
-    pkg-config \
-    libssl-dev \
-    # wasmedge
-    libclang-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -fsS https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh -o wasmedge.sh \
-    && bash wasmedge.sh -v $WASMEDGE_VERSION \
-    && rm wasmedge.sh
+RUN <<EOT
+    set -eux 
+    export DEBIAN_FRONTEND=noninteractive
+    apt update
+    apt install --yes --no-install-recommends \
+        # base
+        git \
+        curl \
+        make \
+        # openssl deps \
+        pkg-config \
+        libssl-dev \
+        # wasmedge deps \
+        libclang-dev \
+        # asdf deps
+        xz-utils \
+        unzip \
+        # poetry deps \
+        python3 \
+        python3-setuptools \
+        python3-venv \
+
+    apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
+
+    curl -fsS https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh -o wasmedge.sh
+    bash wasmedge.sh -v $WASMEDGE_VERSION
+    rm wasmedge.sh
+
+    GHJK_EXE_INSTALL_DIR=/usr/bin SHELL=/bin/bash deno run -A https://raw.github.com/metatypedev/ghjk/install.ts
+EOT
+
+COPY ghjk.ts .
+RUN ghjk ports sync
+ENV BASH_ENV=/root/.local/share/ghjk/env.sh
+SHELL [ "/bin/bash", "-c"]
 
 COPY --from=plan /app/recipe.json recipe.json
 

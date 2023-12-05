@@ -68,7 +68,6 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
@@ -76,15 +75,12 @@ jobs:
         with:
           deno-version: ${{ env.DENO_VERSION }}
       - shell: bash
-        run: deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
-      - shell: bash
-        env: 
-          BASH_ENV: $HOME/.local/share/ghjk/hooks/hook.sh
-        run: ghjk sync
+        run: deno run -A https://raw.github.com/metatypedev/ghjk/main/install.ts
       - shell: bash
         env: 
           BASH_ENV: $HOME/.local/share/ghjk/hooks/hook.sh
         run: |
+          ghjk sync
           cd website
           pnpm install --frozen-lockfile
           cd ..
@@ -155,16 +151,13 @@ jobs:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - shell: bash
-        run: deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
-      - shell: bash
-        env: 
-          BASH_ENV: $HOME/.local/share/ghjk/hooks/hook.sh
-        run: ghjk sync
+        run: deno run -A https://raw.github.com/metatypedev/ghjk/main/install.ts
       - shell: bash
         env: 
           BASH_ENV: $HOME/.local/share/ghjk/hooks/hook.sh
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
+          ghjk sync
 
           python3 -m venv .venv
           ${{ matrix.activate }}
@@ -268,9 +261,7 @@ jobs:
       DENO_DIR: deno-dir
     steps:
       - uses: actions/checkout@v4
-      - uses: lukka/get-cmake@latest
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
@@ -289,16 +280,14 @@ jobs:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - shell: bash
-        run: deno run -A https://raw.github.com/metatypedev/ghjk/feat/mvp/install.ts
+        run: deno run -A https://raw.github.com/metatypedev/ghjk/main/install.ts
       - shell: bash
         env: 
-          BASH_ENV: $HOME/.local/share/ghjk/hooks/hook.sh
-        run: ghjk sync
-      - shell: bash
-        env: 
-          BASH_ENV: $HOME/.local/share/ghjk/hooks/hook.sh
+          BASH_ENV: $HOME/.local/share/ghjk/env.sh
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
+          ghjk sync
+
           sudo apt update
           sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev perl make
 

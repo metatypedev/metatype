@@ -28,7 +28,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "function",
-      "title": "func_10",
+      "title": "func_33",
       "runtime": 1,
       "policies": [
         0
@@ -86,7 +86,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "list",
-      "title": "array_6",
+      "title": "list_6",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -124,7 +124,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "list",
-      "title": "array_8",
+      "title": "list_8",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -141,7 +141,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "function",
-      "title": "func_14",
+      "title": "func_34",
       "runtime": 1,
       "policies": [
         0
@@ -185,7 +185,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "function",
-      "title": "func_19",
+      "title": "func_35",
       "runtime": 1,
       "policies": [
         0
@@ -238,7 +238,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "function",
-      "title": "func_25",
+      "title": "func_36",
       "runtime": 1,
       "policies": [
         0
@@ -303,7 +303,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "function",
-      "title": "func_32",
+      "title": "func_37",
       "runtime": 1,
       "policies": [
         0
