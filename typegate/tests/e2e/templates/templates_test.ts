@@ -11,8 +11,8 @@ import { projectDir } from "../../../../dev/utils.ts";
 // import { shell } from "test-utils/shell.ts";
 
 const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
-  python: () => {},
-  deno: async (dir: string) => {
+  "python": () => {},
+  "deno": async (dir: string) => {
     const version = await get_version();
     console.log(version);
     for await (const f of expandGlob("**/*.ts", { root: dir })) {
@@ -25,8 +25,9 @@ const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
       await Deno.writeTextFile(f.path, newData);
     }
   },
-  node: async (_dir) => {
+  "node": async (_dir) => {
     // Method 1. the published version from npm is used
+
     // Method 2. install local module
     // should work once we have a `node` loader since
     // deno does not support file scheme yet
@@ -34,6 +35,7 @@ const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
     // await shell(["npm", "i", "../../typegraph/node"], {
     //   currentDir: dir,
     // });
+
     // Method 3. rewrite imports
     // const importMap = JSON.parse(
     //   await Deno.readTextFile("typegraph/node/package.json"),
