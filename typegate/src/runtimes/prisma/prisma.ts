@@ -269,10 +269,28 @@ export class PrismaRuntime extends Runtime {
       } else {
         const resolver: Resolver = ({ _: { parent } }) => {
           const resolver = parent[field.props.node];
-          const ret = typeof resolver === "function" ? resolver() : resolver;
+          const rawValue = typeof resolver === "function"
+            ? resolver()
+            : resolver;
           const matData = stage.props.materializer
             ?.data as unknown as PrismaOperationMatData;
-          return matData.operation === "queryRaw" ? ret["prisma__value"] : ret;
+
+          // if queryRaw is used, the result has a type tag
+          const ret = matData.operation === "queryRaw"
+            ? rawValue["prisma__value"]
+            : rawValue;
+
+          // Prisma to uses $type tag for formatted strings
+          // eg. `createAt: { "$type": "DateTime", value: "2023-12-05T14:10:21.840Z" }`
+          if (
+            !Array.isArray(ret) &&
+            typeof ret === "object" &&
+            ret !== null &&
+            "$type" in ret // !
+          ) {
+            return ret?.["value"] ?? ret;
+          }
+          return ret;
         };
         stagesMat.push(
           new ComputeStage({
