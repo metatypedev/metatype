@@ -222,9 +222,8 @@ jobs:
 
   test-full:
     runs-on:
-      - ubuntu-latest
-      # - self-hosted # https://check-jsonschema.readthedocs.io/en/latest/faq.html#using-self-hosted-runners
-      # - custom-linux
+      - self-hosted # https://check-jsonschema.readthedocs.io/en/latest/faq.html#using-self-hosted-runners
+      - custom-linux
     timeout-minutes: 60
     services:
       redis:
