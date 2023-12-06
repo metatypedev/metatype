@@ -39,13 +39,18 @@ export class LazyAsyncMessenger<Broker, M, A>
           this.receive.bind(this),
         );
       }
-      const { op } = message;
+      const { op, ignoreTimeout } = message;
       if (op !== null && !this.#loadedOps.has(op)) {
         const initOp = this.#ops.get(op);
         if (!initOp) {
           throw new Error(`unknown op ${op}`);
         }
-        await this.execute(null, initOp);
+        await this.execute(
+          null,
+          initOp,
+          [],
+          ignoreTimeout,
+        );
         this.#loadedOps.add(op);
       }
       await send(this.broker, message);
