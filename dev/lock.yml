@@ -62,7 +62,7 @@ dev:
     GHJK_VERSION: v0.1.0-alpha
     PYTHON_VERSION: '3.8'
     POETRY_VERSION: 1.7.0
-    PROTOC_VERSION: v24.x
+    PROTOC_VERSION: v25.1
     RUST_VERSION: 1.73.0
     DENO_VERSION: 1.38.1
     NODE_VERSION: 20.8.0
@@ -77,6 +77,8 @@ dev:
     METATYPE_VERSION: 0.2.5-0+dev
     PUBLISHED_VERSION: 0.2.4
     WASM_OPT_VERSION: 0.116.0
+    MOLD_VERSION: v2.4.0
+    CMAKE_VERSION: 3.28.0-rc6
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with
       zero-trust and less code, no matter where and how your (legacy) systems

@@ -14,15 +14,15 @@ import earthly from "https://raw.github.com/metatypedev/ghjk/v0.1.0-alpha/ports/
 import whiz from "https://raw.github.com/metatypedev/ghjk/v0.1.0-alpha/ports/whiz.ts";
 // import node from "https://raw.github.com/metatypedev/ghjk/v0.1.0-alpha/ports/node.ts";
 
-const PROTOC_VERSION = "v24.x";
+const PROTOC_VERSION = "v25.1";
 const POETRY_VERSION = "1.7.0";
 const PNPM_VERSION = "8.8.0";
 const WASM_TOOLS_VERSION = "1.0.53";
 const JCO_VERSION = "0.12.1";
 const WASMEDGE_VERSION = "0.12.1";
 const WASM_OPT_VERSION = "0.116.0";
-const MOLD_VERSION = "undefined";
-const CMAKE_VERSION = "undefined";
+const MOLD_VERSION = "v2.4.0";
+const CMAKE_VERSION = "3.28.0-rc6";
 const CARGO_INSTA_VERSION = "1.33.0";
 // const NODE_VERSION = "20.8.0";
 
