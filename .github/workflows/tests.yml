@@ -9,6 +9,7 @@ on:
       - ready_for_review
 
 env:
+  GHJK_VERSION: "main"
   PYTHON_VERSION: "3.8"
   PROTOC_VERSION: "v24.x"
   POETRY_VERSION: "1.7.0"
@@ -75,12 +76,13 @@ jobs:
         with:
           deno-version: ${{ env.DENO_VERSION }}
       - shell: bash
-        run: deno run -A https://raw.github.com/metatypedev/ghjk/main/install.ts
+        run: |
+          GHJK_EXE_INSTALL_DIR=/usr/bin deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
+          ghjk ports sync
       - shell: bash
         env: 
           BASH_ENV: $HOME/.local/share/ghjk/hooks/hook.sh
         run: |
-          ghjk sync
           cd website
           pnpm install --frozen-lockfile
           cd ..
@@ -151,13 +153,14 @@ jobs:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - shell: bash
-        run: deno run -A https://raw.github.com/metatypedev/ghjk/main/install.ts
+        run: |
+          GHJK_EXE_INSTALL_DIR=/usr/bin deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
+          ghjk ports sync
       - shell: bash
         env: 
           BASH_ENV: $HOME/.local/share/ghjk/hooks/hook.sh
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
-          ghjk sync
 
           python3 -m venv .venv
           ${{ matrix.activate }}
@@ -219,8 +222,9 @@ jobs:
 
   test-full:
     runs-on:
-      - self-hosted # https://check-jsonschema.readthedocs.io/en/latest/faq.html#using-self-hosted-runners
-      - custom-linux
+      - ubuntu-latest
+      # - self-hosted # https://check-jsonschema.readthedocs.io/en/latest/faq.html#using-self-hosted-runners
+      # - custom-linux
     timeout-minutes: 60
     services:
       redis:
@@ -280,13 +284,14 @@ jobs:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - shell: bash
-        run: deno run -A https://raw.github.com/metatypedev/ghjk/main/install.ts
+        run: |
+          GHJK_EXE_INSTALL_DIR=/usr/bin deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
+          ghjk ports sync
       - shell: bash
         env: 
           BASH_ENV: $HOME/.local/share/ghjk/env.sh
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
-          ghjk sync
 
           sudo apt update
           sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev perl make

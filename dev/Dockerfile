@@ -29,12 +29,11 @@ ENV PATH "${DENO_INSTALL}/bin:${PATH}"
 
 COPY --from=deno-bin /usr/bin/deno /bin/deno
 
-RUN <<EOT
-    set -eux 
-    export DEBIAN_FRONTEND=noninteractive
-    apt update
+RUN set -eux; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    apt update; \
     apt install --yes --no-install-recommends \
-        # base
+        # base \
         git \
         curl \
         make \
@@ -50,15 +49,14 @@ RUN <<EOT
         python3 \
         python3-setuptools \
         python3-venv \
+        ; \
+    apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/; \
+    curl -fsS https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh -o wasmedge.sh; \
+    bash wasmedge.sh -v $WASMEDGE_VERSION; \
+    rm wasmedge.sh; 
 
-    apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
-
-    curl -fsS https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh -o wasmedge.sh
-    bash wasmedge.sh -v $WASMEDGE_VERSION
-    rm wasmedge.sh
-
-    GHJK_EXE_INSTALL_DIR=/usr/bin SHELL=/bin/bash deno run -A https://raw.github.com/metatypedev/ghjk/install.ts
-EOT
+ARG GHJK_VERSION=main
+RUN GHJK_EXE_INSTALL_DIR=/usr/bin SHELL=/bin/bash deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
 COPY ghjk.ts .
 RUN ghjk ports sync
