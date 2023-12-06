@@ -87,7 +87,7 @@ jobs:
           pnpm install --frozen-lockfile
           cd ..
           # FIXME: bug from wasmedge ghjk port
-          echo "WASMEDGE_INCLUDE_DIR=$(dirname $WASMEDGE_LIB_DIR)/include" >> $GITHUB_ENV
+          ln -s $(dirname $WASMEDGE_LIB_DIR) ~/.wasmedge
       - uses: pre-commit/action@v3.0.0
 
   test-website:
@@ -184,7 +184,7 @@ jobs:
           poetry install --no-root
 
           # FIXME: bug from wasmedge ghjk port
-          export WASMEDGE_INCLUDE_DIR=$(dirname $WASMEDGE_LIB_DIR)/include
+          ln -s $(dirname $WASMEDGE_LIB_DIR) ~/.wasmedge
 
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
           mkdir -p $(dirname $WASM_FILE)
@@ -233,6 +233,7 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
 
   test-full:
+    needs: changes
     if: ${{ needs.changes.outputs.full == 'true' }}
     runs-on:
       - ubuntu-latest
@@ -319,7 +320,7 @@ jobs:
           poetry install --no-root
 
           # FIXME: bug from wasmedge ghjk port
-          export WASMEDGE_INCLUDE_DIR=$(dirname $WASMEDGE_LIB_DIR)/include
+          ln -s $(dirname $WASMEDGE_LIB_DIR) ~/.wasmedge
 
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
           mkdir -p $(dirname $WASM_FILE)
