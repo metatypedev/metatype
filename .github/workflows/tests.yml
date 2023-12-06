@@ -86,9 +86,11 @@ jobs:
           cd website
           pnpm install --frozen-lockfile
           cd ..
+          deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
+
           # FIXME: bug from wasmedge ghjk port
           ln -s $(dirname $WASMEDGE_LIB_DIR) ~/.wasmedge
-          # FIXME: alias ld to mold in ghjk
+          # FIXME: alias ld to mold from within ghjk
           sudo ln -sf "$(which mold)" "$(realpath /usr/bin/ld)"
       - uses: pre-commit/action@v3.0.0
 
@@ -185,9 +187,11 @@ jobs:
           cd ../..
           poetry install --no-root
 
+          deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
+
           # FIXME: bug from wasmedge ghjk port
           ln -s $(dirname $WASMEDGE_LIB_DIR) ~/.wasmedge
-          # activate mold
+          # FIXME: alias ld to mold from within ghjk
           sudo ln -sf "$(which mold)" "$(realpath /usr/bin/ld)"
 
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
@@ -322,9 +326,11 @@ jobs:
           source .venv/bin/activate
           poetry install --no-root
 
+          deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
+
           # FIXME: bug from wasmedge ghjk port
           ln -s $(dirname $WASMEDGE_LIB_DIR) ~/.wasmedge
-          # activate mold
+          # FIXME: alias ld to mold from within ghjk
           sudo ln -sf "$(which mold)" "$(realpath /usr/bin/ld)"
 
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
