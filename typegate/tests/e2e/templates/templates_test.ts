@@ -10,8 +10,6 @@ import { get_version } from "native";
 import { projectDir } from "../../../../dev/utils.ts";
 // import { shell } from "test-utils/shell.ts";
 
-const port = 7897;
-
 const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
   "python": () => {},
   "deno": async (dir: string) => {
@@ -24,10 +22,7 @@ const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
         `npm:@typegraph/sdk@${version}`,
         `${Array(level).fill("..").join("/")}/typegraph/deno/src`,
       );
-      await Deno.writeTextFile(
-        f.path,
-        newData,
-      );
+      await Deno.writeTextFile(f.path, newData);
     }
   },
   "node": async (_dir) => {
@@ -67,7 +62,9 @@ const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
   },
 };
 
+let nextPort = 7900;
 for (const template of ["python", "deno", "node"]) {
+  const port = nextPort++;
   Meta.test(
     `${template} template`,
     async (t) => {
@@ -83,9 +80,7 @@ for (const template of ["python", "deno", "node"]) {
           }),
         );
         assert(sourcesFiles.length > 0);
-        for (
-          const f of sourcesFiles
-        ) {
+        for (const f of sourcesFiles) {
           const relPath = f.path.replace(source, "");
           assert(exists(join(dir, relPath)));
         }

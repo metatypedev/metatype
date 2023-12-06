@@ -103,7 +103,10 @@ impl Deploy {
         let options = deploy.options.clone();
 
         let node_config = config.node(&deploy.node, &deploy.target);
-        let node = node_config.build(&dir).await?;
+        let node = node_config
+            .build(&dir)
+            .await
+            .with_context(|| format!("building node from config: {node_config:#?}"))?;
 
         Ok(Self {
             config,
