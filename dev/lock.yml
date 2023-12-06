@@ -6,17 +6,21 @@ dev:
   lines:
     rust-toolchain.toml:
       (channel = ").+("): RUST_VERSION
+    ghjk.ts:
+      (const PROTOC_VERSION = ").*(";): PROTOC_VERSION
+      (const POETRY_VERSION = ").*(";): POETRY_VERSION
+      (const PNPM_VERSION = ").*(";): PNPM_VERSION
+      (const WASM_TOOLS_VERSION = ").*(";): WASM_TOOLS_VERSION
+      (const JCO_VERSION = ").*(";): JCO_VERSION
+      (const WASMEDGE_VERSION = ").*(";): WASMEDGE_VERSION
+      (const WASM_OPT_VERSION = ").*(";): WASM_OPT_VERSION
+      (const MOLD_VERSION = ").*(";): MOLD_VERSION
+      (const CMAKE_VERSION = ").*(";): CMAKE_VERSION
+      (const CARGO_INSTA_VERSION = ").*(";): CARGO_INSTA_VERSION
     .github/*/*.yml:
-      '(  PYTHON_VERSION: ").+(")': PYTHON_VERSION
+      '(  GHJK_VERSION: ").+(")': GHJK_VERSION
       '(  POETRY_VERSION: ").+(")': POETRY_VERSION
       '(  DENO_VERSION: ").+(")': DENO_VERSION
-      '(  PNPM_VERSION: ").+(")': PNPM_VERSION
-      '(  NODE_VERSION: ").+(")': NODE_VERSION
-      '(  PROTOC_VERSION: ").+(")': PROTOC_VERSION
-      '(  WASM_TOOLS_VERSION: ").+(")': WASM_TOOLS_VERSION
-      '(  JCO_VERSION: ").+(")': JCO_VERSION
-      '(  WASMEDGE_VERSION: ").+(")': WASMEDGE_VERSION
-      '(  WASM_OPT_VERSION: ").+(")': WASM_OPT_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
     typegraph/python/pyproject.toml:
@@ -55,6 +59,7 @@ dev:
     examples/**/*.ts:
       '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': PUBLISHED_VERSION
   lock:
+    GHJK_VERSION: v0.1.0-alpha
     PYTHON_VERSION: '3.8'
     POETRY_VERSION: 1.7.0
     PROTOC_VERSION: v24.x

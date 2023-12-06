@@ -51,6 +51,7 @@ RUN set -eux; \
         python3-venv \
         ; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/; \
+    # FIXME: bug in ghjk wasmedge port
     curl -fsS https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh -o wasmedge.sh; \
     bash wasmedge.sh -v $WASMEDGE_VERSION; \
     rm wasmedge.sh; 
