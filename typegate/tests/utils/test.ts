@@ -7,7 +7,6 @@ import { dirname, join } from "std/path/mod.ts";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
 
-import { Server } from "std/http/server.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
 import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
@@ -33,20 +32,15 @@ export interface ParseOptions {
 }
 
 function serve(typegate: Typegate, port: number): () => void {
-  const server = new Server({
-    port,
-    hostname: "localhost",
-    handler(req) {
-      return typegate.handle(req, {
-        remoteAddr: { hostname: "localhost" },
-      } as Deno.ServeHandlerInfo);
-    },
+  const server = Deno.serve({ port }, (req) => {
+    console.log("[virtual typegate instance]", req);
+    return typegate.handle(req, {
+      remoteAddr: { hostname: "localhost" },
+    } as Deno.ServeHandlerInfo);
   });
 
-  const listener = server.listenAndServe();
   return async () => {
-    server.close();
-    await listener;
+    await server.shutdown();
   };
 }
 
@@ -281,7 +275,6 @@ export const test = ((name, fn, opts = {}): void => {
           mt.shell = sh;
           mt.meta = await createMetaCli(sh);
           await sh(["git", "init"]);
-          console.log(await Deno.lstat(dir!));
           await sh(["git", "config", "user.name", "user"]);
           await sh(["git", "config", "user.email", "user@example.com"]);
           await sh(["git", "add", "."]);

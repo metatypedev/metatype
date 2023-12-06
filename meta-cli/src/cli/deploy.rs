@@ -164,7 +164,10 @@ impl Deploy<DefaultModeData> {
         }
 
         let node_config = config.node(&deploy.node, &deploy.target);
-        let node = node_config.build(&dir).await?;
+        let node = node_config
+            .build(&dir)
+            .await
+            .with_context(|| format!("building node from config: {node_config:#?}"))?;
         let push_config = PushConfig::new(node, config.base_dir.clone());
 
         Ok(Self {

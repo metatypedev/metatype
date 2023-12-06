@@ -28,6 +28,7 @@ impl TypeConversion for Either {
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
+            .inject(self.extended_base.injection.clone())?
             .build()?,
             data: EitherTypeData {
                 one_of: self

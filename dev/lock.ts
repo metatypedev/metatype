@@ -132,7 +132,9 @@ for (const [channel, { files, lines, lock }] of Object.entries(lockfile)) {
   }
 }
 
-await runOrExit(["cargo", "generate-lockfile"]);
+if (dirty) {
+  await runOrExit(["cargo", "generate-lockfile"]);
+}
 
 if (args.check) {
   Deno.exit(dirty ? 1 : 0);
