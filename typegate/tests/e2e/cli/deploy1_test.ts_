@@ -81,7 +81,7 @@ Meta.test(
   "meta deploy: fails migration for new columns without default value",
   async (t) => {
     await t.should("load first version of the typegraph", async () => {
-      await reset("e2e7895alt");
+      // await reset("e2e7895alt");
       await writeTypegraph(null);
     });
 
