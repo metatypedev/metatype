@@ -47,7 +47,7 @@ snapshot[`Auto-tests for test 2`] = `
 }
 `;
 
-snapshot[`Auto-tests for basic 1`] = `
+snapshot[`Auto-tests for authentication 1`] = `
 {
   data: {
     get_context: {
@@ -57,7 +57,7 @@ snapshot[`Auto-tests for basic 1`] = `
 }
 `;
 
-snapshot[`Auto-tests for basic 2`] = `
+snapshot[`Auto-tests for authentication 2`] = `
 {
   data: {
     __schema: {
@@ -94,17 +94,54 @@ snapshot[`Auto-tests for basic 2`] = `
 }
 `;
 
-snapshot[`Auto-tests for jwt 1`] = `
+snapshot[`Auto-tests for policies 1`] = `
 {
   data: {
-    get_context: {
-      your_own_content: null,
-    },
+    public: "R0!S@O!FUVCGw",
   },
 }
 `;
 
-snapshot[`Auto-tests for jwt 2`] = `
+snapshot[`Auto-tests for policies 2`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "No policy took decision on type 'func_7' ('function') at '<root>.admin_only'",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for policies 3`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "No policy took decision on type 'func_11' ('function') at '<root>.user_only'",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for policies 4`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "No policy took decision on type 'func_15' ('function') at '<root>.both'",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for policies 5`] = `
 {
   data: {
     __schema: {
@@ -119,21 +156,20 @@ snapshot[`Auto-tests for jwt 2`] = `
           description: "Query type",
           fields: [
             {
-              name: "get_context",
+              name: "both",
+            },
+            {
+              name: "user_only",
+            },
+            {
+              name: "admin_only",
+            },
+            {
+              name: "public",
             },
           ],
           inputFields: null,
           name: "Query",
-        },
-        {
-          description: "object_3 type",
-          fields: [
-            {
-              name: "your_own_content",
-            },
-          ],
-          inputFields: null,
-          name: "object_3",
         },
       ],
     },
@@ -141,17 +177,140 @@ snapshot[`Auto-tests for jwt 2`] = `
 }
 `;
 
-snapshot[`Auto-tests for oauth2 1`] = `
+snapshot[`Auto-tests for deno 1`] = `
 {
   data: {
-    get_context: {
-      exp: null,
+    compute_fib: {
+      ms: 0,
+      res: 3,
     },
   },
 }
 `;
 
-snapshot[`Auto-tests for oauth2 2`] = `
+snapshot[`Auto-tests for deno 2`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "float type",
+          fields: null,
+          inputFields: null,
+          name: "Float",
+        },
+        {
+          description: "integer type",
+          fields: null,
+          inputFields: null,
+          name: "Int",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "compute_fib",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+        {
+          description: "object_4 type",
+          fields: [
+            {
+              name: "ms",
+            },
+            {
+              name: "res",
+            },
+          ],
+          inputFields: null,
+          name: "object_4",
+        },
+      ],
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for graphql 1`] = `
+{
+  data: {
+    users: {
+      data: [
+        {
+          id: "1",
+          name: "Leanne Graham",
+        },
+        {
+          id: "2",
+          name: "Ervin Howell",
+        },
+        {
+          id: "3",
+          name: "Clementine Bauch",
+        },
+        {
+          id: "4",
+          name: "Patricia Lebsack",
+        },
+        {
+          id: "5",
+          name: "Chelsey Dietrich",
+        },
+        {
+          id: "6",
+          name: "Mrs. Dennis Schulist",
+        },
+        {
+          id: "7",
+          name: "Kurtis Weissnat",
+        },
+        {
+          id: "8",
+          name: "Nicholas Runolfsdottir V",
+        },
+        {
+          id: "9",
+          name: "Glenna Reichert",
+        },
+        {
+          id: "10",
+          name: "Clementina DuBuque",
+        },
+      ],
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for graphql 2`] = `
+{
+  data: {
+    create_message: {
+      id: 1,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for graphql 3`] = `
+{
+  data: {
+    messages: [
+      {
+        title: "Hey",
+        user: {
+          name: "Leanne Graham",
+        },
+      },
+    ],
+  },
+}
+`;
+
+snapshot[`Auto-tests for graphql 4`] = `
 {
   data: {
     __schema: {
@@ -163,24 +322,408 @@ snapshot[`Auto-tests for oauth2 2`] = `
           name: "Int",
         },
         {
+          description: "string type",
+          fields: null,
+          inputFields: null,
+          name: "String",
+        },
+        {
+          description: "_Integer type",
+          fields: [
+            {
+              name: "integer",
+            },
+          ],
+          inputFields: null,
+          name: "_Integer",
+        },
+        {
+          description: "_String type",
+          fields: [
+            {
+              name: "string",
+            },
+          ],
+          inputFields: null,
+          name: "_String",
+        },
+        {
           description: "Query type",
           fields: [
             {
-              name: "get_context",
+              name: "users",
+            },
+            {
+              name: "messages",
             },
           ],
           inputFields: null,
           name: "Query",
         },
         {
-          description: "object_3 type",
+          description: "messageWithNestedCount type",
           fields: [
             {
-              name: "exp",
+              name: "user",
+            },
+            {
+              name: "user_id",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "id",
             },
           ],
           inputFields: null,
-          name: "object_3",
+          name: "messageWithNestedCount",
+        },
+        {
+          description: "object_2 type",
+          fields: [
+            {
+              name: "name",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "object_2",
+        },
+        {
+          description: "object_82 type",
+          fields: [
+            {
+              name: "data",
+            },
+          ],
+          inputFields: null,
+          name: "object_82",
+        },
+        {
+          description: "Mutation type",
+          fields: [
+            {
+              name: "create_message",
+            },
+          ],
+          inputFields: null,
+          name: "Mutation",
+        },
+        {
+          description: "_messageOutputType type",
+          fields: [
+            {
+              name: "user",
+            },
+            {
+              name: "user_id",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "_messageOutputType",
+        },
+        {
+          description: "QuerymessageWhereInput input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "user_id",
+            },
+            {
+              name: "AND",
+            },
+            {
+              name: "OR",
+            },
+            {
+              name: "NOT",
+            },
+          ],
+          name: "QuerymessageWhereInputInp",
+        },
+        {
+          description: "union type
+_integer_filter, object_27",
+          fields: null,
+          inputFields: null,
+          name: "union_28In",
+        },
+        {
+          description: "either type
+integer_18, object_21, object_22, object_23, object_24, object_25",
+          fields: null,
+          inputFields: null,
+          name: "_integer_filterIn",
+        },
+        {
+          description: "object_21 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "equals",
+            },
+          ],
+          name: "object_21Inp",
+        },
+        {
+          description: "object_22 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_22Inp",
+        },
+        {
+          description: "object_23 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "lt",
+            },
+            {
+              name: "gt",
+            },
+            {
+              name: "lte",
+            },
+            {
+              name: "gte",
+            },
+          ],
+          name: "object_23Inp",
+        },
+        {
+          description: "object_24 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "in",
+            },
+          ],
+          name: "object_24Inp",
+        },
+        {
+          description: "object_25 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "notIn",
+            },
+          ],
+          name: "object_25Inp",
+        },
+        {
+          description: "object_27 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_27Inp",
+        },
+        {
+          description: "union type
+_string_filter, object_44",
+          fields: null,
+          inputFields: null,
+          name: "union_45In",
+        },
+        {
+          description: "union type
+string_31, object_34, object_35, object_36, object_37, object_40, object_41, object_42",
+          fields: null,
+          inputFields: null,
+          name: "_string_filterIn",
+        },
+        {
+          description: "object_34 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "equals",
+            },
+          ],
+          name: "object_34Inp",
+        },
+        {
+          description: "object_35 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_35Inp",
+        },
+        {
+          description: "object_36 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "in",
+            },
+          ],
+          name: "object_36Inp",
+        },
+        {
+          description: "object_37 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "notIn",
+            },
+          ],
+          name: "object_37Inp",
+        },
+        {
+          description: "object_40 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "contains",
+            },
+            {
+              name: "mode",
+            },
+          ],
+          name: "object_40Inp",
+        },
+        {
+          description: "object_41 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "search",
+            },
+          ],
+          name: "object_41Inp",
+        },
+        {
+          description: "object_42 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "startsWith",
+            },
+            {
+              name: "endsWith",
+            },
+          ],
+          name: "object_42Inp",
+        },
+        {
+          description: "object_44 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_44Inp",
+        },
+        {
+          description: "object_61 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "user_id",
+            },
+          ],
+          name: "object_61Inp",
+        },
+        {
+          description: "union type
+object_58, _SortOrder",
+          fields: null,
+          inputFields: null,
+          name: "union_59In",
+        },
+        {
+          description: "object_58 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "sort",
+            },
+          ],
+          name: "object_58Inp",
+        },
+        {
+          description: "union type
+object_68, object_69, object_70",
+          fields: null,
+          inputFields: null,
+          name: "_message_CursorIn",
+        },
+        {
+          description: "object_68 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+          ],
+          name: "object_68Inp",
+        },
+        {
+          description: "object_69 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "title",
+            },
+          ],
+          name: "object_69Inp",
+        },
+        {
+          description: "object_70 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "user_id",
+            },
+          ],
+          name: "object_70Inp",
+        },
+        {
+          description: "_message_CreateInput input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "title",
+            },
+            {
+              name: "user_id",
+            },
+          ],
+          name: "_message_CreateInputInp",
         },
       ],
     },
@@ -542,6 +1085,43 @@ object_49, _SortOrder",
           name: "object_49Inp",
         },
         {
+          description: "union type
+object_59, object_60, object_61",
+          fields: null,
+          inputFields: null,
+          name: "_message_CursorIn",
+        },
+        {
+          description: "object_59 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+          ],
+          name: "object_59Inp",
+        },
+        {
+          description: "object_60 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "title",
+            },
+          ],
+          name: "object_60Inp",
+        },
+        {
+          description: "object_61 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "body",
+            },
+          ],
+          name: "object_61Inp",
+        },
+        {
           description: "_message_CreateInput input type",
           fields: null,
           inputFields: [
@@ -563,467 +1143,7 @@ object_49, _SortOrder",
 }
 `;
 
-snapshot[`Auto-tests for graphql 1`] = `
-{
-  data: {
-    users: {
-      data: [
-        {
-          id: "1",
-          name: "Leanne Graham",
-        },
-        {
-          id: "2",
-          name: "Ervin Howell",
-        },
-        {
-          id: "3",
-          name: "Clementine Bauch",
-        },
-        {
-          id: "4",
-          name: "Patricia Lebsack",
-        },
-        {
-          id: "5",
-          name: "Chelsey Dietrich",
-        },
-        {
-          id: "6",
-          name: "Mrs. Dennis Schulist",
-        },
-        {
-          id: "7",
-          name: "Kurtis Weissnat",
-        },
-        {
-          id: "8",
-          name: "Nicholas Runolfsdottir V",
-        },
-        {
-          id: "9",
-          name: "Glenna Reichert",
-        },
-        {
-          id: "10",
-          name: "Clementina DuBuque",
-        },
-      ],
-    },
-  },
-}
-`;
-
-snapshot[`Auto-tests for graphql 2`] = `
-{
-  data: {
-    create_message: {
-      id: 1,
-    },
-  },
-}
-`;
-
-snapshot[`Auto-tests for graphql 3`] = `
-{
-  data: {
-    messages: [
-      {
-        title: "Hey",
-        user: {
-          name: "Leanne Graham",
-        },
-      },
-    ],
-  },
-}
-`;
-
-snapshot[`Auto-tests for graphql 4`] = `
-{
-  data: {
-    __schema: {
-      types: [
-        {
-          description: "integer type",
-          fields: null,
-          inputFields: null,
-          name: "Int",
-        },
-        {
-          description: "string type",
-          fields: null,
-          inputFields: null,
-          name: "String",
-        },
-        {
-          description: "_Integer type",
-          fields: [
-            {
-              name: "integer",
-            },
-          ],
-          inputFields: null,
-          name: "_Integer",
-        },
-        {
-          description: "_String type",
-          fields: [
-            {
-              name: "string",
-            },
-          ],
-          inputFields: null,
-          name: "_String",
-        },
-        {
-          description: "Query type",
-          fields: [
-            {
-              name: "users",
-            },
-            {
-              name: "messages",
-            },
-          ],
-          inputFields: null,
-          name: "Query",
-        },
-        {
-          description: "messageWithNestedCount type",
-          fields: [
-            {
-              name: "user",
-            },
-            {
-              name: "user_id",
-            },
-            {
-              name: "title",
-            },
-            {
-              name: "id",
-            },
-          ],
-          inputFields: null,
-          name: "messageWithNestedCount",
-        },
-        {
-          description: "object_2 type",
-          fields: [
-            {
-              name: "name",
-            },
-            {
-              name: "id",
-            },
-          ],
-          inputFields: null,
-          name: "object_2",
-        },
-        {
-          description: "object_77 type",
-          fields: [
-            {
-              name: "data",
-            },
-          ],
-          inputFields: null,
-          name: "object_77",
-        },
-        {
-          description: "Mutation type",
-          fields: [
-            {
-              name: "create_message",
-            },
-          ],
-          inputFields: null,
-          name: "Mutation",
-        },
-        {
-          description: "_messageOutputType type",
-          fields: [
-            {
-              name: "user",
-            },
-            {
-              name: "user_id",
-            },
-            {
-              name: "title",
-            },
-            {
-              name: "id",
-            },
-          ],
-          inputFields: null,
-          name: "_messageOutputType",
-        },
-        {
-          description: "QuerymessageWhereInput input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "id",
-            },
-            {
-              name: "title",
-            },
-            {
-              name: "user_id",
-            },
-            {
-              name: "AND",
-            },
-            {
-              name: "OR",
-            },
-            {
-              name: "NOT",
-            },
-          ],
-          name: "QuerymessageWhereInputInp",
-        },
-        {
-          description: "union type
-_integer_filter, object_27",
-          fields: null,
-          inputFields: null,
-          name: "union_28In",
-        },
-        {
-          description: "either type
-integer_18, object_21, object_22, object_23, object_24, object_25",
-          fields: null,
-          inputFields: null,
-          name: "_integer_filterIn",
-        },
-        {
-          description: "object_21 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "equals",
-            },
-          ],
-          name: "object_21Inp",
-        },
-        {
-          description: "object_22 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "not",
-            },
-          ],
-          name: "object_22Inp",
-        },
-        {
-          description: "object_23 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "lt",
-            },
-            {
-              name: "gt",
-            },
-            {
-              name: "lte",
-            },
-            {
-              name: "gte",
-            },
-          ],
-          name: "object_23Inp",
-        },
-        {
-          description: "object_24 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "in",
-            },
-          ],
-          name: "object_24Inp",
-        },
-        {
-          description: "object_25 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "notIn",
-            },
-          ],
-          name: "object_25Inp",
-        },
-        {
-          description: "object_27 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "not",
-            },
-          ],
-          name: "object_27Inp",
-        },
-        {
-          description: "union type
-_string_filter, object_44",
-          fields: null,
-          inputFields: null,
-          name: "union_45In",
-        },
-        {
-          description: "union type
-string_31, object_34, object_35, object_36, object_37, object_40, object_41, object_42",
-          fields: null,
-          inputFields: null,
-          name: "_string_filterIn",
-        },
-        {
-          description: "object_34 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "equals",
-            },
-          ],
-          name: "object_34Inp",
-        },
-        {
-          description: "object_35 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "not",
-            },
-          ],
-          name: "object_35Inp",
-        },
-        {
-          description: "object_36 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "in",
-            },
-          ],
-          name: "object_36Inp",
-        },
-        {
-          description: "object_37 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "notIn",
-            },
-          ],
-          name: "object_37Inp",
-        },
-        {
-          description: "object_40 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "contains",
-            },
-            {
-              name: "mode",
-            },
-          ],
-          name: "object_40Inp",
-        },
-        {
-          description: "object_41 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "search",
-            },
-          ],
-          name: "object_41Inp",
-        },
-        {
-          description: "object_42 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "startsWith",
-            },
-            {
-              name: "endsWith",
-            },
-          ],
-          name: "object_42Inp",
-        },
-        {
-          description: "object_44 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "not",
-            },
-          ],
-          name: "object_44Inp",
-        },
-        {
-          description: "object_61 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "id",
-            },
-            {
-              name: "title",
-            },
-            {
-              name: "user_id",
-            },
-          ],
-          name: "object_61Inp",
-        },
-        {
-          description: "union type
-object_58, _SortOrder",
-          fields: null,
-          inputFields: null,
-          name: "union_59In",
-        },
-        {
-          description: "object_58 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "sort",
-            },
-          ],
-          name: "object_58Inp",
-        },
-        {
-          description: "_message_CreateInput input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "id",
-            },
-            {
-              name: "title",
-            },
-            {
-              name: "user_id",
-            },
-          ],
-          name: "_message_CreateInputInp",
-        },
-      ],
-    },
-  },
-}
-`;
-
-snapshot[`Auto-tests for authentication 1`] = `
+snapshot[`Auto-tests for basic 1`] = `
 {
   data: {
     get_context: {
@@ -1033,7 +1153,7 @@ snapshot[`Auto-tests for authentication 1`] = `
 }
 `;
 
-snapshot[`Auto-tests for authentication 2`] = `
+snapshot[`Auto-tests for basic 2`] = `
 {
   data: {
     __schema: {
@@ -1059,6 +1179,100 @@ snapshot[`Auto-tests for authentication 2`] = `
           fields: [
             {
               name: "username",
+            },
+          ],
+          inputFields: null,
+          name: "object_3",
+        },
+      ],
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for jwt 1`] = `
+{
+  data: {
+    get_context: {
+      your_own_content: null,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for jwt 2`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "string type",
+          fields: null,
+          inputFields: null,
+          name: "String",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "get_context",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+        {
+          description: "object_3 type",
+          fields: [
+            {
+              name: "your_own_content",
+            },
+          ],
+          inputFields: null,
+          name: "object_3",
+        },
+      ],
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for oauth2 1`] = `
+{
+  data: {
+    get_context: {
+      exp: null,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for oauth2 2`] = `
+{
+  data: {
+    __schema: {
+      types: [
+        {
+          description: "integer type",
+          fields: null,
+          inputFields: null,
+          name: "Int",
+        },
+        {
+          description: "Query type",
+          fields: [
+            {
+              name: "get_context",
+            },
+          ],
+          inputFields: null,
+          name: "Query",
+        },
+        {
+          description: "object_3 type",
+          fields: [
+            {
+              name: "exp",
             },
           ],
           inputFields: null,
@@ -1188,28 +1402,19 @@ snapshot[`Auto-tests for rate 5`] = `
 }
 `;
 
-snapshot[`Auto-tests for deno 1`] = `
+snapshot[`Auto-tests for execute 1`] = `
 {
   data: {
-    compute_fib: {
-      ms: 0,
-      res: 3,
-    },
+    set_vote_importance: 0,
   },
 }
 `;
 
-snapshot[`Auto-tests for deno 2`] = `
+snapshot[`Auto-tests for execute 2`] = `
 {
   data: {
     __schema: {
       types: [
-        {
-          description: "float type",
-          fields: null,
-          inputFields: null,
-          name: "Float",
-        },
         {
           description: "integer type",
           fields: null,
@@ -1217,192 +1422,10 @@ snapshot[`Auto-tests for deno 2`] = `
           name: "Int",
         },
         {
-          description: "Query type",
-          fields: [
-            {
-              name: "compute_fib",
-            },
-          ],
-          inputFields: null,
-          name: "Query",
-        },
-        {
-          description: "object_4 type",
-          fields: [
-            {
-              name: "ms",
-            },
-            {
-              name: "res",
-            },
-          ],
-          inputFields: null,
-          name: "object_4",
-        },
-      ],
-    },
-  },
-}
-`;
-
-snapshot[`Auto-tests for policies 1`] = `
-{
-  data: {
-    public: "R0!S@O!FUVCGw",
-  },
-}
-`;
-
-snapshot[`Auto-tests for policies 2`] = `
-{
-  errors: [
-    {
-      extensions: {},
-      locations: [],
-      message: "No policy took decision on type 'func_6' ('function') at '<root>.admin_only'",
-      path: [],
-    },
-  ],
-}
-`;
-
-snapshot[`Auto-tests for policies 3`] = `
-{
-  errors: [
-    {
-      extensions: {},
-      locations: [],
-      message: "No policy took decision on type 'func_10' ('function') at '<root>.user_only'",
-      path: [],
-    },
-  ],
-}
-`;
-
-snapshot[`Auto-tests for policies 4`] = `
-{
-  errors: [
-    {
-      extensions: {},
-      locations: [],
-      message: "No policy took decision on type 'func_14' ('function') at '<root>.both'",
-      path: [],
-    },
-  ],
-}
-`;
-
-snapshot[`Auto-tests for policies 5`] = `
-{
-  data: {
-    __schema: {
-      types: [
-        {
           description: "string type",
           fields: null,
           inputFields: null,
           name: "String",
-        },
-        {
-          description: "Query type",
-          fields: [
-            {
-              name: "both",
-            },
-            {
-              name: "user_only",
-            },
-            {
-              name: "admin_only",
-            },
-            {
-              name: "public",
-            },
-          ],
-          inputFields: null,
-          name: "Query",
-        },
-      ],
-    },
-  },
-}
-`;
-
-snapshot[`Auto-tests for index 1`] = `
-{
-  data: {
-    stargazers: [
-      {
-        login: "cgallay",
-        user: {
-          name: "Charles Gallay",
-        },
-      },
-      {
-        login: "Kazy",
-        user: {
-          name: "Jocelyn Boullier",
-        },
-      },
-    ],
-  },
-}
-`;
-
-snapshot[`Auto-tests for index 2`] = `
-{
-  errors: [
-    {
-      extensions: {},
-      locations: [],
-      message: "Validation errors:
-  - at <value>.data.email: string does not statisfy the required format 'email'
-",
-      path: [],
-    },
-  ],
-}
-`;
-
-snapshot[`Auto-tests for index 3`] = `
-{
-  errors: [
-    {
-      extensions: {},
-      locations: [],
-      message: "Authorization failed for policy '__ctx_p_email____metatype_dev' with effect 'read' on type 'string_1' ('string') at '<root>.list_feedback.email'",
-      path: [],
-    },
-  ],
-}
-`;
-
-snapshot[`Auto-tests for index 4`] = `
-{
-  data: {
-    __schema: {
-      types: [
-        {
-          description: "string type",
-          fields: null,
-          inputFields: null,
-          name: "String",
-        },
-        {
-          description: "integer type",
-          fields: null,
-          inputFields: null,
-          name: "Int",
-        },
-        {
-          description: "_String type",
-          fields: [
-            {
-              name: "string",
-            },
-          ],
-          inputFields: null,
-          name: "_String",
         },
         {
           description: "_Integer type",
@@ -1415,95 +1438,431 @@ snapshot[`Auto-tests for index 4`] = `
           name: "_Integer",
         },
         {
+          description: "_String type",
+          fields: [
+            {
+              name: "string",
+            },
+          ],
+          inputFields: null,
+          name: "_String",
+        },
+        {
           description: "Query type",
           fields: [
             {
-              name: "list_feedback",
+              name: "get_context",
             },
             {
-              name: "stargazers",
+              name: "get_idea",
+            },
+            {
+              name: "get_bucket",
+            },
+            {
+              name: "get_buckets",
             },
           ],
           inputFields: null,
           name: "Query",
         },
         {
-          description: "object_14 type",
+          description: "bucketWithNestedCount type",
           fields: [
             {
-              name: "user",
+              name: "_count",
             },
             {
-              name: "login",
+              name: "ideas",
             },
-          ],
-          inputFields: null,
-          name: "object_14",
-        },
-        {
-          description: "object_12 type",
-          fields: [
             {
               name: "name",
-            },
-          ],
-          inputFields: null,
-          name: "object_12",
-        },
-        {
-          description: "feedbackWithNestedCount type",
-          fields: [
-            {
-              name: "message",
-            },
-            {
-              name: "email",
             },
             {
               name: "id",
             },
           ],
           inputFields: null,
-          name: "feedbackWithNestedCount",
+          name: "bucketWithNestedCount",
+        },
+        {
+          description: "ideaWithNestedCount_excluding___rel_idea_bucket_1 type",
+          fields: [
+            {
+              name: "_count",
+            },
+            {
+              name: "votes",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "ideaWithNestedCount_excluding___rel_idea_bucket_1",
+        },
+        {
+          description: "voteWithNestedCount_excluding___rel_idea_bucket_1___rel_vote_idea_2 type",
+          fields: [
+            {
+              name: "desc",
+            },
+            {
+              name: "importance",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "voteWithNestedCount_excluding___rel_idea_bucket_1___rel_vote_idea_2",
+        },
+        {
+          description: "object_210 type",
+          fields: [
+            {
+              name: "votes",
+            },
+          ],
+          inputFields: null,
+          name: "object_210",
+        },
+        {
+          description: "object_213 type",
+          fields: [
+            {
+              name: "ideas",
+            },
+          ],
+          inputFields: null,
+          name: "object_213",
+        },
+        {
+          description: "_bucketOutputType type",
+          fields: [
+            {
+              name: "ideas",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "_bucketOutputType",
+        },
+        {
+          description: "_ideaOutputType_excluding___rel_idea_bucket_1 type",
+          fields: [
+            {
+              name: "votes",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "_ideaOutputType_excluding___rel_idea_bucket_1",
+        },
+        {
+          description: "_voteOutputType_excluding___rel_idea_bucket_1___rel_vote_idea_2 type",
+          fields: [
+            {
+              name: "desc",
+            },
+            {
+              name: "importance",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "_voteOutputType_excluding___rel_idea_bucket_1___rel_vote_idea_2",
+        },
+        {
+          description: "ideaWithNestedCount type",
+          fields: [
+            {
+              name: "_count",
+            },
+            {
+              name: "votes",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "id",
+            },
+            {
+              name: "bucket",
+            },
+          ],
+          inputFields: null,
+          name: "ideaWithNestedCount",
+        },
+        {
+          description: "voteWithNestedCount_excluding___rel_vote_idea_2 type",
+          fields: [
+            {
+              name: "desc",
+            },
+            {
+              name: "importance",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "voteWithNestedCount_excluding___rel_vote_idea_2",
+        },
+        {
+          description: "bucket type",
+          fields: [
+            {
+              name: "ideas",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "bucket",
+        },
+        {
+          description: "idea type",
+          fields: [
+            {
+              name: "votes",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "id",
+            },
+            {
+              name: "bucket",
+            },
+          ],
+          inputFields: null,
+          name: "idea",
+        },
+        {
+          description: "vote type",
+          fields: [
+            {
+              name: "desc",
+            },
+            {
+              name: "importance",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "id",
+            },
+            {
+              name: "idea",
+            },
+          ],
+          inputFields: null,
+          name: "vote",
+        },
+        {
+          description: "object_244 type",
+          fields: [
+            {
+              name: "votes",
+            },
+          ],
+          inputFields: null,
+          name: "object_244",
+        },
+        {
+          description: "object_308 type",
+          fields: [
+            {
+              name: "username",
+            },
+          ],
+          inputFields: null,
+          name: "object_308",
         },
         {
           description: "Mutation type",
           fields: [
             {
-              name: "send_feedback",
+              name: "set_vote_importance",
+            },
+            {
+              name: "create_vote",
+            },
+            {
+              name: "create_idea",
+            },
+            {
+              name: "create_bucket",
             },
           ],
           inputFields: null,
           name: "Mutation",
         },
         {
-          description: "_feedbackOutputType type",
+          description: "_ideaOutputType type",
           fields: [
             {
-              name: "message",
+              name: "bucket",
             },
             {
-              name: "email",
+              name: "votes",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "name",
             },
             {
               name: "id",
             },
           ],
           inputFields: null,
-          name: "_feedbackOutputType",
+          name: "_ideaOutputType",
         },
         {
-          description: "QueryfeedbackWhereInput input type",
+          description: "_voteOutputType_excluding___rel_vote_idea_2 type",
+          fields: [
+            {
+              name: "desc",
+            },
+            {
+              name: "importance",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "_voteOutputType_excluding___rel_vote_idea_2",
+        },
+        {
+          description: "_bucketOutputType_excluding___rel_idea_bucket_1 type",
+          fields: [
+            {
+              name: "name",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "_bucketOutputType_excluding___rel_idea_bucket_1",
+        },
+        {
+          description: "_voteOutputType type",
+          fields: [
+            {
+              name: "idea",
+            },
+            {
+              name: "desc",
+            },
+            {
+              name: "importance",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "_voteOutputType",
+        },
+        {
+          description: "_ideaOutputType_excluding___rel_vote_idea_2 type",
+          fields: [
+            {
+              name: "bucket",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "_ideaOutputType_excluding___rel_vote_idea_2",
+        },
+        {
+          description: "_bucketOutputType_excluding___rel_vote_idea_2___rel_idea_bucket_1 type",
+          fields: [
+            {
+              name: "name",
+            },
+            {
+              name: "id",
+            },
+          ],
+          inputFields: null,
+          name: "_bucketOutputType_excluding___rel_vote_idea_2___rel_idea_bucket_1",
+        },
+        {
+          description: "QuerybucketWhereInput input type",
           fields: null,
           inputFields: [
             {
               name: "id",
             },
             {
-              name: "email",
+              name: "name",
             },
             {
-              name: "message",
+              name: "ideas",
             },
             {
               name: "AND",
@@ -1515,48 +1874,154 @@ snapshot[`Auto-tests for index 4`] = `
               name: "NOT",
             },
           ],
-          name: "QueryfeedbackWhereInputInp",
+          name: "QuerybucketWhereInputInp",
         },
         {
           description: "union type
-_string_filter, object_41",
+_integer_filter, object_65",
           fields: null,
           inputFields: null,
-          name: "union_42In",
+          name: "union_66In",
         },
         {
-          description: "union type
-string_28, object_31, object_32, object_33, object_34, object_37, object_38, object_39",
+          description: "either type
+integer_56, object_59, object_60, object_61, object_62, object_63",
           fields: null,
           inputFields: null,
-          name: "_string_filterIn",
+          name: "_integer_filterIn",
         },
         {
-          description: "object_31 input type",
+          description: "object_59 input type",
           fields: null,
           inputFields: [
             {
               name: "equals",
             },
           ],
-          name: "object_31Inp",
+          name: "object_59Inp",
         },
         {
-          description: "object_32 input type",
+          description: "object_60 input type",
           fields: null,
           inputFields: [
             {
               name: "not",
             },
           ],
-          name: "object_32Inp",
+          name: "object_60Inp",
+        },
+        {
+          description: "object_61 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "lt",
+            },
+            {
+              name: "gt",
+            },
+            {
+              name: "lte",
+            },
+            {
+              name: "gte",
+            },
+          ],
+          name: "object_61Inp",
+        },
+        {
+          description: "object_62 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "in",
+            },
+          ],
+          name: "object_62Inp",
+        },
+        {
+          description: "object_63 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "notIn",
+            },
+          ],
+          name: "object_63Inp",
+        },
+        {
+          description: "object_65 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_65Inp",
+        },
+        {
+          description: "union type
+_string_filter, object_37",
+          fields: null,
+          inputFields: null,
+          name: "union_38In",
+        },
+        {
+          description: "union type
+string_24, object_27, object_28, object_29, object_30, object_33, object_34, object_35",
+          fields: null,
+          inputFields: null,
+          name: "_string_filterIn",
+        },
+        {
+          description: "object_27 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "equals",
+            },
+          ],
+          name: "object_27Inp",
+        },
+        {
+          description: "object_28 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "not",
+            },
+          ],
+          name: "object_28Inp",
+        },
+        {
+          description: "object_29 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "in",
+            },
+          ],
+          name: "object_29Inp",
+        },
+        {
+          description: "object_30 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "notIn",
+            },
+          ],
+          name: "object_30Inp",
         },
         {
           description: "object_33 input type",
           fields: null,
           inputFields: [
             {
-              name: "in",
+              name: "contains",
+            },
+            {
+              name: "mode",
             },
           ],
           name: "object_33Inp",
@@ -1566,36 +2031,13 @@ string_28, object_31, object_32, object_33, object_34, object_37, object_38, obj
           fields: null,
           inputFields: [
             {
-              name: "notIn",
+              name: "search",
             },
           ],
           name: "object_34Inp",
         },
         {
-          description: "object_37 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "contains",
-            },
-            {
-              name: "mode",
-            },
-          ],
-          name: "object_37Inp",
-        },
-        {
-          description: "object_38 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "search",
-            },
-          ],
-          name: "object_38Inp",
-        },
-        {
-          description: "object_39 input type",
+          description: "object_35 input type",
           fields: null,
           inputFields: [
             {
@@ -1605,217 +2047,252 @@ string_28, object_31, object_32, object_33, object_34, object_37, object_38, obj
               name: "endsWith",
             },
           ],
-          name: "object_39Inp",
+          name: "object_35Inp",
         },
         {
-          description: "object_41 input type",
+          description: "object_37 input type",
           fields: null,
           inputFields: [
             {
               name: "not",
             },
           ],
-          name: "object_41Inp",
+          name: "object_37Inp",
         },
         {
-          description: "object_59 input type",
+          description: "union type
+object_170, object_172, object_174",
+          fields: null,
+          inputFields: null,
+          name: "union_175In",
+        },
+        {
+          description: "object_170 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "every",
+            },
+          ],
+          name: "object_170Inp",
+        },
+        {
+          description: "ideaWhere__skip_4_bucketWhere input type",
           fields: null,
           inputFields: [
             {
               name: "id",
             },
             {
-              name: "email",
+              name: "name",
             },
             {
-              name: "message",
+              name: "authorEmail",
+            },
+            {
+              name: "votes",
+            },
+            {
+              name: "bucket",
             },
           ],
-          name: "object_59Inp",
+          name: "ideaWhere__skip_4_bucketWhereInp",
         },
         {
           description: "union type
-object_56, _SortOrder",
+object_159, object_161, object_163",
           fields: null,
           inputFields: null,
-          name: "union_57In",
+          name: "union_164In",
         },
         {
-          description: "object_56 input type",
+          description: "object_159 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "every",
+            },
+          ],
+          name: "object_159Inp",
+        },
+        {
+          description: "voteWhere__skip_4_bucketWhere__11_ideaWhere__skip_4_bucketWhere input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "importance",
+            },
+            {
+              name: "desc",
+            },
+            {
+              name: "idea",
+            },
+          ],
+          name: "voteWhere__skip_4_bucketWhere__11_ideaWhere__skip_4_bucketWhereInp",
+        },
+        {
+          description: "object_161 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "some",
+            },
+          ],
+          name: "object_161Inp",
+        },
+        {
+          description: "object_163 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "none",
+            },
+          ],
+          name: "object_163Inp",
+        },
+        {
+          description: "bucketWhere input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "ideas",
+            },
+          ],
+          name: "bucketWhereInp",
+        },
+        {
+          description: "object_172 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "some",
+            },
+          ],
+          name: "object_172Inp",
+        },
+        {
+          description: "object_174 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "none",
+            },
+          ],
+          name: "object_174Inp",
+        },
+        {
+          description: "object_191 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "ideas",
+            },
+          ],
+          name: "object_191Inp",
+        },
+        {
+          description: "union type
+object_186, _SortOrder",
+          fields: null,
+          inputFields: null,
+          name: "union_187In",
+        },
+        {
+          description: "object_186 input type",
           fields: null,
           inputFields: [
             {
               name: "sort",
             },
           ],
-          name: "object_56Inp",
+          name: "object_186Inp",
         },
         {
-          description: "_feedback_CreateInput input type",
+          description: "object_189 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "_count",
+            },
+            {
+              name: "_avg",
+            },
+            {
+              name: "_sum",
+            },
+            {
+              name: "_min",
+            },
+            {
+              name: "_max",
+            },
+          ],
+          name: "object_189Inp",
+        },
+        {
+          description: "union type
+object_198, object_199",
+          fields: null,
+          inputFields: null,
+          name: "_bucket_CursorIn",
+        },
+        {
+          description: "object_198 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+          ],
+          name: "object_198Inp",
+        },
+        {
+          description: "object_199 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "name",
+            },
+          ],
+          name: "object_199Inp",
+        },
+        {
+          description: "QueryideaWhereInput input type",
           fields: null,
           inputFields: [
             {
               name: "id",
             },
             {
-              name: "email",
+              name: "name",
             },
             {
-              name: "message",
-            },
-          ],
-          name: "_feedback_CreateInputInp",
-        },
-      ],
-    },
-  },
-}
-`;
-
-snapshot[`Auto-tests for prisma 1`] = `
-{
-  errors: [
-    {
-      extensions: {},
-      locations: [],
-      message: "Validation errors:
-  - at <value>.data.firstname: expected minimum length: 2, got 0
-",
-      path: [],
-    },
-  ],
-}
-`;
-
-snapshot[`Auto-tests for prisma 2`] = `
-{
-  data: {
-    find_user: [],
-    read_user: [],
-  },
-}
-`;
-
-snapshot[`Auto-tests for prisma 3`] = `
-{
-  data: {
-    __schema: {
-      types: [
-        {
-          description: "string type",
-          fields: null,
-          inputFields: null,
-          name: "String",
-        },
-        {
-          description: "integer type",
-          fields: null,
-          inputFields: null,
-          name: "Int",
-        },
-        {
-          description: "_String type",
-          fields: [
-            {
-              name: "string",
-            },
-          ],
-          inputFields: null,
-          name: "_String",
-        },
-        {
-          description: "_Integer type",
-          fields: [
-            {
-              name: "integer",
-            },
-          ],
-          inputFields: null,
-          name: "_Integer",
-        },
-        {
-          description: "Query type",
-          fields: [
-            {
-              name: "find_user",
+              name: "authorEmail",
             },
             {
-              name: "read_user",
-            },
-          ],
-          inputFields: null,
-          name: "Query",
-        },
-        {
-          description: "userWithNestedCount type",
-          fields: [
-            {
-              name: "firstname",
+              name: "votes",
             },
             {
-              name: "email",
-            },
-            {
-              name: "id",
-            },
-          ],
-          inputFields: null,
-          name: "userWithNestedCount",
-        },
-        {
-          description: "user type",
-          fields: [
-            {
-              name: "firstname",
-            },
-            {
-              name: "email",
-            },
-            {
-              name: "id",
-            },
-          ],
-          inputFields: null,
-          name: "user",
-        },
-        {
-          description: "Mutation type",
-          fields: [
-            {
-              name: "create_user",
-            },
-          ],
-          inputFields: null,
-          name: "Mutation",
-        },
-        {
-          description: "_userOutputType type",
-          fields: [
-            {
-              name: "firstname",
-            },
-            {
-              name: "email",
-            },
-            {
-              name: "id",
-            },
-          ],
-          inputFields: null,
-          name: "_userOutputType",
-        },
-        {
-          description: "QueryuserWhereInput input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "id",
-            },
-            {
-              name: "email",
-            },
-            {
-              name: "firstname",
+              name: "bucket",
             },
             {
               name: "AND",
@@ -1827,156 +2304,813 @@ snapshot[`Auto-tests for prisma 3`] = `
               name: "NOT",
             },
           ],
-          name: "QueryuserWhereInputInp",
+          name: "QueryideaWhereInputInp",
         },
         {
           description: "union type
-_string_filter, object_22",
+object_106, object_108, object_110",
           fields: null,
           inputFields: null,
-          name: "union_23In",
+          name: "union_111In",
         },
         {
-          description: "union type
-string_9, object_12, object_13, object_14, object_15, object_18, object_19, object_20",
-          fields: null,
-          inputFields: null,
-          name: "_string_filterIn",
-        },
-        {
-          description: "object_12 input type",
+          description: "object_106 input type",
           fields: null,
           inputFields: [
             {
-              name: "equals",
+              name: "every",
             },
           ],
-          name: "object_12Inp",
+          name: "object_106Inp",
         },
         {
-          description: "object_13 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "not",
-            },
-          ],
-          name: "object_13Inp",
-        },
-        {
-          description: "object_14 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "in",
-            },
-          ],
-          name: "object_14Inp",
-        },
-        {
-          description: "object_15 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "notIn",
-            },
-          ],
-          name: "object_15Inp",
-        },
-        {
-          description: "object_18 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "contains",
-            },
-            {
-              name: "mode",
-            },
-          ],
-          name: "object_18Inp",
-        },
-        {
-          description: "object_19 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "search",
-            },
-          ],
-          name: "object_19Inp",
-        },
-        {
-          description: "object_20 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "startsWith",
-            },
-            {
-              name: "endsWith",
-            },
-          ],
-          name: "object_20Inp",
-        },
-        {
-          description: "object_22 input type",
-          fields: null,
-          inputFields: [
-            {
-              name: "not",
-            },
-          ],
-          name: "object_22Inp",
-        },
-        {
-          description: "object_40 input type",
+          description: "voteWhere__skip_11_ideaWhere input type",
           fields: null,
           inputFields: [
             {
               name: "id",
             },
             {
-              name: "email",
+              name: "authorEmail",
             },
             {
-              name: "firstname",
+              name: "importance",
             },
-          ],
-          name: "object_40Inp",
-        },
-        {
-          description: "union type
-object_37, _SortOrder",
-          fields: null,
-          inputFields: null,
-          name: "union_38In",
-        },
-        {
-          description: "object_37 input type",
-          fields: null,
-          inputFields: [
             {
-              name: "sort",
+              name: "desc",
+            },
+            {
+              name: "idea",
             },
           ],
-          name: "object_37Inp",
+          name: "voteWhere__skip_11_ideaWhereInp",
         },
         {
-          description: "_user_CreateInput input type",
+          description: "ideaWhere input type",
           fields: null,
           inputFields: [
             {
               name: "id",
             },
             {
-              name: "email",
+              name: "name",
             },
             {
-              name: "firstname",
+              name: "authorEmail",
+            },
+            {
+              name: "votes",
+            },
+            {
+              name: "bucket",
             },
           ],
-          name: "_user_CreateInputInp",
+          name: "ideaWhereInp",
+        },
+        {
+          description: "bucketWhere__skip_11_ideaWhere input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "ideas",
+            },
+          ],
+          name: "bucketWhere__skip_11_ideaWhereInp",
+        },
+        {
+          description: "union type
+object_117, object_119, object_121",
+          fields: null,
+          inputFields: null,
+          name: "union_122In",
+        },
+        {
+          description: "object_117 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "every",
+            },
+          ],
+          name: "object_117Inp",
+        },
+        {
+          description: "object_119 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "some",
+            },
+          ],
+          name: "object_119Inp",
+        },
+        {
+          description: "object_121 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "none",
+            },
+          ],
+          name: "object_121Inp",
+        },
+        {
+          description: "object_108 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "some",
+            },
+          ],
+          name: "object_108Inp",
+        },
+        {
+          description: "object_110 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "none",
+            },
+          ],
+          name: "object_110Inp",
+        },
+        {
+          description: "object_228 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "votes",
+            },
+            {
+              name: "bucket",
+            },
+          ],
+          name: "object_228Inp",
+        },
+        {
+          description: "object_225 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "name",
+            },
+          ],
+          name: "object_225Inp",
+        },
+        {
+          description: "union type
+object_233, object_234, object_235",
+          fields: null,
+          inputFields: null,
+          name: "_idea_CursorIn",
+        },
+        {
+          description: "object_233 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+          ],
+          name: "object_233Inp",
+        },
+        {
+          description: "object_234 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "name",
+            },
+          ],
+          name: "object_234Inp",
+        },
+        {
+          description: "object_235 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "authorEmail",
+            },
+          ],
+          name: "object_235Inp",
+        },
+        {
+          description: "_bucket_CreateInput input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "ideas",
+            },
+          ],
+          name: "_bucket_CreateInputInp",
+        },
+        {
+          description: "union type
+object_128, object_129, object_130, object_134",
+          fields: null,
+          inputFields: null,
+          name: "union_135In",
+        },
+        {
+          description: "object_128 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "create",
+            },
+          ],
+          name: "object_128Inp",
+        },
+        {
+          description: "_idea_CreateInput_excluding___rel_idea_bucket_1 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "votes",
+            },
+          ],
+          name: "_idea_CreateInput_excluding___rel_idea_bucket_1Inp",
+        },
+        {
+          description: "union type
+object_85, object_86, object_87, object_91",
+          fields: null,
+          inputFields: null,
+          name: "union_92In",
+        },
+        {
+          description: "object_85 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "create",
+            },
+          ],
+          name: "object_85Inp",
+        },
+        {
+          description: "_vote_CreateInput_excluding___rel_idea_bucket_1And__rel_vote_idea_2 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "importance",
+            },
+            {
+              name: "desc",
+            },
+          ],
+          name: "_vote_CreateInput_excluding___rel_idea_bucket_1And__rel_vote_idea_2Inp",
+        },
+        {
+          description: "object_86 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "connect",
+            },
+          ],
+          name: "object_86Inp",
+        },
+        {
+          description: "voteWhere input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "importance",
+            },
+            {
+              name: "desc",
+            },
+            {
+              name: "idea",
+            },
+          ],
+          name: "voteWhereInp",
+        },
+        {
+          description: "ideaWhere__skip_19_voteWhere input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "votes",
+            },
+            {
+              name: "bucket",
+            },
+          ],
+          name: "ideaWhere__skip_19_voteWhereInp",
+        },
+        {
+          description: "union type
+object_49, object_51, object_53",
+          fields: null,
+          inputFields: null,
+          name: "union_54In",
+        },
+        {
+          description: "object_49 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "every",
+            },
+          ],
+          name: "object_49Inp",
+        },
+        {
+          description: "object_51 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "some",
+            },
+          ],
+          name: "object_51Inp",
+        },
+        {
+          description: "object_53 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "none",
+            },
+          ],
+          name: "object_53Inp",
+        },
+        {
+          description: "bucketWhere__skip_19_voteWhere__11_ideaWhere__skip_19_voteWhere input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "ideas",
+            },
+          ],
+          name: "bucketWhere__skip_19_voteWhere__11_ideaWhere__skip_19_voteWhereInp",
+        },
+        {
+          description: "union type
+object_72, object_74, object_76",
+          fields: null,
+          inputFields: null,
+          name: "union_77In",
+        },
+        {
+          description: "object_72 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "every",
+            },
+          ],
+          name: "object_72Inp",
+        },
+        {
+          description: "object_74 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "some",
+            },
+          ],
+          name: "object_74Inp",
+        },
+        {
+          description: "object_76 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "none",
+            },
+          ],
+          name: "object_76Inp",
+        },
+        {
+          description: "object_87 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "connectOrCreate",
+            },
+          ],
+          name: "object_87Inp",
+        },
+        {
+          description: "object_84 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "create",
+            },
+            {
+              name: "where",
+            },
+          ],
+          name: "object_84Inp",
+        },
+        {
+          description: "object_91 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "createMany",
+            },
+          ],
+          name: "object_91Inp",
+        },
+        {
+          description: "object_89 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "data",
+            },
+          ],
+          name: "object_89Inp",
+        },
+        {
+          description: "object_129 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "connect",
+            },
+          ],
+          name: "object_129Inp",
+        },
+        {
+          description: "object_130 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "connectOrCreate",
+            },
+          ],
+          name: "object_130Inp",
+        },
+        {
+          description: "object_127 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "create",
+            },
+            {
+              name: "where",
+            },
+          ],
+          name: "object_127Inp",
+        },
+        {
+          description: "object_134 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "createMany",
+            },
+          ],
+          name: "object_134Inp",
+        },
+        {
+          description: "object_132 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "data",
+            },
+          ],
+          name: "object_132Inp",
+        },
+        {
+          description: "object_276 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "name",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "votes",
+            },
+            {
+              name: "bucket",
+            },
+          ],
+          name: "object_276Inp",
+        },
+        {
+          description: "union type
+object_252, object_253, object_254, object_258",
+          fields: null,
+          inputFields: null,
+          name: "union_259In",
+        },
+        {
+          description: "object_252 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "create",
+            },
+          ],
+          name: "object_252Inp",
+        },
+        {
+          description: "_vote_CreateInput_excluding___rel_vote_idea_2 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "importance",
+            },
+            {
+              name: "desc",
+            },
+          ],
+          name: "_vote_CreateInput_excluding___rel_vote_idea_2Inp",
+        },
+        {
+          description: "object_253 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "connect",
+            },
+          ],
+          name: "object_253Inp",
+        },
+        {
+          description: "object_254 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "connectOrCreate",
+            },
+          ],
+          name: "object_254Inp",
+        },
+        {
+          description: "object_251 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "create",
+            },
+            {
+              name: "where",
+            },
+          ],
+          name: "object_251Inp",
+        },
+        {
+          description: "object_258 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "createMany",
+            },
+          ],
+          name: "object_258Inp",
+        },
+        {
+          description: "object_256 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "data",
+            },
+          ],
+          name: "object_256Inp",
+        },
+        {
+          description: "object_275 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "connect",
+            },
+          ],
+          name: "object_275Inp",
+        },
+        {
+          description: "_vote_CreateInput input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "importance",
+            },
+            {
+              name: "desc",
+            },
+            {
+              name: "idea",
+            },
+          ],
+          name: "_vote_CreateInputInp",
+        },
+        {
+          description: "union type
+object_290, object_291, object_292",
+          fields: null,
+          inputFields: null,
+          name: "union_293In",
+        },
+        {
+          description: "object_290 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "create",
+            },
+          ],
+          name: "object_290Inp",
+        },
+        {
+          description: "_idea_CreateInput_excluding___rel_vote_idea_2 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "name",
+            },
+            {
+              name: "authorEmail",
+            },
+            {
+              name: "bucket",
+            },
+          ],
+          name: "_idea_CreateInput_excluding___rel_vote_idea_2Inp",
+        },
+        {
+          description: "union type
+object_284, object_285, object_286",
+          fields: null,
+          inputFields: null,
+          name: "union_287In",
+        },
+        {
+          description: "object_284 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "create",
+            },
+          ],
+          name: "object_284Inp",
+        },
+        {
+          description: "_bucket_CreateInput_excluding___rel_vote_idea_2And__rel_idea_bucket_1 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "id",
+            },
+            {
+              name: "name",
+            },
+          ],
+          name: "_bucket_CreateInput_excluding___rel_vote_idea_2And__rel_idea_bucket_1Inp",
+        },
+        {
+          description: "object_285 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "connect",
+            },
+          ],
+          name: "object_285Inp",
+        },
+        {
+          description: "object_286 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "connectOrCreate",
+            },
+          ],
+          name: "object_286Inp",
+        },
+        {
+          description: "object_283 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "create",
+            },
+            {
+              name: "where",
+            },
+          ],
+          name: "object_283Inp",
+        },
+        {
+          description: "object_291 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "connect",
+            },
+          ],
+          name: "object_291Inp",
+        },
+        {
+          description: "object_292 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "connectOrCreate",
+            },
+          ],
+          name: "object_292Inp",
+        },
+        {
+          description: "object_289 input type",
+          fields: null,
+          inputFields: [
+            {
+              name: "create",
+            },
+            {
+              name: "where",
+            },
+          ],
+          name: "object_289Inp",
         },
       ],
     },

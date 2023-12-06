@@ -4,8 +4,7 @@
 import { gql, Meta } from "test-utils/mod.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { dropSchemas, removeMigrations } from "test-utils/migrations.ts";
-import { assertStringIncludes } from "std/assert/mod.ts";
-import { assertRejects } from "std/assert/mod.ts";
+import { assertRejects, assertStringIncludes } from "std/assert/mod.ts";
 import pg from "npm:pg";
 
 const m = new TestModule(import.meta);

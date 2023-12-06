@@ -6,7 +6,7 @@ on:
 env:
   PYTHON_VERSION: "3.8"
   POETRY_VERSION: "1.7.0"
-  DENO_VERSION: "1.38.1"
+  DENO_VERSION: "1.38.2"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
   WASM_TOOLS_VERSION: "1.0.53"
   JCO_VERSION: "0.12.1"
