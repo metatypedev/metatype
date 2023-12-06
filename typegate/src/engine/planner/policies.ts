@@ -18,6 +18,7 @@ import { getLogger } from "../../log.ts";
 import { Type } from "../../typegraph/type_node.ts";
 import { ArgPolicies } from "./args.ts";
 import { BadContext } from "../../errors.ts";
+import config from "../../config.ts";
 
 export interface FunctionSubtreeData {
   typeIdx: TypeIdx;
@@ -91,7 +92,10 @@ export class OperationPolicies {
           "Policies must run on a Deno Runtime",
         );
         if (!this.resolvers.has(polIdx)) {
-          this.resolvers.set(polIdx, runtime.delegate(mat, false));
+          this.resolvers.set(
+            polIdx,
+            runtime.delegate(mat, false, config.timer_disable_on_policy_eval),
+          );
         }
       }
     }

@@ -7,6 +7,7 @@ export interface Message<T> {
   id: number;
   op: string | number | null;
   data: T;
+  ignoreTimeout?: boolean;
 }
 
 export type Answer<T> =
