@@ -87,7 +87,6 @@ def typegate(g: Graph):
         },
         name="Typegraph",
     )
-
     path = t.list(t.string())
     arg_info_inp = t.struct(
         {
@@ -109,10 +108,9 @@ def typegate(g: Graph):
             "config": t.json().optional(),
             "default": t.json().optional(),
             "format": t.string().optional(),
-            "fields": t.list(t.struct({
-                "subPath": path,
-                "termNode": g.ref("ArgInfoOut")
-            })).optional(),
+            "fields": t.list(
+                t.struct({"subPath": path, "termNode": g.ref("ArgInfoOut")})
+            ).optional(),
         }
     ).rename("ArgInfoOut")
 
