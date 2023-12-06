@@ -88,6 +88,8 @@ jobs:
           cd ..
           # FIXME: bug from wasmedge ghjk port
           ln -s $(dirname $WASMEDGE_LIB_DIR) ~/.wasmedge
+          # activate mold
+          sudo ln -sf /usr/local/bin/mold "$(realpath /usr/bin/ld)"
       - uses: pre-commit/action@v3.0.0
 
   test-website:
@@ -185,6 +187,8 @@ jobs:
 
           # FIXME: bug from wasmedge ghjk port
           ln -s $(dirname $WASMEDGE_LIB_DIR) ~/.wasmedge
+          # activate mold
+          sudo ln -sf /usr/local/bin/mold "$(realpath /usr/bin/ld)"
 
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
           mkdir -p $(dirname $WASM_FILE)
@@ -320,6 +324,8 @@ jobs:
 
           # FIXME: bug from wasmedge ghjk port
           ln -s $(dirname $WASMEDGE_LIB_DIR) ~/.wasmedge
+          # activate mold
+          sudo ln -sf /usr/local/bin/mold "$(realpath /usr/bin/ld)"
 
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
           mkdir -p $(dirname $WASM_FILE)
