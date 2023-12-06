@@ -21,7 +21,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "function",
-        "title": "func_20",
+        "title": "func_21",
         "runtime": 0,
         "policies": [
           0
@@ -142,7 +142,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "list",
-        "title": "array_15",
+        "title": "list_15",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -354,7 +354,7 @@ snapshot[`typegraphs creation 2`] = `
       },
       {
         "type": "function",
-        "title": "func_4",
+        "title": "func_5",
         "runtime": 1,
         "policies": [
           0
@@ -406,7 +406,7 @@ snapshot[`typegraphs creation 2`] = `
       },
       {
         "type": "function",
-        "title": "func_10",
+        "title": "func_11",
         "runtime": 0,
         "policies": [
           0
@@ -562,7 +562,7 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "function",
-        "title": "func_10",
+        "title": "func_11",
         "runtime": 0,
         "policies": [
           0
@@ -617,7 +617,7 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "function",
-        "title": "func_12",
+        "title": "func_13",
         "runtime": 0,
         "policies": [
           1
@@ -674,7 +674,7 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "function",
-        "title": "func_14",
+        "title": "func_15",
         "runtime": 0,
         "policies": [
           2
@@ -836,7 +836,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "function",
-        "title": "func_20",
+        "title": "func_21",
         "runtime": 0,
         "policies": [
           0
@@ -957,7 +957,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "list",
-        "title": "array_15",
+        "title": "list_15",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -1169,7 +1169,7 @@ snapshot[`typegraphs creation 5`] = `
       },
       {
         "type": "function",
-        "title": "func_4",
+        "title": "func_5",
         "runtime": 1,
         "policies": [
           0
@@ -1221,7 +1221,7 @@ snapshot[`typegraphs creation 5`] = `
       },
       {
         "type": "function",
-        "title": "func_10",
+        "title": "func_11",
         "runtime": 0,
         "policies": [
           0
@@ -1377,7 +1377,7 @@ snapshot[`typegraphs creation 6`] = `
       },
       {
         "type": "function",
-        "title": "func_9",
+        "title": "func_10",
         "runtime": 0,
         "policies": [
           0
@@ -1432,7 +1432,7 @@ snapshot[`typegraphs creation 6`] = `
       },
       {
         "type": "function",
-        "title": "func_11",
+        "title": "func_12",
         "runtime": 0,
         "policies": [
           1
@@ -1489,7 +1489,7 @@ snapshot[`typegraphs creation 6`] = `
       },
       {
         "type": "function",
-        "title": "func_13",
+        "title": "func_14",
         "runtime": 0,
         "policies": [
           2
