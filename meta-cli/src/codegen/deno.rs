@@ -506,8 +506,9 @@ mod tests {
             ));
 
             let mut event_rx = event_rx;
-            let LoaderEvent::Typegraph(tg) = event_rx.recv().await.unwrap() else {
-                bail!("error");
+            let tg = match event_rx.recv().await.unwrap() {
+                LoaderEvent::Typegraph(tg) => tg,
+                evt => bail!("unexpected loader evt: {evt:?}"),
             };
             let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
             assert_eq!(module_codes.len(), 1);
