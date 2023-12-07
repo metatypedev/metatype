@@ -272,8 +272,6 @@ Meta.test(
 
     const nodeConfigs = ["-t", "with_prefix"];
 
-    const prismaConfigs = [e.rawName];
-
     await t.should("fail to access database", async () => {
       await gql`
         query {
@@ -286,26 +284,14 @@ Meta.test(
         .on(e);
     });
 
-    await t.should("create migrations", async () => {
-      await t.meta(
-        ["prisma", "dev", ...nodeConfigs, ...prismaConfigs, "--create-only"],
-        { stdin: "initial_migration\n" },
-      );
-    });
-
-    await t.should("fail on dirty repo", async () => {
-      await assertRejects(() =>
-        t.meta(["deploy", "-t", "with_prefix", "-f", "prisma/prisma.py"])
-      );
-    });
-
-    await t.should("commit changes 2", async () => {
-      await t.shell(["git", "add", "."]);
-      await t.shell(["git", "commit", "-m", "create migrations"]);
-    });
-
     // not in t.should because it creates a worker that will not be closed
-    await t.meta(["deploy", ...nodeConfigs, "-f", "prisma.py"]);
+    await t.meta([
+      "deploy",
+      ...nodeConfigs,
+      "-f",
+      "prisma.py",
+      "--create-migration",
+    ]);
 
     await t.should(
       "succeed have replaced and terminated the previous engine",

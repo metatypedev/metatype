@@ -192,7 +192,11 @@ export class DenoRuntime extends Runtime {
     })];
   }
 
-  delegate(mat: TypeMaterializer, verbose: boolean): Resolver {
+  delegate(
+    mat: TypeMaterializer,
+    verbose: boolean,
+    pulseCount?: number,
+  ): Resolver {
     if (mat.name === "predefined_function") {
       const func = predefinedFuncs[mat.data.name as string];
       if (!func) {
@@ -218,23 +222,28 @@ export class DenoRuntime extends Runtime {
       ) => {
         const token = await InternalAuth.emit();
 
-        return this.w.execute(op, {
-          type: "import_func",
-          args,
-          internals: {
-            parent,
-            context,
-            secrets,
-            effect: mat.effect.effect ?? null,
-            meta: {
-              url: `${url.protocol}//${url.host}/${this.typegraphName}`,
-              token,
+        return this.w.execute(
+          op,
+          {
+            type: "import_func",
+            args,
+            internals: {
+              parent,
+              context,
+              secrets,
+              effect: mat.effect.effect ?? null,
+              meta: {
+                url: `${url.protocol}//${url.host}/${this.typegraphName}`,
+                token,
+              },
+              headers,
             },
-            headers,
+            name: mat.data.name as string,
+            verbose,
           },
-          name: mat.data.name as string,
-          verbose,
-        });
+          [],
+          pulseCount,
+        );
       };
     }
 
@@ -245,22 +254,27 @@ export class DenoRuntime extends Runtime {
       ) => {
         const token = await InternalAuth.emit();
 
-        return this.w.execute(op, {
-          type: "func",
-          args,
-          internals: {
-            parent,
-            context,
-            secrets,
-            effect: mat.effect.effect ?? null,
-            meta: {
-              url: `${url.protocol}//${url.host}/${this.typegraphName}`,
-              token,
+        return this.w.execute(
+          op,
+          {
+            type: "func",
+            args,
+            internals: {
+              parent,
+              context,
+              secrets,
+              effect: mat.effect.effect ?? null,
+              meta: {
+                url: `${url.protocol}//${url.host}/${this.typegraphName}`,
+                token,
+              },
+              headers,
             },
-            headers,
+            verbose,
           },
-          verbose,
-        });
+          [],
+          pulseCount,
+        );
       };
     }
 
