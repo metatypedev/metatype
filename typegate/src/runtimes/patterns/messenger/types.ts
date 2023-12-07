@@ -7,6 +7,7 @@ export interface Message<T> {
   id: number;
   op: string | number | null;
   data: T;
+  remainingPulseCount?: number;
 }
 
 export type Answer<T> =
