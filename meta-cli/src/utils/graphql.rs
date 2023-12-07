@@ -17,6 +17,7 @@ pub struct Response {
 }
 
 impl Response {
+    #[allow(dead_code)]
     pub fn display_errors(&self) {
         if let Some(errors) = &self.errors {
             println!("Error{s}:", s = if errors.len() > 1 { "s" } else { "" });
