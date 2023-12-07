@@ -216,6 +216,10 @@ export class Typegate {
       pushResponse,
     );
 
+    if (pushResponse.failure) {
+      throw new Error(`Push failed: ${pushResponse.failure.message}`);
+    }
+
     logger.info(`Initializing engine '${name}'`);
     const engine = await this.initQueryEngine(
       tg,
