@@ -29,7 +29,7 @@ default = []
 typegate = ["dep:typegate_engine"]
 
 [dependencies]
-self_update = { version = "0.38.0", features = [
+self_update = { version = "0.39.0", features = [
   "archive-tar",
   "archive-zip",
   "compression-flate2",
@@ -67,14 +67,14 @@ indexmap = { version = "2.1.0", features = ["serde"] }
 lade-sdk = "0.9.1"
 async-trait = "0.1.74"
 async-recursion = "1.0.5"
-itertools = "0.11.0"
+itertools = "0.12.0"
 enum_dispatch = "0.3.12"
 git2 = { version = "0.18.1", features = ["vendored-libgit2"], default-features = false }
 normpath = "1.1.1"
 include_dir = "0.7.3"
 chrono = { version = "0.4.31", features = ["serde"] }
 directories = "5.0.1"
-grep = "0.2.12"
+grep = "0.3.1"
 semver = "1.0.20"
 textwrap = "0.16.0"
 actix = "0.13.1"
