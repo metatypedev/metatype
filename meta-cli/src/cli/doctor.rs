@@ -116,8 +116,8 @@ impl Action for Doctor {
                     .collect::<Vec<_>>();
 
                 let base_dir = config.base_dir.clone();
-                let tgs = Discovery::new(Arc::new(config), base_dir, true)
-                    .get_all()
+                let tgs = Discovery::new(Arc::new(config), base_dir)
+                    .get_all(true)
                     .await?
                     .into_iter()
                     .map(|p| clean_path(dir, p).unwrap_or("".to_string()))

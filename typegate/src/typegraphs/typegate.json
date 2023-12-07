@@ -241,7 +241,7 @@
         "name": 21,
         "messages": 22,
         "migrations": 26,
-        "resetRequired": 30
+        "failure": 30
       },
       "required": []
     },
@@ -335,13 +335,14 @@
       "as_id": false
     },
     {
-      "type": "list",
-      "title": "list_28",
+      "type": "optional",
+      "title": "optional_28",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 31
+      "item": 31,
+      "default_value": null
     },
     {
       "type": "string",
@@ -349,7 +350,8 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false
+      "as_id": false,
+      "format": "json"
     },
     {
       "type": "function",
