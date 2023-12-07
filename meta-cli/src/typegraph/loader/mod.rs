@@ -141,12 +141,12 @@ impl Loader {
     fn get_load_command(module_type: ModuleType, path: &Path) -> Result<Command, LoaderError> {
         match module_type {
             ModuleType::Python => {
-                // TODO cache result?
                 ensure_venv(path).map_err(|e| LoaderError::PythonVenvNotFound {
                     path: path.to_owned().into(),
                     error: e,
                 })?;
                 let vars: HashMap<_, _> = env::vars().collect();
+                // TODO cache result?
                 let mut command = Command::new("python3");
                 command
                     .arg(path.to_str().unwrap())
@@ -231,9 +231,7 @@ impl ToString for LoaderError {
                 format!("module file not found: {path:?}")
             }
             Self::PythonVenvNotFound { path, error } => {
-                format!(
-                    "python venv (.venv) not found in parent directories of {path:?}: {error:?}"
-                )
+                format!("python venv (.venv) not found in parent directories of {path:?}: {error}",)
             }
         }
     }
