@@ -173,37 +173,14 @@ impl Loader {
                 Ok(command)
             }
             ModuleType::Deno => {
-                let rt_name = if let Ok(val) = std::env::var("MCLI_TS_LOADER_RT") {
-                    val.trim().to_lowercase()
-                } else if let Ok(true) = Command::new("deno")
-                    .arg("--version")
-                    .output()
+                // TODO cache result?
+                match detect_deno_loader_cmd(path)
                     .await
-                    .map(|out| out.status.success())
-                {
-                    "deno".to_string()
-                } else if let Ok(true) = Command::new("node")
-                    .arg("-v")
-                    .output()
-                    .await
-                    .map(|out| out.status.success())
-                {
-                    "node".to_string()
-                } else if let Ok(true) = Command::new("bun")
-                    .arg("--version")
-                    .output()
-                    .await
-                    .map(|out| out.status.success())
-                {
-                    "bun".to_string()
-                } else {
-                    return Err(LoaderError::LoaderProcess {
+                    .map_err(|error| LoaderError::Unknown {
                         path: path.into(),
-                        error: anyhow::format_err!("unable to find deno, node or bun runtimes"),
-                    });
-                };
-                match &rt_name[..] {
-                    "deno" => {
+                        error,
+                    })? {
+                    TsLoaderRt::Deno => {
                         let mut command = Command::new("deno");
                         command
                             .arg("run")
@@ -214,7 +191,7 @@ impl Loader {
                             .envs(vars);
                         Ok(command)
                     }
-                    "node" => {
+                    TsLoaderRt::Node => {
                         log::debug!("loading typegraph using node, make sure npm packages have been installed");
                         let mut command = Command::new("npm");
                         command
@@ -225,7 +202,7 @@ impl Loader {
                             .envs(vars);
                         Ok(command)
                     }
-                    "bun" => {
+                    TsLoaderRt::Bun => {
                         log::debug!("loading typegraph using bun, make sure npm packages have been installed");
                         let mut command = Command::new("bun");
                         command
@@ -236,16 +213,82 @@ impl Loader {
                             .envs(vars);
                         Ok(command)
                     }
-                    rt_name => Err(LoaderError::LoaderProcess {
-                        path: path.into(),
-                        error: anyhow::format_err!(
-                            "unrecognized js runtime specified for loading: {rt_name}"
-                        ),
-                    }),
                 }
             }
         }
     }
+}
+
+enum TsLoaderRt {
+    Deno,
+    Node,
+    Bun,
+}
+async fn detect_deno_loader_cmd(tg_path: &Path) -> Result<TsLoaderRt> {
+    use TsLoaderRt::*;
+    let test_deno_exec = || async {
+        Command::new("deno")
+            .arg("--version")
+            .output()
+            .await
+            .map(|out| out.status.success())
+            .map_err(|err| anyhow!(err))
+    };
+    let test_node_exec = || async {
+        Command::new("node")
+            .arg("-v")
+            .output()
+            .await
+            .map(|out| out.status.success())
+            .map_err(|err| anyhow!(err))
+    };
+    let test_bun_exec = || async {
+        Command::new("deno")
+            .arg("--version")
+            .output()
+            .await
+            .map(|out| out.status.success())
+            .map_err(|err| anyhow!(err))
+    };
+    let mut maybe_parent_dir = tg_path.parent();
+    // try to detect runtime in use by checking for package.json/deno.json
+    // files first
+    loop {
+        let Some(parent_dir) = maybe_parent_dir else {
+            break;
+        };
+        use tokio::fs::try_exists;
+        if try_exists(parent_dir.join("deno.json")).await.is_ok()
+            || try_exists(parent_dir.join("deno.jsonc")).await.is_ok()
+        {
+            return Ok(Deno);
+        }
+        if try_exists(parent_dir.join("package.json")).await.is_ok() {
+            // TODO: cache the test values without making a spaghetti mess
+            // lazy async result values are hard to Once/LazyCell :/
+            if test_node_exec().await? {
+                return Ok(Node);
+            }
+            if test_bun_exec().await? {
+                return Ok(Bun);
+            }
+        }
+        maybe_parent_dir = parent_dir.parent();
+    }
+    // if no package manifest found, just use the first runtime found in the
+    // following order
+    if test_deno_exec().await? {
+        return Ok(Deno);
+    }
+    if test_node_exec().await? {
+        return Ok(Node);
+    }
+    if test_bun_exec().await? {
+        return Ok(Bun);
+    }
+    Err(anyhow::format_err!(
+        "unable to find deno, node or bun runtimes"
+    ))
 }
 
 #[derive(Debug)]
