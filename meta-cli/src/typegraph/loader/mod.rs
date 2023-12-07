@@ -134,13 +134,14 @@ impl Loader {
     }
 
     fn get_load_command(module_type: ModuleType, path: &Path) -> Result<Command, LoaderError> {
-        let vars: HashMap<_, _> = env::vars().collect();
         match module_type {
             ModuleType::Python => {
                 // TODO cache result?
-                ensure_venv(path).map_err(|_| LoaderError::PythonVenvNotFound {
+                ensure_venv(path).map_err(|e| LoaderError::PythonVenvNotFound {
                     path: path.to_owned().into(),
+                    error: e,
                 })?;
+                let vars: HashMap<_, _> = env::vars().collect();
                 let mut command = Command::new("python3");
                 command
                     .arg(path.to_str().unwrap())
@@ -151,6 +152,7 @@ impl Loader {
                 Ok(command)
             }
             ModuleType::Deno => {
+                let vars: HashMap<_, _> = env::vars().collect();
                 let mut command = Command::new("deno");
                 command
                     .arg("run")
@@ -190,6 +192,7 @@ pub enum LoaderError {
     },
     PythonVenvNotFound {
         path: Arc<Path>,
+        error: Error,
     },
 }
 
@@ -222,8 +225,10 @@ impl ToString for LoaderError {
             Self::ModuleFileNotFound { path } => {
                 format!("module file not found: {path:?}")
             }
-            Self::PythonVenvNotFound { path } => {
-                format!("python venv (.venv) not found in parent directories of {path:?}")
+            Self::PythonVenvNotFound { path, error } => {
+                format!(
+                    "python venv (.venv) not found in parent directories of {path:?}: {error:?}"
+                )
             }
         }
     }
