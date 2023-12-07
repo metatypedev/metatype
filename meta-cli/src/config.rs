@@ -95,7 +95,7 @@ impl NodeConfig {
         Node::new(
             self.url.clone(),
             self.prefix.clone(),
-            Some(self.basic_auth(dir).await?),
+            Some(self.basic_auth(dir).await.context("basic auth")?),
             self.env.clone(),
         )
     }
@@ -168,7 +168,9 @@ impl FromStr for Config {
     type Err = serde_yaml::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        serde_yaml::from_str(s)
+        let mut config: serde_yaml::Value = serde_yaml::from_str(s)?;
+        config.apply_merge()?;
+        serde_yaml::from_value(config)
     }
 }
 
@@ -188,7 +190,9 @@ impl Config {
             }
             _ => anyhow!(err.to_string()),
         })?;
-        let mut config: Self = serde_yaml::from_reader(file)?;
+        let mut config: serde_yaml::Value = serde_yaml::from_reader(file)?;
+        config.apply_merge()?;
+        let mut config: Self = serde_yaml::from_value(config)?;
         config.path = Some(path.clone());
         config.base_dir = {
             let mut path = path;

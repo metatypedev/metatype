@@ -392,7 +392,7 @@ interface runtimes {
         list-typegraphs,
         find-typegraph,
         add-typegraph,
-        remove-typegraph,
+        remove-typegraphs,
         get-serialized-typegraph,
         get-arg-info-by-path
     }

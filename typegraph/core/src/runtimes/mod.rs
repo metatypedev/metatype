@@ -581,7 +581,7 @@ impl crate::wit::runtimes::Guest for crate::Lib {
             WitOp::ListTypegraphs => (WitEffect::Read, Op::ListTypegraphs),
             WitOp::FindTypegraph => (WitEffect::Read, Op::FindTypegraph),
             WitOp::AddTypegraph => (WitEffect::Create(true), Op::AddTypegraph),
-            WitOp::RemoveTypegraph => (WitEffect::Delete(true), Op::RemoveTypegraph),
+            WitOp::RemoveTypegraphs => (WitEffect::Delete(true), Op::RemoveTypegraphs),
             WitOp::GetSerializedTypegraph => (WitEffect::Read, Op::GetSerializedTypegraph),
             WitOp::GetArgInfoByPath => (WitEffect::Read, Op::GetArgInfoByPath),
         };

@@ -12,20 +12,20 @@
         "typegraphs": 1,
         "typegraph": 7,
         "addTypegraph": 15,
-        "removeTypegraph": 32,
-        "argInfoByPath": 36
+        "removeTypegraphs": 32,
+        "argInfoByPath": 37
       },
       "required": [
         "typegraphs",
         "typegraph",
         "addTypegraph",
-        "removeTypegraph",
+        "removeTypegraphs",
         "argInfoByPath"
       ]
     },
     {
       "type": "function",
-      "title": "func_64",
+      "title": "func_65",
       "runtime": 1,
       "policies": [
         0
@@ -89,7 +89,7 @@
     },
     {
       "type": "function",
-      "title": "func_65",
+      "title": "func_66",
       "runtime": 1,
       "policies": [
         0
@@ -179,7 +179,7 @@
     },
     {
       "type": "function",
-      "title": "func_66",
+      "title": "func_67",
       "runtime": 1,
       "policies": [
         0
@@ -243,7 +243,7 @@
         "name": 21,
         "messages": 22,
         "migrations": 26,
-        "resetRequired": 30
+        "failure": 30
       },
       "required": []
     },
@@ -337,13 +337,14 @@
       "as_id": false
     },
     {
-      "type": "list",
-      "title": "list_55",
+      "type": "optional",
+      "title": "optional_55",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 31
+      "item": 31,
+      "default_value": null
     },
     {
       "type": "string",
@@ -351,50 +352,8 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false
-    },
-    {
-      "type": "function",
-      "title": "func_67",
-      "runtime": 1,
-      "policies": [
-        0
-      ],
-      "config": {},
       "as_id": false,
-      "input": 33,
-      "output": 35,
-      "materializer": 5,
-      "rate_weight": null,
-      "rate_calls": true
-    },
-    {
-      "type": "object",
-      "title": "object_59",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "properties": {
-        "name": 34
-      },
-      "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_58",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "integer",
-      "title": "integer_60",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
+      "format": "json"
     },
     {
       "type": "function",
@@ -405,8 +364,60 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 37,
-      "output": 44,
+      "input": 33,
+      "output": 36,
+      "materializer": 5,
+      "rate_weight": null,
+      "rate_calls": true
+    },
+    {
+      "type": "object",
+      "title": "object_60",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "names": 34
+      },
+      "required": []
+    },
+    {
+      "type": "list",
+      "title": "list_59",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 35
+    },
+    {
+      "type": "string",
+      "title": "string_58",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "boolean",
+      "title": "boolean_61",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "function",
+      "title": "func_69",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 38,
+      "output": 45,
       "materializer": 6,
       "rate_weight": null,
       "rate_calls": true
@@ -419,10 +430,10 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "typegraph": 38,
-        "queryType": 39,
-        "fn": 40,
-        "argPaths": 41
+        "typegraph": 39,
+        "queryType": 40,
+        "fn": 41,
+        "argPaths": 42
       },
       "required": []
     },
@@ -457,7 +468,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 42
+      "items": 43
     },
     {
       "type": "list",
@@ -466,7 +477,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 43
+      "items": 44
     },
     {
       "type": "string",
@@ -478,12 +489,12 @@
     },
     {
       "type": "list",
-      "title": "_62_ArgInfoOut[]",
+      "title": "_63_ArgInfoOut[]",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 45
+      "items": 46
     },
     {
       "type": "object",
@@ -493,16 +504,16 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "optional": 46,
-        "as_id": 47,
-        "title": 48,
-        "type": 49,
-        "enum": 50,
-        "runtime": 53,
-        "config": 54,
-        "default": 56,
-        "format": 58,
-        "fields": 60
+        "optional": 47,
+        "as_id": 48,
+        "title": 49,
+        "type": 50,
+        "enum": 51,
+        "runtime": 54,
+        "config": 55,
+        "default": 57,
+        "format": 59,
+        "fields": 61
       },
       "required": []
     },
@@ -545,7 +556,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 51,
+      "item": 52,
       "default_value": null
     },
     {
@@ -555,7 +566,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 52
+      "items": 53
     },
     {
       "type": "string",
@@ -581,7 +592,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 55,
+      "item": 56,
       "default_value": null
     },
     {
@@ -600,7 +611,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 57,
+      "item": 58,
       "default_value": null
     },
     {
@@ -619,7 +630,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 59,
+      "item": 60,
       "default_value": null
     },
     {
@@ -637,7 +648,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 61,
+      "item": 62,
       "default_value": null
     },
     {
@@ -647,7 +658,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 62
+      "items": 63
     },
     {
       "type": "object",
@@ -657,8 +668,8 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "subPath": 42,
-        "termNode": 45
+        "subPath": 43,
+        "termNode": 46
       },
       "required": []
     }
@@ -712,7 +723,7 @@
       "data": {}
     },
     {
-      "name": "removeTypegraph",
+      "name": "removeTypegraphs",
       "runtime": 1,
       "effect": {
         "effect": "delete",

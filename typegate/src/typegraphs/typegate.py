@@ -51,13 +51,13 @@ def typegate(g: Graph):
         raise Exception(add_typegraph_mat_id.value)
     add_typegraph_mat = Materializer(add_typegraph_mat_id.value, effect=fx.create(True))
 
-    remove_typegraph_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.REMOVE_TYPEGRAPH
+    remove_typegraphs_mat_id = runtimes.register_typegate_materializer(
+        store, TypegateOperation.REMOVE_TYPEGRAPHS
     )
-    if isinstance(remove_typegraph_mat_id, Err):
-        raise Exception(remove_typegraph_mat_id.value)
-    remove_typegraph_mat = Materializer(
-        remove_typegraph_mat_id.value, effect=fx.delete(True)
+    if isinstance(remove_typegraphs_mat_id, Err):
+        raise Exception(remove_typegraphs_mat_id.value)
+    remove_typegraphs_mat = Materializer(
+        remove_typegraphs_mat_id.value, effect=fx.delete(True)
     )
 
     serialized_typegraph_mat_id = runtimes.register_typegate_materializer(
@@ -150,16 +150,16 @@ def typegate(g: Graph):
                             }
                         )
                     ),
-                    "resetRequired": t.list(t.string()),
+                    "failure": t.json().optional(),
                 }
             ),
             add_typegraph_mat,
             rate_calls=True,
         ),
-        removeTypegraph=t.func(
-            t.struct({"name": t.string()}),
-            t.integer(),
-            remove_typegraph_mat,
+        removeTypegraphs=t.func(
+            t.struct({"names": t.list(t.string())}),
+            t.boolean(),
+            remove_typegraphs_mat,
             rate_calls=True,
         ),
         argInfoByPath=t.func(

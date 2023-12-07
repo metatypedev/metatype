@@ -12,7 +12,7 @@ env:
   PYTHON_VERSION: "3.8"
   PROTOC_VERSION: "v24.x"
   POETRY_VERSION: "1.7.0"
-  DENO_VERSION: "1.38.1"
+  DENO_VERSION: "1.38.2"
   PNPM_VERSION: "8.8.0"
   NODE_VERSION: "20.8.0"
   WASM_TOOLS_VERSION: "1.0.45"
@@ -355,7 +355,7 @@ jobs:
           deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
           cargo build -p meta-cli
           cargo build -p xtask # xtask and meta-cli are used by the test suite
-          deno run -A dev/test.ts --threads 2 -- --coverage=coverage
+          deno run -A dev/test.ts --threads 1 -- --coverage=coverage
           deno --unstable coverage ./coverage --lcov > coverage.lcov
 
       - uses: codecov/codecov-action@v3

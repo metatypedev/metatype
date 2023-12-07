@@ -1,6 +1,5 @@
 from typegraph import typegraph, t, Graph, Policy
 from typegraph.runtimes.deno import DenoRuntime
-from typing import Optional
 
 
 @typegraph()
@@ -18,17 +17,8 @@ def test(g: Graph):
         name="B",
     )
 
-    def gen_union1(name: Optional[str] = None):
-        if name is None:
-            return t.union([t.integer(), t.string()])
-        else:
-            return t.union([t.integer(), t.string()], name=name)
-
-    def gen_union2(name: Optional[str] = None):
-        if name is None:
-            return t.union([A, B])
-        else:
-            return t.union([A, B], name=name)
+    union1 = t.union([t.integer(), t.string()])
+    union2 = t.union([A, B])
 
     deno = DenoRuntime()
     dummy_func = "() => {}"
@@ -44,15 +34,15 @@ def test(g: Graph):
                     "third": t.boolean().optional(),
                 }
             ),
-            "union1": gen_union1("Union1"),
-            "union2": gen_union2("Union2"),
+            "union1": union1.rename("Union1"),
+            "union2": union2.rename("Union2"),
             "from_union1": deno.func(
-                t.struct({"u1": gen_union1().from_parent("Union1")}),
+                t.struct({"u1": union1.from_parent("Union1")}),
                 t.integer(),
                 code=dummy_func,
             ),
             "from_union2": deno.func(
-                t.struct({"u2": gen_union2().from_parent("Union2")}),
+                t.struct({"u2": union2.from_parent("Union2")}),
                 t.integer(),
                 code=dummy_func,
             ),

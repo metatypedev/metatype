@@ -13,33 +13,28 @@ use grep::{regex::RegexMatcher, searcher::Searcher};
 use ignore::{gitignore::Gitignore, Match, WalkBuilder};
 use log::{debug, info};
 use pathdiff::diff_paths;
-use std::{
-    collections::HashSet,
-    path::{Path, PathBuf},
-    sync::Arc,
-};
+use std::collections::HashSet;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub struct Discovery {
     dir: PathBuf,
     filter: FileFilter,
     #[allow(dead_code)]
     follow_symlinks: bool,
-    silence: bool,
 }
 
 impl Discovery {
-    pub fn new(config: Arc<Config>, dir: PathBuf, silence: bool) -> Self {
+    pub fn new(config: Arc<Config>, dir: PathBuf) -> Self {
         let filter = FileFilter::new(&config).expect("Could not load filters");
         Self {
             dir,
             filter,
             follow_symlinks: true,
-            silence,
         }
     }
 
-    pub async fn get_all(self) -> Result<Vec<PathBuf>> {
-        let mut res = HashSet::new();
+    pub async fn start(self, mut handler: impl FnMut(Result<PathBuf>)) -> Result<()> {
         let mut searcher = SearcherBuilder::new()
             .binary_detection(BinaryDetection::none())
             .build();
@@ -49,27 +44,39 @@ impl Discovery {
             .follow_links(true)
             .build()
         {
-            let entry = match result {
-                Ok(entry) => entry,
-                Err(err) => {
-                    debug!("{}", err);
-                    continue;
+            match result {
+                Ok(entry) => {
+                    let path = entry.path();
+                    if !self.filter.is_excluded(path, &mut searcher) {
+                        handler(Ok(path.to_path_buf()));
+                    }
                 }
-            };
-            let path = entry.path();
-            if self.filter.is_excluded(path, &mut searcher) {
-                continue;
+                Err(err) => {
+                    handler(Err(err.into()));
+                }
             }
-
-            let rel_path = diff_paths(path, &self.dir).unwrap();
-            if !self.silence {
-                info!(
-                    "Found typegraph definition module at {}",
-                    rel_path.display()
-                );
-            }
-            res.insert(path.to_path_buf());
         }
+
+        Ok(())
+    }
+
+    pub async fn get_all(self, silent: bool) -> Result<Vec<PathBuf>> {
+        let mut res = HashSet::new();
+
+        let dir = self.dir.clone();
+        self.start(|path| match path {
+            Ok(path) => {
+                let rel_path = diff_paths(path.as_path(), &dir).unwrap();
+                if !silent && res.insert(path) {
+                    info!(
+                        "Found typegraph definition module at {}",
+                        rel_path.display()
+                    );
+                }
+            }
+            Err(err) => debug!("{}", err),
+        })
+        .await?;
 
         Ok(res.into_iter().collect())
     }

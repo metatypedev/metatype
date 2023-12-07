@@ -14,7 +14,7 @@ pub enum TypegateOperation {
     ListTypegraphs,
     FindTypegraph,
     AddTypegraph,
-    RemoveTypegraph,
+    RemoveTypegraphs,
     GetSerializedTypegraph,
     GetArgInfoByPath,
 }
@@ -33,7 +33,7 @@ impl MaterializerConverter for TypegateOperation {
                 Self::ListTypegraphs => "typegraphs",
                 Self::FindTypegraph => "typegraph",
                 Self::AddTypegraph => "addTypegraph",
-                Self::RemoveTypegraph => "removeTypegraph",
+                Self::RemoveTypegraphs => "removeTypegraphs",
                 Self::GetSerializedTypegraph => "serializedTypegraph",
                 Self::GetArgInfoByPath => "argInfoByPath",
             }

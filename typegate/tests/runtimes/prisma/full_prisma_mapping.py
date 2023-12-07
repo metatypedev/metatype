@@ -20,6 +20,7 @@ def prisma(g: Graph):
             "city": t.string(),
             "posts": t.list(g.ref("Post")),
             "extended_profile": g.ref("ExtendedProfile").optional(),
+            "comments": t.list(g.ref("Comment")),
         },
         name="User",
     )
@@ -42,6 +43,7 @@ def prisma(g: Graph):
             "id": t.integer(as_id=True),
             "content": t.string(),
             "related_post": g.ref("Post"),
+            "author": g.ref("User"),
         },
         name="Comment",
     )
@@ -65,6 +67,15 @@ def prisma(g: Graph):
         updateUser=db.update(user),
         upsertOneUser=db.upsert(user),
         findManyPosts=db.find_many(post),
+        findCommentersOfCurrentUser=db.find_many(user).reduce(
+            {
+                "where": {
+                    "comments": {
+                        "some": {"author": {"id": g.inherit().from_context("user_id")}}
+                    }
+                }
+            }
+        ),
         findFirstPost=db.find_first(post),
         findFirstComment=db.find_first(comment),
         findUniquePost=db.find_unique(post),
