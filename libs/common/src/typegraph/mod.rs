@@ -8,7 +8,8 @@ pub mod visitor;
 
 pub use types::*;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use anyhow::{bail, Result};
 use indexmap::IndexMap;
@@ -33,7 +34,7 @@ pub struct Typegraph {
 
     // TODO: factor out non-essential fields into a separate struct
     #[serde(skip)]
-    pub path: Option<PathBuf>,
+    pub path: Option<Arc<Path>>,
     #[serde(skip)]
     pub deps: Vec<PathBuf>,
 }
