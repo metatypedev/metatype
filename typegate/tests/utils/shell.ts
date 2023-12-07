@@ -50,19 +50,6 @@ export class ShellError extends Error {
   }
 }
 
-export class ShellError extends Error {
-  constructor(
-    public code: number,
-    public command: string[],
-    public stdout: string,
-    public stderr: string,
-  ) {
-    const err = `-- start STDERR --\n${stderr}\n-- end STDERR --`;
-    const cmd = command.map((s) => JSON.stringify(s)).join(" ");
-    super(`Command '${cmd}' failed with code ${code}:\n${err}`);
-  }
-}
-
 export async function shell(
   cmd: string[],
   options: ShellOptions = {},
