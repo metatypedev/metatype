@@ -25,6 +25,7 @@ impl TypeConversion for Union {
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
+            .inject(self.extended_base.injection.clone())?
             .build()?,
             data: UnionTypeData {
                 any_of: self

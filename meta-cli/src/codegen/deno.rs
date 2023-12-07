@@ -5,7 +5,7 @@ use anyhow::{bail, Context, Result};
 use colored::Colorize;
 use common::typegraph::runtimes::{KnownRuntime, TGRuntime};
 use common::typegraph::{TypeNode, Typegraph};
-use log::{info, trace};
+use log::info;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::cell::RefCell;
@@ -116,7 +116,10 @@ impl<'a> Codegen<'a> {
                 }
                 let code: String =
                     serde_json::from_value(mat.data.get("code").unwrap().clone()).unwrap();
-                if let Some(relpath) = code.strip_prefix("file:") {
+                if let Some(relpath) = code
+                    .strip_prefix("file:")
+                    .map(|s| s.find(';').map(|i| &s[..i]).unwrap_or(s))
+                {
                     let path = {
                         let mut path = base_dir.clone();
                         // TODO is this necessary?? py-tg yields absolute path!!
@@ -161,11 +164,13 @@ impl<'a> Codegen<'a> {
                     let path: String =
                         serde_json::from_value(module_mat.data.get("code").unwrap().clone())
                             .unwrap();
-                    if let Some(path) = path.strip_prefix("file:") {
+                    if let Some(path) = path
+                        .strip_prefix("file:")
+                        .map(|s| s.find(';').map(|i| &s[..i]).unwrap_or(s))
+                    {
                         if self.ts_modules.contains_key(path)
                             && self.check_func(path, &mat_data.name)
                         {
-                            trace!("Entry[{path:?}]: {:?}", self.ts_modules.get(path).unwrap());
                             gen_list.push(GenItem {
                                 input: data.input,
                                 output: data.output,
@@ -184,7 +189,6 @@ impl<'a> Codegen<'a> {
             .into_iter()
             .map(|(name, code)| -> Result<ModuleCode> {
                 let path = self.ts_modules.remove(&name).unwrap().path;
-                trace!("Code path: {path:?}");
                 let code = ts::format_text(&path, &code)
                     .context(format!("could not format code: {code:#?}"))?;
                 Ok(ModuleCode { path, code })
@@ -194,7 +198,6 @@ impl<'a> Codegen<'a> {
 
     fn generate(&self, gen_list: Vec<GenItem>) -> HashMap<String, String> {
         let mut map: HashMap<String, Vec<Result<String>>> = HashMap::default();
-        let current_dir = std::env::current_dir().unwrap();
         for GenItem {
             input,
             output,
@@ -202,7 +205,6 @@ impl<'a> Codegen<'a> {
             name,
         } in gen_list.into_iter()
         {
-            trace!("Codegen::generate: path={path:?}, current-dir={current_dir:?}");
             // let rel_path = diff_paths(&path, &current_dir).unwrap();
             info!("Generating missing function {} for {:?}", name.blue(), path);
             let functions = map.entry(path).or_default();
@@ -466,19 +468,21 @@ mod tests {
 
     use normpath::PathExt;
     use pathdiff::diff_paths;
+    use tokio::sync::mpsc;
 
     use super::*;
     use crate::config::Config;
+    use crate::deploy::actors::console::ConsoleActor;
+    use crate::deploy::actors::loader::{LoadModule, LoaderActor, LoaderEvent, PostProcessOptions};
     use crate::tests::utils::ensure_venv;
-    use crate::typegraph::loader::{Loader, LoaderResult};
+    use actix::prelude::*;
 
-    #[tokio::test(flavor = "multi_thread")]
+    #[actix::test(flavor = "multi_thread")]
     async fn codegen() -> Result<()> {
         crate::logger::init();
         ensure_venv()?;
         let test_folder = Path::new("./src/tests/typegraphs").normalize()?;
         std::env::set_current_dir(&test_folder)?;
-        trace!("Test folder: {:?}", test_folder.as_path());
         let tests = fs::read_dir(&test_folder).unwrap();
         let config = Config::default_in(".");
         let config = Arc::new(config);
@@ -486,31 +490,35 @@ mod tests {
         for typegraph_test in tests {
             let typegraph_test = typegraph_test.unwrap().path();
             let typegraph_test = diff_paths(&typegraph_test, &test_folder).unwrap();
-            trace!("test: {typegraph_test:?}");
-            let loader = Loader::new(Arc::clone(&config)).skip_deno_modules(true);
 
-            match loader.load_file(&typegraph_test).await {
-                LoaderResult::Loaded(tgs) => {
-                    assert_eq!(tgs.len(), 1);
-                    let tg = &tgs[0];
+            let console = ConsoleActor::new(Arc::clone(&config)).start();
+            let (event_tx, event_rx) = mpsc::unbounded_channel();
+            let loader = LoaderActor::new(
+                Arc::clone(&config),
+                PostProcessOptions::default().no_deno(),
+                console,
+                event_tx,
+            )
+            .auto_stop()
+            .start();
+            loader.do_send(LoadModule(
+                test_folder.join(&typegraph_test).as_path().into(),
+            ));
 
-                    let module_codes = Codegen::new(tg, &typegraph_test).codegen()?;
-                    assert_eq!(module_codes.len(), 1);
+            let mut event_rx = event_rx;
+            let LoaderEvent::Typegraph(tg) = event_rx.recv().await.unwrap() else {
+                bail!("error");
+            };
+            let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
+            assert_eq!(module_codes.len(), 1);
 
-                    let test_name = typegraph_test.to_string_lossy().to_string();
-                    trace!("test-name={test_name:?}");
-                    insta::assert_snapshot!(test_name, &module_codes[0].code);
-                }
-                LoaderResult::Error(e) => {
-                    bail!(
-                        "Error while loading typegraph from {typegraph_test:?}: {e}",
-                        e = e.to_string()
-                    );
-                }
-                LoaderResult::Rewritten(_) => {
-                    bail!("Unexpected: typegraph definition module has been rewritten");
-                }
-            }
+            let test_name = typegraph_test.to_string_lossy().to_string();
+            insta::assert_snapshot!(test_name, &module_codes[0].code);
+
+            assert!(matches!(
+                event_rx.recv().await,
+                Some(LoaderEvent::Stopped(_))
+            ));
         }
 
         Ok(())
