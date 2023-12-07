@@ -9,12 +9,12 @@ members = [
 ]
 
 [workspace.package]
-version = "0.2.5-0+dev"
+version = "0.3.0"
 edition = "2021"
 
 [workspace.dependencies]
 #deno = { path =  "../../../deno/cli"}
-deno = { git = "https://github.com/metatypedev/deno", branch = "v1.38.1-embeddable" }
+deno = { git = "https://github.com/metatypedev/deno", branch = "v1.38.2-embeddable" }
 
 # internal crates
 mt_deno = { path = "libs/deno/"}

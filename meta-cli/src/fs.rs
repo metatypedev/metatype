@@ -15,7 +15,11 @@ pub fn is_hidden(path: impl AsRef<Path>) -> bool {
 }
 
 pub fn find_in_parents<P: AsRef<Path>>(start_dir: P, files: &[&str]) -> Result<Option<PathBuf>> {
-    let mut current_dir = start_dir.as_ref().to_path_buf();
+    let start_dir = start_dir.as_ref();
+    if !start_dir.is_absolute() {
+        bail!("expected an absolute directory: {:?}", start_dir)
+    }
+    let mut current_dir = start_dir.to_path_buf();
     if !current_dir.is_dir() {
         current_dir.pop();
     }
