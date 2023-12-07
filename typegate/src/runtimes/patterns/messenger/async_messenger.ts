@@ -64,7 +64,16 @@ export class AsyncMessenger<Broker, M, A> {
 
         let shouldStop = false;
         for (const item of currentQueue) {
-          if (this.#tasks.has(item.id) && !item.ignoreTimeout) {
+          if (this.#tasks.has(item.id)) {
+            if (
+              item.remainingPulseCount !== undefined &&
+              item.remainingPulseCount > 0
+            ) {
+              // check again next time if unterminated
+              item.remainingPulseCount -= 1;
+              continue;
+            }
+            // default behavior or 0 pulse left
             this.receive({
               id: item.id,
               error: `${config.timer_max_timeout_ms / 1000}s timeout exceeded`,
@@ -86,13 +95,13 @@ export class AsyncMessenger<Broker, M, A> {
     op: string | number | null,
     data: M,
     hooks: Array<() => Promise<void>> = [],
-    ignoreTimeout = false,
+    pulseCount = 0,
   ): Promise<unknown> {
     const id = this.nextId();
     const promise = deferred<unknown>();
     this.#tasks.set(id, { promise, hooks });
 
-    const message = { id, op, data, ignoreTimeout };
+    const message = { id, op, data, remainingPulseCount: pulseCount };
     this.#operationQueues[this.#queueIndex].push(message);
     void this.#send(this.broker, message);
     return promise;

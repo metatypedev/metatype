@@ -39,7 +39,7 @@ export class LazyAsyncMessenger<Broker, M, A>
           this.receive.bind(this),
         );
       }
-      const { op, ignoreTimeout } = message;
+      const { op, remainingPulseCount } = message;
       if (op !== null && !this.#loadedOps.has(op)) {
         const initOp = this.#ops.get(op);
         if (!initOp) {
@@ -49,7 +49,7 @@ export class LazyAsyncMessenger<Broker, M, A>
           null,
           initOp,
           [],
-          ignoreTimeout,
+          remainingPulseCount,
         );
         this.#loadedOps.add(op);
       }

@@ -195,7 +195,7 @@ export class DenoRuntime extends Runtime {
   delegate(
     mat: TypeMaterializer,
     verbose: boolean,
-    ignoreTimeout?: boolean,
+    pulseCount?: number,
   ): Resolver {
     if (mat.name === "predefined_function") {
       const func = predefinedFuncs[mat.data.name as string];
@@ -242,7 +242,7 @@ export class DenoRuntime extends Runtime {
             verbose,
           },
           [],
-          ignoreTimeout,
+          pulseCount,
         );
       };
     }
@@ -273,7 +273,7 @@ export class DenoRuntime extends Runtime {
             verbose,
           },
           [],
-          ignoreTimeout,
+          pulseCount,
         );
       };
     }

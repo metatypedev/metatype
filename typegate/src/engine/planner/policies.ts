@@ -94,7 +94,7 @@ export class OperationPolicies {
         if (!this.resolvers.has(polIdx)) {
           this.resolvers.set(
             polIdx,
-            runtime.delegate(mat, false, config.timer_disable_on_policy_eval),
+            runtime.delegate(mat, false, config.timer_policy_eval_retries),
           );
         }
       }
