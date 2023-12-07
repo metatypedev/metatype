@@ -179,7 +179,7 @@ pub mod deno_rt {
         Ok(())
     }
 
-    #[derive(Default, Debug)]
+    #[derive(Default, Debug, Clone)]
     pub struct DenoModules {
         codegen: bool,
     }
@@ -198,6 +198,7 @@ pub mod deno_rt {
             }
             for mat in tg.materializers.iter_mut().filter(|m| m.name == "module") {
                 let mut mat_data: ModuleMatData = object_from_map(std::mem::take(&mut mat.data))?;
+                log::debug!("processing module {:?}", mat_data.code);
                 let Some(path) = mat_data.code.strip_prefix("file:") else {
                     continue;
                 };
@@ -206,6 +207,7 @@ pub mod deno_rt {
                 let tg_path = fs::canonicalize(tg.path.to_owned().unwrap()).unwrap();
                 let main_path = tg_path.parent().unwrap().join(path);
                 mat_data.code = compress_and_encode(&main_path, &tg_path)?;
+                log::debug!("compressed module {:?}", mat_data.code);
 
                 mat.data = map_from_object(mat_data)?;
                 tg.deps.push(main_path);
@@ -283,7 +285,7 @@ pub mod prisma_rt {
         typegraph::runtimes::{prisma::MigrationOptions, KnownRuntime::Prisma, TGRuntime},
     };
 
-    #[derive(Default, Debug)]
+    #[derive(Default, Debug, Clone)]
     pub struct EmbedPrismaMigrations {
         create_migration: bool,
         reset_on_drift: bool,

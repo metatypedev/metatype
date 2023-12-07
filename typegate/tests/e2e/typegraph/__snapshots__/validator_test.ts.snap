@@ -1,8 +1,7 @@
 export const snapshot = {};
 
 snapshot[`typegraph validation 1`] = `
-\`
-[ERROR] at validator:/test/[in]/a: Expected number got '"1"'
+\`[ERROR] at validator:/test/[in]/a: Expected number got '"1"'
 [ERROR] at validator:/test/[in]/b: Expected a string, got '["h","e","l","l","o"]'
 [ERROR] at validator:/test/[in]/c: Expected a minimum value of 2, got 0
 [ERROR] at validator:/test/[in]/d: Expected a maximun length of 4, got "hello" (len=5)
@@ -22,6 +21,6 @@ snapshot[`typegraph validation 1`] = `
 [ERROR] at validator:/testEnums/[out]/a: Expected a minimum length of 4, got "hi" (len=2)
 [ERROR] at validator:/testEnums/[out]/a: Expected a string, got '12'
 [ERROR] at validator:/testEnums/[out]/b: Expected float got '"13"'
-Error: error while post processing typegraph validator from "validator.py": Typegraph validator failed validation
+[ERROR] error while post processing typegraph validator from "validator.py": Typegraph validator failed validation
 \`
 `;

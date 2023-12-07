@@ -4,6 +4,7 @@
 mod cli;
 mod codegen;
 mod config;
+pub mod deploy;
 mod fs;
 mod global_config;
 mod logger;
@@ -19,7 +20,7 @@ use clap::Parser;
 use cli::upgrade::upgrade_check;
 use cli::Action;
 use cli::Args;
-use log::warn;
+use log::{error, warn};
 
 use shadow_rs::shadow;
 
@@ -29,11 +30,19 @@ fn main() -> Result<()> {
     setup_panic_hook();
     logger::init();
 
-    let rt = tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()?;
-    rt.block_on(upgrade_check())
-        .unwrap_or_else(|e| warn!("cannot check for update: {}", e));
+    let _ = actix::System::with_tokio_rt(|| {
+        tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+    });
+
+    actix::run(async {
+        upgrade_check()
+            .await
+            .unwrap_or_else(|e| warn!("cannot check for update: {}", e));
+    })?;
+
     let args = match Args::try_parse() {
         Ok(cli) => cli,
         Err(e) => {
@@ -50,7 +59,12 @@ fn main() -> Result<()> {
     match args.command {
         // the deno task requires use of a single thread runtime which it'll spawn itself
         Some(cli::Commands::Typegate(cmd_args)) => cli::typegate::command(cmd_args, args.gen)?,
-        Some(command) => rt.block_on(command.run(args.gen))?,
+        Some(command) => actix::run(async move {
+            command.run(args.gen).await.unwrap_or_else(|e| {
+                error!("{}", e.to_string());
+                std::process::exit(1);
+            });
+        })?,
         None => Args::command().print_help()?,
     }
 

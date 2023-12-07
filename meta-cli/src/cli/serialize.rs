@@ -3,26 +3,28 @@
 
 use super::{Action, GenArgs};
 use crate::config::Config;
-use crate::typegraph::loader::{Discovery, Loader, LoaderResult};
-use crate::typegraph::postprocess;
-use crate::utils::ensure_venv;
-use anyhow::bail;
-use anyhow::{Context, Result};
+use crate::deploy::actors::console::ConsoleActor;
+use crate::deploy::actors::loader::{
+    LoadModule, LoaderActor, LoaderEvent, PostProcessOptions, StopBehavior,
+};
+use actix::prelude::*;
+use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
+use common::typegraph::Typegraph;
 use core::fmt::Debug;
-use log::warn;
 use std::io::{self, Write};
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
+use tokio::sync::mpsc;
 
 #[derive(Parser, Debug)]
 pub struct Serialize {
     /// The python source file that defines the typegraph(s).
     /// Default: All the python files descending from the current directory.
     #[clap(short, long = "file", value_parser)]
-    files: Vec<String>,
+    files: Vec<PathBuf>,
 
     /// Name of the typegraph to serialize.
     #[clap(short, long, value_parser)]
@@ -52,7 +54,6 @@ impl Action for Serialize {
     async fn run(&self, args: GenArgs) -> Result<()> {
         let dir = &args.dir()?;
         let config_path = args.config;
-        ensure_venv(dir)?;
 
         // config file is not used when `TypeGraph` files
         // are provided in the CLI by flags
@@ -63,45 +64,34 @@ impl Action for Serialize {
         };
         let config = Arc::new(config);
 
-        let mut loader = Loader::new(Arc::clone(&config));
-        if self.deploy {
-            loader = loader.with_postprocessor(postprocess::EmbedPrismaMigrations::default());
+        let console = ConsoleActor::new(Arc::clone(&config)).start();
+
+        let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
+
+        let loader = LoaderActor::new(
+            Arc::clone(&config),
+            PostProcessOptions::default(),
+            console.clone(),
+            loader_event_tx,
+        )
+        .auto_stop()
+        .start();
+
+        for path in self.files.iter() {
+            loader.do_send(LoadModule(dir.join(path).into()));
         }
 
-        loader = loader
-            .with_postprocessor(postprocess::DenoModules::default())
-            .with_postprocessor(postprocess::PythonModules::default())
-            .with_postprocessor(postprocess::WasmdegeModules::default());
-
-        let paths = if self.files.is_empty() {
-            Discovery::new(Arc::clone(&config), dir.clone(), false)
-                .get_all()
-                .await?
-        } else {
-            self.files.iter().map(PathBuf::from).collect()
-        };
-
-        if paths.is_empty() {
-            bail!("No typegraph definition module found.");
-        }
-
-        let mut loaded = vec![];
-        for path in paths {
-            match loader.load_file(&path).await {
-                LoaderResult::Loaded(tgs) => {
-                    if tgs.is_empty() {
-                        log::warn!("no typegraph in {path:?}");
+        let mut loaded: Vec<Box<Typegraph>> = vec![];
+        let mut event_rx = loader_event_rx;
+        while let Some(event) = event_rx.recv().await {
+            log::debug!("event");
+            match event {
+                LoaderEvent::Typegraph(tg) => loaded.push(tg),
+                LoaderEvent::Stopped(b) => {
+                    log::debug!("event: {b:?}");
+                    if let StopBehavior::ExitFailure(e) = b {
+                        bail!(e);
                     }
-                    for tg in tgs.into_iter() {
-                        loaded.push(tg);
-                    }
-                }
-                LoaderResult::Rewritten(_) => {
-                    // ? reload?
-                    warn!("Typegraph definition at {path:?} has been rewritten.");
-                }
-                LoaderResult::Error(e) => {
-                    bail!("{}", e.to_string());
                 }
             }
         }
