@@ -10,6 +10,7 @@ export interface ShellOptions {
 }
 
 export interface ShellOutput {
+  code: number;
   stdout: string;
   stderr: string;
 }
@@ -31,7 +32,9 @@ async function readOutput(p: Deno.ChildProcess): Promise<ShellOutput> {
       return stderr;
     })(),
   ]);
-  return { stdout, stderr };
+  const status = await p.status;
+  console.log(status);
+  return { stdout, stderr, code: status.code };
 }
 
 export class ShellError extends Error {

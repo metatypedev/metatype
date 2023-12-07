@@ -22,6 +22,7 @@ pub(crate) mod doctor;
 pub(crate) mod new;
 pub(crate) mod serialize;
 pub(crate) mod typegate;
+pub(crate) mod undeploy;
 pub(crate) mod upgrade;
 
 #[derive(Parser, Debug)]
@@ -66,6 +67,8 @@ pub(crate) enum Commands {
     Dev(dev::Dev),
     /// Push typegraph(s) to typegate
     Deploy(deploy::DeploySubcommand),
+    /// Undeploy typegraph(s) from typegate
+    Undeploy(undeploy::Undeploy),
     /// Generate materializers code from typegraph definition
     Codegen(codegen::Codegen),
     /// Upgrade
