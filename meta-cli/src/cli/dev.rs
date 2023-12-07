@@ -26,6 +26,7 @@ pub struct Dev {
 #[async_trait]
 impl Action for Dev {
     async fn run(&self, args: GenArgs) -> Result<()> {
+        log::info!("'meta dev' subcommand is an alias to 'meta deploy --codegen --allow-dirty --watch --create-migration'");
         let options = DeployOptions {
             codegen: true,
             allow_dirty: true,

@@ -118,7 +118,7 @@ def typegate(g: Graph):
                             }
                         )
                     ),
-                    "resetRequired": t.list(t.string()),
+                    "failure": t.json().optional(),
                 }
             ),
             add_typegraph_mat,
