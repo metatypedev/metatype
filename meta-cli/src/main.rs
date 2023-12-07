@@ -45,10 +45,7 @@ fn main() -> Result<()> {
 
     let args = match Args::try_parse() {
         Ok(cli) => cli,
-        Err(e) => {
-            e.print()?;
-            return Ok(());
-        }
+        Err(e) => e.exit(),
     };
 
     if args.version {

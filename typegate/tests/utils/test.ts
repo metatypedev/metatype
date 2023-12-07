@@ -33,7 +33,6 @@ export interface ParseOptions {
 
 function serve(typegate: Typegate, port: number): () => void {
   const server = Deno.serve({ port }, (req) => {
-    console.log("[virtual typegate instance]", req);
     return typegate.handle(req, {
       remoteAddr: { hostname: "localhost" },
     } as Deno.ServeHandlerInfo);

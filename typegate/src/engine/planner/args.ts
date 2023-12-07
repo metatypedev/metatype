@@ -571,13 +571,21 @@ class ArgumentCollector {
       // no injection for the effect
       // fallthrough
     }
-    if (typ.type != Type.OPTIONAL) {
-      throw new MandatoryArgumentError(this.currentNodeDetails);
-    } else {
-      this.addPoliciesFrom(typ.item);
+
+    switch (typ.type) {
+      case Type.OPTIONAL: {
+        this.addPoliciesFrom(typ.item);
+        const { default_value: defaultValue = null } = typ;
+        return () => defaultValue;
+      }
+
+      case Type.OBJECT: {
+        return this.collectDefaults(typ.properties);
+      }
+
+      default:
+        throw new MandatoryArgumentError(this.currentNodeDetails);
     }
-    const { default_value: defaultValue } = typ;
-    return () => defaultValue;
   }
 
   /** Collect the value of an injected parameter. */
@@ -673,11 +681,8 @@ class ArgumentCollector {
           return typ.default_value;
         }
 
-        const suggestions = `available fields from parent are: ${
-          Object.keys(
-            parent,
-          ).join(", ")
-        }`;
+        const keys = Object.keys(parent).join(", ");
+        const suggestions = `available fields from parent are: ${keys}`;
         throw new Error(
           `non-optional injected argument ${name} is missing from parent: ${suggestions}`,
         );

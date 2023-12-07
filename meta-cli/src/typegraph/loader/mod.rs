@@ -65,7 +65,7 @@ impl Loader {
                 });
             }
         }
-        let command = Self::get_load_command(ModuleType::try_from(&*path).unwrap(), &path)?;
+        let command = Self::get_load_command(ModuleType::try_from(&*path).unwrap(), &path).await?;
         self.load_command(command, &path).await
     }
 
@@ -138,15 +138,30 @@ impl Loader {
         }
     }
 
-    fn get_load_command(module_type: ModuleType, path: &Path) -> Result<Command, LoaderError> {
+    async fn get_load_command(
+        module_type: ModuleType,
+        path: &Path,
+    ) -> Result<Command, LoaderError> {
+        let vars: HashMap<_, _> = env::vars().collect();
+
+        if let Ok(argv_str) = std::env::var("MCLI_LOADER_CMD") {
+            let argv = argv_str.split(' ').collect::<Vec<_>>();
+            let mut command = Command::new(argv[0]);
+            command
+                .args(&argv[1..])
+                .arg(path.to_str().unwrap())
+                .envs(vars);
+            return Ok(command);
+        }
+
         match module_type {
             ModuleType::Python => {
-                // TODO cache result?
                 ensure_venv(path).map_err(|e| LoaderError::PythonVenvNotFound {
                     path: path.to_owned().into(),
                     error: e,
                 })?;
                 let vars: HashMap<_, _> = env::vars().collect();
+                // TODO cache result?
                 let mut command = Command::new("python3");
                 command
                     .arg(path.to_str().unwrap())
@@ -157,19 +172,122 @@ impl Loader {
                 Ok(command)
             }
             ModuleType::Deno => {
-                let vars: HashMap<_, _> = env::vars().collect();
-                let mut command = Command::new("deno");
-                command
-                    .arg("run")
-                    .arg("--unstable")
-                    .arg("--allow-all")
-                    .arg("--check")
-                    .arg(path.to_str().unwrap())
-                    .envs(vars);
-                Ok(command)
+                // TODO cache result?
+                match detect_deno_loader_cmd(path)
+                    .await
+                    .map_err(|error| LoaderError::Unknown {
+                        path: path.into(),
+                        error,
+                    })? {
+                    TsLoaderRt::Deno => {
+                        let mut command = Command::new("deno");
+                        command
+                            .arg("run")
+                            .arg("--unstable")
+                            .arg("--allow-all")
+                            .arg("--check")
+                            .arg(path.to_str().unwrap())
+                            .envs(vars);
+                        Ok(command)
+                    }
+                    TsLoaderRt::Node => {
+                        log::debug!("loading typegraph using npm x tsx, make sure npm packages have been installed");
+                        let mut command = Command::new("npm");
+                        command
+                            .arg("x")
+                            .arg("tsx")
+                            .current_dir(path.parent().unwrap())
+                            .arg(path.to_str().unwrap())
+                            .envs(vars);
+                        Ok(command)
+                    }
+                    TsLoaderRt::Bun => {
+                        log::debug!("loading typegraph using bun x tsx, make sure npm packages have been installed");
+                        let mut command = Command::new("bun");
+                        command
+                            .arg("x")
+                            .arg("tsx")
+                            .current_dir(path.parent().unwrap())
+                            .arg(path.to_str().unwrap())
+                            .envs(vars);
+                        Ok(command)
+                    }
+                }
             }
         }
     }
+}
+
+enum TsLoaderRt {
+    Deno,
+    Node,
+    Bun,
+}
+async fn detect_deno_loader_cmd(tg_path: &Path) -> Result<TsLoaderRt> {
+    use TsLoaderRt::*;
+    let test_deno_exec = || async {
+        Command::new("deno")
+            .arg("--version")
+            .output()
+            .await
+            .map(|out| out.status.success())
+            .map_err(|err| anyhow!(err))
+    };
+    let test_node_exec = || async {
+        Command::new("node")
+            .arg("-v")
+            .output()
+            .await
+            .map(|out| out.status.success())
+            .map_err(|err| anyhow!(err))
+    };
+    let test_bun_exec = || async {
+        Command::new("deno")
+            .arg("--version")
+            .output()
+            .await
+            .map(|out| out.status.success())
+            .map_err(|err| anyhow!(err))
+    };
+    let mut maybe_parent_dir = tg_path.parent();
+    // try to detect runtime in use by checking for package.json/deno.json
+    // files first
+    loop {
+        let Some(parent_dir) = maybe_parent_dir else {
+            break;
+        };
+        use tokio::fs::try_exists;
+        if try_exists(parent_dir.join("deno.json")).await.is_ok()
+            || try_exists(parent_dir.join("deno.jsonc")).await.is_ok()
+        {
+            return Ok(Deno);
+        }
+        if try_exists(parent_dir.join("package.json")).await.is_ok() {
+            // TODO: cache the test values without making a spaghetti mess
+            // lazy async result values are hard to Once/LazyCell :/
+            if test_node_exec().await? {
+                return Ok(Node);
+            }
+            if test_bun_exec().await? {
+                return Ok(Bun);
+            }
+        }
+        maybe_parent_dir = parent_dir.parent();
+    }
+    // if no package manifest found, just use the first runtime found in the
+    // following order
+    if test_deno_exec().await? {
+        return Ok(Deno);
+    }
+    if test_node_exec().await? {
+        return Ok(Node);
+    }
+    if test_bun_exec().await? {
+        return Ok(Bun);
+    }
+    Err(anyhow::format_err!(
+        "unable to find deno, node or bun runtimes"
+    ))
 }
 
 #[derive(Debug)]
@@ -231,9 +349,7 @@ impl ToString for LoaderError {
                 format!("module file not found: {path:?}")
             }
             Self::PythonVenvNotFound { path, error } => {
-                format!(
-                    "python venv (.venv) not found in parent directories of {path:?}: {error:?}"
-                )
+                format!("python venv (.venv) not found in parent directories of {path:?}: {error}",)
             }
         }
     }
