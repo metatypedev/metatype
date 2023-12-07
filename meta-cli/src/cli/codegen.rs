@@ -1,16 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use crate::typegraph::loader::{Loader, LoaderResult};
-use crate::utils::ensure_venv;
+use crate::typegraph::loader::Loader;
 use crate::{config::Config, typegraph::postprocess};
-use anyhow::{bail, Result};
+use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use clap::{Parser, Subcommand};
-use log::warn;
 
 use super::{Action, GenArgs};
 
@@ -57,29 +55,21 @@ impl Action for Deno {
         let config = Arc::new(
             Config::load_or_find(args.config, &dir).unwrap_or_else(|_| Config::default_in(&dir)),
         );
-        ensure_venv(&dir)?;
+
         let loader = Loader::new(config)
             .skip_deno_modules(true)
             .with_postprocessor(postprocess::DenoModules::default().codegen(true))
             .with_postprocessor(postprocess::PythonModules::default())
             .with_postprocessor(postprocess::WasmdegeModules::default());
 
-        match loader.load_file(&self.file).await {
-            LoaderResult::Loaded(_) => {
-                // ok
-            }
-            LoaderResult::Rewritten(_) => {
-                warn!("Typegraph definition module has been rewritten");
-                bail!("Typegraph definition module has been rewritten");
-            }
-            LoaderResult::Error(e) => {
-                bail!(
-                    "An error occured while loading typegraphs from the {:?}: {}",
-                    self.file,
-                    e.to_string()
-                );
-            }
-        }
+        let file: Arc<Path> = self.file.clone().into();
+        loader.load_module(file.clone()).await.map_err(|e| {
+            anyhow!(
+                "An error occured while loading typegraphs from the {:?}: {}",
+                file,
+                e.to_string()
+            )
+        })?;
 
         Ok(())
     }

@@ -17,18 +17,18 @@ pub struct DependencyGraph {
 impl DependencyGraph {
     pub fn update_typegraph(&mut self, tg: &Typegraph) {
         let path = tg.path.clone().unwrap();
-        if !self.deps.contains_key(&path) {
-            self.deps.insert(path.clone(), HashSet::default());
+        if !self.deps.contains_key(path.as_ref()) {
+            self.deps.insert(path.to_path_buf(), HashSet::default());
         }
 
-        let deps = self.deps.get_mut(&path).unwrap();
+        let deps = self.deps.get_mut(path.as_ref()).unwrap();
         let old_deps = std::mem::replace(deps, tg.deps.iter().cloned().collect());
         let removed_deps = old_deps.difference(deps);
         let added_deps = deps.difference(&old_deps);
 
         for removed in removed_deps {
             let rdeps = self.reverse_deps.get_mut(removed).unwrap();
-            rdeps.take(&path).unwrap();
+            rdeps.take(path.as_ref()).unwrap();
             if rdeps.is_empty() {
                 self.reverse_deps.remove(removed);
             }
@@ -36,10 +36,10 @@ impl DependencyGraph {
 
         for added in added_deps {
             if let Some(set) = self.reverse_deps.get_mut(added) {
-                set.insert(path.clone());
+                set.insert(path.to_path_buf());
             } else {
                 self.reverse_deps
-                    .insert(added.clone(), HashSet::from_iter(Some(path.clone())));
+                    .insert(added.clone(), HashSet::from_iter(Some(path.to_path_buf())));
             }
         }
     }

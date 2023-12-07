@@ -124,7 +124,7 @@ export class TypeGateRuntime extends Runtime {
       name: engine.name,
       messages: pushResponse.messages,
       migrations: pushResponse.migrations,
-      resetRequired: pushResponse.resetRequired,
+      failure: pushResponse.failure && JSON.stringify(pushResponse.failure),
     };
   };
 

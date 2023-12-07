@@ -20,6 +20,8 @@ export type MessengerSend<Broker, M> = (
 
 export type MessengerStop<Broker> = (broker: Broker) => Promise<void> | void;
 
+const TIMEOUT_SECS = config.timer_max_timeout_ms / 1000;
+
 export class AsyncMessenger<Broker, M, A> {
   protected broker: Broker;
   #counter = 0;
@@ -74,9 +76,10 @@ export class AsyncMessenger<Broker, M, A> {
               continue;
             }
             // default behavior or 0 pulse left
+            const data = JSON.stringify(item, null, 2);
             this.receive({
               id: item.id,
-              error: `${config.timer_max_timeout_ms / 1000}s timeout exceeded`,
+              error: `${TIMEOUT_SECS}s timeout exceeded: ${data}`,
             });
             shouldStop = true;
           }

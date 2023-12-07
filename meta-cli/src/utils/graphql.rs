@@ -17,6 +17,7 @@ pub struct Response {
 }
 
 impl Response {
+    #[allow(dead_code)]
     pub fn display_errors(&self) {
         if let Some(errors) = &self.errors {
             println!("Error{s}:", s = if errors.len() > 1 { "s" } else { "" });
@@ -86,6 +87,7 @@ struct FailedQueryResponse {
     errors: Vec<GraphqlError>,
 }
 
+#[derive(Debug)]
 pub enum Error {
     EndpointNotReachable(String),
     FailedQuery(Vec<GraphqlError>),
@@ -191,5 +193,6 @@ async fn handle_error(res: HttpResponse) -> Result<(), Error> {
     let errors = serde_json::from_str::<FailedQueryResponse>(&content)
         .map(|json| json.errors)
         .map_err(|e| Error::InvalidResponse(format!("Response is not in graphql format: {e:?}")))?;
+
     Err(Error::FailedQuery(errors))
 }
