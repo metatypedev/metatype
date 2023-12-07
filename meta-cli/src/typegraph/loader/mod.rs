@@ -65,11 +65,14 @@ impl Loader {
                 });
             }
         }
-        let command = Self::get_load_command(ModuleType::try_from(&*path).unwrap(), &path)?;
+        let command = Self::get_load_command(ModuleType::try_from(&*path).unwrap(), &path).await?;
         self.load_command(command, &path).await
     }
 
     async fn load_command(&self, mut command: Command, path: &Path) -> LoaderResult {
+        // TODO: use env var to pass a tmp tpath for the cmd to emit it to
+        // openssl::sha::sha256(path.to_str())
+        // std::env::temp_dir().join(path);
         let path: Arc<Path> = path.into();
         let p = command
             .current_dir(&self.config.base_dir)
@@ -138,7 +141,20 @@ impl Loader {
         }
     }
 
-    fn get_load_command(module_type: ModuleType, path: &Path) -> Result<Command, LoaderError> {
+    async fn get_load_command(
+        module_type: ModuleType,
+        path: &Path,
+    ) -> Result<Command, LoaderError> {
+        let vars: HashMap<_, _> = env::vars().collect();
+        if let Ok(argv_str) = std::env::var("MCLI_LOADER_CMD") {
+            let argv = argv_str.split(' ').collect::<Vec<_>>();
+            let mut command = Command::new(argv[0]);
+            command
+                .args(&argv[1..])
+                .arg(path.to_str().unwrap())
+                .envs(vars);
+            return Ok(command);
+        }
         match module_type {
             ModuleType::Python => {
                 // TODO cache result?
@@ -157,16 +173,76 @@ impl Loader {
                 Ok(command)
             }
             ModuleType::Deno => {
-                let vars: HashMap<_, _> = env::vars().collect();
-                let mut command = Command::new("deno");
-                command
-                    .arg("run")
-                    .arg("--unstable")
-                    .arg("--allow-all")
-                    .arg("--check")
-                    .arg(path.to_str().unwrap())
-                    .envs(vars);
-                Ok(command)
+                let rt_name = if let Ok(val) = std::env::var("MCLI_TS_LOADER_RT") {
+                    val.trim().to_lowercase()
+                } else if let Ok(true) = Command::new("deno")
+                    .arg("--version")
+                    .output()
+                    .await
+                    .map(|out| out.status.success())
+                {
+                    "deno".to_string()
+                } else if let Ok(true) = Command::new("node")
+                    .arg("-v")
+                    .output()
+                    .await
+                    .map(|out| out.status.success())
+                {
+                    "node".to_string()
+                } else if let Ok(true) = Command::new("bun")
+                    .arg("--version")
+                    .output()
+                    .await
+                    .map(|out| out.status.success())
+                {
+                    "bun".to_string()
+                } else {
+                    return Err(LoaderError::LoaderProcess {
+                        path: path.into(),
+                        error: anyhow::format_err!("unable to find deno, node or bun runtimes"),
+                    });
+                };
+                match &rt_name[..] {
+                    "deno" => {
+                        let mut command = Command::new("deno");
+                        command
+                            .arg("run")
+                            .arg("--unstable")
+                            .arg("--allow-all")
+                            .arg("--check")
+                            .arg(path.to_str().unwrap())
+                            .envs(vars);
+                        Ok(command)
+                    }
+                    "node" => {
+                        log::debug!("loading typegraph using node, make sure npm packages have been installed");
+                        let mut command = Command::new("npm");
+                        command
+                            .arg("x")
+                            .arg("tsx")
+                            .current_dir(path.parent().unwrap())
+                            .arg(path.to_str().unwrap())
+                            .envs(vars);
+                        Ok(command)
+                    }
+                    "bun" => {
+                        log::debug!("loading typegraph using bun, make sure npm packages have been installed");
+                        let mut command = Command::new("bun");
+                        command
+                            .arg("x")
+                            .arg("tsx")
+                            .current_dir(path.parent().unwrap())
+                            .arg(path.to_str().unwrap())
+                            .envs(vars);
+                        Ok(command)
+                    }
+                    rt_name => Err(LoaderError::LoaderProcess {
+                        path: path.into(),
+                        error: anyhow::format_err!(
+                            "unrecognized js runtime specified for loading: {rt_name}"
+                        ),
+                    }),
+                }
             }
         }
     }
