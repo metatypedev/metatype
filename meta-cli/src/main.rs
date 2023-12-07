@@ -13,7 +13,7 @@ mod tests;
 mod typegraph;
 mod utils;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use clap::CommandFactory;
 
 use clap::Parser;
@@ -45,10 +45,7 @@ fn main() -> Result<()> {
 
     let args = match Args::try_parse() {
         Ok(cli) => cli,
-        Err(e) => {
-            e.print()?;
-            bail!("failed to parse command arguments.");
-        }
+        Err(e) => e.exit(),
     };
 
     if args.version {
