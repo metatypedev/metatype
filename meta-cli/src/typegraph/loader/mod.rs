@@ -4,6 +4,7 @@
 pub mod discovery;
 
 pub use discovery::Discovery;
+use pathdiff::diff_paths;
 use tokio::process::Command;
 
 use std::{collections::HashMap, env, path::Path, process::Stdio, sync::Arc};
@@ -91,6 +92,7 @@ impl Loader {
                     );
                 }
             }
+            let base_path = &self.config.base_dir;
 
             std::str::from_utf8(&p.stdout)
                 .with_context(|| "invalid utf-8 on stdout")
@@ -109,10 +111,13 @@ impl Loader {
                         .and_then(|mut tg| {
                             tg.path = Some(path.clone());
                             apply_all(self.postprocessors.iter(), &mut tg, &self.config).map_err(
-                                |e| LoaderError::PostProcessingError {
-                                    path: path.clone(),
-                                    typegraph_name: tg.name().unwrap(),
-                                    error: e,
+                                |e| {
+                                    let path = diff_paths(&path, base_path.clone()).unwrap();
+                                    LoaderError::PostProcessingError {
+                                        path: path.into(),
+                                        typegraph_name: tg.name().unwrap(),
+                                        error: e,
+                                    }
                                 },
                             )?;
                             Ok(tg)
