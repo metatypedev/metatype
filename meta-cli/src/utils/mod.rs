@@ -8,7 +8,6 @@ use anyhow::{bail, Result};
 use dialoguer::{Input, Password};
 use log::trace;
 use reqwest::{Client, IntoUrl, RequestBuilder, Url};
-use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env::{set_var, var};
 use std::hash::Hash;
@@ -114,14 +113,6 @@ impl Node {
             b = b.basic_auth(&auth.username, Some(&auth.password));
         }
         Ok(b.timeout(Duration::from_secs(5)))
-    }
-
-    pub fn tg_name<'a>(&self, raw_name: &'a str) -> Cow<'a, str> {
-        if let Some(prefix) = &self.prefix {
-            format!("{}{}", prefix, raw_name).into()
-        } else {
-            raw_name.into()
-        }
     }
 }
 

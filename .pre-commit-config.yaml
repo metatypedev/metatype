@@ -22,12 +22,12 @@ repos:
       - id: check-dependabot
       - id: check-github-workflows
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.1.5"
+    rev: "v0.1.6"
     hooks:
       - id: ruff
       - id: ruff-format
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: 3.12.0
+    rev: v3.13.0
     hooks:
       - id: commitizen
         stages:

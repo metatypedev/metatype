@@ -18,6 +18,7 @@ pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
     tg.traverse_types(validator).unwrap()
 }
 
+#[derive(Debug)]
 pub struct ValidatorError {
     pub path: String,
     pub message: String,
