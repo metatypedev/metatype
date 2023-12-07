@@ -70,9 +70,6 @@ impl Loader {
     }
 
     async fn load_command(&self, mut command: Command, path: &Path) -> LoaderResult {
-        // TODO: use env var to pass a tmp tpath for the cmd to emit it to
-        // openssl::sha::sha256(path.to_str())
-        // std::env::temp_dir().join(path);
         let path: Arc<Path> = path.into();
         let p = command
             .current_dir(&self.config.base_dir)
@@ -146,6 +143,7 @@ impl Loader {
         path: &Path,
     ) -> Result<Command, LoaderError> {
         let vars: HashMap<_, _> = env::vars().collect();
+
         if let Ok(argv_str) = std::env::var("MCLI_LOADER_CMD") {
             let argv = argv_str.split(' ').collect::<Vec<_>>();
             let mut command = Command::new(argv[0]);
@@ -155,6 +153,7 @@ impl Loader {
                 .envs(vars);
             return Ok(command);
         }
+
         match module_type {
             ModuleType::Python => {
                 // TODO cache result?
@@ -192,7 +191,7 @@ impl Loader {
                         Ok(command)
                     }
                     TsLoaderRt::Node => {
-                        log::debug!("loading typegraph using node, make sure npm packages have been installed");
+                        log::debug!("loading typegraph using npm x tsx, make sure npm packages have been installed");
                         let mut command = Command::new("npm");
                         command
                             .arg("x")
@@ -203,7 +202,7 @@ impl Loader {
                         Ok(command)
                     }
                     TsLoaderRt::Bun => {
-                        log::debug!("loading typegraph using bun, make sure npm packages have been installed");
+                        log::debug!("loading typegraph using bun x tsx, make sure npm packages have been installed");
                         let mut command = Command::new("bun");
                         command
                             .arg("x")
