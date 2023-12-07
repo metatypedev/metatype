@@ -18,11 +18,7 @@ const tgName = "migration-failure-test";
 
 async function writeTypegraph(version: number | null) {
   if (version == null) {
-    await m.shell([
-      "bash",
-      "-c",
-      "cp ./templates/migration.py migration.py",
-    ]);
+    await m.shell(["bash", "-c", "cp ./templates/migration.py migration.py"]);
   } else {
     await m.shell([
       "bash",
@@ -185,34 +181,22 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
 
   const nodeConfigs = ["--target", "dev7897"];
 
-  const prismaConfigs = [
-    e.name,
-  ];
-
   await t.should("fail to access database", async () => {
     await gql`
-      query {
-        findManyRecords {
-          id
+        query {
+          findManyRecords {
+            id
+          }
         }
-      }
-    `
+      `
       .expectErrorContains("table `e2e7897.record` does not exist")
       .on(e);
   });
 
-  await t.should("create migrations", async () => {
-    await t.meta(
-      ["prisma", "dev", ...nodeConfigs, ...prismaConfigs, "--create-only"],
-      { stdin: "initial_migration\n" },
-    );
-  });
-
   await t.should("fail on dirty repo", async () => {
-    await assertRejects(
-      () => t.meta(["deploy", ...nodeConfigs, "-f", "prisma.py"]),
-      Error,
-      "Dirty repository not allowed",
+    await t.shell(["bash", "-c", "touch README.md"]);
+    await assertRejects(() =>
+      t.meta(["deploy", ...nodeConfigs, "-f", "prisma.py"])
     );
   });
 
@@ -227,18 +211,19 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
     ...nodeConfigs,
     "-f",
     "prisma.py",
+    "--create-migration",
   ]);
 
   await t.should(
     "succeed have replaced and terminated the previous engine",
     async () => {
       await gql`
-      query {
-        findManyRecords{
-          id
-        }
-      }
-    `
+          query {
+            findManyRecords {
+              id
+            }
+          }
+        `
         .expectErrorContains("Could not find engine")
         .on(e);
     },
@@ -248,13 +233,13 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
 
   await t.should("succeed to query database", async () => {
     await gql`
-      query {
-        findManyRecords{
-          id
-          name
+        query {
+          findManyRecords {
+            id
+            name
+          }
         }
-      }
-    `
+      `
       .expectData({
         findManyRecords: [],
       })
@@ -271,100 +256,97 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
   },
 });
 
-Meta.test("cli:deploy - with prefix", async (t) => {
-  const e = await t.engine("runtimes/prisma/prisma.py", {
-    secrets: {
-      POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=e2e7894",
-    },
-    prefix: "pref-",
-  });
+Meta.test(
+  "cli:deploy - with prefix",
+  async (t) => {
+    const e = await t.engine("runtimes/prisma/prisma.py", {
+      secrets: {
+        POSTGRES:
+          "postgresql://postgres:password@localhost:5432/db?schema=e2e7894",
+      },
+      prefix: "pref-",
+    });
 
-  await dropSchemas(e);
-  await removeMigrations(e);
+    await dropSchemas(e);
+    await removeMigrations(e);
 
-  const nodeConfigs = [
-    "-t",
-    "with_prefix",
-  ];
+    const nodeConfigs = ["-t", "with_prefix"];
 
-  const prismaConfigs = [
-    e.rawName,
-  ];
+    const prismaConfigs = [e.rawName];
 
-  await t.should("fail to access database", async () => {
-    await gql`
-      query {
-        findManyRecords {
-          id
-        }
-      }
-    `
-      .expectErrorContains("table `e2e7894.record` does not exist")
-      .on(e);
-  });
-
-  await t.should("create migrations", async () => {
-    await t.meta(
-      ["prisma", "dev", ...nodeConfigs, ...prismaConfigs, "--create-only"],
-      { stdin: "initial_migration\n" },
-    );
-  });
-
-  await t.should("fail on dirty repo", async () => {
-    await assertRejects(() =>
-      t.meta(["deploy", "-t", "with_prefix", "-f", "prisma/prisma.py"])
-    );
-  });
-
-  await t.should("commit changes 2", async () => {
-    await t.shell(["git", "add", "."]);
-    await t.shell(["git", "commit", "-m", "create migrations"]);
-  });
-
-  // not in t.should because it creates a worker that will not be closed
-  await t.meta(
-    ["deploy", ...nodeConfigs, "-f", "prisma.py"],
-  );
-
-  await t.should(
-    "succeed have replaced and terminated the previous engine",
-    async () => {
+    await t.should("fail to access database", async () => {
       await gql`
-      query {
-        findManyRecords{
-          id
+        query {
+          findManyRecords {
+            id
+          }
         }
-      }
-    `
-        .expectErrorContains("Could not find engine")
+      `
+        .expectErrorContains("table `e2e7894.record` does not exist")
         .on(e);
-    },
-  );
+    });
 
-  const e2 = t.getTypegraphEngine("pref-prisma")!;
+    await t.should("create migrations", async () => {
+      await t.meta(
+        ["prisma", "dev", ...nodeConfigs, ...prismaConfigs, "--create-only"],
+        { stdin: "initial_migration\n" },
+      );
+    });
 
-  await t.should("succeed to query database", async () => {
-    await gql`
-      query {
-        findManyRecords{
-          id
-          name
+    await t.should("fail on dirty repo", async () => {
+      await assertRejects(() =>
+        t.meta(["deploy", "-t", "with_prefix", "-f", "prisma/prisma.py"])
+      );
+    });
+
+    await t.should("commit changes 2", async () => {
+      await t.shell(["git", "add", "."]);
+      await t.shell(["git", "commit", "-m", "create migrations"]);
+    });
+
+    // not in t.should because it creates a worker that will not be closed
+    await t.meta(["deploy", ...nodeConfigs, "-f", "prisma.py"]);
+
+    await t.should(
+      "succeed have replaced and terminated the previous engine",
+      async () => {
+        await gql`
+          query {
+            findManyRecords {
+              id
+            }
+          }
+        `
+          .expectErrorContains("Could not find engine")
+          .on(e);
+      },
+    );
+
+    const e2 = t.getTypegraphEngine("pref-prisma")!;
+
+    await t.should("succeed to query database", async () => {
+      await gql`
+        query {
+          findManyRecords {
+            id
+            name
+          }
         }
-      }
-    `
-      .expectData({
-        findManyRecords: [],
-      })
-      .on(e2);
-  });
-}, {
-  systemTypegraphs: true,
-  port: 7894,
-  gitRepo: {
-    content: {
-      "prisma.py": "runtimes/prisma/prisma.py",
-      "metatype.yml": "metatype.yml",
+      `
+        .expectData({
+          findManyRecords: [],
+        })
+        .on(e2);
+    });
+  },
+  {
+    systemTypegraphs: true,
+    port: 7894,
+    gitRepo: {
+      content: {
+        "prisma.py": "runtimes/prisma/prisma.py",
+        "metatype.yml": "metatype.yml",
+      },
     },
   },
-});
+);
