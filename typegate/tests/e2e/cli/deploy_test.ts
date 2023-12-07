@@ -4,18 +4,12 @@
 import { gql, Meta } from "test-utils/mod.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { dropSchemas, removeMigrations } from "test-utils/migrations.ts";
-import { dropSchema } from "test-utils/database.ts";
-import { assertStringIncludes } from "std/assert/mod.ts";
-import { assertRejects } from "std/assert/mod.ts";
+import { assertRejects, assertStringIncludes } from "std/assert/mod.ts";
+import pg from "npm:pg";
 
 const m = new TestModule(import.meta);
 
 const tgName = "migration-failure-test";
-
-async function reset(schema: string) {
-  await removeMigrations(tgName);
-  await dropSchema(schema);
-}
 
 /**
  * These tests use different ports for the virtual typegate instance to avoid
@@ -69,6 +63,18 @@ async function deploy(port: number | null, noMigration = false) {
     console.log(e.toString());
     throw e;
   }
+}
+
+async function reset(schema: string) {
+  await removeMigrations(tgName);
+
+  // remove the database schema
+  const client = new pg.Client({
+    connectionString: "postgres://postgres:password@localhost:5432/db",
+  });
+  await client.connect();
+  await client.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
+  await client.end();
 }
 
 Meta.test(
