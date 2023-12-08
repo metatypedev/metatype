@@ -3,4 +3,3 @@
 
 pub mod python_bindings;
 pub mod wasi_vm;
-pub mod wasmedge_sdk_bindgen;
