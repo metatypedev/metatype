@@ -127,6 +127,7 @@ jobs:
           cargo install wasm-opt --version $WASM_OPT_VERSION --locked
 
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm --release
+          mkdir -p $(dirname $WASM_FILE)
           wasm-opt -Oz target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE.opt
           wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
 
