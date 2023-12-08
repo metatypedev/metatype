@@ -25,20 +25,20 @@ jobs:
         with:
           deno-version: v${{ env.DENO_VERSION }}
       - uses: kenji-miyake/setup-git-cliff@v1
-      - id: checks
-        run: |
+      - run: |
           VERSION=$(deno run -A dev/lock.ts --version)
           if [[ "${{ github.ref_name }}" != "v$VERSION" ]]; then
             echo "Tag ${{ github.ref_name }} does not match code version v$VERSION, stopping."
             exit -1
           fi
           echo "Releasing v$VERSION"
-          echo "release_note=$(git cliff --latest --strip header)" >> $GITHUB_OUTPUT
+          git cliff --latest --strip header --output CHANGE.md
+          cat CHANGE.md
       - uses: ncipollo/release-action@v1
         with:
           tag: ${{ github.ref_name }}
           makeLatest: true
-          body: ${{ steps.checks.outputs.release_note }}
+          bodyFile: "CHANGE.md"
           discussionCategory: "Announcements"
 
   meta-cli:
