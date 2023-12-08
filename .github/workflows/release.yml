@@ -93,8 +93,8 @@ jobs:
           overwrite: false
 
   typegraph:
-    needs:
-      - check-bump
+    # needs:
+    #   - check-bump
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -124,11 +124,10 @@ jobs:
           curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
           export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
           cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
-          cargo install wasm-opt --version $WASM_OPT_VERSION --locked
 
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm --release
-          wasm-opt -Oz target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE.opt
-          wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
+          mkdir -p $(dirname $WASM_FILE)
+          wasm-tools component new target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE
 
           poetry install --no-root
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen

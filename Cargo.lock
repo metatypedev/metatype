@@ -1297,7 +1297,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "base64 0.21.5",
@@ -5345,7 +5345,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "actix",
  "anyhow",
@@ -5673,7 +5673,7 @@ dependencies = [
 
 [[package]]
 name = "mt_deno"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "deno",
@@ -10756,7 +10756,7 @@ dependencies = [
 
 [[package]]
 name = "typegate"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "colored",
  "common",
@@ -10769,7 +10769,7 @@ dependencies = [
 
 [[package]]
 name = "typegate_engine"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "base64 0.21.5",
@@ -10808,7 +10808,7 @@ dependencies = [
 
 [[package]]
 name = "typegraph_core"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "common",
  "enum_dispatch",
@@ -10835,7 +10835,7 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 
 [[package]]
 name = "typescript"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "dprint-plugin-typescript 0.87.1",
@@ -11958,7 +11958,7 @@ checksum = "213b7324336b53d2414b2db8537e56544d981803139155afa84f76eeebb7a546"
 
 [[package]]
 name = "xtask"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "clap",
