@@ -7,43 +7,31 @@ import { dropSchema } from "test-utils/database.ts";
 
 const m = new TestModule(import.meta);
 
+const port = 7897;
+
 Meta.test("meta undeploy", async (t) => {
   // prepare
-  await dropSchema("e2e7895alt");
+  await dropSchema(`e2e${port}alt`);
 
-  // TODO assert this leaks resources
-  // await t.should("fail", async () => {
-  //   const _out = await m.cli(
-  //     {},
-  //     "deploy",
-  //     "--target",
-  //     "dev7895",
-  //     "-f",
-  //     "templates/migration.py",
-  //     "--allow-dirty",
-  //   );
-  // });
-
+  // no leaked resources error
   await t.should("free resources", async () => {
-    const _out = await m.cli(
+    await m.cli(
       {},
       "deploy",
       "--target",
-      "dev7895",
+      `dev${port}`,
       "-f",
       "templates/migration.py",
       "--allow-dirty",
     );
 
-    const out2 = await m.cli(
+    await m.cli(
       {},
       "undeploy",
       "--target",
-      "dev7895",
+      `dev${port}`,
       "--typegraph",
       "migration-failure-test",
     );
-
-    console.log(out2.stderr);
   });
-}, { port: 7895, systemTypegraphs: true });
+}, { port, systemTypegraphs: true });
