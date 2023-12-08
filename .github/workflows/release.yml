@@ -93,8 +93,8 @@ jobs:
           overwrite: false
 
   typegraph:
-    # needs:
-    #   - check-bump
+    needs:
+      - check-bump
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
