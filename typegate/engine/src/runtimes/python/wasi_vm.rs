@@ -43,12 +43,13 @@ pub fn init_reactor_vm(
     let mut vm = VmBuilder::new().with_config(config).build()?;
 
     // FIXME:
-    // wasmedge bug? locally scoped import ref that involves host function
+    // https://github.com/WasmEdge/WasmEdge/issues/3085
+    // locally scoped import ref that uses the host function
     // makes some bindings call segfault with exit code 11
-    // if we don't use a global ref.
-
     // Note: in version 0.8.1, register_import_module
     // only required my_import vs &my_import (current)
+
+    // Current solution: make a global ref
     vm.register_import_module(get_or_init_imports()?)?;
 
     // load wasm module
