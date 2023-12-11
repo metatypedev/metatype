@@ -17,7 +17,7 @@ env:
   NODE_VERSION: "20.8.0"
   WASM_TOOLS_VERSION: "1.0.45"
   JCO_VERSION: "0.12.1"
-  WASMEDGE_VERSION: "0.12.1"
+  WASMEDGE_VERSION: "0.13.5"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
 

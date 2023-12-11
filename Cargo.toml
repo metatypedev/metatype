@@ -28,9 +28,9 @@ env_logger = "=0.10.0"
 clap = "=4.3.3"
 clap_complete = "=4.3.1"
 # https://github.com/WasmEdge/wasmedge-rust-sdk
-wasmedge-sdk = "=0.8.1"
-wasmedge-sys = "=0.13.1"
-wasmedge-types = "=0.4.1"
+wasmedge-sdk = "=0.13.2"
+wasmedge-sys = "=0.17.5"
+wasmedge-types = "=0.4.4"
 # https://github.com/denoland/deno_ast/blob/main/Cargo.toml
 swc_common = "=0.32.0"
 swc_ecma_ast = "=0.109.0"

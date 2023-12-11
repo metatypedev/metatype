@@ -21,7 +21,7 @@ FROM lukechannings/deno:v${DENO_VERSION} AS deno-bin
 #
 FROM base AS builder
 
-ARG WASMEDGE_VERSION=0.12.1
+ARG WASMEDGE_VERSION=0.13.5
 
 ENV DENO_DIR /deno-dir/
 ENV DENO_INSTALL /root/.deno
