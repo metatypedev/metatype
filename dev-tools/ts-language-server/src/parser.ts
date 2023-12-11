@@ -46,7 +46,7 @@ function withCapture<T>(
   return capture && f(capture.node);
 }
 
-type TypegraphDefinitionCaptures = {
+export type TypegraphDefinitionCaptures = {
   name?: Parser.SyntaxNode;
   builder?: Parser.SyntaxNode;
   args?: Parser.SyntaxNode;

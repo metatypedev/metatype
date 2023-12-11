@@ -26,46 +26,12 @@ Deno.test("semantic analysis of expose", async (t) => {
 
   const tree = parser.parse(code);
   const node = tree.rootNode;
+  const ctx = new ModuleDiagnosticsContext(node, fileUri.toString());
+
   const typegraphDefs = findTypegraphDefinitions(node);
   assertEquals(typegraphDefs.length, 1);
 
-  const ctx = new ModuleDiagnosticsContext(node, fileUri.toString());
-
-  // const scopeManager = new ScopeManager(node);
-  // console.log(
-  //   [...scopeManager.variables.entries()].map(
-  //     ([k, v]) => [k, v.map((v) => v.node.text)],
-  //   ),
-  // );
-  //
-  // // const rootScope = new Scope(rootNode, null, scopeManager);
-  //
-  const typegraphDef = new TypegraphDefinition(typegraphDefs[0], ctx);
-  const exposedFunctions = typegraphDef.exposedFunctions;
-  for (const exposed of exposedFunctions.values()) {
-    ctx.checkExposedFunction(exposed);
-  }
+  ctx.checkTypegraph(typegraphDefs[0]);
 
   await assertSnapshot(t, ctx.diagnostics);
-
-  // const exposed = typegraphDef.findExposedFunctions();
-  // const analysisResult = exposed.map(([name, node]) => {
-  //   const res = analyzeExposeExpression(node);
-  //   return {
-  //     name,
-  //     runtime: res.runtime.text,
-  //     generator: res.generator,
-  //   };
-  // });
-  //
-  // assertObjectMatch(analysisResult[0], {
-  //   name: "add",
-  //   runtime: "python",
-  //   generator: "fromLambda",
-  // });
-  // assertObjectMatch(analysisResult[1], {
-  //   name: "multiply",
-  //   runtime: "deno",
-  //   generator: "func",
-  // });
 });

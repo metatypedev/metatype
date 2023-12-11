@@ -2,6 +2,8 @@ import { Connection, Diagnostic, TextDocuments } from "vscode-languageserver";
 import { DiagnosticSeverity } from "vscode-languageserver/types";
 import { TextDocument } from "vscode-languageserver/textdocument";
 import { ClientCapabilities } from "./mod.ts";
+import { findTypegraphDefinitions, Parser, TypeScript } from "../parser.ts";
+import { ModuleDiagnosticsContext } from "../analysis/diagnostics/context.ts";
 
 // TODO settings?
 type DocumentSettings = Record<string, never>;
@@ -57,41 +59,25 @@ export class Documents {
   }
 
   #validateDocument(textDocument: TextDocument) {
-    const text = textDocument.getText();
-    const pattern = /\.apply\(/g;
-    let match: RegExpExecArray | null;
+    const parser = new Parser();
+    parser.setLanguage(TypeScript);
 
-    const diagnostics: Diagnostic[] = [];
+    const tree = parser.parse(textDocument.getText());
+    const rootNode = tree.rootNode;
+    const diagnosticContext = new ModuleDiagnosticsContext(
+      rootNode,
+      textDocument.uri,
+    );
 
-    while ((match = pattern.exec(text)) && match != null) {
-      const diagnostic: Diagnostic = {
-        severity: DiagnosticSeverity.Warning,
-        range: {
-          start: textDocument.positionAt(match.index),
-          end: textDocument.positionAt(match.index + match[0].length),
-        },
-        message: `Found .apply()`,
-        source: "ex", // what?
-      };
+    const typegraphDefs = findTypegraphDefinitions(rootNode);
 
-      if (this.clientCapabilities.diagnosticRelatedInformation) {
-        diagnostic.relatedInformation = [
-          {
-            location: {
-              uri: textDocument.uri,
-              range: Object.assign({}, diagnostic.range),
-            },
-            message: "Found .apply()",
-          },
-        ];
-      }
-
-      diagnostics.push(diagnostic);
+    for (const def of typegraphDefs) {
+      diagnosticContext.checkTypegraph(def);
     }
 
     this.connection.sendDiagnostics({
       uri: textDocument.uri,
-      diagnostics,
+      diagnostics: diagnosticContext.diagnostics,
     });
   }
 }

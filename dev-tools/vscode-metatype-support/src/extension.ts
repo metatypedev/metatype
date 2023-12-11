@@ -22,7 +22,7 @@ export function activate(context: ExtensionContext) {
     },
     debug: {
       command: "deno",
-      args: ["run", "-A", "src/server.ts"],
+      args: ["run", "-A", "src/server.ts", "--stdio"],
       options: {
         cwd: tsServerDir,
       },

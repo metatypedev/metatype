@@ -9,7 +9,10 @@ import {
   InitializeParams,
   InitializeResult,
 } from "vscode-languageserver/types";
-import { TextDocumentSyncKind } from "vscode-languageserver/protocol";
+import {
+  DidChangeConfigurationNotification,
+  TextDocumentSyncKind,
+} from "vscode-languageserver/protocol";
 import { Documents } from "./documents.ts";
 
 export interface ClientCapabilities {
@@ -43,7 +46,7 @@ export class LspServer {
     this.connection.onDidChangeConfiguration(
       this.#onDidChangeConfiguration.bind(this),
     );
-    this.connection.onDidChangeWatchedFiles(() => { });
+    this.connection.onDidChangeWatchedFiles(() => {});
     // TODO
     this.connection.onCompletion(() => []);
     this.connection.onCompletionResolve((item) => item);
@@ -82,7 +85,8 @@ export class LspServer {
   }
 
   #onInitialized() {
-    if (this.hasConfigurationCapability) {
+    console.error("initialized LSP");
+    if (this.clientCapabilities.configuration) {
       this.connection.client.register(
         DidChangeConfigurationNotification.type,
         undefined,
@@ -93,12 +97,12 @@ export class LspServer {
   #onDidChangeConfiguration(change) {
     if (this.clientCapabilities.configuration) {
       // reset all cached document settings
-      this.settings.clear();
+      // this.settings.clear();
     } else {
       // TODO what is the key?? "languageServerExample"?
-      this.globalSettings = <DocumentSettings>(
-        change.settings.languageServerExample || defaultSettings
-      );
+      // this.globalSettings = <DocumentSettings> (
+      //   change.settings.languageServerExample || defaultSettings
+      // );
     }
   }
 }
