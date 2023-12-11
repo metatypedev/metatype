@@ -14,7 +14,7 @@ edition = "2021"
 
 [workspace.dependencies]
 #deno = { path =  "../../../deno/cli"}
-deno = { git = "https://github.com/metatypedev/deno", branch = "v1.38.1-embeddable" }
+deno = { git = "https://github.com/metatypedev/deno", branch = "v1.38.5-embeddable" }
 
 # internal crates
 mt_deno = { path = "libs/deno/"}
