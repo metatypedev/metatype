@@ -7,11 +7,26 @@ snapshot[`semantic analysis of expose 1`] = `
     range: {
       end: {
         character: 27,
-        line: 4,
+        line: 5,
       },
       start: {
         character: 21,
-        line: 4,
+        line: 5,
+      },
+    },
+    severity: 1,
+    source: "typegraph",
+  },
+  {
+    message: "Input type of exposed function must be a struct, but got TgType(integer)",
+    range: {
+      end: {
+        character: 47,
+        line: 21,
+      },
+      start: {
+        character: 21,
+        line: 21,
       },
     },
     severity: 1,

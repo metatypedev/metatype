@@ -2,6 +2,8 @@
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/types";
 import { ScopeManager } from "../typescript-semantic/scope.ts";
 import { Parser } from "../../parser.ts";
+import { ExposedFunction } from "../exposed_function.ts";
+import { TgTypeStruct } from "../typescript-semantic/semantic-node.ts";
 
 export class ModuleDiagnosticsContext {
   symbolRegistry: ScopeManager;
@@ -31,6 +33,16 @@ export class ModuleDiagnosticsContext {
       },
       source: "typegraph",
     });
+  }
+
+  checkExposedFunction(exposedFunction: ExposedFunction) {
+    const inputType = exposedFunction.inputType;
+    if (!(inputType instanceof TgTypeStruct)) {
+      this.error(
+        exposedFunction.node,
+        `Input type of exposed function must be a struct, but got ${inputType}`,
+      );
+    }
   }
 
   error(node: Parser.SyntaxNode, message: string) {
