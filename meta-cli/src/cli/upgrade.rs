@@ -4,11 +4,11 @@
 use crate::global_config::GlobalConfig;
 
 use super::{Action, GenArgs};
+use crate::build;
 use anyhow::{Ok, Result};
 use async_trait::async_trait;
 use chrono::{Duration, Utc};
 use clap::Parser;
-use common::get_version;
 use self_update::{backends::github::Update, update::UpdateStatus};
 use semver::Version;
 
@@ -35,7 +35,7 @@ impl Action for Upgrade {
                 .repo_name("metatype")
                 .bin_name("meta")
                 .show_download_progress(true)
-                .current_version(get_version())
+                .current_version(build::PKG_VERSION)
                 .no_confirm(opts.yes);
 
             if let Some(version) = opts.version {
@@ -64,7 +64,7 @@ pub async fn upgrade_check() -> Result<()> {
     let mut local_config = GlobalConfig::load(&config_path).await?;
 
     if local_config.update_check + Duration::days(1) < Utc::now() {
-        let current_version = get_version();
+        let current_version = build::PKG_VERSION;
         let latest = tokio::task::spawn_blocking(move || {
             let update = Update::configure()
                 .repo_owner("metatypedev")

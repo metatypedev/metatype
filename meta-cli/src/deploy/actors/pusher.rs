@@ -102,7 +102,7 @@ impl PusherActor {
         Ok(serde_json::json!({
             "tg": serde_json::to_string(&tg)?,
             "secrets": serde_json::to_string(secrets)?,
-            "cliVersion": common::get_version()
+            "cliVersion": crate::build::PKG_VERSION,
         }))
     }
 

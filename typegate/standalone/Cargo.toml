@@ -10,4 +10,3 @@ sentry = { version = "0.31.8", features = ["anyhow"] }
 env_logger.workspace = true
 log = "0.4.20"
 typegate_engine.workspace = true
-common.workspace = true
