@@ -2,10 +2,12 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "devtools:build",
+			"label": "vscode-ext:build",
 			"type": "shell",
 			"command": "pnpm",
-			"args": ["compile"],
+			"args": [
+				"compile"
+			],
 			"group": "build",
 			"presentation": {
 				"panel": "dedicated",
@@ -15,14 +17,16 @@
 				"$tsc"
 			],
 			"options": {
-				"cwd": "${workspaceFolder}/dev-tools"
+				"cwd": "${workspaceFolder}/dev-tools/vscode-metatype-support"
 			}
 		},
 		{
-			"label": "devtools:build:watch",
+			"label": "vscode-ext:build:watch",
 			"type": "shell",
 			"command": "pnpm",
-			"args": ["watch"],
+			"args": [
+				"watch"
+			],
 			"isBackground": true,
 			"group": {
 				"kind": "build"
@@ -35,7 +39,7 @@
 				"$tsc-watch"
 			],
 			"options": {
-				"cwd": "${workspaceFolder}/dev-tools"
+				"cwd": "${workspaceFolder}/dev-tools/vscode-metatype-support"
 			}
 		}
 	]

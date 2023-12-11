@@ -7,9 +7,13 @@
 			"request": "launch",
 			"name": "Launch Client",
 			"runtimeExecutable": "${execPath}",
-			"args": ["--extensionDevelopmentPath=${workspaceRoot}/dev-tools/vscode-metatype-support"],
-			"outFiles": ["${workspaceRoot}/dev-tools/vscode-metatype-support/out/**/*.js"],
-			"preLaunchTask": "devtools:build"
+			"args": [
+				"--extensionDevelopmentPath=${workspaceRoot}/dev-tools/vscode-metatype-support"
+			],
+			"outFiles": [
+				"${workspaceRoot}/dev-tools/vscode-metatype-support/out/**/*.js"
+			],
+			"preLaunchTask": "vscode-ext:build"
 		},
 		{
 			"name": "Language Server E2E Test",
@@ -21,7 +25,9 @@
 				"--extensionTestsPath=${workspaceRoot}/client/out/test/index",
 				"${workspaceRoot}/client/testFixture"
 			],
-			"outFiles": ["${workspaceRoot}/client/out/test/**/*.js"]
+			"outFiles": [
+				"${workspaceRoot}/client/out/test/**/*.js"
+			]
 		}
 	]
 }
