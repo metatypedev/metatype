@@ -4,6 +4,9 @@ import TabItem from "@theme/TabItem";
 <SDKTabs>
   <TabItem value="typescript">
 
+
+    [![Typegraph version](https://img.shields.io/npm/v/@typegraph/sdk?label=typegraph)](https://www.npmjs.com/package/@typegraph/sdk)
+
 Install the `@typegraph/sdk` package from npm using your preferred package manager and runtime. The SDK requires Node 16+ with Typescript 4.7+, Deno 1.28+ or Bun 1+.
 
 ```bash
@@ -23,8 +26,16 @@ import { ... } from "npm:@typegraph/sdk/mod.ts";
 bun add @typegraph/sdk
 ```
 
+When using Node, make sure to add this to your Typescript configuration:
+
+```json
+    "moduleResolution": "node16", // Or "nodenext"
+```
+
   </TabItem>
   <TabItem value="python">
+
+  [![Typegraph version](https://img.shields.io/pypi/v/typegraph?label=typegraph)](https://pypi.org/project/typegraph/)
 
 Create (and activate) your virtual environment with Python 3.8+ for your project. Then install the `typegraph` package from Python Package Index (PyPI) using your preferred method.
 
@@ -42,9 +53,3 @@ poetry add typegraph
 
   </TabItem>
 </SDKTabs>
-
-When using Node, make sure to add this to your Typescript configuration:
-
-```json
-    "moduleResolution": "node16", // Or "nodenext"
-```

@@ -2,24 +2,15 @@
 sidebar_position: 50
 ---
 
-import TGExample from "@site/src/components/TGExample";
-import CodeBlock from "@theme-original/CodeBlock";
+import S3Intro from "@site/shared/s3/index.mdx";
 
 # Upload files to cloud storage
 
-## Typegraph
+<S3Intro />
 
-```ini
-TG_RETREND_S3_HOST=http://localhost:9000
-TG_RETREND_S3_REGION=local
-TG_RETREND_S3_ACCESS_KEY=minio
-TG_RETREND_S3_SECRET_KEY=password
-TG_RETREND_S3_PATH_STYLE=true
-```
+We can then use this typegraph from our client code like so:
 
-<CodeBlock language="python">{require("../../../../examples/typegraphs/files-upload.py").content}</CodeBlock>
-
-## Uploading file using presigned url
+### Uploading file using presigned url
 
 ```ts
 const image = await Deno.readFile("website/static/images/logo.png");
@@ -54,7 +45,7 @@ const upload = await fetch(presigned, {
 console.log(upload.status);
 ```
 
-## Uploading file using GraphQL multipart request
+### Uploading file using GraphQL multipart request
 
 Metatype supports
 [GraphQL multipart request](https://github.com/jaydenseric/graphql-multipart-request-spec)

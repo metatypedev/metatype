@@ -1,5 +1,14 @@
 # Functions
 
+Function objects describe a piece of logic that is to be run on a certain runtime.
+They're usually generated through helpers provided by the runtimes such as the crud helpers from the Prisma runtime that generate functions to allows easy crud operations.
+The different places where typegraphs use functions include:
+
+- CRUD and SQL operations from the [PrismaRuntime](/docs/reference/runtimes/prisma)
+- Evaluation of requests inputs for Policies using the [DenoRuntime](/docs/reference/runtimes/deno)
+- The expose function takes a mapping function objects to generate the GQL api
+- Authoring Faas like operations using runtimes like DenoRuntime and [PythonRuntime](/docs/reference/runtimes/python).
+
 ## Effects
 
 Effects are a property of materializers and help categorization what happens to data when it gets transformed. Although they are similar to REST verbs and SQL statements, there is no direct one-to-one mapping.
