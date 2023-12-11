@@ -31,6 +31,7 @@ import { TypeGraphRuntime } from "../runtimes/typegraph.ts";
 import { resolveIdentifier } from "../services/middlewares.ts";
 import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
+import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
 import introspectionJson from "../typegraphs/introspection.json" with {
   type: "json",
 };
@@ -76,7 +77,19 @@ export class Typegate {
     let res = typegraph;
 
     for (const handler of this.#onPushHooks) {
-      res = await handler(res, secretManager, response);
+      try {
+        res = await handler(res, secretManager, response);
+      } catch (e) {
+        logger.error(`Error in onPush hook: ${e}`);
+        if (e instanceof MigrationFailure) {
+          response.setFailure(e.errors[0]);
+        } else {
+          response.setFailure({
+            reason: "Unknown",
+            message: e.toString(),
+          });
+        }
+      }
     }
 
     return res;
@@ -202,6 +215,10 @@ export class Typegate {
       secretManager,
       pushResponse,
     );
+
+    if (pushResponse.failure) {
+      throw new Error(`Push failed: ${pushResponse.failure.message}`);
+    }
 
     logger.info(`Initializing engine '${name}'`);
     const engine = await this.initQueryEngine(

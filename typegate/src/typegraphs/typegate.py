@@ -1,9 +1,7 @@
 # Copyright Metatype under the Elastic License 2.0.
 
 from typegraph import Graph, fx, t, typegraph
-from typegraph.gen.exports.runtimes import (
-    TypegateOperation,
-)
+from typegraph.gen.exports.runtimes import TypegateOperation
 from typegraph.gen.types import Err
 from typegraph.graph.params import Auth, Cors, Rate
 from typegraph.runtimes.base import Materializer
@@ -53,13 +51,13 @@ def typegate(g: Graph):
         raise Exception(add_typegraph_mat_id.value)
     add_typegraph_mat = Materializer(add_typegraph_mat_id.value, effect=fx.create(True))
 
-    remove_typegraph_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.REMOVE_TYPEGRAPH
+    remove_typegraphs_mat_id = runtimes.register_typegate_materializer(
+        store, TypegateOperation.REMOVE_TYPEGRAPHS
     )
-    if isinstance(remove_typegraph_mat_id, Err):
-        raise Exception(remove_typegraph_mat_id.value)
-    remove_typegraph_mat = Materializer(
-        remove_typegraph_mat_id.value, effect=fx.delete(True)
+    if isinstance(remove_typegraphs_mat_id, Err):
+        raise Exception(remove_typegraphs_mat_id.value)
+    remove_typegraphs_mat = Materializer(
+        remove_typegraphs_mat_id.value, effect=fx.delete(True)
     )
 
     serialized_typegraph_mat_id = runtimes.register_typegate_materializer(
@@ -72,6 +70,14 @@ def typegate(g: Graph):
         serialized_typegraph_mat_id.value, effect=fx.read()
     )
 
+    arg_info_by_path_id = runtimes.register_typegate_materializer(
+        store,
+        TypegateOperation.GET_ARG_INFO_BY_PATH,
+    )
+    if isinstance(arg_info_by_path_id, Err):
+        raise Exception(arg_info_by_path_id.value)
+    arg_info_by_path_mat = Materializer(arg_info_by_path_id.value, effect=fx.read())
+
     serialized = t.gen(t.string(), serialized_typegraph_mat)
 
     typegraph = t.struct(
@@ -81,6 +87,32 @@ def typegate(g: Graph):
         },
         name="Typegraph",
     )
+    path = t.list(t.string())
+    arg_info_inp = t.struct(
+        {
+            "typegraph": t.string(),
+            "queryType": t.string(),
+            "fn": t.string(),
+            "argPaths": t.list(path),
+        }
+    )
+
+    arg_info_out = t.struct(
+        {
+            "optional": t.boolean(),
+            "as_id": t.boolean(),
+            "title": t.string(),
+            "type": t.string(),
+            "enum": t.list(t.json()).optional(),
+            "runtime": t.string(),
+            "config": t.json().optional(),
+            "default": t.json().optional(),
+            "format": t.string().optional(),
+            "fields": t.list(
+                t.struct({"subPath": path, "termNode": g.ref("ArgInfoOut")})
+            ).optional(),
+        }
+    ).rename("ArgInfoOut")
 
     g.expose(
         typegraphs=t.func(
@@ -118,17 +150,20 @@ def typegate(g: Graph):
                             }
                         )
                     ),
-                    "resetRequired": t.list(t.string()),
+                    "failure": t.json().optional(),
                 }
             ),
             add_typegraph_mat,
             rate_calls=True,
         ),
-        removeTypegraph=t.func(
-            t.struct({"name": t.string()}),
-            t.integer(),
-            remove_typegraph_mat,
+        removeTypegraphs=t.func(
+            t.struct({"names": t.list(t.string())}),
+            t.boolean(),
+            remove_typegraphs_mat,
             rate_calls=True,
+        ),
+        argInfoByPath=t.func(
+            arg_info_inp, t.list(arg_info_out), arg_info_by_path_mat, rate_calls=True
         ),
         default_policy=admin_only,
     )

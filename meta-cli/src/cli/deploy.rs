@@ -1,38 +1,28 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use std::time::Duration;
+use std::sync::{Arc, Mutex};
 
 use super::{Action, CommonArgs, GenArgs};
 use crate::config::Config;
-use crate::typegraph::dependency_graph::DependencyGraph;
-use crate::typegraph::loader::discovery::FileFilter;
-use crate::typegraph::loader::queue::Queue;
-use crate::typegraph::loader::watch::Watcher;
-use crate::typegraph::loader::Loader;
-use crate::typegraph::loader::{Discovery, LoaderResult};
-use crate::typegraph::postprocess::prisma_rt::EmbedPrismaMigrations;
-use crate::typegraph::postprocess::{self, EmbeddedPrismaMigrationOptionsPatch};
-use crate::typegraph::push::{PushConfig, PushResult, RetryId, RetryManager, RetryState};
-use crate::utils::{ensure_venv, plural_suffix};
+use crate::deploy::actors;
+use crate::deploy::actors::console::{Console, ConsoleActor};
+use crate::deploy::actors::discovery::DiscoveryActor;
+use crate::deploy::actors::loader::{
+    self, LoaderActor, LoaderEvent, PostProcessOptions, ReloadModule, ReloadReason, StopBehavior,
+};
+use crate::deploy::actors::pusher::Push;
+use crate::deploy::actors::watcher::WatcherActor;
+use crate::typegraph::postprocess::EmbedPrismaMigrations;
+use crate::utils::Node;
+use actix::prelude::*;
 use anyhow::{bail, Context, Result};
-use async_recursion::async_recursion;
 use async_trait::async_trait;
 use clap::Parser;
-use colored::Colorize;
-use common::archive::unpack;
-use common::typegraph::Typegraph;
-use dialoguer::Confirm;
-use grep::searcher::{BinaryDetection, SearcherBuilder};
-use log::{error, info, trace, warn};
+use log::warn;
 use normpath::PathExt;
-use pathdiff::diff_paths;
-use tokio::select;
-use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
-use tokio::time::sleep;
+use tokio::sync::mpsc;
 
 #[derive(Parser, Debug)]
 pub struct DeploySubcommand {
@@ -95,277 +85,48 @@ pub struct DeployOptions {
     pub watch: bool,
 }
 
-pub struct DefaultModeData;
-
-pub struct WatchModeData {
-    retry_max: u32,
-    retry_interval: Duration,
-    file_filter: FileFilter,
-    queue: Queue,
-    watcher: Watcher,
-    retry_tx: UnboundedSender<PushRetry>,
-    retry_rx: UnboundedReceiver<PushRetry>,
-    retry_manager: RetryManager,
-    dependency_graph: DependencyGraph,
-}
-
-impl WatchModeData {
-    fn new(base_dir: &Path, config: &Config) -> Result<Self> {
-        let config_path = config.path.as_ref().unwrap();
-        let mut watcher = Watcher::new().context("Could not start watcher")?;
-        watcher.watch(base_dir)?;
-        watcher.watch(config_path)?;
-        let (retry_tx, retry_rx) = unbounded_channel();
-        let file_filter = FileFilter::new(config)?;
-        Ok(Self {
-            retry_max: 3,                           // TODO configurable
-            retry_interval: Duration::from_secs(5), // TODO configurable
-            file_filter,
-            queue: Queue::default(),
-            watcher,
-            retry_tx,
-            retry_rx,
-            retry_manager: RetryManager::default(),
-            dependency_graph: DependencyGraph::default(),
-        })
-    }
-}
-
-pub struct Deploy<T = DefaultModeData> {
+pub struct Deploy {
     config: Arc<Config>,
-    base_dir: PathBuf,
+    base_dir: Arc<Path>,
     options: DeployOptions,
-    loader: Loader,
-    push_config: PushConfig,
-    mode_data: T,
+    node: Node,
+    file: Option<Arc<Path>>,
 }
 
-impl Deploy<DefaultModeData> {
+impl Deploy {
     pub async fn new(deploy: &DeploySubcommand, args: &GenArgs) -> Result<Self> {
         let dir = args.dir()?;
-        ensure_venv(&dir)?;
+
         let config_path = args.config.clone();
         let config = Arc::new(Config::load_or_find(config_path, &dir)?);
 
         let options = deploy.options.clone();
 
-        let mut loader = Loader::new(Arc::clone(&config))
-            .skip_deno_modules(true)
-            .with_postprocessor(postprocess::DenoModules::default().codegen(options.codegen))
-            .with_postprocessor(postprocess::PythonModules::default())
-            .with_postprocessor(postprocess::WasmdegeModules::default());
-
-        if !options.no_migration {
-            loader = loader.with_postprocessor(
-                EmbedPrismaMigrations::default()
-                    .reset_on_drift(options.allow_destructive)
-                    .create_migration(options.create_migration),
-            );
-        }
-
         let node_config = config.node(&deploy.node, &deploy.target);
-        let node = node_config.build(&dir).await?;
-        let push_config = PushConfig::new(node, config.base_dir.clone());
+        let node = node_config
+            .build(&dir)
+            .await
+            .with_context(|| format!("building node from config: {node_config:#?}"))?;
 
         Ok(Self {
             config,
-            base_dir: dir,
+            base_dir: dir.into(),
             options,
-            loader,
-            push_config,
-            mode_data: DefaultModeData,
+            node,
+            file: deploy
+                .file
+                .as_ref()
+                .map(|f| f.normalize())
+                .transpose()?
+                .map(|f| f.into_path_buf().into()),
         })
     }
-
-    async fn run(self, file: Option<&PathBuf>) -> Result<()> {
-        let paths = if let Some(path) = file {
-            vec![path.normalize()?.into_path_buf()]
-        } else {
-            self.discovery().await?
-        };
-
-        if paths.is_empty() {
-            bail!("No typegraph definition module found.");
-        }
-
-        let mut err_count = 0;
-
-        trace!("Loading typegraphs...");
-        for path in paths.into_iter() {
-            let rel_path = diff_paths(&path, &self.base_dir).unwrap();
-            info!("Loading typegraphs from {}.", rel_path.display());
-            let tgs =
-                Self::load_typegraphs(&path, &self.base_dir, &self.loader, OnRewrite::Reload).await;
-            let tgs = match tgs {
-                Err(e) => {
-                    error!("{e:?}");
-                    err_count += 1;
-                    continue;
-                }
-                Ok(tgs) => tgs,
-            };
-
-            let mut tgs: VecDeque<_> = tgs.into_iter().collect();
-
-            if tgs.is_empty() {
-                warn!("No typegraph found in {}.", rel_path.display());
-                continue;
-            }
-
-            while let Some(tg) = tgs.pop_front() {
-                let tg_name = tg.full_name().unwrap().cyan();
-                info!("Pushing typegraph {tg_name}...");
-                match self.push_config.push(&tg).await {
-                    Ok(res) => {
-                        if !res.success() {
-                            error!("Some errors occured while pushing the typegraph {tg_name}");
-                            err_count += 1;
-                        }
-                        match self.handle_push_result(res) {
-                            HandlePushResult::Success => {}
-                            HandlePushResult::Failure => {
-                                error!("Error while pushing typegraph {tg_name}");
-                            }
-                            HandlePushResult::PushAgain { reset_database } => {
-                                err_count -= 1;
-                                let mut tg = tg;
-                                if !reset_database.is_empty() {
-                                    EmbeddedPrismaMigrationOptionsPatch::default()
-                                        .reset_on_drift(true)
-                                        .apply(&mut tg, reset_database)
-                                        .unwrap();
-                                }
-                                // push again
-                                tgs.push_front(tg);
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        err_count += 1;
-                        error!("Error while pushing typegraph {tg_name}: {}", e.to_string());
-                    }
-                }
-            }
-        }
-
-        if err_count > 0 {
-            bail!(
-                "Failed to push {err_count} typegraph{s}",
-                s = plural_suffix(err_count)
-            );
-        }
-        Ok(())
-    }
 }
 
-enum HandlePushResult {
-    Success,
-    PushAgain { reset_database: Vec<String> },
-    Failure,
+struct CtrlCHandlerData {
+    watcher: Addr<WatcherActor>,
+    loader: Addr<LoaderActor>,
 }
-
-impl<T> Deploy<T>
-where
-    T: Sync,
-{
-    fn watch_mode(self) -> Result<Deploy<WatchModeData>> {
-        let mode_data = WatchModeData::new(&self.base_dir, &self.config)?;
-        Ok(Deploy {
-            config: Arc::clone(&self.config),
-            base_dir: self.base_dir,
-            options: self.options,
-            loader: self.loader,
-            push_config: self.push_config,
-            mode_data,
-        })
-    }
-
-    async fn discovery(&self) -> Result<Vec<PathBuf>> {
-        Discovery::new(Arc::clone(&self.config), self.base_dir.clone(), false)
-            .get_all()
-            .await
-    }
-
-    #[async_recursion]
-    async fn load_typegraphs(
-        path: &Path,
-        base_dir: &Path,
-        loader: &Loader,
-        on_rewrite: OnRewrite,
-    ) -> Result<Vec<Typegraph>> {
-        let rel_path = diff_paths(path, base_dir).unwrap();
-        match loader.load_file(path).await {
-            LoaderResult::Loaded(tgs) => Ok(tgs),
-            LoaderResult::Rewritten(_) => {
-                info!("Typegraph definition at {rel_path:?} has been rewritten.");
-                match on_rewrite {
-                    OnRewrite::Skip => Ok(vec![]),
-                    OnRewrite::Reload => {
-                        Self::load_typegraphs(path, base_dir, loader, OnRewrite::Fail).await
-                    }
-                    OnRewrite::Fail => {
-                        bail!("Typegraph definition module at {rel_path:?} has been rewritten unexpectedly");
-                    }
-                }
-            }
-            LoaderResult::Error(e) => {
-                bail!(
-                    "Failed to load typegraph(s) from {rel_path:?}: {}",
-                    e.to_string()
-                );
-            }
-        }
-    }
-
-    fn handle_push_result(&self, mut res: PushResult) -> HandlePushResult {
-        let name = res.tg_name().to_string();
-        res.print_messages();
-        let migdir = self
-            .config
-            .prisma_migrations_dir(res.original_name.as_ref().unwrap());
-        for migrations in res.take_migrations() {
-            let dest = migdir.join(&migrations.runtime);
-            if let Err(e) = unpack(&dest, Some(migrations.migrations)) {
-                error!(
-                    "Error while unpacking migrations into {:?}",
-                    diff_paths(dest, &self.base_dir)
-                );
-                error!("{e:?}");
-            } else {
-                info!(
-                    "Successfully unpacked migrations for {name}/{} at {:?}!",
-                    migrations.runtime, dest
-                );
-            }
-        }
-
-        let resets = res.reset_required();
-        if !resets.is_empty()
-            && Confirm::new()
-                .with_prompt(format!(
-                    "{} Do you want to reset the database{s} for {runtimes} on {name}?",
-                    "[confirm]".yellow(),
-                    s = plural_suffix(resets.len()),
-                    runtimes = resets.join(", ").magenta(),
-                    name = name.cyan(),
-                ))
-                .interact()
-                .unwrap()
-        {
-            return HandlePushResult::PushAgain {
-                reset_database: resets.to_vec(),
-            };
-        }
-        if res.success() {
-            info!("{} Successfully pushed typegraph {name}.", "✓".green());
-            HandlePushResult::Success
-        } else {
-            HandlePushResult::Failure
-        }
-    }
-}
-
-struct WatchModeRestart(bool);
 
 #[async_trait]
 impl Action for DeploySubcommand {
@@ -390,214 +151,327 @@ impl Action for DeploySubcommand {
         }
 
         if deploy.options.watch {
-            let mut deploy = deploy;
-            loop {
-                let restart = deploy.watch_mode()?.run(self.file.as_ref()).await?;
-                if !restart.0 {
-                    break;
-                }
-                deploy = Deploy::new(self, &args).await?;
+            if self.file.is_some() {
+                bail!("Cannot use --file in watch mode");
             }
+            watch_mode::enter_watch_mode(deploy).await?;
         } else {
-            deploy.run(self.file.as_ref()).await?;
+            let deploy = default_mode::DefaultMode::init(deploy).await?;
+            deploy.run().await?;
         }
         Ok(())
     }
 }
 
-enum OnRewrite {
-    Skip,
-    Reload,
-    Fail,
-}
+mod default_mode {
+    //! non-watch mode
 
-#[derive(Debug)]
-pub struct PushRetry {
-    pub id: RetryId,
-    pub tg: Typegraph,
-    pub retry_no: u32,
-}
+    use crate::deploy::actors::{
+        loader::LoadModule,
+        push_manager::{PushManager, PushManagerActor, PushManagerBuilder},
+    };
 
-impl Deploy<WatchModeData> {
-    async fn reload_all_from_discovery(&mut self) -> Result<()> {
-        let discovered = self.discovery().await?;
-        if discovered.is_empty() {
-            warn!("No typegraph definition module found.");
-        }
+    use super::*;
 
-        for path in discovered.into_iter() {
-            self.mode_data.queue.push(path);
-        }
-        Ok(())
+    pub struct DefaultMode {
+        deploy: Deploy,
+        console: Addr<ConsoleActor>,
+        loader: Addr<LoaderActor>,
+        loader_event_rx: mpsc::UnboundedReceiver<LoaderEvent>,
+        pusher: Addr<PushManagerActor>,
     }
 
-    async fn file_modified(&mut self, path: PathBuf) -> Result<WatchModeRestart> {
-        if &path == self.config.path.as_ref().unwrap() {
-            warn!("Metatype config file has been modified.");
-            warn!("Reloading everything...");
-            // reload everything
-            return Ok(WatchModeRestart(true));
+    impl DefaultMode {
+        pub async fn init(deploy: Deploy) -> Result<Self> {
+            let console = ConsoleActor::new(Arc::clone(&deploy.config)).start();
+            let secrets =
+                lade_sdk::hydrate(deploy.node.env.clone(), deploy.base_dir.to_path_buf()).await?;
+
+            let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
+
+            let loader = LoaderActor::new(
+                Arc::clone(&deploy.config),
+                PostProcessOptions::default()
+                    .deno_codegen(deploy.options.codegen)
+                    .prisma(
+                        (!deploy.options.no_migration).then_some(
+                            EmbedPrismaMigrations::default()
+                                .create_migration(deploy.options.create_migration),
+                        ),
+                    )
+                    .allow_destructive(deploy.options.allow_destructive),
+                console.clone(),
+                loader_event_tx,
+            )
+            .auto_stop()
+            .start();
+
+            let pusher = PushManagerBuilder::new(console.clone()).start(
+                Arc::clone(&deploy.config),
+                deploy.base_dir.clone(),
+                deploy.node.clone(),
+                secrets,
+            );
+
+            Ok(Self {
+                deploy,
+                console,
+                loader,
+                loader_event_rx,
+                pusher,
+            })
         }
 
-        let w = &mut self.mode_data;
-
-        let rdeps = w.dependency_graph.get_rdeps(&path);
-        if !rdeps.is_empty() {
-            let rel_path = diff_paths(&path, &self.base_dir).unwrap();
-            info!("File modified: {rel_path:?}");
-            for path in rdeps.into_iter() {
-                let rel_path = diff_paths(&path, &self.base_dir).unwrap();
-                info!("- Reloading dependency: {rel_path:?}");
-                w.queue.push(path);
-            }
-            return Ok(WatchModeRestart(false));
-        }
-
-        let mut searcher = SearcherBuilder::new()
-            .binary_detection(BinaryDetection::none())
-            .build();
-
-        if !w.file_filter.is_excluded(&path, &mut searcher) {
-            let rel_path = diff_paths(&path, &self.base_dir).unwrap();
-            info!("Reloading: file modified {:?}...", rel_path);
-            w.retry_manager.cancel_all(&path);
-            w.queue.push(path);
-        }
-        Ok(WatchModeRestart(false))
-    }
-
-    fn file_deleted(&mut self, path: PathBuf) {
-        self.mode_data.dependency_graph.remove_typegraph_at(&path);
-    }
-
-    #[async_recursion]
-    async fn push_typegraph(&mut self, tg: Typegraph, retry_no: u32) {
-        let tg_name = tg.full_name().unwrap().cyan();
-
-        info!(
-            "Pushing typegraph {tg_name}{}...",
-            if retry_no > 0 {
-                format!(" (retry {}/{})", retry_no, self.mode_data.retry_max).dimmed()
+        pub async fn run(self) -> Result<()> {
+            log::debug!("file: {:?}", self.deploy.file);
+            let _discovery = if let Some(file) = self.deploy.file.clone() {
+                self.loader.do_send(LoadModule(file));
+                None
             } else {
-                String::default().dimmed()
-            }
-        );
-        match self.push_config.push(&tg).await {
-            Ok(res) => match self.handle_push_result(res) {
-                HandlePushResult::Success => {}
-                // HandlePushResult::Failure => self.schedule_retry(tg, retry_no + 1),
-                HandlePushResult::Failure => {}
-                HandlePushResult::PushAgain { reset_database } => {
-                    let mut tg = tg;
-                    if !reset_database.is_empty() {
-                        EmbeddedPrismaMigrationOptionsPatch::default()
-                            .reset_on_drift(true)
-                            .apply(&mut tg, reset_database)
-                            .unwrap();
-                    }
-                    info!("Repushing typegraph {tg_name} with new flags.");
-                    self.push_typegraph(tg, 0).await;
-                }
-            },
-            Err(e) => {
-                error!("Error while pushing typegraph {tg_name}: {e:?}");
-                self.schedule_retry(tg, retry_no + 1);
-            }
-        }
-    }
+                Some(
+                    DiscoveryActor::new(
+                        Arc::clone(&self.deploy.config),
+                        self.loader.clone(),
+                        self.console.clone(),
+                        Arc::clone(&self.deploy.base_dir),
+                    )
+                    .start(),
+                )
+            };
 
-    fn schedule_retry(&mut self, tg: Typegraph, retry_no: u32) {
-        if retry_no <= self.mode_data.retry_max {
-            warn!(
-                "Retrying in {} seconds...",
-                self.mode_data.retry_interval.as_secs()
-            );
-            let retry_id = self.mode_data.retry_manager.add(tg.path.clone().unwrap());
-            let retry_tx = self.mode_data.retry_tx.clone();
-            let retry_interval = self.mode_data.retry_interval;
-            tokio::task::spawn(async move {
-                sleep(retry_interval).await;
-                retry_tx
-                    .send(PushRetry {
-                        id: retry_id,
-                        tg,
-                        retry_no,
-                    })
-                    .unwrap();
-            });
-        }
-    }
+            let loader = self.loader.clone();
+            let pusher = self.pusher.clone();
+            self.push_loaded_typegraphs();
 
-    async fn retry(&mut self, retry: PushRetry) -> Result<()> {
-        let state = self
-            .mode_data
-            .retry_manager
-            .remove(retry.id, retry.tg.path.as_ref().unwrap())
-            .with_context(|| {
-                format!("Inconsistent state: retry #{} not found", retry.id.as_u32())
-            })?;
+            let ret = match loader::stopped(loader).await {
+                Ok(StopBehavior::Restart) => unreachable!("LoaderActor should not restart"),
+                Ok(StopBehavior::ExitSuccess) => Ok(()),
+                Ok(StopBehavior::ExitFailure(msg)) => bail!("{msg}"),
+                Err(e) => panic!("Loader actor stopped unexpectedly: {e:?}"),
+            };
 
-        if let RetryState::Cancelled = state {
-            trace!(
-                "Retry #{} has been cancelled for typegraph {} at {:?}",
-                retry.id.as_u32(),
-                retry.tg.full_name().unwrap().cyan(),
-                diff_paths(retry.tg.path.as_ref().unwrap(), &self.base_dir).unwrap()
-            );
-        } else {
-            self.push_typegraph(retry.tg, retry.retry_no).await;
-        }
-        Ok(())
-    }
-
-    async fn run(mut self, file: Option<&PathBuf>) -> Result<WatchModeRestart> {
-        if let Some(file) = &file {
-            error!("Cannot enter watch mode with a single file {:?}:", file);
-            error!("Please re-run without the --file option.");
-            bail!("Cannot enter watch mode with a single file.");
+            log::debug!("loader stopped, stopping pusher");
+            pusher.stop().await?;
+            ret
         }
 
-        info!("Entering watch mode...");
+        fn push_loaded_typegraphs(self) {
+            let pusher = self.pusher.clone();
+            let mut event_rx = self.loader_event_rx;
 
-        self.reload_all_from_discovery().await?;
-
-        // All the operations are sequential
-        // Typegraph reload cancels any queued reload or pending push (retry)
-
-        loop {
-            select! {
-                biased;
-
-                Some(path) = self.mode_data.watcher.next() => {
-                    if path.try_exists()? {
-                        let restart = self.file_modified(path).await?;
-                        if restart.0 {
-                            return Ok(restart);
+            Arbiter::current().spawn(async move {
+                while let Some(event) = event_rx.recv().await {
+                    match event {
+                        LoaderEvent::Typegraph(tg) => {
+                            // TODO await -- no queue
+                            pusher.do_send(Push::new(tg.into()));
                         }
-                    }
-                    else {
-                        self.file_deleted(path);
-                    }
-                }
-
-                Some(retry) = self.mode_data.retry_rx.recv() => {
-                    self.retry(retry).await?;
-                }
-
-                Some(path) = self.mode_data.queue.next() => {
-                    let tgs = Self::load_typegraphs(&path, &self.base_dir, &self.loader, OnRewrite::Skip).await;
-                    match tgs {
-                        Err(e) => error!("{e:?}"),
-                        Ok(tgs) => {
-                            for tg in tgs.into_iter() {
-                                self.mode_data.dependency_graph.update_typegraph(&tg);
-                                self.push_typegraph(tg, 0).await;
+                        LoaderEvent::Stopped(b) => {
+                            if let StopBehavior::ExitFailure(msg) = b {
+                                panic!("{msg}");
                             }
                         }
                     }
                 }
+                log::trace!("Typegraph channel closed.");
+                // pusher address will be dropped when both loops are done
+            });
+        }
+    }
+}
 
+mod watch_mode {
+    use std::time::Duration;
+
+    use crate::deploy::actors::push_manager::{PushManager, PushManagerActor, PushManagerBuilder};
+
+    use super::*;
+
+    pub async fn enter_watch_mode(deploy: Deploy) -> Result<()> {
+        let console = ConsoleActor::new(Arc::clone(&deploy.config)).start();
+
+        let ctrlc_handler_data = Arc::new(Mutex::new(None));
+
+        let data = ctrlc_handler_data.clone();
+        ctrlc::set_handler(move || {
+            let mut data = data.lock().unwrap();
+            if let Some(CtrlCHandlerData { watcher, loader }) = data.take() {
+                watcher.do_send(actors::watcher::Stop);
+                loader.do_send(loader::TryStop(StopBehavior::ExitSuccess));
             }
+        })
+        .context("setting Ctrl-C handler")?;
+
+        loop {
+            let secrets =
+                lade_sdk::hydrate(deploy.node.env.clone(), deploy.base_dir.to_path_buf()).await?;
+
+            let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
+
+            let loader = LoaderActor::new(
+                Arc::clone(&deploy.config),
+                PostProcessOptions::default()
+                    .deno_codegen(deploy.options.codegen)
+                    .prisma(
+                        (!deploy.options.no_migration).then_some(
+                            EmbedPrismaMigrations::default()
+                                .create_migration(deploy.options.create_migration),
+                        ),
+                    )
+                    .allow_destructive(deploy.options.allow_destructive),
+                console.clone(),
+                loader_event_tx,
+            )
+            .start();
+
+            let _discovery = DiscoveryActor::new(
+                Arc::clone(&deploy.config),
+                loader.clone(),
+                console.clone(),
+                Arc::clone(&deploy.base_dir),
+            )
+            .start();
+
+            let (watch_event_tx, watch_event_rx) = mpsc::unbounded_channel();
+
+            let watcher = WatcherActor::new(
+                Arc::clone(&deploy.config),
+                deploy.base_dir.clone(),
+                watch_event_tx,
+                console.clone(),
+            )?
+            .start();
+
+            let pusher = PushManagerBuilder::new(console.clone())
+                .linear_backoff(Duration::from_secs(5), 3)
+                .start(
+                    Arc::clone(&deploy.config),
+                    deploy.base_dir.clone(),
+                    deploy.node.clone(),
+                    secrets,
+                );
+
+            let actor_system = ActorSystem {
+                console: console.clone(),
+                watcher,
+                loader: loader.clone(),
+                pusher: pusher.clone(),
+            };
+
+            actor_system.push_loaded_typegraphs(loader_event_rx);
+            actor_system.handle_watch_events(watch_event_rx);
+            actor_system.update_ctrlc_handler(ctrlc_handler_data.clone());
+
+            // TODO wait for push lifecycle
+            match loader::stopped(loader).await {
+                Ok(StopBehavior::ExitSuccess) => {
+                    pusher.stop().await?;
+                    break;
+                }
+                Ok(StopBehavior::Restart) => {
+                    pusher.stop().await?;
+                    continue;
+                }
+                Ok(StopBehavior::ExitFailure(_)) => {
+                    pusher.stop().await?;
+                    break;
+                }
+                Err(e) => {
+                    panic!("Loader actor stopped unexpectedly: {e:?}");
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    struct ActorSystem {
+        console: Addr<ConsoleActor>,
+        watcher: Addr<WatcherActor>,
+        loader: Addr<LoaderActor>,
+        pusher: Addr<PushManagerActor>,
+    }
+
+    impl ActorSystem {
+        fn push_loaded_typegraphs(&self, event_rx: mpsc::UnboundedReceiver<LoaderEvent>) {
+            let pusher = self.pusher.clone();
+            Arbiter::current().spawn(async move {
+                let mut event_rx = event_rx;
+                while let Some(event) = event_rx.recv().await {
+                    match event {
+                        LoaderEvent::Typegraph(tg) => {
+                            pusher.do_send(Push::new(tg.into()));
+                            // TODO update deps
+                        }
+                        LoaderEvent::Stopped(b) => {
+                            if let StopBehavior::ExitFailure(msg) = b {
+                                panic!("{msg}");
+                            }
+                        }
+                    }
+                }
+                log::trace!("Typegraph channel closed.");
+                // pusher address will be dropped when both loops are done
+            });
+        }
+
+        fn handle_watch_events(
+            &self,
+            watch_event_rx: mpsc::UnboundedReceiver<actors::watcher::Event>,
+        ) {
+            let console = self.console.clone();
+            let watcher = self.watcher.clone();
+            let loader = self.loader.clone();
+            let pusher = self.pusher.clone();
+            Arbiter::current().spawn(async move {
+                let mut watch_event_rx = watch_event_rx;
+                while let Some(event) = watch_event_rx.recv().await {
+                    use actors::watcher::Event as E;
+                    match event {
+                        E::ConfigChanged => {
+                            console.warning("Metatype configuration file changed.".to_string());
+                            console.warning("Reloading everything.".to_string());
+
+                            loader.do_send(loader::TryStop(StopBehavior::Restart));
+                            watcher.do_send(actors::watcher::Stop);
+                        }
+                        E::TypegraphModuleChanged { typegraph_module } => {
+                            pusher.cancel_all_from(&typegraph_module).await.unwrap();
+                            loader.do_send(ReloadModule(
+                                typegraph_module.into(),
+                                ReloadReason::FileChanged,
+                            ));
+                        }
+                        E::TypegraphModuleDeleted { typegraph_module } => {
+                            // TODO registry
+                            pusher.cancel_all_from(&typegraph_module).await.unwrap();
+                            // TODO internally by the watcher??
+                            watcher.do_send(actors::watcher::RemoveTypegraph(
+                                typegraph_module.clone(),
+                            ));
+                            // TODO delete typegraph in typegate??
+                        }
+                        E::DependencyChanged {
+                            typegraph_module,
+                            dependency_path,
+                        } => {
+                            pusher.cancel_all_from(&typegraph_module).await.unwrap();
+                            loader.do_send(ReloadModule(
+                                typegraph_module.into(),
+                                ReloadReason::DependencyChanged(dependency_path),
+                            ));
+                        }
+                    }
+                }
+                log::trace!("Watcher event channel closed.");
+            });
+        }
+
+        fn update_ctrlc_handler(&self, data: Arc<Mutex<Option<CtrlCHandlerData>>>) {
+            *data.lock().unwrap() = Some(CtrlCHandlerData {
+                watcher: self.watcher.clone(),
+                loader: self.loader.clone(),
+            });
         }
     }
 }

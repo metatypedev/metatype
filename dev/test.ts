@@ -78,7 +78,7 @@ const tmpDir = join(projectDir, "tmp");
 const env: Record<string, string> = {
   "RUST_LOG": "off,xtask=debug,meta=debug",
   "LOG_LEVEL": "DEBUG",
-  "NO_COLOR": "1",
+  // "NO_COLOR": "1",
   "DEBUG": "true",
   "PACKAGED": "false",
   "TG_SECRET":
@@ -87,7 +87,7 @@ const env: Record<string, string> = {
   "REDIS_URL": "redis://:password@localhost:6379/0",
   "DENO_TESTING": "true",
   "TMP_DIR": tmpDir,
-  "TIMER_MAX_TIMEOUT_MS": "15000",
+  "TIMER_MAX_TIMEOUT_MS": "30000",
 };
 
 await Deno.mkdir(tmpDir, { recursive: true });

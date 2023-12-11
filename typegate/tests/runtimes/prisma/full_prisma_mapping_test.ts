@@ -678,7 +678,11 @@ Meta.test("prisma full mapping", async (t) => {
     await gql`
         mutation {
           createOneComment(
-            data: { id: 50001, content: "good", related_post: {connect: {id: 10001}} }
+            data: {
+              id: 50001,
+              content: "good",
+              related_post: { connect: { id: 10001 }},
+              author: { connect: { id: 1 } } }
           ) {
             id
             content

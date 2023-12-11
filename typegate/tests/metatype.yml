@@ -2,28 +2,43 @@
 # TODO : isolate inside a folder
 
 typegates:
-  deploy:
-    url: "http://localhost:7895"
-    username: admin
-    password: password
-    env:
-      TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e"
-      TG_MIGRATION_FAILURE_TEST_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e2"
-
   with_prefix:
-    url: "http://localhost:7895"
+    url: "http://localhost:7894"
     username: admin
     password: password
     env:
-      TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e"
+      TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
     prefix: pref-
 
-  dev:
+  dev: &dev
     url: "http://localhost:7890"
     username: admin
     password: password
     env: 
+      TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e"
       TG_MIGRATION_FAILURE_TEST_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e2"
+
+  dev7895:
+    <<: *dev
+    url: "http://localhost:7895"
+    env:
+      TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7895"
+      TG_MIGRATION_FAILURE_TEST_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7895alt"
+
+  dev7896:
+    <<: *dev
+    url: "http://localhost:7896"
+    env:
+      TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7896"
+      TG_MIGRATION_FAILURE_TEST_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7896alt"
+
+  dev7897:
+    url: "http://localhost:7897"
+    <<: *dev
+    env:
+      TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7897"
+      TG_MIGRATION_FAILURE_TEST_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7897alt"
+
 
 typegraphs:
   materializers:

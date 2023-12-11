@@ -20,9 +20,9 @@ pub(crate) mod deploy;
 pub(crate) mod dev;
 pub(crate) mod doctor;
 pub(crate) mod new;
-pub(crate) mod prisma;
 pub(crate) mod serialize;
 pub(crate) mod typegate;
+pub(crate) mod undeploy;
 pub(crate) mod upgrade;
 
 #[derive(Parser, Debug)]
@@ -63,12 +63,12 @@ impl GenArgs {
 pub(crate) enum Commands {
     /// Serialize the typegraphs defined in the specified python file(s) into JSON.
     Serialize(serialize::Serialize),
-    /// Manage prisma migration
-    Prisma(prisma::Prisma),
     /// Push typegraph(s) with development mode features enabled
     Dev(dev::Dev),
     /// Push typegraph(s) to typegate
     Deploy(deploy::DeploySubcommand),
+    /// Undeploy typegraph(s) from typegate
+    Undeploy(undeploy::Undeploy),
     /// Generate materializers code from typegraph definition
     Codegen(codegen::Codegen),
     /// Upgrade

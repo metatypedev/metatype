@@ -37,7 +37,7 @@ snapshot[`GraphQL parser 1`] = `
     as_id: false,
     config: {},
     input: 3,
-    materializer: 0,
+    materializer: 1,
     output: 5,
     policies: [
       0,
@@ -45,7 +45,7 @@ snapshot[`GraphQL parser 1`] = `
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "func_6",
+    title: "func_7",
     type: "function",
   },
   {
@@ -101,7 +101,7 @@ snapshot[`GraphQL parser 1`] = `
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "func_8",
+    title: "func_9",
     type: "function",
   },
   {
@@ -129,7 +129,7 @@ snapshot[`GraphQL parser 1`] = `
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "func_11",
+    title: "func_12",
     type: "function",
   },
   {
@@ -178,7 +178,7 @@ snapshot[`GraphQL parser 1`] = `
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "func_13",
+    title: "func_14",
     type: "function",
   },
   {

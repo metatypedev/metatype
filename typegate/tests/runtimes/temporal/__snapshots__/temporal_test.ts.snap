@@ -27,7 +27,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "function",
-        "title": "func_6",
+        "title": "func_27",
         "runtime": 1,
         "policies": [
           0
@@ -63,7 +63,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "list",
-        "title": "array_3",
+        "title": "list_3",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -100,7 +100,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "function",
-        "title": "func_12",
+        "title": "func_28",
         "runtime": 1,
         "policies": [
           0
@@ -145,7 +145,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "list",
-        "title": "array_9",
+        "title": "list_9",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -162,7 +162,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "function",
-        "title": "func_21",
+        "title": "func_29",
         "runtime": 1,
         "policies": [
           0
@@ -191,7 +191,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "string",
-        "title": "string_13",
+        "title": "string_19",
         "runtime": 1,
         "policies": [],
         "injection": {
@@ -213,7 +213,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "list",
-        "title": "array_15",
+        "title": "list_15",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -230,7 +230,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "function",
-        "title": "func_26",
+        "title": "func_30",
         "runtime": 1,
         "policies": [
           0
@@ -408,7 +408,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "function",
-        "title": "func_6",
+        "title": "func_7",
         "runtime": 1,
         "policies": [
           0
@@ -444,7 +444,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "list",
-        "title": "array_3",
+        "title": "list_3",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -481,7 +481,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "function",
-        "title": "func_13",
+        "title": "func_14",
         "runtime": 1,
         "policies": [
           0
@@ -526,7 +526,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "list",
-        "title": "array_10",
+        "title": "list_10",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -543,7 +543,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "function",
-        "title": "func_23",
+        "title": "func_24",
         "runtime": 1,
         "policies": [
           0
@@ -572,7 +572,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "string",
-        "title": "string_15",
+        "title": "string_21",
         "runtime": 1,
         "policies": [],
         "injection": {
@@ -594,7 +594,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "list",
-        "title": "array_17",
+        "title": "list_17",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -611,7 +611,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "function",
-        "title": "func_29",
+        "title": "func_30",
         "runtime": 1,
         "policies": [
           0
