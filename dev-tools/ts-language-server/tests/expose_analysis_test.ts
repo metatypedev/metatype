@@ -9,13 +9,14 @@ import {
 import { analyzeExposeExpression } from "../src/analysis/exposed_function.ts";
 import { ScopeManager } from "../src/analysis/typescript-semantic/scope.ts";
 import { ModuleDiagnosticsContext } from "../src/analysis/diagnostics/context.ts";
+import { assertSnapshot } from "std/testing/snapshot.ts";
 
 await Parser.init();
 const TypeScript = await Parser.Language.load(
   join(testDir, "../grammars/typescript.wasm"),
 );
 
-Deno.test("semantic analysis of expose", async (_t) => {
+Deno.test("semantic analysis of expose", async (t) => {
   const fileUri = new URL("typegraphs/apply_deno.ts", import.meta.url);
   const codeBuf = await Deno.readFile(fileUri);
   const code = new TextDecoder().decode(codeBuf);
@@ -45,7 +46,8 @@ Deno.test("semantic analysis of expose", async (_t) => {
   //   console.log("expose", exposed.name, "input:", exposed.inputType.toString());
   // }
 
-  console.log(ctx.diagnostics);
+  await assertSnapshot(t, ctx.diagnostics);
+
   // const exposed = typegraphDef.findExposedFunctions();
   // const analysisResult = exposed.map(([name, node]) => {
   //   const res = analyzeExposeExpression(node);

@@ -1,0 +1,21 @@
+export const snapshot = {};
+
+snapshot[`semantic analysis of expose 1`] = `
+[
+  {
+    message: "expected only one parameter for the typegraph builder",
+    range: {
+      end: {
+        character: 27,
+        line: 4,
+      },
+      start: {
+        character: 21,
+        line: 4,
+      },
+    },
+    severity: 1,
+    source: "typegraph",
+  },
+]
+`;
