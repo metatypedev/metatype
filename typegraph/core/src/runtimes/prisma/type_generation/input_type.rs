@@ -67,7 +67,17 @@ impl TypeGen for InputType {
                         },
                         operation: Operation::Create,
                     })?;
+                    let create = match prop.quantifier {
+                        Cardinality::Many => t::unionx!(create, t::list(create)).build()?,
+                        _ => create,
+                    };
+
                     let connect = context.generate(&Where::new(prop.model_id))?;
+                    let connect = match prop.quantifier {
+                        Cardinality::Many => t::unionx!(connect, t::list(connect)).build()?,
+                        _ => connect,
+                    };
+
                     let connect_or_create = t::struct_()
                         .prop("create", create)
                         .prop("where", connect)
