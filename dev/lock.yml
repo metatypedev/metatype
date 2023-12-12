@@ -34,7 +34,6 @@ dev:
     dev/Dockerfile:
       (ARG DENO_VERSION=).*(): DENO_VERSION
       (ARG RUST_VERSION=).*(): RUST_VERSION
-      (ARG WASMEDGE_VERSION=).*(): WASMEDGE_VERSION
       (ARG GHJK_VERSION=).*(): GHJK_VERSION
     typegate/src/typegraph/versions.ts:
       (const typegraphVersion = ").*(";): TYPEGRAPH_VERSION

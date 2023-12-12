@@ -18,10 +18,7 @@ RUN cargo chef prepare --recipe-path recipe.json
 # provides ARM binaries: https://github.com/LukeChannings/deno-arm64
 FROM lukechannings/deno:v${DENO_VERSION} AS deno-bin
 
-#
 FROM base AS builder
-
-ARG WASMEDGE_VERSION=0.13.5
 
 ENV DENO_DIR /deno-dir/
 ENV DENO_INSTALL /root/.deno
@@ -40,17 +37,11 @@ RUN set -eux; \
         # openssl deps \
         pkg-config \
         libssl-dev \
-        # wasmedge deps \
-        libclang-dev \
         # asdf deps
         xz-utils \
         unzip \
         ; \
-    apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/; \
-    # FIXME: bug in ghjk wasmedge port
-    curl -fsS https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh -o wasmedge.sh; \
-    bash wasmedge.sh -v $WASMEDGE_VERSION; \
-    rm wasmedge.sh; 
+    apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
 ARG GHJK_VERSION=b25b35
 RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
@@ -90,7 +81,8 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TAR
 RUN chmod +x /tini \
     && mkdir -p /lib/sym \
     && ln -s /lib/aarch64-linux-gnu /lib/sym/arm64 \
-    && ln -s /lib/x86_64-linux-gnu /lib/sym/amd64
+    && ln -s /lib/x86_64-linux-gnu /lib/sym/amd64 \
+    && cp $(dirname $(realpath $(which wasmedge)))/.. /root/.wasmedge -r
 
 #
 FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG} as prd
@@ -98,14 +90,14 @@ FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG} as prd
 ARG TARGETARCH
 
 ENV NO_COLOR true
-ENV LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:/nonroot/.wasmedge/lib"
 ENV DENO_DIR /deno-dir/
+ENV LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:/nonroot/.wasmedge/lib"
 
 WORKDIR /app
 
 COPY --from=runtime-bin /tini /tini
 COPY --from=runtime-bin /lib/sym /lib/sym
-COPY --from=builder /root/.wasmedge /nonroot/.wasmedge
+COPY --from=runtime-bin /root/.wasmedge /nonroot/.wasmedge
 COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 
 COPY --from=builder /app/target/release/typegate /bin/typegate
