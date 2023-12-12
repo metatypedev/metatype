@@ -9,7 +9,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "b25b35"
+  GHJK_VERSION: "92cd571"
   PYTHON_VERSION: "3.8"
   DENO_VERSION: "1.38.1"
   WASMEDGE_VERSION: "0.12.1"
