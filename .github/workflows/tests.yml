@@ -9,7 +9,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "v0.1.0-alpha"
+  GHJK_VERSION: "b25b35"
   PYTHON_VERSION: "3.8"
   DENO_VERSION: "1.38.1"
   WASMEDGE_VERSION: "0.12.1"
@@ -87,11 +87,6 @@ jobs:
           pnpm install --frozen-lockfile
           cd ..
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
-
-          # FIXME: bug from wasmedge ghjk port
-          ln -s $(dirname $WASMEDGE_LIB_DIR) ~/.wasmedge
-          # FIXME: alias ld to mold from within ghjk
-          sudo ln -sf "$(which mold)" "$(realpath /usr/bin/ld)"
       - uses: pre-commit/action@v3.0.0
 
   test-website:
@@ -189,14 +184,10 @@ jobs:
 
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
 
-          # FIXME: bug from wasmedge ghjk port
-          ln -s $(dirname $WASMEDGE_LIB_DIR) ~/.wasmedge
-          # FIXME: alias ld to mold from within ghjk
-          sudo ln -sf "$(which mold)" "$(realpath /usr/bin/ld)"
-
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
           mkdir -p $(dirname $WASM_FILE)
-          wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+          wasm-opt -Oz target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE.opt
+          wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
           rm -rf typegraph/python/typegraph/gen
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
@@ -328,14 +319,10 @@ jobs:
 
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
 
-          # FIXME: bug from wasmedge ghjk port
-          ln -s $(dirname $WASMEDGE_LIB_DIR) ~/.wasmedge
-          # FIXME: alias ld to mold from within ghjk
-          sudo ln -sf "$(which mold)" "$(realpath /usr/bin/ld)"
-
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
           mkdir -p $(dirname $WASM_FILE)
-          wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+          wasm-opt -Oz target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE.opt
+          wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
           rm -rf typegraph/deno/src/gen
           jco transpile $WASM_FILE -o typegraph/deno/src/gen
           deno run -A typegraph/deno/dev/fix-declarations.ts

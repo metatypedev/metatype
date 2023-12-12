@@ -45,10 +45,6 @@ RUN set -eux; \
         # asdf deps
         xz-utils \
         unzip \
-        # poetry deps \
-        python3 \
-        python3-setuptools \
-        python3-venv \
         ; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/; \
     # FIXME: bug in ghjk wasmedge port
@@ -56,11 +52,11 @@ RUN set -eux; \
     bash wasmedge.sh -v $WASMEDGE_VERSION; \
     rm wasmedge.sh; 
 
-ARG GHJK_VERSION=main
-RUN GHJK_EXE_INSTALL_DIR=/usr/bin SHELL=/bin/bash deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
+ARG GHJK_VERSION=b25b35
+RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
 COPY ghjk.ts .
-RUN ghjk ports sync
+RUN CI=1 NO_PYTHON=1 ghjk ports sync
 ENV BASH_ENV=/root/.local/share/ghjk/env.sh
 SHELL [ "/bin/bash", "-c"]
 
