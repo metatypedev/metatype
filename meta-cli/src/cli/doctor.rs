@@ -16,7 +16,6 @@ use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
 use colored::Colorize;
-use common::get_version;
 use std::process::Command;
 
 #[derive(Parser, Debug)]
@@ -51,7 +50,7 @@ impl Action for Doctor {
             "global config",
             &GlobalConfig::default_path()?.display().to_string(),
         );
-        ui::cols(c, "meta-cli version", get_version());
+        ui::cols(c, "meta-cli version", crate::build::PKG_VERSION);
         match shell(vec!["docker", "--version"]) {
             Ok(s) => {
                 ui::cols(c, "docker version", &s);

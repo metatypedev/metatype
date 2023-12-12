@@ -36,6 +36,10 @@ typescript.workspace = true
 wasmedge-sdk.workspace = true
 wasmedge-sys.workspace = true
 wasmedge-types.workspace = true
+shadow-rs.workspace = true
 
 [dev-dependencies]
 env_logger.workspace = true
+
+[build-dependencies]
+shadow-rs.workspace = true
