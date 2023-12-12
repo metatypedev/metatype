@@ -1,5 +1,5 @@
 ARG RUST_VERSION=1.73.0
-ARG DENO_VERSION=1.38.2
+ARG DENO_VERSION=1.38.1
 ARG DISTROLESS_TAG=debug-nonroot
 
 # must match distroless version
@@ -21,7 +21,7 @@ FROM lukechannings/deno:v${DENO_VERSION} AS deno-bin
 #
 FROM base AS builder
 
-ARG WASMEDGE_VERSION=0.12.1
+ARG WASMEDGE_VERSION=0.13.5
 
 ENV DENO_DIR /deno-dir/
 ENV DENO_INSTALL /root/.deno

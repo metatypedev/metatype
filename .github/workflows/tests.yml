@@ -11,7 +11,7 @@ on:
 env:
   GHJK_VERSION: "v0.1.0-alpha"
   PYTHON_VERSION: "3.8"
-  DENO_VERSION: "1.38.2"
+  DENO_VERSION: "1.38.1"
   WASMEDGE_VERSION: "0.12.1"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
@@ -245,7 +245,7 @@ jobs:
     if: ${{ needs.changes.outputs.full == 'true' }}
     runs-on:
       - self-hosted # https://check-jsonschema.readthedocs.io/en/latest/faq.html#using-self-hosted-runners
-      - custom-linux
+      - custom-ubuntu-large
     timeout-minutes: 60
     services:
       redis:

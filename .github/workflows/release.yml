@@ -6,11 +6,11 @@ on:
 env:
   PYTHON_VERSION: "3.8"
   POETRY_VERSION: "1.7.0"
-  DENO_VERSION: "1.38.2"
+  DENO_VERSION: "1.38.1"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
   WASM_TOOLS_VERSION: "1.0.53"
   JCO_VERSION: "0.12.1"
-  WASMEDGE_VERSION: "0.12.1"
+  WASMEDGE_VERSION: "0.13.5"
   WASM_OPT_VERSION: "0.116.0"
   PNPM_VERSION: "8.8.0"
 
@@ -25,20 +25,20 @@ jobs:
         with:
           deno-version: v${{ env.DENO_VERSION }}
       - uses: kenji-miyake/setup-git-cliff@v1
-      - id: checks
-        run: |
+      - run: |
           VERSION=$(deno run -A dev/lock.ts --version)
           if [[ "${{ github.ref_name }}" != "v$VERSION" ]]; then
             echo "Tag ${{ github.ref_name }} does not match code version v$VERSION, stopping."
             exit -1
           fi
           echo "Releasing v$VERSION"
-          echo "release_note=$(git cliff --latest --strip header)" >> $GITHUB_OUTPUT
+          git cliff --latest --strip header --output CHANGE.md
+          cat CHANGE.md
       - uses: ncipollo/release-action@v1
         with:
           tag: ${{ github.ref_name }}
           makeLatest: true
-          body: ${{ steps.checks.outputs.release_note }}
+          bodyFile: "CHANGE.md"
           discussionCategory: "Announcements"
 
   meta-cli:
@@ -123,6 +123,7 @@ jobs:
           cargo install wasm-opt --version $WASM_OPT_VERSION --locked
 
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm --release
+          mkdir -p $(dirname $WASM_FILE)
           wasm-opt -Oz target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE.opt
           wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
 
