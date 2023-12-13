@@ -52,6 +52,12 @@ function parsePath(pathname: string): [string, string | undefined] {
   return [engineName, serviceName];
 }
 
+export type PushResult = {
+  name: string;
+  engine: QueryEngine | null;
+  response: PushResponse;
+};
+
 export class Typegate {
   #onPushHooks: PushHandler[] = [];
 
@@ -186,7 +192,7 @@ export class Typegate {
     secrets: Record<string, string>,
     enableIntrospection: boolean,
     system = false,
-  ): Promise<[QueryEngine, PushResponse]> {
+  ): Promise<PushResult> {
     const name = TypeGraph.formatName(tgJson);
 
     if (SystemTypegraph.check(name)) {
@@ -217,7 +223,11 @@ export class Typegate {
     );
 
     if (pushResponse.failure) {
-      throw new Error(`Push failed: ${pushResponse.failure.message}`);
+      return {
+        name,
+        engine: null,
+        response: pushResponse,
+      };
     }
 
     logger.info(`Initializing engine '${name}'`);
@@ -231,7 +241,11 @@ export class Typegate {
     logger.info(`Registering engine '${name}'`);
     await this.register.add(engine);
 
-    return [engine, pushResponse];
+    return {
+      name,
+      engine,
+      response: pushResponse,
+    };
   }
 
   async initQueryEngine(

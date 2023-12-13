@@ -396,7 +396,7 @@ impl Handler<PushResult> for PusherActor {
                                 rt = runtime_name.magenta(),
                                 name = name.cyan()
                             ),
-                            ConfirmDatabaseRequired {
+                            ConfirmDatabaseResetRequired {
                                 runtime_name: runtime_name.clone(),
                                 typegraph,
                             },
@@ -416,12 +416,12 @@ impl Handler<PushResult> for PusherActor {
 }
 
 #[derive(Debug)]
-struct ConfirmDatabaseRequired {
+struct ConfirmDatabaseResetRequired {
     runtime_name: String,
     typegraph: Arc<Typegraph>,
 }
 
-impl ConfirmHandler for ConfirmDatabaseRequired {
+impl ConfirmHandler for ConfirmDatabaseResetRequired {
     fn on_confirm(&self, push_manager: Addr<PushManagerActor>) {
         let mut typegraph = (*self.typegraph).clone();
         EmbeddedPrismaMigrationOptionsPatch::default()
