@@ -112,16 +112,17 @@ jobs:
       - uses: metatypedev/ghjk@v0.1.0-alpha
         with:
           installer-uri:  https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
-      - env:
+      - name: Cache ghjk dir
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.GHJK_DIR }}
+          key: ghjk-${{ hashFiles('ghjk.ts') }}
+      - shell: bash
+        env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           WASM_FILE: target/release/typegraph_core.wasm
         run: |
-          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
-          export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
-          cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
-          cargo install wasm-opt --version $WASM_OPT_VERSION --locked
-
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm --release
           mkdir -p $(dirname $WASM_FILE)
           wasm-opt -Oz target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE.opt
