@@ -4,15 +4,10 @@ on:
       - v*
 
 env:
+  GHJK_VERSION: "01c6cb8"
   PYTHON_VERSION: "3.8"
-  POETRY_VERSION: "1.7.0"
   DENO_VERSION: "1.38.1"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
-  WASM_TOOLS_VERSION: "1.0.53"
-  JCO_VERSION: "0.12.1"
-  WASMEDGE_VERSION: "0.13.5"
-  WASM_OPT_VERSION: "0.116.0"
-  PNPM_VERSION: "8.8.0"
 
 jobs:
   check-bump:
@@ -109,14 +104,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "poetry"
-      - uses: metatypedev/ghjk@v0.1.0-alpha
-        with:
-          installer-uri:  https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
-      - name: Cache ghjk dir
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.GHJK_DIR }}
-          key: ghjk-${{ hashFiles('ghjk.ts') }}
+      - uses: metatypedev/ghjk@01c6cb8727cb8f8cf6fa3bb9279429fb7c7f8046
       - shell: bash
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}

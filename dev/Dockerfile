@@ -1,6 +1,9 @@
 ARG RUST_VERSION=1.73.0
 ARG DENO_VERSION=1.38.1
+# disable SHELL cmd down below if switching to non-debug
 ARG DISTROLESS_TAG=debug-nonroot
+ARG GHJK_VERSION=01c6cb8
+ARG TINI_VERSION=v0.19.0
 
 # must match distroless debian version
 FROM rust:${RUST_VERSION}-slim-bullseye AS base
@@ -48,7 +51,6 @@ RUN set -eux; \
         ; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
-ARG GHJK_VERSION=f5216cc
 RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
 COPY ghjk.ts .
@@ -88,7 +90,6 @@ EOT
 FROM builder AS runtime-bin
 
 ARG TARGETARCH
-ARG TINI_VERSION=v0.19.0
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TARGETARCH} /tini
 
@@ -104,6 +105,8 @@ EOT
 #
 FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG} as prd
 
+SHELL ["/busybox/sh", "-c"]
+
 ARG TARGETARCH
 
 ENV NO_COLOR true
@@ -115,7 +118,6 @@ WORKDIR /app
 COPY --from=runtime-bin /tini /tini
 COPY --from=runtime-bin /lib/sym /lib/sym
 COPY --from=runtime-bin /.wasmedge /.wasmedge
-SHELL ["/busybox/sh", "-c"]
 COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 
 COPY --from=builder /app/target/release/typegate /bin/typegate

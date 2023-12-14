@@ -1,17 +1,17 @@
-export { ghjk } from "https://raw.github.com/metatypedev/ghjk/f5216cc/mod.ts";
+export { ghjk } from "https://raw.github.com/metatypedev/ghjk/01c6cb8/mod.ts";
 
-import wasmedge from "https://raw.github.com/metatypedev/ghjk/f5216cc/ports/wasmedge.ts";
-import pnpm from "https://raw.github.com/metatypedev/ghjk/f5216cc/ports/pnpm.ts";
-import jco from "https://raw.github.com/metatypedev/ghjk/f5216cc/ports/jco.ts";
-import mold from "https://raw.github.com/metatypedev/ghjk/f5216cc/ports/mold.ts";
-import wasm_tools from "https://raw.github.com/metatypedev/ghjk/f5216cc/ports/wasm-tools.ts";
-import wasm_opt from "https://raw.github.com/metatypedev/ghjk/f5216cc/ports/wasm-opt.ts";
-import cargo_insta from "https://raw.github.com/metatypedev/ghjk/f5216cc/ports/cargo-insta.ts";
-import asdf from "https://raw.github.com/metatypedev/ghjk/f5216cc/ports/asdf.ts";
-import protoc from "https://raw.github.com/metatypedev/ghjk/f5216cc/ports/protoc.ts";
-import act from "https://raw.github.com/metatypedev/ghjk/f5216cc/ports/act.ts";
-import whiz from "https://raw.github.com/metatypedev/ghjk/f5216cc/ports/whiz.ts";
-// import node from "https://raw.github.com/metatypedev/ghjk/f5216cc/ports/node.ts";
+import wasmedge from "https://raw.github.com/metatypedev/ghjk/01c6cb8/ports/wasmedge.ts";
+import pnpm from "https://raw.github.com/metatypedev/ghjk/01c6cb8/ports/pnpm.ts";
+import jco from "https://raw.github.com/metatypedev/ghjk/01c6cb8/ports/jco.ts";
+import mold from "https://raw.github.com/metatypedev/ghjk/01c6cb8/ports/mold.ts";
+import wasm_tools from "https://raw.github.com/metatypedev/ghjk/01c6cb8/ports/wasm-tools.ts";
+import wasm_opt from "https://raw.github.com/metatypedev/ghjk/01c6cb8/ports/wasm-opt.ts";
+import cargo_insta from "https://raw.github.com/metatypedev/ghjk/01c6cb8/ports/cargo-insta.ts";
+import asdf from "https://raw.github.com/metatypedev/ghjk/01c6cb8/ports/asdf.ts";
+import protoc from "https://raw.github.com/metatypedev/ghjk/01c6cb8/ports/protoc.ts";
+import act from "https://raw.github.com/metatypedev/ghjk/01c6cb8/ports/act.ts";
+import whiz from "https://raw.github.com/metatypedev/ghjk/01c6cb8/ports/whiz.ts";
+// import node from "https://raw.github.com/metatypedev/ghjk/01c6cb8/ports/node.ts";
 
 const PROTOC_VERSION = "v25.1";
 const POETRY_VERSION = "1.7.0";

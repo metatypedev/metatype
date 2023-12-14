@@ -9,10 +9,9 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "f5216cc"
+  GHJK_VERSION: "01c6cb8"
   PYTHON_VERSION: "3.8"
   DENO_VERSION: "1.38.1"
-  WASMEDGE_VERSION: "0.12.1"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
 
@@ -69,18 +68,17 @@ jobs:
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
+          # use custom shared key to share cache across jobs
+          # default prefix includes job-id otherwise
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/ghjk@v0.1.0-alpha
-        with:
-          installer-uri:  https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
-      - name: Cache ghjk dir
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.GHJK_DIR }}
-          key: ghjk-${{ hashFiles('ghjk.ts') }}
+      # cant use github vars like action/myaction@$ACTION_VERSION
+      # it also requires the full sha when referencing commits
+      # https://github.com/actions/toolkit/blob/master/docs/action-versioning.md
+      # currently using the dev/lock.ts script to mantain this
+      - uses: metatypedev/ghjk@01c6cb8727cb8f8cf6fa3bb9279429fb7c7f8046
       - shell: bash
         run: |
           cd website
@@ -106,14 +104,7 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      - uses: metatypedev/ghjk@v0.1.0-alpha
-        with:
-          installer-uri:  https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
-      - name: Cache ghjk dir
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.GHJK_DIR }}
-          key: ghjk-${{ hashFiles('ghjk.ts') }}
+      - uses: metatypedev/ghjk@01c6cb8727cb8f8cf6fa3bb9279429fb7c7f8046
       - name: Cache .venv dir
         uses: actions/cache@v3
         with:
@@ -161,14 +152,7 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: metatypedev/ghjk@v0.1.0-alpha
-        with:
-          installer-uri:  https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
-      - name: Cache ghjk dir
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.GHJK_DIR }}
-          key: ghjk-mac-${{ hashFiles('ghjk.ts') }}
+      - uses: metatypedev/ghjk@01c6cb8727cb8f8cf6fa3bb9279429fb7c7f8046
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -296,14 +280,7 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: metatypedev/ghjk@v0.1.0-alpha
-        with:
-          installer-uri:  https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
-      - name: Cache ghjk dir
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.GHJK_DIR }}
-          key: ghjk-${{ hashFiles('ghjk.ts') }}
+      - uses: metatypedev/ghjk@01c6cb8727cb8f8cf6fa3bb9279429fb7c7f8046
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm

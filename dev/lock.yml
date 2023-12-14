@@ -20,8 +20,9 @@ dev:
       (const\s+CARGO_INSTA_VERSION\s*=\s*").*(";): CARGO_INSTA_VERSION
     .github/*/*.yml:
       '(  GHJK_VERSION: ").+(")': GHJK_VERSION
-      '(  POETRY_VERSION: ").+(")': POETRY_VERSION
       '(  DENO_VERSION: ").+(")': DENO_VERSION
+      '(  PYTHON_VERSION: ").+(")': PYTHON_VERSION
+      '([\s-]+uses:\s+metatypedev/ghjk@).+()': GHJK_ACTION_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
     typegraph/python/pyproject.toml:
@@ -60,7 +61,8 @@ dev:
     examples/**/*.ts:
       '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': PUBLISHED_VERSION
   lock:
-    GHJK_VERSION: f5216cc
+    GHJK_VERSION: 01c6cb8
+    GHJK_ACTION_VERSION: 01c6cb8727cb8f8cf6fa3bb9279429fb7c7f8046
     PYTHON_VERSION: '3.8'
     POETRY_VERSION: 1.7.0
     PROTOC_VERSION: v25.1
