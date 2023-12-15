@@ -62,10 +62,8 @@ pub async fn run(
     );
 
     let flags = args::Flags {
-        // subcommand: args::DenoSubcommand::Run(args::RunFlags {
-        //     script: main_module.path().to_owned(),
-        //     watch: None,
-        // }),
+        // NOTE: avoid using the Run subcommand
+        // as it breaks our custom_extensions patch for some reason
         import_map_path: import_map_url,
         unstable: true,
         ..Default::default()
