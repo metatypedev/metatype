@@ -14,7 +14,7 @@ import act from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/act.ts";
 import whiz from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/whiz.ts";
 // import node from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/node.ts";
 
-const PROTOC_VERSION = "v25.1";
+const PROTOC_VERSION = "v24.x";
 const POETRY_VERSION = "1.7.0";
 const PNPM_VERSION = "v8.8.0";
 const WASM_TOOLS_VERSION = "1.0.53";

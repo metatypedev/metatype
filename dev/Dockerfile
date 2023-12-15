@@ -1,6 +1,6 @@
-ARG RUST_VERSION=1.73.0
-ARG DENO_VERSION=1.38.1
 # disable SHELL cmd down below if switching to non-debug
+ARG RUST_VERSION=1.74.1
+ARG DENO_VERSION=1.39.0
 ARG DISTROLESS_TAG=debug-nonroot
 
 # must match distroless debian version

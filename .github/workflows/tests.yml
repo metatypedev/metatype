@@ -11,7 +11,7 @@ on:
 env:
   GHJK_VERSION: "6040bb3"
   PYTHON_VERSION: "3.8"
-  DENO_VERSION: "1.38.1"
+  DENO_VERSION: "1.39.0"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
 
