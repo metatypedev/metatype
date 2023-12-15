@@ -2,8 +2,6 @@ ARG RUST_VERSION=1.73.0
 ARG DENO_VERSION=1.38.1
 # disable SHELL cmd down below if switching to non-debug
 ARG DISTROLESS_TAG=debug-nonroot
-ARG GHJK_VERSION=01c6cb8
-ARG TINI_VERSION=v0.19.0
 
 # must match distroless debian version
 FROM rust:${RUST_VERSION}-slim-bullseye AS base
@@ -51,6 +49,7 @@ RUN set -eux; \
         ; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
+ARG GHJK_VERSION=6040bb3
 RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
 COPY ghjk.ts .
@@ -89,6 +88,7 @@ EOT
 
 FROM builder AS runtime-bin
 
+ARG TINI_VERSION=v0.19.0
 ARG TARGETARCH
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TARGETARCH} /tini

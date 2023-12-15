@@ -9,7 +9,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "01c6cb8"
+  GHJK_VERSION: "6040bb3"
   PYTHON_VERSION: "3.8"
   DENO_VERSION: "1.38.1"
   RUST_BACKTRACE: "full"
@@ -78,7 +78,7 @@ jobs:
       # it also requires the full sha when referencing commits
       # https://github.com/actions/toolkit/blob/master/docs/action-versioning.md
       # currently using the dev/lock.ts script to mantain this
-      - uses: metatypedev/ghjk@01c6cb8727cb8f8cf6fa3bb9279429fb7c7f8046
+      - uses: metatypedev/ghjk@6040bb3645c6b81cc863b90d2b6d99960574f790
       - shell: bash
         run: |
           cd website
@@ -104,7 +104,7 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      - uses: metatypedev/ghjk@01c6cb8727cb8f8cf6fa3bb9279429fb7c7f8046
+      - uses: metatypedev/ghjk@6040bb3645c6b81cc863b90d2b6d99960574f790
       - name: Cache .venv dir
         uses: actions/cache@v3
         with:
@@ -152,7 +152,7 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: metatypedev/ghjk@01c6cb8727cb8f8cf6fa3bb9279429fb7c7f8046
+      - uses: metatypedev/ghjk@6040bb3645c6b81cc863b90d2b6d99960574f790
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -280,7 +280,7 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: metatypedev/ghjk@01c6cb8727cb8f8cf6fa3bb9279429fb7c7f8046
+      - uses: metatypedev/ghjk@6040bb3645c6b81cc863b90d2b6d99960574f790
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
