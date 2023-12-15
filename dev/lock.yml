@@ -22,7 +22,7 @@ dev:
       '(  GHJK_VERSION: ").+(")': GHJK_VERSION
       '(  DENO_VERSION: ").+(")': DENO_VERSION
       '(  PYTHON_VERSION: ").+(")': PYTHON_VERSION
-      '([\s-]+uses:\s+metatypedev/ghjk@).+()': GHJK_ACTION_VERSION
+      '([\s-]+uses:\s+metatypedev/setup-ghjk@).+()': GHJK_ACTION_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
     typegraph/python/pyproject.toml:
@@ -62,7 +62,7 @@ dev:
       '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': PUBLISHED_VERSION
   lock:
     GHJK_VERSION: 6040bb3
-    GHJK_ACTION_VERSION: 6040bb3645c6b81cc863b90d2b6d99960574f790
+    GHJK_ACTION_VERSION: v1
     PYTHON_VERSION: '3.8'
     POETRY_VERSION: 1.7.0
     PROTOC_VERSION: v25.1

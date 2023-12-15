@@ -104,7 +104,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "poetry"
-      - uses: metatypedev/ghjk@6040bb3645c6b81cc863b90d2b6d99960574f790
+      - uses: metatypedev/setup-ghjk@v1
       - shell: bash
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}

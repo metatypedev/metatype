@@ -74,11 +74,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      # cant use github vars like action/myaction@$ACTION_VERSION
-      # it also requires the full sha when referencing commits
-      # https://github.com/actions/toolkit/blob/master/docs/action-versioning.md
-      # currently using the dev/lock.ts script to mantain this
-      - uses: metatypedev/ghjk@6040bb3645c6b81cc863b90d2b6d99960574f790
+      - uses: metatypedev/setup-ghjk@v1
       - shell: bash
         run: |
           cd website
@@ -104,7 +100,7 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      - uses: metatypedev/ghjk@6040bb3645c6b81cc863b90d2b6d99960574f790
+      - uses: metatypedev/setup-ghjk@v1
       - name: Cache .venv dir
         uses: actions/cache@v3
         with:
@@ -152,7 +148,7 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: metatypedev/ghjk@6040bb3645c6b81cc863b90d2b6d99960574f790
+      - uses: metatypedev/setup-ghjk@v1
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -280,7 +276,7 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: metatypedev/ghjk@6040bb3645c6b81cc863b90d2b6d99960574f790
+      - uses: metatypedev/setup-ghjk@v1
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
