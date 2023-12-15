@@ -10787,7 +10787,6 @@ name = "typegate"
 version = "0.3.1"
 dependencies = [
  "colored",
- "common",
  "env_logger",
  "envconfig",
  "log",
@@ -10821,6 +10820,7 @@ dependencies = [
  "request-handlers",
  "schema-connector",
  "schema-core",
+ "shadow-rs",
  "tap",
  "tempfile",
  "temporal-client",
