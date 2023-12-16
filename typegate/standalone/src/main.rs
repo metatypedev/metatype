@@ -17,7 +17,7 @@ pub fn init_sentry(config: &Config) -> sentry::ClientInitGuard {
     sentry::init((
         config.sentry_dsn.clone(),
         sentry::ClientOptions {
-            release: Some(Cow::from(common::get_version())),
+            release: Some(Cow::from(typegate_engine::build::PKG_VERSION)),
             environment: Some(Cow::from(env)),
             sample_rate: config.sentry_sample_rate,
             traces_sample_rate: config.sentry_traces_sample_rate,

@@ -28,6 +28,9 @@ pub use deno_core::{resolve_url, resolve_url_or_path};
 pub use ext::extensions;
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
+use shadow_rs::shadow;
+
+shadow!(build);
 
 use crate::interlude::*;
 
@@ -132,7 +135,7 @@ pub async fn launch_typegate_deno(
 #[deno_core::op2]
 #[string]
 fn op_get_version() -> &'static str {
-    common::get_version()
+    build::PKG_VERSION
 }
 
 #[cfg(test)]

@@ -50,7 +50,7 @@ fn main() -> Result<()> {
     };
 
     if args.version {
-        println!("meta {}", common::get_version());
+        println!("meta {}", build::PKG_VERSION);
         return Ok(());
     }
 

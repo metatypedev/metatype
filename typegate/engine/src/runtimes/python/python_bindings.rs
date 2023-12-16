@@ -6,12 +6,12 @@ use crate::interlude::*;
 use dashmap::{mapref::one::Ref, DashMap};
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
+
+use std::path::PathBuf;
+use wasmedge_sdk::dock::{Param, VmDock};
 use wasmedge_sdk::{params, Vm};
 
-use super::{
-    wasi_vm,
-    wasmedge_sdk_bindgen::{Bindgen, Param},
-};
+use super::wasi_vm;
 
 #[derive(Default)]
 pub struct Ctx {
@@ -95,8 +95,8 @@ pub struct PythonApplyInp {
 }
 
 fn run_wasi_func(vm: &Vm, fn_name: String, args: Vec<Param>) -> Result<String> {
-    let mut bg = Bindgen::new(vm.to_owned());
-    match bg.run_wasm(fn_name, args) {
+    let vm_dock = VmDock::new(vm.to_owned());
+    match vm_dock.run_func(fn_name, args) {
         Ok(ret) => {
             let ret = ret.unwrap().pop().unwrap().downcast::<String>().unwrap();
             Ok(ret.as_ref().to_owned())

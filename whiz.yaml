@@ -108,7 +108,7 @@ setup:
     WASM_TOOLS_VERSION: "1.0.45"
     JCO_VERSION: "0.12.1"
     CARGO_INSTA_VERSION: "1.33.0"
-    WASMEDGE_VERSION: "0.12.1"
+    WASMEDGE_VERSION: "0.13.5"
     WASM_OPT_VERSION: "0.116.0"
   command: |
     set -e

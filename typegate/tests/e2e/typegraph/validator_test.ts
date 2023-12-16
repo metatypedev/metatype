@@ -3,7 +3,7 @@
 
 import { TestModule } from "test-utils/test_module.ts";
 import { Meta } from "test-utils/mod.ts";
-import { assert } from "std/assert/mod.ts";
+import { fail } from "std/assert/mod.ts";
 
 const m = new TestModule(import.meta);
 
@@ -22,7 +22,7 @@ Meta.test("typegraph validation", async (t) => {
           "-f",
           "validator.py",
         );
-        assert(false, "should have thrown");
+        fail("should have thrown");
       } catch (e) {
         await t.assertSnapshot(e.stderr);
       }

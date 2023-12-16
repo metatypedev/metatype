@@ -9,16 +9,16 @@ members = [
 ]
 
 [workspace.package]
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 
 [workspace.dependencies]
-#deno = { path =  "../../../deno/cli"}
-deno = { git = "https://github.com/metatypedev/deno", branch = "v1.38.1-embeddable" }
+# deno = { path =  "../deno/cli"}
+deno = { git = "https://github.com/metatypedev/deno", branch = "v1.38.5-embeddable" }
 
 # internal crates
-mt_deno = { path = "libs/deno/"}
-common = { path = "libs/common/"}
+mt_deno = { path = "libs/deno/" }
+common = { path = "libs/common/" }
 typescript = { path = "libs/typescript/" }
 typegate_engine = { path = "typegate/engine" }
 
@@ -27,10 +27,11 @@ typegate_engine = { path = "typegate/engine" }
 env_logger = "=0.10.0"
 clap = "=4.3.3"
 clap_complete = "=4.3.1"
+reqwest = "0.11.20"
 # https://github.com/WasmEdge/wasmedge-rust-sdk
-wasmedge-sdk = "=0.8.1"
-wasmedge-sys = "=0.13.1"
-wasmedge-types = "=0.4.1"
+wasmedge-sdk = "=0.13.2"
+wasmedge-sys = "=0.17.5"
+wasmedge-types = "=0.4.4"
 # https://github.com/denoland/deno_ast/blob/main/Cargo.toml
 swc_common = "=0.32.0"
 swc_ecma_ast = "=0.109.0"
@@ -38,3 +39,4 @@ swc_ecma_codegen = "=0.144.1"
 swc_ecma_parser = "=0.139.0"
 swc_ecma_transforms_typescript = "=0.182.3"
 swc_ecma_visit = "=0.95.0"
+shadow-rs = "0.24"
