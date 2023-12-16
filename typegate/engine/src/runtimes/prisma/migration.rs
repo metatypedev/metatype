@@ -8,11 +8,13 @@ use crate::interlude::*;
 use anyhow::Result;
 use convert_case::{Case, Casing};
 use log::{error, trace};
+use regex::Regex;
 use schema_core::json_rpc::types::{
     ApplyMigrationsInput, CreateMigrationInput, DevAction, DevDiagnosticInput, DevDiagnosticOutput,
     DiffParams, DiffTarget, EvaluateDataLossInput, ListMigrationDirectoriesInput, SchemaContainer,
 };
 use schema_core::{CoreError, CoreResult, GenericApi};
+use serde::Serialize;
 use std::io::Write;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -206,7 +208,7 @@ pub async fn diff(
     datasource: String,
     datamodel: String,
     script: bool,
-) -> Result<Option<String>> {
+) -> Result<Option<(String, Vec<ParsedDiff>)>> {
     trace!("diff");
     let schema = format!("{datasource}{datamodel}");
     let buffer = Arc::new(Mutex::new(Some(String::default())));
@@ -241,8 +243,122 @@ pub async fn diff(
 
     let buffer = buffer.lock().unwrap().take();
     // FIXME the text might change??
-    let mut diff = buffer.filter(|diff| !diff.contains("No difference detected"));
-    Ok(diff.take())
+    let diff = buffer.filter(|diff| !diff.contains("No difference detected"));
+
+    Ok(diff.map(|diff| {
+        let parsed_diff = ParsedDiff::parse(&diff);
+        (diff, parsed_diff)
+    }))
+}
+
+#[derive(Default)]
+struct DiffFoldRes {
+    result: Vec<ParsedDiff>,
+    current: Option<ParsedDiff>,
+}
+
+#[derive(Debug, Serialize)]
+enum ColumnTypeDiff {
+    NullableToRequired,
+    RequiredToNullable,
+}
+
+#[derive(Debug, Serialize)]
+struct TableDiff {
+    column: String,
+    diff: ColumnDiff,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(tag = "action")]
+enum ColumnDiff {
+    Added,
+    Removed,
+    Altered { type_diff: Option<ColumnTypeDiff> },
+}
+
+impl TableDiff {
+    fn new(line: &str) -> Option<Self> {
+        let regex = Regex::new(r"Added column `([^`]+)`").unwrap();
+        if let Some(added_column) = regex.captures(line) {
+            return Some(TableDiff {
+                column: added_column.get(1).unwrap().as_str().to_string(),
+                diff: ColumnDiff::Added,
+            });
+        }
+        let regex = Regex::new(r"Removed column `([^`]+)`").unwrap();
+        if let Some(removed_column) = regex.captures(line) {
+            return Some(TableDiff {
+                column: removed_column.get(1).unwrap().as_str().to_string(),
+                diff: ColumnDiff::Removed,
+            });
+        }
+        let regex = Regex::new(r"Altered column `([^`]+)` (.+)$").unwrap();
+        if let Some(altered_column) = regex.captures(line) {
+            let column_name = altered_column.get(1).unwrap().as_str().to_string();
+            let diff = altered_column.get(2).unwrap().as_str();
+
+            let type_diff = if diff.contains("from Nullable to Required") {
+                Some(ColumnTypeDiff::NullableToRequired)
+            } else if diff.contains("from Required to Nullable") {
+                Some(ColumnTypeDiff::RequiredToNullable)
+            } else {
+                None
+            };
+
+            return Some(TableDiff {
+                column: column_name,
+                diff: ColumnDiff::Altered { type_diff },
+            });
+        }
+
+        None
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct ParsedDiff {
+    table: String,
+    diff: Vec<TableDiff>,
+}
+
+impl ParsedDiff {
+    fn new(line: &str) -> Option<Self> {
+        let regex = Regex::new(r"Changed the `([^`]+)` table").unwrap();
+        if let Some(table) = regex.captures(line) {
+            return Some(ParsedDiff {
+                table: table.get(1).unwrap().as_str().to_string(),
+                diff: Vec::new(),
+            });
+        }
+        None
+    }
+
+    fn parse(description: &str) -> Vec<Self> {
+        let mut res = description
+            .lines()
+            .fold(DiffFoldRes::default(), |mut acc, line| {
+                if line.starts_with("  ") {
+                    if let Some(current) = acc.current.as_mut() {
+                        if let Some(diff) = TableDiff::new(line) {
+                            current.diff.push(diff);
+                        }
+                    }
+                } else {
+                    if let Some(current) = acc.current.take() {
+                        acc.result.push(current);
+                    }
+
+                    acc.current = Self::new(line);
+                }
+                acc
+            });
+        if let Some(current) = res.current {
+            res.result.push(current);
+        }
+
+        res.result
+    }
 }
 
 #[derive(Serialize)]

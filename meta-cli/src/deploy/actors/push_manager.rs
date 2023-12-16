@@ -3,7 +3,7 @@
 
 mod state;
 
-use dialoguer::Confirm;
+use dialoguer::{Confirm, Select};
 use state::{AddTypegraphError, CancelationStatus, RemoveTypegraphError, State};
 use std::collections::hash_map::Entry;
 use std::path::PathBuf;
@@ -18,6 +18,7 @@ use common::typegraph::Typegraph;
 use tokio::sync::oneshot;
 
 use crate::config::Config;
+use crate::input::{ConfirmHandler, SelectOption};
 use crate::utils::Node;
 
 use super::console::{Console, ConsoleActor};
@@ -215,6 +216,21 @@ impl PushManagerActor {
                     false => handler.on_deny(self_addr),
                 }
             }
+
+            Interaction::Select {
+                prompt,
+                mut options,
+            } => {
+                // TODO console
+                let answer = Select::new()
+                    .with_prompt(format!("{} {}", "[select]".yellow(), prompt))
+                    .items(&options)
+                    .default(0)
+                    .interact()
+                    .unwrap();
+                let selected_option = options.swap_remove(answer);
+                selected_option.on_select(self_addr);
+            }
         }
     }
 }
@@ -245,16 +261,15 @@ impl Handler<Push> for PushManagerActor {
     }
 }
 
-pub trait ConfirmHandler: std::fmt::Debug {
-    fn on_confirm(&self, push_manager: Addr<PushManagerActor>);
-    fn on_deny(&self, _push_manager: Addr<PushManagerActor>) {}
-}
-
 #[derive(Debug)]
 pub enum Interaction {
     Confirm {
         question: String,
         handler: Box<dyn ConfirmHandler + Send + 'static>,
+    },
+    Select {
+        prompt: String,
+        options: Vec<Box<dyn SelectOption + Send + 'static>>,
     },
 }
 
@@ -295,6 +310,14 @@ impl PushFinished {
             question,
             handler: Box::new(handler),
         })
+    }
+
+    pub(super) fn select(
+        self,
+        prompt: String,
+        options: Vec<Box<dyn SelectOption + Send + 'static>>,
+    ) -> Self {
+        self.interact(Interaction::Select { prompt, options })
     }
 
     pub(super) fn interact(mut self, interaction: Interaction) -> Self {

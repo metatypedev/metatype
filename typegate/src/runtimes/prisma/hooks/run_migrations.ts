@@ -32,7 +32,12 @@ export class MigrationFailure extends Error {
     return err;
   }
 
-  static fromErrorMessage(message: string, runtimeName: string) {
+  static fromErrorMessage(
+    message: string,
+    runtimeName: string,
+    migrationName?: string,
+    diff?: ParsedDiff[],
+  ) {
     const err = new MigrationFailure(message, runtimeName);
 
     const prefix = "ERROR: ";
@@ -44,15 +49,21 @@ export class MigrationFailure extends Error {
         const match = NULL_CONSTRAINT_ERROR_REGEX.exec(err);
         if (match != null) {
           const { table, col } = match.groups!;
+
+          const isNewColumn = diff?.find((d) =>
+            d.table === table
+          )?.diff.find((d) => d.column === col)?.diff.action !== "Altered";
           return {
             reason: "NullConstraintViolation",
             message: [
               "Could not apply migration:",
               err,
-              'Suggestion: set a default value: add `config={ "default": defaultValue }`',
+              // 'Suggestion: set a default value: add `config={ "default": defaultValue }`',
             ].join("\n"),
             runtimeName,
             column: col,
+            isNewColumn,
+            migrationName,
             table,
           };
         } else {
@@ -241,7 +252,7 @@ class Migration {
     }
   }
 
-  async #opDiff(): Promise<boolean> {
+  async #opDiff(): Promise<ParsedDiff[] | null> {
     const diff = await native.prisma_diff({
       datasource: this.#datasource,
       datamodel: this.#datamodel,
@@ -249,15 +260,15 @@ class Migration {
     });
 
     if (diff != null) {
-      this.#info(`Changes detected in the schema: ${diff}`);
-      return true;
+      this.#info(`Changes detected in the schema: ${diff[0]}`);
+      return diff[1];
     } else {
       this.#info(`No changes detected in the schema.`);
-      return false;
+      return null;
     }
   }
 
-  async #opCreate() {
+  async #opCreate(diff: ParsedDiff[]) {
     this.#warn(`Creating migration for the changes.`);
     const res = nativeResult(
       await native.prisma_create({
@@ -284,7 +295,12 @@ class Migration {
     }
 
     if (apply_err != null) {
-      throw MigrationFailure.fromErrorMessage(apply_err, this.#runtimeName);
+      throw MigrationFailure.fromErrorMessage(
+        apply_err,
+        this.#runtimeName,
+        created_migration_name ?? undefined,
+        diff,
+      );
     }
   }
 

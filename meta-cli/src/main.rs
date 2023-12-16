@@ -7,6 +7,7 @@ mod config;
 pub mod deploy;
 mod fs;
 mod global_config;
+mod input;
 mod logger;
 #[cfg(test)]
 mod tests;

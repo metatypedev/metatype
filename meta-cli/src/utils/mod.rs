@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 pub mod clap;
+pub mod from_shared;
 pub mod graphql;
 
 use anyhow::{bail, Result};

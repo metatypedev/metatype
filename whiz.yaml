@@ -1,7 +1,7 @@
 env:
   TYPEGRAPH_VERSION: "0.0.3"
   CLICOLOR_FORCE: "1"
-  RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
+  RUST_LOG: "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off,error"
 
 gate1: &tp
   watch:
@@ -12,6 +12,7 @@ gate1: &tp
     TG_PORT: "7891"
     PACKAGED: "false"
     LOG_LEVEL: "DEBUG"
+    RUST_LOG: "xtask=info,error"
     DYLD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$DYLD_LIBRARY_PATH" # macOS
     LD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$LD_LIBRARY_PATH" # linux
     DEBUG: "true"

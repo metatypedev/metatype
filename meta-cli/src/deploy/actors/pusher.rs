@@ -16,12 +16,16 @@ use pathdiff::diff_paths;
 use serde::Deserialize;
 
 use crate::config::Config;
+use crate::deploy::push::migration_resolution::{
+    ForceReset, ManualResolution, RemoveLatestMigration,
+};
+use crate::input::{ConfirmHandler, SelectOption};
 use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use crate::utils::graphql;
 use crate::utils::{graphql::Query, Node};
 
 use super::console::{Console, ConsoleActor};
-use super::push_manager::{ConfirmHandler, PushFinished, PushManagerActor};
+use super::push_manager::{PushFinished, PushManagerActor};
 
 type Secrets = HashMap<String, String>;
 
@@ -223,6 +227,10 @@ pub enum PushFailure {
         #[serde(rename = "runtimeName")]
         runtime_name: String,
         column: String,
+        #[serde(rename = "migrationName")]
+        migration_name: String,
+        #[serde(rename = "isNewColumn")]
+        is_new_column: bool,
         table: String,
     },
 }
@@ -403,10 +411,52 @@ impl Handler<PushResult> for PusherActor {
                         ));
                 }
 
-                PushFailure::NullConstraintViolation { message, .. } => {
+                PushFailure::NullConstraintViolation {
+                    message,
+                    is_new_column,
+                    migration_name,
+                    runtime_name,
+                    column,
+                    table,
+                    ..
+                } => {
                     self.console.error(message.clone());
-                    self.push_manager
-                        .do_send(PushFinished::new(res.push, false))
+                    if *is_new_column {
+                        let typegraph = res.push.typegraph.clone();
+                        self.console.info(format!("manually edit the migration {migration_name}; or remove the migration and add set a default value"));
+
+                        let remove_latest = RemoveLatestMigration {
+                            typegraph: typegraph.clone(),
+                            runtime_name: runtime_name.clone(),
+                            migration_name: migration_name.clone(),
+                            migration_dir: self.config.prisma_migrations_dir(&typegraph.name().unwrap()),
+                            message: "You can update the typegraph to create an alternative non-breaking schema.".to_string().into()
+                        };
+
+                        let manual = ManualResolution {
+                            typegraph: typegraph.clone(),
+                            runtime_name: runtime_name.clone(),
+                            migration_name: migration_name.clone(),
+                            migration_dir: self
+                                .config
+                                .prisma_migrations_dir(&typegraph.name().unwrap()),
+                            message: "Set default value".to_string().into(),
+                        };
+
+                        let reset = ForceReset {
+                            typegraph: typegraph.clone(),
+                            runtime_name: runtime_name.clone(),
+                        };
+
+                        self.push_manager
+                            .do_send(PushFinished::new(res.push, false).select(
+                                "Choose on of the following options".to_string(),
+                                vec![Box::new(remove_latest), Box::new(manual), Box::new(reset)],
+                            ));
+                    } else {
+                        self.push_manager
+                            .do_send(PushFinished::new(res.push, false))
+                    }
                 }
             }
         } else {
@@ -429,6 +479,58 @@ impl ConfirmHandler for ConfirmDatabaseResetRequired {
             .apply(&mut typegraph, vec![self.runtime_name.clone()])
             .unwrap();
         push_manager.do_send(Push::new(typegraph.into()))
+    }
+}
+
+#[derive(Debug)]
+struct CustomizedMigration {
+    runtime_name: String,
+    typegraph: Arc<Typegraph>,
+    migration_name: String,
+    suggestion: String,
+}
+
+impl std::fmt::Display for CustomizedMigration {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let note = "Note that if you do not make the suggested edits, the migration might fail in production.";
+        let tg_name = self.typegraph.name().unwrap();
+        write!(
+            f,
+            "Reset the database after manually editing the migration at \"{}/{}/{}\" for {}. {}",
+            tg_name, self.runtime_name, self.migration_name, self.suggestion, note
+        )
+    }
+}
+
+impl SelectOption for CustomizedMigration {
+    fn on_select(&self, _push_manager: Addr<PushManagerActor>) {
+        todo!("todo")
+    }
+}
+
+#[derive(Debug)]
+struct RemoveCreatedMigration {
+    runtime_name: String,
+    typegraph: Arc<Typegraph>,
+    migration_name: String,
+    // suggestion: String,
+}
+
+impl std::fmt::Display for RemoveCreatedMigration {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let note = "After this operation you can add a default value to the property in the typegraph and push again.";
+        let tg_name = self.typegraph.name().unwrap();
+        write!(
+            f,
+            "Remove the created migration migration at \"{}/{}/{}\". {}",
+            tg_name, self.runtime_name, self.migration_name, note
+        )
+    }
+}
+
+impl SelectOption for RemoveCreatedMigration {
+    fn on_select(&self, _push_manager: Addr<PushManagerActor>) {
+        todo!("todo")
     }
 }
 

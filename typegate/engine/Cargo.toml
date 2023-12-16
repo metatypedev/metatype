@@ -36,6 +36,8 @@ typescript.workspace = true
 wasmedge-sdk.workspace = true
 wasmedge-sys.workspace = true
 wasmedge-types.workspace = true
+serde = { version = "1.0", features = ["derive"] }
+regex = "1.10.2"
 
 [dev-dependencies]
 env_logger.workspace = true
