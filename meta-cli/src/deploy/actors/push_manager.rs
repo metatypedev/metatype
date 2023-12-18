@@ -1,9 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MP
+
 mod state;
 
-use dialoguer::{Confirm, Select};
+use dialoguer::Confirm;
 use state::{AddTypegraphError, CancelationStatus, RemoveTypegraphError, State};
 use std::collections::hash_map::Entry;
 use std::path::PathBuf;
@@ -18,7 +21,7 @@ use common::typegraph::Typegraph;
 use tokio::sync::oneshot;
 
 use crate::config::Config;
-use crate::input::{ConfirmHandler, SelectOption};
+use crate::input::{ConfirmHandler, Select, SelectOption};
 use crate::utils::Node;
 
 use super::console::{Console, ConsoleActor};
@@ -217,19 +220,12 @@ impl PushManagerActor {
                 }
             }
 
-            Interaction::Select {
-                prompt,
-                mut options,
-            } => {
+            Interaction::Select { prompt, options } => {
                 // TODO console
-                let answer = Select::new()
-                    .with_prompt(format!("{} {}", "[select]".yellow(), prompt))
-                    .items(&options)
-                    .default(0)
-                    .interact()
+                Select::new(prompt)
+                    .max_retry_count(3)
+                    .interact(&options)
                     .unwrap();
-                let selected_option = options.swap_remove(answer);
-                selected_option.on_select(self_addr);
             }
         }
     }

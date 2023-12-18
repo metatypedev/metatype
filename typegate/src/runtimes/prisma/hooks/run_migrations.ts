@@ -70,7 +70,7 @@ export class MigrationFailure extends Error {
           return {
             reason: "Unknown",
             message:
-              `Could not apply migration for runtime ${runtimeName}: \n{message}`,
+              `Could not apply migration for runtime ${runtimeName}: \n${message}`,
           };
         }
       });

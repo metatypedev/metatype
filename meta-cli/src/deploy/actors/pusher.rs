@@ -19,7 +19,7 @@ use crate::config::Config;
 use crate::deploy::push::migration_resolution::{
     ForceReset, ManualResolution, RemoveLatestMigration,
 };
-use crate::input::{ConfirmHandler, SelectOption};
+use crate::input::ConfirmHandler;
 use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use crate::utils::graphql;
 use crate::utils::{graphql::Query, Node};
@@ -425,32 +425,43 @@ impl Handler<PushResult> for PusherActor {
                         let typegraph = res.push.typegraph.clone();
                         self.console.info(format!("manually edit the migration {migration_name}; or remove the migration and add set a default value"));
 
+                        let migration_dir: Arc<Path> = self
+                            .config
+                            .prisma_migrations_dir(&typegraph.name().unwrap())
+                            .join(runtime_name)
+                            .into();
+
                         let remove_latest = RemoveLatestMigration {
                             typegraph: typegraph.clone(),
                             runtime_name: runtime_name.clone(),
                             migration_name: migration_name.clone(),
-                            migration_dir: self.config.prisma_migrations_dir(&typegraph.name().unwrap()),
-                            message: "You can update the typegraph to create an alternative non-breaking schema.".to_string().into()
+                            migration_dir: migration_dir.clone(),
+                            message: "You can update the typegraph to create an alternative non-breaking schema.".to_string().into(),
+                            push_manager: self.push_manager.clone(),
+
                         };
 
                         let manual = ManualResolution {
                             typegraph: typegraph.clone(),
                             runtime_name: runtime_name.clone(),
                             migration_name: migration_name.clone(),
-                            migration_dir: self
-                                .config
-                                .prisma_migrations_dir(&typegraph.name().unwrap()),
-                            message: "Set default value".to_string().into(),
+                            migration_dir,
+                            message: Some(format!(
+                                "Set a default value for the column `{}` in the table `{}`",
+                                column, table
+                            )),
+                            push_manager: self.push_manager.clone(),
                         };
 
                         let reset = ForceReset {
                             typegraph: typegraph.clone(),
                             runtime_name: runtime_name.clone(),
+                            push_manager: self.push_manager.clone(),
                         };
 
                         self.push_manager
                             .do_send(PushFinished::new(res.push, false).select(
-                                "Choose on of the following options".to_string(),
+                                "Choose one of the following options".to_string(),
                                 vec![Box::new(remove_latest), Box::new(manual), Box::new(reset)],
                             ));
                     } else {
@@ -482,58 +493,59 @@ impl ConfirmHandler for ConfirmDatabaseResetRequired {
     }
 }
 
-#[derive(Debug)]
-struct CustomizedMigration {
-    runtime_name: String,
-    typegraph: Arc<Typegraph>,
-    migration_name: String,
-    suggestion: String,
-}
-
-impl std::fmt::Display for CustomizedMigration {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let note = "Note that if you do not make the suggested edits, the migration might fail in production.";
-        let tg_name = self.typegraph.name().unwrap();
-        write!(
-            f,
-            "Reset the database after manually editing the migration at \"{}/{}/{}\" for {}. {}",
-            tg_name, self.runtime_name, self.migration_name, self.suggestion, note
-        )
-    }
-}
-
-impl SelectOption for CustomizedMigration {
-    fn on_select(&self, _push_manager: Addr<PushManagerActor>) {
-        todo!("todo")
-    }
-}
-
-#[derive(Debug)]
-struct RemoveCreatedMigration {
-    runtime_name: String,
-    typegraph: Arc<Typegraph>,
-    migration_name: String,
-    // suggestion: String,
-}
-
-impl std::fmt::Display for RemoveCreatedMigration {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let note = "After this operation you can add a default value to the property in the typegraph and push again.";
-        let tg_name = self.typegraph.name().unwrap();
-        write!(
-            f,
-            "Remove the created migration migration at \"{}/{}/{}\". {}",
-            tg_name, self.runtime_name, self.migration_name, note
-        )
-    }
-}
-
-impl SelectOption for RemoveCreatedMigration {
-    fn on_select(&self, _push_manager: Addr<PushManagerActor>) {
-        todo!("todo")
-    }
-}
-
+// #[derive(Debug)]
+// struct CustomizedMigration {
+//     runtime_name: String,
+//     typegraph: Arc<Typegraph>,
+//     migration_name: String,
+//     suggestion: String,
+//     push_manager: Addr<PushManagerActor>,
+// }
+//
+// impl std::fmt::Display for CustomizedMigration {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         let note = "Note that if you do not make the suggested edits, the migration might fail in production.";
+//         let tg_name = self.typegraph.name().unwrap();
+//         write!(
+//             f,
+//             "Reset the database after manually editing the migration at \"{}/{}/{}\" for {}. {}",
+//             tg_name, self.runtime_name, self.migration_name, self.suggestion, note
+//         )
+//     }
+// }
+//
+// impl SelectOption for CustomizedMigration {
+//     fn on_select(&self) {
+//         todo!("todo")
+//     }
+// }
+//
+// #[derive(Debug)]
+// struct RemoveCreatedMigration {
+//     runtime_name: String,
+//     typegraph: Arc<Typegraph>,
+//     migration_name: String,
+//     // suggestion: String,
+// }
+//
+// impl std::fmt::Display for RemoveCreatedMigration {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         let note = "After this operation you can add a default value to the property in the typegraph and push again.";
+//         let tg_name = self.typegraph.name().unwrap();
+//         write!(
+//             f,
+//             "Remove the created migration migration at \"{}/{}/{}\". {}",
+//             tg_name, self.runtime_name, self.migration_name, note
+//         )
+//     }
+// }
+//
+// impl SelectOption for RemoveCreatedMigration {
+//     fn on_select(&self) {
+//         todo!("todo")
+//     }
+// }
+//
 impl Handler<Stop> for PusherActor {
     type Result = ();
 
