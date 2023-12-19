@@ -51,8 +51,8 @@ impl ConsoleActor {
 impl Actor for ConsoleActor {
     type Context = Context<Self>;
 
-    #[cfg(debug_assertions)]
     fn started(&mut self, ctx: &mut Context<Self>) {
+        log::trace!("ConsoleActor started.");
         let console = ctx.address();
 
         std::thread::spawn(move || {
@@ -67,7 +67,7 @@ impl Actor for ConsoleActor {
     }
 
     fn stopped(&mut self, _ctx: &mut Context<Self>) {
-        log::trace!("console actor stopped");
+        log::trace!("ConsoleActor stopped.");
     }
 }
 
