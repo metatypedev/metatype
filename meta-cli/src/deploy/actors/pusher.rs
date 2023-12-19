@@ -263,7 +263,6 @@ impl PushResult {
         })
     }
 }
-
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PushResultRaw {
@@ -405,6 +404,7 @@ impl Handler<PushResult> for PusherActor {
                                 name = name.cyan()
                             ),
                             ConfirmDatabaseResetRequired {
+                                push_manager: self.push_manager.clone(),
                                 runtime_name: runtime_name.clone(),
                                 typegraph,
                             },
@@ -436,9 +436,8 @@ impl Handler<PushResult> for PusherActor {
                             runtime_name: runtime_name.clone(),
                             migration_name: migration_name.clone(),
                             migration_dir: migration_dir.clone(),
-                            message: "You can update the typegraph to create an alternative non-breaking schema.".to_string().into(),
                             push_manager: self.push_manager.clone(),
-
+                            console: self.console.clone(),
                         };
 
                         let manual = ManualResolution {
@@ -451,6 +450,7 @@ impl Handler<PushResult> for PusherActor {
                                 column, table
                             )),
                             push_manager: self.push_manager.clone(),
+                            console: self.console.clone(),
                         };
 
                         let reset = ForceReset {
@@ -478,74 +478,22 @@ impl Handler<PushResult> for PusherActor {
 
 #[derive(Debug)]
 struct ConfirmDatabaseResetRequired {
+    push_manager: Addr<PushManagerActor>,
     runtime_name: String,
     typegraph: Arc<Typegraph>,
 }
 
 impl ConfirmHandler for ConfirmDatabaseResetRequired {
-    fn on_confirm(&self, push_manager: Addr<PushManagerActor>) {
+    fn on_confirm(&self) {
         let mut typegraph = (*self.typegraph).clone();
         EmbeddedPrismaMigrationOptionsPatch::default()
             .reset_on_drift(true)
             .apply(&mut typegraph, vec![self.runtime_name.clone()])
             .unwrap();
-        push_manager.do_send(Push::new(typegraph.into()))
+        self.push_manager.do_send(Push::new(typegraph.into()))
     }
 }
 
-// #[derive(Debug)]
-// struct CustomizedMigration {
-//     runtime_name: String,
-//     typegraph: Arc<Typegraph>,
-//     migration_name: String,
-//     suggestion: String,
-//     push_manager: Addr<PushManagerActor>,
-// }
-//
-// impl std::fmt::Display for CustomizedMigration {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         let note = "Note that if you do not make the suggested edits, the migration might fail in production.";
-//         let tg_name = self.typegraph.name().unwrap();
-//         write!(
-//             f,
-//             "Reset the database after manually editing the migration at \"{}/{}/{}\" for {}. {}",
-//             tg_name, self.runtime_name, self.migration_name, self.suggestion, note
-//         )
-//     }
-// }
-//
-// impl SelectOption for CustomizedMigration {
-//     fn on_select(&self) {
-//         todo!("todo")
-//     }
-// }
-//
-// #[derive(Debug)]
-// struct RemoveCreatedMigration {
-//     runtime_name: String,
-//     typegraph: Arc<Typegraph>,
-//     migration_name: String,
-//     // suggestion: String,
-// }
-//
-// impl std::fmt::Display for RemoveCreatedMigration {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         let note = "After this operation you can add a default value to the property in the typegraph and push again.";
-//         let tg_name = self.typegraph.name().unwrap();
-//         write!(
-//             f,
-//             "Remove the created migration migration at \"{}/{}/{}\". {}",
-//             tg_name, self.runtime_name, self.migration_name, note
-//         )
-//     }
-// }
-//
-// impl SelectOption for RemoveCreatedMigration {
-//     fn on_select(&self) {
-//         todo!("todo")
-//     }
-// }
-//
 impl Handler<Stop> for PusherActor {
     type Result = ();
 

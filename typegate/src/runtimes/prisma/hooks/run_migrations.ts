@@ -32,6 +32,9 @@ export class MigrationFailure extends Error {
     return err;
   }
 
+  // TODO: if error contains: `<name>` failed to apply cleanly to the shadow database,
+  // we should remove that migration...
+
   static fromErrorMessage(
     message: string,
     runtimeName: string,
@@ -39,6 +42,8 @@ export class MigrationFailure extends Error {
     diff?: ParsedDiff[],
   ) {
     const err = new MigrationFailure(message, runtimeName);
+
+    console.log({ message });
 
     const prefix = "ERROR: ";
     const prefixLen = prefix.length;
@@ -68,9 +73,11 @@ export class MigrationFailure extends Error {
           };
         } else {
           return {
-            reason: "Unknown",
+            // huh?
+            reason: "DatabaseResetRequired",
             message:
               `Could not apply migration for runtime ${runtimeName}: \n${message}`,
+            runtimeName,
           };
         }
       });
@@ -106,6 +113,8 @@ export const runMigrations: PushHandler = async (
         ? err
         : MigrationFailure.fromErrorMessage(err.message, rt.data.name);
       response.setFailure(error.errors[0]);
+      // show the error stacktrace
+      console.error(error.stack);
       throw error;
     }
   }

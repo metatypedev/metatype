@@ -9,11 +9,11 @@ use actix::Addr;
 use anyhow::{bail, Result};
 use colored::Colorize;
 
-use crate::deploy::actors::push_manager::PushManagerActor;
+use crate::deploy::actors::console::{Console, ConsoleActor};
 
 pub trait ConfirmHandler: std::fmt::Debug {
-    fn on_confirm(&self, push_manager: Addr<PushManagerActor>);
-    fn on_deny(&self, _push_manager: Addr<PushManagerActor>) {}
+    fn on_confirm(&self);
+    fn on_deny(&self) {}
 }
 
 pub struct OptionLabel<'a> {
@@ -41,13 +41,15 @@ pub trait SelectOption: std::fmt::Debug {
 }
 
 pub struct Select {
+    console: Addr<ConsoleActor>,
     prompt: String,
     max_retry_count: usize,
 }
 
 impl Select {
-    pub fn new(prompt: String) -> Self {
+    pub fn new(console: Addr<ConsoleActor>, prompt: String) -> Self {
         Self {
+            console,
             prompt,
             max_retry_count: 0,
         }
@@ -58,7 +60,10 @@ impl Select {
         self
     }
 
-    pub fn interact(self, options: &[Box<dyn SelectOption + Send>]) -> Result<usize> {
+    pub async fn interact(
+        self,
+        options: &[Box<dyn SelectOption + Sync + Send + 'static>],
+    ) -> Result<usize> {
         let mut retry_left = self.max_retry_count;
 
         eprintln!("{} {}", "[select]".yellow(), self.prompt);
@@ -71,9 +76,10 @@ impl Select {
         }
 
         loop {
-            eprint!("> ");
-            let mut input = String::new();
-            std::io::stdin().read_line(&mut input).unwrap();
+            eprint!("(1-{})> ", options.len());
+
+            let input = self.console.read_line().await;
+
             match input.trim().parse::<usize>() {
                 Ok(i) if i > 0 && i <= options.len() => {
                     options[i - 1].on_select();
@@ -86,6 +92,61 @@ impl Select {
 
             retry_left -= 1;
             if retry_left == 0 {
+                bail!("Max retry count exceeded");
+            }
+        }
+    }
+}
+
+pub struct Confirm {
+    console: Addr<ConsoleActor>,
+    prompt: String,
+    max_retry_count: usize,
+}
+
+impl Confirm {
+    pub fn new(console: Addr<ConsoleActor>, prompt: String) -> Self {
+        Self {
+            console,
+            prompt,
+            max_retry_count: 0,
+        }
+    }
+
+    pub fn max_retry_count(mut self, max_retry_count: usize) -> Self {
+        self.max_retry_count = max_retry_count;
+        self
+    }
+
+    pub async fn interact(
+        self,
+        handler: Box<dyn ConfirmHandler + Sync + Send + 'static>,
+    ) -> Result<bool> {
+        let mut retry_left = self.max_retry_count as isize;
+
+        eprintln!("{} {}", "[confirm]".yellow(), self.prompt);
+
+        loop {
+            eprint!("(y/N)> ");
+
+            let input = self.console.read_line().await;
+
+            match input.trim().to_lowercase().as_str() {
+                "y" | "yes" => {
+                    handler.on_confirm();
+                    return Ok(true);
+                }
+                "n" | "no" => {
+                    handler.on_deny();
+                    return Ok(false);
+                }
+                _ => {
+                    log::error!("Invalid option, please try again.");
+                }
+            }
+
+            retry_left -= 1;
+            if retry_left < 0 {
                 bail!("Max retry count exceeded");
             }
         }

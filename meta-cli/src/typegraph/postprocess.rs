@@ -278,8 +278,6 @@ pub mod wasmedge_rt {
 }
 
 pub mod prisma_rt {
-    use std::path::PathBuf;
-
     use super::*;
     use anyhow::{anyhow, Context};
     use common::{
@@ -329,17 +327,11 @@ pub mod prisma_rt {
     #[derive(Default)]
     pub struct EmbeddedPrismaMigrationOptionsPatch {
         reset: Option<bool>,
-        reload_migrations: Option<PathBuf>,
     }
 
     impl EmbeddedPrismaMigrationOptionsPatch {
         pub fn reset_on_drift(mut self, reset: bool) -> Self {
             self.reset = Some(reset);
-            self
-        }
-
-        pub fn reload_migration_files(mut self, path: PathBuf) -> Self {
-            self.reload_migrations = Some(path);
             self
         }
 
@@ -354,9 +346,6 @@ pub mod prisma_rt {
                             })?;
                         if let Some(reset_on_drift) = self.reset {
                             migration_options.reset = reset_on_drift;
-                        }
-                        if let Some(migration_dir) = &self.reload_migrations {
-                            migration_options.migration_files = archive::archive(migration_dir)?;
                         }
                     }
                 }

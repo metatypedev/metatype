@@ -5,6 +5,7 @@
 // https://github.com/prisma/prisma-engines/blob/main/migration-engine/core/src/api.rs
 
 use crate::interlude::*;
+use anyhow::anyhow;
 use anyhow::Result;
 use convert_case::{Case, Casing};
 use log::{error, trace};
@@ -19,6 +20,23 @@ use std::io::Write;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use tempfile::{tempdir_in, NamedTempFile, TempDir};
+
+trait FormatError<R> {
+    fn format_error(self) -> Result<R>;
+}
+
+fn error_to_string(e: CoreError) -> String {
+    e.to_user_facing().message().to_string()
+}
+
+impl<R> FormatError<R> for CoreResult<R> {
+    fn format_error(self) -> Result<R> {
+        self.map_err(|e| {
+            error!("{e:?}");
+            anyhow!(error_to_string(e))
+        })
+    }
+}
 
 #[allow(dead_code)]
 pub async fn loss(
@@ -67,10 +85,9 @@ impl MigrationContextBuilder {
     }
 
     pub fn build(self) -> Result<MigrationContext> {
-        let api = schema_core::schema_api(Some(self.datasource.clone()), None)
-            .tap_err(|e| error!("{e:?}"))?;
+        let api = schema_core::schema_api(Some(self.datasource.clone()), None).format_error()?;
         let migrations_dir = MigrationsFolder::from(&self.tmp_dir_path, self.migrations.as_ref())
-            .tap_err(|e| error!("{e:?}"))?;
+            .context("Failed to create migrations folder")?;
         Ok(MigrationContext {
             builder: self,
             migrations_dir,
@@ -120,11 +137,11 @@ impl MigrationContext {
     pub async fn apply(&self, reset_database: bool) -> Result<PrismaApplyResult> {
         trace!("Migrations::apply");
 
-        let res = self.dev_diagnostic().await.tap_err(|e| error!("{e:?}"))?;
+        let res = self.dev_diagnostic().await.format_error()?;
 
         let reset_reason = if let DevAction::Reset(reset) = res.action {
             if reset_database {
-                self.api.reset().await.tap_err(|e| error!("{e:?}"))?;
+                self.api.reset().await.format_error()?;
                 Some(reset.reason)
             } else {
                 return Ok(PrismaApplyResult::ResetRequired {
@@ -141,7 +158,7 @@ impl MigrationContext {
                 migrations_directory_path: self.migrations_dir.to_string(),
             })
             .await
-            .tap_err(|e| error!("{e:}"))?;
+            .format_error()?;
         Ok(PrismaApplyResult::Ok {
             applied_migrations: res.applied_migration_names,
             reset_reason,
@@ -169,7 +186,7 @@ impl MigrationContext {
                 prisma_schema: self.schema(),
             })
             .await
-            .tap_err(|e| error!("{e:?}"))?;
+            .format_error()?;
         let Some(generated_migration_name) = res.generated_migration_name else {
             return Ok(PrismaCreateResult {
                 created_migration_name: None,
@@ -191,8 +208,7 @@ impl MigrationContext {
                 migrations_directory_path: self.migrations_dir.to_string(),
             })
             .await
-            .tap_err(|e| error!("{e:?}"))
-            .map_err(err_to_string)
+            .map_err(error_to_string)
             .err();
 
         Ok(PrismaCreateResult {
@@ -376,7 +392,7 @@ impl MigrationContext {
                 migrations_directory_path: self.migrations_dir.to_string(),
             })
             .await
-            .tap_err(|e| error!("{e:?}"))?;
+            .format_error()?;
         let migration_count = res.migrations.len();
 
         let res = self
@@ -385,7 +401,7 @@ impl MigrationContext {
                 migrations_directory_path: self.migrations_dir.to_string(),
             })
             .await
-            .tap_err(|e| error!("{e:?}"))?;
+            .format_error()?;
         let applied_migrations = res.applied_migration_names;
 
         Ok(PrismaDeployOut {
@@ -393,10 +409,6 @@ impl MigrationContext {
             applied_migrations,
         })
     }
-}
-
-fn err_to_string(err: CoreError) -> String {
-    err.to_user_facing().message().to_string()
 }
 
 impl MigrationContext {
