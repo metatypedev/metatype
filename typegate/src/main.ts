@@ -13,10 +13,7 @@ import * as Sentry from "sentry";
 import { getLogger } from "./log.ts";
 import { init_runtimes } from "./runtimes/mod.ts";
 import { MemoryRegister } from "test-utils/memory_register.ts";
-import {
-  MemoryRateLimiter,
-  RedisShim,
-} from "./typegate/memory_rate_limiter.ts";
+import { NoLimiter } from "test-utils/no_limiter.ts";
 
 const logger = getLogger(import.meta);
 logger.info(`typegate v${config.version} starting`);
@@ -61,7 +58,7 @@ try {
   logger.warning(err);
   logger.warning("Entering Redis-less mode");
   register = new MemoryRegister();
-  limiter = new MemoryRateLimiter(new RedisShim());
+  limiter = new NoLimiter();
 }
 
 const typegate = new Typegate(register!, limiter!);
