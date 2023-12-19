@@ -6,17 +6,23 @@ dev:
   lines:
     rust-toolchain.toml:
       (channel = ").+("): RUST_VERSION
+    ghjk.ts:
+      '(.*/metatypedev/ghjk/)[^/]*(/.*)': GHJK_VERSION
+      (const\s+PROTOC_VERSION\s*=\s*").*(";): PROTOC_VERSION
+      (const\s+POETRY_VERSION\s*=\s*").*(";): POETRY_VERSION
+      (const\s+PNPM_VERSION\s*=\s*").*(";): PNPM_VERSION
+      (const\s+WASM_TOOLS_VERSION = ").*(";): WASM_TOOLS_VERSION
+      (const\s+JCO_VERSION =\s*").*(";): JCO_VERSION
+      (const\s+WASMEDGE_VERSION\s*=\s*").*(";): WASMEDGE_VERSION
+      (const\s+WASM_OPT_VERSION\s*=\s*").*(";): WASM_OPT_VERSION
+      (const\s+MOLD_VERSION\s*=\s*").*(";): MOLD_VERSION
+      (const\s+CMAKE_VERSION\s*=\s*").*(";): CMAKE_VERSION
+      (const\s+CARGO_INSTA_VERSION\s*=\s*").*(";): CARGO_INSTA_VERSION
     .github/*/*.yml:
-      '(  PYTHON_VERSION: ").+(")': PYTHON_VERSION
-      '(  POETRY_VERSION: ").+(")': POETRY_VERSION
+      '(  GHJK_VERSION: ").+(")': GHJK_VERSION
       '(  DENO_VERSION: ").+(")': DENO_VERSION
-      '(  PNPM_VERSION: ").+(")': PNPM_VERSION
-      '(  NODE_VERSION: ").+(")': NODE_VERSION
-      '(  PROTOC_VERSION: ").+(")': PROTOC_VERSION
-      '(  WASM_TOOLS_VERSION: ").+(")': WASM_TOOLS_VERSION
-      '(  JCO_VERSION: ").+(")': JCO_VERSION
-      '(  WASMEDGE_VERSION: ").+(")': WASMEDGE_VERSION
-      '(  WASM_OPT_VERSION: ").+(")': WASM_OPT_VERSION
+      '(  PYTHON_VERSION: ").+(")': PYTHON_VERSION
+      '([\s-]+uses:\s+metatypedev/setup-ghjk@).+()': GHJK_ACTION_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
     typegraph/python/pyproject.toml:
@@ -29,7 +35,7 @@ dev:
     dev/Dockerfile:
       (ARG DENO_VERSION=).*(): DENO_VERSION
       (ARG RUST_VERSION=).*(): RUST_VERSION
-      (ARG WASMEDGE_VERSION=).*(): WASMEDGE_VERSION
+      (ARG GHJK_VERSION=).*(): GHJK_VERSION
     typegate/src/typegraph/versions.ts:
       (const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
     typegraph/core/src/typegraph.rs:
@@ -55,15 +61,17 @@ dev:
     examples/**/*.ts:
       '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': PUBLISHED_VERSION
   lock:
+    GHJK_VERSION: 6040bb3
+    GHJK_ACTION_VERSION: v1
     PYTHON_VERSION: '3.8'
     POETRY_VERSION: 1.7.0
-    PROTOC_VERSION: v24.x
-    RUST_VERSION: 1.73.0
-    DENO_VERSION: 1.38.1
+    PROTOC_VERSION: v24.1
+    RUST_VERSION: 1.74.1
+    DENO_VERSION: 1.39.0
     NODE_VERSION: 20.8.0
-    PNPM_VERSION: 8.8.0
+    PNPM_VERSION: v8.8.0
     CARGO_INSTA_VERSION: 1.33.0
-    WASM_TOOLS_VERSION: 1.0.45
+    WASM_TOOLS_VERSION: 1.0.53
     JCO_VERSION: 0.12.1
     WASMTIME_VERSION: 13.0.2
     WASMEDGE_VERSION: 0.13.5
@@ -72,6 +80,8 @@ dev:
     METATYPE_VERSION: 0.3.1
     PUBLISHED_VERSION: 0.2.4
     WASM_OPT_VERSION: 0.116.0
+    MOLD_VERSION: v2.4.0
+    CMAKE_VERSION: 3.28.0-rc6
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with
       zero-trust and less code, no matter where and how your (legacy) systems

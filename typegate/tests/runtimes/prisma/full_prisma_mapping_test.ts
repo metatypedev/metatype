@@ -847,4 +847,40 @@ Meta.test("prisma full mapping", async (t) => {
     })
       .on(e);
   });
+
+  await t.should("work with a create/connect list", async () => {
+    await gql`
+        mutation {
+          createOnePost(
+            data: {
+              id: 99999,
+              title: "New Post",
+              views: 1,
+              likes: 9,
+              published: true,
+              author: { connect: { id: 1 } },
+              comments: {
+                # create: [ 
+                #   { id: 59999, content: "it works!", author: { connect: { id: 1 } }}
+                # ]
+                connect: [ # equiv. {connect: { id: 50001}}
+                  { id: 50001 },
+                ]
+              }
+            }
+          ) {
+            id
+            comments { id content }
+          }
+        }
+    `.expectData({
+      createOnePost: {
+        id: 99999,
+        comments: [
+          { id: 50001, content: "good" },
+        ],
+      },
+    })
+      .on(e);
+  });
 });
