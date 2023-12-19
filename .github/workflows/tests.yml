@@ -9,15 +9,9 @@ on:
       - ready_for_review
 
 env:
+  GHJK_VERSION: "6040bb3"
   PYTHON_VERSION: "3.8"
-  PROTOC_VERSION: "v24.x"
-  POETRY_VERSION: "1.7.0"
-  DENO_VERSION: "1.38.5"
-  PNPM_VERSION: "8.8.0"
-  NODE_VERSION: "20.8.0"
-  WASM_TOOLS_VERSION: "1.0.45"
-  JCO_VERSION: "0.12.1"
-  WASMEDGE_VERSION: "0.13.5"
+  DENO_VERSION: "1.39.0"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
 
@@ -35,9 +29,6 @@ jobs:
             website:
               - '.github/workflows/tests.yml'
               - 'website/**'
-            typegraph:
-              - '.github/workflows/tests.yml'
-              - 'typegraph/**'
             meta-cli:
               - '.github/workflows/tests.yml'
               - 'libs/**'
@@ -47,7 +38,14 @@ jobs:
               - '.github/workflows/tests.yml'
               - 'libs/**'
               - 'typegate/**'
+              - 'meta-cli/**'
+              - 'Cargo.lock'
+            full:
+              - '.github/workflows/tests.yml'
+              - 'libs/**'
+              - 'typegate/**'
               - 'typegraph/**'
+              - 'meta-cli/**'
               - 'Cargo.lock'
             rust:
               - '.github/workflows/tests.yml'
@@ -55,9 +53,9 @@ jobs:
               - 'Cargo.lock'
     outputs:
       website: ${{ steps.filter.outputs.website }}
-      typegraph: ${{ steps.filter.outputs.typegraph }}
       meta-cli: ${{ steps.filter.outputs.meta-cli }}
       typegate: ${{ steps.filter.outputs.typegate }}
+      full: ${{ steps.filter.outputs.full }}
       rust: ${{ steps.filter.outputs.rust }}
 
   test-pre-commit:
@@ -67,26 +65,22 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: pnpm/action-setup@v2.4.0
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: arduino/setup-protoc@v2
-        with:
-          version: ${{ env.PROTOC_VERSION }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
         with:
+          # use custom shared key to share cache across jobs
+          # default prefix includes job-id otherwise
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - run: |
-          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
+      - uses: metatypedev/setup-ghjk@v1
+      - shell: bash
+        run: |
           cd website
           pnpm install --frozen-lockfile
           cd ..
+          deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
       - uses: pre-commit/action@v3.0.0
 
   test-website:
@@ -98,21 +92,20 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: abatilo/actions-poetry@v2
+      - uses: denoland/setup-deno@v1
         with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-      - uses: actions/cache@v3
+          deno-version: ${{ env.DENO_VERSION }}
+      - name: Cache deno dir
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.DENO_DIR }}
+          key: deno-mac-${{ hashFiles('**/deno.lock') }}
+      - uses: metatypedev/setup-ghjk@v1
+      - name: Cache .venv dir
+        uses: actions/cache@v3
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: pnpm/action-setup@v2.4.0
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-          cache-dependency-path: website/pnpm-lock.yaml
       - run: |
           python3 -m venv .venv
           source .venv/bin/activate
@@ -121,76 +114,6 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm lint
           pnpm build
-
-  test-typegraph-core:
-    needs:
-      - changes
-    if: ${{ needs.changes.outputs.typegraph == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dsherret/rust-toolchain-file@v1
-      - uses: rui314/setup-mold@v1
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-      - run: |
-          # test in native rust, not in wasm for a future rust SDK
-          # without --tests, the --doc is causing a link error "syntax error in VERSION script"
-          cargo test --locked --package typegraph_core --tests
-
-  test-meta-cli:
-    needs: changes
-    if: ${{ needs.changes.outputs.meta-cli == 'true' || needs.changes.outputs.typegraph == 'true' || needs.changes.outputs.typegate == 'true' || needs.changes.outputs.rust == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: arduino/setup-protoc@v2
-        with:
-          version: ${{ env.PROTOC_VERSION }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: dsherret/rust-toolchain-file@v1
-      - uses: rui314/setup-mold@v1
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-      - uses: actions/cache@v3
-        with:
-          path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - env:
-          WASM_FILE: target/debug/typegraph_core.wasm
-        run: |
-          python3 -m venv .venv
-          source .venv/bin/activate
-          cd typegraph/python
-          poetry install --no-root
-          cd ../..
-          poetry install --no-root
-
-          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
-          export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
-          cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
-          cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
-          mkdir -p $(dirname $WASM_FILE)
-          wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
-          rm -rf typegraph/python/typegraph/gen
-          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
-
-          cargo run --locked --package meta-cli -- --help
-          cargo test --locked --package meta-cli
-          tar -cvf meta.tar target/debug/meta
-      - uses: actions/upload-artifact@v3
-        with:
-          name: meta
-          path: meta.tar
-          retention-days: 1
 
   test-meta-cli-compat:
     needs: changes
@@ -205,10 +128,14 @@ jobs:
           #  activate: '.venv\Scripts\activate.bat'
     steps:
       - uses: actions/checkout@v4
-      - uses: arduino/setup-protoc@v2
+      - uses: denoland/setup-deno@v1
         with:
-          version: ${{ env.PROTOC_VERSION }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          deno-version: ${{ env.DENO_VERSION }}
+      - name: Cache deno dir
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.DENO_DIR }}
+          key: deno-mac-${{ hashFiles('**/deno.lock') }}
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -216,40 +143,76 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-      - uses: actions/cache@v3
+      - name: Cache .venv dir
+        uses: actions/cache@v3
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - env:
+      - uses: metatypedev/setup-ghjk@v1
+      - shell: bash
+        env: 
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
           python3 -m venv .venv
           ${{ matrix.activate }}
+
           cd typegraph/python
           poetry install --no-root
           cd ../..
           poetry install --no-root
 
-          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
-          export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
-          cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
+          deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
+
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
           mkdir -p $(dirname $WASM_FILE)
-          wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+          wasm-opt -Oz target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE.opt
+          wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
           rm -rf typegraph/python/typegraph/gen
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
 
-  test-typegate:
-    needs:
-      - changes
-      - test-meta-cli
+  test-docker:
+    needs: changes
     if: ${{ needs.changes.outputs.typegate == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: scherermichael-oss/action-has-permission@master
+        id: check
+        with:
+          required-permission: write
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/login-action@v3
+        if: steps.check.outputs.has-permission
+        with:
+          registry: docker.io
+          username: zifeo
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build with cache (internal)
+        uses: docker/build-push-action@v5
+        if: steps.check.outputs.has-permission
+        with:
+          file: dev/Dockerfile
+          platforms: linux/amd64
+          push: false
+          cache-from: type=registry,ref=docker.io/zifeo/metatype-cache:ci
+          cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
+      - name: Build without cache (external)
+        uses: docker/build-push-action@v5
+        if: "! steps.check.outputs.has-permission"
+        with:
+          file: dev/Dockerfile
+          platforms: linux/amd64
+          push: false
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
+
+  test-full:
+    needs: changes
+    if: ${{ needs.changes.outputs.full == 'true' }}
     runs-on:
       - self-hosted # https://check-jsonschema.readthedocs.io/en/latest/faq.html#using-self-hosted-runners
       - custom-ubuntu-large
@@ -293,64 +256,62 @@ jobs:
       DENO_DIR: deno-dir
     steps:
       - uses: actions/checkout@v4
-      - uses: arduino/setup-protoc@v2
-        with:
-          version: ${{ env.PROTOC_VERSION }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: lukka/get-cmake@latest
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: rui314/setup-mold@v1
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: actions/cache@v3
+      - name: Cache deno dir
+        uses: actions/cache@v3
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-${{ hashFiles('**/deno.lock') }}
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-      - uses: arduino/setup-protoc@v2
-        with:
-          version: ${{ env.PROTOC_VERSION }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - uses: actions/cache@v3
+      - name: Cache .venv dir
+        uses: actions/cache@v3
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: actions/download-artifact@v3
-        with:
-          name: meta
-      - env:
+      - uses: metatypedev/setup-ghjk@v1
+      - shell: bash
+        env: 
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
+
           sudo apt update
           sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev perl make
-          tar -xvf meta.tar
+
           python3 -m venv .venv
           source .venv/bin/activate
           poetry install --no-root
-          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
-          export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
-          cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
-          npm install --global @bytecodealliance/jco@$JCO_VERSION
+
+          deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
+
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
           mkdir -p $(dirname $WASM_FILE)
-          wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+          wasm-opt -Oz target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE.opt
+          wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
           rm -rf typegraph/deno/src/gen
           jco transpile $WASM_FILE -o typegraph/deno/src/gen
           deno run -A typegraph/deno/dev/fix-declarations.ts
           rm -rf typegraph/python/typegraph/gen
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
+
+          # from old test-typegraph-core
+          # test in native rust, not in wasm for a future rust SDK
+          # without --tests, the --doc is causing a link error "syntax error in VERSION script"
+          cargo test --locked --package typegraph_core --tests
+
+          # from old test-meta-cli
+          cargo run --locked --package meta-cli -- --help
+          cargo test --locked --package meta-cli
+
+          # from old test-libs
+          cargo test --locked --exclude meta-cli --exclude typegate --exclude typegraph_engine --exclude typegraph_core --workspace
 
           deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
           cargo build -p meta-cli
@@ -363,81 +324,3 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.lcov
           fail_ci_if_error: true
-
-  test-libs:
-    needs:
-      - changes
-      - test-meta-cli
-    if: ${{ needs.changes.outputs.rust == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: arduino/setup-protoc@v2
-        with:
-          version: ${{ env.PROTOC_VERSION }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: dsherret/rust-toolchain-file@v1
-      - uses: rui314/setup-mold@v1
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-      - uses: actions/cache@v3
-        with:
-          path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: actions/download-artifact@v3
-        with:
-          name: meta
-      - run: |
-          tar -xvf meta.tar
-          python3 -m venv .venv
-          source .venv/bin/activate
-          cd typegraph/python
-          poetry install --no-root
-          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
-          cd ../..
-          export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
-          cargo test --locked --exclude meta-cli --exclude typegate --exclude typegraph_engine --exclude typegraph_core --workspace
-
-  test-docker:
-    needs: changes
-    if: ${{ needs.changes.outputs.typegate == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: scherermichael-oss/action-has-permission@master
-        id: check
-        with:
-          required-permission: write
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/login-action@v3
-        if: steps.check.outputs.has-permission
-        with:
-          registry: docker.io
-          username: zifeo
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build with cache (internal)
-        uses: docker/build-push-action@v5
-        if: steps.check.outputs.has-permission
-        with:
-          file: dev/Dockerfile
-          platforms: linux/amd64
-          push: false
-          cache-from: type=registry,ref=docker.io/zifeo/metatype-cache:ci
-          cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
-      - name: Build without cache (external)
-        uses: docker/build-push-action@v5
-        if: "! steps.check.outputs.has-permission"
-        with:
-          file: dev/Dockerfile
-          platforms: linux/amd64
-          push: false
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
