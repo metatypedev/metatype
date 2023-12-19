@@ -13,7 +13,10 @@ import * as Sentry from "sentry";
 import { getLogger } from "./log.ts";
 import { init_runtimes } from "./runtimes/mod.ts";
 import { MemoryRegister } from "test-utils/memory_register.ts";
-import { NoLimiter } from "test-utils/no_limiter.ts";
+import {
+  MemoryRateLimiter,
+  RedisShim,
+} from "./typegate/memory_rate_limiter.ts";
 
 const logger = getLogger(import.meta);
 logger.info(`typegate v${config.version} starting`);
@@ -52,14 +55,13 @@ let register: Register | undefined;
 let limiter: RateLimiter | undefined;
 
 try {
-  // throw "Stop";
   register = await ReplicatedRegister.init(deferredTypegate, redisConfig);
   limiter = await RedisRateLimiter.init(redisConfig);
 } catch (err) {
   logger.warning(err);
   logger.warning("Entering Redis-less mode");
   register = new MemoryRegister();
-  limiter = new NoLimiter();
+  limiter = new MemoryRateLimiter(new RedisShim());
 }
 
 const typegate = new Typegate(register!, limiter!);
