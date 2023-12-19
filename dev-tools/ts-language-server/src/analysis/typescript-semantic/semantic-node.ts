@@ -1,4 +1,5 @@
 import { Parser } from "../../parser.ts";
+import { ModuleDiagnosticsContext } from "../diagnostics/context.ts";
 import { asMethodCall } from "./utils/mod.ts";
 
 export type TgTypeName =
@@ -27,7 +28,7 @@ const types: TgTypeName[] = [
 ];
 
 export abstract class SemanticNode {
-  protected constructor(public node: Parser.SyntaxNode) { }
+  protected constructor(public node: Parser.SyntaxNode) {}
 
   asType(): TgType | null {
     if (this instanceof TgType) {
@@ -53,30 +54,48 @@ export abstract class TgType extends SemanticNode {
   }
 
   toString(): string {
-    return `TgType(${this.type}${this.children
+    return `TgType(${this.type}${
+      this.children
         .map((c) => `, ${c.key} => ${c.type.toString()}`)
         .join("")
-      })`;
+    })`;
   }
 
-  public static fromNode(node: Parser.SyntaxNode): TgType {
+  public static fromNode(
+    node: Parser.SyntaxNode,
+    ctx: ModuleDiagnosticsContext,
+  ): TgType | null {
+    if (node.type === "identifier") {
+      const variable = ctx.symbolRegistry.findVariable(node);
+      if (variable == null) {
+        ctx.error(node, `unknown variable: ${node.text}`);
+        return null;
+      }
+      return TgType.fromNode(variable.definition, ctx);
+    }
+
+    // TODO if symbol
     if (!node.text.startsWith("t.")) {
-      throw new Error("not a type");
+      ctx.error(node, "not a type");
+      return null;
     }
     if (node.type !== "call_expression") {
-      throw new Error("not a type");
+      ctx.error(node, "not a type");
+      return null;
     }
 
     const methodCall = asMethodCall(node);
     if (methodCall == null) {
       // TODO function call returning a type??
-      throw new Error("not a type");
+      ctx.error(node, "not a type");
+      return null;
     }
 
     // TODO check imported symbols, etc.
     if (methodCall.object.text !== "t") {
       // TODO nested call expressions: t.integer().optional()
-      throw new Error("not a type");
+      ctx.error(node, "not a type");
+      return null;
     }
 
     switch (methodCall.method) {
@@ -95,37 +114,52 @@ export abstract class TgType extends SemanticNode {
           return new TgTypeStruct(node, []);
         }
         if (args.namedChildren.length > 1) {
-          // TODO
-          throw new Error("struct takes only one argument");
+          ctx.error(args, "too many arguments");
+          return null;
         }
         // TODO
         const arg = args.namedChildren[0];
-        const props = arg.namedChildren.map((node) => {
-          const keyNode = node.childForFieldName("key");
-          if (keyNode == null) {
-            throw new Error("key not found");
+
+        const props: ChildType[] = [];
+        for (const child of arg.namedChildren) {
+          if (child.type !== "pair" || child.namedChildren.length !== 2) {
+            ctx.error(child, "could not parse: not a pair");
+            return null;
           }
+          const keyNode = child.namedChildren[0];
+          // if (keyNode == null) {
+          //   ctx.error(child, "could not parse: key not found");
+          //   console.error("child", child.toString());
+          //   return null;
+          // }
           if (keyNode.type !== "string") {
-            throw new Error("key is not a string");
+            ctx.error(keyNode, "key must be a string");
+            return null;
           }
           const key = keyNode.text;
 
-          const valueNode = node.childForFieldName("value");
-          if (valueNode == null) {
-            throw new Error("value not found");
-          }
-          const value = TgType.fromNode(valueNode);
-          return { key, type: value } as ChildType;
-        });
+          const valueNode = child.namedChildren[1];
+          // if (valueNode == null) {
+          //   ctx.error(node, "could not parse: value not found");
+          //   console.error("child", child.toString());
+          //   console.error(
+          //     "children",
+          //     child.namedChildren.map((c) => [c.text, c.toString()]),
+          //   );
+          //   return null;
+          // }
+          const value = TgType.fromNode(valueNode, ctx);
 
-        // for (const child of arg.namedChildren) {
-        //   console.log("t.struct argument", child.toString());
-        // }
+          if (value == null) {
+            return null;
+          }
+          props.push({ key, type: value });
+        }
 
         return new TgTypeStruct(node, props);
       }
       default: {
-        throw new Error(`unknown type t.${methodCall.method}`);
+        ctx.error(node, `unknown type: ${methodCall.method}`);
       }
     }
   }
@@ -153,7 +187,7 @@ export class TgTypeInteger extends TgType {
 
 export class TgTypeFloat extends TgType {
   constructor(node: Parser.SyntaxNode) {
-    super("integer", node);
+    super("float", node);
   }
 }
 

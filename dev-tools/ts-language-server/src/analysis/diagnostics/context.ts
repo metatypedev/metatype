@@ -42,7 +42,7 @@ export class ModuleDiagnosticsContext {
 
     for (const [name, exposedFunction] of typegraphDef.exposedFunctions) {
       const inputType = exposedFunction.inputType;
-      if (!(inputType instanceof TgTypeStruct)) {
+      if (inputType && !(inputType instanceof TgTypeStruct)) {
         this.error(
           inputType.node,
           `Exposed function '${name}': expected input type to be a struct but got ${inputType}`,

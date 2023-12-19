@@ -1,4 +1,5 @@
 import { Parser, TypeScript } from "../parser.ts";
+import { ModuleDiagnosticsContext } from "./diagnostics/context.ts";
 import { Runtime } from "./runtimes/mod.ts";
 import { ScopeManager } from "./typescript-semantic/scope.ts";
 import { TgType } from "./typescript-semantic/semantic-node.ts";
@@ -8,7 +9,7 @@ export type ExposedFunction = {
   name: string;
   node: Parser.SyntaxNode;
   runtime: Runtime;
-  inputType: TgType;
+  inputType: TgType | null; // null if could not be parsed or invalid
   generator: string;
   generatorArgs: Parser.SyntaxNode;
   reduce?: Parser.SyntaxNode | null;
@@ -38,7 +39,7 @@ const runtimeNameByConstructor = {
  */
 export function analyzeExposeExpression(
   node: Parser.SyntaxNode,
-  scopeManager: ScopeManager,
+  ctx: ModuleDiagnosticsContext,
 ): Omit<ExposedFunction, "name"> {
   let methodCall = asMethodCall(node);
   if (methodCall === null) {
@@ -65,7 +66,7 @@ export function analyzeExposeExpression(
 
   let runtimeNode = methodCall.object;
   if (runtimeNode.type === "identifier") {
-    const variable = scopeManager.findVariable(runtimeNode);
+    const variable = ctx.symbolRegistry.findVariable(runtimeNode);
     if (variable === null) {
       // TODO diagnostic??
       throw new Error(`variable ${runtimeNode.text} not found`);
@@ -99,7 +100,7 @@ export function analyzeExposeExpression(
     inputType: runtime.getGeneratorInputType(
       generator,
       generatorArgs.namedChildren,
-      scopeManager,
+      ctx,
     ),
     generator,
     generatorArgs,

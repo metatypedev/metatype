@@ -154,7 +154,7 @@ export class TypegraphDefinition {
     if (this.#exposedFunctions.size === 0) {
       for (const [name, node] of this.#findExposedFunctions()) {
         this.#exposedFunctions.set(name, {
-          ...analyzeExposeExpression(node, this.ctx.symbolRegistry),
+          ...analyzeExposeExpression(node, this.ctx),
           name,
         });
       }
