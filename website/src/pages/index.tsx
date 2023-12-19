@@ -27,6 +27,7 @@ function Header() {
           <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-metared from-15% via-metablue via-50% to-metared to-85%">
             API development
           </span>{" "}
+          <span></span>
           platform
         </h1>
         <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[850px]">
