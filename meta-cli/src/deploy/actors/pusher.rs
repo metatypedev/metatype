@@ -15,11 +15,11 @@ use indoc::indoc;
 use pathdiff::diff_paths;
 use serde::Deserialize;
 
+use super::console::input::ConfirmHandler;
 use crate::config::Config;
 use crate::deploy::push::migration_resolution::{
     ForceReset, ManualResolution, RemoveLatestMigration,
 };
-use crate::input::ConfirmHandler;
 use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use crate::utils::graphql;
 use crate::utils::{graphql::Query, Node};

@@ -20,11 +20,13 @@ use common::typegraph::Typegraph;
 use tokio::sync::oneshot;
 
 use crate::config::Config;
-use crate::input::{Confirm, ConfirmHandler, Select, SelectOption};
 use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use crate::utils::Node;
 
-use super::console::{Console, ConsoleActor};
+use super::console::{
+    input::{Confirm, ConfirmHandler, Select, SelectOption},
+    Console, ConsoleActor,
+};
 use super::pusher::{Push, PusherActor};
 
 enum RetryConfig {

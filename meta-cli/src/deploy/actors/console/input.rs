@@ -1,8 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-// TODO move this file
-
 use std::borrow::Cow;
 
 use actix::Addr;

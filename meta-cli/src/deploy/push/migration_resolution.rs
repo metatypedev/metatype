@@ -9,10 +9,12 @@ use colored::Colorize;
 use common::typegraph::Typegraph;
 use filetime::{set_file_mtime, FileTime};
 
-use crate::deploy::actors::console::{Console, ConsoleActor};
+use crate::deploy::actors::console::{
+    input::{OptionLabel, SelectOption},
+    Console, ConsoleActor,
+};
+use crate::deploy::actors::push_manager::PushManagerActor;
 use crate::deploy::actors::push_manager::{AddOneTimeOptions, OneTimePushOption};
-use crate::input::SelectOption;
-use crate::{deploy::actors::push_manager::PushManagerActor, input::OptionLabel};
 
 #[derive(Debug)]
 pub struct ForceReset {
