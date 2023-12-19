@@ -6,7 +6,6 @@ import { createGraphiQLFetcher } from "@graphiql/toolkit";
 import BrowserOnly from "@docusaurus/BrowserOnly";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import CodeBlock from "@theme-original/CodeBlock";
-import Link from "@docusaurus/Link";
 
 import {
   GraphiQLProvider,
@@ -102,11 +101,11 @@ function MiniQLBrowser({
               {codeFileUrl ? (
                 <div className="p-2 text-xs font-light">
                   See/edit full code on{" "}
-                  <Link
+                  <a
                     href={`https://github.com/metatypedev/metatype/blob/main/${codeFileUrl}`}
                   >
                     {codeFileUrl}
-                  </Link>
+                  </a>
                 </div>
               ) : null}
               {code ? (
