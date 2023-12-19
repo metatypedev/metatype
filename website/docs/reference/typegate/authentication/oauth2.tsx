@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import React, { useCallback, useState } from "react";
-import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import BrowserOnly from "@docusaurus/BrowserOnly";
 
@@ -31,10 +30,10 @@ function OAuth2({ name, typegraph }) {
   )}`;
   return (
     <p className="mb-6">
-      Start the flow via <Link href={url}>{url}</Link> and take token by clicking{" "}
-      <Link className="cursor-pointer" onClick={take}>
+      Start the flow via <a href={url}>{url}</a> and take token by clicking{" "}
+      <a className="cursor-pointer" onClick={take}>
         here
-      </Link>
+      </a>
       :<br />
       <input
         className="py-1 border-0 bg-slate-200 w-full"
