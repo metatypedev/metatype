@@ -61,6 +61,7 @@ try {
     register = new MemoryRegister();
     limiter = new NoLimiter();
   } else {
+    logger.error(err);
     throw err;
   }
 }

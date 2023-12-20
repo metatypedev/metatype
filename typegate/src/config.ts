@@ -87,7 +87,7 @@ const config = await configOrExit([
     timer_max_timeout_ms: 3000,
     timer_destroy_ressources: true,
     timer_policy_eval_retries: 1,
-    allow_redisless_mode_on_fail: true,
+    allow_redisless_mode_on_fail: false,
   },
   mapKeys(Deno.env.toObject(), (k: string) => k.toLowerCase()),
   parse(Deno.args) as Record<string, unknown>,
