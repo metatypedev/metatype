@@ -158,6 +158,7 @@ Meta.test("s3", async (t) => {
 
     assertExists(url);
     const res2 = await fetch(url2);
+    console.log("DOWNLOAD URL", url);
     const text = await res2.text();
     assertEquals(text, fileContent2);
   });
@@ -226,3 +227,57 @@ Meta.test("s3", async (t) => {
       .on(e);
   });
 });
+
+// Meta.test("s3 upload with fetch", async (t) => {
+//   const e = await t.engine("runtimes/s3/s3.py", {
+//     secrets: {
+//       HOST: HOST,
+//       REGION: REGION,
+//       ACCESS_KEY: ACCESS_KEY,
+//       SECRET_KEY: SECRET_KEY,
+//       PATH_STYLE: PATH_STYLE,
+//     },
+//   });
+
+//   await initBucket();
+
+//   const fileContent = "Hello, World!";
+//   const file = new File(
+//     [fileContent],
+//     "hello.txt",
+//     { type: "text/plain" },
+//   );
+//   const formData = new FormData();
+//   formData.append(
+//     "operations",
+//     JSON.stringify({
+//       query: `
+//         mutation ($file: File!, $path: String!) {
+//           upload(file: $file, path: $path)
+//         }
+//       `,
+//       variables: {
+//         file,
+//         path: "hello.txt",
+//       },
+//     }),
+//   );
+//   formData.append("map", JSON.stringify({ 0: ["variables.file"] }));
+//   formData.append(
+//     "0",
+//     new Blob([await file.arrayBuffer()], { type: "text/plain" }),
+//     "hello.txt",
+//   );
+
+//   await t.should(
+//     "work",
+//     async () => {
+//       const req = new Request(`http://typegate.local/${e.name}`, {
+//         method: "POST",
+//         body: formData,
+//       });
+//       const res = await execute(e, req);
+//       console.log("response", res);
+//     },
+//   );
+// });
