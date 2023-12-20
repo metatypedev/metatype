@@ -14,7 +14,6 @@ use crate::config::Config;
 enum Mode {
     Input {
         output_buffer: Vec<Box<dyn OutputMessage + 'static>>,
-        input_tx: oneshot::Sender<String>,
     },
     Output,
 }
@@ -23,13 +22,19 @@ pub struct ConsoleActor {
     #[allow(dead_code)]
     config: Arc<Config>,
     mode: Mode,
+    input_tx: std::sync::mpsc::Sender<oneshot::Sender<String>>,
 }
 
 impl ConsoleActor {
     pub fn new(config: Arc<Config>) -> Self {
+        let (input_tx, input_rx) = std::sync::mpsc::channel();
+
+        Self::create_input_thread(input_rx);
+
         Self {
             config,
             mode: Mode::Output,
+            input_tx,
         }
     }
 
@@ -46,24 +51,27 @@ impl ConsoleActor {
             }
         }
     }
+
+    fn create_input_thread(rx: std::sync::mpsc::Receiver<oneshot::Sender<String>>) {
+        std::thread::spawn(move || {
+            let mut stdin = std::io::stdin().lock();
+
+            while let Ok(tx) = rx.recv() {
+                let mut input = String::new();
+                stdin.read_line(&mut input).unwrap();
+                tx.send(input).unwrap();
+            }
+
+            log::trace!("Input thread stopped.");
+        });
+    }
 }
 
 impl Actor for ConsoleActor {
     type Context = Context<Self>;
 
-    fn started(&mut self, ctx: &mut Context<Self>) {
+    fn started(&mut self, _ctx: &mut Context<Self>) {
         log::trace!("ConsoleActor started.");
-        let console = ctx.address();
-
-        std::thread::spawn(move || {
-            let mut stdin = std::io::stdin().lock();
-
-            loop {
-                let mut input = String::new();
-                stdin.read_line(&mut input).unwrap();
-                console.do_send(ConsoleInputLine(input));
-            }
-        });
     }
 
     fn stopped(&mut self, _ctx: &mut Context<Self>) {
@@ -140,24 +148,8 @@ impl Handler<StartInput> for ConsoleActor {
         let StartInput(tx) = msg;
         self.mode = Mode::Input {
             output_buffer: Vec::new(),
-            input_tx: tx,
         };
-    }
-}
-
-#[derive(Message)]
-#[rtype(result = "()")]
-struct ConsoleInputLine(String);
-
-impl Handler<ConsoleInputLine> for ConsoleActor {
-    type Result = ();
-
-    fn handle(&mut self, msg: ConsoleInputLine, _ctx: &mut Context<Self>) -> Self::Result {
-        if let Mode::Input { input_tx, .. } = std::mem::replace(&mut self.mode, Mode::Output) {
-            input_tx.send(msg.0).unwrap();
-        } else {
-            // discard line
-        }
+        self.input_tx.send(tx).unwrap();
     }
 }
 

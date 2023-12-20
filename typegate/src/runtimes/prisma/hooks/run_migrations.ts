@@ -153,9 +153,10 @@ class Migration {
         await this.#opApply(migrations);
       }
 
-      if (await this.#opDiff()) {
+      const diff = await this.#opDiff();
+      if (diff) {
         // create new migration
-        await this.#opCreate();
+        await this.#opCreate(diff);
       }
     } else { // like `prisma deploy`
       if (migrations == null) {
