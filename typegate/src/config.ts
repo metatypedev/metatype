@@ -19,8 +19,10 @@ const schema = {
   hostname: z.string(),
   redis_url: z
     .string()
-    .url()
     .transform((s: string) => {
+      if (s == "none") {
+        return new URL("redis://none");
+      }
       const url = new URL(s);
       if (url.password === "") {
         url.password = Deno.env.get("REDIS_PASSWORD") ?? "";
@@ -42,7 +44,6 @@ const schema = {
   timer_max_timeout_ms: z.coerce.number().positive().max(60000),
   timer_destroy_ressources: z.boolean(),
   timer_policy_eval_retries: z.number().nonnegative().max(5),
-  allow_redisless_mode_on_fail: z.boolean(),
   tg_admin_password: z.string(),
   tmp_dir: z.string(),
   jwt_max_duration_sec: z.coerce.number().positive(),
@@ -87,7 +88,6 @@ const config = await configOrExit([
     timer_max_timeout_ms: 3000,
     timer_destroy_ressources: true,
     timer_policy_eval_retries: 1,
-    allow_redisless_mode_on_fail: false,
   },
   mapKeys(Deno.env.toObject(), (k: string) => k.toLowerCase()),
   parse(Deno.args) as Record<string, unknown>,

@@ -51,19 +51,13 @@ const deferredTypegate = deferred<Typegate>();
 let register: Register | undefined;
 let limiter: RateLimiter | undefined;
 
-try {
+if (redisConfig.hostname != "none") {
   register = await ReplicatedRegister.init(deferredTypegate, redisConfig);
   limiter = await RedisRateLimiter.init(redisConfig);
-} catch (err) {
-  if (config.allow_redisless_mode_on_fail) {
-    logger.warning(err);
-    logger.warning("Entering Redis-less mode");
-    register = new MemoryRegister();
-    limiter = new NoLimiter();
-  } else {
-    logger.error(err);
-    throw err;
-  }
+} else {
+  logger.warning("Entering Redis-less mode");
+  register = new MemoryRegister();
+  limiter = new NoLimiter();
 }
 
 const typegate = new Typegate(register!, limiter!);
