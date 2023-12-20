@@ -55,10 +55,14 @@ try {
   register = await ReplicatedRegister.init(deferredTypegate, redisConfig);
   limiter = await RedisRateLimiter.init(redisConfig);
 } catch (err) {
-  logger.warning(err);
-  logger.warning("Entering Redis-less mode");
-  register = new MemoryRegister();
-  limiter = new NoLimiter();
+  if (config.allow_redisless_mode_on_fail) {
+    logger.warning(err);
+    logger.warning("Entering Redis-less mode");
+    register = new MemoryRegister();
+    limiter = new NoLimiter();
+  } else {
+    throw err;
+  }
 }
 
 const typegate = new Typegate(register!, limiter!);
