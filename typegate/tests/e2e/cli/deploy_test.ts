@@ -125,6 +125,59 @@ Meta.test(
   { port: 7895, systemTypegraphs: true },
 );
 
+// new
+Meta.test(
+  "meta deploy: fails migration for new columns without default value",
+  async (t) => {
+    await t.should("load first version of the typegraph", async () => {
+      await reset("e2e7895alt");
+      await writeTypegraph(null);
+    });
+
+    const port = 7895;
+
+    // `deploy` must be run outside of the `should` block,
+    // otherwise this would fail by leaking ops.
+    // That is expected since it creates new engine that persists beyond the
+    // `should` block.
+    await deploy(port);
+
+    await t.should("insert records", async () => {
+      const e = t.getTypegraphEngine(tgName);
+      if (!e) {
+        throw new Error("typegraph not found");
+      }
+      await gql`
+        mutation {
+          createRecord(data: {}) {
+            id
+          }
+        }
+      `
+        .expectData({
+          createRecord: {
+            id: 1,
+          },
+        })
+        .on(e);
+    });
+
+    await t.should("load second version of the typegraph", async () => {
+      await writeTypegraph(1);
+    });
+
+    try {
+      await deploy(port);
+    } catch (e) {
+      assertStringIncludes(
+        e.message,
+        'column "age" of relation "Record" contains null values: set a default value:',
+      );
+    }
+  },
+  { port: 7895, systemTypegraphs: true, only: true },
+);
+
 Meta.test(
   "meta deploy: succeeds migration for new columns with default value",
   async (t) => {
