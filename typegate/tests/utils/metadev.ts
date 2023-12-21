@@ -1,5 +1,9 @@
-import { readline } from "https://deno.land/x/readline@v1.1.0/mod.ts";
-import { testDir } from "test_utils/dir.ts";
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
+
+import { testDir } from "test-utils/dir.ts";
+import { getMetaCliBin } from "test-utils/meta.ts";
+import { TextLineStream } from "../../../dev/deps.ts";
 
 export type MetaDevOptions = {
   args?: string[];
@@ -13,13 +17,16 @@ export type FetchOutputLineParam = {
 
 export class MetaDev {
   #process: Deno.ChildProcess;
-  #writer: WritableStreamDefaultWriter<Uint8Array>;
-  #stdoutReader: ReadableStream<Uint8Array>;
-  #stderrReader: ReadableStream<Uint8Array>;
-  #stdout: AsyncIterableIterator<Uint8Array>;
-  #stderr: AsyncIterableIterator<Uint8Array>;
+  #stdinStream: WritableStream<Uint8Array>;
+  #stdoutStream: ReadableStream<string>;
+  #stderrStream: ReadableStream<string>;
+  #stdout: ReadableStreamDefaultReader<string>;
+  #stderr: ReadableStreamDefaultReader<string>;
 
-  constructor(metaBin: string, public options: MetaDevOptions) {
+  private constructor(
+    metaBin: string,
+    public options: MetaDevOptions,
+  ) {
     this.#process = new Deno.Command(metaBin, {
       cwd: options.cwd ?? testDir,
       args: options.args ?? [],
@@ -29,23 +36,35 @@ export class MetaDev {
       stdin: "piped",
     }).spawn();
 
-    this.#writer = this.#process.stdin.getWriter();
-    this.#stdoutReader = this.#process.stdout;
-    this.#stderrReader = this.#process.stderr;
-    this.#stdout = readline(this.#stdoutReader);
-    this.#stderr = readline(this.#stderrReader);
+    this.#stdinStream = this.#process.stdin;
+    this.#stdoutStream = this.#process.stdout
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(new TextLineStream());
+    this.#stderrStream = this.#process.stderr
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(new TextLineStream());
+    this.#stdout = this.#stdoutStream.getReader();
+    this.#stderr = this.#stderrStream.getReader();
+  }
+
+  static async start(options: MetaDevOptions = {}): Promise<MetaDev> {
+    const metaBin = await getMetaCliBin();
+    return new MetaDev(metaBin, options);
   }
 
   // TODO timeout
   async #fetchOutputLines(
-    iterator: AsyncIterableIterator<Uint8Array>,
+    reader: ReadableStreamDefaultReader<string>,
     param: FetchOutputLineParam,
   ) {
-    for await (const line of iterator) {
-      const text = new TextDecoder().decode(line);
-      const shouldContinue = await param(text);
-      if (!shouldContinue) break;
+    let shouldContinue = true;
+    while (shouldContinue) {
+      const { value: line, done } = await reader.read();
+      if (done) break;
+      shouldContinue = await param(line);
     }
+
+    console.log("end of iteration");
   }
 
   fetchStdoutLines(param: FetchOutputLineParam) {
@@ -56,7 +75,18 @@ export class MetaDev {
     return this.#fetchOutputLines(this.#stderr, param);
   }
 
-  writeLine(line: string) {
-    this.#writer.write(new TextEncoder().encode(`${line}\n`));
+  async writeLine(line: string) {
+    const writer = this.#stdinStream.getWriter();
+    await writer.write(new TextEncoder().encode(`${line}\n`));
+    writer.releaseLock();
+  }
+
+  async close() {
+    await this.#stdinStream.close();
+    await this.#stdout.cancel();
+    await this.#stderr.cancel();
+    this.#process.kill("SIGKILL");
+    const status = await this.#process.status;
+    return status;
   }
 }

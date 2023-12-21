@@ -16,16 +16,16 @@ const tgName = "migration-failure-test";
  * conflicts with one another when running in parallel.
  */
 
-async function writeTypegraph(version: number | null) {
+async function writeTypegraph(version: number | null, target = "migration.py") {
   if (version == null) {
-    await m.shell(["bash", "-c", "cp ./templates/migration.py migration.py"]);
+    await m.shell(["bash", "-c", `cp ./templates/migration.py ${target}`]);
   } else {
     await m.shell([
       "bash",
       "select.sh",
       "templates/migration.py",
       `${version}`,
-      "migration.py",
+      target,
     ]);
   }
 }
@@ -125,59 +125,6 @@ Meta.test(
   { port: 7895, systemTypegraphs: true },
 );
 
-// new
-Meta.test(
-  "meta deploy: fails migration for new columns without default value",
-  async (t) => {
-    await t.should("load first version of the typegraph", async () => {
-      await reset("e2e7895alt");
-      await writeTypegraph(null);
-    });
-
-    const port = 7895;
-
-    // `deploy` must be run outside of the `should` block,
-    // otherwise this would fail by leaking ops.
-    // That is expected since it creates new engine that persists beyond the
-    // `should` block.
-    await deploy(port);
-
-    await t.should("insert records", async () => {
-      const e = t.getTypegraphEngine(tgName);
-      if (!e) {
-        throw new Error("typegraph not found");
-      }
-      await gql`
-        mutation {
-          createRecord(data: {}) {
-            id
-          }
-        }
-      `
-        .expectData({
-          createRecord: {
-            id: 1,
-          },
-        })
-        .on(e);
-    });
-
-    await t.should("load second version of the typegraph", async () => {
-      await writeTypegraph(1);
-    });
-
-    try {
-      await deploy(port);
-    } catch (e) {
-      assertStringIncludes(
-        e.message,
-        'column "age" of relation "Record" contains null values: set a default value:',
-      );
-    }
-  },
-  { port: 7895, systemTypegraphs: true, only: true },
-);
-
 Meta.test(
   "meta deploy: succeeds migration for new columns with default value",
   async (t) => {
@@ -221,71 +168,73 @@ Meta.test(
   { port: 7896, systemTypegraphs: true },
 );
 
-Meta.test("cli:deploy - automatic migrations", async (t) => {
-  const e = await t.engine("runtimes/prisma/prisma.py", {
-    secrets: {
-      POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=e2e7897",
-    },
-  });
+Meta.test(
+  "cli:deploy - automatic migrations",
+  async (t) => {
+    const e = await t.engine("runtimes/prisma/prisma.py", {
+      secrets: {
+        POSTGRES:
+          "postgresql://postgres:password@localhost:5432/db?schema=e2e7897",
+      },
+    });
 
-  await dropSchemas(e);
-  await removeMigrations(e);
+    await dropSchemas(e);
+    await removeMigrations(e);
 
-  const nodeConfigs = ["--target", "dev7897"];
+    const nodeConfigs = ["--target", "dev7897"];
 
-  await t.should("fail to access database", async () => {
-    await gql`
+    await t.should("fail to access database", async () => {
+      await gql`
         query {
           findManyRecords {
             id
           }
         }
       `
-      .expectErrorContains("table `e2e7897.record` does not exist")
-      .on(e);
-  });
+        .expectErrorContains("table `e2e7897.record` does not exist")
+        .on(e);
+    });
 
-  await t.should("fail on dirty repo", async () => {
-    await t.shell(["bash", "-c", "touch README.md"]);
-    await assertRejects(() =>
-      t.meta(["deploy", ...nodeConfigs, "-f", "prisma.py"])
-    );
-  });
+    await t.should("fail on dirty repo", async () => {
+      await t.shell(["bash", "-c", "touch README.md"]);
+      await assertRejects(() =>
+        t.meta(["deploy", ...nodeConfigs, "-f", "prisma.py"])
+      );
+    });
 
-  await t.should("commit changes", async () => {
-    await t.shell(["git", "add", "."]);
-    await t.shell(["git", "commit", "-m", "create migrations"]);
-  });
+    await t.should("commit changes", async () => {
+      await t.shell(["git", "add", "."]);
+      await t.shell(["git", "commit", "-m", "create migrations"]);
+    });
 
-  // not in t.should because it creates a worker that will not be closed
-  await t.meta([
-    "deploy",
-    ...nodeConfigs,
-    "-f",
-    "prisma.py",
-    "--create-migration",
-  ]);
+    // not in t.should because it creates a worker that will not be closed
+    await t.meta([
+      "deploy",
+      ...nodeConfigs,
+      "-f",
+      "prisma.py",
+      "--create-migration",
+    ]);
 
-  await t.should(
-    "succeed have replaced and terminated the previous engine",
-    async () => {
-      await gql`
+    await t.should(
+      "succeed have replaced and terminated the previous engine",
+      async () => {
+        await gql`
           query {
             findManyRecords {
               id
             }
           }
         `
-        .expectErrorContains("Could not find engine")
-        .on(e);
-    },
-  );
+          .expectErrorContains("Could not find engine")
+          .on(e);
+      },
+    );
 
-  const e2 = t.getTypegraphEngine("prisma")!;
+    const e2 = t.getTypegraphEngine("prisma")!;
 
-  await t.should("succeed to query database", async () => {
-    await gql`
+    await t.should("succeed to query database", async () => {
+      await gql`
         query {
           findManyRecords {
             id
@@ -293,21 +242,23 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
           }
         }
       `
-      .expectData({
-        findManyRecords: [],
-      })
-      .on(e2);
-  });
-}, {
-  systemTypegraphs: true,
-  port: 7897,
-  gitRepo: {
-    content: {
-      "prisma.py": "runtimes/prisma/prisma.py",
-      "metatype.yml": "metatype.yml",
+        .expectData({
+          findManyRecords: [],
+        })
+        .on(e2);
+    });
+  },
+  {
+    systemTypegraphs: true,
+    port: 7897,
+    gitRepo: {
+      content: {
+        "prisma.py": "runtimes/prisma/prisma.py",
+        "metatype.yml": "metatype.yml",
+      },
     },
   },
-});
+);
 
 Meta.test(
   "cli:deploy - with prefix",

@@ -86,6 +86,7 @@ impl Loader {
             #[cfg(debug_assertions)]
             {
                 if !p.stderr.is_empty() {
+                    // TODO console actor
                     eprintln!(
                         "{}",
                         std::str::from_utf8(&p.stderr).expect("invalid utf-8 on stderr")

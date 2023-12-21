@@ -153,6 +153,28 @@ impl Handler<StartInput> for ConsoleActor {
     }
 }
 
+#[derive(Message)]
+#[rtype(result = "()")]
+struct EndInput;
+
+impl Handler<EndInput> for ConsoleActor {
+    type Result = ();
+
+    fn handle(&mut self, _msg: EndInput, ctx: &mut Context<Self>) -> Self::Result {
+        match std::mem::replace(&mut self.mode, Mode::Output) {
+            Mode::Input { output_buffer } => {
+                for output in output_buffer.into_iter() {
+                    output.send();
+                }
+            }
+            Mode::Output => {
+                ctx.address()
+                    .error("EndInput received while not in input mode.".to_string());
+            }
+        }
+    }
+}
+
 #[async_trait::async_trait]
 pub trait Console {
     fn info(&self, msg: String);
@@ -178,6 +200,8 @@ impl Console for Addr<ConsoleActor> {
     async fn read_line(&self) -> String {
         let (tx, rx) = oneshot::channel();
         self.do_send(StartInput(tx));
-        rx.await.unwrap()
+        let line = rx.await.unwrap();
+        self.do_send(EndInput);
+        line
     }
 }

@@ -32,6 +32,14 @@ export async function metaCli(
 
 type MetaCli = (args: string[], options?: ShellOptions) => Promise<ShellOutput>;
 
+export async function getMetaCliBin(): Promise<string> {
+  if (!compiled) {
+    await shell(["cargo", "build", "--package", "meta-cli"]);
+    compiled = true;
+  }
+  return metaCliExe;
+}
+
 export async function createMetaCli(
   shell: (args: string[], options?: ShellOptions) => Promise<ShellOutput>,
 ): Promise<MetaCli> {
