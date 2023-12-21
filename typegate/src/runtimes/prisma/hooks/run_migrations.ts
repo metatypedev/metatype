@@ -204,7 +204,7 @@ class Migration {
         this.#warn(`Database reset required`);
         this.#warn(res.ResetRequired.reset_reason);
         this.#warn("Re-running the migrations with the `reset` flag");
-        this.#opApply(migrations, true);
+        await this.#opApply(migrations, true);
         return;
       } else {
         throw MigrationFailure.resetRequired(
