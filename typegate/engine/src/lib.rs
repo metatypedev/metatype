@@ -102,6 +102,11 @@ pub async fn launch_typegate_deno(
     main_mod: deno_core::ModuleSpecifier,
     import_map_url: Option<String>,
 ) -> Result<()> {
+    std::env::var("REDIS_URL")
+        .ok()
+        .ok_or_else(|| std::env::set_var("REDIS_URL", "none"))
+        .ok();
+
     let permissions = deno_runtime::permissions::PermissionsOptions {
         allow_run: Some(["hostname"].into_iter().map(str::to_owned).collect()),
         allow_sys: Some(vec![]),
