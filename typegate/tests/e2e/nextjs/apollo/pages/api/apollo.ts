@@ -13,7 +13,9 @@ export default async function handler(
   res: NextApiResponse<ResponseData>,
 ) {
   const client = new ApolloClient({
-    uri: "http://localhost:7890/apollo_test",
+    // FIXME: what is the correct endpoint?
+    // "Response not successful: Received status code 404"
+    uri: "http://localhost:7897/apollo-test",
     cache: new InMemoryCache(),
   });
 
@@ -26,12 +28,12 @@ export default async function handler(
 
   client.mutate({
     mutation: gql`
-      mutation ($file: Upload!) {
+      mutation ($file: File!) {
         upload(file: $file)
       }
     `,
     variables: { file },
   })
     .then((out: any) => res.status(200).json(out))
-    .catch((err: any) => res.status(400).json(err));
+    .catch((err: any) => res.status(400).json({ error: err!.message }));
 }
