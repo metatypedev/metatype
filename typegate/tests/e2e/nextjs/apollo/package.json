@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.8.8",
+    "apollo-upload-client": "^18.0.1",
     "graphql": "^16.8.1",
     "next": "14.0.4",
     "react": "^18",

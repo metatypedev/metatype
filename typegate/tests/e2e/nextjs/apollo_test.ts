@@ -1,0 +1,124 @@
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
+
+// import { Meta } from "../../utils/mod.ts";
+// import {
+//   CreateBucketCommand,
+//   DeleteObjectsCommand,
+//   ListObjectsCommand,
+//   S3Client,
+// } from "aws-sdk/client-s3";
+// import { TestModule } from "test-utils/test_module.ts";
+// import { testDir } from "test-utils/dir.ts";
+// import { join } from "std/path/mod.ts";
+// import { launch } from "https://deno.land/x/astral@0.3.2/mod.ts";
+
+// const HOST = "http://localhost:9000";
+// const REGION = "local";
+// const ACCESS_KEY = "minio";
+// const SECRET_KEY = "password";
+// const PATH_STYLE = "true";
+
+// const m = new TestModule(import.meta);
+
+// async function initBucket() {
+//   const client = new S3Client({
+//     endpoint: "http://localhost:9000",
+//     region: "local",
+//     credentials: {
+//       accessKeyId: ACCESS_KEY,
+//       secretAccessKey: SECRET_KEY,
+//     },
+//     forcePathStyle: true,
+//   });
+
+//   try {
+//     const command = new CreateBucketCommand({
+//       Bucket: "bucket",
+//     });
+//     await client.send(command);
+//   } catch (_e) {
+//     // bucket already exists
+//     const listCommand = new ListObjectsCommand({ Bucket: "bucket" });
+//     const res = await client.send(listCommand);
+
+//     if (res.Contents != null) {
+//       const deleteCommand = new DeleteObjectsCommand({
+//         Bucket: "bucket",
+//         Delete: {
+//           Objects: res.Contents.map(({ Key }) => ({ Key })),
+//         },
+//       });
+//       await client.send(deleteCommand);
+//     }
+//   }
+// }
+
+// function startNextServer() {
+//   const command = new Deno.Command("bash", {
+//     args: ["./server.sh"],
+//     cwd: join(testDir, "e2e", "nextjs"),
+//     stderr: "piped",
+//     stdout: "piped",
+//   });
+//   return command.spawn();
+// }
+
+// async function renderHtml(url: string) {
+//   const browser = await launch();
+//   try {
+//     const page = await browser.newPage(url);
+//     return await page.content();
+//   } catch (err) {
+//     throw err;
+//   } finally {
+//     await browser.close();
+//   }
+// }
+
+// const port = 7897;
+
+// Meta.test("apollo client", async (t) => {
+//   await initBucket();
+
+//   await m.cli(
+//     {
+//       env: {
+//         HOST: HOST,
+//         REGION: REGION,
+//         ACCESS_KEY: ACCESS_KEY,
+//         SECRET_KEY: SECRET_KEY,
+//         PATH_STYLE: PATH_STYLE,
+//       },
+//     },
+//     "deploy",
+//     "--target",
+//     `dev${port}`,
+//     "-f",
+//     "typegraph/apollo.py",
+//     "--allow-dirty",
+//   );
+
+//   // non blocking
+//   const proc = startNextServer();
+
+//   console.log("PID", proc.pid);
+
+//   const res = await renderHtml("http://localhost:3000");
+//   console.log("OUTPUT", res);
+
+//   proc.kill();
+// }, { sanitizeOps: false });
+
+// Meta.test("meta undeploy", async (t) => {
+//   await t.should("free resources", async () => {
+//     await m.cli(
+//       {},
+//       "undeploy",
+//       "--target",
+//       `dev${port}`,
+//       "--typegraph",
+//       "apollo-test",
+//     );
+//   });
+// }, { port, systemTypegraphs: true });
