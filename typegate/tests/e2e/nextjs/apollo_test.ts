@@ -11,7 +11,6 @@
 // import { TestModule } from "test-utils/test_module.ts";
 // import { testDir } from "test-utils/dir.ts";
 // import { join } from "std/path/mod.ts";
-// import { launch } from "https://deno.land/x/astral@0.3.2/mod.ts";
 
 // const HOST = "http://localhost:9000";
 // const REGION = "local";
@@ -64,18 +63,6 @@
 //   return command.spawn();
 // }
 
-// async function renderHtml(url: string) {
-//   const browser = await launch();
-//   try {
-//     const page = await browser.newPage(url);
-//     return await page.content();
-//   } catch (err) {
-//     throw err;
-//   } finally {
-//     await browser.close();
-//   }
-// }
-
 // const port = 7897;
 
 // Meta.test("apollo client", async (t) => {
@@ -104,8 +91,8 @@
 
 //   console.log("PID", proc.pid);
 
-//   const res = await renderHtml("http://localhost:3000");
-//   console.log("OUTPUT", res);
+//   const res = await fetch("http://localhost:3000/api/apollo");
+//   console.log("OUTPUT", await res.text());
 
 //   proc.kill();
 // }, { sanitizeOps: false });
