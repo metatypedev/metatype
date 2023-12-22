@@ -4,14 +4,16 @@
 import { deferred } from "std/async/deferred.ts";
 import { init_native } from "native";
 
-import { ReplicatedRegister } from "./typegate/register.ts";
+import { Register, ReplicatedRegister } from "./typegate/register.ts";
 import config, { redisConfig } from "./config.ts";
 import { Typegate } from "./typegate/mod.ts";
-import { RedisRateLimiter } from "./typegate/rate_limiter.ts";
+import { RateLimiter, RedisRateLimiter } from "./typegate/rate_limiter.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import * as Sentry from "sentry";
 import { getLogger } from "./log.ts";
 import { init_runtimes } from "./runtimes/mod.ts";
+import { MemoryRegister } from "test-utils/memory_register.ts";
+import { NoLimiter } from "test-utils/no_limiter.ts";
 
 const logger = getLogger(import.meta);
 logger.info(`typegate v${config.version} starting`);
@@ -46,19 +48,29 @@ init_native();
 await init_runtimes();
 
 const deferredTypegate = deferred<Typegate>();
-const register = await ReplicatedRegister.init(
-  deferredTypegate,
-  redisConfig,
-);
-const limiter = await RedisRateLimiter.init(redisConfig);
-const typegate = new Typegate(register, limiter);
+let register: Register | undefined;
+let limiter: RateLimiter | undefined;
+
+if (redisConfig.hostname != "none") {
+  register = await ReplicatedRegister.init(deferredTypegate, redisConfig);
+  limiter = await RedisRateLimiter.init(redisConfig);
+} else {
+  logger.warning("Entering Redis-less mode");
+  register = new MemoryRegister();
+  limiter = new NoLimiter();
+}
+
+const typegate = new Typegate(register!, limiter!);
+
 deferredTypegate.resolve(typegate);
 
-const lastSync = await register.historySync().catch((err) => {
-  logger.error(err);
-  throw new Error(`failed to load history at boot, aborting: {err.message}`);
-});
-register.startSync(lastSync);
+if (register instanceof ReplicatedRegister) {
+  const lastSync = await register.historySync().catch((err) => {
+    logger.error(err);
+    throw new Error(`failed to load history at boot, aborting: ${err.message}`);
+  });
+  register.startSync(lastSync);
+}
 
 await SystemTypegraph.loadAll(typegate, !config.packaged);
 

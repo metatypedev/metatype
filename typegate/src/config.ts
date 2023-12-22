@@ -19,8 +19,10 @@ const schema = {
   hostname: z.string(),
   redis_url: z
     .string()
-    .url()
     .transform((s: string) => {
+      if (s == "none") {
+        return new URL("redis://none");
+      }
       const url = new URL(s);
       if (url.password === "") {
         url.password = Deno.env.get("REDIS_PASSWORD") ?? "";
