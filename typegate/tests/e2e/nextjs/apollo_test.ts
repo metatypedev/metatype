@@ -11,6 +11,7 @@ import {
 import { TestModule } from "test-utils/test_module.ts";
 import { testDir } from "test-utils/dir.ts";
 import { join } from "std/path/mod.ts";
+import { assertEquals } from "std/assert/assert_equals.ts";
 
 const HOST = "http://localhost:9000";
 const REGION = "local";
@@ -90,7 +91,7 @@ async function deployTypegraph() {
   );
 
   console.log("deploy output stdout", output.stdout);
-  console.log("deploy output stdout", output.stderr);
+  console.log("deploy output stderr", output.stderr);
 }
 
 async function undeployTypegraph() {
@@ -111,26 +112,26 @@ async function undeployTypegraph() {
 Meta.test("apollo client", async (t) => {
   await initBucket();
   await deployTypegraph();
-  await sleep(60000);
 
   // install nextjs app
-  // const install = await t.shell(["bash", "./install.sh"], {
-  //   currentDir: nextjsDir,
-  // });
+  const install = await t.shell(["bash", "./install.sh"], {
+    currentDir: nextjsDir,
+  });
+  console.log("Nextjs initialization", install);
 
   // non blocking
-  // console.log("Nextjs initialization", install);
-  // const proc = startNextServer();
-  // console.log("Nextjs server PID", proc.pid);
+  const proc = startNextServer();
+  console.log("Nextjs server PID", proc.pid);
+  await sleep(10000);
 
-  // const res = await fetch("http://localhost:3000/api/apollo");
-  // console.log("OUTPUT", await res.json());
+  const res = await fetch("http://localhost:3000/api/apollo");
+  const jsonResponse = await res.json();
+  // console.log("Nextjs API response", jsonResponse);
+  assertEquals(jsonResponse, { success: { data: { uploadMany: true } } });
 
-  // await sleep(10000);
-
-  // await proc.stdout.cancel();
-  // await proc.stderr.cancel();
-  // proc.kill();
+  await proc.stdout.cancel();
+  await proc.stderr.cancel();
+  proc.kill();
 
   await undeployTypegraph();
 }, { port, systemTypegraphs: true, introspection: true });
