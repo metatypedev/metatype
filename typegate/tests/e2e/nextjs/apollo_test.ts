@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Meta } from "../../utils/mod.ts";
+import { Meta, sleep } from "../../utils/mod.ts";
 import {
   CreateBucketCommand,
   DeleteObjectsCommand,
@@ -53,10 +53,12 @@ async function initBucket() {
   }
 }
 
+const nextjsDir = join(testDir, "e2e", "nextjs");
+
 function startNextServer() {
   const command = new Deno.Command("bash", {
     args: ["./server.sh"],
-    cwd: join(testDir, "e2e", "nextjs"),
+    cwd: nextjsDir,
     stderr: "piped",
     stdout: "piped",
   });
@@ -64,26 +66,21 @@ function startNextServer() {
 }
 
 const port = 7897;
+const envs = {
+  TG_APOLLO_HOST: HOST,
+  TG_APOLLO_REGION: REGION,
+  TG_APOLLO_ACCESS_KEY: ACCESS_KEY,
+  TG_APOLLO_SECRET_KEY: SECRET_KEY,
+  TG_APOLLO_PATH_STYLE: PATH_STYLE,
+};
 
-Meta.test("apollo client", async (t) => {
-  await initBucket();
-  const out = await m.cli(
+async function deployTypegraph() {
+  Object.entries(envs).forEach(([k, v]) => {
+    Deno.env.set(k, v);
+  });
+
+  const output = await m.cli(
     {},
-    "doctor",
-  );
-
-  console.log("OUTOUT", out.stdout);
-
-  await m.cli(
-    {
-      env: {
-        HOST: HOST,
-        REGION: REGION,
-        ACCESS_KEY: ACCESS_KEY,
-        SECRET_KEY: SECRET_KEY,
-        PATH_STYLE: PATH_STYLE,
-      },
-    },
     "deploy",
     "--target",
     `dev${port}`,
@@ -92,28 +89,48 @@ Meta.test("apollo client", async (t) => {
     "--allow-dirty",
   );
 
-  // non blocking
-  const proc = startNextServer();
+  console.log("deploy output stdout", output.stdout);
+  console.log("deploy output stdout", output.stderr);
+}
 
-  console.log("PID", proc.pid);
-
-  const res = await fetch("http://localhost:3000/api/apollo");
-  console.log("OUTPUT", await res.json());
-
-  await proc.stdout.cancel();
-  await proc.stderr.cancel();
-  proc.kill();
-}, { port });
-
-Meta.test("meta undeploy", async (t) => {
-  await t.should("free resources", async () => {
-    await m.cli(
-      {},
-      "undeploy",
-      "--target",
-      `dev${port}`,
-      "--typegraph",
-      "apollo-test",
-    );
+async function undeployTypegraph() {
+  Object.keys(envs).forEach(([k, v]) => {
+    Deno.env.delete(k);
   });
-}, { port, systemTypegraphs: true });
+
+  await m.cli(
+    {},
+    "undeploy",
+    "--target",
+    `dev${port}`,
+    "--typegraph",
+    "apollo-test",
+  );
+}
+
+Meta.test("apollo client", async (t) => {
+  await initBucket();
+  await deployTypegraph();
+  await sleep(60000);
+
+  // install nextjs app
+  // const install = await t.shell(["bash", "./install.sh"], {
+  //   currentDir: nextjsDir,
+  // });
+
+  // non blocking
+  // console.log("Nextjs initialization", install);
+  // const proc = startNextServer();
+  // console.log("Nextjs server PID", proc.pid);
+
+  // const res = await fetch("http://localhost:3000/api/apollo");
+  // console.log("OUTPUT", await res.json());
+
+  // await sleep(10000);
+
+  // await proc.stdout.cancel();
+  // await proc.stderr.cancel();
+  // proc.kill();
+
+  await undeployTypegraph();
+}, { port, systemTypegraphs: true, introspection: true });

@@ -3,37 +3,37 @@
 
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ApolloClient, gql, InMemoryCache } from "@apollo/client/index";
+import createUploadLink from "apollo-upload-client/createUploadLink.mjs";
 
 type ResponseData = {
   message: string;
 };
 
-export default async function handler(
+export default function handler(
   _req: NextApiRequest,
   res: NextApiResponse<ResponseData>,
 ) {
   const client = new ApolloClient({
-    // FIXME: what is the correct endpoint?
-    // "Response not successful: Received status code 404"
-    uri: "http://localhost:7897/apollo-test",
     cache: new InMemoryCache(),
+    // Does FormData.append stuff and enables File Upload
+    // Please refer to https://github.com/jaydenseric/apollo-upload-client/blob/master/createUploadLink.mjs
+    // Note: if link and uri are both provided, link takes precedence
+    link: createUploadLink({ uri: "http://localhost:7897/apollo" })
   });
-
-  const fileContent = "Hello World";
-  const file = new File(
-    [fileContent],
-    "hello.txt",
-    { type: "text/plain" },
-  );
 
   client.mutate({
     mutation: gql`
-      mutation ($file: File!) {
-        upload(file: $file)
+      mutation ($files: [File]!, $prefix: String!) {
+        uploadMany(files: $files, prefix: $prefix)
       }
     `,
-    variables: { file },
+    variables: {
+      files: [1, 2, 3, 4].map((i) =>
+        new File([`hello #${i}`], `hello-${i}.txt`, { type: "text/plain" })
+      ),
+      prefix: "user/",
+    },
   })
-    .then((out: any) => res.status(200).json(out))
-    .catch((err: any) => res.status(400).json({ error: err!.message }));
+    .then((out: any) => res.status(200).json({ success: out } as any))
+    .catch((err: any) => res.status(400).json({ error: err!.message } as any));
 }
