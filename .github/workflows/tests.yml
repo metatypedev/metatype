@@ -317,7 +317,7 @@ jobs:
           cargo build -p meta-cli
           cargo build -p xtask # xtask and meta-cli are used by the test suite
           deno run -A dev/test.ts --threads 1 -- --coverage=coverage
-          deno --unstable coverage ./coverage --exclude=typegate/tests/e2e/nextjs --lcov > coverage.lcov
+          deno --unstable coverage ./coverage --lcov > coverage.lcov
 
       - uses: codecov/codecov-action@v3
         with:
