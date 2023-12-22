@@ -12,22 +12,15 @@ let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
   const tsServerDir = context.asAbsolutePath(
-    path.join("..", "ts-language-server"),
+    path.join("out", "ts-language-server"),
   );
   const serverOptions: ServerOptions = {
-    run: {
-      command: "typegraph-ts-server",
-      args: ["--stdio"],
-      transport: TransportKind.stdio,
+    command: "deno",
+    args: ["run", "-A", "src/server.ts", "--stdio"],
+    options: {
+      cwd: tsServerDir,
     },
-    debug: {
-      command: "deno",
-      args: ["run", "-A", "src/server.ts", "--stdio"],
-      options: {
-        cwd: tsServerDir,
-      },
-      transport: TransportKind.stdio,
-    },
+    transport: TransportKind.stdio,
   };
 
   const clientOptions: LanguageClientOptions = {

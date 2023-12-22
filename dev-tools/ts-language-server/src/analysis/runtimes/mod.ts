@@ -2,8 +2,13 @@ import { Parser } from "../../parser.ts";
 import { ModuleDiagnosticsContext } from "../diagnostics/context.ts";
 import { TgType } from "../typescript-semantic/semantic-node.ts";
 
+export type InputType = {
+  type: TgType | null;
+  spec: Parser.SyntaxNode;
+};
+
 export abstract class Runtime {
-  protected constructor(public node: Parser.SyntaxNode) {}
+  protected constructor(public node: Parser.SyntaxNode) { }
 
   static analyze(
     node: Parser.SyntaxNode,
@@ -33,7 +38,7 @@ export abstract class Runtime {
     generatorNameNode: Parser.SyntaxNode,
     generatorArgs: Parser.SyntaxNode[],
     ctx: ModuleDiagnosticsContext,
-  ): TgType | null;
+  ): InputType | null;
 }
 
 export class DenoRuntime extends Runtime {
@@ -45,18 +50,17 @@ export class DenoRuntime extends Runtime {
     generatorNameNode: Parser.SyntaxNode,
     generatorArgs: Parser.SyntaxNode[],
     ctx: ModuleDiagnosticsContext,
-  ): TgType | null {
+  ): InputType | null {
     switch (generatorNameNode.text) {
       case "identity": {
         // TODO
-        return TgType.fromNode(generatorArgs[0], ctx);
+        return {
+          type: TgType.fromNode(generatorArgs[0], ctx),
+          spec: generatorArgs[0],
+        };
       }
       case "func": {
-        // const inputType = TgType.fromNode(generatorArgs[0]);
-        // console.log("func input type", inputType);
-        // Type.fromNode(generatorArgs[0]);
-        // as struct
-        return TgType.fromNode(generatorArgs[0], ctx);
+        return inputTypeFromNode(generatorArgs[0], ctx);
       }
 
       default:
@@ -78,10 +82,10 @@ export class PythonRuntime extends Runtime {
     generatorNameNode: Parser.SyntaxNode,
     generatorArgs: Parser.SyntaxNode[],
     ctx: ModuleDiagnosticsContext,
-  ): TgType | null {
+  ): InputType | null {
     switch (generatorNameNode.text) {
       case "fromLambda": {
-        return TgType.fromNode(generatorArgs[0], ctx);
+        return inputTypeFromNode(generatorArgs[0], ctx);
       }
 
       default:
@@ -92,4 +96,20 @@ export class PythonRuntime extends Runtime {
         return null;
     }
   }
+}
+
+// TODO only return non-null if the type is a valid struct
+function inputTypeFromNode(
+  node: Parser.SyntaxNode,
+  ctx: ModuleDiagnosticsContext,
+): InputType | null {
+  const type = TgType.fromNode(node, ctx);
+  if (type === null) {
+    ctx.error(node, "expected type");
+    return null;
+  }
+  return {
+    type,
+    spec: node,
+  };
 }

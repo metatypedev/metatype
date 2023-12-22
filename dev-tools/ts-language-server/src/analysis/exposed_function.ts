@@ -1,6 +1,6 @@
 import { Parser, TypeScript } from "../parser.ts";
 import { ModuleDiagnosticsContext } from "./diagnostics/context.ts";
-import { Runtime } from "./runtimes/mod.ts";
+import { InputType, Runtime } from "./runtimes/mod.ts";
 import { ScopeManager } from "./typescript-semantic/scope.ts";
 import { TgType } from "./typescript-semantic/semantic-node.ts";
 import { asMethodCall } from "./typescript-semantic/utils/mod.ts";
@@ -9,7 +9,7 @@ export type ExposedFunction = {
   name: string;
   node: Parser.SyntaxNode;
   runtime: Runtime;
-  inputType: TgType | null; // null if could not be parsed or invalid
+  input: InputType | null; // null if could not be parsed or invalid
   generator: Parser.SyntaxNode;
   generatorArgs: Parser.SyntaxNode;
   reduce?: Parser.SyntaxNode | null;
@@ -98,7 +98,7 @@ export function analyzeExposeExpression(
   return {
     node,
     runtime,
-    inputType: runtime.getGeneratorInputType(
+    input: runtime.getGeneratorInputType(
       generator,
       generatorArgs.namedChildren,
       ctx,
