@@ -54,12 +54,12 @@ async function initBucket() {
   }
 }
 
-const nextjsDir = join(testDir, "e2e", "nextjs");
+const apolloDir = join(testDir, "e2e", "nextjs", "apollo");
 
 function startNextServer() {
-  const command = new Deno.Command("bash", {
-    args: ["./server.sh"],
-    cwd: nextjsDir,
+  const command = new Deno.Command("pnpm", {
+    args: ["run", "dev", "-p", `${nextjsPort}`],
+    cwd: apolloDir,
     stderr: "piped",
     stdout: "piped",
   });
@@ -67,6 +67,7 @@ function startNextServer() {
 }
 
 const port = 7897;
+const nextjsPort = 3123;
 const envs = {
   TG_APOLLO_HOST: HOST,
   TG_APOLLO_REGION: REGION,
@@ -95,7 +96,7 @@ async function deployTypegraph() {
 }
 
 async function undeployTypegraph() {
-  Object.keys(envs).forEach(([k, v]) => {
+  Object.keys(envs).forEach((k) => {
     Deno.env.delete(k);
   });
 
@@ -114,17 +115,20 @@ Meta.test("apollo client", async (t) => {
   await deployTypegraph();
 
   // install nextjs app
-  const install = await t.shell(["bash", "./install.sh"], {
-    currentDir: nextjsDir,
+  const install = await t.shell(["pnpm", "install"], {
+    currentDir: apolloDir,
   });
   console.log("Nextjs initialization", install);
 
-  // non blocking
+  // start nextjs app
   const proc = startNextServer();
-  console.log("Nextjs server PID", proc.pid);
-  await sleep(10000);
+  console.log("Start Nextjs server PID", proc.pid);
 
-  const res = await fetch("http://localhost:3000/api/apollo");
+  const waitMs = 10000;
+  console.log("Waiting", waitMs / 1000, "seconds");
+  await sleep(waitMs);
+
+  const res = await fetch(`http://localhost:${nextjsPort}/api/apollo`);
   const jsonResponse = await res.json();
   // console.log("Nextjs API response", jsonResponse);
   assertEquals(jsonResponse, { success: { data: { uploadMany: true } } });
