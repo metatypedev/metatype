@@ -324,3 +324,23 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.lcov
           fail_ci_if_error: true
+
+  test-lsp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+      - uses: metatypedev/setup-ghjk@v1
+      - shell: bash
+        run: |
+          cd dev-tools/ts-language-server
+          deno run -A dev/generate-grammar-wasm.ts
+          deno test -A --coverage=coverage
+          deno --unstable coverage ./coverage -- lcov > coverage.lcov
+      - uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.lcov
+          fail_ci_if_error: true

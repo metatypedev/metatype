@@ -2,9 +2,6 @@
 
 ## TypeScript Language Server
 
-### Prerequisites
-- Install emcc through [emsdk](https://emscripten.org/docs/getting_started/downloads.html#installation-instructions-using-the-emsdk-recommended) (_TODO: ghjk plugin_)
-
 ### Setup
 ```bash
 cd dev-tools/ts-language-server
