@@ -10,7 +10,7 @@ export type ExposedFunction = {
   node: Parser.SyntaxNode;
   runtime: Runtime;
   inputType: TgType | null; // null if could not be parsed or invalid
-  generator: string;
+  generator: Parser.SyntaxNode;
   generatorArgs: Parser.SyntaxNode;
   reduce?: Parser.SyntaxNode | null;
   policy?: Parser.SyntaxNode | null;
@@ -47,7 +47,8 @@ export function analyzeExposeExpression(
   }
   let policy: Parser.SyntaxNode | null = null;
   let reduce: Parser.SyntaxNode | null = null;
-  if (methodCall.method === "withPolicy") {
+  const methodName = methodCall.method.text;
+  if (methodName === "withPolicy") {
     policy = methodCall.arguments;
     methodCall = asMethodCall(methodCall.object);
     if (methodCall === null) {
@@ -56,7 +57,7 @@ export function analyzeExposeExpression(
   }
 
   // TODO what if reduce is a generator name??
-  if (methodCall.method === "reduce") {
+  if (methodName === "reduce") {
     reduce = methodCall.arguments;
     methodCall = asMethodCall(methodCall.object);
     if (methodCall === null) {
@@ -74,7 +75,7 @@ export function analyzeExposeExpression(
     runtimeNode = variable.definition;
   }
 
-  const runtime = Runtime.analyze(runtimeNode);
+  const runtime = Runtime.analyze(runtimeNode, ctx);
   if (runtime === null) {
     throw new Error("expected runtime");
   }

@@ -17,7 +17,7 @@ const TypeScript = await Parser.Language.load(
 );
 
 Deno.test("semantic analysis of expose", async (t) => {
-  const fileUri = new URL("typegraphs/apply_deno.ts", import.meta.url);
+  const fileUri = new URL("typegraphs/deno_types.ts", import.meta.url);
   const codeBuf = await Deno.readFile(fileUri);
   const code = new TextDecoder().decode(codeBuf);
 

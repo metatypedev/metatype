@@ -15,7 +15,22 @@ snapshot[`semantic analysis of expose 1`] = `
       },
     },
     severity: 1,
-    source: "ex",
+    source: "typegraph",
+  },
+  {
+    message: "unknown type: t.floaty",
+    range: {
+      end: {
+        character: 57,
+        line: 12,
+      },
+      start: {
+        character: 47,
+        line: 12,
+      },
+    },
+    severity: 1,
+    source: "typegraph",
   },
   {
     message: "Exposed function 'scalarInputType': expected input type to be a struct but got TgType(integer)",
@@ -30,7 +45,7 @@ snapshot[`semantic analysis of expose 1`] = `
       },
     },
     severity: 1,
-    source: "ex",
+    source: "typegraph",
   },
 ]
 `;

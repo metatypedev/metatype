@@ -98,7 +98,7 @@ export abstract class TgType extends SemanticNode {
       return null;
     }
 
-    switch (methodCall.method) {
+    switch (methodCall.method.text) {
       case "integer": {
         return new TgTypeInteger(node);
       }
@@ -159,7 +159,8 @@ export abstract class TgType extends SemanticNode {
         return new TgTypeStruct(node, props);
       }
       default: {
-        ctx.error(node, `unknown type: ${methodCall.method}`);
+        ctx.error(node, `unknown type: t.${methodCall.method.text}`);
+        return null;
       }
     }
   }

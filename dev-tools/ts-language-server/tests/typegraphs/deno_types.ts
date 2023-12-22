@@ -10,7 +10,7 @@ typegraph("example", (g, h) => {
 
   g.expose({
     add: python.fromLambda(
-      t.struct({ "first": t.float(), "second": t.float() }),
+      t.struct({ "first": t.float(), "second": t.floaty() }),
       t.float(),
       { code: "lambda x: x['first'] + x['second']" },
     ).withPolicy(pub),

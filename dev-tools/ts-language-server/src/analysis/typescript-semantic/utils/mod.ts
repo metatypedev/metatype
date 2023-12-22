@@ -2,7 +2,7 @@ import { Parser } from "../../../parser.ts";
 
 export type MethodCall = {
   object: Parser.SyntaxNode;
-  method: string;
+  method: Parser.SyntaxNode;
   arguments: Parser.SyntaxNode;
 };
 
@@ -25,7 +25,7 @@ export function asMethodCall(node: Parser.SyntaxNode): MethodCall | null {
   }
   return {
     object: object,
-    method: property.text,
+    method: property,
     arguments: argumentsNode,
   };
 }

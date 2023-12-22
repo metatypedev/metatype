@@ -5,9 +5,13 @@ import { TgType } from "../typescript-semantic/semantic-node.ts";
 export abstract class Runtime {
   protected constructor(public node: Parser.SyntaxNode) {}
 
-  static analyze(node: Parser.SyntaxNode): Runtime | null {
+  static analyze(
+    node: Parser.SyntaxNode,
+    ctx: ModuleDiagnosticsContext,
+  ): Runtime | null {
     if (node.type !== "new_expression") {
-      throw new Error("expected new expression for runtime definition");
+      ctx.warn(node, "expected new expression for runtime definition");
+      return null;
     }
 
     // TODO check import name, etc...
@@ -20,12 +24,13 @@ export abstract class Runtime {
       // case "PrismaRuntime":
       //   return new PrismaRuntime(node);
       default:
-        throw new Error(`unknown runtime: ${constructorName}`);
+        ctx.error(node, `unknown runtime: ${constructorName}`);
+        return null;
     }
   }
 
   abstract getGeneratorInputType(
-    generatorName: string,
+    generatorNameNode: Parser.SyntaxNode,
     generatorArgs: Parser.SyntaxNode[],
     ctx: ModuleDiagnosticsContext,
   ): TgType | null;
@@ -37,11 +42,11 @@ export class DenoRuntime extends Runtime {
   }
 
   override getGeneratorInputType(
-    generatorName: string,
+    generatorNameNode: Parser.SyntaxNode,
     generatorArgs: Parser.SyntaxNode[],
     ctx: ModuleDiagnosticsContext,
   ): TgType | null {
-    switch (generatorName) {
+    switch (generatorNameNode.text) {
       case "identity": {
         // TODO
         return TgType.fromNode(generatorArgs[0], ctx);
@@ -55,7 +60,11 @@ export class DenoRuntime extends Runtime {
       }
 
       default:
-        throw new Error(`unknown generator: ${generatorName}`);
+        ctx.error(
+          generatorNameNode,
+          `unknown generator: ${generatorNameNode.text}`,
+        );
+        return null;
     }
   }
 }
@@ -66,17 +75,21 @@ export class PythonRuntime extends Runtime {
   }
 
   override getGeneratorInputType(
-    generatorName: string,
+    generatorNameNode: Parser.SyntaxNode,
     generatorArgs: Parser.SyntaxNode[],
     ctx: ModuleDiagnosticsContext,
   ): TgType | null {
-    switch (generatorName) {
+    switch (generatorNameNode.text) {
       case "fromLambda": {
         return TgType.fromNode(generatorArgs[0], ctx);
       }
 
       default:
-        throw new Error(`unknown generator: ${generatorName}`);
+        ctx.error(
+          generatorNameNode,
+          `unknown generator: ${generatorNameNode.text}`,
+        );
+        return null;
     }
   }
 }
