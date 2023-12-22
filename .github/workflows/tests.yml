@@ -9,7 +9,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "6040bb3"
+  GHJK_VERSION: "de4b75b"
   PYTHON_VERSION: "3.8"
   DENO_VERSION: "1.39.0"
   RUST_BACKTRACE: "full"
@@ -338,9 +338,10 @@ jobs:
           cd dev-tools/ts-language-server
           deno run -A dev/generate-grammar-wasm.ts
           deno test -A --coverage=coverage
-          deno --unstable coverage ./coverage -- lcov > coverage.lcov
+          deno --unstable coverage ./coverage --lcov > coverage.lcov
+
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.lcov
+          files: ./dev-tools/ts-language-server/coverage.lcov
           fail_ci_if_error: true

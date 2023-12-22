@@ -4,7 +4,7 @@ on:
       - v*
 
 env:
-  GHJK_VERSION: "6040bb3"
+  GHJK_VERSION: "de4b75b"
   PYTHON_VERSION: "3.8"
   DENO_VERSION: "1.39.0"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
@@ -201,6 +201,26 @@ jobs:
           cd ./digests
           docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:${{ github.ref_name }} --tag ${{ env.REGISTRY_IMAGE }}:latest $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:latest
+
+  vscode-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+      - shell: bash
+        run: |
+          cd dev-tools/vscode-metatype-support
+          pnpm install --frozen-lockfile
+          pnpm package
+          pnpm run publish -p $${ env.AZURE_DEVOPS_TOKEN }
+      - uses: svenstaro/upload-release-action@v2
+        with:
+          tag: ${{ github.ref }}
+          file: "dev-tools/vscode-metatype-support/*.vsix"
+          file_glob: true
+          overwrite: false
 
   bump:
     needs:

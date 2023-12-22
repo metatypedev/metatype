@@ -18,8 +18,10 @@
     "main": "./out/extension",
     "contributes": {},
     "scripts": {
-        "vscode:prepublish": "pnpm compile",
-        "compile": "tsc -b",
+        "vscode:prepublish": "cp -r ../ts-language-server out/ && pnpm run compile --minify",
+        "package": "pnpm vsce package --no-dependencies",
+        "publish": "pnpm vsce publish --no-dependencies",
+        "compile": "pnpm esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
         "watch": "tsc -b -w",
         "lint": "eslint ./src --ext .ts"
     },
@@ -28,9 +30,10 @@
     },
     "devDependencies": {
         "@types/node": "^16.18.65",
-        "@types/vscode": "^1.84.2",
+        "@types/vscode": "^1.75.0",
         "@typescript-eslint/eslint-plugin": "^6.14.0",
         "@typescript-eslint/parser": "^6.14.0",
+        "esbuild": "^0.19.10",
         "eslint": "^8.54.0",
         "eslint-config-standard-with-typescript": "^42.0.0",
         "eslint-plugin-import": "^2.25.2",

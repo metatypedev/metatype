@@ -18,6 +18,7 @@ target
 **/*.rs.bk
 
 dev-tools/vscode-metatype-support/out/
+dev-tools/vscode-metatype-support/*.vsix
 dev-tools/ts-language-server/grammars
 
 typegate/workers
