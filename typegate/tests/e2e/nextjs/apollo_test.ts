@@ -128,14 +128,21 @@ Meta.test("apollo client", async (t) => {
   console.log("Waiting", waitMs / 1000, "seconds");
   await sleep(waitMs);
 
-  const res = await fetch(`http://localhost:${nextjsPort}/api/apollo`);
-  const jsonResponse = await res.json();
-  // console.log("Nextjs API response", jsonResponse);
-  assertEquals(jsonResponse, { success: { data: { uploadMany: true } } });
+  try {
+    const url = `http://localhost:${nextjsPort}/api/apollo`;
+    console.log("Fetch", url);
+    const res = await fetch(url);
+    const jsonResponse = await res.json();
 
-  await proc.stdout.cancel();
-  await proc.stderr.cancel();
-  proc.kill();
+    console.log("Nextjs API response", jsonResponse);
+    assertEquals(jsonResponse, { success: { data: { uploadMany: true } } });
+  } catch (err) {
+    throw err;
+  } finally {
+    await proc.stdout.cancel();
+    await proc.stderr.cancel();
+    proc.kill();
+  }
 
   await undeployTypegraph();
 }, { port, systemTypegraphs: true, introspection: true });
