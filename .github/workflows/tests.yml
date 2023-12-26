@@ -9,7 +9,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "de4b75b"
+  GHJK_VERSION: "c157479"
   PYTHON_VERSION: "3.8"
   DENO_VERSION: "1.39.0"
   RUST_BACKTRACE: "full"
@@ -80,6 +80,9 @@ jobs:
           cd website
           pnpm install --frozen-lockfile
           cd ..
+          cd dev-tools/vscode-metatype-support
+          pnpm install --frozen-lockfile
+          cd ../..
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
       - uses: pre-commit/action@v3.0.0
 
