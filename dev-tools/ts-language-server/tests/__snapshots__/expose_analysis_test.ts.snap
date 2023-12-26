@@ -33,6 +33,21 @@ snapshot[`semantic analysis of expose 1`] = `
     source: "typegraph",
   },
   {
+    message: "expected type",
+    range: {
+      end: {
+        character: 60,
+        line: 12,
+      },
+      start: {
+        character: 6,
+        line: 12,
+      },
+    },
+    severity: 1,
+    source: "typegraph",
+  },
+  {
     message: "Exposed function 'scalarInputType': expected input type to be a struct but got TgType(integer)",
     range: {
       end: {
