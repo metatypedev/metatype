@@ -67,6 +67,7 @@ const tsFiles = [
     {
       root: projectDir,
       globstar: true,
+      exclude: ["typegate/tests/e2e/nextjs"],
     },
   ),
 ].map((f: WalkEntry) => f.path);

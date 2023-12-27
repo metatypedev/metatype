@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { assertEquals, assertExists } from "std/assert/mod.ts";
-import { gql, Meta } from "../../utils/mod.ts";
+import { execute, gql, Meta } from "../../utils/mod.ts";
 import {
   CreateBucketCommand,
   DeleteObjectsCommand,
@@ -158,6 +158,7 @@ Meta.test("s3", async (t) => {
 
     assertExists(url);
     const res2 = await fetch(url2);
+    console.log("DOWNLOAD URL", url);
     const text = await res2.text();
     assertEquals(text, fileContent2);
   });
@@ -225,4 +226,54 @@ Meta.test("s3", async (t) => {
       })
       .on(e);
   });
+});
+
+Meta.test("s3 upload with fetch", async (t) => {
+  const e = await t.engine("runtimes/s3/s3.py", {
+    secrets: {
+      HOST: HOST,
+      REGION: REGION,
+      ACCESS_KEY: ACCESS_KEY,
+      SECRET_KEY: SECRET_KEY,
+      PATH_STYLE: PATH_STYLE,
+    },
+  });
+
+  await initBucket();
+
+  const fileContent = "Hello World";
+  const file = new File(
+    [fileContent],
+    "hello.txt",
+    { type: "text/plain" },
+  );
+
+  const formData = new FormData();
+  formData.append(
+    "operations",
+    JSON.stringify({
+      query: `
+        mutation ($file: File) {
+          upload(file: $file)
+        }
+      `,
+      variables: {
+        file: null,
+      },
+    }),
+  );
+  formData.append("map", JSON.stringify({ 0: ["variables.file"] }));
+  formData.append("0", new Blob([file], { type: "text/plain" }), "hello.txt");
+
+  await t.should(
+    "work with GraphQL multipart request",
+    async () => {
+      const req = new Request(`http://typegate.local/${e.name}`, {
+        method: "POST",
+        body: formData,
+      });
+      const res = await execute(e, req);
+      assertEquals(await res.json(), { data: { upload: true } });
+    },
+  );
 });
