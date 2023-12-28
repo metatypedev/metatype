@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { testDir } from "test-utils/dir.ts";
-import { getMetaCliBin } from "test-utils/meta.ts";
+import { getMetaCliExe } from "test-utils/meta.ts";
 import { TextLineStream } from "../../../dev/deps.ts";
 
 export type MetaDevOptions = {
@@ -48,18 +48,25 @@ export class MetaDev {
   }
 
   static async start(options: MetaDevOptions = {}): Promise<MetaDev> {
-    const metaBin = await getMetaCliBin();
+    const metaBin = await getMetaCliExe();
     return new MetaDev(metaBin, options);
   }
 
-  // TODO timeout
   async #fetchOutputLines(
     reader: ReadableStreamDefaultReader<string>,
     param: FetchOutputLineParam,
+    timeoutMs?: number,
   ) {
+    const next = timeoutMs == null ? () => reader.read() : () =>
+      Promise.race([
+        reader.read(),
+        new Promise((_, reject) =>
+          setTimeout(reject, timeoutMs, new Error("timeout"))
+        ),
+      ]) as Promise<ReadableStreamDefaultReadResult<string>>;
     let shouldContinue = true;
     while (shouldContinue) {
-      const { value: line, done } = await reader.read();
+      const { value: line, done } = await next();
       if (done) break;
       shouldContinue = await param(line);
     }

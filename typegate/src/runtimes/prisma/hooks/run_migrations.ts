@@ -32,9 +32,6 @@ export class MigrationFailure extends Error {
     return err;
   }
 
-  // TODO: if error contains: `<name>` failed to apply cleanly to the shadow database,
-  // we should remove that migration...
-
   static fromErrorMessage(
     message: string,
     runtimeName: string,
@@ -73,7 +70,6 @@ export class MigrationFailure extends Error {
           };
         } else {
           return {
-            // huh?
             reason: "DatabaseResetRequired",
             message:
               `Could not apply migration for runtime ${runtimeName}: \n${message}`,

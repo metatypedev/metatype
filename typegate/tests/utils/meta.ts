@@ -5,7 +5,6 @@ import { testDir } from "test-utils/dir.ts";
 import { shell, ShellOptions, ShellOutput } from "test-utils/shell.ts";
 import { resolve } from "std/path/mod.ts";
 
-const metaCliExe = resolve(testDir, "../../target/debug/meta");
 let compiled = false;
 
 export async function metaCli(...args: string[]): Promise<ShellOutput>;
@@ -17,10 +16,7 @@ export async function metaCli(
   first: string | ShellOptions,
   ...input: string[]
 ): Promise<ShellOutput> {
-  if (!compiled) {
-    await shell(["cargo", "build", "--package", "meta-cli"]);
-    compiled = true;
-  }
+  const metaCliExe = await getMetaCliExe();
 
   const res =
     await (typeof first === "string"
@@ -32,21 +28,19 @@ export async function metaCli(
 
 type MetaCli = (args: string[], options?: ShellOptions) => Promise<ShellOutput>;
 
-export async function getMetaCliBin(): Promise<string> {
+export async function getMetaCliExe(): Promise<string> {
   if (!compiled) {
     await shell(["cargo", "build", "--package", "meta-cli"]);
     compiled = true;
   }
+  const metaCliExe = resolve(testDir, "../../target/debug/meta");
   return metaCliExe;
 }
 
 export async function createMetaCli(
   shell: (args: string[], options?: ShellOptions) => Promise<ShellOutput>,
 ): Promise<MetaCli> {
-  if (!compiled) {
-    await shell(["cargo", "build", "--package", "meta-cli"]);
-    compiled = true;
-  }
+  const metaCliExe = await getMetaCliExe();
   return (args, options) => {
     console.log({ options });
     return shell([metaCliExe, ...args], options);
