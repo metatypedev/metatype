@@ -40,7 +40,17 @@ const runtimeNameByConstructor = {
 export function analyzeExposeExpression(
   node: Parser.SyntaxNode,
   ctx: ModuleDiagnosticsContext,
-): Omit<ExposedFunction, "name"> {
+): Omit<ExposedFunction, "name"> | null {
+  if (node.type === "identifier") {
+    console.log("identifier", node.toString());
+    const res = ctx.symbolRegistry.findVariable(node);
+    if (res === null) {
+      ctx.error(node, "symbol definition not found");
+      return null;
+    }
+
+    return analyzeExposeExpression(res.definition, ctx);
+  }
   let methodCall = asMethodCall(node);
   if (methodCall === null) {
     throw new Error("expected method call");

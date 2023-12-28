@@ -153,10 +153,11 @@ export class TypegraphDefinition {
   get exposedFunctions(): Map<string, ExposedFunction> {
     if (this.#exposedFunctions.size === 0) {
       for (const [name, node] of this.#findExposedFunctions()) {
-        this.#exposedFunctions.set(name, {
-          ...analyzeExposeExpression(node, this.ctx),
-          name,
-        });
+        const res = analyzeExposeExpression(node, this.ctx);
+        if (res === null) {
+          continue;
+        }
+        this.#exposedFunctions.set(name, { ...res, name });
       }
     }
     return this.#exposedFunctions;

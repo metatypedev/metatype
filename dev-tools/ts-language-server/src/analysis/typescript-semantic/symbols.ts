@@ -1,5 +1,5 @@
 import { ScopeManager } from "./scope.ts";
-import { SymbolSemantics } from "./symbol-semantics.ts";
+import { SemanticNode } from "./semantic-node.ts";
 
 type VariableKind = "let" | "const" | "var" | "import";
 
@@ -19,6 +19,8 @@ export class ImportSymbol extends Symbol {
 }
 
 export class Variable {
+  semantics: SemanticNode | null = null;
+
   protected constructor(
     public kind: VariableKind,
     public node: Parser.SyntaxNode,

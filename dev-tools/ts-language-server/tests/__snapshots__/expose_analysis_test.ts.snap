@@ -22,11 +22,11 @@ snapshot[`semantic analysis of expose 1`] = `
     range: {
       end: {
         character: 57,
-        line: 12,
+        line: 18,
       },
       start: {
         character: 47,
-        line: 12,
+        line: 18,
       },
     },
     severity: 1,
@@ -37,11 +37,11 @@ snapshot[`semantic analysis of expose 1`] = `
     range: {
       end: {
         character: 60,
-        line: 12,
+        line: 18,
       },
       start: {
         character: 6,
-        line: 12,
+        line: 18,
       },
     },
     severity: 1,
@@ -52,11 +52,11 @@ snapshot[`semantic analysis of expose 1`] = `
     range: {
       end: {
         character: 46,
-        line: 21,
+        line: 23,
       },
       start: {
         character: 35,
-        line: 21,
+        line: 23,
       },
     },
     severity: 1,

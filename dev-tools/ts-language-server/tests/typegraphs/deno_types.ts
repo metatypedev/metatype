@@ -8,17 +8,19 @@ typegraph("example", (g, h) => {
   const deno = new DenoRuntime();
   const python = new PythonRuntime();
 
+  const multiply = deno.func(
+    t.struct({ "first": t.float(), "second": t.float() }),
+    t.float(),
+    { code: "({first, second}) => first * second" },
+  ).withPolicy(pub);
+
   g.expose({
     add: python.fromLambda(
       t.struct({ "first": t.float(), "second": t.floaty() }),
       t.float(),
       { code: "lambda x: x['first'] + x['second']" },
     ).withPolicy(pub),
-    multiply: deno.func(
-      t.struct({ "first": t.float(), "second": t.float() }),
-      t.float(),
-      { code: "({first, second}) => first * second" },
-    ).withPolicy(pub),
+    multiply: multiply,
     scalarInputType: deno.identity(t.integer()),
   });
 });
