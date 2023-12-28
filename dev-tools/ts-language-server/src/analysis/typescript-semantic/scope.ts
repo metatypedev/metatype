@@ -1,4 +1,5 @@
 import { Parser, TypeScript } from "../../parser.ts";
+import { ModuleDiagnosticsContext } from "../diagnostics/context.ts";
 
 type VariableDeclarationKeyword = "let" | "const" | "var" | "import";
 
@@ -22,6 +23,7 @@ export class Scope {
     public node: Parser.SyntaxNode,
     public parent: Scope | null,
     private scopeManager: ScopeManager,
+    ctx: ModuleDiagnosticsContext,
   ) {
     // 1. find child scopes
     // 2. find variables
@@ -48,7 +50,8 @@ export class Scope {
 
       switch (child.type) {
         case "variable_declaration": {
-          throw new Error("todo");
+          ctx.warn(child, "variable declaration not yet supported");
+          continue;
         }
         case "lexical_declaration": {
           const keyword = child.childForFieldName("kind")!
@@ -111,8 +114,12 @@ export class ScopeManager {
   }
 
   // identifier node
-  findVariable(node: Parser.SyntaxNode): Variable | null {
+  findVariable(
+    node: Parser.SyntaxNode,
+    ctx: ModuleDiagnosticsContext,
+  ): Variable | null {
     if (node.type !== "identifier") {
+      // TODO better error handing -- this is a logical bug
       throw new Error("not an identifier");
     }
     const name = node.text;
@@ -120,7 +127,12 @@ export class ScopeManager {
     if (list) {
       if (list.length > 1) {
         // TODO check scope
-        throw new Error("multiple variables with the same name");
+        for (const item of list) {
+          ctx.warn(
+            item.node,
+            "multiple variables with the same name: not yet supported",
+          );
+        }
       }
       return list[0];
     }

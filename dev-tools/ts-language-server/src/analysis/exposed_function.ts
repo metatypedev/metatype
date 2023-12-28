@@ -53,54 +53,57 @@ export function analyzeExposeExpression(
   }
   let methodCall = asMethodCall(node);
   if (methodCall === null) {
-    throw new Error("expected method call");
+    ctx.error(node, "expected method call");
+    return null;
   }
-  let policy: Parser.SyntaxNode | null = null;
-  let reduce: Parser.SyntaxNode | null = null;
   const methodName = methodCall.method.text;
+
   if (methodName === "withPolicy") {
-    policy = methodCall.arguments;
-    methodCall = asMethodCall(methodCall.object);
-    if (methodCall === null) {
-      throw new Error("expected method call");
+    const policy = methodCall.arguments;
+    const expr = analyzeExposeExpression(methodCall.object, ctx);
+    if (expr == null) {
+      return null;
     }
+    if (expr.policy != null) {
+      ctx.warn(node, "multiple policies specified");
+      return expr;
+    }
+    expr.policy = policy;
+    return expr;
   }
 
   // TODO what if reduce is a generator name??
   if (methodName === "reduce") {
-    reduce = methodCall.arguments;
-    methodCall = asMethodCall(methodCall.object);
-    if (methodCall === null) {
-      throw new Error("expected method call");
+    const reduce = methodCall.arguments;
+    const expr = analyzeExposeExpression(methodCall.object, ctx);
+    if (expr == null) {
+      return null;
     }
+
+    if (expr.reduce != null) {
+      // TODO multiple reduce not yet supported
+      ctx.warn(node, "chained reduce called not yet supported by the LSP");
+      return expr;
+    }
+    expr.reduce = reduce;
+    return expr;
   }
 
   let runtimeNode = methodCall.object;
   if (runtimeNode.type === "identifier") {
     const variable = ctx.symbolRegistry.findVariable(runtimeNode);
     if (variable === null) {
-      // TODO diagnostic??
-      throw new Error(`variable ${runtimeNode.text} not found`);
+      ctx.error(runtimeNode, "symbol definition not found");
+      return null;
     }
     runtimeNode = variable.definition;
   }
 
   const runtime = Runtime.analyze(runtimeNode, ctx);
   if (runtime === null) {
-    throw new Error("expected runtime");
+    ctx.error(runtimeNode, "expected a runtime");
+    return null;
   }
-
-  // if (runtime.type !== "new_expression") {
-  //   throw new Error("expected new expression");
-  // }
-  // const runtimeConstructor = runtime.childForFieldName("constructor")!.text;
-  // const runtimeName = runtimeNameByConstructor[
-  //   runtimeConstructor as keyof typeof runtimeNameByConstructor
-  // ];
-  // if (runtimeName === undefined) {
-  //   throw new Error(`unknown runtime: ${runtimeConstructor}`);
-  // }
-  // console.log(runtimeName);
 
   const generator = methodCall.method;
   const generatorArgs = methodCall.arguments;
@@ -115,7 +118,5 @@ export function analyzeExposeExpression(
     ),
     generator,
     generatorArgs,
-    reduce,
-    policy,
   };
 }

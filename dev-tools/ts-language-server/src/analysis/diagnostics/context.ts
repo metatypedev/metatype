@@ -38,7 +38,11 @@ export class ModuleDiagnosticsContext {
   }
 
   public checkTypegraph(def: TypegraphDefinitionCaptures) {
-    const typegraphDef = new TypegraphDefinition(def, this);
+    const typegraphDef = TypegraphDefinition.create(def, this);
+
+    if (typegraphDef == null) {
+      return;
+    }
 
     for (const [name, exposedFunction] of typegraphDef.exposedFunctions) {
       const input = exposedFunction.input;

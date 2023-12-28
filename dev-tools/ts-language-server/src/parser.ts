@@ -87,43 +87,66 @@ const methodCallQuery = TypeScript.query(`
 `);
 
 export class TypegraphDefinition {
-  name: string;
-  builder: Parser.SyntaxNode;
-  graphParameterName: string;
-  body: Parser.SyntaxNode;
-  #exposedFunctions: Map<string, ExposedFunction> = new Map();
+  public exposedFunctions: Map<string, ExposedFunction>;
 
-  constructor(
-    captures: TypegraphDefinitionCaptures,
-    private ctx: ModuleDiagnosticsContext,
+  private constructor(
+    public name: string,
+    public builder: Parser.SyntaxNode,
+    public graphParameterName: string,
+    public body: Parser.SyntaxNode,
+    ctx: ModuleDiagnosticsContext,
   ) {
-    if (captures.name != undefined) {
-      this.name = captures.name.text;
-      this.builder = captures.builder!;
-    } else {
+    this.exposedFunctions = new Map();
+    for (const [name, node] of this.#findExposedFunctions()) {
+      const res = analyzeExposeExpression(node, ctx);
+      if (res === null) {
+        continue;
+      }
+      this.exposedFunctions.set(name, { ...res, name });
+    }
+  }
+
+  static create(
+    captures: TypegraphDefinitionCaptures,
+    ctx: ModuleDiagnosticsContext,
+  ): TypegraphDefinition | null {
+    if (captures.name == undefined) {
       // TODO find name in args
-      throw new Error("TODO");
+      ctx.error(captures.args!, "Invalid typegraph definition");
+      return null;
     }
 
-    const matches = parameterQuery.matches(this.builder.namedChildren[0]);
+    const name = captures.name.text;
+    const builder = captures.builder!;
+
+    const matches = parameterQuery.matches(builder.namedChildren[0]);
+    let graphParameterName: string;
     // this is to be checked by the typescript linter.
     if (matches.length === 0) {
-      this.ctx.error(
-        this.builder.namedChildren[0],
+      ctx.error(
+        builder.namedChildren[0],
         "expected one parameter for the typegraph builder",
       );
-      // throw new Error("expected one match");
-      this.graphParameterName = "g";
+      graphParameterName = "g";
     } else {
       if (matches.length > 1) {
-        this.ctx.error(
-          this.builder.namedChildren[0],
+        ctx.error(
+          builder.namedChildren[0],
           "expected only one parameter for the typegraph builder",
         );
       }
-      this.graphParameterName = matches[0].captures[0].node.text;
+      graphParameterName = matches[0].captures[0].node.text;
     }
-    this.body = this.builder.namedChildren[1];
+
+    const body = builder.namedChildren[1];
+
+    return new TypegraphDefinition(
+      name,
+      builder,
+      graphParameterName,
+      body,
+      ctx,
+    );
   }
 
   #findExposedFunctions(): [name: string, node: Parser.SyntaxNode][] {
@@ -139,27 +162,12 @@ export class TypegraphDefinition {
       })
       .map((m) => m.captures.find((c) => c.name === "objectArg")?.node);
 
-    if (exposeObjects.length !== 1) {
-      throw new Error("expected one object argument in expose");
-    }
-
-    return exposeObjects[0]!.namedChildren.map((c) => {
-      const name = c.childForFieldName("key");
-      const value = c.childForFieldName("value");
-      return [name!.text, value!];
+    return exposeObjects.filter((o) => o).flatMap((o) => {
+      return o!.namedChildren.map((c) => {
+        const name = c.childForFieldName("key");
+        const value = c.childForFieldName("value");
+        return [name!.text, value!] as [string, Parser.SyntaxNode];
+      });
     });
-  }
-
-  get exposedFunctions(): Map<string, ExposedFunction> {
-    if (this.#exposedFunctions.size === 0) {
-      for (const [name, node] of this.#findExposedFunctions()) {
-        const res = analyzeExposeExpression(node, this.ctx);
-        if (res === null) {
-          continue;
-        }
-        this.#exposedFunctions.set(name, { ...res, name });
-      }
-    }
-    return this.#exposedFunctions;
   }
 }
