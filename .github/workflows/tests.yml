@@ -9,7 +9,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "c157479"
+  GHJK_VERSION: "7f63fb7"
   PYTHON_VERSION: "3.8"
   DENO_VERSION: "1.39.0"
   RUST_BACKTRACE: "full"

@@ -1,21 +1,21 @@
-export { ghjk } from "https://raw.github.com/metatypedev/ghjk/c157479/mod.ts";
-import * as ghjk from "https://raw.github.com/metatypedev/ghjk/c157479/mod.ts";
-import { install } from "https://raw.github.com/metatypedev/ghjk/c157479/mod.ts";
+export { ghjk } from "https://raw.github.com/metatypedev/ghjk/7f63fb7/mod.ts";
+import * as ghjk from "https://raw.github.com/metatypedev/ghjk/7f63fb7/mod.ts";
+import { install } from "https://raw.github.com/metatypedev/ghjk/7f63fb7/mod.ts";
 
-import wasmedge from "https://raw.github.com/metatypedev/ghjk/c157479/ports/wasmedge.ts";
-import pnpm from "https://raw.github.com/metatypedev/ghjk/c157479/ports/pnpm.ts";
-import jco from "https://raw.github.com/metatypedev/ghjk/c157479/ports/jco.ts";
-import mold from "https://raw.github.com/metatypedev/ghjk/c157479/ports/mold.ts";
-import wasm_tools from "https://raw.github.com/metatypedev/ghjk/c157479/ports/wasm-tools.ts";
-import wasm_opt from "https://raw.github.com/metatypedev/ghjk/c157479/ports/wasm-opt.ts";
-import cargo_insta from "https://raw.github.com/metatypedev/ghjk/c157479/ports/cargo-insta.ts";
-import asdf from "https://raw.github.com/metatypedev/ghjk/c157479/ports/asdf.ts";
-import protoc from "https://raw.github.com/metatypedev/ghjk/c157479/ports/protoc.ts";
-import act from "https://raw.github.com/metatypedev/ghjk/c157479/ports/act.ts";
-import whiz from "https://raw.github.com/metatypedev/ghjk/c157479/ports/whiz.ts";
-// import node from "https://raw.github.com/metatypedev/ghjk/c157479/ports/node.ts";
-import emscripten from "https://raw.github.com/metatypedev/ghjk/c157479/ports/emscripten.ts";
-import tree_sitter from "https://raw.github.com/metatypedev/ghjk/c157479/ports/tree-sitter.ts";
+import wasmedge from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/wasmedge.ts";
+import pnpm from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/pnpm.ts";
+import jco from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/jco.ts";
+import mold from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/mold.ts";
+import wasm_tools from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/wasm-tools.ts";
+import wasm_opt from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/wasm-opt.ts";
+import cargo_insta from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/cargo-insta.ts";
+import asdf from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/asdf.ts";
+import protoc from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/protoc.ts";
+import act from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/act.ts";
+import whiz from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/whiz.ts";
+// import node from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/node.ts";
+import emscripten from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/emscripten.ts";
+import tree_sitter from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/tree-sitter.ts";
 
 const PROTOC_VERSION = "v24.1";
 const POETRY_VERSION = "1.7.0";
