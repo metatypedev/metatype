@@ -1,4 +1,4 @@
-import * as path from "path";
+import { join } from "node:path";
 import { ExtensionContext } from "vscode";
 
 import {
@@ -11,10 +11,19 @@ import {
 let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
-  const tsServerDir = context.asAbsolutePath(
-    path.join("out", "ts-language-server"),
-  );
+  const serverDir = context.asAbsolutePath(join("ts-language-server"));
+  const serverModule = context.asAbsolutePath(join("ts-language-server", "out", "server.js"));
   const serverOptions: ServerOptions = {
+    run: {
+      module: serverModule, transport: TransportKind.ipc,
+    },
+    debug: {
+      command: "pnpm",
+      args: "tsx src/server.ts --ipc",
+      options: {
+        cwd: serverDir,
+      },
+    },
     command: "deno",
     args: ["run", "-A", "src/server.ts", "--stdio"],
     options: {

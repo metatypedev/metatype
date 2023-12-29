@@ -8,7 +8,7 @@
 			"name": "Launch Client",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceRoot}/dev-tools/vscode-metatype-support"
+				"--extensionDevelopmentPath=${workspaceRoot}/dev-tools"
 			],
 			"outFiles": [
 				"${workspaceRoot}/dev-tools/vscode-metatype-support/out/**/*.js"

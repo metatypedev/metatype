@@ -6,7 +6,7 @@
 			"type": "shell",
 			"command": "pnpm",
 			"args": [
-				"compile"
+				"compile:vscode"
 			],
 			"group": "build",
 			"presentation": {
@@ -17,7 +17,7 @@
 				"$tsc"
 			],
 			"options": {
-				"cwd": "${workspaceFolder}/dev-tools/vscode-metatype-support"
+				"cwd": "${workspaceFolder}/dev-tools"
 			}
 		},
 		{
