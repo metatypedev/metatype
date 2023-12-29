@@ -2,16 +2,9 @@
 
 ## TypeScript Language Server
 
-### Setup
-```bash
-cd dev-tools/ts-language-server
-deno run -A dev/generate-grammar-wasm.ts
-```
-
 ### Testing
 ```bash
-# still in dev-tools/ts-language-server
-deno test -A
+pnpm test
 ```
 
 ## VSCode extension: vscode-metatype-support

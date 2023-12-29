@@ -72,14 +72,14 @@ repos:
           - ts
           - tsx
         files: ^website/
-      - id: vscode-extension-lint
-        name: ESLint for the vscode extension
+      - id: devtools-lint
+        name: ESLint the dev-tools
         language: system
-        entry: bash -c 'cd dev-tools/vscode-metatype-support && pnpm lint --fix'
+        entry: bash -c 'cd dev-tools && pnpm lint --fix'
         pass_filenames: false
         types:
           - ts
-        files: ^dev-tools/vscode-metatype-support
+        files: ^dev-tools/
       - id: version
         name: "Lock versions"
         always_run: true

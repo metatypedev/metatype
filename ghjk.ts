@@ -13,7 +13,7 @@ import asdf from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/asdf.ts"
 import protoc from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/protoc.ts";
 import act from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/act.ts";
 import whiz from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/whiz.ts";
-// import node from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/node.ts";
+import node from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/node.ts";
 import emscripten from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/emscripten.ts";
 import tree_sitter from "https://raw.github.com/metatypedev/ghjk/7f63fb7/ports/tree-sitter.ts";
 

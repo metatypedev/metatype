@@ -1,19 +1,12 @@
-import Parser from "npm:web-tree-sitter";
-import { join } from "std/path/mod.ts";
+import Parser = require("tree-sitter");
+import { typescript as TypeScript } from "tree-sitter-typescript";
 import {
   analyzeExposeExpression,
   ExposedFunction,
 } from "./analysis/exposed_function.ts";
 import { ModuleDiagnosticsContext } from "./analysis/diagnostics/context.ts";
 
-export { Parser };
-
-const srcDir = new URL(".", import.meta.url).pathname;
-
-await Parser.init();
-export const TypeScript = await Parser.Language.load(
-  join(srcDir, "../grammars/typescript.wasm"),
-);
+export { Parser, TypeScript };
 
 export function parse(code: string): Parser.Tree {
   const parser = new Parser();
@@ -21,21 +14,29 @@ export function parse(code: string): Parser.Tree {
   return parser.parse(code);
 }
 
+export function queryMatches(
+  query: string,
+  node: Parser.SyntaxNode,
+): Parser.QueryMatch[] {
+  const q = new Parser.Query(TypeScript, query);
+  return q.matches(node);
+}
+
 // TODO arrrow funnction vs anonymous function vs named function
-const typegraphDefinitionQuery = TypeScript.query(`
+const typegraphDefinitionQuery = `
 (call_expression
-  function: (identifier) @function
-  arguments: [
-    (arguments 
-      (string (string_fragment) @name)
-      (arrow_function) @builder
-    )
-    (arguments
-      (object) @args
-      (arrow_function)? @builder
-    )
-  ]
-)`);
+ function: (identifier) @function
+ arguments: [
+   (arguments 
+    (string (string_fragment) @name)
+    (arrow_function) @builder
+   )
+   (arguments
+    (object) @args
+    (arrow_function)? @builder
+   )
+ ]
+)`;
 
 function withCapture<T>(
   queryMatch: Parser.QueryMatch,
@@ -59,12 +60,12 @@ const typegraphDefinitionCaptureNames = ["name", "builder", "args"] as const;
 export function findTypegraphDefinitions(
   node: Parser.SyntaxNode,
 ): TypegraphDefinitionCaptures[] {
-  return typegraphDefinitionQuery
-    .matches(node)
+  return queryMatches(typegraphDefinitionQuery, node)
     .filter((m) => withCapture(m, "function", (n) => n.text === "typegraph"))
     .map((m) =>
       m.captures.reduce((acc, c) => {
-        if (typegraphDefinitionCaptureNames.includes(c.name as any)) {
+        const captureNames = typegraphDefinitionCaptureNames as string[];
+        if (captureNames.includes(c.name)) {
           acc[c.name as keyof TypegraphDefinitionCaptures] = c.node;
         }
         return acc;
@@ -72,19 +73,19 @@ export function findTypegraphDefinitions(
     );
 }
 
-const parameterQuery = TypeScript.query(`
-  (identifier) @graphParameterName
-`);
+const parameterQuery = `
+(identifier) @graphParameterName
+`;
 
-const methodCallQuery = TypeScript.query(`
+const methodCallQuery = `
 (call_expression
-  function: (
-    member_expression object: (identifier) @object
-    property: (property_identifier) @method
-  )
-  arguments: (arguments (object) @objectArg)
+ function: (
+   member_expression object: (identifier) @object
+   property: (property_identifier) @method
+ )
+ arguments: (arguments (object) @objectArg)
 )
-`);
+`;
 
 export class TypegraphDefinition {
   public exposedFunctions: Map<string, ExposedFunction>;
@@ -119,7 +120,7 @@ export class TypegraphDefinition {
     const name = captures.name.text;
     const builder = captures.builder!;
 
-    const matches = parameterQuery.matches(builder.namedChildren[0]);
+    const matches = queryMatches(parameterQuery, builder.namedChildren[0]);
     let graphParameterName: string;
     // this is to be checked by the typescript linter.
     if (matches.length === 0) {
@@ -150,8 +151,7 @@ export class TypegraphDefinition {
   }
 
   #findExposedFunctions(): [name: string, node: Parser.SyntaxNode][] {
-    const exposeObjects = methodCallQuery
-      .matches(this.body)
+    const exposeObjects = queryMatches(methodCallQuery, this.body)
       .filter((m) => {
         const object = m.captures.find((c) => c.name === "object");
         const method = m.captures.find((c) => c.name === "method");

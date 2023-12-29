@@ -1,6 +1,5 @@
-import { Connection, Diagnostic, TextDocuments } from "vscode-languageserver";
-import { DiagnosticSeverity } from "vscode-languageserver/types";
-import { TextDocument } from "vscode-languageserver/textdocument";
+import { Connection, TextDocuments } from "vscode-languageserver";
+import { TextDocument } from "vscode-languageserver-textdocument";
 import { ClientCapabilities } from "./mod.ts";
 import { findTypegraphDefinitions, Parser, TypeScript } from "../parser.ts";
 import { ModuleDiagnosticsContext } from "../analysis/diagnostics/context.ts";

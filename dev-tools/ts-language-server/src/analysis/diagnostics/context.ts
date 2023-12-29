@@ -1,4 +1,4 @@
-import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/types";
+import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 import { ScopeManager } from "../typescript-semantic/scope.ts";
 import {
   Parser,
