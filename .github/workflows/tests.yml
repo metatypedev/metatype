@@ -74,7 +74,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@8057951e6a72d18b1a32cf563b1ee4d748a42c62
+      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
       - shell: bash
         run: |
           cd website
@@ -100,7 +100,7 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      - uses: metatypedev/setup-ghjk@8057951e6a72d18b1a32cf563b1ee4d748a42c62
+      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
       - name: Cache .venv dir
         uses: actions/cache@v3
         with:
@@ -148,7 +148,7 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: metatypedev/setup-ghjk@8057951e6a72d18b1a32cf563b1ee4d748a42c62
+      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -276,7 +276,7 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: metatypedev/setup-ghjk@8057951e6a72d18b1a32cf563b1ee4d748a42c62
+      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
