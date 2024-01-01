@@ -12,7 +12,7 @@ use common::typegraph::Typegraph;
 use tokio::sync::{mpsc, oneshot};
 
 use crate::config::Config;
-use crate::typegraph::loader::Loader;
+use crate::typegraph::loader::LoaderPool;
 use crate::typegraph::postprocess::{self, DenoModules, EmbedPrismaMigrations};
 use crate::utils::plural_suffix;
 
@@ -71,13 +71,13 @@ pub enum LoaderEvent {
 }
 
 pub struct LoaderActor {
-    config: Arc<Config>,
-    postprocess_options: PostProcessOptions,
+    // config: Arc<Config>,
     console: Addr<ConsoleActor>,
     stopped_tx: Option<oneshot::Sender<StopBehavior>>,
     stop_behavior: StopBehavior,
     event_tx: mpsc::UnboundedSender<LoaderEvent>,
     counter: Option<Arc<AtomicU32>>,
+    loader_pool: Arc<LoaderPool>,
 }
 
 impl LoaderActor {
@@ -86,15 +86,18 @@ impl LoaderActor {
         postprocess_options: PostProcessOptions,
         console: Addr<ConsoleActor>,
         event_tx: mpsc::UnboundedSender<LoaderEvent>,
+        max_parallel_loads: usize,
     ) -> Self {
+        let loader_pool =
+            Self::loader_pool(config.clone(), max_parallel_loads, postprocess_options);
         Self {
-            config,
-            postprocess_options,
+            // config,
             console,
             stopped_tx: None,
             stop_behavior: StopBehavior::ExitSuccess,
             event_tx,
             counter: None,
+            loader_pool: Arc::new(loader_pool),
         }
     }
 
@@ -107,32 +110,38 @@ impl LoaderActor {
 }
 
 impl LoaderActor {
-    fn loader(&self) -> Loader {
-        let mut loader = Loader::new(Arc::clone(&self.config));
-        if let Some(deno) = &self.postprocess_options.deno {
-            loader = loader.with_postprocessor(deno.clone());
+    fn loader_pool(
+        config: Arc<Config>,
+        max_parallel_loads: usize,
+        postprocess_options: PostProcessOptions,
+    ) -> LoaderPool {
+        let mut pool = LoaderPool::new(config, max_parallel_loads);
+        if let Some(deno) = &postprocess_options.deno {
+            pool = pool.with_postprocessor(deno.clone());
         }
-        // .skip_deno_modules(true)
-        loader = loader
+
+        pool = pool
             .with_postprocessor(postprocess::PythonModules::default())
             .with_postprocessor(postprocess::WasmdegeModules::default());
 
-        if let Some(prisma) = &self.postprocess_options.prisma {
-            loader = loader.with_postprocessor(
+        if let Some(prisma) = &postprocess_options.prisma {
+            pool = pool.with_postprocessor(
                 prisma
                     .clone()
-                    .reset_on_drift(self.postprocess_options.allow_destructive),
+                    .reset_on_drift(postprocess_options.allow_destructive),
             );
         }
 
-        loader
+        pool
     }
 
     fn load_module(&self, self_addr: Addr<Self>, path: Arc<Path>) {
-        let loader = self.loader();
+        let loader_pool = self.loader_pool.clone();
         let console = self.console.clone();
         let counter = self.counter.clone();
         Arbiter::current().spawn(async move {
+            // TODO error handling?
+            let loader = loader_pool.get_loader().await.unwrap();
             match loader.load_module(path.clone()).await {
                 Ok(tgs) => self_addr.do_send(LoadedModule(path, tgs)),
                 Err(e) => {

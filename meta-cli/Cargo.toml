@@ -86,6 +86,7 @@ env_logger.workspace = true
 clap = { workspace = true, features = ["derive", "env"] }
 clap_complete.workspace = true
 filetime = "0.2"
+num_cpus = "1.16.0"
 
 [dev-dependencies]
 assert_cmd = "2.0.12"

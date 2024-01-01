@@ -4,7 +4,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use crate::typegraph::loader::Loader;
+use crate::typegraph::loader::LoaderPool;
 use crate::{config::Config, typegraph::postprocess};
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
@@ -56,11 +56,12 @@ impl Action for Deno {
             Config::load_or_find(args.config, &dir).unwrap_or_else(|_| Config::default_in(&dir)),
         );
 
-        let loader = Loader::new(config)
-            .skip_deno_modules(true)
+        let loader_pool = LoaderPool::new(config, 1)
             .with_postprocessor(postprocess::DenoModules::default().codegen(true))
             .with_postprocessor(postprocess::PythonModules::default())
             .with_postprocessor(postprocess::WasmdegeModules::default());
+
+        let loader = loader_pool.get_loader().await?;
 
         let file: Arc<Path> = self.file.clone().into();
         loader.load_module(file.clone()).await.map_err(|e| {
