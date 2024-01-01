@@ -35,7 +35,7 @@ wasmedge-types = "=0.4.4"
 # https://github.com/denoland/deno_ast/blob/main/Cargo.toml
 swc_common = "=0.32.0"
 swc_ecma_ast = "=0.109.0"
-swc_ecma_codegen = "=0.144.1"
+swc_ecma_codegen = "=0.146.32"
 swc_ecma_parser = "=0.139.0"
 swc_ecma_transforms_typescript = "=0.182.3"
 swc_ecma_visit = "=0.95.0"
