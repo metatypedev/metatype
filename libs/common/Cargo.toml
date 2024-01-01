@@ -4,13 +4,13 @@ version = "0.3.1"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.75"
+anyhow = "1.0.78"
 base64 = "0.21.5"
 flate2 = "1.0.28"
 indexmap = { version = "2.1.0", features = ["serde"] }
 schemars = { version = "0.8.16", features = ["derive", "preserve_order"], optional = true }
 serde = { version = "1.0.192", features = ["derive"] }
-serde_json = { version = "1.0.108", features = ["preserve_order"] }
+serde_json = { version = "1.0.109", features = ["preserve_order"] }
 serde_with = "3.4.0"
 tar = "0.4.40"
 ignore = "0.4.20"

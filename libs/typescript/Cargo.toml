@@ -4,10 +4,10 @@ version = "0.3.1"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.75"
+anyhow = "1.0.78"
 string_cache = "0.8.7"
 lazy_static = "1.4.0"
-dprint-plugin-typescript = "0.87.1"
+dprint-plugin-typescript = "0.88.7"
 swc_common = { workspace = true, features = ["tty-emitter"] }
 swc_ecma_ast.workspace = true
 swc_ecma_codegen.workspace = true

@@ -6,4 +6,4 @@ version.workspace = true
 [dependencies]
 deno.workspace = true
 log = "0.4.20"
-anyhow = "1.0.75"
+anyhow = "1.0.78"

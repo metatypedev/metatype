@@ -29,7 +29,7 @@ default = []
 typegate = ["dep:typegate_engine"]
 
 [dependencies]
-self_update = { version = "0.38.0", features = [
+self_update = { version = "0.39.0", features = [
   "archive-tar",
   "archive-zip",
   "compression-flate2",
@@ -38,19 +38,19 @@ self_update = { version = "0.38.0", features = [
 ] }
 prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2"  }
 lazy_static = "1.4.0"
-tokio = { version = "1.34.0", features = ["full"] }
-futures = "0.3.29"
+tokio = { version = "1.35.1", features = ["full"] }
+futures = "0.3.30"
 log = "0.4.20"
-clap-verbosity-flag = "2.1.0"
-crossbeam-channel = "0.5.8"
+clap-verbosity-flag = "2.1.1"
+crossbeam-channel = "0.5.10"
 notify-debouncer-mini = { version = "0.4.1", default-features = false }
 tiny_http = "0.12.0"
 ignore = "0.4.20"
 globset = "0.4.13"
-anyhow = "1.0.75"
+anyhow = "1.0.78"
 indoc = "2.0.4"
 serde = { version = "1.0.192", features = ["derive"] }
-serde_json = { version = "1.0.108", features = ["preserve_order"] }
+serde_json = { version = "1.0.109", features = ["preserve_order"] }
 reqwest = { workspace = true, features = ["json"] }
 colored = "2.0.4"
 question = "0.2.2"
@@ -60,25 +60,25 @@ tar = "0.4.40"
 base64 = "0.21.5"
 common = { path = "../libs/common" }
 typescript = { path = "../libs/typescript" }
-serde_yaml = "0.9.27"
+serde_yaml = "0.9.29"
 pathdiff = "0.2.1"
-openssl = { version = "0.10.59", features = ["vendored"] }
+openssl = { version = "0.10.62", features = ["vendored"] }
 indexmap = { version = "2.1.0", features = ["serde"] }
 lade-sdk = "0.9.1"
-async-trait = "0.1.74"
+async-trait = "0.1.76"
 async-recursion = "1.0.5"
-itertools = "0.11.0"
+itertools = "0.12.0"
 enum_dispatch = "0.3.12"
 git2 = { version = "0.18.1", features = ["vendored-libgit2"], default-features = false }
 normpath = "1.1.1"
 include_dir = "0.7.3"
 chrono = { version = "0.4.31", features = ["serde"] }
 directories = "5.0.1"
-grep = "0.2.12"
+grep = "0.3.1"
 semver = "1.0.20"
 textwrap = "0.16.0"
 actix = "0.13.1"
-ctrlc = "3.4.1"
+ctrlc = "3.4.2"
 derive_more = "0.99.17"
 typegate_engine =  { workspace = true, optional = true }
 shadow-rs.workspace = true
