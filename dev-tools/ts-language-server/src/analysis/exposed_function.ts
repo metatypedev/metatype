@@ -1,8 +1,6 @@
-import { Parser, TypeScript } from "../parser.ts";
+import { Parser } from "../parser.ts";
 import { ModuleDiagnosticsContext } from "./diagnostics/context.ts";
 import { InputType, Runtime } from "./runtimes/mod.ts";
-import { ScopeManager } from "./typescript-semantic/scope.ts";
-import { TgType } from "./typescript-semantic/semantic-node.ts";
 import { asMethodCall } from "./typescript-semantic/utils/mod.ts";
 
 export type ExposedFunction = {
@@ -14,12 +12,6 @@ export type ExposedFunction = {
   generatorArgs: Parser.SyntaxNode;
   reduce?: Parser.SyntaxNode | null;
   policy?: Parser.SyntaxNode | null;
-};
-
-const runtimeNameByConstructor = {
-  "PythonRuntime": "python",
-  "DenoRuntime": "deno",
-  "PrismaRuntime": "prisma",
 };
 
 /**
@@ -51,7 +43,7 @@ export function analyzeExposeExpression(
 
     return analyzeExposeExpression(res.definition, ctx);
   }
-  let methodCall = asMethodCall(node);
+  const methodCall = asMethodCall(node);
   if (methodCall === null) {
     ctx.error(node, "expected method call");
     return null;

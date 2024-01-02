@@ -1,4 +1,4 @@
-import { Parser, TypeScript } from "../../parser.ts";
+import { Parser, queryMatches } from "../../parser.ts";
 import { ModuleDiagnosticsContext } from "../diagnostics/context.ts";
 
 type VariableDeclarationKeyword = "let" | "const" | "var" | "import";
@@ -11,9 +11,7 @@ type Variable = {
   scope: Scope;
 };
 
-const blockQuery = TypeScript.query(`
-(statement_block) @block
-`);
+const blockQuery = "(statement_block) @block";
 
 export class Scope {
   children: Scope[] = [];
@@ -31,7 +29,7 @@ export class Scope {
     const subBlocks: Parser.SyntaxNode[] = [];
 
     for (const child of node.namedChildren) {
-      const blockMatches = blockQuery.matches(child);
+      const blockMatches = queryMatches(blockQuery, child);
       for (const match of blockMatches) {
         const block = match.captures[0].node;
         if (subBlocks.length === 0) {
@@ -54,15 +52,14 @@ export class Scope {
           continue;
         }
         case "lexical_declaration": {
-          const keyword = child.childForFieldName("kind")!
-            .text as VariableDeclarationKeyword;
+          const keyword = child.child(0)!.text as VariableDeclarationKeyword;
           for (const declarator of child.namedChildren) {
             if (declarator.type === "variable_declarator") {
-              const name = declarator.childForFieldName("name")!;
+              const name = declarator.namedChild(0)!;
               if (name.type !== "identifier") {
                 console.warn("unsupported variable declaration:", name.type);
               } else {
-                const initializer = declarator.childForFieldName("value");
+                const initializer = declarator.namedChild(1);
                 if (initializer) {
                   this.addVariable({
                     keyword,

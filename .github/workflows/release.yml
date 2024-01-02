@@ -203,6 +203,8 @@ jobs:
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:latest
 
   vscode-extension:
+    needs:
+      - check-bump
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -211,14 +213,21 @@ jobs:
           deno-version: ${{ env.DENO_VERSION }}
       - shell: bash
         run: |
-          cd dev-tools/vscode-metatype-support
+          cd dev-tools
           pnpm install --frozen-lockfile
-          pnpm package
+          cd ts-language-server
+          pnpm install --frozen-lockfile
+          cd ../vscode-metatype-support
+          pnpm install --frozen-lockfile
+          cd ..
+          pnpm compile:ts-server
+          pnpm compile:vscode
+          pnpm vscode:package
           pnpm run publish -p $${ env.AZURE_DEVOPS_TOKEN }
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ github.ref }}
-          file: "dev-tools/vscode-metatype-support/*.vsix"
+          file: "dev-tools/*.vsix"
           file_glob: true
           overwrite: false
 

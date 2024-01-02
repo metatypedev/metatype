@@ -1,0 +1,45 @@
+{
+    "name": "metatype-devtools",
+    "author": "Metatype Team",
+    "version": "0.2.5",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/metatypedev/metatype"
+    },
+    "publisher": "metatype",
+    "engines": {
+        "vscode": "^1.75.0"
+    },
+    "activationEvents": [
+        "onLanguage:typescript",
+        "onLanguage:javascript"
+    ],
+    "main": "./vscode-metatype-support/out/extension",
+    "scripts": {
+        "compile:ts-server": "pnpm esbuild ./ts-language-server/src/server.ts --bundle --outfile=ts-language-server/out/server.js --packages=external --format=cjs --platform=node",
+        "dev:ts-server": "cd ts-language-server && pnpm dev",
+        "compile:vscode": "pnpm esbuild ./vscode-metatype-support/src/extension.ts --bundle --outfile=vscode-metatype-support/out/extension.js --external:vscode --format=cjs --platform=node",
+        "vscode:prepublish": "pnpm run compile:ts-server && pnpm run compile:vscode",
+        "lint": "eslint ./ts-language-server/src ./vscode-metatype-support/src --ext .ts",
+        "vscode:package": "pnpm vsce package --no-dependencies",
+        "vscode:publish": "pnpm vsce publish --no-dependencies",
+        "postinstall": "cd ts-language-server && pnpm install && cd ..",
+        "test:ts-server": "cd ts-language-server && pnpm test",
+        "clean": "rm -rf ./ts-language-server/out && rm -rf ./vscode-metatype-support/out"
+    },
+    "devDependencies": {
+        "@types/node": "^16.18.65",
+        "@types/vscode": "^1.75.0",
+        "@typescript-eslint/eslint-plugin": "^6.14.0",
+        "@typescript-eslint/parser": "^6.14.0",
+        "@vscode/vsce": "^2.22.0",
+        "esbuild": "^0.19.10",
+        "eslint": "^8.54.0",
+        "eslint-config-standard-with-typescript": "^42.0.0",
+        "eslint-plugin-import": "^2.25.2",
+        "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
+        "eslint-plugin-promise": "^6.0.0",
+        "typescript": "^5.3.2",
+        "tsx": "4.7"
+    }
+}
