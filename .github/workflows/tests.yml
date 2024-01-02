@@ -276,6 +276,12 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
+      # FIXME: the custom runner is missing some ambient items found in
+      # github runner images by default. remove this hack when ghjk handles 
+      # zstd/bsdtar on it's own
+      - run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends zstd
       - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
       - shell: bash
         env: 
