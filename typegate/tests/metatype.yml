@@ -18,6 +18,10 @@ typegates:
       TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e"
       TG_MIGRATION_FAILURE_TEST_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e2"
 
+  dev7893:
+    <<: *dev
+    url: "http://localhost:7893"
+
   dev7895:
     <<: *dev
     url: "http://localhost:7895"
@@ -38,7 +42,6 @@ typegates:
     env:
       TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7897"
       TG_MIGRATION_FAILURE_TEST_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7897alt"
-
 
 typegraphs:
   materializers:
