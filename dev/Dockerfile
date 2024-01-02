@@ -58,7 +58,7 @@ RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash \
 
 COPY ghjk.ts .
 RUN CI=1 NO_PYTHON=1 ghjk ports sync
-ENV GHJK_ENV=/root/.local/share/ghjk/env.sh
+ENV GHJK_ENV=/root/.local/share/ghjk/env.bash
 
 COPY --from=plan /app/recipe.json recipe.json
 
