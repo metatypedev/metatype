@@ -158,7 +158,6 @@ Meta.test("s3", async (t) => {
 
     assertExists(url);
     const res2 = await fetch(url2);
-    console.log("DOWNLOAD URL", url);
     const text = await res2.text();
     assertEquals(text, fileContent2);
   });
