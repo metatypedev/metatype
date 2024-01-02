@@ -52,13 +52,13 @@ RUN set -eux; \
         ; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
-ARG GHJK_VERSION=c6f46a3
+ARG GHJK_VERSION=f34935c
 RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash \
     deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
 COPY ghjk.ts .
 RUN CI=1 NO_PYTHON=1 ghjk ports sync
-ENV GHJK_ENV=/root/.local/share/ghjk/env.bash
+ENV GHJK_ENV=/root/.local/share/ghjk/env.sh
 
 COPY --from=plan /app/recipe.json recipe.json
 
