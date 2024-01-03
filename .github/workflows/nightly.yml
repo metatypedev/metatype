@@ -50,7 +50,7 @@ jobs:
           mkdir -p digests/prd
           digest="${{ steps.prd.outputs.digest }}"
           touch "digests/prd/${digest#sha256:}"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: digests
           path: ./digests/*
@@ -70,7 +70,7 @@ jobs:
           - target: prd
             tag: nightly
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: digests
           path: ./digests

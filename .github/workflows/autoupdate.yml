@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
       - uses: browniebroke/pre-commit-autoupdate-action@main
       - uses: peter-evans/create-pull-request@v5
         with:
