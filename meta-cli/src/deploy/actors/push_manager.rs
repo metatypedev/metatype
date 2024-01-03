@@ -3,7 +3,6 @@
 
 mod state;
 
-use dialoguer::Confirm;
 use state::{AddTypegraphError, CancelationStatus, RemoveTypegraphError, State};
 use std::collections::hash_map::Entry;
 use std::path::PathBuf;
@@ -18,9 +17,13 @@ use common::typegraph::Typegraph;
 use tokio::sync::oneshot;
 
 use crate::config::Config;
+use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use crate::utils::Node;
 
-use super::console::{Console, ConsoleActor};
+use super::console::{
+    input::{Confirm, ConfirmHandler, Select, SelectOption},
+    Console, ConsoleActor,
+};
 use super::pusher::{Push, PusherActor};
 
 enum RetryConfig {
@@ -68,9 +71,15 @@ impl PushManagerBuilder {
                 state: State::default(),
                 retry_config: self.retry_config,
                 typegraph_paths: HashMap::new(),
+                one_time_push_options: HashMap::new(),
             }
         })
     }
+}
+
+#[derive(Debug)]
+pub enum OneTimePushOption {
+    ForceReset { runtime_name: String },
 }
 
 pub struct PushManagerActor {
@@ -79,6 +88,8 @@ pub struct PushManagerActor {
     state: State,
     retry_config: RetryConfig,
     typegraph_paths: HashMap<String, PathBuf>,
+    // maps: typegraph_key -> option
+    one_time_push_options: HashMap<String, Vec<OneTimePushOption>>,
 }
 
 impl PushManagerActor {
@@ -202,19 +213,46 @@ impl PushManagerActor {
         }
     }
 
-    fn interact(&mut self, interaction: Interaction, self_addr: Addr<Self>) {
+    async fn interact(console: Addr<ConsoleActor>, interaction: Interaction) {
         match interaction {
             Interaction::Confirm { question, handler } => {
                 // TODO console
-                let answer = Confirm::new()
-                    .with_prompt(format!("{} {question}", "[confirm]".yellow()))
-                    .interact()
+                Confirm::new(console, question)
+                    .max_retry_count(3)
+                    .interact(handler)
+                    .await
                     .unwrap();
-                match answer {
-                    true => handler.on_confirm(self_addr),
-                    false => handler.on_deny(self_addr),
+            }
+
+            Interaction::Select { prompt, options } => {
+                Select::new(console, prompt)
+                    .max_retry_count(3)
+                    .interact(&options)
+                    .await
+                    .unwrap();
+            }
+        }
+    }
+
+    pub fn apply_options(&mut self, push: Push) -> Result<Push> {
+        let typegraph_key = push.typegraph.get_key()?;
+        if let Some(options) = self.one_time_push_options.remove(&typegraph_key) {
+            let mut push = push;
+            for option in options {
+                match option {
+                    OneTimePushOption::ForceReset { runtime_name } => {
+                        let mut typegraph = (*push.typegraph).clone();
+                        EmbeddedPrismaMigrationOptionsPatch::default()
+                            .reset_on_drift(true)
+                            .apply(&mut typegraph, vec![runtime_name])
+                            .unwrap();
+                        push.typegraph = typegraph.into();
+                    }
                 }
             }
+            Ok(push)
+        } else {
+            Ok(push)
         }
     }
 }
@@ -236,6 +274,8 @@ impl Handler<Push> for PushManagerActor {
 
     fn handle(&mut self, push: Push, _ctx: &mut Self::Context) -> Self::Result {
         if self.add_active(&push.typegraph) {
+            let push = self.apply_options(push).unwrap(); // TODO error handling
+
             self.pusher.do_send(push);
         } else {
             let tg_name = push.typegraph.name().unwrap().cyan();
@@ -245,16 +285,15 @@ impl Handler<Push> for PushManagerActor {
     }
 }
 
-pub trait ConfirmHandler: std::fmt::Debug {
-    fn on_confirm(&self, push_manager: Addr<PushManagerActor>);
-    fn on_deny(&self, _push_manager: Addr<PushManagerActor>) {}
-}
-
 #[derive(Debug)]
 pub enum Interaction {
     Confirm {
         question: String,
-        handler: Box<dyn ConfirmHandler + Send + 'static>,
+        handler: Box<dyn ConfirmHandler + Sync + Send + 'static>,
+    },
+    Select {
+        prompt: String,
+        options: Vec<Box<dyn SelectOption + Sync + Send + 'static>>,
     },
 }
 
@@ -289,12 +328,20 @@ impl PushFinished {
     pub(super) fn confirm(
         self,
         question: String,
-        handler: impl ConfirmHandler + Send + 'static,
+        handler: impl ConfirmHandler + Sync + Send + 'static,
     ) -> Self {
         self.interact(Interaction::Confirm {
             question,
             handler: Box::new(handler),
         })
+    }
+
+    pub(super) fn select(
+        self,
+        prompt: String,
+        options: Vec<Box<dyn SelectOption + Sync + Send + 'static>>,
+    ) -> Self {
+        self.interact(Interaction::Select { prompt, options })
     }
 
     pub(super) fn interact(mut self, interaction: Interaction) -> Self {
@@ -332,7 +379,10 @@ impl Handler<PushFinished> for PushManagerActor {
                 }
                 F::Interact(interaction) => {
                     if !is_cancelled {
-                        self.interact(interaction, ctx.address());
+                        let console = self.console.clone();
+                        Arbiter::current().spawn(async move {
+                            Self::interact(console, interaction).await;
+                        });
                     }
                 }
             }
@@ -402,5 +452,31 @@ impl PushManager for Addr<PushManagerActor> {
         });
         rx.await?;
         Ok(())
+    }
+}
+
+#[derive(Message, Debug)]
+#[rtype(result = "()")]
+pub struct AddOneTimeOptions {
+    pub typegraph_key: String,
+    pub options: Vec<OneTimePushOption>,
+}
+
+impl Handler<AddOneTimeOptions> for PushManagerActor {
+    type Result = ();
+
+    fn handle(&mut self, msg: AddOneTimeOptions, _ctx: &mut Self::Context) -> Self::Result {
+        let AddOneTimeOptions {
+            typegraph_key,
+            options,
+        } = msg;
+        match self.one_time_push_options.entry(typegraph_key) {
+            Entry::Occupied(mut entry) => {
+                entry.get_mut().extend(options);
+            }
+            Entry::Vacant(entry) => {
+                entry.insert(options);
+            }
+        }
     }
 }

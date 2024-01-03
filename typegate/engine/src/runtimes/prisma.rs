@@ -14,7 +14,7 @@ use dashmap::DashMap;
 use deno_core::OpState;
 
 use self::migration::{
-    MigrationContextBuilder, PrismaApplyResult, PrismaCreateResult, PrismaDeployOut,
+    MigrationContextBuilder, ParsedDiff, PrismaApplyResult, PrismaCreateResult, PrismaDeployOut,
 };
 
 #[derive(Clone)]
@@ -118,17 +118,19 @@ pub struct PrismaDiffInp {
 }
 
 #[deno_core::op2(async)]
-#[string]
+#[serde]
 pub async fn op_prisma_diff(
     state: Rc<RefCell<OpState>>,
     #[serde] input: PrismaDiffInp,
-) -> Result<Option<String>> {
+) -> Result<Option<(String, Vec<ParsedDiff>)>> {
     let datamodel = reformat_datamodel(&input.datamodel).context("Error formatting datamodel")?;
     let tmp_dir = {
         let state = state.borrow();
         state.borrow::<Ctx>().tmp_dir.clone()
     };
-    migration::diff(&tmp_dir, input.datasource, datamodel, input.script).await
+    let res = migration::diff(&tmp_dir, input.datasource, datamodel, input.script).await;
+    eprintln!("diff result: {:?}", res);
+    res
 }
 
 #[derive(Deserialize)]

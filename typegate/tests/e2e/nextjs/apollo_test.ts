@@ -66,7 +66,7 @@ function startNextServer() {
   return command.spawn();
 }
 
-const port = 7897;
+const port = 7893;
 const nextjsPort = 3123;
 const envs = {
   TG_APOLLO_HOST: HOST,
@@ -106,7 +106,7 @@ async function undeployTypegraph() {
     "--target",
     `dev${port}`,
     "--typegraph",
-    "apollo-test",
+    "apollo",
   );
 }
 
