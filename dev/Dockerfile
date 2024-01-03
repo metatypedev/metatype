@@ -34,25 +34,25 @@ RUN set -eux; \
     export DEBIAN_FRONTEND=noninteractive; \
     apt update; \
     apt install --yes --no-install-recommends \
-        # typegate build \
-        make \
-        ## libffi-sys\
-        automake \
-        ## wasmedge-sys \
-        libclang-dev \
-        ## openssl deps \
-        pkg-config \
-        libssl-dev \
-        # base ghjk deps \
-        git \
-        curl \
-        # asdf deps \
-        xz-utils \
-        unzip \
-        ; \
+    # typegate build \
+    make \
+    ## libffi-sys\
+    automake \
+    ## wasmedge-sys \
+    libclang-dev \
+    ## openssl deps \
+    pkg-config \
+    libssl-dev \
+    # base ghjk deps \
+    git \
+    curl \
+    # asdf deps \
+    xz-utils \
+    unzip \
+    ; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
-ARG GHJK_VERSION=c6f46a3
+ARG GHJK_VERSION=dc9b402
 RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash \
     deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
