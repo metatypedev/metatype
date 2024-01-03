@@ -171,6 +171,16 @@ impl Typegraph {
         tg.meta.prefix = Some(prefix);
         Ok(tg)
     }
+
+    pub fn get_key(&self) -> Result<String> {
+        let path = self
+            .path
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("typegraph path not set, cannot get id"))?
+            .to_str()
+            .ok_or_else(|| anyhow::anyhow!("typegraph path is not valid unicode"))?;
+        Ok(format!("{}#{}", path, self.name()?))
+    }
 }
 
 impl TypeNode {

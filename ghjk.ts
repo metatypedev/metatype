@@ -1,18 +1,6 @@
-export { ghjk } from "https://raw.github.com/metatypedev/ghjk/6040bb3/mod.ts";
-import { install } from "https://raw.github.com/metatypedev/ghjk/6040bb3/mod.ts";
-
-import wasmedge from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/wasmedge.ts";
-import pnpm from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/pnpm.ts";
-import jco from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/jco.ts";
-import mold from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/mold.ts";
-import wasm_tools from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/wasm-tools.ts";
-import wasm_opt from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/wasm-opt.ts";
-import cargo_insta from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/cargo-insta.ts";
-import asdf from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/asdf.ts";
-import protoc from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/protoc.ts";
-import act from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/act.ts";
-import whiz from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/whiz.ts";
-// import node from "https://raw.github.com/metatypedev/ghjk/6040bb3/ports/node.ts";
+export { ghjk } from "https://raw.github.com/metatypedev/ghjk/dc9b402/mod.ts";
+import * as ghjk from "https://raw.github.com/metatypedev/ghjk/dc9b402/mod.ts";
+import * as ports from "https://raw.github.com/metatypedev/ghjk/dc9b402/ports/mod.ts";
 
 const PROTOC_VERSION = "v24.1";
 const POETRY_VERSION = "1.7.0";
@@ -24,26 +12,27 @@ const WASM_OPT_VERSION = "0.116.0";
 const MOLD_VERSION = "v2.4.0";
 const CMAKE_VERSION = "3.28.0-rc6";
 const CARGO_INSTA_VERSION = "1.33.0";
-// const NODE_VERSION = "20.8.0";
+const NODE_VERSION = "20.8.0";
 
-install(
-  wasmedge({ version: WASMEDGE_VERSION }),
-  pnpm({ version: PNPM_VERSION }),
-  wasm_tools({ version: WASM_TOOLS_VERSION }),
-  wasm_opt({ version: WASM_OPT_VERSION }),
-  cargo_insta({ version: CARGO_INSTA_VERSION }),
-  protoc({ version: PROTOC_VERSION }),
-  asdf({
+ghjk.install(
+  ports.wasmedge({ version: WASMEDGE_VERSION }),
+  ports.pnpm({ version: PNPM_VERSION }),
+  ports.wasm_tools({ version: WASM_TOOLS_VERSION }),
+  ports.wasm_opt({ version: WASM_OPT_VERSION }),
+  ports.cargo_insta({ version: CARGO_INSTA_VERSION }),
+  ports.protoc({ version: PROTOC_VERSION }),
+  ports.asdf({
     pluginRepo: "https://github.com/asdf-community/asdf-cmake",
     installType: "version",
     version: CMAKE_VERSION,
   }),
   // FIXME: jco installs node as a dep
-  ...jco({ version: JCO_VERSION }),
+  ports.jco({ version: JCO_VERSION })[0],
+  ports.node({ version: NODE_VERSION }),
 );
 if (Deno.build.os == "linux") {
-  install(
-    mold({
+  ghjk.install(
+    ports.mold({
       version: MOLD_VERSION,
       replaceLd: Deno.env.has("CI"),
     }),
@@ -51,18 +40,26 @@ if (Deno.build.os == "linux") {
 }
 // node({ version: NODE_VERSION }),
 if (!Deno.env.has("NO_PYTHON")) {
-  install(
-    asdf({
-      pluginRepo: "https://github.com/asdf-community/asdf-poetry",
-      installType: "version",
+  ghjk.install(
+    ...ports.pipi({
+      packageName: "poetry",
       version: POETRY_VERSION,
     }),
   );
+  if (!Deno.env.has("CI")) {
+    ghjk.install(
+      ports.pipi({ packageName: "pre-commit" })[0],
+    );
+  }
 }
 
 if (!Deno.env.has("CI")) {
-  install(
-    act({}),
-    whiz({}),
+  ghjk.install(
+    ports.act({}),
+    ports.whiz({}),
   );
 }
+
+export const secureConfig = ghjk.secureConfig({
+  allowedPortDeps: [...ghjk.stdDeps({ enableRuntimes: true })],
+});

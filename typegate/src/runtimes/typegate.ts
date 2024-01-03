@@ -143,17 +143,17 @@ export class TypeGateRuntime extends Runtime {
     }
 
     const tgJson = await TypeGraph.parseJson(fromString);
-    const [engine, pushResponse] = await this.typegate.pushTypegraph(
+    const { engine, response, name } = await this.typegate.pushTypegraph(
       tgJson,
       JSON.parse(secrets),
       true, // introspection
     );
 
     return {
-      name: engine.name,
-      messages: pushResponse.messages,
-      migrations: pushResponse.migrations,
-      failure: pushResponse.failure && JSON.stringify(pushResponse.failure),
+      name: engine?.name ?? name,
+      messages: response.messages,
+      migrations: response.migrations,
+      failure: response.failure && JSON.stringify(response.failure),
     };
   };
 

@@ -17,4 +17,8 @@ def migration_failure_test(g: Graph):
         name="Record",
     )
 
-    g.expose(Policy.public(), createRecord=db.create(record))
+    g.expose(
+        Policy.public(),
+        createRecord=db.create(record),
+        findRecords=db.find_many(record),
+    )

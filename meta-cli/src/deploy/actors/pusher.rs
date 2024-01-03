@@ -15,13 +15,17 @@ use indoc::indoc;
 use pathdiff::diff_paths;
 use serde::Deserialize;
 
+use super::console::input::ConfirmHandler;
 use crate::config::Config;
+use crate::deploy::push::migration_resolution::{
+    ForceReset, ManualResolution, RemoveLatestMigration,
+};
 use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use crate::utils::graphql;
 use crate::utils::{graphql::Query, Node};
 
 use super::console::{Console, ConsoleActor};
-use super::push_manager::{ConfirmHandler, PushFinished, PushManagerActor};
+use super::push_manager::{PushFinished, PushManagerActor};
 
 type Secrets = HashMap<String, String>;
 
@@ -207,24 +211,12 @@ impl Push {
 #[rtype(result = "()")]
 pub struct CancelPush(pub PathBuf);
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug)]
 #[serde(tag = "reason")]
-pub enum PushFailure {
-    Unknown {
-        message: String,
-    },
-    DatabaseResetRequired {
-        message: String,
-        #[serde(rename = "runtimeName")]
-        runtime_name: String,
-    },
-    NullConstraintViolation {
-        message: String,
-        #[serde(rename = "runtimeName")]
-        runtime_name: String,
-        column: String,
-        table: String,
-    },
+enum PushFailure {
+    Unknown(GenericPushFailure),
+    DatabaseResetRequired(DatabaseResetRequired),
+    NullConstraintViolation(NullConstraintViolation),
 }
 
 #[derive(Message, Debug)]
@@ -263,6 +255,45 @@ pub struct PushResultRaw {
     pub messages: Vec<MessageEntry>,
     pub migrations: Vec<Migrations>,
     pub failure: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct DatabaseResetRequired {
+    message: String,
+    runtime_name: String,
+}
+
+#[derive(Message)]
+#[rtype(result = "()")]
+struct DatabaseReset {
+    push: Push,
+    name: String,
+    failure: DatabaseResetRequired,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct NullConstraintViolation {
+    message: String,
+    runtime_name: String,
+    column: String,
+    migration_name: String,
+    is_new_column: bool,
+    table: String,
+}
+
+#[derive(Message)]
+#[rtype(result = "()")]
+struct ResolveNullConstraintViolation {
+    push: Push,
+    failure: NullConstraintViolation,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct GenericPushFailure {
+    message: String,
 }
 
 #[derive(Message, Debug)]
@@ -341,7 +372,7 @@ impl Handler<Push> for PusherActor {
 impl Handler<PushResult> for PusherActor {
     type Result = ();
 
-    fn handle(&mut self, res: PushResult, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, res: PushResult, ctx: &mut Self::Context) -> Self::Result {
         let name = res.name.clone();
         self.print_messages(&name, &res.messages);
 
@@ -367,46 +398,30 @@ impl Handler<PushResult> for PusherActor {
         }
 
         if let Some(failure) = res.failure {
-            match &failure {
-                PushFailure::Unknown { message } => {
+            match failure {
+                PushFailure::Unknown(f) => {
                     self.console.error(format!(
                         "Unknown error while pushing typegraph {tg_name}",
                         tg_name = name.cyan(),
                     ));
-                    self.console.error(message.clone());
+                    self.console.error(f.message);
                     self.push_manager
                         .do_send(PushFinished::new(res.push, false))
                 }
 
-                PushFailure::DatabaseResetRequired {
-                    message,
-                    runtime_name,
-                } => {
-                    self.console.error(format!(
-                        "Database reset required for prisma runtime '{runtime_name}' in typegraph {tg_name}",
-                        tg_name = name.cyan(),
-                    ));
-                    self.console.error(message.clone());
-
-                    let typegraph = res.push.typegraph.clone();
-                    self.push_manager
-                        .do_send(PushFinished::new(res.push, false).confirm(
-                            format!(
-                                "Do you want to reset the database for runtime {rt} on {name}?",
-                                rt = runtime_name.magenta(),
-                                name = name.cyan()
-                            ),
-                            ConfirmDatabaseRequired {
-                                runtime_name: runtime_name.clone(),
-                                typegraph,
-                            },
-                        ));
+                PushFailure::DatabaseResetRequired(failure) => {
+                    ctx.address().do_send(DatabaseReset {
+                        push: res.push,
+                        name,
+                        failure,
+                    });
                 }
 
-                PushFailure::NullConstraintViolation { message, .. } => {
-                    self.console.error(message.clone());
-                    self.push_manager
-                        .do_send(PushFinished::new(res.push, false))
+                PushFailure::NullConstraintViolation(failure) => {
+                    ctx.address().do_send(ResolveNullConstraintViolation {
+                        push: res.push,
+                        failure,
+                    });
                 }
             }
         } else {
@@ -415,20 +430,120 @@ impl Handler<PushResult> for PusherActor {
     }
 }
 
+impl Handler<DatabaseReset> for PusherActor {
+    type Result = ();
+
+    fn handle(&mut self, msg: DatabaseReset, _ctx: &mut Self::Context) -> Self::Result {
+        let DatabaseResetRequired {
+            message,
+            runtime_name,
+        } = msg.failure;
+        let name = msg.name.cyan();
+
+        self.console.error(format!(
+            "Database reset required for prisma runtime {rt} in typegraph {name}",
+            rt = runtime_name.magenta(),
+        ));
+        self.console.error(message);
+
+        let typegraph = msg.push.typegraph.clone();
+        self.push_manager
+            .do_send(PushFinished::new(msg.push, false).confirm(
+                format!(
+                    "Do you want to reset the database for runtime {rt} on {name}?",
+                    rt = runtime_name.magenta(),
+                ),
+                ConfirmDatabaseResetRequired {
+                    push_manager: self.push_manager.clone(),
+                    runtime_name,
+                    typegraph,
+                },
+            ));
+    }
+}
+
+impl Handler<ResolveNullConstraintViolation> for PusherActor {
+    type Result = ();
+
+    fn handle(
+        &mut self,
+        msg: ResolveNullConstraintViolation,
+        _ctx: &mut Self::Context,
+    ) -> Self::Result {
+        let NullConstraintViolation {
+            message,
+            runtime_name,
+            migration_name,
+            is_new_column,
+            column,
+            table,
+        } = msg.failure;
+        self.console.error(message);
+        if is_new_column {
+            let typegraph = msg.push.typegraph.clone();
+            self.console.info(format!("manually edit the migration {migration_name}; or remove the migration and add set a default value"));
+
+            let migration_dir: Arc<Path> = self
+                .config
+                .prisma_migrations_dir(&typegraph.name().unwrap())
+                .join(&runtime_name)
+                .into();
+
+            let remove_latest = RemoveLatestMigration {
+                typegraph: typegraph.clone(),
+                runtime_name: runtime_name.clone(),
+                migration_name: migration_name.clone(),
+                migration_dir: migration_dir.clone(),
+                push_manager: self.push_manager.clone(),
+                console: self.console.clone(),
+            };
+
+            let manual = ManualResolution {
+                typegraph: typegraph.clone(),
+                runtime_name: runtime_name.clone(),
+                migration_name: migration_name.clone(),
+                migration_dir,
+                message: Some(format!(
+                    "Set a default value for the column `{}` in the table `{}`",
+                    column, table
+                )),
+                push_manager: self.push_manager.clone(),
+                console: self.console.clone(),
+            };
+
+            let reset = ForceReset {
+                typegraph: typegraph.clone(),
+                runtime_name: runtime_name.clone(),
+                push_manager: self.push_manager.clone(),
+            };
+
+            self.push_manager
+                .do_send(PushFinished::new(msg.push, false).select(
+                    "Choose one of the following options".to_string(),
+                    vec![Box::new(remove_latest), Box::new(manual), Box::new(reset)],
+                ));
+        } else {
+            self.push_manager
+                .do_send(PushFinished::new(msg.push, false))
+        }
+    }
+}
+
 #[derive(Debug)]
-struct ConfirmDatabaseRequired {
+struct ConfirmDatabaseResetRequired {
+    push_manager: Addr<PushManagerActor>,
     runtime_name: String,
     typegraph: Arc<Typegraph>,
 }
 
-impl ConfirmHandler for ConfirmDatabaseRequired {
-    fn on_confirm(&self, push_manager: Addr<PushManagerActor>) {
+impl ConfirmHandler for ConfirmDatabaseResetRequired {
+    fn on_confirm(&self) {
         let mut typegraph = (*self.typegraph).clone();
         EmbeddedPrismaMigrationOptionsPatch::default()
             .reset_on_drift(true)
             .apply(&mut typegraph, vec![self.runtime_name.clone()])
             .unwrap();
-        push_manager.do_send(Push::new(typegraph.into()))
+        self.push_manager.do_send(Push::new(typegraph.into()))
     }
 }
 
