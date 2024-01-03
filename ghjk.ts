@@ -26,8 +26,6 @@ ghjk.install(
     installType: "version",
     version: CMAKE_VERSION,
   }),
-  emscripten(),
-  tree_sitter(),
   // FIXME: jco installs node as a dep
   ports.jco({ version: JCO_VERSION })[0],
   ports.node({ version: NODE_VERSION }),
