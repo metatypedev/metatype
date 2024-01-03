@@ -344,6 +344,10 @@ jobs:
       - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
       - shell: bash
         run: |
+          # TODO ghjk port for node-gyp
+          SHELL=/bin/bash pnpm setup
+          source ~/.bashrc
+          pnpm install -g node-gyp
           cd dev-tools
           pnpm install
           cd ts-language-server
