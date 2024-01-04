@@ -20,7 +20,7 @@
         "dev:ts-server": "cd ts-language-server && pnpm dev",
         "compile:vscode": "pnpm esbuild ./vscode-metatype-support/src/extension.ts --bundle --outfile=vscode-metatype-support/out/extension.js --external:vscode --format=cjs --platform=node",
         "vscode:prepublish": "pnpm run compile:ts-server && pnpm run compile:vscode",
-        "lint": "eslint ./ts-language-server/src ./vscode-metatype-support/src --ext .ts",
+        "lint": "pnpm eslint ./ts-language-server/src ./vscode-metatype-support/src --ext .ts",
         "vscode:package": "pnpm vsce package --no-dependencies",
         "vscode:publish": "pnpm vsce publish --no-dependencies",
         "postinstall": "cd ts-language-server && pnpm install && cd ..",
