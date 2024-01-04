@@ -34,7 +34,7 @@ shadow!(build);
 
 use crate::interlude::*;
 
-// This is uded to populate the deno_core::OpState with dependencies
+// This is used to populate the deno_core::OpState with dependencies
 // used by the different ops
 #[derive(Clone)]
 pub struct OpDepInjector {

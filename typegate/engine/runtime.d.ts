@@ -132,6 +132,17 @@ interface WasiVmInitConfig {
   wasi_mod_path: string;
   preopens: Array<string>;
 }
+interface TableDiff {
+  column: string;
+  diff: {
+    action: "Added" | "Removed" | "Altered";
+    type_diff: "NullableToRequired" | "RequiredToNullable" | null | undefined;
+  };
+}
+interface ParsedDiff {
+  table: string;
+  diff: TableDiff[];
+}
 declare namespace Meta {
   function version(): string;
   function typescriptFormatCode(source: string): string;
@@ -147,7 +158,7 @@ declare namespace Meta {
     function query(inp: PrismaQueryInp): Promise<string>;
     function diff(
       inp: PrismaDiffInp,
-    ): Promise<string | undefined | null>;
+    ): Promise<[string, ParsedDiff[]] | undefined | null>;
     function apply(inp: PrismaDevInp): Promise<PrismaApplyOut>;
     function deploy(inp: PrismaDeployInp): Promise<PrismaDeployOut>;
     function create(inp: PrismaCreateInp): Promise<PrismaCreateOut>;

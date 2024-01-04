@@ -428,7 +428,7 @@ export type PrismaDiffInp = {
 
 export async function prisma_diff(
   a0: PrismaDiffInp,
-): Promise<string | null | undefined> {
+): Promise<[string, ParsedDiff[]] | null | undefined> {
   return await Meta.prisma.diff(a0);
 }
 

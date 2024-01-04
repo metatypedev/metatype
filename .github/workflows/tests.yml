@@ -9,7 +9,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "6040bb3"
+  GHJK_VERSION: "dc9b402"
   PYTHON_VERSION: "3.8"
   DENO_VERSION: "1.39.0"
   RUST_BACKTRACE: "full"
@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - uses: dsherret/rust-toolchain-file@v1
@@ -74,7 +74,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@v1
+      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
       - shell: bash
         run: |
           cd website
@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - uses: denoland/setup-deno@v1
@@ -100,7 +100,7 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      - uses: metatypedev/setup-ghjk@v1
+      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
       - name: Cache .venv dir
         uses: actions/cache@v3
         with:
@@ -140,7 +140,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Cache .venv dir
@@ -148,7 +148,7 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: metatypedev/setup-ghjk@v1
+      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -268,7 +268,7 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-${{ hashFiles('**/deno.lock') }}
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Cache .venv dir
@@ -276,7 +276,13 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: metatypedev/setup-ghjk@v1
+      # FIXME: the custom runner is missing some ambient items found in
+      # github runner images by default. remove this hack when ghjk handles 
+      # zstd/bsdtar on it's own
+      - run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends zstd
+      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm

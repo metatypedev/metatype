@@ -77,8 +77,12 @@ export class MetaTest {
   }
 
   async serialize(path: string, opts: ParseOptions = {}): Promise<string> {
-    const { deploy = false, typegraph = null, prefix = null, pretty = false } =
-      opts;
+    const {
+      deploy = false,
+      typegraph = null,
+      prefix = null,
+      pretty = false,
+    } = opts;
     const cmd = ["serialize", "-f", path];
 
     if (pretty) {
@@ -125,11 +129,15 @@ export class MetaTest {
       }
     }
 
-    const [engine, _] = await this.typegate.pushTypegraph(
+    const { engine, response } = await this.typegate.pushTypegraph(
       tgJson,
       secrets,
       this.introspection,
     );
+
+    if (engine == null) {
+      throw response.failure!;
+    }
 
     return engine;
   }
@@ -148,9 +156,7 @@ export class MetaTest {
 
   async terminate() {
     await Promise.all(this.cleanups.map((c) => c()));
-    await Promise.all(
-      this.register.list().map((e) => e.terminate()),
-    );
+    await Promise.all(this.register.list().map((e) => e.terminate()));
   }
 
   async should(
@@ -260,10 +266,7 @@ export const test = ((name, fn, opts = {}): void => {
           for (const [path, srcPath] of Object.entries(gitRepo.content)) {
             const destPath = join(dir, path);
             await Deno.mkdir(dirname(destPath), { recursive: true });
-            await Deno.copyFile(
-              join(testDir, srcPath),
-              destPath,
-            );
+            await Deno.copyFile(join(testDir, srcPath), destPath);
           }
           console.log(dir);
 

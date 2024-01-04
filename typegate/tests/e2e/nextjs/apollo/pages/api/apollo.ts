@@ -18,7 +18,7 @@ export default function handler(
     // Does FormData.append stuff and enables File Upload
     // Please refer to https://github.com/jaydenseric/apollo-upload-client/blob/master/createUploadLink.mjs
     // Note: if link and uri are both provided, link takes precedence
-    link: createUploadLink({ uri: "http://localhost:7897/apollo" })
+    link: createUploadLink({ uri: "http://localhost:7893/apollo" }),
   });
 
   client.mutate({

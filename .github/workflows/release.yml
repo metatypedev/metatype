@@ -4,7 +4,7 @@ on:
       - v*
 
 env:
-  GHJK_VERSION: "6040bb3"
+  GHJK_VERSION: "dc9b402"
   PYTHON_VERSION: "3.8"
   DENO_VERSION: "1.39.0"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
@@ -19,7 +19,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v${{ env.DENO_VERSION }}
-      - uses: kenji-miyake/setup-git-cliff@v1
+      - uses: kenji-miyake/setup-git-cliff@v2
       - run: |
           VERSION=$(deno run -A dev/lock.ts --version)
           if [[ "${{ github.ref_name }}" != "v$VERSION" ]]; then
@@ -100,11 +100,11 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "poetry"
-      - uses: metatypedev/setup-ghjk@v1
+      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
       - shell: bash
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
@@ -175,7 +175,7 @@ jobs:
           mkdir -p ./digests
           digest="${{ steps.build.outputs.digest }}"
           touch "./digests/${digest#sha256:}"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: digests
           path: ./digests/*
@@ -187,7 +187,7 @@ jobs:
       - typegate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: digests
           path: ./digests
@@ -215,7 +215,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v${{ env.DENO_VERSION }}
-      - uses: kenji-miyake/setup-git-cliff@v1
+      - uses: kenji-miyake/setup-git-cliff@v2
       - id: bump
         run: |
           deno run -A dev/lock.ts --bump prerelease

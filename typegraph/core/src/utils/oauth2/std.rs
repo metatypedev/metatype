@@ -243,12 +243,12 @@ impl StdOauth2Provider for Github {
         let out = out.build()?;
 
         let js_code = format!(
-            "(p) => ({{ id: p.id, {} }})",
+            "(p) => ({{ id: p.id, {}}})",
             additional_fields
                 .iter()
-                .map(|f| format!("{}: p.{}", f, f))
+                .map(|f| format!("{}: p.{}, ", f, f))
                 .collect::<Vec<_>>()
-                .join(",\n")
+                .join("")
         );
 
         Ok(OAuth2Profiler {
