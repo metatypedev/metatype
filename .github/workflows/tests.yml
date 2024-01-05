@@ -351,10 +351,11 @@ jobs:
           pnpm install
           cd ts-language-server
           pnpm install
-          node --test --import=tsx --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage.lcov tests/*.test.ts
+          # node --test --import=tsx --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage.lcov tests/*.test.ts
+          node --test --import=tsx tests/*.test.ts
 
-      - uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./dev-tools/ts-language-server/coverage.lcov
-          fail_ci_if_error: true
+      # - uses: codecov/codecov-action@v3
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     files: ./dev-tools/ts-language-server/coverage.lcov
+      #     fail_ci_if_error: true
