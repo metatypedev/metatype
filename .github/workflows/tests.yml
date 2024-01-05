@@ -345,8 +345,6 @@ jobs:
       - shell: bash
         run: |
           echo "npm binary: `which npm`"
-          sudo apt-get update
-          sudo apt-get install npm
           sudo npm install -g node-gyp
 
           cd dev-tools

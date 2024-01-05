@@ -38,6 +38,9 @@ devDependencies:
   eslint-plugin-promise:
     specifier: ^6.0.0
     version: 6.1.1(eslint@8.56.0)
+  lcov:
+    specifier: '1.16'
+    version: 1.16.0
   tsx:
     specifier: '4.7'
     version: 4.7.0
@@ -1817,6 +1820,11 @@ packages:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
     dependencies:
       json-buffer: 3.0.1
+    dev: true
+
+  /lcov@1.16.0:
+    resolution: {integrity: sha512-pEUuvik5O5xPeB3z1z8cFWCGtugnPHwR5YhGd1Er6dJqHRb1X/Gvn2ZBbmWn9lVEAf1ivFsR/JGCsVrPBgPy+A==}
+    hasBin: true
     dev: true
 
   /leven@3.1.0:
