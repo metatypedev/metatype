@@ -488,6 +488,9 @@ interface utils {
     add-auth: func(data: auth) -> result<u32, error>
     add-raw-auth: func(data: string) -> result<u32, error>
     oauth2: func(service-name: string, scopes: string) -> result<string, error> 
+    oauth2-without-profiler: func(service-name: string, scopes: string) -> result<string, error>
+    oauth2-with-extended-profiler: func(service-name: string, scopes: string, extension: string) -> result<string, error>
+    oauth2-with-custom-profiler: func(service-name: string, scopes: string, profiler: type-id) -> result<string, error>
 }
 
 world typegraph {

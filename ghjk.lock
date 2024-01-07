@@ -2621,19 +2621,19 @@
             "portRef": "node_org@0.1.0",
             "instId": "node_org@0.1.0+88ba357c"
           },
-          "asdf@0.1.0+65d907b4": {
-            "instId": "asdf@0.1.0+65d907b4",
+          "asdf@0.1.0+6974a914": {
+            "instId": "asdf@0.1.0+6974a914",
             "portRef": "asdf@0.1.0",
             "config": {
               "version": "3.28.0-rc6",
               "depConfigs": {
                 "curl_aa": {
-                  "version": "8.2.1",
+                  "version": "8.5.0",
                   "depConfigs": {},
                   "portRef": "curl_aa@0.1.0"
                 },
                 "git_aa": {
-                  "version": "2.40.1",
+                  "version": "2.43.0",
                   "depConfigs": {},
                   "portRef": "git_aa@0.1.0"
                 },
@@ -2641,7 +2641,7 @@
                   "version": "d631481e96",
                   "depConfigs": {
                     "git_aa": {
-                      "version": "2.40.1",
+                      "version": "2.43.0",
                       "depConfigs": {},
                       "portRef": "git_aa@0.1.0"
                     }
@@ -2661,12 +2661,12 @@
               "installType": "version"
             }
           },
-          "asdf_plugin_git@0.1.0+4f72e64a": {
+          "asdf_plugin_git@0.1.0+9387764b": {
             "config": {
               "version": "d631481e96",
               "depConfigs": {
                 "git_aa": {
-                  "version": "2.40.1",
+                  "version": "2.43.0",
                   "depConfigs": {},
                   "portRef": "git_aa@0.1.0"
                 }
@@ -2675,25 +2675,25 @@
               "pluginRepo": "https://github.com/asdf-community/asdf-cmake"
             },
             "portRef": "asdf_plugin_git@0.1.0",
-            "instId": "asdf_plugin_git@0.1.0+4f72e64a"
+            "instId": "asdf_plugin_git@0.1.0+9387764b"
           },
-          "git_aa@0.1.0+46876952": {
+          "git_aa@0.1.0+e1dc78fc": {
             "config": {
-              "version": "2.40.1",
+              "version": "2.43.0",
               "depConfigs": {},
               "portRef": "git_aa@0.1.0"
             },
             "portRef": "git_aa@0.1.0",
-            "instId": "git_aa@0.1.0+46876952"
+            "instId": "git_aa@0.1.0+e1dc78fc"
           },
-          "curl_aa@0.1.0+111de4ca": {
+          "curl_aa@0.1.0+5f2adea7": {
             "config": {
-              "version": "8.2.1",
+              "version": "8.5.0",
               "depConfigs": {},
               "portRef": "curl_aa@0.1.0"
             },
             "portRef": "curl_aa@0.1.0",
-            "instId": "curl_aa@0.1.0+111de4ca"
+            "instId": "curl_aa@0.1.0+5f2adea7"
           },
           "protoc_ghrel@0.1.0+95df0014": {
             "instId": "protoc_ghrel@0.1.0+95df0014",
@@ -2790,7 +2790,7 @@
           "wasm_opt_cbinst@0.1.0+66136275",
           "cargo_insta_cbinst@0.1.0+c37139e3",
           "protoc_ghrel@0.1.0+95df0014",
-          "asdf@0.1.0+65d907b4",
+          "asdf@0.1.0+6974a914",
           "jco_npm@0.1.0+474f388b",
           "node_org@0.1.0+3d080bd3",
           "mold_ghrel@0.1.0+76e364ed",
@@ -2804,8 +2804,8 @@
           "tar_aa@0.1.0+d9cbe4e3",
           "act_ghrel@0.1.0+e9b6de66",
           "zstd_aa@0.1.0+993fa832",
-          "git_aa@0.1.0+46876952",
-          "curl_aa@0.1.0+111de4ca",
+          "git_aa@0.1.0+e1dc78fc",
+          "curl_aa@0.1.0+5f2adea7",
           "protoc_ghrel@0.1.0+95df0014",
           "cargo_binstall_ghrel@0.1.0+dfb618ea",
           "pnpm_ghrel@0.1.0+99af1bf3"
@@ -2830,15 +2830,15 @@
           "node_org@0.1.0+88ba357c": [
             "jco_npm@0.1.0+474f388b"
           ],
-          "curl_aa@0.1.0+111de4ca": [
-            "asdf@0.1.0+65d907b4"
+          "curl_aa@0.1.0+5f2adea7": [
+            "asdf@0.1.0+6974a914"
           ],
-          "git_aa@0.1.0+46876952": [
-            "asdf@0.1.0+65d907b4",
-            "asdf_plugin_git@0.1.0+4f72e64a"
+          "git_aa@0.1.0+e1dc78fc": [
+            "asdf@0.1.0+6974a914",
+            "asdf_plugin_git@0.1.0+9387764b"
           ],
-          "asdf_plugin_git@0.1.0+4f72e64a": [
-            "asdf@0.1.0+65d907b4"
+          "asdf_plugin_git@0.1.0+9387764b": [
+            "asdf@0.1.0+6974a914"
           ],
           "cargo_binstall_ghrel@0.1.0+dfb618ea": [
             "cargo_insta_cbinst@0.1.0+c37139e3",
@@ -2899,23 +2899,23 @@
               "tar_aa"
             ]
           ],
-          "asdf@0.1.0+65d907b4": [
+          "asdf@0.1.0+6974a914": [
             [
-              "curl_aa@0.1.0+111de4ca",
+              "curl_aa@0.1.0+5f2adea7",
               "curl_aa"
             ],
             [
-              "git_aa@0.1.0+46876952",
+              "git_aa@0.1.0+e1dc78fc",
               "git_aa"
             ],
             [
-              "asdf_plugin_git@0.1.0+4f72e64a",
+              "asdf_plugin_git@0.1.0+9387764b",
               "asdf_plugin_git"
             ]
           ],
-          "asdf_plugin_git@0.1.0+4f72e64a": [
+          "asdf_plugin_git@0.1.0+9387764b": [
             [
-              "git_aa@0.1.0+46876952",
+              "git_aa@0.1.0+e1dc78fc",
               "git_aa"
             ]
           ],

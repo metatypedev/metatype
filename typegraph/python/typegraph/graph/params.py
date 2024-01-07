@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass
 import json
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING, Any
 from typegraph.gen.exports import utils
 from typegraph.wit import store, wit_utils
 
@@ -11,6 +11,24 @@ from typegraph.gen.types import Err
 
 if TYPE_CHECKING:
     from typegraph import t
+
+
+class StdOauth2Profiler:
+    pass
+
+
+class NoProfiler(StdOauth2Profiler):
+    pass
+
+
+@dataclass
+class ExtendedProfiler(StdOauth2Profiler):
+    extension: Any
+
+
+@dataclass
+class CustomProfiler(StdOauth2Profiler):
+    id: "t.func"
 
 
 class Rate:
@@ -106,94 +124,101 @@ class Auth:
             ],
         )
 
-    def oauth2_digitalocean(scopes: str) -> "utils.Auth":
-        res = wit_utils.oauth2(store, "digitalocean", scopes)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return RawAuth(res.value)
+    def oauth2_digitalocean(
+        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ) -> "utils.Auth":
+        return RawAuth.from_std("digitalocean", scopes, profiler)
 
-    def oauth2_discord(scopes: str) -> "utils.Auth":
-        res = wit_utils.oauth2(store, "discord", scopes)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return RawAuth(res.value)
+    def oauth2_discord(
+        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ) -> "utils.Auth":
+        return RawAuth.from_std("discord", scopes, profiler)
 
-    def oauth2_dropbox(scopes: str) -> "utils.Auth":
-        res = wit_utils.oauth2(store, "dropbox", scopes)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return RawAuth(res.value)
+    def oauth2_dropbox(
+        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ) -> "utils.Auth":
+        return RawAuth.from_std("dropbox", scopes, profiler)
 
-    def oauth2_facebook(scopes: str) -> "utils.Auth":
-        res = wit_utils.oauth2(store, "facebook", scopes)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return RawAuth(res.value)
+    def oauth2_facebook(
+        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ) -> "utils.Auth":
+        return RawAuth.from_std("facebook", scopes, profiler)
 
-    def oauth2_github(scopes: str) -> "utils.Auth":
-        res = wit_utils.oauth2(store, "github", scopes)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return RawAuth(res.value)
+    def oauth2_github(
+        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ) -> "utils.Auth":
+        return RawAuth.from_std("github", scopes, profiler)
 
-    def oauth2_gitlab(scopes: str) -> "utils.Auth":
-        res = wit_utils.oauth2(store, "gitlab", scopes)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return RawAuth(res.value)
+    def oauth2_gitlab(
+        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ) -> "utils.Auth":
+        return RawAuth.from_std("gitlab", scopes, profiler)
 
-    def oauth2_google(scopes: str) -> "utils.Auth":
-        res = wit_utils.oauth2(store, "google", scopes)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return RawAuth(res.value)
+    def oauth2_google(
+        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ) -> "utils.Auth":
+        return RawAuth.from_std("google", scopes, profiler)
 
-    def oauth2_instagram(scopes: str) -> "utils.Auth":
-        res = wit_utils.oauth2(store, "instagram", scopes)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return RawAuth(res.value)
+    def oauth2_instagram(
+        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ) -> "utils.Auth":
+        return RawAuth.from_std("instagram", scopes, profiler)
 
-    def oauth2_linkedin(scopes: str) -> "utils.Auth":
-        res = wit_utils.oauth2(store, "linkedin", scopes)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return RawAuth(res.value)
+    def oauth2_linkedin(
+        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ) -> "utils.Auth":
+        return RawAuth.from_std("linkedin", scopes, profiler)
 
-    def oauth2_microsoft(scopes: str) -> "utils.Auth":
-        res = wit_utils.oauth2(store, "microsoft", scopes)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return RawAuth(res.value)
+    def oauth2_microsoft(
+        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ) -> "utils.Auth":
+        return RawAuth.from_std("microsoft", scopes, profiler)
 
-    def oauth2_reddit(scopes: str) -> "utils.Auth":
-        res = wit_utils.oauth2(store, "reddit", scopes)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return RawAuth(res.value)
+    def oauth2_reddit(
+        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ) -> "utils.Auth":
+        return RawAuth.from_std("reddit", scopes, profiler)
 
-    def oauth2_slack(scopes: str) -> "utils.Auth":
-        res = wit_utils.oauth2(store, "slack", scopes)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return RawAuth(res.value)
+    def oauth2_slack(
+        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ) -> "utils.Auth":
+        return RawAuth.from_std("slack", scopes, profiler)
 
-    def oauth2_stackexchange(scopes: str) -> "utils.Auth":
-        res = wit_utils.oauth2(store, "stackexchange", scopes)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return RawAuth(res.value)
+    def oauth2_stackexchange(
+        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ) -> "utils.Auth":
+        return RawAuth.from_std("stackexchange", scopes, profiler)
 
-    def oauth2_twitter(scopes: str) -> "utils.Auth":
-        res = wit_utils.oauth2(store, "twitter", scopes)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return RawAuth(res.value)
+    def oauth2_twitter(
+        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ) -> "utils.Auth":
+        return RawAuth.from_std("twitter", scopes, profiler)
 
 
 @dataclass
 class RawAuth:
     json_str: str
+
+    @classmethod
+    def from_std(
+        cls, service: str, scopes: str, profiler: Optional[StdOauth2Profiler] = None
+    ):
+        if isinstance(profiler, NoProfiler):
+            res = wit_utils.oauth2_without_profiler(store, service, scopes)
+        elif isinstance(profiler, ExtendedProfiler):
+            res = wit_utils.oauth2_with_extended_profiler(
+                store, service, scopes, json.dumps(profiler.extension)
+            )
+        elif isinstance(profiler, CustomProfiler):
+            res = wit_utils.oauth2_with_custom_profiler(
+                store, service, scopes, profiler.id
+            )
+        else:  # default profiler
+            res = wit_utils.oauth2(store, service, scopes)
+
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return cls(res.value)
 
 
 @dataclass
