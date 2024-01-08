@@ -301,9 +301,9 @@ jobs:
           mkdir -p $(dirname $WASM_FILE)
           wasm-opt -Oz target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE.opt
           wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
-          rm -rf typegraph/deno/src/gen
-          jco transpile $WASM_FILE -o typegraph/deno/src/gen
-          deno run -A typegraph/deno/dev/fix-declarations.ts
+          rm -rf typegraph/node/src/gen
+          jco transpile $WASM_FILE -o typegraph/node/src/gen
+          deno run -A typegraph/node/dev/fix-declarations.ts
           rm -rf typegraph/python/typegraph/gen
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 

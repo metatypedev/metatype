@@ -126,10 +126,10 @@ jobs:
           cd ../..
 
           npm install --global @bytecodealliance/jco@$JCO_VERSION
-          jco transpile $WASM_FILE -o typegraph/deno/src/gen
-          deno run -A typegraph/deno/dev/fix-declarations.ts
+          jco transpile $WASM_FILE -o typegraph/node/src/gen
+          deno run -A typegraph/node/dev/fix-declarations.ts
 
-          cd typegraph/deno/src
+          cd typegraph/node/src
           deno run -A ../../../dev/publish.ts
           cd ../../..
 
