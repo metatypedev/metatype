@@ -60,7 +60,7 @@ export function getPolicyChain(
     }
     return {
       tag: "per-effect",
-      val: mapValues(p, (v) => v._id) as unknown as PolicyPerEffect,
+      val: mapValues(p, (v: any) => v._id) as unknown as PolicyPerEffect,
     } as const;
   });
 }
