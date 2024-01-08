@@ -9,6 +9,7 @@
     "typegate",
     "dev",
     "examples/templates/deno",
+    "typegraph/node/dev"
   ],
   "deno.unstable": true,
   "deno.suggest.completeFunctionCalls": true,

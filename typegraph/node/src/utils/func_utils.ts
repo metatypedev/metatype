@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { InheritDef } from "../typegraph.ts";
-import { ReducePath } from "../gen/interfaces/metatype-typegraph-utils.d.ts";
-import { serializeStaticInjection } from "./injection_utils.ts";
+import { InheritDef } from "../typegraph";
+import { ReducePath } from "../gen/interfaces/metatype-typegraph-utils";
+import { serializeStaticInjection } from "./injection_utils";
 
 export function stringifySymbol(symbol: symbol) {
   const name = symbol.toString().match(/\((.+)\)/)?.[1];

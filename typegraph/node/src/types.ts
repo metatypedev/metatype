@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { core, wit_utils } from "./wit.ts";
+import { core, wit_utils } from "./wit";
 import {
   PolicyPerEffect,
   PolicySpec as WitPolicySpec,
@@ -14,20 +14,20 @@ import {
   TypeOptional,
   TypeString,
   TypeUnion,
-} from "./gen/interfaces/metatype-typegraph-core.d.ts";
-import { Reduce } from "./gen/interfaces/metatype-typegraph-utils.d.ts";
-import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.d.ts";
-import { Materializer } from "./runtimes/mod.ts";
-import { mapValues } from "./deps.ts";
-import Policy from "./policy.ts";
-import { buildReduceData, serializeRecordValues } from "./utils/func_utils.ts";
+} from "./gen/interfaces/metatype-typegraph-core";
+import { Reduce } from "./gen/interfaces/metatype-typegraph-utils";
+import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes";
+import { Materializer } from "./runtimes/mod";
+import { mapValues } from "./deps";
+import Policy from "./policy";
+import { buildReduceData, serializeRecordValues } from "./utils/func_utils";
 import {
   serializeFromParentInjection,
   serializeGenericInjection,
   serializeStaticInjection,
-} from "./utils/injection_utils.ts";
-import { InjectionValue } from "./utils/type_utils.ts";
-import { InheritDef } from "./typegraph.ts";
+} from "./utils/injection_utils";
+import { InjectionValue } from "./utils/type_utils";
+import { InheritDef } from "./typegraph";
 
 export type PolicySpec = Policy | {
   none: Policy;

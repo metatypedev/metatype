@@ -6,22 +6,15 @@ import {
   fromFileUrl,
   resolve,
 } from "https://deno.land/std@0.202.0/path/mod.ts";
-import { expandGlobSync } from "https://deno.land/std@0.202.0/fs/mod.ts";
 
 export const thisDir = dirname(fromFileUrl(import.meta.url));
 
 const replacements = [
-  ...Array.from(expandGlobSync("../src/gen/**/*.d.ts", {
-    root: thisDir,
-    includeDirs: false,
-    globstar: true,
-  })).map(({ path }) => ({
-    path,
-    op: (s: string) => s.replace(/^(import .*)(?<!\.ts)\';$/, "$1.d.ts';"),
-  })),
   {
     path: resolve(thisDir, "../src/gen/typegraph_core.js"),
-    op: (s: string) => s.replaceAll(/,\s*\w+ as '[\w:\/]+'/g, ""),
+    op: (s: string) => {
+      return s.replaceAll(/,\s*\w+ as '[\w:\/]+'/g, "");
+    },
   },
 ];
 

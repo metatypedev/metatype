@@ -1,14 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Materializer, Runtime } from "../runtimes/mod.ts";
-import { aws } from "../wit.ts";
+import { Materializer, Runtime } from "../runtimes/mod";
+import { aws } from "../wit";
 import {
   S3PresignGetParams,
   S3PresignPutParams,
   S3RuntimeData,
-} from "../gen/interfaces/metatype-typegraph-aws.d.ts";
-import { t } from "../mod.ts";
+} from "../gen/interfaces/metatype-typegraph-aws";
+import { t } from "../mod";
 
 type S3PresignGetMat = Materializer & S3PresignGetParams;
 type S3PresignPutMat = Materializer & S3PresignPutParams;
