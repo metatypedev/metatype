@@ -36,7 +36,6 @@ recipe.json
 tmp/
 coverage*
 
-typegraph/node
 typegraph/deno/src/gen
 typegraph/python/typegraph/gen
 

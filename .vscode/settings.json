@@ -9,8 +9,6 @@
     "typegate",
     "dev",
     "examples/templates/deno",
-    "typegraph/core/tests/typegraphs/deno",
-    "typegraph/deno"
   ],
   "deno.unstable": true,
   "deno.suggest.completeFunctionCalls": true,
@@ -30,8 +28,8 @@
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.codeActionsOnSave": {
-      "source.fixAll": true,
-      "source.organizeImports": true
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
     }
   },
   "[typescript]": {
