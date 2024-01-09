@@ -65,7 +65,16 @@ for (const [channel, { files, lines, lock }] of Object.entries(lockfile)) {
         globstar: true,
         exclude: ignores,
       }),
-    );
+    ) as { path: string }[];
+    // FIXME: terrible hack
+    // replace globs with regexps
+    if (glob.match(/Cargo/)) {
+      const idx = paths.findIndex((ent) => ent.path.match(/node_modules/));
+      if (idx != -1) {
+        console.error("special excluded path", paths[idx].path);
+        paths[idx] = paths.pop()!;
+      }
+    }
 
     if (paths.length == 0) {
       console.error(`No files found for ${glob}, please check and retry.`);
