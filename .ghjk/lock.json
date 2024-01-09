@@ -946,8 +946,7 @@
                   }
                 ],
                 "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/7bef036/ports/cpy_bs.ts"
-              },
-              "releaseTag": "20231002"
+              }
             },
             {
               "version": "1.7.0",

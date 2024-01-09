@@ -43,7 +43,7 @@ if (Deno.build.os == "linux") {
 // node({ version: NODE_VERSION }),
 if (!Deno.env.has("NO_PYTHON")) {
   ghjk.install(
-    ports.cpy_bs({ version: PYTHON_VERSION, releaseTag: "20231002" }),
+    ports.cpy_bs({ version: PYTHON_VERSION }),
     ports.pipi({
       packageName: "poetry",
       version: POETRY_VERSION,
