@@ -8,14 +8,14 @@ use serde_json::json;
 
 use crate::errors::Result;
 use crate::global_store::Store;
-use crate::runtimes::{DenoMaterializer, Materializer};
-use crate::t::TypeBuilder;
 use crate::types::TypeId;
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
-use crate::wit::runtimes::MaterializerDenoFunc;
 use crate::wit::utils::Auth as WitAuth;
-use crate::{t, Lib};
+use crate::Lib;
 
+use self::oauth2::std::{named_provider, Oauth2Builder};
+
+mod oauth2;
 pub mod reduce;
 
 fn find_missing_props(
@@ -77,17 +77,6 @@ impl TryFrom<Oauth2Params<'_>> for String {
 
         Ok(ret)
     }
-}
-
-macro_rules! gen_profiler_func {
-    ($inp:expr, $out: expr, $profiler:expr) => {{
-        let deno_mat = DenoMaterializer::Inline(MaterializerDenoFunc {
-            code: $profiler.to_string(),
-            secrets: vec![],
-        });
-        let mat = Materializer::deno(deno_mat, crate::wit::runtimes::Effect::Read);
-        t::func($inp, $out, Store::register_materializer(mat))
-    }};
 }
 
 impl crate::wit::utils::Guest for crate::Lib {
@@ -184,218 +173,32 @@ impl crate::wit::utils::Guest for crate::Lib {
     }
 
     fn oauth2(service_name: String, scopes: String) -> Result<String> {
-        let (name, scopes) = (service_name.as_ref(), scopes.as_ref());
-        match name {
-            "digitalocean" => {
-                let mut account = t::struct_();
-                let inp = t::struct_()
-                    .propx("account", account.propx("uuid", t::string())?)?
-                    .build()?;
-                let out = t::struct_().propx("id", t::integer())?.build()?;
-                let func = gen_profiler_func!(inp, out, "(p) => ({id: p.account.uuid})")?;
-                Ok(Oauth2Params {
-                    name,
-                    authorize_url: "https://cloud.digitalocean.com/v1/oauth/authorize",
-                    access_url: "https://cloud.digitalocean.com/v1/oauth/token",
-                    // https://docs.digitalocean.com/reference/api/api-reference/#operation/account_get
-                    scopes,
-                    profile_url: Some("https://api.digitalocean.com/v2/account"),
-                    profiler: Some(func),
-                })
-            }
-            "discord" => {
-                let inp = t::struct_().propx("id", t::string())?.build()?;
-                let out = t::struct_().propx("id", t::string())?.build()?;
-                let func = gen_profiler_func!(inp, out, "(p) => ({id: p.id})")?;
-                Ok(Oauth2Params {
-                    name,
-                    authorize_url: "https://discord.com/api/oauth2/authorize",
-                    access_url: "https://discord.com/api/oauth2/token",
-                    // https://discord.com/developers/docs/resources/user
-                    scopes,
-                    profile_url: Some("https://discord.com/api/users/@me"),
-                    profiler: Some(func),
-                })
-            }
-            "dropbox" => {
-                let inp = t::struct_().propx("account_id", t::string())?.build()?;
-                let out = t::struct_().propx("id", t::string())?.build()?;
-                let func = gen_profiler_func!(inp, out, "(p) => ({id: p.account_id})")?;
-                Ok(Oauth2Params {
-                    name,
-                    authorize_url: "https://www.dropbox.com/oauth2/authorize",
-                    access_url: "https://api.dropboxapi.com/oauth2/token",
-                    // https://www.dropbox.com/developers/documentation/http/documentation#users-get_current_account
-                    scopes,
-                    profile_url: Some("https://api.dropboxapi.com/2/users/get_current_account"),
-                    profiler: Some(func),
-                })
-            }
-            "facebook" => {
-                let inp = t::struct_().propx("id", t::string())?.build()?;
-                let out = t::struct_().propx("id", t::string())?.build()?;
-                let func = gen_profiler_func!(inp, out, "(p) => ({id: p.id})")?;
-                Ok(Oauth2Params {
-                    name,
-                    authorize_url: "https://www.facebook.com/v16.0/dialog/oauth",
-                    access_url: "https://graph.facebook.com/v16.0/oauth/access_token",
-                    // https://developers.facebook.com/docs/graph-api/overview#me
-                    // https://developers.facebook.com/docs/graph-api/reference/user/
-                    scopes,
-                    profile_url: Some("https://graph.facebook.com/me"),
-                    profiler: Some(func),
-                })
-            }
-            "github" => {
-                let inp = t::struct_().propx("id", t::integer())?.build()?;
-                let out = t::struct_().propx("id", t::integer())?.build()?;
-                let func = gen_profiler_func!(inp, out, "(p) => ({id: p.id})")?;
-                Ok(Oauth2Params {
-                    name,
-                    authorize_url: "https://github.com/login/oauth/authorize",
-                    access_url: "https://github.com/login/oauth/access_token",
-                    // https://docs.github.com/en/rest/reference/users?apiVersion=2022-11-28#get-the-authenticated-user
-                    scopes,
-                    profile_url: Some("https://api.github.com/user"),
-                    profiler: Some(func),
-                })
-            }
-            "gitlab" => {
-                let inp = t::struct_().propx("id", t::integer())?.build()?;
-                let out = t::struct_().propx("id", t::integer())?.build()?;
-                let func = gen_profiler_func!(inp, out, "(p) => ({id: p.id})")?;
-                Ok(Oauth2Params {
-                    name,
-                    authorize_url: "https://gitlab.com/oauth/authorize",
-                    access_url: "https://gitlab.com/oauth/token",
-                    // https://docs.gitlab.com/ee/api/users.html#list-current-user
-                    scopes,
-                    profile_url: Some("https://gitlab.com/api/v3/user"),
-                    profiler: Some(func),
-                })
-            }
-            "google" => {
-                let inp = t::struct_().propx("localId", t::string())?.build()?;
-                let out = t::struct_().propx("id", t::string())?.build()?;
-                let func = gen_profiler_func!(inp, out, "(p) => ({id: p.localId})")?;
-                Ok(Oauth2Params {
-                    name,
-                    authorize_url: "https://accounts.google.com/o/oauth2/v2/auth",
-                    access_url: "https://oauth2.googleapis.com/token",
-                    // https://cloud.google.com/identity-platform/docs/reference/rest/v1/UserInfo
-                    scopes,
-                    profile_url: Some("https://openidconnect.googleapis.com/v1/userinfo"),
-                    profiler: Some(func),
-                })
-            }
-            "instagram" => {
-                let inp = t::struct_().propx("id", t::string())?.build()?;
-                let out = t::struct_().propx("id", t::string())?.build()?;
-                let func = gen_profiler_func!(inp, out, "(p) => ({id: p.id})")?;
-                Ok(Oauth2Params {
-                    name,
-                    authorize_url: "https://api.instagram.com/oauth/authorize",
-                    access_url: "https://api.instagram.com/oauth/access_token",
-                    // https://developers.facebook.com/docs/instagram-basic-display-api/reference/me
-                    // https://developers.facebook.com/docs/instagram-basic-display-api/reference/user#reading
-                    scopes,
-                    profile_url: Some("https://graph.instagram.com/me"),
-                    profiler: Some(func),
-                })
-            }
-            "linkedin" => {
-                let inp = t::struct_().propx("id", t::integer())?.build()?;
-                let out = t::struct_().propx("id", t::integer())?.build()?;
-                let func = gen_profiler_func!(inp, out, "(p) => ({id: p.id})")?;
-                Ok(Oauth2Params {
-                    name,
-                    authorize_url: "https://www.linkedin.com/oauth/v2/authorization",
-                    access_url: "https://www.linkedin.com/oauth/v2/accessToken",
-                    // https://learn.microsoft.com/en-us/linkedin/shared/integrations/people/profile-api#retrieve-current-members-profile
-                    scopes,
-                    profile_url: Some("https://api.linkedin.com/v2/me"),
-                    profiler: Some(func),
-                })
-            }
-            "microsoft" => {
-                let inp = t::struct_().propx("id", t::string())?.build()?;
-                let out = t::struct_().propx("id", t::string())?.build()?;
-                let func = gen_profiler_func!(inp, out, "(p) => ({id: p.id})")?;
-                Ok(Oauth2Params {
-                    name,
-                    authorize_url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-                    access_url: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-                    // https://learn.microsoft.com/en-us//javascript/api/@microsoft/teams-js/app.userinfo?view=msteams-client-js-latest
-                    scopes,
-                    profile_url: Some("https://graph.microsoft.com/oidc/userinfo"),
-                    profiler: Some(func),
-                })
-            }
-            "reddit" => {
-                let inp = t::struct_()
-                    .propx("id", t::eitherx!(t::integer(), t::string()))?
-                    .build()?;
-                let out = t::struct_()
-                    .propx("id", t::eitherx!(t::integer(), t::string()))?
-                    .build()?;
-                let func = gen_profiler_func!(inp, out, "(p) => ({id: p.id})")?;
-                Ok(Oauth2Params {
-                    name,
-                    authorize_url: "https://www.reddit.com/api/v1/authorize",
-                    access_url: "https://www.reddit.com/api/v1/access_token",
-                    // https://www.reddit.com/dev/api/#GET_api_v1_me
-                    scopes,
-                    profile_url: Some("https://oauth.reddit.com/api/v1/me"),
-                    profiler: Some(func),
-                })
-            }
-            "slack" => {
-                let inp = t::struct_().propx("user_id", t::string())?.build()?;
-                let out = t::struct_().propx("id", t::string())?.build()?;
-                let func = gen_profiler_func!(inp, out, "(p) => ({id: p.user_id})")?;
-                Ok(Oauth2Params {
-                    name,
-                    authorize_url: "https://slack.com/oauth/v2/authorize",
-                    access_url: "https://slack.com/api/oauth.v2.access",
-                    // https://api.slack.com/methods/auth.test
-                    scopes,
-                    profile_url: Some("https://slack.com/api/auth.test"),
-                    profiler: Some(func),
-                })
-            }
-            "stackexchange" => {
-                let inp = t::struct_().propx("account_id", t::integer())?.build()?;
-                let out = t::struct_().propx("id", t::string())?.build()?;
-                let func = gen_profiler_func!(inp, out, "(p) => ({id: `${p.account_id}`})")?;
-                Ok(Oauth2Params {
-                    name: "stackexchange",
-                    authorize_url: "https://stackoverflow.com/oauth",
-                    access_url: "https://stackoverflow.com/oauth/access_token/json",
-                    // https://api.stackexchange.com/docs/me
-                    scopes,
-                    profile_url: Some("https://api.stackexchange.com/2.3/me"),
-                    profiler: Some(func),
-                })
-            }
-            "twitter" => {
-                let mut data = t::struct_();
-                let inp = t::struct_()
-                    .propx("data", data.propx("id", t::string())?)?
-                    .build()?;
-                let out = t::struct_().propx("id", t::string())?.build()?;
-                let func = gen_profiler_func!(inp, out, "(p) => ({id: p.data.id})")?;
-                Ok(Oauth2Params {
-                    name,
-                    authorize_url: "https://twitter.com/i/oauth2/authorize",
-                    access_url: "https://api.twitter.com/2/oauth2/token",
-                    // https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-me
-                    scopes,
-                    profile_url: Some("https://api.twitter.com/2/users/me"),
-                    profiler: Some(func),
-                })
-            }
-            _ => Err(format!("service named {:?} not supported", name)),
-        }?
-        .try_into()
+        Oauth2Builder::new(scopes).build(named_provider(&service_name)?)
+    }
+
+    fn oauth2_without_profiler(service_name: String, scopes: String) -> Result<String> {
+        Oauth2Builder::new(scopes)
+            .no_profiler()
+            .build(named_provider(&service_name)?)
+    }
+
+    fn oauth2_with_extended_profiler(
+        service_name: String,
+        scopes: String,
+        extension: String,
+    ) -> Result<String> {
+        Oauth2Builder::new(scopes)
+            .with_extended_profiler(extension)
+            .build(named_provider(&service_name)?)
+    }
+
+    fn oauth2_with_custom_profiler(
+        service_name: String,
+        scopes: String,
+        profiler: CoreTypeId,
+    ) -> Result<String> {
+        Oauth2Builder::new(scopes)
+            .with_profiler(profiler.into())
+            .build(named_provider(&service_name)?)
     }
 }
