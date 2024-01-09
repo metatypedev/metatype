@@ -4,7 +4,7 @@ on:
       - v*
 
 env:
-  GHJK_VERSION: "dc9b402"
+  GHJK_VERSION: "9c02081"
   PYTHON_VERSION: "3.8"
   DENO_VERSION: "1.39.0"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
@@ -104,7 +104,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "poetry"
-      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
+      - uses: metatypedev/setup-ghjk@7329997f90d9428bf3c6a07043ca4be3d5a5445a
       - shell: bash
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}

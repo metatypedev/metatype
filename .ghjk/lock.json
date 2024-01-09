@@ -1,0 +1,1494 @@
+{
+  "version": "0",
+  "platform": [
+    "linux",
+    "x86_64"
+  ],
+  "moduleEntries": {
+    "ports": {
+      "version": "0",
+      "configResolutions": {
+        "9aaf6a4fddacb5a219afcb3a46e1fd21049cbbeb5808c49be95ea371e3928fc0": {
+          "version": "0.13.5",
+          "depConfigs": {
+            "tar_aa": {
+              "version": "1.34",
+              "depConfigs": {},
+              "portRef": "tar_aa@0.1.0"
+            }
+          },
+          "portRef": "wasmedge_ghrel@0.1.0"
+        },
+        "9e3fa7742c431c34ae7ba8d1e907e50c937ccfb631fb4dcfb7a1773742abe267": {
+          "version": "1.34",
+          "depConfigs": {},
+          "portRef": "tar_aa@0.1.0"
+        },
+        "1b51fcb17016f9514e8bbcfec4c5154711261e69203c3a89fac8914f55bfb4cf": {
+          "version": "v8.8.0",
+          "depConfigs": {},
+          "portRef": "pnpm_ghrel@0.1.0"
+        },
+        "bee3466d0efadb81e940abf5af5600fbf5c0fb8f3da091d0ef0f018edcf2cbff": {
+          "version": "1.0.53",
+          "depConfigs": {
+            "cargo_binstall_ghrel": {
+              "version": "v1.5.0",
+              "depConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0"
+            }
+          },
+          "portRef": "wasm_tools_cbinst@0.1.0"
+        },
+        "402fae54fb94ffdba9cd2617602c7b33c55002275f3c3bb588615b01ff0c3c26": {
+          "version": "v1.5.0",
+          "depConfigs": {},
+          "portRef": "cargo_binstall_ghrel@0.1.0"
+        },
+        "c131aa1d44cbef793ebbc9230c7b4b1527ff7737f09827db8f38ec5bbf81ea7d": {
+          "version": "0.116.0",
+          "depConfigs": {
+            "cargo_binstall_ghrel": {
+              "version": "v1.5.0",
+              "depConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0"
+            }
+          },
+          "portRef": "wasm_opt_cbinst@0.1.0"
+        },
+        "7949920b78ca2c84f31ff8021653b9ff4e271453b4b993d7246027385934ab98": {
+          "version": "1.33.0",
+          "depConfigs": {
+            "cargo_binstall_ghrel": {
+              "version": "v1.5.0",
+              "depConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0"
+            }
+          },
+          "portRef": "cargo_insta_cbinst@0.1.0"
+        },
+        "5155b24a1a756a5b91108ba34188d8bc4f5d6744f5ac29454450d6275663df86": {
+          "version": "v24.1",
+          "depConfigs": {},
+          "portRef": "protoc_ghrel@0.1.0"
+        },
+        "a686ca4668445f0e4ba9b8c1b2342ded13e44e78cf86211a8e43c7fd3a2de97c": {
+          "version": "3.28.0-rc6",
+          "depConfigs": {
+            "curl_aa": {
+              "version": "8.5.0",
+              "depConfigs": {},
+              "portRef": "curl_aa@0.1.0"
+            },
+            "git_aa": {
+              "version": "2.43.0",
+              "depConfigs": {},
+              "portRef": "git_aa@0.1.0"
+            },
+            "asdf_plugin_git": {
+              "version": "d631481e96",
+              "depConfigs": {
+                "git_aa": {
+                  "version": "2.43.0",
+                  "depConfigs": {},
+                  "portRef": "git_aa@0.1.0"
+                }
+              },
+              "portRef": "asdf_plugin_git@0.1.0",
+              "pluginRepo": "https://github.com/asdf-community/asdf-cmake"
+            }
+          },
+          "resolutionDepConfigs": {
+            "asdf_plugin_git": {
+              "pluginRepo": "https://github.com/asdf-community/asdf-cmake",
+              "portRef": "asdf_plugin_git@0.1.0"
+            }
+          },
+          "portRef": "asdf@0.1.0",
+          "pluginRepo": "https://github.com/asdf-community/asdf-cmake",
+          "installType": "version"
+        },
+        "c7d12a562ecc8f3f95df5469ec0272561bc6715ebc41bcd82ba94f17a69a6fcb": {
+          "version": "8.5.0",
+          "depConfigs": {},
+          "portRef": "curl_aa@0.1.0"
+        },
+        "0c719c533251d13d9e84b3113733c9dcd9e48f978c02f3fc4e14816080f7a69e": {
+          "version": "2.43.0",
+          "depConfigs": {},
+          "portRef": "git_aa@0.1.0"
+        },
+        "9ffe0540cc740abe4bae8b926d9f53b78deee279a25c863e64e99263ee0ec7d1": {
+          "version": "d631481e96",
+          "depConfigs": {
+            "git_aa": {
+              "version": "2.43.0",
+              "depConfigs": {},
+              "portRef": "git_aa@0.1.0"
+            }
+          },
+          "portRef": "asdf_plugin_git@0.1.0",
+          "pluginRepo": "https://github.com/asdf-community/asdf-cmake"
+        },
+        "cda344fa6703598428b27ecadd873e4a7eef27b3daec54bde60fd5ea946ad83e": {
+          "version": "0.12.1",
+          "depConfigs": {
+            "node_org": {
+              "version": "v21.5.0",
+              "depConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "depConfigs": {},
+                  "portRef": "tar_aa@0.1.0"
+                }
+              },
+              "portRef": "node_org@0.1.0"
+            }
+          },
+          "portRef": "jco_npm@0.1.0"
+        },
+        "77a0197285cae563176871bd72f2ea24504c195dc596f5c33d4c9cc95eda1fba": {
+          "version": "v21.5.0",
+          "depConfigs": {
+            "tar_aa": {
+              "version": "1.34",
+              "depConfigs": {},
+              "portRef": "tar_aa@0.1.0"
+            }
+          },
+          "portRef": "node_org@0.1.0"
+        },
+        "83443bd71fed2699b3245687aececa5b03834f11b1260dd5486045b7af35f471": {
+          "version": "v20.8.0",
+          "depConfigs": {
+            "tar_aa": {
+              "version": "1.34",
+              "depConfigs": {},
+              "portRef": "tar_aa@0.1.0"
+            }
+          },
+          "portRef": "node_org@0.1.0"
+        },
+        "6d6bdaabeee201ce9b33f9c531e3d0ba24437297f49157e22c757d45c88b86e9": {
+          "version": "v2.4.0",
+          "depConfigs": {
+            "tar_aa": {
+              "version": "1.34",
+              "depConfigs": {},
+              "portRef": "tar_aa@0.1.0"
+            }
+          },
+          "portRef": "mold_ghrel@0.1.0",
+          "replaceLd": false
+        },
+        "e998f3459ee09f37bbaa9ccc452c5abb5e2552e90277f31d95a86113f7c18c35": {
+          "version": "1.7.0",
+          "depConfigs": {
+            "cpy_bs_ghrel": {
+              "version": "3.12.1",
+              "depConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "depConfigs": {},
+                  "portRef": "tar_aa@0.1.0"
+                },
+                "zstd_aa": {
+                  "version": "v1.5.5,",
+                  "depConfigs": {},
+                  "portRef": "zstd_aa@0.1.0"
+                }
+              },
+              "portRef": "cpy_bs_ghrel@0.1.0"
+            }
+          },
+          "portRef": "pipi_pypi@0.1.0",
+          "packageName": "poetry"
+        },
+        "84ecde630296f01e7cb8443c58d1596d668c357a0d9837c0a678b8a541ed0a39": {
+          "version": "3.12.1",
+          "depConfigs": {
+            "tar_aa": {
+              "version": "1.34",
+              "depConfigs": {},
+              "portRef": "tar_aa@0.1.0"
+            },
+            "zstd_aa": {
+              "version": "v1.5.5,",
+              "depConfigs": {},
+              "portRef": "zstd_aa@0.1.0"
+            }
+          },
+          "portRef": "cpy_bs_ghrel@0.1.0"
+        },
+        "4f16c72030e922711abf15474d30e3cb232b18144beb73322b297edecfcdb86f": {
+          "version": "v1.5.5,",
+          "depConfigs": {},
+          "portRef": "zstd_aa@0.1.0"
+        },
+        "076a5b8ee3bdc68ebf20a696378458465042bb7dc1e49ac2dc98e5fa0dab3e25": {
+          "version": "3.6.0",
+          "depConfigs": {
+            "cpy_bs_ghrel": {
+              "version": "3.12.1",
+              "depConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "depConfigs": {},
+                  "portRef": "tar_aa@0.1.0"
+                },
+                "zstd_aa": {
+                  "version": "v1.5.5,",
+                  "depConfigs": {},
+                  "portRef": "zstd_aa@0.1.0"
+                }
+              },
+              "portRef": "cpy_bs_ghrel@0.1.0"
+            }
+          },
+          "portRef": "pipi_pypi@0.1.0",
+          "packageName": "pre-commit"
+        },
+        "95dbc2b8c604a5996b88c5b1b4fb0c10b3e0d9cac68f57eb915b012c44288e93": {
+          "version": "v0.2.57",
+          "depConfigs": {},
+          "portRef": "act_ghrel@0.1.0"
+        },
+        "34ced839bcf88b2b7c09aa591ad94c8ed4f61e1840e0eceea0d6f96c24c42a3e": {
+          "version": "v0.5.0",
+          "depConfigs": {
+            "tar_aa": {
+              "version": "1.34",
+              "depConfigs": {},
+              "portRef": "tar_aa@0.1.0"
+            }
+          },
+          "portRef": "whiz_ghrel@0.1.0"
+        }
+      }
+    },
+    "tasks": {
+      "version": "0"
+    }
+  },
+  "config": {
+    "modules": [
+      {
+        "id": "ports",
+        "config": {
+          "installs": [
+            {
+              "version": "0.13.5",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "wasmedge_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "tar_aa"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/wasmedge.ts"
+              }
+            },
+            {
+              "version": "v8.8.0",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "pnpm_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/pnpm.ts"
+              }
+            },
+            {
+              "version": "1.0.53",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "wasm_tools_cbinst",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "cargo_binstall_ghrel"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/wasm-tools.ts"
+              }
+            },
+            {
+              "version": "0.116.0",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "wasm_opt_cbinst",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "cargo_binstall_ghrel"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/wasm-opt.ts"
+              }
+            },
+            {
+              "version": "1.33.0",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "cargo_insta_cbinst",
+                "platforms": [
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "freebsd",
+                    "x86_64"
+                  ],
+                  [
+                    "freebsd",
+                    "aarch64"
+                  ],
+                  [
+                    "netbsd",
+                    "x86_64"
+                  ],
+                  [
+                    "netbsd",
+                    "aarch64"
+                  ],
+                  [
+                    "aix",
+                    "x86_64"
+                  ],
+                  [
+                    "aix",
+                    "aarch64"
+                  ],
+                  [
+                    "solaris",
+                    "x86_64"
+                  ],
+                  [
+                    "solaris",
+                    "aarch64"
+                  ],
+                  [
+                    "illumos",
+                    "x86_64"
+                  ],
+                  [
+                    "illumos",
+                    "aarch64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "cargo_binstall_ghrel"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/cargo-insta.ts"
+              }
+            },
+            {
+              "version": "v24.1",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "protoc_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/protoc.ts"
+              }
+            },
+            {
+              "version": "3.28.0-rc6",
+              "depConfigs": {
+                "asdf_plugin_git": {
+                  "pluginRepo": "https://github.com/asdf-community/asdf-cmake",
+                  "portRef": "asdf_plugin_git@0.1.0"
+                }
+              },
+              "resolutionDepConfigs": {
+                "asdf_plugin_git": {
+                  "pluginRepo": "https://github.com/asdf-community/asdf-cmake",
+                  "portRef": "asdf_plugin_git@0.1.0"
+                }
+              },
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "asdf",
+                "platforms": [
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "curl_aa"
+                  },
+                  {
+                    "name": "git_aa"
+                  },
+                  {
+                    "name": "asdf_plugin_git"
+                  }
+                ],
+                "resolutionDeps": [
+                  {
+                    "name": "curl_aa"
+                  },
+                  {
+                    "name": "git_aa"
+                  },
+                  {
+                    "name": "asdf_plugin_git"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/asdf.ts"
+              },
+              "pluginRepo": "https://github.com/asdf-community/asdf-cmake",
+              "installType": "version"
+            },
+            {
+              "version": "0.12.1",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "jco_npm",
+                "platforms": [
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "freebsd",
+                    "x86_64"
+                  ],
+                  [
+                    "freebsd",
+                    "aarch64"
+                  ],
+                  [
+                    "netbsd",
+                    "x86_64"
+                  ],
+                  [
+                    "netbsd",
+                    "aarch64"
+                  ],
+                  [
+                    "aix",
+                    "x86_64"
+                  ],
+                  [
+                    "aix",
+                    "aarch64"
+                  ],
+                  [
+                    "solaris",
+                    "x86_64"
+                  ],
+                  [
+                    "solaris",
+                    "aarch64"
+                  ],
+                  [
+                    "illumos",
+                    "x86_64"
+                  ],
+                  [
+                    "illumos",
+                    "aarch64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "node_org"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/jco.ts"
+              }
+            },
+            {
+              "version": "20.8.0",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "node_org",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "tar_aa"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/node.ts"
+              }
+            },
+            {
+              "version": "v2.4.0",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "mold_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "tar_aa"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/mold.ts"
+              },
+              "replaceLd": false
+            },
+            {
+              "version": "1.7.0",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "pipi_pypi",
+                "platforms": [
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "freebsd",
+                    "x86_64"
+                  ],
+                  [
+                    "freebsd",
+                    "aarch64"
+                  ],
+                  [
+                    "netbsd",
+                    "x86_64"
+                  ],
+                  [
+                    "netbsd",
+                    "aarch64"
+                  ],
+                  [
+                    "aix",
+                    "x86_64"
+                  ],
+                  [
+                    "aix",
+                    "aarch64"
+                  ],
+                  [
+                    "solaris",
+                    "x86_64"
+                  ],
+                  [
+                    "solaris",
+                    "aarch64"
+                  ],
+                  [
+                    "illumos",
+                    "x86_64"
+                  ],
+                  [
+                    "illumos",
+                    "aarch64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "cpy_bs_ghrel"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/pipi.ts"
+              },
+              "packageName": "poetry"
+            },
+            {
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "cpy_bs_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "tar_aa"
+                  },
+                  {
+                    "name": "zstd_aa"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/cpy_bs.ts"
+              }
+            },
+            {
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "pipi_pypi",
+                "platforms": [
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "freebsd",
+                    "x86_64"
+                  ],
+                  [
+                    "freebsd",
+                    "aarch64"
+                  ],
+                  [
+                    "netbsd",
+                    "x86_64"
+                  ],
+                  [
+                    "netbsd",
+                    "aarch64"
+                  ],
+                  [
+                    "aix",
+                    "x86_64"
+                  ],
+                  [
+                    "aix",
+                    "aarch64"
+                  ],
+                  [
+                    "solaris",
+                    "x86_64"
+                  ],
+                  [
+                    "solaris",
+                    "aarch64"
+                  ],
+                  [
+                    "illumos",
+                    "x86_64"
+                  ],
+                  [
+                    "illumos",
+                    "aarch64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "cpy_bs_ghrel"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/pipi.ts"
+              },
+              "packageName": "pre-commit"
+            },
+            {
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "act_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/act.ts"
+              }
+            },
+            {
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "whiz_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "tar_aa"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/whiz.ts"
+              }
+            }
+          ],
+          "allowedDeps": {
+            "tar_aa": {
+              "manifest": {
+                "ty": "ambientAccess@v1",
+                "name": "tar_aa",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "execName": "tar",
+                "versionExtractFlag": "--version",
+                "versionExtractRegex": "(\\d+\\.\\d+)",
+                "versionExtractRegexFlags": ""
+              },
+              "defaultInst": {
+                "portRef": "tar_aa@0.1.0"
+              }
+            },
+            "git_aa": {
+              "manifest": {
+                "ty": "ambientAccess@v1",
+                "name": "git_aa",
+                "platforms": [
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "freebsd",
+                    "x86_64"
+                  ],
+                  [
+                    "freebsd",
+                    "aarch64"
+                  ],
+                  [
+                    "netbsd",
+                    "x86_64"
+                  ],
+                  [
+                    "netbsd",
+                    "aarch64"
+                  ],
+                  [
+                    "aix",
+                    "x86_64"
+                  ],
+                  [
+                    "aix",
+                    "aarch64"
+                  ],
+                  [
+                    "solaris",
+                    "x86_64"
+                  ],
+                  [
+                    "solaris",
+                    "aarch64"
+                  ],
+                  [
+                    "illumos",
+                    "x86_64"
+                  ],
+                  [
+                    "illumos",
+                    "aarch64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "execName": "git",
+                "versionExtractFlag": "--version",
+                "versionExtractRegex": "(\\d+\\.\\d+\\.\\d+)",
+                "versionExtractRegexFlags": ""
+              },
+              "defaultInst": {
+                "portRef": "git_aa@0.1.0"
+              }
+            },
+            "curl_aa": {
+              "manifest": {
+                "ty": "ambientAccess@v1",
+                "name": "curl_aa",
+                "platforms": [
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "freebsd",
+                    "x86_64"
+                  ],
+                  [
+                    "freebsd",
+                    "aarch64"
+                  ],
+                  [
+                    "netbsd",
+                    "x86_64"
+                  ],
+                  [
+                    "netbsd",
+                    "aarch64"
+                  ],
+                  [
+                    "aix",
+                    "x86_64"
+                  ],
+                  [
+                    "aix",
+                    "aarch64"
+                  ],
+                  [
+                    "solaris",
+                    "x86_64"
+                  ],
+                  [
+                    "solaris",
+                    "aarch64"
+                  ],
+                  [
+                    "illumos",
+                    "x86_64"
+                  ],
+                  [
+                    "illumos",
+                    "aarch64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "execName": "curl",
+                "versionExtractFlag": "--version",
+                "versionExtractRegex": "(\\d+\\.\\d+\\.\\d+)",
+                "versionExtractRegexFlags": ""
+              },
+              "defaultInst": {
+                "portRef": "curl_aa@0.1.0"
+              }
+            },
+            "unzip_aa": {
+              "manifest": {
+                "ty": "ambientAccess@v1",
+                "name": "unzip_aa",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "execName": "unzip",
+                "versionExtractFlag": "-v",
+                "versionExtractRegex": "(\\d+\\.\\d+)",
+                "versionExtractRegexFlags": ""
+              },
+              "defaultInst": {
+                "portRef": "unzip_aa@0.1.0"
+              }
+            },
+            "zstd_aa": {
+              "manifest": {
+                "ty": "ambientAccess@v1",
+                "name": "zstd_aa",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "execName": "zstd",
+                "versionExtractFlag": "--version",
+                "versionExtractRegex": "v(\\d+\\.\\d+\\.\\d+),",
+                "versionExtractRegexFlags": ""
+              },
+              "defaultInst": {
+                "portRef": "zstd_aa@0.1.0"
+              }
+            },
+            "cargo_binstall_ghrel": {
+              "manifest": {
+                "ty": "denoWorker@v1",
+                "name": "cargo_binstall_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/cargo-binstall.ts"
+              },
+              "defaultInst": {
+                "portRef": "cargo_binstall_ghrel@0.1.0"
+              }
+            },
+            "pnpm_ghrel": {
+              "manifest": {
+                "ty": "denoWorker@v1",
+                "name": "pnpm_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/pnpm.ts"
+              },
+              "defaultInst": {
+                "portRef": "pnpm_ghrel@0.1.0"
+              }
+            },
+            "asdf_plugin_git": {
+              "manifest": {
+                "ty": "denoWorker@v1",
+                "name": "asdf_plugin_git",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "git_aa"
+                  }
+                ],
+                "resolutionDeps": [
+                  {
+                    "name": "git_aa"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/asdf_plugin_git.ts"
+              },
+              "defaultInst": {
+                "portRef": "asdf_plugin_git@0.1.0"
+              }
+            },
+            "node_org": {
+              "manifest": {
+                "ty": "denoWorker@v1",
+                "name": "node_org",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "tar_aa"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/node.ts"
+              },
+              "defaultInst": {
+                "portRef": "node_org@0.1.0"
+              }
+            },
+            "cpy_bs_ghrel": {
+              "manifest": {
+                "ty": "denoWorker@v1",
+                "name": "cpy_bs_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "tar_aa"
+                  },
+                  {
+                    "name": "zstd_aa"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/9c02081/ports/cpy_bs.ts"
+              },
+              "defaultInst": {
+                "portRef": "cpy_bs_ghrel@0.1.0"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "tasks",
+        "config": {
+          "tasks": {}
+        }
+      }
+    ]
+  }
+}
