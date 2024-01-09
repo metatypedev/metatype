@@ -9,7 +9,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "1dc9d1f"
+  GHJK_VERSION: "005bf7b"
   PYTHON_VERSION: "3.8"
   DENO_VERSION: "1.39.0"
   RUST_BACKTRACE: "full"
@@ -74,13 +74,15 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - shell: bash
         run: |
           cd website
           pnpm install --frozen-lockfile
           cd ..
-          cd dev-tools/vscode-metatype-support
+          cd dev-tools
+          pnpm install --frozen-lockfile
+          cd vscode-metatype-support
           pnpm install --frozen-lockfile
           cd ../..
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
@@ -103,13 +105,14 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - name: Cache .venv dir
         uses: actions/cache@v3
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - run: |
+      - shell: bash
+        run: |
           python3 -m venv .venv
           source .venv/bin/activate
           poetry install --no-root
@@ -151,7 +154,7 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -285,7 +288,7 @@ jobs:
       - run: |
           sudo apt update
           sudo apt install -y --no-install-recommends zstd
-      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -341,7 +344,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - shell: bash
         run: |
           echo "npm binary: `which npm`"

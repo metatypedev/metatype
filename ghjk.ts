@@ -1,6 +1,6 @@
-export { ghjk } from "https://raw.github.com/metatypedev/ghjk/1dc9d1f/mod.ts";
-import * as ghjk from "https://raw.github.com/metatypedev/ghjk/1dc9d1f/mod.ts";
-import * as ports from "https://raw.github.com/metatypedev/ghjk/1dc9d1f/ports/mod.ts";
+export { ghjk } from "https://raw.github.com/metatypedev/ghjk/005bf7b/mod.ts";
+import * as ghjk from "https://raw.github.com/metatypedev/ghjk/005bf7b/mod.ts";
+import * as ports from "https://raw.github.com/metatypedev/ghjk/005bf7b/ports/mod.ts";
 
 const PROTOC_VERSION = "v24.1";
 const POETRY_VERSION = "1.7.0";
