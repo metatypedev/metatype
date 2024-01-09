@@ -303,7 +303,6 @@ jobs:
           wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
           rm -rf typegraph/node/src/gen
           jco transpile $WASM_FILE -o typegraph/node/src/gen
-          deno run -A typegraph/node/dev/fix-declarations.ts
           rm -rf typegraph/python/typegraph/gen
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
