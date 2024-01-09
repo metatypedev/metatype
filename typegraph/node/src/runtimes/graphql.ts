@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes";
-import * as t from "../types";
-import { runtimes } from "../wit";
-import { Materializer, Runtime } from "./mod";
-import { fx } from "../mod";
+import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
+import * as t from "../types.js";
+import { runtimes } from "../wit.js";
+import { Materializer, Runtime } from "./mod.js";
+import { fx } from "../mod.js";
 
 export class GraphQLRuntime extends Runtime {
   constructor(private endpoint: string) {

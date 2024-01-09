@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { MaterializerId } from "./gen/interfaces/metatype-typegraph-core";
-import { core, runtimes } from "./wit";
-import { DenoRuntime } from "./runtimes/deno";
+import { MaterializerId } from "./gen/interfaces/metatype-typegraph-core.js";
+import { core, runtimes } from "./wit.js";
+import { DenoRuntime } from "./runtimes/deno.js";
 
 export default class Policy {
   constructor(public readonly _id: number, public readonly name: string) {}

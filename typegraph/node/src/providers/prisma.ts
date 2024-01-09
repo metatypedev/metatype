@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Runtime } from "../runtimes/mod";
-import { runtimes } from "../wit";
-import { Typedef } from "../types";
-import { t } from "../mod";
-import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes";
-import { genRef } from "./../typegraph";
+import { Runtime } from "../runtimes/mod.js";
+import { runtimes } from "../wit.js";
+import { Typedef } from "../types.js";
+import { t } from "../mod.js";
+import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
+import { genRef } from "./../typegraph.js";
 
 type PrismaLinkArg = {
   fkey?: boolean;

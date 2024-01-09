@@ -1,14 +1,10 @@
 {
   "compilerOptions": {
-    "target": "ES2017",                          
-    "module": "CommonJS",                    
-    "allowJs": true,
-    "outDir": "build",                          
-    "rootDir": "src",
-    "strict": true,
-    "noImplicitAny": true,
+    "target": "ES2015",
+    "module": "NodeNext",
+    "moduleResolution": "Node16",
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "outDir": "dist"
   },
-  "exclude": ["dev"]
+  "include": ["src"]
 }

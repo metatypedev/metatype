@@ -1,18 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import * as t from "./types";
-import { core } from "./gen/typegraph_core";
-import { caller, dirname, fromFileUrl } from "./deps";
-import { InjectionValue } from "./utils/type_utils";
+import * as t from "./types.js";
+import { core } from "./gen/typegraph_core.js";
+import { caller, dirname, fromFileUrl } from "./deps.js";
+import { InjectionValue } from "./utils/type_utils.js";
 import {
   serializeFromParentInjection,
   serializeGenericInjection,
   serializeStaticInjection,
-} from "./utils/injection_utils";
-import { Auth, Cors, Rate, wit_utils } from "./wit";
-import Policy from "./policy";
-import { getPolicyChain } from "./types";
+} from "./utils/injection_utils.js";
+import { Auth, Cors, Rate, wit_utils } from "./wit.js";
+import Policy from "./policy.js";
+import { getPolicyChain } from "./types.js";
 
 type Exports = Record<string, t.Func>;
 

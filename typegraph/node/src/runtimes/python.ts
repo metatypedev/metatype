@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import * as t from "../types";
-import { runtimes } from "../wit";
-import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes";
-import { Materializer, Runtime } from "./mod";
-import { fx } from "../mod";
+import * as t from "../types.js";
+import { runtimes } from "../wit.js";
+import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
+import { Materializer, Runtime } from "./mod.js";
+import { fx } from "../mod.js";
 
 interface LambdaMat extends Materializer {
   fn: string;

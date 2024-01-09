@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { RawAuth } from "./typegraph";
-import { Auth as Auth_, wit_utils } from "./wit";
-import * as t from "./types";
+import { RawAuth } from "./typegraph.js";
+import { Auth as Auth_, wit_utils } from "./wit.js";
+import * as t from "./types.js";
 
 export type StdOauth2Profiler =
   | { profiler: "default" }
