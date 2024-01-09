@@ -16,6 +16,10 @@ Meta.test("prisma query builder", async (t) => {
     query {
       findUniqueUser(where: { id: 12 }) {
         id
+        identities {
+          identifier
+          provider
+        }
         email
         name
         messages {
@@ -42,6 +46,12 @@ Meta.test("prisma query builder", async (t) => {
     query: {
       selection: {
         id: true,
+        identities: {
+          selection: {
+            identifier: true,
+            provider: true,
+          },
+        },
         email: true,
         name: true,
         messages: {
