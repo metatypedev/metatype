@@ -83,8 +83,8 @@ jobs:
       - uses: pre-commit/action@v3.0.0
 
   test-website:
-    # needs: changes
-    # if: ${{ needs.changes.outputs.website == 'true' }}
+    needs: changes
+    if: ${{ needs.changes.outputs.website == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -104,9 +104,11 @@ jobs:
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - shell: bash
         run: |
-          python3 -m venv .venv
           pwd
           ls
+          ls .ghjk/envs/default/shims/bin
+          which python3
+          python3 -m venv .venv
           ls .venv
           ls .venv/bin
           source .venv/bin/activate
