@@ -5,7 +5,6 @@ on:
 
 env:
   GHJK_VERSION: "7bef036"
-  PYTHON_VERSION: "3.8"
   DENO_VERSION: "1.39.0"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
 
@@ -100,10 +99,6 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: "poetry"
       - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - shell: bash
         env:
