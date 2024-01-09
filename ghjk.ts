@@ -4,7 +4,7 @@ import * as ports from "https://raw.github.com/metatypedev/ghjk/fcb1d92/ports/mo
 
 const PROTOC_VERSION = "v24.1";
 const POETRY_VERSION = "1.7.0";
-const PYTHON_VERSION = "3.8.18";
+const PYTHON_VERSION = "3.12.1";
 const PNPM_VERSION = "v8.8.0";
 const WASM_TOOLS_VERSION = "1.0.53";
 const JCO_VERSION = "0.12.1";

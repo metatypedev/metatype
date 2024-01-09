@@ -315,6 +315,22 @@
             }
           },
           "portRef": "cpy_bs_ghrel@0.1.0"
+        },
+        "e5e9403382d82c523568a0f63a2973c850b4dd68253334ffdf66253268778f44": {
+          "version": "3.12.1",
+          "depConfigs": {
+            "tar_aa": {
+              "version": "1.34",
+              "depConfigs": {},
+              "portRef": "tar_aa@0.1.0"
+            },
+            "zstd_aa": {
+              "version": "v1.5.5,",
+              "depConfigs": {},
+              "portRef": "zstd_aa@0.1.0"
+            }
+          },
+          "portRef": "cpy_bs_ghrel@0.1.0"
         }
       }
     },
@@ -873,7 +889,7 @@
               "replaceLd": false
             },
             {
-              "version": "3.8.18",
+              "version": "3.12.1",
               "port": {
                 "ty": "denoWorker@v1",
                 "name": "cpy_bs_ghrel",
