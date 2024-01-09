@@ -105,6 +105,10 @@ jobs:
       - shell: bash
         run: |
           python3 -m venv .venv
+          pwd
+          ls
+          ls .venv
+          ls .venv/bin
           source .venv/bin/activate
           poetry install --no-root
           cd website
@@ -332,13 +336,9 @@ jobs:
       - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - shell: bash
         run: |
-          echo "npm binary: `which npm`"
-          sudo npm install -g node-gyp
-
           cd dev-tools
-          pnpm install
+          pnpm install --frozen-lockfile --recursive
           cd ts-language-server
-          pnpm install
           # node --test --import=tsx --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage.lcov tests/*.test.ts
           node --test --import=tsx tests/*.test.ts
 
