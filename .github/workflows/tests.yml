@@ -9,8 +9,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "005bf7b"
-  PYTHON_VERSION: "3.8"
+  GHJK_VERSION: "fcb1d92"
   DENO_VERSION: "1.39.0"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
@@ -62,9 +61,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -81,22 +77,17 @@ jobs:
           pnpm install --frozen-lockfile
           cd ..
           cd dev-tools
-          pnpm install --frozen-lockfile
-          cd vscode-metatype-support
-          pnpm install --frozen-lockfile
-          cd ../..
+          pnpm install --frozen-lockfile --recursive
+          cd ..
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
       - uses: pre-commit/action@v3.0.0
 
   test-website:
-    needs: changes
-    if: ${{ needs.changes.outputs.website == 'true' }}
+    # needs: changes
+    # if: ${{ needs.changes.outputs.website == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
@@ -146,9 +137,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
       - name: Cache .venv dir
         uses: actions/cache@v3
         with:
@@ -274,9 +262,6 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-${{ hashFiles('**/deno.lock') }}
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
       - name: Cache .venv dir
         uses: actions/cache@v3
         with:

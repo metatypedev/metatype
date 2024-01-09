@@ -263,6 +263,58 @@
             }
           },
           "portRef": "whiz_ghrel@0.1.0"
+        },
+        "ee88028bdec4e009320082eea2cdb000c14ec80ebc193c5d49e21f71eb54a88a": {
+          "version": "0.12.1",
+          "depConfigs": {
+            "node_org": {
+              "version": "v21.5.0",
+              "depConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "depConfigs": {},
+                  "portRef": "tar_aa@0.1.0"
+                }
+              },
+              "portRef": "node_org@0.1.0"
+            }
+          },
+          "portRef": "npmi_npm@0.1.0",
+          "packageName": "@bytecodealliance/jco"
+        },
+        "23e2521c50a2a9ea95405def479e6fbcce0da681f6b97251070178c6cdbcb378": {
+          "version": "10.0.1",
+          "depConfigs": {
+            "node_org": {
+              "version": "v21.5.0",
+              "depConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "depConfigs": {},
+                  "portRef": "tar_aa@0.1.0"
+                }
+              },
+              "portRef": "node_org@0.1.0"
+            }
+          },
+          "portRef": "npmi_npm@0.1.0",
+          "packageName": "node-gyp"
+        },
+        "c6037cd6c9d0f07b7975f62b6770757c0d3a1e4fd1631380eff888c0a6a3b537": {
+          "version": "3.8.18",
+          "depConfigs": {
+            "tar_aa": {
+              "version": "1.34",
+              "depConfigs": {},
+              "portRef": "tar_aa@0.1.0"
+            },
+            "zstd_aa": {
+              "version": "v1.5.5,",
+              "depConfigs": {},
+              "portRef": "zstd_aa@0.1.0"
+            }
+          },
+          "portRef": "cpy_bs_ghrel@0.1.0"
         }
       }
     },
@@ -305,7 +357,7 @@
                     "name": "tar_aa"
                   }
                 ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/wasmedge.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/wasmedge.ts"
               }
             },
             {
@@ -340,7 +392,7 @@
                   ]
                 ],
                 "version": "0.1.0",
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/pnpm.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/pnpm.ts"
               }
             },
             {
@@ -380,7 +432,7 @@
                     "name": "cargo_binstall_ghrel"
                   }
                 ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/wasm-tools.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/wasm-tools.ts"
               }
             },
             {
@@ -420,7 +472,7 @@
                     "name": "cargo_binstall_ghrel"
                   }
                 ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/wasm-opt.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/wasm-opt.ts"
               }
             },
             {
@@ -500,7 +552,7 @@
                     "name": "cargo_binstall_ghrel"
                   }
                 ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/cargo-insta.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/cargo-insta.ts"
               }
             },
             {
@@ -527,7 +579,7 @@
                   ]
                 ],
                 "version": "0.1.0",
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/protoc.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/protoc.ts"
               }
             },
             {
@@ -588,7 +640,7 @@
                     "name": "asdf_plugin_git"
                   }
                 ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/asdf.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/asdf.ts"
               },
               "pluginRepo": "https://github.com/asdf-community/asdf-cmake",
               "installType": "version"
@@ -597,7 +649,7 @@
               "version": "0.12.1",
               "port": {
                 "ty": "denoWorker@v1",
-                "name": "jco_npm",
+                "name": "npmi_npm",
                 "platforms": [
                   [
                     "linux",
@@ -670,8 +722,90 @@
                     "name": "node_org"
                   }
                 ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/jco.ts"
-              }
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/npmi.ts"
+              },
+              "packageName": "@bytecodealliance/jco"
+            },
+            {
+              "version": "10.0.1",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "npmi_npm",
+                "platforms": [
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "freebsd",
+                    "x86_64"
+                  ],
+                  [
+                    "freebsd",
+                    "aarch64"
+                  ],
+                  [
+                    "netbsd",
+                    "x86_64"
+                  ],
+                  [
+                    "netbsd",
+                    "aarch64"
+                  ],
+                  [
+                    "aix",
+                    "x86_64"
+                  ],
+                  [
+                    "aix",
+                    "aarch64"
+                  ],
+                  [
+                    "solaris",
+                    "x86_64"
+                  ],
+                  [
+                    "solaris",
+                    "aarch64"
+                  ],
+                  [
+                    "illumos",
+                    "x86_64"
+                  ],
+                  [
+                    "illumos",
+                    "aarch64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "node_org"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/npmi.ts"
+              },
+              "packageName": "node-gyp"
             },
             {
               "version": "20.8.0",
@@ -710,7 +844,7 @@
                     "name": "tar_aa"
                   }
                 ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/node.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/node.ts"
               }
             },
             {
@@ -734,9 +868,52 @@
                     "name": "tar_aa"
                   }
                 ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/mold.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/mold.ts"
               },
               "replaceLd": false
+            },
+            {
+              "version": "3.8.18",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "cpy_bs_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "tar_aa"
+                  },
+                  {
+                    "name": "zstd_aa"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/cpy_bs.ts"
+              }
             },
             {
               "version": "1.7.0",
@@ -815,51 +992,9 @@
                     "name": "cpy_bs_ghrel"
                   }
                 ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/pipi.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/pipi.ts"
               },
               "packageName": "poetry"
-            },
-            {
-              "port": {
-                "ty": "denoWorker@v1",
-                "name": "cpy_bs_ghrel",
-                "platforms": [
-                  [
-                    "linux",
-                    "x86_64"
-                  ],
-                  [
-                    "linux",
-                    "aarch64"
-                  ],
-                  [
-                    "darwin",
-                    "x86_64"
-                  ],
-                  [
-                    "darwin",
-                    "aarch64"
-                  ],
-                  [
-                    "windows",
-                    "x86_64"
-                  ],
-                  [
-                    "windows",
-                    "aarch64"
-                  ]
-                ],
-                "version": "0.1.0",
-                "deps": [
-                  {
-                    "name": "tar_aa"
-                  },
-                  {
-                    "name": "zstd_aa"
-                  }
-                ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/cpy_bs.ts"
-              }
             },
             {
               "port": {
@@ -937,7 +1072,7 @@
                     "name": "cpy_bs_ghrel"
                   }
                 ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/pipi.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/pipi.ts"
               },
               "packageName": "pre-commit"
             },
@@ -972,7 +1107,7 @@
                   ]
                 ],
                 "version": "0.1.0",
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/act.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/act.ts"
               }
             },
             {
@@ -1011,7 +1146,7 @@
                     "name": "tar_aa"
                   }
                 ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/whiz.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/whiz.ts"
               }
             }
           ],
@@ -1303,7 +1438,7 @@
                   ]
                 ],
                 "version": "0.1.0",
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/cargo-binstall.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/cargo-binstall.ts"
               },
               "defaultInst": {
                 "portRef": "cargo_binstall_ghrel@0.1.0"
@@ -1340,7 +1475,7 @@
                   ]
                 ],
                 "version": "0.1.0",
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/pnpm.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/pnpm.ts"
               },
               "defaultInst": {
                 "portRef": "pnpm_ghrel@0.1.0"
@@ -1387,7 +1522,7 @@
                     "name": "git_aa"
                   }
                 ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/asdf_plugin_git.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/asdf_plugin_git.ts"
               },
               "defaultInst": {
                 "portRef": "asdf_plugin_git@0.1.0"
@@ -1429,7 +1564,7 @@
                     "name": "tar_aa"
                   }
                 ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/node.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/node.ts"
               },
               "defaultInst": {
                 "portRef": "node_org@0.1.0"
@@ -1474,7 +1609,7 @@
                     "name": "zstd_aa"
                   }
                 ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/005bf7b/ports/cpy_bs.ts"
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/fcb1d92/ports/cpy_bs.ts"
               },
               "defaultInst": {
                 "portRef": "cpy_bs_ghrel@0.1.0"

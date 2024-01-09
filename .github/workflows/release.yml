@@ -4,7 +4,7 @@ on:
       - v*
 
 env:
-  GHJK_VERSION: "005bf7b"
+  GHJK_VERSION: "fcb1d92"
   PYTHON_VERSION: "3.8"
   DENO_VERSION: "1.39.0"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate

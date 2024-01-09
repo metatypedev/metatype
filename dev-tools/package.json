@@ -23,7 +23,6 @@
         "lint": "pnpm eslint ./ts-language-server/src ./vscode-metatype-support/src --ext .ts",
         "vscode:package": "pnpm vsce package --no-dependencies",
         "vscode:publish": "pnpm vsce publish --no-dependencies",
-        "postinstall": "cd ts-language-server && pnpm install && cd ..",
         "test:ts-server": "cd ts-language-server && pnpm test",
         "clean": "rm -rf ./ts-language-server/out && rm -rf ./vscode-metatype-support/out"
     },
