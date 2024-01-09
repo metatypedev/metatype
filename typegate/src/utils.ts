@@ -114,11 +114,7 @@ export function toPrettyJSON(value: unknown) {
   return JSON.stringify(value, null, 2);
 }
 
-function isChildStage(parentId: string, stageId: string, strict = true) {
-  if (!strict && parentId === stageId) {
-    return true;
-  }
-
+function isChildStage(parentId: string, stageId: string) {
   return stageId.startsWith(`${parentId}.`) ||
     stageId.startsWith(`${parentId}${BRANCH_NAME_SEPARATOR}`);
 }
