@@ -61,9 +61,9 @@ dev:
     examples/**/*.ts:
       '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': PUBLISHED_VERSION
   lock:
-    GHJK_VERSION: fcb1d92
+    GHJK_VERSION: 7bef036
     GHJK_ACTION_VERSION: a4453d20156edde8e1c9b19784f8188a36b3bf23
-    PYTHON_VERSION: 3.12.1
+    PYTHON_VERSION: 3.8.18
     POETRY_VERSION: 1.7.0
     PROTOC_VERSION: v24.1
     RUST_VERSION: 1.74.1

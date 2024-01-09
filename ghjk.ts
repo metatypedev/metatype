@@ -1,10 +1,10 @@
-export { ghjk } from "https://raw.github.com/metatypedev/ghjk/fcb1d92/mod.ts";
-import * as ghjk from "https://raw.github.com/metatypedev/ghjk/fcb1d92/mod.ts";
-import * as ports from "https://raw.github.com/metatypedev/ghjk/fcb1d92/ports/mod.ts";
+export { ghjk } from "https://raw.github.com/metatypedev/ghjk/7bef036/mod.ts";
+import * as ghjk from "https://raw.github.com/metatypedev/ghjk/7bef036/mod.ts";
+import * as ports from "https://raw.github.com/metatypedev/ghjk/7bef036/ports/mod.ts";
 
 const PROTOC_VERSION = "v24.1";
 const POETRY_VERSION = "1.7.0";
-const PYTHON_VERSION = "3.12.1";
+const PYTHON_VERSION = "3.8.18";
 const PNPM_VERSION = "v8.8.0";
 const WASM_TOOLS_VERSION = "1.0.53";
 const JCO_VERSION = "0.12.1";
@@ -43,7 +43,7 @@ if (Deno.build.os == "linux") {
 // node({ version: NODE_VERSION }),
 if (!Deno.env.has("NO_PYTHON")) {
   ghjk.install(
-    ports.cpy_bs({ version: PYTHON_VERSION }),
+    ports.cpy_bs({ version: PYTHON_VERSION, releaseTag: "20231002" }),
     ports.pipi({
       packageName: "poetry",
       version: POETRY_VERSION,
