@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/mod.ts";
-import { CREATE, DELETE, READ, UPDATE } from "@typegraph/sdk/effects.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk/mod.js";
+import { CREATE, DELETE, READ, UPDATE } from "@typegraph/sdk/effects.js";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
 const tpe = t.struct({
   "a": t.integer({}, { name: "A" }),
@@ -26,7 +26,7 @@ const tpe = t.struct({
   "date": t.datetime().inject("now"),
 });
 
-typegraph("injection", (g) => {
+typegraph("injection", (g: any) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
 

@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/mod.ts";
-import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk/mod.js";
+import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.js";
 
-typegraph("temporal", (g) => {
+typegraph("temporal", (g: any) => {
   const pub = Policy.public();
   const temporal = new TemporalRuntime("<name>", "<host>");
   const arg = t.struct({ some_field: t.string() });

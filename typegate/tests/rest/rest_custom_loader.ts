@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { fx, Policy, t, typegraph } from "@typegraph/sdk/mod.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+import { fx, Policy, t, typegraph } from "@typegraph/sdk/mod.js";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import { endpoints } from "./custom/custom_loader.ts";
 
 const user = t.struct({
@@ -22,7 +22,7 @@ const complexType = t.struct({
   f: t.float({ enumeration: [1.0, 2.5] }),
 }, { name: "ComplexType" });
 
-typegraph("rest", (g) => {
+typegraph("rest", (g: any) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
 

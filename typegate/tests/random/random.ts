@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/mod.ts";
-import { RandomRuntime } from "@typegraph/sdk/runtimes/random.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk/mod.js";
+import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
-typegraph("random", (g) => {
+typegraph("random", (g: any) => {
   const random = new RandomRuntime({ seed: 1, reset: "" });
   const pub = Policy.public();
 
