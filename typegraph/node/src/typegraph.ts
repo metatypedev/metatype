@@ -3,7 +3,7 @@
 
 import * as t from "./types.js";
 import { core } from "./gen/typegraph_core.js";
-import { caller, dirname, fromFileUrl } from "./deps.js";
+import { caller, dirname, fromFileUrl } from "./deps/mod.js";
 import { InjectionValue } from "./utils/type_utils.js";
 import {
   serializeFromParentInjection,

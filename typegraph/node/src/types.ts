@@ -18,7 +18,7 @@ import {
 import { Reduce } from "./gen/interfaces/metatype-typegraph-utils.js";
 import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.js";
 import { Materializer } from "./runtimes/mod.js";
-import { mapValues } from "./deps.js";
+import { mapValues } from "./deps/mod.js";
 import Policy from "./policy.js";
 import { buildReduceData, serializeRecordValues } from "./utils/func_utils.js";
 import {
