@@ -4,6 +4,7 @@
     "module": "NodeNext",
     "moduleResolution": "Node16",
     "esModuleInterop": true,
+    "declaration": true,
     "outDir": "dist"
   },
   "include": ["src"]
