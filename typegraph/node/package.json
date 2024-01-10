@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "npx tsc && cp -R ./src/gen ./dist/",
+    "build": "pnpm exec tsc && cp -R ./src/gen ./dist/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
