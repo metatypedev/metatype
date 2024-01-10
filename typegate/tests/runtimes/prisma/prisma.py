@@ -28,9 +28,20 @@ def prisma(g: Graph):
         },
     ).rename("messages")
 
+    user_identities = t.struct(
+        {
+            "id": t.uuid(as_id=True, config={"auto": True}),
+            "provider": t.enum(["github", "google", "facebook"]),
+            "identifier": t.string(),
+            "user": g.ref("users"),
+        },
+        name="user_identity",
+    )
+
     users = t.struct(
         {
             "id": t.integer(as_id=True, config={"auto": True}),
+            "identities": t.list(user_identities),
             "email": t.string(),
             "name": t.string(),
             "messages": db.link(t.list(g.ref("messages")), "messageSender"),
