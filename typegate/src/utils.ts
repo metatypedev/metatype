@@ -15,6 +15,7 @@ import { Untar } from "std/archive/untar.ts";
 import * as streams from "std/streams/mod.ts";
 import { path } from "compress/deps.ts";
 import { sha1 } from "./crypto.ts";
+import { BRANCH_NAME_SEPARATOR } from "./engine/computation_engine.ts";
 
 export const maxi32 = 2_147_483_647;
 
@@ -113,6 +114,11 @@ export function toPrettyJSON(value: unknown) {
   return JSON.stringify(value, null, 2);
 }
 
+function isChildStage(parentId: string, stageId: string) {
+  return stageId.startsWith(`${parentId}.`) ||
+    stageId.startsWith(`${parentId}${BRANCH_NAME_SEPARATOR}`);
+}
+
 export function iterParentStages(
   stages: ComputeStage[],
   cb: (stage: ComputeStage, children: ComputeStage[]) => void,
@@ -120,9 +126,8 @@ export function iterParentStages(
   let cursor = 0;
   while (cursor < stages.length) {
     const stage = stages[cursor];
-    const children = stages.slice(cursor + 1).filter((s) =>
-      s.id().startsWith(stage.id())
-    );
+    const children = stages.slice(cursor + 1)
+      .filter((s) => isChildStage(stage.id(), s.id()));
     cb(stage, children);
     cursor += 1 + children.length;
   }
