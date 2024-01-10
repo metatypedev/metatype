@@ -15,7 +15,7 @@ repos:
       - id: check-merge-conflict
       - id: end-of-file-fixer
         # exclude all generated files
-        exclude: (ghjk.lock|ghjk.deno.lock|typegate/deno.lock|.*\.snap$|typegate/src/typegraphs/.*\.json|website/docs/reference/)
+        exclude: (.ghjk/.*|typegate/deno.lock|.*\.snap$|typegate/src/typegraphs/.*\.json|website/docs/reference/)
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.27.2
     hooks:
@@ -72,6 +72,14 @@ repos:
           - ts
           - tsx
         files: ^website/
+      - id: devtools-lint
+        name: ESLint the dev-tools
+        language: system
+        entry: bash -c 'cd dev-tools && pnpm lint --fix'
+        pass_filenames: false
+        types:
+          - ts
+        files: ^dev-tools/
       - id: version
         name: "Lock versions"
         always_run: true
