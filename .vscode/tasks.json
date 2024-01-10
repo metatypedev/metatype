@@ -1,0 +1,46 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "vscode-ext:build",
+			"type": "shell",
+			"command": "pnpm",
+			"args": [
+				"compile:vscode"
+			],
+			"group": "build",
+			"presentation": {
+				"panel": "dedicated",
+				"reveal": "never"
+			},
+			"problemMatcher": [
+				"$tsc"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/dev-tools"
+			}
+		},
+		{
+			"label": "vscode-ext:build:watch",
+			"type": "shell",
+			"command": "pnpm",
+			"args": [
+				"watch"
+			],
+			"isBackground": true,
+			"group": {
+				"kind": "build"
+			},
+			"presentation": {
+				"panel": "dedicated",
+				"reveal": "never"
+			},
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/dev-tools/vscode-metatype-support"
+			}
+		}
+	]
+}

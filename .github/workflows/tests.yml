@@ -9,8 +9,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "dc9b402"
-  PYTHON_VERSION: "3.8"
+  GHJK_VERSION: "7bef036"
   DENO_VERSION: "1.39.0"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
@@ -62,9 +61,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -74,11 +70,18 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - shell: bash
         run: |
+          env
+          ls -osha $LIBCLANG_PATH
+          sudo apt update
+          sudo apt install -y --no-install-recommends libclang-dev clang
           cd website
           pnpm install --frozen-lockfile
+          cd ..
+          cd dev-tools
+          pnpm install --frozen-lockfile --recursive
           cd ..
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
       - uses: pre-commit/action@v3.0.0
@@ -89,9 +92,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
@@ -100,14 +100,20 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - name: Cache .venv dir
         uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - run: |
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
+      - shell: bash
+        run: |
+          env
+          which python3
+          python3 --version
           python3 -m venv .venv
+          ls .venv
+          ls .venv/bin
           source .venv/bin/activate
           poetry install --no-root
           cd website
@@ -140,15 +146,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
       - name: Cache .venv dir
         uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -268,21 +271,18 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-${{ hashFiles('**/deno.lock') }}
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
       - name: Cache .venv dir
         uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
       # FIXME: the custom runner is missing some ambient items found in
       # github runner images by default. remove this hack when ghjk handles 
       # zstd/bsdtar on it's own
       - run: |
           sudo apt update
           sudo apt install -y --no-install-recommends zstd
-      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -330,3 +330,25 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.lcov
           fail_ci_if_error: true
+
+  test-lsp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
+      - shell: bash
+        run: |
+          cd dev-tools
+          pnpm install --frozen-lockfile --recursive
+          cd ts-language-server
+          # node --test --import=tsx --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage.lcov tests/*.test.ts
+          node --test --import=tsx tests/*.test.ts
+
+      # - uses: codecov/codecov-action@v3
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     files: ./dev-tools/ts-language-server/coverage.lcov
+      #     fail_ci_if_error: true
