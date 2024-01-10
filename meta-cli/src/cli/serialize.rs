@@ -47,6 +47,9 @@ pub struct Serialize {
 
     #[clap(short, long)]
     prefix: Option<String>,
+
+    #[clap(long)]
+    max_parallel_loads: Option<usize>,
 }
 
 #[async_trait]
@@ -73,6 +76,7 @@ impl Action for Serialize {
             PostProcessOptions::default(),
             console.clone(),
             loader_event_tx,
+            self.max_parallel_loads.unwrap_or_else(num_cpus::get),
         )
         .auto_stop()
         .start();

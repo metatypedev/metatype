@@ -5,7 +5,10 @@ pub mod discovery;
 
 pub use discovery::Discovery;
 use pathdiff::diff_paths;
-use tokio::process::Command;
+use tokio::{
+    process::Command,
+    sync::{Semaphore, SemaphorePermit},
+};
 
 use std::{collections::HashMap, env, path::Path, process::Stdio, sync::Arc};
 
@@ -22,28 +25,29 @@ use super::postprocess::{self, apply_all, PostProcessorWrapper};
 
 pub type LoaderResult = Result<Vec<Typegraph>, LoaderError>;
 
-#[derive(Clone)]
-pub struct Loader {
+pub struct LoaderPool {
     config: Arc<Config>,
-    skip_deno_modules: bool,
     postprocessors: Vec<PostProcessorWrapper>,
+    semaphore: Semaphore,
 }
 
-impl Loader {
-    pub fn new(config: Arc<Config>) -> Self {
+pub struct Loader<'a> {
+    config: Arc<Config>,
+    postprocessors: &'a [PostProcessorWrapper],
+    #[allow(dead_code)]
+    permit: SemaphorePermit<'a>,
+}
+
+impl LoaderPool {
+    pub fn new(config: Arc<Config>, max_parallel_loads: usize) -> Self {
         Self {
             config,
-            skip_deno_modules: false,
             postprocessors: vec![
                 postprocess::Validator.into(),
                 postprocess::ReformatScripts.into(),
             ],
+            semaphore: Semaphore::new(max_parallel_loads),
         }
-    }
-
-    pub fn skip_deno_modules(mut self, skip: bool) -> Self {
-        self.skip_deno_modules = skip;
-        self
     }
 
     pub fn with_postprocessor(mut self, postprocessor: impl Into<PostProcessorWrapper>) -> Self {
@@ -51,6 +55,16 @@ impl Loader {
         self
     }
 
+    pub async fn get_loader(&self) -> Result<Loader<'_>> {
+        Ok(Loader {
+            config: self.config.clone(),
+            postprocessors: &self.postprocessors,
+            permit: self.semaphore.acquire().await?,
+        })
+    }
+}
+
+impl<'a> Loader<'a> {
     pub async fn load_module(&self, path: Arc<Path>) -> LoaderResult {
         match tokio::fs::try_exists(&path).await {
             Ok(exists) => {

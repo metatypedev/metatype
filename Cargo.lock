@@ -5633,6 +5633,7 @@ dependencies = [
  "log",
  "normpath",
  "notify-debouncer-mini",
+ "num_cpus",
  "openssl",
  "pathdiff",
  "prisma-models",

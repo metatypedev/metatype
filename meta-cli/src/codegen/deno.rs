@@ -498,6 +498,7 @@ mod tests {
                 PostProcessOptions::default().no_deno(),
                 console,
                 event_tx,
+                1,
             )
             .auto_stop()
             .start();
