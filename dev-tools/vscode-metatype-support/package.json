@@ -1,0 +1,29 @@
+{
+    "name": "vscode-metatype-support",
+    "description": "VSCode extension for Metatype support",
+    "author": "Metatype Team",
+    "version": "0.2.5",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/metatypedev/metatype"
+    },
+    "publisher": "metatype",
+    "engines": {
+        "vscode": "^1.75.0"
+    },
+    "activationEvents": [
+        "onLanguage:typescript",
+        "onLanguage:javascript"
+    ],
+    "main": "./out/extension",
+    "contributes": {},
+    "scripts": {
+        "vscode:prepublish": "cp ../ts-language-server/out/server.js out/ && pnpm run compile --minify",
+        "package": "pnpm vsce package --no-dependencies",
+        "publish": "pnpm vsce publish --no-dependencies",
+        "lint": "eslint ./src --ext .ts"
+    },
+    "dependencies": {
+        "vscode-languageclient": "^8.1.0"
+    }
+}

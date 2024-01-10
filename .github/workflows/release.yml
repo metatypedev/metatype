@@ -4,8 +4,7 @@ on:
       - v*
 
 env:
-  GHJK_VERSION: "dc9b402"
-  PYTHON_VERSION: "3.8"
+  GHJK_VERSION: "7bef036"
   DENO_VERSION: "1.39.0"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
 
@@ -100,11 +99,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: "poetry"
-      - uses: metatypedev/setup-ghjk@55eb03992e3c1c268b8784046b1c09f01f90c0f0
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - shell: bash
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
@@ -201,6 +196,35 @@ jobs:
           cd ./digests
           docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:${{ github.ref_name }} --tag ${{ env.REGISTRY_IMAGE }}:latest $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:latest
+
+  vscode-extension:
+    needs:
+      - check-bump
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+      - shell: bash
+        run: |
+          cd dev-tools
+          pnpm install --frozen-lockfile
+          cd ts-language-server
+          pnpm install --frozen-lockfile
+          cd ../vscode-metatype-support
+          pnpm install --frozen-lockfile
+          cd ..
+          pnpm compile:ts-server
+          pnpm compile:vscode
+          pnpm vscode:package
+          pnpm run publish -p $${ env.AZURE_DEVOPS_TOKEN }
+      - uses: svenstaro/upload-release-action@v2
+        with:
+          tag: ${{ github.ref }}
+          file: "dev-tools/*.vsix"
+          file_glob: true
+          overwrite: false
 
   bump:
     needs:
