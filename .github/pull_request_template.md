@@ -6,15 +6,15 @@ Pull requests are squash merged using:
 Having a good title and description is important for the users to get readable changelog and understand when they need to update his code and how.
 -->
 
-### Describe your change
+#### Describe your change
 
 <!-- Explain WHAT the change is -->
 
-### Motivation and context
+#### Motivation and context
 
 <!-- Explain WHY the was made or link an issue number -->
 
-### Migration notes
+#### Migration notes
 
 <!-- Explain HOW users should update their code when required -->
 

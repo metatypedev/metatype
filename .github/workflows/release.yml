@@ -34,6 +34,7 @@ jobs:
           makeLatest: true
           bodyFile: "CHANGE.md"
           discussionCategory: "Announcements"
+          prerelease: ${{ contains(github.ref_name, 'dev') || contains(github.ref_name, 'alpha') }}
 
   meta-cli:
     needs:
