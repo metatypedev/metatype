@@ -55,8 +55,7 @@ typegraph:
     cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
     wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
 
-    rm -rf typegraph/node/src/gen
-    rm -rf typegraph/node/dist
+    rm -rf typegraph/node/src/gen typegraph/node/dist
     jco transpile $WASM_FILE -o typegraph/node/src/gen
     cd typegraph/node
     pnpm run build

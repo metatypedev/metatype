@@ -1,5 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+export { caller } from "./_import.js";
 
 export function mapValues(
   object: Object,
@@ -22,5 +23,10 @@ export function dirname(path: string) {
   return path;
 }
 
-export { default as caller } from "./caller.js";
-export { default as fromFileUrl } from "./fromFileUrl.js";
+import { fromFileUrlPosix, fromFileUrlWin32 } from "./_import.js";
+
+export function fromFileUrl(path: string) {
+  // Examples: file://C:, file://D:
+  const isWin32 = /^file:\/\/\w\:/.test(path);
+  return isWin32 ? fromFileUrlWin32(path) : fromFileUrlPosix(path);
+}
