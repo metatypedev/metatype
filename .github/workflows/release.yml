@@ -127,7 +127,8 @@ jobs:
           pnpm install
           pnpm run build
           cd dist
-          deno run -A ../../../dev/publish.ts
+          cp ../package.json ./ 
+          pnpm publish
           cd ../../..
 
           cd typegraph/node

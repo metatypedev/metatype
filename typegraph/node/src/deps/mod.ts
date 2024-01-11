@@ -13,13 +13,15 @@ export function mapValues(
 }
 
 export function dirname(path: string) {
+  // Note: Do not refactor with runtime dependent OS check
   const [unixIdx, winIdx] = ["/", "\\"].map((sep) => path.lastIndexOf(sep));
-  return winIdx > 0 ? path.substring(winIdx + 1) : path.substring(unixIdx + 1);
+  return path.substring((winIdx > 0 ? winIdx : unixIdx) + 1);
 }
 
 import { fromFileUrlPosix, fromFileUrlWin32 } from "./_import.js";
 
 export function fromFileUrl(path: string) {
+  // Note: Do not refactor with runtime dependent OS check
   // Examples: file://C:, file://D:
   const isWin32 = /^file:\/\/\w\:/.test(path);
   return isWin32 ? fromFileUrlWin32(path) : fromFileUrlPosix(path);

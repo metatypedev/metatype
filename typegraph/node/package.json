@@ -2,8 +2,8 @@
   "name": "@typegraph/sdk",
   "version": "0.3.1",
   "description": "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are.",
-  "main": "index.js",
   "type": "module",
+  "main": "mod.js",
   "scripts": {
     "build": "pnpm exec tsc && cp -R ./src/gen ./dist/",
     "test": "echo \"Error: no test specified\" && exit 1"
