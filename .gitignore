@@ -17,6 +17,10 @@ crash.log
 target
 **/*.rs.bk
 
+dev-tools/ts-language-server/out/
+dev-tools/vscode-metatype-support/out/
+dev-tools/*.vsix
+
 typegate/workers
 typegate/codegen
 typegate/tests/prisma-migrations

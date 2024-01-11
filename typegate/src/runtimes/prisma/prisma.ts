@@ -11,7 +11,7 @@ import { ComputeArgParams } from "../../engine/planner/args.ts";
 import { PrismaOperationMatData } from "../../typegraph/types.ts";
 import { getLogger } from "../../log.ts";
 import * as PrismaRT from "./types.ts";
-import { filterValues } from "https://deno.land/std@0.192.0/collections/filter_values.ts";
+import { filterValues } from "std/collections/filter_values.ts";
 
 const logger = getLogger(import.meta);
 
@@ -128,7 +128,10 @@ export class PrismaRuntime extends Runtime {
 
       const startTime = performance.now();
       const generatedQuery = q({ variables, context, effect, parent });
-      console.log("remote prisma query", generatedQuery);
+      console.log(
+        "remote prisma query",
+        JSON.stringify(generatedQuery, null, 2),
+      );
       const res = await this.query(generatedQuery);
       const endTime = performance.now();
       logger.debug(`queried prisma in ${(endTime - startTime).toFixed(2)}ms`);
@@ -155,6 +158,7 @@ export class PrismaRuntime extends Runtime {
         };
       }
     });
+
     return selectionSet;
   }
 
@@ -242,8 +246,6 @@ export class PrismaRuntime extends Runtime {
     );
     const stagesMat: ComputeStage[] = [];
     stagesMat.push(queryStage);
-
-    console.error("## fields", fields.map((s) => s.id()));
 
     fields.shift();
     // TODO renames

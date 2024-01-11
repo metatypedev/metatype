@@ -39,6 +39,9 @@ pub struct DeploySubcommand {
 
     #[command(flatten)]
     options: DeployOptions,
+
+    #[clap(long)]
+    max_parallel_loads: Option<usize>,
 }
 
 impl DeploySubcommand {
@@ -47,12 +50,14 @@ impl DeploySubcommand {
         target: String,
         options: DeployOptions,
         file: Option<PathBuf>,
+        max_parallel_loads: Option<usize>,
     ) -> Self {
         Self {
             node,
             target,
             options,
             file,
+            max_parallel_loads,
         }
     }
 }
@@ -91,6 +96,7 @@ pub struct Deploy {
     options: DeployOptions,
     node: Node,
     file: Option<Arc<Path>>,
+    max_parallel_loads: Option<usize>,
 }
 
 impl Deploy {
@@ -119,6 +125,7 @@ impl Deploy {
                 .map(|f| f.normalize())
                 .transpose()?
                 .map(|f| f.into_path_buf().into()),
+            max_parallel_loads: deploy.max_parallel_loads,
         })
     }
 }
@@ -202,6 +209,7 @@ mod default_mode {
                     .allow_destructive(deploy.options.allow_destructive),
                 console.clone(),
                 loader_event_tx,
+                deploy.max_parallel_loads.unwrap_or_else(num_cpus::get),
             )
             .auto_stop()
             .start();
@@ -321,6 +329,7 @@ mod watch_mode {
                     .allow_destructive(deploy.options.allow_destructive),
                 console.clone(),
                 loader_event_tx,
+                deploy.max_parallel_loads.unwrap_or_else(num_cpus::get),
             )
             .start();
 

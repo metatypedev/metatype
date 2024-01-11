@@ -1,9 +1,10 @@
-export { ghjk } from "https://raw.github.com/metatypedev/ghjk/dc9b402/mod.ts";
-import * as ghjk from "https://raw.github.com/metatypedev/ghjk/dc9b402/mod.ts";
-import * as ports from "https://raw.github.com/metatypedev/ghjk/dc9b402/ports/mod.ts";
+export { ghjk } from "https://raw.github.com/metatypedev/ghjk/7bef036/mod.ts";
+import * as ghjk from "https://raw.github.com/metatypedev/ghjk/7bef036/mod.ts";
+import * as ports from "https://raw.github.com/metatypedev/ghjk/7bef036/ports/mod.ts";
 
 const PROTOC_VERSION = "v24.1";
 const POETRY_VERSION = "1.7.0";
+const PYTHON_VERSION = "3.8.18";
 const PNPM_VERSION = "v8.8.0";
 const WASM_TOOLS_VERSION = "1.0.53";
 const JCO_VERSION = "0.14.2";
@@ -27,7 +28,8 @@ ghjk.install(
     version: CMAKE_VERSION,
   }),
   // FIXME: jco installs node as a dep
-  ports.jco({ version: JCO_VERSION })[0],
+  ports.npmi({ packageName: "@bytecodealliance/jco", version: JCO_VERSION })[0],
+  ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0],
   ports.node({ version: NODE_VERSION }),
 );
 if (Deno.build.os == "linux") {
@@ -41,10 +43,11 @@ if (Deno.build.os == "linux") {
 // node({ version: NODE_VERSION }),
 if (!Deno.env.has("NO_PYTHON")) {
   ghjk.install(
-    ...ports.pipi({
+    ports.cpy_bs({ version: PYTHON_VERSION }),
+    ports.pipi({
       packageName: "poetry",
       version: POETRY_VERSION,
-    }),
+    })[0],
   );
   if (!Deno.env.has("CI")) {
     ghjk.install(

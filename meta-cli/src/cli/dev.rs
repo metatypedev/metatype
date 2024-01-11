@@ -21,6 +21,9 @@ pub struct Dev {
 
     #[clap(long, default_value_t = false)]
     run_destructive_migrations: bool,
+
+    #[clap(long)]
+    max_parallel_loads: Option<usize>,
 }
 
 #[async_trait]
@@ -41,6 +44,7 @@ impl Action for Dev {
             self.target.clone().unwrap_or("dev".to_string()),
             options,
             None,
+            self.max_parallel_loads,
         );
         deploy.run(args).await
     }

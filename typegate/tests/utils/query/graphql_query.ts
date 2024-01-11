@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { QueryEngine } from "../../../src/engine/query_engine.ts";
 import { FileExtractor } from "./file_extractor.ts";
 import {
   Context,
@@ -10,6 +11,10 @@ import {
   Query,
   Variables,
 } from "./mod.ts";
+import { findOperation } from "../../../src/transports/graphql/graphql.ts";
+import { parse } from "graphql";
+import { None } from "monads";
+import { MetaTest } from "../test.ts";
 
 export class GraphQLQuery extends Query {
   constructor(
@@ -117,5 +122,25 @@ export class GraphQLQuery extends Query {
         }),
       });
     }
+  }
+
+  async planOn(engine: QueryEngine) {
+    const [op, frags] = findOperation(parse(this.query), None);
+    const [plan] = await engine.getPlan(op.unwrap(), frags, false, false);
+    return plan;
+  }
+
+  async assertPlanSnapshot(t: MetaTest, engine: QueryEngine) {
+    const plan = await this.planOn(engine);
+    await t.assertSnapshot(plan.stages.map((s) => {
+      return [
+        s.id(),
+        s.props.node,
+        s.props.path.join("/"),
+        s.props.outType.type,
+        s.props.outType.title,
+        s.props.excludeResult ?? false,
+      ].join("  ");
+    }));
   }
 }

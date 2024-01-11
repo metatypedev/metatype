@@ -9,6 +9,7 @@ dev:
     ghjk.ts:
       '(.*/metatypedev/ghjk/)[^/]*(/.*)': GHJK_VERSION
       (const\s+PROTOC_VERSION\s*=\s*").*(";): PROTOC_VERSION
+      (const\s+PYTHON_VERSION\s*=\s*").*(";): PYTHON_VERSION
       (const\s+POETRY_VERSION\s*=\s*").*(";): POETRY_VERSION
       (const\s+PNPM_VERSION\s*=\s*").*(";): PNPM_VERSION
       (const\s+WASM_TOOLS_VERSION = ").*(";): WASM_TOOLS_VERSION
@@ -21,7 +22,6 @@ dev:
     .github/*/*.yml:
       '(  GHJK_VERSION: ").+(")': GHJK_VERSION
       '(  DENO_VERSION: ").+(")': DENO_VERSION
-      '(  PYTHON_VERSION: ").+(")': PYTHON_VERSION
       '([\s-]+uses:\s+metatypedev/setup-ghjk@).+()': GHJK_ACTION_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
@@ -61,9 +61,9 @@ dev:
     examples/**/*.ts:
       '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': PUBLISHED_VERSION
   lock:
-    GHJK_VERSION: dc9b402
-    GHJK_ACTION_VERSION: 55eb03992e3c1c268b8784046b1c09f01f90c0f0
-    PYTHON_VERSION: '3.8'
+    GHJK_VERSION: 7bef036
+    GHJK_ACTION_VERSION: a4453d20156edde8e1c9b19784f8188a36b3bf23
+    PYTHON_VERSION: 3.8.18
     POETRY_VERSION: 1.7.0
     PROTOC_VERSION: v24.1
     RUST_VERSION: 1.74.1

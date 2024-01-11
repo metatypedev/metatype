@@ -1,58 +1,26 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { findOperation } from "../../src/transports/graphql/graphql.ts";
 import { gql, Meta } from "../utils/mod.ts";
-import { None } from "monads";
-import { parse } from "graphql";
 import { mapValues } from "std/collections/map_values.ts";
 import { filterKeys } from "std/collections/filter_keys.ts";
-import { QueryEngine } from "../../src/engine/query_engine.ts";
-import { MetaTest } from "../utils/test.ts";
-
-async function assertPlanSnapshot(t: MetaTest, e: QueryEngine, query: string) {
-  const [op, frags] = findOperation(parse(query), None);
-  const [plan] = await e.getPlan(op.unwrap(), frags, false, false);
-
-  try {
-    t.assertSnapshot(
-      plan.stages.map((s) =>
-        [
-          s.id(),
-          s.props.node,
-          s.props.path.join("/"),
-          s.props.outType.type,
-          s.props.outType.title,
-          s.props.excludeResult ?? false,
-        ].join(
-          "  ",
-        )
-      ),
-    );
-  } catch (e) {
-    console.error("error", e);
-    throw e;
-  }
-}
 
 Meta.test("planner", async (t) => {
   const e = await t.engine("planner/planner.py");
-  const query = `
-      query {
-        one {
-          id
-          email
-          nested {
-            first
-            second
-            third
-          }
+  const plan = await gql`
+    query {
+      one {
+        id
+        email
+        nested {
+          first
+          second
+          third
         }
       }
-    `;
-
-  const [op, frags] = findOperation(parse(query), None);
-  const [plan] = await e.getPlan(op.unwrap(), frags, false, false);
+    }
+  `
+    .planOn(e);
 
   await t.should("generate the right stages", () => {
     t.assertSnapshot(
@@ -118,10 +86,7 @@ Meta.test("planner", async (t) => {
   });
 
   await t.should("work with unions", async () => {
-    await assertPlanSnapshot(
-      t,
-      e,
-      `
+    await gql`
       query {
         one {
           union1
@@ -135,23 +100,21 @@ Meta.test("planner", async (t) => {
             }
           }
         }
-      }`,
-    );
+      }
+    `
+      .assertPlanSnapshot(t, e);
   });
 
   await t.should("work with union dependency", async () => {
-    await assertPlanSnapshot(
-      t,
-      e,
-      `
-        query {
-          one {
-            from_union2
-            from_union1
-          }
+    await gql`
+      query {
+        one {
+          from_union2
+          from_union1
         }
-      `,
-    );
+      }
+    `
+      .assertPlanSnapshot(t, e);
   });
 });
 
@@ -159,87 +122,74 @@ Meta.test("planner: dependencies", async (t) => {
   const e = await t.engine("planner/planner.py");
 
   await t.should("get the right plan", async () => {
-    await assertPlanSnapshot(
-      t,
-      e,
-      `
-        query {
-          two {
-            id
-            email
-          }
-        }`,
-    );
+    await gql`
+      query {
+        two {
+          id
+          email
+        }
+      }
+    `
+      .assertPlanSnapshot(t, e);
 
-    await assertPlanSnapshot(
-      t,
-      e,
-      `
-        query {
-          two {
-            id
-            email
-            profile {
-              firstName lastName profilePic
-            }
+    await gql`
+      query {
+        two {
+          id
+          email
+          profile {
+            firstName lastName profilePic
           }
-        }`,
-    );
+        }
+      }
+    `
+      .assertPlanSnapshot(t, e);
 
-    await assertPlanSnapshot(
-      t,
-      e,
-      `
-        query {
-          two {
-            id
-            profile {
-              firstName lastName profilePic
-            }
-            email
+    await gql`
+      query {
+        two {
+          id
+          profile {
+            firstName lastName profilePic
           }
-        }`,
-    );
+          email
+        }
+      }
+    `
+      .assertPlanSnapshot(t, e);
 
-    await assertPlanSnapshot(
-      t,
-      e,
-      `
-        query {
-          two {
-            profile {
-              firstName lastName profilePic
-            }
-            id
+    await gql`
+      query {
+        two {
+          profile {
+            firstName lastName profilePic
           }
-        }`,
-    );
+          id
+        }
+      }
+    `
+      .assertPlanSnapshot(t, e);
 
-    await assertPlanSnapshot(
-      t,
-      e,
-      `
-        query {
-          two {
-            taggedPic
-            profile {
-              firstName lastName profilePic
-            }
+    await gql`
+      query {
+        two {
+        taggedPic
+          profile {
+            firstName lastName profilePic
           }
-        }`,
-    );
+        }
+      }
+    `
+      .assertPlanSnapshot(t, e);
 
-    await assertPlanSnapshot(
-      t,
-      e,
-      `
-        query {
-          two {
-            id
-            taggedPic
-          }
-        }`,
-    );
+    await gql`
+      query {
+        two {
+        id
+          taggedPic
+        }
+      }
+    `.assertPlanSnapshot(t, e);
   });
 });
 
@@ -247,10 +197,7 @@ Meta.test("planner: dependencies in union/either", async (t) => {
   const e = await t.engine("planner/planner.py");
 
   await t.should("get the right plan", async () => {
-    await assertPlanSnapshot(
-      t,
-      e,
-      `
+    await gql`
       query {
         three {
           id
@@ -262,37 +209,34 @@ Meta.test("planner: dependencies in union/either", async (t) => {
                 email displayName profilePic
               }
             }
-            ... on GuestUser {
+            ...on GuestUser {
               id
             }
           }
         }
       }
-    `,
-    );
+    `
+      .assertPlanSnapshot(t, e);
 
-    await assertPlanSnapshot(
-      t,
-      e,
-      `
-        query {
-          three {
-            id
-            user {
-              ...on RegisteredUser {
-                id
-                profile {
-                  email
-                  displayName
-                }
+    await gql`
+      query {
+        three {
+          id
+          user {
+            ...on RegisteredUser {
+              id
+              profile {
+                email
+                displayName
               }
-              ...on GuestUser {
-                id
-              }
+            }
+            ...on GuestUser {
+              id
             }
           }
         }
-      `,
-    );
+      }
+    `
+      .assertPlanSnapshot(t, e);
   });
 });
