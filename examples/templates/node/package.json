@@ -3,8 +3,8 @@
   "type": "module",
   "version": "1.0.0",
   "scripts": {
-    "load-tgraph": "tsx",
-    "dev": "MCLI_LOADER_CMD='npm load-tgraph' meta-cli dev"
+    "load-tgraph": "npx tsx api/example.ts",
+    "dev": "MCLI_LOADER_CMD='npm run load-tgraph --silent' meta dev"
   },
   "dependencies": {
     "@typegraph/sdk": "^0.2.4"
