@@ -9,7 +9,7 @@ import {
 } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import { runtimes } from "../wit.js";
 import { Materializer, Runtime } from "./mod.js";
-import { fx } from "../mod.js";
+import { fx } from "../index.js";
 
 type HttpRequestMat<M extends string> =
   & Materializer

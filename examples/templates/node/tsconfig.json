@@ -2,8 +2,6 @@
     "compilerOptions": {
         "strict": true,
         "moduleResolution": "node16",
-        "target": "ES2019",
-        "module": "NodeNext",
         "esModuleInterop": true        
     }
 }

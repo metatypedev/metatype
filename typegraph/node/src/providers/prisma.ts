@@ -4,7 +4,7 @@
 import { Runtime } from "../runtimes/mod.js";
 import { runtimes } from "../wit.js";
 import { Typedef } from "../types.js";
-import { t } from "../mod.js";
+import { t } from "../index.js";
 import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import { genRef } from "./../typegraph.js";
 

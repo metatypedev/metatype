@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/mod.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { CREATE, DELETE, READ, UPDATE } from "@typegraph/sdk/effects.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 

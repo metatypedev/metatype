@@ -6,7 +6,7 @@ import { runtimes } from "../wit.js";
 import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import Policy from "../policy.js";
 import { Materializer, Runtime } from "./mod.js";
-import { fx } from "../mod.js";
+import { fx } from "../index.js";
 
 interface FunMat extends Materializer {
   code: string;

@@ -5,7 +5,7 @@ import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import * as t from "../types.js";
 import { runtimes } from "../wit.js";
 import { Materializer, Runtime } from "./mod.js";
-import { fx } from "../mod.js";
+import { fx } from "../index.js";
 
 export class GraphQLRuntime extends Runtime {
   constructor(private endpoint: string) {

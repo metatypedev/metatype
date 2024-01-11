@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/mod.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 
 typegraph("prisma_opt_1", (g: any) => {

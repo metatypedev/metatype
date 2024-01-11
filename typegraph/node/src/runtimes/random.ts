@@ -7,7 +7,7 @@ import {
   RandomRuntimeData,
 } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import { Materializer, Runtime } from "./mod.js";
-import { fx } from "../mod.js";
+import { fx } from "../index.js";
 
 interface RandomMat extends Materializer {
   runtime: number;

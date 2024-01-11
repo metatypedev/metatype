@@ -8,7 +8,7 @@ import {
   S3PresignPutParams,
   S3RuntimeData,
 } from "../gen/interfaces/metatype-typegraph-aws.js";
-import { t } from "../mod.js";
+import { t } from "../index.js";
 
 type S3PresignGetMat = Materializer & S3PresignGetParams;
 type S3PresignPutMat = Materializer & S3PresignPutParams;
