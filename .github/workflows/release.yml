@@ -127,7 +127,7 @@ jobs:
           pnpm install
           pnpm run build
           cd dist
-          cp ../package.json ./ 
+          cp ../{*.json,pnpm-lock.yaml,LICENSE.md} ./
           pnpm publish
           cd ../../..
 
