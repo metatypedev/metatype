@@ -126,3 +126,6 @@ setup:
     cd website
     pnpm install
     cd ..
+    cd typegraph/node
+    pnpm install
+    cd ../..

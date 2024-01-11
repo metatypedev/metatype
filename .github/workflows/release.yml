@@ -129,6 +129,7 @@ jobs:
           jco transpile $WASM_FILE -o typegraph/node/src/gen
 
           cd typegraph/node
+          pnpm install
           pnpm run build
           cd dist
           deno run -A ../../../dev/publish.ts
