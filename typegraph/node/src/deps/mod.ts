@@ -14,13 +14,7 @@ export function mapValues(
 
 export function dirname(path: string) {
   const [unixIdx, winIdx] = ["/", "\\"].map((sep) => path.lastIndexOf(sep));
-  if (unixIdx > 0) {
-    return path.substring(unixIdx + 1);
-  }
-  if (winIdx > 0) {
-    return path.substring(winIdx + 1);
-  }
-  return path;
+  return winIdx > 0 ? path.substring(winIdx + 1) : path.substring(unixIdx + 1);
 }
 
 import { fromFileUrlPosix, fromFileUrlWin32 } from "./_import.js";

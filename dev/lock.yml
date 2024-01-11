@@ -25,6 +25,9 @@ dev:
       '([\s-]+uses:\s+metatypedev/setup-ghjk@).+()': GHJK_ACTION_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
+    typegraph/node/package.json:
+      '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
+      '(\s*"description"\s*:\s*").*(",?)': TAGLINE
     typegraph/python/pyproject.toml:
       (description = ").+("): TAGLINE
     '**/Cargo.toml':
