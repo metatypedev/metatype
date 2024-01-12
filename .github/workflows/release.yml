@@ -6,6 +6,11 @@ on:
         required: true
         type: boolean
         default: true
+      checkBump:
+        description: check-bump adds a release entry to github so it's disabled by default.
+        required: true
+        type: boolean
+        default: false
   push:
       tags:
         - v*
@@ -18,20 +23,25 @@ env:
 jobs:
   check-bump:
     runs-on: ubuntu-latest
-    if: github.ref_type == 'tag'
-
+    if: github.ref_type == 'tag' 
+      && (
+        github.event_name != 'workflow_dispatch'
+        inputs.checkBump
+      )
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: WyriHaximus/github-action-get-previous-tag@v1.3.0
+        id: latest-tag
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v${{ env.DENO_VERSION }}
       - uses: kenji-miyake/setup-git-cliff@v2
       - run: |
           VERSION=$(deno run -A dev/lock.ts --version)
-          if [[ "${{ github.ref_name }}" != "v$VERSION" ]]; then
-            echo "Tag ${{ github.ref_name }} does not match code version v$VERSION, stopping."
+          if [[ "${{ steps.latest-tag.outputs.tag }}" != "v$VERSION" ]]; then
+            echo "Tag ${{ steps.latest-tag.outputs.tag }} does not match code version v$VERSION, stopping."
             exit -1
           fi
           echo "Releasing v$VERSION"
@@ -39,15 +49,24 @@ jobs:
           cat CHANGE.md
       - uses: ncipollo/release-action@v1
         with:
-          tag: ${{ github.ref_name }}
+          tag: ${{ steps.latest-tag.outputs.tag }}
           makeLatest: true
           bodyFile: "CHANGE.md"
           discussionCategory: "Announcements"
-          prerelease: ${{ contains(github.ref_name, 'dev') || contains(github.ref_name, 'alpha') }}
+          prerelease: ${{ contains(steps.latest-tag.outputs.tag 'dev') || contains(steps.latest-tag.outputs.tag 'alpha') }}
 
   meta-cli:
     needs:
       - check-bump
+    # using `always()` makes the job evaulte despite
+    # status of check-bump
+    # we combine that with our own conditions
+    if: |
+      always()
+      && (
+        needs.check-bump.result == 'success'
+        || github.event_name == 'workflow_dispatch'
+      )
     runs-on: "${{ matrix.os }}"
     strategy:
       fail-fast: false
@@ -70,6 +89,10 @@ jobs:
             suffix: ""
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: WyriHaximus/github-action-get-previous-tag@v1.3.0
+        id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
         with:
           targets: ${{ matrix.target }}
@@ -88,20 +111,30 @@ jobs:
           args: "--locked --release --package meta-cli --target ${{ matrix.target }}"
       - run: |
           cd target/${{ matrix.target }}/release
-          tar czvf ../../../meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
+          tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
       - uses: svenstaro/upload-release-action@v2
         with:
-          tag: ${{ github.ref }}
-          file: "meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
-          asset_name: "meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
+          tag: ${{ steps.latest-tag.outputs.tag }}
+          file: "meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
+          asset_name: "meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
           overwrite: ${{ inputs.ovewriteArtifacts }}
 
   typegraph:
     needs:
       - check-bump
+    if: |
+      always()
+      && (
+        needs.check-bump.result == 'success'
+        || github.event_name == 'workflow_dispatch'
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: WyriHaximus/github-action-get-previous-tag@v1.3.0
+        id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
@@ -144,7 +177,7 @@ jobs:
           pnpm publish --no-git-checks
       - uses: svenstaro/upload-release-action@v2
         with:
-          tag: ${{ github.ref }}
+          tag: ${{ steps.latest-tag.outputs.tag }}
           file: "typegraph/python/dist/*"
           file_glob: true
           overwrite: ${{ inputs.ovewriteArtifacts }}
@@ -152,6 +185,12 @@ jobs:
   typegate:
     needs:
       - check-bump
+    if: |
+      always()
+      && (
+        needs.check-bump.result == 'success'
+        || github.event_name == 'workflow_dispatch'
+      )
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -191,8 +230,16 @@ jobs:
   docker:
     needs:
       - typegate
+    # needs hack required here as well because
+    # `typegate` uses it
+    if: always() && needs.typegate.result == 'success'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: WyriHaximus/github-action-get-previous-tag@v1.3.0
+        id: latest-tag
       - uses: actions/download-artifact@v4
         with:
           name: digests
@@ -205,15 +252,25 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: |
           cd ./digests
-          docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:${{ github.ref_name }} --tag ${{ env.REGISTRY_IMAGE }}:latest $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
+          docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:${{ steps.latest-tag.outputs.tag }} --tag ${{ env.REGISTRY_IMAGE }}:latest $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:latest
 
   vscode-extension:
-    # needs:
-    #   - check-bump
+    needs:
+      - check-bump
+    if: |
+      always()
+      && (
+        needs.check-bump.result == 'success'
+        || github.event_name == 'workflow_dispatch'
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: WyriHaximus/github-action-get-previous-tag@v1.3.0
+        id: latest-tag
       - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - shell: bash
         run: |
@@ -230,7 +287,7 @@ jobs:
           pnpm run publish -p $${ env.AZURE_DEVOPS_TOKEN }
       - uses: svenstaro/upload-release-action@v2
         with:
-          tag: ${{ github.ref }}
+          tag: ${{ steps.latest-tag.outputs.tag }}
           file: "dev-tools/*.vsix"
           file_glob: true
           overwrite: ${{ inputs.ovewriteArtifacts }}
@@ -244,6 +301,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: dsherret/rust-toolchain-file@v1
       - uses: denoland/setup-deno@v1
         with:
