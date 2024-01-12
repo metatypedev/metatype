@@ -15,6 +15,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v${{ env.DENO_VERSION }}
@@ -34,6 +36,7 @@ jobs:
           makeLatest: true
           bodyFile: "CHANGE.md"
           discussionCategory: "Announcements"
+          prerelease: ${{ contains(github.ref_name, 'dev') || contains(github.ref_name, 'alpha') }}
 
   meta-cli:
     needs:
