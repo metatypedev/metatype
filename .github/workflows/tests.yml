@@ -73,8 +73,6 @@ jobs:
       - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - shell: bash
         run: |
-          env
-          ls -osha $LIBCLANG_PATH
           sudo apt update
           sudo apt install -y --no-install-recommends libclang-dev clang
           cd website
