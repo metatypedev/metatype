@@ -124,7 +124,7 @@ jobs:
           cd ../..
 
           npm install --global @bytecodealliance/jco@$JCO_VERSION
-          jco transpile $WASM_FILE -o typegraph/node/src/gen
+          jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen
 
           cd typegraph/node
           pnpm install
