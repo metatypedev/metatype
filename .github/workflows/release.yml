@@ -24,9 +24,9 @@ jobs:
   check-bump:
     runs-on: ubuntu-latest
     if: github.ref_type == 'tag' 
-      && (
-        github.event_name != 'workflow_dispatch'
-        || inputs.checkBump
+      || (
+        github.event_name == 'workflow_dispatch'
+        && inputs.checkBump
       )
     steps:
       - uses: actions/checkout@v4
