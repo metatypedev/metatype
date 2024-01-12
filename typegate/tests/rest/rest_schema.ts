@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { fx, Policy, t, typegraph } from "../../../typegraph/deno/src/mod.ts";
-import { DenoRuntime } from "../../../typegraph/deno/src/runtimes/deno.ts";
+import { fx, Policy, t, typegraph } from "@typegraph/sdk/index.js";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
-typegraph("rest_schema", (g) => {
+typegraph("rest_schema", (g: any) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
 

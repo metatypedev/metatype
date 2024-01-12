@@ -1,15 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import * as t from "../types.ts";
+import * as t from "../types.js";
 import {
   Effect,
   HttpMethod,
   MaterializerHttpRequest,
-} from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
-import { runtimes } from "../wit.ts";
-import { Materializer, Runtime } from "./mod.ts";
-import { fx } from "../mod.ts";
+} from "../gen/interfaces/metatype-typegraph-runtimes.js";
+import { runtimes } from "../wit.js";
+import { Materializer, Runtime } from "./mod.js";
+import { fx } from "../index.js";
 
 type HttpRequestMat<M extends string> =
   & Materializer

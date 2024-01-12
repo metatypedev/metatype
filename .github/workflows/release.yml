@@ -124,14 +124,15 @@ jobs:
           cd ../..
 
           npm install --global @bytecodealliance/jco@$JCO_VERSION
-          jco transpile $WASM_FILE -o typegraph/deno/src/gen
-          deno run -A typegraph/deno/dev/fix-declarations.ts
-
-          cd typegraph/deno/src
-          deno run -A ../../../dev/publish.ts
-          cd ../../..
+          jco transpile $WASM_FILE -o typegraph/node/src/gen
 
           cd typegraph/node
+          pnpm install
+          pnpm run sdk-build
+          cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
+          cd ../..
+
+          cd typegraph/node/sdk/dist
           pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
           pnpm publish --no-git-checks
       - uses: svenstaro/upload-release-action@v2

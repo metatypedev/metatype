@@ -1,0 +1,19 @@
+{
+  "name": "metatype",
+  "version": "0.3.1",
+  "description": "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are.",
+  "scripts": {
+    "sdk-build": "cd sdk && pnpm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/metatypedev/metatype.git"
+  },
+  "bugs": {
+    "url": "https://github.com/metatypedev/metatype/issues"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MPL-2.0"
+}

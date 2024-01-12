@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { fx, Policy, t, typegraph } from "@typegraph/sdk/mod.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+import { fx, Policy, t, typegraph } from "@typegraph/sdk/index.js";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
 const student = t.struct({
   id: t.integer(),
@@ -32,7 +32,7 @@ const grades = t.struct({
 
 const tpe = t.struct({ student, grades: grades.optional() });
 
-typegraph("test-reduce-deno", (g) => {
+typegraph("test-reduce-deno", (g: any) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
   const identityStudent = deno.func(

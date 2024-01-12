@@ -47,7 +47,7 @@ typegraph:
   watch:
     - "typegraph/core/src/**/*.rs"
     - "typegraph/core/wit/*.wit"
-    - "typegraph/deno/dev/fix-declarations.sh"
+    - "typegraph/node/src/**/*.ts"
   env:
     WASM_FILE: target/debug/typegraph_core.wasm
   command: |
@@ -55,9 +55,12 @@ typegraph:
     cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
     wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
 
-    rm -rf typegraph/deno/src/gen
-    jco transpile $WASM_FILE -o typegraph/deno/src/gen
-    deno run -A typegraph/deno/dev/fix-declarations.ts
+    rm -rf typegraph/node/sdk/src/gen typegraph/node/sdk/dist
+    jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen
+    cd typegraph/node
+    pnpm run sdk-build
+    cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
+    cd ../..
 
     rm -rf typegraph/python/typegraph/gen
     poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
@@ -106,7 +109,7 @@ setup:
     - website/package.json
   env:
     WASM_TOOLS_VERSION: "1.0.53"
-    JCO_VERSION: "0.12.1"
+    JCO_VERSION: "0.14.2"
     CARGO_INSTA_VERSION: "1.33.0"
     WASMEDGE_VERSION: "0.13.5"
     WASM_OPT_VERSION: "0.116.0"
@@ -123,3 +126,6 @@ setup:
     cd website
     pnpm install
     cd ..
+    cd typegraph/node
+    pnpm install
+    cd ../..

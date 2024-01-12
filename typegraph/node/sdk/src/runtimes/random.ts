@@ -1,13 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import * as t from "../types.ts";
-import { runtimes } from "../wit.ts";
+import * as t from "../types.js";
+import { runtimes } from "../wit.js";
 import {
   RandomRuntimeData,
-} from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
-import { Materializer, Runtime } from "./mod.ts";
-import { fx } from "../mod.ts";
+} from "../gen/interfaces/metatype-typegraph-runtimes.js";
+import { Materializer, Runtime } from "./mod.js";
+import { fx } from "../index.js";
 
 interface RandomMat extends Materializer {
   runtime: number;

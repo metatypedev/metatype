@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { core, wit_utils } from "./wit.ts";
+import { core, wit_utils } from "./wit.js";
 import {
   PolicyPerEffect,
   PolicySpec as WitPolicySpec,
@@ -14,20 +14,20 @@ import {
   TypeOptional,
   TypeString,
   TypeUnion,
-} from "./gen/interfaces/metatype-typegraph-core.d.ts";
-import { Reduce } from "./gen/interfaces/metatype-typegraph-utils.d.ts";
-import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.d.ts";
-import { Materializer } from "./runtimes/mod.ts";
-import { mapValues } from "./deps.ts";
-import Policy from "./policy.ts";
-import { buildReduceData, serializeRecordValues } from "./utils/func_utils.ts";
+} from "./gen/interfaces/metatype-typegraph-core.js";
+import { Reduce } from "./gen/interfaces/metatype-typegraph-utils.js";
+import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.js";
+import { Materializer } from "./runtimes/mod.js";
+import { mapValues } from "./deps/mod.js";
+import Policy from "./policy.js";
+import { buildReduceData, serializeRecordValues } from "./utils/func_utils.js";
 import {
   serializeFromParentInjection,
   serializeGenericInjection,
   serializeStaticInjection,
-} from "./utils/injection_utils.ts";
-import { InjectionValue } from "./utils/type_utils.ts";
-import { InheritDef } from "./typegraph.ts";
+} from "./utils/injection_utils.js";
+import { InjectionValue } from "./utils/type_utils.js";
+import { InheritDef } from "./typegraph.js";
 
 export type PolicySpec = Policy | {
   none: Policy;
@@ -60,7 +60,7 @@ export function getPolicyChain(
     }
     return {
       tag: "per-effect",
-      val: mapValues(p, (v) => v._id) as unknown as PolicyPerEffect,
+      val: mapValues(p, (v: any) => v._id) as unknown as PolicyPerEffect,
     } as const;
   });
 }

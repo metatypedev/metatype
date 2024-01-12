@@ -1,18 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import * as t from "./types.ts";
+import * as t from "./types.js";
 import { core } from "./gen/typegraph_core.js";
-import { caller, dirname, fromFileUrl } from "./deps.ts";
-import { InjectionValue } from "./utils/type_utils.ts";
+import { caller, dirname, fromFileUrl } from "./deps/mod.js";
+import { InjectionValue } from "./utils/type_utils.js";
 import {
   serializeFromParentInjection,
   serializeGenericInjection,
   serializeStaticInjection,
-} from "./utils/injection_utils.ts";
-import { Auth, Cors, Rate, wit_utils } from "./wit.ts";
-import Policy from "./policy.ts";
-import { getPolicyChain } from "./types.ts";
+} from "./utils/injection_utils.js";
+import { Auth, Cors, Rate, wit_utils } from "./wit.js";
+import Policy from "./policy.js";
+import { getPolicyChain } from "./types.js";
 
 type Exports = Record<string, t.Func>;
 
@@ -26,7 +26,7 @@ interface TypegraphArgs {
   rate?: Rate;
 }
 
-interface TypegraphBuilderArgs {
+export interface TypegraphBuilderArgs {
   expose: (exports: Exports, defaultPolicy?: Policy) => void;
   inherit: () => InheritDef;
   rest: (graphql: string) => number;
@@ -62,7 +62,7 @@ export class InheritDef {
   }
 }
 
-type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
+export type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
 
 export class RawAuth {
   constructor(readonly jsonStr: string) {}

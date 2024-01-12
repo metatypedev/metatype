@@ -1,16 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/mod.ts";
-import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql.ts";
-import * as effects from "@typegraph/sdk/effects.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
+import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql.js";
+import * as effects from "@typegraph/sdk/effects.js";
 
 const user = t.struct({
   id: t.integer(),
   // TODO more fields with more types
 }, { name: "User" });
 
-typegraph("graphql", (g) => {
+typegraph("graphql", (g: any) => {
   const graphql = new GraphQLRuntime("https://example.com/api/graphql");
   const pub = Policy.public();
 

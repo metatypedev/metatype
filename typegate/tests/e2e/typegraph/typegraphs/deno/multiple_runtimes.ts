@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/mod.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
-import { PythonRuntime } from "@typegraph/sdk/runtimes/python.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
+import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
 
-typegraph("test-multiple-runtimes", (g) => {
+typegraph("test-multiple-runtimes", (g: any) => {
   const pub = Policy.public();
   const deno = new DenoRuntime();
   const python = new PythonRuntime();

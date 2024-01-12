@@ -2,6 +2,6 @@
     "compilerOptions": {
         "strict": true,
         "moduleResolution": "node16",
-        "esModuleInterop": true
+        "esModuleInterop": true        
     }
 }

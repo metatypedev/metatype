@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/mod.ts";
-import { S3Runtime } from "@typegraph/sdk/providers/aws.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
+import { S3Runtime } from "@typegraph/sdk/providers/aws.js";
 
-typegraph("s3-test", (g) => {
+typegraph("s3-test", (g: any) => {
   const pub = Policy.public();
 
   const s3 = new S3Runtime({

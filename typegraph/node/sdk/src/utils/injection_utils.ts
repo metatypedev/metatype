@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { CREATE, DELETE, READ, UPDATE } from "../effects.ts";
-import { InjectionSource, InjectionValue } from "./type_utils.ts";
-import { stringifySymbol } from "./func_utils.ts";
-import { genRef } from "./../typegraph.ts";
+import { CREATE, DELETE, READ, UPDATE } from "../effects.js";
+import { InjectionSource, InjectionValue } from "./type_utils.js";
+import { stringifySymbol } from "./func_utils.js";
+import { genRef } from "./../typegraph.js";
 
 export function serializeInjection(
   source: InjectionSource,

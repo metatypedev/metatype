@@ -2,7 +2,8 @@ dev:
   files:
     dev/LICENSE-MPL-2.0.md:
       - typegraph/python/LICENSE.md
-      - typegraph/deno/LICENSE.md
+      - typegraph/node/LICENSE.md
+      - typegraph/node/sdk/LICENSE.md
   lines:
     rust-toolchain.toml:
       (channel = ").+("): RUST_VERSION
@@ -25,6 +26,12 @@ dev:
       '([\s-]+uses:\s+metatypedev/setup-ghjk@).+()': GHJK_ACTION_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
+    typegraph/node/sdk/package.json:
+      '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
+      '(\s*"description"\s*:\s*").*(",?)': TAGLINE
+    typegraph/node/package.json:
+      '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
+      '(\s*"description"\s*:\s*").*(",?)': TAGLINE
     typegraph/python/pyproject.toml:
       (description = ").+("): TAGLINE
     '**/Cargo.toml':
@@ -72,7 +79,7 @@ dev:
     PNPM_VERSION: v8.8.0
     CARGO_INSTA_VERSION: 1.33.0
     WASM_TOOLS_VERSION: 1.0.53
-    JCO_VERSION: 0.12.1
+    JCO_VERSION: 0.14.2
     WASMTIME_VERSION: 13.0.2
     WASMEDGE_VERSION: 0.13.5
     TYPEGRAPH_VERSION: 0.0.3

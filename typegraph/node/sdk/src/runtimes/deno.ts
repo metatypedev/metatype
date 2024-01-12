@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import * as t from "../types.ts";
-import { runtimes } from "../wit.ts";
-import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
-import Policy from "../policy.ts";
-import { Materializer, Runtime } from "./mod.ts";
-import { fx } from "../mod.ts";
+import * as t from "../types.js";
+import { runtimes } from "../wit.js";
+import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
+import Policy from "../policy.js";
+import { Materializer, Runtime } from "./mod.js";
+import { fx } from "../index.js";
 
 interface FunMat extends Materializer {
   code: string;
