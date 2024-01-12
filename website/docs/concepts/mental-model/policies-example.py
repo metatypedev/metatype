@@ -4,7 +4,7 @@ from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph()
-def policies(g):
+def policies_example(g):
     # skip:end
     deno = DenoRuntime()
     public = deno.policy("public", "() => true")  # noqa
