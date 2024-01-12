@@ -53,7 +53,7 @@ jobs:
           makeLatest: true
           bodyFile: "CHANGE.md"
           discussionCategory: "Announcements"
-          prerelease: ${{ contains(steps.latest-tag.outputs.tag 'dev') || contains(steps.latest-tag.outputs.tag 'alpha') }}
+          prerelease: ${{ contains(steps.latest-tag.outputs.tag, 'dev') || contains(steps.latest-tag.outputs.tag, 'alpha') }}
 
   meta-cli:
     needs:
