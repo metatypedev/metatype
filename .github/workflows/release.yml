@@ -26,7 +26,7 @@ jobs:
     if: github.ref_type == 'tag' 
       && (
         github.event_name != 'workflow_dispatch'
-        inputs.checkBump
+        || inputs.checkBump
       )
     steps:
       - uses: actions/checkout@v4
