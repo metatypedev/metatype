@@ -1,7 +1,14 @@
 on:
+  workflow_dispatch:
+    inputs:
+      ovewriteArtifacts:
+        description: Ovewrite artifacts on the release.
+        required: true
+        type: boolean
+        default: true
   push:
-    tags:
-      - v*
+      tags:
+        - v*
 
 env:
   GHJK_VERSION: "7bef036"
@@ -87,7 +94,7 @@ jobs:
           tag: ${{ github.ref }}
           file: "meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
           asset_name: "meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
-          overwrite: false
+          overwrite: ${{ inputs.ovewriteArtifacts }}
 
   typegraph:
     needs:
@@ -140,7 +147,7 @@ jobs:
           tag: ${{ github.ref }}
           file: "typegraph/python/dist/*"
           file_glob: true
-          overwrite: false
+          overwrite: ${{ inputs.ovewriteArtifacts }}
 
   typegate:
     needs:
@@ -202,14 +209,12 @@ jobs:
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:latest
 
   vscode-extension:
-    needs:
-      - check-bump
+    # needs:
+    #   - check-bump
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: ${{ env.DENO_VERSION }}
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - shell: bash
         run: |
           cd dev-tools
@@ -228,7 +233,7 @@ jobs:
           tag: ${{ github.ref }}
           file: "dev-tools/*.vsix"
           file_glob: true
-          overwrite: false
+          overwrite: ${{ inputs.ovewriteArtifacts }}
 
   bump:
     needs:
