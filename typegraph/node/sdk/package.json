@@ -1,9 +1,10 @@
 {
-  "name": "metatype",
+  "name": "@typegraph/sdk",
   "version": "0.3.1",
   "description": "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are.",
+  "type": "module",
   "scripts": {
-    "sdk-build": "cd sdk && pnpm run build",
+    "build": "pnpm exec tsc && cp -R ./src/gen ./dist/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -15,5 +16,8 @@
   },
   "keywords": [],
   "author": "",
-  "license": "MPL-2.0"
+  "license": "MPL-2.0",
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
 }

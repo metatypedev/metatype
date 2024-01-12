@@ -55,10 +55,11 @@ typegraph:
     cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
     wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
 
-    rm -rf typegraph/node/src/gen typegraph/node/dist
-    jco transpile $WASM_FILE -o typegraph/node/src/gen
+    rm -rf typegraph/node/sdk/src/gen typegraph/node/sdk/dist
+    jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen
     cd typegraph/node
-    pnpm run build
+    pnpm run sdk-build
+    cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
     cd ../..
 
     rm -rf typegraph/python/typegraph/gen

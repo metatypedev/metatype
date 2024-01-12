@@ -26,7 +26,7 @@ interface TypegraphArgs {
   rate?: Rate;
 }
 
-interface TypegraphBuilderArgs {
+export interface TypegraphBuilderArgs {
   expose: (exports: Exports, defaultPolicy?: Policy) => void;
   inherit: () => InheritDef;
   rest: (graphql: string) => number;
@@ -62,7 +62,7 @@ export class InheritDef {
   }
 }
 
-type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
+export type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
 
 export class RawAuth {
   constructor(readonly jsonStr: string) {}
