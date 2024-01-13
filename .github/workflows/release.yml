@@ -2,7 +2,7 @@ on:
   workflow_dispatch:
     inputs:
       ovewriteArtifacts:
-        description: Ovewrite artifacts on the release.
+        description: Ovewrite artifacts on the release. Some will only be skipped.
         required: true
         type: boolean
         default: true
@@ -160,7 +160,9 @@ jobs:
           cd typegraph/python
           poetry install
           poetry build
-          poetry publish
+          [ $${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
+            && poetry publish --skip-existing \
+            || poetry publish
           cd ../..
 
           npm install --global @bytecodealliance/jco@$JCO_VERSION
@@ -174,7 +176,9 @@ jobs:
 
           cd typegraph/node/sdk/dist
           pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
-          pnpm publish --no-git-checks
+          [ $${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
+            && pnpm publish --no-git-checks --force \
+            || pnpm publish --no-git-checks
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
@@ -284,7 +288,10 @@ jobs:
           pnpm compile:ts-server
           pnpm compile:vscode
           pnpm vscode:package
-          pnpm run publish -p $${ env.AZURE_DEVOPS_TOKEN }
+          
+          [ $${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
+            && pnpm run vscode:publish -p $${ env.AZURE_DEVOPS_TOKEN } --skip-duplicate \
+            || pnpm run vscode:publish -p $${ env.AZURE_DEVOPS_TOKEN } 
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
