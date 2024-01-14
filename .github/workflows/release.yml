@@ -290,8 +290,8 @@ jobs:
           pnpm vscode:package
           
           [ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
-            && pnpm run vscode:publish -p ${{ env.AZURE_DEVOPS_TOKEN }} --skip-duplicate \
-            || pnpm run vscode:publish -p ${{ env.AZURE_DEVOPS_TOKEN }} 
+            && pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }} --skip-duplicate \
+            || pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }} 
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
