@@ -24,6 +24,12 @@ dev:
       '(  GHJK_VERSION: ").+(")': GHJK_VERSION
       '(  DENO_VERSION: ").+(")': DENO_VERSION
       '([\s-]+uses:\s+metatypedev/setup-ghjk@).+()': GHJK_ACTION_VERSION
+    dev-tools/package.json:
+      '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
+    dev-tools/ts-language-server/package.json:
+      '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
+    dev-tools/vscode-metatype-support/package.json:
+      '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
     typegraph/node/sdk/package.json:
