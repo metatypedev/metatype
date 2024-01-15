@@ -2,7 +2,7 @@
     "name": "typegraph-ts-server",
     "description": "TypeScript language server for TypeGraph",
     "author": "Metatype Team",
-    "version": "0.2.5",
+    "version": "0.3.2",
     "repository": {
         "type": "git",
         "url": "https://github.com/metatypedev/metatype"
