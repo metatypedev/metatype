@@ -345,7 +345,7 @@ It also bundles the GrahpiQl API explorer and you should be able to access it at
 
     <TGExample
           typegraph="roadmap-random"
-          python={require("./random.py")}
+          python={require("../../../typegraphs/random.py")}
           query={require("./random.graphql")}
         />
 
@@ -601,7 +601,7 @@ We should be able to add a few buckets and ideas now.
 
     <TGExample
           typegraph="roadmap-prisma"
-          python={require("./prisma.py")}
+          python={require("../../../typegraphs/prisma.py")}
           query={require("./prisma.graphql")}
         />
 
@@ -716,7 +716,7 @@ If you're using the GraphiQl interface from earlier, there should be a panel in 
 
     <TGExample
           typegraph="roadmap-policies"
-          python={require("./roadmap-policies.py")}
+          python={require("../../../typegraphs/roadmap-policies.py")}
           query={require("./policies.graphql")}
         />
 
@@ -814,7 +814,7 @@ Requests are now only able to `connect` new ideas with pre-existing buckets and 
 
     <TGExample
           typegraph="roadmap-reduce"
-          python={require("./reduce.py")}
+          python={require("../../../typegraphs/reduce.py")}
           query={require("./reduce.graphql")}
         />
 
@@ -896,7 +896,7 @@ Our query is exposed like any other materializer in the GraphQl api.
 
     <TGExample
           typegraph="roadmap-execute"
-          python={require("./execute.py")}
+          python={require("../../../typegraphs/execute.py")}
           query={require("./execute.graphql")}
         />
 
@@ -1074,7 +1074,7 @@ def roadmap(g: Graph):
 We can now access our func through the GraphQl api.
     <TGExample
           typegraph="roadmap-func"
-          python={require("./func.py")}
+          python={require("../../../typegraphs/func.py")}
           query={require("./func.graphql")}
         />
 

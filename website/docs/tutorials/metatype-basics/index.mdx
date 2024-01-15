@@ -41,7 +41,7 @@ There is no "object" or "primitive" type, only 4 main categories of types:
 
 You can combine them with each other to describe almost any data type you may need. The typegate enforces the data validation when data flows through it. Some syntactic sugar is available to make the type definition shorter:
 
-    <CodeBlock language="python">{require("./typecheck.py").content}</CodeBlock>
+    <CodeBlock language="python">{require("../../../typegraphs/typecheck.py").content}</CodeBlock>
 
 ## The typegraph package
 
@@ -62,7 +62,7 @@ A complete typegraph definition may look like the following:
 
     <TGExample
           typegraph="first-typegraph"
-          python={require("./first-typegraph.py")}
+          python={require("../../../typegraphs/first-typegraph.py")}
           query={require("./query.graphql")}
         />
 

@@ -37,7 +37,7 @@ Go ahead and update `typegraph.py` with the highlighted lines below:
 
 <TGExample
   typegraph="database"
-  python={require("./database.py")}
+  python={require("../../../../typegraphs/database.py")}
   query={require("./database.graphql")}
 />
 
@@ -49,7 +49,7 @@ A few things to note on the changes:
 1. Runtimes often come with some sugar syntax to generate types and avoid manipulating materializers directly. A corresponding declaration would have looked like this:
 
 <CodeBlock language="python">
-  {require("./prisma-no-sugar.py").content}
+  {require("../../../../typegraphs/prisma-no-sugar.py").content}
 </CodeBlock>
 
 In order to use the Prisma runtime, you need to add a new environment variable. Runtimes don't take raw secrets, but instead a secret key used to look up environment variables named under the format `TG_[typegraph name]_[key]`. You can either add it in your `metatype.yml` (recommended) or in your `compose.yml`.

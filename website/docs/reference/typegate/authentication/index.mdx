@@ -18,7 +18,7 @@ Basic authentication is the simplest way to authenticate requests. It is done by
 
 <TGExample
   typegraph="basic_authentification"
-  python={require("./basic.py")}
+  python={require("../../../../typegraphs/basic.py")}
   query={require("./basic.graphql")}
   headers={{
     Authorization: "Basic YWRtaW46cGFzc3dvcmQ=",
@@ -57,7 +57,7 @@ Even though, asymmetric encryption is recommended, HMAC-SHA256 is so commonly us
 
 <TGExample
   typegraph="jwt_authentification"
-  python={require("./jwt.py")}
+  python={require("../../../../typegraphs/jwt.py")}
   query={require("./jwt.graphql")}
   headers={{
     Authorization:
@@ -102,7 +102,7 @@ const { token } = await take.json();
 
 <TGExample
   typegraph="oauth2_authentication"
-  python={require("./oauth2.py")}
+  python={require("../../../../typegraphs/oauth2.py")}
   query={require("./oauth2.graphql")}
   headers={{
     Authorization: "Bearer your-token",

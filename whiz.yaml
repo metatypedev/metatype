@@ -39,7 +39,7 @@ meta-cli:
     - "typegate/src/**/*.ts"
     - "typegate/core/**/*.rs"
     - "libs/deno/**/*"
-  command: "cargo run -p meta-cli -- -C website dev --run-destructive-migrations"
+  command: "cargo run -p meta-cli -- -C website/typegraphs dev --run-destructive-migrations"
   depends_on:
     - typegraph
 
