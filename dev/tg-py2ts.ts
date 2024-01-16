@@ -3,6 +3,11 @@
 
 /**
  * Translate typegraph in python to deno
+ * This makes assumption at how a python typegraph looks like at 0.3.2
+ * A better implementation would be to
+ * (1) actually parse python source
+ * (2) emit typescript code directly from the serialized json.
+ *
  * Usage:
  *   deno run -A --config=typegate/deno.jsonc dev/tg-py2ts.ts --file <file.py> [--force]
  */
@@ -37,6 +42,36 @@ function camelCase(str: string) {
     .join("");
 }
 
+function captureInsideParenthesis(text: string, prefix: string) {
+  const cursor = text.lastIndexOf(prefix) + prefix.length;
+  if (cursor < 0) "";
+  let parenthStack = 0;
+  let expr = "";
+  for (let i = cursor; i < text.length; i++) {
+    const char = text.charAt(i);
+    if (char == "(" || char == ")") {
+      parenthStack += char == "(" ? 1 : -1;
+      if (parenthStack == 0) break; // first "(" has closed
+      if (parenthStack < 0) {
+        const peekRadius = 10;
+        throw new Error(
+          `invalid parenthesis near .. ${
+            text.substring(
+              Math.max(0, i - peekRadius),
+              Math.min(text.length, i + peekRadius),
+            ).replace(/[\n\r]/g, "\\n")
+              .trim()
+          } ..`,
+        );
+      }
+    }
+    if (i > cursor) {
+      expr += char;
+    }
+  }
+  return expr;
+}
+
 const chain: Array<ReplaceStep> = [
   {
     description: "imports",
@@ -58,7 +93,7 @@ const chain: Array<ReplaceStep> = [
           }
           const relPath = pkg.split(".").join("/");
           const imports = imp.split(/\s*,\s*/)
-            .map((e) => camelCase(e))
+            .map(camelCase)
             .join(", ");
           return `import { ${imports} } from "@typegraph/sdk/${relPath}.js\n`;
         },
@@ -75,16 +110,35 @@ const chain: Array<ReplaceStep> = [
   {
     description: "Translate typegraph body",
     apply(text: string) {
-      // TODO
-      return text;
+      // match name near def
+      const tmp = text.match(/def\s+(\w*)\(.*\)\s*\:/);
+      if (tmp == null) {
+        throw new Error("could not extract typegraph name");
+      }
+      const [tgDefExpr, tgName] = tmp!;
+      const defOffset = text.lastIndexOf(tgDefExpr);
+      const body = text.substring(defOffset + tgDefExpr.length);
+
+      // match <expr> in @typegraph(<expr>)
+      const prefixTg = "@typegraph";
+      const cursor = text.lastIndexOf(prefixTg) + prefixTg.length;
+      if (cursor < 0) {
+        throw new Error(`could not find ${prefixTg}`);
+      }
+
+      const name = tgName.replace(/_+/, "-");
+      const config = captureInsideParenthesis(text, prefixTg).replace("=", ":");
+      const header = text.substring(0, text.lastIndexOf(prefixTg));
+
+      return `${header}\ntypegraph({\nname: "${name}",\n${config}, (g) => \n{${body}\n});`;
     },
   },
   {
-    description: "Function names: some_func => someFunc",
+    description: "Function names on an object: foo.some_func => foo.someFunc",
     apply(text: string) {
       return text
         .replace(
-          /(\w+_)+?(\w+)/g,
+          /\.(\w+_)+?(\w+)/g,
           camelCase,
         );
     },
@@ -92,14 +146,13 @@ const chain: Array<ReplaceStep> = [
   {
     description: "Expose expression",
     apply(text: string) {
-      // TODO
-      return text;
+      const exposed = captureInsideParenthesis(text, "g.expose");
+      return text.replace(exposed, `{${exposed.replace("=", ":")}}`);
     },
   },
   // {
   //   description: "Translate multiline comments",
   //   apply(text: string) {
-  //     // TODO
   //     return text;
   //   },
   // },
