@@ -488,4 +488,19 @@ Meta.test("schema generation", async (t) => {
       );
     },
   );
+
+  await t.should("generate with multi-field id", async () => {
+    await assertGeneratedSchema(
+      "multi-field-id",
+      outdent`
+        model Project {
+            ownerName String @db.Text
+            name String @db.Text
+            description String? @db.Text
+
+            @@id([ownerName, name])
+        }
+      `,
+    );
+  });
 });

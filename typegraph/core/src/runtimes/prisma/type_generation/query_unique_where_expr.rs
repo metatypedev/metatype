@@ -28,7 +28,7 @@ impl TypeGen for QueryUniqueWhereExpr {
         for (k, prop) in model.iter_props() {
             match prop {
                 Property::Scalar(prop) => {
-                    if &model.id_field == k || prop.unique {
+                    if model.id_fields.contains(k) || prop.unique {
                         builder.propx(k, t::optional(prop.type_id))?;
                     }
                 }

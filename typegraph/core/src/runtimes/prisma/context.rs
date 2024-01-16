@@ -302,7 +302,7 @@ impl PrismaContext {
                 })
                 .filter_map(|r| r.transpose())
                 .collect::<Result<Vec<_>>>()?,
-            id_fields: vec![model.id_field.clone()],
+            id_fields: model.id_fields.clone(),
         })
     }
 

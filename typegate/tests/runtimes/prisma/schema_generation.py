@@ -445,3 +445,36 @@ def injection(g: Graph):
     g.expose(
         createUser=db.create(user),
     )
+
+
+@typegraph()
+def multi_field_id(g: Graph):
+    db = PrismaRuntime("test", "POSTGRES")
+
+    project = t.struct(
+        {
+            "ownerName": t.string(),
+            "name": t.string(),
+            "description": t.string().optional(),
+        },
+        config={"id": ["ownerName", "name"]},
+    ).rename("Project")
+
+    g.expose(
+        createProject=db.create(project),
+    )
+
+
+@typegraph()
+def foreign_id(g: Graph):
+    pass
+
+
+@typegraph()
+def mixed_id(g: Graph):
+    pass
+
+
+@typegraph()
+def multi_field_unique(g: Graph):
+    pass
