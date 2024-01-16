@@ -23,3 +23,6 @@ export * as semver from "https://deno.land/std@0.202.0/semver/mod.ts";
 // export { udd } from "https://deno.land/x/udd@0.8.2/mod.ts";
 export { udd } from "https://github.com/levibostian/deno-udd/raw/ignore-prerelease/mod.ts";
 export * as dnt from "https://deno.land/x/dnt@0.38.1/mod.ts";
+// @deno-types="https://deno.land/x/fuse@v6.4.1/dist/fuse.d.ts"
+import Fuse from "https://deno.land/x/fuse@v6.4.1/dist/fuse.esm.min.js";
+export { Fuse };
