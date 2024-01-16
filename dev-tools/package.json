@@ -1,8 +1,10 @@
 {
-    "name": "metatype-devtools",
+    "name": "vscode-metatype",
+    "displayName": "Metatype",
+    "description": "VSCode extension for Metatype support",
+    "icon": "logo.png",
     "author": "Metatype Team",
     "version": "0.3.2",
-    "description": "Metatype Devtools",
     "repository": {
         "type": "git",
         "url": "https://github.com/metatypedev/metatype"
