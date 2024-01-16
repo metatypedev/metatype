@@ -12,11 +12,12 @@
  *   deno run -A --config=typegate/deno.jsonc dev/tg-py2ts.ts --file <file.py> [--force]
  */
 
+import { basename, dirname, join } from "std/path/mod.ts";
 import { parseFlags, resolve } from "./deps.ts";
 
 const args = parseFlags(Deno.args, {
   string: ["file"],
-  boolean: ["force"],
+  boolean: ["force", "print"],
 });
 
 if (!args.file) {
@@ -91,11 +92,18 @@ const chain: Array<ReplaceStep> = [
               `import expr invalid at "${m}", got ${typeof imp}`,
             );
           }
-          const relPath = pkg.split(".").join("/");
+
+          const pkgSplit = pkg.split(".");
+          const [start, ...rem] = pkgSplit;
+          const first = start == "typegraph" ? "" : start;
+          const relPath = `${pkgSplit.length == 1 ? "/index" : ""}${
+            [first, ...rem]
+              .join("/")
+          }`;
           const imports = imp.split(/\s*,\s*/)
             .map(camelCase)
             .join(", ");
-          return `import { ${imports} } from "@typegraph/sdk/${relPath}.js\n`;
+          return `import { ${imports} } from "@typegraph/sdk${relPath}.js"\n`;
         },
       );
     },
@@ -126,11 +134,14 @@ const chain: Array<ReplaceStep> = [
         throw new Error(`could not find ${prefixTg}`);
       }
 
-      const name = tgName.replace(/_+/, "-");
-      const config = captureInsideParenthesis(text, prefixTg).replace("=", ":");
+      const name = tgName.replace(/_+/g, "-");
+      const config = captureInsideParenthesis(text, prefixTg).replace(
+        /=/g,
+        ":",
+      );
       const header = text.substring(0, text.lastIndexOf(prefixTg));
 
-      return `${header}\ntypegraph({\nname: "${name}",\n${config}, (g) => \n{${body}\n});`;
+      return `${header}\ntypegraph({\nname: "${name}",\n${config}}, (g) => \n{${body}\n});`;
     },
   },
   {
@@ -147,7 +158,7 @@ const chain: Array<ReplaceStep> = [
     description: "Expose expression",
     apply(text: string) {
       const exposed = captureInsideParenthesis(text, "g.expose");
-      return text.replace(exposed, `{${exposed.replace("=", ":")}}`);
+      return text.replace(exposed, `{${exposed.replace(/=/g, ":")}}`);
     },
   },
   // {
@@ -190,7 +201,9 @@ if (!args.force && result.errors.length > 0) {
   Deno.exit(-2);
 }
 
-console.log(result.output);
-
-// TODO
-// write .ts on the same directory as path
+if (args.print) {
+  console.log(result.output);
+} else {
+  const outputFile = basename(path).replace(/\.py$/, ".ts");
+  Deno.writeTextFileSync(join(dirname(path), outputFile), result.output);
+}
