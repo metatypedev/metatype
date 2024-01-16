@@ -503,4 +503,24 @@ Meta.test("schema generation", async (t) => {
       `,
     );
   });
+
+  await t.should("generate with foreign id", async () => {
+    await assertGeneratedSchema(
+      "foreign-id",
+      outdent`
+        model User {
+            id String @db.Uuid @default(uuid()) @id
+            email String @db.Text @unique
+            profile Profile? @relation(name: "__rel_Profile_User_1")
+        }
+
+        model Profile {
+            user User @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
+            userId String @db.Uuid @id
+            profilePicUrl String @db.Text
+            bio String? @db.Text
+        }
+      `,
+    );
+  });
 });

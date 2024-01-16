@@ -467,7 +467,31 @@ def multi_field_id(g: Graph):
 
 @typegraph()
 def foreign_id(g: Graph):
-    pass
+    db = PrismaRuntime("test", "POSTGRES")
+
+    user = t.struct(
+        {
+            "id": t.uuid(as_id=True, config=["auto"]),
+            "email": t.email(config=["unique"]),
+            "profile": g.ref("Profile").optional(),
+        },
+        name="User",
+    )
+
+    _profile = t.struct(
+        {
+            "user": user,
+            "profilePicUrl": t.uri(),
+            "bio": t.string().optional(),
+        },
+        name="Profile",
+        config={"id": ["user"]},
+    )
+
+    g.expose(
+        createUser=db.create(user),
+        # createProfile=db.create(profile),
+    )
 
 
 @typegraph()

@@ -350,18 +350,24 @@ export class SchemaGenerator {
     const tags: string[] = [];
     const modelFields: ModelField[] = [];
 
+    const fkeysMap = new Map<string, string[]>();
+
     for (const prop of model.props) {
       const field = this.#fieldBuilder.build(prop);
       modelFields.push(field);
       modelFields.push(...field.fkeys);
-      if (field.fkeysUnique) {
+      if (field.fkeys.length > 0) {
+        fkeysMap.set(field.name, field.fkeys.map((fkey) => fkey.name));
+      }
+      if (field.fkeysUnique && !model.idFields.includes(field.name)) {
         const fieldNames = field.fkeys.map((fkey) => fkey.name);
         tags.push(`@@unique(${fieldNames.join(", ")})`);
       }
     }
 
     // set @id tag
-    const ids = model.idFields;
+    const ids = model.idFields.flatMap((key) => fkeysMap.get(key) ?? [key]);
+
     if (ids.length === 0) {
       // unreachable
       throw new Error("no @id field found");
