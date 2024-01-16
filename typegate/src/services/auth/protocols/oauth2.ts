@@ -4,7 +4,7 @@
 import config from "../../../config.ts";
 import { OAuth2Client, OAuth2ClientConfig, Tokens } from "oauth2_client";
 import { encrypt, randomUUID, signJWT, verifyJWT } from "../../../crypto.ts";
-import { AdditionalAuthParams, JWTClaims } from "../mod.ts";
+import { AdditionalAuthParams, JWTClaims, ProfileClaims } from "../mod.ts";
 import { getLogger } from "../../../log.ts";
 import { SecretManager } from "../../../typegraph/mod.ts";
 import {
@@ -21,6 +21,7 @@ import {
   generateValidator,
   generateWeakValidator,
 } from "../../../engine/typecheck/input.ts";
+import { mapKeys } from "std/collections/map_keys.ts";
 
 const logger = getLogger(import.meta);
 
@@ -280,6 +281,9 @@ export class OAuth2Auth extends Protocol {
 
   private async createJWT(token: Tokens): Promise<string> {
     const profile = await this.getProfile(token);
+    const profileClaims: ProfileClaims = profile
+      ? mapKeys(profile, (k) => `profile.${k}`)
+      : {};
     const payload: JWTClaims = {
       provider: this.authName,
       accessToken: token.accessToken,
@@ -289,7 +293,7 @@ export class OAuth2Auth extends Protocol {
           (token.expiresIn ?? config.jwt_refresh_duration_sec),
       ),
       scope: token.scope,
-      profile,
+      ...profileClaims,
     };
     return await signJWT(payload, config.jwt_max_duration_sec);
   }
