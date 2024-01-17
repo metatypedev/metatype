@@ -41,7 +41,7 @@ Meta.test("prisma full mapping", async (t) => {
                 }
               }
               extended_profile: {
-                create: { id: 10111, bio: "Some bio 1" }
+                create: { bio: "Some bio 1" }
               }
             }
           ) 
@@ -739,7 +739,6 @@ Meta.test("prisma full mapping", async (t) => {
         ) {
           id
           extended_profile {
-            id
             bio
           }
         }

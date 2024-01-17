@@ -407,6 +407,7 @@ export interface Model {
   typeName: string;
   props: Property[];
   idFields: string[];
+  uniqueConstraints: string[][];
 }
 export interface ManagedInjection {
   create?: Injection2 | null;

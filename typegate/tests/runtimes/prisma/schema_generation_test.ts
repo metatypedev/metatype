@@ -173,7 +173,7 @@ Meta.test("schema generation", async (t) => {
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
   
-              @@unique(userId)
+              @@unique([userId])
           }
         `,
       );
@@ -191,7 +191,7 @@ Meta.test("schema generation", async (t) => {
               user User @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int
       
-              @@unique(userId)
+              @@unique([userId])
           }
         `,
       );
@@ -204,7 +204,7 @@ Meta.test("schema generation", async (t) => {
               user User @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int
       
-              @@unique(userId)
+              @@unique([userId])
           }
       
           model User {
@@ -233,7 +233,7 @@ Meta.test("schema generation", async (t) => {
               user User? @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int?
   
-              @@unique(userId)
+              @@unique([userId])
           }
         `,
       );
@@ -246,7 +246,7 @@ Meta.test("schema generation", async (t) => {
               user User? @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
               userId Int?
   
-              @@unique(userId)
+              @@unique([userId])
           }
 
           model User {
@@ -275,7 +275,7 @@ Meta.test("schema generation", async (t) => {
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
   
-              @@unique(userId)
+              @@unique([userId])
           }
         `,
       );
@@ -293,7 +293,7 @@ Meta.test("schema generation", async (t) => {
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
   
-              @@unique(userId)
+              @@unique([userId])
           }
         `,
       );
@@ -306,7 +306,7 @@ Meta.test("schema generation", async (t) => {
               user User @relation(name: "userProfile", fields: [userId], references: [id])
               userId Int
   
-              @@unique(userId)
+              @@unique([userId])
           }
 
           model User {
@@ -382,7 +382,7 @@ Meta.test("schema generation", async (t) => {
             nextId String? @db.Uuid
             prev ListNode? @relation(name: "__rel_ListNode_ListNode_1")
   
-            @@unique(nextId)
+            @@unique([nextId])
         }
       `,
     );
@@ -396,7 +396,7 @@ Meta.test("schema generation", async (t) => {
             next ListNode? @relation(name: "__rel_ListNode_ListNode_1", fields: [nextId], references: [id])
             nextId String? @db.Uuid
   
-            @@unique(nextId)
+            @@unique([nextId])
         }
       `,
     );
@@ -464,7 +464,7 @@ Meta.test("schema generation", async (t) => {
               motherId String? @db.Uuid
               children Person[] @relation(name: "__rel_Person_Person_2")
       
-              @@unique(personal_heroId)
+              @@unique([personal_heroId])
           }
         `,
       );
@@ -488,4 +488,60 @@ Meta.test("schema generation", async (t) => {
       );
     },
   );
+
+  await t.should("generate with multi-field id", async () => {
+    await assertGeneratedSchema(
+      "multi-field-id",
+      outdent`
+        model Project {
+            ownerName String @db.Text
+            name String @db.Text
+            description String? @db.Text
+
+            @@id([ownerName, name])
+        }
+      `,
+    );
+  });
+
+  await t.should("generate with foreign id", async () => {
+    await assertGeneratedSchema(
+      "foreign-id",
+      outdent`
+        model User {
+            id String @db.Uuid @default(uuid()) @id
+            email String @db.Text @unique
+            profile Profile? @relation(name: "__rel_Profile_User_1")
+        }
+
+        model Profile {
+            user User @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
+            userId String @db.Uuid @id
+            profilePicUrl String @db.Text
+            bio String? @db.Text
+        }
+      `,
+    );
+  });
+
+  await t.should("generate with multi-field unique constraint", async () => {
+    await assertGeneratedSchema(
+      "multi-field-unique",
+      outdent`
+        model Account {
+            id String @db.Uuid @default(uuid()) @id
+            projects Project[] @relation(name: "__rel_Project_Account_1")
+        }
+
+        model Project {
+            id String @db.Uuid @default(uuid()) @id
+            owner Account @relation(name: "__rel_Project_Account_1", fields: [ownerId], references: [id])
+            ownerId String @db.Uuid
+            name String @db.Text
+
+            @@unique([ownerId, name])
+        }
+      `,
+    );
+  });
 });

@@ -23,6 +23,7 @@
 import {
   basename,
   expandGlobSync,
+  Fuse,
   join,
   mergeReadableStreams,
   parseFlags,
@@ -31,7 +32,10 @@ import {
 } from "./deps.ts";
 import { projectDir, relPath } from "./utils.ts";
 
-const flags = parseFlags(Deno.args, { "--": true, string: ["threads"] });
+const flags = parseFlags(Deno.args, {
+  "--": true,
+  string: ["threads", "f", "filter"],
+});
 
 const testFiles: string[] = [];
 
@@ -72,6 +76,18 @@ if (flags._.length === 0) {
     }
   }
 }
+
+const filter: string | undefined = flags.filter || flags.f;
+const prefixLength = `${projectDir}/typegate/tests/`.length;
+const fuse = new Fuse(testFiles.map((f) => f.slice(prefixLength)), {
+  includeScore: true,
+  useExtendedSearch: true,
+  threshold: 0.4,
+});
+const filtered = filter ? fuse.search(filter) : null;
+const filteredTestFiles = filter
+  ? filtered.map((res) => testFiles[res.refIndex])
+  : testFiles;
 
 const cwd = resolve(projectDir, "typegate");
 const tmpDir = join(projectDir, "tmp");
@@ -162,7 +178,7 @@ function createRun(testFile: string): Run {
   };
 }
 
-const queues = [...testFiles];
+const queues = [...filteredTestFiles];
 const runs: Record<string, Run> = {};
 const globalStart = Date.now();
 
@@ -216,12 +232,20 @@ console.log(
     Math.floor(globalDuration / 1_000) % 60
   }s:`,
 );
+
 console.log(
-  `  succcesses: ${successes.length}/${testFiles.length}`,
+  `  successes: ${successes.length}/${filteredTestFiles.length}`,
 );
 console.log(
-  `  failures: ${failures.length}/${testFiles.length}`,
+  `  failures: ${failures.length}/${filteredTestFiles.length}`,
 );
+const filteredOutCount = testFiles.length - filteredTestFiles.length;
+if (filteredOutCount > 0) {
+  console.log(
+    `  ${filteredOutCount} test files were filtered out`,
+  );
+}
+
 console.log("");
 
 if (failures.length > 0) {
