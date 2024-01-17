@@ -445,3 +445,74 @@ def injection(g: Graph):
     g.expose(
         createUser=db.create(user),
     )
+
+
+@typegraph()
+def multi_field_id(g: Graph):
+    db = PrismaRuntime("test", "POSTGRES")
+
+    project = t.struct(
+        {
+            "ownerName": t.string(),
+            "name": t.string(),
+            "description": t.string().optional(),
+        },
+        config={"id": ["ownerName", "name"]},
+    ).rename("Project")
+
+    g.expose(
+        createProject=db.create(project),
+    )
+
+
+@typegraph()
+def foreign_id(g: Graph):
+    db = PrismaRuntime("test", "POSTGRES")
+
+    user = t.struct(
+        {
+            "id": t.uuid(as_id=True, config=["auto"]),
+            "email": t.email(config=["unique"]),
+            "profile": g.ref("Profile").optional(),
+        },
+        name="User",
+    )
+
+    _profile = t.struct(
+        {
+            "user": user,
+            "profilePicUrl": t.uri(),
+            "bio": t.string().optional(),
+        },
+        name="Profile",
+        config={"id": ["user"]},
+    )
+
+    g.expose(
+        createUser=db.create(user),
+    )
+
+
+@typegraph()
+def multi_field_unique(g: Graph):
+    db = PrismaRuntime("test", "POSTGRES")
+
+    account = t.struct(
+        {
+            "id": t.uuid(as_id=True, config=["auto"]),
+            "projects": t.list(g.ref("Project")),
+        }
+    ).rename("Account")
+
+    _project = t.struct(
+        {
+            "id": t.uuid(as_id=True, config=["auto"]),
+            "owner": g.ref("Account"),
+            "name": t.string(),
+        },
+        config={"unique": [["owner", "name"]]},
+    ).rename("Project")
+
+    g.expose(
+        createAccount=db.create(account),
+    )
