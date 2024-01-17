@@ -1713,7 +1713,8 @@
         "idFields",
         "props",
         "typeIdx",
-        "typeName"
+        "typeName",
+        "uniqueConstraints"
       ],
       "properties": {
         "typeIdx": {
@@ -1734,6 +1735,15 @@
           "type": "array",
           "items": {
             "type": "string"
+          }
+        },
+        "uniqueConstraints": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       }

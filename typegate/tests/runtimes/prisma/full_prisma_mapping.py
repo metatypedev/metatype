@@ -50,10 +50,10 @@ def prisma(g: Graph):
 
     extended_profile = t.struct(
         {
-            "id": t.integer(as_id=True),
             "bio": t.string(),
             "user": g.ref("User"),
         },
+        config={"id": ["user"]},
         name="ExtendedProfile",
     )
 
