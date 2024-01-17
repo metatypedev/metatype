@@ -13,13 +13,15 @@ use crate::types::{TypeDef, TypeDefExt};
 use crate::validation::types::validate_value;
 use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
 
+use super::constraints::{find_id_fields, get_struct_level_unique_constraints};
+
 #[derive(Debug)]
 pub struct Model {
     pub type_id: TypeId,
     pub type_name: String,
     pub props: IndexMap<String, Property>,
-    // TODO Vec<String>
-    pub id_field: String,
+    pub id_fields: Vec<String>,
+    pub unique_constraints: Vec<Vec<String>>,
     // property -> relationship name
     pub relationships: IndexMap<String, String>,
 }
@@ -39,45 +41,23 @@ impl TryFrom<TypeId> for Model {
             .name()?
             .ok_or_else(|| errors::unnamed_model(&type_id.repr().unwrap()))?;
 
-        let id_field = Self::find_id_field(&type_name, &props)?;
+        let config = RuntimeConfig::new(typ.base().runtime_config.as_ref());
+
+        let id_fields = find_id_fields(&type_name, &props, &config)?;
+        let unique_constraints = get_struct_level_unique_constraints(&type_name, &config)?;
 
         Ok(Self {
             type_id,
             type_name,
             props,
-            id_field,
+            id_fields,
+            unique_constraints,
             relationships: Default::default(), // populated later
         })
     }
 }
 
 impl Model {
-    fn find_id_field(type_name: &str, props: &IndexMap<String, Property>) -> Result<String> {
-        let id_fields = props
-            .iter()
-            .filter_map(|(k, p)| match p {
-                Property::Scalar(prop) => match prop.quantifier {
-                    Cardinality::One => prop
-                        .type_id
-                        .as_type_def()
-                        .unwrap()
-                        .unwrap()
-                        .base()
-                        .as_id
-                        .then(|| k.clone()),
-                    _ => None,
-                },
-                _ => None,
-            })
-            .collect::<Vec<_>>();
-
-        match id_fields.len() {
-            0 => Err(errors::id_field_not_found(type_name)),
-            1 => Ok(id_fields.into_iter().next().unwrap()),
-            _ => Err(errors::multiple_id_fields(type_name)),
-        }
-    }
-
     pub fn iter_props(&self) -> impl Iterator<Item = (&String, &Property)> {
         self.props.iter()
     }
