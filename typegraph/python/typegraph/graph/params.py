@@ -28,7 +28,7 @@ class ExtendedProfiler(StdOauth2Profiler):
 
 @dataclass
 class CustomProfiler(StdOauth2Profiler):
-    id: "t.func"
+    func: "t.func"
 
 
 class Rate:
@@ -211,7 +211,7 @@ class RawAuth:
             )
         elif isinstance(profiler, CustomProfiler):
             res = wit_utils.oauth2_with_custom_profiler(
-                store, service, scopes, profiler.id
+                store, service, scopes, profiler.func.id
             )
         else:  # default profiler
             res = wit_utils.oauth2(store, service, scopes)
