@@ -5,7 +5,7 @@
  * Translate typegraph in python to deno
  * This makes assumption at how a python typegraph looks like at 0.3.2
  * A better implementation would be to
- * (1) actually parse python source
+ * (1) parse the python source directly and 1-1 map the imports/functions + refer to the ambient node sdk to validate the imports or attempt to autoresolve them.
  * (2) emit typescript code directly from the serialized json.
  *
  * Usage:
@@ -161,8 +161,32 @@ const chain: Array<ReplaceStep> = [
       return text.replace(exposed, `{${exposed.replace(/=/g, ":")}}`);
     },
   },
+  {
+    description: "Translate keywords",
+    apply(text: string) {
+      const replMap = Object.entries({
+        "True": "true",
+        "False": "false",
+        "None": "null",
+      });
+      return replMap
+        .reduce((prev, [tk, repl]) => prev.replaceAll(tk, repl), text);
+    },
+  },
+  // {
+  //   description: "variable assignements",
+  //   apply(text: string) {
+  //     return text;
+  //   },
+  // },
   // {
   //   description: "Translate multiline comments",
+  //   apply(text: string) {
+  //     return text;
+  //   },
+  // },
+  // {
+  //   description: "Translate multiline string",
   //   apply(text: string) {
   //     return text;
   //   },
