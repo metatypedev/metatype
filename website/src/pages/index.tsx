@@ -14,6 +14,7 @@ import "react-lite-youtube-embed/dist/LiteYouTubeEmbed.css";
 
 import { ChoicePicker } from "../components/ChoicePicker";
 import { CompareLandscape } from "../components/CompareLandscape";
+import Heading from "@theme/Heading";
 
 function Header() {
   return (
@@ -22,13 +23,13 @@ function Header() {
         <div className="rounded-full bg-white w-40 h-40 flex px-6 m-auto mb-10">
           <img src="images/logo.svg" alt="Metatype logo" />
         </div>
-        <h1 className="text-5xl">
+        <Heading as="h1" className="text-5xl">
           Declarative{" "}
           <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-metared from-15% via-metablue via-50% to-metared to-85%">
             API development
           </span>{" "}
           platform
-        </h1>
+        </Heading>
         <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[850px]">
           Build <strong>serverless</strong> backends with{" "}
           <strong>zero-trust</strong> and{" "}
@@ -72,10 +73,10 @@ function Intro({
             onChange={setProfile}
           />
         </div>
-        <h2>
+        <Heading as="h2">
           <span className="text-metared">Programming</span> is like{" "}
           <span className="text-metared">castle</span> building
-        </h2>
+        </Heading>
         <p>
           And castle building is{" "}
           <strong>hard</strong>. Even the best teams can struggle to build
@@ -97,10 +98,10 @@ function Stability(): JSX.Element {
   return (
     <section>
       <div>
-        <h2>
+        <Heading as="h2">
           Build <span className="text-metared">stable</span> castle with{" "}
           <span className="text-metared">typegraphs</span>
-        </h2>
+        </Heading>
         <p>
           Typegraphs are programmable <strong>virtual graphs</strong>{" "}
           describing all the components of your stack. They enable you to
@@ -121,10 +122,10 @@ function Modularity(): JSX.Element {
   return (
     <section>
       <div>
-        <h2>
+        <Heading as="h2">
           Build <span className="text-metared">modulable</span> castle with{" "}
           <span className="text-metared">typegate</span>
-        </h2>
+        </Heading>
         <p>
           Typegate is a distributed GraphQL/REST <strong>query engine</strong>
           {" "}
@@ -146,10 +147,10 @@ function Reusability(): JSX.Element {
   return (
     <section>
       <div>
-        <h2>
+        <Heading as="h2">
           Build <span className="text-metared">reusable</span> castle with{" "}
           <span className="text-metared">Metatype</span>
-        </h2>
+        </Heading>
         <p>
           Install third parties as <strong>dependencies</strong>{" "}
           and start reusing components. The Meta CLI offers you live reloading
@@ -246,7 +247,7 @@ function Features(): JSX.Element {
               <Svg width="200" height="200" role="img" />
             </div>
             <div>
-              <h3>{props.title}</h3>
+              <Heading as="h3">{props.title}</Heading>
               <p>{props.description}</p>
             </div>
           </div>
@@ -260,10 +261,10 @@ function TryIt(): JSX.Element {
   return (
     <section>
       <div>
-        <h2>
+        <Heading as="h2">
           Try the <span className="text-metared">playground</span> and{" "}
           <span className="text-metared">deploy</span>
-        </h2>
+        </Heading>
         <p>
           Metatype's unique approach combines the{" "}
           <strong>best of the two worlds</strong>. You are quickly productive
@@ -273,7 +274,7 @@ function TryIt(): JSX.Element {
       </div>
       <div className="w-full">
         <TGExample
-          python={require("./index.py")}
+          python={require("../../typegraphs/index.py")}
           typegraph="homepage"
           variables={{ email: "fill-me", message: "Great tool!" }}
           noTool={true}
@@ -344,10 +345,10 @@ function Runtimes(): JSX.Element {
   return (
     <section>
       <div>
-        <h2>
+        <Heading as="h2">
           <span className="text-metared">Easily</span> add your{" "}
           <span className="text-metared">own</span> runtime
-        </h2>
+        </Heading>
         <p>
           More than 12 runtimes are natively supported. Usually it takes less
           than a day to integrate a new one and support the most frequent
@@ -373,10 +374,10 @@ function DemoVideo(): JSX.Element {
   return (
     <section>
       <div>
-        <h2>
+        <Heading as="h2">
           Forget weeks, <span className="text-metared">deliver</span> APIs{" "}
           <span className="text-metared">in hours</span>
-        </h2>
+        </Heading>
         <p>
           Watch the <strong>3 minutes introduction</strong>{" "}
           of the Metatype platform and start designing your own typegraph. Once
@@ -403,10 +404,10 @@ function Landscape(): JSX.Element {
   return (
     <section>
       <div>
-        <h2>
+        <Heading as="h2">
           Bringing <span className="text-metared">speed</span> and{" "}
           <span className="text-metared">novelty</span> to backend development
-        </h2>
+        </Heading>
         <p className="text-xl">
           Metatype fills a gap in the tech landscape by introducing a new way to
           build fast and developer-friendly APIs that are{" "}

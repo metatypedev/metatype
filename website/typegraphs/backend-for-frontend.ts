@@ -7,8 +7,8 @@ import { HttpRuntime } from "@typegraph/sdk/runtimes/http.js";
 typegraph({
   name: "backend-for-frontend",
 }, (g) => {
-  const pub = Policy.public();
   const github = new HttpRuntime("https://api.github.com");
+  const pub = Policy.public();
 
   const stargazer = t.struct(
     {
@@ -26,6 +26,6 @@ typegraph({
       t.struct({}),
       t.list(stargazer),
       { path: "/repos/metatypedev/metatype/stargazers?per_page:2" },
-    ),
+    ).withPolicy(pub),
   });
 });
