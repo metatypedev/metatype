@@ -359,9 +359,12 @@ export class SchemaGenerator {
       if (field.fkeys.length > 0) {
         fkeysMap.set(field.name, field.fkeys.map((fkey) => fkey.name));
       }
-      if (field.fkeysUnique && !model.idFields.includes(field.name)) {
+      if (
+        field.fkeysUnique &&
+        !(model.idFields.length === 1 && model.idFields[0] === field.name)
+      ) {
         const fieldNames = field.fkeys.map((fkey) => fkey.name);
-        tags.push(`@@unique(${fieldNames.join(", ")})`);
+        tags.push(`@@unique([${fieldNames.join(", ")}])`);
       }
     }
 
@@ -377,6 +380,15 @@ export class SchemaGenerator {
     } else {
       const names = ids.join(", ");
       tags.push(`@@id([${names}])`);
+    }
+
+    // expand foreign keys
+    const uniqueConstraints = model.uniqueConstraints.map(
+      (constraint) => constraint.flatMap((key) => fkeysMap.get(key) ?? [key]),
+    );
+    for (const constraint of uniqueConstraints) {
+      const names = constraint.join(", ");
+      tags.push(`@@unique([${names}])`);
     }
 
     const formattedFields = modelFields.map((field) =>

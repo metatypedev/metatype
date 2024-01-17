@@ -490,15 +490,29 @@ def foreign_id(g: Graph):
 
     g.expose(
         createUser=db.create(user),
-        # createProfile=db.create(profile),
     )
 
 
 @typegraph()
-def mixed_id(g: Graph):
-    pass
-
-
-@typegraph()
 def multi_field_unique(g: Graph):
-    pass
+    db = PrismaRuntime("test", "POSTGRES")
+
+    account = t.struct(
+        {
+            "id": t.uuid(as_id=True, config=["auto"]),
+            "projects": t.list(g.ref("Project")),
+        }
+    ).rename("Account")
+
+    _project = t.struct(
+        {
+            "id": t.uuid(as_id=True, config=["auto"]),
+            "owner": g.ref("Account"),
+            "name": t.string(),
+        },
+        config={"unique": [["owner", "name"]]},
+    ).rename("Project")
+
+    g.expose(
+        createAccount=db.create(account),
+    )

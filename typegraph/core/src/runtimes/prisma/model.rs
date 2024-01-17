@@ -13,7 +13,7 @@ use crate::types::{TypeDef, TypeDefExt};
 use crate::validation::types::validate_value;
 use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
 
-use super::id_fields::find_id_fields;
+use super::constraints::{find_id_fields, get_struct_level_unique_constraints};
 
 #[derive(Debug)]
 pub struct Model {
@@ -21,6 +21,7 @@ pub struct Model {
     pub type_name: String,
     pub props: IndexMap<String, Property>,
     pub id_fields: Vec<String>,
+    pub unique_constraints: Vec<Vec<String>>,
     // property -> relationship name
     pub relationships: IndexMap<String, String>,
 }
@@ -42,13 +43,15 @@ impl TryFrom<TypeId> for Model {
 
         let config = RuntimeConfig::new(typ.base().runtime_config.as_ref());
 
-        let id_fields = find_id_fields(&type_name, &props, config)?;
+        let id_fields = find_id_fields(&type_name, &props, &config)?;
+        let unique_constraints = get_struct_level_unique_constraints(&type_name, &config)?;
 
         Ok(Self {
             type_id,
             type_name,
             props,
             id_fields,
+            unique_constraints,
             relationships: Default::default(), // populated later
         })
     }

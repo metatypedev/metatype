@@ -512,13 +512,34 @@ Meta.test("schema generation", async (t) => {
             id String @db.Uuid @default(uuid()) @id
             email String @db.Text @unique
             profile Profile? @relation(name: "__rel_Profile_User_1")
-        }
+        } 
 
         model Profile {
             user User @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
             userId String @db.Uuid @id
             profilePicUrl String @db.Text
             bio String? @db.Text
+        } 
+      `,
+    );
+  });
+
+  await t.should("generate with multi-field unique constraint", async () => {
+    await assertGeneratedSchema(
+      "multi-field-unique",
+      outdent`
+        model Account {
+            id String @db.Uuid @default(uuid()) @id
+            projects Project[] @relation(name: "__rel_Project_Account_1")
+        }
+
+        model Project {
+            id String @db.Uuid @default(uuid()) @id
+            owner Account @relation(name: "__rel_Project_Account_1", fields: [ownerId], references: [id])
+            ownerId String @db.Uuid
+            name String @db.Text
+
+            @@unique([ownerId, name])
         }
       `,
     );

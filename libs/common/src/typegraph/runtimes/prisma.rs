@@ -130,6 +130,7 @@ pub struct Model {
     pub type_name: String,
     pub props: Vec<Property>,
     pub id_fields: Vec<String>,
+    pub unique_constraints: Vec<Vec<String>>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

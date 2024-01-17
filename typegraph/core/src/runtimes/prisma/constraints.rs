@@ -70,7 +70,7 @@ fn find_id_part_fields(
 
 fn find_struct_level_ids(
     type_name: &str,
-    config: RuntimeConfig<'_>,
+    config: &RuntimeConfig<'_>,
     props: &IndexMap<String, Property>,
 ) -> Result<Option<Vec<String>>> {
     let id_config: Option<Vec<String>> = config.get("id").ok().flatten();
@@ -139,7 +139,7 @@ fn find_struct_level_ids(
 pub fn find_id_fields(
     type_name: &str,
     props: &IndexMap<String, Property>,
-    config: RuntimeConfig<'_>,
+    config: &RuntimeConfig<'_>,
 ) -> Result<Vec<String>> {
     let as_id_field = find_as_id_field(type_name, props)?;
     let id_part_fields = find_id_part_fields(type_name, props)?;
@@ -154,4 +154,23 @@ pub fn find_id_fields(
             .to_string()
             .into()),
     }
+}
+
+pub fn get_struct_level_unique_constraints(
+    type_name: &str,
+    config: &RuntimeConfig<'_>,
+) -> Result<Vec<Vec<String>>> {
+    let unique_config: Option<Vec<Vec<String>>> = config.get("unique").ok().flatten();
+
+    let Some(unique_config) = unique_config else {
+        return Ok(vec![]);
+    };
+
+    for unique_fields in &unique_config {
+        if unique_fields.is_empty() {
+            return Err(format!("unexpected empty unique constraint in model {type_name}").into());
+        }
+    }
+
+    Ok(unique_config)
 }
