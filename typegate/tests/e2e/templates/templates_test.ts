@@ -16,12 +16,17 @@ const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
     const version = await get_version();
     console.log(version);
     for await (const f of expandGlob("**/*.ts", { root: dir })) {
-      const data = await Deno.readTextFile(f.path);
-      const level = f.path.replace(projectDir, "").split("/").length - 1;
+      // FIXME: deno is unable to map the types from .d.ts files when used locally
+      const data = (await Deno.readTextFile(f.path)).replace(
+        /\(\s*g\s*\)/,
+        "(g: any)",
+      );
+      const level = f.path.replace(projectDir, "").split("/").length - 2;
       const newData = data.replaceAll(
         `npm:@typegraph/sdk@${version}`,
-        `${Array(level).fill("..").join("/")}/typegraph/deno/src`,
+        `${Array(level).fill("..").join("/")}/typegraph/node/sdk/dist`,
       );
+
       await Deno.writeTextFile(f.path, newData);
     }
   },
