@@ -101,6 +101,21 @@ export class DenoRuntime extends Runtime {
     );
   }
 
+  static<
+    P extends t.Typedef,
+  >(out: P, value: any) {
+    const mat = {
+      _id: runtimes.registerDenoStatic({
+        value: JSON.stringify(value),
+      }, out._id),
+    };
+    return t.func(
+      t.struct({}),
+      out,
+      mat,
+    );
+  }
+
   policy(name: string, _code: string): Policy;
   policy(name: string, data: Omit<DenoFunc, "effect">): Policy;
   policy(name: string, data: string | Omit<DenoFunc, "effect">): Policy {

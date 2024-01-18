@@ -2,6 +2,7 @@
     "compilerOptions": {
         "strict": true,
         "moduleResolution": "node16",
+        "module": "NodeNext",
         "esModuleInterop": true        
     }
 }
