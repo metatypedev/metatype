@@ -13,6 +13,7 @@
 
 import { basename, dirname, join } from "std/path/mod.ts";
 import { parseFlags, resolve } from "./deps.ts";
+import { camelCase, Cursor, findCursors, nextMatch } from "./utils.ts";
 
 const args = parseFlags(Deno.args, {
   string: ["file"],
@@ -30,74 +31,6 @@ if (!args.file) {
 type ReplaceStep = { description: string; apply: (text: string) => string };
 type Failure = { error: Error | string; stepDescription: string };
 type StepResult = { output: string; errors: Array<Failure> };
-type Cursor = { start: number; end: number; length: number; match: string };
-
-function upperFirst(str: string) {
-  return str.charAt(0).toUpperCase() + str.substring(1);
-}
-
-function camelCase(str: string) {
-  return str
-    .split(/_+/g)
-    .map((chunk, idx) => idx > 0 ? upperFirst(chunk) : chunk)
-    .join("");
-}
-
-/**
- * Enhanced `indexOf` with regex support and position information
- */
-function nextMatch(
-  text: string,
-  word: string | RegExp,
-  pos = 0,
-): Cursor | null {
-  if (word instanceof RegExp) {
-    const searchPos = Math.min(text.length, pos);
-    const nextText = text.substring(searchPos);
-    const res = word.exec(nextText);
-    word.lastIndex = 0; // always reset (js!)
-    return res
-      ? {
-        match: res[0],
-        start: searchPos + res.index,
-        end: searchPos + res.index + res[0].length - 1,
-        length: res[0].length,
-      }
-      : null;
-  }
-  const start = text.indexOf(word, pos);
-  return start >= 0
-    ? {
-      start,
-      end: start + word.length - 1,
-      match: word,
-      length: word.length,
-    }
-    : null;
-}
-
-/**
- * Determine all indexOf with position information
- */
-export function findCursors(
-  text: string,
-  word: string | RegExp,
-): Array<Cursor> {
-  const matches = [] as Array<Cursor>;
-
-  let cursor = 0;
-  while (cursor >= 0) {
-    const res = nextMatch(text, word, cursor);
-    if (res != null) {
-      cursor = res.end;
-      matches.push(res);
-    } else {
-      break;
-    }
-  }
-
-  return matches;
-}
 
 /**
  * Capture args string in function-calls
