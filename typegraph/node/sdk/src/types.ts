@@ -545,14 +545,13 @@ export class Func<
   }
 
   rate(
-    calls: boolean,
-    weight?: number,
+    inp: { calls: boolean; weight?: number },
   ): Func<P, I, O, M> {
     return func(
       this.inp,
       this.out,
       this.mat,
-      { rateCalls: calls ?? false, rateWeight: weight },
+      { rateCalls: inp.calls ?? false, rateWeight: inp.weight },
     );
   }
 
