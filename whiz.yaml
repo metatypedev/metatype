@@ -47,7 +47,7 @@ typegraph:
   watch:
     - "typegraph/core/src/**/*.rs"
     - "typegraph/core/wit/*.wit"
-    - "typegraph/node/src/**/*.ts"
+    - "typegraph/node/sdk/src/**/*.ts"
   env:
     WASM_FILE: target/debug/typegraph_core.wasm
   command: |
