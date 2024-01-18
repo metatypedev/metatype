@@ -544,6 +544,18 @@ export class Func<
     );
   }
 
+  rate(
+    calls: boolean,
+    weight?: number,
+  ): Func<P, I, O, M> {
+    return func(
+      this.inp,
+      this.out,
+      this.mat,
+      { rateCalls: calls ?? false, rateWeight: weight },
+    );
+  }
+
   static fromTypeFunc(data: FuncParams) {
     return func(
       new Typedef(data.inp, {}) as Struct<{ [key: string]: Typedef }>,
