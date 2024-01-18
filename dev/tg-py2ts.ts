@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 /**
- * Translate typegraph in python to deno
- * This makes assumption at how a python typegraph looks like at 0.3.2
+ * Translate typegraph in python to deno (experimental) for version 0.3.2
  * A better implementation would be to
  * (1) parse the python source directly and 1-1 map the imports/functions + refer to the ambient node sdk to validate the imports or attempt to autoresolve them.
  * (2) emit typescript code directly from the serialized json.
@@ -31,6 +30,7 @@ if (!args.file) {
 type ReplaceStep = { description: string; apply: (text: string) => string };
 type Failure = { error: Error | string; stepDescription: string };
 type StepResult = { output: string; errors: Array<Failure> };
+type Cursor = { start: number; end: number; length: number; match: string };
 
 function upperFirst(str: string) {
   return str.charAt(0).toUpperCase() + str.substring(1);
@@ -43,42 +43,141 @@ function camelCase(str: string) {
     .join("");
 }
 
-function captureInsideParenthesis(text: string, prefix: string) {
-  const cursor = text.lastIndexOf(prefix) + prefix.length;
-  if (cursor < 0) "";
+/**
+ * Enhanced `indexOf` with regex support and position information
+ */
+function nextMatch(
+  text: string,
+  word: string | RegExp,
+  pos = 0,
+): Cursor | null {
+  if (word instanceof RegExp) {
+    const searchPos = Math.min(text.length, pos);
+    const nextText = text.substring(searchPos);
+    const res = word.exec(nextText);
+    word.lastIndex = 0; // always reset (js!)
+    return res
+      ? {
+        match: res[0],
+        start: searchPos + res.index,
+        end: searchPos + res.index + res[0].length - 1,
+        length: res[0].length,
+      }
+      : null;
+  }
+  const start = text.indexOf(word, pos);
+  return start >= 0
+    ? {
+      start,
+      end: start + word.length - 1,
+      match: word,
+      length: word.length,
+    }
+    : null;
+}
+
+/**
+ * Determine all indexOf with position information
+ */
+export function findCursors(
+  text: string,
+  word: string | RegExp,
+): Array<Cursor> {
+  const matches = [] as Array<Cursor>;
+
+  let cursor = 0;
+  while (cursor >= 0) {
+    const res = nextMatch(text, word, cursor);
+    if (res != null) {
+      cursor = res.end;
+      matches.push(res);
+    } else {
+      break;
+    }
+  }
+
+  return matches;
+}
+
+/**
+ * Capture args string in function-calls
+ */
+function captureInsideParenthesis(
+  text: string,
+  prefix: string | RegExp,
+  offset?: number, // inclusive
+): Cursor | null {
+  const res = nextMatch(text, prefix, offset);
+
+  if (res == null) {
+    return null;
+  }
+
+  const searchStart = res.end + 1;
+  let startPos = null;
   let parenthStack = 0;
+  let lastOpenedParenth = -1;
   let expr = "";
-  for (let i = cursor; i < text.length; i++) {
+  for (let i = searchStart; i < text.length; i++) {
     const char = text.charAt(i);
-    if (char == "(" || char == ")") {
-      parenthStack += char == "(" ? 1 : -1;
-      if (parenthStack == 0) break; // first "(" has closed
-      if (parenthStack < 0) {
-        const peekRadius = 10;
-        throw new Error(
-          `invalid parenthesis near .. ${
-            text.substring(
-              Math.max(0, i - peekRadius),
-              Math.min(text.length, i + peekRadius),
-            ).replace(/[\n\r]/g, "\\n")
-              .trim()
-          } ..`,
-        );
+    const isParenthesis = char == "(" || char == ")";
+    if (lastOpenedParenth < 0 && !isParenthesis) {
+      if (/\s/.test(char)) {
+        continue; // prefix\s*()
+      } else {
+        break; // prefix\s*something\s*()
       }
     }
-    if (i > cursor) {
+
+    if (isParenthesis) {
+      if (char == "(") {
+        lastOpenedParenth = i;
+        parenthStack += 1;
+      } else {
+        parenthStack -= 1;
+      }
+      // first "(" has closed or we reached a premature end
+      if (parenthStack <= 0) break;
+    }
+    if (i > searchStart) {
+      startPos = startPos == null ? i : startPos;
       expr += char;
     }
   }
-  return expr;
+
+  // no-op
+  if (lastOpenedParenth == null) {
+    return null;
+  }
+
+  if (parenthStack != 0) {
+    const peekRadius = 10;
+    throw new Error(
+      `invalid parenthesis near .. ${
+        text.substring(
+          Math.max(0, lastOpenedParenth - peekRadius),
+          Math.min(text.length, lastOpenedParenth + peekRadius),
+        ).replace(/[\n\r]/g, "\\n")
+          .trim()
+      } ..`,
+    );
+  }
+
+  const start = startPos ?? lastOpenedParenth; // handle 0 length epxr: prefix()
+  return {
+    start,
+    end: start + expr.length,
+    length: expr.length,
+    match: expr,
+  };
 }
 
+// Concept:
+// source => step1 => step2(input step1) => .. => output
 const chain: Array<ReplaceStep> = [
   {
     description: "imports",
     apply(text: string) {
-      // TODO
-      // replace all imports first
       return text.replace(
         /from\s+(.+?)\s+import\s+(.+,?)\s/g,
         (m: string, pkg, imp) => {
@@ -135,7 +234,9 @@ const chain: Array<ReplaceStep> = [
       }
 
       const name = tgName.replace(/_+/g, "-");
-      const config = captureInsideParenthesis(text, prefixTg).replace(
+      const nextParenthesis = captureInsideParenthesis(text, prefixTg) ??
+        { match: "" };
+      const config = nextParenthesis.match.replace(
         /=/g,
         ":",
       );
@@ -145,7 +246,7 @@ const chain: Array<ReplaceStep> = [
     },
   },
   {
-    description: "Function names on an object: foo.some_func => foo.someFunc",
+    description: "Function name on an object: foo.some_func => foo.someFunc",
     apply(text: string) {
       return text
         .replace(
@@ -157,12 +258,16 @@ const chain: Array<ReplaceStep> = [
   {
     description: "Expose expression",
     apply(text: string) {
-      const exposed = captureInsideParenthesis(text, "g.expose");
-      return text.replace(exposed, `{${exposed.replace(/=/g, ":")}}`);
+      const exposed = captureInsideParenthesis(text, "g.expose") ??
+        { match: "" };
+      return text.replace(
+        exposed.match,
+        `{${exposed.match.replace(/=/g, ":")}}`,
+      );
     },
   },
   {
-    description: "Translate keywords",
+    description: "Keyword translation",
     apply(text: string) {
       const replMap = Object.entries({
         "True": "true",
@@ -173,10 +278,74 @@ const chain: Array<ReplaceStep> = [
         .reduce((prev, [tk, repl]) => prev.replaceAll(tk, repl), text);
     },
   },
+  {
+    description: "Scalar type argument translation",
+    apply(text: string) {
+      const objectify = (list: Array<[string, string]>) => {
+        return `{${list.map(([k, v]) => `${k}: ${v}`).join(", ")}}`;
+      };
+      const prefix = /t\.(integer|float|string|boolean|uuid)/g;
+      const cursors = findCursors(text, prefix)
+        .map(({ start }) =>
+          captureInsideParenthesis(text, prefix, start) ?? { match: "" }
+        );
+
+      return cursors.reduce((prev, { match }) => {
+        if (match == "") return prev;
+        const basic = ["min", "max", "xmin", "xmax"];
+        const splits = match.split(",")
+          .map((arg) => arg.split("="));
+        const left = [] as Array<[string, string]>;
+        const right = [] as Array<[string, string]>;
+        for (const [k, v] of splits) {
+          const ptr = basic.includes(k) ? left : right;
+          ptr.push([camelCase(k.trim()), v]);
+        }
+        return prev.replace(
+          match,
+          `${objectify(left)}, ${objectify(right)}`,
+        );
+      }, text);
+    },
+  },
+  {
+    description: "Comment name=..",
+    apply(text: string) {
+      // struc({}, name=..) => struct({}/*rename("..")*/)
+      const prefix = "t.struct";
+      return findCursors(text, prefix)
+        .map(({ start }) => {
+          const insideParenth = captureInsideParenthesis(text, prefix, start) ??
+            { match: "" };
+          return insideParenth.match.match(/,?\s*name\s*=\s*("\w+")/);
+        }).reduce(
+          (prev, rename) =>
+            rename === null ? prev : ({
+              value: prev.value.replace(
+                rename[0],
+                `/*rename(${rename[1].trim()})*/`,
+              ),
+            }),
+          { value: text },
+        ).value;
+    },
+  },
   // {
-  //   description: "variable assignements",
+  //   description: "Variable assignements",
   //   apply(text: string) {
-  //     return text;
+  //     // at this stage g.expose is already translated
+  //     return text.split(/\n/g).map((line) => {
+  //       // assignement test
+  //       if (!/\s*\w+\s*=.+\s/.test(line)) {
+  //         return line;
+  //       }
+  //       const [left, right] = line.split("=");
+  //       if (right && !/config/.test(left)) {
+  //         const indent = left.match(/\s*/)?.[0] ?? "";
+  //         return `${indent}const ${left.trim()} = ${right.trim()}`;
+  //       }
+  //       return line;
+  //     }).join("\n");
   //   },
   // },
   // {
