@@ -121,6 +121,25 @@ Meta.test("Deno runtime: use local imports", async (t) => {
   });
 });
 
+Meta.test("Deno runtime with typescript", async (t) => {
+  const e = await t.engine("runtimes/deno/deno_static.ts");
+  await t.should("work with static values", async () => {
+    await gql`
+      query {
+        simpleStatic
+        structStatic {
+          a
+        }
+      }
+    `.expectData({
+      simpleStatic: "One!",
+      structStatic: {
+        a: "Hello World",
+      },
+    }).on(e);
+  });
+});
+
 Meta.test("Deno runtime: file name reloading", async (t) => {
   const load = async (value: number) => {
     Deno.env.set("DYNAMIC", join("dynamic", `${value}.ts`));
