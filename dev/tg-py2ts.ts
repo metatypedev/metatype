@@ -231,7 +231,7 @@ const chain: Array<ReplaceStep> = [
         const left = [] as Array<[string, string]>;
         const right = [] as Array<[string, string]>;
         for (const [k, v] of splits) {
-          const ptr = basic.includes(k) ? left : right;
+          const ptr = basic.includes(k.trim()) ? left : right;
           ptr.push([camelCase(k.trim()), v]);
         }
         return prev.replace(
