@@ -19,7 +19,7 @@ import { Reduce } from "./gen/interfaces/metatype-typegraph-utils.js";
 import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.js";
 import { Materializer } from "./runtimes/mod.js";
 import { mapValues } from "./deps/mod.js";
-import Policy from "./policy.js";
+import Policy, { PolicyPerEffectObject } from "./policy.js";
 import { buildReduceData, serializeRecordValues } from "./utils/func_utils.js";
 import {
   serializeFromParentInjection,
@@ -29,7 +29,7 @@ import {
 import { InjectionValue } from "./utils/type_utils.js";
 import { InheritDef } from "./typegraph.js";
 
-export type PolicySpec = Policy | {
+export type PolicySpec = Policy | PolicyPerEffectObject | {
   none: Policy;
   create: Policy;
   update: Policy;
@@ -58,9 +58,13 @@ export function getPolicyChain(
     if (p instanceof Policy) {
       return { tag: "simple", val: p._id } as const;
     }
+
     return {
       tag: "per-effect",
-      val: mapValues(p, (v: any) => v._id) as unknown as PolicyPerEffect,
+      val: mapValues(
+        p instanceof PolicyPerEffectObject ? p.value : p,
+        (v: any) => v._id,
+      ) as unknown as PolicyPerEffect,
     } as const;
   });
 }
