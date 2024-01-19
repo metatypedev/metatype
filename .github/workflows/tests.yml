@@ -75,13 +75,22 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y --no-install-recommends libclang-dev clang
+
+          cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
+          mkdir -p $(dirname $WASM_FILE)
+          wasm-opt -Oz target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE.opt
+          wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
+          rm -rf typegraph/node/sdk/src/gen typegraph/node/sdk/dist
+          jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen
           cd typegraph/node
           pnpm install
           pnpm run sdk-build
+          cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
           cd ../..
           cd website
           pnpm install --frozen-lockfile
           cd ..
+
           cd dev-tools
           pnpm install --frozen-lockfile --recursive
           cd ..
