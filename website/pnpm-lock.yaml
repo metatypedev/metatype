@@ -40,6 +40,9 @@ dependencies:
   '@tailwindcss/container-queries':
     specifier: ^0.1.1
     version: 0.1.1(tailwindcss@3.4.0)
+  '@typegraph/sdk':
+    specifier: file:../typegraph/node/sdk/dist
+    version: file:../typegraph/node/sdk/dist
   autoprefixer:
     specifier: ^10.4.16
     version: 10.4.16(postcss@8.4.32)
@@ -15841,3 +15844,8 @@ packages:
 
   /zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
+
+  file:../typegraph/node/sdk/dist:
+    resolution: {directory: ../typegraph/node/sdk/dist, type: directory}
+    name: '@typegraph/sdk'
+    dev: false

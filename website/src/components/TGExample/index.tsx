@@ -5,15 +5,27 @@ import MiniQL, { MiniQLProps } from "@site/src/components/MiniQL";
 import React from "react";
 
 interface TGExampleProps extends MiniQLProps {
-  python: { content: string; path: string };
+  python?: { content: string; path: string };
+  typescript?: { content: string; path: string}
 }
 
-export default function TGExample({ python, ...props }: TGExampleProps) {
+export default function TGExample({ python, typescript, ...props }: TGExampleProps) {
+  const code = [
+    python && {
+      content: python.content,
+      codeLanguage: "python",
+      codeFileUrl: python.path
+    },
+    typescript && {
+      content: typescript.content,
+      codeLanguage: "typescript",
+      codeFileUrl: typescript.path
+    }
+  ].filter((v) => !!v);
+
   return (
     <MiniQL
-      code={python.content}
-      codeLanguage="python"
-      codeFileUrl={python.path}
+      code={code.length == 0 ? undefined : code}
       {...props}
     />
   );
