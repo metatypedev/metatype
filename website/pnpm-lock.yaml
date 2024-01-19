@@ -41,8 +41,8 @@ dependencies:
     specifier: ^0.1.1
     version: 0.1.1(tailwindcss@3.4.0)
   '@typegraph/sdk':
-    specifier: file:../typegraph/node/sdk/dist
-    version: file:../typegraph/node/sdk/dist
+    specifier: ^0.3.2
+    version: 0.3.2
   autoprefixer:
     specifier: ^10.4.16
     version: 10.4.16(postcss@8.4.32)
@@ -4995,6 +4995,10 @@ packages:
   /@trysound/sax@0.2.0:
     resolution: {integrity: sha512-L7z9BgrNEcYyUYtF+HaEfiS5ebkh9jXqbszz7pC0hRBPaatV0XjSD3+eHrpqFemQfgwiFF0QPIarnIihIDn7OA==}
     engines: {node: '>=10.13.0'}
+
+  /@typegraph/sdk@0.3.2:
+    resolution: {integrity: sha512-31ipZUGeTwkoBOQwU0xyMbb0OxMRFedl6T3y6hbXIygcjqhQR3f3U4byy0bsENyx1r3snyT3+o3BgwUd7hGtPA==}
+    dev: false
 
   /@types/acorn@4.0.6:
     resolution: {integrity: sha512-veQTnWP+1D/xbxVrPC3zHnCZRjSrKfhbMUlEA43iMZLu7EsnTtkJklIuwrCPbOi8YkvDQAiW05VQQFvvz9oieQ==}
@@ -15844,8 +15848,3 @@ packages:
 
   /zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
-
-  file:../typegraph/node/sdk/dist:
-    resolution: {directory: ../typegraph/node/sdk/dist, type: directory}
-    name: '@typegraph/sdk'
-    dev: false
