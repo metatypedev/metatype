@@ -75,6 +75,10 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y --no-install-recommends libclang-dev clang
+          cd typegraph/node
+          pnpm install
+          pnpm run sdk-build
+          cd ../..
           cd website
           pnpm install --frozen-lockfile
           cd ..
