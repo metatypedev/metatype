@@ -13,10 +13,8 @@ gate1: &tp
     PACKAGED: "false"
     LOG_LEVEL: "DEBUG"
     RUST_LOG: "xtask=info,error"
-    DYLD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$DYLD_LIBRARY_PATH" # macOS
-    LD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$LD_LIBRARY_PATH" # linux
     DEBUG: "true"
-    REDIS_URL: "redis://:password@localhost:6379/0"
+      # REDIS_URL: "redis://:password@localhost:6379/0"
     TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
     TG_ADMIN_PASSWORD: "password"
   command: "cargo run -p typegate"
@@ -108,24 +106,13 @@ setup:
     - typegraph/python/pyproject.toml
     - website/package.json
   env:
-    WASM_TOOLS_VERSION: "1.0.53"
-    JCO_VERSION: "0.14.2"
-    CARGO_INSTA_VERSION: "1.33.0"
-    WASMEDGE_VERSION: "0.13.5"
-    WASM_OPT_VERSION: "0.116.0"
+    GHJK_VERSION: "f380522"
   command: |
     set -e
+    curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh |  bash
+    . $(ghjk print share-dir-path)/env.sh
+    ghjk p sync
+    echo "exec ./. to refresh env vars"
     [ -d .venv ] || python3 -m venv .venv
     poetry install --sync --no-root
-    ~/.wasmedge/bin/wasmedge --version | grep -q $WASMEDGE_VERSION || curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
-    curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
-    cargo binstall wasm-tools --version $WASM_TOOLS_VERSION --locked -y
-    cargo binstall wasm-opt --version $WASM_OPT_VERSION --locked -y
-    cargo binstall cargo-insta --version $CARGO_INSTA_VERSION --locked -y
-    npm install --global @bytecodealliance/jco@$JCO_VERSION
-    cd website
-    pnpm install
-    cd ..
-    cd typegraph/node
-    pnpm install
-    cd ../..
+    yes | pnpm install --recursive

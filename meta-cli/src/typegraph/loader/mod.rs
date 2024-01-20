@@ -79,14 +79,18 @@ impl<'a> Loader<'a> {
                 });
             }
         }
-        let command = Self::get_load_command(ModuleType::try_from(&*path).unwrap(), &path).await?;
+        let command = Self::get_load_command(
+            ModuleType::try_from(&*path).unwrap(),
+            &path,
+            &self.config.base_dir,
+        )
+        .await?;
         self.load_command(command, &path).await
     }
 
     async fn load_command(&self, mut command: Command, path: &Path) -> LoaderResult {
         let path: Arc<Path> = path.into();
         let p = command
-            .current_dir(&self.config.base_dir)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()
@@ -143,8 +147,12 @@ impl<'a> Loader<'a> {
             Err(LoaderError::LoaderProcess {
                 path: path.clone(),
                 error: anyhow::anyhow!(
-                    "{}",
+                    "{}\n{}",
                     String::from_utf8(p.stderr).map_err(|e| LoaderError::Unknown {
+                        error: e.into(),
+                        path: path.clone(),
+                    })?,
+                    String::from_utf8(p.stdout).map_err(|e| LoaderError::Unknown {
                         error: e.into(),
                         path,
                     })?
@@ -156,6 +164,7 @@ impl<'a> Loader<'a> {
     async fn get_load_command(
         module_type: ModuleType,
         path: &Path,
+        base_dir: &Path,
     ) -> Result<Command, LoaderError> {
         let vars: HashMap<_, _> = env::vars().collect();
 
@@ -165,6 +174,7 @@ impl<'a> Loader<'a> {
             command
                 .args(&argv[1..])
                 .arg(path.to_str().unwrap())
+                .arg(base_dir)
                 .envs(vars);
             return Ok(command);
         }
@@ -180,6 +190,7 @@ impl<'a> Loader<'a> {
                 let mut command = Command::new("python3");
                 command
                     .arg(path.to_str().unwrap())
+                    .current_dir(base_dir)
                     .envs(vars)
                     .env("PYTHONUNBUFFERED", "1")
                     .env("PYTHONDONTWRITEBYTECODE", "1")
@@ -195,6 +206,7 @@ impl<'a> Loader<'a> {
                         error,
                     })? {
                     TsLoaderRt::Deno => {
+                        log::debug!("loading typegraph using deno");
                         let mut command = Command::new("deno");
                         command
                             .arg("run")
@@ -202,6 +214,7 @@ impl<'a> Loader<'a> {
                             .arg("--allow-all")
                             .arg("--check")
                             .arg(path.to_str().unwrap())
+                            .current_dir(base_dir)
                             .envs(vars);
                         Ok(command)
                     }
@@ -222,8 +235,8 @@ impl<'a> Loader<'a> {
                         command
                             .arg("x")
                             .arg("tsx")
-                            .current_dir(path.parent().unwrap())
                             .arg(path.to_str().unwrap())
+                            .current_dir(path.parent().unwrap())
                             .envs(vars);
                         Ok(command)
                     }
@@ -272,12 +285,15 @@ async fn detect_deno_loader_cmd(tg_path: &Path) -> Result<TsLoaderRt> {
             break;
         };
         use tokio::fs::try_exists;
-        if try_exists(parent_dir.join("deno.json")).await.is_ok()
-            || try_exists(parent_dir.join("deno.jsonc")).await.is_ok()
+        log::trace!("testing for ts project manifest in {parent_dir:?}");
+        if matches!(try_exists(parent_dir.join("deno.json")).await, Ok(true))
+            || matches!(try_exists(parent_dir.join("deno.jsonc")).await, Ok(true))
         {
+            log::trace!("deno.json hit in {parent_dir:?}");
             return Ok(Deno);
         }
-        if try_exists(parent_dir.join("package.json")).await.is_ok() {
+        if matches!(try_exists(parent_dir.join("package.json")).await, Ok(true)) {
+            log::trace!("package.json hit in {parent_dir:?}");
             // TODO: cache the test values without making a spaghetti mess
             // lazy async result values are hard to Once/LazyCell :/
             if test_node_exec().await? {
@@ -355,10 +371,10 @@ impl ToString for LoaderError {
                 format!("error while parsing raw typegraph JSON from {path:?}: {error:?} in \"{content}\"")
             }
             Self::LoaderProcess { path, error } => {
-                format!("error while loading typegraph(s) from {path:?}: {error:?}")
+                format!("loader process error while loading typegraph(s) from {path:?}: {error:?}")
             }
             Self::Unknown { path, error } => {
-                format!("error while loading typegraph(s) from {path:?}: {error:?}")
+                format!("unknown error while loading typegraph(s) from {path:?}: {error:?}")
             }
             Self::ModuleFileNotFound { path } => {
                 format!("module file not found: {path:?}")
