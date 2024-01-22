@@ -3,6 +3,8 @@ import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 
 typegraph({
   name: "roadmap-py",
+  // skip:next-line
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
   const pub = Policy.public();
   const db = new PrismaRuntime("db", "POSTGRES");

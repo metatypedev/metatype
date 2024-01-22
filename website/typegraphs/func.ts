@@ -9,6 +9,7 @@ import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 typegraph({
   // skip:start
   name: "roadmap-func",
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
   // skip:end
 }, (g) => {
   // skip:start

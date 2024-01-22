@@ -8,6 +8,7 @@ import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
 typegraph({
   name: "policies",
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
   const deno = new DenoRuntime();
   const random = new RandomRuntime({ seed: 0 });

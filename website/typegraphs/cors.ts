@@ -18,8 +18,6 @@ typegraph({
     allowCredentials: true,
     // highlight-next-line
     maxAgeSec: 60,
-    // highlight-next-line
-    allowMethods: ["GET"],
   },
 }, (g) => {
   const random = new RandomRuntime({ seed: 0 });

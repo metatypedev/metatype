@@ -7,6 +7,8 @@ import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
 
 typegraph({
   name: "faas-runner",
+  // skip:next-line
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
   const pub = Policy.public();
 

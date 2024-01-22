@@ -6,6 +6,22 @@ import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
 typegraph({
   name: "rate",
+  // highlight-next-line
+  rate: {
+    // highlight-next-line
+    windowLimit: 35,
+    // highlight-next-line
+    windowSec: 15,
+    // highlight-next-line
+    queryLimit: 25,
+    // highlight-next-line
+    contextIdentifier: undefined,
+    // highlight-next-line
+    localExcess: 0,
+    // highlight-next-line
+  },
+  // skip:next-line
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
   const random = new RandomRuntime({ seed: 0 });
   const pub = Policy.public();

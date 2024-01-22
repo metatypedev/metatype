@@ -9,6 +9,8 @@ import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql.js";
 
 typegraph({
   name: "graphql",
+  // skip:next-line
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
   const db = new PrismaRuntime("database", "POSTGRES_CONN");
   // highlight-next-line

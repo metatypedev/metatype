@@ -7,6 +7,8 @@ import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
 typegraph({
   name: "iam-provider",
+  // skip:next-line
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
   g.auth(Auth.oauth2Github("openid profile email"));
 
@@ -25,7 +27,7 @@ typegraph({
       t.struct({ "username": t.string() }).optional(),
       {
         code:
-          "(_, { context }) :> Object.keys(context).length ::: 0 ? null : context",
+          "(_, { context }) :> Object.keys(context).length === 0 ? null : context",
       },
     ),
   }, pub);

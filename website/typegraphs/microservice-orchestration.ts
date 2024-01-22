@@ -8,6 +8,8 @@ import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql.js";
 
 typegraph({
   name: "team-a",
+  // skip:next-line
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
   const pub = Policy.public();
 

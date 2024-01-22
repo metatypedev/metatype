@@ -9,6 +9,10 @@ import { HttpRuntime } from "@typegraph/sdk/runtimes/http.js";
 
 typegraph({
   name: "homepage",
+  // skip:start
+  rate: { windowLimit: 2000, windowSec: 60, queryLimit: 200, localExcess: 0 },
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
+  // skip:end
 }, (g) => {
   // every field may be controlled by a policy
   const pub = Policy.public();

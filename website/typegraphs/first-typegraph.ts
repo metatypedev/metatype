@@ -3,6 +3,8 @@ import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
 typegraph({
   name: "first-typegraph",
+  // skip:next-line
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
   // declare runtimes and policies
   const random = new RandomRuntime({});

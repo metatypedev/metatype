@@ -8,6 +8,8 @@ import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 
 typegraph({
   name: "database",
+  // skip:next-line
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
   const db = new PrismaRuntime("database", "POSTGRES_CONN");
   const pub = Policy.public();

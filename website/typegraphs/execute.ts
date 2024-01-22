@@ -7,6 +7,7 @@ import { EffectUpdate } from "@typegraph/sdk/gen/interfaces/metatype-typegraph-r
 typegraph({
   // skip:start
   name: "roadmap-execute",
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
   // skip:end
 }, (g) => {
   const pub = Policy.public();

@@ -6,6 +6,8 @@ import { HttpRuntime } from "@typegraph/sdk/runtimes/http.js";
 
 typegraph({
   name: "backend-for-frontend",
+  // skip:next-line
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
   const github = new HttpRuntime("https://api.github.com");
   const pub = Policy.public();

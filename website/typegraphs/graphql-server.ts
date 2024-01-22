@@ -6,6 +6,8 @@ import { HttpRuntime } from "@typegraph/sdk/runtimes/http.js";
 
 typegraph({
   name: "graphql-server",
+  // skip:next-line
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
   const pub = Policy.public();
 
