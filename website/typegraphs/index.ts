@@ -54,7 +54,7 @@ typegraph({
     stargazers: github.get(
       t.struct({}),
       t.list(stargazer),
-      { path: "/repos/metatypedev/metatype/stargazers?per_page:2" },
+      { path: "/repos/metatypedev/metatype/stargazers?per_page=2" },
     ),
     // automatically generate crud operations
     send_feedback: db.create(feedback),

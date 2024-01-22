@@ -27,7 +27,7 @@ typegraph({
     stargazers: github.get(
       t.struct({}),
       t.list(stargazer),
-      { path: "/repos/metatypedev/metatype/stargazers?per_page:2" },
+      { path: "/repos/metatypedev/metatype/stargazers?per_page=2" },
     ).withPolicy(pub),
   });
 });

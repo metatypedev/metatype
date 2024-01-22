@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { expandGlob } from "std/fs/expand_glob.ts";
-import { dirname, fromFileUrl } from "std/path/mod.ts";
+import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { existsSync } from "std/fs/exists.ts";
+import { copySync } from "std/fs/copy.ts";
 import { Meta } from "../../utils/mod.ts";
 import { MetaTest } from "../../utils/test.ts";
 import { assertEquals } from "std/assert/assert_equals.ts";
@@ -12,8 +13,9 @@ import config from "../../../src/config.ts";
 export const thisDir = dirname(fromFileUrl(import.meta.url));
 
 async function testSerializeAllPairs(t: MetaTest, path: string) {
-  let success = 0;
-  let count = 0;
+  const tempDir = Deno.makeTempDirSync({
+    dir: config.tmp_dir,
+  });
 
   for await (
     const file of expandGlob(path, {
@@ -25,9 +27,12 @@ async function testSerializeAllPairs(t: MetaTest, path: string) {
     const name = file.name.replace(/\.py$/, "");
     const pyPath = file.path;
     const tsPath = pyPath.replace(/\.py$/, ".ts");
+    const scriptDir = join(dirname(tsPath), "scripts");
+    if (!existsSync(scriptDir)) {
+      copySync(scriptDir, tempDir);
+    }
 
     if (existsSync(tsPath)) {
-      count += 1;
       const { stdout: pyVersion } = await Meta.cli(
         "serialize",
         "--pretty",
@@ -41,10 +46,8 @@ async function testSerializeAllPairs(t: MetaTest, path: string) {
         /\(\s*g\s*\)/,
         "(g: any)",
       );
-      const tsTempPath = Deno.makeTempFileSync({
-        dir: config.tmp_dir,
-        suffix: ".ts",
-      });
+
+      const tsTempPath = join(tempDir, `${name}.ts`);
       Deno.writeTextFileSync(tsTempPath, data);
       const { stdout: tsVersion } = await Meta.cli(
         "serialize",
@@ -57,13 +60,10 @@ async function testSerializeAllPairs(t: MetaTest, path: string) {
         `serialize and compare python and typescript version of ${name})}`,
         () => {
           assertEquals(pyVersion, tsVersion);
-          success += 1;
         },
       );
     }
   }
-
-  console.log(`Comparison success ${success}/${count}`);
 }
 
 Meta.test("typegraphs creation", async (t) => {

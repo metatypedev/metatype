@@ -22,7 +22,8 @@ typegraph({
       "body": t.string(),
     },
     // highlight-next-line
-  ).rename("message");
+    { name: "message" },
+  );
 
   g.expose({
     // highlight-next-line

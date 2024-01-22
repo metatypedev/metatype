@@ -20,7 +20,7 @@ typegraph({
     maxAgeSec: 60,
   },
 }, (g) => {
-  const random = new RandomRuntime({ seed: 0 });
+  const random = new RandomRuntime({});
   const pub = Policy.public();
 
   g.expose({
