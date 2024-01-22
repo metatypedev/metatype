@@ -3,6 +3,8 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { Auth } from "@typegraph/sdk/params.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+
 function getEnvOrDefault(key: string, defaultValue: string) {
   const glob = globalThis as any;
   const value = glob?.process

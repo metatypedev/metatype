@@ -1,6 +1,9 @@
 import { t, typegraph } from "@typegraph/sdk/index.js";
 import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
+// skip:next-line
+/* eslint-disable  @typescript-eslint/no-unused-vars */
+
 typegraph({
   name: "roadmap-random",
   // skip:next-line

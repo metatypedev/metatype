@@ -4,8 +4,10 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql.js";
 
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+
 function getEnvOrDefault(key: string, defaultValue: string) {
-  const glob = globalThis as any;
+  const glob = globalThis as any; // @typescript-eslint/no-explicit-any
   const value = glob?.process
     ? glob?.process.env?.[key]
     : glob?.Deno.env.get(key);
