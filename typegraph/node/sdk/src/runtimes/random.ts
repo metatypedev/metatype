@@ -18,7 +18,7 @@ export class RandomRuntime extends Runtime {
     super(runtimes.registerRandomRuntime(data));
   }
 
-  gen(inp: t.Typedef) {
+  gen(out: t.Typedef) {
     const effect = fx.read();
 
     const matId = runtimes.createRandomMat(
@@ -33,7 +33,7 @@ export class RandomRuntime extends Runtime {
 
     return t.func(
       t.struct({}),
-      inp,
+      out,
       { _id: matId, runtime: this._id } as RandomMat,
     );
   }

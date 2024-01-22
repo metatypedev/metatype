@@ -52,9 +52,7 @@ def roadmap(g: Graph):
 
     admins = deno.policy(
         "admins",
-        """
-  (_args, { context }) => !!context.username
-""",
+        "(_args, { context }) => !!context.username",
     )
 
     g.expose(

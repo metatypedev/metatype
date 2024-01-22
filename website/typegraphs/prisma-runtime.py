@@ -36,10 +36,7 @@ def prisma_runtime(g: Graph):
         create_user=db.create(user),
         read_user=db.find_many(user),
         find_user=db.query_raw(
-            """
-                SELECT id, firstname, email FROM "user"
-                WHERE CAST(id as VARCHAR) = ${id} OR email LIKE ${term} OR firstname LIKE ${term}
-            """,
+            'SELECT id, firstname, email FROM "user" WHERE CAST(id as VARCHAR) = ${id} OR email LIKE ${term} OR firstname LIKE ${term}',
             t.struct(
                 {
                     "id": t.string(),

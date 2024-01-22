@@ -24,7 +24,9 @@ typegraph({
   for (const [k, static_vals] of Object.entries(myApiFormat)) {
     const policy = static_vals["access"] == "public" ? pub : roulette_access;
     g.expose({
-      [k]: deno.static(t.struct({ "foo": t.string() }), static_vals),
+      [k]: deno.static(t.struct({ "foo": t.string() }), {
+        foo: static_vals["foo"],
+      }),
     }, policy);
   }
 });

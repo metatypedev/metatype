@@ -2,7 +2,7 @@ import { t, typegraph } from "@typegraph/sdk/index.js";
 import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
 typegraph({
-  name: "roadmap",
+  name: "roadmap-random",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
@@ -20,17 +20,17 @@ typegraph({
     },
   );
 
-  // const _vote = t.struct(
-  //   {
-  //     "id": t.uuid(),
-  //     "authorEmail": t.email(),
-  //     "importance": t.enum_(
-  //       ["medium", "important", "critical"],
-  //     ).optional(), // `enum_` is also a shorthand over `t.string`
-  //     "createdAt": t.datetime(),
-  //     "desc": t.string().optional(), // makes it optional
-  //   },
-  // );
+  const _vote = t.struct(
+    {
+      "id": t.uuid(),
+      "authorEmail": t.email(),
+      "importance": t.enum_(
+        ["medium", "important", "critical"],
+      ).optional(), // `enum_` is also a shorthand over `t.string`
+      "createdAt": t.datetime(),
+      "desc": t.string().optional(), // makes it optional
+    },
+  );
 
   const random = new RandomRuntime({});
   g.expose({ get_idea: random.gen(idea) });

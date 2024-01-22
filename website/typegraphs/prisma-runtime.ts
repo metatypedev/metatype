@@ -27,14 +27,14 @@ typegraph({
       "email": t.email(),
       "firstname": t.string({ min: 2, max: 2000 }, {}),
     },
-  ).rename("user");
+    { name: "user" },
+  );
 
   g.expose({
     create_user: db.create(user),
     read_user: db.findMany(user),
     find_user: db.queryRaw(
-      `SELECT id, firstname, email FROM "user"
-        WHERE CAST(id as VARCHAR) : $\{id} OR email LIKE $\{term} OR firstname LIKE $\{term}`,
+      `SELECT id, firstname, email FROM "user" WHERE CAST(id as VARCHAR) = $\{id} OR email LIKE $\{term} OR firstname LIKE $\{term}`,
       t.struct(
         {
           "id": t.string(),

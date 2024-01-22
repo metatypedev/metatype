@@ -36,5 +36,5 @@ def roadmap(g: Graph):
             "desc": t.string().optional(),  # makes it optional
         }
     )
-    random = RandomRuntime()
+    random = RandomRuntime(reset=None)
     g.expose(get_idea=random.gen(idea))
