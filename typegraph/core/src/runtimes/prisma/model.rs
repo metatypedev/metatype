@@ -127,7 +127,12 @@ impl Property {
     fn new(wrapper_type_id: TypeId) -> Result<Self> {
         let (ref_data, type_def) = wrapper_type_id.resolve_ref()?;
         let runtime_config = RuntimeConfig::new(type_def.base().runtime_config.as_ref());
-        let unique = runtime_config.get("unique")?.unwrap_or(false);
+        let unique = if matches!(type_def, TypeDef::Struct(_)) {
+            // the unique config is used to specify struct-level unique constraints on structs
+            false
+        } else {
+            runtime_config.get("unique")?.unwrap_or(false)
+        };
         let auto = runtime_config.get("auto")?.unwrap_or(false);
         let default_value = runtime_config.get("default")?;
         if let Some(default_value) = default_value.as_ref() {
