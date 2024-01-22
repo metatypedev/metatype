@@ -2,8 +2,20 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { MaterializerId } from "./gen/interfaces/metatype-typegraph-core.js";
-import { core, runtimes } from "./wit.js";
-import { DenoRuntime } from "./runtimes/deno.js";
+import { core } from "./wit.js";
+
+interface PolicyPerEffectAlt {
+  update?: Policy;
+  delete?: Policy;
+  create?: Policy;
+  read?: Policy;
+}
+
+export class PolicyPerEffectObject {
+  constructor(
+    public readonly value: PolicyPerEffectAlt,
+  ) {}
+}
 
 export default class Policy {
   constructor(public readonly _id: number, public readonly name: string) {}
@@ -33,5 +45,9 @@ export default class Policy {
       core.registerPolicy({ name, materializer: materializerId }),
       name,
     );
+  }
+
+  static on(effects: PolicyPerEffectAlt) {
+    return new PolicyPerEffectObject(effects);
   }
 }

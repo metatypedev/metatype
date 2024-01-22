@@ -10,11 +10,13 @@ import {
   serializeGenericInjection,
   serializeStaticInjection,
 } from "./utils/injection_utils.js";
-import { Auth, Cors, Rate, wit_utils } from "./wit.js";
+import { Auth, Cors as CorsWit, Rate, wit_utils } from "./wit.js";
 import Policy from "./policy.js";
 import { getPolicyChain } from "./types.js";
 
 type Exports = Record<string, t.Func>;
+
+type Cors = Partial<CorsWit>;
 
 interface TypegraphArgs {
   name: string;
@@ -111,18 +113,24 @@ export function typegraph(
     ),
   );
 
+  const defaultCorsFields = {
+    allowCredentials: true,
+    allowHeaders: [],
+    allowMethods: [],
+    allowOrigin: [],
+    exposeHeaders: [],
+    maxAgeSec: undefined,
+  } as CorsWit;
+
+  const defaultRateFields = {
+    localExcess: 0,
+  } as { localExcess?: number };
+
   const tgParams = {
     prefix,
     secrets: secrets ?? [],
-    cors: cors ?? {
-      allowCredentials: true,
-      allowHeaders: [],
-      allowMethods: [],
-      allowOrigin: [],
-      exposeHeaders: [],
-      maxAgeSec: undefined,
-    } as Cors,
-    rate,
+    cors: cors ? { ...defaultCorsFields, ...cors } : defaultCorsFields,
+    rate: rate ? { ...defaultRateFields, ...rate } : undefined,
   };
 
   core.initTypegraph({ name, dynamic, path, ...tgParams });

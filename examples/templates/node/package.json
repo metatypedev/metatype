@@ -7,7 +7,7 @@
     "dev": "MCLI_LOADER_CMD='npm run load-tgraph --silent' meta dev"
   },
   "dependencies": {
-    "@typegraph/sdk": "^0.2.4"
+    "@typegraph/sdk": "^0.3.2"
   },
   "devDependencies": {
     "tsx": "^3.13.0",
