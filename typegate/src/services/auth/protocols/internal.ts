@@ -24,7 +24,7 @@ export class InternalAuth extends Protocol {
 
   async tokenMiddleware(
     token: string,
-    _url: URL,
+    _request: Request,
   ): Promise<[Record<string, unknown>, string | null]> {
     try {
       const claims = await verifyJWT(token);
