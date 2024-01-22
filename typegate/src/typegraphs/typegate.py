@@ -114,6 +114,38 @@ def typegate(g: Graph):
         }
     ).rename("ArgInfoOut")
 
+    query_arg = t.struct(
+        {
+            "name": t.string(),
+            "type": arg_info_out,
+        }
+    )
+
+    query_info = t.struct(
+        {
+            "name": t.string(),
+            "inputs": t.list(query_arg),
+            "output": arg_info_out,
+            "outputItem": arg_info_out,
+        }
+    )
+
+    find_list_queries_mat_id = runtimes.register_typegate_materializer(
+        store,
+        TypegateOperation.FIND_LIST_QUERIES,
+    )
+    if isinstance(find_list_queries_mat_id, Err):
+        raise Exception(find_list_queries_mat_id.value)
+    find_list_queries_mat = Materializer(
+        find_list_queries_mat_id.value, effect=fx.read()
+    )
+    find_list_queries = t.func(
+        t.struct({"typegraph": t.string()}),
+        t.list(query_info),
+        find_list_queries_mat,
+        rate_calls=True,
+    )
+
     g.expose(
         typegraphs=t.func(
             t.struct({}),
@@ -165,5 +197,6 @@ def typegate(g: Graph):
         argInfoByPath=t.func(
             arg_info_inp, t.list(arg_info_out), arg_info_by_path_mat, rate_calls=True
         ),
+        findListQueries=find_list_queries,
         default_policy=admin_only,
     )
