@@ -10,8 +10,8 @@ typegraph({
     hostSecret: "S3_HOST",
     regionSecret: "S3_REGION",
     accessKeySecret: "S3_ACCESS_KEY",
-    pathStyleSecret: "S3_SECRET_KEY",
-    secretKeySecret: "S3_PATH_STYLE",
+    secretKeySecret: "S3_SECRET_KEY",
+    pathStyleSecret: "S3_PATH_STYLE",
   });
 
   g.expose({

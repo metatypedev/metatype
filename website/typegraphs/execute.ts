@@ -20,7 +20,8 @@ typegraph({
       "name": t.string(),
       "ideas": t.list(g.ref("idea")),
     },
-  ).rename("bucket");
+    { name: "bucket" },
+  );
 
   const idea = t.struct(
     {
@@ -30,7 +31,8 @@ typegraph({
       "votes": t.list(g.ref("vote")),
       "bucket": g.ref("bucket"),
     },
-  ).rename("idea");
+    { name: "idea" },
+  );
 
   const vote = t.struct(
     {
@@ -40,7 +42,8 @@ typegraph({
       "desc": t.string().optional(),
       "idea": g.ref("idea"),
     },
-  ).rename("vote");
+    { name: "vote" },
+  );
 
   g.auth(Auth.basic(["andim"]));
 
@@ -68,7 +71,7 @@ typegraph({
     ),
     create_vote: db.create(vote),
     set_vote_importance: db.execute(
-      'UPDATE "vote" SET importance : ${importance} WHERE id : ${vote_id}::uuid',
+      'UPDATE "vote" SET importance = ${importance} WHERE id = ${vote_id}::uuid',
       t.struct(
         {
           "vote_id": t.uuid(),

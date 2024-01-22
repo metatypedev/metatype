@@ -8,13 +8,14 @@ typegraph({
   const deno = new DenoRuntime();
   const pub = Policy.public();
 
-  const user = t.struct({ "id": t.integer() });
+  const user = t.struct({ "id": t.integer() }, { name: "User" });
 
   const post = t.struct(
     {
       "id": t.integer(),
       "author": user,
     },
+    { name: "Post" },
   );
 
   // API docs {typegate_url}/example-rest/rest

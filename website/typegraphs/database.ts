@@ -27,7 +27,7 @@ typegraph({
 
   g.expose({
     // highlight-next-line
-    create_message: db.create(message).withPolicy(pub),
-    list_messages: db.findMany(message).withPolicy(pub),
-  });
+    create_message: db.create(message),
+    list_messages: db.findMany(message),
+  }, pub);
 });

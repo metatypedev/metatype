@@ -33,18 +33,28 @@ async function testSerializeAllPairs(t: MetaTest, path: string) {
     }
 
     if (existsSync(tsPath)) {
-      const { stdout: pyVersion } = await Meta.cli(
-        "serialize",
-        "--pretty",
-        "-f",
-        pyPath,
-      );
-
       // for now, run the typegraph assuming it is deno
       // FIXME: type hint issue with deno
       const data = (await Deno.readTextFile(tsPath)).replace(
         /\(\s*g\s*\)/,
         "(g: any)",
+      );
+
+      // FIXME:
+      if (
+        /fromLambda|from_lambda|fromDef|from_def/.test(data)
+      ) {
+        // skip these for now, reasons:
+        // deno directly use the given string value
+        // python parse its own source
+        continue;
+      }
+
+      const { stdout: pyVersion } = await Meta.cli(
+        "serialize",
+        "--pretty",
+        "-f",
+        pyPath,
       );
 
       const tsTempPath = join(tempDir, `${name}.ts`);
@@ -67,5 +77,8 @@ async function testSerializeAllPairs(t: MetaTest, path: string) {
 }
 
 Meta.test("typegraphs creation", async (t) => {
-  await testSerializeAllPairs(t, "./../../../../website/typegraphs/*.py");
+  await testSerializeAllPairs(
+    t,
+    "./../../../../website/typegraphs/*.py",
+  );
 });

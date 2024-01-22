@@ -30,7 +30,8 @@ typegraph({
       "email": t.email().withPolicy(publicWriteOnly),
       "message": t.string({ min: 1, max: 2000 }, {}),
     },
-  ).rename("feedback");
+    { name: "feedback" },
+  );
 
   // a stargazer object from Github
   const stargazer = t.struct(
