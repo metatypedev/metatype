@@ -23,12 +23,13 @@ typegraph({
 
   const deno = new DenoRuntime();
   const host = getEnvOrDefault("TG_URL", "http://localhost:7890");
-  const url =
-    `${host}/iam-provider/auth/github?redirect_uri={quote_plus(host)}`;
+  const url = `${host}/iam-provider/auth/github?redirect_uri=${
+    encodeURIComponent(host)
+  }`;
 
   g.expose({
     loginUrl: deno.static(t.string(), url),
-    logoutUrl: deno.static(t.string(), `"${url}&clear`),
+    logoutUrl: deno.static(t.string(), `${url}&clear`),
     context: deno.func(
       t.struct({}),
       t.struct({ "username": t.string() }).optional(),

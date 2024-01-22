@@ -25,7 +25,7 @@ typegraph({
       "id": t.integer({}, { asId: true, config: { auto: true } }),
       "title": t.string(),
       // highlight-next-line
-      "user_id": t.string().rename("uid"),
+      "user_id": t.string({}, { name: "uid" }),
       // highlight-next-line
       "user": gql.query(
         t.struct(
@@ -37,7 +37,8 @@ typegraph({
         t.optional(user),
       ),
     },
-  ).rename("message");
+    { name: "message" },
+  );
 
   g.expose({
     create_message: db.create(message),
