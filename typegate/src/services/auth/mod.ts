@@ -97,7 +97,7 @@ export async function ensureJWT(
 
   const [context, nextAuth] = await auth.tokenMiddleware(
     token,
-    new URL(request.url),
+    request,
   );
   if (nextAuth !== null) {
     // "" is valid as it signal to remove the token
