@@ -28,13 +28,13 @@ async function testSerializeAllPairs(t: MetaTest, dirPath: string) {
 
   const skip = [
     // FIXME:
-    "rest", // python and typescript generates different indentation for g.rest
-    // TODO: why are these failing?
-    "random",
-    "func",
-    "prisma",
-    "reduce",
-  ];
+    // "rest", // python and typescript generates different indentation for g.rest
+    // FIXME: why are these failing?
+    // "random",
+    // "func",
+    // "prisma",
+    // "reduce",
+  ] as Array<string>;
 
   for await (
     const file of expandGlob(join(tempDir, "*.py"), {
