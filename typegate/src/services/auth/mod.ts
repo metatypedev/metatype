@@ -50,14 +50,17 @@ export function initAuth(
   }
 }
 
+export type ProfileClaims = {
+  [key: `profile.${string}`]: unknown;
+};
+
 export type JWTClaims = {
   provider: string;
   accessToken: string;
   refreshToken: string;
   refreshAt: number;
-  profile: null | Record<string, unknown>;
   scope?: string[];
-};
+} & ProfileClaims;
 
 export async function ensureJWT(
   request: Request,
@@ -71,9 +74,9 @@ export async function ensureJWT(
     return [{}, headers];
   }
 
-  let auth = null;
+  let auth: Protocol | null = null;
   if (kind.toLowerCase() === "basic") {
-    auth = engine.tg.auths.get("basic");
+    auth = engine.tg.auths.get("basic") ?? null;
   } else {
     try {
       const { provider } = await unsafeExtractJWT(token);
@@ -81,7 +84,7 @@ export async function ensureJWT(
         // defaulting to first auth
         auth = engine.tg.auths.values().next().value;
       } else {
-        auth = engine.tg.auths.get(provider as string);
+        auth = engine.tg.auths.get(provider as string) ?? null;
       }
     } catch (e) {
       logger.warning(`malformed jwt: ${e}`);
