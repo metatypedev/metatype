@@ -819,6 +819,7 @@
     "https://deno.land/x/dnt@0.38.1/lib/utils.ts": "878b7ac7003a10c16e6061aa49dbef9b42bd43174853ebffc9b67ea47eeb11d8",
     "https://deno.land/x/dnt@0.38.1/mod.ts": "b13349fe77847cf58e26b40bcd58797a8cec5d71b31a1ca567071329c8489de1",
     "https://deno.land/x/dnt@0.38.1/transform.ts": "f68743a14cf9bf53bfc9c81073871d69d447a7f9e3453e0447ca2fb78926bb1d",
+    "https://deno.land/x/fuse@v6.4.1/dist/fuse.esm.min.js": "02034c3e0a1d7f4d207ecd104c9cde1bab116d474dc60c2a019e9d4353455ff4",
     "https://deno.land/x/levenshtein@v1.0.1/mod.ts": "6b632d4a9bb11ba6d5d02a770c7fc9b0a4125f30bd9c668632ff85e7f05ff4f6",
     "https://deno.land/x/math@v1.1.0/abs.ts": "d64fe603ae4bb57037f06a1a5004285b99ed016dab6bfcded07c8155efce24b7",
     "https://deno.land/x/math@v1.1.0/big/mod.ts": "ba561f56a24ecc9f03542693ed0c81166ed0c921f8017d220ec70c963e935509",

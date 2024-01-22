@@ -115,4 +115,4 @@ setup:
     echo "exec ./. to refresh env vars"
     [ -d .venv ] || python3 -m venv .venv
     poetry install --sync --no-root
-    yes | pnpm install --recursive
+    yes | pnpm install --recursive --filter ./website/... --filter ./typegraph/node/...
