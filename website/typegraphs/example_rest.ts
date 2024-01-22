@@ -36,7 +36,7 @@ typegraph({
     postFromUser: deno.func(
       user,
       post,
-      { code: "(_) :> ({ id: 12, author: {id: 1}  })" },
+      { code: "(_) => ({ id: 12, author: {id: 1}  })" },
     ).withPolicy(pub),
   });
 });

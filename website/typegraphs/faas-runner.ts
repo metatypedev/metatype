@@ -27,7 +27,7 @@ typegraph({
       out,
       {
         code:
-          "({n}) :> Array.from(Array(5).keys()).reduce((sum, e) :> sum + e, 0)",
+          "({n}) => Array.from(Array(5).keys()).reduce((sum, e) => sum + e, 0)",
       },
     ),
   }, pub);

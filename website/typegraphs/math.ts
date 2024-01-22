@@ -25,7 +25,7 @@ typegraph({
     random: deno.func(
       t.struct({}),
       t.float(),
-      { code: "() :> Math.random()" },
+      { code: "() => Math.random()" },
     ).withPolicy(pub),
     randomItem: deno.func(
       t.struct({ "items": t.list(t.string()) }),

@@ -6,12 +6,12 @@ typegraph({
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
-  // const _bucket = t.struct(
-  //   {
-  //     "id": t.integer({}, { asId: true }),
-  //     "name": t.string(),
-  //   },
-  // );
+  const _bucket = t.struct(
+    {
+      "id": t.integer({}, { asId: true }),
+      "name": t.string(),
+    },
+  );
   const idea = t.struct(
     {
       "id": t.uuid({ asId: true }), // email is just a shorthand alias for `t.string({}, {{format: "uuid"}: undefined})`

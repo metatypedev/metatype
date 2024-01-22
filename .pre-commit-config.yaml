@@ -72,6 +72,7 @@ repos:
           - ts
           - tsx
         files: ^website/
+        exclude: ^website/typegraphs
       - id: devtools-lint
         name: ESLint the dev-tools
         language: system

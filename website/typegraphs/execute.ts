@@ -2,7 +2,7 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 import { Auth } from "@typegraph/sdk/params.js";
-import { EffectUpdate } from "@typegraph/sdk/gen/interfaces/metatype-typegraph-runtimes.js";
+import * as effects from "@typegraph/sdk/effects.js";
 
 typegraph({
   // skip:start
@@ -75,7 +75,7 @@ typegraph({
           "importance": t.enum_(["medium", "important", "critical"]),
         },
       ),
-      { tag: "update" } as EffectUpdate,
+      effects.update(),
     ),
     get_context: deno.identity(
       t.struct({ "username": t.string().optional().fromContext("username") }),

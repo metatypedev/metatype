@@ -3,6 +3,13 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { Auth } from "@typegraph/sdk/params.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
+function getEnvOrDefault(key: string, defaultValue: string) {
+  const glob = globalThis as any;
+  const value = glob?.process
+    ? glob?.process.env?.[key]
+    : glob?.Deno.env.get(key);
+  return value ?? defaultValue;
+}
 // skip:end
 
 typegraph({
@@ -15,7 +22,7 @@ typegraph({
   const pub = Policy.public();
 
   const deno = new DenoRuntime();
-  const host = process.env?.TG_URL ?? "http://localhost:7890";
+  const host = getEnvOrDefault("TG_URL", "http://localhost:7890");
   const url =
     `${host}/iam-provider/auth/github?redirect_uri={quote_plus(host)}`;
 
@@ -27,7 +34,7 @@ typegraph({
       t.struct({ "username": t.string() }).optional(),
       {
         code:
-          "(_, { context }) :> Object.keys(context).length === 0 ? null : context",
+          "(_, { context }) => Object.keys(context).length === 0 ? null : context",
       },
     ),
   }, pub);

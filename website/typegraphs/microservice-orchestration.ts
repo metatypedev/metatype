@@ -4,6 +4,13 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql.js";
 
+function getEnvOrDefault(key: string, defaultValue: string) {
+  const glob = globalThis as any;
+  const value = glob?.process
+    ? glob?.process.env?.[key]
+    : glob?.Deno.env.get(key);
+  return value ?? defaultValue;
+}
 // skip:end
 
 typegraph({
@@ -15,7 +22,7 @@ typegraph({
 
   const deno = new DenoRuntime();
   const records = new GraphQLRuntime(
-    (process.env?.TG_URL ?? "http://localhost:7890") + "/team-b",
+    getEnvOrDefault("TG_URL", "http://localhost:7890" + "/team-b"),
   );
 
   g.expose({
