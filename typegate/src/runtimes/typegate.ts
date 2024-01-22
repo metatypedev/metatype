@@ -85,6 +85,9 @@ export class TypeGateRuntime extends Runtime {
       if (name === "argInfoByPath") {
         return this.argInfoByPath;
       }
+      if (name === "findListQueries") {
+        return this.findListQueries;
+      }
 
       return async ({ _: { parent }, ...args }) => {
         const resolver = parent[stage.props.node];
@@ -200,6 +203,39 @@ export class TypeGateRuntime extends Runtime {
 
     return paths.map((path) => walkPath(tg!.tg, input, 0, path));
   };
+
+  findListQueries: Resolver = ({ typegraph }) => {
+    const tg = this.typegate.register.get(typegraph);
+
+    const root = tg!.tg.type(0, Type.OBJECT).properties.query;
+    const exposed = tg!.tg.type(root, Type.OBJECT).properties;
+
+    return Object.entries(exposed).map(([name, idx]) => {
+      const func = tg!.tg.type(idx, Type.FUNCTION);
+      const input = tg!.tg.type(func.input, Type.OBJECT);
+      const inputs = input.properties;
+      const output = tg!.tg.type(func.output);
+      if (output.type != Type.LIST) {
+        return null;
+      }
+      const outputItem = tg!.tg.type(output.items);
+      if (outputItem.type != Type.OBJECT) {
+        return null;
+      }
+
+      return {
+        name,
+        inputs: Object.keys(inputs).map((name) => {
+          return {
+            name,
+            type: walkPath(tg!.tg, input, 0, [name]),
+          };
+        }),
+        output: walkPath(tg!.tg, output, 0, []),
+        outputItem: walkPath(tg!.tg, outputItem, 0, []),
+      };
+    }).filter((e) => e != null);
+  };
 }
 
 function resolveOptional(tg: TypeGraph, node: TypeNode) {
@@ -225,6 +261,7 @@ function collectObjectFields(
   // first generate all possible paths
 
   const paths = [] as Array<Array<string>>;
+  const traversed = new Set();
 
   const collectAllPaths = (
     parent: TypeNode,
@@ -233,6 +270,10 @@ function collectObjectFields(
     const node = resolveOptional(tg, parent).node;
 
     if (node.type == Type.OBJECT) {
+      if (traversed.has(node.title)) {
+        return;
+      }
+      traversed.add(node.title);
       for (const [keyName, fieldIdx] of Object.entries(node.properties)) {
         collectAllPaths(tg.type(fieldIdx), [...currentPath, keyName]);
       }

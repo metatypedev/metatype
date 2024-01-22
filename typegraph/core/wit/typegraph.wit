@@ -394,7 +394,8 @@ interface runtimes {
         add-typegraph,
         remove-typegraphs,
         get-serialized-typegraph,
-        get-arg-info-by-path
+        get-arg-info-by-path,
+        find-list-queries,
     }
 
     register-typegate-materializer: func(operation: typegate-operation) -> result<materializer-id, error>
