@@ -15,7 +15,7 @@ export const thisDir = dirname(fromFileUrl(import.meta.url));
 function stripIncomparable(json: string) {
   return [
     // FIXME: python and deno does not produce the same tarball
-    (source: string) => source.replace(/"file:scripts\/.+;(.+)"/g, '""'),
+    (source: string) => source.replace(/"file:scripts(.)+?"/g, '""'),
   ].reduce((prev, op) => op(prev), json);
 }
 
@@ -26,16 +26,6 @@ async function testSerializeAllPairs(t: MetaTest, dirPath: string) {
 
   copySync(resolve(dirPath), tempDir, { overwrite: true });
 
-  const skip = [
-    // FIXME:
-    // "rest", // python and typescript generates different indentation for g.rest
-    // FIXME: why are these failing?
-    // "random",
-    // "func",
-    // "prisma",
-    // "reduce",
-  ] as Array<string>;
-
   for await (
     const file of expandGlob(join(tempDir, "*.py"), {
       root: thisDir,
@@ -44,9 +34,6 @@ async function testSerializeAllPairs(t: MetaTest, dirPath: string) {
     })
   ) {
     const name = file.name.replace(/\.py$/, "");
-    if (skip.includes(name)) {
-      continue;
-    }
 
     const pyPath = file.path;
     const tsPath = pyPath.replace(/\.py$/, ".ts");
@@ -69,7 +56,7 @@ async function testSerializeAllPairs(t: MetaTest, dirPath: string) {
 
       const { stdout: pyVersion } = await Meta.cli(
         "serialize",
-        "--pretty",
+        // "--pretty",
         "-f",
         pyPath,
       );
@@ -78,7 +65,7 @@ async function testSerializeAllPairs(t: MetaTest, dirPath: string) {
       Deno.writeTextFileSync(tsTempPath, data);
       const { stdout: tsVersion } = await Meta.cli(
         "serialize",
-        "--pretty",
+        // "--pretty",
         "-f",
         tsTempPath,
       );

@@ -4,7 +4,7 @@ import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
 typegraph({
-  name: "roadmap",
+  name: "roadmap-reduce",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
