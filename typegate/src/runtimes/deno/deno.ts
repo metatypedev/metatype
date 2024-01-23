@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { toFileUrl } from "std/path/mod.ts";
 import { ComputeStage } from "../../engine/query_engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../../typegraph/mod.ts";
 import { Runtime } from "../Runtime.ts";
@@ -11,7 +12,7 @@ import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
 import { Task } from "./shared_types.ts";
 import { structureRepr, uncompress } from "../../utils.ts";
-import { path } from "compress/deps.ts";
+import { path, url } from "compress/deps.ts";
 import config from "../../config.ts";
 import { getLogger } from "../../log.ts";
 
@@ -107,8 +108,8 @@ export class DenoRuntime extends Runtime {
         // hence the use of contentHash
         ops.set(registryCount, {
           type: "register_import_func",
-          modulePath: path.join(
-            outDir,
+          modulePath: url.join(
+            toFileUrl(outDir),
             `${repr.entryPoint}?hash=${repr.hashes.content}`,
           ),
           op: registryCount,
