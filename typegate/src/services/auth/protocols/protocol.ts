@@ -12,6 +12,6 @@ export abstract class Protocol {
 
   abstract tokenMiddleware(
     token: string,
-    url: URL,
+    request: Request,
   ): Promise<[Record<string, unknown>, string | null]>;
 }

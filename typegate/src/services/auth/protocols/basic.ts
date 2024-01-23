@@ -35,7 +35,7 @@ export class BasicAuth extends Protocol {
 
   tokenMiddleware(
     jwt: string,
-    _url: URL,
+    _request: Request,
   ): Promise<[Record<string, unknown>, string | null]> {
     try {
       const [username, token] = b64decode(jwt).split(

@@ -55,7 +55,10 @@ class AuthProfiler {
     });
   }
 
-  async transform(profile: any, url: string) {
+  async transform(
+    profile: any,
+    request: Request,
+  ) {
     const { tg, runtimeReferences } = this.authParameters;
     const funcNode = tg.type(this.funcIndex, Type.FUNCTION);
     const mat = tg.materializer(funcNode.materializer);
@@ -63,7 +66,15 @@ class AuthProfiler {
     const validatorInputWeak = generateWeakValidator(tg, funcNode.input);
     const validatorOutput = generateValidator(tg, funcNode.output);
 
-    const input = { ...profile, _: { info: { url } } };
+    const input = {
+      ...profile,
+      _: {
+        info: {
+          url: new URL(request.url),
+          headers: Object.fromEntries(request.headers.entries()),
+        },
+      },
+    };
     validatorInputWeak(input);
 
     // Note: this assumes func is a simple t.func(inp, out, mat)
@@ -154,7 +165,7 @@ export class OAuth2Auth extends Protocol {
             this.typegraphName,
           );
         const tokens = await client.code.getToken(url, { state, codeVerifier });
-        const token = await this.createJWT(tokens);
+        const token = await this.createJWT(tokens, request);
         const headers = await setEncryptedSessionCookie(
           url.hostname,
           this.typegraphName,
@@ -211,8 +222,9 @@ export class OAuth2Auth extends Protocol {
 
   async tokenMiddleware(
     token: string,
-    url: URL,
+    request: Request,
   ): Promise<[Record<string, unknown>, string | null]> {
+    const url = new URL(request.url);
     const typegraphPath = `/${this.typegraphName}`;
     const client = new OAuth2Client({
       ...this.clientData,
@@ -236,7 +248,7 @@ export class OAuth2Auth extends Protocol {
     if (new Date().valueOf() / 1000 > claims.refreshAt) {
       try {
         const newClaims = await client.refreshToken.refresh(refreshToken);
-        const token = await this.createJWT(newClaims);
+        const token = await this.createJWT(newClaims, request);
         return [
           claims,
           token ?? "", // token or clear
@@ -252,6 +264,7 @@ export class OAuth2Auth extends Protocol {
 
   private async getProfile(
     token: Tokens,
+    request: Request,
   ): Promise<null | Record<string, unknown>> {
     if (!this.profileUrl) {
       return null;
@@ -270,7 +283,7 @@ export class OAuth2Auth extends Protocol {
       let profile = await res.json();
 
       if (this.authProfiler) {
-        profile = await this.authProfiler!.transform(profile, url);
+        profile = await this.authProfiler!.transform(profile, request);
       }
 
       return profile;
@@ -279,8 +292,11 @@ export class OAuth2Auth extends Protocol {
     }
   }
 
-  private async createJWT(token: Tokens): Promise<string> {
-    const profile = await this.getProfile(token);
+  private async createJWT(
+    token: Tokens,
+    request: Request,
+  ): Promise<string> {
+    const profile = await this.getProfile(token, request);
     const profileClaims: ProfileClaims = profile
       ? mapKeys(profile, (k) => `profile.${k}`)
       : {};
