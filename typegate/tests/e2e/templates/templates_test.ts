@@ -30,40 +30,44 @@ const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
       await Deno.writeTextFile(f.path, newData);
     }
   },
-  "node": async (_dir) => {
+  "node": async (dir) => {
     // Method 1. the published version from npm is used
 
-    // Method 2. install local module
-    // should work once we have a `node` loader since
-    // deno does not support file scheme yet
-    // https://github.com/denoland/deno/issues/18474
-    // await shell(["npm", "i", "../../typegraph/node"], {
+    // // Method 2. install local module
+    // // should work once we have a `node` loader since
+    // // deno does not support file scheme yet
+    // // https://github.com/denoland/deno/issues/18474
+    // await shell(["pnpm", "i", "../../typegraph/node"], {
     //   currentDir: dir,
     // });
 
     // Method 3. rewrite imports
     // const importMap = JSON.parse(
-    //   await Deno.readTextFile("typegraph/node/package.json"),
+    //   await Deno.readTextFile(
+    //     import.meta.resolve("../../../../typegraph/node/sdk/package.json"),
+    //   ),
     // );
-    // for await (const f of expandGlob("**/*.ts", { root: dir })) {
-    //   const data = await Deno.readTextFile(f.path);
-    //   const newData = data.replace(
-    //     /"@typegraph\/sdk\/?(.*)"/g,
-    //     (match, chunk_) => {
-    //       const chunk = chunk_ == "" ? "." : ("./" + chunk_);
-    //       const importFile = importMap?.exports[chunk]?.import;
-    //       console.log(chunk, "=>", importFile);
-    //       if (importFile) {
-    //         return `"../../../typegraph/node/${importFile.replace("./", "")}"`;
-    //       }
-    //       return match;
-    //     },
-    //   );
-    //   await Deno.writeTextFile(
-    //     f.path,
-    //     newData,
-    //   );
-    // }
+    for await (const f of expandGlob("**/*.ts", { root: dir })) {
+      const data = await Deno.readTextFile(f.path);
+      const newData = data.replace(
+        /"@typegraph\/sdk\/?(.*)"/g,
+        (_match, chunk_) => {
+          const chunk = chunk_ == "" ? "." : ("./" + chunk_);
+          return `"../../../typegraph/node/sdk/src/${chunk}"`;
+          // const importFile = importMap?.exports[chunk]?.import;
+          // console.log(chunk, "=>", importFile);
+          // if (importFile) {
+          //   return `"../../../typegraph/node/sdk/${
+          //     importFile.replace("./", "")
+          //   }"`;
+          // }
+        },
+      );
+      await Deno.writeTextFile(
+        f.path,
+        newData,
+      );
+    }
   },
 };
 

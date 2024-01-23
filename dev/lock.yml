@@ -55,11 +55,7 @@ dev:
       '(static TYPEGRAPH_VERSION: &str = ").*(";)': TYPEGRAPH_VERSION
     whiz.yaml:
       '(  TYPEGRAPH_VERSION: ").+(")': TYPEGRAPH_VERSION
-      '(    WASM_TOOLS_VERSION: ").+(")': WASM_TOOLS_VERSION
-      '(    CARGO_INSTA_VERSION: ").+(")': CARGO_INSTA_VERSION
-      '(    JCO_VERSION: ").+(")': JCO_VERSION
-      '(    WASMEDGE_VERSION: ").+(")': WASMEDGE_VERSION
-      '(    WASM_OPT_VERSION: ").+(")': WASM_OPT_VERSION
+      '(    GHJK_VERSION: ").+(")': GHJK_VERSION
     website/docusaurus.config.js:
       '(  tagline: ").+(",)': TAGLINE
     examples/**/compose.yml:
@@ -74,7 +70,7 @@ dev:
     examples/**/*.ts:
       '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': PUBLISHED_VERSION
   lock:
-    GHJK_VERSION: 7bef036
+    GHJK_VERSION: f380522
     GHJK_ACTION_VERSION: a4453d20156edde8e1c9b19784f8188a36b3bf23
     PYTHON_VERSION: 3.8.18
     POETRY_VERSION: 1.7.0

@@ -6,6 +6,8 @@ settings:
 
 importers:
 
+  .: {}
+
   sdk:
     devDependencies:
       typescript:
