@@ -1,4 +1,4 @@
-import { t, typegraph } from "@typegraph/sdk/index.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
 // skip:next-line
@@ -15,6 +15,7 @@ typegraph({
       "name": t.string(),
     },
   );
+
   const idea = t.struct(
     {
       "id": t.uuid({ asId: true }), // email is just a shorthand alias for `t.string({}, {{format: "uuid"}: undefined})`
@@ -36,5 +37,6 @@ typegraph({
   );
 
   const random = new RandomRuntime({});
-  g.expose({ get_idea: random.gen(idea) });
+  const pub = Policy.public();
+  g.expose({ get_idea: random.gen(idea) }, pub);
 });
