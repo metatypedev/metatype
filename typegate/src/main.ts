@@ -16,69 +16,77 @@ import { MemoryRegister } from "test-utils/memory_register.ts";
 import { NoLimiter } from "test-utils/no_limiter.ts";
 
 const logger = getLogger(import.meta);
-logger.info(`typegate v${config.version} starting`);
 
-Sentry.init({
-  dsn: config.sentry_dsn,
-  release: config.version,
-  environment: config.debug ? "development" : "production",
-  sampleRate: config.sentry_sample_rate,
-  tracesSampleRate: config.sentry_traces_sample_rate,
-  integrations: [
-    new Sentry.Integrations.Context({
-      app: true,
-      os: true,
-      device: true,
-      culture: true,
-    }),
-  ],
-  debug: true,
-});
+try {
+  logger.debug(Deno.inspect(config));
+  logger.info(`typegate v${config.version} starting`);
 
-addEventListener("unhandledrejection", (e) => {
-  Sentry.captureException(e);
-  logger.error(e);
-  e.preventDefault();
-});
-
-// init rust native libs
-init_native();
-
-// load all runtimes
-await init_runtimes();
-
-const deferredTypegate = deferred<Typegate>();
-let register: Register | undefined;
-let limiter: RateLimiter | undefined;
-
-if (redisConfig.hostname != "none") {
-  register = await ReplicatedRegister.init(deferredTypegate, redisConfig);
-  limiter = await RedisRateLimiter.init(redisConfig);
-} else {
-  logger.warning("Entering Redis-less mode");
-  register = new MemoryRegister();
-  limiter = new NoLimiter();
-}
-
-const typegate = new Typegate(register!, limiter!);
-
-deferredTypegate.resolve(typegate);
-
-if (register instanceof ReplicatedRegister) {
-  const lastSync = await register.historySync().catch((err) => {
-    logger.error(err);
-    throw new Error(`failed to load history at boot, aborting: ${err.message}`);
+  Sentry.init({
+    dsn: config.sentry_dsn,
+    release: config.version,
+    environment: config.debug ? "development" : "production",
+    sampleRate: config.sentry_sample_rate,
+    tracesSampleRate: config.sentry_traces_sample_rate,
+    integrations: [
+      new Sentry.Integrations.Context({
+        app: true,
+        os: true,
+        device: true,
+        culture: true,
+      }),
+    ],
+    debug: true,
   });
-  register.startSync(lastSync);
+
+  addEventListener("unhandledrejection", (e) => {
+    Sentry.captureException(e);
+    logger.error(e);
+    e.preventDefault();
+  });
+
+  // init rust native libs
+  init_native();
+
+  // load all runtimes
+  await init_runtimes();
+
+  const deferredTypegate = deferred<Typegate>();
+  let register: Register | undefined;
+  let limiter: RateLimiter | undefined;
+
+  if (redisConfig.hostname != "none") {
+    register = await ReplicatedRegister.init(deferredTypegate, redisConfig);
+    limiter = await RedisRateLimiter.init(redisConfig);
+  } else {
+    logger.warning("Entering Redis-less mode");
+    register = new MemoryRegister();
+    limiter = new NoLimiter();
+  }
+
+  const typegate = new Typegate(register!, limiter!);
+
+  deferredTypegate.resolve(typegate);
+
+  if (register instanceof ReplicatedRegister) {
+    const lastSync = await register.historySync().catch((err) => {
+      logger.error(err);
+      throw new Error(
+        `failed to load history at boot, aborting: ${err.message}`,
+      );
+    });
+    register.startSync(lastSync);
+  }
+
+  await SystemTypegraph.loadAll(typegate, !config.packaged);
+
+  const server = Deno.serve(
+    { port: config.tg_port },
+    (req, connInfo) => typegate.handle(req, connInfo),
+  );
+
+  getLogger().info(`typegate ready on ${config.tg_port}`);
+
+  await server.finished;
+} catch (err) {
+  logger.error(err);
 }
-
-await SystemTypegraph.loadAll(typegate, !config.packaged);
-
-const server = Deno.serve(
-  { port: config.tg_port },
-  (req, connInfo) => typegate.handle(req, connInfo),
-);
-
-getLogger().info(`typegate ready on ${config.tg_port}`);
-
-await server.finished;

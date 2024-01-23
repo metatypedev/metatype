@@ -107,23 +107,24 @@ pub async fn launch_typegate_deno(
         .ok_or_else(|| std::env::set_var("REDIS_URL", "none"))
         .ok();
 
+    use std::str::FromStr;
+    let tmp_dir = std::env::var("TMP_DIR")
+        .map(|p| PathBuf::from_str(&p).expect("invalid $TMP_DIR"))
+        .unwrap_or_else(|_| std::env::current_dir().expect("no cwd found").join("tmp"));
+
     let permissions = deno_runtime::permissions::PermissionsOptions {
         allow_run: Some(["hostname"].into_iter().map(str::to_owned).collect()),
         allow_sys: Some(vec![]),
         allow_env: Some(vec![]),
         allow_hrtime: true,
-        allow_write: Some(
-            ["tmp"]
-                .into_iter()
-                .map(std::str::FromStr::from_str)
-                .collect::<Result<_, _>>()?,
-        ),
+        allow_write: Some(vec![tmp_dir.clone()]),
         allow_ffi: Some(vec![]),
         allow_read: Some(
-            ["."]
-                .into_iter()
-                .map(std::str::FromStr::from_str)
-                .collect::<Result<_, _>>()?,
+            // we allow read for the whole fs
+            // since the location of `main_mod`
+            // is user configurable and we need read
+            // access to typescript files to execute them
+            vec![],
         ),
         allow_net: Some(vec![]),
         ..Default::default()
