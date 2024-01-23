@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { toFileUrl } from "std/path/mod.ts";
+import * as url from "std/url/mod.ts";
 import { ComputeStage } from "../../engine/query_engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../../typegraph/mod.ts";
 import { Runtime } from "../Runtime.ts";
@@ -12,7 +13,7 @@ import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
 import { Task } from "./shared_types.ts";
 import { structureRepr, uncompress } from "../../utils.ts";
-import { path, url } from "compress/deps.ts";
+import { path } from "compress/deps.ts";
 import config from "../../config.ts";
 import { getLogger } from "../../log.ts";
 
