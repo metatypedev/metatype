@@ -89,4 +89,5 @@ try {
   await server.finished;
 } catch (err) {
   logger.error(err);
+  throw err;
 }

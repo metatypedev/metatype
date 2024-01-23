@@ -103,17 +103,15 @@ export class DenoRuntime extends Runtime {
         );
 
         logger.info(`uncompressed ${entries.join(", ")} at ${outDir}`);
-        const modulePath = toFileUrl(
-          path.resolve(outDir, repr.entryPoint),
-        ).toString() + `?hash=${repr.hashes.content}`;
 
-        logger.debug(`registering op ${registryCount} from ${modulePath}`);
         // Note:
         // Worker destruction seems to have no effect on the import cache? (deinit() => stop(worker))
         // hence the use of contentHash
         ops.set(registryCount, {
           type: "register_import_func",
-          modulePath,
+          modulePath: toFileUrl(
+            path.resolve(outDir, repr.entryPoint),
+          ).toString() + `?hash=${repr.hashes.content}`,
           op: registryCount,
           verbose: config.debug,
         });
