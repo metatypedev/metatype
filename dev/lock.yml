@@ -58,8 +58,6 @@ dev:
       '(    GHJK_VERSION: ").+(")': GHJK_VERSION
     website/docusaurus.config.js:
       '(  tagline: ").+(",)': TAGLINE
-    website/package.json:
-      '(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)': PUBLISHED_VERSION
     examples/**/compose.yml:
       '(    image: ghcr.io/metatypedev/typegate:v).+()': METATYPE_VERSION
     '**/pyproject.toml':
