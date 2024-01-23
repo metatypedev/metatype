@@ -69,7 +69,6 @@ export class DenoRuntime extends Runtime {
       "deno",
       name.replaceAll(" ", "_"), // TODO: improve sanitization
     );
-    logger.debug(Deno.inspect({ basePath, tmpDir: config.tmp_dir }));
 
     try {
       // clean up old files

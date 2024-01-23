@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { toFileUrl } from "std/path/mod.ts";
+
 import { getLogger } from "../../log.ts";
 import { Answer, Message } from "../patterns/messenger/types.ts";
 
@@ -92,9 +94,10 @@ async function func(op: number, task: FuncTask) {
 async function register_import_func(_: null, task: RegisterImportFuncTask) {
   const { modulePath, verbose, op } = task;
   verbose && logger.info(`register import func "${op}"`);
+  const url = toFileUrl(modulePath);
   registry.set(
     op,
-    await import(modulePath),
+    await import(url),
   );
 }
 
