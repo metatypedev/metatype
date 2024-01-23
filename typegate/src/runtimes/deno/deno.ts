@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { toFileUrl } from "std/path/mod.ts";
 import { ComputeStage } from "../../engine/query_engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../../typegraph/mod.ts";
 import { Runtime } from "../Runtime.ts";
@@ -87,7 +88,7 @@ export class DenoRuntime extends Runtime {
           type: "register_func",
           fnCode: code,
           op: registryCount,
-          verbose: false,
+          verbose: config.debug,
         });
         registry.set(code, registryCount);
         registryCount += 1;
@@ -102,17 +103,17 @@ export class DenoRuntime extends Runtime {
         );
 
         logger.info(`uncompressed ${entries.join(", ")} at ${outDir}`);
+
         // Note:
         // Worker destruction seems to have no effect on the import cache? (deinit() => stop(worker))
         // hence the use of contentHash
         ops.set(registryCount, {
           type: "register_import_func",
-          modulePath: path.join(
-            outDir,
-            `${repr.entryPoint}?hash=${repr.hashes.content}`,
-          ),
+          modulePath: toFileUrl(
+            path.resolve(outDir, repr.entryPoint),
+          ).toString() + `?hash=${repr.hashes.content}`,
           op: registryCount,
-          verbose: false,
+          verbose: config.debug,
         });
         registry.set(code, registryCount);
         registryCount += 1;
