@@ -47,7 +47,7 @@ export class JWTAuth extends Protocol {
 
   async tokenMiddleware(
     token: string,
-    _url: URL,
+    _request: Request,
   ): Promise<[Record<string, unknown>, string | null]> {
     try {
       const claims = await jwt.verify(token, this.signKey);
