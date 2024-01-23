@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { toFileUrl } from "std/path/mod.ts";
-import * as url from "std/url/mod.ts";
 import { ComputeStage } from "../../engine/query_engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../../typegraph/mod.ts";
 import { Runtime } from "../Runtime.ts";
@@ -104,10 +103,10 @@ export class DenoRuntime extends Runtime {
         );
 
         logger.info(`uncompressed ${entries.join(", ")} at ${outDir}`);
-        const modulePath = url.join(
-          toFileUrl(outDir),
-          `${repr.entryPoint}?hash=${repr.hashes.content}`,
-        ).toString();
+        const modulePath = toFileUrl(
+          path.resolve(outDir, repr.entryPoint),
+        ).toString() + `?hash=${repr.hashes.content}`;
+
         logger.debug(`registering op ${registryCount} from ${modulePath}`);
         // Note:
         // Worker destruction seems to have no effect on the import cache? (deinit() => stop(worker))
