@@ -56,7 +56,7 @@ async function testSerializeAllPairs(t: MetaTest, dirPath: string) {
 
       const { stdout: pyVersion } = await Meta.cli(
         "serialize",
-        // "--pretty",
+        "--pretty",
         "-f",
         pyPath,
       );
@@ -65,13 +65,13 @@ async function testSerializeAllPairs(t: MetaTest, dirPath: string) {
       Deno.writeTextFileSync(tsTempPath, data);
       const { stdout: tsVersion } = await Meta.cli(
         "serialize",
-        // "--pretty",
+        "--pretty",
         "-f",
         tsTempPath,
       );
 
       await t.should(
-        `serialize and compare python and typescript version of ${name})}`,
+        `serialize and compare python and typescript version of ${name}`,
         () => {
           assertEquals(
             stripIncomparable(pyVersion),
@@ -84,5 +84,5 @@ async function testSerializeAllPairs(t: MetaTest, dirPath: string) {
 }
 
 Meta.test("typegraphs comparison", async (t) => {
-  await testSerializeAllPairs(t, "website/typegraphs");
+  await testSerializeAllPairs(t, "examples/typegraphs");
 });
