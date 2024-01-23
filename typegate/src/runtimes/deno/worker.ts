@@ -91,7 +91,8 @@ async function func(op: number, task: FuncTask) {
 
 async function register_import_func(_: null, task: RegisterImportFuncTask) {
   const { modulePath, verbose, op } = task;
-  verbose && logger.info(`register import func "${op}"`);
+  verbose &&
+    logger.info(`register import func "${op}" from "${modulePath.toString()}`);
   registry.set(
     op,
     await import(modulePath),

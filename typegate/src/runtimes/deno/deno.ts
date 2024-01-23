@@ -89,7 +89,7 @@ export class DenoRuntime extends Runtime {
           type: "register_func",
           fnCode: code,
           op: registryCount,
-          verbose: false,
+          verbose: config.debug,
         });
         registry.set(code, registryCount);
         registryCount += 1;
@@ -104,17 +104,19 @@ export class DenoRuntime extends Runtime {
         );
 
         logger.info(`uncompressed ${entries.join(", ")} at ${outDir}`);
+        const modulePath = url.join(
+          toFileUrl(outDir),
+          `${repr.entryPoint}?hash=${repr.hashes.content}`,
+        ).toString();
+        logger.debug(`registering op ${registryCount} from ${modulePath}`);
         // Note:
         // Worker destruction seems to have no effect on the import cache? (deinit() => stop(worker))
         // hence the use of contentHash
         ops.set(registryCount, {
           type: "register_import_func",
-          modulePath: url.join(
-            toFileUrl(outDir),
-            `${repr.entryPoint}?hash=${repr.hashes.content}`,
-          ),
+          modulePath,
           op: registryCount,
-          verbose: false,
+          verbose: config.debug,
         });
         registry.set(code, registryCount);
         registryCount += 1;
