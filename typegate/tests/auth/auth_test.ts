@@ -177,7 +177,7 @@ Meta.test("Auth", async (t) => {
     const { token } = JSON.parse(await decrypt(cook!));
     const claims = await verifyJWT(token) as JWTClaims;
     assertEquals(claims.accessToken, accessToken);
-    assertEquals(claims.profile?.id, id);
+    assertEquals(claims["profile.id"], id);
     assertEquals(await decrypt(claims.refreshToken as string), refreshToken);
   });
 
@@ -262,7 +262,7 @@ Meta.test("Auth", async (t) => {
       accessToken: "a1",
       refreshToken: "r1",
       refreshAt: new Date().valueOf() + 10,
-      profile: {},
+      "profile.id": 123,
     };
     const jwt = await signJWT(claims, 10);
     await gql`
@@ -292,7 +292,7 @@ Meta.test("Auth", async (t) => {
       accessToken: "a1",
       refreshToken,
       refreshAt: Math.floor(new Date().valueOf() / 1000),
-      profile: {},
+      "profile.id": 123,
     };
     const jwt = await signJWT(claims, 10);
     await sleep(1);
@@ -359,7 +359,7 @@ Meta.test("Auth", async (t) => {
       accessToken: "a1",
       refreshToken: "r1",
       refreshAt: Math.floor(new Date().valueOf() / 1000),
-      profile: {},
+      "profile.id": 123,
     };
     const jwt = await signJWT(claims, 10);
     await sleep(1);
