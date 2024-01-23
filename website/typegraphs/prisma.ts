@@ -2,7 +2,7 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 
 typegraph({
-  name: "roadmap-py",
+  name: "roadmap-prisma",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
@@ -15,7 +15,8 @@ typegraph({
       "name": t.string(),
       "ideas": t.list(g.ref("idea")),
     },
-  ).rename("bucket");
+    { name: "bucket" },
+  );
   const idea = t.struct(
     {
       "id": t.uuid({ asId: true, config: { "auto": true } }),
@@ -24,7 +25,8 @@ typegraph({
       "votes": t.list(g.ref("vote")),
       "bucket": g.ref("bucket"),
     },
-  ).rename("idea");
+    { name: "idea" },
+  );
   const vote = t.struct(
     {
       "id": t.uuid({ asId: true, config: { "auto": true } }),
@@ -33,7 +35,8 @@ typegraph({
       "desc": t.string().optional(),
       "idea": g.ref("idea"),
     },
-  ).rename("vote");
+    { name: "vote" },
+  );
 
   g.expose({
     get_buckets: db.findMany(bucket),
