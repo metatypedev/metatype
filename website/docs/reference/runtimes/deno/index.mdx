@@ -13,7 +13,8 @@ This enables to run lightweight and short-lived typescript function in a sandbox
 
 <TGExample
   typegraph="deno"
-  python={require("./deno.py")}
+  python={require("../../../../../examples/typegraphs/deno.py")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/deno.ts")}
   query={require("./deno.graphql")}
 />
 

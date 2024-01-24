@@ -19,7 +19,7 @@ def math(g: Graph):
         fib=deno.import_(
             t.struct({"size": t.integer()}),
             t.list(t.float()),
-            module="fib.ts",
+            module="scripts/fib.ts",
             name="default",
         ).with_policy(restrict_referer),
         random=deno.func(

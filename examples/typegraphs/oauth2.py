@@ -17,14 +17,7 @@ def oauth2_authentication(g: Graph):
     ctx = t.struct({"exp": t.integer().optional().from_context("exp")})
 
     # highlight-start
-    g.auth(
-        Auth.oauth2(
-            "github",
-            "https://github.com/login/oauth/authorize",
-            "https://github.com/login/oauth/access_token",
-            "openid profile email",
-        )
-    )
+    g.auth(Auth.oauth2_github("openid profile email"))
     # highlight-end
 
     g.expose(

@@ -14,7 +14,8 @@ For your app, you will use basic authentication in order to restrict some action
 
     <TGExample
           typegraph="authentication"
-          python={require("./authentication.py")}
+          python={require("../../../../examples/typegraphs/authentication.py")}
+          typescript={require("!!code-loader!../../../../examples/typegraphs/authentication.ts")}
           query={require("./authentication.graphql")}
           headers={{
             Authorization: "Basic YWRtaW46cGFzc3dvcmQ=",

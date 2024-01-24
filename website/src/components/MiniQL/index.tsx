@@ -22,9 +22,11 @@ import { ChoicePicker } from "../ChoicePicker";
 export interface MiniQLProps {
   typegraph: string;
   query: ast.DocumentNode;
-  code?: string;
-  codeLanguage?: string;
-  codeFileUrl?: string;
+  code?: Array<{
+    content: string, 
+    codeLanguage?: string;
+    codeFileUrl?: string;
+  }>;
   headers?: Record<string, unknown>;
   variables?: Record<string, unknown>;
   tab?: Tab;
@@ -46,8 +48,6 @@ function MiniQLBrowser({
   typegraph,
   query,
   code,
-  codeLanguage,
-  codeFileUrl,
   headers = {},
   variables = {},
   tab = "",
@@ -98,23 +98,26 @@ function MiniQLBrowser({
           } gap-2 w-full order-first`}
         >
           {!defaultMode || mode === "typegraph" ? (
-            <div className=" bg-slate-100 rounded-lg flex flex-col mb-2 md:mb-0">
-              {codeFileUrl ? (
-                <div className="p-2 text-xs font-light">
-                  See/edit full code on{" "}
-                  <Link
-                    href={`https://github.com/metatypedev/metatype/blob/main/${codeFileUrl}`}
-                  >
-                    {codeFileUrl}
-                  </Link>
+            code?.map(lang => 
+                <div className=" bg-slate-100 rounded-lg flex flex-col mb-2 md:mb-0">
+                  {lang?.codeFileUrl ? (
+                    <div className="p-2 text-xs font-light">
+                      See/edit full code on{" "}
+                      <Link
+                        href={`https://github.com/metatypedev/metatype/blob/main/${lang?.codeFileUrl}`}
+                      >
+                        {lang?.codeFileUrl}
+                      </Link>
+                    </div>
+                  ) : null}
+                  {lang ? (
+                    <CodeBlock language={lang?.codeLanguage} wrap className="flex-1">
+                      {lang.content}
+                    </CodeBlock>
+                  ) : null}
                 </div>
-              ) : null}
-              {code ? (
-                <CodeBlock language={codeLanguage} wrap className="flex-1">
-                  {code}
-                </CodeBlock>
-              ) : null}
-            </div>
+            )
+
           ) : null}
           {!defaultMode || mode === "playground" ? (
             <div className="flex flex-col graphiql-container">

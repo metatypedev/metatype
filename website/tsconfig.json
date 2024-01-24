@@ -6,6 +6,7 @@
     "strict": true,
     "allowJs": false,
     "baseUrl": ".",
+    "esModuleInterop": true,
     "types": [
       "docusaurus-theme-frontmatter"
     ]

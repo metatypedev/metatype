@@ -16,7 +16,7 @@ def graphql_server(g: Graph):
 
     stargazer = t.struct(
         {
-            "login": t.string(name="login"),
+            "login": t.string().rename("login"),
             "user": github.get(
                 "/users/{user}",
                 t.struct({"user": t.string().from_parent("login")}),
