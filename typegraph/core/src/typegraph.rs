@@ -24,7 +24,8 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::wit::core::{
-    Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypegraphInitParams,
+    Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec, RuntimeId,
+    TypegraphDeployParams, TypegraphInitParams,
 };
 
 #[derive(Default)]
@@ -218,6 +219,12 @@ pub fn finalize() -> Result<String> {
 
     #[cfg(not(test))]
     return serde_json::to_string(&tg).map_err(|e| e.to_string().into());
+}
+
+pub fn deploy(_params: TypegraphDeployParams) -> Result<()> {
+    let _json = finalize()?;
+    // now deploy
+    Ok(())
 }
 
 fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {

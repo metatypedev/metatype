@@ -79,7 +79,7 @@ function captureInsideParenthesis(
   }
 
   // no-op
-  if (lastOpenedParenth == null) {
+  if (lastOpenedParenth < 0) {
     return null;
   }
 

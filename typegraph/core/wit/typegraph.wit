@@ -34,8 +34,21 @@ interface core {
         rate: option<rate>,
     }
 
+    record basic-auth {
+        username: string,
+        password: string,
+    }
+
+    record typegraph-deploy-params {
+        base-url: string,
+        prefix: option<string>,
+        auth: option<basic-auth>,
+        env: list<tuple<string, string>>
+    }
+
     init-typegraph: func(params: typegraph-init-params) -> result<_, error>
     finalize-typegraph: func() -> result<string, error>
+    deploy-typegraph: func(params: typegraph-deploy-params) -> result<_, error>
 
     type type-id = u32
     record type-base {
