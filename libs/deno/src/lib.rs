@@ -147,7 +147,22 @@ pub async fn test(
     let options = cli_factory.cli_options().clone();
 
     let test_options = args::TestOptions {
-        files,
+        files: util::glob::FilePatterns {
+            include: files.include.map(|vec| {
+                util::glob::PathOrPatternSet::new(
+                    vec.into_iter()
+                        .map(util::glob::PathOrPattern::Path)
+                        .collect(),
+                )
+            }),
+            exclude: util::glob::PathOrPatternSet::new(
+                files
+                    .exclude
+                    .into_iter()
+                    .map(util::glob::PathOrPattern::Path)
+                    .collect(),
+            ),
+        },
         ..options.resolve_test_options(args::TestFlags {
             doc: false,
             trace_ops: true,
@@ -164,7 +179,7 @@ pub async fn test(
     let permissions = deno_runtime::permissions::Permissions::from_options(&permissions)?;
 
     let specifiers_with_mode =
-        fetch_specifiers_with_test_mode(file_fetcher, &test_options.files, &test_options.doc)
+        fetch_specifiers_with_test_mode(file_fetcher, test_options.files, &test_options.doc)
             .await?;
 
     if !test_options.allow_none && specifiers_with_mode.is_empty() {
@@ -275,7 +290,11 @@ pub async fn bench(
     };
 
     let bench_options = args::BenchOptions {
-        ..args::BenchOptions::resolve(Some(deno_config::BenchConfig { files }), None)?
+        ..args::BenchOptions::resolve(
+            Some(deno_config::BenchConfig { files }),
+            None,
+            &std::env::current_dir()?,
+        )?
     };
     let cli_factory = factory::CliFactory::from_flags(flags)
         .await?
@@ -287,7 +306,7 @@ pub async fn bench(
     // file would have impact on other files, which is undesirable.
     let permissions = deno_runtime::permissions::Permissions::from_options(&permissions)?;
 
-    let specifiers = util::fs::collect_specifiers(&bench_options.files, is_supported_bench_path)?;
+    let specifiers = util::fs::collect_specifiers(bench_options.files, is_supported_bench_path)?;
 
     if specifiers.is_empty() {
         return Err(deno_core::error::generic_error("No bench modules found"));

@@ -4,7 +4,7 @@
 pub mod parser;
 
 pub use dprint_plugin_typescript as dprint_plugin;
-pub use string_cache;
+pub use swc_atoms;
 pub use swc_common;
 use swc_common::sync::Lrc;
 use swc_common::SourceMap;
@@ -42,12 +42,11 @@ pub fn print_module<W: Write>(cm: Lrc<SourceMap>, module: &Module, writer: W) ->
         _ => "\n",           // UNIX or MAC := LF
     };
     let mut emitter = Emitter {
-        cfg: Config {
-            target: EsVersion::latest(),
-            ascii_only: true,
-            minify: false,
-            omit_last_semi: true,
-        },
+        cfg: Config::default()
+            .with_target(EsVersion::latest())
+            .with_ascii_only(true)
+            .with_minify(false)
+            .with_omit_last_semi(true),
         cm: cm.clone(),
         comments: None,
         wr: JsWriter::new(cm, new_line, writer, None),
