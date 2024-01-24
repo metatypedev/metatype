@@ -38,6 +38,8 @@ RUN set -eux; \
     make \
     ## libffi-sys\
     automake \
+    # wasm-opt deps \
+    clang \
     ## wasmedge-sys \
     libclang-dev \
     ## openssl deps \
@@ -57,8 +59,11 @@ RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash \
     deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
 COPY ghjk.ts .
-RUN CI=1 NO_PYTHON=1 ghjk ports sync
+RUN OCI=1 NO_PYTHON=1 ghjk ports sync
 ENV GHJK_ENV=/root/.local/share/ghjk/env.sh
+
+ARG WASM_OPT_VERSION=0.116.0
+RUN cargo install wasm-opt@$WASM_OPT_VERSION --locked --debug
 
 COPY --from=plan /app/recipe.json recipe.json
 

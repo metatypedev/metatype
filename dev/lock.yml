@@ -49,6 +49,7 @@ dev:
       (ARG DENO_VERSION=).*(): DENO_VERSION
       (ARG RUST_VERSION=).*(): RUST_VERSION
       (ARG GHJK_VERSION=).*(): GHJK_VERSION
+      (ARG WASM_OPT_VERSION=).*(): WASM_OPT_VERSION
     typegate/src/typegraph/versions.ts:
       (const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
     typegraph/core/src/typegraph.rs:
