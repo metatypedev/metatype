@@ -18,7 +18,6 @@ const NODE_VERSION = "20.8.0";
 ghjk.install(
   ports.wasmedge({ version: WASMEDGE_VERSION }),
   ports.pnpm({ version: PNPM_VERSION }),
-  ports.wasm_tools({ version: WASM_TOOLS_VERSION }),
   ports.cargo_insta({ version: CARGO_INSTA_VERSION }),
   ports.protoc({ version: PROTOC_VERSION }),
   ports.asdf({
@@ -35,6 +34,7 @@ ghjk.install(
 if (!Deno.env.has("OCI")) {
   ghjk.install(
     ports.wasm_opt({ version: WASM_OPT_VERSION }),
+    ports.wasm_tools({ version: WASM_TOOLS_VERSION }),
   );
 }
 
