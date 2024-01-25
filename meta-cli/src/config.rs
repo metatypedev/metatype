@@ -15,7 +15,8 @@ use std::str::FromStr;
 
 use crate::cli::CommonArgs;
 use crate::fs::find_in_parents;
-use crate::utils::{BasicAuth, Node};
+use crate::utils::BasicAuth;
+use common::node::Node;
 
 pub const METATYPE_FILES: &[&str] = &["metatype.yml", "metatype.yaml"];
 pub const VENV_FOLDERS: &[&str] = &[".venv"];
@@ -95,7 +96,7 @@ impl NodeConfig {
         Node::new(
             self.url.clone(),
             self.prefix.clone(),
-            Some(self.basic_auth(dir).await.context("basic auth")?),
+            Some(self.basic_auth(dir).await.context("basic auth")?.into()),
             self.env.clone(),
         )
     }

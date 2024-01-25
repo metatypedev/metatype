@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use indoc::indoc;
 use reqwest::{Client, IntoUrl, RequestBuilder, Url};
 use std::{collections::HashMap, time::Duration};
@@ -67,13 +67,12 @@ impl Node {
     }
 
     pub async fn try_deploy(
-        self,
+        &self,
         tg: &Typegraph,
         secrets: &HashMap<String, String>,
         cli_version: String,
-    ) -> Result<(), Error> {
-        let _response = self
-            .post("/typegate")
+    ) -> Result<graphql::Response, Error> {
+        self.post("/typegate")
             .map_err(Error::Other)?
             .timeout(Duration::from_secs(10))
             .gql(
@@ -90,7 +89,30 @@ impl Node {
                 Some(Self::graphql_vars(tg, secrets, cli_version).map_err(Error::Other)?),
             )
             .await
-            .map_err(Error::Graphql)?;
+            .map_err(Error::Graphql)
+    }
+
+    pub async fn try_undeploy(&self, typegraphs: &[String]) -> Result<()> {
+        let res = self
+            .post("/typegate")?
+            .gql(
+                indoc! {"
+                mutation($names: [String!]!) {
+                    removeTypegraphs(names: $names)
+                }"}
+                .to_string(),
+                Some(serde_json::json!({
+                    "names": typegraphs,
+                })),
+            )
+            .await?;
+
+        let res: bool = res
+            .data("removeTypegraphs")
+            .context("removeTypegraph reponse")?;
+        if !res {
+            anyhow::bail!("undeploy failed");
+        }
         Ok(())
     }
 }

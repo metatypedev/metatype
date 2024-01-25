@@ -18,7 +18,7 @@ use tokio::sync::oneshot;
 
 use crate::config::Config;
 use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
-use crate::utils::Node;
+use common::node::Node;
 
 use super::console::{
     input::{Confirm, ConfirmHandler, Select, SelectOption},

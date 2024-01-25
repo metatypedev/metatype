@@ -4,14 +4,13 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::Duration;
 
 use colored::Colorize;
 use common::typegraph::Typegraph;
 
 use actix::prelude::*;
 use anyhow::{Context as AnyhowContext, Result};
-use indoc::indoc;
+use futures::TryFutureExt;
 use pathdiff::diff_paths;
 use serde::Deserialize;
 
@@ -21,8 +20,8 @@ use crate::deploy::push::migration_resolution::{
     ForceReset, ManualResolution, RemoveLatestMigration,
 };
 use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
-use crate::utils::graphql;
-use crate::utils::{graphql::Query, Node};
+use common::graphql;
+use common::node::Node;
 
 use super::console::{Console, ConsoleActor};
 use super::push_manager::{PushFinished, PushManagerActor};
@@ -102,14 +101,6 @@ impl PusherActor {
         }
     }
 
-    fn graphql_vars(tg: &Typegraph, secrets: &Secrets) -> Result<serde_json::Value> {
-        Ok(serde_json::json!({
-            "tg": serde_json::to_string(&tg)?,
-            "secrets": serde_json::to_string(secrets)?,
-            "cliVersion": crate::build::PKG_VERSION,
-        }))
-    }
-
     async fn push(push: Push, node: Arc<Node>, secrets: Arc<Secrets>) -> Result<PushResult, Error> {
         // TODO can we set the prefix before the push? // in the loader??
         // so we wont need to clone
@@ -121,23 +112,13 @@ impl PusherActor {
 
         let secrets: &Secrets = &secrets;
 
-        let res =  node
-            .post("/typegate").map_err(|e| { Error::Other(e) })?
-            .timeout(Duration::from_secs(10))
-            .gql(
-                indoc! {"
-                    mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
-                        addTypegraph(fromString: $tg, secrets: $secrets, cliVersion: $cliVersion) {
-                            name
-                            messages { type text }
-                            migrations { runtime migrations }
-                            failure
-                        }
-                    }"}
-                .to_string(),
-                Some(Self::graphql_vars(&tg, secrets).map_err(|e| { Error::Other(e) })?
-            ))
-            .await.map_err(|e| { Error::Graphql(e) })?;
+        let res = node
+            .try_deploy(&tg, secrets, crate::build::PKG_VERSION.to_owned())
+            .map_err(|e| match e {
+                common::node::Error::Graphql(payload) => Error::Graphql(payload),
+                common::node::Error::Other(payload) => Error::Other(payload),
+            })
+            .await?;
 
         let res: PushResultRaw = res
             .data("addTypegraph")
