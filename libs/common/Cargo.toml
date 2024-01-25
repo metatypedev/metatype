@@ -14,7 +14,7 @@ serde_json = { version = "1.0.108", features = ["preserve_order"] }
 serde_with = "3.4.0"
 tar = "0.4.40"
 ignore = "0.4.20"
-reqwest = { workspace = true, features = ["json"] }
+reqwest-wasm = { features = ["json"] }
 async-trait = "0.1.74"
 itertools = "0.11.0"
 colored = "2.0.4"

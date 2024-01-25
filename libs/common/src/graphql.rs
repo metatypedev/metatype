@@ -5,7 +5,8 @@ use anyhow::{bail, Result};
 use async_trait::async_trait;
 use colored::Colorize;
 use itertools::Itertools;
-use reqwest::{header::CONTENT_TYPE, RequestBuilder, Response as HttpResponse};
+// use reqwest::{header::CONTENT_TYPE, RequestBuilder, Response as HttpResponse};
+use reqwest_wasm::{header::CONTENT_TYPE, RequestBuilder, Response as HttpResponse};
 use serde::Deserialize;
 use serde_json;
 use std::fmt;
@@ -15,6 +16,8 @@ pub struct Response {
     data: serde_json::Value,
     errors: Option<Vec<GraphqlError>>,
 }
+
+unsafe impl Send for Response {}
 
 impl Response {
     #[allow(dead_code)]
