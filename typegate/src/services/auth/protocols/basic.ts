@@ -5,7 +5,7 @@ import { SystemTypegraph } from "../../../system_typegraphs.ts";
 import { b64decode } from "../../../utils.ts";
 import { SecretManager } from "../../../typegraph/mod.ts";
 import config from "../../../config.ts";
-import { Protocol } from "./protocol.ts";
+import { Protocol, TokenMiddlewareOutput } from "./protocol.ts";
 import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
 import { Auth } from "../../../typegraph/types.ts";
 
@@ -36,7 +36,7 @@ export class BasicAuth extends Protocol {
   tokenMiddleware(
     jwt: string,
     _request: Request,
-  ): Promise<[Record<string, unknown>, string | null]> {
+  ): Promise<TokenMiddlewareOutput> {
     try {
       const [username, token] = b64decode(jwt).split(
         ":",
@@ -49,9 +49,17 @@ export class BasicAuth extends Protocol {
         }
         : {};
 
-      return Promise.resolve([claims, null]);
+      return Promise.resolve({
+        claims,
+        nextToken: null,
+        error: null,
+      });
     } catch {
-      return Promise.resolve([{}, null]);
+      return Promise.resolve({
+        claims: {},
+        nextToken: null,
+        error: "Invalid token",
+      });
     }
   }
 }

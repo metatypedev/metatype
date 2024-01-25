@@ -12,7 +12,7 @@ import { Protocol } from "./protocols/protocol.ts";
 import { DenoRuntime } from "../../runtimes/deno/deno.ts";
 import { unsafeExtractJWT } from "../../crypto.ts";
 import { QueryEngine } from "../../engine/query_engine.ts";
-import { clearCookie, getEncryptedCookie } from "../auth/cookies.ts";
+import * as routes from "./routes/mod.ts";
 import { getLogger } from "../../log.ts";
 import { methodNotAllowed } from "../../services/responses.ts";
 import { Runtime } from "../../runtimes/Runtime.ts";
@@ -95,13 +95,13 @@ export async function ensureJWT(
     return [{}, headers];
   }
 
-  const [context, nextAuth] = await auth.tokenMiddleware(
+  const { claims: context, nextToken } = await auth.tokenMiddleware(
     token,
     request,
   );
-  if (nextAuth !== null) {
+  if (nextToken !== null) {
     // "" is valid as it signal to remove the token
-    headers.set(nextAuthorizationHeader, nextAuth);
+    headers.set(nextAuthorizationHeader, nextToken);
   }
   return [context, headers];
 }
@@ -121,38 +121,15 @@ export async function handleAuth(
     4,
   );
 
-  const origin = request.headers.get("origin") ?? "";
-
   if (providerName === "take") {
-    const resHeaders = clearCookie(url.hostname, engine.name, headers);
-    try {
-      const { token, redirectUri } = await getEncryptedCookie(
-        request.headers,
-        engine.name,
-      );
-
-      if (!redirectUri.startsWith(origin)) {
-        return new Response(
-          "take request must share domain with redirect uri",
-          {
-            status: 400,
-            headers: resHeaders,
-          },
-        );
-      }
-      resHeaders.set("content-type", "application/json");
-      return new Response(JSON.stringify({ token }), {
-        status: 200,
-        headers: resHeaders,
-      });
-    } catch (e) {
-      logger.info(`take request failed ${e}`);
-      return new Response("not authorized", {
-        status: 401,
-        headers: resHeaders,
-      });
-    }
+    return await routes.take({ request, engine, headers });
   }
+
+  if (providerName === "validate") {
+    return await routes.validate({ request, engine, headers });
+  }
+
+  const origin = request.headers.get("origin") ?? "";
 
   const provider = engine.tg.auths.get(providerName);
   if (!provider) {
