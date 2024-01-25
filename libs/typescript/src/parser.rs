@@ -253,7 +253,11 @@ pub fn transform_module(source: String) -> Result<String> {
     let globals = Globals::default();
     let module = GLOBALS.set(&globals, || {
         let top_level_mark = Mark::new();
-        module.fold_with(&mut strip(top_level_mark))
+        let Program::Module(module) = Program::Module(module).fold_with(&mut strip(top_level_mark))
+        else {
+            unreachable!()
+        };
+        module
     });
 
     with_emitter(cm, |emitter| {
@@ -290,7 +294,11 @@ pub fn transform_script(source: String) -> Result<String> {
     let globals = Globals::default();
     let script = GLOBALS.set(&globals, || {
         let top_level_mark = Mark::new();
-        script.fold_with(&mut strip(top_level_mark))
+        let Program::Script(script) = Program::Script(script).fold_with(&mut strip(top_level_mark))
+        else {
+            unreachable!();
+        };
+        script
     });
 
     with_emitter(cm, |emitter| {
