@@ -1327,10 +1327,15 @@ name = "common"
 version = "0.3.2"
 dependencies = [
  "anyhow",
+ "async-trait",
  "base64 0.21.7",
+ "colored",
  "flate2",
  "ignore",
  "indexmap 2.1.0",
+ "indoc",
+ "itertools 0.11.0",
+ "reqwest",
  "schemars",
  "serde 1.0.195",
  "serde_json",

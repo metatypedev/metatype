@@ -2,4 +2,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 pub mod archive;
+pub mod graphql;
+pub mod node;
 pub mod typegraph;
