@@ -10,7 +10,7 @@ on:
 
 env:
   GHJK_VERSION: "f380522"
-  DENO_VERSION: "1.39.4"
+  DENO_VERSION: "1.40.1"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
 

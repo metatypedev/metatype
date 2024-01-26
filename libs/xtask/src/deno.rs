@@ -81,10 +81,24 @@ impl Test {
             ..Default::default()
         };
         let inj = typegate_engine::OpDepInjector::from_env();
+        use mt_deno::deno::deno_config;
         mt_deno::test_sync(
-            mt_deno::deno::deno_config::FilesConfig {
-                include: self.files,
-                exclude: self.ignore.unwrap_or_default(),
+            deno_config::glob::FilePatterns {
+                base: std::env::current_dir()?,
+                include: self.files.map(|vec| {
+                    deno_config::glob::PathOrPatternSet::new(
+                        vec.into_iter()
+                            .map(deno_config::glob::PathOrPattern::Path)
+                            .collect(),
+                    )
+                }),
+                exclude: deno_config::glob::PathOrPatternSet::new(
+                    self.ignore
+                        .unwrap_or_default()
+                        .into_iter()
+                        .map(deno_config::glob::PathOrPattern::Path)
+                        .collect(),
+                ),
             },
             self.config,
             permissions,
@@ -142,10 +156,24 @@ impl Bench {
             allow_net: Some(vec![]),
             ..Default::default()
         };
+        use mt_deno::deno::deno_config;
         mt_deno::bench_sync(
-            mt_deno::deno::deno_config::FilesConfig {
-                include: self.files,
-                exclude: self.ignore.unwrap_or_default(),
+            deno_config::glob::FilePatterns {
+                base: std::env::current_dir()?,
+                include: self.files.map(|vec| {
+                    deno_config::glob::PathOrPatternSet::new(
+                        vec.into_iter()
+                            .map(deno_config::glob::PathOrPattern::Path)
+                            .collect(),
+                    )
+                }),
+                exclude: deno_config::glob::PathOrPatternSet::new(
+                    self.ignore
+                        .unwrap_or_default()
+                        .into_iter()
+                        .map(deno_config::glob::PathOrPattern::Path)
+                        .collect(),
+                ),
             },
             self.config,
             permissions,

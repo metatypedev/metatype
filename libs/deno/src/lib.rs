@@ -65,7 +65,10 @@ pub async fn run(
         // NOTE: avoid using the Run subcommand
         // as it breaks our custom_extensions patch for some reason
         import_map_path: import_map_url,
-        unstable: true,
+        unstable_config: args::UnstableConfig {
+            legacy_flag_enabled: true,
+            ..Default::default()
+        },
         ..Default::default()
     };
 
@@ -87,7 +90,7 @@ pub async fn run(
 }
 
 pub fn test_sync(
-    files: deno_config::FilesConfig,
+    files: deno_config::glob::FilePatterns,
     config_file: PathBuf,
     permissions: PermissionsOptions,
     coverage_dir: Option<String>,
@@ -119,7 +122,7 @@ pub fn test_sync(
 }
 
 pub async fn test(
-    files: deno_config::FilesConfig,
+    files: deno_config::glob::FilePatterns,
     config_file: PathBuf,
     permissions: PermissionsOptions,
     coverage_dir: Option<String>,
@@ -133,7 +136,10 @@ pub async fn test(
         Box::new(util::draw_thread::DrawThread::show),
     );
     let flags = args::Flags {
-        unstable: true,
+        unstable_config: args::UnstableConfig {
+            legacy_flag_enabled: true,
+            ..Default::default()
+        },
         type_check_mode: args::TypeCheckMode::Local,
         config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
         argv,
@@ -147,22 +153,7 @@ pub async fn test(
     let options = cli_factory.cli_options().clone();
 
     let test_options = args::TestOptions {
-        files: util::glob::FilePatterns {
-            include: files.include.map(|vec| {
-                util::glob::PathOrPatternSet::new(
-                    vec.into_iter()
-                        .map(util::glob::PathOrPattern::Path)
-                        .collect(),
-                )
-            }),
-            exclude: util::glob::PathOrPatternSet::new(
-                files
-                    .exclude
-                    .into_iter()
-                    .map(util::glob::PathOrPattern::Path)
-                    .collect(),
-            ),
-        },
+        files,
         ..options.resolve_test_options(args::TestFlags {
             doc: false,
             trace_ops: true,
@@ -244,7 +235,7 @@ fn new_thread_builder() -> std::thread::Builder {
 }
 
 pub fn bench_sync(
-    files: deno_config::FilesConfig,
+    files: deno_config::glob::FilePatterns,
     config_file: PathBuf,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
@@ -268,7 +259,7 @@ pub fn bench_sync(
 }
 
 pub async fn bench(
-    files: deno_config::FilesConfig,
+    files: deno_config::glob::FilePatterns,
     config_file: PathBuf,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
@@ -282,7 +273,10 @@ pub async fn bench(
         Box::new(util::draw_thread::DrawThread::show),
     );
     let flags = args::Flags {
-        unstable: true,
+        unstable_config: args::UnstableConfig {
+            legacy_flag_enabled: true,
+            ..Default::default()
+        },
         type_check_mode: args::TypeCheckMode::Local,
         config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
         argv,
