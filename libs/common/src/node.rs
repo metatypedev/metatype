@@ -3,9 +3,8 @@
 
 use anyhow::{Context, Result};
 use indoc::indoc;
-// use reqwest::{Client, IntoUrl, RequestBuilder, Url};
-use reqwest_wasm::{Client, IntoUrl, RequestBuilder, Url};
-use std::collections::HashMap;
+use reqwest::{Client, IntoUrl, RequestBuilder, Url};
+use std::{collections::HashMap, time::Duration};
 
 use crate::{
     graphql::{self, Query},
@@ -52,7 +51,7 @@ impl Node {
         if let Some(auth) = &self.auth {
             b = b.basic_auth(&auth.username, Some(&auth.password));
         }
-        Ok(b /*.timeout(Duration::from_secs(5)) */)
+        Ok(b.timeout(Duration::from_secs(5)))
     }
 
     fn graphql_vars(
@@ -75,7 +74,7 @@ impl Node {
     ) -> Result<graphql::Response, Error> {
         self.post("/typegate")
             .map_err(Error::Other)?
-            // .timeout(Duration::from_secs(10))
+            .timeout(Duration::from_secs(10))
             .gql(
                 indoc! {"
                 mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
