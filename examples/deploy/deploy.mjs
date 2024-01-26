@@ -1,10 +1,10 @@
-import { fx, Policy, t, typegraph } from "@typegraph/sdk/index.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import { tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 
 const tg = typegraph({
-  name: "deploy-example",
-  disableAutoSerialization: true 
+  name: "deploy-example-node",
+  disableAutoSerialization: true // disable print
 }, (g) => {
     const deno = new DenoRuntime();
     const pub = Policy.public();

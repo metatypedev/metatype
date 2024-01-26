@@ -71,7 +71,7 @@ export class RawAuth {
   constructor(readonly jsonStr: string) {}
 }
 
-export interface Typegraph {
+export interface TypegraphOutput {
   serialized: string;
   args: Omit<TypegraphArgs, "builder">;
 }
@@ -90,7 +90,7 @@ export function typegraph(
 export function typegraph(
   nameOrArgs: string | TypegraphArgs | Omit<TypegraphArgs, "builder">,
   maybeBuilder?: TypegraphBuilder,
-): Typegraph {
+): TypegraphOutput {
   const args = typeof nameOrArgs === "string"
     ? { name: nameOrArgs }
     : nameOrArgs;

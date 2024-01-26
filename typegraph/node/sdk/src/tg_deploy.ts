@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Typegraph } from "./typegraph.js";
+import { TypegraphOutput } from "./typegraph.js";
 
 export interface BasicAuth {
   username: string;
@@ -10,15 +10,13 @@ export interface BasicAuth {
 
 export interface TypegraphDeployParams {
   baseUrl: string;
-  //   prefix?: string;
   auth?: BasicAuth;
   secrets: Record<string, string>;
   cliVersion: string;
-  //   env: Record<string, string>;
 }
 
 export async function tgDeploy(
-  typegraph: Typegraph,
+  typegraph: TypegraphOutput,
   params: TypegraphDeployParams,
 ) {
   const { baseUrl, cliVersion, secrets, auth } = params;

@@ -119,6 +119,12 @@ class Graph:
         return gen_ref(name)
 
 
+@dataclass
+class TypegraphOutput:
+    tg: Typegraph
+    serialized: str
+
+
 def typegraph(
     name: Optional[str] = None,
     *,
@@ -126,8 +132,9 @@ def typegraph(
     rate: Optional[Rate] = None,
     cors: Optional[Cors] = None,
     prefix: Optional[str] = None,
-) -> Callable[[Callable[[Graph], None]], Typegraph]:
-    def decorator(builder: Callable[[Graph], None]) -> Typegraph:
+    disable_auto_serialization: Optional[bool] = False,
+) -> Callable[[Callable[[Graph], None]], Callable[[], TypegraphOutput]]:
+    def decorator(builder: Callable[[Graph], None]) -> TypegraphOutput:
         actual_name = name
         if name is None:
             import re
@@ -166,9 +173,10 @@ def typegraph(
         if isinstance(res, Err):
             raise Exception(res.value)
 
-        print(res.value)
+        if not disable_auto_serialization:
+            print(res.value)
 
-        return tg
+        return lambda: TypegraphOutput(tg=tg, serialized=res.value)
 
     return decorator
 

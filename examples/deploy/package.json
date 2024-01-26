@@ -4,7 +4,8 @@
   "description": "",
   "main": "sample.mjs",
   "scripts": {
-    "deploy": "node deploy.mjs", 
+    "deploy": "node deploy.mjs",
+    "deploy_python": "python3 deploy.py",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
