@@ -26,6 +26,7 @@ interface TypegraphArgs {
   secrets?: Array<string>;
   cors?: Cors;
   rate?: Rate;
+  disableAutoSerialization?: boolean;
 }
 
 export interface TypegraphBuilderArgs {
@@ -70,6 +71,11 @@ export class RawAuth {
   constructor(readonly jsonStr: string) {}
 }
 
+export interface Typegraph {
+  serialized: string;
+  args: Omit<TypegraphArgs, "builder">;
+}
+
 export function typegraph(
   name: string,
   builder: TypegraphBuilder,
@@ -84,7 +90,7 @@ export function typegraph(
 export function typegraph(
   nameOrArgs: string | TypegraphArgs | Omit<TypegraphArgs, "builder">,
   maybeBuilder?: TypegraphBuilder,
-): void {
+): Typegraph {
   const args = typeof nameOrArgs === "string"
     ? { name: nameOrArgs }
     : nameOrArgs;
@@ -96,6 +102,7 @@ export function typegraph(
     prefix,
     rate,
     secrets,
+    disableAutoSerialization,
   } = args;
   const builder = "builder" in args
     ? args.builder as TypegraphBuilder
@@ -161,7 +168,20 @@ export function typegraph(
 
   builder(g);
 
-  console.log(core.finalizeTypegraph());
+  const tgJson = core.finalizeTypegraph();
+  if (!disableAutoSerialization) {
+    console.log(tgJson);
+  }
+  return {
+    serialized: tgJson,
+    args: {
+      name,
+      cors,
+      dynamic,
+      rate,
+      secrets,
+    },
+  };
 }
 
 export function genRef(name: string) {

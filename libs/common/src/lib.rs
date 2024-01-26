@@ -5,7 +5,7 @@ pub mod archive;
 pub mod typegraph;
 
 // Note:
-// try refactoring the typegraph deploy feature and refactor redundant code on both sdks
+// try refactoring the typegraph deploy feature on both sdks
 // once WebAssembly async and networking has matured enough
 #[cfg(not(target_arch = "wasm32"))]
 pub mod graphql;

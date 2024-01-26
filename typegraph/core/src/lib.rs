@@ -29,7 +29,7 @@ use types::{
 use wit::core::{
     ContextCheck, Policy, PolicyId, PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat,
     TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList, TypeOptional, TypeString, TypeStruct,
-    TypeUnion, TypegraphDeployParams, TypegraphInitParams,
+    TypeUnion, TypegraphInitParams,
 };
 use wit::runtimes::{Guest, MaterializerDenoFunc};
 
@@ -58,10 +58,6 @@ impl wit::core::Guest for Lib {
 
     fn finalize_typegraph() -> Result<String> {
         typegraph::finalize()
-    }
-
-    fn deploy_typegraph(params: TypegraphDeployParams) -> Result<()> {
-        typegraph::deploy(params)
     }
 
     fn refb(name: String, attributes: Vec<(String, String)>) -> Result<CoreTypeId> {
