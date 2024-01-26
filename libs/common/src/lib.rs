@@ -6,7 +6,7 @@ pub mod typegraph;
 
 // Note:
 // try refactoring the typegraph deploy feature on both sdks
-// once WebAssembly async and networking has matured enough
+// once WebAssembly async and networking have matured enough
 #[cfg(not(target_arch = "wasm32"))]
 pub mod graphql;
 #[cfg(not(target_arch = "wasm32"))]

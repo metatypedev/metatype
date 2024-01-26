@@ -17,6 +17,9 @@ mod test_utils;
 
 use std::collections::HashSet;
 
+#[allow(unused_imports)]
+use crate::wit::compress as host_compress;
+
 use errors::Result;
 use global_store::{NameRegistration, Store};
 use indoc::formatdoc;
@@ -57,6 +60,7 @@ impl wit::core::Guest for Lib {
     }
 
     fn finalize_typegraph() -> Result<String> {
+        // host_compress("path/to/file").map_err(|e| e.into())
         typegraph::finalize()
     }
 

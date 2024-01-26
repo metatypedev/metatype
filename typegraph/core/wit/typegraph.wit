@@ -499,4 +499,5 @@ world typegraph {
     export runtimes
     export utils
     export aws
+    import compress: func(path: string) -> result<string, string>;
 }
