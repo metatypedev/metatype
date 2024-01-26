@@ -17,12 +17,13 @@ const tg = typegraph({
 
 tgDeploy(tg, {
   baseUrl: "http://localhost:7890",
+  cliVersion: "0.3.2",
   auth: {
     username: "admin",
     password: "password",
   },
-}).then((response) => {
-  console.log("OK");
-  console.log(response);
+}).then((result) => {
+  console.log("gate:");
+  console.log(result);
 })
   .catch(console.error);

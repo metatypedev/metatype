@@ -3,8 +3,6 @@
 
 import { Typegraph } from "./typegraph.js";
 
-export const CLI_CONSTRAINT_VERSION = "0.3.2";
-
 export interface BasicAuth {
   username: string;
   password: string;
@@ -15,6 +13,7 @@ export interface TypegraphDeployParams {
   //   prefix?: string;
   auth?: BasicAuth;
   secrets: Record<string, string>;
+  cliVersion: string;
   //   env: Record<string, string>;
 }
 
@@ -22,7 +21,7 @@ export async function tgDeploy(
   typegraph: Typegraph,
   params: TypegraphDeployParams,
 ) {
-  const { baseUrl, secrets, auth } = params;
+  const { baseUrl, cliVersion, secrets, auth } = params;
   const { serialized } = typegraph;
 
   const headers = new Headers();
@@ -37,12 +36,17 @@ export async function tgDeploy(
   const response = await fetch(new URL("/typegate", baseUrl), {
     method: "POST",
     headers,
-    body: JSON.stringify(gqlBody(serialized, secrets)),
+    body: JSON.stringify(gqlBody(serialized, cliVersion, secrets)),
   });
-  return await response.text();
+
+  return handleResponse(response);
 }
 
-function gqlBody(tg: String, secrets?: Record<string, string>) {
+function gqlBody(
+  tg: String,
+  cliVersion: string,
+  secrets?: Record<string, string>,
+) {
   const query = `
     mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
         addTypegraph(fromString: $tg, secrets: $secrets, cliVersion: $cliVersion) {
@@ -58,7 +62,16 @@ function gqlBody(tg: String, secrets?: Record<string, string>) {
     variables: {
       tg,
       secrets: JSON.stringify(secrets ?? {}),
-      cliVersion: CLI_CONSTRAINT_VERSION,
+      cliVersion,
     },
   };
+}
+
+async function handleResponse(
+  response: Response,
+): Promise<Record<string, any> | string> {
+  if (response.headers.get("Content-Type") == "application/json") {
+    return await response.json();
+  }
+  return await response.text();
 }

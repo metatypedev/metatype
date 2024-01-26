@@ -4,7 +4,7 @@
   "description": "",
   "main": "sample.mjs",
   "scripts": {
-    "deploy": "node sample.mjs", 
+    "deploy": "node deploy.mjs", 
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
