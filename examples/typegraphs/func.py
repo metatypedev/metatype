@@ -57,9 +57,7 @@ def roadmap(g: Graph):
 
     admins = deno.policy(
         "admins",
-        """
-  (_args, { context }) => !!context.username
-""",
+        "(_args, { context }) => !!context.username",
     )
     # skip:end
 
@@ -85,7 +83,7 @@ def roadmap(g: Graph):
         parse_markdown=deno.import_(
             t.struct({"raw": t.string()}),
             t.string(),
-            module="md2html.ts.src",
+            module="scripts/md2html.ts.src",
             name="parse",
         ),
     )

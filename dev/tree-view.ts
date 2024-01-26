@@ -3,7 +3,7 @@
 
 /**
  * Usage:
- *   deno run -A dev/tree-view.ts --confg typegate/deno.json [<options>] <file.py>
+ *   deno run -A dev/tree-view.ts --config=typegate/deno.jsonc [<options>] <file.py>
  *
  * Options:
  *    --depth <N>   The depth of the tree

@@ -14,7 +14,7 @@ from typegraph.runtimes.random import RandomRuntime
 )
 def policies(g: Graph):
     deno = DenoRuntime()
-    random = RandomRuntime(seed=0)
+    random = RandomRuntime(seed=0, reset=None)
     public = Policy.public()
 
     admin_only = deno.policy(

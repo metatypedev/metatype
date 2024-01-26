@@ -13,14 +13,7 @@ from typegraph.runtimes import DenoRuntime
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 )
 def iam_provider(g: Graph):
-    g.auth(
-        Auth.oauth2(
-            "github",
-            "https://github.com/login/oauth/authorize",
-            "https://github.com/login/oauth/access_token",
-            "openid profile email",
-        )
-    )
+    g.auth(Auth.oauth2_github("openid profile email"))
 
     public = Policy.public()
 

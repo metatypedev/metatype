@@ -8,7 +8,7 @@ from typegraph.graph.params import Cors
 @typegraph(
     # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
-    name="roadmap-policies",
+    name="roadmap-reduce",
     # skip:end
 )
 def roadmap(g: Graph):
@@ -18,7 +18,6 @@ def roadmap(g: Graph):
 
     bucket = t.struct(
         {
-            # auto generate ids during creation
             "id": t.integer(as_id=True, config={"auto": True}),
             "name": t.string(),
             "ideas": t.list(g.ref("idea")),
@@ -52,16 +51,24 @@ def roadmap(g: Graph):
 
     admins = deno.policy(
         "admins",
-        """
-  (_args, { context }) => !!context.username
-""",
+        "(_args, { context }) => !!context.username",
     )
 
     g.expose(
         pub,
         create_bucket=db.create(bucket).with_policy(admins),
         get_buckets=db.find_many(bucket),
+        get_bucket=db.find_first(bucket),
         get_idea=db.find_many(idea),
-        create_idea=db.create(idea),
+        create_idea=db.create(idea).reduce(
+            {
+                "data": {
+                    "name": g.inherit(),
+                    "authorEmail": g.inherit(),
+                    "votes": g.inherit(),
+                    "bucket": {"connect": g.inherit()},
+                }
+            }
+        ),
         create_vote=db.create(vote),
     )

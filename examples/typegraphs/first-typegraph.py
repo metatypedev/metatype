@@ -9,7 +9,7 @@ from typegraph.runtimes import RandomRuntime
 )
 def first_typegraph(g: Graph):
     # declare runtimes and policies
-    random = RandomRuntime()
+    random = RandomRuntime(reset=None)
     public = Policy.public()
 
     # declare types

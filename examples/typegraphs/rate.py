@@ -24,7 +24,7 @@ from typegraph.runtimes.random import RandomRuntime
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 )
 def rate(g: Graph):
-    random = RandomRuntime(seed=0)
+    random = RandomRuntime(seed=0, reset=None)
     public = Policy.public()
 
     g.expose(

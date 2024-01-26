@@ -1,6 +1,7 @@
 from typegraph import typegraph, t, Graph
 from typegraph.runtimes.random import RandomRuntime
 from typegraph.graph.params import Cors
+from typegraph.policy import Policy
 
 
 @typegraph(
@@ -36,5 +37,6 @@ def roadmap(g: Graph):
             "desc": t.string().optional(),  # makes it optional
         }
     )
-    random = RandomRuntime()
-    g.expose(get_idea=random.gen(idea))
+    random = RandomRuntime(reset=None)
+    pub = Policy.public()
+    g.expose(pub, get_idea=random.gen(idea))
