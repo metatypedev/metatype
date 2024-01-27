@@ -24,6 +24,8 @@ use deno_runtime::deno_core as deno_core; // necessary for re-exported macros to
 
 use std::path::PathBuf;
 
+const DEFAULT_UNSTABLE_FLAGS: &[&str] = &["worker-options", "net"];
+
 /// Ensure that the subcommand runs in a task, rather than being directly executed. Since some of these
 /// futures are very large, this prevents the stack from getting blown out from passing them by value up
 /// the callchain (especially in debug mode when Rust doesn't have a chance to elide copies!).
@@ -66,7 +68,11 @@ pub async fn run(
         // as it breaks our custom_extensions patch for some reason
         import_map_path: import_map_url,
         unstable_config: args::UnstableConfig {
-            legacy_flag_enabled: true,
+            features: DEFAULT_UNSTABLE_FLAGS
+                .iter()
+                .copied()
+                .map(String::from)
+                .collect(),
             ..Default::default()
         },
         ..Default::default()
@@ -137,7 +143,11 @@ pub async fn test(
     );
     let flags = args::Flags {
         unstable_config: args::UnstableConfig {
-            legacy_flag_enabled: true,
+            features: DEFAULT_UNSTABLE_FLAGS
+                .iter()
+                .copied()
+                .map(String::from)
+                .collect(),
             ..Default::default()
         },
         type_check_mode: args::TypeCheckMode::Local,
@@ -274,7 +284,11 @@ pub async fn bench(
     );
     let flags = args::Flags {
         unstable_config: args::UnstableConfig {
-            legacy_flag_enabled: true,
+            features: DEFAULT_UNSTABLE_FLAGS
+                .iter()
+                .copied()
+                .map(String::from)
+                .collect(),
             ..Default::default()
         },
         type_check_mode: args::TypeCheckMode::Local,
