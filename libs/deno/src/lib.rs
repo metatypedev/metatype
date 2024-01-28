@@ -141,6 +141,12 @@ pub async fn test(
         Box::new(util::draw_thread::DrawThread::hide),
         Box::new(util::draw_thread::DrawThread::show),
     );
+    let test_flags = args::TestFlags {
+        doc: false,
+        trace_ops: true,
+        coverage_dir,
+        ..Default::default()
+    };
     let flags = args::Flags {
         unstable_config: args::UnstableConfig {
             features: DEFAULT_UNSTABLE_FLAGS
@@ -153,6 +159,7 @@ pub async fn test(
         type_check_mode: args::TypeCheckMode::Local,
         config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
         argv,
+        subcommand: args::DenoSubcommand::Test(test_flags.clone()),
         ..Default::default()
     };
 
@@ -164,12 +171,7 @@ pub async fn test(
 
     let test_options = args::TestOptions {
         files,
-        ..options.resolve_test_options(args::TestFlags {
-            doc: false,
-            trace_ops: true,
-            coverage_dir,
-            ..Default::default()
-        })?
+        ..options.resolve_test_options(test_flags)?
     };
     let file_fetcher = cli_factory.file_fetcher()?;
     let module_load_preparer = cli_factory.module_load_preparer().await?;
