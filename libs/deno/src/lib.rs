@@ -141,7 +141,29 @@ pub async fn test(
         Box::new(util::draw_thread::DrawThread::hide),
         Box::new(util::draw_thread::DrawThread::show),
     );
+    let pattern_to_str = |pattern| match pattern {
+        deno_config::glob::PathOrPattern::Path(path) => path.to_string_lossy().into(),
+        deno_config::glob::PathOrPattern::Pattern(pattern) => pattern.as_str().to_owned(),
+        deno_config::glob::PathOrPattern::RemoteUrl(url) => url.as_str().to_owned(),
+    };
+
     let test_flags = args::TestFlags {
+        files: args::FileFlags {
+            include: files
+                .include
+                .clone()
+                .map(|set| set.into_path_or_patterns().into_iter())
+                .unwrap_or_default()
+                .map(pattern_to_str)
+                .collect(),
+            ignore: files
+                .exclude
+                .clone()
+                .into_path_or_patterns()
+                .into_iter()
+                .map(pattern_to_str)
+                .collect(),
+        },
         doc: false,
         trace_ops: true,
         coverage_dir,
