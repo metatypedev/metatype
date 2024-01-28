@@ -288,6 +288,7 @@ jobs:
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
+          echo pwd in $(pwd)
 
           sudo apt update
           sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev perl make
@@ -329,7 +330,8 @@ jobs:
           cargo build -p xtask # xtask and meta-cli are used by the test suite
           deno run -A dev/test.ts --threads 1 -- --coverage=coverage
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
-          deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/**/*.ts dev/utils.ts
+          echo pwd in $(pwd)
+          deno cache -r --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/**/*.ts dev/utils.ts
           deno --unstable coverage ./coverage --lcov > coverage.lcov
 
       - uses: codecov/codecov-action@v3
