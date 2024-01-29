@@ -2,6 +2,11 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import { tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 
+// deno
+// import { Policy, t, typegraph } from "../../typegraph/node/sdk/dist/index.js";
+// import { DenoRuntime } from "../../typegraph/node/sdk/dist/runtimes/deno.js";
+// import { tgDeploy } from "../../typegraph/node/sdk/dist/tg_deploy.js";
+
 const tg = typegraph({
   name: "deploy-example-node",
   disableAutoSerialization: true // disable print

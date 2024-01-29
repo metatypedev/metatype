@@ -60,9 +60,9 @@ impl wit::core::Guest for Lib {
     }
 
     fn finalize_typegraph() -> Result<String> {
-        expand_glob(".")
-            .map(|r| print(&format!("value {:?}", r).to_string()))
-            .ok();
+        // expand_glob(".", &["node_module".to_owned()])
+        //     .map(|r| print(&format!("value {:?}", r).to_string()))
+        //     .ok();
         // read_file("path/to").ok();
         typegraph::finalize()
     }

@@ -500,7 +500,7 @@ world typegraph {
     export utils
     export aws
     import print: func(s: string)
-    import expand-glob: func(root: string) -> result<list<string>, string>
+    import expand-glob: func(root: string, exclude: list<string>) -> result<list<string>, string>
     // TODO: use pure u8 stream?
     import read-file: func(path: string) -> result<string, string>
 }
