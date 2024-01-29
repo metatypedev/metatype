@@ -499,5 +499,8 @@ world typegraph {
     export runtimes
     export utils
     export aws
-    import compress: func(path: string) -> result<string, string>;
+    import print: func(s: string)
+    import expand-glob: func(root: string) -> result<list<string>, string>
+    // TODO: use pure u8 stream?
+    import read-file: func(path: string) -> result<string, string>
 }

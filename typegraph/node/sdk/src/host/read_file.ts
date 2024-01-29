@@ -2,7 +2,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
 export default function (path: string): string {
-  // console.log("[path]", path);
-  // idea: it's up to the host to do io operations
-  return "<b64tar>";
+  return "<pure byte sequence>";
 }
