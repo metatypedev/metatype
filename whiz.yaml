@@ -54,7 +54,8 @@ typegraph:
     wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
 
     rm -rf typegraph/node/sdk/src/gen typegraph/node/sdk/dist
-    jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen --map print=../host/print.js read-file=../host/read_file.js expand-glob=../host/expand_glob.js
+    jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen --map print=../host/print.js read-file=../host/read_file.js write-file=../host/write_file.js expand-glob=../host/expand_glob.js
+
     cd typegraph/node
     pnpm run sdk-build
     cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist

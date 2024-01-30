@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 import * as fs from "node:fs";
 
-export default function (path: string): Uint8Array {
+export default function (path: string, data: Uint8Array): void {
   try {
-    const buffer = fs.readFileSync(path, null);
-    return new Uint8Array(buffer);
+    void fs.writeFileSync(path, data);
   } catch (err) {
     throw (err instanceof Error ? err.message : err);
   }

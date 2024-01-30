@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 import * as fs from "node:fs";
 import * as path from "node:path";
-function listAllFiles(
+function listAllFilesHelper(
   root: string,
   list: Array<string>,
   exclude?: Array<string>,
@@ -16,17 +16,21 @@ function listAllFiles(
     const fullPath = path.join(root, filename);
     if (exclude) {
       for (const pattern of exclude) {
-        const reg = new RegExp(pattern, "g");
+        const reg = new RegExp(pattern);
         if (reg.test(fullPath)) continue search;
       }
     }
-    listAllFiles(fullPath, list, exclude);
+    listAllFilesHelper(fullPath, list, exclude);
   }
 }
 
 export default function (root: string, exclude: Array<string>): Array<string> {
-  const ret = [] as Array<string>;
-  console.log("[host] received args", root, exclude);
-  listAllFiles(root, ret, exclude);
-  return ret;
+  try {
+    const ret = [] as Array<string>;
+    // console.log("[host] received args", root, exclude);
+    listAllFilesHelper(root, ret, exclude);
+    return ret;
+  } catch (err) {
+    throw (err instanceof Error ? err.message : err);
+  }
 }

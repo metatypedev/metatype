@@ -15,6 +15,7 @@ use crate::Lib;
 
 use self::oauth2::std::{named_provider, Oauth2Builder};
 
+pub mod fs_host;
 mod oauth2;
 pub mod reduce;
 

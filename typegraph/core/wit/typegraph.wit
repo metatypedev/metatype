@@ -501,6 +501,6 @@ world typegraph {
     export aws
     import print: func(s: string)
     import expand-glob: func(root: string, exclude: list<string>) -> result<list<string>, string>
-    // TODO: use pure u8 stream?
-    import read-file: func(path: string) -> result<string, string>
+    import read-file: func(path: string) -> result<list<u8>, string>
+    import write-file: func(path: string, data: list<u8>) -> result<_, string>
 }
