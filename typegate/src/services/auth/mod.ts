@@ -95,7 +95,7 @@ export async function ensureJWT(
     return [{}, headers];
   }
 
-  const { claims: context, nextToken } = await auth.tokenMiddleware(
+  const { claims, nextToken } = await auth.tokenMiddleware(
     token,
     request,
   );
@@ -103,7 +103,7 @@ export async function ensureJWT(
     // "" is valid as it signal to remove the token
     headers.set(nextAuthorizationHeader, nextToken);
   }
-  return [context, headers];
+  return [claims, headers];
 }
 
 export async function handleAuth(
