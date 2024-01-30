@@ -5,8 +5,9 @@ use anyhow::{Context, Result};
 use base64::{engine::general_purpose::STANDARD, Engine};
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use ignore::{Walk, WalkBuilder};
+use indexmap::IndexMap;
 use std::{fs, path::Path};
-use tar::Archive;
+use tar::{Archive, Header};
 
 pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<impl AsRef<[u8]>>) -> Result<()> {
     fs::create_dir_all(dest.as_ref())?;
@@ -73,6 +74,33 @@ pub fn archive_entries(dir_walker: Walk, prefix: Option<&Path>) -> Result<Option
     if !empty {
         let bytes = tar.into_inner()?.finish()?;
         return Ok(Some(STANDARD.encode(bytes)));
+    }
+
+    Ok(None)
+}
+
+pub fn archive_entries_from_bytes(entries: IndexMap<String, Vec<u8>>) -> Result<Option<Vec<u8>>> {
+    let encoder = GzEncoder::new(Vec::new(), Compression::default());
+    let mut tar = tar::Builder::new(encoder);
+
+    tar.mode(tar::HeaderMode::Deterministic);
+
+    let mut empty = true;
+    for (path, bytes) in entries.iter() {
+        let mut header = Header::new_old();
+        header.set_size(bytes.len() as u64);
+        header.set_entry_type(tar::EntryType::Regular);
+        header.set_mode(0o666); // rw-rw-rw
+        header.set_cksum();
+
+        tar.append_data(&mut header, path, bytes.as_slice())
+            .context("Adding file to tarball")?;
+        empty = false;
+    }
+
+    if !empty {
+        let ret = Some(tar.into_inner()?.finish()?);
+        return Ok(ret);
     }
 
     Ok(None)

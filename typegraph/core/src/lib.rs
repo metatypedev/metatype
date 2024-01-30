@@ -28,7 +28,6 @@ use types::{
     Boolean, Either, File, Float, Func, Integer, List, Optional, StringT, Struct, TypeBoolean,
     TypeDef, TypeDefExt, TypeId, Union,
 };
-use utils::fs_host::{read_text_file, write_text_file};
 
 use wit::core::{
     ContextCheck, Policy, PolicyId, PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat,
@@ -64,13 +63,23 @@ impl wit::core::Guest for Lib {
         // expand_glob(".", &["node_module".to_owned()])
         //     .map(|r| print(&format!("value {:?}", r).to_string()))
         //     .ok();
-        write_text_file("./guest_says.txt", "こんにちは世界")?;
-        match read_text_file("./package.json") {
-            Ok(res) => {
-                print(&format!("Content {:?}", res));
-            }
-            Err(e) => print(&format!("{:?}", e)),
-        }
+        // match compress_folder(".") {
+        //     Ok(res) => match res {
+        //         None => print("empty file"),
+        //         Some(bytes) => {
+        //             write_file("./test.tar", bytes.as_slice())?;
+        //             print("compress ok");
+        //         }
+        //     },
+        //     Err(e) => print(&format!("compress error {:?}", e)),
+        // }
+        // write_text_file("./guest_says.txt", "こんにちは世界")?;
+        // match read_text_file("./package.json") {
+        //     Ok(res) => {
+        //         print(&format!("Content {:?}", res));
+        //     }
+        //     Err(e) => print(&format!("{:?}", e)),
+        // }
         typegraph::finalize()
     }
 
