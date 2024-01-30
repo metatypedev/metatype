@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { signJWT, verifyJWT } from "../../../crypto.ts";
-import { Protocol } from "./protocol.ts";
+import { Protocol, TokenMiddlewareOutput } from "./protocol.ts";
 
 export class InternalAuth extends Protocol {
   static init(typegraphName: string): Promise<Protocol> {
@@ -25,15 +25,28 @@ export class InternalAuth extends Protocol {
   async tokenMiddleware(
     token: string,
     _request: Request,
-  ): Promise<[Record<string, unknown>, string | null]> {
+  ): Promise<TokenMiddlewareOutput> {
     try {
       const claims = await verifyJWT(token);
       if (claims.provider === "internal") {
-        return [claims, null];
+        return {
+          claims,
+          nextToken: null,
+          error: null,
+        };
+      } else {
+        return {
+          claims: {},
+          nextToken: null,
+          error: null,
+        };
       }
     } catch {
-      // invalid jwt
+      return {
+        claims: {},
+        nextToken: null,
+        error: "invalid token",
+      };
     }
-    return [{}, null];
   }
 }
