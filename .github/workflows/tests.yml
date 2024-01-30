@@ -332,10 +332,9 @@ jobs:
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
           deno cache --import-map typegate/import_map.json \
             typegate/src/main.ts \
-            typegate/tests/utils/mod.ts \
-            typegate/tests/utils/database.ts \
-            typegate/tests/utils/test_module.ts \
-            dev/deps.ts
+            typegate/tests/utils/*.ts \
+            dev/deps.ts \
+            dev/utils.ts
           deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
 
       - uses: codecov/codecov-action@v3
