@@ -3,6 +3,12 @@
 
 import { notFound } from "../../../services/responses.ts";
 
+export type TokenMiddlewareOutput = {
+  claims: Record<string, unknown>;
+  nextToken: string | null;
+  error: string | null;
+};
+
 export abstract class Protocol {
   protected constructor(public typegraphName: string) {}
 
@@ -13,5 +19,5 @@ export abstract class Protocol {
   abstract tokenMiddleware(
     token: string,
     request: Request,
-  ): Promise<[Record<string, unknown>, string | null]>;
+  ): Promise<TokenMiddlewareOutput>;
 }

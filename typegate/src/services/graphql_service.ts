@@ -100,10 +100,6 @@ export async function handleGraphQL(
       );
     }
 
-    if (engine.name !== "typegate" && !isIntrospection) {
-      logger.debug({ req: { query, operationName, variables }, res });
-    }
-
     return jsonOk(res, headers);
   } catch (e) {
     // throw e;

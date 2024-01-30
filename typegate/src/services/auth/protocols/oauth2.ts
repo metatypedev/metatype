@@ -22,6 +22,7 @@ import {
   generateWeakValidator,
 } from "../../../engine/typecheck/input.ts";
 import { mapKeys } from "std/collections/map_keys.ts";
+import { TokenMiddlewareOutput } from "./protocol.ts";
 
 const logger = getLogger(import.meta);
 
@@ -223,7 +224,7 @@ export class OAuth2Auth extends Protocol {
   async tokenMiddleware(
     token: string,
     request: Request,
-  ): Promise<[Record<string, unknown>, string | null]> {
+  ): Promise<TokenMiddlewareOutput> {
     const url = new URL(request.url);
     const typegraphPath = `/${this.typegraphName}`;
     const client = new OAuth2Client({
@@ -233,33 +234,48 @@ export class OAuth2Auth extends Protocol {
     });
 
     if (!token) {
-      return [{}, null];
+      return {
+        claims: {},
+        nextToken: null,
+        error: "missing token",
+      };
     }
-    const jwt = await verifyJWT(token).catch((e) => {
-      logger.info(`invalid auth: ${e}`);
-      return null;
-    }) as JWTClaims | null;
-
-    if (!jwt) {
-      return [{}, ""]; // clear
+    let jwt: JWTClaims;
+    try {
+      jwt = (await verifyJWT(token)) as JWTClaims;
+    } catch (e) {
+      return {
+        claims: {},
+        nextToken: "", // clear
+        error: `invalid token: ${e}`,
+      };
     }
 
     const { refreshToken, ...claims } = jwt;
-    if (new Date().valueOf() / 1000 > claims.refreshAt) {
+    if (isJwtExpired(jwt)) {
+      let newClaims: Tokens;
       try {
-        const newClaims = await client.refreshToken.refresh(refreshToken);
-        const token = await this.createJWT(newClaims, request);
-        return [
-          claims,
-          token ?? "", // token or clear
-        ];
+        newClaims = await client.refreshToken.refresh(refreshToken);
       } catch (e) {
-        logger.info(`expired auth: ${e}`);
-        return [{}, ""]; // clear
+        return {
+          claims: {},
+          nextToken: "", // clear
+          error: `could not refresh expired token: ${e}`,
+        };
       }
+      const token = await this.createJWT(newClaims, request);
+      return {
+        claims,
+        nextToken: token, // update
+        error: null,
+      };
     }
 
-    return [claims, null];
+    return {
+      claims,
+      nextToken: null, // keep
+      error: null,
+    };
   }
 
   private async getProfile(
@@ -313,4 +329,8 @@ export class OAuth2Auth extends Protocol {
     };
     return await signJWT(payload, config.jwt_max_duration_sec);
   }
+}
+
+function isJwtExpired(jwt: JWTClaims): boolean {
+  return new Date().valueOf() / 1000 > jwt.refreshAt;
 }

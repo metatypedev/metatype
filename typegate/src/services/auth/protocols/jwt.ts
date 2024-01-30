@@ -4,7 +4,7 @@
 import * as jwt from "jwt";
 import { getLogger } from "../../../log.ts";
 import { SecretManager } from "../../../typegraph/mod.ts";
-import { Protocol } from "./protocol.ts";
+import { Protocol, TokenMiddlewareOutput } from "./protocol.ts";
 import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
 import { Auth } from "../../../typegraph/types.ts";
 
@@ -48,10 +48,14 @@ export class JWTAuth extends Protocol {
   async tokenMiddleware(
     token: string,
     _request: Request,
-  ): Promise<[Record<string, unknown>, string | null]> {
+  ): Promise<TokenMiddlewareOutput> {
     try {
       const claims = await jwt.verify(token, this.signKey);
-      return [claims, null];
+      return {
+        claims,
+        nextToken: null,
+        error: null,
+      };
     } catch (e) {
       if (e.message.includes("jwt is expired")) {
         throw new Error("jwt expired");
