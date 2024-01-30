@@ -63,14 +63,11 @@ impl wit::core::Guest for Lib {
         // expand_glob(".", &["node_module".to_owned()])
         //     .map(|r| print(&format!("value {:?}", r).to_string()))
         //     .ok();
-        // match compress_folder(".") {
-        //     Ok(res) => match res {
-        //         None => print("empty file"),
-        //         Some(bytes) => {
-        //             write_file("./test.tar", bytes.as_slice())?;
-        //             print("compress ok");
-        //         }
-        //     },
+        // match crate::utils::fs_host::compress_folder(".") {
+        //     Ok(bytes) => {
+        //         crate::wit::write_file("./test.tar", bytes.as_slice())?;
+        //         print("compress ok");
+        //     }
         //     Err(e) => print(&format!("compress error {:?}", e)),
         // }
         // write_text_file("./guest_says.txt", "こんにちは世界")?;

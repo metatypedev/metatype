@@ -21,8 +21,9 @@ pub fn write_text_file<P: Into<String>, S: Into<String>>(path: P, text: S) -> Re
 }
 
 #[allow(unused)]
-pub fn compress_folder<P: Into<String>>(path: P) -> Result<Option<Vec<u8>>, String> {
-    let exclude = &["node_modules".to_string()];
+pub fn compress_folder<P: Into<String>>(path: P) -> Result<Vec<u8>, String> {
+    // Note: each exclude entry is a regex pattern
+    let exclude = &["node_modules/".to_string(), "\\.git/".to_string()];
     let paths = expand_glob(&path.into(), exclude)?;
     let mut entries = IndexMap::new();
     for path in paths {
@@ -32,15 +33,3 @@ pub fn compress_folder<P: Into<String>>(path: P) -> Result<Option<Vec<u8>>, Stri
 
     archive_entries_from_bytes(entries).map_err(|e| e.to_string())
 }
-
-// expand_glob(".", &["node_module".to_owned()])
-// .map(|r| print(&format!("value {:?}", r).to_string()))
-// .ok();
-// match read_file("./sample.txt") {
-// Ok(res) => {
-//     print("OK");
-//     print(&format!("received len {}", res.len()));
-//     print(&format!("Content from bytes{:?}", std::str::from_utf8(res)));
-// }
-// Err(e) => print(&format!("{:?}", e)),
-// }

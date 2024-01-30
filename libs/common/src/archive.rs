@@ -79,13 +79,12 @@ pub fn archive_entries(dir_walker: Walk, prefix: Option<&Path>) -> Result<Option
     Ok(None)
 }
 
-pub fn archive_entries_from_bytes(entries: IndexMap<String, Vec<u8>>) -> Result<Option<Vec<u8>>> {
+pub fn archive_entries_from_bytes(entries: IndexMap<String, Vec<u8>>) -> Result<Vec<u8>> {
     let encoder = GzEncoder::new(Vec::new(), Compression::default());
     let mut tar = tar::Builder::new(encoder);
 
     tar.mode(tar::HeaderMode::Deterministic);
 
-    let mut empty = true;
     for (path, bytes) in entries.iter() {
         let mut header = Header::new_old();
         header.set_size(bytes.len() as u64);
@@ -95,15 +94,10 @@ pub fn archive_entries_from_bytes(entries: IndexMap<String, Vec<u8>>) -> Result<
 
         tar.append_data(&mut header, path, bytes.as_slice())
             .context("Adding file to tarball")?;
-        empty = false;
     }
 
-    if !empty {
-        let ret = Some(tar.into_inner()?.finish()?);
-        return Ok(ret);
-    }
-
-    Ok(None)
+    let bytes = tar.into_inner()?.finish()?;
+    Ok(bytes)
 }
 
 pub fn unpack_tar_base64<P: AsRef<Path>>(b64: String, dest: P) -> Result<()> {
