@@ -21,7 +21,7 @@ pub fn write_text_file<P: Into<String>, S: Into<String>>(path: P, text: S) -> Re
 }
 
 #[allow(unused)]
-pub fn compress_folder<P: Into<String>>(path: P) -> Result<Vec<u8>, String> {
+pub fn compress<P: Into<String>>(path: P) -> Result<Vec<u8>, String> {
     // Note: each exclude entry is a regex pattern
     let exclude = &["node_modules/".to_string(), "\\.git/".to_string()];
     let paths = expand_glob(&path.into(), exclude)?;
