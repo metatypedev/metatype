@@ -330,10 +330,13 @@ jobs:
           cargo build -p xtask # xtask and meta-cli are used by the test suite
           deno run -A dev/test.ts --threads 1 -- --coverage=coverage
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
-          echo pwd in $(pwd)
-          deno info ./typegate/tests/utils/database.ts
-          deno cache -r --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/**/*.ts dev/utils.ts
-          deno --unstable coverage ./coverage --lcov > coverage.lcov
+          deno cache --import-map typegate/import_map.json \
+            typegate/src/main.ts \
+            typegate/tests/utils/mod.ts \
+            typegate/tests/utils/database.ts \
+            typegate/tests/utils/test_module.ts \
+            dev/deps.ts
+          deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
 
       - uses: codecov/codecov-action@v3
         with:
