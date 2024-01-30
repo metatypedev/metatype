@@ -231,8 +231,12 @@ export class TypeGateRuntime extends Runtime {
             type: walkPath(tg!.tg, input, 0, [name]),
           };
         }),
-        output: walkPath(tg!.tg, output, 0, []),
-        outputItem: walkPath(tg!.tg, outputItem, 0, []),
+        output: walkPath(tg!.tg, output, 0, [], {
+          filter: filterPolicies,
+        }),
+        outputItem: walkPath(tg!.tg, outputItem, 0, [], {
+          filter: filterPolicies,
+        }),
       };
     }).filter((e) => e != null);
   };
@@ -257,6 +261,7 @@ function resolveOptional(tg: TypeGraph, node: TypeNode) {
 function collectObjectFields(
   tg: TypeGraph,
   parent: TypeNode,
+  options: Filter = {},
 ): Array<ObjectNodeResult> {
   // first generate all possible paths
 
@@ -287,10 +292,26 @@ function collectObjectFields(
 
   collectAllPaths(parent);
 
-  return paths.map((path) => ({
-    subPath: path,
-    termNode: walkPath(tg, parent, 0, path),
-  }));
+  return paths.map((path) => {
+    const termNode = walkPath(tg, parent, 0, path, options);
+    if (termNode == null) return null;
+    return {
+      subPath: path,
+      termNode,
+    };
+  }).filter((e) => e != null) as Array<ObjectNodeResult>;
+}
+
+type Filter = {
+  filter?: (node: TypeNode) => boolean;
+};
+
+function noFilter(_node: TypeNode) {
+  return true;
+}
+
+function filterPolicies(node: TypeNode) {
+  return node.policies.length === 0;
 }
 
 function walkPath(
@@ -298,13 +319,23 @@ function walkPath(
   parent: TypeNode,
   startCursor: number,
   path: Array<string>,
-): ArgInfoResult {
+  options: Filter = {},
+): ArgInfoResult | null {
+  const filter = options.filter ?? noFilter;
   let node = parent as TypeNode;
   for (let cursor = startCursor; cursor < path.length; cursor += 1) {
     const current = path.at(cursor)!;
 
+    if (!filter(node)) {
+      return null;
+    }
+
     // if the type is optional and path has not ended yet, the wrapped type needs to be retrieved
     node = resolveOptional(tg, node).node;
+
+    if (!filter(node)) {
+      return null;
+    }
 
     const prettyPath = path.map((chunk, i) =>
       i == cursor ? `[${chunk}]` : chunk
@@ -335,7 +366,7 @@ function walkPath(
         for (let i = 0; i < variantsIdx.length; i += 1) {
           const variant = tg.type(variantsIdx[i]);
           try {
-            compat.push(walkPath(tg, variant, cursor, path));
+            compat.push(walkPath(tg, variant, cursor, path, options));
           } catch (err) {
             failures[i] = err;
           }
@@ -370,6 +401,10 @@ function walkPath(
   );
   node = resNode;
 
+  if (!filter(node)) {
+    return null;
+  }
+
   return {
     optional: isOptional,
     as_id: node.as_id,
@@ -380,6 +415,8 @@ function walkPath(
     config: node.config ? JSON.stringify(node.config) : null,
     default: defaultValue ? JSON.stringify(defaultValue) : null,
     format: format ?? null,
-    fields: node.type == "object" ? collectObjectFields(tg, parent) : null,
+    fields: node.type == "object"
+      ? collectObjectFields(tg, parent, options)
+      : null,
   };
 }
