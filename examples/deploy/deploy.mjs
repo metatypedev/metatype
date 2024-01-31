@@ -16,6 +16,11 @@ const tg = typegraph({
 
     g.expose({
       test: deno.static(t.struct({ a: t.string() }), { a: "HELLO" }),
+      sayHello: deno.import(
+        t.struct({ name: t.string() }),
+        t.struct({ message: t.string() }),
+        { module: "scripts/say_hello.ts", name: "sayHello" }
+      ),
     }, pub);
   },
 );

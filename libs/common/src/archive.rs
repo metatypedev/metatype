@@ -86,7 +86,7 @@ pub fn archive_entries_from_bytes(entries: IndexMap<String, Vec<u8>>) -> Result<
     tar.mode(tar::HeaderMode::Deterministic);
 
     for (path, bytes) in entries.iter() {
-        let mut header = Header::new_old();
+        let mut header = Header::new_gnu();
         header.set_size(bytes.len() as u64);
         header.set_entry_type(tar::EntryType::Regular);
         header.set_mode(0o666); // rw-rw-rw

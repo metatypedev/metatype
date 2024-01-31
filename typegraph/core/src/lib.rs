@@ -60,23 +60,6 @@ impl wit::core::Guest for Lib {
     }
 
     fn finalize_typegraph(mode: TypegraphFinalizeMode) -> Result<String> {
-        // expand_glob(".", &["node_module".to_owned()])
-        //     .map(|r| print(&format!("value {:?}", r).to_string()))
-        //     .ok();
-        // match crate::utils::fs_host::compress(".", None) {
-        //     Ok(bytes) => {
-        //         crate::wit::write_file("./test.tar", bytes.as_slice())?;
-        //         print("compress ok");
-        //     }
-        //     Err(e) => print(&format!("compress error {:?}", e)),
-        // }
-        // write_text_file("./guest_says.txt", "こんにちは世界")?;
-        // match read_text_file("./package.json") {
-        //     Ok(res) => {
-        //         print(&format!("Content {:?}", res));
-        //     }
-        //     Err(e) => print(&format!("{:?}", e)),
-        // }
         typegraph::finalize(mode)
     }
 
@@ -529,7 +512,7 @@ mod tests {
     use crate::wit::core::Guest;
     use crate::wit::runtimes::{Effect, Guest as GuestRuntimes, MaterializerDenoFunc};
     use crate::Lib;
-    use crate::TypegraphInitParams;
+    use crate::{TypegraphFinalizeMode, TypegraphInitParams};
 
     impl Default for TypegraphInitParams {
         fn default() -> Self {

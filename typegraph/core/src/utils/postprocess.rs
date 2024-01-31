@@ -12,20 +12,19 @@ use common::typegraph::{
 use super::fs_host;
 
 fn compress_and_encode(main_rel_path: &Path) -> Result<String, String> {
-    let cwd_path = fs_host::cwd()?;
-    let file = match main_rel_path.strip_prefix(&cwd_path) {
-        Ok(ret) => ret,
-        Err(_) => {
-            return Err(format!(
-                "{:?} does not contain script {:?}",
-                cwd_path.clone().display(),
-                main_rel_path.display(),
-            ))
-        }
-    };
+    let script_path = fs_host::cwd()?.join(main_rel_path);
+
+    let full_path = script_path.display().to_string();
+    if let Err(e) = fs_host::read_text_file(full_path) {
+        return Err(format!("Unable to read {:?}; {}", script_path.display(), e));
+    }
 
     let enc_content = fs_host::compress_and_encode_base64(".")?;
-    Ok(format!("file:{};base64:{}", file.display(), enc_content))
+    Ok(format!(
+        "file:{};base64:{}",
+        main_rel_path.display(),
+        enc_content
+    ))
 }
 
 pub fn resolve_deno_modules(tg: &mut Typegraph) -> Result<(), String> {
