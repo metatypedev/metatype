@@ -436,6 +436,7 @@ impl StructBuilder {
         self
     }
 
+    #[allow(dead_code)]
     pub fn max(&mut self, max: u32) -> &mut Self {
         self.data.max = Some(max);
         self

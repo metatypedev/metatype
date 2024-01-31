@@ -24,6 +24,8 @@ use deno_runtime::deno_core as deno_core; // necessary for re-exported macros to
 
 use std::path::PathBuf;
 
+const DEFAULT_UNSTABLE_FLAGS: &[&str] = &["worker-options", "net"];
+
 /// Ensure that the subcommand runs in a task, rather than being directly executed. Since some of these
 /// futures are very large, this prevents the stack from getting blown out from passing them by value up
 /// the callchain (especially in debug mode when Rust doesn't have a chance to elide copies!).
@@ -65,7 +67,14 @@ pub async fn run(
         // NOTE: avoid using the Run subcommand
         // as it breaks our custom_extensions patch for some reason
         import_map_path: import_map_url,
-        unstable: true,
+        unstable_config: args::UnstableConfig {
+            features: DEFAULT_UNSTABLE_FLAGS
+                .iter()
+                .copied()
+                .map(String::from)
+                .collect(),
+            ..Default::default()
+        },
         ..Default::default()
     };
 
@@ -87,7 +96,7 @@ pub async fn run(
 }
 
 pub fn test_sync(
-    files: deno_config::FilesConfig,
+    files: deno_config::glob::FilePatterns,
     config_file: PathBuf,
     permissions: PermissionsOptions,
     coverage_dir: Option<String>,
@@ -119,7 +128,7 @@ pub fn test_sync(
 }
 
 pub async fn test(
-    files: deno_config::FilesConfig,
+    files: deno_config::glob::FilePatterns,
     config_file: PathBuf,
     permissions: PermissionsOptions,
     coverage_dir: Option<String>,
@@ -132,11 +141,47 @@ pub async fn test(
         Box::new(util::draw_thread::DrawThread::hide),
         Box::new(util::draw_thread::DrawThread::show),
     );
+    let pattern_to_str = |pattern| match pattern {
+        deno_config::glob::PathOrPattern::Path(path) => path.to_string_lossy().into(),
+        deno_config::glob::PathOrPattern::Pattern(pattern) => pattern.as_str().to_owned(),
+        deno_config::glob::PathOrPattern::RemoteUrl(url) => url.as_str().to_owned(),
+    };
+
+    let test_flags = args::TestFlags {
+        files: args::FileFlags {
+            include: files
+                .include
+                .clone()
+                .map(|set| set.into_path_or_patterns().into_iter())
+                .unwrap_or_default()
+                .map(pattern_to_str)
+                .collect(),
+            ignore: files
+                .exclude
+                .clone()
+                .into_path_or_patterns()
+                .into_iter()
+                .map(pattern_to_str)
+                .collect(),
+        },
+        doc: false,
+        trace_ops: true,
+        coverage_dir,
+        ..Default::default()
+    };
     let flags = args::Flags {
-        unstable: true,
+        unstable_config: args::UnstableConfig {
+            features: DEFAULT_UNSTABLE_FLAGS
+                .iter()
+                .copied()
+                .map(String::from)
+                .collect(),
+            ..Default::default()
+        },
         type_check_mode: args::TypeCheckMode::Local,
         config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
         argv,
+        subcommand: args::DenoSubcommand::Test(test_flags.clone()),
         ..Default::default()
     };
 
@@ -148,12 +193,7 @@ pub async fn test(
 
     let test_options = args::TestOptions {
         files,
-        ..options.resolve_test_options(args::TestFlags {
-            doc: false,
-            trace_ops: true,
-            coverage_dir,
-            ..Default::default()
-        })?
+        ..options.resolve_test_options(test_flags)?
     };
     let file_fetcher = cli_factory.file_fetcher()?;
     let module_load_preparer = cli_factory.module_load_preparer().await?;
@@ -164,7 +204,7 @@ pub async fn test(
     let permissions = deno_runtime::permissions::Permissions::from_options(&permissions)?;
 
     let specifiers_with_mode =
-        fetch_specifiers_with_test_mode(file_fetcher, &test_options.files, &test_options.doc)
+        fetch_specifiers_with_test_mode(file_fetcher, test_options.files, &test_options.doc)
             .await?;
 
     if !test_options.allow_none && specifiers_with_mode.is_empty() {
@@ -229,7 +269,7 @@ fn new_thread_builder() -> std::thread::Builder {
 }
 
 pub fn bench_sync(
-    files: deno_config::FilesConfig,
+    files: deno_config::glob::FilePatterns,
     config_file: PathBuf,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
@@ -253,7 +293,7 @@ pub fn bench_sync(
 }
 
 pub async fn bench(
-    files: deno_config::FilesConfig,
+    files: deno_config::glob::FilePatterns,
     config_file: PathBuf,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
@@ -267,7 +307,14 @@ pub async fn bench(
         Box::new(util::draw_thread::DrawThread::show),
     );
     let flags = args::Flags {
-        unstable: true,
+        unstable_config: args::UnstableConfig {
+            features: DEFAULT_UNSTABLE_FLAGS
+                .iter()
+                .copied()
+                .map(String::from)
+                .collect(),
+            ..Default::default()
+        },
         type_check_mode: args::TypeCheckMode::Local,
         config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
         argv,
@@ -275,7 +322,11 @@ pub async fn bench(
     };
 
     let bench_options = args::BenchOptions {
-        ..args::BenchOptions::resolve(Some(deno_config::BenchConfig { files }), None)?
+        ..args::BenchOptions::resolve(
+            Some(deno_config::BenchConfig { files }),
+            None,
+            &std::env::current_dir()?,
+        )?
     };
     let cli_factory = factory::CliFactory::from_flags(flags)
         .await?
@@ -287,7 +338,7 @@ pub async fn bench(
     // file would have impact on other files, which is undesirable.
     let permissions = deno_runtime::permissions::Permissions::from_options(&permissions)?;
 
-    let specifiers = util::fs::collect_specifiers(&bench_options.files, is_supported_bench_path)?;
+    let specifiers = util::fs::collect_specifiers(bench_options.files, is_supported_bench_path)?;
 
     if specifiers.is_empty() {
         return Err(deno_core::error::generic_error("No bench modules found"));
