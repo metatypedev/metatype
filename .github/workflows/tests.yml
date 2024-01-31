@@ -364,3 +364,69 @@ jobs:
       #     token: ${{ secrets.CODECOV_TOKEN }}
       #     files: ./dev-tools/ts-language-server/coverage.lcov
       #     fail_ci_if_error: true
+
+  meta-cli-cross:
+    runs-on: "${{ matrix.os }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            suffix: ""
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            suffix: ""
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            suffix: ""
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            suffix: ""
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            suffix: ""
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: WyriHaximus/github-action-get-previous-tag@v1.3.0
+        id: latest-tag
+      - uses: dsherret/rust-toolchain-file@v1
+        with:
+          targets: ${{ matrix.target }}
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ runner.os }}-${{ matrix.target }}
+      - run: |
+          # sometimes, dtolnay/rust-toolchain does not select the correct default target
+          rustup target add ${{ matrix.target }}
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: "--locked --release --package meta-cli --target ${{ matrix.target }} --features typegate"
+      - run: |
+          cd target/${{ matrix.target }}/release
+          tar czvf ../../../meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
+      # - uses: svenstaro/upload-release-action@v2
+      #   with:
+      #     tag: ${{ steps.latest-tag.outputs.tag }}
+      #     file: "meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
+      #     asset_name: "meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
+      #     overwrite: ${{ inputs.ovewriteArtifacts }}
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: "--locked --release --package meta-cli --target ${{ matrix.target }}"
+      - run: |
+          cd target/${{ matrix.target }}/release
+          tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
+      # - uses: svenstaro/upload-release-action@v2
+      #   with:
+      #     tag: ${{ steps.latest-tag.outputs.tag }}
+      #     file: "meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
+      #     asset_name: "meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
+      #     overwrite: ${{ inputs.ovewriteArtifacts }}

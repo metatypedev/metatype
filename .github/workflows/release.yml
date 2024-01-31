@@ -96,8 +96,7 @@ jobs:
       - uses: dsherret/rust-toolchain-file@v1
         with:
           targets: ${{ matrix.target }}
-      - uses: rui314/setup-mold@v1
-        if: contains(matrix.target, 'linux')
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}-${{ matrix.target }}
@@ -240,7 +239,7 @@ jobs:
           touch "./digests/${digest#sha256:}"
       - uses: actions/upload-artifact@v4
         with:
-          name: digests
+          name: digests-${{ matrix.runner }}
           path: ./digests/*
           if-no-files-found: error
           retention-days: 1
@@ -260,8 +259,9 @@ jobs:
         id: latest-tag
       - uses: actions/download-artifact@v4
         with:
-          name: digests
           path: ./digests
+          pattern: digests-*
+          merge-multiple: digests-*
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
