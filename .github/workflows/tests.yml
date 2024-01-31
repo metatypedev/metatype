@@ -402,12 +402,9 @@ jobs:
       - run: |
           # sometimes, dtolnay/rust-toolchain does not select the correct default target
           rustup target add ${{ matrix.target }}
-      - uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: "--locked --release --package meta-cli --target ${{ matrix.target }} --features typegate"
-      - run: |
+      - shell: bash
+        run: |
+          cargo build --locked --release --package meta-cli --target ${{ matrix.target }} --features typegate
           cd target/${{ matrix.target }}/release
           tar czvf ../../../meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
       # - uses: svenstaro/upload-release-action@v2
@@ -416,12 +413,9 @@ jobs:
       #     file: "meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
       #     asset_name: "meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
       #     overwrite: ${{ inputs.ovewriteArtifacts }}
-      - uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: "--locked --release --package meta-cli --target ${{ matrix.target }}"
-      - run: |
+      - shell: bash
+        run: |
+          cargo build --locked --release --package meta-cli --target ${{ matrix.target }}
           cd target/${{ matrix.target }}/release
           tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
       # - uses: svenstaro/upload-release-action@v2
