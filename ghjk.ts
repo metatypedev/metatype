@@ -17,24 +17,31 @@ const NODE_VERSION = "20.8.0";
 
 ghjk.install(
   ports.wasmedge({ version: WASMEDGE_VERSION }),
-  ports.pnpm({ version: PNPM_VERSION }),
-  ports.cargo_insta({ version: CARGO_INSTA_VERSION }),
   ports.protoc({ version: PROTOC_VERSION }),
   ports.asdf({
     pluginRepo: "https://github.com/asdf-community/asdf-cmake",
     installType: "version",
     version: CMAKE_VERSION,
   }),
-  // FIXME: jco installs node as a dep
-  ports.npmi({ packageName: "@bytecodealliance/jco", version: JCO_VERSION })[0],
-  ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0],
-  ports.node({ version: NODE_VERSION }),
+  // FIXME: replace with `cargobi` once that's ready
+  ports.cargo_binstall(),
 );
 
 if (!Deno.env.has("OCI")) {
   ghjk.install(
+    // FIXME: use cargobi when avail
     ports.wasm_opt({ version: WASM_OPT_VERSION }),
     ports.wasm_tools({ version: WASM_TOOLS_VERSION }),
+    // these aren't required by the typegate build process
+    ports.cargo_insta({ version: CARGO_INSTA_VERSION }),
+    ports.node({ version: NODE_VERSION }),
+    ports.pnpm({ version: PNPM_VERSION }),
+    // FIXME: jco installs node as a dep
+    ports.npmi({
+      packageName: "@bytecodealliance/jco",
+      version: JCO_VERSION,
+    })[0],
+    ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0],
   );
 }
 

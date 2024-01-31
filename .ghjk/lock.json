@@ -819,6 +819,32 @@
               }
             },
             {
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "cargo_binstall_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/cargo-binstall.ts"
+              }
+            },
+            {
               "version": "0.116.0",
               "port": {
                 "ty": "denoWorker@v1",
