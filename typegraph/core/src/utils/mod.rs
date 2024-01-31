@@ -17,6 +17,7 @@ use self::oauth2::std::{named_provider, Oauth2Builder};
 
 pub mod fs_host;
 mod oauth2;
+pub mod postprocess;
 pub mod reduce;
 
 fn find_missing_props(

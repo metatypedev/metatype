@@ -34,8 +34,13 @@ interface core {
         rate: option<rate>,
     }
 
+    enum typegraph-finalize-mode {
+        simple,
+        resolve-artifacts
+    }
+
     init-typegraph: func(params: typegraph-init-params) -> result<_, error>
-    finalize-typegraph: func() -> result<string, error>
+    finalize-typegraph: func(mode: typegraph-finalize-mode) -> result<string, error>
 
     type type-id = u32
     record type-base {
@@ -503,4 +508,5 @@ world typegraph {
     import expand-glob: func(root: string, exclude: list<string>) -> result<list<string>, string>
     import read-file: func(path: string) -> result<list<u8>, string>
     import write-file: func(path: string, data: list<u8>) -> result<_, string>
+    import get-cwd: func() -> result<string, string>
 }

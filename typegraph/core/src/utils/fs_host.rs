@@ -1,11 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::archive::archive_entries_from_bytes;
+use std::path::PathBuf;
+
+use common::archive::{archive_entries_from_bytes, encode_bytes_to_base_64};
 use indexmap::IndexMap;
 
 #[allow(unused_imports)]
-use crate::wit::{expand_glob, print, read_file, write_file};
+use crate::wit::{expand_glob, get_cwd, print, read_file, write_file};
 
 #[allow(unused)]
 pub fn read_text_file<P: Into<String>>(path: P) -> Result<String, String> {
@@ -21,15 +23,28 @@ pub fn write_text_file<P: Into<String>, S: Into<String>>(path: P, text: S) -> Re
 }
 
 #[allow(unused)]
-pub fn compress<P: Into<String>>(path: P) -> Result<Vec<u8>, String> {
+pub fn compress<P: Into<String>>(path: P, exclude: Option<Vec<String>>) -> Result<Vec<u8>, String> {
     // Note: each exclude entry is a regex pattern
-    let exclude = &["node_modules/".to_string(), "\\.git/".to_string()];
-    let paths = expand_glob(&path.into(), exclude)?;
+    let exclude = exclude.unwrap_or_default();
+    let paths = expand_glob(&path.into(), &exclude)?;
     let mut entries = IndexMap::new();
     for path in paths {
         entries.insert(path.clone(), read_file(&path.clone())?);
-        print(&format!("Entry {:?}", path.clone()));
+        // print(&format!("Entry {:?}", path.clone()));
     }
 
     archive_entries_from_bytes(entries).map_err(|e| e.to_string())
+}
+
+#[allow(unused)]
+pub fn compress_and_encode_base64<P: Into<String>>(path: P) -> Result<String, String> {
+    let exclude = vec!["node_modules/".to_string(), "\\.git/".to_string()];
+    let bytes = compress(path, Some(exclude))?;
+    encode_bytes_to_base_64(bytes).map_err(|e| e.to_string())
+}
+
+#[allow(unused)]
+pub fn cwd() -> Result<PathBuf, String> {
+    let ret = PathBuf::from(get_cwd()?.to_owned());
+    Ok(ret)
 }

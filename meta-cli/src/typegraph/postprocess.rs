@@ -5,11 +5,11 @@ use std::sync::{Arc, RwLock};
 
 use crate::config::Config;
 
-use super::utils::{map_from_object, object_from_map};
 use anyhow::Context;
 use anyhow::{bail, Result};
 use colored::Colorize;
 use common::archive::archive_entries;
+use common::typegraph::utils::{map_from_object, object_from_map};
 use common::typegraph::validator::validate_typegraph;
 use common::typegraph::{Materializer, Typegraph};
 use ignore::WalkBuilder;
@@ -144,7 +144,7 @@ pub mod deno_rt {
     use common::typegraph::runtimes::deno::{FunctionMatData, ModuleMatData};
     use common::typegraph::runtimes::{KnownRuntime, TGRuntime};
 
-    use crate::typegraph::utils::{find_runtimes, get_materializers};
+    use common::typegraph::utils::{find_runtimes, get_materializers};
 
     use super::*;
 

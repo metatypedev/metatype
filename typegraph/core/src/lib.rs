@@ -32,7 +32,7 @@ use types::{
 use wit::core::{
     ContextCheck, Policy, PolicyId, PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat,
     TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList, TypeOptional, TypeString, TypeStruct,
-    TypeUnion, TypegraphInitParams,
+    TypeUnion, TypegraphFinalizeMode, TypegraphInitParams,
 };
 use wit::runtimes::{Guest, MaterializerDenoFunc};
 
@@ -59,11 +59,11 @@ impl wit::core::Guest for Lib {
         typegraph::init(params)
     }
 
-    fn finalize_typegraph() -> Result<String> {
+    fn finalize_typegraph(mode: TypegraphFinalizeMode) -> Result<String> {
         // expand_glob(".", &["node_module".to_owned()])
         //     .map(|r| print(&format!("value {:?}", r).to_string()))
         //     .ok();
-        // match crate::utils::fs_host::compress_folder(".") {
+        // match crate::utils::fs_host::compress(".", None) {
         //     Ok(bytes) => {
         //         crate::wit::write_file("./test.tar", bytes.as_slice())?;
         //         print("compress ok");
@@ -77,7 +77,7 @@ impl wit::core::Guest for Lib {
         //     }
         //     Err(e) => print(&format!("{:?}", e)),
         // }
-        typegraph::finalize()
+        typegraph::finalize(mode)
     }
 
     fn refb(name: String, attributes: Vec<(String, String)>) -> Result<CoreTypeId> {
@@ -597,7 +597,7 @@ mod tests {
             crate::test_utils::setup(Some("test-2")),
             Err(errors::nested_typegraph_context("test-1"))
         );
-        Lib::finalize_typegraph()?;
+        Lib::finalize_typegraph(TypegraphFinalizeMode::Simple)?;
         Ok(())
     }
 
@@ -610,7 +610,7 @@ mod tests {
         );
 
         assert_eq!(
-            Lib::finalize_typegraph(),
+            Lib::finalize_typegraph(TypegraphFinalizeMode::Simple),
             Err(errors::expected_typegraph_context())
         );
 

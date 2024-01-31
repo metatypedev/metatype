@@ -127,7 +127,14 @@ pub fn flat_list_dir<P: AsRef<Path>>(dir: P) -> Result<Vec<String>> {
     Ok(ret)
 }
 
-pub fn encode_to_base_64(file: &Path) -> Result<String> {
-    let bytes = fs::read(file).with_context(|| format!("reading file {:?}", file.display()))?;
+// Note: mainly used on the core sdk
+// importing the entire base64 lib might increase the binary size
+pub fn encode_bytes_to_base_64(bytes: Vec<u8>) -> Result<String> {
     Ok(STANDARD.encode(bytes))
+}
+
+pub fn encode_to_base_64(file: &Path) -> Result<String> {
+    fs::read(file)
+        .with_context(|| format!("reading file {:?}", file.display()))
+        .and_then(encode_bytes_to_base_64)
 }

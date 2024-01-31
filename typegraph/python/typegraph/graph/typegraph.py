@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
 from typegraph.gen.exports.core import (
     Rate,
+    TypegraphFinalizeMode,
     TypegraphInitParams,
 )
 from typegraph.gen.exports.core import (
@@ -169,14 +170,20 @@ def typegraph(
         popped = Typegraph._context.pop()
         assert tg == popped
 
-        res = core.finalize_typegraph(store)
-        if isinstance(res, Err):
-            raise Exception(res.value)
+        tg_json = core.finalize_typegraph(
+            store,
+            TypegraphFinalizeMode.SIMPLE
+            if disable_auto_serialization
+            else TypegraphFinalizeMode.RESOLVE_ARTIFACTS,
+        )
+
+        if isinstance(tg_json, Err):
+            raise Exception(tg_json.value)
 
         if not disable_auto_serialization:
-            print(res.value)
+            tg_json = core.finalize_typegraph(store, TypegraphFinalizeMode.SIMPLE)
 
-        return lambda: TypegraphOutput(tg=tg, serialized=res.value)
+        return lambda: TypegraphOutput(tg=tg, serialized=tg_json.value)
 
     return decorator
 
