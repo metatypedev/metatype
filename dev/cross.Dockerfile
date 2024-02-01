@@ -23,7 +23,7 @@ RUN set -eux \
                 # openssl crate build deps \
                 pkg-config \
                 libssl-dev:$ARCH \
-                zlib1g:$ARCH \
+                zlib1g-dev:$ARCH \
                 # base ghjk deps \ 
                 git \
                 curl \
