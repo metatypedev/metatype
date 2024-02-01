@@ -417,11 +417,11 @@ jobs:
         run: |
           cargo install cross
 
-          cross build --locked --package meta-cli --target ${{ matrix.target }} --features typegate -v
-          tar czvf meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "target/${{ matrix.target }}/debug/meta${{ matrix.suffix }}"
-
           cross build --locked --package meta-cli --target ${{ matrix.target }}
           tar czvf meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "target/${{ matrix.target }}/debug/meta${{ matrix.suffix }}"
+
+          cross build --locked --package meta-cli --target ${{ matrix.target }} --features typegate -v
+          tar czvf meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "target/${{ matrix.target }}/debug/meta${{ matrix.suffix }}"
       # - uses: svenstaro/upload-release-action@v2
       #   with:
       #     tag: ${{ steps.latest-tag.outputs.tag }}
