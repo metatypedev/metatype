@@ -414,7 +414,7 @@ jobs:
           ls -osha target
           ls -osha target/${{ matrix.target }}
           ls -osha target/${{ matrix.target }}/debug
-          cd target/${{ matrix.target }}/debug
+          ls -osha target/${{ matrix.target }}/debug/meta
           tar czvf meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "target/${{ matrix.target }}/debug/meta${{ matrix.suffix }}"
 
           cross build --locked --package meta-cli --target ${{ matrix.target }}
