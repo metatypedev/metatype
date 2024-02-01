@@ -376,7 +376,7 @@ jobs:
             suffix: ""
           # cross doesn't provide macos support so we compile
           # arm64 on an arm64 machine
-          - os: custom-macos
+          - os: macos-latest
             target: aarch64-apple-darwin
             suffix: ""
           - os: ubuntu-latest
@@ -410,6 +410,10 @@ jobs:
         env:
           # arguments for our custom cross.Dockerfile
           CROSS_BUILD_OPTS: "--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
+          # deno won't cross compile unless this var is set
+          # due to issues with snapshots (not in use currently)
+          # once we have arm64 linux builders, we won't need to cross compile anymore
+          DENO_SKIP_CROSS_BUILD_CHECK: 1
         run: |
           cargo install cross
 
