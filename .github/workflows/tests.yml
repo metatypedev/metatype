@@ -412,6 +412,8 @@ jobs:
           cross build --locked --package meta-cli --target ${{ matrix.target }} --features typegate -v
           ls -osha
           ls -osha target
+          ls -osha target/${{ matrix.target }}
+          ls -osha target/${{ matrix.target }}/debug
           cd target/${{ matrix.target }}/debug
           tar czvf meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "target/${{ matrix.target }}/debug/meta${{ matrix.suffix }}"
 
