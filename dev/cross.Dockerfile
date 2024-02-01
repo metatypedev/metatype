@@ -37,6 +37,6 @@ COPY ghjk.ts .
 RUN OCI=1 NO_PYTHON=1 ghjk ports sync
 ENV GHJK_ENV=$GHJK_SHARE_DIR/env.sh
 ENV BASH_ENV=$GHJK_ENV
-RUN echo $PATH && echo $LD_LIBRARY_PATH && dpkg --status libclang-dev && ls -osha /usr/lib/llvm-10/lib/ && exit 1
+#RUN echo $PATH && echo $LD_LIBRARY_PATH && dpkg --status libclang-dev && ls -osha /usr/lib/llvm-10/lib/ && exit 1
 ENV PATH=/.ghjk/envs/default/shims/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ENV LD_LIBRARY_PATH=/.ghjk/envs/default/shims/lib
