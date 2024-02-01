@@ -168,7 +168,7 @@ export function typegraph(
 
   builder(g);
 
-  let tgJson = core.finalizeTypegraph(
+  const tgJson = core.finalizeTypegraph(
     disableAutoSerialization ? "resolve-artifacts" : "simple",
   );
   if (!disableAutoSerialization) {

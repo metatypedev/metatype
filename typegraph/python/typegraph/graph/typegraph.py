@@ -172,16 +172,16 @@ def typegraph(
 
         tg_json = core.finalize_typegraph(
             store,
-            TypegraphFinalizeMode.SIMPLE
+            TypegraphFinalizeMode.RESOLVE_ARTIFACTS
             if disable_auto_serialization
-            else TypegraphFinalizeMode.RESOLVE_ARTIFACTS,
+            else TypegraphFinalizeMode.SIMPLE,
         )
 
         if isinstance(tg_json, Err):
             raise Exception(tg_json.value)
 
         if not disable_auto_serialization:
-            tg_json = core.finalize_typegraph(store, TypegraphFinalizeMode.SIMPLE)
+            print(tg_json.value)
 
         return lambda: TypegraphOutput(tg=tg, serialized=tg_json.value)
 
