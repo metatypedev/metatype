@@ -5,6 +5,7 @@ use crate::conversion::runtimes::{convert_materializer, convert_runtime, Convert
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
 use crate::types::{TypeDef, TypeDefExt, TypeId};
+use crate::utils::postprocess::python_rt::PythonProcessor;
 use crate::utils::postprocess::{deno_rt::DenoProcessor, PostProcessor};
 use crate::validation::validate_name;
 use crate::Lib;
@@ -215,10 +216,8 @@ pub fn finalize(mode: TypegraphFinalizeMode) -> Result<String> {
 
     match mode {
         TypegraphFinalizeMode::ResolveArtifacts => {
-            let processors = vec![DenoProcessor::new()];
-            for proc in processors {
-                proc.postprocess(&mut tg)?;
-            }
+            DenoProcessor.postprocess(&mut tg)?;
+            PythonProcessor.postprocess(&mut tg)?;
         }
         TypegraphFinalizeMode::Simple => {}
     }

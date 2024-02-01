@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use typescript::parser::transform_script;
 
 use crate::utils::postprocess::{compress_and_encode, PostProcessor};
+
 pub struct DenoProcessor;
 
 impl PostProcessor for DenoProcessor {
@@ -32,10 +33,6 @@ impl PostProcessor for DenoProcessor {
 }
 
 impl DenoProcessor {
-    pub fn new() -> Self {
-        Self {}
-    }
-
     pub fn reformat_materializer_script(mat: &mut Materializer) -> Result<(), String> {
         if mat.name.as_str() == "function" {
             let mut mat_data: FunctionMatData =

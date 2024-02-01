@@ -1,30 +1,45 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
+import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
 import { tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 
 // deno
 // import { Policy, t, typegraph } from "../../typegraph/node/sdk/dist/index.js";
 // import { DenoRuntime } from "../../typegraph/node/sdk/dist/runtimes/deno.js";
+// import { PythonRuntime } from "../../typegraph/node/sdk/dist/runtimes/python.js";
 // import { tgDeploy } from "../../typegraph/node/sdk/dist/tg_deploy.js";
+
 
 const tg = typegraph({
   name: "deploy-example-node",
   disableAutoSerialization: true // disable print
 }, (g) => {
     const deno = new DenoRuntime();
+    const python = new PythonRuntime();
     const pub = Policy.public();
 
     g.expose({
       test: deno.static(t.struct({ a: t.string() }), { a: "HELLO" }),
       sayHello: deno.import(
         t.struct({ name: t.string() }),
-        t.struct({ message: t.string() }),
-        { module: "scripts/say_hello.ts", name: "sayHello" }
+        t.string(),
+        { module: "scripts/deno/say_hello.ts", name: "sayHello" }
       ),
       sayHelloLambda: deno.func(
         t.struct({ name: t.string() }),
-        t.struct({ message: t.string() }),
-        { code: "({ name }) => ({ message: `Hello ${name}`})" }
+        t.string(),
+        { code: "({ name }) => `Hello ${name} from deno lambda`" }
+      ),
+      // Python
+      sayHelloPyLambda: python.fromLambda(
+        t.struct({ name: t.string() }),
+        t.string(),
+        { code: `lambda obj: f"Hello {obj['name']} from python lambda"` }
+      ),
+      sayHelloPyMod: python.import(
+        t.struct({ name: t.string() }),
+        t.string(),
+        { module: "scripts/python/say_hello.py", name: "say_hello" }
       ),
     }, pub);
   },
