@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: WyriHaximus/github-action-get-previous-tag@v1.3.0
+      - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: denoland/setup-deno@v1
         with:
@@ -92,13 +92,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: WyriHaximus/github-action-get-previous-tag@v1.3.0
+      - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
         with:
           targets: ${{ matrix.target }}
       # some targets don't use cross so will require the deps in the host
-      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
+      - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}-${{ matrix.target }}
@@ -148,7 +148,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: WyriHaximus/github-action-get-previous-tag@v1.3.0
+      - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
@@ -157,7 +157,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
+      - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
       - shell: bash
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
@@ -257,7 +257,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: WyriHaximus/github-action-get-previous-tag@v1.3.0
+      - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: actions/download-artifact@v4
         with:
@@ -289,9 +289,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: WyriHaximus/github-action-get-previous-tag@v1.3.0
+      - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
-      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
+      - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
       - shell: bash
         run: |
           cd dev-tools
@@ -336,7 +336,7 @@ jobs:
           deno run -A dev/lock.ts --bump prerelease
           echo "version=$(deno run -A dev/lock.ts --version)" >> $GITHUB_OUTPUT
           git cliff --output CHANGELOG.md
-      - uses: peter-evans/create-pull-request@v5
+      - uses: peter-evans/create-pull-request@v6
         with:
           branch: bump-${{ steps.bump.outputs.version }}
           delete-branch: true
