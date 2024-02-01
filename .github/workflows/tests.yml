@@ -371,12 +371,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            suffix: ""
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            suffix: ""
+          # - os: macos-latest
+          #   target: x86_64-apple-darwin
+          #   suffix: ""
+          # - os: macos-latest
+          #   target: aarch64-apple-darwin
+          #   suffix: ""
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             suffix: ""
@@ -384,9 +384,9 @@ jobs:
           # - os: ubuntu-latest
           #   target: x86_64-unknown-linux-musl
           #   suffix: ""
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            suffix: ""
+          # - os: ubuntu-latest
+          #   target: aarch64-unknown-linux-gnu
+          #   suffix: ""
     steps:
       - uses: actions/checkout@v4
         with:
@@ -403,12 +403,14 @@ jobs:
           # sometimes, dtolnay/rust-toolchain does not select the correct default target
           rustup target add ${{ matrix.target }}
       - shell: bash
+        env:
+          # arguments for our custom cross.Dockerfile
+          CROSS_BUILD_OPTS: "--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
         run: |
           cargo install cross
-          # arguments for our custom cross.Dockerfile
-          export CROSS_BUILD_OPTS="--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
 
-          cross build --locked --package meta-cli --target ${{ matrix.target }} --features typegate
+          cross build --locked --package meta-cli --target ${{ matrix.target }} --features typegate -v
+          ls -osha target
           cd target/${{ matrix.target }}/debug
           tar czvf ../../../meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
 
