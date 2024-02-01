@@ -21,6 +21,11 @@ const tg = typegraph({
         t.struct({ message: t.string() }),
         { module: "scripts/say_hello.ts", name: "sayHello" }
       ),
+      sayHelloLambda: deno.func(
+        t.struct({ name: t.string() }),
+        t.struct({ message: t.string() }),
+        { code: "({ name }) => ({ message: `Hello ${name}`})" }
+      ),
     }, pub);
   },
 );

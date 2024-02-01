@@ -5,7 +5,7 @@ use crate::conversion::runtimes::{convert_materializer, convert_runtime, Convert
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
 use crate::types::{TypeDef, TypeDefExt, TypeId};
-use crate::utils::postprocess::resolve_deno_modules;
+use crate::utils::postprocess::{deno_rt::DenoProcessor, PostProcessor};
 use crate::validation::validate_name;
 use crate::Lib;
 use crate::{
@@ -214,7 +214,12 @@ pub fn finalize(mode: TypegraphFinalizeMode) -> Result<String> {
     };
 
     match mode {
-        TypegraphFinalizeMode::ResolveArtifacts => resolve_deno_modules(&mut tg)?,
+        TypegraphFinalizeMode::ResolveArtifacts => {
+            let processors = vec![DenoProcessor::new()];
+            for proc in processors {
+                proc.postprocess(&mut tg)?;
+            }
+        }
         TypegraphFinalizeMode::Simple => {}
     }
 
