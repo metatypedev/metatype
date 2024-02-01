@@ -6,6 +6,7 @@ use common::typegraph::Typegraph;
 use std::path::Path;
 pub mod deno_rt;
 pub mod python_rt;
+pub mod wasmedge_rt;
 
 pub fn compress_and_encode(main_path: &Path) -> Result<String, String> {
     if let Err(e) = fs_host::read_text_file(main_path.display().to_string()) {

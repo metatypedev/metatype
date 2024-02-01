@@ -5,8 +5,10 @@ use crate::conversion::runtimes::{convert_materializer, convert_runtime, Convert
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
 use crate::types::{TypeDef, TypeDefExt, TypeId};
+use crate::utils::postprocess::deno_rt::DenoProcessor;
 use crate::utils::postprocess::python_rt::PythonProcessor;
-use crate::utils::postprocess::{deno_rt::DenoProcessor, PostProcessor};
+use crate::utils::postprocess::wasmedge_rt::WasmedgeProcessor;
+use crate::utils::postprocess::PostProcessor;
 use crate::validation::validate_name;
 use crate::Lib;
 use crate::{
@@ -218,6 +220,7 @@ pub fn finalize(mode: TypegraphFinalizeMode) -> Result<String> {
         TypegraphFinalizeMode::ResolveArtifacts => {
             DenoProcessor.postprocess(&mut tg)?;
             PythonProcessor.postprocess(&mut tg)?;
+            WasmedgeProcessor.postprocess(&mut tg)?;
         }
         TypegraphFinalizeMode::Simple => {}
     }

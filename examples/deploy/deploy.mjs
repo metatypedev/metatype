@@ -1,6 +1,7 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
+import { WasmEdgeRuntime } from "@typegraph/sdk/runtimes/wasmedge.js";
 import { tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 
 // deno
@@ -16,6 +17,7 @@ const tg = typegraph({
 }, (g) => {
     const deno = new DenoRuntime();
     const python = new PythonRuntime();
+    const wasmedge = new WasmEdgeRuntime();
     const pub = Policy.public();
 
     g.expose({
@@ -40,6 +42,11 @@ const tg = typegraph({
         t.struct({ name: t.string() }),
         t.string(),
         { module: "scripts/python/say_hello.py", name: "say_hello" }
+      ),
+      testWasmedge: wasmedge.wasi(
+        t.struct({"a": t.float(), "b": t.float()}),
+        t.integer(),
+        { wasm: "wasi/rust.wasm", func: "add" }
       ),
     }, pub);
   },

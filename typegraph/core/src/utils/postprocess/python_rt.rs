@@ -3,7 +3,7 @@
 
 use crate::utils::fs_host;
 use common::typegraph::{
-    runtimes::deno::ModuleMatData,
+    runtimes::python::ModuleMatData,
     utils::{map_from_object, object_from_map},
     Typegraph,
 };
@@ -22,9 +22,7 @@ impl PostProcessor for PythonProcessor {
                 let Some(path) = mat_data.code.strip_prefix("file:").to_owned() else {
                     continue;
                 };
-                // main_path can be either relative or absolute,
-                // if relative => make it absolute
-                // fs::canonicalize wouldn't work in this setup
+
                 let main_path = fs_host::make_absolute(&PathBuf::from(path))?;
                 mat_data.code = compress_and_encode(&main_path)?;
 
