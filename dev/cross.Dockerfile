@@ -23,6 +23,7 @@ RUN set -eux \
                 # openssl crate build deps \
                 pkg-config \
                 libssl-dev:$ARCH \
+                zlib1g-dev \
                 zlib1g-dev:$ARCH \
                 # base ghjk deps \ 
                 git \
@@ -37,7 +38,8 @@ RUN curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh 
    | GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash sh 
 
 COPY ghjk.ts .
-RUN OCI=1 NO_PYTHON=1 ghjk ports sync
+# mold breaks builds for aarch64 linux
+RUN OCI=1 NO_PYTHON=1 NO_MOLD=1 ghjk ports sync
 ENV GHJK_ENV=$GHJK_SHARE_DIR/env.sh
 ENV BASH_ENV=$GHJK_ENV
 #RUN echo $PATH && echo $LD_LIBRARY_PATH && dpkg --status libclang-dev && ls -osha /usr/lib/llvm-10/lib/ && exit 1

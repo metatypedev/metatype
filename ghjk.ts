@@ -45,7 +45,7 @@ if (!Deno.env.has("OCI")) {
   );
 }
 
-if (Deno.build.os == "linux") {
+if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
   ghjk.install(
     ports.mold({
       version: MOLD_VERSION,
