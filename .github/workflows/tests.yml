@@ -409,11 +409,11 @@ jobs:
           export CROSS_BUILD_OPTS="--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
 
           cross build --locked --package meta-cli --target ${{ matrix.target }} --features typegate
-          cd target/${{ matrix.target }}/release
+          cd target/${{ matrix.target }}/debug
           tar czvf ../../../meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
 
           cross build --locked --package meta-cli --target ${{ matrix.target }}
-          cd target/${{ matrix.target }}/release
+          cd target/${{ matrix.target }}/debug
           tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
       # - uses: svenstaro/upload-release-action@v2
       #   with:
