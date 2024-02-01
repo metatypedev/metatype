@@ -16,8 +16,10 @@ RUN set -eux \
                 make \
                 # libffi-sys cate build dep\
                 automake \
+                # protoc\
+                libprotoc-dev:$ARCH \
                 # wasmedge-sys crate build dep\
-                libclang-dev:$ARCH \
+                libclang-dev \
                 # openssl crate build deps \
                 pkg-config \
                 libssl-dev:$ARCH \

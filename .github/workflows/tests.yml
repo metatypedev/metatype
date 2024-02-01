@@ -374,6 +374,8 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             suffix: ""
+          # cross doesn't provide macos support so we compile
+          # arm64 on an arm64 machine
           - os: custom-macos
             target: aarch64-apple-darwin
             suffix: ""
@@ -384,7 +386,7 @@ jobs:
           # - os: ubuntu-latest
           #   target: x86_64-unknown-linux-musl
           #   suffix: ""
-          - os: custom-macos
+          - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             suffix: ""
     steps:
@@ -399,6 +401,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}-${{ matrix.target }}
+      # some targets don't use cross so will require the deps in the host
+      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - run: |
           # sometimes, dtolnay/rust-toolchain does not select the correct default target
           rustup target add ${{ matrix.target }}
