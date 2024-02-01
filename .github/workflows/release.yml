@@ -100,31 +100,31 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}-${{ matrix.target }}
-      - run: |
+      - shell: bash
+        env:
+          # arguments for our custom cross.Dockerfile
+          CROSS_BUILD_OPTS: "--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
+          # deno won't cross compile unless this var is set
+          # due to issues with snapshots (not in use currently)
+          # once we have arm64 linux builders, we won't need to cross compile anymore
+          DENO_SKIP_CROSS_BUILD_CHECK: 1
+        run: |
           # sometimes, dtolnay/rust-toolchain does not select the correct default target
           rustup target add ${{ matrix.target }}
-      - uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: "--locked --release --package meta-cli --target ${{ matrix.target }} --features typegate"
-      - run: |
-          cd target/${{ matrix.target }}/release
-          tar czvf ../../../meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
+
+          cargo install cross
+
+          cross build --release --locked --package meta-cli --target ${{ matrix.target }} --features typegate -v
+          tar czvf meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "target/${{ matrix.target }}/release/meta${{ matrix.suffix }}"
+
+          cross build --release --locked --package meta-cli --target ${{ matrix.target }}
+          tar czvf meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "target/${{ matrix.target }}/release/meta${{ matrix.suffix }}"
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
           file: "meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
           asset_name: "meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
           overwrite: ${{ inputs.ovewriteArtifacts }}
-      - uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: "--locked --release --package meta-cli --target ${{ matrix.target }}"
-      - run: |
-          cd target/${{ matrix.target }}/release
-          tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
