@@ -81,9 +81,10 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             suffix: ""
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            suffix: ""
+          # FIXME: deno doesn't support musl today https://github.com/denoland/deno/issues/3711
+          # - os: ubuntu-latest
+          #   target: x86_64-unknown-linux-musl
+          #   suffix: ""
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             suffix: ""
@@ -96,6 +97,7 @@ jobs:
       - uses: dsherret/rust-toolchain-file@v1
         with:
           targets: ${{ matrix.target }}
+      # some targets don't use cross so will require the deps in the host
       - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
       - uses: Swatinem/rust-cache@v2
         with:
