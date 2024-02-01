@@ -113,29 +113,28 @@ pub mod tree {
                 ),
             };
 
-            let enum_variants: Option<Vec<String>> = self
-                .type_id
-                .as_type_def()
-                .unwrap()
-                .map(|type_def| match type_def {
-                    TypeDef::Integer(typ) => typ
-                        .data
-                        .enumeration
-                        .clone()
-                        .map(|v| v.iter().map(|v| v.to_string()).collect()),
-                    TypeDef::Float(typ) => typ
-                        .data
-                        .enumeration
-                        .clone()
-                        .map(|v| v.iter().map(|v| v.to_string()).collect()),
-                    TypeDef::String(typ) => typ
-                        .data
-                        .enumeration
-                        .clone()
-                        .map(|v| v.iter().map(|v| format!("'{v}'")).collect()),
-                    _ => None,
-                })
-                .flatten();
+            let enum_variants: Option<Vec<String>> =
+                self.type_id
+                    .as_type_def()
+                    .unwrap()
+                    .and_then(|type_def| match type_def {
+                        TypeDef::Integer(typ) => typ
+                            .data
+                            .enumeration
+                            .clone()
+                            .map(|v| v.iter().map(|v| v.to_string()).collect()),
+                        TypeDef::Float(typ) => typ
+                            .data
+                            .enumeration
+                            .clone()
+                            .map(|v| v.iter().map(|v| v.to_string()).collect()),
+                        TypeDef::String(typ) => typ
+                            .data
+                            .enumeration
+                            .clone()
+                            .map(|v| v.iter().map(|v| format!("'{v}'")).collect()),
+                        _ => None,
+                    });
 
             let enum_variants = enum_variants
                 .map(|v| format!(" enum{{ {} }}", v.join(", ")))

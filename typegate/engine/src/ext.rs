@@ -100,7 +100,10 @@ pub mod tests {
     #[tokio::test(flavor = "current_thread")]
     async fn test_obj_go_round() -> Result<()> {
         let deno_factory = deno::factory::CliFactory::from_flags(deno::args::Flags {
-            unstable: true,
+            unstable_config: deno::args::UnstableConfig {
+                legacy_flag_enabled: true,
+                ..Default::default()
+            },
             ..Default::default()
         })
         .await?

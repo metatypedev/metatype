@@ -49,6 +49,8 @@ dev:
       (ARG DENO_VERSION=).*(): DENO_VERSION
       (ARG RUST_VERSION=).*(): RUST_VERSION
       (ARG GHJK_VERSION=).*(): GHJK_VERSION
+      (ARG WASM_OPT_VERSION=).*(): WASM_OPT_VERSION
+      (ARG WASM_TOOLS_VERSION=).*(): WASM_TOOLS_VERSION
     typegate/src/typegraph/versions.ts:
       (const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
     typegraph/core/src/typegraph.rs:
@@ -75,8 +77,8 @@ dev:
     PYTHON_VERSION: 3.8.18
     POETRY_VERSION: 1.7.0
     PROTOC_VERSION: v24.1
-    RUST_VERSION: 1.74.1
-    DENO_VERSION: 1.39.0
+    RUST_VERSION: 1.75.0
+    DENO_VERSION: 1.40.1
     NODE_VERSION: 20.8.0
     PNPM_VERSION: v8.8.0
     CARGO_INSTA_VERSION: 1.33.0
@@ -86,7 +88,7 @@ dev:
     WASMEDGE_VERSION: 0.13.5
     TYPEGRAPH_VERSION: 0.0.3
     PRISMA_VERSION: 5.5.2
-    METATYPE_VERSION: 0.3.2
+    METATYPE_VERSION: 0.3.3
     PUBLISHED_VERSION: 0.3.2
     WASM_OPT_VERSION: 0.116.0
     MOLD_VERSION: v2.4.0

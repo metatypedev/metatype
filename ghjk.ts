@@ -18,8 +18,6 @@ const NODE_VERSION = "20.8.0";
 ghjk.install(
   ports.wasmedge({ version: WASMEDGE_VERSION }),
   ports.pnpm({ version: PNPM_VERSION }),
-  ports.wasm_tools({ version: WASM_TOOLS_VERSION }),
-  ports.wasm_opt({ version: WASM_OPT_VERSION }),
   ports.cargo_insta({ version: CARGO_INSTA_VERSION }),
   ports.protoc({ version: PROTOC_VERSION }),
   ports.asdf({
@@ -32,15 +30,23 @@ ghjk.install(
   ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0],
   ports.node({ version: NODE_VERSION }),
 );
+
+if (!Deno.env.has("OCI")) {
+  ghjk.install(
+    ports.wasm_opt({ version: WASM_OPT_VERSION }),
+    ports.wasm_tools({ version: WASM_TOOLS_VERSION }),
+  );
+}
+
 if (Deno.build.os == "linux") {
   ghjk.install(
     ports.mold({
       version: MOLD_VERSION,
-      replaceLd: Deno.env.has("CI"),
+      replaceLd: Deno.env.has("CI") || Deno.env.has("OCI"),
     }),
   );
 }
-// node({ version: NODE_VERSION }),
+
 if (!Deno.env.has("NO_PYTHON")) {
   ghjk.install(
     ports.cpy_bs({ version: PYTHON_VERSION }),
@@ -49,14 +55,14 @@ if (!Deno.env.has("NO_PYTHON")) {
       version: POETRY_VERSION,
     })[0],
   );
-  if (!Deno.env.has("CI")) {
+  if (!Deno.env.has("CI") && !Deno.env.has("OCI")) {
     ghjk.install(
       ports.pipi({ packageName: "pre-commit" })[0],
     );
   }
 }
 
-if (!Deno.env.has("CI")) {
+if (!Deno.env.has("CI") && !Deno.env.has("OCI")) {
   ghjk.install(
     ports.act({}),
     ports.whiz({}),
