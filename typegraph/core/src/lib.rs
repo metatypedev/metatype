@@ -17,8 +17,6 @@ mod test_utils;
 
 use std::collections::HashSet;
 
-#[allow(unused_imports)]
-use crate::wit::print;
 use errors::Result;
 use global_store::{NameRegistration, Store};
 use indoc::formatdoc;

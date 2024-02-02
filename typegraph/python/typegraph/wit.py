@@ -4,7 +4,7 @@
 from typing import List
 from wasmtime import Store
 
-from typegraph.gen import Root, RootImports, imports
+from typegraph.gen import Root, imports, RootImports
 from typegraph.gen.exports.aws import Aws
 from typegraph.gen.exports.core import Core
 from typegraph.gen.exports.runtimes import Runtimes
@@ -12,7 +12,7 @@ from typegraph.gen.exports.utils import Utils
 from typegraph.gen.types import Result
 
 
-class Host(imports.Host):
+class Host(imports.HostHost):
     def expand_glob(self, root: str, exclude: List[str]) -> Result[List[str], str]:
         raise NotImplementedError
 

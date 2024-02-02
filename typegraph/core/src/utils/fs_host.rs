@@ -6,8 +6,7 @@ use std::path::{Path, PathBuf};
 use common::archive::{archive_entries_from_bytes, encode_bytes_to_base_64};
 use indexmap::IndexMap;
 
-#[allow(unused_imports)]
-use crate::wit::{expand_glob, get_cwd, print, read_file, write_file};
+use crate::wit::metatype::typegraph::host::{expand_glob, get_cwd, read_file, write_file};
 
 pub fn read_text_file<P: Into<String>>(path: P) -> Result<String, String> {
     read_file(&path.into()).and_then(|bytes| {
