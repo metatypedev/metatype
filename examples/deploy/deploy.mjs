@@ -22,6 +22,7 @@ const tg = typegraph({
 
     g.expose({
       test: deno.static(t.struct({ a: t.string() }), { a: "HELLO" }),
+      // Deno
       sayHello: deno.import(
         t.struct({ name: t.string() }),
         t.string(),
@@ -41,8 +42,9 @@ const tg = typegraph({
       sayHelloPyMod: python.import(
         t.struct({ name: t.string() }),
         t.string(),
-        { module: "scripts/python/say_hello.py", name: "say_hello" }
+        {  module: "scripts/python/say_hello.py", name: "sayHello" }
       ),
+      // Wasmedge
       testWasmedge: wasmedge.wasi(
         t.struct({"a": t.float(), "b": t.float()}),
         t.integer(),
@@ -54,13 +56,13 @@ const tg = typegraph({
 
 tgDeploy(tg, {
   baseUrl: "http://localhost:7890",
-  cliVersion: "0.3.2",
+  cliVersion: "0.3.3",
   auth: {
     username: "admin",
     password: "password",
   },
 }).then((result) => {
-  console.log("gate:");
-  console.log(result);
+  console.log("gate:", result);
+  // console.log(result, tg);
 })
   .catch(console.error);
