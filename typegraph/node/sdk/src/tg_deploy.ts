@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { TypegraphOutput } from "./typegraph.js";
+import { wit_utils } from "./wit.js";
 
 export interface BasicAuth {
   username: string;
@@ -34,35 +35,13 @@ export async function tgDeploy(
   const response = await fetch(new URL("/typegate", baseUrl), {
     method: "POST",
     headers,
-    body: JSON.stringify(gqlBody(serialized, cliVersion, secrets)),
-  });
-
-  return handleResponse(response);
-}
-
-function gqlBody(
-  tg: String,
-  cliVersion: string,
-  secrets?: Record<string, string>,
-) {
-  const query = `
-    mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
-        addTypegraph(fromString: $tg, secrets: $secrets, cliVersion: $cliVersion) {
-            name
-            messages { type text }
-            migrations { runtime migrations }
-            failure
-        }
-    }`;
-
-  return {
-    query: query,
-    variables: {
-      tg,
-      secrets: JSON.stringify(secrets ?? {}),
+    body: wit_utils.genGqlquery({
       cliVersion,
-    },
-  };
+      tg: serialized,
+      secrets: Object.entries(secrets ?? {}),
+    }),
+  });
+  return handleResponse(response);
 }
 
 async function handleResponse(

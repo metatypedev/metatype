@@ -497,6 +497,14 @@ interface utils {
     oauth2-without-profiler: func(service-name: string, scopes: string) -> result<string, error>
     oauth2-with-extended-profiler: func(service-name: string, scopes: string, extension: string) -> result<string, error>
     oauth2-with-custom-profiler: func(service-name: string, scopes: string, profiler: type-id) -> result<string, error>
+
+    record query-body-params {
+        tg: string,
+        cli-version: string,
+        secrets: option<list<tuple<string, string>>>,
+    }
+
+    gen-gqlquery: func(params: query-body-params) -> result<string, error>
 }
 
 interface host {

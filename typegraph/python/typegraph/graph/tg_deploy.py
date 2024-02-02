@@ -6,8 +6,11 @@ from typing import Dict, Optional
 from urllib import request
 import json
 from base64 import b64encode
+from typegraph.gen.types import Err
 
 from typegraph.graph.typegraph import TypegraphOutput
+from typegraph.gen.exports.utils import QueryBodyParams
+from typegraph.wit import store, wit_utils
 
 
 @dataclass
@@ -35,13 +38,23 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams):
         ).decode("utf-8")
         headers["Authorization"] = f"Basic {payload}"
 
+    res = wit_utils.gen_gqlquery(
+        store,
+        params=QueryBodyParams(
+            tg=tg.serialized,
+            cli_version=params.cli_version,
+            secrets=[(k, v) for k, v in (params.secrets or {})],
+        ),
+    )
+
+    if isinstance(res, Err):
+        raise Exception(res.value)
+
     req = request.Request(
         url=url,
         method="POST",
         headers=headers,
-        data=gql_body(
-            tg.serialized, cli_version=params.cli_version, secrets=params.secrets
-        ).encode(),
+        data=res.value.encode(),
     )
 
     body = request.urlopen(req).read().decode()
@@ -49,26 +62,3 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams):
         return json.loads(body)
     except Exception as _:
         return body
-
-
-def gql_body(tg: str, cli_version: str, secrets: Optional[Dict[str, any]] = None):
-    query = """
-    mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
-        addTypegraph(fromString: $tg, secrets: $secrets, cliVersion: $cliVersion) {
-            name
-            messages { type text }
-            migrations { runtime migrations }
-            failure
-        }
-    }
-    """
-    return json.dumps(
-        {
-            "query": query,
-            "variables": {
-                "tg": tg,
-                "secrets": json.dumps(secrets or {}),
-                "cliVersion": cli_version,
-            },
-        }
-    )
