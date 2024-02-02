@@ -6,6 +6,7 @@ mod runtimes;
 mod typegraph;
 mod typescript;
 
+#[allow(unused_imports)]
 mod interlude {
     pub use anyhow::{Context, Result};
     pub use log::{debug, error, info, trace, warn};

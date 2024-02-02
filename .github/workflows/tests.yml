@@ -10,7 +10,7 @@ on:
 
 env:
   GHJK_VERSION: "f380522"
-  DENO_VERSION: "1.39.0"
+  DENO_VERSION: "1.40.1"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
 
@@ -172,7 +172,15 @@ jobs:
   test-docker:
     needs: changes
     if: ${{ needs.changes.outputs.typegate == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: custom-macos
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -193,7 +201,7 @@ jobs:
         if: steps.check.outputs.has-permission
         with:
           file: dev/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ matrix.platform }}
           push: false
           cache-from: type=registry,ref=docker.io/zifeo/metatype-cache:ci
           cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
@@ -280,6 +288,7 @@ jobs:
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
+          echo pwd in $(pwd)
 
           sudo apt update
           sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev perl make
@@ -320,7 +329,13 @@ jobs:
           cargo build -p meta-cli
           cargo build -p xtask # xtask and meta-cli are used by the test suite
           deno run -A dev/test.ts --threads 1 -- --coverage=coverage
-          deno --unstable coverage ./coverage --lcov > coverage.lcov
+          # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
+          deno cache --import-map typegate/import_map.json \
+            typegate/src/main.ts \
+            typegate/tests/utils/*.ts \
+            dev/deps.ts \
+            dev/utils.ts
+          deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
 
       - uses: codecov/codecov-action@v3
         with:

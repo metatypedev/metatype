@@ -465,86 +465,6 @@
               }
             },
             {
-              "version": "1.0.53",
-              "port": {
-                "ty": "denoWorker@v1",
-                "name": "wasm_tools_cbinst",
-                "platforms": [
-                  [
-                    "linux",
-                    "aarch64"
-                  ],
-                  [
-                    "linux",
-                    "x86_64"
-                  ],
-                  [
-                    "darwin",
-                    "aarch64"
-                  ],
-                  [
-                    "darwin",
-                    "x86_64"
-                  ],
-                  [
-                    "windows",
-                    "aarch64"
-                  ],
-                  [
-                    "windows",
-                    "x86_64"
-                  ]
-                ],
-                "version": "0.1.0",
-                "deps": [
-                  {
-                    "name": "cargo_binstall_ghrel"
-                  }
-                ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/wasm-tools.ts"
-              }
-            },
-            {
-              "version": "0.116.0",
-              "port": {
-                "ty": "denoWorker@v1",
-                "name": "wasm_opt_cbinst",
-                "platforms": [
-                  [
-                    "linux",
-                    "aarch64"
-                  ],
-                  [
-                    "linux",
-                    "x86_64"
-                  ],
-                  [
-                    "darwin",
-                    "aarch64"
-                  ],
-                  [
-                    "darwin",
-                    "x86_64"
-                  ],
-                  [
-                    "windows",
-                    "aarch64"
-                  ],
-                  [
-                    "windows",
-                    "x86_64"
-                  ]
-                ],
-                "version": "0.1.0",
-                "deps": [
-                  {
-                    "name": "cargo_binstall_ghrel"
-                  }
-                ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/wasm-opt.ts"
-              }
-            },
-            {
               "version": "1.33.0",
               "port": {
                 "ty": "denoWorker@v1",
@@ -914,6 +834,112 @@
                   }
                 ],
                 "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/node.ts"
+              }
+            },
+            {
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "cargo_binstall_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/cargo-binstall.ts"
+              }
+            },
+            {
+              "version": "0.116.0",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "wasm_opt_cbinst",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "cargo_binstall_ghrel"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/wasm-opt.ts"
+              }
+            },
+            {
+              "version": "1.0.53",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "wasm_tools_cbinst",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "cargo_binstall_ghrel"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/wasm-tools.ts"
               }
             },
             {

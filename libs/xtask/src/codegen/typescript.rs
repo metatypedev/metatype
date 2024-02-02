@@ -11,10 +11,9 @@ use typescript::ast::{
     TsPropertySignature, TsType, TsTypeAliasDecl, TsTypeElement, TsTypeRef,
     TsUnionOrIntersectionType, TsUnionType,
 };
-use typescript::print_module;
-
 use typescript::parser::parse_module_source;
-use typescript::string_cache::Atom;
+use typescript::print_module;
+use typescript::swc_atoms::Atom;
 use typescript::swc_common::DUMMY_SP;
 
 pub fn run() -> Result<()> {
@@ -126,8 +125,7 @@ fn find_union_type(module: &Module, name: &str) -> Result<Option<(usize, Vec<Box
                 span: _,
                 decl: Decl::TsTypeAlias(t),
             })) => {
-                //
-                if &t.id.sym == name {
+                if t.id.sym == name {
                     Some((idx, t.type_ann.as_ref()))
                 } else {
                     None

@@ -19,7 +19,7 @@ use swc_ecma_codegen::{text_writer::JsWriter, Emitter};
 use swc_ecma_parser::parse_file_as_module;
 use swc_ecma_parser::parse_file_as_script;
 use swc_ecma_parser::Syntax;
-use swc_ecma_transforms_typescript::strip::strip;
+use swc_ecma_transforms_typescript::strip;
 use swc_ecma_visit::{Fold, FoldWith};
 
 /// Creates a named import from the following elements:
@@ -137,7 +137,7 @@ impl Fold for MyVisitor {
             .into_iter()
             .filter(|s| match &s {
                 ModuleItem::ModuleDecl(ModuleDecl::Import(imp)) => {
-                    !(imp.src.value.to_string() == "./output.ts" && imp.type_only)
+                    !(imp.src.value == "./output.ts" && imp.type_only)
                 }
                 _ => true,
             })
@@ -147,7 +147,7 @@ impl Fold for MyVisitor {
             ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
                 decl: Decl::Fn(f),
                 ..
-            })) => f.ident.sym.to_string() == "apply",
+            })) => f.ident.sym == "apply",
             _ => false,
         }) {
             if let ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
@@ -188,7 +188,7 @@ impl Fold for MyVisitor {
                 ident,
                 declare: _,
                 function,
-            }) if ident.sym.to_string() == "apply" => {
+            }) if ident.sym == "apply" => {
                 println!("TEST {:?}", function.params);
             }
             _ => (),
@@ -253,7 +253,11 @@ pub fn transform_module(source: String) -> Result<String> {
     let globals = Globals::default();
     let module = GLOBALS.set(&globals, || {
         let top_level_mark = Mark::new();
-        module.fold_with(&mut strip(top_level_mark))
+        let Program::Module(module) = Program::Module(module).fold_with(&mut strip(top_level_mark))
+        else {
+            unreachable!()
+        };
+        module
     });
 
     with_emitter(cm, |emitter| {
@@ -290,7 +294,11 @@ pub fn transform_script(source: String) -> Result<String> {
     let globals = Globals::default();
     let script = GLOBALS.set(&globals, || {
         let top_level_mark = Mark::new();
-        script.fold_with(&mut strip(top_level_mark))
+        let Program::Script(script) = Program::Script(script).fold_with(&mut strip(top_level_mark))
+        else {
+            unreachable!();
+        };
+        script
     });
 
     with_emitter(cm, |emitter| {
@@ -337,12 +345,11 @@ where
 {
     let mut buf = vec![];
     let mut emitter = Emitter {
-        cfg: Config {
-            target: EsVersion::latest(),
-            ascii_only: false,
-            minify: true,
-            omit_last_semi: false,
-        },
+        cfg: Config::default()
+            .with_target(EsVersion::latest())
+            .with_ascii_only(false)
+            .with_minify(true)
+            .with_omit_last_semi(false),
         cm: cm.clone(),
         comments: None,
         wr: JsWriter::new(cm, "", &mut buf, None),

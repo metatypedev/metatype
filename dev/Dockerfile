@@ -1,6 +1,6 @@
 # disable SHELL cmd down below if switching to non-debug
-ARG RUST_VERSION=1.74.1
-ARG DENO_VERSION=1.39.0
+ARG RUST_VERSION=1.75.0
+ARG DENO_VERSION=1.40.1
 ARG DISTROLESS_TAG=debug-nonroot
 
 #
@@ -38,6 +38,8 @@ RUN set -eux; \
     make \
     ## libffi-sys\
     automake \
+    # wasm-opt deps \
+    clang \
     ## wasmedge-sys \
     libclang-dev \
     ## openssl deps \
@@ -57,8 +59,13 @@ RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash \
     deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
 COPY ghjk.ts .
-RUN CI=1 NO_PYTHON=1 ghjk ports sync
+RUN OCI=1 NO_PYTHON=1 ghjk ports sync
 ENV GHJK_ENV=/root/.local/share/ghjk/env.sh
+
+ARG WASM_OPT_VERSION=0.116.0
+ARG WASM_TOOLS_VERSION=1.0.53
+RUN cargo install wasm-opt@$WASM_OPT_VERSION --locked --debug
+RUN cargo install wasm-tools@$WASM_TOOLS_VERSION --locked --debug
 
 COPY --from=plan /app/recipe.json recipe.json
 
