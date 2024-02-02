@@ -17,7 +17,7 @@ pub enum TypegateOperation {
     RemoveTypegraphs,
     GetSerializedTypegraph,
     GetArgInfoByPath,
-    FindListQueries,
+    FindAvailableOperations,
 }
 
 impl MaterializerConverter for TypegateOperation {
@@ -37,7 +37,7 @@ impl MaterializerConverter for TypegateOperation {
                 Self::RemoveTypegraphs => "removeTypegraphs",
                 Self::GetSerializedTypegraph => "serializedTypegraph",
                 Self::GetArgInfoByPath => "argInfoByPath",
-                Self::FindListQueries => "findListQueries",
+                Self::FindAvailableOperations => "findAvailableOperations",
             }
             .to_string(),
             runtime,
