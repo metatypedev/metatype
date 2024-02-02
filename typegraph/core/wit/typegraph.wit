@@ -500,8 +500,9 @@ interface utils {
 }
 
 interface host {
-    printf: func(s: string)
+    print: func(s: string)
     expand-glob: func(root: string, exclude: list<string>) -> result<list<string>, string>
+    file-exists: func(path: string) -> result<bool, string>
     read-file: func(path: string) -> result<list<u8>, string>
     write-file: func(path: string, data: list<u8>) -> result<_, string>
     get-cwd: func() -> result<string, string>

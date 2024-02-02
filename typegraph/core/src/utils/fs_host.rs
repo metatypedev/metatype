@@ -27,9 +27,7 @@ pub fn compress<P: Into<String>>(path: P, exclude: Option<Vec<String>>) -> Resul
     let mut entries = IndexMap::new();
     for path in paths {
         entries.insert(path.clone(), read_file(&path.clone())?);
-        // print(&format!("Entry {:?}", path.clone()));
     }
-
     archive_entries_from_bytes(entries).map_err(|e| e.to_string())
 }
 

@@ -41,12 +41,20 @@ export function expandGlob(
 }
 
 export function print(msg: string) {
-  console.log("[host]", msg);
+  console.log(msg);
 }
 
 export function getCwd(): string {
   try {
     return process.cwd();
+  } catch (err) {
+    throw (err instanceof Error ? err.message : err);
+  }
+}
+
+export function fileExists(path: string): boolean {
+  try {
+    return fs.existsSync(path);
   } catch (err) {
     throw (err instanceof Error ? err.message : err);
   }
