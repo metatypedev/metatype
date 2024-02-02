@@ -295,7 +295,7 @@ jobs:
           wasm-opt -Oz target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE.opt
           wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
           rm -rf typegraph/node/sdk/src/gen typegraph/node/sdk/dist
-          jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen
+          jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen --map metatype:typegraph/host=../host/host.js
           cd typegraph/node
           pnpm install
           pnpm run sdk-build
