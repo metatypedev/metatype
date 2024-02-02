@@ -51,9 +51,8 @@ const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
       const data = await Deno.readTextFile(f.path);
       const newData = data.replace(
         /"@typegraph\/sdk\/?(.*)"/g,
-        (_match, chunk_) => {
-          const chunk = chunk_ == "" ? "." : ("./" + chunk_);
-          return `"../../../typegraph/node/sdk/src/${chunk}"`;
+        (_match, chunk) => {
+          return `"../../../typegraph/node/sdk/dist/${chunk}"`;
           // const importFile = importMap?.exports[chunk]?.import;
           // console.log(chunk, "=>", importFile);
           // if (importFile) {
