@@ -45,6 +45,8 @@ dev:
       (description = ").+("): TAGLINE
       '([\w-]+\s*=\s*\{\s*git\s*=\s*"https:\/\/github\.com\/prisma\/prisma-engines"\s*,\s*tag\s*=\s*").+("\s*\})': PRISMA_VERSION
       '(deno\s*=\s*\{\s*git\s*=\s*"https:\/\/github\.com\/metatypedev\/deno"\s*,\s*branch\s*=\s*"v).+(-embeddable"\s*\})': DENO_VERSION
+    dev/cross.Dockerfile:
+      (ARG GHJK_VERSION=).*(): GHJK_VERSION
     dev/Dockerfile:
       (ARG DENO_VERSION=).*(): DENO_VERSION
       (ARG RUST_VERSION=).*(): RUST_VERSION
