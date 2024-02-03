@@ -10,6 +10,8 @@ use crate::types::{Struct, Type, TypeDef, TypeDefExt, TypeId};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
 
+#[allow(unused)]
+use crate::wit::core::TypegraphFinalizeMode;
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
@@ -114,7 +116,7 @@ pub struct NameRegistration(pub bool);
 #[cfg(test)]
 impl Store {
     pub fn reset() {
-        let _ = crate::typegraph::finalize();
+        let _ = crate::typegraph::finalize(TypegraphFinalizeMode::Simple);
         with_store_mut(|s| *s = Store::new());
     }
 }

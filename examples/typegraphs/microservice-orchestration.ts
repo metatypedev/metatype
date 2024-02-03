@@ -7,7 +7,7 @@ import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql.js";
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 
 function getEnvOrDefault(key: string, defaultValue: string) {
-  const glob = globalThis as any; // @typescript-eslint/no-explicit-any
+  const glob = globalThis as any;
   const value = glob?.process
     ? glob?.process.env?.[key]
     : glob?.Deno.env.get(key);

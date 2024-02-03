@@ -26,10 +26,11 @@ use types::{
     Boolean, Either, File, Float, Func, Integer, List, Optional, StringT, Struct, TypeBoolean,
     TypeDef, TypeDefExt, TypeId, Union,
 };
+
 use wit::core::{
     ContextCheck, Policy, PolicyId, PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat,
     TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList, TypeOptional, TypeString, TypeStruct,
-    TypeUnion, TypegraphInitParams,
+    TypeUnion, TypegraphFinalizeMode, TypegraphInitParams,
 };
 use wit::runtimes::{Guest, MaterializerDenoFunc};
 
@@ -56,8 +57,8 @@ impl wit::core::Guest for Lib {
         typegraph::init(params)
     }
 
-    fn finalize_typegraph() -> Result<String> {
-        typegraph::finalize()
+    fn finalize_typegraph(mode: TypegraphFinalizeMode) -> Result<String> {
+        typegraph::finalize(mode)
     }
 
     fn refb(name: String, attributes: Vec<(String, String)>) -> Result<CoreTypeId> {
@@ -509,7 +510,7 @@ mod tests {
     use crate::wit::core::Guest;
     use crate::wit::runtimes::{Effect, Guest as GuestRuntimes, MaterializerDenoFunc};
     use crate::Lib;
-    use crate::TypegraphInitParams;
+    use crate::{TypegraphFinalizeMode, TypegraphInitParams};
 
     impl Default for TypegraphInitParams {
         fn default() -> Self {
@@ -577,7 +578,7 @@ mod tests {
             crate::test_utils::setup(Some("test-2")),
             Err(errors::nested_typegraph_context("test-1"))
         );
-        Lib::finalize_typegraph()?;
+        Lib::finalize_typegraph(TypegraphFinalizeMode::Simple)?;
         Ok(())
     }
 
@@ -590,7 +591,7 @@ mod tests {
         );
 
         assert_eq!(
-            Lib::finalize_typegraph(),
+            Lib::finalize_typegraph(TypegraphFinalizeMode::Simple),
             Err(errors::expected_typegraph_context())
         );
 
@@ -685,7 +686,7 @@ mod tests {
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::Read)?;
         Lib::expose(vec![("one".to_string(), t::func(s, b, mat)?.into())], None)?;
-        let typegraph = Lib::finalize_typegraph()?;
+        let typegraph = Lib::finalize_typegraph(TypegraphFinalizeMode::Simple)?;
         insta::assert_snapshot!(typegraph);
         Ok(())
     }

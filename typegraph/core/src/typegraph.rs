@@ -5,6 +5,10 @@ use crate::conversion::runtimes::{convert_materializer, convert_runtime, Convert
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
 use crate::types::{TypeDef, TypeDefExt, TypeId};
+use crate::utils::postprocess::deno_rt::DenoProcessor;
+use crate::utils::postprocess::python_rt::PythonProcessor;
+use crate::utils::postprocess::wasmedge_rt::WasmedgeProcessor;
+use crate::utils::postprocess::PostProcessor;
 use crate::validation::validate_name;
 use crate::Lib;
 use crate::{
@@ -24,7 +28,8 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::wit::core::{
-    Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypegraphInitParams,
+    Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec, RuntimeId,
+    TypegraphFinalizeMode, TypegraphInitParams,
 };
 
 #[derive(Default)]
@@ -174,7 +179,7 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
         .collect::<Result<Vec<_>>>()
 }
 
-pub fn finalize() -> Result<String> {
+pub fn finalize(mode: TypegraphFinalizeMode) -> Result<String> {
     #[cfg(test)]
     eprintln!("Finalizing typegraph...");
 
@@ -186,7 +191,7 @@ pub fn finalize() -> Result<String> {
 
     let auths = finalize_auths(&mut ctx)?;
 
-    let tg = Typegraph {
+    let mut tg = Typegraph {
         id: format!("https://metatype.dev/specs/{TYPEGRAPH_VERSION}.json"),
         types: ctx
             .types
@@ -210,6 +215,15 @@ pub fn finalize() -> Result<String> {
         path: None,
         deps: Default::default(),
     };
+
+    match mode {
+        TypegraphFinalizeMode::ResolveArtifacts => {
+            DenoProcessor.postprocess(&mut tg)?;
+            PythonProcessor.postprocess(&mut tg)?;
+            WasmedgeProcessor.postprocess(&mut tg)?;
+        }
+        TypegraphFinalizeMode::Simple => {}
+    }
 
     Store::restore(ctx.saved_store_state.unwrap());
 

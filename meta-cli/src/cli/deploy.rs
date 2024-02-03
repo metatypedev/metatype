@@ -15,11 +15,11 @@ use crate::deploy::actors::loader::{
 use crate::deploy::actors::pusher::Push;
 use crate::deploy::actors::watcher::WatcherActor;
 use crate::typegraph::postprocess::EmbedPrismaMigrations;
-use crate::utils::Node;
 use actix::prelude::*;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
+use common::node::Node;
 use log::warn;
 use normpath::PathExt;
 use tokio::sync::mpsc;

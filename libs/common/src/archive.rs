@@ -5,8 +5,9 @@ use anyhow::{Context, Result};
 use base64::{engine::general_purpose::STANDARD, Engine};
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use ignore::{Walk, WalkBuilder};
+use indexmap::IndexMap;
 use std::{fs, path::Path};
-use tar::Archive;
+use tar::{Archive, Header};
 
 pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<impl AsRef<[u8]>>) -> Result<()> {
     fs::create_dir_all(dest.as_ref())?;
@@ -78,6 +79,27 @@ pub fn archive_entries(dir_walker: Walk, prefix: Option<&Path>) -> Result<Option
     Ok(None)
 }
 
+pub fn archive_entries_from_bytes(entries: IndexMap<String, Vec<u8>>) -> Result<Vec<u8>> {
+    let encoder = GzEncoder::new(Vec::new(), Compression::default());
+    let mut tar = tar::Builder::new(encoder);
+
+    tar.mode(tar::HeaderMode::Deterministic);
+
+    for (path, bytes) in entries.iter() {
+        let mut header = Header::new_gnu();
+        header.set_size(bytes.len() as u64);
+        header.set_entry_type(tar::EntryType::Regular);
+        header.set_mode(0o666); // rw-rw-rw
+        header.set_cksum();
+
+        tar.append_data(&mut header, path, bytes.as_slice())
+            .context("Adding file to tarball")?;
+    }
+
+    let bytes = tar.into_inner()?.finish()?;
+    Ok(bytes)
+}
+
 pub fn unpack_tar_base64<P: AsRef<Path>>(b64: String, dest: P) -> Result<()> {
     let buffer = STANDARD
         .decode(b64)
@@ -105,7 +127,14 @@ pub fn flat_list_dir<P: AsRef<Path>>(dir: P) -> Result<Vec<String>> {
     Ok(ret)
 }
 
-pub fn encode_to_base_64(file: &Path) -> Result<String> {
-    let bytes = fs::read(file).with_context(|| format!("reading file {:?}", file.display()))?;
+// Note: mainly used on the core sdk
+// importing the entire base64 lib might increase the binary size
+pub fn encode_bytes_to_base_64(bytes: Vec<u8>) -> Result<String> {
     Ok(STANDARD.encode(bytes))
+}
+
+pub fn encode_to_base_64(file: &Path) -> Result<String> {
+    fs::read(file)
+        .with_context(|| format!("reading file {:?}", file.display()))
+        .and_then(encode_bytes_to_base_64)
 }
