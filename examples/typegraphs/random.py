@@ -1,7 +1,6 @@
 from typegraph import typegraph, Policy, t, Graph
 from typegraph.runtimes.random import RandomRuntime
 from typegraph.graph.params import Cors
-from typegraph.policy import Policy
 
 
 @typegraph(

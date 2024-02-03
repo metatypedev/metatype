@@ -25,8 +25,8 @@ def math(g: Graph):
         fib=deno.import_(
             t.struct({"size": t.integer()}),
             t.list(t.float()),
-            module="scripts/fib.ts",
-            name="default",   # name the exported function to run
+            module=fib_module,
+            name="default",  # name the exported function to run
         ).with_policy(restrict_referer),
         randomItem=deno.func(
             t.struct({"items": t.list(t.string())}),
