@@ -128,12 +128,26 @@ COPY --from=builder /app/target/release/typegate /bin/typegate
 COPY --from=builder /app/typegate/deno.jsonc /app/typegate/import_map.json ./typegate/
 COPY --from=builder /app/typegate/engine/*.js /app/typegate/engine/*.ts ./typegate/engine/
 COPY --from=builder /app/typegate/src ./typegate/src/
+COPY --from=builder /app/typegate/tests ./typegate/tests/
 COPY dev/LICENSE-Elastic-2.0.md LICENSE.md
 
 # writeable
 COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
 COPY --from=builder --chown=nonroot:nonroot /app/typegate/deno.lock ./typegate/
 COPY --from=builder --chown=nonroot:nonroot /app/typegate/tmp ./
+
+# distroless-nonroot is by default the nonroot user
+# which prevents us from removing the /deno bin down below
+USER root
+
+# we temporarliy copy the deno bin and run the type checker
+# to make sure all required ts files are found in the image
+COPY --from=deno-bin --chown=nonroot:nonroot /usr/bin/deno /bin/deno
+RUN /bin/deno check \
+    --config /app/typegate/deno.jsonc \
+    /app/typegate/src/**/*.ts \
+    /app/typegate/tests/utils/**/*.ts \
+    && rm /bin/deno
 
 USER nonroot
 EXPOSE 7890
