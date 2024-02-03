@@ -97,7 +97,7 @@ def typegate(g: Graph):
         }
     )
 
-    arg_info_out = t.struct(
+    type_info = t.struct(
         {
             "optional": t.boolean(),
             "as_id": t.boolean(),
@@ -108,45 +108,51 @@ def typegate(g: Graph):
             "config": t.json().optional(),
             "default": t.json().optional(),
             "format": t.string().optional(),
+            "policies": t.list(t.string()),
             "fields": t.list(
-                t.struct({"subPath": path, "termNode": g.ref("ArgInfoOut")})
+                t.struct({"subPath": path, "termNode": g.ref("TypeInfo")})
             ).optional(),
-        }
-    ).rename("ArgInfoOut")
+        },
+        name="TypeInfo",
+    )
 
-    query_arg = t.struct(
+    operation_parameter = t.struct(
         {
             "name": t.string(),
-            "type": arg_info_out,
+            "type": type_info,
         }
     )
 
-    query_info = t.struct(
+    operation_info = t.struct(
         {
             "name": t.string(),
-            "inputs": t.list(query_arg),
-            "output": arg_info_out,
-            "outputItem": arg_info_out,
-        }
+            "type": t.enum(["query", "mutation"]),
+            "inputs": t.list(operation_parameter),
+            "output": type_info,
+            "outputItem": type_info.optional(),  # if output is a list
+        },
+        name="OperationInfo",
     )
 
-    find_list_queries_mat_id = runtimes.register_typegate_materializer(
+    find_available_operations_mat_id = runtimes.register_typegate_materializer(
         store,
-        TypegateOperation.FIND_LIST_QUERIES,
+        TypegateOperation.FIND_AVAILABLE_OPERATIONS,
     )
-    if isinstance(find_list_queries_mat_id, Err):
-        raise Exception(find_list_queries_mat_id.value)
+    if isinstance(find_available_operations_mat_id, Err):
+        raise Exception(find_available_operations_mat_id.value)
     find_list_queries_mat = Materializer(
-        find_list_queries_mat_id.value, effect=fx.read()
+        find_available_operations_mat_id.value, effect=fx.read()
     )
-    find_list_queries = t.func(
+    find_available_operations = t.func(
+        # TODO filters: query/mutation
         t.struct({"typegraph": t.string()}),
-        t.list(query_info),
+        t.list(operation_info),
         find_list_queries_mat,
         rate_calls=True,
     )
 
     g.expose(
+        admin_only,
         typegraphs=t.func(
             t.struct({}),
             t.list(typegraph),
@@ -195,8 +201,7 @@ def typegate(g: Graph):
             rate_calls=True,
         ),
         argInfoByPath=t.func(
-            arg_info_inp, t.list(arg_info_out), arg_info_by_path_mat, rate_calls=True
+            arg_info_inp, t.list(type_info), arg_info_by_path_mat, rate_calls=True
         ),
-        findListQueries=find_list_queries,
-        default_policy=admin_only,
+        findAvailableOperations=find_available_operations,
     )

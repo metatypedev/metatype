@@ -1,5 +1,6 @@
 from typegraph import typegraph, Policy, t, Graph
 from typegraph.providers.prisma import PrismaRuntime
+from typegraph.effects import CREATE
 
 
 @typegraph()
@@ -13,6 +14,9 @@ def prisma(g: Graph):
             "id": t.uuid(as_id=True, config={"auto": True}),
             "name": t.string(),
             "age": t.integer().optional(),
+            "createdAt": t.datetime()
+            .inject({CREATE: "now"})
+            .with_policy(Policy.on(create=public)),
         },
         name="record",
     )
