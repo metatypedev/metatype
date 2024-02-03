@@ -4,7 +4,7 @@
 import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 
-Meta.test("typegate: list queries", async (t) => {
+Meta.test("typegate: find available operations", async (t) => {
   const prismaEngine = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       POSTGRES:
@@ -20,9 +20,9 @@ Meta.test("typegate: list queries", async (t) => {
     throw new Error("typegate engine not found");
   }
 
-  await t.should("list queries", async () => {
+  await t.should("list available operations", async () => {
     await gql`
-      fragment TermOutput on ArgInfoOut {
+      fragment TermOutput on TypeInfo {
         optional
         as_id
         title
@@ -34,7 +34,7 @@ Meta.test("typegate: list queries", async (t) => {
         format
       }
 
-      fragment Output on ArgInfoOut {
+      fragment Output on TypeInfo {
         ...TermOutput
         fields {
           subPath
@@ -45,7 +45,7 @@ Meta.test("typegate: list queries", async (t) => {
       }
 
       query {
-        findListQueries(typegraph: "prisma") {
+        findAvailableOperations(typegraph: "prisma") {
           name
           inputs {
             name

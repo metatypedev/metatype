@@ -1,9 +1,106 @@
 export const snapshot = {};
 
-snapshot[`typegate: list queries 1`] = `
+snapshot[`typegate: find available operations 1`] = `
 {
   data: {
-    findListQueries: [
+    findAvailableOperations: [
+      {
+        inputs: [
+          {
+            name: "where",
+            type: {
+              as_id: false,
+              config: "{}",
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              runtime: "prisma",
+              title: "QueryUniquerecordWhereInput",
+              type: "object",
+            },
+          },
+        ],
+        name: "findRecord",
+        output: {
+          as_id: false,
+          config: "{}",
+          default: null,
+          enum: null,
+          fields: [
+            {
+              subPath: [
+                "id",
+              ],
+              termNode: {
+                as_id: true,
+                config: '{"auto":true}',
+                default: null,
+                enum: null,
+                format: "uuid",
+                optional: false,
+                runtime: "prisma",
+                title: "string_0",
+                type: "string",
+              },
+            },
+            {
+              subPath: [
+                "name",
+              ],
+              termNode: {
+                as_id: false,
+                config: "{}",
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                runtime: "prisma",
+                title: "string_1",
+                type: "string",
+              },
+            },
+            {
+              subPath: [
+                "age",
+              ],
+              termNode: {
+                as_id: false,
+                config: "{}",
+                default: null,
+                enum: null,
+                format: null,
+                optional: true,
+                runtime: "prisma",
+                title: "integer_2",
+                type: "integer",
+              },
+            },
+            {
+              subPath: [
+                "createdAt",
+              ],
+              termNode: {
+                as_id: false,
+                config: "{}",
+                default: null,
+                enum: null,
+                format: "date-time",
+                optional: false,
+                runtime: "prisma",
+                title: "string_6",
+                type: "string",
+              },
+            },
+          ],
+          format: null,
+          optional: true,
+          runtime: "prisma",
+          title: "recordWithNestedCount",
+          type: "object",
+        },
+        outputItem: null,
+      },
       {
         inputs: [
           {
@@ -181,6 +278,153 @@ snapshot[`typegate: list queries 1`] = `
           title: "recordWithNestedCount",
           type: "object",
         },
+      },
+      {
+        inputs: [
+          {
+            name: "where",
+            type: {
+              as_id: false,
+              config: "{}",
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              runtime: "prisma",
+              title: "QueryUniqueusersWhereInput",
+              type: "object",
+            },
+          },
+        ],
+        name: "findUniqueUser",
+        output: {
+          as_id: false,
+          config: "{}",
+          default: null,
+          enum: null,
+          fields: [
+            {
+              subPath: [
+                "id",
+              ],
+              termNode: {
+                as_id: true,
+                config: '{"auto":true}',
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                runtime: "prisma",
+                title: "integer_21",
+                type: "integer",
+              },
+            },
+            {
+              subPath: [
+                "identities",
+              ],
+              termNode: {
+                as_id: false,
+                config: "{}",
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                runtime: "prisma",
+                title: "_241_user_identityWithNestedCount_excluding___rel_user_identity_users_1[]",
+                type: "list",
+              },
+            },
+            {
+              subPath: [
+                "email",
+              ],
+              termNode: {
+                as_id: false,
+                config: "{}",
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                runtime: "prisma",
+                title: "string_23",
+                type: "string",
+              },
+            },
+            {
+              subPath: [
+                "name",
+              ],
+              termNode: {
+                as_id: false,
+                config: "{}",
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                runtime: "prisma",
+                title: "string_24",
+                type: "string",
+              },
+            },
+            {
+              subPath: [
+                "messages",
+              ],
+              termNode: {
+                as_id: false,
+                config: "{}",
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                runtime: "prisma",
+                title: "_243_messagesWithNestedCount_excluding_messageSender[]",
+                type: "list",
+              },
+            },
+            {
+              subPath: [
+                "_count",
+                "identities",
+              ],
+              termNode: {
+                as_id: false,
+                config: "{}",
+                default: null,
+                enum: null,
+                format: null,
+                optional: true,
+                runtime: "prisma",
+                title: "integer_244",
+                type: "integer",
+              },
+            },
+            {
+              subPath: [
+                "_count",
+                "messages",
+              ],
+              termNode: {
+                as_id: false,
+                config: "{}",
+                default: null,
+                enum: null,
+                format: null,
+                optional: true,
+                runtime: "prisma",
+                title: "integer_244",
+                type: "integer",
+              },
+            },
+          ],
+          format: null,
+          optional: true,
+          runtime: "prisma",
+          title: "usersWithNestedCount",
+          type: "object",
+        },
+        outputItem: null,
       },
       {
         inputs: [
