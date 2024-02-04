@@ -136,6 +136,12 @@ COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
 COPY --from=builder --chown=nonroot:nonroot /app/typegate/deno.lock ./typegate/
 COPY --from=builder --chown=nonroot:nonroot /app/typegate/tmp ./
 
+#
+# run the checks in a separate target to avoid bloating
+# the final image with the deno bin
+# https://forums.docker.com/t/why-run-command-which-deletes-files-inflates-image-size/33670
+FROM prd as check
+
 # distroless-nonroot is by default the nonroot user
 # which prevents us from removing the /deno bin down below
 USER root
@@ -148,6 +154,9 @@ RUN /bin/deno check \
     /app/typegate/src/**/*.ts \
     /app/typegate/tests/utils/**/*.ts \
     && rm /bin/deno
+
+#
+FROM prd as epoint
 
 USER nonroot
 EXPOSE 7890

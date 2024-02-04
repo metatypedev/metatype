@@ -117,7 +117,7 @@ jobs:
           cargo install cross
 
           cross build --release --locked --package meta-cli --target ${{ matrix.target }} --features typegate -v
-          # we cd next to the file so that the it's parent dirs
+          # we cd next to the file so that the its parent dirs
           # aren't present in the tar
           cd target/${{ matrix.target }}/release/
           tar czvf ../../../meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
