@@ -2,7 +2,9 @@
 sidebar_position: 50
 ---
 
-import TGExample from "@site/src/components/TGExample";
+import TGExample from "@site/src/components/TGExample"; 
+import Cors from "@site/shared/cors/index.mdx";
+
 
 # Secure your requests
 
@@ -23,9 +25,17 @@ For your app, you will use basic authentication in order to restrict some action
           tab="headers"
         />
 
-## CORS
+More details [here](/docs/reference/typegate/authentication).
 
-## Context
+{/* ## Context
 
 
 ## Policies
+ */}
+## CORS
+
+<Cors />
+
+```python
+TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"])
+```

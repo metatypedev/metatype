@@ -1,0 +1,13 @@
+{
+  fib(size: 50)
+  random
+  randomItem(
+    items: [
+      "ice", 
+      "advice", 
+      "gold", 
+      "flowers",
+      "dirt"
+    ]
+  )
+}
