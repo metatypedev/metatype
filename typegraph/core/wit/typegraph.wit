@@ -34,12 +34,27 @@ interface core {
         rate: option<rate>,
     }
 
-    enum typegraph-finalize-mode {
-        simple,
-        resolve-artifacts
+    init-typegraph: func(params: typegraph-init-params) -> result<_, error>
+
+    enum migration-action {
+        create,
+        reset
     }
 
-    init-typegraph: func(params: typegraph-init-params) -> result<_, error>
+    record migration-config {
+        path-dir: string,
+        action: migration-action
+    }
+
+    record artifact-resolution-config {
+        prisma-migration: migration-config
+    }
+
+    variant typegraph-finalize-mode {
+        simple,
+        resolve-artifacts(option<artifact-resolution-config>)
+    }
+
     finalize-typegraph: func(mode: typegraph-finalize-mode) -> result<string, error>
 
     type type-id = u32

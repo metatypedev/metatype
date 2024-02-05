@@ -61,8 +61,13 @@ tgDeploy(tg, {
     username: "admin",
     password: "password",
   },
+  artifactsConfig: {
+    prismaMigration: {
+      action: "create",
+      pathDir: "./migrations"
+    }
+  }
 }).then((result) => {
   console.log("gate:", result);
-  // console.log(result, tg);
 })
   .catch(console.error);

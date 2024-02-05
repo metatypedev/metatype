@@ -13,6 +13,7 @@ import {
 import { Auth, Cors as CorsWit, Rate, wit_utils } from "./wit.js";
 import Policy from "./policy.js";
 import { getPolicyChain } from "./types.js";
+import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
 
 type Exports = Record<string, t.Func>;
 
@@ -72,8 +73,8 @@ export class RawAuth {
 }
 
 export interface TypegraphOutput {
-  serialized: string;
-  args: Omit<TypegraphArgs, "builder">;
+  serialize: (config?: ArtifactResolutionConfig) => string;
+  name: string;
 }
 
 export function typegraph(
@@ -168,21 +169,25 @@ export function typegraph(
 
   builder(g);
 
-  const tgJson = core.finalizeTypegraph(
-    disableAutoSerialization ? "resolve-artifacts" : "simple",
-  );
+  let serialize = () => "";
   if (!disableAutoSerialization) {
+    const tgJson = core.finalizeTypegraph({ tag: "simple" });
     console.log(tgJson);
+    serialize = () => tgJson;
+  } else {
+    // config is known at deploy time
+    serialize = (config?: ArtifactResolutionConfig) => {
+      const tgJson = core.finalizeTypegraph({
+        tag: "resolve-artifacts",
+        val: config,
+      });
+      // console.log(tgJson);
+      return tgJson;
+    };
   }
   return {
-    serialized: tgJson,
-    args: {
-      name,
-      cors,
-      dynamic,
-      rate,
-      secrets,
-    },
+    serialize,
+    name,
   };
 }
 

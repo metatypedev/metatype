@@ -5,6 +5,7 @@ use crate::utils::fs_host;
 use common::typegraph::Typegraph;
 use std::path::Path;
 pub mod deno_rt;
+pub mod prisma_rt;
 pub mod python_rt;
 pub mod wasmedge_rt;
 

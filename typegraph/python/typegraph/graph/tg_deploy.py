@@ -6,6 +6,7 @@ from typing import Dict, Optional
 from urllib import request
 import json
 from base64 import b64encode
+from typegraph.gen.exports.core import ArtifactResolutionConfig
 from typegraph.gen.types import Err
 
 from typegraph.graph.typegraph import TypegraphOutput
@@ -25,6 +26,7 @@ class TypegraphDeployParams:
     cli_version: str
     auth: Optional[BasicAuth] = None
     secrets: Optional[Dict[str, any]] = None
+    artifacts_config: Optional[ArtifactResolutionConfig] = None
 
 
 def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams):
@@ -41,7 +43,7 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams):
     res = wit_utils.gen_gqlquery(
         store,
         params=QueryBodyParams(
-            tg=tg.serialized,
+            tg=tg.serialize(params.artifacts_config),
             cli_version=params.cli_version,
             secrets=[(k, v) for k, v in (params.secrets or {})],
         ),

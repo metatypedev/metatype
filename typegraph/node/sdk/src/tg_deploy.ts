@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
 
@@ -12,6 +13,7 @@ export interface BasicAuth {
 export interface TypegraphDeployParams {
   baseUrl: string;
   auth?: BasicAuth;
+  artifactsConfig?: ArtifactResolutionConfig;
   secrets: Record<string, string>;
   cliVersion: string;
 }
@@ -20,8 +22,8 @@ export async function tgDeploy(
   typegraph: TypegraphOutput,
   params: TypegraphDeployParams,
 ) {
-  const { baseUrl, cliVersion, secrets, auth } = params;
-  const { serialized } = typegraph;
+  const { baseUrl, cliVersion, secrets, auth, artifactsConfig } = params;
+  const serialized = typegraph.serialize(artifactsConfig);
 
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
