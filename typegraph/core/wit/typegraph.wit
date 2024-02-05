@@ -36,13 +36,13 @@ interface core {
 
     init-typegraph: func(params: typegraph-init-params) -> result<_, error>
 
-    enum migration-action {
-        create,
-        reset
+    record migration-action {
+        create: bool,
+        reset: bool
     }
 
     record migration-config {
-        path-dir: string,
+        migration-dir: option<string>,
         action: migration-action
     }
 
