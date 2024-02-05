@@ -1,14 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{
-    config::Config,
-    utils::{graphql::Query, Node},
-};
-use anyhow::{Context, Result};
+use crate::config::Config;
+use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
-use indoc::indoc;
 
 use super::{Action, CommonArgs};
 
@@ -33,34 +29,8 @@ impl Action for Undeploy {
         let config = Config::load_or_find(config_path, &dir)?;
         let node_config = config.node(&self.node, &self.target);
         let node = node_config.build(&dir).await?;
-        node.undeploy(&self.typegraphs).await?;
+        node.try_undeploy(&self.typegraphs).await?;
 
-        Ok(())
-    }
-}
-
-impl Node {
-    async fn undeploy(&self, typegraphs: &[String]) -> Result<()> {
-        let res = self
-            .post("/typegate")?
-            .gql(
-                indoc! {"
-                mutation($names: [String!]!) {
-                    removeTypegraphs(names: $names)
-                }"}
-                .to_string(),
-                Some(serde_json::json!({
-                    "names": typegraphs,
-                })),
-            )
-            .await?;
-
-        let res: bool = res
-            .data("removeTypegraphs")
-            .context("removeTypegraph reponse")?;
-        if !res {
-            anyhow::bail!("undeploy failed");
-        }
         Ok(())
     }
 }

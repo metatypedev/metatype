@@ -1,8 +1,8 @@
-// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
-// SPDX-License-Identifier: MPL-2.0
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
+use crate::typegraph::{runtimes::TGRuntime, Typegraph};
 use anyhow::{bail, Result};
-use common::typegraph::{runtimes::TGRuntime, Typegraph};
 use indexmap::IndexMap;
 use serde::{de::DeserializeOwned, ser::Serialize};
 use serde_json::{from_value, to_value, Value};

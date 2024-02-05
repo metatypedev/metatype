@@ -272,6 +272,14 @@ class ArgumentCollector {
         name: { value: varName },
       } = valueNode;
       this.deps.variables.add(varName);
+      if (typ.type === Type.OBJECT) {
+        const injectedFields = this.collectInjectedFields(typ.properties);
+        return (params: ComputeArgParams) => {
+          const fromVars = params.variables[varName] as Record<string, unknown>;
+          const injected = injectedFields(params);
+          return { ...fromVars, ...injected };
+        };
+      }
       return ({ variables: vars }) => vars[varName];
     }
 
@@ -551,6 +559,20 @@ class ArgumentCollector {
 
     return (...params: Parameters<ComputeArg>) =>
       mapValues(computes, (c) => c(...params));
+  }
+
+  private collectInjectedFields(props: Record<string, number>) {
+    const computes: Record<string, ComputeArg | null> = {};
+    for (const [name, idx] of Object.entries(props)) {
+      const typ = this.tg.type(idx);
+      if ("injection" in typ) {
+        const value = this.collectInjection(this.tg.type(idx));
+        computes[name] = value;
+      }
+    }
+
+    return (params: ComputeArgParams) =>
+      mapValues(computes, (c) => c?.(params) ?? null);
   }
 
   /** Collect the value for a missing parameter. */

@@ -3,6 +3,7 @@
 
 pub mod runtimes;
 pub mod types;
+pub mod utils;
 pub mod validator;
 pub mod visitor;
 

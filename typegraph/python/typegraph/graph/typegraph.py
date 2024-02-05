@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
 from typegraph.gen.exports.core import (
     Rate,
+    TypegraphFinalizeMode,
     TypegraphInitParams,
 )
 from typegraph.gen.exports.core import (
@@ -119,6 +120,12 @@ class Graph:
         return gen_ref(name)
 
 
+@dataclass
+class TypegraphOutput:
+    tg: Typegraph
+    serialized: str
+
+
 def typegraph(
     name: Optional[str] = None,
     *,
@@ -126,8 +133,9 @@ def typegraph(
     rate: Optional[Rate] = None,
     cors: Optional[Cors] = None,
     prefix: Optional[str] = None,
-) -> Callable[[Callable[[Graph], None]], Typegraph]:
-    def decorator(builder: Callable[[Graph], None]) -> Typegraph:
+    disable_auto_serialization: Optional[bool] = False,
+) -> Callable[[Callable[[Graph], None]], Callable[[], TypegraphOutput]]:
+    def decorator(builder: Callable[[Graph], None]) -> TypegraphOutput:
         actual_name = name
         if name is None:
             import re
@@ -162,13 +170,20 @@ def typegraph(
         popped = Typegraph._context.pop()
         assert tg == popped
 
-        res = core.finalize_typegraph(store)
-        if isinstance(res, Err):
-            raise Exception(res.value)
+        tg_json = core.finalize_typegraph(
+            store,
+            TypegraphFinalizeMode.RESOLVE_ARTIFACTS
+            if disable_auto_serialization
+            else TypegraphFinalizeMode.SIMPLE,
+        )
 
-        print(res.value)
+        if isinstance(tg_json, Err):
+            raise Exception(tg_json.value)
 
-        return tg
+        if not disable_auto_serialization:
+            print(tg_json.value)
+
+        return lambda: TypegraphOutput(tg=tg, serialized=tg_json.value)
 
     return decorator
 

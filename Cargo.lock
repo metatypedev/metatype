@@ -1356,10 +1356,15 @@ name = "common"
 version = "0.3.3"
 dependencies = [
  "anyhow",
+ "async-trait",
  "base64 0.21.7",
+ "colored",
  "flate2",
  "ignore",
  "indexmap 2.1.0",
+ "indoc",
+ "itertools 0.11.0",
+ "reqwest",
  "schemars",
  "serde 1.0.196",
  "serde_json",
@@ -11041,6 +11046,7 @@ dependencies = [
  "serde 1.0.196",
  "serde_json",
  "sha2 0.10.8",
+ "typescript",
  "wit-bindgen",
 ]
 

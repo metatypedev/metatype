@@ -13,10 +13,11 @@ import { TypeGraph } from "../typegraph/mod.ts";
 import { closestWord } from "../utils.ts";
 import { Type, TypeNode } from "../typegraph/type_node.ts";
 import { StringFormat } from "../typegraph/types.ts";
+import { mapValues } from "std/collections/map_values.ts";
 
 const logger = getLogger(import.meta);
 
-interface ArgInfoResult {
+interface TypeInfo {
   optional: boolean;
   as_id: boolean;
   title: string;
@@ -31,12 +32,13 @@ interface ArgInfoResult {
   /** json string */
   format: StringFormat | null;
   fields: Array<ObjectNodeResult> | null;
+  policies: Array<string | Record<string, string | null>>;
 }
 
 interface ObjectNodeResult {
   /** path starting from the parent node */
   subPath: Array<string>;
-  termNode: ArgInfoResult;
+  termNode: TypeInfo;
 }
 
 export class TypeGateRuntime extends Runtime {
@@ -85,8 +87,8 @@ export class TypeGateRuntime extends Runtime {
       if (name === "argInfoByPath") {
         return this.argInfoByPath;
       }
-      if (name === "findListQueries") {
-        return this.findListQueries;
+      if (name === "findAvailableOperations") {
+        return this.findAvailableOperations;
       }
 
       return async ({ _: { parent }, ...args }) => {
@@ -204,7 +206,8 @@ export class TypeGateRuntime extends Runtime {
     return paths.map((path) => walkPath(tg!.tg, input, 0, path));
   };
 
-  findListQueries: Resolver = ({ typegraph }) => {
+  findAvailableOperations: Resolver = ({ typegraph }) => {
+    // TODO filter
     const tg = this.typegate.register.get(typegraph);
 
     const root = tg!.tg.type(0, Type.OBJECT).properties.query;
@@ -212,29 +215,33 @@ export class TypeGateRuntime extends Runtime {
 
     return Object.entries(exposed).map(([name, idx]) => {
       const func = tg!.tg.type(idx, Type.FUNCTION);
-      const input = tg!.tg.type(func.input, Type.OBJECT);
-      const inputs = input.properties;
-      const output = tg!.tg.type(func.output);
-      if (output.type != Type.LIST) {
-        return null;
+
+      const inputType = tg!.tg.type(func.input, Type.OBJECT);
+      const inputs = Object.keys(inputType.properties).map((name) => ({
+        name,
+        type: walkPath(tg!.tg, inputType, 0, [name]),
+      }));
+
+      const outputType = tg!.tg.type(func.output);
+      const output = walkPath(tg!.tg, outputType, 0, []);
+      let outputItem: TypeInfo | null = null;
+      if (outputType.type == Type.LIST) {
+        outputItem = walkPath(tg!.tg, tg!.tg.type(outputType.items), 0, []);
       }
-      const outputItem = tg!.tg.type(output.items);
-      if (outputItem.type != Type.OBJECT) {
-        return null;
-      }
+
+      const materializer = tg!.tg.materializer(func.materializer);
+      const type = [null, "read"].includes(materializer.effect.effect as string)
+        ? "query"
+        : "mutation";
 
       return {
         name,
-        inputs: Object.keys(inputs).map((name) => {
-          return {
-            name,
-            type: walkPath(tg!.tg, input, 0, [name]),
-          };
-        }),
-        output: walkPath(tg!.tg, output, 0, []),
-        outputItem: walkPath(tg!.tg, outputItem, 0, []),
+        type,
+        inputs,
+        output,
+        outputItem,
       };
-    }).filter((e) => e != null);
+    });
   };
 }
 
@@ -287,10 +294,14 @@ function collectObjectFields(
 
   collectAllPaths(parent);
 
-  return paths.map((path) => ({
-    subPath: path,
-    termNode: walkPath(tg, parent, 0, path),
-  }));
+  return paths.map((path) => {
+    const termNode = walkPath(tg, parent, 0, path);
+    if (termNode == null) return null;
+    return {
+      subPath: path,
+      termNode,
+    };
+  }).filter((e) => e != null) as Array<ObjectNodeResult>;
 }
 
 function walkPath(
@@ -298,7 +309,7 @@ function walkPath(
   parent: TypeNode,
   startCursor: number,
   path: Array<string>,
-): ArgInfoResult {
+): TypeInfo | null {
   let node = parent as TypeNode;
   for (let cursor = startCursor; cursor < path.length; cursor += 1) {
     const current = path.at(cursor)!;
@@ -381,5 +392,19 @@ function walkPath(
     default: defaultValue ? JSON.stringify(defaultValue) : null,
     format: format ?? null,
     fields: node.type == "object" ? collectObjectFields(tg, parent) : null,
+    // TODO enum type on typegraph typegate.py
+    policies: node.policies.map((policy) => {
+      if (typeof policy === "number") {
+        return JSON.stringify(tg.policy(policy).name);
+      }
+      return JSON.stringify(
+        mapValues(policy as Record<string, number>, (value: number) => {
+          if (value === null) {
+            return null;
+          }
+          return tg.policy(value).name;
+        }),
+      );
+    }),
   };
 }

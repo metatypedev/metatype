@@ -34,8 +34,13 @@ interface core {
         rate: option<rate>,
     }
 
+    enum typegraph-finalize-mode {
+        simple,
+        resolve-artifacts
+    }
+
     init-typegraph: func(params: typegraph-init-params) -> result<_, error>
-    finalize-typegraph: func() -> result<string, error>
+    finalize-typegraph: func(mode: typegraph-finalize-mode) -> result<string, error>
 
     type type-id = u32
     record type-base {
@@ -395,7 +400,7 @@ interface runtimes {
         remove-typegraphs,
         get-serialized-typegraph,
         get-arg-info-by-path,
-        find-list-queries,
+        find-available-operations,
     }
 
     register-typegate-materializer: func(operation: typegate-operation) -> result<materializer-id, error>
@@ -492,11 +497,30 @@ interface utils {
     oauth2-without-profiler: func(service-name: string, scopes: string) -> result<string, error>
     oauth2-with-extended-profiler: func(service-name: string, scopes: string, extension: string) -> result<string, error>
     oauth2-with-custom-profiler: func(service-name: string, scopes: string, profiler: type-id) -> result<string, error>
+
+    record query-body-params {
+        tg: string,
+        cli-version: string,
+        secrets: option<list<tuple<string, string>>>,
+    }
+
+    gen-gqlquery: func(params: query-body-params) -> result<string, error>
 }
+
+interface host {
+    print: func(s: string)
+    expand-glob: func(root: string, exclude: list<string>) -> result<list<string>, string>
+    file-exists: func(path: string) -> result<bool, string>
+    read-file: func(path: string) -> result<list<u8>, string>
+    write-file: func(path: string, data: list<u8>) -> result<_, string>
+    get-cwd: func() -> result<string, string>
+}
+
 
 world typegraph {
     export core
     export runtimes
     export utils
     export aws
+    import host
 }

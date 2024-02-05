@@ -2,20 +2,18 @@
 // SPDX-License-Identifier: MPL-2.0
 
 pub mod clap;
-pub mod graphql;
 
 use anyhow::{bail, Result};
 use dialoguer::{Input, Password};
 use log::trace;
-use reqwest::{Client, IntoUrl, RequestBuilder, Url};
 use std::collections::HashMap;
 use std::env::{set_var, var};
 use std::hash::Hash;
 use std::path::Path;
-use std::time::Duration;
 
 use crate::config::VENV_FOLDERS;
 use crate::fs::find_in_parents;
+use common::node::BasicAuth as BasicAuthCommon;
 
 pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     if let Ok(active_venv) = var("VIRTUAL_ENV") {
@@ -61,8 +59,8 @@ pub fn plural_suffix(count: usize) -> &'static str {
 
 #[derive(Debug, Clone)]
 pub struct BasicAuth {
-    username: String,
-    password: String,
+    pub username: String,
+    pub password: String,
 }
 
 impl BasicAuth {
@@ -84,35 +82,12 @@ impl BasicAuth {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Node {
-    pub base_url: Url,
-    pub prefix: Option<String>,
-    auth: Option<BasicAuth>,
-    pub env: HashMap<String, String>,
-}
-
-impl Node {
-    pub fn new<U: IntoUrl>(
-        url: U,
-        prefix: Option<String>,
-        auth: Option<BasicAuth>,
-        env: HashMap<String, String>,
-    ) -> Result<Self> {
-        Ok(Self {
-            base_url: url.into_url()?,
-            prefix,
-            auth,
-            env,
-        })
-    }
-
-    pub fn post(&self, path: &str) -> Result<RequestBuilder> {
-        let mut b = Client::new().post(self.base_url.join(path)?);
-        if let Some(auth) = &self.auth {
-            b = b.basic_auth(&auth.username, Some(&auth.password));
+impl From<BasicAuth> for BasicAuthCommon {
+    fn from(val: BasicAuth) -> Self {
+        BasicAuthCommon {
+            username: val.username,
+            password: val.password,
         }
-        Ok(b.timeout(Duration::from_secs(5)))
     }
 }
 

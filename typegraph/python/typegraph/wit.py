@@ -3,14 +3,15 @@
 
 from wasmtime import Store
 
-from typegraph.gen import Root
+from typegraph.gen import Root, RootImports
 from typegraph.gen.exports.aws import Aws
 from typegraph.gen.exports.core import Core
 from typegraph.gen.exports.runtimes import Runtimes
 from typegraph.gen.exports.utils import Utils
+from typegraph.host.host import HostImpl
 
 store = Store()
-_typegraph_core = Root(store)
+_typegraph_core = Root(store, RootImports(HostImpl()))
 
 core = Core(_typegraph_core)
 runtimes = Runtimes(_typegraph_core)

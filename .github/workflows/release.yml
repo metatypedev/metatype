@@ -187,7 +187,7 @@ jobs:
           cd ../..
 
           npm install --global @bytecodealliance/jco@$JCO_VERSION
-          jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen
+          jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen --map metatype:typegraph/host=../host/host.js
 
           cd typegraph/node
           pnpm install
@@ -269,7 +269,7 @@ jobs:
         with:
           path: ./digests
           pattern: digests-*
-          merge-multiple: digests-*
+          merge-multiple: true
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
