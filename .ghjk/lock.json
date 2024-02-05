@@ -430,121 +430,6 @@
               }
             },
             {
-              "version": "v8.8.0",
-              "port": {
-                "ty": "denoWorker@v1",
-                "name": "pnpm_ghrel",
-                "platforms": [
-                  [
-                    "linux",
-                    "aarch64"
-                  ],
-                  [
-                    "linux",
-                    "x86_64"
-                  ],
-                  [
-                    "darwin",
-                    "aarch64"
-                  ],
-                  [
-                    "darwin",
-                    "x86_64"
-                  ],
-                  [
-                    "windows",
-                    "aarch64"
-                  ],
-                  [
-                    "windows",
-                    "x86_64"
-                  ]
-                ],
-                "version": "0.1.0",
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/pnpm.ts"
-              }
-            },
-            {
-              "version": "1.33.0",
-              "port": {
-                "ty": "denoWorker@v1",
-                "name": "cargo_insta_cbinst",
-                "platforms": [
-                  [
-                    "linux",
-                    "x86_64"
-                  ],
-                  [
-                    "linux",
-                    "aarch64"
-                  ],
-                  [
-                    "darwin",
-                    "x86_64"
-                  ],
-                  [
-                    "darwin",
-                    "aarch64"
-                  ],
-                  [
-                    "windows",
-                    "x86_64"
-                  ],
-                  [
-                    "windows",
-                    "aarch64"
-                  ],
-                  [
-                    "freebsd",
-                    "x86_64"
-                  ],
-                  [
-                    "freebsd",
-                    "aarch64"
-                  ],
-                  [
-                    "netbsd",
-                    "x86_64"
-                  ],
-                  [
-                    "netbsd",
-                    "aarch64"
-                  ],
-                  [
-                    "aix",
-                    "x86_64"
-                  ],
-                  [
-                    "aix",
-                    "aarch64"
-                  ],
-                  [
-                    "solaris",
-                    "x86_64"
-                  ],
-                  [
-                    "solaris",
-                    "aarch64"
-                  ],
-                  [
-                    "illumos",
-                    "x86_64"
-                  ],
-                  [
-                    "illumos",
-                    "aarch64"
-                  ]
-                ],
-                "version": "0.1.0",
-                "deps": [
-                  {
-                    "name": "cargo_binstall_ghrel"
-                  }
-                ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/cargo-insta.ts"
-              }
-            },
-            {
               "version": "v24.1",
               "port": {
                 "ty": "denoWorker@v1",
@@ -633,6 +518,267 @@
               },
               "pluginRepo": "https://github.com/asdf-community/asdf-cmake",
               "installType": "version"
+            },
+            {
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "cargo_binstall_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/cargo-binstall.ts"
+              }
+            },
+            {
+              "version": "0.116.0",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "wasm_opt_cbinst",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "cargo_binstall_ghrel"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/wasm-opt.ts"
+              }
+            },
+            {
+              "version": "1.0.53",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "wasm_tools_cbinst",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "cargo_binstall_ghrel"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/wasm-tools.ts"
+              }
+            },
+            {
+              "version": "1.33.0",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "cargo_insta_cbinst",
+                "platforms": [
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "freebsd",
+                    "x86_64"
+                  ],
+                  [
+                    "freebsd",
+                    "aarch64"
+                  ],
+                  [
+                    "netbsd",
+                    "x86_64"
+                  ],
+                  [
+                    "netbsd",
+                    "aarch64"
+                  ],
+                  [
+                    "aix",
+                    "x86_64"
+                  ],
+                  [
+                    "aix",
+                    "aarch64"
+                  ],
+                  [
+                    "solaris",
+                    "x86_64"
+                  ],
+                  [
+                    "solaris",
+                    "aarch64"
+                  ],
+                  [
+                    "illumos",
+                    "x86_64"
+                  ],
+                  [
+                    "illumos",
+                    "aarch64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "cargo_binstall_ghrel"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/cargo-insta.ts"
+              }
+            },
+            {
+              "version": "20.8.0",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "node_org",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "deps": [
+                  {
+                    "name": "tar_aa"
+                  }
+                ],
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/node.ts"
+              }
+            },
+            {
+              "version": "v8.8.0",
+              "port": {
+                "ty": "denoWorker@v1",
+                "name": "pnpm_ghrel",
+                "platforms": [
+                  [
+                    "linux",
+                    "aarch64"
+                  ],
+                  [
+                    "linux",
+                    "x86_64"
+                  ],
+                  [
+                    "darwin",
+                    "aarch64"
+                  ],
+                  [
+                    "darwin",
+                    "x86_64"
+                  ],
+                  [
+                    "windows",
+                    "aarch64"
+                  ],
+                  [
+                    "windows",
+                    "x86_64"
+                  ]
+                ],
+                "version": "0.1.0",
+                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/pnpm.ts"
+              }
             },
             {
               "version": "1.0.0",
@@ -795,152 +941,6 @@
                 "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/npmi.ts"
               },
               "packageName": "node-gyp"
-            },
-            {
-              "version": "20.8.0",
-              "port": {
-                "ty": "denoWorker@v1",
-                "name": "node_org",
-                "platforms": [
-                  [
-                    "linux",
-                    "aarch64"
-                  ],
-                  [
-                    "linux",
-                    "x86_64"
-                  ],
-                  [
-                    "darwin",
-                    "aarch64"
-                  ],
-                  [
-                    "darwin",
-                    "x86_64"
-                  ],
-                  [
-                    "windows",
-                    "aarch64"
-                  ],
-                  [
-                    "windows",
-                    "x86_64"
-                  ]
-                ],
-                "version": "0.1.0",
-                "deps": [
-                  {
-                    "name": "tar_aa"
-                  }
-                ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/node.ts"
-              }
-            },
-            {
-              "port": {
-                "ty": "denoWorker@v1",
-                "name": "cargo_binstall_ghrel",
-                "platforms": [
-                  [
-                    "linux",
-                    "aarch64"
-                  ],
-                  [
-                    "linux",
-                    "x86_64"
-                  ],
-                  [
-                    "darwin",
-                    "aarch64"
-                  ],
-                  [
-                    "darwin",
-                    "x86_64"
-                  ]
-                ],
-                "version": "0.1.0",
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/cargo-binstall.ts"
-              }
-            },
-            {
-              "version": "0.116.0",
-              "port": {
-                "ty": "denoWorker@v1",
-                "name": "wasm_opt_cbinst",
-                "platforms": [
-                  [
-                    "linux",
-                    "aarch64"
-                  ],
-                  [
-                    "linux",
-                    "x86_64"
-                  ],
-                  [
-                    "darwin",
-                    "aarch64"
-                  ],
-                  [
-                    "darwin",
-                    "x86_64"
-                  ],
-                  [
-                    "windows",
-                    "aarch64"
-                  ],
-                  [
-                    "windows",
-                    "x86_64"
-                  ]
-                ],
-                "version": "0.1.0",
-                "deps": [
-                  {
-                    "name": "cargo_binstall_ghrel"
-                  }
-                ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/wasm-opt.ts"
-              }
-            },
-            {
-              "version": "1.0.53",
-              "port": {
-                "ty": "denoWorker@v1",
-                "name": "wasm_tools_cbinst",
-                "platforms": [
-                  [
-                    "linux",
-                    "aarch64"
-                  ],
-                  [
-                    "linux",
-                    "x86_64"
-                  ],
-                  [
-                    "darwin",
-                    "aarch64"
-                  ],
-                  [
-                    "darwin",
-                    "x86_64"
-                  ],
-                  [
-                    "windows",
-                    "aarch64"
-                  ],
-                  [
-                    "windows",
-                    "x86_64"
-                  ]
-                ],
-                "version": "0.1.0",
-                "deps": [
-                  {
-                    "name": "cargo_binstall_ghrel"
-                  }
-                ],
-                "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/f380522/ports/wasm-tools.ts"
-              }
             },
             {
               "version": "v2.4.0",
