@@ -21,7 +21,7 @@ jobs:
       pull-requests: read
     steps:
       - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v2
+      - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
@@ -70,7 +70,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
+      - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
       - shell: bash
         run: |
           sudo apt update
@@ -94,13 +94,13 @@ jobs:
         with:
           deno-version: ${{ env.DENO_VERSION }}
       - name: Cache deno dir
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
+      - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
       - name: Cache .venv dir
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
@@ -131,7 +131,7 @@ jobs:
         with:
           deno-version: ${{ env.DENO_VERSION }}
       - name: Cache deno dir
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-mac-${{ hashFiles('**/deno.lock') }}
@@ -140,11 +140,11 @@ jobs:
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
       - name: Cache .venv dir
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
-      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
+      - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -271,12 +271,12 @@ jobs:
         with:
           deno-version: ${{ env.DENO_VERSION }}
       - name: Cache deno dir
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-${{ hashFiles('**/deno.lock') }}
       - name: Cache .venv dir
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
@@ -286,7 +286,7 @@ jobs:
       - run: |
           sudo apt update
           sudo apt install -y --no-install-recommends zstd
-      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
+      - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -340,7 +340,7 @@ jobs:
             dev/utils.ts
           deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
 
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.lcov
@@ -353,7 +353,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@a4453d20156edde8e1c9b19784f8188a36b3bf23
+      - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
       - shell: bash
         run: |
           cd dev-tools
@@ -362,7 +362,7 @@ jobs:
           # node --test --import=tsx --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage.lcov tests/*.test.ts
           node --test --import=tsx tests/*.test.ts
 
-      # - uses: codecov/codecov-action@v3
+      # - uses: codecov/codecov-action@v4
       #   with:
       #     token: ${{ secrets.CODECOV_TOKEN }}
       #     files: ./dev-tools/ts-language-server/coverage.lcov
