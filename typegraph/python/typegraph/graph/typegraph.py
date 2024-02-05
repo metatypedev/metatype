@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Union
 from typegraph.gen.exports.core import (
     ArtifactResolutionConfig,
     Rate,
-    TypegraphFinalizeMode,
     TypegraphFinalizeModeResolveArtifacts,
+    TypegraphFinalizeModeSimple,
     TypegraphInitParams,
 )
 from typegraph.gen.exports.core import (
@@ -175,9 +175,11 @@ def typegraph(
         serialize = None
 
         if not disable_auto_serialization:
-            tg_json = core.finalize_typegraph(store, TypegraphFinalizeMode.SIMPLE)
+            tg_json = core.finalize_typegraph(store, TypegraphFinalizeModeSimple())
             if isinstance(tg_json, Err):
                 raise Exception(tg_json.value)
+
+            print(tg_json.value)
 
             def no_conf():
                 return tg_json.value
