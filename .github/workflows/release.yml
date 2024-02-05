@@ -117,10 +117,16 @@ jobs:
           cargo install cross
 
           cross build --release --locked --package meta-cli --target ${{ matrix.target }} --features typegate -v
-          tar czvf meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "target/${{ matrix.target }}/release/meta${{ matrix.suffix }}"
+          # we cd next to the file so that the its parent dirs
+          # aren't present in the tar
+          cd target/${{ matrix.target }}/release/
+          tar czvf ../../../meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
+          cd ../../../
 
           cross build --release --locked --package meta-cli --target ${{ matrix.target }}
-          tar czvf meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "target/${{ matrix.target }}/release/meta${{ matrix.suffix }}"
+          cd target/${{ matrix.target }}/release/
+          tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
+          cd ../../../
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
