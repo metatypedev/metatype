@@ -6,7 +6,11 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use ignore::{Walk, WalkBuilder};
 use indexmap::IndexMap;
-use std::{fs, path::Path};
+use std::{
+    fs,
+    io::Read,
+    path::{Path, PathBuf},
+};
 use tar::{Archive, Header};
 
 pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<impl AsRef<[u8]>>) -> Result<()> {
@@ -19,6 +23,25 @@ pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<impl AsRef<[u8]>>) -> 
     let mut archive = Archive::new(decoder);
     archive.unpack(dest.as_ref())?;
     Ok(())
+}
+
+pub fn iter_tar_entries<P: AsRef<Path>>(
+    tar: impl AsRef<[u8]>,
+) -> Result<IndexMap<PathBuf, Vec<u8>>> {
+    let bytes = STANDARD.decode(tar)?;
+    let decoder = GzDecoder::new(bytes.as_slice());
+    let mut archive = Archive::new(decoder);
+
+    archive
+        .entries()?
+        .filter_map(|e| e.ok())
+        .map(|mut entry| -> Result<(PathBuf, Vec<u8>)> {
+            let path = entry.path()?.to_path_buf();
+            let mut buff = vec![];
+            entry.read_to_end(&mut buff)?;
+            Ok((path, buff))
+        })
+        .collect::<Result<IndexMap<PathBuf, Vec<u8>>>>()
 }
 
 pub fn archive<P: AsRef<Path>>(folder: P) -> Result<Option<String>> {

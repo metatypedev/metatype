@@ -52,26 +52,30 @@ export function getCwd(): string {
   }
 }
 
-export function fileExists(path: string): boolean {
+export function fileExists(filePath: string): boolean {
   try {
-    return fs.existsSync(path);
+    return fs.existsSync(filePath);
   } catch (err) {
     throw (err instanceof Error ? err.message : err);
   }
 }
 
-export function readFile(path: string): Uint8Array {
+export function readFile(filePath: string): Uint8Array {
   try {
-    const buffer = fs.readFileSync(path, null);
+    const buffer = fs.readFileSync(filePath, null);
     return new Uint8Array(buffer);
   } catch (err) {
     throw (err instanceof Error ? err.message : err);
   }
 }
 
-export function writeFile(path: string, data: Uint8Array): void {
+export function writeFile(filePath: string, data: Uint8Array): void {
   try {
-    void fs.writeFileSync(path, data);
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    void fs.writeFileSync(filePath, data);
   } catch (err) {
     throw (err instanceof Error ? err.message : err);
   }

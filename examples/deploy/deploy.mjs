@@ -63,8 +63,11 @@ tgDeploy(tg, {
   },
   artifactsConfig: {
     prismaMigration: {
-      action: "create",
-      pathDir: "./migrations"
+      action: {
+        create: true,
+        reset: false
+      },
+      migrationDir: "prisma/migrations"
     }
   }
 }).then((result) => {
