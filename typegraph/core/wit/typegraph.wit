@@ -1,7 +1,6 @@
 package metatype:typegraph
 
 interface core {
-
     record error {
         stack: list<string>,
     }
@@ -132,8 +131,34 @@ interface core {
 
     get-type-repr: func(id: type-id) -> result<string, error>
 
+    variant value-source {
+        raw(string),  // json
+        context(string),  // key
+        secret(string),  // key
+        parent(string),  // name
+        param(string),  // name
+    }
+
+    record parameter-transform-leaf {
+        path: list<string>,
+        source: value-source,
+    }
+    
+    type parameter-transform-tree = list<parameter-transform-leaf>
+
+    record parameter-transform {
+        resolver-input: type-id,
+        tree: parameter-transform-tree,
+    }
+
+    record query-parameter {
+        path: list<string>,
+        type-id: type-id,
+    }
+
     record type-func {
         inp: type-id,
+        parameter-transform: option<parameter-transform>,
         out: type-id,
         mat: materializer-id,
         rate-calls: bool,
