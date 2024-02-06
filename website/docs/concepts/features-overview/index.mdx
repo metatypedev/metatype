@@ -4,38 +4,53 @@ sidebar_position: 1
 
 # Features overview
 
-## Authentication
+- Metatype offers multiple runtimes with pre-defined operations (e.g. Prisma) and can replace the needs for an ad-hoc backend.
+
+- When the project grows, you can easily introduce new APIs or break existing ones in smaller parts while keeping the same interface.
+
+- You can write complex business logic directly in Typescript, Python or WebAssembly and run them directly inside the query engine.
+
+- Most of the frontend are today built on composable components, this brings a similar approach to backend development.
+
+- Third-parties APIs can be easily integrated, providing you visibility and control over them.
+
+- Metatype is interoperable with existing systems, and can be introduced step by step.
+
+- Metatype can be easily self-hosted or customized according to your needs.
+
 
 ## GraphQL and REST queries
 
+Easily expose business logic endpoints through using generated [GraphQl APIs](/docs/reference/runtimes/graphql).
+Including helpers to auto-generate and expose CRUD operations from your types on [myriad of databases](/docs/reference/runtimes/prisma).
+These are only helpers though. 
+They're built upon the typegraphs primitive that compose well with every other feature and allow [granular control](/docs/reference/types/reducers) when required.
+There are helpers to expose sections of your GraphQl through [REST queries as well](/docs/guides/rest).
+
+## Authentication
+
+First class support for authentication primitives through the Policies object. 
+Oauth2 helpers for popular services included as well. 
+Read more [here](/docs/reference/typegate/authentication).
+
 ## Type checking
+
+Everything in Metatype starts with [types](/docs/reference/types).
+The typegraph sdks allow you to model exactly what's needed for your app with simple syntax and a modern type system.
+Type authoring isn't done with through static, declarative snippets but through the typegraphs in a functional, "first class" manner allowing you build your own abstractions when needed.
 
 ## Live reload during development
 
-## Built-in CORS and rate-limiting
+Metatype development is primarily done through the [meta-cil](/docs/reference/meta-cli) that's designed to get you up and productive in no time. 
+Live auto-reload, database migration management, type-checking and linting, it's all there.
 
-## Policy-based authorization
+## Built-in CORS and rate-limiting
 
 ## Bring your own storage
 
-s3
+Working with object files in Metatype is easy using the [S3Runtime](/docs/reference/runtimes/s3) including support for [GraphQl file uploads](/docs/guides/files-upload) and presigned URLs.
 
 ## Function runner
 
-python, typescript
-
-## Automatic migration
-
-it offers multiple runtimes [1] with pre-defined operations (e.g. Prisma) and can replace the needs for an ad-hoc backend
-
-- when the project grows, you can easily introduce new APIs or break existing ones in smaller parts while keeping the same interface
-
-- you can write complex business logic directly in Typescript, Python or WebAssembly and run them directly inside the query engine
-
-- most of the frontend are today built on composable components, this brings a similar approach to backend development
-
-- third-parties APIs can be easily integrated, providing you visibility and control over them
-
-- it is interoperable with existing systems, and can be introduced step by step
-
-- it can be easily self-hosted or customized according to your needs
+When the expressive powers of the typegate primitives are not up for the task, different runtimes are available for running the exact, turing complete, code you need. 
+Metatype supports [Typescript](/docs/reference/runtimes/deno), [Python](/docs/reference/runtimes/python) and [Wasm](/docs/reference/runtimes/wasmedge) functions today.

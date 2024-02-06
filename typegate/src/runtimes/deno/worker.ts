@@ -1,6 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+// bring the unstable WorkerOptions api into scope
+/// <reference lib="deno.worker" />
+
 import { getLogger } from "../../log.ts";
 import { Answer, Message } from "../patterns/messenger/types.ts";
 

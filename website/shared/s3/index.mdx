@@ -1,0 +1,27 @@
+import TGExample from "@site/src/components/TGExample";
+
+We can make use of the [S3Runtime](/docs/reference/runtimes/s3) to interact with object storage APIs that implement the S3 api.
+
+We'll need to add the following vars to our `metatype.yml` first.
+
+```yml
+typegates:
+  dev:
+    # ..
+    env:
+      # replace RETREND by the name of your typegraph
+      TG_RETREND_S3_HOST: http://localhost:9000
+      TG_RETREND_S3_REGION: local
+      TG_RETREND_S3_ACCESS_KEY: minio
+      TG_RETREND_S3_SECRET_KEY: password
+      TG_RETREND_S3_PATH_STYLE: true
+```
+
+Our typegraph will then look something like:
+
+<TGExample 
+  typegraph="retrend"
+  python={require("../../../examples/typegraphs/files-upload.py")} 
+  typescript={require("!!code-loader!../../../examples/typegraphs/files-upload.ts")}
+  query={require('./retrend.graphql')} 
+  />

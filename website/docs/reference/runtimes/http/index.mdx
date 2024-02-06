@@ -1,14 +1,18 @@
 # HTTP/REST 
 
+The HTTPRuntime allows our typegraphs to access external REST APIs.
+
 Example:
 
 ```python
 from typegraph.runtime.http import HTTPRuntime
 
-    remote = HTTPRuntime('https://dev.to/api')
-    remote.get(
-        '/test',
-        t.struct({}),
-        t.list(t.struct({'a': t.integer()})),
-    )
+# ..
+
+remote = HTTPRuntime('https://dev.to/api')
+remote.get(
+    '/test',
+    t.struct({}),
+    t.list(t.struct({'a': t.integer()})),
+)
 ```

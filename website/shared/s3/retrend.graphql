@@ -1,0 +1,8 @@
+{
+  listObjects{
+    keys{
+      key
+      size
+    }
+  }
+}
