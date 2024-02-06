@@ -1,6 +1,5 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
-
 use std::path::PathBuf;
 
 use common::typegraph::runtimes::prisma::MigrationOptions;
@@ -10,7 +9,7 @@ use common::typegraph::Typegraph;
 use crate::utils::fs_host;
 use crate::utils::postprocess::PostProcessor;
 use crate::wit::core::MigrationConfig;
-use crate::wit::metatype::typegraph::host::get_cwd;
+use crate::wit::metatype::typegraph::host::{file_exists, get_cwd};
 
 pub struct PrismaProcessor {
     #[allow(unused)]
@@ -42,10 +41,13 @@ impl PrismaProcessor {
                 rt_data.migration_options = Some(MigrationOptions {
                     migration_files: {
                         let path = fs_host::make_absolute(&path)?;
-                        let base64 =
-                            fs_host::compress_and_encode_base64(path.display().to_string())?;
-                        match base64.is_empty() {
-                            true => Some(base64),
+                        match file_exists(&path.display().to_string())? {
+                            true => {
+                                let base64 = fs_host::compress_and_encode_base64(
+                                    path.display().to_string(),
+                                )?;
+                                Some(base64)
+                            }
                             false => None,
                         }
                     },
@@ -62,14 +64,9 @@ impl PrismaProcessor {
             self.config
                 .migration_dir
                 .clone()
-                .unwrap_or("prisma/migrations".to_string()),
+                .unwrap_or("prisma-migrations".to_string()),
         ));
         path.push(tg_name);
         Ok(path)
     }
 }
-
-// TODO:
-// reset
-// create
-// +take basedir into account

@@ -75,7 +75,7 @@ export function writeFile(filePath: string, data: Uint8Array): void {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
-    void fs.writeFileSync(filePath, data);
+    void fs.writeFileSync(filePath, data, { flag: "w" });
   } catch (err) {
     throw (err instanceof Error ? err.message : err);
   }

@@ -520,6 +520,8 @@ interface utils {
     }
 
     gen-gqlquery: func(params: query-body-params) -> result<string, error>
+
+    unpack-tarb64: func(tar-b64: string, dest: string) -> result<_, error>
 }
 
 interface host {

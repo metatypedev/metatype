@@ -25,21 +25,30 @@ pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<impl AsRef<[u8]>>) -> 
     Ok(())
 }
 
-pub fn iter_tar_entries<P: AsRef<Path>>(
-    tar: impl AsRef<[u8]>,
+pub fn tarb64_unpack_entries_as_map(
+    tarb64: Option<impl AsRef<[u8]>>,
 ) -> Result<IndexMap<PathBuf, Vec<u8>>> {
-    let bytes = STANDARD.decode(tar)?;
-    let decoder = GzDecoder::new(bytes.as_slice());
+    let Some(tarb64) = tarb64 else {
+        return Ok(IndexMap::new());
+    };
+    let tar_bytes = STANDARD.decode(tarb64)?;
+    let decoder = GzDecoder::new(tar_bytes.as_slice());
     let mut archive = Archive::new(decoder);
-
     archive
         .entries()?
-        .filter_map(|e| e.ok())
-        .map(|mut entry| -> Result<(PathBuf, Vec<u8>)> {
+        .filter_map(|e| match e {
+            Ok(entry) => {
+                if entry.header().entry_type().is_dir() {
+                    return None;
+                }
+                Some(entry)
+            }
+            _ => None,
+        })
+        .map(|entry| -> Result<(PathBuf, Vec<u8>)> {
             let path = entry.path()?.to_path_buf();
-            let mut buff = vec![];
-            entry.read_to_end(&mut buff)?;
-            Ok((path, buff))
+            let bytes = entry.bytes().collect::<Result<Vec<u8>, _>>()?;
+            Ok((path, bytes))
         })
         .collect::<Result<IndexMap<PathBuf, Vec<u8>>>>()
 }
@@ -83,9 +92,7 @@ pub fn archive_entries(dir_walker: Walk, prefix: Option<&Path>) -> Result<Option
                             Err(_) => archive_path,
                         };
                     }
-                    // println!("file {} => {}", path.display(), archive_path.display());
-                    tar.append_file(archive_path, &mut file)
-                        .context("Adding file to tarball")?;
+                    tar.append_file(archive_path, &mut file)?;
                 }
                 empty = false;
                 Ok(())
@@ -115,8 +122,7 @@ pub fn archive_entries_from_bytes(entries: IndexMap<String, Vec<u8>>) -> Result<
         header.set_mode(0o666); // rw-rw-rw
         header.set_cksum();
 
-        tar.append_data(&mut header, path, bytes.as_slice())
-            .context("Adding file to tarball")?;
+        tar.append_data(&mut header, path, bytes.as_slice())?;
     }
 
     let bytes = tar.into_inner()?.finish()?;

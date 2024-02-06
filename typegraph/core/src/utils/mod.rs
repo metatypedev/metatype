@@ -236,4 +236,8 @@ impl crate::wit::utils::Guest for crate::Lib {
 
         Ok(req_body.to_string())
     }
+
+    fn unpack_tarb64(tar_b64: String, dest: String) -> Result<()> {
+        fs_host::unpack_base64(&tar_b64, dest).map_err(|e| e.into())
+    }
 }

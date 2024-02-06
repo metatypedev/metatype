@@ -2,7 +2,11 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
 import { WasmEdgeRuntime } from "@typegraph/sdk/runtimes/wasmedge.js";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 import { tgDeploy } from "@typegraph/sdk/tg_deploy.js";
+import { wit_utils } from "@typegraph/sdk/wit.js";
+import * as path from "path";
+
 
 // deno
 // import { Policy, t, typegraph } from "../../typegraph/node/sdk/dist/index.js";
@@ -18,8 +22,16 @@ const tg = typegraph({
     const deno = new DenoRuntime();
     const python = new PythonRuntime();
     const wasmedge = new WasmEdgeRuntime();
+    const prisma = new PrismaRuntime("prisma", "POSTGRES")
     const pub = Policy.public();
-
+    const student = t.struct(
+      {
+        id: t.integer({}, { asId: true }),
+        name: t.string(),
+      },
+      { name: "Student" },
+    );
+  
     g.expose({
       test: deno.static(t.struct({ a: t.string() }), { a: "HELLO" }),
       // Deno
@@ -50,9 +62,23 @@ const tg = typegraph({
         t.integer(),
         { wasm: "wasi/rust.wasm", func: "add" }
       ),
+      // Prisma
+      createStudent: prisma.create(student),
+      findManyStudent: prisma.findMany(student),
     }, pub);
   },
 );
+
+const artifactsConfig = {
+  prismaMigration: {
+    action: {
+      create: true,
+      reset: false
+    },
+    migrationDir: "prisma-migrations"
+  }
+};
+
 
 tgDeploy(tg, {
   baseUrl: "http://localhost:7890",
@@ -61,16 +87,20 @@ tgDeploy(tg, {
     username: "admin",
     password: "password",
   },
-  artifactsConfig: {
-    prismaMigration: {
-      action: {
-        create: true,
-        reset: false
-      },
-      migrationDir: "prisma/migrations"
-    }
-  }
+  secrets: {
+    TG_DEPLOY_EXAMPLE_NODE_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
+  },
+  artifactsConfig,
 }).then((result) => {
   console.log("gate:", result);
+  if (result.data.addTypegraph) {
+    const migrations = result.data.addTypegraph.migrations ?? [];
+    migrations.map(({ runtime, migrations }) => {
+      const baseDir = artifactsConfig.prismaMigration.migrationDir;
+      const fullPath = path.join(baseDir, tg.name, runtime);
+      wit_utils.unpackTarb64(migrations,  fullPath);
+      console.log(`Unpacked migration at ${fullPath}`)
+    });
+  }
 })
   .catch(console.error);
