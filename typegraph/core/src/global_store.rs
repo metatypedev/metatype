@@ -6,7 +6,7 @@ use crate::runtimes::{
     DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
 };
 use crate::types::type_ref::TypeRef;
-use crate::types::{Struct, Type, TypeDef, TypeDefExt, TypeId};
+use crate::types::{Type, TypeDef, TypeDefExt, TypeId};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
 
@@ -463,6 +463,31 @@ impl Store {
     }
 }
 
+/// Generate a pub fn for asserting/unwrapping a Type as a specific TypeDef variant
+/// e.g.: `as_variant!(Struct)` gives
+/// ```rust
+/// pub fn as_struct(&self) -> Result<Rc<Struct>> {
+///     match self.as_type()? {
+///         Type::Def(TypeDef::Struct(inner)) => Ok(inner),
+///         Type::Ref(type_ref) => type_ref.try_resolve()?.id().as_struct(),
+///         _ => Err(errors::invalid_type("Struct", &self.repr()?)),
+///     }
+/// }
+/// ```
+macro_rules! as_variant {
+    ($variant:ident) => {
+        paste::paste! {
+            pub fn [<as_ $variant:lower>](&self) -> Result<Rc<crate::types::[<$variant>]>> {
+                match self.as_type()? {
+                    Type::Def(TypeDef::$variant(inner)) => Ok(inner),
+                    Type::Ref(type_ref) => type_ref.try_resolve()?.id().[<as_ $variant:lower>](),
+                    _ => Err(errors::invalid_type(stringify!($variant), &self.repr()?)),
+                }
+            }
+        }
+    };
+}
+
 impl TypeId {
     pub fn as_type(&self) -> Result<Type> {
         with_store(|s| {
@@ -473,13 +498,8 @@ impl TypeId {
         })
     }
 
-    pub fn as_struct(&self) -> Result<Rc<Struct>> {
-        match self.as_type()? {
-            Type::Def(TypeDef::Struct(inner)) => Ok(inner),
-            Type::Ref(type_ref) => type_ref.try_resolve()?.id().as_struct(),
-            _ => Err(errors::invalid_type("Struct", &self.repr()?)),
-        }
-    }
+    as_variant!(Struct);
+    as_variant!(List);
 
     pub fn is_func(&self) -> Result<bool> {
         Ok(matches!(self.as_type_def()?, Some(TypeDef::Func(_))))
@@ -489,6 +509,14 @@ impl TypeId {
         let type_id = *self;
         match type_id.as_type_def()? {
             Some(TypeDef::List(a)) => Ok(a.data.of.into()),
+            Some(TypeDef::Optional(o)) => Ok(o.data.of.into()),
+            _ => Ok(type_id),
+        }
+    }
+
+    pub fn resolve_optional(&self) -> Result<TypeId> {
+        let type_id = *self;
+        match type_id.as_type_def()? {
             Some(TypeDef::Optional(o)) => Ok(o.data.of.into()),
             _ => Ok(type_id),
         }

@@ -4,6 +4,7 @@
 mod conversion;
 mod errors;
 mod global_store;
+mod params;
 mod runtimes;
 mod t;
 mod typedef;
@@ -320,6 +321,7 @@ impl wit::core::Guest for Lib {
         if !matches!(TypeDef::try_from(wrapper_type)?, TypeDef::Struct(_)) {
             return Err(errors::invalid_input_type(&wrapper_type.repr()?));
         }
+
         let base = TypeBase::default();
         Ok(Store::register_type_def(
             |id| {

@@ -139,21 +139,9 @@ interface core {
         param(string),  // name
     }
 
-    record parameter-transform-leaf {
-        path: list<string>,
-        source: value-source,
-    }
-    
-    type parameter-transform-tree = list<parameter-transform-leaf>
-
     record parameter-transform {
         resolver-input: type-id,
-        tree: parameter-transform-tree,
-    }
-
-    record query-parameter {
-        path: list<string>,
-        type-id: type-id,
+        transform-tree: string,
     }
 
     record type-func {
@@ -500,6 +488,8 @@ interface utils {
     }
 
     gen-reduceb: func(supertype-id: type-id, data: reduce) -> result<type-id, error>
+
+    check-parameter-transform: func(resolver-inp: type-id, transform: string) -> result<type-id, error>
 
     add-graphql-endpoint: func(graphql: string) -> result<u32, error>
 
