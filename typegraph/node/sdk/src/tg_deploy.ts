@@ -5,9 +5,12 @@ import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-co
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
 
-export interface BasicAuth {
-  username: string;
-  password: string;
+export class BasicAuth {
+  constructor(public username: string, public password: string) {
+  }
+  asHeaderValue(): string {
+    return `Basic ${btoa(this.username + ":" + this.password)}`;
+  }
 }
 
 export interface TypegraphDeployParams {
@@ -16,6 +19,11 @@ export interface TypegraphDeployParams {
   artifactsConfig?: ArtifactResolutionConfig;
   secrets: Record<string, string>;
   cliVersion: string;
+}
+
+export interface TypegraphRemoveParams {
+  baseUrl: string;
+  auth?: BasicAuth;
 }
 
 export async function tgDeploy(
@@ -28,20 +36,37 @@ export async function tgDeploy(
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
   if (auth) {
-    headers.append(
-      "Authorization",
-      `Basic ${btoa(auth.username + ":" + auth.password)}`,
-    );
+    headers.append("Authorization", auth.asHeaderValue());
   }
 
   const response = await fetch(new URL("/typegate", baseUrl), {
     method: "POST",
     headers,
-    body: wit_utils.genGqlquery({
+    body: wit_utils.gqlDeployQuery({
       cliVersion,
       tg: serialized,
       secrets: Object.entries(secrets ?? {}),
     }),
+  });
+  return handleResponse(response);
+}
+
+export async function tgRemove(
+  typegraph: TypegraphOutput,
+  params: TypegraphRemoveParams,
+) {
+  const { baseUrl, auth } = params;
+
+  const headers = new Headers();
+  headers.append("Content-Type", "application/json");
+  if (auth) {
+    headers.append("Authorization", auth.asHeaderValue());
+  }
+
+  const response = await fetch(new URL("/typegate", baseUrl), {
+    method: "POST",
+    headers,
+    body: wit_utils.gqlRemoveQuery([typegraph.name]),
   });
   return handleResponse(response);
 }

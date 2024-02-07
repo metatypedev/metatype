@@ -80,14 +80,14 @@ export interface TypegraphOutput {
 export function typegraph(
   name: string,
   builder: TypegraphBuilder,
-): void;
+): TypegraphOutput;
 export function typegraph(
   args: TypegraphArgs,
-): void;
+): TypegraphOutput;
 export function typegraph(
   args: Omit<TypegraphArgs, "builder">,
   builder: TypegraphBuilder,
-): void;
+): TypegraphOutput;
 export function typegraph(
   nameOrArgs: string | TypegraphArgs | Omit<TypegraphArgs, "builder">,
   maybeBuilder?: TypegraphBuilder,

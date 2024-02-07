@@ -3,7 +3,7 @@ import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
 import { WasmEdgeRuntime } from "@typegraph/sdk/runtimes/wasmedge.js";
 import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
-import { tgDeploy } from "@typegraph/sdk/tg_deploy.js";
+import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 import { wit_utils } from "@typegraph/sdk/wit.js";
 import * as path from "path";
 
@@ -78,15 +78,20 @@ const artifactsConfig = {
     migrationDir: "prisma-migrations"
   }
 };
+const baseUrl = "http://localhost:7890";
+const auth = new BasicAuth("admin", "password");
+
+// tgRemove(tg, { baseUrl, auth })
+//   .then((res) => {
+//     console.log(`Removing typegraph ${tg.name} ${JSON.stringify(res)}`);
+//   })
+//   .catch(console.error);
 
 
 tgDeploy(tg, {
-  baseUrl: "http://localhost:7890",
+  baseUrl,
   cliVersion: "0.3.3",
-  auth: {
-    username: "admin",
-    password: "password",
-  },
+  auth,
   secrets: {
     TG_DEPLOY_EXAMPLE_NODE_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
   },

@@ -2,7 +2,11 @@ from typegraph import typegraph, Policy, t, Graph
 from typegraph.providers.prisma import PrismaRuntime
 from typegraph.runtimes.deno import DenoRuntime
 
-from typegraph.graph.tg_deploy import tg_deploy, TypegraphDeployParams, BasicAuth
+from typegraph.graph.tg_deploy import (
+    tg_deploy,
+    TypegraphDeployParams,
+    BasicAuth,
+)
 from typegraph.runtimes.python import PythonRuntime
 from typegraph.runtimes.wasmedge import WasmEdgeRuntime
 from typegraph.utils import unpack_tarb64
@@ -76,6 +80,11 @@ config_params = MigrationConfig(
 artifacts_config = ArtifactResolutionConfig(config_params)
 
 tg = deploy_example_python()
+
+# remove previous
+# res = tg_remove(tg, TypegraphRemoveParams("http://localhost:7890", auth))
+# print(f"Removing typegraph {tg.name} {str(res)}")
+
 res = tg_deploy(
     tg,
     TypegraphDeployParams(

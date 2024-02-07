@@ -11,7 +11,7 @@ use crate::errors::Result;
 use crate::global_store::Store;
 use crate::types::TypeId;
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
-use crate::wit::utils::{Auth as WitAuth, QueryBodyParams};
+use crate::wit::utils::{Auth as WitAuth, QueryDeployParams};
 use crate::Lib;
 
 use self::oauth2::std::{named_provider, Oauth2Builder};
@@ -205,7 +205,7 @@ impl crate::wit::utils::Guest for crate::Lib {
             .build(named_provider(&service_name)?)
     }
 
-    fn gen_gqlquery(params: QueryBodyParams) -> Result<String> {
+    fn gql_deploy_query(params: QueryDeployParams) -> Result<String> {
         let query = r"
             mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
                 addTypegraph(fromString: $tg, secrets: $secrets, cliVersion: $cliVersion) {
@@ -234,6 +234,21 @@ impl crate::wit::utils::Guest for crate::Lib {
             }),
         });
 
+        Ok(req_body.to_string())
+    }
+
+    fn gql_remove_query(names: Vec<String>) -> Result<String> {
+        let query = r"
+            mutation($names: [String!]!) {
+                removeTypegraphs(names: $names)
+            }
+        ";
+        let req_body = json!({
+            "query": query,
+            "variables": json!({
+                "names":  names,
+              }),
+        });
         Ok(req_body.to_string())
     }
 
