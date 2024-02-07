@@ -77,7 +77,7 @@ auth = BasicAuth(username="admin", password="password")
 config_params = MigrationConfig(
     migration_dir="prisma-migrations", action=MigrationAction(create=True, reset=True)
 )
-artifacts_config = ArtifactResolutionConfig(config_params)
+artifacts_config = ArtifactResolutionConfig(prisma_migration=config_params, dir=None)
 
 tg = deploy_example_python()
 

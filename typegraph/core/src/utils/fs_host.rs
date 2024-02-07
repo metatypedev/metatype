@@ -8,7 +8,10 @@ use common::archive::{
 };
 use indexmap::IndexMap;
 
-use crate::wit::metatype::typegraph::host::{expand_glob, get_cwd, read_file, write_file};
+use crate::{
+    global_store::Store,
+    wit::metatype::typegraph::host::{expand_glob, get_cwd, read_file, write_file},
+};
 
 pub fn read_text_file<P: Into<String>>(path: P) -> Result<String, String> {
     read_file(&path.into()).and_then(|bytes| {
@@ -51,16 +54,18 @@ pub fn unpack_base64<P: Into<String>>(tarb64: &str, dest: P) -> Result<(), Strin
     Ok(())
 }
 
-pub fn compress_and_encode_base64<P: Into<String>>(path: P) -> Result<String, String> {
+pub fn compress_and_encode_base64(path: PathBuf) -> Result<String, String> {
     let exclude = vec!["node_modules/".to_string(), "\\.git/".to_string()];
-    let bytes = compress(path, Some(exclude))?;
+    let bytes = compress(path.display().to_string(), Some(exclude))?;
     encode_bytes_to_base_64(bytes).map_err(|e| e.to_string())
 }
 
+/// Returns `get_cwd()` by default, custom `dir` otherwise
 pub fn cwd() -> Result<PathBuf, String> {
-    // idea: make it configurable from the frontends?
-    let ret = PathBuf::from(get_cwd()?.to_owned());
-    Ok(ret)
+    match Store::get_deploy_cwd() {
+        Some(path) => Ok(path),
+        None => Ok(PathBuf::from(get_cwd()?.to_owned())),
+    }
 }
 
 pub fn make_relative(path: &Path) -> Result<PathBuf, String> {

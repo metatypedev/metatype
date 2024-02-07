@@ -219,12 +219,13 @@ pub fn finalize(mode: TypegraphFinalizeMode) -> Result<String> {
 
     match mode {
         TypegraphFinalizeMode::ResolveArtifacts(config) => {
+            if let Some(config) = config {
+                Store::set_deploy_cwd(config.dir);
+                PrismaProcessor::new(config.prisma_migration).postprocess(&mut tg)?;
+            }
             DenoProcessor.postprocess(&mut tg)?;
             PythonProcessor.postprocess(&mut tg)?;
             WasmedgeProcessor.postprocess(&mut tg)?;
-            if let Some(config) = config {
-                PrismaProcessor::new(config.prisma_migration).postprocess(&mut tg)?;
-            }
         }
         TypegraphFinalizeMode::Simple => {}
     }

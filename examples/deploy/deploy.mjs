@@ -95,10 +95,13 @@ tgDeploy(tg, {
   secrets: {
     TG_DEPLOY_EXAMPLE_NODE_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
   },
-  artifactsConfig,
+  artifactsConfig: {
+    ...artifactsConfig,
+    // dir: "."
+  },
 }).then((result) => {
-  console.log("[OK] Pushed.");
-  const selection = result.data.addTypegraph;
+  console.log("[OK] Serialized.");
+  const selection = result?.data?.addTypegraph;
   if (selection) {
     const { migrations, messages } = selection;
     console.log(messages.map(({ text }) => text).join("\n"));

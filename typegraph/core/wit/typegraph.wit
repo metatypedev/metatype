@@ -47,6 +47,7 @@ interface core {
     }
 
     record artifact-resolution-config {
+        dir: option<string>, // cwd() if none
         prisma-migration: migration-config
     }
 

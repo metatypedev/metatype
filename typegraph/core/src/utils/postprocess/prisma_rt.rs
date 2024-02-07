@@ -9,7 +9,7 @@ use common::typegraph::Typegraph;
 use crate::utils::fs_host;
 use crate::utils::postprocess::PostProcessor;
 use crate::wit::core::MigrationConfig;
-use crate::wit::metatype::typegraph::host::{file_exists, get_cwd};
+use crate::wit::metatype::typegraph::host::file_exists;
 
 pub struct PrismaProcessor {
     config: MigrationConfig,
@@ -39,8 +39,8 @@ impl PrismaProcessor {
                 let path = base_migration_path.join(rt_name);
                 rt_data.migration_options = Some(MigrationOptions {
                     migration_files: {
-                        let path = fs_host::make_absolute(&path)?.display().to_string();
-                        match file_exists(&path)? {
+                        let path = fs_host::make_absolute(&path)?;
+                        match file_exists(&path.display().to_string())? {
                             true => {
                                 let base64 = fs_host::compress_and_encode_base64(path)?;
                                 Some(base64)
@@ -57,7 +57,7 @@ impl PrismaProcessor {
     }
 
     pub fn prisma_migrations_dir(&self, tg_name: &str) -> Result<PathBuf, String> {
-        let mut path = PathBuf::from(get_cwd()?).join(PathBuf::from(
+        let mut path = fs_host::cwd()?.join(PathBuf::from(
             self.config
                 .migration_dir
                 .clone()
