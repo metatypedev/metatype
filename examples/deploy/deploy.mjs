@@ -92,14 +92,16 @@ tgDeploy(tg, {
   },
   artifactsConfig,
 }).then((result) => {
-  console.log("gate:", result);
-  if (result.data.addTypegraph) {
-    const migrations = result.data.addTypegraph.migrations ?? [];
+  console.log("[OK] Pushed.");
+  const selection = result.data.addTypegraph;
+  if (selection) {
+    const { migrations, messages } = selection;
+    console.log(messages.map(({ text }) => text).join("\n"));
     migrations.map(({ runtime, migrations }) => {
       const baseDir = artifactsConfig.prismaMigration.migrationDir;
       const fullPath = path.join(baseDir, tg.name, runtime);
       wit_utils.unpackTarb64(migrations,  fullPath);
-      console.log(`Unpacked migration at ${fullPath}`)
+      console.log(`Unpacked migrations at ${fullPath}`)
     });
   }
 })

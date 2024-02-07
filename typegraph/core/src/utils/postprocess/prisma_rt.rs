@@ -12,7 +12,6 @@ use crate::wit::core::MigrationConfig;
 use crate::wit::metatype::typegraph::host::{file_exists, get_cwd};
 
 pub struct PrismaProcessor {
-    #[allow(unused)]
     config: MigrationConfig,
 }
 
@@ -40,12 +39,10 @@ impl PrismaProcessor {
                 let path = base_migration_path.join(rt_name);
                 rt_data.migration_options = Some(MigrationOptions {
                     migration_files: {
-                        let path = fs_host::make_absolute(&path)?;
-                        match file_exists(&path.display().to_string())? {
+                        let path = fs_host::make_absolute(&path)?.display().to_string();
+                        match file_exists(&path)? {
                             true => {
-                                let base64 = fs_host::compress_and_encode_base64(
-                                    path.display().to_string(),
-                                )?;
+                                let base64 = fs_host::compress_and_encode_base64(path)?;
                                 Some(base64)
                             }
                             false => None,

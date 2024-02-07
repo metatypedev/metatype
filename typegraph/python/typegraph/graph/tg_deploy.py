@@ -25,7 +25,7 @@ class TypegraphDeployParams:
     base_url: str
     cli_version: str
     auth: Optional[BasicAuth] = None
-    secrets: Optional[Dict[str, any]] = None
+    secrets: Optional[Dict[str, str]] = None
     artifacts_config: Optional[ArtifactResolutionConfig] = None
 
 
@@ -45,7 +45,7 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams):
         params=QueryBodyParams(
             tg=tg.serialize(params.artifacts_config),
             cli_version=params.cli_version,
-            secrets=[(k, v) for k, v in (params.secrets or {})],
+            secrets=[(k, v) for k, v in (params.secrets or {}).items()],
         ),
     )
 

@@ -39,9 +39,10 @@ pub fn tarb64_unpack_entries_as_map(
         .filter_map(|e| match e {
             Ok(entry) => {
                 if entry.header().entry_type().is_dir() {
-                    return None;
+                    None
+                } else {
+                    Some(entry)
                 }
-                Some(entry)
             }
             _ => None,
         })
