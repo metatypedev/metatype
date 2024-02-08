@@ -81,13 +81,6 @@ const artifactsConfig = {
 const baseUrl = "http://localhost:7890";
 const auth = new BasicAuth("admin", "password");
 
-// tgRemove(tg, { baseUrl, auth })
-//   .then((res) => {
-//     console.log(`Removing typegraph ${tg.name} ${JSON.stringify(res)}`);
-//   })
-//   .catch(console.error);
-
-
 tgDeploy(tg, {
   baseUrl,
   cliVersion: "0.3.3",
@@ -100,17 +93,19 @@ tgDeploy(tg, {
     // dir: "."
   },
 }).then((result) => {
-  console.log("[OK] Serialized.");
   const selection = result?.data?.addTypegraph;
   if (selection) {
     const { migrations, messages } = selection;
+    // migration status.. etc
     console.log(messages.map(({ text }) => text).join("\n"));
     migrations.map(({ runtime, migrations }) => {
       const baseDir = artifactsConfig.prismaMigration.migrationDir;
+      // Convention, however if migrationDir is absolute then you might want to use that instead
       const fullPath = path.join(baseDir, tg.name, runtime);
       wit_utils.unpackTarb64(migrations,  fullPath);
       console.log(`Unpacked migrations at ${fullPath}`)
     });
   }
+  throw new Error(result);
 })
   .catch(console.error);

@@ -181,7 +181,6 @@ export function typegraph(
         tag: "resolve-artifacts",
         val: config,
       });
-      // console.log(tgJson);
       return tgJson;
     };
   }

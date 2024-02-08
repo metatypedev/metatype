@@ -81,10 +81,6 @@ artifacts_config = ArtifactResolutionConfig(prisma_migration=config_params, dir=
 
 tg = deploy_example_python()
 
-# remove previous
-# res = tg_remove(tg, TypegraphRemoveParams("http://localhost:7890", auth))
-# print(f"Removing typegraph {tg.name} {str(res)}")
-
 res = tg_deploy(
     tg,
     TypegraphDeployParams(
@@ -98,13 +94,14 @@ res = tg_deploy(
     ),
 )
 
-print("[OK] Pushed.")
-
+# migration status.. etc
 print("\n".join([msg["text"] for msg in res["data"]["addTypegraph"]["messages"]]))
 
 migrations = res["data"]["addTypegraph"]["migrations"] or []
 for item in migrations:
+    # what to do with the migration files?
     base_dir = artifacts_config.prisma_migration.migration_dir
+    # Convention, however if migration_dir is absolute then you might want to use that instead
     full_path = path.join(base_dir, tg.name, item["runtime"])
     unpack_tarb64(item["migrations"], full_path)
     print(f"Unpacked migrations at {full_path}")
