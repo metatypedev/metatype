@@ -3,7 +3,7 @@
 
 use crate::interlude::*;
 use crate::{
-    runtimes::{prisma, python::python_bindings, temporal, wasmedge},
+    runtimes::{deno_rt, prisma, python::python_bindings, temporal, wasmedge},
     typegraph, typescript,
 };
 
@@ -49,6 +49,7 @@ deno_core::extension!(
         prisma::op_prisma_reset,
         prisma::op_unpack,
         prisma::op_archive,
+        deno_rt::op_deno_transform_typescript
     ],
     esm_entry_point = "ext:tg_metatype_ext/runtime.js",
     esm = ["runtime.js"],

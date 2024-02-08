@@ -11046,7 +11046,6 @@ dependencies = [
  "serde 1.0.196",
  "serde_json",
  "sha2 0.10.8",
- "typescript",
  "wit-bindgen",
 ]
 

@@ -15,7 +15,6 @@ wit-bindgen = "0.12.0"
 regex = "1.10.2"
 indexmap = { version = "2.1.0", features = ["serde"] }
 common = { path = "../../libs/common" }
-typescript = { path = "../../libs/typescript" }
 indoc = "2.0.4"
 graphql-parser = "0.4.0"
 sha2 = "0.10.8"

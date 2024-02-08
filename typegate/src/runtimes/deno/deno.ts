@@ -15,6 +15,7 @@ import { structureRepr, uncompress } from "../../utils.ts";
 import { path } from "compress/deps.ts";
 import config from "../../config.ts";
 import { getLogger } from "../../log.ts";
+import { transformTypescript } from "native";
 
 const logger = getLogger(import.meta);
 
@@ -82,8 +83,10 @@ export class DenoRuntime extends Runtime {
     let registryCount = 0;
     for (const mat of materializers) {
       if (mat.name === "function") {
-        const code = mat.data.script as string;
+        // convert to js first
+        mat.data.script = transformTypescript(mat.data.script as string);
 
+        const code = mat.data.script as string;
         ops.set(registryCount, {
           type: "register_func",
           fnCode: code,
