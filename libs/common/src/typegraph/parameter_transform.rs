@@ -9,64 +9,25 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ApplyFromArg {
-    pub name: String,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ApplyFromStatic {
-    #[serde(rename = "valueJson")]
-    pub value_json: String,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ApplyFromSecret {
-    pub key: String,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ApplyFromContext {
-    pub key: String,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ApplyFromParent {
-    pub name: String,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "source")]
+#[serde(tag = "source", rename_all = "lowercase")]
 pub enum ParameterTransformLeafNode {
-    Arg(ApplyFromArg),
-    Static(ApplyFromStatic),
-    Secret(ApplyFromSecret),
-    Context(ApplyFromContext),
-    Parent(ApplyFromParent),
+    Arg { name: String },
+    Static { value_json: String },
+    Secret { key: String },
+    Context { key: String },
+    Parent { type_idx: u32 },
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ParameterTransformObjectNode {
-    pub fields: HashMap<String, ParameterTransformNode>,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ParameterTransformArrayNode {
-    pub items: Vec<ParameterTransformNode>,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "type")]
+#[serde(tag = "type", rename_all = "lowercase")]
 pub enum ParameterTransformParentNode {
-    Object(ParameterTransformObjectNode),
-    Array(ParameterTransformArrayNode),
+    Object {
+        fields: HashMap<String, ParameterTransformNode>,
+    },
+    Array {
+        items: Vec<ParameterTransformNode>,
+    },
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -81,5 +42,5 @@ pub enum ParameterTransformNode {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FunctionParameterTransform {
     pub resolver_input: u32,
-    pub transform_root: ParameterTransformObjectNode,
+    pub transform_root: HashMap<String, ParameterTransformNode>,
 }

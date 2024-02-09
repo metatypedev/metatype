@@ -4,12 +4,14 @@
 import json as JsonLib
 from typing import Any, Dict, List, Optional, Tuple, Union
 import copy
+import sys
 
 from typing_extensions import Self
 
 from typegraph.effects import EffectType
 from typegraph.gen.exports.core import (
     FuncParams,
+    ParameterTransform,
     TypeList,
     TypeBase,
     TypeEither,
@@ -638,31 +640,27 @@ def serialize_apply_param_node(node: ApplyParamNode) -> Any:
 
 
 class func(typedef):
-    inp: struct
+    inp: Union[struct, typedef]
     out: typedef
     mat: Materializer
     rate_calls: bool
     rate_weight: Optional[int]
-    parameter_transform: Optional[ApplyParamObjectNode]
+    parameter_transform: Optional[ParameterTransform]
 
     def __init__(
         self,
-        inp: struct,
+        inp: Union[struct, typedef],
         out: typedef,
         mat: Materializer,
         /,
         rate_calls: bool = False,
         rate_weight: Optional[int] = None,
-        parameter_transform: Optional[ApplyParamObjectNode] = None,
+        parameter_transform: Optional[ParameterTransform] = None,
     ):
         data = TypeFunc(
             inp=inp.id,
             out=out.id,
-            parameter_transform=JsonLib.dumps(
-                serialize_apply_param_node(parameter_transform)
-            )
-            if parameter_transform
-            else None,
+            parameter_transform=parameter_transform,
             mat=mat.id,
             rate_calls=rate_calls,
             rate_weight=rate_weight,
@@ -721,11 +719,21 @@ class func(typedef):
         )
 
     def apply(self, value: ApplyParamObjectNode) -> "func":
+        serialized = serialize_apply_param_node(value)
+        assert isinstance(serialized, dict)
+        assert serialized["type"] == "object"
+        transform_tree = JsonLib.dumps(serialized["fields"])
+        print(transform_tree, file=sys.stderr)
+
+        apply_params = core.gen_apply(store, self.inp.id, transform_tree)
+        if isinstance(apply_params, Err):
+            raise Exception(apply_params.value)
+
         return func(
-            self.inp,
+            typedef(apply_params.value.query_input),
             self.out,
             self.mat,
-            parameter_transform=value,
+            parameter_transform=apply_params.value.parameter_transform,
             rate_calls=self.rate_calls,
             rate_weight=self.rate_weight,
         )

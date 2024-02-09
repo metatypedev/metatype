@@ -164,10 +164,10 @@ impl crate::wit::utils::Guest for crate::Lib {
     }
 
     fn check_parameter_transform(resolver_input: CoreTypeId, tree: String) -> Result<CoreTypeId> {
-        let tree = serde_json::from_str(&tree)
+        let root_fields = serde_json::from_str(&tree)
             .map_err(|e| format!("Error while parsing parameter transform tree: {e:?}"))?;
         ParameterTransformValidator::new()
-            .query_input(resolver_input.into(), tree)
+            .query_input(resolver_input.into(), &root_fields)
             .map(Into::into)
     }
 

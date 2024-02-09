@@ -344,7 +344,7 @@ impl wit::core::Guest for Lib {
     fn gen_apply(resolver_input: CoreTypeId, transform_tree: String) -> Result<ApplyParams> {
         let query_input = apply::ParameterTransformValidator::new().query_input(
             resolver_input.into(),
-            serde_json::from_str(&transform_tree).map_err(|e| -> TgError {
+            &serde_json::from_str(&transform_tree).map_err(|e| -> TgError {
                 format!("Error while parsing transform tree: {e:?}").into()
             })?,
         )?;

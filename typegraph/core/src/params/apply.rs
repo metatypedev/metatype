@@ -8,63 +8,28 @@ use serde::Deserialize;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct ApplyFromArg {
-    pub name: Option<String>,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Deserialize)]
-pub struct ApplyFromStatic {
-    pub value_json: String,
-}
-
-// TODO add to secret list??
-#[allow(dead_code)]
-#[derive(Debug, Clone, Deserialize)]
-pub struct ApplyFromSecret {
-    pub key: String,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Deserialize)]
-pub struct ApplyFromContext {
-    pub key: String,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Deserialize)]
-pub struct ApplyFromParent {
-    pub name: String,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(tag = "source")]
+#[serde(tag = "source", rename_all = "lowercase")]
 pub enum ParameterTransformLeafNode {
-    Arg(ApplyFromArg),
-    Static(ApplyFromStatic),
-    Secret(ApplyFromSecret),
-    Context(ApplyFromContext),
-    Parent(ApplyFromParent),
+    Arg { name: Option<String> },
+    Static { value_json: String },
+    Secret { key: String },
+    Context { key: String },
+    Parent { name: String },
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct ParameterTransformObjectNode {
-    pub fields: HashMap<String, ParameterTransformNode>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct ParameterTransformArrayNode {
-    pub items: Vec<ParameterTransformNode>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", rename_all = "lowercase")]
 pub enum ParameterTransformParentNode {
-    Object(ParameterTransformObjectNode),
-    Array(ParameterTransformArrayNode),
+    Object {
+        fields: HashMap<String, ParameterTransformNode>,
+    },
+    Array {
+        items: Vec<ParameterTransformNode>,
+    },
 }
 
 #[derive(Debug, Clone, Deserialize)]
+#[serde(untagged, rename_all = "lowercase")]
 pub enum ParameterTransformNode {
     Leaf(ParameterTransformLeafNode),
     Parent(ParameterTransformParentNode),
@@ -135,9 +100,9 @@ impl ParameterTransformValidator {
     pub fn query_input(
         mut self,
         resolver_input: TypeId,
-        root: ParameterTransformObjectNode,
+        root_fields: &HashMap<String, ParameterTransformNode>,
     ) -> Result<TypeId> {
-        self.check_object_node(resolver_input, &root, vec![])?;
+        self.check_object_node(resolver_input, root_fields, vec![])?;
 
         let mut query_input_type = t::struct_();
         for (name, param) in self.query_params.into_iter() {
@@ -154,8 +119,8 @@ impl ParameterTransformValidator {
         path: Vec<String>,
     ) -> Result<()> {
         match leaf {
-            ParameterTransformLeafNode::Arg(arg) => {
-                let param_name = Self::get_param_name(arg.name.as_deref(), &path)?;
+            ParameterTransformLeafNode::Arg { name } => {
+                let param_name = Self::get_param_name(name.as_deref(), &path)?;
                 let old_param = self.query_params.insert(
                     param_name.clone(),
                     QueryParam {
@@ -174,17 +139,17 @@ impl ParameterTransformValidator {
                     Ok(())
                 }
             }
-            ParameterTransformLeafNode::Static(_) => Ok(()), // TODO validate agains type
-            ParameterTransformLeafNode::Secret(_) => Ok(()),
-            ParameterTransformLeafNode::Context(_) => Ok(()),
-            ParameterTransformLeafNode::Parent(_) => Ok(()),
+            ParameterTransformLeafNode::Static { .. } => Ok(()), // TODO validate agains type
+            ParameterTransformLeafNode::Secret { .. } => Ok(()),
+            ParameterTransformLeafNode::Context { .. } => Ok(()),
+            ParameterTransformLeafNode::Parent { .. } => Ok(()),
         }
     }
 
     fn check_object_node(
         &mut self,
         type_id: TypeId,
-        node: &ParameterTransformObjectNode,
+        fields: &HashMap<String, ParameterTransformNode>,
         path: Vec<String>,
     ) -> Result<()> {
         let type_id = type_id.resolve_optional()?;
@@ -200,7 +165,7 @@ impl ParameterTransformValidator {
             .iter()
             .map(|(k, v)| (k.as_str(), *v))
             .collect::<HashMap<_, _>>();
-        for (field, node) in &node.fields {
+        for (field, node) in fields {
             let prop_type_id = available_fields.remove(field.as_str()).ok_or_else(|| {
                 format!(
                     "Field {field:?} not found in type {repr:?} at {path:?}",
@@ -251,7 +216,7 @@ impl ParameterTransformValidator {
     fn check_array_node(
         &mut self,
         type_id: TypeId,
-        node: &ParameterTransformArrayNode,
+        items: &[ParameterTransformNode],
         path: Vec<String>,
     ) -> Result<()> {
         let type_id = type_id.resolve_optional()?;
@@ -264,7 +229,7 @@ impl ParameterTransformValidator {
 
         let item_type_id = TypeId(ty.data.of);
 
-        for (index, node) in node.items.iter().enumerate() {
+        for (index, node) in items.iter().enumerate() {
             let mut path = path.clone();
             path.push(format!("[{index}]"));
             self.check_node(item_type_id, node, path)?;
@@ -281,11 +246,11 @@ impl ParameterTransformValidator {
         match node {
             ParameterTransformNode::Leaf(leaf) => self.check_leaf_node(type_id, leaf, path),
             ParameterTransformNode::Parent(parent) => match parent {
-                ParameterTransformParentNode::Object(obj) => {
-                    self.check_object_node(type_id, obj, path)
+                ParameterTransformParentNode::Object { fields } => {
+                    self.check_object_node(type_id, fields, path)
                 }
-                ParameterTransformParentNode::Array(arr) => {
-                    self.check_array_node(type_id, arr, path)
+                ParameterTransformParentNode::Array { items } => {
+                    self.check_array_node(type_id, items, path)
                 }
             },
         }
@@ -304,23 +269,21 @@ mod test {
             .propx("a", t::string())?
             .propx("b", t::string())?
             .build()?;
-        let root = ParameterTransformObjectNode {
-            fields: vec![
-                (
-                    "a".to_string(),
-                    ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg(ApplyFromArg {
-                        name: None,
-                    })),
-                ),
-                (
-                    "b".to_string(),
-                    ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg(ApplyFromArg {
-                        name: None,
-                    })),
-                ),
-            ]
-            .into_iter()
-            .collect(),
+        let root_fields = {
+            let mut map = HashMap::new();
+            map.insert(
+                "a".to_string(),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg(ApplyFromArg {
+                    name: None,
+                })),
+            );
+            map.insert(
+                "b".to_string(),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg(ApplyFromArg {
+                    name: None,
+                })),
+            );
+            map
         };
         let query_input = validator.query_input(input, root)?;
 
