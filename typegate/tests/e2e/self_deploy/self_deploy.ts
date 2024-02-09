@@ -3,8 +3,8 @@
 
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
-import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
 
+// export the typegraph
 export const tg = typegraph({
   name: "self-deploy",
   disableAutoSerialization: true, // disable print
@@ -27,31 +27,3 @@ export const tg = typegraph({
     ),
   }, pub);
 });
-
-export async function deploy(
-  gate: string,
-  auth: BasicAuth,
-  cliVersion: string,
-  dir: string,
-) {
-  return await tgDeploy(tg, {
-    baseUrl: gate,
-    cliVersion,
-    auth,
-    secrets: {},
-    artifactsConfig: {
-      prismaMigration: {
-        action: {
-          create: true,
-          reset: false,
-        },
-        migrationDir: "prisma-migrations",
-      },
-      dir,
-    },
-  });
-}
-
-export function undeploy(gate: string, auth: BasicAuth) {
-  return tgRemove(tg, { baseUrl: gate, auth });
-}
