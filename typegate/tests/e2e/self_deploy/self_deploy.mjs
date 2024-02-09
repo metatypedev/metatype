@@ -8,7 +8,7 @@ import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 export const tg = typegraph({
   name: "self-deploy",
   disableAutoSerialization: true, // disable print
-}, (g: any) => {
+}, (g) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
 

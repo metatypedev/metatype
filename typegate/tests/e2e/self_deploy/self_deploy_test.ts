@@ -3,7 +3,7 @@
 import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
 
 import { Meta } from "test-utils/mod.ts";
-import { tg } from "./self_deploy.ts";
+import { tg } from "./self_deploy.mjs"; // FIXME: deno coverage issues with transpiled version of this file
 import { testDir } from "test-utils/dir.ts";
 import { join } from "std/path/join.ts";
 import { assertEquals, assertExists } from "std/assert/mod.ts";
@@ -38,6 +38,9 @@ Meta.test("deploy and undeploy typegraph without meta-cli", async (_) => {
     },
   });
 
-  const gateResponseRem = await tgRemove(tg, { baseUrl: gate, auth });
+  const { typegate: gateResponseRem } = await tgRemove(tg, {
+    baseUrl: gate,
+    auth,
+  });
   assertEquals(gateResponseRem, { data: { removeTypegraphs: true } });
 }, { port, systemTypegraphs: true });
