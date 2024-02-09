@@ -244,28 +244,28 @@ export type ParameterTransformNode =
   | ParameterTransformLeafNode
   | ParameterTransformParentNode;
 export type ParameterTransformLeafNode = {
-  source: "Arg";
+  source: "arg";
   name: string;
 } | {
-  source: "Static";
-  valueJson: string;
+  source: "static";
+  value_json: string;
 } | {
-  source: "Secret";
+  source: "secret";
   key: string;
 } | {
-  source: "Context";
+  source: "context";
   key: string;
 } | {
-  source: "Parent";
-  name: string;
+  source: "parent";
+  type_idx: number;
 };
 export type ParameterTransformParentNode = {
-  type: "Object";
+  type: "object";
   fields: {
     [k: string]: ParameterTransformNode;
   };
 } | {
-  type: "Array";
+  type: "array";
   items: ParameterTransformNode[];
 };
 export type EffectType = "create" | "update" | "delete" | "read";
@@ -393,10 +393,7 @@ export interface SingleValueForUint32 {
 }
 export interface FunctionParameterTransform {
   resolver_input: number;
-  transform_root: ParameterTransformObjectNode;
-}
-export interface ParameterTransformObjectNode {
-  fields: {
+  transform_root: {
     [k: string]: ParameterTransformNode;
   };
 }

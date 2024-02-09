@@ -1323,17 +1323,6 @@
           "minimum": 0.0
         },
         "transform_root": {
-          "$ref": "#/definitions/ParameterTransformObjectNode"
-        }
-      }
-    },
-    "ParameterTransformObjectNode": {
-      "type": "object",
-      "required": [
-        "fields"
-      ],
-      "properties": {
-        "fields": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/ParameterTransformNode"
@@ -1363,7 +1352,7 @@
             "source": {
               "type": "string",
               "enum": [
-                "Arg"
+                "arg"
               ]
             },
             "name": {
@@ -1375,16 +1364,16 @@
           "type": "object",
           "required": [
             "source",
-            "valueJson"
+            "value_json"
           ],
           "properties": {
             "source": {
               "type": "string",
               "enum": [
-                "Static"
+                "static"
               ]
             },
-            "valueJson": {
+            "value_json": {
               "type": "string"
             }
           }
@@ -1399,7 +1388,7 @@
             "source": {
               "type": "string",
               "enum": [
-                "Secret"
+                "secret"
               ]
             },
             "key": {
@@ -1417,7 +1406,7 @@
             "source": {
               "type": "string",
               "enum": [
-                "Context"
+                "context"
               ]
             },
             "key": {
@@ -1428,18 +1417,20 @@
         {
           "type": "object",
           "required": [
-            "name",
-            "source"
+            "source",
+            "type_idx"
           ],
           "properties": {
             "source": {
               "type": "string",
               "enum": [
-                "Parent"
+                "parent"
               ]
             },
-            "name": {
-              "type": "string"
+            "type_idx": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
             }
           }
         }
@@ -1457,7 +1448,7 @@
             "type": {
               "type": "string",
               "enum": [
-                "Object"
+                "object"
               ]
             },
             "fields": {
@@ -1478,7 +1469,7 @@
             "type": {
               "type": "string",
               "enum": [
-                "Array"
+                "array"
               ]
             },
             "items": {

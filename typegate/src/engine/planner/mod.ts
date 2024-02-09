@@ -411,8 +411,13 @@ export class Planner {
     }
 
     const schema = this.tg.type(node.typeIdx, Type.FUNCTION);
-    const { input: inputIdx, output: outputIdx, rate_calls, rate_weight } =
-      schema;
+    const {
+      input: inputIdx,
+      output: outputIdx,
+      rate_calls,
+      rate_weight,
+      parameterTransform = null,
+    } = schema;
     const outputType = this.tg.type(outputIdx);
 
     const mat = this.tg.materializer(schema.materializer);
@@ -440,6 +445,7 @@ export class Planner {
       parentProps,
       inputIdx,
       argNodes,
+      parameterTransform,
     );
 
     deps.push(...collected.deps);

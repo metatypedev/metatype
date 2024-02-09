@@ -24,13 +24,21 @@ import {
 import { mapValues } from "std/collections/map_values.ts";
 import { filterValues } from "std/collections/filter_values.ts";
 
-import { EffectType, EitherNode } from "../../typegraph/types.ts";
+import {
+  EffectType,
+  EitherNode,
+  FunctionParameterTransform,
+} from "../../typegraph/types.ts";
 
 import { getChildTypes, visitTypes } from "../../typegraph/visitor.ts";
 import { generateValidator } from "../typecheck/input.ts";
 import { getParentId } from "../stage_id.ts";
 import { BadContext } from "../../errors.ts";
 import { selectInjection } from "./injection_utils.ts";
+import {
+  compileParameterTransformer,
+  defaultParameterTransformer,
+} from "./parameter_transformer.ts";
 
 class MandatoryArgumentError extends Error {
   constructor(argDetails: string) {
@@ -84,6 +92,7 @@ export function collectArgs(
   parentProps: Record<string, number>,
   typeIdx: TypeIdx,
   astNodes: Record<string, ast.ArgumentNode>,
+  parameterTransform: FunctionParameterTransform | null,
 ): CollectedArgs {
   const collector = new ArgumentCollector(
     typegraph,
@@ -108,6 +117,12 @@ export function collectArgs(
   }
 
   const validate = generateValidator(typegraph, typeIdx);
+  const parameterTransformer = parameterTransform == null
+    ? defaultParameterTransformer
+    : compileParameterTransformer(
+      parameterTransform.transform_root,
+      parentProps,
+    );
 
   const policies = collector.policies;
 
@@ -124,7 +139,10 @@ export function collectArgs(
     // typecheck
     validate(value);
     return {
-      compute: () => value,
+      compute: (c) => {
+        const { parent, context } = c;
+        return parameterTransformer({ args: value, parent, context });
+      },
       deps: [],
       policies,
     };
@@ -136,7 +154,8 @@ export function collectArgs(
     compute: (params) => {
       const value = mapValues(compute, (c) => c(params));
       validate(value);
-      return value;
+      const { parent, context } = params;
+      return parameterTransformer({ args: value, parent, context });
     },
     deps: Array.from(collector.deps.parent).map((dep) => `${parentId}.${dep}`),
     policies,

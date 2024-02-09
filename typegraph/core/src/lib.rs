@@ -349,9 +349,9 @@ impl wit::core::Guest for Lib {
             })?,
         )?;
         Ok(ApplyParams {
-            query_input: resolver_input,
+            query_input: query_input.0,
             parameter_transform: ParameterTransform {
-                resolver_input: query_input.0,
+                resolver_input,
                 transform_tree,
             },
         })
