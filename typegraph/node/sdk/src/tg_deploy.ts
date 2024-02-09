@@ -26,10 +26,19 @@ export interface TypegraphRemoveParams {
   auth?: BasicAuth;
 }
 
+export interface DeployResult {
+  serialized: string;
+  typegate: unknown;
+}
+
+export interface RemoveResult {
+  typegate: unknown;
+}
+
 export async function tgDeploy(
   typegraph: TypegraphOutput,
   params: TypegraphDeployParams,
-) {
+): Promise<DeployResult> {
   const { baseUrl, cliVersion, secrets, auth, artifactsConfig } = params;
   const serialized = typegraph.serialize(artifactsConfig);
 
@@ -48,13 +57,16 @@ export async function tgDeploy(
       secrets: Object.entries(secrets ?? {}),
     }),
   });
-  return handleResponse(response);
+  return {
+    serialized,
+    typegate: await handleResponse(response),
+  };
 }
 
 export async function tgRemove(
   typegraph: TypegraphOutput,
   params: TypegraphRemoveParams,
-) {
+): Promise<RemoveResult> {
   const { baseUrl, auth } = params;
 
   const headers = new Headers();
@@ -68,7 +80,9 @@ export async function tgRemove(
     headers,
     body: wit_utils.gqlRemoveQuery([typegraph.name]),
   });
-  return handleResponse(response);
+  return {
+    typegate: await handleResponse(response),
+  };
 }
 
 async function handleResponse(

@@ -94,10 +94,14 @@ res = tg_deploy(
     ),
 )
 
-# migration status.. etc
-print("\n".join([msg["text"] for msg in res["data"]["addTypegraph"]["messages"]]))
+# print(res.serialized)
 
-migrations = res["data"]["addTypegraph"]["migrations"] or []
+# migration status.. etc
+print(
+    "\n".join([msg["text"] for msg in res.typegate["data"]["addTypegraph"]["messages"]])
+)
+
+migrations = res.typegate["data"]["addTypegraph"]["migrations"] or []
 for item in migrations:
     # what to do with the migration files?
     base_dir = artifacts_config.prisma_migration.migration_dir

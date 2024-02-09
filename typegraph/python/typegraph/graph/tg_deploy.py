@@ -41,18 +41,29 @@ class TypegraphRemoveParams:
     auth: Optional[BasicAuth] = None
 
 
-def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams):
+@dataclass
+class DeployResult:
+    serialized: str
+    typegate: any
+
+
+@dataclass
+class RemoveResult:
+    typegate: any
+
+
+def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResult:
     sep = "/" if not params.base_url.endswith("/") else ""
     url = params.base_url + sep + "typegate"
 
     headers = {"Content-Type": "application/json"}
     if params.auth is not None:
         headers["Authorization"] = params.auth.as_header_value()
-
+    serialized = tg.serialize(params.artifacts_config)
     res = wit_utils.gql_deploy_query(
         store,
         params=QueryDeployParams(
-            tg=tg.serialize(params.artifacts_config),
+            tg=serialized,
             cli_version=params.cli_version,
             secrets=[(k, v) for k, v in (params.secrets or {}).items()],
         ),
@@ -67,7 +78,10 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams):
         headers=headers,
         data=res.value.encode(),
     )
-    return handle_response(request.urlopen(req).read().decode())
+    return DeployResult(
+        serialized=serialized,
+        typegate=handle_response(request.urlopen(req).read().decode()),
+    )
 
 
 def tg_remove(tg: TypegraphOutput, params: TypegraphRemoveParams):
@@ -90,7 +104,7 @@ def tg_remove(tg: TypegraphOutput, params: TypegraphRemoveParams):
         headers=headers,
         data=res.value.encode(),
     )
-    return handle_response(request.urlopen(req).read().decode())
+    return RemoveResult(typegate=handle_response(request.urlopen(req).read().decode()))
 
 
 def handle_response(res: any):

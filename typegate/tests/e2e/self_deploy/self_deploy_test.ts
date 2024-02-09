@@ -6,6 +6,7 @@ import { Meta } from "test-utils/mod.ts";
 import { tg } from "./self_deploy.ts";
 import { testDir } from "test-utils/dir.ts";
 import { join } from "std/path/join.ts";
+import { assertEquals, assertExists } from "std/assert/mod.ts";
 
 const port = 7898;
 const auth = new BasicAuth("admin", "password");
@@ -14,7 +15,7 @@ const cliVersion = "0.3.3";
 const cwdDir = join(testDir, "e2e", "self_deploy");
 
 Meta.test("deploy and undeploy typegraph without meta-cli", async (_) => {
-  await tgDeploy(tg, {
+  const { serialized, typegate: gateResponseAdd } = await tgDeploy(tg, {
     baseUrl: gate,
     cliVersion,
     auth,
@@ -30,6 +31,13 @@ Meta.test("deploy and undeploy typegraph without meta-cli", async (_) => {
       dir: cwdDir,
     },
   });
+  assertExists(serialized, "serialized has a value");
+  assertEquals(gateResponseAdd, {
+    data: {
+      addTypegraph: { name: "self-deploy", messages: [], migrations: [] },
+    },
+  });
 
-  await tgRemove(tg, { baseUrl: gate, auth });
+  const gateResponseRem = await tgRemove(tg, { baseUrl: gate, auth });
+  assertEquals(gateResponseRem, { data: { removeTypegraphs: true } });
 }, { port, systemTypegraphs: true });
