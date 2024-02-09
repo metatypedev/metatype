@@ -9,32 +9,32 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ApplyFromArg {
-    name: Option<String>,
+    pub name: Option<String>,
 }
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct ApplyFromStatic {
-    value: String,
+    pub value_json: String,
 }
 
 // TODO add to secret list??
 #[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct ApplyFromSecret {
-    key: String,
+    pub key: String,
 }
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct ApplyFromContext {
-    key: String,
+    pub key: String,
 }
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct ApplyFromParent {
-    name: String,
+    pub name: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -49,12 +49,12 @@ pub enum ParameterTransformLeafNode {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ParameterTransformObjectNode {
-    fields: HashMap<String, ParameterTransformNode>,
+    pub fields: HashMap<String, ParameterTransformNode>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ParameterTransformArrayNode {
-    items: Vec<ParameterTransformNode>,
+    pub items: Vec<ParameterTransformNode>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

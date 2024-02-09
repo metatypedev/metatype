@@ -842,6 +842,16 @@
               "format": "uint32",
               "minimum": 0.0
             },
+            "parameterTransform": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/FunctionParameterTransform"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "output": {
               "type": "integer",
               "format": "uint32",
@@ -1298,6 +1308,187 @@
         "date",
         "date-time",
         "phone"
+      ]
+    },
+    "FunctionParameterTransform": {
+      "type": "object",
+      "required": [
+        "resolver_input",
+        "transform_root"
+      ],
+      "properties": {
+        "resolver_input": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "transform_root": {
+          "$ref": "#/definitions/ParameterTransformObjectNode"
+        }
+      }
+    },
+    "ParameterTransformObjectNode": {
+      "type": "object",
+      "required": [
+        "fields"
+      ],
+      "properties": {
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ParameterTransformNode"
+          }
+        }
+      }
+    },
+    "ParameterTransformNode": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ParameterTransformLeafNode"
+        },
+        {
+          "$ref": "#/definitions/ParameterTransformParentNode"
+        }
+      ]
+    },
+    "ParameterTransformLeafNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "name",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "Arg"
+              ]
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "source",
+            "valueJson"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "Static"
+              ]
+            },
+            "valueJson": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "key",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "Secret"
+              ]
+            },
+            "key": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "key",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "Context"
+              ]
+            },
+            "key": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "name",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "Parent"
+              ]
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "ParameterTransformParentNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "fields",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Object"
+              ]
+            },
+            "fields": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/definitions/ParameterTransformNode"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "items",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Array"
+              ]
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ParameterTransformNode"
+              }
+            }
+          }
+        }
       ]
     },
     "Materializer": {
