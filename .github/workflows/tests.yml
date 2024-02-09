@@ -205,6 +205,8 @@ jobs:
           push: false
           cache-from: type=registry,ref=docker.io/zifeo/metatype-cache:ci
           cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
+          # check target runs extra validation steps in the Dockerfile
+          target: check
       - name: Build without cache (external)
         uses: docker/build-push-action@v5
         if: "! steps.check.outputs.has-permission"
@@ -213,6 +215,7 @@ jobs:
           platforms: linux/amd64
           push: false
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
+          target: check
 
   test-full:
     needs: changes

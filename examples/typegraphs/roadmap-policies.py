@@ -16,6 +16,7 @@ def roadmap(g: Graph):
     db = PrismaRuntime("db", "POSTGRES")
     deno = DenoRuntime()
 
+    # skip:start
     bucket = t.struct(
         {
             # auto generate ids during creation
@@ -47,16 +48,21 @@ def roadmap(g: Graph):
         },
         name="vote",
     )
+    # skip:end
 
+    # highlight-next-line
     g.auth(Auth.basic(["andim"]))
 
+    # highlight-start
     admins = deno.policy(
         "admins",
         "(_args, { context }) => !!context.username",
     )
+    # highlight-end
 
     g.expose(
         pub,
+        # highlight-next-line
         create_bucket=db.create(bucket).with_policy(admins),
         get_buckets=db.find_many(bucket),
         get_idea=db.find_many(idea),

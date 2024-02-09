@@ -6,21 +6,26 @@ import React from "react";
 
 interface TGExampleProps extends MiniQLProps {
   python?: { content: string; path: string };
-  typescript?: { content: string; path: string}
+  typescript?: { content: string; path: string };
+  codeLang?: "py" | "ts";
+  code?: string;
+  codePath?: string;
 }
 
-export default function TGExample({ python, typescript, ...props }: TGExampleProps) {
+export default function TGExample(
+  { python, typescript, ...props }: TGExampleProps,
+) {
   const code = [
     python && {
       content: python.content,
       codeLanguage: "python",
-      codeFileUrl: python.path
+      codeFileUrl: python.path,
     },
     typescript && {
       content: typescript.content,
       codeLanguage: "typescript",
-      codeFileUrl: typescript.path
-    }
+      codeFileUrl: typescript.path,
+    },
   ].filter((v) => !!v);
 
   return (
