@@ -381,7 +381,7 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             suffix: ""
-          - os: macos-latest
+          - os: macos-14
             target: aarch64-apple-darwin
             suffix: ""
           - os: ubuntu-latest
@@ -419,7 +419,7 @@ jobs:
           # we cd next to the file so that the its parent dirs
           # aren't present in the tar
           cd target/${{ matrix.target }}/release/
-          meta typegate || true
+          ./meta typegate || true
           tar czvf ../../../meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
           cd ../../../
 
@@ -439,6 +439,6 @@ jobs:
           # NOTE: we only build the thin cli
           cross build --release --locked --package meta-cli --target ${{ matrix.target }}
           cd target/${{ matrix.target }}/release/
-          meta typegate || true
+          ./meta --help
           tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
           cd ../../../
