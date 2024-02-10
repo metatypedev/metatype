@@ -75,7 +75,7 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             suffix: ""
-          - os: macos-latest
+          - os: macos-14
             target: aarch64-apple-darwin
             suffix: ""
           - os: ubuntu-latest
@@ -106,20 +106,6 @@ jobs:
           # sometimes, dtolnay/rust-toolchain does not select the correct default target
           rustup target add ${{ matrix.target }}
       # we use cross for building on this platform
-      - if: ${{ matrix.target != 'aarch64-unknown-linux-gnu' }}
-        shell: bash
-        run: |
-          cargo build --release --locked --package meta-cli --target ${{ matrix.target }} --features typegate -v
-          # we cd next to the file so that the its parent dirs
-          # aren't present in the tar
-          cd target/${{ matrix.target }}/release/
-          tar czvf ../../../meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
-          cd ../../../
-
-          cargo build --release --locked --package meta-cli --target ${{ matrix.target }}
-          cd target/${{ matrix.target }}/release/
-          tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
-          cd ../../../
       - if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
         shell: bash
         env:
@@ -131,6 +117,20 @@ jobs:
 
           # NOTE: we only build the thin cli
           cross build --release --locked --package meta-cli --target ${{ matrix.target }}
+          # we cd next to the file so that the its parent dirs
+          # aren't present in the tar
+          cd target/${{ matrix.target }}/release/
+          tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
+          cd ../../../
+      - if: ${{ matrix.target != 'aarch64-unknown-linux-gnu' }}
+        shell: bash
+        run: |
+          cargo build --release --locked --package meta-cli --target ${{ matrix.target }} --features typegate -v
+          cd target/${{ matrix.target }}/release/
+          tar czvf ../../../meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
+          cd ../../../
+
+          cargo build --release --locked --package meta-cli --target ${{ matrix.target }}
           cd target/${{ matrix.target }}/release/
           tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
           cd ../../../
