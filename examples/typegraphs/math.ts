@@ -31,15 +31,15 @@ typegraph({
         name: "default", // name the exported function to run
       },
     ).withPolicy(restrict_referer),
-    random: deno.func(
-      t.struct({}),
-      t.float(),
-      { code: "() => Math.random()" }, // more inline code
-    ).withPolicy(pub),
     randomItem: deno.func(
       t.struct({ "items": t.list(t.string()) }),
       t.string(),
       { code: random_item_fn },
+    ).withPolicy(pub),
+    random: deno.func(
+      t.struct({}),
+      t.float(),
+      { code: "() => Math.random()" }, // more inline code
     ).withPolicy(pub),
   });
 });
