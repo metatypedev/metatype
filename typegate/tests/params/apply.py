@@ -81,4 +81,18 @@ def test_apply(g: Graph):
             ),
             code="""() => ({ a: 1 })""",
         ),
+        withArray=deno.identity(
+            t.struct(
+                {
+                    "a": t.list(t.integer()),
+                }
+            )
+        ).apply(
+            {
+                "a": [
+                    g.as_arg("first"),
+                    g.as_arg("second"),
+                ]
+            }
+        ),
     )

@@ -633,9 +633,10 @@ def serialize_apply_param_node(node: ApplyParamNode) -> Any:
             "type": "object",
             "fields": {k: serialize_apply_param_node(v) for k, v in node.items()},
         }
-    if isinstance(node, list):
+    if isinstance(node, (og_list, tuple)):
         return {"type": "array", "items": [serialize_apply_param_node(v) for v in node]}
-    raise Exception(f"unexpected node type: {node}")
+
+    raise Exception(f"unexpected node type: node={node}")
 
 
 class func(typedef):

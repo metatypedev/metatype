@@ -87,4 +87,18 @@ Meta.test("(python (sdk): apply)", async (t) => {
       })
       .on(e);
   });
+
+  await t.should("work with list", async () => {
+    await gql`
+      query {
+        withArray(first: 1, second: 2) {
+          a
+        }
+      }
+    `
+      .expectData({
+        withArray: { a: [1, 2] },
+      })
+      .on(e);
+  });
 });
