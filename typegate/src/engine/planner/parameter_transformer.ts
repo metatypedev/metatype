@@ -7,7 +7,6 @@ import { ParameterTransformNode } from "../../typegraph/types.ts";
 export type TransformParamsInput = {
   args: Record<string, any>;
   context: Record<string, any>;
-  // secrets: Record<string, any>;
   parent: Record<string, any>;
 };
 
@@ -26,7 +25,11 @@ export function compileParameterTransformer(
 ): TransformParams {
   const ctx = new TransformerCompilationContext(typegraph, parentProps);
   const fnBody = ctx.compile(transformerTreeRoot);
-  return new Function("input", fnBody) as TransformParams;
+  const fn = new Function("input", fnBody) as TransformParams;
+  return (input) => {
+    const res = fn(input);
+    return res;
+  };
 }
 
 class TransformerCompilationContext {
@@ -43,7 +46,6 @@ class TransformerCompilationContext {
 
   #reset() {
     this.#collector = [
-      // TODO secrets
       "const { args, context, parent } = input;\n",
     ];
   }
@@ -75,8 +77,8 @@ class TransformerCompilationContext {
           return this.#compileArgInjection(typeIdx, nodeData.name);
         case "context":
           return this.#compileContextInjection(typeIdx, nodeData.key);
-        // case "secret":
-        //   return this.#compileSecretsInjection(node);
+        case "secret":
+          return this.#compileSecretsInjection(typeIdx, nodeData.key);
         case "parent":
           return this.#compileParentInjection(typeIdx, nodeData.parentIdx);
         default:
@@ -134,17 +136,19 @@ class TransformerCompilationContext {
     return varName;
   }
 
-  // #compileSecretsInjection(key: string) {
-  //   // TODO type validation ?
-  //   const varName = this.#createVarName();
-  //   this.#collector.push(`const ${varName} = secrets["${key}"];`);
-  //   return varName;
-  // }
+  // return () => this.tg.parseSecret(typ, secretName);
+  #compileSecretsInjection(typeIdx: number, key: string) {
+    const secret = this.#tg.parseSecret(this.#tg.type(typeIdx), key);
+    // TODO type validation ? -- only additional constraints
+    const varName = this.#createVarName();
+    this.#collector.push(`const ${varName} = ${JSON.stringify(secret)};`);
+    return varName;
+  }
 
   #compileParentInjection(_typeIdx: number, parentIdx: number) {
     // TODO type validation ?
     // TODO what if the value is lazy (a function?)
-    const key = Object.entries(this.#parentProps)
+    const [key] = Object.entries(this.#parentProps)
       .find(([_key, idx]) => idx === parentIdx)!;
     const varName = this.#createVarName();
     this.#collector.push(`const ${varName} = parent["${key}"];`);

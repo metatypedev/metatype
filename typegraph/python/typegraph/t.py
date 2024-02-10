@@ -725,6 +725,9 @@ class func(typedef):
 
         transform_data = core.get_transform_data(store, self.inp.id, transform_tree)
         if isinstance(transform_data, Err):
+            import sys
+
+            print(transform_tree, file=sys.stderr)
             raise Exception(transform_data.value)
 
         return func(

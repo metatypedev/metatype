@@ -20,7 +20,7 @@ pub mod raw_tree {
         Static { value_json: String },
         Secret { key: String },
         Context { key: String },
-        Parent { name: String },
+        Parent { type_name: String },
     }
 
     #[derive(Debug, Clone, Deserialize)]
@@ -49,7 +49,7 @@ pub enum ParameterTransformLeafNode {
     Static { value_json: String },
     Secret { key: String },
     Context { key: String },
-    Parent { name: String },
+    Parent { type_name: String },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -240,10 +240,10 @@ impl TransformDataBuildContext {
                     key: key.clone(),
                 }),
             }),
-            N::Parent { name } => Ok(ParameterTransformNode {
+            N::Parent { type_name } => Ok(ParameterTransformNode {
                 type_id: type_id.0,
                 data: ParameterTransformNodeData::Leaf(ParameterTransformLeafNode::Parent {
-                    name: name.clone(),
+                    type_name: type_name.clone(),
                 }),
             }),
         }
