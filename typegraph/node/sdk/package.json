@@ -1,6 +1,6 @@
 {
   "name": "@typegraph/sdk",
-  "version": "0.3.4",
+  "version": "0.3.5-0",
   "description": "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are.",
   "type": "module",
   "scripts": {
