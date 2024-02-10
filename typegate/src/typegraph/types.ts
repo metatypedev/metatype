@@ -240,7 +240,7 @@ export type StringFormat =
   | "date"
   | "date-time"
   | "phone";
-export type ParameterTransformNode =
+export type ParameterTransformNodeData =
   | ParameterTransformLeafNode
   | ParameterTransformParentNode;
 export type ParameterTransformLeafNode = {
@@ -248,7 +248,7 @@ export type ParameterTransformLeafNode = {
   name: string;
 } | {
   source: "static";
-  value_json: string;
+  valueJson: string;
 } | {
   source: "secret";
   key: string;
@@ -257,7 +257,7 @@ export type ParameterTransformLeafNode = {
   key: string;
 } | {
   source: "parent";
-  type_idx: number;
+  parentIdx: number;
 };
 export type ParameterTransformParentNode = {
   type: "object";
@@ -393,9 +393,11 @@ export interface SingleValueForUint32 {
 }
 export interface FunctionParameterTransform {
   resolver_input: number;
-  transform_root: {
-    [k: string]: ParameterTransformNode;
-  };
+  transform_root: ParameterTransformNode;
+}
+export interface ParameterTransformNode {
+  typeIdx: number;
+  data: ParameterTransformNodeData;
 }
 export interface Materializer {
   name: string;

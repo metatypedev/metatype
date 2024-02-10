@@ -1,8 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::HashMap;
-
 use common::typegraph::{
     parameter_transform::FunctionParameterTransform, FunctionTypeData, TypeNode,
 };
@@ -37,7 +35,7 @@ impl TypeConversion for Func {
             .as_ref()
             .map(|transform| -> Result<_> {
                 let resolver_input = TypeId(transform.resolver_input);
-                let transform_root: HashMap<String, ParameterTransformNode> =
+                let transform_root: ParameterTransformNode =
                     serde_json::from_str(&transform.transform_tree).map_err(|e| {
                         TgError::from(format!("Failed to parse transform_root: {}", e))
                     })?;

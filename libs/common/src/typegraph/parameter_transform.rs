@@ -11,36 +11,50 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "source", rename_all = "lowercase")]
 pub enum ParameterTransformLeafNode {
+    #[serde(rename_all = "camelCase")]
     Arg { name: String },
+    #[serde(rename_all = "camelCase")]
     Static { value_json: String },
+    #[serde(rename_all = "camelCase")]
     Secret { key: String },
+    #[serde(rename_all = "camelCase")]
     Context { key: String },
-    Parent { type_idx: u32 },
+    #[serde(rename_all = "camelCase")]
+    Parent { parent_idx: u32 },
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ParameterTransformParentNode {
+    #[serde(rename_all = "camelCase")]
     Object {
         fields: HashMap<String, ParameterTransformNode>,
     },
-    Array {
-        items: Vec<ParameterTransformNode>,
-    },
+    #[serde(rename_all = "camelCase")]
+    Array { items: Vec<ParameterTransformNode> },
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(untagged)]
-pub enum ParameterTransformNode {
+pub enum ParameterTransformNodeData {
     Leaf(ParameterTransformLeafNode),
     Parent(ParameterTransformParentNode),
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ParameterTransformNode {
+    pub type_idx: u32,
+    // #[serde(flatten)]
+    pub data: ParameterTransformNodeData,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FunctionParameterTransform {
     pub resolver_input: u32,
-    pub transform_root: HashMap<String, ParameterTransformNode>,
+    pub transform_root: ParameterTransformNode,
 }

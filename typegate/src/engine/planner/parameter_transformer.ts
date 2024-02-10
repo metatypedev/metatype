@@ -1,10 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import {
-  ParameterTransformNode,
-  ParameterTransformParentNode,
-} from "../../typegraph/types.ts";
+import { TypeGraph } from "../../typegraph/mod.ts";
+import { ParameterTransformNode } from "../../typegraph/types.ts";
 
 export type TransformParamsInput = {
   args: Record<string, any>;
@@ -22,25 +20,24 @@ export type TransformParams = {
 };
 
 export function compileParameterTransformer(
-  transformerTreeRootFields: Record<string, ParameterTransformNode>,
+  typegraph: TypeGraph,
   parentProps: Record<string, number>,
+  transformerTreeRoot: ParameterTransformNode,
 ): TransformParams {
-  const rootNode: ParameterTransformParentNode = {
-    type: "object",
-    fields: transformerTreeRootFields,
-  };
-  const ctx = new TransformerCompilationContext(parentProps);
-  const fnBody = ctx.compile(rootNode);
+  const ctx = new TransformerCompilationContext(typegraph, parentProps);
+  const fnBody = ctx.compile(transformerTreeRoot);
   return new Function("input", fnBody) as TransformParams;
 }
 
 class TransformerCompilationContext {
+  #tg: TypeGraph;
   #parentProps: Record<string, number>;
   #path: string[] = [];
   #latestVarIndex = 0;
   #collector: string[] = [];
 
-  constructor(parentProps: Record<string, number>) {
+  constructor(typegraph: TypeGraph, parentProps: Record<string, number>) {
+    this.#tg = typegraph;
     this.#parentProps = parentProps;
   }
 
@@ -51,7 +48,7 @@ class TransformerCompilationContext {
     ];
   }
 
-  compile(rootNode: ParameterTransformParentNode) {
+  compile(rootNode: ParameterTransformNode) {
     this.#reset();
     const varName = this.#compileNode(rootNode);
     this.#collector.push(`return ${varName};`);
@@ -59,35 +56,41 @@ class TransformerCompilationContext {
   }
 
   #compileNode(node: ParameterTransformNode) {
-    if ("type" in node) {
-      switch (node.type) {
+    const { typeIdx, data: nodeData } = node;
+    if ("type" in nodeData) {
+      switch (nodeData.type) {
         case "object":
-          return this.#compileObject(node.fields);
+          return this.#compileObject(typeIdx, nodeData.fields);
         case "array":
-          return this.#compileArray(node.items);
+          return this.#compileArray(typeIdx, nodeData.items);
         default:
           // unreachable
           throw new Error(
-            `Unknown type: ${(node as any).type} at ${this.#path}`,
+            `Unknown type: ${(nodeData as any).type} at ${this.#path}`,
           );
       }
     } else {
-      switch (node.source) {
+      switch (nodeData.source) {
         case "arg":
-          return this.#compileArgInjection(node.name);
+          return this.#compileArgInjection(typeIdx, nodeData.name);
         case "context":
-          return this.#compileContextInjection(node.key);
+          return this.#compileContextInjection(typeIdx, nodeData.key);
         // case "secret":
         //   return this.#compileSecretsInjection(node);
         case "parent":
-          return this.#compileParentInjection(node.type_idx);
+          return this.#compileParentInjection(typeIdx, nodeData.parentIdx);
         default:
-          throw new Error(`Unknown source: ${node.source} at ${this.#path}`);
+          throw new Error(
+            `Unknown source: ${nodeData.source} at ${this.#path}`,
+          );
       }
     }
   }
 
-  #compileObject(fields: Record<string, ParameterTransformNode>): string {
+  #compileObject(
+    _typeIdx: number, // TODO validation
+    fields: Record<string, ParameterTransformNode>,
+  ): string {
     const varName = this.#createVarName();
     this.#collector.push(`const ${varName} = {};`);
 
@@ -102,7 +105,7 @@ class TransformerCompilationContext {
     return varName;
   }
 
-  #compileArray(items: ParameterTransformNode[]) {
+  #compileArray(_typeIdx: number, items: ParameterTransformNode[]) {
     const varName = this.#createVarName();
     this.#collector.push(`const ${varName} = [];`);
 
@@ -117,14 +120,14 @@ class TransformerCompilationContext {
     return varName;
   }
 
-  #compileArgInjection(name: string) {
+  #compileArgInjection(_typeIdx: number, name: string) {
     // TODO type validation ?
     const varName = this.#createVarName();
     this.#collector.push(`const ${varName} = args["${name}"];`);
     return varName;
   }
 
-  #compileContextInjection(key: string) {
+  #compileContextInjection(_typeIdx: number, key: string) {
     // TODO type validation ?
     const varName = this.#createVarName();
     this.#collector.push(`const ${varName} = context["${key}"];`);
@@ -138,11 +141,11 @@ class TransformerCompilationContext {
   //   return varName;
   // }
 
-  #compileParentInjection(typeIdx: number) {
+  #compileParentInjection(_typeIdx: number, parentIdx: number) {
     // TODO type validation ?
     // TODO what if the value is lazy (a function?)
     const key = Object.entries(this.#parentProps)
-      .find(([_key, idx]) => idx === typeIdx)!;
+      .find(([_key, idx]) => idx === parentIdx)!;
     const varName = this.#createVarName();
     this.#collector.push(`const ${varName} = parent["${key}"];`);
     return varName;

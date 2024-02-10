@@ -7,19 +7,23 @@ use crate::errors::Result;
 use crate::errors::TgError;
 use crate::t;
 use crate::t::TypeBuilder;
+use crate::types::TypeId;
 use crate::{params::apply::*, typegraph::TypegraphContext};
 use common::typegraph::parameter_transform as cm;
 
 pub fn convert_tree(
     ctx: &mut TypegraphContext,
-    root_fields: &HashMap<String, ParameterTransformNode>,
+    root_fields: &ParameterTransformNode,
     runtime_id: u32,
-) -> Result<HashMap<String, cm::ParameterTransformNode>> {
-    let object_node = convert_object_node(ctx, root_fields, runtime_id)?;
-    match object_node {
-        cm::ParameterTransformParentNode::Object { fields } => Ok(fields),
-        _ => unreachable!(),
+) -> Result<cm::ParameterTransformNode> {
+    let res = convert_node(ctx, root_fields, runtime_id)?;
+    if !matches!(
+        res.data,
+        cm::ParameterTransformNodeData::Parent(cm::ParameterTransformParentNode::Object { .. })
+    ) {
+        return Err(TgError::from("Root node must be an object node"));
     }
+    Ok(res)
 }
 
 fn convert_node(
@@ -27,12 +31,25 @@ fn convert_node(
     node: &ParameterTransformNode,
     runtime_id: u32,
 ) -> Result<cm::ParameterTransformNode> {
-    match node {
-        ParameterTransformNode::Leaf(leaf_node) => {
-            convert_leaf_node(ctx, leaf_node, runtime_id).map(cm::ParameterTransformNode::Leaf)
+    let type_idx = ctx
+        .register_type(TypeId(node.type_id).resolve_ref()?.1, Some(runtime_id))?
+        .0;
+    match &node.data {
+        ParameterTransformNodeData::Leaf(leaf_node) => {
+            convert_leaf_node(ctx, leaf_node, runtime_id).map(|leaf_node| {
+                cm::ParameterTransformNode {
+                    type_idx,
+                    data: cm::ParameterTransformNodeData::Leaf(leaf_node),
+                }
+            })
         }
-        ParameterTransformNode::Parent(a) => {
-            convert_parent_node(ctx, a, runtime_id).map(cm::ParameterTransformNode::Parent)
+        ParameterTransformNodeData::Parent(parent_node) => {
+            convert_parent_node(ctx, parent_node, runtime_id).map(|parent_node| {
+                cm::ParameterTransformNode {
+                    type_idx,
+                    data: cm::ParameterTransformNodeData::Parent(parent_node),
+                }
+            })
         }
     }
 }
@@ -43,11 +60,9 @@ fn convert_leaf_node(
     runtime_id: u32,
 ) -> Result<cm::ParameterTransformLeafNode> {
     match node {
-        ParameterTransformLeafNode::Arg { name } => Ok(cm::ParameterTransformLeafNode::Arg {
-            name: name.clone().ok_or_else(|| {
-                Into::<TgError>::into("argument must have a know name".to_string())
-            })?,
-        }),
+        ParameterTransformLeafNode::Arg { name } => {
+            Ok(cm::ParameterTransformLeafNode::Arg { name: name.clone() })
+        }
         ParameterTransformLeafNode::Static { value_json } => {
             Ok(cm::ParameterTransformLeafNode::Static {
                 value_json: value_json.clone(),
@@ -62,8 +77,8 @@ fn convert_leaf_node(
         ParameterTransformLeafNode::Parent { name } => {
             let type_ref = t::ref_(name).build()?;
             let (_, type_def) = type_ref.resolve_ref()?;
-            let type_idx = ctx.register_type(type_def, Some(runtime_id))?.0;
-            Ok(cm::ParameterTransformLeafNode::Parent { type_idx })
+            let parent_idx = ctx.register_type(type_def, Some(runtime_id))?.0;
+            Ok(cm::ParameterTransformLeafNode::Parent { parent_idx })
         }
     }
 }

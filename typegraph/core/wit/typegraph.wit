@@ -155,11 +155,12 @@ interface core {
 
     funcb: func(data: type-func) -> result<type-id, error>
 
-    record apply-params {
+    record transform-data {
         query-input: type-id,
         parameter-transform: parameter-transform,
     }
-    gen-apply: func(resolver-input: type-id, transform-tree: string) -> result<apply-params, error>
+
+    get-transform-data: func(resolver-input: type-id, transform-tree: string) -> result<transform-data, error>
 
     type policy-id = u32
 
@@ -495,8 +496,6 @@ interface utils {
     }
 
     gen-reduceb: func(supertype-id: type-id, data: reduce) -> result<type-id, error>
-
-    check-parameter-transform: func(resolver-inp: type-id, transform: string) -> result<type-id, error>
 
     add-graphql-endpoint: func(graphql: string) -> result<u32, error>
 

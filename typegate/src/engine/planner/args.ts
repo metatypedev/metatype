@@ -120,8 +120,9 @@ export function collectArgs(
   const parameterTransformer = parameterTransform == null
     ? defaultParameterTransformer
     : compileParameterTransformer(
-      parameterTransform.transform_root,
+      typegraph,
       parentProps,
+      parameterTransform.transform_root,
     );
 
   const policies = collector.policies;

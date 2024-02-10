@@ -4,7 +4,6 @@
 import json as JsonLib
 from typing import Any, Dict, List, Optional, Tuple, Union
 import copy
-import sys
 
 from typing_extensions import Self
 
@@ -723,17 +722,16 @@ class func(typedef):
         assert isinstance(serialized, dict)
         assert serialized["type"] == "object"
         transform_tree = JsonLib.dumps(serialized["fields"])
-        print(transform_tree, file=sys.stderr)
 
-        apply_params = core.gen_apply(store, self.inp.id, transform_tree)
-        if isinstance(apply_params, Err):
-            raise Exception(apply_params.value)
+        transform_data = core.get_transform_data(store, self.inp.id, transform_tree)
+        if isinstance(transform_data, Err):
+            raise Exception(transform_data.value)
 
         return func(
-            typedef(apply_params.value.query_input),
+            typedef(transform_data.value.query_input),
             self.out,
             self.mat,
-            parameter_transform=apply_params.value.parameter_transform,
+            parameter_transform=transform_data.value.parameter_transform,
             rate_calls=self.rate_calls,
             rate_weight=self.rate_weight,
         )

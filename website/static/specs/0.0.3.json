@@ -1323,14 +1323,28 @@
           "minimum": 0.0
         },
         "transform_root": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/ParameterTransformNode"
-          }
+          "$ref": "#/definitions/ParameterTransformNode"
         }
       }
     },
     "ParameterTransformNode": {
+      "type": "object",
+      "required": [
+        "data",
+        "typeIdx"
+      ],
+      "properties": {
+        "typeIdx": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "data": {
+          "$ref": "#/definitions/ParameterTransformNodeData"
+        }
+      }
+    },
+    "ParameterTransformNodeData": {
       "anyOf": [
         {
           "$ref": "#/definitions/ParameterTransformLeafNode"
@@ -1364,7 +1378,7 @@
           "type": "object",
           "required": [
             "source",
-            "value_json"
+            "valueJson"
           ],
           "properties": {
             "source": {
@@ -1373,7 +1387,7 @@
                 "static"
               ]
             },
-            "value_json": {
+            "valueJson": {
               "type": "string"
             }
           }
@@ -1417,8 +1431,8 @@
         {
           "type": "object",
           "required": [
-            "source",
-            "type_idx"
+            "parentIdx",
+            "source"
           ],
           "properties": {
             "source": {
@@ -1427,7 +1441,7 @@
                 "parent"
               ]
             },
-            "type_idx": {
+            "parentIdx": {
               "type": "integer",
               "format": "uint32",
               "minimum": 0.0

@@ -30,9 +30,9 @@ use types::{
 };
 
 use wit::core::{
-    ApplyParams, ContextCheck, ParameterTransform, Policy, PolicyId, PolicySpec, TypeBase,
-    TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList,
-    TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphFinalizeMode, TypegraphInitParams,
+    ContextCheck, Policy, PolicyId, PolicySpec, TransformData, TypeBase, TypeEither, TypeFile,
+    TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList, TypeOptional, TypeString,
+    TypeStruct, TypeUnion, TypegraphFinalizeMode, TypegraphInitParams,
 };
 use wit::runtimes::{Guest, MaterializerDenoFunc};
 
@@ -341,20 +341,16 @@ impl wit::core::Guest for Lib {
         .into())
     }
 
-    fn gen_apply(resolver_input: CoreTypeId, transform_tree: String) -> Result<ApplyParams> {
-        let query_input = apply::ParameterTransformValidator::new().query_input(
+    fn get_transform_data(
+        resolver_input: CoreTypeId,
+        transform_tree: String,
+    ) -> Result<TransformData> {
+        apply::build_transform_data(
             resolver_input.into(),
             &serde_json::from_str(&transform_tree).map_err(|e| -> TgError {
                 format!("Error while parsing transform tree: {e:?}").into()
             })?,
-        )?;
-        Ok(ApplyParams {
-            query_input: query_input.0,
-            parameter_transform: ParameterTransform {
-                resolver_input,
-                transform_tree,
-            },
-        })
+        )
     }
 
     fn with_injection(type_id: CoreTypeId, injection: String) -> Result<CoreTypeId> {

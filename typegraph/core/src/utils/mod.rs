@@ -9,7 +9,6 @@ use serde_json::json;
 
 use crate::errors::Result;
 use crate::global_store::Store;
-use crate::params::apply::ParameterTransformValidator;
 use crate::types::TypeId;
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
 use crate::wit::utils::{Auth as WitAuth, QueryBodyParams};
@@ -161,14 +160,6 @@ impl crate::wit::utils::Guest for crate::Lib {
             .ok_or("root type does not have any field".to_string())?;
 
         Ok(*root_id)
-    }
-
-    fn check_parameter_transform(resolver_input: CoreTypeId, tree: String) -> Result<CoreTypeId> {
-        let root_fields = serde_json::from_str(&tree)
-            .map_err(|e| format!("Error while parsing parameter transform tree: {e:?}"))?;
-        ParameterTransformValidator::new()
-            .query_input(resolver_input.into(), &root_fields)
-            .map(Into::into)
     }
 
     fn add_graphql_endpoint(graphql: String) -> Result<u32> {
