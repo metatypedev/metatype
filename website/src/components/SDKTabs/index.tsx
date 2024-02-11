@@ -2,20 +2,21 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import React from "react";
-import Tabs from "@theme/Tabs";
+import { useSDK } from "../../states/sdk";
+import { ChoicePicker } from "../ChoicePicker";
 
 export default function SDKTabs({ children }) {
+  const [sdk, setSDK] = useSDK();
   return (
-    <Tabs
-      groupID="sdk"
-      queryString="sdk"
-      defaultValue="typescript"
-      values={[
-        { label: "Typescript SDK", value: "typescript" },
-        { label: "Python SDK", value: "python" },
-      ]}
+    <ChoicePicker
+      choices={{
+        typescript: "Typescript SDK",
+        python: "Python SDK",
+      }}
+      choice={sdk}
+      onChange={setSDK}
     >
       {children}
-    </Tabs>
+    </ChoicePicker>
   );
 }

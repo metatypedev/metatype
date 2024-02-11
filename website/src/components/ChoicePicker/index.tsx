@@ -12,33 +12,44 @@ interface ChoicePickerP<T> {
 }
 
 export function ChoicePicker<T>({
-  name,
   choices,
   choice,
   onChange,
   className,
+  children,
 }: ChoicePickerP<T>) {
+  const tab = React.Children.toArray(children)
+    .map((child) => {
+      if (!React.isValidElement(child) || !choices[child.props?.value]) {
+        throw new Error("ChoicePicker only accepts children with a value prop");
+      }
+      return child;
+    })
+    .find((child) => child.props?.value === choice);
+
   return (
-    <ul className={`pl-0 m-0 list-none w-full ${className ?? ""}`}>
-      {Object.entries(choices).map(([k, p]) => (
-        <li key={k} className="inline-block rounded-md overflow-clip mr-1">
-          <div>
-            <label className="cursor-pointer">
-              <input
-                type="radio"
-                name={name}
-                value={k}
-                checked={k === choice}
-                onChange={() => onChange(k)}
-                className="hidden peer"
-              />
-              <div className="px-3 py-1 bg-slate-100 peer-checked:bg-metared peer-checked:text-white">
-                {p}
-              </div>
-            </label>
-          </div>
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className={`pl-0 m-0 list-none ${className ?? ""}`}>
+        {Object.entries(choices).map(([value, key]) => (
+          <li key={value} className="inline-block rounded-md overflow-clip m-2">
+            <div>
+              <label className="cursor-pointer">
+                <input
+                  type="radio"
+                  value={value}
+                  checked={value === choice}
+                  onChange={() => onChange(value)}
+                  className="hidden peer"
+                />
+                <div className="px-3 py-1 bg-slate-100 peer-checked:bg-metared peer-checked:text-white">
+                  {key}
+                </div>
+              </label>
+            </div>
+          </li>
+        ))}
+      </ul>
+      {tab}
+    </>
   );
 }
