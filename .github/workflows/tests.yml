@@ -123,6 +123,8 @@ jobs:
         include:
           - os: macos-latest
             activate: "source .venv/bin/activate"
+          - os: macos-14
+            activate: "source .venv/bin/activate"
           #- os: windows-latest
           #  activate: '.venv\Scripts\activate.bat'
     steps:
@@ -179,6 +181,8 @@ jobs:
         include:
           - platform: linux/amd64
             runner: ubuntu-latest
+          # FIXME: try macos-14 runner once all actions support it
+          # docker buildx action broken as of 2024-02-09
           - platform: linux/arm64
             runner: custom-macos
     steps:

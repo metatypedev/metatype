@@ -3,7 +3,7 @@ import { S3Runtime } from "@typegraph/sdk/providers/aws.js";
 
 typegraph({
   name: "retrend",
-  // skip-next-line
+  // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
   const pub = Policy.public();

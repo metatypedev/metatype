@@ -134,7 +134,7 @@ COPY dev/LICENSE-Elastic-2.0.md LICENSE.md
 # writeable
 COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
 COPY --from=builder --chown=nonroot:nonroot /app/typegate/deno.lock ./typegate/
-COPY --from=builder --chown=nonroot:nonroot /app/typegate/tmp ./
+COPY --from=builder --chown=nonroot:nonroot /app/typegate/tmp ./tmp
 
 #
 # run the checks in a separate target to avoid bloating

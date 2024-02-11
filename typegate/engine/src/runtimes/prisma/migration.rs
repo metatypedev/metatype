@@ -63,6 +63,7 @@ pub async fn loss(
     }
 }
 
+#[derive(Debug)]
 pub struct MigrationContextBuilder {
     pub datasource: String,
     pub datamodel: String,
@@ -88,6 +89,7 @@ impl MigrationContextBuilder {
         let api = schema_core::schema_api(Some(self.datasource.clone()), None).format_error()?;
         let migrations_dir = MigrationsFolder::from(&self.tmp_dir_path, self.migrations.as_ref())
             .context("Failed to create migrations folder")?;
+        debug!("building migration ctx: {self:#?} {migrations_dir:#?}");
         Ok(MigrationContext {
             builder: self,
             migrations_dir,
@@ -225,7 +227,6 @@ pub async fn diff(
     datamodel: String,
     script: bool,
 ) -> Result<Option<(String, Vec<ParsedDiff>)>> {
-    trace!("diff");
     let schema = format!("{datasource}{datamodel}");
     let buffer = Arc::new(Mutex::new(Some(String::default())));
     let api = schema_core::schema_api(
@@ -236,6 +237,7 @@ pub async fn diff(
     )?;
 
     let dir = tempdir_in(tmp_dir_path)?;
+    debug!("diff dir: {dir:?} tmp_dir: {tmp_dir_path:?} script: {script}");
     let mut source_file = NamedTempFile::new_in(&dir)?;
     writeln!(source_file, "{datasource}").unwrap();
 
@@ -423,6 +425,7 @@ impl MigrationContext {
     }
 }
 
+#[derive(Debug)]
 struct MigrationsFolder {
     dir: TempDir,
 }

@@ -75,7 +75,7 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             suffix: ""
-          - os: macos-latest
+          - os: macos-14
             target: aarch64-apple-darwin
             suffix: ""
           - os: ubuntu-latest
@@ -102,32 +102,41 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}-${{ matrix.target }}
-      - shell: bash
+      - run: |
+          # sometimes, dtolnay/rust-toolchain does not select the correct default target
+          rustup target add ${{ matrix.target }}
+      # we use cross for building on this platform
+      - if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
+        shell: bash
         env:
           # arguments for our custom cross.Dockerfile
           CROSS_BUILD_OPTS: "--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
-          # deno won't cross compile unless this var is set
-          # due to issues with snapshots (not in use currently)
-          # once we have arm64 linux builders, we won't need to cross compile anymore
-          DENO_SKIP_CROSS_BUILD_CHECK: 1
         run: |
-          # sometimes, dtolnay/rust-toolchain does not select the correct default target
-          rustup target add ${{ matrix.target }}
 
           cargo install cross
 
-          cross build --release --locked --package meta-cli --target ${{ matrix.target }} --features typegate -v
+          # NOTE: we only build the thin cli
+          cross build --release --locked --package meta-cli --target ${{ matrix.target }}
           # we cd next to the file so that the its parent dirs
           # aren't present in the tar
+          cd target/${{ matrix.target }}/release/
+          tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
+          cd ../../../
+      - if: ${{ matrix.target != 'aarch64-unknown-linux-gnu' }}
+        shell: bash
+        run: |
+          cargo build --release --locked --package meta-cli --target ${{ matrix.target }} --features typegate -v
           cd target/${{ matrix.target }}/release/
           tar czvf ../../../meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
           cd ../../../
 
-          cross build --release --locked --package meta-cli --target ${{ matrix.target }}
+          cargo build --release --locked --package meta-cli --target ${{ matrix.target }}
           cd target/${{ matrix.target }}/release/
           tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
           cd ../../../
-      - uses: svenstaro/upload-release-action@v2
+      # full meta-cli is not avail for arm64 linux (waiting on arm64 linux machines for Gh CI)
+      - if: ${{ matrix.target != 'aarch64-unknown-linux-gnu' }}
+        uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
           file: "meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"

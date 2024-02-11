@@ -1,6 +1,6 @@
 services:
   typegate:
-    image: ghcr.io/metatypedev/typegate:v0.3.3
+    image: ghcr.io/metatypedev/typegate:v0.3.4
     restart: always
     ports:
       - "7890:7890"
