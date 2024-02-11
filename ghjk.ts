@@ -97,6 +97,10 @@ if (!Deno.env.has("CI") && !Deno.env.has("OCI")) {
   );
 }
 
+export const secureConfig = ghjk.secureConfig({
+  allowedPortDeps: [...ghjk.stdDeps({ enableRuntimes: true })],
+});
+
 ghjk.task("clean-deno-lock", {
   installs: [
     // jq
