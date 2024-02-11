@@ -34,7 +34,7 @@
     }
   },
   "[typescript]": {
-    "editor.defaultFormatter": "denoland.vscode-deno"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "languageToolLinter.languageTool.ignoredWordsInWorkspace": [
     "cockroachdb",
