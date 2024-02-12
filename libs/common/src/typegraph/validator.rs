@@ -8,14 +8,15 @@ use anyhow::{anyhow, bail, Result};
 use serde_json::Value;
 
 use super::{
-    visitor::{Path, PathSegment, TypeVisitor, VisitResult},
+    visitor::{CurrentNode, Path, PathSegment, TypeVisitor, TypeVisitorContext, VisitResult},
     EitherTypeData, FloatTypeData, Injection, IntegerTypeData, ListTypeData, ObjectTypeData,
     StringTypeData, UnionTypeData,
 };
 
 pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
+    let context = ValidatorContext { typegraph: tg };
     let validator = Validator::default();
-    tg.traverse_types(validator).unwrap()
+    tg.traverse_types(validator, &context).unwrap()
 }
 
 #[derive(Debug)]
@@ -24,7 +25,12 @@ pub struct ValidatorError {
     pub message: String,
 }
 
-#[derive(Default)]
+#[derive(Debug)]
+pub struct ValidatorContext<'a> {
+    typegraph: &'a Typegraph,
+}
+
+#[derive(Debug, Default)]
 struct Validator {
     errors: Vec<ValidatorError>,
 }
@@ -61,34 +67,39 @@ impl Typegraph {
     }
 }
 
-impl TypeVisitor for Validator {
+impl<'a> TypeVisitorContext for ValidatorContext<'a> {
+    fn get_typegraph(&self) -> &Typegraph {
+        self.typegraph
+    }
+}
+
+impl<'a> TypeVisitor<'a> for Validator {
     type Return = Vec<ValidatorError>;
+    type Context = ValidatorContext<'a>;
 
     fn visit(
         &mut self,
-        type_idx: u32,
-        path: &[PathSegment],
-        tg: &Typegraph,
-        as_input: bool,
+        current_node: CurrentNode<'_>,
+        context: &Self::Context,
     ) -> VisitResult<Self::Return> {
-        let node = &tg.types[type_idx as usize];
-
-        if as_input {
+        let typegraph = context.get_typegraph();
+        let type_node = current_node.type_node;
+        if current_node.as_input {
             // do not allow t.func in input types
-            if let TypeNode::Function { .. } = node {
-                self.push_error(path, "function is not allowed in input types");
+            if let TypeNode::Function { .. } = type_node {
+                self.push_error(current_node.path, "function is not allowed in input types");
                 return VisitResult::Continue(false);
             }
         } else {
-            match node {
+            match type_node {
                 TypeNode::Union { .. } | TypeNode::Either { .. } => {
                     let mut variants = vec![];
-                    tg.collect_nested_variants_into(&mut variants, &[type_idx]);
+                    typegraph.collect_nested_variants_into(&mut variants, &[current_node.type_idx]);
                     let mut object_count = 0;
 
                     for variant_type in variants
                         .iter()
-                        .map(|idx| tg.types.get(*idx as usize).unwrap())
+                        .map(|idx| typegraph.types.get(*idx as usize).unwrap())
                     {
                         match variant_type {
                             TypeNode::Object { .. } => object_count += 1,
@@ -99,10 +110,10 @@ impl TypeVisitor for Validator {
                                 // scalar
                             }
                             TypeNode::List { data, .. } => {
-                                let item_type = tg.types.get(data.items as usize).unwrap();
+                                let item_type = typegraph.types.get(data.items as usize).unwrap();
                                 if !item_type.is_scalar() {
                                     self.push_error(
-                                        path,
+                                        current_node.path,
                                         format!(
                                             "array of '{}' not allowed as union/either variant",
                                             item_type.type_name()
@@ -113,7 +124,7 @@ impl TypeVisitor for Validator {
                             }
                             _ => {
                                 self.push_error(
-                                    path,
+                                    current_node.path,
                                     format!(
                                         "type '{}' not allowed as union/either variant",
                                         variant_type.type_name()
@@ -126,7 +137,7 @@ impl TypeVisitor for Validator {
 
                     if object_count != 0 && object_count != variants.len() {
                         self.push_error(
-                            path,
+                            current_node.path,
                             "union variants must either be all scalars or all objects",
                         );
                         return VisitResult::Continue(false);
@@ -140,21 +151,24 @@ impl TypeVisitor for Validator {
             }
         }
 
-        if let Some(enumeration) = &node.base().enumeration {
-            if matches!(node, TypeNode::Optional { .. }) {
+        if let Some(enumeration) = &type_node.base().enumeration {
+            if matches!(type_node, TypeNode::Optional { .. }) {
                 self.push_error(
-                    path,
+                    current_node.path,
                     "optional not cannot have enumerated values".to_owned(),
                 );
             } else {
                 for value in enumeration.iter() {
                     match serde_json::from_str::<Value>(value) {
-                        Ok(val) => match tg.validate_value(type_idx, &val) {
+                        Ok(val) => match context
+                            .get_typegraph()
+                            .validate_value(current_node.type_idx, &val)
+                        {
                             Ok(_) => {}
-                            Err(err) => self.push_error(path, err.to_string()),
+                            Err(err) => self.push_error(current_node.path, err.to_string()),
                         },
                         Err(e) => self.push_error(
-                            path,
+                            current_node.path,
                             format!("Error while deserializing enum value {value:?}: {e:?}"),
                         ),
                     }
@@ -162,22 +176,24 @@ impl TypeVisitor for Validator {
             }
         }
 
-        if let Some(injection) = &node.base().injection {
+        if let Some(injection) = &type_node.base().injection {
             match injection {
                 Injection::Static(data) => {
                     for value in data.values().iter() {
                         match serde_json::from_str::<Value>(value) {
-                            Ok(val) => match tg.validate_value(type_idx, &val) {
-                                Ok(_) => {}
-                                Err(err) => self.push_error(path, err.to_string()),
-                            },
+                            Ok(val) => {
+                                match typegraph.validate_value(current_node.type_idx, &val) {
+                                    Ok(_) => {}
+                                    Err(err) => self.push_error(current_node.path, err.to_string()),
+                                }
+                            }
                             Err(e) => {
                                 self.push_error(
-                                    path,
+                                    current_node.path,
                                     format!(
-                                    "Error while parsing static injection value {value:?}: {e:?}",
-                                    value = value
-                                ),
+                                        "Error while parsing static injection value {value:?}: {e:?}",
+                                        value = value
+                                    ),
                                 );
                             }
                         }

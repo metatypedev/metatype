@@ -8,7 +8,11 @@ use super::{TypeNode, Typegraph};
 
 impl Typegraph {
     /// Depth-first traversal over all the types
-    pub fn traverse_types<V: TypeVisitor + Sized>(&self, visitor: V) -> Option<V::Return> {
+    pub fn traverse_types<'a, V: TypeVisitor<'a> + Sized>(
+        &'a self,
+        visitor: V,
+        context: &'a V::Context,
+    ) -> Option<V::Return> {
         let mut traversal = TypegraphTraversal {
             tg: self,
             path: vec![],
@@ -18,7 +22,7 @@ impl Typegraph {
             visitor,
         };
         traversal
-            .visit_type(0)
+            .visit_type(0, context)
             .or_else(|| traversal.visitor.get_result())
         // if let Some(ret) = traversal.visit_type(0) {
         //     ret
@@ -28,7 +32,7 @@ impl Typegraph {
     }
 }
 
-struct TypegraphTraversal<'a, V: TypeVisitor + Sized> {
+struct TypegraphTraversal<'a, V: TypeVisitor<'a> + Sized> {
     tg: &'a Typegraph,
     path: Vec<PathSegment<'a>>,
     as_input: bool,
@@ -37,8 +41,8 @@ struct TypegraphTraversal<'a, V: TypeVisitor + Sized> {
     visitor: V,
 }
 
-impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
-    fn visit_type(&mut self, type_idx: u32) -> Option<V::Return> {
+impl<'a, V: TypeVisitor<'a> + Sized> TypegraphTraversal<'a, V> {
+    fn visit_type(&mut self, type_idx: u32, context: &'a V::Context) -> Option<V::Return> {
         if self.as_input {
             if self.visited_input_types.contains(&type_idx) {
                 return None;
@@ -51,20 +55,30 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
             self.visited_types.insert(type_idx);
         }
 
-        let res = self
-            .visitor
-            .visit(type_idx, &self.path, self.tg, self.as_input);
+        let type_node = &context.get_typegraph().types[type_idx as usize];
+        let node = CurrentNode {
+            type_idx,
+            type_node,
+            path: &self.path,
+            as_input: self.as_input,
+        };
+
+        let res = self.visitor.visit(node, context);
         let type_node = &self.tg.types[type_idx as usize];
 
         match res {
             VisitResult::Continue(deeper) if deeper => match type_node {
-                TypeNode::Optional { data, .. } => self.visit_optional(type_idx, data.item),
-                TypeNode::Object { data, .. } => self.visit_object(type_idx, &data.properties),
-                TypeNode::List { data, .. } => self.visit_array(type_idx, data.items),
-                TypeNode::Union { data, .. } => self.visit_union(type_idx, &data.any_of),
-                TypeNode::Either { data, .. } => self.visit_either(type_idx, &data.one_of),
+                TypeNode::Optional { data, .. } => {
+                    self.visit_optional(type_idx, data.item, context)
+                }
+                TypeNode::Object { data, .. } => {
+                    self.visit_object(type_idx, &data.properties, context)
+                }
+                TypeNode::List { data, .. } => self.visit_array(type_idx, data.items, context),
+                TypeNode::Union { data, .. } => self.visit_union(type_idx, &data.any_of, context),
+                TypeNode::Either { data, .. } => self.visit_either(type_idx, &data.one_of, context),
                 TypeNode::Function { data, .. } => {
-                    self.visit_function(type_idx, data.input, data.output)
+                    self.visit_function(type_idx, data.input, data.output, context)
                 }
                 TypeNode::Boolean { .. }
                 | TypeNode::Float { .. }
@@ -81,7 +95,12 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
         }
     }
 
-    fn visit_optional(&mut self, type_idx: u32, item_type_idx: u32) -> Option<V::Return> {
+    fn visit_optional(
+        &mut self,
+        type_idx: u32,
+        item_type_idx: u32,
+        context: &'a V::Context,
+    ) -> Option<V::Return> {
         self.visit_child(
             PathSegment {
                 from: type_idx,
@@ -89,10 +108,16 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
             },
             item_type_idx,
             false,
+            context,
         )
     }
 
-    fn visit_array(&mut self, type_idx: u32, item_type_idx: u32) -> Option<V::Return> {
+    fn visit_array(
+        &mut self,
+        type_idx: u32,
+        item_type_idx: u32,
+        context: &'a V::Context,
+    ) -> Option<V::Return> {
         self.visit_child(
             PathSegment {
                 from: type_idx,
@@ -100,6 +125,7 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
             },
             item_type_idx,
             false,
+            context,
         )
     }
 
@@ -107,6 +133,7 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
         &mut self,
         type_idx: u32,
         props: &'a IndexMap<String, u32>,
+        context: &'a V::Context,
     ) -> Option<V::Return> {
         for (prop_name, prop_type) in props.iter() {
             let res = self.visit_child(
@@ -116,6 +143,7 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
                 },
                 *prop_type,
                 false,
+                context,
             );
             if let Some(res) = res {
                 return Some(res);
@@ -124,7 +152,12 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
         None
     }
 
-    fn visit_union(&mut self, type_idx: u32, variants: &'a [u32]) -> Option<V::Return> {
+    fn visit_union(
+        &mut self,
+        type_idx: u32,
+        variants: &'a [u32],
+        context: &'a V::Context,
+    ) -> Option<V::Return> {
         for (i, variant_type) in variants.iter().enumerate() {
             let res = self.visit_child(
                 PathSegment {
@@ -133,6 +166,7 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
                 },
                 *variant_type,
                 false,
+                context,
             );
             if let Some(ret) = res {
                 return Some(ret);
@@ -141,7 +175,12 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
         None
     }
 
-    fn visit_either(&mut self, type_idx: u32, variants: &'a [u32]) -> Option<V::Return> {
+    fn visit_either(
+        &mut self,
+        type_idx: u32,
+        variants: &'a [u32],
+        context: &'a V::Context,
+    ) -> Option<V::Return> {
         variants.iter().enumerate().find_map(|(i, t)| {
             self.visit_child(
                 PathSegment {
@@ -150,11 +189,18 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
                 },
                 *t,
                 false,
+                context,
             )
         })
     }
 
-    fn visit_function(&mut self, type_idx: u32, input: u32, output: u32) -> Option<V::Return> {
+    fn visit_function(
+        &mut self,
+        type_idx: u32,
+        input: u32,
+        output: u32,
+        context: &'a V::Context,
+    ) -> Option<V::Return> {
         [
             (Edge::FunctionInput, input, true),
             (Edge::FunctionOutput, output, false),
@@ -168,6 +214,7 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
                 },
                 t,
                 as_input,
+                context,
             )
         })
     }
@@ -177,6 +224,7 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
         segment: PathSegment<'a>,
         type_idx: u32,
         as_input: bool,
+        context: &'a V::Context,
     ) -> Option<V::Return> {
         let root_input = as_input && !self.as_input;
         if root_input {
@@ -184,7 +232,7 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
         }
 
         self.path.push(segment);
-        let res = self.visit_type(type_idx);
+        let res = self.visit_type(type_idx, context);
         self.path.pop().unwrap();
 
         if root_input {
@@ -242,16 +290,26 @@ pub enum VisitResult<T> {
     Return(T),
 }
 
-pub trait TypeVisitor {
+pub struct CurrentNode<'a> {
+    pub type_idx: u32,
+    pub type_node: &'a TypeNode,
+    pub path: &'a [PathSegment<'a>],
+    pub as_input: bool,
+}
+
+pub trait TypeVisitorContext {
+    fn get_typegraph(&self) -> &Typegraph;
+}
+
+pub trait TypeVisitor<'a> {
     type Return: Sized;
+    type Context: TypeVisitorContext;
 
     /// return true to continue the traversal on the subgraph
     fn visit(
         &mut self,
-        type_idx: u32,
-        path: &[PathSegment],
-        tg: &Typegraph,
-        as_input: bool,
+        current_node: CurrentNode<'_>,
+        context: &Self::Context,
     ) -> VisitResult<Self::Return>;
 
     fn get_result(self) -> Option<Self::Return>
