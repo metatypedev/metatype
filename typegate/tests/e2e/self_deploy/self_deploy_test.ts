@@ -7,17 +7,17 @@ import { tg } from "./self_deploy.mjs"; // FIXME: deno coverage issues with tran
 import { testDir } from "test-utils/dir.ts";
 import { join } from "std/path/join.ts";
 import { assertEquals, assertExists } from "std/assert/mod.ts";
-
+// in sync with lock.yml
+const TARGET_VERSION = "0.3.4";
 const port = 7898;
 const auth = new BasicAuth("admin", "password");
 const gate = `http://localhost:${port}`;
-const cliVersion = "0.3.3";
 const cwdDir = join(testDir, "e2e", "self_deploy");
 
 Meta.test("deploy and undeploy typegraph without meta-cli", async (_) => {
   const { serialized, typegate: gateResponseAdd } = await tgDeploy(tg, {
+    cliVersion: TARGET_VERSION,
     baseUrl: gate,
-    cliVersion,
     auth,
     secrets: {},
     artifactsConfig: {
