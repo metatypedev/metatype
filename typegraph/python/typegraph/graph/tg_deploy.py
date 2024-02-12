@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 from urllib import request
 import json
 from base64 import b64encode
@@ -44,12 +44,12 @@ class TypegraphRemoveParams:
 @dataclass
 class DeployResult:
     serialized: str
-    typegate: any
+    typegate: Union[Dict[str, any], str]
 
 
 @dataclass
 class RemoveResult:
-    typegate: any
+    typegate: Union[Dict[str, any], str]
 
 
 def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResult:
