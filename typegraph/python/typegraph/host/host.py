@@ -47,6 +47,8 @@ class HostImpl(imports.HostHost):
 
     def write_file(self, path: str, data: bytes) -> Result[None, str]:
         try:
+            dirname = os.path.dirname(path)
+            os.makedirs(dirname, exist_ok=True)
             file = open(path, "wb")
             file.write(data)
             return Ok(None)

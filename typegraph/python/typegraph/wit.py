@@ -9,6 +9,11 @@ from typegraph.gen.exports.core import Core
 from typegraph.gen.exports.runtimes import Runtimes
 from typegraph.gen.exports.utils import Utils
 from typegraph.host.host import HostImpl
+from typegraph.gen.exports.core import (
+    ArtifactResolutionConfig,  # noqa
+    MigrationConfig,  # noqa
+    MigrationAction,  # noqa
+)
 
 store = Store()
 _typegraph_core = Root(store, RootImports(HostImpl()))
