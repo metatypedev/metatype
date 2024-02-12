@@ -83,7 +83,7 @@ const auth = new BasicAuth("admin", "password");
 
 tgDeploy(tg, {
   baseUrl,
-  cliVersion: "0.3.3",
+  cliVersion: "0.3.4",
   auth,
   secrets: {
     TG_DEPLOY_EXAMPLE_NODE_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
@@ -92,8 +92,8 @@ tgDeploy(tg, {
     ...artifactsConfig,
     // dir: "."
   },
-}).then((result) => {
-  const selection = result?.data?.addTypegraph;
+}).then(({ typegate }) => {
+  const selection = typegate?.data?.addTypegraph;
   if (selection) {
     const { migrations, messages } = selection;
     // migration status.. etc
@@ -105,7 +105,8 @@ tgDeploy(tg, {
       wit_utils.unpackTarb64(migrations,  fullPath);
       console.log(`Unpacked migrations at ${fullPath}`)
     });
+  } else {
+    throw new Error(JSON.stringify(typegate));
   }
-  throw new Error(result);
 })
   .catch(console.error);

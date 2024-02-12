@@ -28,11 +28,11 @@ export interface TypegraphRemoveParams {
 
 export interface DeployResult {
   serialized: string;
-  typegate: unknown;
+  typegate: Record<string, any> | string;
 }
 
 export interface RemoveResult {
-  typegate: unknown;
+  typegate: Record<string, any> | string;
 }
 
 export async function tgDeploy(
