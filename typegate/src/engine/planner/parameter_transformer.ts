@@ -2,7 +2,16 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { TypeGraph } from "../../typegraph/mod.ts";
+import { Type } from "../../typegraph/type_node.ts";
 import { ParameterTransformNode } from "../../typegraph/types.ts";
+import { generateBooleanValidator } from "../typecheck/inline_validators/boolean.ts";
+import { generateListValidator } from "../typecheck/inline_validators/list.ts";
+import { generateNumberValidator } from "../typecheck/inline_validators/number.ts";
+import {
+  generateObjectValidator,
+  getKeys,
+} from "../typecheck/inline_validators/object.ts";
+import { generateStringValidator } from "../typecheck/inline_validators/string.ts";
 
 export type TransformParamsInput = {
   args: Record<string, any>;
@@ -90,7 +99,7 @@ class TransformerCompilationContext {
   }
 
   #compileObject(
-    _typeIdx: number, // TODO validation
+    typeIdx: number,
     fields: Record<string, ParameterTransformNode>,
   ): string {
     const varName = this.#createVarName();
@@ -106,10 +115,21 @@ class TransformerCompilationContext {
       );
     }
 
+    const typeNode = this.#tg.type(typeIdx, Type.OBJECT);
+
+    this.#collector.push(
+      ...generateObjectValidator(
+        typeNode,
+        varName,
+        this.#path.join("."),
+        getKeys(typeNode, (idx) => this.#tg.type(idx)),
+      ),
+    );
+
     return varName;
   }
 
-  #compileArray(_typeIdx: number, items: ParameterTransformNode[]) {
+  #compileArray(typeIdx: number, items: ParameterTransformNode[]) {
     const varName = this.#createVarName();
     this.#collector.push(`const ${varName} = [];`);
 
@@ -121,29 +141,118 @@ class TransformerCompilationContext {
       this.#collector.push(`${varName}.push(${propVarName});`);
     }
 
+    const typeNode = this.#tg.type(typeIdx, Type.LIST);
+
+    this.#collector.push(
+      ...generateListValidator(typeNode, varName, this.#path.join(".")),
+    );
+
     return varName;
   }
 
   #compileArgInjection(_typeIdx: number, name: string) {
-    // TODO type validation ?
+    // No validation is needed since the value is already validated in the planner
     const varName = this.#createVarName();
     this.#collector.push(`const ${varName} = args[${JSON.stringify(name)}];`);
     return varName;
   }
 
-  #compileContextInjection(_typeIdx: number, key: string) {
+  #compileContextInjection(typeIdx: number, key: string) {
     // TODO type validation ?
     const varName = this.#createVarName();
+    let typeNode = this.#tg.type(typeIdx);
+    let optional = false;
+    if (typeNode.type === Type.OPTIONAL) {
+      typeNode = this.#tg.type(typeNode.item);
+      optional = true;
+    }
     this.#collector.push(`const ${varName} = context[${JSON.stringify(key)}];`);
+
+    const path = this.#path.join(".");
+
+    this.#collector.push(`if (${varName} != null) {`);
+
+    switch (typeNode.type) {
+      case Type.OPTIONAL:
+        throw new Error(`At "${path}": nested optional not supported`);
+      case Type.INTEGER: {
+        const parsedVar = this.#createVarName();
+        this.#collector.push(
+          `const ${parsedVar} = parseInt(${varName}, 10);`,
+          ...generateNumberValidator(typeNode, parsedVar, path),
+        );
+        break;
+      }
+      case Type.FLOAT: {
+        const parsedVar = this.#createVarName();
+        this.#collector.push(
+          `const ${parsedVar} = parseFloat(${varName});`,
+          ...generateNumberValidator(typeNode, parsedVar, path),
+        );
+        break;
+      }
+      case Type.STRING:
+        this.#collector.push(
+          ...generateStringValidator(typeNode, varName, path),
+        );
+        break;
+      case Type.BOOLEAN: {
+        const parsedVar = this.#createVarName();
+
+        this.#collector.push(
+          `const ${varName} = Boolean(${varName});`,
+          ...generateBooleanValidator(typeNode, parsedVar, path),
+        );
+        break;
+      }
+
+      default:
+        throw new Error(
+          `At "${path}": Unsupported type "${typeNode.type}" for context injection`,
+        );
+    }
+
+    this.#collector.push("}");
+    if (!optional) {
+      const keyStr = JSON.stringify(key);
+      this.#collector.push(
+        `else {`,
+        `  throw new Error(\`At "${path}": Context value is missing for "${keyStr}"\`);`,
+        `}`,
+      );
+    }
+
     return varName;
   }
 
-  // return () => this.tg.parseSecret(typ, secretName);
   #compileSecretsInjection(typeIdx: number, key: string) {
-    const secret = this.#tg.parseSecret(this.#tg.type(typeIdx), key);
+    const typeNode = this.#tg.type(typeIdx);
+    const secret = this.#tg.parseSecret(typeNode, key);
     // TODO type validation ? -- only additional constraints
     const varName = this.#createVarName();
     this.#collector.push(`const ${varName} = ${JSON.stringify(secret)};`);
+
+    switch (typeNode.type) {
+      case Type.STRING:
+        this.#collector.push(
+          ...generateStringValidator(typeNode, varName, this.#path.join(".")),
+        );
+        break;
+      case Type.INTEGER:
+      case Type.FLOAT:
+        this.#collector.push(
+          ...generateNumberValidator(typeNode, varName, this.#path.join(".")),
+        );
+        break;
+      default:
+        // TODO optional??
+        throw new Error(
+          `At "${
+            this.#path.join(".")
+          }": Unsupported type "${typeNode.type}" for secret injection`,
+        );
+    }
+
     return varName;
   }
 
