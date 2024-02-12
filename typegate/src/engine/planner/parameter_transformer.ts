@@ -101,7 +101,9 @@ class TransformerCompilationContext {
       path.push(key);
       const propVarName = this.#compileNode(node);
       path.pop();
-      this.#collector.push(`${varName}["${key}"] = ${propVarName};`);
+      this.#collector.push(
+        `${varName}[${JSON.stringify(key)}] = ${propVarName};`,
+      );
     }
 
     return varName;
@@ -125,14 +127,14 @@ class TransformerCompilationContext {
   #compileArgInjection(_typeIdx: number, name: string) {
     // TODO type validation ?
     const varName = this.#createVarName();
-    this.#collector.push(`const ${varName} = args["${name}"];`);
+    this.#collector.push(`const ${varName} = args[${JSON.stringify(name)}];`);
     return varName;
   }
 
   #compileContextInjection(_typeIdx: number, key: string) {
     // TODO type validation ?
     const varName = this.#createVarName();
-    this.#collector.push(`const ${varName} = context["${key}"];`);
+    this.#collector.push(`const ${varName} = context[${JSON.stringify(key)}];`);
     return varName;
   }
 
@@ -151,7 +153,7 @@ class TransformerCompilationContext {
     const [key] = Object.entries(this.#parentProps)
       .find(([_key, idx]) => idx === parentIdx)!;
     const varName = this.#createVarName();
-    this.#collector.push(`const ${varName} = parent["${key}"];`);
+    this.#collector.push(`const ${varName} = parent[${JSON.stringify(key)}];`);
     return varName;
   }
 
