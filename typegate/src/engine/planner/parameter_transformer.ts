@@ -158,7 +158,6 @@ class TransformerCompilationContext {
   }
 
   #compileContextInjection(typeIdx: number, key: string) {
-    // TODO type validation ?
     const varName = this.#createVarName();
     let typeNode = this.#tg.type(typeIdx);
     let optional = false;
@@ -232,24 +231,24 @@ class TransformerCompilationContext {
     const varName = this.#createVarName();
     this.#collector.push(`const ${varName} = ${JSON.stringify(secret)};`);
 
+    const path = this.#path.join(".");
+
     switch (typeNode.type) {
       case Type.STRING:
         this.#collector.push(
-          ...generateStringValidator(typeNode, varName, this.#path.join(".")),
+          ...generateStringValidator(typeNode, varName, path),
         );
         break;
       case Type.INTEGER:
       case Type.FLOAT:
         this.#collector.push(
-          ...generateNumberValidator(typeNode, varName, this.#path.join(".")),
+          ...generateNumberValidator(typeNode, varName, path),
         );
         break;
       default:
         // TODO optional??
         throw new Error(
-          `At "${
-            this.#path.join(".")
-          }": Unsupported type "${typeNode.type}" for secret injection`,
+          `At "${path}": Unsupported type "${typeNode.type}" for secret injection`,
         );
     }
 
@@ -257,7 +256,8 @@ class TransformerCompilationContext {
   }
 
   #compileParentInjection(_typeIdx: number, parentIdx: number) {
-    // TODO type validation ?
+    // TODO type validation ?: the source is validated in the arg computation step;
+    // type inclusion is checked AOT with the typegraph
     // TODO what if the value is lazy (a function?)
     const [key] = Object.entries(this.#parentProps)
       .find(([_key, idx]) => idx === parentIdx)!;
