@@ -18,11 +18,11 @@ function stripIncomparable(json: string) {
   return [
     // FIXME: python and deno does not produce the same tarball
     (source: string) => source.replace(/"file:scripts(.)+?"/g, '""'),
-    (_: string) => {
-      const tg: TypeGraphDS = JSON.parse(json)?.[0];
+    (source: string) => {
+      const tg: TypeGraphDS = JSON.parse(source)?.[0];
       // Required since the typescript format/js convesion Postprocessors are now removed from the cli and sdk
       applyPostProcessors([tg]);
-      return JSON.stringify(tg);
+      return JSON.stringify(tg, null, 2);
     },
   ].reduce((prev, op) => op(prev), json);
 }
