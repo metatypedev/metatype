@@ -9,6 +9,8 @@ import { Meta } from "../../utils/mod.ts";
 import { MetaTest } from "../../utils/test.ts";
 import { assertEquals } from "std/assert/assert_equals.ts";
 import config from "../../../src/config.ts";
+import { applyPostProcessors } from "../../../src/postprocess.ts";
+import { TypeGraphDS } from "../../../src/typegraph/mod.ts";
 
 export const thisDir = dirname(fromFileUrl(import.meta.url));
 
@@ -16,6 +18,12 @@ function stripIncomparable(json: string) {
   return [
     // FIXME: python and deno does not produce the same tarball
     (source: string) => source.replace(/"file:scripts(.)+?"/g, '""'),
+    (_: string) => {
+      const tg: TypeGraphDS = JSON.parse(json)?.[0];
+      // Required since the typescript format/js convesion Postprocessors are now removed from the cli and sdk
+      applyPostProcessors([tg]);
+      return JSON.stringify(tg);
+    },
   ].reduce((prev, op) => op(prev), json);
 }
 
