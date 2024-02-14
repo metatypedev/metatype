@@ -29,7 +29,37 @@ interface TypegraphArgs {
   disableAutoSerialization?: boolean;
 }
 
-export interface TypegraphBuilderArgs {
+export class ApplyFromArg {
+  constructor(public name: string | null) { }
+}
+
+export class ApplyFromStatic {
+  constructor(public value: any) { }
+}
+
+export class ApplyFromSecret {
+  constructor(public key: string) { }
+}
+
+export class ApplyFromContext {
+  constructor(public key: string) { }
+}
+
+export class ApplyFromParent {
+  constructor(public typeName: string) { }
+}
+
+const InjectionSource = {
+  asArg: (name?: string) => new ApplyFromArg(name ?? null),
+  set: (value: any) => new ApplyFromStatic(value),
+  fromSecret: (key: string) => new ApplyFromSecret(key),
+  fromContext: (key: string) => new ApplyFromContext(key),
+  fromParent: (typeName: string) => new ApplyFromParent(typeName),
+} as const;
+
+type InjectionSourceType = typeof InjectionSource;
+
+export interface TypegraphBuilderArgs extends InjectionSourceType {
   expose: (exports: Exports, defaultPolicy?: Policy) => void;
   inherit: () => InheritDef;
   rest: (graphql: string) => number;
@@ -68,7 +98,7 @@ export class InheritDef {
 export type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
 
 export class RawAuth {
-  constructor(readonly jsonStr: string) {}
+  constructor(readonly jsonStr: string) { }
 }
 
 export interface TypegraphOutput {
@@ -164,6 +194,7 @@ export function typegraph(
     ref: (name: string) => {
       return genRef(name);
     },
+    ...InjectionSource,
   };
 
   builder(g);

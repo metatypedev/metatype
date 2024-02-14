@@ -14,6 +14,8 @@ import {
   TypeOptional,
   TypeString,
   TypeUnion,
+  TypeId,
+  ParameterTransform,
 } from "./gen/interfaces/metatype-typegraph-core.js";
 import { Reduce } from "./gen/interfaces/metatype-typegraph-utils.js";
 import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.js";
@@ -27,7 +29,7 @@ import {
   serializeStaticInjection,
 } from "./utils/injection_utils.js";
 import { InjectionValue } from "./utils/type_utils.js";
-import { InheritDef } from "./typegraph.js";
+import { ApplyFromArg, ApplyFromContext, ApplyFromParent, ApplyFromSecret, ApplyFromStatic, InheritDef } from "./typegraph.js";
 
 export type PolicySpec = Policy | PolicyPerEffectObject | {
   none: Policy;
@@ -510,21 +512,57 @@ export function struct<P extends { [key: string]: Typedef }>(
   );
 }
 
+// `Record<string, ApplyParamNode>` does work...
+type ApplyParamObjectNode = {
+  [key: string]: ApplyParamNode;
+};
+type ApplyParamArrayNode = Array<ApplyParamNode>;
+type ApplyParamLeafNode = ApplyFromArg | ApplyFromStatic | ApplyFromContext | ApplyFromSecret | ApplyFromParent;
+type ApplyParamNode = ApplyParamObjectNode | ApplyParamArrayNode | ApplyParamLeafNode;
+
+function serializeApplyParamNode(node: ApplyParamNode): Record<string, unknown> {
+  if (node instanceof ApplyFromArg) {
+    return { source: "arg", name: node.name };
+  } else if (node instanceof ApplyFromStatic) {
+    return { source: "static", value: JSON.stringify(node.value) };
+  } else if (node instanceof ApplyFromContext) {
+    return { source: "context", key: node.key };
+  } else if (node instanceof ApplyFromSecret) {
+    return { source: "secret", key: node.key };
+  } else if (node instanceof ApplyFromParent) {
+    return { source: "parent", typeName: node.typeName };
+  } else if (Array.isArray(node)) {
+    return {
+      type: "array",
+      items: node.map(serializeApplyParamNode),
+    };
+  } else if (typeof node === "object" && node !== null) {
+    return {
+      type: "object",
+      fields: mapValues(node, serializeApplyParamNode),
+    };
+  }
+  throw new Error(`Unexpected node type: ${node}`);
+}
+
 export class Func<
-  P extends { [key: string]: Typedef } = Record<string, Typedef>,
-  I extends Struct<P> = Struct<P>,
+  I extends Typedef = Typedef,
   O extends Typedef = Typedef,
   M extends Materializer = Materializer,
 > extends Typedef {
   inp: I;
   out: O;
   mat: M;
+  parameterTransform: ParameterTransform | null;
+  config: FuncConfig | null;
 
-  constructor(_id: number, inp: I, out: O, mat: M) {
+  constructor(_id: number, inp: I, out: O, mat: M, parameterTransform: ParameterTransform | null = null, config: FuncConfig | null = null) {
     super(_id, {});
     this.inp = inp;
     this.out = out;
     this.mat = mat;
+    this.parameterTransform = parameterTransform;
+    this.config = config;
   }
 
   reduce(value: Record<string, unknown | InheritDef>) {
@@ -538,19 +576,37 @@ export class Func<
     );
 
     return func(
-      new Typedef(reducedId, {}) as Struct<P>,
+      new Typedef(reducedId, {}),
       this.out,
       this.mat,
     );
   }
 
+  apply(value: ApplyParamObjectNode): Func<Typedef, O, M> {
+    const serialized = serializeApplyParamNode(value);
+    if (typeof serialized !== "object" || serialized == null || serialized.type !== "object") {
+      throw new Error("Invalid apply value: root must be an object");
+    }
+    const transformTree = JSON.stringify(serialized.fields);
+    const transformData = core.getTransformData(this.inp._id, transformTree);
+
+    return func(
+      new Typedef(transformData.queryInput, {}),
+      this.out,
+      this.mat,
+      transformData.parameterTransform,
+      this.config,
+    )
+  }
+
   rate(
     inp: { calls: boolean; weight?: number },
-  ): Func<P, I, O, M> {
+  ): Func<I, O, M> {
     return func(
       this.inp,
       this.out,
       this.mat,
+      this.parameterTransform,
       { rateCalls: inp.calls ?? false, rateWeight: inp.weight },
     );
   }
@@ -570,26 +626,31 @@ type FuncConfig = {
 };
 
 export function func<
-  P extends { [key: string]: Typedef },
-  I extends Struct<P> = Struct<P>,
+  I extends Typedef = Typedef,
   O extends Typedef = Typedef,
   M extends Materializer = Materializer,
 >(
   inp: I,
   out: O,
   mat: M,
-  { rateCalls = false, rateWeight = undefined }: FuncConfig = {},
+  transformData: ParameterTransform | null = null,
+  config: FuncConfig | null = null,
 ) {
-  return new Func<P, I, O, M>(
+  const rateCalls = config?.rateCalls ?? false;
+  const rateWeight = config?.rateWeight ?? undefined;
+  return new Func<I, O, M>(
     core.funcb({
       inp: inp._id,
       out: out._id,
       mat: mat._id,
+      parameterTransform: transformData ?? undefined,
       rateCalls,
       rateWeight,
     }) as number,
     inp,
     out,
     mat,
+    transformData,
+    config,
   );
 }
