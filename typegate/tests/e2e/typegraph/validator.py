@@ -29,7 +29,34 @@ def validator(g: Graph):
         }
     )
 
+    parents = t.struct(
+        {
+            "a": t.integer().rename("A"),
+            "b": t.string(max=20).rename("B"),
+            "c": t.struct({"a": t.integer(), "b": t.integer().optional()}).rename("C"),
+            "d": t.list(t.integer()).rename("D"),
+        }
+    )
+
     g.expose(
         test=deno.identity(injection),
         testEnums=deno.identity(enums),
+        testFromParent=deno.identity(parents).extend(
+            {
+                "nested": deno.func(
+                    t.struct(
+                        {
+                            "a": t.string().from_parent("A"),
+                            "b": t.string(min=12, max=16).from_parent("B"),
+                            "c": t.struct(
+                                {"a": t.integer(), "c": t.boolean().optional()}
+                            ).from_parent("C"),
+                            "d": t.list(t.integer()).from_parent("D"),
+                        }
+                    ),
+                    t.struct(),
+                    code="...",
+                ),
+            }
+        ),
     )

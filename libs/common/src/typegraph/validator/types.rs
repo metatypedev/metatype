@@ -17,7 +17,7 @@ impl<'a> ExtendedTypeNode<'a> {
 
 #[derive(Debug, Default)]
 pub struct ErrorCollector {
-    errors: Vec<String>,
+    pub errors: Vec<String>,
 }
 
 impl ErrorCollector {

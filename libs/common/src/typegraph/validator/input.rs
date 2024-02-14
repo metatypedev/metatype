@@ -114,5 +114,11 @@ impl Validator {
         let target = ExtendedTypeNode::new(typegraph, current_node.type_idx);
         let mut errors = ErrorCollector::default();
         source.ensure_subtype_of(&target, typegraph, &mut errors);
+        for error in errors.errors.into_iter() {
+            self.push_error(
+                current_node.path,
+                format!("from_parent injection: {error}", error = error),
+            );
+        }
     }
 }
