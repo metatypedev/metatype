@@ -4,74 +4,72 @@
 use serde_json::Value;
 
 use crate::typegraph::{
-    visitor::{CurrentNode, Path, PathSegment, TypeVisitor, TypeVisitorContext, VisitResult},
-    Injection, TypeNode, Typegraph,
+    visitor::{CurrentNode, TypeVisitor, VisitResult},
+    Injection, TypeNode,
 };
 
-use super::types::{EnsureSubtypeOf, ErrorCollector, ExtendedTypeNode};
+use super::{
+    types::{EnsureSubtypeOf, ErrorCollector, ExtendedTypeNode},
+    TypeVisitorContext, Validator, ValidatorContext,
+};
 
-#[derive(Debug)]
-pub struct InputValidationError {
-    path: String, // param_path   != fn_path
-    message: String,
-}
-
-pub struct InputValidationContext<'a> {
-    typegraph: &'a Typegraph,
-    fn_path: String,
-    fn_idx: u32,
-    parent_struct_idx: u32,
-}
-
-impl TypeVisitorContext for InputValidationContext<'_> {
-    fn get_typegraph(&self) -> &Typegraph {
-        self.typegraph
-    }
-}
-
-pub struct InputValidator {
-    errors: Vec<InputValidationError>,
-}
-
-impl InputValidator {
-    fn push_error(&mut self, path: &[PathSegment], message: impl Into<String>) {
-        self.errors.push(InputValidationError {
-            path: Path(path).to_string(),
-            message: message.into(),
-        });
-    }
-}
-
-impl<'a> TypeVisitor<'a> for InputValidator {
-    type Return = Vec<InputValidationError>;
-    type Context = InputValidationContext<'a>;
-
-    fn visit(
+impl Validator {
+    pub fn visit_input_type_impl(
         &mut self,
         current_node: CurrentNode<'_>,
-        context: &Self::Context,
-    ) -> VisitResult<Self::Return> {
+        context: &<Validator as TypeVisitor>::Context,
+    ) -> VisitResult<<Validator as TypeVisitor>::Return> {
+        let typegraph = context.get_typegraph();
         let type_node = current_node.type_node;
 
-        if let TypeNode::Function { .. } = type_node {
-            // TODO suggest to use composition-- when available
-            self.push_error(current_node.path, "Function is not allowed in input types.");
-            return VisitResult::Continue(false);
+        match type_node {
+            TypeNode::Function { .. } => {
+                // TODO suggest to use composition-- when available
+                self.push_error(current_node.path, "Function is not allowed in input types.");
+                return VisitResult::Continue(false);
+            }
+            TypeNode::Union { .. } | TypeNode::Either { .. } => {
+                let mut variants = vec![];
+                typegraph.collect_nested_variants_into(&mut variants, &[current_node.type_idx]);
+                match typegraph.check_union_variants(&variants) {
+                    Ok(_) => {}
+                    Err(err) => {
+                        self.push_error(current_node.path, err);
+                        return VisitResult::Continue(false);
+                    }
+                }
+            }
+            _ => (),
         }
+
         if let Some(injection) = &type_node.base().injection {
             self.validate_injection(injection, current_node, context);
         }
 
-        return VisitResult::Continue(true);
+        if let Some(enumeration) = &type_node.base().enumeration {
+            match context
+                .get_typegraph()
+                .check_enum_values(current_node.type_idx, enumeration)
+            {
+                Ok(_) => {}
+                Err(err) => {
+                    for e in err {
+                        self.push_error(current_node.path, e);
+                    }
+                }
+            }
+        }
+
+        VisitResult::Continue(true)
     }
 }
 
-impl InputValidator {
+impl Validator {
     fn validate_injection(
         &mut self,
         injection: &Injection,
         current_node: CurrentNode<'_>,
-        context: &InputValidationContext<'_>,
+        context: &ValidatorContext<'_>,
     ) {
         let typegraph = context.get_typegraph();
 
@@ -95,8 +93,11 @@ impl InputValidator {
                     }
                 }
             }
-            Injection::Parent(_data) => {
-                // TODO match type to parent type
+            Injection::Parent(data) => {
+                let sources = data.values();
+                for source_idx in sources.iter().copied() {
+                    self.validate_parent_injection(*source_idx, &current_node, context);
+                }
             }
             _ => (),
         }
@@ -105,13 +106,13 @@ impl InputValidator {
     fn validate_parent_injection(
         &mut self,
         source_idx: u32,
-        current_node: CurrentNode<'_>,
-        context: &InputValidationContext<'_>,
+        current_node: &CurrentNode<'_>,
+        context: &ValidatorContext<'_>,
     ) {
         let typegraph = context.get_typegraph();
         let source = ExtendedTypeNode::new(typegraph, source_idx);
         let target = ExtendedTypeNode::new(typegraph, current_node.type_idx);
         let mut errors = ErrorCollector::default();
-        source.ensure_subtype_of(&target, &typegraph, &mut errors);
+        source.ensure_subtype_of(&target, typegraph, &mut errors);
     }
 }

@@ -5,7 +5,7 @@ use crate::typegraph::{
     EitherTypeData, FileTypeData, FloatTypeData, IntegerTypeData, ListTypeData, ObjectTypeData,
     StringTypeData, TypeNode, Typegraph, UnionTypeData,
 };
-use std::{any::Any, collections::HashSet, fmt::Display};
+use std::{collections::HashSet, fmt::Display};
 
 pub struct ExtendedTypeNode<'a>(u32, &'a TypeNode);
 
@@ -21,12 +21,6 @@ pub struct ErrorCollector {
 }
 
 impl ErrorCollector {
-    fn single_error(message: impl Into<String>) -> Self {
-        ErrorCollector {
-            errors: vec![message.into()],
-        }
-    }
-
     fn push(&mut self, message: impl Into<String>) {
         self.errors.push(message.into());
     }
@@ -50,10 +44,8 @@ fn ensure_subtype_of_for_min<T>(
                 errors.push(format!("{key} is less than the {key} of the supertype"));
             }
         }
-    } else {
-        if sup_min.is_some() {
-            errors.push(format!("{key} is not defined in the subtype"));
-        }
+    } else if sup_min.is_some() {
+        errors.push(format!("{key} is not defined in the subtype"));
     }
 }
 
@@ -71,10 +63,8 @@ fn ensure_subtype_of_for_max<T>(
                 errors.push(format!("{key} is greater than the {key} of the supertype"));
             }
         }
-    } else {
-        if sup_max.is_some() {
-            errors.push(format!("{key} is not defined in the subtype"));
-        }
+    } else if sup_max.is_some() {
+        errors.push(format!("{key} is not defined in the subtype"));
     }
 }
 
@@ -94,20 +84,13 @@ fn ensure_subtype_of_for_multiple_of<T>(
                 ));
             }
         }
-    } else {
-        if sup_multiple_of.is_some() {
-            errors.push(format!("{key} is not defined in the subtype"));
-        }
+    } else if sup_multiple_of.is_some() {
+        errors.push(format!("{key} is not defined in the subtype"));
     }
 }
 
 impl EnsureSubtypeOf for IntegerTypeData {
-    fn ensure_subtype_of(
-        &self,
-        sup: &IntegerTypeData,
-        tg: &Typegraph,
-        errors: &mut ErrorCollector,
-    ) {
+    fn ensure_subtype_of(&self, sup: &Self, _tg: &Typegraph, errors: &mut ErrorCollector) {
         ensure_subtype_of_for_min(self.minimum, sup.minimum, "minimum", errors);
         ensure_subtype_of_for_max(self.maximum, sup.maximum, "maximum", errors);
         ensure_subtype_of_for_min(
@@ -127,7 +110,7 @@ impl EnsureSubtypeOf for IntegerTypeData {
 }
 
 impl EnsureSubtypeOf for FloatTypeData {
-    fn ensure_subtype_of(&self, sup: &FloatTypeData, tg: &Typegraph, errors: &mut ErrorCollector) {
+    fn ensure_subtype_of(&self, sup: &Self, _tg: &Typegraph, errors: &mut ErrorCollector) {
         ensure_subtype_of_for_min(self.minimum, sup.minimum, "minimum", errors);
         ensure_subtype_of_for_max(self.maximum, sup.maximum, "maximum", errors);
         ensure_subtype_of_for_min(
@@ -147,7 +130,7 @@ impl EnsureSubtypeOf for FloatTypeData {
 }
 
 impl EnsureSubtypeOf for StringTypeData {
-    fn ensure_subtype_of(&self, sup: &StringTypeData, tg: &Typegraph, errors: &mut ErrorCollector) {
+    fn ensure_subtype_of(&self, sup: &Self, _tg: &Typegraph, errors: &mut ErrorCollector) {
         ensure_subtype_of_for_min(self.min_length, sup.min_length, "minimum_length", errors);
         ensure_subtype_of_for_max(self.max_length, sup.max_length, "maximum_length", errors);
 
@@ -157,10 +140,8 @@ impl EnsureSubtypeOf for StringTypeData {
                     errors.push("pattern does not match the pattern of the supertype");
                 }
             }
-        } else {
-            if sup.pattern.is_some() {
-                errors.push("pattern is not defined in the subtype");
-            }
+        } else if sup.pattern.is_some() {
+            errors.push("pattern is not defined in the subtype");
         }
 
         if let Some(sub_format) = &self.format {
@@ -169,16 +150,14 @@ impl EnsureSubtypeOf for StringTypeData {
                     errors.push("format does not match the format of the supertype");
                 }
             }
-        } else {
-            if sup.format.is_some() {
-                errors.push("format is not defined in the subtype");
-            }
+        } else if sup.format.is_some() {
+            errors.push("format is not defined in the subtype");
         }
     }
 }
 
 impl EnsureSubtypeOf for FileTypeData {
-    fn ensure_subtype_of(&self, sup: &FileTypeData, tg: &Typegraph, errors: &mut ErrorCollector) {
+    fn ensure_subtype_of(&self, sup: &Self, _tg: &Typegraph, errors: &mut ErrorCollector) {
         ensure_subtype_of_for_min(self.min_size, sup.min_size, "minimum_size", errors);
         ensure_subtype_of_for_max(self.max_size, sup.max_size, "maximum_size", errors);
 
@@ -192,16 +171,14 @@ impl EnsureSubtypeOf for FileTypeData {
                     errors.push("mime_types is not a subset of the mime_types of the supertype");
                 }
             }
-        } else {
-            if sup.mime_types.is_some() {
-                errors.push("mime_types is not defined in the subtype");
-            }
+        } else if sup.mime_types.is_some() {
+            errors.push("mime_types is not defined in the subtype");
         }
     }
 }
 
 impl EnsureSubtypeOf for ObjectTypeData {
-    fn ensure_subtype_of(&self, sup: &ObjectTypeData, tg: &Typegraph, errors: &mut ErrorCollector) {
+    fn ensure_subtype_of(&self, sup: &Self, tg: &Typegraph, errors: &mut ErrorCollector) {
         let mut sup_props_left = sup.properties.keys().collect::<HashSet<_>>();
 
         for (key, sub_idx) in &self.properties {

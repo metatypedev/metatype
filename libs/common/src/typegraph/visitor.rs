@@ -8,62 +8,77 @@ use super::{TypeNode, Typegraph};
 
 impl Typegraph {
     /// Depth-first traversal over all the types
-    pub fn traverse_types<'a, V: TypeVisitor<'a> + Sized>(
-        &'a self,
-        visitor: V,
-        context: &'a V::Context,
-    ) -> Option<V::Return> {
+    pub fn traverse_types<'a, V>(&'a self, visitor: V, context: &'a V::Context) -> Option<V::Return>
+    where
+        V: TypeVisitor<'a> + Sized,
+    {
         let mut traversal = TypegraphTraversal {
             tg: self,
             path: vec![],
-            as_input: false,
             visited_types: HashSet::new(),
             visited_input_types: HashSet::new(),
             visitor,
+            input_parent_function: None,
         };
         traversal
             .visit_type(0, context)
-            .or_else(|| traversal.visitor.get_result())
-        // if let Some(ret) = traversal.visit_type(0) {
-        //     ret
-        // } else {
-        //     traversal.visitor.get_result()
-        // }
+            .or_else(|| traversal.visitor.take_result())
     }
 }
 
-struct TypegraphTraversal<'a, V: TypeVisitor<'a> + Sized> {
+pub struct FunctionMetadata {
+    pub idx: u32,
+    // TODO Vec<>
+    pub path: String,
+    pub parent_struct_idx: u32,
+}
+
+struct TypegraphTraversal<'a, V>
+where
+    V: TypeVisitor<'a> + Sized,
+{
     tg: &'a Typegraph,
     path: Vec<PathSegment<'a>>,
-    as_input: bool,
+    input_parent_function: Option<FunctionMetadata>,
     visited_types: HashSet<u32>, // non input types
     visited_input_types: HashSet<u32>,
     visitor: V,
 }
 
-impl<'a, V: TypeVisitor<'a> + Sized> TypegraphTraversal<'a, V> {
+impl<'a, V> TypegraphTraversal<'a, V>
+where
+    V: TypeVisitor<'a> + Sized,
+{
     fn visit_type(&mut self, type_idx: u32, context: &'a V::Context) -> Option<V::Return> {
-        if self.as_input {
+        let res = if self.input_parent_function.as_ref().is_some() {
             if self.visited_input_types.contains(&type_idx) {
                 return None;
             }
             self.visited_input_types.insert(type_idx);
+            let type_node = &context.get_typegraph().types[type_idx as usize];
+            let node = CurrentNode {
+                type_idx,
+                type_node,
+                path: &self.path,
+            };
+
+            self.visitor.visit_input_type(node, context)
         } else {
             if self.visited_types.contains(&type_idx) {
                 return None;
             }
             self.visited_types.insert(type_idx);
-        }
 
-        let type_node = &context.get_typegraph().types[type_idx as usize];
-        let node = CurrentNode {
-            type_idx,
-            type_node,
-            path: &self.path,
-            as_input: self.as_input,
+            let type_node = &context.get_typegraph().types[type_idx as usize];
+            let node = CurrentNode {
+                type_idx,
+                type_node,
+                path: &self.path,
+            };
+
+            self.visitor.visit(node, context)
         };
 
-        let res = self.visitor.visit(node, context);
         let type_node = &self.tg.types[type_idx as usize];
 
         match res {
@@ -107,7 +122,6 @@ impl<'a, V: TypeVisitor<'a> + Sized> TypegraphTraversal<'a, V> {
                 edge: Edge::OptionalItem,
             },
             item_type_idx,
-            false,
             context,
         )
     }
@@ -124,7 +138,6 @@ impl<'a, V: TypeVisitor<'a> + Sized> TypegraphTraversal<'a, V> {
                 edge: Edge::ArrayItem,
             },
             item_type_idx,
-            false,
             context,
         )
     }
@@ -142,7 +155,6 @@ impl<'a, V: TypeVisitor<'a> + Sized> TypegraphTraversal<'a, V> {
                     edge: Edge::ObjectProp(prop_name),
                 },
                 *prop_type,
-                false,
                 context,
             );
             if let Some(res) = res {
@@ -165,7 +177,6 @@ impl<'a, V: TypeVisitor<'a> + Sized> TypegraphTraversal<'a, V> {
                     edge: Edge::UnionVariant(i),
                 },
                 *variant_type,
-                false,
                 context,
             );
             if let Some(ret) = res {
@@ -188,7 +199,6 @@ impl<'a, V: TypeVisitor<'a> + Sized> TypegraphTraversal<'a, V> {
                     edge: Edge::EitherVariant(i),
                 },
                 *t,
-                false,
                 context,
             )
         })
@@ -201,43 +211,65 @@ impl<'a, V: TypeVisitor<'a> + Sized> TypegraphTraversal<'a, V> {
         output: u32,
         context: &'a V::Context,
     ) -> Option<V::Return> {
-        [
-            (Edge::FunctionInput, input, true),
-            (Edge::FunctionOutput, output, false),
-        ]
-        .into_iter()
-        .find_map(|(edge, t, as_input)| {
-            self.visit_child(
-                PathSegment {
-                    from: type_idx,
-                    edge,
-                },
-                t,
-                as_input,
-                context,
-            )
-        })
+        if self.input_parent_function.as_ref().is_some() {
+            return Some(V::Return::from_error(
+                Path(&self.path).to_string(),
+                "Function is not allowed in input types.".to_string(),
+            ));
+        }
+        let last_path_seg = self.path.last().unwrap();
+        match last_path_seg.edge {
+            Edge::ObjectProp(_) => {}
+            _ => {
+                return Some(V::Return::from_error(
+                    Path(&self.path).to_string(),
+                    "Function is only allowed as struct field (direct child)".to_string(),
+                ));
+            }
+        }
+
+        let parent_struct_idx = last_path_seg.from;
+        self.input_parent_function = Some(FunctionMetadata {
+            idx: type_idx,
+            path: Path(&self.path).to_string(),
+            parent_struct_idx,
+        });
+
+        let res = self.visit_child(
+            PathSegment {
+                from: type_idx,
+                edge: Edge::FunctionInput,
+            },
+            input,
+            context,
+        );
+        self.input_parent_function = None;
+
+        if let Some(ret) = res {
+            return Some(ret);
+        }
+
+        let res = self.visit_child(
+            PathSegment {
+                from: type_idx,
+                edge: Edge::FunctionOutput,
+            },
+            output,
+            context,
+        );
+
+        res
     }
 
     fn visit_child(
         &mut self,
         segment: PathSegment<'a>,
         type_idx: u32,
-        as_input: bool,
         context: &'a V::Context,
     ) -> Option<V::Return> {
-        let root_input = as_input && !self.as_input;
-        if root_input {
-            self.as_input = as_input;
-        }
-
         self.path.push(segment);
         let res = self.visit_type(type_idx, context);
         self.path.pop().unwrap();
-
-        if root_input {
-            self.as_input = false;
-        }
         res
     }
 }
@@ -290,11 +322,11 @@ pub enum VisitResult<T> {
     Return(T),
 }
 
+#[derive(Clone, Copy)]
 pub struct CurrentNode<'a> {
     pub type_idx: u32,
     pub type_node: &'a TypeNode,
     pub path: &'a [PathSegment<'a>],
-    pub as_input: bool,
 }
 
 pub trait TypeVisitorContext {
@@ -302,8 +334,8 @@ pub trait TypeVisitorContext {
 }
 
 pub trait TypeVisitor<'a> {
-    type Return: Sized;
-    type Context: TypeVisitorContext;
+    type Return: Sized + VisitorResult;
+    type Context: TypeVisitorContext + Clone;
 
     /// return true to continue the traversal on the subgraph
     fn visit(
@@ -312,10 +344,22 @@ pub trait TypeVisitor<'a> {
         context: &Self::Context,
     ) -> VisitResult<Self::Return>;
 
-    fn get_result(self) -> Option<Self::Return>
+    fn visit_input_type(
+        &mut self,
+        current_node: CurrentNode<'_>,
+        context: &Self::Context,
+    ) -> VisitResult<Self::Return> {
+        self.visit(current_node, context)
+    }
+
+    fn take_result(&mut self) -> Option<Self::Return>
     where
         Self: Sized,
     {
         None
     }
+}
+
+pub trait VisitorResult {
+    fn from_error(path: String, message: String) -> Self;
 }
