@@ -149,7 +149,7 @@ jobs:
       - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
         with:
           # temporary fix
-          cache-key-prefix: true
+          cache-key-prefix: ${{ matrix.os }}
       - shell: bash
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
