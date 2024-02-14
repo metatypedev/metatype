@@ -45,8 +45,6 @@ dev:
       (description = ").+("): TAGLINE
       '([\w-]+\s*=\s*\{\s*git\s*=\s*"https:\/\/github\.com\/prisma\/prisma-engines"\s*,\s*tag\s*=\s*").+("\s*\})': PRISMA_VERSION
       '(deno\s*=\s*\{\s*git\s*=\s*"https:\/\/github\.com\/metatypedev\/deno"\s*,\s*branch\s*=\s*"v).+(-embeddable"\s*\})': DENO_VERSION
-    typegate/tests/e2e/self_deploy/self_deploy_test.ts:
-      (const\s+TARGET_VERSION\s*=\s*").*(";): METATYPE_VERSION
     dev/cross.Dockerfile:
       (ARG GHJK_VERSION=).*(): GHJK_VERSION
     dev/Dockerfile:
