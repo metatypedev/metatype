@@ -256,9 +256,12 @@ class TransformerCompilationContext {
   }
 
   #compileParentInjection(_typeIdx: number, parentIdx: number) {
-    // TODO type validation ?: the source is validated in the arg computation step;
-    // type inclusion is checked AOT with the typegraph
+    // VALIDATION
+    // - the source is validated in the arg computation step;
+    // - type inheritance is checked AOT with the typegraph
+
     // TODO what if the value is lazy (a function?)
+
     const [key] = Object.entries(this.#parentProps)
       .find(([_key, idx]) => idx === parentIdx)!;
     const varName = this.#createVarName();
