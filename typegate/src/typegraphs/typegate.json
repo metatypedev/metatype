@@ -493,7 +493,9 @@
       "type": "object",
       "title": "object_39",
       "runtime": 1,
-      "policies": [],
+      "policies": [
+        0
+      ],
       "config": {},
       "as_id": false,
       "properties": {
@@ -543,6 +545,10 @@
       "title": "OperationInfo",
       "runtime": 1,
       "policies": [],
+      "enum": [
+        "\"query\"",
+        "\"mutation\""
+      ],
       "config": {},
       "as_id": false,
       "properties": {
@@ -564,13 +570,25 @@
         "\"mutation\""
       ],
       "config": {},
-      "as_id": false
+      "as_id": false,
+      "properties": {
+        "name": 5,
+        "type": 46,
+        "inputs": 47,
+        "output": 31,
+        "outputItem": 49
+      },
+      "required": []
     },
     {
       "type": "list",
       "title": "list_48",
       "runtime": 1,
       "policies": [],
+      "enum": [
+        "\"query\"",
+        "\"mutation\""
+      ],
       "config": {},
       "as_id": false,
       "items": 48
@@ -587,6 +605,16 @@
         "type": 31
       },
       "required": []
+    },
+    {
+      "type": "optional",
+      "title": "_49_TypeInfo?",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 31,
+      "default_value": null
     },
     {
       "type": "optional",

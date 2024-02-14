@@ -332,9 +332,17 @@ interface runtimes {
         fn: string,
     }
 
+    record module-dependency-meta {
+        path: string,
+        dep-hash: string,
+        relative-path-prefix: list<string>,
+    }
+
     record materializer-python-module {
         runtime: runtime-id,
-        file: string,
+        artifact: string,
+        artifact-hash: string,
+        deps: list<module-dependency-meta>,
     }
 
     record materializer-python-import {
@@ -348,6 +356,7 @@ interface runtimes {
     from-python-def: func(base: base-materializer, data: materializer-python-def) -> result<materializer-id, error>
     from-python-module: func(base: base-materializer, data: materializer-python-module) -> result<materializer-id, error>
     from-python-import: func(base: base-materializer, data: materializer-python-import) -> result<materializer-id, error>
+    get-deps: func(artifact-hash: string) -> result<list<module-dependency-meta>, error>
 
     // random
     record random-runtime-data {

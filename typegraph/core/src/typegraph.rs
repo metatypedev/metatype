@@ -24,6 +24,7 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::hash::Hasher as _;
 
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::wit::core::{
@@ -237,6 +238,11 @@ pub fn finalize(
     TypegraphPostProcessor::new(config).postprocess(&mut tg)?;
 
     Store::restore(ctx.saved_store_state.unwrap());
+
+    let result = match serde_json::to_string_pretty(&tg).map_err(|e| e.to_string().into()) {
+        Ok(res) => res,
+        Err(e) => return Err(e),
+    };
 
     let result = match serde_json::to_string_pretty(&tg).map_err(|e| e.to_string().into()) {
         Ok(res) => res,

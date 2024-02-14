@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional
 
 from astunparse import unparse
-
 from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
     Effect,
@@ -15,9 +14,11 @@ from typegraph.gen.exports.runtimes import (
     MaterializerPythonImport,
     MaterializerPythonLambda,
     MaterializerPythonModule,
+    ModuleDependencyMeta,
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.utils import get_file_hash, get_parent_directories, get_relative_path
 from typegraph.wit import runtimes, store
 
 if TYPE_CHECKING:
@@ -93,15 +94,39 @@ class PythonRuntime(Runtime):
         *,
         module: str,
         name: str,
+        deps: List[str] = [],
         effect: Optional[Effect] = None,
         secrets: Optional[List[str]] = None,
     ):
         effect = effect or EffectRead()
         secrets = secrets or []
 
+        artifact_hash = get_file_hash(module)
+
+        # generate dep_metas
+        dep_metas = []
+        for dep in deps:
+            dep_hash = get_file_hash(dep)
+            dep_parent_dirs = get_parent_directories(dep)
+            dep_meta = ModuleDependencyMeta(
+                path=dep,
+                dep_hash=dep_hash,
+                relative_path_prefix=get_relative_path(
+                    get_parent_directories(module), dep_parent_dirs
+                ),
+            )
+            dep_metas.append(dep_meta)
+
         base = BaseMaterializer(runtime=self.id.value, effect=effect)
         mat_id = runtimes.from_python_module(
-            store, base, MaterializerPythonModule(file=module, runtime=self.id.value)
+            store,
+            base,
+            MaterializerPythonModule(
+                artifact=module,
+                artifact_hash=artifact_hash,
+                deps=dep_metas,
+                runtime=self.id.value,
+            ),
         )
 
         if isinstance(mat_id, Err):
@@ -171,4 +196,5 @@ class DefinitionCollector(ast.NodeTransformer):
         self.lambdas.append(unparse(node).strip())
 
     def visit_FunctionDef(self, node):
+        self.defs.append((node.name, unparse(node).strip()))
         self.defs.append((node.name, unparse(node).strip()))

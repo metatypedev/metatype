@@ -3,6 +3,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::process::exit;
 use std::sync::{Arc, Mutex};
 
 use super::{Action, CommonArgs, GenArgs};

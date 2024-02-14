@@ -95,3 +95,35 @@ def get_file_hash(file_path: str) -> str:
             sha256_hasher.update(chunk)
 
     return sha256_hasher.hexdigest()
+
+
+def get_parent_directories(
+    path: str,
+) -> List[str]:
+    parents = []
+
+    while True:
+        path, folder = os.path.split(path)
+        if folder:
+            parents.append(folder)
+        else:
+            if path:
+                parents.append(path)
+            break
+
+    return parents[::-1]
+
+
+def get_relative_path(
+    module_path: List[str],
+    dep_path: List[str],
+) -> List[str]:
+    common = 0
+
+    max_len = min(len(module_path), len(dep_path))
+    for i in range(max_len):
+        if module_path[i] != dep_path[i]:
+            break
+        common += 1
+
+    return dep_path[common:]

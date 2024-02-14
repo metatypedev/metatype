@@ -3,9 +3,17 @@
 
 import * as t from "../types.js";
 import { runtimes } from "../wit.js";
-import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
+import {
+  Effect,
+  ModuleDependencyMeta,
+} from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import { Materializer, Runtime } from "./mod.js";
 import { fx } from "../index.js";
+import {
+  getFileHash,
+  getParentDirectories,
+  getRelativePath,
+} from "../utils/file_utils.js";
 
 interface LambdaMat extends Materializer {
   fn: string;
@@ -21,9 +29,15 @@ interface DefMat extends Materializer {
 interface PythonImport {
   name: string;
   module: string;
+  deps: Array<string>;
   secrets?: Array<string>;
   effect?: Effect;
 }
+
+// interface DependencyMeta {
+//   path: string;
+//   hash: string;
+// }
 
 interface ImportMat extends Materializer {
   module: string;
@@ -84,22 +98,42 @@ export class PythonRuntime extends Runtime {
     } as DefMat);
   }
 
-  import<
+  async import<
     I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
-    { name, module, effect = fx.read(), secrets = [] }: PythonImport,
-  ): t.Func<I, O, ImportMat> {
+    { name, module, deps = [], effect = fx.read(), secrets = [] }: PythonImport,
+  ): Promise<t.Func<I, O, ImportMat>> {
     const base = {
       runtime: this._id,
       effect,
     };
 
+    const artifactHash = await getFileHash(module);
+
+    // generate dep meta
+    const depMetas: ModuleDependencyMeta[] = [];
+    for (const dep of deps) {
+      const depHash = await getFileHash(dep);
+      const depParentDirs = getParentDirectories(dep);
+      const depMeta: ModuleDependencyMeta = {
+        path: dep,
+        depHash: depHash,
+        relativePathPrefix: getRelativePath(
+          getParentDirectories(module),
+          depParentDirs,
+        ),
+      };
+      depMetas.push(depMeta);
+    }
+
     const matId = runtimes.fromPythonModule(base, {
-      file: module,
+      artifact: module,
       runtime: this._id,
+      artifactHash: artifactHash,
+      deps: depMetas,
     });
 
     const pyModMatId = runtimes.fromPythonImport(base, {
