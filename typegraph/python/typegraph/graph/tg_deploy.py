@@ -96,7 +96,6 @@ def tg_remove(tg: TypegraphOutput, params: TypegraphRemoveParams):
 
     if isinstance(res, Err):
         raise Exception(res.value)
-    print(res.value)
 
     req = request.Request(
         url=url,
