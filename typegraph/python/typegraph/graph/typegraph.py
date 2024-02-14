@@ -172,9 +172,9 @@ def typegraph(
 
         tg_json = core.finalize_typegraph(
             store,
-            TypegraphFinalizeMode.RESOLVE_ARTIFACTS
-            if disable_auto_serialization
-            else TypegraphFinalizeMode.SIMPLE,
+            TypegraphFinalizeMode.RESOLVE_ARTIFACTS,
+            # if disable_auto_serialization
+            # else TypegraphFinalizeMode.SIMPLE,
         )
 
         if isinstance(tg_json, Err):

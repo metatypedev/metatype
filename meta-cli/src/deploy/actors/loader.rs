@@ -13,7 +13,7 @@ use tokio::sync::{mpsc, oneshot};
 
 use crate::config::Config;
 use crate::typegraph::loader::LoaderPool;
-use crate::typegraph::postprocess::{self, DenoModules, EmbedPrismaMigrations};
+use crate::typegraph::postprocess::{DenoModules, EmbedPrismaMigrations};
 use crate::utils::plural_suffix;
 
 use super::console::{Console, ConsoleActor};
@@ -119,10 +119,6 @@ impl LoaderActor {
         if let Some(deno) = &postprocess_options.deno {
             pool = pool.with_postprocessor(deno.clone());
         }
-
-        pool = pool
-            .with_postprocessor(postprocess::PythonModules::default())
-            .with_postprocessor(postprocess::WasmdegeModules::default());
 
         if let Some(prisma) = &postprocess_options.prisma {
             pool = pool.with_postprocessor(

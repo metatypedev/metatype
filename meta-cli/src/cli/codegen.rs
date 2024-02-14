@@ -57,9 +57,7 @@ impl Action for Deno {
         );
 
         let loader_pool = LoaderPool::new(config, 1)
-            .with_postprocessor(postprocess::DenoModules::default().codegen(true))
-            .with_postprocessor(postprocess::PythonModules::default())
-            .with_postprocessor(postprocess::WasmdegeModules::default());
+            .with_postprocessor(postprocess::DenoModules::default().codegen(true));
 
         let loader = loader_pool.get_loader().await?;
 
