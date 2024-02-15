@@ -7,8 +7,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
 from typegraph.gen.exports.core import (
+    ArtifactResolutionConfig,
     Rate,
-    TypegraphFinalizeMode,
+    TypegraphFinalizeModeResolveArtifacts,
+    TypegraphFinalizeModeSimple,
     TypegraphInitParams,
 )
 from typegraph.gen.exports.core import (
@@ -122,8 +124,8 @@ class Graph:
 
 @dataclass
 class TypegraphOutput:
-    tg: Typegraph
-    serialized: str
+    name: str
+    serialize: Callable[[Optional[ArtifactResolutionConfig]], str]
 
 
 def typegraph(
@@ -170,20 +172,33 @@ def typegraph(
         popped = Typegraph._context.pop()
         assert tg == popped
 
-        tg_json = core.finalize_typegraph(
-            store,
-            TypegraphFinalizeMode.RESOLVE_ARTIFACTS
-            if disable_auto_serialization
-            else TypegraphFinalizeMode.SIMPLE,
-        )
-
-        if isinstance(tg_json, Err):
-            raise Exception(tg_json.value)
+        serialize = None
 
         if not disable_auto_serialization:
+            tg_json = core.finalize_typegraph(store, TypegraphFinalizeModeSimple())
+            if isinstance(tg_json, Err):
+                raise Exception(tg_json.value)
+
             print(tg_json.value)
 
-        return lambda: TypegraphOutput(tg=tg, serialized=tg_json.value)
+            def no_conf():
+                return tg_json.value
+
+            serialize = no_conf
+        else:
+            # config is only known at deploy time
+            def serialize_with_artifacts(
+                config: Optional[ArtifactResolutionConfig] = None,
+            ):
+                mode = TypegraphFinalizeModeResolveArtifacts(config)
+                tg_json = core.finalize_typegraph(store, mode)
+                if isinstance(tg_json, Err):
+                    raise Exception(tg_json.value)
+                return tg_json.value
+
+            serialize = serialize_with_artifacts
+
+        return lambda: TypegraphOutput(name=tg.name, serialize=serialize)
 
     return decorator
 
