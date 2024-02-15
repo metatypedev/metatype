@@ -4,7 +4,8 @@
 use std::borrow::Cow;
 
 use crate::errors::Result;
-use crate::types::{TypeDef, TypeDefExt};
+use crate::global_store::{NameRegistration, Store};
+use crate::types::{TypeDef, TypeDefExt, TypeId};
 
 pub struct RuntimeConfig<'a>(Cow<'a, [(String, String)]>);
 
@@ -36,4 +37,21 @@ impl<'a> TryFrom<&'a TypeDef> for RuntimeConfig<'a> {
     fn try_from(type_def: &'a TypeDef) -> Result<Self> {
         Ok(Self::new(type_def.base().runtime_config.as_ref()))
     }
+}
+
+pub fn remove_injection(type_id: TypeId) -> Result<TypeId> {
+    let (_, type_def) = type_id.resolve_ref()?;
+
+    let x_base = type_def.x_base();
+    if x_base.injection.is_none() {
+        return Ok(type_id);
+    }
+
+    let mut x_base = x_base.clone();
+    x_base.injection = None;
+
+    Store::register_type_def(
+        move |id| type_def.with_x_base(id, x_base),
+        NameRegistration(false),
+    )
 }

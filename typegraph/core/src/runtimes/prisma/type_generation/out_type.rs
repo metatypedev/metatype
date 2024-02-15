@@ -5,6 +5,7 @@ use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::errors;
 use crate::runtimes::prisma::model::Property;
+use crate::runtimes::prisma::type_utils::remove_injection;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeId;
 
@@ -62,7 +63,7 @@ impl TypeGen for OutType {
                     builder.prop(key, out_type);
                 }
                 Property::Scalar(prop) => {
-                    builder.prop(key, prop.wrapper_type_id);
+                    builder.prop(key, remove_injection(prop.wrapper_type_id)?);
                 }
                 Property::Unmanaged(type_id) => {
                     // just forward the original type

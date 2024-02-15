@@ -6,6 +6,7 @@ use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::model::Property;
 use crate::runtimes::prisma::relationship::Cardinality;
 use crate::runtimes::prisma::type_generation::count::Count;
+use crate::runtimes::prisma::type_utils::remove_injection;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::{TypeDefExt, TypeId};
 
@@ -71,7 +72,7 @@ impl TypeGen for WithNestedCount {
 
                 Property::Scalar(prop) => {
                     let type_id = prop.wrapper_type_id.resolve_ref()?.1.id();
-                    builder.prop(key, type_id);
+                    builder.prop(key, remove_injection(type_id)?);
                 }
 
                 Property::Unmanaged(type_id) => {

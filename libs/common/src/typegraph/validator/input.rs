@@ -19,27 +19,12 @@ impl Validator {
         current_node: CurrentNode<'_>,
         context: &<Validator as TypeVisitor>::Context,
     ) -> VisitResult<<Validator as TypeVisitor>::Return> {
-        let typegraph = context.get_typegraph();
         let type_node = current_node.type_node;
 
-        match type_node {
-            TypeNode::Function { .. } => {
-                // TODO suggest to use composition-- when available
-                self.push_error(current_node.path, "Function is not allowed in input types.");
-                return VisitResult::Continue(false);
-            }
-            TypeNode::Union { .. } | TypeNode::Either { .. } => {
-                let mut variants = vec![];
-                typegraph.collect_nested_variants_into(&mut variants, &[current_node.type_idx]);
-                match typegraph.check_union_variants(&variants) {
-                    Ok(_) => {}
-                    Err(err) => {
-                        self.push_error(current_node.path, err);
-                        return VisitResult::Continue(false);
-                    }
-                }
-            }
-            _ => (),
+        if let TypeNode::Function { .. } = type_node {
+            // TODO suggest to use composition-- when available
+            self.push_error(current_node.path, "Function is not allowed in input types.");
+            return VisitResult::Continue(false);
         }
 
         if let Some(injection) = &type_node.base().injection {
