@@ -101,4 +101,32 @@ Meta.test("(python (sdk): apply)", async (t) => {
       })
       .on(e);
   });
+
+  await t.should("work with nested arrays", async () => {
+    await gql`
+      query {
+        withNestedArrays(first: 1, second: [2]) {
+          a
+        }
+      }
+    `
+      .expectData({
+        withNestedArrays: { a: [[1], [2]] },
+      })
+      .on(e);
+  });
+
+  await t.should("work with array of objects", async () => {
+    await gql`
+      query {
+        withArrayOfObjects(first: 1, second: { b: 12 }) {
+          a { b }
+        }
+      }
+    `
+      .expectData({
+        withArrayOfObjects: { a: [{ b: 1 }, { b: 12 }] },
+      })
+      .on(e);
+  });
 });

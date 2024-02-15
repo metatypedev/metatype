@@ -95,4 +95,32 @@ def test_apply(g: Graph):
                 ]
             }
         ),
+        withNestedArrays=deno.identity(
+            t.struct(
+                {
+                    "a": t.list(t.list(t.integer())),
+                }
+            )
+        ).apply(
+            {
+                "a": [
+                    [g.as_arg("first")],
+                    g.as_arg("second"),
+                ]
+            }
+        ),
+        withArrayOfObjects=deno.identity(
+            t.struct(
+                {
+                    "a": t.list(t.struct({"b": t.integer()})),
+                }
+            )
+        ).apply(
+            {
+                "a": [
+                    {"b": g.as_arg("first")},
+                    g.as_arg("second"),
+                ]
+            }
+        ),
     )
