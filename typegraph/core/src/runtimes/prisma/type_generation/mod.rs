@@ -17,7 +17,6 @@ use self::group_by::GroupByResult;
 use self::input_type::InputType;
 use self::out_type::OutType;
 use self::query_input_type::QueryInputType;
-use self::query_unique_where_expr::QueryUniqueWhereExpr;
 use self::query_where_expr::QueryWhereExpr;
 use self::with_nested_count::WithNestedCount;
 
@@ -37,7 +36,6 @@ mod input_type;
 mod order_by;
 mod out_type;
 pub mod query_input_type;
-mod query_unique_where_expr;
 mod query_where_expr;
 mod where_;
 mod with_nested_count;
@@ -173,7 +171,7 @@ impl PrismaOperation for FindUnique {
         t::struct_()
             .propx(
                 "where",
-                t::optional(context.generate(&QueryUniqueWhereExpr::new(model_id))?),
+                t::optional(context.generate(&QueryWhereExpr::new(model_id).unique())?),
             )?
             .build()
     }
@@ -281,7 +279,7 @@ impl PrismaOperation for UpdateOne {
             .prop("data", context.generate(&InputType::for_update(model_id))?)
             .prop(
                 "where",
-                context.generate(&QueryUniqueWhereExpr::new(model_id))?,
+                context.generate(&QueryWhereExpr::new(model_id).unique())?,
             )
             .build()
     }
@@ -310,7 +308,7 @@ impl PrismaOperation for UpsertOne {
         t::struct_()
             .prop(
                 "where",
-                context.generate(&QueryUniqueWhereExpr::new(model_id))?,
+                context.generate(&QueryWhereExpr::new(model_id).unique())?,
             )
             .prop(
                 "create",
@@ -332,7 +330,7 @@ impl PrismaOperation for DeleteOne {
         t::struct_()
             .prop(
                 "where",
-                context.generate(&QueryUniqueWhereExpr::new(model_id))?,
+                context.generate(&QueryWhereExpr::new(model_id).unique())?,
             )
             .build()
     }
