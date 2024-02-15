@@ -75,7 +75,7 @@ dev:
       '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': PUBLISHED_VERSION
   lock:
     GHJK_VERSION: f380522
-    GHJK_ACTION_VERSION: 32fe7ad4eab41d5e62189208afa6fe17112a5563
+    GHJK_ACTION_VERSION: a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
     PYTHON_VERSION: 3.8.18
     POETRY_VERSION: 1.7.0
     PROTOC_VERSION: v24.1

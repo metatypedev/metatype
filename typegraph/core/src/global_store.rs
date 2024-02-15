@@ -15,6 +15,7 @@ use crate::wit::core::TypegraphFinalizeMode;
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::{cell::RefCell, collections::HashMap};
 
@@ -58,6 +59,8 @@ pub struct Store {
     typegraph_runtime: RuntimeId,
     graphql_endpoints: Vec<String>,
     auths: Vec<common::typegraph::Auth>,
+
+    deploy_cwd_dir: Option<PathBuf>,
 }
 
 impl Store {
@@ -188,6 +191,16 @@ impl Store {
             s.type_by_names.insert(name, id);
             Ok(())
         })
+    }
+
+    pub fn set_deploy_cwd(value: Option<String>) {
+        with_store_mut(|s| {
+            s.deploy_cwd_dir = value.map(PathBuf::from);
+        })
+    }
+
+    pub fn get_deploy_cwd() -> Option<PathBuf> {
+        with_store(|s| s.deploy_cwd_dir.clone())
     }
 
     pub fn pick_branch_by_path(supertype_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
