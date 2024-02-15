@@ -14,7 +14,6 @@ import {
   TypeOptional,
   TypeString,
   TypeUnion,
-  TypeId,
   ParameterTransform,
 } from "./gen/interfaces/metatype-typegraph-core.js";
 import { Reduce } from "./gen/interfaces/metatype-typegraph-utils.js";
@@ -563,6 +562,21 @@ export class Func<
     this.mat = mat;
     this.parameterTransform = parameterTransform;
     this.config = config;
+  }
+
+  extend(fields: Record<string, Typedef>): Func<I, Typedef, M> {
+    const output = core.extendStruct(
+      this.out._id,
+      Object.entries(fields).map(([name, typ]) => [name, typ._id] as [string, number])
+    );
+
+    return func(
+      this.inp,
+      new Typedef(output, {}),
+      this.mat,
+      this.parameterTransform,
+      this.config,
+    );
   }
 
   reduce(value: Record<string, unknown | InheritDef>) {

@@ -29,6 +29,7 @@ use types::{
     TypeDef, TypeDefExt, TypeId, Union,
 };
 
+use utils::clear_name;
 use wit::core::{
     ContextCheck, Policy, PolicyId, PolicySpec, TransformData, TypeBase, TypeEither, TypeFile,
     TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList, TypeOptional, TypeString,
@@ -313,6 +314,34 @@ impl wit::core::Guest for Lib {
                 )
             },
             NameRegistration(true),
+        )?
+        .into())
+    }
+
+    fn extend_struct(
+        type_id: CoreTypeId,
+        new_props: Vec<(String, CoreTypeId)>,
+    ) -> Result<CoreTypeId> {
+        let type_def = TypeId(type_id).as_struct()?;
+        let mut props = type_def.data.props.clone();
+        props.extend(new_props);
+
+        Ok(Store::register_type_def(
+            |id| {
+                TypeDef::Struct(
+                    Struct {
+                        id,
+                        base: clear_name(&type_def.base),
+                        extended_base: type_def.extended_base.clone(),
+                        data: TypeStruct {
+                            props,
+                            ..type_def.data.clone()
+                        },
+                    }
+                    .into(),
+                )
+            },
+            NameRegistration(false),
         )?
         .into())
     }

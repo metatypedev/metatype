@@ -128,6 +128,7 @@ interface core {
         enumeration: option<list<string>>,
     }
     structb: func(data: type-struct, base: type-base) -> result<type-id, error>
+    extend-struct: func(tpe: type-id, props: list<tuple<string, type-id>>) -> result<type-id, error>
 
     get-type-repr: func(id: type-id) -> result<string, error>
 
@@ -526,6 +527,8 @@ interface utils {
     }
 
     gen-gqlquery: func(params: query-body-params) -> result<string, error>
+
+    remove-injections: func(type-id: type-id) -> result<type-id, error>
 }
 
 interface host {

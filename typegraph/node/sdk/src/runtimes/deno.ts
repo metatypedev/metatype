@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as t from "../types.js";
-import { runtimes } from "../wit.js";
+import { runtimes, wit_utils } from "../wit.js";
 import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import Policy from "../policy.js";
 import { Materializer, Runtime } from "./mod.js";
@@ -86,14 +86,15 @@ export class DenoRuntime extends Runtime {
 
   identity<
     I extends t.Typedef = t.Typedef,
-  >(inp: I): t.Func<I, I, PredefinedFuncMat> {
+  >(inp: I): t.Func<I, t.Typedef, PredefinedFuncMat> {
     const mat: PredefinedFuncMat = {
       _id: runtimes.getPredefinedDenoFunc({ name: "identity" }),
       name: "identity",
     };
+    const out = wit_utils.removeInjections(inp._id);
     return t.func(
       inp,
-      inp,
+      new t.Typedef(out, {}),
       mat,
     );
   }

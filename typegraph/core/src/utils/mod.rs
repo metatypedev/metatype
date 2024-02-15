@@ -8,8 +8,9 @@ use indexmap::IndexMap;
 use serde_json::json;
 
 use crate::errors::Result;
-use crate::global_store::Store;
-use crate::types::TypeId;
+use crate::global_store::{NameRegistration, Store};
+use crate::types::map_children::map_children;
+use crate::types::{TypeDefExt, TypeId};
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
 use crate::wit::utils::{Auth as WitAuth, QueryBodyParams};
 use crate::Lib;
@@ -235,5 +236,38 @@ impl crate::wit::utils::Guest for crate::Lib {
         });
 
         Ok(req_body.to_string())
+    }
+
+    fn remove_injections(id: CoreTypeId) -> Result<CoreTypeId> {
+        remove_injections_recursively(id.into()).map(|id| id.into())
+    }
+}
+
+fn remove_injections_recursively(id: TypeId) -> Result<TypeId> {
+    let id = remove_injection(id)?;
+    map_children(id, &remove_injections_recursively)
+}
+
+pub fn remove_injection(type_id: TypeId) -> Result<TypeId> {
+    let (_, type_def) = type_id.resolve_ref()?;
+
+    let x_base = type_def.x_base();
+    if x_base.injection.is_none() {
+        return Ok(type_id);
+    }
+
+    let mut x_base = x_base.clone();
+    x_base.injection = None;
+
+    Store::register_type_def(
+        move |id| type_def.with_x_base(id, x_base),
+        NameRegistration(false),
+    )
+}
+
+pub fn clear_name(base: &TypeBase) -> TypeBase {
+    TypeBase {
+        name: None,
+        ..base.clone()
     }
 }

@@ -688,10 +688,14 @@ class func(typedef):
         )
 
     def extend(self, props: Dict[str, typedef]):
-        if not isinstance(self.out, struct):
-            raise Exception("Cannot extend non-struct function output")
+        res = core.extend_struct(
+            store, self.out.id, og_list((k, v.id) for k, v in props.items())
+        )
+        if isinstance(res, Err):
+            raise Exception(res.value)
 
-        out = self.out.extend(props)
+        out = typedef(res.value)
+
         return func(
             self.inp,
             out,

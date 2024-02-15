@@ -283,6 +283,9 @@ impl<'a> EnsureSubtypeOf for ExtendedTypeNode<'a> {
                         errors,
                     );
                 }
+                (_, TypeNode::Optional { data: sup, .. }) => {
+                    self.ensure_subtype_of(&ExtendedTypeNode::new(tg, sup.item), tg, errors);
+                }
                 (TypeNode::Boolean { .. }, TypeNode::Boolean { .. }) => { /* nothing to check */ }
                 (TypeNode::Integer { data: sub, .. }, TypeNode::Integer { data: sup, .. }) => {
                     sub.ensure_subtype_of(sup, tg, errors)
@@ -337,7 +340,11 @@ impl<'a> EnsureSubtypeOf for ExtendedTypeNode<'a> {
                 (TypeNode::Function { .. }, _) | (_, TypeNode::Function { .. }) => {
                     errors.push("Function types are not supported");
                 }
-                _ => errors.push("Type mismatch"),
+                (x, y) => errors.push(format!(
+                    "Type mismatch: {} to {}",
+                    x.type_name(),
+                    y.type_name()
+                )),
             }
         }
     }

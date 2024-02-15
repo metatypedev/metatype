@@ -5,9 +5,9 @@ use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::errors;
 use crate::runtimes::prisma::model::Property;
-use crate::runtimes::prisma::type_utils::remove_injection;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::TypeId;
+use crate::utils::remove_injection;
 
 use super::{Cardinality, TypeGen};
 

@@ -56,25 +56,25 @@ snapshot[`Basic introspection 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "User",
+        name: "object_19",
         possibleTypes: null,
       },
       {
         fields: null,
         kind: "UNION",
-        name: "FavoriteToyOut",
+        name: "either_18Out",
         possibleTypes: [
           {
             kind: "OBJECT",
-            name: "Rubix",
+            name: "object_14",
           },
           {
             kind: "OBJECT",
-            name: "Toygun",
+            name: "object_15",
           },
           {
             kind: "OBJECT",
-            name: "Gunpla",
+            name: "object_17",
           },
         ],
       },
@@ -88,7 +88,7 @@ snapshot[`Basic introspection 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "Rubix",
+        name: "object_14",
         possibleTypes: null,
       },
       {
@@ -98,7 +98,7 @@ snapshot[`Basic introspection 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "Toygun",
+        name: "object_15",
         possibleTypes: null,
       },
       {
@@ -111,13 +111,13 @@ snapshot[`Basic introspection 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "Gunpla",
+        name: "object_17",
         possibleTypes: null,
       },
       {
         fields: null,
         kind: "UNION",
-        name: "union_8Out",
+        name: "union_16Out",
         possibleTypes: [
           {
             kind: "OBJECT",
