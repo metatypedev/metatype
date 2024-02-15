@@ -6,7 +6,11 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use ignore::{Walk, WalkBuilder};
 use indexmap::IndexMap;
-use std::{fs, path::Path};
+use std::{
+    fs,
+    io::Read,
+    path::{Path, PathBuf},
+};
 use tar::{Archive, Header};
 
 pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<impl AsRef<[u8]>>) -> Result<()> {
@@ -19,6 +23,35 @@ pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<impl AsRef<[u8]>>) -> 
     let mut archive = Archive::new(decoder);
     archive.unpack(dest.as_ref())?;
     Ok(())
+}
+
+pub fn tarb64_unpack_entries_as_map(
+    tarb64: Option<impl AsRef<[u8]>>,
+) -> Result<IndexMap<PathBuf, Vec<u8>>> {
+    let Some(tarb64) = tarb64 else {
+        return Ok(IndexMap::new());
+    };
+    let tar_bytes = STANDARD.decode(tarb64)?;
+    let decoder = GzDecoder::new(tar_bytes.as_slice());
+    let mut archive = Archive::new(decoder);
+    archive
+        .entries()?
+        .filter_map(|e| match e {
+            Ok(entry) => {
+                if entry.header().entry_type().is_dir() {
+                    None
+                } else {
+                    Some(entry)
+                }
+            }
+            _ => None,
+        })
+        .map(|entry| -> Result<(PathBuf, Vec<u8>)> {
+            let path = entry.path()?.to_path_buf();
+            let bytes = entry.bytes().collect::<Result<Vec<u8>, _>>()?;
+            Ok((path, bytes))
+        })
+        .collect::<Result<IndexMap<PathBuf, Vec<u8>>>>()
 }
 
 pub fn archive<P: AsRef<Path>>(folder: P) -> Result<Option<String>> {
@@ -60,9 +93,7 @@ pub fn archive_entries(dir_walker: Walk, prefix: Option<&Path>) -> Result<Option
                             Err(_) => archive_path,
                         };
                     }
-                    // println!("file {} => {}", path.display(), archive_path.display());
-                    tar.append_file(archive_path, &mut file)
-                        .context("Adding file to tarball")?;
+                    tar.append_file(archive_path, &mut file)?;
                 }
                 empty = false;
                 Ok(())
@@ -92,8 +123,7 @@ pub fn archive_entries_from_bytes(entries: IndexMap<String, Vec<u8>>) -> Result<
         header.set_mode(0o666); // rw-rw-rw
         header.set_cksum();
 
-        tar.append_data(&mut header, path, bytes.as_slice())
-            .context("Adding file to tarball")?;
+        tar.append_data(&mut header, path, bytes.as_slice())?;
     }
 
     let bytes = tar.into_inner()?.finish()?;

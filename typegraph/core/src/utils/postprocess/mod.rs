@@ -5,6 +5,7 @@ use crate::utils::fs_host;
 use common::typegraph::Typegraph;
 use std::path::Path;
 pub mod deno_rt;
+pub mod prisma_rt;
 pub mod python_rt;
 pub mod wasmedge_rt;
 
@@ -13,7 +14,7 @@ pub fn compress_and_encode(main_path: &Path) -> Result<String, String> {
         return Err(format!("Unable to read {:?}: {}", main_path.display(), e));
     }
 
-    let enc_content = fs_host::compress_and_encode_base64(".")?;
+    let enc_content = fs_host::compress_and_encode_base64(fs_host::cwd()?)?;
     Ok(format!(
         "file:{};base64:{}",
         fs_host::make_relative(main_path)?.display(),
