@@ -373,10 +373,12 @@ impl TransformDataBuildContext {
 mod test {
     use super::*;
     use crate::test_utils::tree;
+    use raw_tree::{
+        ParameterTransformLeafNode, ParameterTransformNode, ParameterTransformParentNode,
+    };
 
     #[test]
     fn identity() -> Result<()> {
-        let validator = TransformTreeValidationContext::new();
         let input = t::struct_()
             .propx("a", t::string())?
             .propx("b", t::string())?
@@ -385,23 +387,20 @@ mod test {
             let mut map = HashMap::new();
             map.insert(
                 "a".to_string(),
-                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg(ApplyFromArg {
-                    name: None,
-                })),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg { name: None }),
             );
             map.insert(
                 "b".to_string(),
-                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg(ApplyFromArg {
-                    name: None,
-                })),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg { name: None }),
             );
             map
         };
-        let query_input = validator.query_input(input, root)?;
+
+        let transform_data = build_transform_data(input, &root_fields)?;
 
         let print_options = tree::PrintOptions::new().no_indent_lines();
         assert_eq!(
-            print_options.print(query_input),
+            print_options.print(transform_data.query_input.into()),
             indoc::indoc! {"
                 root: struct #3
                     [a]: string #0
@@ -413,35 +412,32 @@ mod test {
 
     #[test]
     fn identity_named() -> Result<()> {
-        let validator = TransformTreeValidationContext::new();
         let input = t::struct_()
             .propx("a", t::string())?
             .propx("b", t::string())?
             .build()?;
-        let root = ParameterTransformObjectNode {
-            fields: vec![
-                (
-                    "a".to_string(),
-                    ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg(ApplyFromArg {
-                        name: Some("first".to_string()),
-                    })),
-                ),
-                (
-                    "b".to_string(),
-                    ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg(ApplyFromArg {
-                        name: Some("second".to_string()),
-                    })),
-                ),
-            ]
-            .into_iter()
-            .collect(),
-        };
+        let root = vec![
+            (
+                "a".to_string(),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                    name: Some("first".to_string()),
+                }),
+            ),
+            (
+                "b".to_string(),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                    name: Some("second".to_string()),
+                }),
+            ),
+        ]
+        .into_iter()
+        .collect();
 
-        let query_input = validator.query_input(input, root)?;
+        let transform_data = build_transform_data(input, &root)?;
 
         let print_options = tree::PrintOptions::new().no_indent_lines();
         assert_eq!(
-            print_options.print(query_input),
+            print_options.print(transform_data.query_input.into()),
             indoc::indoc! {"
                 root: struct #3
                     [first]: string #0
@@ -453,81 +449,64 @@ mod test {
 
     #[test]
     fn array_items() -> Result<()> {
-        let validator = TransformTreeValidationContext::new();
         let input = t::struct_()
             .propx("a", t::string())?
             .propx("b", t::listx(t::string())?)?
             .build()?;
-        let root = ParameterTransformObjectNode {
-            fields: vec![
-                (
-                    "a".to_string(),
-                    ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg(ApplyFromArg {
-                        name: None,
-                    })),
-                ),
-                (
-                    "b".to_string(),
-                    ParameterTransformNode::Parent(ParameterTransformParentNode::Array(
-                        ParameterTransformArrayNode {
-                            items: vec![
-                                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg(
-                                    ApplyFromArg { name: None },
-                                )),
-                                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg(
-                                    ApplyFromArg { name: None },
-                                )),
-                            ],
-                        },
-                    )),
-                ),
-            ]
-            .into_iter()
-            .collect(),
-        };
+        let root = vec![
+            (
+                "a".to_string(),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg { name: None }),
+            ),
+            (
+                "b".to_string(),
+                ParameterTransformNode::Parent(ParameterTransformParentNode::Array {
+                    items: vec![
+                        ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                            name: None,
+                        }),
+                        ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                            name: None,
+                        }),
+                    ],
+                }),
+            ),
+        ]
+        .into_iter()
+        .collect();
 
-        let query_input = validator.query_input(input, root);
-        assert!(query_input.is_err());
-        let err = query_input.unwrap_err().to_string();
+        let transform_data = build_transform_data(input, &root);
+        assert!(transform_data.is_err());
+        let err = transform_data.unwrap_err().to_string();
         // eprintln!("{}", err);
         assert!(err.contains("Cannot get param name from array item at b.[0]"));
 
-        let root = ParameterTransformObjectNode {
-            fields: vec![
-                (
-                    "a".to_string(),
-                    ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg(ApplyFromArg {
-                        name: None,
-                    })),
-                ),
-                (
-                    "b".to_string(),
-                    ParameterTransformNode::Parent(ParameterTransformParentNode::Array(
-                        ParameterTransformArrayNode {
-                            items: vec![
-                                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg(
-                                    ApplyFromArg {
-                                        name: Some("first".to_string()),
-                                    },
-                                )),
-                                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg(
-                                    ApplyFromArg {
-                                        name: Some("second".to_string()),
-                                    },
-                                )),
-                            ],
-                        },
-                    )),
-                ),
-            ]
-            .into_iter()
-            .collect(),
-        };
-        let query_input = TransformTreeValidationContext::new().query_input(input, root)?;
+        let root = vec![
+            (
+                "a".to_string(),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg { name: None }),
+            ),
+            (
+                "b".to_string(),
+                ParameterTransformNode::Parent(ParameterTransformParentNode::Array {
+                    items: vec![
+                        ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                            name: Some("first".to_string()),
+                        }),
+                        ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                            name: Some("second".to_string()),
+                        }),
+                    ],
+                }),
+            ),
+        ]
+        .into_iter()
+        .collect();
 
+        let transform_data = build_transform_data(input, &root)?;
         let print_options = tree::PrintOptions::new().no_indent_lines();
         assert_eq!(
-            print_options.print(query_input),
+            print_options.print(transform_data.query_input.into()),
             indoc::indoc! {"
                 root: struct #4
                     [a]: string #0

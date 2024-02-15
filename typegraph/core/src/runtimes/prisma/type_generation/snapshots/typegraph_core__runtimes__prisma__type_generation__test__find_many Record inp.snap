@@ -3,194 +3,194 @@ source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(inp)"
 ---
 root: struct '_Record_QueryInput' #66
-├─ [where]: optional '_42_QueryRecordWhereInput?' #42
-│  └─ item: struct 'QueryRecordWhereInput' #41
-│     ├─ [id]: optional '_21__string_filter_c?' #21
-│     │  └─ item: optional '_string_filter_c' #20
-│     │     └─ item: union #19
-│     │        ├─ variant_0: union '_string_filter' #17
-│     │        │  ├─ variant_0: string #5
-│     │        │  ├─ variant_1: struct #8
-│     │        │  │  └─ [equals]: string #5
-│     │        │  ├─ variant_2: struct #9
-│     │        │  │  └─ [not]: string #5
-│     │        │  ├─ variant_3: struct #10
-│     │        │  │  └─ [in]: list #7
-│     │        │  │     └─ item: string #5
-│     │        │  ├─ variant_4: struct #11
-│     │        │  │  └─ [notIn]: list #7
-│     │        │  │     └─ item: string #5
-│     │        │  ├─ variant_5: struct #14
-│     │        │  │  ├─ [contains]: string #5
-│     │        │  │  └─ [mode]: optional #13
-│     │        │  │     └─ item: string #12 enum{ '"insensitive"' }
-│     │        │  ├─ variant_6: struct #15
-│     │        │  │  └─ [search]: string #5
-│     │        │  └─ variant_7: struct #16
-│     │        │     ├─ [startsWith]: optional #6
-│     │        │     │  └─ item: string #5
-│     │        │     └─ [endsWith]: optional #6
-│     │        │        └─ item: string #5
-│     │        └─ variant_1: struct #18
-│     │           └─ [not]: union '_string_filter' #17
-│     │              ├─ variant_0: string #5
-│     │              ├─ variant_1: struct #8
-│     │              │  └─ [equals]: string #5
-│     │              ├─ variant_2: struct #9
-│     │              │  └─ [not]: string #5
-│     │              ├─ variant_3: struct #10
-│     │              │  └─ [in]: list #7
-│     │              │     └─ item: string #5
-│     │              ├─ variant_4: struct #11
-│     │              │  └─ [notIn]: list #7
-│     │              │     └─ item: string #5
-│     │              ├─ variant_5: struct #14
-│     │              │  ├─ [contains]: string #5
-│     │              │  └─ [mode]: optional #13
-│     │              │     └─ item: string #12 enum{ '"insensitive"' }
-│     │              ├─ variant_6: struct #15
-│     │              │  └─ [search]: string #5
-│     │              └─ variant_7: struct #16
-│     │                 ├─ [startsWith]: optional #6
-│     │                 │  └─ item: string #5
-│     │                 └─ [endsWith]: optional #6
-│     │                    └─ item: string #5
-│     ├─ [name]: optional '_22__string_filter_c?' #22
-│     │  └─ item: optional '_string_filter_c' #20
-│     │     └─ item: union #19
-│     │        ├─ variant_0: union '_string_filter' #17
-│     │        │  ├─ variant_0: string #5
-│     │        │  ├─ variant_1: struct #8
-│     │        │  │  └─ [equals]: string #5
-│     │        │  ├─ variant_2: struct #9
-│     │        │  │  └─ [not]: string #5
-│     │        │  ├─ variant_3: struct #10
-│     │        │  │  └─ [in]: list #7
-│     │        │  │     └─ item: string #5
-│     │        │  ├─ variant_4: struct #11
-│     │        │  │  └─ [notIn]: list #7
-│     │        │  │     └─ item: string #5
-│     │        │  ├─ variant_5: struct #14
-│     │        │  │  ├─ [contains]: string #5
-│     │        │  │  └─ [mode]: optional #13
-│     │        │  │     └─ item: string #12 enum{ '"insensitive"' }
-│     │        │  ├─ variant_6: struct #15
-│     │        │  │  └─ [search]: string #5
-│     │        │  └─ variant_7: struct #16
-│     │        │     ├─ [startsWith]: optional #6
-│     │        │     │  └─ item: string #5
-│     │        │     └─ [endsWith]: optional #6
-│     │        │        └─ item: string #5
-│     │        └─ variant_1: struct #18
-│     │           └─ [not]: union '_string_filter' #17
-│     │              ├─ variant_0: string #5
-│     │              ├─ variant_1: struct #8
-│     │              │  └─ [equals]: string #5
-│     │              ├─ variant_2: struct #9
-│     │              │  └─ [not]: string #5
-│     │              ├─ variant_3: struct #10
-│     │              │  └─ [in]: list #7
-│     │              │     └─ item: string #5
-│     │              ├─ variant_4: struct #11
-│     │              │  └─ [notIn]: list #7
-│     │              │     └─ item: string #5
-│     │              ├─ variant_5: struct #14
-│     │              │  ├─ [contains]: string #5
-│     │              │  └─ [mode]: optional #13
-│     │              │     └─ item: string #12 enum{ '"insensitive"' }
-│     │              ├─ variant_6: struct #15
-│     │              │  └─ [search]: string #5
-│     │              └─ variant_7: struct #16
-│     │                 ├─ [startsWith]: optional #6
-│     │                 │  └─ item: string #5
-│     │                 └─ [endsWith]: optional #6
-│     │                    └─ item: string #5
-│     ├─ [age]: optional '_35__integer_filter_c?' #35
-│     │  └─ item: optional '_integer_filter_c' #34
-│     │     └─ item: union #33
-│     │        ├─ variant_0: either '_integer_filter' #31
-│     │        │  ├─ variant_0: integer #23
-│     │        │  ├─ variant_1: struct #26
-│     │        │  │  └─ [equals]: integer #23
-│     │        │  ├─ variant_2: struct #27
-│     │        │  │  └─ [not]: integer #23
-│     │        │  ├─ variant_3: struct #28
-│     │        │  │  ├─ [lt]: optional #24
-│     │        │  │  │  └─ item: integer #23
-│     │        │  │  ├─ [gt]: optional #24
-│     │        │  │  │  └─ item: integer #23
-│     │        │  │  ├─ [lte]: optional #24
-│     │        │  │  │  └─ item: integer #23
-│     │        │  │  └─ [gte]: optional #24
-│     │        │  │     └─ item: integer #23
-│     │        │  ├─ variant_4: struct #29
-│     │        │  │  └─ [in]: list #25
-│     │        │  │     └─ item: integer #23
-│     │        │  └─ variant_5: struct #30
-│     │        │     └─ [notIn]: list #25
-│     │        │        └─ item: integer #23
-│     │        └─ variant_1: struct #32
-│     │           └─ [not]: either '_integer_filter' #31
-│     │              ├─ variant_0: integer #23
-│     │              ├─ variant_1: struct #26
-│     │              │  └─ [equals]: integer #23
-│     │              ├─ variant_2: struct #27
-│     │              │  └─ [not]: integer #23
-│     │              ├─ variant_3: struct #28
-│     │              │  ├─ [lt]: optional #24
-│     │              │  │  └─ item: integer #23
-│     │              │  ├─ [gt]: optional #24
-│     │              │  │  └─ item: integer #23
-│     │              │  ├─ [lte]: optional #24
-│     │              │  │  └─ item: integer #23
-│     │              │  └─ [gte]: optional #24
-│     │              │     └─ item: integer #23
-│     │              ├─ variant_4: struct #29
-│     │              │  └─ [in]: list #25
-│     │              │     └─ item: integer #23
-│     │              └─ variant_5: struct #30
-│     │                 └─ [notIn]: list #25
-│     │                    └─ item: integer #23
-│     ├─ [AND]: optional '_39__38_QueryRecordWhereInput[]?' #39
-│     │  └─ item: list '_38_QueryRecordWhereInput[]' #38
-│     │     └─ item: &QueryRecordWhereInput #37
-│     ├─ [OR]: optional '_39__38_QueryRecordWhereInput[]?' #39
-│     │  └─ item: list '_38_QueryRecordWhereInput[]' #38
-│     │     └─ item: &QueryRecordWhereInput #37
-│     └─ [NOT]: optional '_40_QueryRecordWhereInput?' #40
-│        └─ item: &QueryRecordWhereInput #37
-├─ [orderBy]: optional '_53__Record_OrderBy?' #53
-│  └─ item: list '_Record_OrderBy' #52
-│     └─ item: struct #51
-│        ├─ [id]: optional '_Sort' #47
-│        │  └─ item: union #46
-│        │     ├─ variant_0: struct #45
-│        │     │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│        │     └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│        ├─ [name]: optional '_Sort' #47
-│        │  └─ item: union #46
-│        │     ├─ variant_0: struct #45
-│        │     │  └─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│        │     └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│        └─ [age]: optional '_Sort_nullable' #50
-│           └─ item: union #49
-│              ├─ variant_0: struct #48
-│              │  ├─ [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-│              │  └─ [nulls]: string '_NullsOrder' #44 enum{ '"first"', '"last"' }
-│              └─ variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
-├─ [take]: optional '_55__Take?' #55
-│  └─ item: integer '_Take' #54
-├─ [skip]: optional '_57__Skip?' #57
-│  └─ item: integer '_Skip' #56
-├─ [cursor]: optional '_62__Record_Cursor?' #62
-│  └─ item: union '_Record_Cursor' #61
-│     ├─ variant_0: struct #58
-│     │  └─ [id]: string #0
-│     ├─ variant_1: struct #59
-│     │  └─ [name]: string #1
-│     └─ variant_2: struct #60
-│        └─ [age]: integer #2
-└─ [distinct]: optional '_65__KeysOf_Record?' #65
-   └─ item: list '_KeysOf_Record' #64
-      └─ item: string #63 enum{ '"id"', '"name"', '"age"' }
+├── [cursor]: optional '_62__Record_Cursor?' #62
+│   └── item: union '_Record_Cursor' #61
+│       ├── variant_0: struct #58
+│       │   └── [id]: string #0
+│       ├── variant_1: struct #59
+│       │   └── [name]: string #1
+│       └── variant_2: struct #60
+│           └── [age]: integer #2
+├── [distinct]: optional '_65__KeysOf_Record?' #65
+│   └── item: list '_KeysOf_Record' #64
+│       └── item: string #63 enum{ '"id"', '"name"', '"age"' }
+├── [orderBy]: optional '_53__Record_OrderBy?' #53
+│   └── item: list '_Record_OrderBy' #52
+│       └── item: struct #51
+│           ├── [age]: optional '_Sort_nullable' #50
+│           │   └── item: union #49
+│           │       ├── variant_0: struct #48
+│           │       │   ├── [nulls]: string '_NullsOrder' #44 enum{ '"first"', '"last"' }
+│           │       │   └── [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
+│           │       └── variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
+│           ├── [id]: optional '_Sort' #47
+│           │   └── item: union #46
+│           │       ├── variant_0: struct #45
+│           │       │   └── [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
+│           │       └── variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
+│           └── [name]: optional '_Sort' #47
+│               └── item: union #46
+│                   ├── variant_0: struct #45
+│                   │   └── [sort]: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
+│                   └── variant_1: string '_SortOrder' #43 enum{ '"asc"', '"desc"' }
+├── [skip]: optional '_57__Skip?' #57
+│   └── item: integer '_Skip' #56
+├── [take]: optional '_55__Take?' #55
+│   └── item: integer '_Take' #54
+└── [where]: optional '_42_QueryRecordWhereInput?' #42
+    └── item: struct 'QueryRecordWhereInput' #41
+        ├── [AND]: optional '_39__38_QueryRecordWhereInput[]?' #39
+        │   └── item: list '_38_QueryRecordWhereInput[]' #38
+        │       └── item: &QueryRecordWhereInput #37
+        ├── [NOT]: optional '_40_QueryRecordWhereInput?' #40
+        │   └── item: &QueryRecordWhereInput #37
+        ├── [OR]: optional '_39__38_QueryRecordWhereInput[]?' #39
+        │   └── item: list '_38_QueryRecordWhereInput[]' #38
+        │       └── item: &QueryRecordWhereInput #37
+        ├── [age]: optional '_35__integer_filter_c?' #35
+        │   └── item: optional '_integer_filter_c' #34
+        │       └── item: union #33
+        │           ├── variant_0: either '_integer_filter' #31
+        │           │   ├── variant_0: integer #23
+        │           │   ├── variant_1: struct #26
+        │           │   │   └── [equals]: integer #23
+        │           │   ├── variant_2: struct #27
+        │           │   │   └── [not]: integer #23
+        │           │   ├── variant_3: struct #28
+        │           │   │   ├── [gt]: optional #24
+        │           │   │   │   └── item: integer #23
+        │           │   │   ├── [gte]: optional #24
+        │           │   │   │   └── item: integer #23
+        │           │   │   ├── [lt]: optional #24
+        │           │   │   │   └── item: integer #23
+        │           │   │   └── [lte]: optional #24
+        │           │   │       └── item: integer #23
+        │           │   ├── variant_4: struct #29
+        │           │   │   └── [in]: list #25
+        │           │   │       └── item: integer #23
+        │           │   └── variant_5: struct #30
+        │           │       └── [notIn]: list #25
+        │           │           └── item: integer #23
+        │           └── variant_1: struct #32
+        │               └── [not]: either '_integer_filter' #31
+        │                   ├── variant_0: integer #23
+        │                   ├── variant_1: struct #26
+        │                   │   └── [equals]: integer #23
+        │                   ├── variant_2: struct #27
+        │                   │   └── [not]: integer #23
+        │                   ├── variant_3: struct #28
+        │                   │   ├── [gt]: optional #24
+        │                   │   │   └── item: integer #23
+        │                   │   ├── [gte]: optional #24
+        │                   │   │   └── item: integer #23
+        │                   │   ├── [lt]: optional #24
+        │                   │   │   └── item: integer #23
+        │                   │   └── [lte]: optional #24
+        │                   │       └── item: integer #23
+        │                   ├── variant_4: struct #29
+        │                   │   └── [in]: list #25
+        │                   │       └── item: integer #23
+        │                   └── variant_5: struct #30
+        │                       └── [notIn]: list #25
+        │                           └── item: integer #23
+        ├── [id]: optional '_21__string_filter_c?' #21
+        │   └── item: optional '_string_filter_c' #20
+        │       └── item: union #19
+        │           ├── variant_0: union '_string_filter' #17
+        │           │   ├── variant_0: string #5
+        │           │   ├── variant_1: struct #8
+        │           │   │   └── [equals]: string #5
+        │           │   ├── variant_2: struct #9
+        │           │   │   └── [not]: string #5
+        │           │   ├── variant_3: struct #10
+        │           │   │   └── [in]: list #7
+        │           │   │       └── item: string #5
+        │           │   ├── variant_4: struct #11
+        │           │   │   └── [notIn]: list #7
+        │           │   │       └── item: string #5
+        │           │   ├── variant_5: struct #14
+        │           │   │   ├── [contains]: string #5
+        │           │   │   └── [mode]: optional #13
+        │           │   │       └── item: string #12 enum{ '"insensitive"' }
+        │           │   ├── variant_6: struct #15
+        │           │   │   └── [search]: string #5
+        │           │   └── variant_7: struct #16
+        │           │       ├── [endsWith]: optional #6
+        │           │       │   └── item: string #5
+        │           │       └── [startsWith]: optional #6
+        │           │           └── item: string #5
+        │           └── variant_1: struct #18
+        │               └── [not]: union '_string_filter' #17
+        │                   ├── variant_0: string #5
+        │                   ├── variant_1: struct #8
+        │                   │   └── [equals]: string #5
+        │                   ├── variant_2: struct #9
+        │                   │   └── [not]: string #5
+        │                   ├── variant_3: struct #10
+        │                   │   └── [in]: list #7
+        │                   │       └── item: string #5
+        │                   ├── variant_4: struct #11
+        │                   │   └── [notIn]: list #7
+        │                   │       └── item: string #5
+        │                   ├── variant_5: struct #14
+        │                   │   ├── [contains]: string #5
+        │                   │   └── [mode]: optional #13
+        │                   │       └── item: string #12 enum{ '"insensitive"' }
+        │                   ├── variant_6: struct #15
+        │                   │   └── [search]: string #5
+        │                   └── variant_7: struct #16
+        │                       ├── [endsWith]: optional #6
+        │                       │   └── item: string #5
+        │                       └── [startsWith]: optional #6
+        │                           └── item: string #5
+        └── [name]: optional '_22__string_filter_c?' #22
+            └── item: optional '_string_filter_c' #20
+                └── item: union #19
+                    ├── variant_0: union '_string_filter' #17
+                    │   ├── variant_0: string #5
+                    │   ├── variant_1: struct #8
+                    │   │   └── [equals]: string #5
+                    │   ├── variant_2: struct #9
+                    │   │   └── [not]: string #5
+                    │   ├── variant_3: struct #10
+                    │   │   └── [in]: list #7
+                    │   │       └── item: string #5
+                    │   ├── variant_4: struct #11
+                    │   │   └── [notIn]: list #7
+                    │   │       └── item: string #5
+                    │   ├── variant_5: struct #14
+                    │   │   ├── [contains]: string #5
+                    │   │   └── [mode]: optional #13
+                    │   │       └── item: string #12 enum{ '"insensitive"' }
+                    │   ├── variant_6: struct #15
+                    │   │   └── [search]: string #5
+                    │   └── variant_7: struct #16
+                    │       ├── [endsWith]: optional #6
+                    │       │   └── item: string #5
+                    │       └── [startsWith]: optional #6
+                    │           └── item: string #5
+                    └── variant_1: struct #18
+                        └── [not]: union '_string_filter' #17
+                            ├── variant_0: string #5
+                            ├── variant_1: struct #8
+                            │   └── [equals]: string #5
+                            ├── variant_2: struct #9
+                            │   └── [not]: string #5
+                            ├── variant_3: struct #10
+                            │   └── [in]: list #7
+                            │       └── item: string #5
+                            ├── variant_4: struct #11
+                            │   └── [notIn]: list #7
+                            │       └── item: string #5
+                            ├── variant_5: struct #14
+                            │   ├── [contains]: string #5
+                            │   └── [mode]: optional #13
+                            │       └── item: string #12 enum{ '"insensitive"' }
+                            ├── variant_6: struct #15
+                            │   └── [search]: string #5
+                            └── variant_7: struct #16
+                                ├── [endsWith]: optional #6
+                                │   └── item: string #5
+                                └── [startsWith]: optional #6
+                                    └── item: string #5
 

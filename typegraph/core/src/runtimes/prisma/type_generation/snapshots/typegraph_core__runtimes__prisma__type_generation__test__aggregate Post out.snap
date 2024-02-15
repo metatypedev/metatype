@@ -3,25 +3,25 @@ source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(out)"
 ---
 root: struct #49
-├─ [_count]: struct '_Post_AggrCount' #40
-│  ├─ [_all]: optional #39
-│  │  └─ item: integer #38
-│  ├─ [id]: optional #39
-│  │  └─ item: integer #38
-│  ├─ [title]: optional #39
-│  │  └─ item: integer #38
-│  └─ [author]: optional #39
-│     └─ item: integer #38
-├─ [_avg]: struct '_Post_NumberAgg_avg' #43
-│  └─ [id]: optional #42
-│     └─ item: float #41
-├─ [_sum]: struct '_Post_NumberAgg' #48
-│  └─ [id]: optional #47
-│     └─ item: integer #46
-├─ [_min]: struct '_Post_NumberAgg' #48
-│  └─ [id]: optional #47
-│     └─ item: integer #46
-└─ [_max]: struct '_Post_NumberAgg' #48
-   └─ [id]: optional #47
-      └─ item: integer #46
+├── [_avg]: struct '_Post_NumberAgg_avg' #43
+│   └── [id]: optional #42
+│       └── item: float #41
+├── [_count]: struct '_Post_AggrCount' #40
+│   ├── [_all]: optional #39
+│   │   └── item: integer #38
+│   ├── [author]: optional #39
+│   │   └── item: integer #38
+│   ├── [id]: optional #39
+│   │   └── item: integer #38
+│   └── [title]: optional #39
+│       └── item: integer #38
+├── [_max]: struct '_Post_NumberAgg' #48
+│   └── [id]: optional #47
+│       └── item: integer #46
+├── [_min]: struct '_Post_NumberAgg' #48
+│   └── [id]: optional #47
+│       └── item: integer #46
+└── [_sum]: struct '_Post_NumberAgg' #48
+    └── [id]: optional #47
+        └── item: integer #46
 
