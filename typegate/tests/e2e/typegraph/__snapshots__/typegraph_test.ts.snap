@@ -245,7 +245,8 @@ snapshot[`typegraphs creation 1`] = `
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda=()=>true;"
+          "script": "var _my_lambda = () => true",
+          "secrets": []
         }
       },
       {
@@ -489,7 +490,8 @@ snapshot[`typegraphs creation 2`] = `
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda=({first,second})=>first*second;"
+          "script": "var _my_lambda = ({ first, second }) => first * second",
+          "secrets": []
         }
       }
     ],
@@ -538,7 +540,7 @@ snapshot[`typegraphs creation 2`] = `
 `;
 
 snapshot[`typegraphs creation 3`] = `
-'[
+\`[
   {
     "\$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
@@ -697,7 +699,8 @@ snapshot[`typegraphs creation 3`] = `
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda=()=>12;"
+          "script": "var _my_lambda = () => 12",
+          "secrets": []
         }
       },
       {
@@ -708,7 +711,8 @@ snapshot[`typegraphs creation 3`] = `
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda=(_,{context})=>context.provider===\\\\"internal\\\\";"
+          "script": "var _my_lambda = (_, { context }) => context.provider === 'internal'",
+          "secrets": []
         }
       },
       {
@@ -719,7 +723,8 @@ snapshot[`typegraphs creation 3`] = `
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda=user=>({id:12,user});"
+          "script": "var _my_lambda = (user) => ({ id: 12, user })",
+          "secrets": []
         }
       },
       {
@@ -730,7 +735,8 @@ snapshot[`typegraphs creation 3`] = `
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda=()=>false;"
+          "script": "var _my_lambda = () => false",
+          "secrets": []
         }
       },
       {
@@ -812,7 +818,7 @@ snapshot[`typegraphs creation 3`] = `
       "version": "0.0.3"
     }
   }
-]'
+]\`
 `;
 
 snapshot[`typegraphs creation 4`] = `
@@ -1060,7 +1066,8 @@ snapshot[`typegraphs creation 4`] = `
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda=()=>true;"
+          "script": "var _my_lambda = () => true",
+          "secrets": []
         }
       },
       {
@@ -1304,7 +1311,8 @@ snapshot[`typegraphs creation 5`] = `
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda=({first,second})=>first*second;"
+          "script": "var _my_lambda = ({first, second}) => first * second",
+          "secrets": []
         }
       }
     ],
@@ -1353,7 +1361,7 @@ snapshot[`typegraphs creation 5`] = `
 `;
 
 snapshot[`typegraphs creation 6`] = `
-'[
+\`[
   {
     "\$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
@@ -1512,7 +1520,8 @@ snapshot[`typegraphs creation 6`] = `
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda=()=>12;"
+          "script": "var _my_lambda = () => 12",
+          "secrets": []
         }
       },
       {
@@ -1523,7 +1532,8 @@ snapshot[`typegraphs creation 6`] = `
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda=(_,{context})=>context.provider===\\\\"internal\\\\";"
+          "script": "var _my_lambda = (_, { context }) => context.provider === 'internal'",
+          "secrets": []
         }
       },
       {
@@ -1534,7 +1544,8 @@ snapshot[`typegraphs creation 6`] = `
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda=user=>({id:12,user});"
+          "script": "var _my_lambda = (user) => ({ id: 12, user })",
+          "secrets": []
         }
       },
       {
@@ -1545,7 +1556,8 @@ snapshot[`typegraphs creation 6`] = `
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda=()=>false;"
+          "script": "var _my_lambda = () => false",
+          "secrets": []
         }
       },
       {
@@ -1627,5 +1639,5 @@ snapshot[`typegraphs creation 6`] = `
       "version": "0.0.3"
     }
   }
-]'
+]\`
 `;
