@@ -1,27 +1,27 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(out)"
+expression: "tree::PrintOptions::new().indent_size(3).print(out)"
 ---
 root: struct #16
-├── [_avg]: struct '_Record_NumberAgg_avg' #10
-│   └── [age]: optional #9
-│       └── item: float #8
-├── [_count]: struct '_Record_AggrCount' #7
-│   ├── [_all]: optional #6
-│   │   └── item: integer #5
-│   ├── [age]: optional #6
-│   │   └── item: integer #5
-│   ├── [id]: optional #6
-│   │   └── item: integer #5
-│   └── [name]: optional #6
-│       └── item: integer #5
-├── [_max]: struct '_Record_NumberAgg' #15
-│   └── [age]: optional #14
-│       └── item: integer #13
-├── [_min]: struct '_Record_NumberAgg' #15
-│   └── [age]: optional #14
-│       └── item: integer #13
-└── [_sum]: struct '_Record_NumberAgg' #15
-    └── [age]: optional #14
-        └── item: integer #13
+├─ [_avg]: struct '_Record_NumberAgg_avg' #10
+│  └─ [age]: optional #9
+│     └─ item: float #8
+├─ [_count]: struct '_Record_AggrCount' #7
+│  ├─ [_all]: optional #6
+│  │  └─ item: integer #5
+│  ├─ [age]: optional #6
+│  │  └─ item: integer #5
+│  ├─ [id]: optional #6
+│  │  └─ item: integer #5
+│  └─ [name]: optional #6
+│     └─ item: integer #5
+├─ [_max]: struct '_Record_NumberAgg' #15
+│  └─ [age]: optional #14
+│     └─ item: integer #13
+├─ [_min]: struct '_Record_NumberAgg' #15
+│  └─ [age]: optional #14
+│     └─ item: integer #13
+└─ [_sum]: struct '_Record_NumberAgg' #15
+   └─ [age]: optional #14
+      └─ item: integer #13
 

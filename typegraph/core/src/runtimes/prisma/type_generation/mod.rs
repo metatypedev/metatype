@@ -411,18 +411,19 @@ mod test {
 
             let record = models::simple_record()?;
             context.manage(record)?;
+            let tp = tree::PrintOptions::new().indent_size(3);
             if $test_inp {
                 let inp = $op_name.generate_input_type(&context, record)?;
                 insta::assert_snapshot!(
                     paste! { concat!(stringify!([<$op_name:snake>]), " Record inp") },
-                    tree::print(inp)
+                    tp.print(inp)
                 );
             }
             if $test_out {
                 let out = $op_name.generate_output_type(&context, record)?;
                 insta::assert_snapshot!(
                     paste! { concat!(stringify!([<$op_name:snake>]), " Record out") },
-                    tree::print(out)
+                    tp.print(out)
                 );
             }
 
@@ -433,7 +434,7 @@ mod test {
                 let inp = $op_name.generate_input_type(&context, user)?;
                 insta::assert_snapshot!(
                     paste! { concat!(stringify!([<$op_name:snake>]), " User inp") },
-                    tree::print(inp)
+                    tp.print(inp)
                 );
             }
 
@@ -441,7 +442,7 @@ mod test {
                 let out = $op_name.generate_output_type(&context, user)?;
                 insta::assert_snapshot!(
                     paste! { concat!(stringify!([<$op_name:snake>]), " User out") },
-                    tree::print(out)
+                    tp.print(out)
                 );
             }
 
@@ -449,14 +450,14 @@ mod test {
                 let inp = $op_name.generate_input_type(&context, post)?;
                 insta::assert_snapshot!(
                     paste! { concat!(stringify!([<$op_name:snake>]), " Post inp") },
-                    tree::print(inp)
+                    tp.print(inp)
                 );
             }
             if $test_out {
                 let out = $op_name.generate_output_type(&context, post)?;
                 insta::assert_snapshot!(
                     paste! { concat!(stringify!([<$op_name:snake>]), " Post out") },
-                    tree::print(out)
+                    tp.print(out)
                 );
             }
 
