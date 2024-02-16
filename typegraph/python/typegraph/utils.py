@@ -7,6 +7,7 @@ from typing import Dict, List, Union, Tuple, Optional, Any
 from typegraph.injection import InheritDef
 from typegraph.gen.exports.utils import ReducePath, ReduceValue
 from typegraph.injection import serialize_static_injection
+from typegraph.wit import store, wit_utils
 
 
 # def serialize_record_values(obj: Union[Dict[str, any], None]):
@@ -72,3 +73,7 @@ def build_reduce_data(node: any, paths: List[ReducePath], curr_path: List[str]):
         return paths
 
     raise Exception(f"unsupported type {type(node)} at {'.'.join(curr_path)}")
+
+
+def unpack_tarb64(tar_b64: str, dest: str):
+    return wit_utils.unpack_tarb64(store, tar_b64, dest)
