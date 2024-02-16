@@ -73,7 +73,8 @@ steps in advance to help us fix any potential bug as fast as possible.
   you might want to check [this section](#i-have-a-question)).
 - To see if other users have experienced (and potentially already solved) the
   same issue you are having, check if there is not already a bug report existing
-  for your bug or error in the [bug tracker](https://github.com/metatypedev/metatype/issues?q=label%3Abug).
+  for your bug or error in the
+  [bug tracker](https://github.com/metatypedev/metatype/issues?q=label%3Abug).
 - Also make sure to search the internet (including Stack Overflow) to see if
   users outside the GitHub community have discussed the issue.
 - Collect information about the bug:
@@ -229,4 +230,17 @@ rustflags = [
 rustflags = [
     "-C", "link-arg=-fuse-ld=mold"
 ]
+```
+
+#### Local typegraph with Nodejs
+
+Currently, the `typegraph/sdk/node/dist` project is generated dynamically.
+Depending on your package manager, the protocol used may differ.
+
+```bash
+# uses the `file:..` protocol
+npm install path/to/typegraph/sdk/node/dist
+
+# uses the `link:..` protocol (equivalent to `file:..` but for directories only)
+pnpm install path/to/typegraph/sdk/node/dist
 ```
