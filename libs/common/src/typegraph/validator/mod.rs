@@ -71,7 +71,7 @@ impl<'a> TypeVisitor<'a> for Validator {
         let last_seg = current_node.path.last();
         if let Some(last_seg) = last_seg {
             if let Edge::FunctionInput = last_seg.edge {
-                self.visit_input_type_impl(current_node, context);
+                self.visit_input_type(current_node, context);
                 return VisitResult::Continue(false);
             }
         }

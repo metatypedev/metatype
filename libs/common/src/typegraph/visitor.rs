@@ -18,7 +18,7 @@ impl Typegraph {
             visited_types: HashSet::new(),
             visited_input_types: HashSet::new(),
             visitor,
-            input_parent_function: None,
+            as_input: false,
         };
         traversal
             .visit_type(0, context)
@@ -39,7 +39,7 @@ where
 {
     tg: &'a Typegraph,
     path: Vec<PathSegment<'a>>,
-    input_parent_function: Option<FunctionMetadata>,
+    as_input: bool,
     visited_types: HashSet<u32>, // non input types
     visited_input_types: HashSet<u32>,
     visitor: V,
@@ -50,7 +50,7 @@ where
     V: TypeVisitor<'a> + Sized,
 {
     fn visit_type(&mut self, type_idx: u32, context: &'a V::Context) -> Option<V::Return> {
-        let res = if self.input_parent_function.as_ref().is_some() {
+        let res = if self.as_input {
             if self.visited_input_types.contains(&type_idx) {
                 return None;
             }
@@ -211,6 +211,11 @@ where
         output: u32,
         context: &'a V::Context,
     ) -> Option<V::Return> {
+        if self.as_input {
+            // TODO warning
+            return None;
+        }
+
         let last_path_seg = self.path.last().unwrap();
         match last_path_seg.edge {
             Edge::ObjectProp(_) => {}
@@ -222,6 +227,7 @@ where
             }
         }
 
+        self.as_input = true;
         let res = self.visit_child(
             PathSegment {
                 from: type_idx,
@@ -230,6 +236,7 @@ where
             input,
             context,
         );
+        self.as_input = false;
 
         if let Some(ret) = res {
             return Some(ret);

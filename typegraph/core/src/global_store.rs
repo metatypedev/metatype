@@ -61,6 +61,8 @@ pub struct Store {
     auths: Vec<common::typegraph::Auth>,
 
     deploy_cwd_dir: Option<PathBuf>,
+
+    latest_alias_no: u32,
 }
 
 impl Store {
@@ -185,6 +187,24 @@ impl Store {
     pub fn register_type_name(name: impl Into<String>, id: TypeId) -> Result<()> {
         let name = name.into();
         with_store_mut(move |s| -> Result<()> {
+            if s.type_by_names.contains_key(&name) {
+                return Err(format!("type with name {:?} already exists", name).into());
+            }
+            s.type_by_names.insert(name, id);
+            Ok(())
+        })
+    }
+
+    pub fn generate_alias() -> String {
+        with_store_mut(|s| {
+            s.latest_alias_no += 1;
+            format!("__alias_{}", s.latest_alias_no)
+        })
+    }
+
+    pub fn register_alias(name: impl Into<String>, id: TypeId) -> Result<()> {
+        let name = name.into();
+        with_store_mut(|s| {
             if s.type_by_names.contains_key(&name) {
                 return Err(format!("type with name {:?} already exists", name).into());
             }

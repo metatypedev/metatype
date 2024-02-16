@@ -55,7 +55,7 @@ def validator(g: Graph):
                         }
                     ),
                     t.struct(),
-                    code="...",
+                    code="() => ({})",
                 ),
             }
         ),
