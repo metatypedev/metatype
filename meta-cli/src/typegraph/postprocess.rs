@@ -11,11 +11,10 @@ use colored::Colorize;
 use common::archive::archive_entries;
 use common::typegraph::utils::{map_from_object, object_from_map};
 use common::typegraph::validator::validate_typegraph;
-use common::typegraph::{Materializer, Typegraph};
+use common::typegraph::Typegraph;
 use ignore::WalkBuilder;
 use log::error;
 use std::path::Path;
-use typescript::parser::transform_script;
 
 pub trait PostProcessor {
     fn postprocess(&self, tg: &mut Typegraph, config: &Config) -> Result<()>;
@@ -34,14 +33,6 @@ where
 
 #[derive(Clone)]
 pub struct PostProcessorWrapper(Arc<RwLock<Box<dyn PostProcessor + Sync + Send>>>);
-
-impl PostProcessorWrapper {
-    pub fn generic(
-        pp: impl Fn(&mut Typegraph, &Config) -> Result<()> + Sync + Send + 'static,
-    ) -> Self {
-        PostProcessorWrapper::from(GenericPostProcessor(pp))
-    }
-}
 
 impl<T> From<T> for PostProcessorWrapper
 where
@@ -112,7 +103,6 @@ fn compress_and_encode(main_path: &Path, tg_path: &Path) -> Result<String> {
 }
 
 pub use deno_rt::DenoModules;
-pub use deno_rt::ReformatScripts;
 pub use prisma_rt::EmbedPrismaMigrations;
 pub use prisma_rt::EmbeddedPrismaMigrationOptionsPatch;
 pub use python_rt::PythonModules;
@@ -141,43 +131,9 @@ impl PostProcessor for Validator {
 pub mod deno_rt {
     use std::fs;
 
-    use common::typegraph::runtimes::deno::{FunctionMatData, ModuleMatData};
-    use common::typegraph::runtimes::{KnownRuntime, TGRuntime};
-
-    use common::typegraph::utils::{find_runtimes, get_materializers};
+    use common::typegraph::runtimes::deno::ModuleMatData;
 
     use super::*;
-
-    pub struct ReformatScripts;
-
-    impl From<ReformatScripts> for PostProcessorWrapper {
-        fn from(_val: ReformatScripts) -> Self {
-            PostProcessorWrapper::generic(reformat_scripts)
-        }
-    }
-
-    fn reformat_materializer_script(mat: &mut Materializer) -> Result<()> {
-        if mat.name.as_str() == "function" {
-            let mut mat_data: FunctionMatData = object_from_map(std::mem::take(&mut mat.data))?;
-            // TODO check variable `_my_lambda` exists and is a function expression/lambda
-            mat_data.script = transform_script(mat_data.script)?;
-            mat.data = map_from_object(mat_data)?;
-        }
-        Ok(())
-    }
-
-    fn reformat_scripts(typegraph: &mut Typegraph, _c: &Config) -> Result<()> {
-        for rt_idx in find_runtimes(typegraph, |rt| {
-            matches!(rt, TGRuntime::Known(KnownRuntime::Deno(_)))
-        })
-        .into_iter()
-        {
-            for mat_idx in get_materializers(typegraph, rt_idx as u32) {
-                reformat_materializer_script(&mut typegraph.materializers[mat_idx])?;
-            }
-        }
-        Ok(())
-    }
 
     #[derive(Default, Debug, Clone)]
     pub struct DenoModules {
