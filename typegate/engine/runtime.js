@@ -38,6 +38,9 @@ globalThis.Meta = {
     registerModule: ops.op_register_module,
     unregisterModule: ops.op_unregister_module,
   },
+  deno: {
+    transformTypescript: ops.op_deno_transform_typescript,
+  },
   version: ops.op_get_version,
   typescriptFormatCode: ops.op_typescript_format_code,
   typegraphValidate: ops.op_typegraph_validate,

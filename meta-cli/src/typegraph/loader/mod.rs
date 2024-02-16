@@ -42,10 +42,7 @@ impl LoaderPool {
     pub fn new(config: Arc<Config>, max_parallel_loads: usize) -> Self {
         Self {
             config,
-            postprocessors: vec![
-                postprocess::Validator.into(),
-                postprocess::ReformatScripts.into(),
-            ],
+            postprocessors: vec![postprocess::Validator.into()],
             semaphore: Semaphore::new(max_parallel_loads),
         }
     }
