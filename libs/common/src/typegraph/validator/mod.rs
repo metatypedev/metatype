@@ -9,7 +9,8 @@ mod value;
 use crate::typegraph::{TypeNode, Typegraph};
 
 use super::visitor::{
-    CurrentNode, Path, PathSegment, TypeVisitor, TypeVisitorContext, VisitResult, VisitorResult,
+    CurrentNode, Edge, Path, PathSegment, TypeVisitor, TypeVisitorContext, VisitResult,
+    VisitorResult,
 };
 
 pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
@@ -66,6 +67,14 @@ impl<'a> TypeVisitor<'a> for Validator {
     ) -> VisitResult<Self::Return> {
         let typegraph = context.get_typegraph();
         let type_node = current_node.type_node;
+
+        let last_seg = current_node.path.last();
+        if let Some(last_seg) = last_seg {
+            if let Edge::FunctionInput = last_seg.edge {
+                self.visit_input_type_impl(current_node, context);
+                return VisitResult::Continue(false);
+            }
+        }
 
         match type_node {
             TypeNode::Union { .. } | TypeNode::Either { .. } => {

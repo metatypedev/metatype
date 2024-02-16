@@ -211,12 +211,6 @@ where
         output: u32,
         context: &'a V::Context,
     ) -> Option<V::Return> {
-        if self.input_parent_function.as_ref().is_some() {
-            return Some(V::Return::from_error(
-                Path(&self.path).to_string(),
-                "Function is not allowed in input types.".to_string(),
-            ));
-        }
         let last_path_seg = self.path.last().unwrap();
         match last_path_seg.edge {
             Edge::ObjectProp(_) => {}
@@ -228,13 +222,6 @@ where
             }
         }
 
-        let parent_struct_idx = last_path_seg.from;
-        self.input_parent_function = Some(FunctionMetadata {
-            idx: type_idx,
-            path: Path(&self.path).to_string(),
-            parent_struct_idx,
-        });
-
         let res = self.visit_child(
             PathSegment {
                 from: type_idx,
@@ -243,7 +230,6 @@ where
             input,
             context,
         );
-        self.input_parent_function = None;
 
         if let Some(ret) = res {
             return Some(ret);
@@ -277,8 +263,8 @@ where
 #[derive(Debug)]
 pub struct PathSegment<'a> {
     #[allow(dead_code)]
-    from: u32, // typeIdx
-    edge: Edge<'a>,
+    pub from: u32, // typeIdx
+    pub edge: Edge<'a>,
 }
 
 impl<'a> Display for PathSegment<'a> {
