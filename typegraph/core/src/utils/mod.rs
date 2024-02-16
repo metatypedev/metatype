@@ -9,7 +9,7 @@ use serde_json::json;
 
 use crate::errors::Result;
 use crate::global_store::{NameRegistration, Store};
-use crate::types::map_children::map_children;
+use crate::types::subgraph::Subgraph;
 use crate::types::{TypeDefExt, TypeId};
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
 use crate::wit::utils::{Auth as WitAuth, QueryDeployParams};
@@ -263,8 +263,7 @@ impl crate::wit::utils::Guest for crate::Lib {
 }
 
 fn remove_injections_recursively(id: TypeId) -> Result<TypeId> {
-    let id = remove_injection(id)?;
-    map_children(id, &remove_injections_recursively)
+    Subgraph::new(id).map(remove_injection)
 }
 
 pub fn remove_injection(type_id: TypeId) -> Result<TypeId> {
