@@ -7,6 +7,7 @@ import type { DenoRuntime } from "../runtimes/deno/deno.ts";
 import { Runtime } from "../runtimes/Runtime.ts";
 import { ensure, ensureNonNullable } from "../utils.ts";
 import { typegraph_validate } from "native";
+import Chance from "chance";
 
 import {
   initAuth,
@@ -41,6 +42,7 @@ import type {
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { Protocol } from "../services/auth/protocols/protocol.ts";
 import { initRuntime } from "../runtimes/mod.ts";
+import randomizeRecursively from "../runtimes/random.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -347,6 +349,23 @@ export class TypeGraph {
     throw new Error(
       `invalid type for secret injection: ${schema.type}`,
     );
+  }
+
+  getRandom(
+    schema: TypeNode,
+  ): number | string | null {
+    const tgTypes: TypeNode[] = this.tg.types;
+    const chance: typeof Chance = new Chance(1);
+
+    try {
+      const result = randomizeRecursively(schema, chance, tgTypes);
+
+      return result;
+    } catch (_) {
+      throw new Error(
+        `invalid type for random injection: ${schema.type}`,
+      );
+    }
   }
 
   nextBatcher = (

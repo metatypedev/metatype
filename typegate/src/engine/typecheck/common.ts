@@ -45,6 +45,16 @@ const formatValidators: Record<StringFormat, FormatValidator> = {
   phone: validator.isMobilePhone, // ??
   date: validator.isDate,
   "date-time": validator.isISO8601,
+  name: (value: string) => validator.isAlpha(value.replace(/\s+/g, "")),
+  password: (_: string) => true,
+  gender: (value: string) =>
+    ["male", "female", "other"].includes(value.toLowerCase()),
+  firstname: validator.isAlpha,
+  lastname: validator.isAlpha,
+  prefix: validator.isAlphanumeric,
+  profession: validator.isAscii,
+  city: validator.isAlpha,
+  country: validator.isAlpha,
 };
 
 export const validationContext: ValidationContext = {

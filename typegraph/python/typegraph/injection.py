@@ -32,7 +32,7 @@ def serialize_static_injection(value: Union[any, Dict[EffectType, any]]):
 
 
 def serialize_generic_injection(source: str, value: Union[any, Dict[EffectType, any]]):
-    allowed = ["dynamic", "context", "secret"]
+    allowed = ["dynamic", "context", "secret", "random"]
     if source in allowed:
         return serialize_injection(source, value=value)
     raise Exception(f"source must be one of ${', '.join(allowed)}")
@@ -84,4 +84,8 @@ class InheritDef:
 
     def from_parent(self, value: Union[str, Dict[EffectType, str]]):
         self.payload = serialize_parent_injection(value)
+        return self
+
+    def from_random(self, value: Union[str, Dict[EffectType, str]]):
+        self.payload = serialize_generic_injection("random", value)
         return self

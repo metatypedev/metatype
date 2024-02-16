@@ -186,6 +186,9 @@ impl TypeVisitor for Validator {
                 Injection::Parent(_data) => {
                     // TODO match type to parent type
                 }
+                Injection::Random(_data) => {
+                    // TODO match type to parent type
+                }
                 _ => (),
             }
 

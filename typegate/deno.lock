@@ -1051,5 +1051,13 @@
     "https://raw.githubusercontent.com/metatypedev/metatype/feat/MET-250/refactor-ffi/typegate/src/typegraph/visitor.ts": "854f2dd1adadc62ea2050f6e0f293c88f76d4feefb7620bcc490049fb8967043",
     "https://raw.githubusercontent.com/metatypedev/metatype/feat/MET-250/refactor-ffi/typegate/src/types.ts": "1857e6bf96b0642e15352e10dd4e175c4983edc421868ae0158ce271e075926d",
     "https://raw.githubusercontent.com/metatypedev/metatype/feat/MET-250/refactor-ffi/typegate/src/utils.ts": "8a34944dc326d1759c67fcdd4a714f99838d5eac040773bcdb7287a00118923b"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:chance@^1.1.11",
+        "npm:yarn@^1.22.19"
+      ]
+    }
   }
 }

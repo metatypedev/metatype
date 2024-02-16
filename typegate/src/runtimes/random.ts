@@ -78,48 +78,94 @@ export class RandomRuntime extends Runtime {
 
   execute(typ: TypeNode): Resolver {
     return () => {
-      return this.randomizeRecursively(typ);
+      return randomizeRecursively(typ, this.chance, this._tgTypes);
     };
   }
+}
 
-  randomizeRecursively(typ: TypeNode): any {
-    const config = typ.config ?? {};
-    if (Object.prototype.hasOwnProperty.call(config, "gen")) {
-      const { gen, ...arg } = config;
-      return this.chance[gen as string](arg);
+export default function randomizeRecursively(
+  typ: TypeNode,
+  chance: typeof Chance,
+  tgTypes: TypeNode[],
+): any {
+  const config = typ.config ?? {};
+  if (Object.prototype.hasOwnProperty.call(config, "gen")) {
+    const { gen, ...arg } = config;
+    return chance[gen as string](arg);
+  }
+  switch (typ.type) {
+    case "object":
+      return {};
+    case "optional": {
+      const childNodeName = tgTypes[typ.item];
+      return chance.bool()
+        ? randomizeRecursively(childNodeName, chance, tgTypes)
+        : null;
     }
-    switch (typ.type) {
-      case "object":
-        return {};
-      case "optional": {
-        const childNodeName = this.getTgTypeNameByIndex(typ.item);
-        return this.chance.bool()
-          ? this.randomizeRecursively(childNodeName)
-          : null;
+    case "integer":
+      return chance.integer();
+    case "string":
+      if (typ.format === "uuid") {
+        return chance.guid();
       }
-      case "integer":
-        return this.chance.integer();
-      case "string":
-        if (typ.format === "uuid") {
-          return this.chance.guid();
-        }
-        if (typ.format === "email") {
-          return this.chance.email();
-        }
-        return this.chance.string();
-      case "boolean":
-        return this.chance.bool();
-      case "list": {
-        const res = [];
-        let size = this.chance.integer({ min: 1, max: 10 });
-        const childNodeName = this.getTgTypeNameByIndex(typ.items);
-        while (size--) {
-          res.push(this.randomizeRecursively(childNodeName));
-        }
-        return res;
+      if (typ.format === "email") {
+        return chance.email();
       }
-      default:
-        throw new Error(`type not supported "${typ.type}"`);
+      if (typ.format === "uri") {
+        return chance.url();
+      }
+      if (typ.format === "hostname") {
+        return chance.domain();
+      }
+      // if (typ.format === "date") {
+      //   return new Date(chance.date({ string: true }));
+      // }
+      if (typ.format === "date-time") {
+        return chance.date().toISOString();
+      }
+      if (typ.format === "phone") {
+        return chance.phone();
+      }
+      if (typ.format === "name") {
+        return chance.name();
+      }
+      if (typ.format === "gender") {
+        return chance.gender();
+      }
+      if (typ.format === "firstname") {
+        return chance.first();
+      }
+      if (typ.format === "lastname") {
+        return chance.last();
+      }
+      if (typ.format === "prefix") {
+        return chance.prefix();
+      }
+      if (typ.format === "profession") {
+        return chance.profession();
+      }
+      if (typ.format === "city") {
+        return chance.city();
+      }
+      if (typ.format === "country") {
+        return chance.country({ full: true });
+      }
+      return chance.string();
+    case "boolean":
+      return chance.bool();
+    case "list": {
+      const res = [];
+      let size = chance.integer({ min: 1, max: 10 });
+      const childNodeName = tgTypes[typ.items];
+      while (size--) {
+        res.push(
+          randomizeRecursively(childNodeName, chance, tgTypes),
+        );
+      }
+      return res;
     }
+
+    default:
+      throw new Error(`type not supported "${typ.type}"`);
   }
 }

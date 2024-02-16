@@ -63,6 +63,11 @@ export class InheritDef {
     this.payload = serializeFromParentInjection(value);
     return this;
   }
+
+  fromRandom(value: InjectionValue<string>) {
+    this.payload = serializeGenericInjection("random", value);
+    return this;
+  }
 }
 
 export type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;

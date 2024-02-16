@@ -172,6 +172,12 @@ export class Typedef {
       serializeFromParentInjection(value),
     );
   }
+
+  fromRandom(value: InjectionValue<string>) {
+    return this.withInjection(
+      serializeGenericInjection("random", value),
+    );
+  }
 }
 
 class Boolean extends Typedef {
@@ -322,6 +328,54 @@ export function path() {
 
 export function datetime() {
   return string({ format: "date-time" });
+}
+
+export function json() {
+  return string({ format: "json" });
+}
+
+export function hostname() {
+  return string({ format: "hostname" });
+}
+
+export function phone() {
+  return string({ format: "phone" });
+}
+
+export function name() {
+  return string({ format: "name" });
+}
+
+export function password() {
+  return string({ format: "password" });
+}
+
+export function gender() {
+  return string({ format: "gender" });
+}
+
+export function firstname() {
+  return string({ format: "firstname" });
+}
+
+export function lastname() {
+  return string({ format: "lastname" });
+}
+
+export function prefix() {
+  return string({ format: "prefix" });
+}
+
+export function profession() {
+  return string({ format: "profession" });
+}
+
+export function city() {
+  return string({ format: "city" });
+}
+
+export function country() {
+  return string({ format: "country" });
 }
 
 // Note: enum is a reserved word

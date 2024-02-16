@@ -222,6 +222,9 @@ export type Injection = {
 } | {
   source: "dynamic";
   data: InjectionDataFor_String;
+} | {
+  source: "random";
+  data: InjectionDataFor_String;
 };
 export type InjectionDataFor_String = SingleValueFor_String | {
   [k: string]: string;
@@ -238,7 +241,17 @@ export type StringFormat =
   | "ean"
   | "date"
   | "date-time"
-  | "phone";
+  | "phone"
+  | "name"
+  | "password"
+  | "gender"
+  | "firstname"
+  | "lastname"
+  | "prefix"
+  | "profession"
+  | "city"
+  | "country";
+
 export type EffectType = "create" | "update" | "delete" | "read";
 export type TGRuntime = KnownRuntime | UnknownRuntime;
 export type KnownRuntime = {
