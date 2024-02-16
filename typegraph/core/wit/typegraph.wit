@@ -34,12 +34,28 @@ interface core {
         rate: option<rate>,
     }
 
-    enum typegraph-finalize-mode {
-        simple,
-        resolve-artifacts
+    init-typegraph: func(params: typegraph-init-params) -> result<_, error>
+
+    record migration-action {
+        create: bool,
+        reset: bool
     }
 
-    init-typegraph: func(params: typegraph-init-params) -> result<_, error>
+    record migration-config {
+        migration-dir: option<string>,
+        action: migration-action
+    }
+
+    record artifact-resolution-config {
+        dir: option<string>, // cwd() if none
+        prisma-migration: migration-config
+    }
+
+    variant typegraph-finalize-mode {
+        simple,
+        resolve-artifacts(option<artifact-resolution-config>)
+    }
+
     finalize-typegraph: func(mode: typegraph-finalize-mode) -> result<string, error>
 
     type type-id = u32
@@ -498,13 +514,16 @@ interface utils {
     oauth2-with-extended-profiler: func(service-name: string, scopes: string, extension: string) -> result<string, error>
     oauth2-with-custom-profiler: func(service-name: string, scopes: string, profiler: type-id) -> result<string, error>
 
-    record query-body-params {
+    record query-deploy-params {
         tg: string,
         cli-version: string,
         secrets: option<list<tuple<string, string>>>,
     }
 
-    gen-gqlquery: func(params: query-body-params) -> result<string, error>
+    gql-deploy-query: func(params: query-deploy-params) -> result<string, error>
+    gql-remove-query: func(tg-name: list<string>) -> result<string, error>
+
+    unpack-tarb64: func(tar-b64: string, dest: string) -> result<_, error>
 }
 
 interface host {
