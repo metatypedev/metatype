@@ -42,6 +42,9 @@ export function serializeInjection(
     }
   }
 
+  if (value === null) {
+    return JSON.stringify({ source, data: {} });
+  }
   return JSON.stringify({
     source,
     data: { value: valueMapper(value) },

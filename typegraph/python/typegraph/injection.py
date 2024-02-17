@@ -3,6 +3,7 @@
 
 import json
 from typing import Callable, Dict, Union
+
 from typegraph.effects import EffectType
 from typegraph.graph.typegraph import gen_ref
 
@@ -21,6 +22,9 @@ def serialize_injection(
             str(k.name.lower()): value_mapper(v) for k, v in value.items()
         }
         return json.dumps({"source": source, "data": value_per_effect})
+
+    if value is None:
+        return json.dumps({"source": source, "data": {}})
 
     return json.dumps({"source": source, "data": {"value": value_mapper(value)}})
 
@@ -86,6 +90,7 @@ class InheritDef:
         self.payload = serialize_parent_injection(value)
         return self
 
-    def from_random(self, value: Union[str, Dict[EffectType, str]]):
-        self.payload = serialize_generic_injection("random", value)
+    def from_random(self):
+        self.payload = serialize_generic_injection("random", None)
+        return self
         return self

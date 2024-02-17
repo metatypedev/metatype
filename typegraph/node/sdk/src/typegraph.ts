@@ -65,8 +65,8 @@ export class InheritDef {
     return this;
   }
 
-  fromRandom(value: InjectionValue<string>) {
-    this.payload = serializeGenericInjection("random", value);
+  fromRandom() {
+    this.payload = serializeGenericInjection("random", null);
     return this;
   }
 }

@@ -117,38 +117,11 @@ export default function randomizeRecursively(
       if (typ.format === "hostname") {
         return chance.domain();
       }
-      // if (typ.format === "date") {
-      //   return new Date(chance.date({ string: true }));
-      // }
       if (typ.format === "date-time") {
         return chance.date().toISOString();
       }
-      if (typ.format === "phone") {
-        return chance.phone();
-      }
-      if (typ.format === "name") {
-        return chance.name();
-      }
-      if (typ.format === "gender") {
-        return chance.gender();
-      }
-      if (typ.format === "firstname") {
-        return chance.first();
-      }
-      if (typ.format === "lastname") {
-        return chance.last();
-      }
-      if (typ.format === "prefix") {
-        return chance.prefix();
-      }
-      if (typ.format === "profession") {
-        return chance.profession();
-      }
-      if (typ.format === "city") {
-        return chance.city();
-      }
-      if (typ.format === "country") {
-        return chance.country({ full: true });
+      if (typ.format == "ean") {
+        return generateEAN(chance);
       }
       return chance.string();
     case "boolean":
@@ -168,4 +141,30 @@ export default function randomizeRecursively(
     default:
       throw new Error(`type not supported "${typ.type}"`);
   }
+}
+
+function generateEAN(chance: typeof Chance) {
+  let ean = "0";
+
+  for (let i = 1; i <= 11; i++) {
+    ean += chance.integer({ min: 0, max: 9 }).toString();
+  }
+
+  const checkDigit = calculateCheckDigit(ean);
+  ean += checkDigit;
+
+  return ean;
+}
+
+function calculateCheckDigit(ean: string) {
+  const digits = ean.split("").map(Number);
+
+  let sum = 0;
+  for (let i = 0; i < digits.length; i++) {
+    sum += (i % 2 === 0) ? digits[i] : digits[i] * 3;
+  }
+
+  const checkDigit = (10 - (sum % 10)) % 10;
+
+  return checkDigit.toString();
 }

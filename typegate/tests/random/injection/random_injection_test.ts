@@ -11,6 +11,7 @@ Meta.test("Python: Random Injection", async (metaTest) => {
           query {
               randomUser {
                   id
+                  ean
                   name
                   age
                   married
@@ -33,6 +34,7 @@ Meta.test("Python: Random Injection", async (metaTest) => {
       .expectData({
         randomUser: {
           id: "1069ace0-cdb1-5c1f-8193-81f53d29da35",
+          ean: "0497901391205",
           name: "Landon Glover",
           age: 38,
           married: true,
@@ -83,6 +85,7 @@ Meta.test("Deno: Random Injection", async (metaTest) => {
         query {
             randomUser {
                   id
+                  ean
                   name
                   age
                   married
@@ -105,6 +108,7 @@ Meta.test("Deno: Random Injection", async (metaTest) => {
       .expectData({
         randomUser: {
           id: "1069ace0-cdb1-5c1f-8193-81f53d29da35",
+          ean: "0497901391205",
           name: "Landon Glover",
           age: 38,
           married: true,

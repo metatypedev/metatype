@@ -5,25 +5,26 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
 const user = t.struct({
-  id: t.uuid().fromRandom("rand"),
-  name: t.string({}, { config: { gen: "name" } }).fromRandom("rand"),
-  age: t.integer({}, { config: { gen: "age", type: "adult" } }).fromRandom(
-    "rand",
-  ),
-  married: t.boolean().fromRandom("rand"),
-  birthday: t.string({ format: "date-time" }).fromRandom("rand"),
-  friends: t.list(t.string({}, { config: { gen: "name" } })).fromRandom("rand"),
-  phone: t.string({ format: "phone" }).fromRandom("rand"),
-  gender: t.string({ format: "gender" }).fromRandom("rand"),
-  firstname: t.string({ format: "firstname" }).fromRandom("rand"),
-  lastname: t.string({ format: "lastname" }).fromRandom("rand"),
-  occupation: t.string({ format: "profession" }).fromRandom("rand"),
-  street: t.string({}, { config: { gen: "address" } }).fromRandom("rand"),
-  city: t.string({}, { config: { gen: "city" } }).fromRandom("rand"),
-  postcode: t.string({}, { config: { gen: "postcode" } }).fromRandom("rand"),
-  country: t.string({ format: "country" }).fromRandom("rand"),
-  uri: t.string({ format: "uri" }).fromRandom("rand"),
-  hostname: t.string({ format: "hostname" }).fromRandom("rand"),
+  id: t.uuid().fromRandom(),
+  ean: t.ean().fromRandom(),
+  name: t.string({}, { config: { gen: "name" } }).fromRandom(),
+  age: t.integer({}, { config: { gen: "age", type: "adult" } }).fromRandom(),
+  married: t.boolean().fromRandom(),
+  email: t.string({ format: "email" }).fromRandom(),
+  birthday: t.datetime().fromRandom(),
+  friends: t.list(t.string({}, { config: { gen: "name" } })).fromRandom(),
+  phone: t.string({}, { config: { gen: "phone" } }).fromRandom(),
+  gender: t.string({}, { config: { gen: "gender" } }).fromRandom(),
+  firstname: t.string({}, { config: { gen: "first" } }).fromRandom(),
+  lastname: t.string({}, { config: { gen: "last" } }).fromRandom(),
+  occupation: t.string({}, { config: { gen: "profession" } }).fromRandom(),
+  street: t.string({}, { config: { gen: "address" } }).fromRandom(),
+  city: t.string({}, { config: { gen: "city" } }).fromRandom(),
+  postcode: t.string({}, { config: { gen: "postcode" } }).fromRandom(),
+  country: t.string({}, { config: { gen: "country", full: true } })
+    .fromRandom(),
+  uri: t.string({ format: "uri" }).fromRandom(),
+  hostname: t.string({ format: "hostname" }).fromRandom(),
 });
 
 typegraph("random_injection", (g: any) => {

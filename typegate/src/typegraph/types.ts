@@ -240,17 +240,7 @@ export type StringFormat =
   | "hostname"
   | "ean"
   | "date"
-  | "date-time"
-  | "phone"
-  | "name"
-  | "password"
-  | "gender"
-  | "firstname"
-  | "lastname"
-  | "prefix"
-  | "profession"
-  | "city"
-  | "country";
+  | "date-time";
 
 export type EffectType = "create" | "update" | "delete" | "read";
 export type TGRuntime = KnownRuntime | UnknownRuntime;

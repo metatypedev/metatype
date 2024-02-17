@@ -173,9 +173,9 @@ export class Typedef {
     );
   }
 
-  fromRandom(value: InjectionValue<string>) {
+  fromRandom() {
     return this.withInjection(
-      serializeGenericInjection("random", value),
+      serializeGenericInjection("random", null),
     );
   }
 }
