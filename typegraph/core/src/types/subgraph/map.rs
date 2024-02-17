@@ -42,10 +42,11 @@ where
         let alias = Store::generate_alias();
         ctx.result_aliases.insert(type_id, alias.clone());
 
-        let type_id = (self.mapper)(type_id)?;
+        let new_type_id = (self.mapper)(type_id)?;
 
-        let res = self.map_children(type_id, ctx)?;
+        let res = self.map_children(new_type_id, ctx)?;
         Store::register_alias(alias, res)?;
+        ctx.result_aliases.remove(&type_id);
 
         Ok(res)
     }

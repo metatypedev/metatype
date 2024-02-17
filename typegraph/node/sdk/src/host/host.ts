@@ -44,6 +44,10 @@ export function print(msg: string) {
   console.log(msg);
 }
 
+export function eprint(msg: string) {
+  console.error(msg);
+}
+
 export function getCwd(): string {
   try {
     return process.cwd();

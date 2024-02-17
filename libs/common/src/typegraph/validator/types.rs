@@ -251,11 +251,11 @@ impl<'a> EnsureSubtypeOf for GenericUnionVariants<'a> {
         // any variant is a subtype of a variant in the supertype
         for sub_idx in self.0 {
             let sub_type = ExtendedTypeNode::new(typegraph, *sub_idx);
-            let mut error_collector = ErrorCollector::default();
             let mut found = false;
             for sup_idx in sup.0 {
                 let sup_type = ExtendedTypeNode::new(typegraph, *sup_idx);
 
+                let mut error_collector = ErrorCollector::default();
                 sub_type.ensure_subtype_of(&sup_type, typegraph, &mut error_collector);
                 if error_collector.errors.is_empty() {
                     found = true;
@@ -337,8 +337,11 @@ impl<'a> EnsureSubtypeOf for ExtendedTypeNode<'a> {
                     };
                     sub.ensure_subtype_of(sup, tg, errors);
                 }
-                (TypeNode::Function { .. }, _) | (_, TypeNode::Function { .. }) => {
-                    errors.push("Function types are not supported");
+                (_, TypeNode::Function { .. }) => {
+                    errors.push("Function types are not supported for supertype");
+                }
+                (TypeNode::Function { data, .. }, _) => {
+                    ExtendedTypeNode::new(tg, data.output).ensure_subtype_of(sup, tg, errors);
                 }
                 (x, y) => errors.push(format!(
                     "Type mismatch: {} to {}",
