@@ -2,7 +2,7 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
-root: struct #20
+root: struct #55
 ├─ [data]: struct '_Record_UpdateInput' #17
 │  ├─ [age]: optional #16
 │  │  └─ item: union #15
