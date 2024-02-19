@@ -30,6 +30,23 @@ Meta.test("prisma", async (t) => {
       .on(e);
   });
 
+  await t.should("accept non unique fields", async () => {
+    await gql`
+      query {
+        findRecord(where: {
+          id: "b7831fd1-799d-4b20-9a84-830588f750a1"
+          age: { gte: 18 }
+        }) {
+          id
+        }
+      }
+    `
+      .expectData({
+        findRecord: null,
+      })
+      .on(e);
+  });
+
   await t.should("return no data when empty", async () => {
     await gql`
       query {
