@@ -79,11 +79,14 @@ class Typegraph:
         default_policy: Optional[PolicySpec] = None,
         **kwargs: ExposeItem,
     ):
-        core.expose(
+        res = core.expose(
             store,
             [(k, v.id) for k, v in kwargs.items()],
             default_policy=get_policy_chain(default_policy) if default_policy else None,
         )
+
+        if isinstance(res, Err):
+            raise Exception(res.value)
 
 
 @dataclass
