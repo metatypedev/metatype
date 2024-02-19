@@ -51,12 +51,7 @@ interface core {
         prisma-migration: migration-config
     }
 
-    variant typegraph-finalize-mode {
-        simple,
-        resolve-artifacts(option<artifact-resolution-config>)
-    }
-
-    finalize-typegraph: func(mode: typegraph-finalize-mode) -> result<string, error>
+    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<string, error>
 
     type type-id = u32
     record type-base {

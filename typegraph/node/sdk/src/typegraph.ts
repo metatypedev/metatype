@@ -73,7 +73,7 @@ export class RawAuth {
 }
 
 export interface TypegraphOutput {
-  serialize: (config?: ArtifactResolutionConfig) => string;
+  serialize: (config: ArtifactResolutionConfig) => string;
   name: string;
 }
 
@@ -169,23 +169,11 @@ export function typegraph(
 
   builder(g);
 
-  let serialize = () => "";
-  if (!disableAutoSerialization) {
-    const tgJson = core.finalizeTypegraph({ tag: "simple" });
-    console.log(tgJson);
-    serialize = () => tgJson;
-  } else {
-    // config is known at deploy time
-    serialize = (config?: ArtifactResolutionConfig) => {
-      const tgJson = core.finalizeTypegraph({
-        tag: "resolve-artifacts",
-        val: config,
-      });
-      return tgJson;
-    };
-  }
   return {
-    serialize,
+    serialize(config: ArtifactResolutionConfig) {
+      const tgJson = core.finalizeTypegraph(config);
+      return tgJson;
+    },
     name,
   };
 }

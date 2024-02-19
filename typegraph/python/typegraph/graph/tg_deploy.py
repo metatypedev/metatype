@@ -32,7 +32,7 @@ class TypegraphDeployParams:
     cli_version: str
     auth: Optional[BasicAuth] = None
     secrets: Optional[Dict[str, str]] = None
-    artifacts_config: Optional[ArtifactResolutionConfig] = None
+    artifacts_config: ArtifactResolutionConfig
 
 
 @dataclass

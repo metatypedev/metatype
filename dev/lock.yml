@@ -35,6 +35,8 @@ dev:
     typegraph/node/sdk/package.json:
       '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
       '(\s*"description"\s*:\s*").*(",?)': TAGLINE
+    typegraph/node/sdk/src/tg_manage.ts:
+      (const\s+VERSION\s*=\s*").*(";): METATYPE_VERSION
     typegraph/node/package.json:
       '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
       '(\s*"description"\s*:\s*").*(",?)': TAGLINE

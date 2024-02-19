@@ -16,7 +16,7 @@ export class BasicAuth {
 export interface TypegraphDeployParams {
   baseUrl: string;
   auth?: BasicAuth;
-  artifactsConfig?: ArtifactResolutionConfig;
+  artifactsConfig: ArtifactResolutionConfig;
   secrets: Record<string, string>;
   cliVersion: string;
 }

@@ -5,6 +5,7 @@ import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-co
 import { TypegraphOutput } from "./typegraph.js";
 import { getEnvVariable } from "./utils/func_utils.js";
 
+const VERSION = "0.3.5-0";
 const PORT_SOURCE = "META_CLI_SERVER_PORT";
 
 type Command = "serialize" | "deploy" | "undeploy" | "unpack_migration";

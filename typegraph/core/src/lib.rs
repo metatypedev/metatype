@@ -28,9 +28,9 @@ use types::{
 };
 
 use wit::core::{
-    ContextCheck, Policy, PolicyId, PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat,
-    TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList, TypeOptional, TypeString, TypeStruct,
-    TypeUnion, TypegraphFinalizeMode, TypegraphInitParams,
+    ArtifactResolutionConfig, ContextCheck, Policy, PolicyId, PolicySpec, TypeBase, TypeEither,
+    TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList, TypeOptional,
+    TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
 };
 use wit::runtimes::{Guest, MaterializerDenoFunc};
 
@@ -57,8 +57,8 @@ impl wit::core::Guest for Lib {
         typegraph::init(params)
     }
 
-    fn finalize_typegraph(mode: TypegraphFinalizeMode) -> Result<String> {
-        typegraph::finalize(mode)
+    fn finalize_typegraph(res_config: Option<ArtifactResolutionConfig>) -> Result<String> {
+        typegraph::finalize(res_config)
     }
 
     fn refb(name: String, attributes: Vec<(String, String)>) -> Result<CoreTypeId> {
@@ -510,7 +510,7 @@ mod tests {
     use crate::wit::core::Guest;
     use crate::wit::runtimes::{Effect, Guest as GuestRuntimes, MaterializerDenoFunc};
     use crate::Lib;
-    use crate::{TypegraphFinalizeMode, TypegraphInitParams};
+    use crate::{ArtifactResolutionConfig, TypegraphInitParams};
 
     impl Default for TypegraphInitParams {
         fn default() -> Self {
@@ -578,7 +578,7 @@ mod tests {
             crate::test_utils::setup(Some("test-2")),
             Err(errors::nested_typegraph_context("test-1"))
         );
-        Lib::finalize_typegraph(TypegraphFinalizeMode::Simple)?;
+        Lib::finalize_typegraph(None)?;
         Ok(())
     }
 
@@ -591,7 +591,7 @@ mod tests {
         );
 
         assert_eq!(
-            Lib::finalize_typegraph(TypegraphFinalizeMode::Simple),
+            Lib::finalize_typegraph(None),
             Err(errors::expected_typegraph_context())
         );
 
@@ -686,7 +686,7 @@ mod tests {
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::Read)?;
         Lib::expose(vec![("one".to_string(), t::func(s, b, mat)?.into())], None)?;
-        let typegraph = Lib::finalize_typegraph(TypegraphFinalizeMode::Simple)?;
+        let typegraph = Lib::finalize_typegraph(None)?;
         insta::assert_snapshot!(typegraph);
         Ok(())
     }

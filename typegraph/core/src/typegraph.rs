@@ -5,11 +5,7 @@ use crate::conversion::runtimes::{convert_materializer, convert_runtime, Convert
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
 use crate::types::{TypeDef, TypeDefExt, TypeId};
-use crate::utils::postprocess::deno_rt::DenoProcessor;
-use crate::utils::postprocess::prisma_rt::PrismaProcessor;
-use crate::utils::postprocess::python_rt::PythonProcessor;
-use crate::utils::postprocess::wasmedge_rt::WasmedgeProcessor;
-use crate::utils::postprocess::PostProcessor;
+use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
 use crate::validation::validate_name;
 use crate::Lib;
 use crate::{
@@ -29,8 +25,8 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::wit::core::{
-    Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec, RuntimeId,
-    TypegraphFinalizeMode, TypegraphInitParams,
+    ArtifactResolutionConfig, Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec,
+    RuntimeId, TypegraphInitParams,
 };
 
 #[derive(Default)]
@@ -180,7 +176,7 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
         .collect::<Result<Vec<_>>>()
 }
 
-pub fn finalize(mode: TypegraphFinalizeMode) -> Result<String> {
+pub fn finalize(res_config: Option<ArtifactResolutionConfig>) -> Result<String> {
     #[cfg(test)]
     eprintln!("Finalizing typegraph...");
 
@@ -217,17 +213,8 @@ pub fn finalize(mode: TypegraphFinalizeMode) -> Result<String> {
         deps: Default::default(),
     };
 
-    match mode {
-        TypegraphFinalizeMode::ResolveArtifacts(config) => {
-            if let Some(config) = config {
-                Store::set_deploy_cwd(config.dir);
-                PrismaProcessor::new(config.prisma_migration).postprocess(&mut tg)?;
-            }
-            DenoProcessor.postprocess(&mut tg)?;
-            PythonProcessor.postprocess(&mut tg)?;
-            WasmedgeProcessor.postprocess(&mut tg)?;
-        }
-        TypegraphFinalizeMode::Simple => {}
+    if let Some(config) = res_config {
+        TypegraphPostProcessor::new(config).postprocess(&mut tg)?;
     }
 
     Store::restore(ctx.saved_store_state.unwrap());
