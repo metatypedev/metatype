@@ -42,9 +42,9 @@ const formatValidators: Record<StringFormat, FormatValidator> = {
   // TODO
   hostname: validator.isFQDN,
   ean: validator.isEAN,
+  phone: validator.isMobilePhone, // ??
   date: validator.isDate,
   "date-time": validator.isISO8601,
-  phone: validator.isMobilePhone,
 };
 
 export const validationContext: ValidationContext = {

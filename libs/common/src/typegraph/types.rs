@@ -117,6 +117,7 @@ pub enum StringFormat {
     Ean,
     Date,
     DateTime,
+    Phone,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

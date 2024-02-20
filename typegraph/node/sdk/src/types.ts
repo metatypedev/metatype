@@ -343,42 +343,6 @@ export function phone() {
   return string({ format: "phone" });
 }
 
-export function name() {
-  return string({ format: "name" });
-}
-
-export function password() {
-  return string({ format: "password" });
-}
-
-export function gender() {
-  return string({ format: "gender" });
-}
-
-export function firstname() {
-  return string({ format: "firstname" });
-}
-
-export function lastname() {
-  return string({ format: "lastname" });
-}
-
-export function prefix() {
-  return string({ format: "prefix" });
-}
-
-export function profession() {
-  return string({ format: "profession" });
-}
-
-export function city() {
-  return string({ format: "city" });
-}
-
-export function country() {
-  return string({ format: "country" });
-}
-
 // Note: enum is a reserved word
 export function enum_(variants: string[], base: SimplifiedBase<TypeBase> = {}) {
   return string({

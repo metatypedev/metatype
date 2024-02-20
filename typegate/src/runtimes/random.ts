@@ -120,6 +120,9 @@ export default function randomizeRecursively(
       if (typ.format === "date-time") {
         return chance.date().toISOString();
       }
+      if (typ.format === "phone") {
+        return chance.phone();
+      }
       if (typ.format == "ean") {
         return generateEAN(chance);
       }
@@ -164,7 +167,7 @@ function calculateCheckDigit(ean: string) {
     sum += (i % 2 === 0) ? digits[i] : digits[i] * 3;
   }
 
-  const checkDigit = 10 - (sum % 10);
+  const checkDigit = (10 - (sum % 10)) % 10;
 
   return checkDigit.toString();
 }
