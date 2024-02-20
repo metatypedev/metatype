@@ -164,7 +164,7 @@ function calculateCheckDigit(ean: string) {
     sum += (i % 2 === 0) ? digits[i] : digits[i] * 3;
   }
 
-  const checkDigit = (10 - (sum % 10)) % 10;
+  const checkDigit = 10 - (sum % 10);
 
   return checkDigit.toString();
 }

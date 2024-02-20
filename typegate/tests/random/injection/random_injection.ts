@@ -32,7 +32,7 @@ typegraph("random_injection", (g: any) => {
   const deno = new DenoRuntime();
 
   // Configure random injection seed value or the default will be used
-  g.configureRandomInjection(1);
+  g.configureRandomInjection({ seed: 1 });
 
   g.expose({
     randomUser: deno.identity(user).withPolicy(pub),

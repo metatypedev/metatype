@@ -66,7 +66,7 @@ export interface TypegraphBuilderArgs extends InjectionSourceType {
   rest: (graphql: string) => number;
   auth: (value: Auth | RawAuth) => number;
   ref: (name: string) => t.Typedef;
-  configureRandomInjection: (seed: number) => void;
+  configureRandomInjection: (params: {seed: number}) => void;
 }
 
 export class InheritDef {
@@ -201,8 +201,8 @@ export function typegraph(
     ref: (name: string) => {
       return genRef(name);
     },
-    configureRandomInjection: (seed: number) => {
-      return core.setSeed(seed);
+    configureRandomInjection: (params: {seed: number}) => {
+      return core.setSeed(params.seed);
     },
     ...InjectionSource,
   };
