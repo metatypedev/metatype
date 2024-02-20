@@ -93,4 +93,3 @@ class InheritDef:
     def from_random(self):
         self.payload = serialize_generic_injection("random", None)
         return self
-        return self

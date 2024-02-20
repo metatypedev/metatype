@@ -32,6 +32,7 @@ pub struct Typegraph {
     pub runtimes: Vec<TGRuntime>,
     pub policies: Vec<Policy>,
     pub meta: TypeMeta,
+    pub random_seed: Option<u32>,
 
     // TODO: factor out non-essential fields into a separate struct
     #[serde(skip)]

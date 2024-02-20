@@ -352,6 +352,7 @@ export interface Typegraph {
   runtimes: TGRuntime[];
   policies: Policy[];
   meta: TypeMeta;
+  random_seed: number | undefined;
 }
 export interface PolicyIndicesByEffect {
   read?: number | null;

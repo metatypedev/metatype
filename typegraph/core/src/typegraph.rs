@@ -215,6 +215,7 @@ pub fn finalize(mode: TypegraphFinalizeMode) -> Result<String> {
         },
         path: None,
         deps: Default::default(),
+        random_seed: Store::get_random_seed(),
     };
 
     match mode {
@@ -305,6 +306,11 @@ pub fn expose(
         ctx.types[0] = Some(root);
         res.map(|_| ())
     })?
+}
+
+pub fn set_seed(seed: Option<u32>) -> Result<()> {
+    Store::set_random_seed(seed);
+    Ok(())
 }
 
 impl TypegraphContext {

@@ -39,7 +39,8 @@ def random_injection(g: Graph):
             "names": t.list(t.string(config={"gen": "name"})).from_random(),
         }
     )
-
+    # Configure random injection seed value or the default will be used
+    g.configure_random_injection(seed=1)
     g.expose(
         pub,
         randomUser=deno.identity(user),

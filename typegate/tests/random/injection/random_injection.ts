@@ -31,6 +31,9 @@ typegraph("random_injection", (g: any) => {
   const pub = Policy.public();
   const deno = new DenoRuntime();
 
+  // Configure random injection seed value or the default will be used
+  g.configureRandomInjection(1);
+
   g.expose({
     randomUser: deno.identity(user).withPolicy(pub),
   });

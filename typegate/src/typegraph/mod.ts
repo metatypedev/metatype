@@ -355,7 +355,11 @@ export class TypeGraph {
     schema: TypeNode,
   ): number | string | null {
     const tgTypes: TypeNode[] = this.tg.types;
-    const chance: typeof Chance = new Chance(1);
+    let seed = 12; // default seed
+    if (this.tg.random_seed !== undefined && this.tg.random_seed !== null) {
+      seed = this.tg.random_seed;
+    }
+    const chance: typeof Chance = new Chance(seed);
 
     try {
       const result = randomizeRecursively(schema, chance, tgTypes);

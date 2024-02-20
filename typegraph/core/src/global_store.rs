@@ -61,6 +61,7 @@ pub struct Store {
     auths: Vec<common::typegraph::Auth>,
 
     deploy_cwd_dir: Option<PathBuf>,
+    random_seed: Option<u32>,
 }
 
 impl Store {
@@ -201,6 +202,14 @@ impl Store {
 
     pub fn get_deploy_cwd() -> Option<PathBuf> {
         with_store(|s| s.deploy_cwd_dir.clone())
+    }
+
+    pub fn get_random_seed() -> Option<u32> {
+        with_store(|store| store.random_seed)
+    }
+
+    pub fn set_random_seed(value: Option<u32>) {
+        with_store_mut(|store| store.random_seed = value)
     }
 
     pub fn pick_branch_by_path(supertype_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
