@@ -13,7 +13,7 @@ typegraph({
   const deno = new DenoRuntime();
   const pub = Policy.public();
 
-  const ctx = t.struct({ "exp": t.integer().optional().fromContext("exp") });
+  const ctx = t.struct({ "exp": t.integer().optional() });
 
   // highlight-start
   g.auth(
@@ -22,6 +22,8 @@ typegraph({
   // highlight-end
 
   g.expose({
-    get_context: deno.identity(ctx),
+    get_context: deno.identity(ctx).apply({
+      exp: g.fromContext("exp"),
+    }),
   }, pub);
 });

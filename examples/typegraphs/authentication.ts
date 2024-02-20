@@ -14,7 +14,7 @@ typegraph({
   const pub = Policy.public();
 
   const ctx = t.struct({
-    "username": t.string().optional().fromContext("username"),
+    "username": t.string().optional(),
   });
 
   // highlight-start
@@ -25,6 +25,8 @@ typegraph({
   // highlight-end
 
   g.expose({
-    get_context: deno.identity(ctx).withPolicy(pub),
+    get_context: deno.identity(ctx).apply({
+      username: g.fromContext("username"),
+    }).withPolicy(pub),
   });
 });

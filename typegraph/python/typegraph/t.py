@@ -10,6 +10,7 @@ from typing_extensions import Self
 from typegraph.effects import EffectType
 from typegraph.gen.exports.core import (
     FuncParams,
+    ParameterTransform,
     TypeList,
     TypeBase,
     TypeEither,
@@ -26,7 +27,15 @@ from typegraph.gen.exports.core import (
 from typegraph.gen.exports.runtimes import EffectRead
 from typegraph.gen.exports.utils import Reduce
 from typegraph.gen.types import Err
-from typegraph.graph.typegraph import core, store
+from typegraph.graph.typegraph import (
+    core,
+    store,
+    ApplyFromArg,
+    ApplyFromContext,
+    ApplyFromParent,
+    ApplyFromSecret,
+    ApplyFromStatic,
+)
 from typegraph.injection import (
     serialize_generic_injection,
     serialize_parent_injection,
@@ -599,24 +608,59 @@ class struct(typedef):
         return struct(props={**self.props, **props})
 
 
+ApplyParamObjectNode = Dict[str, "ApplyParamNode"]
+ApplyParamArrayNode = List["ApplyParamNode"]
+ApplyParamLeafNode = Union[
+    ApplyFromArg, ApplyFromStatic, ApplyFromContext, ApplyFromSecret, ApplyFromParent
+]
+
+ApplyParamNode = Union[ApplyParamObjectNode, ApplyParamArrayNode, ApplyParamLeafNode]
+
+
+def serialize_apply_param_node(node: ApplyParamNode) -> Any:
+    if isinstance(node, ApplyFromArg):
+        return {"source": "arg", "name": node.name}
+    if isinstance(node, ApplyFromStatic):
+        return {"source": "static", "value": JsonLib.dumps(node.value)}
+    if isinstance(node, ApplyFromContext):
+        return {"source": "context", "key": node.key}
+    if isinstance(node, ApplyFromSecret):
+        return {"source": "secret", "key": node.key}
+    if isinstance(node, ApplyFromParent):
+        return {"source": "parent", "type_name": node.type_name}
+    if isinstance(node, dict):
+        return {
+            "type": "object",
+            "fields": {k: serialize_apply_param_node(v) for k, v in node.items()},
+        }
+    if isinstance(node, (og_list, tuple)):
+        return {"type": "array", "items": [serialize_apply_param_node(v) for v in node]}
+
+    raise Exception(f"unexpected node type: node={node}")
+
+
 class func(typedef):
-    inp: struct
+    inp: Union[struct, typedef]
     out: typedef
     mat: Materializer
     rate_calls: bool
     rate_weight: Optional[int]
+    parameter_transform: Optional[ParameterTransform]
 
     def __init__(
         self,
-        inp: struct,
+        inp: Union[struct, typedef],
         out: typedef,
         mat: Materializer,
+        /,
         rate_calls: bool = False,
         rate_weight: Optional[int] = None,
+        parameter_transform: Optional[ParameterTransform] = None,
     ):
         data = TypeFunc(
             inp=inp.id,
             out=out.id,
+            parameter_transform=parameter_transform,
             mat=mat.id,
             rate_calls=rate_calls,
             rate_weight=rate_weight,
@@ -631,26 +675,76 @@ class func(typedef):
         self.mat = mat
         self.rate_calls = rate_calls
         self.rate_weight = rate_weight
+        self.parameter_transform = parameter_transform
 
     def rate(self, calls: bool = False, weight: Optional[int] = None) -> "func":
-        return func(self.inp, self.out, self.mat, calls, weight)
+        return func(
+            self.inp,
+            self.out,
+            self.mat,
+            parameter_transform=self.parameter_transform,
+            rate_calls=calls,
+            rate_weight=weight,
+        )
 
     def extend(self, props: Dict[str, typedef]):
-        if not isinstance(self.out, struct):
-            raise Exception("Cannot extend non-struct function output")
+        res = core.extend_struct(
+            store, self.out.id, og_list((k, v.id) for k, v in props.items())
+        )
+        if isinstance(res, Err):
+            raise Exception(res.value)
 
-        out = self.out.extend(props)
-        return func(self.inp, out, self.mat)
+        out = typedef(res.value)
 
-    def reduce(self, value: Dict[str, any]) -> "func":
+        return func(
+            self.inp,
+            out,
+            self.mat,
+            parameter_transform=self.parameter_transform,
+            rate_calls=self.rate_calls,
+            rate_weight=self.rate_weight,
+        )
+
+    def reduce(self, value: Dict[str, Any]) -> "func":
         data = Reduce(paths=build_reduce_data(value, [], []))
         reduced_id = wit_utils.gen_reduceb(store, self.inp.id, data=data)
 
         if isinstance(reduced_id, Err):
             raise Exception(reduced_id.value)
 
-        return func(typedef(id=reduced_id.value), self.out, self.mat)
+        # TODO typedef(...).as_struct()
+        return func(
+            typedef(id=reduced_id.value),
+            self.out,
+            self.mat,
+            parameter_transform=self.parameter_transform,
+            rate_calls=self.rate_calls,
+            rate_weight=self.rate_weight,
+        )
 
+    def apply(self, value: ApplyParamObjectNode) -> "func":
+        serialized = serialize_apply_param_node(value)
+        assert isinstance(serialized, dict)
+        assert serialized["type"] == "object"
+        transform_tree = JsonLib.dumps(serialized["fields"])
+
+        transform_data = core.get_transform_data(store, self.inp.id, transform_tree)
+        if isinstance(transform_data, Err):
+            import sys
+
+            print(transform_tree, file=sys.stderr)
+            raise Exception(transform_data.value)
+
+        return func(
+            typedef(transform_data.value.query_input),
+            self.out,
+            self.mat,
+            parameter_transform=transform_data.value.parameter_transform,
+            rate_calls=self.rate_calls,
+            rate_weight=self.rate_weight,
+        )
+
+    @staticmethod
     def from_type_func(
         data: FuncParams, rate_calls: bool = False, rate_weight: Optional[int] = None
     ) -> "func":
@@ -663,6 +757,7 @@ class func(typedef):
             mat,
             rate_calls=rate_calls,
             rate_weight=rate_weight,
+            parameter_transform=None,
         )
 
 

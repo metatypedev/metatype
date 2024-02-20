@@ -121,8 +121,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
-            activate: "source .venv/bin/activate"
+          # TODO
+          # - os: macos-latest
+          #   activate: "source .venv/bin/activate"
           - os: macos-14
             activate: "source .venv/bin/activate"
           #- os: windows-latest
@@ -186,8 +187,10 @@ jobs:
             runner: ubuntu-latest
           # FIXME: try macos-14 runner once all actions support it
           # docker buildx action broken as of 2024-02-09
-          - platform: linux/arm64
-            runner: custom-macos
+
+          # TODO
+          # - platform: linux/arm64
+          #   runner: custom-macos
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3

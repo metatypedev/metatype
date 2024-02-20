@@ -14,13 +14,15 @@ typegraph({
   const pub = Policy.public();
 
   const ctx = t.struct({
-    "username": t.string().optional().fromContext("username"),
+    "username": t.string().optional(),
   });
 
   // highlight-next-line
   g.auth(Auth.basic(["admin"]));
 
   g.expose({
-    get_context: deno.identity(ctx).withPolicy(pub),
+    get_context: deno.identity(ctx).apply({
+      username: g.fromContext("username"),
+    }).withPolicy(pub),
   });
 });

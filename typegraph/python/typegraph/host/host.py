@@ -6,6 +6,7 @@ from typegraph.gen import imports
 from typegraph.gen.types import Err, Ok, Result
 import os
 import re
+import sys
 
 
 def has_match(text: str, items: List[str]) -> bool:
@@ -19,6 +20,9 @@ def has_match(text: str, items: List[str]) -> bool:
 class HostImpl(imports.HostHost):
     def print(self, msg: str):
         print(msg)
+
+    def eprint(self, msg: str):
+        print(msg, file=sys.stderr)
 
     def expand_glob(self, root: str, exclude: List[str]) -> Result[List[str], str]:
         try:

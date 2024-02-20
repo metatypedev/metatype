@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as t from "../types.js";
-import { runtimes } from "../wit.js";
+import { runtimes, wit_utils } from "../wit.js";
 import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import Policy from "../policy.js";
 import { Materializer, Runtime } from "./mod.js";
@@ -44,14 +44,13 @@ export class DenoRuntime extends Runtime {
   }
 
   func<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
+    I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
     { code, secrets = [], effect = fx.read() }: DenoFunc,
-  ): t.Func<P, I, O, FunMat> {
+  ): t.Func<I, O, FunMat> {
     const matId = runtimes.registerDenoFunc({ code, secrets }, effect);
     const mat: FunMat = {
       _id: matId,
@@ -63,14 +62,13 @@ export class DenoRuntime extends Runtime {
   }
 
   import<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
+    I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
     { name, module, effect = fx.read(), secrets = [] }: DenoImport,
-  ): t.Func<P, I, O, ImportMat> {
+  ): t.Func<I, O, ImportMat> {
     const matId = runtimes.importDenoFunction({
       funcName: name,
       module,
@@ -87,16 +85,16 @@ export class DenoRuntime extends Runtime {
   }
 
   identity<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
-  >(inp: I): t.Func<P, I, I, PredefinedFuncMat> {
+    I extends t.Typedef = t.Typedef,
+  >(inp: I): t.Func<I, t.Typedef, PredefinedFuncMat> {
     const mat: PredefinedFuncMat = {
       _id: runtimes.getPredefinedDenoFunc({ name: "identity" }),
       name: "identity",
     };
+    const out = wit_utils.removeInjections(inp._id);
     return t.func(
       inp,
-      inp,
+      new t.Typedef(out, {}),
       mat,
     );
   }

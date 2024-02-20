@@ -57,6 +57,7 @@ typegraph:
     jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen --map metatype:typegraph/host=../host/host.js
 
     cd typegraph/node
+    pnpm install
     pnpm run sdk-build
     cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
     cd ../..
