@@ -356,8 +356,11 @@ export class TypeGraph {
   ): number | string | null {
     const tgTypes: TypeNode[] = this.tg.types;
     let seed = 12; // default seed
-    if (this.tg.random_seed !== undefined && this.tg.random_seed !== null) {
-      seed = this.tg.random_seed;
+    if (
+      this.tg.meta.random_seed !== undefined &&
+      this.tg.meta.random_seed !== null
+    ) {
+      seed = this.tg.meta.random_seed;
     }
     const chance: typeof Chance = new Chance(seed);
 

@@ -33,7 +33,6 @@ pub struct Typegraph {
     pub runtimes: Vec<TGRuntime>,
     pub policies: Vec<Policy>,
     pub meta: TypeMeta,
-    pub random_seed: Option<u32>,
 
     // TODO: factor out non-essential fields into a separate struct
     #[serde(skip)]
@@ -99,6 +98,7 @@ pub struct TypeMeta {
     pub auths: Vec<Auth>,
     pub rate: Option<Rate>,
     pub version: String,
+    pub random_seed: Option<u32>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

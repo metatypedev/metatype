@@ -109,6 +109,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             prefix: params.prefix,
             rate: params.rate.map(|v| v.into()),
             secrets: vec![],
+            random_seed: Default::default(),
         },
         types: vec![],
         saved_store_state: Some(Store::save()),
@@ -210,12 +211,12 @@ pub fn finalize(mode: TypegraphFinalizeMode) -> Result<String> {
                 dynamic: ctx.meta.queries.dynamic,
                 endpoints: Store::get_graphql_endpoints(),
             },
+            random_seed: Store::get_random_seed(),
             auths,
             ..ctx.meta
         },
         path: None,
         deps: Default::default(),
-        random_seed: Store::get_random_seed(),
     };
 
     match mode {

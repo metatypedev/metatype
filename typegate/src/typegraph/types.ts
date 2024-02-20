@@ -381,7 +381,6 @@ export interface Typegraph {
   runtimes: TGRuntime[];
   policies: Policy[];
   meta: TypeMeta;
-  random_seed: number | undefined;
 }
 export interface PolicyIndicesByEffect {
   read?: number | null;
@@ -507,6 +506,7 @@ export interface TypeMeta {
   auths: Auth[];
   rate?: Rate | null;
   version: string;
+  random_seed: number | undefined;
 }
 export interface Queries {
   dynamic: boolean;
