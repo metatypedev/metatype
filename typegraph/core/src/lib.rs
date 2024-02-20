@@ -4,6 +4,7 @@
 mod conversion;
 mod errors;
 mod global_store;
+mod params;
 mod runtimes;
 mod t;
 mod typedef;
@@ -17,9 +18,10 @@ mod test_utils;
 
 use std::collections::HashSet;
 
-use errors::Result;
+use errors::{Result, TgError};
 use global_store::{NameRegistration, Store};
 use indoc::formatdoc;
+use params::apply;
 use regex::Regex;
 use runtimes::{DenoMaterializer, Materializer};
 use types::{
@@ -27,10 +29,11 @@ use types::{
     TypeDef, TypeDefExt, TypeId, Union,
 };
 
+use utils::clear_name;
 use wit::core::{
-    ArtifactResolutionConfig, ContextCheck, Policy, PolicyId, PolicySpec, TypeBase, TypeEither,
-    TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList, TypeOptional,
-    TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
+    ArtifactResolutionConfig, ContextCheck, Policy, PolicyId, PolicySpec, TransformData, TypeBase,
+    TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList,
+    TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
 };
 use wit::runtimes::{Guest, MaterializerDenoFunc};
 
@@ -315,11 +318,40 @@ impl wit::core::Guest for Lib {
         .into())
     }
 
+    fn extend_struct(
+        type_id: CoreTypeId,
+        new_props: Vec<(String, CoreTypeId)>,
+    ) -> Result<CoreTypeId> {
+        let type_def = TypeId(type_id).as_struct()?;
+        let mut props = type_def.data.props.clone();
+        props.extend(new_props);
+
+        Ok(Store::register_type_def(
+            |id| {
+                TypeDef::Struct(
+                    Struct {
+                        id,
+                        base: clear_name(&type_def.base),
+                        extended_base: type_def.extended_base.clone(),
+                        data: TypeStruct {
+                            props,
+                            ..type_def.data.clone()
+                        },
+                    }
+                    .into(),
+                )
+            },
+            NameRegistration(false),
+        )?
+        .into())
+    }
+
     fn funcb(data: TypeFunc) -> Result<CoreTypeId> {
         let wrapper_type = TypeId(data.inp);
         if !matches!(TypeDef::try_from(wrapper_type)?, TypeDef::Struct(_)) {
             return Err(errors::invalid_input_type(&wrapper_type.repr()?));
         }
+
         let base = TypeBase::default();
         Ok(Store::register_type_def(
             |id| {
@@ -336,6 +368,18 @@ impl wit::core::Guest for Lib {
             NameRegistration(true),
         )?
         .into())
+    }
+
+    fn get_transform_data(
+        resolver_input: CoreTypeId,
+        transform_tree: String,
+    ) -> Result<TransformData> {
+        apply::build_transform_data(
+            resolver_input.into(),
+            &serde_json::from_str(&transform_tree).map_err(|e| -> TgError {
+                format!("Error while parsing transform tree: {e:?}").into()
+            })?,
+        )
     }
 
     fn with_injection(type_id: CoreTypeId, injection: String) -> Result<CoreTypeId> {

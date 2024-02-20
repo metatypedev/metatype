@@ -9,7 +9,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use super::{EffectType, PolicyIndices};
+use super::{parameter_transform::FunctionParameterTransform, EffectType, PolicyIndices};
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -105,7 +105,7 @@ pub struct IntegerTypeData {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum StringFormat {
     Uuid,
@@ -166,6 +166,8 @@ pub struct ListTypeData {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FunctionTypeData {
     pub input: u32,
+    #[serde(rename = "parameterTransform")]
+    pub parameter_transform: Option<FunctionParameterTransform>,
     pub output: u32,
     pub materializer: u32,
     #[serialize_always]

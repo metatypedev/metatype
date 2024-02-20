@@ -13,15 +13,15 @@ typegraph({
   const deno = new DenoRuntime();
   const pub = Policy.public();
 
-  const ctx = t.struct(
-    {
-      "your_own_content": t.string().optional().fromContext("your_own_content"),
-    },
-  );
+  const ctx = t.struct({
+    "your_own_content": t.string().optional(),
+  });
   // highlight-next-line
   g.auth(Auth.hmac256("custom"));
 
   g.expose({
-    get_context: deno.identity(ctx),
+    get_context: deno.identity(ctx).apply({
+      your_own_content: g.fromContext("your_own_content"),
+    }),
   }, pub);
 });

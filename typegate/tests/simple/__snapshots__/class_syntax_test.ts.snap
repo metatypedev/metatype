@@ -73,7 +73,7 @@ snapshot[`Class Syntax 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "object_22",
+        name: "object_23",
       },
       {
         fields: [
@@ -85,12 +85,12 @@ snapshot[`Class Syntax 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "object_13",
+        name: "object_14",
       },
       {
         fields: null,
         kind: "UNION",
-        name: "either_7Out",
+        name: "either_8Out",
       },
       {
         fields: [
@@ -132,7 +132,7 @@ snapshot[`Class Syntax 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "object_19",
+        name: "object_20",
       },
       {
         fields: [
@@ -144,17 +144,17 @@ snapshot[`Class Syntax 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "object_25",
+        name: "object_26",
       },
       {
         fields: null,
         kind: "INPUT_OBJECT",
-        name: "object_13Inp",
+        name: "object_14Inp",
       },
       {
         fields: null,
         kind: "SCALAR",
-        name: "either_7In",
+        name: "either_8In",
       },
       {
         fields: null,
@@ -169,7 +169,7 @@ snapshot[`Class Syntax 1`] = `
       {
         fields: null,
         kind: "INPUT_OBJECT",
-        name: "object_19Inp",
+        name: "object_20Inp",
       },
       {
         fields: null,

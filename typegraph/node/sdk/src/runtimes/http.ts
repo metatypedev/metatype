@@ -33,8 +33,7 @@ export class HttpRuntime extends Runtime {
 
   #request<
     M extends HttpMethod,
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
+    I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     method: M,
@@ -42,7 +41,7 @@ export class HttpRuntime extends Runtime {
     out: O,
     options: Omit<MaterializerHttpRequest, "method">,
     effect: Effect,
-  ): t.Func<P, I, O> {
+  ): t.Func<I, O> {
     const matId = runtimes.httpRequest({
       runtime: this._id,
       effect,
@@ -57,66 +56,61 @@ export class HttpRuntime extends Runtime {
   }
 
   get<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
+    I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
     options: Omit<MaterializerHttpRequest, "method">,
-  ): t.Func<P, I, O> {
+  ): t.Func<I, O> {
     return this.#request("get", inp, out, options, fx.read());
   }
 
   post<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
+    I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
     options: Omit<MaterializerHttpRequest, "method">,
     effect?: Effect,
-  ): t.Func<P, I, O> {
+  ): t.Func<I, O> {
     return this.#request("get", inp, out, options, effect ?? fx.create());
   }
 
   put<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
+    I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
     options: Omit<MaterializerHttpRequest, "method">,
     effect?: Effect,
-  ): t.Func<P, I, O> {
+  ): t.Func<I, O> {
     return this.#request("get", inp, out, options, effect ?? fx.update());
   }
 
   patch<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
+    I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
     options: Omit<MaterializerHttpRequest, "method">,
     effect?: Effect,
-  ): t.Func<P, I, O> {
+  ): t.Func<I, O> {
     return this.#request("patch", inp, out, options, effect ?? fx.update());
   }
 
   delete_<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
+    I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
     options: Omit<MaterializerHttpRequest, "method">,
     effect?: Effect,
-  ): t.Func<P, I, O> {
+  ): t.Func<I, O> {
     return this.#request("get", inp, out, options, effect ?? fx.delete_());
   }
 }

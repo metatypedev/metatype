@@ -455,6 +455,7 @@ impl Default for TypeFunc {
         Self {
             inp: u32::max_value(),
             out: u32::max_value(),
+            parameter_transform: None,
             mat: u32::max_value(),
             rate_calls: false,
             rate_weight: None,

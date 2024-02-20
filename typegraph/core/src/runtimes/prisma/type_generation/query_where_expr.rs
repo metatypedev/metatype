@@ -20,7 +20,6 @@ impl QueryWhereExpr {
         }
     }
 
-    #[allow(dead_code)]
     pub fn unique(mut self) -> Self {
         self.unique = true;
         self
