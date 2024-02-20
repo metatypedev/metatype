@@ -5,6 +5,7 @@ use std::rc::Rc;
 
 use crate::conversion::types::TypeConversion;
 use crate::errors::Result;
+use crate::global_store::{NameRegistration, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
     PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeInteger, TypeList,
@@ -39,6 +40,30 @@ pub struct NonRefType<T: TypeDefData> {
     pub base: TypeBase,
     pub extended_base: ExtendedTypeBase,
     pub data: T,
+}
+
+impl<T: TypeDefData> NonRefType<T>
+where
+    Rc<NonRefType<T>>: Into<TypeDef>,
+{
+    pub fn type_with_data(&self, data: T) -> Result<TypeId> {
+        let base = TypeBase {
+            name: None, // different name -- since it is now a different type
+            ..self.base.clone()
+        };
+        Store::register_type_def(
+            |type_id| {
+                Rc::new(Self {
+                    id: type_id,
+                    base,
+                    extended_base: self.extended_base.clone(),
+                    data,
+                })
+                .into()
+            },
+            NameRegistration(false),
+        )
+    }
 }
 
 #[allow(clippy::derivable_impls)]

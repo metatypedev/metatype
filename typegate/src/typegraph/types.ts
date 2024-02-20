@@ -147,6 +147,7 @@ export type FunctionNode = {
   };
   as_id: boolean;
   input: number;
+  parameterTransform?: FunctionParameterTransform | null;
   output: number;
   materializer: number;
   rate_weight?: number | null;
@@ -240,8 +241,36 @@ export type StringFormat =
   | "hostname"
   | "ean"
   | "date"
-  | "date-time";
-
+  | "date-time"
+  | "phone";
+export type ParameterTransformNodeData =
+  | ParameterTransformLeafNode
+  | ParameterTransformParentNode;
+export type ParameterTransformLeafNode = {
+  source: "arg";
+  name: string;
+} | {
+  source: "static";
+  valueJson: string;
+} | {
+  source: "secret";
+  key: string;
+} | {
+  source: "context";
+  key: string;
+} | {
+  source: "parent";
+  parentIdx: number;
+};
+export type ParameterTransformParentNode = {
+  type: "object";
+  fields: {
+    [k: string]: ParameterTransformNode;
+  };
+} | {
+  type: "array";
+  items: ParameterTransformNode[];
+};
 export type EffectType = "create" | "update" | "delete" | "read";
 export type TGRuntime = KnownRuntime | UnknownRuntime;
 export type KnownRuntime = {
@@ -365,6 +394,14 @@ export interface SingleValueFor_String {
 }
 export interface SingleValueForUint32 {
   value: number;
+}
+export interface FunctionParameterTransform {
+  resolver_input: number;
+  transform_root: ParameterTransformNode;
+}
+export interface ParameterTransformNode {
+  typeIdx: number;
+  data: ParameterTransformNodeData;
 }
 export interface Materializer {
   name: string;

@@ -1,14 +1,14 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(out)"
+expression: tp.print(out)
 ---
 root: list '_161_PostWithNestedCount[]' #161
 └─ item: struct 'PostWithNestedCount' #160
+   ├─ [author]: struct 'User' #73
+   │  ├─ [id]: integer #69
+   │  ├─ [name]: string #70
+   │  └─ [posts]: list '_72_Post[]' #72
+   │     └─ item: &Post #71
    ├─ [id]: integer #74
-   ├─ [title]: string #75
-   └─ [author]: struct 'User' #73
-      ├─ [id]: integer #69
-      ├─ [name]: string #70
-      └─ [posts]: list '_72_Post[]' #72
-         └─ item: &Post #71
+   └─ [title]: string #75
 

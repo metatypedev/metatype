@@ -9,13 +9,33 @@ use super::{where_::Where, TypeGen};
 
 pub struct QueryWhereExpr {
     model_id: TypeId,
+    unique: bool,
 }
 
 impl QueryWhereExpr {
     pub fn new(model_id: TypeId) -> Self {
-        Self { model_id }
+        Self {
+            model_id,
+            unique: false,
+        }
+    }
+
+    pub fn unique(mut self) -> Self {
+        self.unique = true;
+        self
     }
 }
+
+// TODO require at least one unique field for unique queries
+// Currently, this is not supported by `t.struct()`
+//
+// https://www.prisma.io/docs/orm/reference/prisma-client-reference#filter-on-non-unique-fields-with-userwhereuniqueinput
+//
+// ```
+// if model.id_fields.contains(k) || prop.unique {
+//   // ...
+// }
+// ```
 
 impl TypeGen for QueryWhereExpr {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
@@ -40,7 +60,11 @@ impl TypeGen for QueryWhereExpr {
     }
 
     fn name(&self) -> String {
-        format!("Query{}WhereInput", self.model_id.name().unwrap().unwrap())
+        let unique = if self.unique { "Unique" } else { "" };
+        format!(
+            "Query{}Where{unique}Input",
+            self.model_id.name().unwrap().unwrap()
+        )
     }
 }
 

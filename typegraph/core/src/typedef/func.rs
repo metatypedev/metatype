@@ -1,16 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::{FunctionTypeData, TypeNode};
-use errors::Result;
-
-use crate::{
-    conversion::types::{BaseBuilderInit, TypeConversion},
-    errors,
-    typegraph::TypegraphContext,
-    types::{Func, TypeDef, TypeDefData, TypeId},
-    wit::core::TypeFunc,
+use common::typegraph::{
+    parameter_transform::FunctionParameterTransform, FunctionTypeData, TypeNode,
 };
+
+use crate::conversion::parameter_transform::convert_tree;
+use crate::conversion::types::{BaseBuilderInit, TypeConversion};
+use crate::errors::{self, Result, TgError};
+use crate::params::apply::ParameterTransformNode;
+use crate::typegraph::TypegraphContext;
+use crate::types::{Func, TypeDef, TypeDefData, TypeId};
+use crate::wit::core::TypeFunc;
 
 impl TypeConversion for Func {
     fn convert(&self, ctx: &mut TypegraphContext, _runtime_id: Option<u32>) -> Result<TypeNode> {
@@ -28,6 +29,30 @@ impl TypeConversion for Func {
         let out_type = TypeId(self.data.out).resolve_ref()?.1;
         let output = ctx.register_type(out_type, Some(runtime_id))?.into();
 
+        let parameter_transform = self
+            .data
+            .parameter_transform
+            .as_ref()
+            .map(|transform| -> Result<_> {
+                let resolver_input = TypeId(transform.resolver_input);
+                let transform_root: ParameterTransformNode =
+                    serde_json::from_str(&transform.transform_tree).map_err(|e| {
+                        TgError::from(format!("Failed to parse transform_root: {}", e))
+                    })?;
+
+                let transform_root = convert_tree(ctx, &transform_root, runtime_id)?;
+                Ok(FunctionParameterTransform {
+                    resolver_input: match resolver_input.resolve_ref()?.1 {
+                        TypeDef::Struct(_) => {
+                            ctx.register_type(resolver_input.try_into()?, Some(runtime_id))?
+                        }
+                        _ => return Err(errors::invalid_input_type(&resolver_input.repr()?)),
+                    }
+                    .into(),
+                    transform_root,
+                })
+            })
+            .transpose()?;
         Ok(TypeNode::Function {
             base: BaseBuilderInit {
                 ctx,
@@ -42,6 +67,7 @@ impl TypeConversion for Func {
             .build()?,
             data: FunctionTypeData {
                 input,
+                parameter_transform,
                 output,
                 materializer: mat_id,
                 rate_calls: self.data.rate_calls,

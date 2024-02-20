@@ -85,14 +85,13 @@ export class PythonRuntime extends Runtime {
   }
 
   import<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
+    I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
     { name, module, effect = fx.read(), secrets = [] }: PythonImport,
-  ): t.Func<P, I, O, ImportMat> {
+  ): t.Func<I, O, ImportMat> {
     const base = {
       runtime: this._id,
       effect,

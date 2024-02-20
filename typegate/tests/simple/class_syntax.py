@@ -6,7 +6,7 @@ from typegraph.runtimes.deno import DenoRuntime
 def class_syntax(g: Graph):
     # class Tag(t.struct):
     #     # name = t.string() # reserved
-    tag = t.struct({"name": t.string()}, name="Tag")
+    tag = t.struct({"name": t.string()})
 
     class TitledEntity(t.struct):
         title = t.string(min=2, max=20).optional()
@@ -15,7 +15,7 @@ def class_syntax(g: Graph):
     class Info(TitledEntity):
         content = t.string()
 
-    metadata = t.either([tag, Info().rename("Info")])
+    metadata = t.either([tag.rename("Tag"), Info().rename("Info")])
 
     class Comment(TitledEntity):
         content = t.string()

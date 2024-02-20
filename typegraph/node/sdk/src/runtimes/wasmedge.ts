@@ -19,8 +19,7 @@ export class WasmEdgeRuntime extends Runtime {
   }
 
   wasi<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
+    I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
@@ -30,7 +29,7 @@ export class WasmEdgeRuntime extends Runtime {
       wasm: string;
       effect?: Effect;
     },
-  ): t.Func<P, I, O, WasiMat> {
+  ): t.Func<I, O, WasiMat> {
     const matId = runtimes.fromWasiModule(
       {
         runtime: this._id,

@@ -33,7 +33,7 @@ def serialize_config(config: Optional[ConfigSpec]) -> Optional[List[Tuple[str, s
     return [(k, json.dumps(v)) for k, v in config.items()]
 
 
-def build_reduce_data(node: any, paths: List[ReducePath], curr_path: List[str]):
+def build_reduce_data(node: Any, paths: List[ReducePath], curr_path: List[str]):
     if node is None:
         raise Exception(f"unsupported value {str(node)} at {'.'.join(curr_path)},")
 

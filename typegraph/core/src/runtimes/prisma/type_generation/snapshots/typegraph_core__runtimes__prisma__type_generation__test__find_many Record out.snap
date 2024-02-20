@@ -1,11 +1,11 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(out)"
+expression: "tree::PrintOptions::new().indent_size(3).print(out)"
 ---
 root: list '_68_RecordWithNestedCount[]' #68
 └─ item: struct 'RecordWithNestedCount' #67
+   ├─ [age]: optional #3
+   │  └─ item: integer #2
    ├─ [id]: string #0
-   ├─ [name]: string #1
-   └─ [age]: optional #3
-      └─ item: integer #2
+   └─ [name]: string #1
 

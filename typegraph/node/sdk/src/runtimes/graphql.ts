@@ -15,10 +15,9 @@ export class GraphQLRuntime extends Runtime {
   }
 
   query<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
+    I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
-  >(inp: I, out: O, path?: string[]): t.Func<P, I, O, QueryMat> {
+  >(inp: I, out: O, path?: string[]): t.Func<I, O, QueryMat> {
     const matId = runtimes.graphqlQuery({
       runtime: this._id,
       effect: fx.read(),
@@ -33,15 +32,14 @@ export class GraphQLRuntime extends Runtime {
   }
 
   mutation<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
+    I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
     effect: Effect,
     path?: string[],
-  ): t.Func<P, I, O, MutationMat> {
+  ): t.Func<I, O, MutationMat> {
     const matId = runtimes.graphqlMutation({
       runtime: this._id,
       effect,

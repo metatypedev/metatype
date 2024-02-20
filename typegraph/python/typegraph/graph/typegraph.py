@@ -4,7 +4,7 @@
 import inspect
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, Optional, Union
+from typing import TYPE_CHECKING, Callable, List, Optional, Union, Any
 
 from typegraph.gen.exports.core import (
     ArtifactResolutionConfig,
@@ -79,11 +79,39 @@ class Typegraph:
         default_policy: Optional[PolicySpec] = None,
         **kwargs: ExposeItem,
     ):
-        core.expose(
+        res = core.expose(
             store,
             [(k, v.id) for k, v in kwargs.items()],
             default_policy=get_policy_chain(default_policy) if default_policy else None,
         )
+
+        if isinstance(res, Err):
+            raise Exception(res.value)
+
+
+@dataclass
+class ApplyFromArg:
+    name: Optional[str]
+
+
+@dataclass
+class ApplyFromStatic:
+    value: Any
+
+
+@dataclass
+class ApplyFromSecret:
+    key: str
+
+
+@dataclass
+class ApplyFromContext:
+    key: str
+
+
+@dataclass
+class ApplyFromParent:
+    type_name: str
 
 
 @dataclass
@@ -125,6 +153,21 @@ class Graph:
         res = core.set_seed(store, seed)
         if isinstance(res, Err):
             raise Exception(res.value)
+
+    def as_arg(self, name: Optional[str] = None):
+        return ApplyFromArg(name)
+
+    def set(self, value: Any):
+        return ApplyFromStatic(value)
+
+    def from_secret(self, key: str):
+        return ApplyFromSecret(key)
+
+    def from_context(self, key: str):
+        return ApplyFromContext(key)
+
+    def from_parent(self, type_name: str):
+        return ApplyFromParent(type_name)
 
 
 @dataclass
