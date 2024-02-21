@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+pub mod parameter_transform;
 pub mod runtimes;
 pub mod types;
 pub mod utils;

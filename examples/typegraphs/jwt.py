@@ -14,13 +14,15 @@ def jwt_authentication(g: Graph):
     deno = DenoRuntime()
     public = Policy.public()
 
-    ctx = t.struct(
-        {"your_own_content": t.string().optional().from_context("your_own_content")}
-    )
+    ctx = t.struct({"your_own_content": t.string().optional()})
     # highlight-next-line
     g.auth(Auth.hmac256("custom"))
 
     g.expose(
-        get_context=deno.identity(ctx),
+        get_context=deno.identity(ctx).apply(
+            {
+                "your_own_content": g.from_context("your_own_content"),
+            }
+        ),
         default_policy=[public],
     )

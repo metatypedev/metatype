@@ -84,7 +84,9 @@ def roadmap(g: Graph):
             ),
             EffectUpdate(True),
         ),
-        get_context=deno.identity(
-            t.struct({"username": t.string().optional().from_context("username")})
+        get_context=deno.identity(t.struct({"username": t.string().optional()})).apply(
+            {
+                "username": g.from_context("username"),
+            }
         ),
     )

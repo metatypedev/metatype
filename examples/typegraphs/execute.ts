@@ -81,7 +81,9 @@ typegraph({
       effects.update(),
     ),
     get_context: deno.identity(
-      t.struct({ "username": t.string().optional().fromContext("username") }),
-    ),
+      t.struct({ "username": t.string().optional() }),
+    ).apply({
+      "username": g.fromContext("username"),
+    }),
   }, pub);
 });

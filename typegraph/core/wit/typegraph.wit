@@ -1,7 +1,6 @@
 package metatype:typegraph
 
 interface core {
-
     record error {
         stack: list<string>,
     }
@@ -145,17 +144,40 @@ interface core {
         enumeration: option<list<string>>,
     }
     structb: func(data: type-struct, base: type-base) -> result<type-id, error>
+    extend-struct: func(tpe: type-id, props: list<tuple<string, type-id>>) -> result<type-id, error>
 
     get-type-repr: func(id: type-id) -> result<string, error>
 
+    variant value-source {
+        raw(string),  // json
+        context(string),  // key
+        secret(string),  // key
+        parent(string),  // name
+        param(string),  // name
+    }
+
+    record parameter-transform {
+        resolver-input: type-id,
+        transform-tree: string,
+    }
+
     record type-func {
         inp: type-id,
+        parameter-transform: option<parameter-transform>,
         out: type-id,
         mat: materializer-id,
         rate-calls: bool,
         rate-weight: option<u32>,
     }
+
     funcb: func(data: type-func) -> result<type-id, error>
+
+    record transform-data {
+        query-input: type-id,
+        parameter-transform: parameter-transform,
+    }
+
+    get-transform-data: func(resolver-input: type-id, transform-tree: string) -> result<transform-data, error>
 
     type policy-id = u32
 
@@ -525,10 +547,13 @@ interface utils {
     gql-remove-query: func(tg-name: list<string>) -> result<string, error>
 
     unpack-tarb64: func(tar-b64: string, dest: string) -> result<_, error>
+
+    remove-injections: func(type-id: type-id) -> result<type-id, error>
 }
 
 interface host {
     print: func(s: string)
+    eprint: func(s: string)
     expand-glob: func(root: string, exclude: list<string>) -> result<list<string>, string>
     file-exists: func(path: string) -> result<bool, string>
     read-file: func(path: string) -> result<list<u8>, string>

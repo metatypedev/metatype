@@ -263,7 +263,7 @@ Meta.test("Deno: value injection", async (t) => {
     await gql`
       query {
         test(input: {a: 12}) {
-          fromInput {
+          input {
             a
             context
             optional_context
@@ -275,8 +275,6 @@ Meta.test("Deno: value injection", async (t) => {
             alt_context_opt_missing
             date
           }
-          parent
-          fromParent { value }
         }
       }`
       .withContext({
@@ -284,7 +282,7 @@ Meta.test("Deno: value injection", async (t) => {
       })
       .expectData({
         test: {
-          fromInput: {
+          input: {
             a: 12,
             context: "123",
             raw_int: 4,
@@ -295,8 +293,6 @@ Meta.test("Deno: value injection", async (t) => {
             alt_context_opt_missing: "123",
             date: new Date().toISOString(),
           },
-          parent: 1234567,
-          fromParent: { value: 1234567 },
         },
       })
       .on(e);
