@@ -118,7 +118,17 @@ export default function randomizeRecursively(
         return chance.domain();
       }
       if (typ.format === "date-time") {
-        return chance.date().toISOString();
+        const randomDate = chance.date();
+
+        // Get the timestamp of the random date
+        const timestamp = randomDate.getTime();
+        console.log(randomDate);
+
+        // Create a new Date object with the timestamp adjusted for the local timezone offset
+        const dateInUtc = new Date(
+          timestamp - randomDate.getTimezoneOffset() * 60000,
+        );
+        return dateInUtc.toISOString();
       }
       if (typ.format === "phone") {
         return chance.phone();
