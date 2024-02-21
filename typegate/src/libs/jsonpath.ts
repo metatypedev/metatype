@@ -26,7 +26,8 @@ export type PathSegment = ArrayIndex | ObjectKey;
 
 function parsePath(path: string): PathSegment[] {
   const parser = new PathParser(path);
-  return parser.parse();
+  const res = parser.parse();
+  return res;
 }
 
 class PathParser {
@@ -68,7 +69,7 @@ class PathParser {
       return this.#parseIndex();
     }
 
-    return false;
+    throw new Error(`Unexpected character: ${firstChar}`);
   }
 
   #parseKey(): boolean {
@@ -106,6 +107,7 @@ class PathParser {
         if (typeof key !== "string") {
           throw new Error(`Unexpected: Invalid string index`);
         }
+        this.#currentIndex = end;
         return this.#append({ type: "object", key }, 2); // closing quote and bracket
       }
     }
@@ -129,6 +131,7 @@ class PathParser {
             }`,
           );
         }
+        this.#currentIndex = end;
         return this.#append({ type: "array", index }, 1);
       }
     }
@@ -170,9 +173,6 @@ export class QueryFunction {
   static create(path: string, options: JsonPathQueryOptions) {
     const compiler = new QueryFnCompiler(path, options);
     const body = compiler.compile();
-    // console.log("----- BODY:", path, options);
-    // console.log(body);
-    // console.log("-----");
     return new QueryFunction(body);
   }
 
@@ -181,7 +181,7 @@ export class QueryFunction {
   }
 
   asFunctionDef(name: string) {
-    if (!/^[A-Za-z_]\w*$/.test(name)) {
+    if (/^[A-Za-z_]\w*$/.test(name)) {
       return `function ${name}(initialValue) {\n${this.code}\n}`;
     } else {
       throw new Error(`Invalid function name: ${name}`);

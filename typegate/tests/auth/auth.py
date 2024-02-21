@@ -57,7 +57,4 @@ def test_auth(g: Graph):
             ),
             auth_token_field="token",
         ).with_policy(public),
-        # appliedId=deno.identity(t.struct({"id": t.integer()}))
-        # .apply({"id": g.from_context("profile.id")})
-        # .with_policy(has_profile),
     )

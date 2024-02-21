@@ -130,3 +130,79 @@ Meta.test("(python (sdk): apply)", async (t) => {
       .on(e);
   });
 });
+
+Meta.test("nested context access", async (t) => {
+  const e = await t.engine("params/apply_nested_context.py");
+
+  await t.should("work with nested context", async () => {
+    await gql`
+      query {
+        simple {
+          id
+        }
+      }
+    `
+      .withContext({
+        profile: { id: 123 },
+      })
+      .expectData({
+        simple: { id: 123 },
+      })
+      .on(e);
+  });
+
+  await t.should("work with custom key", async () => {
+    await gql`
+      query {
+        customKey {
+          custom
+        }
+      }
+    `
+      .withContext({
+        profile: { "custom key": "custom value" },
+      })
+      .expectData({
+        customKey: { custom: "custom value" },
+      })
+      .on(e);
+  });
+
+  await t.should("work with array index", async () => {
+    await gql`
+      query {
+        thirdProfileData {
+          third
+        }
+      }
+    `
+      .withContext({
+        profile: { data: [true, 456, "hum"] },
+      })
+      .expectData({
+        thirdProfileData: { third: "hum" },
+      })
+      .on(e);
+  });
+
+  await t.should("work with deeply nested value", async () => {
+    await gql`
+      query  {
+        deeplyNestedEntry {
+          value
+        }
+      }
+    `
+      .withContext({
+        profile: {
+          deeply: [
+            { nested: [{ value: "Hello" }, { value: "world" }] },
+          ],
+        },
+      })
+      .expectData({
+        deeplyNestedEntry: { value: "world" },
+      })
+      .on(e);
+  });
+});
