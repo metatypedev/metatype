@@ -74,3 +74,8 @@ export function getEnvVariable(
     : glob?.Deno.env.get(key);
   return value ?? defaultValue;
 }
+
+export function getAllEnvVariables(): any {
+  const glob = globalThis as any;
+  return glob?.process ? glob?.process.env : glob?.Deno.env.toObject();
+}

@@ -26,11 +26,7 @@ export class Manager {
   #endpoint: string;
 
   static isRunFromCLI(): boolean {
-    const value = getEnvVariable(PORT_SOURCE);
-    if (value && value.toLowerCase() == "true") {
-      return true;
-    }
-    return false;
+    return !!getEnvVariable(PORT_SOURCE);
   }
 
   constructor(typegraph: TypegraphOutput, port?: number) {

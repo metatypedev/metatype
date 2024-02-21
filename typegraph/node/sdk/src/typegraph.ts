@@ -14,6 +14,7 @@ import { Auth, Cors as CorsWit, Rate, wit_utils } from "./wit.js";
 import Policy from "./policy.js";
 import { getPolicyChain } from "./types.js";
 import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
+import { Manager } from "./tg_manage.js";
 
 type Exports = Record<string, t.Func>;
 
@@ -31,23 +32,23 @@ interface TypegraphArgs {
 }
 
 export class ApplyFromArg {
-  constructor(public name: string | null) { }
+  constructor(public name: string | null) {}
 }
 
 export class ApplyFromStatic {
-  constructor(public value: any) { }
+  constructor(public value: any) {}
 }
 
 export class ApplyFromSecret {
-  constructor(public key: string) { }
+  constructor(public key: string) {}
 }
 
 export class ApplyFromContext {
-  constructor(public key: string) { }
+  constructor(public key: string) {}
 }
 
 export class ApplyFromParent {
-  constructor(public typeName: string) { }
+  constructor(public typeName: string) {}
 }
 
 const InjectionSource = {
@@ -99,7 +100,7 @@ export class InheritDef {
 export type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
 
 export class RawAuth {
-  constructor(readonly jsonStr: string) { }
+  constructor(readonly jsonStr: string) {}
 }
 
 export interface TypegraphOutput {
@@ -200,13 +201,35 @@ export function typegraph(
 
   builder(g);
 
-  return {
+  const ret = {
     serialize(config: ArtifactResolutionConfig) {
       const tgJson = core.finalizeTypegraph(config);
       return tgJson;
     },
     name,
-  };
+  } as TypegraphOutput;
+
+  if (Manager.isRunFromCLI()) {
+    const manager = new Manager(ret);
+    console.error("CLI!");
+    manager.run().catch((err) => {
+      console.error(err);
+    });
+  } else {
+    console.error("RAW!");
+    console.log(ret.serialize({
+      prismaMigration: {
+        action: {
+          create: true,
+          reset: false,
+        },
+        migrationDir: ".",
+      },
+      dir: ".",
+    }));
+  }
+
+  return ret;
 }
 
 export function genRef(name: string) {

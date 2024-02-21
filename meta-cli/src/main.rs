@@ -8,6 +8,8 @@ pub mod deploy;
 mod fs;
 mod global_config;
 mod logger;
+mod server;
+
 #[cfg(test)]
 mod tests;
 mod typegraph;
@@ -20,8 +22,11 @@ use clap::Parser;
 use cli::upgrade::upgrade_check;
 use cli::Action;
 use cli::Args;
+use futures::try_join;
+use futures::TryFutureExt;
 use log::{error, warn};
 
+use server::spawn_server;
 use shadow_rs::shadow;
 
 shadow!(build);
@@ -29,6 +34,7 @@ shadow!(build);
 fn main() -> Result<()> {
     setup_panic_hook();
     logger::init();
+    std::env::set_var("META_CLI_SERVER_PORT", "1234");
 
     let _ = actix::System::with_tokio_rt(|| {
         tokio::runtime::Builder::new_multi_thread()
@@ -57,7 +63,9 @@ fn main() -> Result<()> {
         // the deno task requires use of a single thread runtime which it'll spawn itself
         Some(cli::Commands::Typegate(cmd_args)) => cli::typegate::command(cmd_args, args.gen)?,
         Some(command) => actix::run(async move {
-            command.run(args.gen).await.unwrap_or_else(|e| {
+            let command = command.run(args.gen);
+            let server = spawn_server().map_err(|e| e.into());
+            try_join!(command, server).unwrap_or_else(|e| {
                 error!("{}", e.to_string());
                 std::process::exit(1);
             });

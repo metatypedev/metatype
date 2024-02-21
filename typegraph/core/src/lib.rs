@@ -554,7 +554,7 @@ mod tests {
     use crate::wit::core::Guest;
     use crate::wit::runtimes::{Effect, Guest as GuestRuntimes, MaterializerDenoFunc};
     use crate::Lib;
-    use crate::{ArtifactResolutionConfig, TypegraphInitParams};
+    use crate::TypegraphInitParams;
 
     impl Default for TypegraphInitParams {
         fn default() -> Self {
