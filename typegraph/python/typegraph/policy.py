@@ -8,6 +8,7 @@ from typing import List, Optional, Union
 from typegraph.gen.exports.core import (
     ContextCheckPattern,
     ContextCheckValue,
+    ContextCheckNotNull,
     Err,
     MaterializerId,
     PolicySpecPerEffect,
@@ -44,8 +45,10 @@ class Policy:
         return cls(id=res.value[0], name=res.value[1])
 
     @classmethod
-    def context(cls, key: str, check: Union[str, Pattern]) -> "Policy":
-        if isinstance(check, str):
+    def context(cls, key: str, check: Optional[Union[str, Pattern]] = None) -> "Policy":
+        if check is None:
+            res = core.register_context_policy(store, key, ContextCheckNotNull())
+        elif isinstance(check, str):
             res = core.register_context_policy(store, key, ContextCheckValue(check))
         else:
             res = core.register_context_policy(

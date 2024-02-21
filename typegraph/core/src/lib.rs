@@ -415,6 +415,7 @@ impl wit::core::Guest for Lib {
 
     fn register_context_policy(key: String, check: ContextCheck) -> Result<(PolicyId, String)> {
         let name = match &check {
+            ContextCheck::NotNull => format!("__ctx_{}", key),
             ContextCheck::Value(v) => format!("__ctx_{}_{}", key, v),
             ContextCheck::Pattern(p) => format!("__ctx_p_{}_{}", key, p),
         };
@@ -424,6 +425,7 @@ impl wit::core::Guest for Lib {
             .to_string();
 
         let check = match check {
+            ContextCheck::NotNull => "value != null".to_string(),
             ContextCheck::Value(val) => {
                 format!("value === {}", serde_json::to_string(&val).unwrap())
             }

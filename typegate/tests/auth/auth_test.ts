@@ -177,7 +177,7 @@ Meta.test("Auth", async (t) => {
     const { token } = JSON.parse(await decrypt(cook!));
     const claims = await verifyJWT(token) as JWTClaims;
     assertEquals(claims.accessToken, accessToken);
-    assertEquals(claims["profile.id"], id);
+    assertEquals(claims.profile?.id, id);
     assertEquals(await decrypt(claims.refreshToken as string), refreshToken);
   });
 
@@ -262,7 +262,7 @@ Meta.test("Auth", async (t) => {
       accessToken: "a1",
       refreshToken: "r1",
       refreshAt: new Date().valueOf() + 10,
-      "profile.id": 123,
+      profile: { id: 123 },
     };
     const jwt = await signJWT(claims, 10);
     await gql`
@@ -292,7 +292,7 @@ Meta.test("Auth", async (t) => {
       accessToken: "a1",
       refreshToken,
       refreshAt: Math.floor(new Date().valueOf() / 1000),
-      "profile.id": 123,
+      profile: { id: 123 },
     };
     const jwt = await signJWT(claims, 10);
     await sleep(1);
@@ -359,7 +359,7 @@ Meta.test("Auth", async (t) => {
       accessToken: "a1",
       refreshToken: "r1",
       refreshAt: Math.floor(new Date().valueOf() / 1000),
-      "profile.id": 123,
+      profile: { id: 123 },
     };
     const jwt = await signJWT(claims, 10);
     await sleep(1);
@@ -386,4 +386,97 @@ Meta.test("Auth", async (t) => {
       .expectErrorContains("Authorization failed")
       .on(e);
   });
+});
+
+Meta.test("auth: nested profile", async (t) => {
+  const clientId = "client_id_1";
+  const clientSecret = "client_secret_1";
+  const e = await t.engine("auth/auth.py", {
+    secrets: {
+      GITHUB_CLIENT_ID: clientId,
+      GITHUB_CLIENT_SECRET: clientSecret,
+    },
+  });
+
+  await t.should("access injected nested context", async () => {
+    await gql`
+      query {
+        injectedId {
+          id
+        }
+      }
+    `
+      .withContext({ profile: { id: 123 } })
+      .expectData({
+        injectedId: {
+          id: 123,
+        },
+      })
+      .on(e);
+  });
+
+  await t.should(
+    "access injected nested context with array index",
+    async () => {
+      await gql`
+      query {
+        secondProfileData {
+          second
+        }
+      }
+    `
+        .withContext({
+          profile: {
+            data: [1234, 5678],
+          },
+        })
+        .expectData({
+          secondProfileData: {
+            second: 5678,
+          },
+        })
+        .on(e);
+    },
+  );
+
+  await t.should(
+    "access injected nested context with custom key",
+    async () => {
+      await gql`
+        query {
+          customKey {
+            custom
+          }
+        }
+      `
+        .withContext({
+          profile: {
+            "custom key": 123,
+          },
+        })
+        .expectData({
+          customKey: {
+            custom: 123,
+          },
+        })
+        .on(e);
+    },
+  );
+
+  // await t.should("access applied profile", async () => {
+  //   await gql`
+  //     query {
+  //       appliedId {
+  //         id
+  //       }
+  //     }
+  //   `
+  //     .withContext({ id: 123 })
+  //     .expectData({
+  //       appliedId: {
+  //         id: 123,
+  //       },
+  //     })
+  //     .on(e);
+  // });
 });

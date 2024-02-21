@@ -185,6 +185,7 @@ interface core {
     get-internal-policy: func() -> result<tuple<policy-id, string>, error>
 
     variant context-check {
+        not-null,
         value(string),
         pattern(string),
     }

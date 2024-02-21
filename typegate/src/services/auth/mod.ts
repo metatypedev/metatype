@@ -50,17 +50,14 @@ export function initAuth(
   }
 }
 
-export type ProfileClaims = {
-  [key: `profile.${string}`]: unknown;
-};
-
 export type JWTClaims = {
   provider: string;
   accessToken: string;
   refreshToken: string;
   refreshAt: number;
+  profile: null | Record<string, unknown>;
   scope?: string[];
-} & ProfileClaims;
+};
 
 export async function ensureJWT(
   request: Request,
