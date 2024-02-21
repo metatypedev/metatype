@@ -50,6 +50,7 @@ pub enum Injection {
     Secret(InjectionData<String>),
     Parent(InjectionData<u32>),
     Dynamic(InjectionData<String>),
+    Random(InjectionData<String>),
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -116,7 +117,6 @@ pub enum StringFormat {
     Ean,
     Date,
     DateTime,
-    // Path,
     Phone,
 }
 

@@ -130,6 +130,9 @@ class typedef:
     def from_parent(self, value: Union[str, Dict[EffectType, str]]):
         return self._with_injection(serialize_parent_injection(value))
 
+    def from_random(self):
+        return self._with_injection(serialize_generic_injection("random", None))
+
 
 class _TypeWithPolicy(typedef):
     base: "typedef"

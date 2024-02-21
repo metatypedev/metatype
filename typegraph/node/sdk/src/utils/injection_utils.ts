@@ -42,6 +42,9 @@ export function serializeInjection(
     }
   }
 
+  if (value === null) {
+    return JSON.stringify({ source, data: {} });
+  }
   return JSON.stringify({
     source,
     data: { value: valueMapper(value) },
@@ -52,7 +55,7 @@ export function serializeGenericInjection(
   source: InjectionSource,
   value: InjectionValue<unknown>,
 ) {
-  const allowed: InjectionSource[] = ["dynamic", "context", "secret"];
+  const allowed: InjectionSource[] = ["dynamic", "context", "secret", "random"];
   if (allowed.includes(source)) {
     return serializeInjection(source, value);
   }
