@@ -18,7 +18,6 @@ def test_auth(g: Graph):
     with_token = deno.policy(
         "with_token", "(_args, { context }) => !!context.accessToken"
     )
-    has_profile = Policy.context("profile")
 
     x = t.struct({"x": t.integer()})
 
@@ -58,16 +57,6 @@ def test_auth(g: Graph):
             ),
             auth_token_field="token",
         ).with_policy(public),
-        injectedId=deno.identity(
-            # TODO validate the path against the profiler result??
-            t.struct({"id": t.integer().from_context("profile.id")})
-        ).with_policy(has_profile),
-        secondProfileData=deno.identity(
-            t.struct({"second": t.integer().from_context("profile.data[1]")})
-        ).with_policy(has_profile),
-        customKey=deno.identity(
-            t.struct({"custom": t.integer().from_context('profile["custom key"]')})
-        ).with_policy(has_profile),
         # appliedId=deno.identity(t.struct({"id": t.integer()}))
         # .apply({"id": g.from_context("profile.id")})
         # .with_policy(has_profile),

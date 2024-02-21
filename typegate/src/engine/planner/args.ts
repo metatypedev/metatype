@@ -663,11 +663,14 @@ class ArgumentCollector {
           return null;
         }
         this.deps.context.add(contextPath);
-        const queryContext = JsonPathQuery.create(contextPath, { strict: true })
+        const queryContext = JsonPathQuery.create(contextPath, {
+          strict: typ.type !== Type.OPTIONAL,
+          rootPath: "<context>",
+        })
           .asFunction();
         return ({ context }) => {
           try {
-            return queryContext(context);
+            return queryContext(context) ?? null;
           } catch (e) {
             const msg = e.message;
             throw new BadContext("Error while querying context: " + msg);

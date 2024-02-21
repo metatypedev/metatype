@@ -161,6 +161,7 @@ export type QueryFn = (value: unknown) => unknown;
 
 export type JsonPathQueryOptions = {
   strict: boolean;
+  rootPath?: string;
 };
 
 export class QueryFunction {
@@ -169,6 +170,9 @@ export class QueryFunction {
   static create(path: string, options: JsonPathQueryOptions) {
     const compiler = new QueryFnCompiler(path, options);
     const body = compiler.compile();
+    // console.log("----- BODY:", path, options);
+    // console.log(body);
+    // console.log("-----");
     return new QueryFunction(body);
   }
 
@@ -215,39 +219,49 @@ class QueryFnCompiler {
   }
 
   #compileArraySegment(segment: ArrayIndex) {
-    if (!this.options.strict) {
-      this.#lines.push(`if (!Array.isArray(value)) { return undefined; }`);
+    if (this.options.strict) {
+      this.#lines.push(`if (!Array.isArray(value)) {`);
+      const error = `Expected an array at \`${this.#currentPath}\``;
+      this.#lines.push(`  throw new Error(${JSON.stringify(error)});`);
+      this.#lines.push(`}`);
     } else {
-      const error =
-        `Could not resolve \`${this.#currentSegment}\` at \`${this.#currentPath}\``;
-      this.#lines.push(
-        "if (!Array.isArray(value)) {",
-        `  throw new Error(${JSON.stringify(error)});`,
-        "}",
-      );
+      this.#lines.push(`if (!Array.isArray(value)) return undefined;`);
     }
     this.#lines.push(`value = value[${segment.index}];`);
+
+    if (this.options.strict) {
+      this.#lines.push(`if (value === undefined) {`);
+      const error2 =
+        `Index ${segment.index} out of range at \`${this.#currentPath}\``;
+      this.#lines.push(`  throw new Error(${JSON.stringify(error2)});`);
+      this.#lines.push(`}`);
+    }
   }
 
   #compileObjectSegment(segment: ObjectKey) {
-    if (!this.options.strict) {
-      this.#lines.push(
-        `if (typeof value !== "object" || value === null) { return undefined; }`,
-      );
+    if (this.options.strict) {
+      this.#lines.push(`if (typeof value !== "object" || value === null) {`);
+      const error = `Expected an object at \`${this.#currentPath}\``;
+      this.#lines.push(`  throw new Error(${JSON.stringify(error)});`);
+      this.#lines.push(`}`);
     } else {
-      const error =
-        `Could not resolve \`${this.#currentSegment}\` at \`${this.#currentPath}\``;
       this.#lines.push(
-        "if (typeof value !== 'object' || value === null) {",
-        `  throw new Error(${JSON.stringify(error)});`,
-        "}",
+        `if (typeof value !== "object" || value === null) return undefined;`,
       );
     }
     this.#lines.push(`value = value[${JSON.stringify(segment.key)}];`);
+    if (this.options.strict) {
+      const error2 =
+        `Property '${segment.key}' not found at \`${this.#currentPath}\``;
+      this.#lines.push(`if (value === undefined) {`);
+      this.#lines.push(`  throw new Error(${JSON.stringify(error2)});`);
+      this.#lines.push(`}`);
+    }
   }
 
   get #currentPath() {
-    return this.#path.slice(0, this.#currentIndex)
+    const rootPath = this.options.rootPath ?? "$";
+    return rootPath + this.#path.slice(0, this.#currentIndex)
       .map(stringifySegment)
       .join("");
   }
