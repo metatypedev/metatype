@@ -2,30 +2,30 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: list '_Post_GroupByResult' #279
-└─ item: struct #278
-   ├─ [_avg]: struct '_Post_SelectNumbers__1' #272
-   │  └─ [id]: optional #271
-   │     └─ item: float #270
-   ├─ [_count]: struct '_Post_AggrCount' #269
-   │  ├─ [_all]: optional #268
-   │  │  └─ item: integer #267
-   │  ├─ [author]: optional #268
-   │  │  └─ item: integer #267
-   │  ├─ [id]: optional #268
-   │  │  └─ item: integer #267
-   │  └─ [title]: optional #268
-   │     └─ item: integer #267
-   ├─ [_max]: struct '_Post_SelectNumbers_' #277
+root: list '_Post_GroupByResult' #284
+└─ item: struct #283
+   ├─ [_avg]: struct '_Post_SelectNumbers__1' #277
    │  └─ [id]: optional #276
-   │     └─ item: integer #275
-   ├─ [_min]: struct '_Post_SelectNumbers_' #277
-   │  └─ [id]: optional #276
-   │     └─ item: integer #275
-   ├─ [_sum]: struct '_Post_SelectNumbers_' #277
-   │  └─ [id]: optional #276
-   │     └─ item: integer #275
-   ├─ [author]: &User #121
-   ├─ [id]: integer #119
-   └─ [title]: string #120
+   │     └─ item: float #275
+   ├─ [_count]: struct '_Post_AggrCount' #274
+   │  ├─ [_all]: optional #273
+   │  │  └─ item: integer #272
+   │  ├─ [author]: optional #273
+   │  │  └─ item: integer #272
+   │  ├─ [id]: optional #273
+   │  │  └─ item: integer #272
+   │  └─ [title]: optional #273
+   │     └─ item: integer #272
+   ├─ [_max]: struct '_Post_SelectNumbers_' #282
+   │  └─ [id]: optional #281
+   │     └─ item: integer #280
+   ├─ [_min]: struct '_Post_SelectNumbers_' #282
+   │  └─ [id]: optional #281
+   │     └─ item: integer #280
+   ├─ [_sum]: struct '_Post_SelectNumbers_' #282
+   │  └─ [id]: optional #281
+   │     └─ item: integer #280
+   ├─ [author]: &User #126
+   ├─ [id]: integer #124
+   └─ [title]: string #125
 

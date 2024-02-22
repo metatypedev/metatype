@@ -2,10 +2,11 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: optional '_45_RecordWithNestedCount?' #45
-└─ item: struct 'RecordWithNestedCount' #44
-   ├─ [age]: optional #3
-   │  └─ item: integer #2
-   ├─ [id]: string #0
-   └─ [name]: string #1
+root: optional '_49_RecordWithNestedCount?' #49
+└─ item: struct 'RecordWithNestedCount' #48
+   ├─ [age]: optional #5
+   │  └─ item: integer #4
+   ├─ [created_at]: string #47
+   ├─ [id]: string #2
+   └─ [name]: string #3
 
