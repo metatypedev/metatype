@@ -19,4 +19,7 @@ def test_nested_context(g: Graph):
         customKey=deno.identity(
             t.struct({"custom": t.integer().from_context('profile["custom key"]')})
         ),
+        optional=deno.identity(
+            t.struct({"optional": t.email().optional().from_context("profile.email")})
+        ),
     )

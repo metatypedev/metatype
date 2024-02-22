@@ -21,4 +21,7 @@ def apply_nested_context(g: Graph):
         deeplyNestedEntry=deno.identity(t.struct({"value": t.string()})).apply(
             {"value": g.from_context('profile.deeply[0]["nested"][1].value')}
         ),
+        optional=deno.identity(t.struct({"optional": t.email().optional()})).apply(
+            {"optional": g.from_context("profile.email")}
+        ),
     )

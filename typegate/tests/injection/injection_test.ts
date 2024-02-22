@@ -368,6 +368,47 @@ Meta.test("Injection from nested context", async (t) => {
     },
   );
 
-  // TODO invalid injection
-  // TODO optional injection with nested context
+  await t.should(
+    "fail for invalid context",
+    async () => {
+      await gql`
+        query {
+          secondProfileData {
+            second
+          }
+        }
+      `
+        .withContext({
+          profile: {
+            "invalid key": 123,
+          },
+        })
+        .expectErrorContains("Property 'data' not found at `<context>.profile`")
+        .on(e);
+    },
+  );
+
+  await t.should(
+    "work with missing context on optional type",
+    async () => {
+      await gql`
+        query {
+          optional {
+            optional
+          }
+        }
+      `
+        .withContext({
+          profile: {
+            id: 1234,
+          },
+        })
+        .expectData({
+          optional: {
+            optional: null,
+          },
+        })
+        .on(e);
+    },
+  );
 });

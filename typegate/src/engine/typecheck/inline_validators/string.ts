@@ -42,7 +42,7 @@ export function generateStringValidator(
       `const ${validatorName} = context.formatValidators[${format}];`,
       check(
         `${varName} != null`,
-        `Unknown format: ${format}`,
+        `'Unknown format: ${typeNode.format}'`,
       ),
       check(
         `${validatorName}(${varName})`,

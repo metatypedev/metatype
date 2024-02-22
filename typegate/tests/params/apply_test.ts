@@ -205,4 +205,36 @@ Meta.test("nested context access", async (t) => {
       })
       .on(e);
   });
+
+  await t.should("fail for invalid context", async () => {
+    await gql`
+      query {
+        thirdProfileData {
+          third
+        }
+      }
+    `
+      .withContext({
+        profile: { datum: 123 },
+      })
+      .expectErrorContains("Property 'data' not found at `$.profile`")
+      .on(e);
+  });
+
+  await t.should("work with invalid context for optional type", async () => {
+    await gql`
+      query {
+        optional {
+          optional
+        }
+      }
+    `
+      .withContext({
+        profile: { datum: 123 },
+      })
+      .expectData({
+        optional: {},
+      })
+      .on(e);
+  });
 });
