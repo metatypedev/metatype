@@ -110,20 +110,20 @@ pub struct ManualResolution {
     pub runtime_name: String,
     pub migration_name: String,
     pub message: Option<String>,
-    pub migration_dir: Arc<Path>,
+    // pub migration_dir: Arc<Path>,
     pub push_manager: Addr<PushManagerActor>,
     pub console: Addr<ConsoleActor>,
 }
 
 impl SelectOption for ManualResolution {
     fn on_select(&self) {
-        let mig_path = self
-            .migration_dir
-            .join(format!("{}/migration.sql", self.migration_name));
-        eprint!(
-            "Edit the migration file at {:?} then press enter to continue...",
-            mig_path
-        );
+        // let mig_path = self
+        //     .migration_dir
+        //     .join(format!("{}/migration.sql", self.migration_name));
+        // eprint!(
+        //     "Edit the migration file at {:?} then press enter to continue...",
+        //     mig_path
+        // );
 
         let console = self.console.clone();
         let push_manager = self.push_manager.clone();

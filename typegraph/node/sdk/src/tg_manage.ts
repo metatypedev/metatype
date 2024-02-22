@@ -62,8 +62,9 @@ export class Manager {
   }
 
   async #requestCommands(): Promise<CLIServerResponse> {
-    // 1. GET localhost:port/config?tg_name=..
+    // 1. GET localhost:port/config
     const config = await this.#requestConfiguration();
+    console.error("CONFIG", config);
     // 2. GET localhost:port/command?tg_name=..
     return { command: "deploy", config };
   }

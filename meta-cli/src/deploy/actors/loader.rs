@@ -120,14 +120,6 @@ impl LoaderActor {
             pool = pool.with_postprocessor(deno.clone());
         }
 
-        if let Some(prisma) = &postprocess_options.prisma {
-            pool = pool.with_postprocessor(
-                prisma
-                    .clone()
-                    .reset_on_drift(postprocess_options.allow_destructive),
-            );
-        }
-
         pool
     }
 

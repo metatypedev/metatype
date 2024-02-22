@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use colored::Colorize;
@@ -11,14 +11,10 @@ use common::typegraph::Typegraph;
 use actix::prelude::*;
 use anyhow::{Context as AnyhowContext, Result};
 use futures::TryFutureExt;
-use pathdiff::diff_paths;
 use serde::Deserialize;
 
 use super::console::input::ConfirmHandler;
-use crate::config::Config;
-use crate::deploy::push::migration_resolution::{
-    ForceReset, ManualResolution, RemoveLatestMigration,
-};
+use crate::deploy::push::migration_resolution::{ForceReset, ManualResolution};
 use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use common::graphql;
 use common::node::Node;
@@ -57,9 +53,7 @@ pub struct Migrations {
 }
 
 pub struct PusherActor {
-    config: Arc<Config>,
     console: Addr<ConsoleActor>,
-    base_dir: Arc<Path>,
     node: Arc<Node>,
     push_manager: Addr<PushManagerActor>,
     secrets: Arc<Secrets>,
@@ -67,17 +61,13 @@ pub struct PusherActor {
 
 impl PusherActor {
     pub fn new(
-        config: Arc<Config>,
         console: Addr<ConsoleActor>,
-        base_dir: Arc<Path>,
         node: Node,
         secrets: Secrets,
         push_manager: Addr<PushManagerActor>,
     ) -> Self {
         Self {
-            config,
             console,
-            base_dir,
             node: Arc::new(node),
             secrets: secrets.into(),
             push_manager,
@@ -206,11 +196,12 @@ pub struct PushResult {
     push: Push,
     name: String,
     messages: Vec<MessageEntry>,
-    migrations: Vec<Migrations>,
+    // migrations: Vec<Migrations>,
     failure: Option<PushFailure>,
     original_name: Option<String>,
 }
 
+// TODO: proxied through the each typegraph
 impl PushResult {
     fn from_raw(raw: PushResultRaw, push: Push) -> Result<Self> {
         let failure = match raw.failure {
@@ -222,7 +213,7 @@ impl PushResult {
             push,
             name: raw.name,
             messages: raw.messages,
-            migrations: raw.migrations,
+            // migrations: raw.migrations,
             failure,
             original_name: None,
         })
@@ -357,26 +348,26 @@ impl Handler<PushResult> for PusherActor {
         let name = res.name.clone();
         self.print_messages(&name, &res.messages);
 
-        let migdir = self
-            .config
-            .prisma_migrations_dir(res.original_name.as_ref().unwrap());
+        // let migdir = self
+        //     .config
+        //     .prisma_migrations_dir(res.original_name.as_ref().unwrap());
 
-        for migrations in res.migrations.into_iter() {
-            let dest = migdir.join(&migrations.runtime);
-            // TODO async??
-            if let Err(e) = common::archive::unpack(&dest, Some(migrations.migrations)) {
-                self.console.error(format!(
-                    "Error while unpacking migrations into {:?}",
-                    diff_paths(&dest, &self.base_dir)
-                ));
-                self.console.error(format!("{e:?}"));
-            } else {
-                self.console.info(format!(
-                    "Successfully unpacked migrations for {name}/{} at {:?}!",
-                    migrations.runtime, dest
-                ));
-            }
-        }
+        // for migrations in res.migrations.into_iter() {
+        //     let dest = migdir.join(&migrations.runtime);
+        //     // TODO async??
+        //     if let Err(e) = common::archive::unpack(&dest, Some(migrations.migrations)) {
+        //         self.console.error(format!(
+        //             "Error while unpacking migrations into {:?}",
+        //             diff_paths(&dest, &self.base_dir)
+        //         ));
+        //         self.console.error(format!("{e:?}"));
+        //     } else {
+        //         self.console.info(format!(
+        //             "Successfully unpacked migrations for {name}/{} at {:?}!",
+        //             migrations.runtime, dest
+        //         ));
+        //     }
+        // }
 
         if let Some(failure) = res.failure {
             match failure {
@@ -464,26 +455,20 @@ impl Handler<ResolveNullConstraintViolation> for PusherActor {
             let typegraph = msg.push.typegraph.clone();
             self.console.info(format!("manually edit the migration {migration_name}; or remove the migration and add set a default value"));
 
-            let migration_dir: Arc<Path> = self
-                .config
-                .prisma_migrations_dir(&typegraph.name().unwrap())
-                .join(&runtime_name)
-                .into();
-
-            let remove_latest = RemoveLatestMigration {
-                typegraph: typegraph.clone(),
-                runtime_name: runtime_name.clone(),
-                migration_name: migration_name.clone(),
-                migration_dir: migration_dir.clone(),
-                push_manager: self.push_manager.clone(),
-                console: self.console.clone(),
-            };
+            // let remove_latest = RemoveLatestMigration {
+            //     typegraph: typegraph.clone(),
+            //     runtime_name: runtime_name.clone(),
+            //     migration_name: migration_name.clone(),
+            //     migration_dir: migration_dir.clone(),
+            //     push_manager: self.push_manager.clone(),
+            //     console: self.console.clone(),
+            // };
 
             let manual = ManualResolution {
                 typegraph: typegraph.clone(),
                 runtime_name: runtime_name.clone(),
                 migration_name: migration_name.clone(),
-                migration_dir,
+                // migration_dir,
                 message: Some(format!(
                     "Set a default value for the column `{}` in the table `{}`",
                     column, table
@@ -501,7 +486,10 @@ impl Handler<ResolveNullConstraintViolation> for PusherActor {
             self.push_manager
                 .do_send(PushFinished::new(msg.push, false).select(
                     "Choose one of the following options".to_string(),
-                    vec![Box::new(remove_latest), Box::new(manual), Box::new(reset)],
+                    vec![
+                        /*Box::new(remove_latest)*/ Box::new(manual),
+                        Box::new(reset),
+                    ],
                 ));
         } else {
             self.push_manager

@@ -100,11 +100,8 @@ pub mod deno_rt {
 
 pub mod prisma_rt {
     use super::*;
-    use anyhow::{anyhow, Context};
-    use common::{
-        archive,
-        typegraph::runtimes::{prisma::MigrationOptions, KnownRuntime::Prisma, TGRuntime},
-    };
+    use anyhow::anyhow;
+    use common::typegraph::runtimes::{KnownRuntime::Prisma, TGRuntime};
 
     #[derive(Default, Debug, Clone)]
     pub struct EmbedPrismaMigrations {
@@ -121,27 +118,6 @@ pub mod prisma_rt {
         pub fn reset_on_drift(mut self, reset: bool) -> Self {
             self.reset_on_drift = reset;
             self
-        }
-    }
-
-    impl PostProcessor for EmbedPrismaMigrations {
-        fn postprocess(&self, tg: &mut Typegraph, config: &Config) -> Result<()> {
-            let tg_name = tg.name().context("Getting typegraph name")?;
-            let base_migration_path = config.prisma_migrations_dir(&tg_name);
-
-            for rt in tg.runtimes.iter_mut() {
-                if let TGRuntime::Known(Prisma(rt_data)) = rt {
-                    let rt_name = &rt_data.name;
-                    let path = base_migration_path.join(rt_name);
-                    rt_data.migration_options = Some(MigrationOptions {
-                        migration_files: archive::archive(path)?,
-                        create: self.create_migration,
-                        reset: self.reset_on_drift,
-                    });
-                }
-            }
-
-            Ok(())
         }
     }
 

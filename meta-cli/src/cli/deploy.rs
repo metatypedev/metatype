@@ -214,12 +214,8 @@ mod default_mode {
             .auto_stop()
             .start();
 
-            let pusher = PushManagerBuilder::new(console.clone()).start(
-                Arc::clone(&deploy.config),
-                deploy.base_dir.clone(),
-                deploy.node.clone(),
-                secrets,
-            );
+            let pusher =
+                PushManagerBuilder::new(console.clone()).start(deploy.node.clone(), secrets);
 
             Ok(Self {
                 deploy,
@@ -353,12 +349,7 @@ mod watch_mode {
 
             let pusher = PushManagerBuilder::new(console.clone())
                 .linear_backoff(Duration::from_secs(5), 3)
-                .start(
-                    Arc::clone(&deploy.config),
-                    deploy.base_dir.clone(),
-                    deploy.node.clone(),
-                    secrets,
-                );
+                .start(deploy.node.clone(), secrets);
 
             let actor_system = ActorSystem {
                 console: console.clone(),

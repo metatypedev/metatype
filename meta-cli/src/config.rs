@@ -5,7 +5,7 @@ use anyhow::{anyhow, Context, Result};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use lazy_static::lazy_static;
 use reqwest::Url;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io;
@@ -48,7 +48,7 @@ impl<T> Lift<T> {
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct NodeConfig {
     pub url: Url,
     pub prefix: Option<String>,
@@ -238,21 +238,6 @@ impl Config {
             .loaders
             .get(&module_type)
             .unwrap_or(&DEFAULT_LOADER_CONFIG)
-    }
-
-    pub fn prisma_migrations_dir(&self, typegraph: &str) -> PathBuf {
-        let mut path = self.base_dir.join(
-            self.typegraphs
-                .materializers
-                .prisma
-                .migrations_path
-                .as_deref()
-                .unwrap_or_else(|| Path::new("prisma/migrations")),
-        );
-
-        path.push(typegraph);
-
-        path
     }
 }
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Action, GenArgs};
+use crate::com::store::{Command, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors::console::ConsoleActor;
 use crate::deploy::actors::loader::{
@@ -65,6 +66,10 @@ impl Action for Serialize {
         } else {
             Config::load_or_find(config_path, dir)?
         };
+
+        // Hint the server what state we are globally in
+        ServerStore::with(Some(Command::Serialize), Some(config.clone()));
+
         let config = Arc::new(config);
 
         let console = ConsoleActor::new(Arc::clone(&config)).start();

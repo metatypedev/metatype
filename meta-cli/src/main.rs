@@ -3,12 +3,12 @@
 
 mod cli;
 mod codegen;
+mod com;
 mod config;
 pub mod deploy;
 mod fs;
 mod global_config;
 mod logger;
-mod server;
 
 #[cfg(test)]
 mod tests;
@@ -22,11 +22,10 @@ use clap::Parser;
 use cli::upgrade::upgrade_check;
 use cli::Action;
 use cli::Args;
+use com::server::spawn_server;
 use futures::try_join;
 use futures::TryFutureExt;
 use log::{error, warn};
-
-use server::spawn_server;
 use shadow_rs::shadow;
 
 shadow!(build);

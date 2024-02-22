@@ -7,7 +7,7 @@ use state::{AddTypegraphError, CancelationStatus, RemoveTypegraphError, State};
 use std::collections::hash_map::Entry;
 use std::path::PathBuf;
 use std::time::Duration;
-use std::{collections::HashMap, path::Path, sync::Arc};
+use std::{collections::HashMap, path::Path};
 
 use actix::prelude::*;
 use anyhow::Result;
@@ -16,7 +16,6 @@ use colored::Colorize;
 use common::typegraph::Typegraph;
 use tokio::sync::oneshot;
 
-use crate::config::Config;
 use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use common::node::Node;
 
@@ -52,18 +51,10 @@ impl PushManagerBuilder {
         self
     }
 
-    pub fn start(
-        self,
-        config: Arc<Config>,
-        base_dir: Arc<Path>,
-        node: Node,
-        secrets: HashMap<String, String>,
-    ) -> Addr<PushManagerActor> {
+    pub fn start(self, node: Node, secrets: HashMap<String, String>) -> Addr<PushManagerActor> {
         PushManagerActor::create(|ctx| {
             let addr = ctx.address();
-            let pusher =
-                PusherActor::new(config, self.console.clone(), base_dir, node, secrets, addr)
-                    .start();
+            let pusher = PusherActor::new(self.console.clone(), node, secrets, addr).start();
 
             PushManagerActor {
                 console: self.console,
