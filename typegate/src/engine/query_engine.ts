@@ -184,7 +184,7 @@ export class QueryEngine {
         if (v.kind === "NonNullType") {
           return casting(v.type);
         }
-        if (name === "String" || name == "ID") {
+        if (v.name.value === "String" || v.name.value == "ID") {
           return String;
         }
         // ListType | Object | boolean | number: stringified

@@ -61,12 +61,15 @@ const InjectionSource = {
 type InjectionSourceType = typeof InjectionSource;
 
 export interface TypegraphBuilderArgs extends InjectionSourceType {
-  expose: (exports: Exports, defaultPolicy?: Policy) => void;
+  expose: (
+    exports: Exports,
+    defaultPolicy?: t.PolicySpec | Array<t.PolicySpec>,
+  ) => void;
   inherit: () => InheritDef;
   rest: (graphql: string) => number;
   auth: (value: Auth | RawAuth) => number;
   ref: (name: string) => t.Typedef;
-  configureRandomInjection: (params: {seed: number}) => void;
+  configureRandomInjection: (params: { seed: number }) => void;
 }
 
 export class InheritDef {
@@ -201,33 +204,33 @@ export function typegraph(
     ref: (name: string) => {
       return genRef(name);
     },
-    configureRandomInjection: (params: {seed: number}) => {
-      return core.setSeed(params.seed);
-    },
+    configureRandomInjection: (params: { seed: number }) => {   
+    return core.setSeed(params.seed);
+  },
     ...InjectionSource,
   };
 
-  builder(g);
+builder(g);
 
-  let serialize = () => "";
-  if (!disableAutoSerialization) {
-    const tgJson = core.finalizeTypegraph({ tag: "simple" });
-    console.log(tgJson);
-    serialize = () => tgJson;
-  } else {
-    // config is known at deploy time
-    serialize = (config?: ArtifactResolutionConfig) => {
-      const tgJson = core.finalizeTypegraph({
-        tag: "resolve-artifacts",
-        val: config,
-      });
-      return tgJson;
-    };
-  }
-  return {
-    serialize,
-    name,
+let serialize = () => "";
+if (!disableAutoSerialization) {
+  const tgJson = core.finalizeTypegraph({ tag: "simple" });
+  console.log(tgJson);
+  serialize = () => tgJson;
+} else {
+  // config is known at deploy time
+  serialize = (config?: ArtifactResolutionConfig) => {
+    const tgJson = core.finalizeTypegraph({
+      tag: "resolve-artifacts",
+      val: config,
+    });
+    return tgJson;
   };
+}
+return {
+  serialize,
+  name,
+};
 }
 
 export function genRef(name: string) {
