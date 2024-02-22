@@ -78,48 +78,106 @@ export class RandomRuntime extends Runtime {
 
   execute(typ: TypeNode): Resolver {
     return () => {
-      return this.randomizeRecursively(typ);
+      return randomizeRecursively(typ, this.chance, this._tgTypes);
     };
   }
+}
 
-  randomizeRecursively(typ: TypeNode): any {
-    const config = typ.config ?? {};
-    if (Object.prototype.hasOwnProperty.call(config, "gen")) {
-      const { gen, ...arg } = config;
-      return this.chance[gen as string](arg);
-    }
-    switch (typ.type) {
-      case "object":
-        return {};
-      case "optional": {
-        const childNodeName = this.getTgTypeNameByIndex(typ.item);
-        return this.chance.bool()
-          ? this.randomizeRecursively(childNodeName)
-          : null;
-      }
-      case "integer":
-        return this.chance.integer();
-      case "string":
-        if (typ.format === "uuid") {
-          return this.chance.guid();
-        }
-        if (typ.format === "email") {
-          return this.chance.email();
-        }
-        return this.chance.string();
-      case "boolean":
-        return this.chance.bool();
-      case "list": {
-        const res = [];
-        let size = this.chance.integer({ min: 1, max: 10 });
-        const childNodeName = this.getTgTypeNameByIndex(typ.items);
-        while (size--) {
-          res.push(this.randomizeRecursively(childNodeName));
-        }
-        return res;
-      }
-      default:
-        throw new Error(`type not supported "${typ.type}"`);
-    }
+export default function randomizeRecursively(
+  typ: TypeNode,
+  chance: typeof Chance,
+  tgTypes: TypeNode[],
+): any {
+  const config = typ.config ?? {};
+  if (Object.prototype.hasOwnProperty.call(config, "gen")) {
+    const { gen, ...arg } = config;
+    return chance[gen as string](arg);
   }
+  switch (typ.type) {
+    case "object":
+      return {};
+    case "optional": {
+      const childNodeName = tgTypes[typ.item];
+      return chance.bool()
+        ? randomizeRecursively(childNodeName, chance, tgTypes)
+        : null;
+    }
+    case "integer":
+      return chance.integer();
+    case "string":
+      if (typ.format === "uuid") {
+        return chance.guid();
+      }
+      if (typ.format === "email") {
+        return chance.email();
+      }
+      if (typ.format === "uri") {
+        return chance.url();
+      }
+      if (typ.format === "hostname") {
+        return chance.domain();
+      }
+      if (typ.format === "date-time") {
+        const randomDate = chance.date();
+
+        // Get the timestamp of the random date
+        const timestamp = randomDate.getTime();
+        console.log(randomDate);
+
+        // Create a new Date object with the timestamp adjusted for the local timezone offset
+        const dateInUtc = new Date(
+          timestamp - randomDate.getTimezoneOffset() * 60000,
+        );
+        return dateInUtc.toISOString();
+      }
+      if (typ.format === "phone") {
+        return chance.phone();
+      }
+      if (typ.format == "ean") {
+        return generateEAN(chance);
+      }
+      return chance.string();
+    case "boolean":
+      return chance.bool();
+    case "list": {
+      const res = [];
+      let size = chance.integer({ min: 1, max: 10 });
+      const childNodeName = tgTypes[typ.items];
+      while (size--) {
+        res.push(
+          randomizeRecursively(childNodeName, chance, tgTypes),
+        );
+      }
+      return res;
+    }
+
+    default:
+      throw new Error(`type not supported "${typ.type}"`);
+  }
+}
+
+function generateEAN(chance: typeof Chance) {
+  let ean = "0";
+
+  for (let i = 1; i <= 11; i++) {
+    ean += chance.integer({ min: 0, max: 9 }).toString();
+  }
+
+  const checkDigit = calculateCheckDigit(ean);
+  ean += checkDigit;
+
+  return ean;
+}
+
+function calculateCheckDigit(ean: string) {
+  const digits = ean.split("").map(Number);
+
+  let sum = 0;
+  for (let i = 0; i < digits.length; i++) {
+    sum += (i % 2 === 0) ? digits[i] : digits[i] * 3;
+  }
+
+  const checkDigit = (10 - (sum % 10)) % 10;
+
+  return checkDigit.toString();
 }
