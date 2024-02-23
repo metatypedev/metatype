@@ -67,7 +67,7 @@ impl TypeGen for OutType {
                 }
                 Property::Unmanaged(type_id) => {
                     // just forward the original type
-                    builder.prop(key, remove_injections_recursive(*type_id)?);
+                    builder.prop(key, *type_id);
                 }
             }
         }

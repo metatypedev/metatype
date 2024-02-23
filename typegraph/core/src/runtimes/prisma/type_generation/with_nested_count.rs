@@ -76,7 +76,7 @@ impl TypeGen for WithNestedCount {
                 }
 
                 Property::Unmanaged(type_id) => {
-                    builder.prop(key, remove_injections_recursive(*type_id)?);
+                    builder.prop(key, *type_id);
                 }
             }
         }
