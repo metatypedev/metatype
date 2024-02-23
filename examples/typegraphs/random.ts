@@ -4,7 +4,7 @@ import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 // skip:next-line
 /* eslint-disable  @typescript-eslint/no-unused-vars */
 
-typegraph({
+await typegraph({
   name: "roadmap-random",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },

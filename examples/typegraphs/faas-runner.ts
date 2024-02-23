@@ -5,7 +5,7 @@ import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
 
 // skip:end
 
-typegraph({
+await typegraph({
   name: "faas-runner",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },

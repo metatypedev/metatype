@@ -4,7 +4,7 @@ import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 import { Auth } from "@typegraph/sdk/params.js";
 import * as effects from "@typegraph/sdk/effects.js";
 
-typegraph({
+await typegraph({
   // skip:start
   name: "roadmap-execute",
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },

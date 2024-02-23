@@ -4,7 +4,7 @@ import { HttpRuntime } from "@typegraph/sdk/runtimes/http.js";
 
 // skip:end
 
-typegraph({
+await typegraph({
   name: "backend-for-frontend",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
@@ -31,3 +31,5 @@ typegraph({
     ).withPolicy(pub),
   });
 });
+
+console.error("HLLO THERE");

@@ -227,6 +227,15 @@ def typegraph(
                 raise Exception(tg_json.value)
             return tg_json.value
 
+        # TODO: remove
+        # print(serialize_with_artifacts(config=ArtifactResolutionConfig(
+        #     dir=".",
+        #     prisma_migration=MigrationConfig(
+        #         action=MigrationAction(create=True, reset=True),
+        #         migration_dir="."
+        #     )
+        # )))
+
         return lambda: TypegraphOutput(name=tg.name, serialize=serialize_with_artifacts)
 
     return decorator

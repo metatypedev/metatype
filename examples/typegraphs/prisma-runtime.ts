@@ -5,7 +5,7 @@ import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 
 // skip:end
 
-typegraph({
+await typegraph({
   name: "prisma-runtime",
   cors: {
     // skip:start
