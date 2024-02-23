@@ -245,7 +245,7 @@ class ArgumentCollector {
   private collectArgImpl(node: CollectNode): ComputeArg {
     const { astNode, typeIdx } = node;
 
-    const typ = this.tg.type(typeIdx);
+    const typ: TypeNode = this.tg.type(typeIdx);
 
     this.addPoliciesFrom(typeIdx);
 
@@ -694,6 +694,10 @@ class ArgumentCollector {
           );
         }
         return generator;
+      }
+
+      case "random": {
+        return () => this.tg.getRandom(typ);
       }
     }
   }

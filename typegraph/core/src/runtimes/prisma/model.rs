@@ -296,7 +296,7 @@ impl TryFrom<&common::typegraph::Injection> for Injection {
         use common::typegraph::Injection as I;
 
         match injection {
-            I::Static(inj) | I::Secret(inj) | I::Context(inj) => {
+            I::Static(inj) | I::Secret(inj) | I::Context(inj) | I::Random(inj) => {
                 Self::convert_injection(inj).ok_or(())
             }
             I::Parent(inj) => Self::convert_injection(inj).ok_or(()),

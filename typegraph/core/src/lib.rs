@@ -535,6 +535,10 @@ impl wit::core::Guest for Lib {
             default_policy,
         )
     }
+
+    fn set_seed(seed: Option<u32>) -> Result<()> {
+        typegraph::set_seed(seed)
+    }
 }
 
 #[macro_export]

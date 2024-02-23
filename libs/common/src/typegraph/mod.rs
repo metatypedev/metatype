@@ -98,6 +98,7 @@ pub struct TypeMeta {
     pub auths: Vec<Auth>,
     pub rate: Option<Rate>,
     pub version: String,
+    pub random_seed: Option<u32>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

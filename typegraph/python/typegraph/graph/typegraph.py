@@ -147,6 +147,11 @@ class Graph:
     def ref(self, name: str) -> "t.typedef":
         return gen_ref(name)
 
+    def configure_random_injection(self, seed: int):
+        res = core.set_seed(store, seed)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+
     def as_arg(self, name: Optional[str] = None):
         return ApplyFromArg(name)
 

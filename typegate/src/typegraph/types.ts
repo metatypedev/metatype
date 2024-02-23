@@ -223,6 +223,9 @@ export type Injection = {
 } | {
   source: "dynamic";
   data: InjectionDataFor_String;
+} | {
+  source: "random";
+  data: InjectionDataFor_String;
 };
 export type InjectionDataFor_String = SingleValueFor_String | {
   [k: string]: string;
@@ -503,6 +506,7 @@ export interface TypeMeta {
   auths: Auth[];
   rate?: Rate | null;
   version: string;
+  random_seed: number | undefined;
 }
 export interface Queries {
   dynamic: boolean;

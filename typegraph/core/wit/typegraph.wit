@@ -210,6 +210,8 @@ interface core {
     rename-type: func(tpe: type-id, new-name: string) -> result<type-id, error>
 
     expose: func(fns: list<tuple<string, type-id>>, default-policy: option<list<policy-spec>>) -> result<_, error>
+
+    set-seed: func(seed: option<u32>) -> result<_, error>
     
     type runtime-id = u32
     type materializer-id = u32
