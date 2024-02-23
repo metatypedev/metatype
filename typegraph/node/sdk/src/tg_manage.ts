@@ -9,15 +9,20 @@ const VERSION = "0.3.5-0";
 const PORT_SOURCE = "META_CLI_SERVER_PORT";
 
 type Command = "serialize" | "deploy" | "undeploy" | "unpack_migration";
+
 type CLIServerResponse = {
   command: Command;
-  config: ArtifactResolutionConfig;
+  config: CLIConfigRequest;
 };
 
-type SDKResponse = {
-  name: string;
-  message: string;
-  typegate?: unknown;
+type CLIConfigRequest = {
+  typegates: Record<string, string>;
+  secrets: Record<string, string>;
+  artifactsConfig: ArtifactResolutionConfig;
+};
+
+type SDKSuccess<T> = {
+  data: T;
 };
 
 export class Manager {
@@ -50,50 +55,45 @@ export class Manager {
     switch (command) {
       case "serialize":
         this.#serialize(config);
+        break;
       case "deploy":
         this.#deploy(config);
+        break;
       case "undeploy":
         this.#undeploy();
       case "unpack_migration":
         this.#unpackMigration(config);
+        break;
       default:
         throw new Error(`command ${command} from meta-cli not supported`);
     }
   }
 
   async #requestCommands(): Promise<CLIServerResponse> {
-    // 1. GET localhost:port/config
-    const config = await this.#requestConfiguration();
-    console.error("CONFIG", config);
-    // 2. GET localhost:port/command?tg_name=..
-    return { command: "deploy", config };
+    const { data: config } = await this.#requestConfig();
+
+    const { data: command } =
+      await (await fetch(new URL("command", this.#endpoint)))
+        .json() as SDKSuccess<Command>;
+
+    console.error("Command", command);
+
+    return { command, config };
   }
 
-  async #sendStatusToCLI(response: SDKResponse) {
-    const url = new URL("status", this.#endpoint);
-    await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(response),
-    });
+  async #requestConfig(): Promise<SDKSuccess<CLIConfigRequest>> {
+    const response = await fetch(new URL("config", this.#endpoint));
+    return (await response.json()) as SDKSuccess<CLIConfigRequest>;
   }
 
-  async #requestConfiguration(): Promise<ArtifactResolutionConfig> {
-    const url = new URL("config", this.#endpoint);
-    const response = await fetch(url);
+  #serialize(config: CLIConfigRequest): void {
+    const ret = this.#typegraph.serialize(config.artifactsConfig);
     // TODO:
-    // configuration follows a different structure on CLI
-    // a converter is needed there and
-    return (await response.json()) as ArtifactResolutionConfig;
+    // send back through http
+    console.log(ret);
   }
 
-  #serialize(config: ArtifactResolutionConfig): void {
-    // TODO
-  }
-
-  #deploy(config: ArtifactResolutionConfig): void {
+  #deploy(config: CLIConfigRequest): void {
     // TODO
   }
 
@@ -101,7 +101,7 @@ export class Manager {
     // TODO
   }
 
-  #unpackMigration(config: ArtifactResolutionConfig): void {
+  #unpackMigration(config: CLIConfigRequest): void {
     // TODO
   }
 }

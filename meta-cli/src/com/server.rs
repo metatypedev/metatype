@@ -77,7 +77,7 @@ async fn response(req_body: String) -> impl Responder {
 }
 
 pub async fn spawn_server() -> std::io::Result<()> {
-    println!("Server is running..");
+    eprintln!("Server is running..");
     HttpServer::new(|| {
         App::new()
             .service(config)

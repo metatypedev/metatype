@@ -67,7 +67,7 @@ export interface TypegraphBuilderArgs extends InjectionSourceType {
   rest: (graphql: string) => number;
   auth: (value: Auth | RawAuth) => number;
   ref: (name: string) => t.Typedef;
-  configureRandomInjection: (params: {seed: number}) => void;
+  configureRandomInjection: (params: { seed: number }) => void;
 }
 
 export class InheritDef {
@@ -114,21 +114,21 @@ export interface TypegraphOutput {
   name: string;
 }
 
-export function typegraph(
+export async function typegraph(
   name: string,
   builder: TypegraphBuilder,
-): TypegraphOutput;
-export function typegraph(
+): Promise<TypegraphOutput>;
+export async function typegraph(
   args: TypegraphArgs,
-): TypegraphOutput;
-export function typegraph(
+): Promise<TypegraphOutput>;
+export async function typegraph(
   args: Omit<TypegraphArgs, "builder">,
   builder: TypegraphBuilder,
-): TypegraphOutput;
-export function typegraph(
+): Promise<TypegraphOutput>;
+export async function typegraph(
   nameOrArgs: string | TypegraphArgs | Omit<TypegraphArgs, "builder">,
   maybeBuilder?: TypegraphBuilder,
-): TypegraphOutput {
+): Promise<TypegraphOutput> {
   const args = typeof nameOrArgs === "string"
     ? { name: nameOrArgs }
     : nameOrArgs;
@@ -140,7 +140,6 @@ export function typegraph(
     prefix,
     rate,
     secrets,
-    disableAutoSerialization,
   } = args;
   const builder = "builder" in args
     ? args.builder as TypegraphBuilder
@@ -202,7 +201,7 @@ export function typegraph(
     ref: (name: string) => {
       return genRef(name);
     },
-    configureRandomInjection: (params: {seed: number}) => {
+    configureRandomInjection: (params: { seed: number }) => {
       return core.setSeed(params.seed);
     },
     ...InjectionSource,
@@ -220,10 +219,7 @@ export function typegraph(
 
   if (Manager.isRunFromCLI()) {
     const manager = new Manager(ret);
-    console.error("CLI!");
-    manager.run().catch((err) => {
-      console.error(err);
-    });
+    await manager.run();
   } else {
     console.error("RAW!");
     console.log(ret.serialize({
