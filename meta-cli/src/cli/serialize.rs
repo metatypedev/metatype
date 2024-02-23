@@ -143,8 +143,6 @@ impl Action for Serialize {
 
 impl Serialize {
     async fn write(&self, contents: &str) -> Result<()> {
-        println!("Output {:?}", contents);
-
         if let Some(path) = self.out.as_ref() {
             tokio::fs::OpenOptions::new()
                 .truncate(true)

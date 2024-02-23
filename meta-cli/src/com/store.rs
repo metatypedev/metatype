@@ -6,6 +6,7 @@ use lazy_static::lazy_static;
 use serde::Serialize;
 use std::{
     borrow::{Borrow, BorrowMut},
+    collections::HashMap,
     sync::Mutex,
 };
 
@@ -26,6 +27,7 @@ fn with_store_mut<T, F: FnOnce(&mut ServerStore) -> T>(f: F) -> T {
 
 #[allow(dead_code)]
 #[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Command {
     Deploy,
     Undeploy,
@@ -36,6 +38,7 @@ pub enum Command {
 pub struct ServerStore {
     config: Option<Config>,
     command: Option<Command>,
+    secrets: HashMap<String, String>,
 }
 
 #[allow(dead_code)]
@@ -57,5 +60,13 @@ impl ServerStore {
 
     pub fn get_command() -> Option<Command> {
         with_store(|s| s.command.clone())
+    }
+
+    pub fn set_secrets(secrets: HashMap<String, String>) {
+        with_store_mut(|s| s.secrets = secrets)
+    }
+
+    pub fn get_secrets() -> HashMap<String, String> {
+        with_store(|s| s.secrets.clone())
     }
 }

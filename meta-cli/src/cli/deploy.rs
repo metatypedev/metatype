@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use super::{Action, CommonArgs, GenArgs};
+use crate::com::store::{Command, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors;
 use crate::deploy::actors::console::{Console, ConsoleActor};
@@ -142,6 +143,12 @@ impl Action for DeploySubcommand {
 
         if !self.options.allow_dirty {
             let repo = git2::Repository::discover(&deploy.config.base_dir).ok();
+
+            // Hint the server what state we are globally in
+            ServerStore::with(
+                Some(Command::Deploy),
+                Some(deploy.config.as_ref().to_owned()),
+            );
 
             if let Some(repo) = repo {
                 let dirty = repo.statuses(None)?.iter().any(|s| {
@@ -309,6 +316,8 @@ mod watch_mode {
         loop {
             let secrets =
                 lade_sdk::hydrate(deploy.node.env.clone(), deploy.base_dir.to_path_buf()).await?;
+
+            ServerStore::set_secrets(secrets.clone());
 
             let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
 

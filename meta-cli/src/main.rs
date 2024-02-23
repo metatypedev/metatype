@@ -22,7 +22,7 @@ use clap::Parser;
 use cli::upgrade::upgrade_check;
 use cli::Action;
 use cli::Args;
-use com::server::spawn_server;
+use com::server::{spawn_server, SERVER_PORT};
 use futures::try_join;
 use futures::TryFutureExt;
 use log::{error, warn};
@@ -33,7 +33,7 @@ shadow!(build);
 fn main() -> Result<()> {
     setup_panic_hook();
     logger::init();
-    std::env::set_var("META_CLI_SERVER_PORT", "1234");
+    std::env::set_var("META_CLI_SERVER_PORT", SERVER_PORT.to_string());
 
     let _ = actix::System::with_tokio_rt(|| {
         tokio::runtime::Builder::new_multi_thread()

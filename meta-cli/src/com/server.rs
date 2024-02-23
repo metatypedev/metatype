@@ -3,9 +3,14 @@
 
 use crate::com::store::ServerStore;
 use actix_web::{get, post, App, HttpResponse, HttpServer, Responder};
+use lazy_static::lazy_static;
 use reqwest::StatusCode;
 use serde::Serialize;
 use serde_json::{json, Value};
+
+lazy_static! {
+    pub static ref SERVER_PORT: u16 = 1234;
+}
 
 #[derive(Serialize)]
 struct ResponseSuccess {
@@ -21,27 +26,21 @@ struct ResponseError {
 async fn config() -> impl Responder {
     match ServerStore::get_config() {
         Some(config) => {
-            let endpoints = config
-                .typegates
-                .iter()
-                .map(|(k, v)| serde_json::to_value((k, v)).unwrap())
-                .collect::<Vec<_>>();
-
             let data = json!({
-                "endpoints": endpoints,
+                "typegates": config.typegates,
+                "secrets": ServerStore::get_secrets(),
                 "artifactsConfig": json!({
                     "dir": config.base_dir.display().to_string(),
-                    "prismaMigration": json!({
+                    "prismaMigration": {
+                        // TODO:
                         "migrationDir": ".",
-                        "create": true,
-                        "action": json!({
+                        "action": {
+                            // TODO:
                             "create": true,
                             "reset": false,
-                        }),
-                    }),
+                        },
+                    },
                 }),
-                "secrets": json!({}),
-                "cliVersion": ""
             });
 
             HttpResponse::Ok()
@@ -85,7 +84,7 @@ pub async fn spawn_server() -> std::io::Result<()> {
             .service(command)
             .service(response)
     })
-    .bind(("127.0.0.1", 1234))?
+    .bind(("127.0.0.1", SERVER_PORT.to_owned()))?
     .run()
     .await
 }
