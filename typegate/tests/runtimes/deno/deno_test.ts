@@ -141,12 +141,12 @@ Meta.test("Deno runtime with typescript", async (t) => {
     await gql`
       query {
         hello(name: "World")
-        helloFn(name: "World!")
+        helloFn(name: "wOrLd")
       }
     `
       .expectData({
         hello: "Hello World",
-        helloFn: "Hello World!",
+        helloFn: "Hello world",
       })
       .on(e);
   });

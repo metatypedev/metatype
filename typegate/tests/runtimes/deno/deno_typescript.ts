@@ -6,10 +6,10 @@ import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
 const hello = ({ name }: any) => `Hello ${name}`;
 function helloFn({ name }: any) {
-  return `Hello ${name}`;
+  return `Hello ${(name as string).toLowerCase()}`;
 }
 
-typegraph("test-deno-static", (g: any) => {
+typegraph("test-deno-tyepscript", (g: any) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
 

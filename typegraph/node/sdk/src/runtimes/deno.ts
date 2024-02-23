@@ -39,7 +39,23 @@ export interface DenoImport {
 }
 
 function stringifyFn(code: string | Function) {
-  return typeof code == "function" ? code.toString() : code;
+  if (typeof code == "function") {
+    const source = code.toString();
+    const namedFnMatch = source.match(/function\s*(\*?\s*[a-zA-Z0-9_]+)/);
+    if (namedFnMatch) {
+      const [, name] = namedFnMatch;
+      if (name.replace(/s/g, "").startsWith("*")) {
+        throw new Error(`Generator function "${name}" not supported`);
+      }
+      if (/function\s[a-zA-Z0-9_]+\(\) { \[native code\] }/.test(source)) {
+        throw new Error(
+          `"${name}" is not supported as it is a native function`,
+        );
+      }
+    }
+    return source;
+  }
+  return code;
 }
 
 export class DenoRuntime extends Runtime {
