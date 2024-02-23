@@ -122,21 +122,33 @@ Meta.test("Deno runtime: use local imports", async (t) => {
 });
 
 Meta.test("Deno runtime with typescript", async (t) => {
-  const e = await t.engine("runtimes/deno/deno_static.ts");
+  const e = await t.engine("runtimes/deno/deno_typescript.ts");
   await t.should("work with static values", async () => {
     await gql`
       query {
-        simpleStatic
-        structStatic {
+        static {
           a
         }
       }
     `.expectData({
-      simpleStatic: "One!",
-      structStatic: {
+      static: {
         a: "Hello World",
       },
     }).on(e);
+  });
+
+  await t.should("work with native tyepscript code", async () => {
+    await gql`
+      query {
+        hello(name: "World")
+        helloFn(name: "World!")
+      }
+    `
+      .expectData({
+        hello: "Hello World",
+        helloFn: "Hello World!",
+      })
+      .on(e);
   });
 });
 
