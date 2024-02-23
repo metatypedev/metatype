@@ -1,22 +1,27 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::cell::RefCell;
-
-use serde::Serialize;
-
 use crate::config::Config;
+use lazy_static::lazy_static;
+use serde::Serialize;
+use std::{
+    borrow::{Borrow, BorrowMut},
+    sync::Mutex,
+};
 
-thread_local! {
-    pub static STORE: RefCell<ServerStore> = RefCell::new(ServerStore::default());
+lazy_static! {
+    #[derive(Debug)]
+    pub static ref STORE: Mutex<ServerStore> = Mutex::new(Default::default());
 }
 
 fn with_store<T, F: FnOnce(&ServerStore) -> T>(f: F) -> T {
-    STORE.with(|s| f(&s.borrow()))
+    let guard = STORE.lock().unwrap();
+    f(guard.borrow())
 }
 
 fn with_store_mut<T, F: FnOnce(&mut ServerStore) -> T>(f: F) -> T {
-    STORE.with(|s| f(&mut s.borrow_mut()))
+    let mut guard = STORE.lock().unwrap();
+    f(guard.borrow_mut())
 }
 
 #[allow(dead_code)]
