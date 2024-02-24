@@ -22,8 +22,8 @@ export function generateNumberValidator(
 ): string[] {
   return [
     check(
-      `typeof ${varName} === "number && !isNan(${varName})"`,
-      `"Expected number at ${path}"`,
+      `typeof ${varName} === "number" && !isNaN(${varName})`,
+      `"Expected number at '${path}'"`,
     ),
     ...generateConstraintValidatorsFor(numberConstraints, typeNode),
   ];
