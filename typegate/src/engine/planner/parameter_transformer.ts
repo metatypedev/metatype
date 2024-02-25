@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { QueryFn, QueryFunction } from "../../libs/jsonpath.ts";
 import { TypeGraph } from "../../typegraph/mod.ts";
 import { Type } from "../../typegraph/type_node.ts";
 import { ParameterTransformNode } from "../../typegraph/types.ts";
@@ -15,8 +16,8 @@ import { generateStringValidator } from "../typecheck/inline_validators/string.t
 
 export type TransformParamsInput = {
   args: Record<string, any>;
-  context: Record<string, any>;
   parent: Record<string, any>;
+  context: Record<string, any>;
 };
 
 export function defaultParameterTransformer(input: TransformParamsInput) {
@@ -27,17 +28,68 @@ export type TransformParams = {
   (input: TransformParamsInput): Record<string, any>;
 };
 
+type CompiledTransformerInput = {
+  args: Record<string, any>;
+  parent: Record<string, any>;
+  getContext: ContextQuery;
+};
+
+type CompiledTransformer = {
+  (input: CompiledTransformerInput): Record<string, any>;
+};
+
 export function compileParameterTransformer(
   typegraph: TypeGraph,
   parentProps: Record<string, number>,
   transformerTreeRoot: ParameterTransformNode,
 ): TransformParams {
   const ctx = new TransformerCompilationContext(typegraph, parentProps);
-  const fnBody = ctx.compile(transformerTreeRoot);
-  const fn = new Function("input", fnBody) as TransformParams;
-  return (input) => {
-    const res = fn(input);
+  const { fnBody, deps } = ctx.compile(transformerTreeRoot);
+  const fn = new Function("input", fnBody) as CompiledTransformer;
+  return ({ args, context, parent }) => {
+    const getContext = compileContextQueries(deps.contexts)(context);
+    const res = fn({ args, getContext, parent });
     return res;
+  };
+}
+
+type Dependencies = {
+  contexts: {
+    strictMode: Set<string>;
+    nonStrictMode: Set<string>;
+  };
+};
+
+type ContextQuery = (path: string, options: { strict: boolean }) => unknown;
+
+function compileContextQueries(contexts: Dependencies["contexts"]) {
+  return (context: Record<string, any>): ContextQuery => {
+    const strictMode = new Map<string, QueryFn>();
+    const nonStrictMode = new Map<string, QueryFn>();
+
+    for (const path of contexts.strictMode) {
+      strictMode.set(
+        path,
+        QueryFunction.create(path, { strict: true }).asFunction(),
+      );
+    }
+
+    for (const path of contexts.nonStrictMode) {
+      nonStrictMode.set(
+        path,
+        QueryFunction.create(path, { strict: false }).asFunction(),
+      );
+    }
+
+    return (path, options) => {
+      const fn = options.strict
+        ? strictMode.get(path)
+        : nonStrictMode.get(path);
+      if (!fn) {
+        throw new Error(`Unknown context query: ${path}`);
+      }
+      return fn(context);
+    };
   };
 }
 
@@ -47,6 +99,12 @@ class TransformerCompilationContext {
   #path: string[] = [];
   #latestVarIndex = 0;
   #collector: string[] = [];
+  #dependencies: Dependencies = {
+    contexts: {
+      strictMode: new Set(),
+      nonStrictMode: new Set(),
+    },
+  };
 
   constructor(typegraph: TypeGraph, parentProps: Record<string, number>) {
     this.#tg = typegraph;
@@ -55,15 +113,28 @@ class TransformerCompilationContext {
 
   #reset() {
     this.#collector = [
-      "const { args, context, parent } = input;\n",
+      "const { args, parent, getContext } = input;\n",
     ];
+    this.#dependencies = {
+      contexts: {
+        strictMode: new Set(),
+        nonStrictMode: new Set(),
+      },
+    };
   }
 
   compile(rootNode: ParameterTransformNode) {
     this.#reset();
     const varName = this.#compileNode(rootNode);
     this.#collector.push(`return ${varName};`);
-    return this.#collector.join("\n");
+    const res = {
+      fnBody: this.#collector.join("\n"),
+      deps: this.#dependencies,
+    };
+
+    this.#reset();
+
+    return res;
   }
 
   #compileNode(node: ParameterTransformNode) {
@@ -165,7 +236,13 @@ class TransformerCompilationContext {
       typeNode = this.#tg.type(typeNode.item);
       optional = true;
     }
-    this.#collector.push(`const ${varName} = context[${JSON.stringify(key)}];`);
+
+    const opts = `{ strict: ${!optional} }`;
+    this.#collector.push(
+      `const ${varName} = getContext(${JSON.stringify(key)}, ${opts});`,
+    );
+    const mode = optional ? "nonStrictMode" : "strictMode";
+    this.#dependencies.contexts[mode].add(key);
 
     const path = this.#path.join(".");
 
@@ -270,6 +347,6 @@ class TransformerCompilationContext {
   }
 
   #createVarName() {
-    return `var${++this.#latestVarIndex}`;
+    return `_var${++this.#latestVarIndex}`;
   }
 }

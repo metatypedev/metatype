@@ -39,6 +39,7 @@ import {
   compileParameterTransformer,
   defaultParameterTransformer,
 } from "./parameter_transformer.ts";
+import { QueryFunction as JsonPathQuery } from "../../libs/jsonpath.ts";
 
 class MandatoryArgumentError extends Error {
   constructor(argDetails: string) {
@@ -657,20 +658,23 @@ class ArgumentCollector {
         return () => this.tg.parseSecret(typ, secretName);
       }
       case "context": {
-        const contextKey = selectInjection(injection.data, this.effect);
-        if (contextKey == null) {
+        const contextPath = selectInjection(injection.data, this.effect);
+        if (contextPath == null) {
           return null;
         }
-        this.deps.context.add(contextKey);
+        this.deps.context.add(contextPath);
+        const queryContext = JsonPathQuery.create(contextPath, {
+          strict: typ.type !== Type.OPTIONAL,
+          rootPath: "<context>",
+        })
+          .asFunction();
         return ({ context }) => {
-          const { [contextKey]: value = null } = context;
-          if (value === null && typ.type != Type.OPTIONAL) {
-            const suggestions = Object.keys(context).join(", ");
-            throw new BadContext(
-              `Non optional injection '${contextKey}' was not found in the context, available context keys are ${suggestions}`,
-            );
+          try {
+            return queryContext(context) ?? null;
+          } catch (e) {
+            const msg = e.message;
+            throw new BadContext("Error while querying context: " + msg);
           }
-          return value;
         };
       }
 
