@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::config::Config;
+use common::node::BasicAuth;
 use lazy_static::lazy_static;
 use serde::Serialize;
 use std::{
@@ -35,10 +36,17 @@ pub enum Command {
 }
 
 #[derive(Default, Clone, Debug)]
+pub struct Endpoint {
+    pub typegate: String,
+    pub auth: Option<BasicAuth>,
+}
+
+#[derive(Default, Clone, Debug)]
 pub struct ServerStore {
     config: Option<Config>,
     command: Option<Command>,
     secrets: HashMap<String, String>,
+    endpoint: Endpoint,
 }
 
 #[allow(dead_code)]
@@ -68,5 +76,13 @@ impl ServerStore {
 
     pub fn get_secrets() -> HashMap<String, String> {
         with_store(|s| s.secrets.clone())
+    }
+
+    pub fn set_endpoint(endpoint: Endpoint) {
+        with_store_mut(|s| s.endpoint = endpoint)
+    }
+
+    pub fn get_endpoint() -> Endpoint {
+        with_store(|s| s.endpoint.clone())
     }
 }

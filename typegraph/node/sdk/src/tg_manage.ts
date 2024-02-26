@@ -20,7 +20,7 @@ type CLIServerResponse = {
 type CLIConfigRequest = {
   typegate: {
     endpoint: string;
-    auth: {
+    auth?: {
       username: string;
       password: string;
     };
@@ -33,14 +33,11 @@ type CLISuccess<T> = {
   data: T;
 };
 
-// Types for SDK => CLi
+// Types for SDK => CLi (typically forwarding the response from typegate)
 type SDKResponse<T> = {
   command: Command;
-  data: T;
-} | {
-  command: Command;
-  error: T;
-};
+  typegraphName: string;
+} & ({ error: T } | { data: T });
 
 export class Manager {
   #port: number;
@@ -89,6 +86,7 @@ export class Manager {
 
   async #requestCommands(): Promise<CLIServerResponse> {
     const { data: config } = await this.#requestConfig();
+    console.error("CONFIG", config);
     const { data: command } =
       await (await fetch(new URL("command", this.#endpoint)))
         .json() as CLISuccess<Command>;
@@ -99,7 +97,10 @@ export class Manager {
   }
 
   async #requestConfig(): Promise<CLISuccess<CLIConfigRequest>> {
-    const response = await fetch(new URL("config", this.#endpoint));
+    const params = new URLSearchParams({
+      typegraph: this.#typegraph.name,
+    });
+    const response = await fetch(new URL("config?" + params, this.#endpoint));
     return (await response.json()) as CLISuccess<CLIConfigRequest>;
   }
 
@@ -113,13 +114,18 @@ export class Manager {
   }
 
   async #undeploy({ typegate }: CLIConfigRequest): Promise<void> {
-    const { endpoint, auth: { username, password } } = typegate;
+    const { endpoint, auth } = typegate;
+    if (!auth) {
+      throw new Error(
+        `"${this.#typegraph.name}" received null or undefined "auth" field on the configuration`,
+      );
+    }
     await this.#relayResultToCLI(
       "undeploy",
       async () =>
         await tgRemove(this.#typegraph, {
           baseUrl: endpoint,
-          auth: new BasicAuth(username, password),
+          auth: new BasicAuth(auth.username, auth.password),
         }),
     );
   }
@@ -129,13 +135,14 @@ export class Manager {
   }
 
   async #relayResultToCLI<T>(initiator: Command, fn: () => Promise<T>) {
+    const typegraphName = this.#typegraph.name;
     let response: SDKResponse<any>;
     try {
       const data = await fn();
-      response = { command: initiator, data };
+      response = { command: initiator, typegraphName, data };
     } catch (err) {
       const msg = err instanceof Error ? err.message : err;
-      response = { command: initiator, error: msg };
+      response = { command: initiator, typegraphName, error: msg };
     }
 
     await fetch(new URL("response", this.#endpoint), {

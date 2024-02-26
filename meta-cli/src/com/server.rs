@@ -4,10 +4,10 @@
 use std::net::{Ipv4Addr, SocketAddrV4, TcpListener};
 
 use crate::com::store::ServerStore;
-use actix_web::{get, post, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, post, web::Query, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use lazy_static::lazy_static;
 use reqwest::StatusCode;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 pub fn random_free_port() -> u16 {
@@ -34,18 +34,31 @@ struct CLIResponseError {
     error: String,
 }
 
+#[derive(Debug, Deserialize)]
+struct QueryConfigParams {
+    typegraph: String,
+}
+
 #[get("/config")]
-async fn config() -> impl Responder {
+async fn config(req: HttpRequest) -> impl Responder {
+    let parsed = Query::<QueryConfigParams>::from_query(req.query_string());
+    let folder = match parsed {
+        Ok(p) => p.typegraph.to_owned(),
+        Err(_) => "".to_string(),
+    };
+    let endpoint = ServerStore::get_endpoint();
     match ServerStore::get_config() {
         Some(config) => {
             let data = json!({
-                "typegates": config.typegates,
+                "typegate": {
+                    "endpoint": endpoint.typegate,
+                    "auth": endpoint.auth
+                },
                 "secrets": ServerStore::get_secrets(),
                 "artifactsConfig": json!({
                     "dir": config.base_dir.display().to_string(),
                     "prismaMigration": {
-                        // TODO:
-                        "migrationDir": ".",
+                        "migrationDir": config.prisma_migrations_dir(&folder),
                         "action": {
                             // TODO:
                             "create": true,

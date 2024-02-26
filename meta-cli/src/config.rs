@@ -100,6 +100,10 @@ impl NodeConfig {
             self.env.clone(),
         )
     }
+
+    pub fn get_auth_pair(&self) -> (Option<String>, Option<String>) {
+        (self.username.to_owned(), self.password.to_owned())
+    }
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]
@@ -238,6 +242,19 @@ impl Config {
             .loaders
             .get(&module_type)
             .unwrap_or(&DEFAULT_LOADER_CONFIG)
+    }
+
+    pub fn prisma_migrations_dir(&self, typegraph: &str) -> PathBuf {
+        let mut path = self.base_dir.join(
+            self.typegraphs
+                .materializers
+                .prisma
+                .migrations_path
+                .as_deref()
+                .unwrap_or_else(|| Path::new("prisma/migrations")),
+        );
+        path.push(typegraph);
+        path
     }
 }
 

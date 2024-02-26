@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::{
-    com::store::{Command, ServerStore},
+    com::store::{Command, Endpoint, ServerStore},
     config::Config,
 };
 use anyhow::Result;
@@ -35,6 +35,11 @@ impl Action for Undeploy {
 
         // Hint the server what state we are globally in
         ServerStore::with(Some(Command::Undeploy), Some(config.clone()));
+
+        ServerStore::set_endpoint(Endpoint {
+            typegate: node.base_url.clone().into(),
+            auth: node.auth.clone(),
+        });
 
         node.try_undeploy(&self.typegraphs).await?;
         Ok(())
