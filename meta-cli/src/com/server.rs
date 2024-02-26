@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::net::{Ipv4Addr, SocketAddrV4, TcpListener};
+
 use crate::com::store::ServerStore;
 use actix_web::{get, post, App, HttpResponse, HttpServer, Responder};
 use lazy_static::lazy_static;
@@ -8,8 +10,18 @@ use reqwest::StatusCode;
 use serde::Serialize;
 use serde_json::{json, Value};
 
+pub fn random_free_port() -> u16 {
+    let addr = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0);
+    TcpListener::bind(addr)
+        .unwrap()
+        .local_addr()
+        .unwrap()
+        .port()
+}
+
 lazy_static! {
-    pub static ref SERVER_PORT: u16 = 1234;
+    #[derive(Debug)]
+    pub static ref SERVER_PORT: u16 = random_free_port();
 }
 
 #[derive(Serialize)]
@@ -77,14 +89,15 @@ async fn response(req_body: String) -> impl Responder {
 }
 
 pub async fn spawn_server() -> std::io::Result<()> {
-    eprintln!("Server is running..");
+    let port = SERVER_PORT.to_owned();
+    eprintln!("Server is running at {:?}", port);
     HttpServer::new(|| {
         App::new()
             .service(config)
             .service(command)
             .service(response)
     })
-    .bind(("127.0.0.1", SERVER_PORT.to_owned()))?
+    .bind(("127.0.0.1", port))?
     .run()
     .await
 }
