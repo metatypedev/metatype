@@ -259,7 +259,11 @@ mod default_mode {
             };
 
             log::debug!("loader stopped, stopping pusher");
-            pusher.stop().await?;
+            let result = pusher.stop().await;
+            if let Err(e) = result {
+                System::current().stop_with_code(1);
+                return Err(e);
+            }
             ret
         }
 
