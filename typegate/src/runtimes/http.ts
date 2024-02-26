@@ -118,7 +118,9 @@ export class HTTPRuntime extends Runtime {
 
       const bodyFields: Record<string, unknown> = {};
       const searchParams = new URLSearchParams();
-      const hasBody = method !== "GET" && method !== "DELETE";
+      const hasBody = (options.body_fields?.length ?? 0) > 0 ||
+        method !== "GET" &&
+          method !== "DELETE";
 
       const { rename_fields } = options;
       for (const [key, value] of Object.entries(args)) {
