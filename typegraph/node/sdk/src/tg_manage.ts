@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
+import { BasicAuth, tgRemove } from "./tg_deploy.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { getEnvVariable } from "./utils/func_utils.js";
 
@@ -10,19 +11,35 @@ const PORT_SOURCE = "META_CLI_SERVER_PORT";
 
 type Command = "serialize" | "deploy" | "undeploy" | "unpack_migration";
 
+// Types for CLI => SDK
 type CLIServerResponse = {
   command: Command;
   config: CLIConfigRequest;
 };
 
 type CLIConfigRequest = {
-  typegates: Record<string, string>;
+  typegate: {
+    endpoint: string;
+    auth: {
+      username: string;
+      password: string;
+    };
+  };
   secrets: Record<string, string>;
   artifactsConfig: ArtifactResolutionConfig;
 };
 
-type SDKSuccess<T> = {
+type CLISuccess<T> = {
   data: T;
+};
+
+// Types for SDK => CLi
+type SDKResponse<T> = {
+  command: Command;
+  data: T;
+} | {
+  command: Command;
+  error: T;
 };
 
 export class Manager {
@@ -60,7 +77,8 @@ export class Manager {
         this.#deploy(config);
         break;
       case "undeploy":
-        this.#undeploy();
+        await this.#undeploy(config);
+        break;
       case "unpack_migration":
         this.#unpackMigration(config);
         break;
@@ -71,25 +89,22 @@ export class Manager {
 
   async #requestCommands(): Promise<CLIServerResponse> {
     const { data: config } = await this.#requestConfig();
-
     const { data: command } =
       await (await fetch(new URL("command", this.#endpoint)))
-        .json() as SDKSuccess<Command>;
+        .json() as CLISuccess<Command>;
 
     console.error("Command", command);
 
     return { command, config };
   }
 
-  async #requestConfig(): Promise<SDKSuccess<CLIConfigRequest>> {
+  async #requestConfig(): Promise<CLISuccess<CLIConfigRequest>> {
     const response = await fetch(new URL("config", this.#endpoint));
-    return (await response.json()) as SDKSuccess<CLIConfigRequest>;
+    return (await response.json()) as CLISuccess<CLIConfigRequest>;
   }
 
   #serialize(config: CLIConfigRequest): void {
     const ret = this.#typegraph.serialize(config.artifactsConfig);
-    // TODO:
-    // send back through http
     console.log(ret);
   }
 
@@ -97,11 +112,36 @@ export class Manager {
     // TODO
   }
 
-  #undeploy(): void {
-    // TODO
+  async #undeploy({ typegate }: CLIConfigRequest): Promise<void> {
+    const { endpoint, auth: { username, password } } = typegate;
+    await this.#relayResultToCLI(
+      "undeploy",
+      async () =>
+        await tgRemove(this.#typegraph, {
+          baseUrl: endpoint,
+          auth: new BasicAuth(username, password),
+        }),
+    );
   }
 
   #unpackMigration(config: CLIConfigRequest): void {
     // TODO
+  }
+
+  async #relayResultToCLI<T>(initiator: Command, fn: () => Promise<T>) {
+    let response: SDKResponse<any>;
+    try {
+      const data = await fn();
+      response = { command: initiator, data };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : err;
+      response = { command: initiator, error: msg };
+    }
+
+    await fetch(new URL("response", this.#endpoint), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(response),
+    });
   }
 }

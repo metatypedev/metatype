@@ -25,12 +25,12 @@ lazy_static! {
 }
 
 #[derive(Serialize)]
-struct ResponseSuccess {
+struct CLIResponseSuccess {
     data: Value,
 }
 
 #[derive(Serialize)]
-struct ResponseError {
+struct CLIResponseError {
     error: String,
 }
 
@@ -57,11 +57,11 @@ async fn config() -> impl Responder {
 
             HttpResponse::Ok()
                 .status(StatusCode::OK)
-                .json(ResponseSuccess { data })
+                .json(CLIResponseSuccess { data })
         }
         None => HttpResponse::Ok()
             .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .json(ResponseError {
+            .json(CLIResponseError {
                 error: "Could not get config".to_string(),
             }),
     }
@@ -72,12 +72,12 @@ async fn command() -> impl Responder {
     match ServerStore::get_command() {
         Some(command) => HttpResponse::Ok()
             .status(StatusCode::OK)
-            .json(ResponseSuccess {
+            .json(CLIResponseSuccess {
                 data: serde_json::to_value(command).unwrap(),
             }),
         None => HttpResponse::Ok()
             .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .json(ResponseError {
+            .json(CLIResponseError {
                 error: "Could not get command".to_string(),
             }),
     }
