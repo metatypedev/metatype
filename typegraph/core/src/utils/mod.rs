@@ -258,9 +258,7 @@ impl crate::wit::utils::Guest for crate::Lib {
     }
 
     fn remove_injections(id: CoreTypeId) -> Result<CoreTypeId> {
-        Subgraph::new(id.into())
-            .map(remove_injection)
-            .map(|id| id.into())
+        remove_injections_recursive(id.into()).map(|id| id.into())
     }
 }
 
@@ -279,6 +277,10 @@ pub fn remove_injection(type_id: TypeId) -> Result<TypeId> {
         move |id| type_def.with_x_base(id, x_base),
         NameRegistration(false),
     )
+}
+
+pub fn remove_injections_recursive(type_id: TypeId) -> Result<TypeId> {
+    Subgraph::new(type_id).map(remove_injection)
 }
 
 pub fn clear_name(base: &TypeBase) -> TypeBase {

@@ -19,23 +19,36 @@ impl Default for Effect {
 }
 
 pub mod models {
+    use std::collections::HashMap;
+
+    use common::typegraph::{EffectType, Injection, InjectionData};
+
     use crate::errors::Result;
     use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
     use crate::types::TypeId;
 
     pub fn simple_record() -> Result<TypeId> {
+        let mut created_at_injection_map = HashMap::new();
+        created_at_injection_map.insert(EffectType::Create, "now".to_string());
+        let created_at = t::string()
+            .format("date-time")
+            .inject(Injection::Dynamic(InjectionData::ValueByEffect(
+                created_at_injection_map,
+            )))
+            .build()?;
+
         t::struct_()
             .named("Record")
-            .prop(
+            .propx(
                 "id",
                 t::string()
                     .as_id(true)
                     .format("uuid")
-                    .config("auto", "true")
-                    .build()?,
-            )
-            .prop("name", t::string().build()?)
-            .prop("age", t::optional(t::integer().build()?).build()?)
+                    .config("auto", "true"),
+            )?
+            .propx("name", t::string())?
+            .propx("age", t::optionalx(t::integer())?)?
+            .prop("created_at", created_at)
             .build()
     }
 
