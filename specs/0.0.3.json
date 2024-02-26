@@ -1241,6 +1241,24 @@
               "$ref": "#/definitions/InjectionData_for_String"
             }
           }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "random"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/InjectionData_for_String"
+            }
+          }
         }
       ]
     },
@@ -2363,6 +2381,14 @@
         },
         "version": {
           "type": "string"
+        },
+        "random_seed": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
         }
       }
     },
