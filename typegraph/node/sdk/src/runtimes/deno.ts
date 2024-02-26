@@ -44,7 +44,7 @@ function stringifyFn(code: string | Function) {
     const namedFnMatch = source.match(/function\s*(\*?\s*[a-zA-Z0-9_]+)/);
     if (namedFnMatch) {
       const [, name] = namedFnMatch;
-      if (name.replace(/s/g, "").startsWith("*")) {
+      if (name.replace(/\s/g, "").startsWith("*")) {
         throw new Error(`Generator function "${name}" not supported`);
       }
       if (/function\s[a-zA-Z0-9_]+\(\) { \[native code\] }/.test(source)) {
