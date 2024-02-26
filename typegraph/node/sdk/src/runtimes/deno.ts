@@ -26,7 +26,7 @@ interface PredefinedFuncMat extends Materializer {
 }
 
 export interface DenoFunc {
-  code: string;
+  code: string | Function;
   secrets?: Array<string>;
   effect?: Effect;
 }
@@ -36,6 +36,26 @@ export interface DenoImport {
   module: string;
   secrets?: Array<string>;
   effect?: Effect;
+}
+
+function stringifyFn(code: string | Function) {
+  if (typeof code == "function") {
+    const source = code.toString();
+    const namedFnMatch = source.match(/function\s*(\*?\s*[a-zA-Z0-9_]+)/);
+    if (namedFnMatch) {
+      const [, name] = namedFnMatch;
+      if (name.replace(/\s/g, "").startsWith("*")) {
+        throw new Error(`Generator function "${name}" not supported`);
+      }
+      if (/function\s[a-zA-Z0-9_]+\(\) { \[native code\] }/.test(source)) {
+        throw new Error(
+          `"${name}" is not supported as it is a native function`,
+        );
+      }
+    }
+    return source;
+  }
+  return code;
 }
 
 export class DenoRuntime extends Runtime {
@@ -51,10 +71,11 @@ export class DenoRuntime extends Runtime {
     out: O,
     { code, secrets = [], effect = fx.read() }: DenoFunc,
   ): t.Func<I, O, FunMat> {
-    const matId = runtimes.registerDenoFunc({ code, secrets }, effect);
+    const source = stringifyFn(code);
+    const matId = runtimes.registerDenoFunc({ code: source, secrets }, effect);
     const mat: FunMat = {
       _id: matId,
-      code,
+      code: source,
       secrets,
       effect,
     };
@@ -123,7 +144,10 @@ export class DenoRuntime extends Runtime {
 
     return Policy.create(
       name,
-      runtimes.registerDenoFunc(params, fx.read()),
+      runtimes.registerDenoFunc(
+        { ...params, code: stringifyFn(params.code) },
+        fx.read(),
+      ),
     );
   }
 
