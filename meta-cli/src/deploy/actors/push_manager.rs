@@ -426,8 +426,8 @@ struct SendBackFailedStatus {
 impl Handler<SendBackFailedStatus> for PushManagerActor {
     type Result = ();
 
-    fn handle(&mut self, _msg: SendBackFailedStatus, _ctx: &mut Self::Context) -> Self::Result {
-        _msg.failure_tx.send(self.failed_push_exists).unwrap();
+    fn handle(&mut self, msg: SendBackFailedStatus, _ctx: &mut Self::Context) -> Self::Result {
+        msg.failure_tx.send(self.failed_push_exists).unwrap();
     }
 }
 
