@@ -1,10 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{
-    com::store::{Command, Endpoint, ServerStore},
-    config::Config,
-};
+use crate::config::Config;
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
@@ -32,14 +29,6 @@ impl Action for Undeploy {
         let config = Config::load_or_find(config_path, &dir)?;
         let node_config = config.node(&self.node, &self.target);
         let node = node_config.build(&dir).await?;
-
-        // Hint the server what state we are globally in
-        ServerStore::with(Some(Command::Undeploy), Some(config.clone()));
-
-        ServerStore::set_endpoint(Endpoint {
-            typegate: node.base_url.clone().into(),
-            auth: node.auth.clone(),
-        });
 
         node.try_undeploy(&self.typegraphs).await?;
         Ok(())

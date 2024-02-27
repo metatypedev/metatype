@@ -9,7 +9,7 @@ import { getEnvVariable } from "./utils/func_utils.js";
 const VERSION = "0.3.5-0";
 const PORT_SOURCE = "META_CLI_SERVER_PORT";
 
-type Command = "serialize" | "deploy" | "undeploy" | "unpack_migration";
+type Command = "serialize" | "deploy" | "unpack_migration";
 
 // Types for CLI => SDK
 type CLIServerResponse = {
@@ -73,9 +73,6 @@ export class Manager {
       case "deploy":
         this.#deploy(config);
         break;
-      case "undeploy":
-        await this.#undeploy(config);
-        break;
       case "unpack_migration":
         this.#unpackMigration(config);
         break;
@@ -109,11 +106,7 @@ export class Manager {
     console.log(ret);
   }
 
-  #deploy(config: CLIConfigRequest): void {
-    // TODO
-  }
-
-  async #undeploy({ typegate }: CLIConfigRequest): Promise<void> {
+  async #deploy({ typegate }: CLIConfigRequest): Promise<void> {
     const { endpoint, auth } = typegate;
     if (!auth) {
       throw new Error(
@@ -121,7 +114,7 @@ export class Manager {
       );
     }
     await this.#relayResultToCLI(
-      "undeploy",
+      "deploy",
       async () =>
         await tgRemove(this.#typegraph, {
           baseUrl: endpoint,
