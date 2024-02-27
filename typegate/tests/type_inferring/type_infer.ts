@@ -4,8 +4,18 @@
 import { t, typegraph } from "@typegraph/sdk/index.js";
 
 typegraph("type infer", (g: any) => {
-  const test_scheme = t.struct();
+  const address = t.struct({
+    street: t.string(),
+    city: t.string(),
+  });
+  const person = t.struct({
+    name: t.string(),
+    age: t.integer(),
+    married: t.boolean(),
+    place: address,
+  });
+
   g.expose({
-    test: test_scheme,
+    test: person,
   });
 });

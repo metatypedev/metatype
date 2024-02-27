@@ -203,6 +203,7 @@ class Integer extends Typedef implements Readonly<TypeInteger> {
   readonly exclusiveMaximum?: number;
   readonly multipleOf?: number;
   readonly enumeration?: Int32Array;
+  readonly zodType = "number";
 
   constructor(_id: number, data: TypeInteger, base: TypeBase) {
     super(_id, base);
@@ -244,6 +245,7 @@ class Float extends Typedef implements Readonly<TypeFloat> {
   readonly exclusiveMaximum?: number;
   readonly multipleOf?: number;
   readonly enumeration?: Float64Array;
+  readonly zodType = "number";
 
   constructor(_id: number, data: TypeFloat, base: TypeBase) {
     super(_id, base);
@@ -284,6 +286,7 @@ class StringT extends Typedef implements Readonly<TypeString> {
   readonly format?: string;
   readonly pattern?: string;
   readonly enumeration?: string[];
+  readonly zodType = "string";
 
   constructor(_id: number, data: TypeString, base: TypeBase) {
     super(_id, base);
@@ -354,6 +357,7 @@ class File extends Typedef {
   readonly min?: number;
   readonly max?: number;
   readonly allow?: string[];
+  readonly zodType = "unknown";
 
   constructor(_id: number, data: TypeFile, base: TypeBase) {
     super(_id, base);
@@ -380,6 +384,7 @@ class List extends Typedef {
   readonly max?: number;
   readonly items?: number;
   readonly uniqueItems?: boolean;
+  readonly zodType = "array";
 
   constructor(_id: number, data: TypeList, base: TypeBase) {
     super(_id, base);
@@ -414,6 +419,7 @@ export function list(
 class Optional extends Typedef {
   readonly item?: number;
   readonly defaultItem?: string;
+  readonly zodType = "optional";
 
   constructor(_id: number, data: TypeOptional, base: TypeBase) {
     super(_id, base);
@@ -474,6 +480,7 @@ export function union(
 
 class Either extends Typedef {
   readonly variants: Array<number>;
+  readonly zodType = "union";
 
   constructor(_id: number, data: TypeEither, base: TypeBase) {
     super(_id, base);
@@ -502,6 +509,7 @@ export function either(
 
 export class Struct<P extends { [key: string]: Typedef }> extends Typedef {
   props: P;
+  readonly zodType = "object";
   constructor(_id: number, { props }: { props: P }, base: TypeBase) {
     super(_id, base);
     this.props = props;
@@ -572,6 +580,7 @@ export class Func<
   mat: M;
   parameterTransform: ParameterTransform | null;
   config: FuncConfig | null;
+  readonly zodType = "function";
 
   constructor(_id: number, inp: I, out: O, mat: M, parameterTransform: ParameterTransform | null = null, config: FuncConfig | null = null) {
     super(_id, {});
@@ -628,7 +637,7 @@ export class Func<
       this.mat,
       transformData.parameterTransform,
       this.config,
-    )
+    );
   }
 
   rate(

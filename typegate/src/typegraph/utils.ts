@@ -10,3 +10,7 @@ export function isInjected(tg: TypeGraphDS, t: TypeNode): boolean {
       Object.values(t.properties).map((propIdx) => tg.types[propIdx])
         .every((nested) => isInjected(tg, nested))));
 }
+
+export function inferType<T extends TypeNode>(node: T): any {
+  console.log(node);
+}
