@@ -4,12 +4,14 @@
 use crate::config::Config;
 use common::node::BasicAuth;
 use lazy_static::lazy_static;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{
     borrow::{Borrow, BorrowMut},
     collections::HashMap,
     sync::Mutex,
 };
+
+use super::server::SDKResponse;
 
 lazy_static! {
     #[derive(Debug)]
@@ -27,12 +29,12 @@ fn with_store_mut<T, F: FnOnce(&mut ServerStore) -> T>(f: F) -> T {
 }
 
 #[allow(dead_code)]
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Command {
     Deploy,
-    Undeploy,
     Serialize,
+    UnpackMigration,
 }
 
 #[derive(Default, Clone, Debug)]
@@ -41,12 +43,13 @@ pub struct Endpoint {
     pub auth: Option<BasicAuth>,
 }
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Debug)]
 pub struct ServerStore {
     config: Option<Config>,
     command: Option<Command>,
     secrets: HashMap<String, String>,
     endpoint: Endpoint,
+    sdk_responses: HashMap<String, SDKResponse>,
 }
 
 #[allow(dead_code)]
@@ -84,5 +87,18 @@ impl ServerStore {
 
     pub fn get_endpoint() -> Endpoint {
         with_store(|s| s.endpoint.clone())
+    }
+
+    pub fn add_response(tg_name: String, response: SDKResponse) {
+        with_store_mut(|s| {
+            s.sdk_responses.insert(tg_name, response);
+        })
+    }
+
+    pub fn get_response(tg_name: String) -> Option<SDKResponse> {
+        with_store(|s| {
+            let value = s.sdk_responses.get(&tg_name).unwrap().clone();
+            None
+        })
     }
 }

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
-import { BasicAuth, tgRemove } from "./tg_deploy.js";
+import { BasicAuth, tgDeploy, tgRemove } from "./tg_deploy.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { getEnvVariable } from "./utils/func_utils.js";
 
@@ -68,13 +68,13 @@ export class Manager {
     let { config, command } = await this.#requestCommands();
     switch (command) {
       case "serialize":
-        this.#serialize(config);
+        await this.#serialize(config);
         break;
       case "deploy":
-        this.#deploy(config);
+        await this.#deploy(config);
         break;
       case "unpack_migration":
-        this.#unpackMigration(config);
+        await this.#unpackMigration(config);
         break;
       default:
         throw new Error(`command ${command} from meta-cli not supported`);
@@ -101,12 +101,16 @@ export class Manager {
     return (await response.json()) as CLISuccess<CLIConfigRequest>;
   }
 
-  #serialize(config: CLIConfigRequest): void {
-    const ret = this.#typegraph.serialize(config.artifactsConfig);
-    console.log(ret);
+  async #serialize(config: CLIConfigRequest): Promise<void> {
+    await this.#relayResultToCLI(
+      "serialize",
+      async () => this.#typegraph.serialize(config.artifactsConfig),
+    );
   }
 
-  async #deploy({ typegate }: CLIConfigRequest): Promise<void> {
+  async #deploy(
+    { typegate, artifactsConfig, secrets }: CLIConfigRequest,
+  ): Promise<void> {
     const { endpoint, auth } = typegate;
     if (!auth) {
       throw new Error(
@@ -116,14 +120,17 @@ export class Manager {
     await this.#relayResultToCLI(
       "deploy",
       async () =>
-        await tgRemove(this.#typegraph, {
+        await tgDeploy(this.#typegraph, {
           baseUrl: endpoint,
+          artifactsConfig,
+          cliVersion: VERSION,
+          secrets,
           auth: new BasicAuth(auth.username, auth.password),
         }),
     );
   }
 
-  #unpackMigration(config: CLIConfigRequest): void {
+  async #unpackMigration(config: CLIConfigRequest): Promise<void> {
     // TODO
   }
 
