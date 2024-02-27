@@ -4,13 +4,12 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use super::{Action, GenArgs};
+use crate::config::Config;
 use crate::typegraph::loader::LoaderPool;
-use crate::{config::Config, typegraph::postprocess};
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use clap::{Parser, Subcommand};
-
-use super::{Action, GenArgs};
 
 #[derive(Parser, Debug)]
 pub struct Codegen {
@@ -56,8 +55,7 @@ impl Action for Deno {
             Config::load_or_find(args.config, &dir).unwrap_or_else(|_| Config::default_in(&dir)),
         );
 
-        let loader_pool = LoaderPool::new(config, 1)
-            .with_postprocessor(postprocess::DenoModules::default().codegen(true));
+        let loader_pool = LoaderPool::new(config, 1);
 
         let loader = loader_pool.get_loader().await?;
 

@@ -9,16 +9,19 @@ use colored::Colorize;
 use common::typegraph::Typegraph;
 use filetime::{set_file_mtime, FileTime};
 
-use crate::deploy::actors::console::{
-    input::{OptionLabel, SelectOption},
-    Console, ConsoleActor,
-};
 use crate::deploy::actors::push_manager::PushManagerActor;
 use crate::deploy::actors::push_manager::{AddOneTimeOptions, OneTimePushOption};
+use crate::{
+    deploy::actors::console::{
+        input::{OptionLabel, SelectOption},
+        Console, ConsoleActor,
+    },
+    typegraph::loader::TypegraphInfos,
+};
 
 #[derive(Debug)]
 pub struct ForceReset {
-    pub typegraph: Arc<Typegraph>,
+    pub typegraph: Arc<TypegraphInfos>,
     pub runtime_name: String,
     pub push_manager: Addr<PushManagerActor>,
 }
@@ -33,7 +36,7 @@ impl SelectOption for ForceReset {
         });
 
         // force reload
-        set_file_mtime(self.typegraph.path.as_ref().unwrap(), FileTime::now()).unwrap();
+        set_file_mtime(self.typegraph.path.clone(), FileTime::now()).unwrap();
     }
 
     fn label(&self) -> OptionLabel<'_> {
@@ -106,7 +109,7 @@ impl SelectOption for RemoveLatestMigration {
 
 #[derive(Debug)]
 pub struct ManualResolution {
-    pub typegraph: Arc<Typegraph>,
+    pub typegraph: Arc<TypegraphInfos>,
     pub runtime_name: String,
     pub migration_name: String,
     pub message: Option<String>,
@@ -129,7 +132,7 @@ impl SelectOption for ManualResolution {
         let push_manager = self.push_manager.clone();
         let typegraph_key = self.typegraph.get_key().unwrap();
         let runtime_name = self.runtime_name.clone();
-        let typegraph_path = self.typegraph.path.clone().unwrap();
+        let typegraph_path = self.typegraph.path.clone();
 
         Arbiter::current().spawn(async move {
             // TODO watch migration file??

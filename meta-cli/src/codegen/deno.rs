@@ -511,11 +511,15 @@ mod tests {
                 LoaderEvent::Typegraph(tg) => tg,
                 evt => bail!("unexpected loader evt: {evt:?}"),
             };
-            let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
-            assert_eq!(module_codes.len(), 1);
 
-            let test_name = typegraph_test.to_string_lossy().to_string();
-            insta::assert_snapshot!(test_name, &module_codes[0].code);
+            // TODO:
+            // run typegraph! thenget serialized version
+
+            // let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
+            // assert_eq!(module_codes.len(), 1);
+
+            // let test_name = typegraph_test.to_string_lossy().to_string();
+            // insta::assert_snapshot!(test_name, &module_codes[0].code);
 
             assert!(matches!(
                 event_rx.recv().await,

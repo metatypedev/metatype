@@ -99,6 +99,8 @@ pub mod deno_rt {
 }
 
 pub mod prisma_rt {
+    use crate::typegraph::loader::TypegraphInfos;
+
     use super::*;
     use anyhow::anyhow;
     use common::typegraph::runtimes::{KnownRuntime::Prisma, TGRuntime};
@@ -132,21 +134,21 @@ pub mod prisma_rt {
             self
         }
 
-        pub fn apply(&self, tg: &mut Typegraph, runtime_names: Vec<String>) -> Result<()> {
-            for rt in tg.runtimes.iter_mut() {
-                if let TGRuntime::Known(Prisma(rt_data)) = rt {
-                    let rt_name = &rt_data.name;
-                    if runtime_names.contains(rt_name) {
-                        let migration_options =
-                            rt_data.migration_options.as_mut().ok_or_else(|| {
-                                anyhow!("Runtime '{rt_name}' not configured to include migrations")
-                            })?;
-                        if let Some(reset_on_drift) = self.reset {
-                            migration_options.reset = reset_on_drift;
-                        }
-                    }
-                }
-            }
+        pub fn apply(&self, tg: &mut TypegraphInfos, runtime_names: Vec<String>) -> Result<()> {
+            // for rt in tg.runtimes.iter_mut() {
+            //     if let TGRuntime::Known(Prisma(rt_data)) = rt {
+            //         let rt_name = &rt_data.name;
+            //         if runtime_names.contains(rt_name) {
+            //             let migration_options =
+            //                 rt_data.migration_options.as_mut().ok_or_else(|| {
+            //                     anyhow!("Runtime '{rt_name}' not configured to include migrations")
+            //                 })?;
+            //             if let Some(reset_on_drift) = self.reset {
+            //                 migration_options.reset = reset_on_drift;
+            //             }
+            //         }
+            //     }
+            // }
 
             Ok(())
         }

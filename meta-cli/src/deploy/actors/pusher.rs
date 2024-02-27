@@ -6,15 +6,14 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use colored::Colorize;
-use common::typegraph::Typegraph;
 
 use actix::prelude::*;
-use anyhow::{Context as AnyhowContext, Result};
-use futures::TryFutureExt;
+use anyhow::Result;
 use serde::Deserialize;
 
 use super::console::input::ConfirmHandler;
 use crate::deploy::push::migration_resolution::{ForceReset, ManualResolution};
+use crate::typegraph::loader::TypegraphInfos;
 use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use common::graphql;
 use common::node::Node;
@@ -94,28 +93,31 @@ impl PusherActor {
     async fn push(push: Push, node: Arc<Node>, secrets: Arc<Secrets>) -> Result<PushResult, Error> {
         // TODO can we set the prefix before the push? // in the loader??
         // so we wont need to clone
-        let tg = &*push.typegraph;
-        let tg = match node.prefix.as_ref() {
-            Some(prefix) => tg.with_prefix(prefix.clone()).map_err(Error::Other)?,
-            None => tg.clone(),
-        };
+        // let tg = &*push.typegraph;
+        // let tg = match node.prefix.as_ref() {
+        //     Some(prefix) => tg.with_prefix(prefix.clone()).map_err(Error::Other)?,
+        //     None => tg.clone(),
+        // };
 
-        let secrets: &Secrets = &secrets;
+        // let secrets: &Secrets = &secrets;
 
-        let res = node
-            .try_deploy(&tg, secrets, crate::build::PKG_VERSION.to_owned())
-            .map_err(|e| match e {
-                common::node::Error::Graphql(payload) => Error::Graphql(payload),
-                common::node::Error::Other(payload) => Error::Other(payload),
-            })
-            .await?;
+        // TODO: tg_info.try_deploy()
 
-        let res: PushResultRaw = res
-            .data("addTypegraph")
-            .context("addTypegraph field in the response")
-            .map_err(|e| Error::invalid_response(e.to_string()))?;
+        // let res = node
+        //     .try_deploy(&tg, secrets, crate::build::PKG_VERSION.to_owned())
+        //     .map_err(|e| match e {
+        //         common::node::Error::Graphql(payload) => Error::Graphql(payload),
+        //         common::node::Error::Other(payload) => Error::Other(payload),
+        //     })
+        //     .await?;
 
-        PushResult::from_raw(res, push).map_err(|e| Error::invalid_response(e.to_string()))
+        // let res: PushResultRaw = res
+        //     .data("addTypegraph")
+        //     .context("addTypegraph field in the response")
+        //     .map_err(|e| Error::invalid_response(e.to_string()))?;
+
+        // PushResult::from_raw(res, push).map_err(|e| Error::invalid_response(e.to_string()))
+        todo!("use try_deploy from tg_info")
     }
 
     fn handle_error(
@@ -153,13 +155,13 @@ impl PusherActor {
 #[derive(Message, Clone, Debug)]
 #[rtype(result = "()")]
 pub struct Push {
-    pub typegraph: Arc<Typegraph>,
+    pub typegraph: Arc<TypegraphInfos>,
     // pub created_at: Instant,
     retry: Option<Retry>,
 }
 
 impl Push {
-    pub fn new(typegraph: Arc<Typegraph>) -> Self {
+    pub fn new(typegraph: Arc<TypegraphInfos>) -> Self {
         Self {
             typegraph,
             retry: None,
@@ -314,24 +316,24 @@ impl Handler<Push> for PusherActor {
                 "".dimmed()
             };
 
-            let tg_name = push.typegraph.name().unwrap().cyan();
+            // let tg_name = push.typegraph.name().unwrap().cyan();
 
-            let file_name = push
-                .typegraph
-                .path
-                .as_ref()
-                .unwrap()
-                .display()
-                .to_string()
-                .dimmed();
-            console.info(format!(
-                "Pushing typegraph {tg_name}{retry} (from '{file_name}')"
-            ));
+            // let file_name = push
+            //     .typegraph
+            //     .path
+            //     .as_ref()
+            //     .unwrap()
+            //     .display()
+            //     .to_string()
+            //     .dimmed();
+            // console.info(format!(
+            //     "Pushing typegraph {tg_name}{retry} (from '{file_name}')"
+            // ));
 
             match Self::push(push.clone(), node, secrets).await {
                 Ok(mut res) => {
-                    res.original_name = Some(push.typegraph.name().unwrap().clone());
-                    self_addr.do_send(res);
+                    // res.original_name = Some(push.typegraph.name().unwrap().clone());
+                    // self_addr.do_send(res);
                 }
                 Err(e) => {
                     Self::handle_error(push, e, console, push_manager);
@@ -502,7 +504,7 @@ impl Handler<ResolveNullConstraintViolation> for PusherActor {
 struct ConfirmDatabaseResetRequired {
     push_manager: Addr<PushManagerActor>,
     runtime_name: String,
-    typegraph: Arc<Typegraph>,
+    typegraph: Arc<TypegraphInfos>,
 }
 
 impl ConfirmHandler for ConfirmDatabaseResetRequired {

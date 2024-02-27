@@ -8,6 +8,7 @@ use crate::deploy::actors::console::ConsoleActor;
 use crate::deploy::actors::loader::{
     LoadModule, LoaderActor, LoaderEvent, PostProcessOptions, StopBehavior,
 };
+use crate::typegraph::loader::TypegraphInfos;
 use actix::prelude::*;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
@@ -91,7 +92,7 @@ impl Action for Serialize {
             loader.do_send(LoadModule(dir.join(path).into()));
         }
 
-        let mut loaded: Vec<Box<Typegraph>> = vec![];
+        let mut loaded: Vec<Box<TypegraphInfos>> = vec![];
         let mut event_rx = loader_event_rx;
         while let Some(event) = event_rx.recv().await {
             log::debug!("event");
@@ -106,37 +107,37 @@ impl Action for Serialize {
             }
         }
 
-        if let Some(prefix) = self.prefix.as_ref() {
-            for tg in loaded.iter_mut() {
-                tg.meta.prefix = Some(prefix.clone());
-            }
-        }
+        // if let Some(prefix) = self.prefix.as_ref() {
+        //     for tg in loaded.iter_mut() {
+        //         tg.meta.prefix = Some(prefix.clone());
+        //     }
+        // }
 
-        let tgs = loaded;
+        // let tgs = loaded;
 
-        if let Some(tg_name) = self.typegraph.as_ref() {
-            if let Some(tg) = tgs.iter().find(|tg| &tg.name().unwrap() == tg_name) {
-                self.write(&self.to_string(&tg)?).await?;
-            } else {
-                let suggestions = tgs
-                    .iter()
-                    .map(|tg| tg.name().unwrap())
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                bail!(
-                    "typegraph \"{}\" not found; available typegraphs are: {suggestions}",
-                    tg_name
-                );
-            }
-        } else if self.unique {
-            if tgs.len() == 1 {
-                self.write(&self.to_string(&tgs[0])?).await?;
-            } else {
-                bail!("expected only one typegraph, got {}", tgs.len());
-            }
-        } else {
-            self.write(&self.to_string(&tgs)?).await?;
-        }
+        // if let Some(tg_name) = self.typegraph.as_ref() {
+        //     if let Some(tg) = tgs.iter().find(|tg| &tg.name().unwrap() == tg_name) {
+        //         self.write(&self.to_string(&tg)?).await?;
+        //     } else {
+        //         let suggestions = tgs
+        //             .iter()
+        //             .map(|tg| tg.name().unwrap())
+        //             .collect::<Vec<_>>()
+        //             .join(", ");
+        //         bail!(
+        //             "typegraph \"{}\" not found; available typegraphs are: {suggestions}",
+        //             tg_name
+        //         );
+        //     }
+        // } else if self.unique {
+        //     if tgs.len() == 1 {
+        //         self.write(&self.to_string(&tgs[0])?).await?;
+        //     } else {
+        //         bail!("expected only one typegraph, got {}", tgs.len());
+        //     }
+        // } else {
+        //     self.write(&self.to_string(&tgs)?).await?;
+        // }
 
         exit(0); // kill the server
     }

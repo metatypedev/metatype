@@ -16,7 +16,6 @@ use colored::Colorize;
 use common::typegraph::Typegraph;
 use tokio::sync::oneshot;
 
-use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use common::node::Node;
 
 use super::console::{
@@ -225,27 +224,27 @@ impl PushManagerActor {
         }
     }
 
-    pub fn apply_options(&mut self, push: Push) -> Result<Push> {
-        let typegraph_key = push.typegraph.get_key()?;
-        if let Some(options) = self.one_time_push_options.remove(&typegraph_key) {
-            let mut push = push;
-            for option in options {
-                match option {
-                    OneTimePushOption::ForceReset { runtime_name } => {
-                        let mut typegraph = (*push.typegraph).clone();
-                        EmbeddedPrismaMigrationOptionsPatch::default()
-                            .reset_on_drift(true)
-                            .apply(&mut typegraph, vec![runtime_name])
-                            .unwrap();
-                        push.typegraph = typegraph.into();
-                    }
-                }
-            }
-            Ok(push)
-        } else {
-            Ok(push)
-        }
-    }
+    // pub fn apply_options(&mut self, push: Push) -> Result<Push> {
+    //     let typegraph_key = push.typegraph.get_key()?;
+    //     if let Some(options) = self.one_time_push_options.remove(&typegraph_key) {
+    //         let mut push = push;
+    //         for option in options {
+    //             match option {
+    //                 OneTimePushOption::ForceReset { runtime_name } => {
+    //                     let mut typegraph = (*push.typegraph).clone();
+    //                     EmbeddedPrismaMigrationOptionsPatch::default()
+    //                         .reset_on_drift(true)
+    //                         .apply(&mut typegraph, vec![runtime_name])
+    //                         .unwrap();
+    //                     push.typegraph = typegraph.into();
+    //                 }
+    //             }
+    //         }
+    //         Ok(push)
+    //     } else {
+    //         Ok(push)
+    //     }
+    // }
 }
 
 impl Actor for PushManagerActor {
@@ -264,15 +263,15 @@ impl Handler<Push> for PushManagerActor {
     type Result = ();
 
     fn handle(&mut self, push: Push, _ctx: &mut Self::Context) -> Self::Result {
-        if self.add_active(&push.typegraph) {
-            let push = self.apply_options(push).unwrap(); // TODO error handling
+        // if self.add_active(&push.typegraph) {
+        //     // let push = self.apply_options(push).unwrap(); // TODO error handling
 
-            self.pusher.do_send(push);
-        } else {
-            let tg_name = push.typegraph.name().unwrap().cyan();
-            self.console
-                .warning(format!("Typegraph {tg_name} was not pushed."));
-        }
+        //     self.pusher.do_send(push);
+        // } else {
+        //     let tg_name = push.typegraph.name().unwrap().cyan();
+        //     self.console
+        //         .warning(format!("Typegraph {tg_name} was not pushed."));
+        // }
     }
 }
 
@@ -345,39 +344,39 @@ impl Handler<PushFinished> for PushManagerActor {
     type Result = ();
 
     fn handle(&mut self, msg: PushFinished, ctx: &mut Self::Context) -> Self::Result {
-        let name = msg.push.typegraph.name().unwrap();
+        // let name = msg.push.typegraph.name().unwrap();
 
-        if msg.success {
-            self.console.info(format!(
-                "{} Successfully pushed typegraph {name}.",
-                "✓".green(),
-                name = name.cyan()
-            ));
-        }
+        // if msg.success {
+        //     self.console.info(format!(
+        //         "{} Successfully pushed typegraph {name}.",
+        //         "✓".green(),
+        //         name = name.cyan()
+        //     ));
+        // }
 
-        let res = self.remove_active(&msg.push.typegraph);
-        let Some(CancelationStatus(is_cancelled)) = res else {
-            return;
-        };
+        // let res = self.remove_active(&msg.push.typegraph);
+        // let Some(CancelationStatus(is_cancelled)) = res else {
+        //     return;
+        // };
 
-        if let Some(follow_up) = msg.follow_up {
-            use PushFollowUp as F;
-            match follow_up {
-                F::ScheduleRetry => {
-                    if !is_cancelled {
-                        self.schedule_retry(msg.push, ctx.address());
-                    }
-                }
-                F::Interact(interaction) => {
-                    if !is_cancelled {
-                        let console = self.console.clone();
-                        Arbiter::current().spawn(async move {
-                            Self::interact(console, interaction).await;
-                        });
-                    }
-                }
-            }
-        }
+        // if let Some(follow_up) = msg.follow_up {
+        //     use PushFollowUp as F;
+        //     match follow_up {
+        //         F::ScheduleRetry => {
+        //             if !is_cancelled {
+        //                 self.schedule_retry(msg.push, ctx.address());
+        //             }
+        //         }
+        //         F::Interact(interaction) => {
+        //             if !is_cancelled {
+        //                 let console = self.console.clone();
+        //                 Arbiter::current().spawn(async move {
+        //                     Self::interact(console, interaction).await;
+        //                 });
+        //             }
+        //         }
+        //     }
+        // }
     }
 }
 

@@ -7,14 +7,11 @@ use std::sync::Arc;
 
 use actix::prelude::Context;
 use actix::prelude::*;
-use colored::Colorize;
-use common::typegraph::Typegraph;
 use tokio::sync::{mpsc, oneshot};
 
 use crate::config::Config;
-use crate::typegraph::loader::LoaderPool;
+use crate::typegraph::loader::{LoaderPool, TypegraphInfos};
 use crate::typegraph::postprocess::{DenoModules, EmbedPrismaMigrations};
-use crate::utils::plural_suffix;
 
 use super::console::{Console, ConsoleActor};
 
@@ -66,7 +63,7 @@ pub enum StopBehavior {
 
 #[derive(Clone, Debug)]
 pub enum LoaderEvent {
-    Typegraph(Box<Typegraph>),
+    Typegraph(Box<TypegraphInfos>),
     Stopped(StopBehavior),
 }
 
@@ -115,12 +112,7 @@ impl LoaderActor {
         max_parallel_loads: usize,
         postprocess_options: PostProcessOptions,
     ) -> LoaderPool {
-        let mut pool = LoaderPool::new(config, max_parallel_loads);
-        if let Some(deno) = &postprocess_options.deno {
-            pool = pool.with_postprocessor(deno.clone());
-        }
-
-        pool
+        LoaderPool::new(config, max_parallel_loads)
     }
 
     fn load_module(&self, self_addr: Addr<Self>, path: Arc<Path>) {
@@ -131,7 +123,7 @@ impl LoaderActor {
             // TODO error handling?
             let loader = loader_pool.get_loader().await.unwrap();
             match loader.load_module(path.clone()).await {
-                Ok(tgs) => self_addr.do_send(LoadedModule(path, tgs)),
+                Ok(tgs_infos) => self_addr.do_send(LoadedModule(path, tgs_infos)),
                 Err(e) => {
                     if counter.is_some() {
                         // auto stop
@@ -169,7 +161,7 @@ struct SetStoppedTx(oneshot::Sender<StopBehavior>);
 
 #[derive(Message)]
 #[rtype(result = "()")]
-struct LoadedModule(pub Arc<Path>, Vec<Typegraph>);
+struct LoadedModule(pub Arc<Path>, TypegraphInfos);
 
 impl Actor for LoaderActor {
     type Context = Context<Self>;
@@ -227,28 +219,8 @@ impl Handler<LoadedModule> for LoaderActor {
     type Result = ();
 
     fn handle(&mut self, msg: LoadedModule, ctx: &mut Context<Self>) -> Self::Result {
-        let LoadedModule(path, tgs) = msg;
-        let count = tgs.len();
-        self.console.info(format!(
-            "Loaded {count} typegraph{s} from {path:?}: {tgs}",
-            s = plural_suffix(count),
-            tgs = tgs
-                .iter()
-                .map(|tg| tg.name().unwrap().cyan().to_string())
-                .collect::<Vec<_>>()
-                .join(", ")
-        ));
-        for tg in tgs.into_iter() {
-            if let Err(e) = self.event_tx.send(LoaderEvent::Typegraph(Box::new(tg))) {
-                self.console
-                    .error(format!("failed to send typegraph: {:?}", e));
-                if self.counter.is_some() {
-                    // auto stop
-                    ctx.stop();
-                    return;
-                }
-            }
-        }
+        let LoadedModule(path, tg_infos) = msg;
+        self.console.info(format!("Loaded 1 file from {path:?}"));
         if let Some(counter) = self.counter.as_ref() {
             let count = counter.fetch_sub(1, Ordering::SeqCst);
             if count == 0 {

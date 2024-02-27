@@ -33,7 +33,7 @@ type CLISuccess<T> = {
   data: T;
 };
 
-// Types for SDK => CLi (typically forwarding the response from typegate)
+// Types for SDK => CLI (typically forwarding the response from typegate)
 type SDKResponse<T> = {
   command: Command;
   typegraphName: string;

@@ -220,18 +220,6 @@ export async function typegraph(
   if (Manager.isRunFromCLI()) {
     const manager = new Manager(ret);
     await manager.run();
-  } else {
-    console.error("RAW!");
-    console.log(ret.serialize({
-      prismaMigration: {
-        action: {
-          create: true,
-          reset: false,
-        },
-        migrationDir: ".",
-      },
-      dir: ".",
-    }));
   }
 
   return ret;
