@@ -7,7 +7,8 @@ import { TypegraphOutput } from "./typegraph.js";
 import { getEnvVariable } from "./utils/func_utils.js";
 
 const VERSION = "0.3.5-0";
-const PORT_SOURCE = "META_CLI_SERVER_PORT";
+const PORT = "META_CLI_SERVER_PORT"; // meta-cli instance that executes the current file
+const SELF_PATH = "META_CLI_TG_PATH"; // path to the current file to uniquely identify the run results
 
 type Command = "serialize" | "deploy" | "unpack_migration";
 
@@ -37,24 +38,27 @@ type CLISuccess<T> = {
 type SDKResponse<T> = {
   command: Command;
   typegraphName: string;
+  typegraphPath: string;
 } & ({ error: T } | { data: T });
 
 export class Manager {
   #port: number;
   #typegraph: TypegraphOutput;
   #endpoint: string;
+  #typegraphPath: string;
 
   static isRunFromCLI(): boolean {
-    return !!getEnvVariable(PORT_SOURCE);
+    return !!getEnvVariable(PORT);
   }
 
   constructor(typegraph: TypegraphOutput, port?: number) {
     this.#typegraph = typegraph;
+    this.#typegraphPath = getEnvVariable(SELF_PATH)!;
     if (port == undefined) {
-      const envPort = parseInt(getEnvVariable(PORT_SOURCE)!);
+      const envPort = parseInt(getEnvVariable(PORT)!);
       if (isNaN(envPort)) {
         throw new Error(
-          `Environment variable ${PORT_SOURCE} is not a number or is undefined`,
+          `Environment variable ${PORT} is not a number or is undefined`,
         );
       }
       this.#port = envPort;
@@ -137,12 +141,17 @@ export class Manager {
   async #relayResultToCLI<T>(initiator: Command, fn: () => Promise<T>) {
     const typegraphName = this.#typegraph.name;
     let response: SDKResponse<any>;
+    const common = {
+      command: initiator,
+      typegraphName,
+      typegraphPath: this.#typegraphPath,
+    };
     try {
       const data = await fn();
-      response = { command: initiator, typegraphName, data };
+      response = { ...common, data };
     } catch (err) {
       const msg = err instanceof Error ? err.message : err;
-      response = { command: initiator, typegraphName, error: msg };
+      response = { ...common, error: msg };
     }
 
     await fetch(new URL("response", this.#endpoint), {

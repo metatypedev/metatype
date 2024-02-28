@@ -14,7 +14,6 @@ use serde::Deserialize;
 use super::console::input::ConfirmHandler;
 use crate::deploy::push::migration_resolution::{ForceReset, ManualResolution};
 use crate::typegraph::loader::TypegraphInfos;
-use crate::typegraph::postprocess::EmbeddedPrismaMigrationOptionsPatch;
 use common::graphql;
 use common::node::Node;
 
@@ -509,12 +508,10 @@ struct ConfirmDatabaseResetRequired {
 
 impl ConfirmHandler for ConfirmDatabaseResetRequired {
     fn on_confirm(&self) {
-        let mut typegraph = (*self.typegraph).clone();
-        EmbeddedPrismaMigrationOptionsPatch::default()
-            .reset_on_drift(true)
-            .apply(&mut typegraph, vec![self.runtime_name.clone()])
-            .unwrap();
-        self.push_manager.do_send(Push::new(typegraph.into()))
+        let _typegraph = (*self.typegraph).clone();
+        // TODO:
+        todo!("CONFIRM DATABASE RESET");
+        // self.push_manager.do_send(Push::new(typegraph.into()))
     }
 }
 

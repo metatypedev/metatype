@@ -5,17 +5,16 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use super::{Action, CommonArgs, GenArgs};
-use crate::com::store::{Command, ServerStore};
+use crate::com::store::{Command, MigrationOptions, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors;
 use crate::deploy::actors::console::{Console, ConsoleActor};
 use crate::deploy::actors::discovery::DiscoveryActor;
 use crate::deploy::actors::loader::{
-    self, LoaderActor, LoaderEvent, PostProcessOptions, ReloadModule, ReloadReason, StopBehavior,
+    self, LoaderActor, LoaderEvent, ReloadModule, ReloadReason, StopBehavior,
 };
 use crate::deploy::actors::pusher::Push;
 use crate::deploy::actors::watcher::WatcherActor;
-use crate::typegraph::postprocess::EmbedPrismaMigrations;
 use actix::prelude::*;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
@@ -109,6 +108,13 @@ impl Deploy {
 
         let options = deploy.options.clone();
 
+        ServerStore::with(Some(Command::Deploy), Some(config.as_ref().to_owned()));
+
+        ServerStore::set_migration_option(MigrationOptions {
+            create: deploy.options.create_migration,
+            reset: deploy.options.allow_destructive, // reset on drift
+        });
+
         let node_config = config.node(&deploy.node, &deploy.target);
         let node = node_config
             .build(&dir)
@@ -143,12 +149,6 @@ impl Action for DeploySubcommand {
 
         if !self.options.allow_dirty {
             let repo = git2::Repository::discover(&deploy.config.base_dir).ok();
-
-            // Hint the server what state we are globally in
-            ServerStore::with(
-                Some(Command::Deploy),
-                Some(deploy.config.as_ref().to_owned()),
-            );
 
             if let Some(repo) = repo {
                 let dirty = repo.statuses(None)?.iter().any(|s| {
@@ -205,15 +205,6 @@ mod default_mode {
 
             let loader = LoaderActor::new(
                 Arc::clone(&deploy.config),
-                PostProcessOptions::default()
-                    .deno_codegen(deploy.options.codegen)
-                    .prisma(
-                        (!deploy.options.no_migration).then_some(
-                            EmbedPrismaMigrations::default()
-                                .create_migration(deploy.options.create_migration),
-                        ),
-                    )
-                    .allow_destructive(deploy.options.allow_destructive),
                 console.clone(),
                 loader_event_tx,
                 deploy.max_parallel_loads.unwrap_or_else(num_cpus::get),
@@ -323,15 +314,6 @@ mod watch_mode {
 
             let loader = LoaderActor::new(
                 Arc::clone(&deploy.config),
-                PostProcessOptions::default()
-                    .deno_codegen(deploy.options.codegen)
-                    .prisma(
-                        (!deploy.options.no_migration).then_some(
-                            EmbedPrismaMigrations::default()
-                                .create_migration(deploy.options.create_migration),
-                        ),
-                    )
-                    .allow_destructive(deploy.options.allow_destructive),
                 console.clone(),
                 loader_event_tx,
                 deploy.max_parallel_loads.unwrap_or_else(num_cpus::get),

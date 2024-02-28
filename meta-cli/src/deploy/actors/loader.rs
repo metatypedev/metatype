@@ -11,23 +11,19 @@ use tokio::sync::{mpsc, oneshot};
 
 use crate::config::Config;
 use crate::typegraph::loader::{LoaderPool, TypegraphInfos};
-use crate::typegraph::postprocess::{DenoModules, EmbedPrismaMigrations};
+use crate::typegraph::postprocess::DenoModules;
 
 use super::console::{Console, ConsoleActor};
 
 #[derive(Debug, Clone)]
 pub struct PostProcessOptions {
     pub deno: Option<DenoModules>,
-    pub prisma: Option<EmbedPrismaMigrations>,
-    pub allow_destructive: bool,
 }
 
 impl Default for PostProcessOptions {
     fn default() -> Self {
         Self {
             deno: Some(DenoModules::default()),
-            prisma: None,
-            allow_destructive: false,
         }
     }
 }
@@ -40,16 +36,6 @@ impl PostProcessOptions {
 
     pub fn deno_codegen(mut self, codegen: bool) -> Self {
         self.deno = Some(DenoModules::default().codegen(codegen));
-        self
-    }
-
-    pub fn allow_destructive(mut self, allow: bool) -> Self {
-        self.allow_destructive = allow;
-        self
-    }
-
-    pub fn prisma(mut self, prisma: Option<EmbedPrismaMigrations>) -> Self {
-        self.prisma = prisma;
         self
     }
 }
@@ -80,13 +66,11 @@ pub struct LoaderActor {
 impl LoaderActor {
     pub fn new(
         config: Arc<Config>,
-        postprocess_options: PostProcessOptions,
         console: Addr<ConsoleActor>,
         event_tx: mpsc::UnboundedSender<LoaderEvent>,
         max_parallel_loads: usize,
     ) -> Self {
-        let loader_pool =
-            Self::loader_pool(config.clone(), max_parallel_loads, postprocess_options);
+        let loader_pool = Self::loader_pool(config.clone(), max_parallel_loads);
         Self {
             // config,
             console,
@@ -107,11 +91,7 @@ impl LoaderActor {
 }
 
 impl LoaderActor {
-    fn loader_pool(
-        config: Arc<Config>,
-        max_parallel_loads: usize,
-        postprocess_options: PostProcessOptions,
-    ) -> LoaderPool {
+    fn loader_pool(config: Arc<Config>, max_parallel_loads: usize) -> LoaderPool {
         LoaderPool::new(config, max_parallel_loads)
     }
 

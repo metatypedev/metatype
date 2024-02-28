@@ -97,10 +97,10 @@ impl<'a> Loader<'a> {
 
     async fn load_command(&self, mut command: Command, path: &Path) -> LoaderResult {
         let path: Arc<Path> = path.into();
-        let path: Arc<Path> = path.clone().into();
         eprintln!("File {} executed", path.clone().display());
         let p = command
             .borrow_mut()
+            .env("META_CLI_TG_PATH", path.display().to_string())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()

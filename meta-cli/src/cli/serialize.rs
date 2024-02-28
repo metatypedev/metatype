@@ -80,7 +80,6 @@ impl Action for Serialize {
 
         let loader = LoaderActor::new(
             Arc::clone(&config),
-            PostProcessOptions::default(),
             console.clone(),
             loader_event_tx,
             self.max_parallel_loads.unwrap_or_else(num_cpus::get),

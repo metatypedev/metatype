@@ -1,7 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::net::{Ipv4Addr, SocketAddrV4, TcpListener};
+use std::{
+    net::{Ipv4Addr, SocketAddrV4, TcpListener},
+    path::PathBuf,
+};
 
 use crate::com::store::ServerStore;
 use actix_web::{get, post, web::Query, App, HttpRequest, HttpResponse, HttpServer, Responder};
@@ -49,6 +52,7 @@ async fn config(req: HttpRequest) -> impl Responder {
         Err(_) => "".to_string(),
     };
     let endpoint = ServerStore::get_endpoint();
+    let migration = ServerStore::get_migration_option();
 
     match ServerStore::get_config() {
         Some(config) => {
@@ -63,11 +67,7 @@ async fn config(req: HttpRequest) -> impl Responder {
                     "dir": config.base_dir.display().to_string(),
                     "prismaMigration": {
                         "migrationDir": config.prisma_migrations_dir(&folder),
-                        "action": {
-                            // TODO:
-                            "create": true,
-                            "reset": false,
-                        },
+                        "action": serde_json::to_string(&migration).unwrap()
                     },
                 }),
             });
@@ -106,6 +106,7 @@ pub struct SDKResponse {
     #[allow(dead_code)]
     command: Command,
     pub typegraph_name: String,
+    pub typegraph_path: PathBuf,
     /// Payload from the SDK (serialized typegraph, response from typegate)
     pub data: Option<String>,
     pub error: Option<String>,
@@ -116,7 +117,7 @@ async fn response(req_body: String) -> impl Responder {
     let sdk_response: SDKResponse = serde_json::from_str(&req_body).unwrap();
 
     // to be used later
-    ServerStore::add_response(sdk_response.typegraph_name.clone(), sdk_response);
+    ServerStore::add_response(sdk_response.typegraph_path.clone(), sdk_response);
 
     HttpResponse::Ok()
         .status(StatusCode::OK)

@@ -493,15 +493,9 @@ mod tests {
 
             let console = ConsoleActor::new(Arc::clone(&config)).start();
             let (event_tx, event_rx) = mpsc::unbounded_channel();
-            let loader = LoaderActor::new(
-                Arc::clone(&config),
-                PostProcessOptions::default().no_deno(),
-                console,
-                event_tx,
-                1,
-            )
-            .auto_stop()
-            .start();
+            let loader = LoaderActor::new(Arc::clone(&config), console, event_tx, 1)
+                .auto_stop()
+                .start();
             loader.do_send(LoadModule(
                 test_folder.join(&typegraph_test).as_path().into(),
             ));

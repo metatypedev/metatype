@@ -50,8 +50,6 @@ pub fn apply_all<'a>(
 }
 
 pub use deno_rt::DenoModules;
-pub use prisma_rt::EmbedPrismaMigrations;
-pub use prisma_rt::EmbeddedPrismaMigrationOptionsPatch;
 
 pub struct Validator;
 impl PostProcessor for Validator {
@@ -93,63 +91,6 @@ pub mod deno_rt {
             if self.codegen {
                 crate::codegen::deno::codegen(tg, tg.path.as_ref().unwrap())?;
             }
-            Ok(())
-        }
-    }
-}
-
-pub mod prisma_rt {
-    use crate::typegraph::loader::TypegraphInfos;
-
-    use super::*;
-    use anyhow::anyhow;
-    use common::typegraph::runtimes::{KnownRuntime::Prisma, TGRuntime};
-
-    #[derive(Default, Debug, Clone)]
-    pub struct EmbedPrismaMigrations {
-        create_migration: bool,
-        reset_on_drift: bool,
-    }
-
-    impl EmbedPrismaMigrations {
-        pub fn create_migration(mut self, create: bool) -> Self {
-            self.create_migration = create;
-            self
-        }
-
-        pub fn reset_on_drift(mut self, reset: bool) -> Self {
-            self.reset_on_drift = reset;
-            self
-        }
-    }
-
-    #[derive(Default)]
-    pub struct EmbeddedPrismaMigrationOptionsPatch {
-        reset: Option<bool>,
-    }
-
-    impl EmbeddedPrismaMigrationOptionsPatch {
-        pub fn reset_on_drift(mut self, reset: bool) -> Self {
-            self.reset = Some(reset);
-            self
-        }
-
-        pub fn apply(&self, tg: &mut TypegraphInfos, runtime_names: Vec<String>) -> Result<()> {
-            // for rt in tg.runtimes.iter_mut() {
-            //     if let TGRuntime::Known(Prisma(rt_data)) = rt {
-            //         let rt_name = &rt_data.name;
-            //         if runtime_names.contains(rt_name) {
-            //             let migration_options =
-            //                 rt_data.migration_options.as_mut().ok_or_else(|| {
-            //                     anyhow!("Runtime '{rt_name}' not configured to include migrations")
-            //                 })?;
-            //             if let Some(reset_on_drift) = self.reset {
-            //                 migration_options.reset = reset_on_drift;
-            //             }
-            //         }
-            //     }
-            // }
-
             Ok(())
         }
     }

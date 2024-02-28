@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::config::Config;
-use common::node::BasicAuth;
+use common::{node::BasicAuth, typegraph::visitor::Path};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::{Borrow, BorrowMut},
     collections::HashMap,
-    sync::Mutex,
+    path::PathBuf,
+    sync::{Arc, Mutex},
 };
 
 use super::server::SDKResponse;
@@ -29,7 +30,7 @@ fn with_store_mut<T, F: FnOnce(&mut ServerStore) -> T>(f: F) -> T {
 }
 
 #[allow(dead_code)]
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Serialize, Clone, Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Command {
     Deploy,
@@ -43,13 +44,20 @@ pub struct Endpoint {
     pub auth: Option<BasicAuth>,
 }
 
+#[derive(Default, Serialize, Clone, Debug)]
+pub struct MigrationOptions {
+    pub reset: bool,
+    pub create: bool,
+}
+
 #[derive(Default, Debug)]
 pub struct ServerStore {
     config: Option<Config>,
     command: Option<Command>,
+    migration_options: MigrationOptions,
     secrets: HashMap<String, String>,
     endpoint: Endpoint,
-    sdk_responses: HashMap<String, SDKResponse>,
+    sdk_responses: HashMap<PathBuf, Arc<SDKResponse>>,
 }
 
 #[allow(dead_code)]
@@ -89,16 +97,25 @@ impl ServerStore {
         with_store(|s| s.endpoint.clone())
     }
 
-    pub fn add_response(tg_name: String, response: SDKResponse) {
+    pub fn add_response(tg_name: PathBuf, response: SDKResponse) {
         with_store_mut(|s| {
-            s.sdk_responses.insert(tg_name, response);
+            s.sdk_responses.insert(tg_name, Arc::new(response));
         })
     }
 
-    pub fn get_response(tg_name: String) -> Option<SDKResponse> {
-        with_store(|s| {
-            let value = s.sdk_responses.get(&tg_name).unwrap().clone();
-            None
-        })
+    pub fn get_response(tg_path: &PathBuf) -> Option<Arc<SDKResponse>> {
+        with_store(|s| s.sdk_responses.get(tg_path).map(|v| v.to_owned()))
+    }
+
+    pub fn get_responses() -> HashMap<PathBuf, Arc<SDKResponse>> {
+        with_store(|s| s.sdk_responses.clone())
+    }
+
+    pub fn set_migration_option(option: MigrationOptions) {
+        with_store_mut(|s| s.migration_options = option)
+    }
+
+    pub fn get_migration_option() -> MigrationOptions {
+        with_store(|s| s.migration_options.to_owned())
     }
 }
