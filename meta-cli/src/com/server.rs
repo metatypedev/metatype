@@ -52,7 +52,8 @@ async fn config(req: HttpRequest) -> impl Responder {
         Err(_) => "".to_string(),
     };
     let endpoint = ServerStore::get_endpoint();
-    let migration = ServerStore::get_migration_option();
+    let secrets = ServerStore::get_secrets();
+    let migration_action = ServerStore::get_migration_action();
 
     match ServerStore::get_config() {
         Some(config) => {
@@ -61,13 +62,13 @@ async fn config(req: HttpRequest) -> impl Responder {
                     "endpoint": endpoint.typegate,
                     "auth": endpoint.auth
                 },
-                "secrets": ServerStore::get_secrets(),
+                "secrets": secrets,
                 // "prefix": config.prefix,
                 "artifactsConfig": json!({
                     "dir": config.base_dir.display().to_string(),
                     "prismaMigration": {
                         "migrationDir": config.prisma_migrations_dir(&folder),
-                        "action": serde_json::to_value(&migration).unwrap()
+                        "action": serde_json::to_value(&migration_action).unwrap()
                     },
                 }),
             });
@@ -108,8 +109,8 @@ pub struct SDKResponse {
     pub typegraph_name: String,
     pub typegraph_path: PathBuf,
     /// Payload from the SDK (serialized typegraph, response from typegate)
-    pub data: Option<String>,
-    pub error: Option<String>,
+    pub data: Option<serde_json::Value>,
+    pub error: Option<serde_json::Value>,
 }
 
 #[post("/response")]
@@ -117,7 +118,8 @@ async fn response(req_body: String) -> impl Responder {
     let sdk_response: SDKResponse = serde_json::from_str(&req_body).unwrap();
 
     // to be used later
-    ServerStore::add_response(sdk_response.typegraph_path.clone(), sdk_response);
+    ServerStore::add_response(sdk_response.typegraph_path.clone(), sdk_response.clone());
+    eprintln!("RECEIVED {:?}", sdk_response);
 
     HttpResponse::Ok()
         .status(StatusCode::OK)

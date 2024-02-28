@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::config::Config;
-use common::{node::BasicAuth, typegraph::visitor::Path};
+use common::node::BasicAuth;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -45,7 +45,7 @@ pub struct Endpoint {
 }
 
 #[derive(Default, Serialize, Clone, Debug)]
-pub struct MigrationOptions {
+pub struct MigrationAction {
     pub reset: bool,
     pub create: bool,
 }
@@ -54,7 +54,7 @@ pub struct MigrationOptions {
 pub struct ServerStore {
     config: Option<Config>,
     command: Option<Command>,
-    migration_options: MigrationOptions,
+    migration_action: MigrationAction,
     secrets: HashMap<String, String>,
     endpoint: Endpoint,
     sdk_responses: HashMap<PathBuf, Arc<SDKResponse>>,
@@ -111,11 +111,11 @@ impl ServerStore {
         with_store(|s| s.sdk_responses.clone())
     }
 
-    pub fn set_migration_option(option: MigrationOptions) {
-        with_store_mut(|s| s.migration_options = option)
+    pub fn set_migration_action(option: MigrationAction) {
+        with_store_mut(|s| s.migration_action = option)
     }
 
-    pub fn get_migration_option() -> MigrationOptions {
-        with_store(|s| s.migration_options.to_owned())
+    pub fn get_migration_action() -> MigrationAction {
+        with_store(|s| s.migration_action.to_owned())
     }
 }

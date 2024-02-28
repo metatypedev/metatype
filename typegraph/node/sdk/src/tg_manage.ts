@@ -21,7 +21,7 @@ type CLIServerResponse = {
 type CLIConfigRequest = {
   typegate: {
     endpoint: string;
-    auth?: {
+    auth?: { // field not required for serialize command
       username: string;
       password: string;
     };
@@ -123,14 +123,16 @@ export class Manager {
     }
     await this.#relayResultToCLI(
       "deploy",
-      async () =>
-        await tgDeploy(this.#typegraph, {
+      async () => {
+        const { typegate } = await tgDeploy(this.#typegraph, {
           baseUrl: endpoint,
           artifactsConfig,
           cliVersion: VERSION,
           secrets,
           auth: new BasicAuth(auth.username, auth.password),
-        }),
+        });
+        return typegate;
+      },
     );
   }
 

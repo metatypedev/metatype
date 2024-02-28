@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use super::{Action, CommonArgs, GenArgs};
-use crate::com::store::{Command, MigrationOptions, ServerStore};
+use crate::com::store::{Command, Endpoint, MigrationAction, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors;
 use crate::deploy::actors::console::{Console, ConsoleActor};
@@ -108,18 +108,21 @@ impl Deploy {
 
         let options = deploy.options.clone();
 
-        ServerStore::with(Some(Command::Deploy), Some(config.as_ref().to_owned()));
-
-        ServerStore::set_migration_option(MigrationOptions {
-            create: deploy.options.create_migration,
-            reset: deploy.options.allow_destructive, // reset on drift
-        });
-
         let node_config = config.node(&deploy.node, &deploy.target);
         let node = node_config
             .build(&dir)
             .await
             .with_context(|| format!("building node from config: {node_config:#?}"))?;
+
+        ServerStore::with(Some(Command::Deploy), Some(config.as_ref().to_owned()));
+        ServerStore::set_migration_action(MigrationAction {
+            create: deploy.options.create_migration,
+            reset: deploy.options.allow_destructive, // reset on drift
+        });
+        ServerStore::set_endpoint(Endpoint {
+            typegate: node.base_url.clone().into(),
+            auth: node.auth.clone(),
+        });
 
         Ok(Self {
             config,
