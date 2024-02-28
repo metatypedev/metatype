@@ -95,7 +95,6 @@ impl PrismaLink {
             type_ref.set("target_field", target_field);
         }
         let res = type_ref.build()?;
-        eprintln!("type_ref: {:?}", res);
         Ok(res)
     }
 }

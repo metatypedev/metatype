@@ -1,11 +1,12 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::PrintOptions::new().indent_size(3).print(out)"
+expression: tp.print(out)
 ---
-root: optional '_6__RecordOutputType?' #6
-└─ item: struct '_RecordOutputType' #5
-   ├─ [age]: optional #3
-   │  └─ item: integer #2
-   ├─ [id]: string #0
-   └─ [name]: string #1
+root: optional '_9__RecordOutputType?' #9
+└─ item: struct '_RecordOutputType' #8
+   ├─ [age]: optional #5
+   │  └─ item: integer #4
+   ├─ [created_at]: string #7
+   ├─ [id]: string #2
+   └─ [name]: string #3
 

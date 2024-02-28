@@ -62,6 +62,7 @@ impl PushManagerBuilder {
                 retry_config: self.retry_config,
                 typegraph_paths: HashMap::new(),
                 one_time_push_options: HashMap::new(),
+                failed_push_exists: false,
             }
         })
     }
@@ -80,6 +81,7 @@ pub struct PushManagerActor {
     typegraph_paths: HashMap<String, PathBuf>,
     // maps: typegraph_key -> option
     one_time_push_options: HashMap<String, Vec<OneTimePushOption>>,
+    failed_push_exists: bool,
 }
 
 impl PushManagerActor {
@@ -344,6 +346,10 @@ impl Handler<PushFinished> for PushManagerActor {
     type Result = ();
 
     fn handle(&mut self, msg: PushFinished, ctx: &mut Self::Context) -> Self::Result {
+
+        // TODO
+        // NOTE: https://github.com/metatypedev/metatype/commit/169e5f402ea04372a23deaf0a44fbaa45a7cf0b7
+
         // let name = msg.push.typegraph.name().unwrap();
 
         // if msg.success {
@@ -352,6 +358,9 @@ impl Handler<PushFinished> for PushManagerActor {
         //         "✓".green(),
         //         name = name.cyan()
         //     ));
+        // }
+        // if !self.failed_push_exists {
+        //     self.failed_push_exists = !msg.success;
         // }
 
         // let res = self.remove_active(&msg.push.typegraph);
@@ -404,6 +413,20 @@ impl Handler<Stop> for PushManagerActor {
 
 #[derive(Message)]
 #[rtype(result = "()")]
+struct SendBackFailedStatus {
+    failure_tx: oneshot::Sender<bool>,
+}
+
+impl Handler<SendBackFailedStatus> for PushManagerActor {
+    type Result = ();
+
+    fn handle(&mut self, msg: SendBackFailedStatus, _ctx: &mut Self::Context) -> Self::Result {
+        msg.failure_tx.send(self.failed_push_exists).unwrap();
+    }
+}
+
+#[derive(Message)]
+#[rtype(result = "()")]
 struct CancelAllFromModule {
     path: PathBuf,
     tx: oneshot::Sender<()>,
@@ -431,7 +454,13 @@ impl PushManager for Addr<PushManagerActor> {
         self.do_send(Stop { tx });
         rx.await?;
         log::trace!("PushManager stopped");
-        Ok(())
+        let (failure_tx, failure_rx) = oneshot::channel();
+        self.do_send(SendBackFailedStatus { failure_tx });
+        let failed = failure_rx.await.unwrap();
+        match failed {
+            false => Ok(()),
+            true => Err(anyhow::anyhow!("Pushing one or more typegraphs failed")),
+        }
     }
 
     async fn cancel_all_from(&self, path: &Path) -> Result<()> {
