@@ -12,7 +12,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use super::server::SDKResponse;
+use super::responses::SDKResponse;
 
 lazy_static! {
     #[derive(Debug)]

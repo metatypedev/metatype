@@ -200,6 +200,20 @@ impl Handler<LoadedModule> for LoaderActor {
 
     fn handle(&mut self, msg: LoadedModule, ctx: &mut Context<Self>) -> Self::Result {
         let LoadedModule(path, tg_infos) = msg;
+
+        if let Err(e) = self
+            .event_tx
+            .send(LoaderEvent::Typegraph(Box::new(tg_infos)))
+        {
+            self.console
+                .error(format!("failed to send typegraph: {:?}", e));
+            if self.counter.is_some() {
+                // auto stop
+                ctx.stop();
+                return;
+            }
+        }
+
         self.console.info(format!("Loaded 1 file from {path:?}"));
         if let Some(counter) = self.counter.as_ref() {
             let count = counter.fetch_sub(1, Ordering::SeqCst);

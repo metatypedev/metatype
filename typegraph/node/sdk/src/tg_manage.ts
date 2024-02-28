@@ -108,7 +108,10 @@ export class Manager {
   async #serialize(config: CLIConfigRequest): Promise<void> {
     await this.#relayResultToCLI(
       "serialize",
-      async () => this.#typegraph.serialize(config.artifactsConfig),
+      async () => {
+        const json = this.#typegraph.serialize(config.artifactsConfig);
+        return JSON.parse(json);
+      },
     );
   }
 

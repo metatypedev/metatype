@@ -1,19 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{
-    net::{Ipv4Addr, SocketAddrV4, TcpListener},
-    path::PathBuf,
+use crate::com::{
+    responses::{CLIResponseError, CLIResponseSuccess, SDKResponse},
+    store::ServerStore,
 };
-
-use crate::com::store::ServerStore;
 use actix_web::{get, post, web::Query, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use lazy_static::lazy_static;
 use reqwest::StatusCode;
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
-
-use super::store::Command;
+use serde::Deserialize;
+use serde_json::json;
+use std::net::{Ipv4Addr, SocketAddrV4, TcpListener};
 
 pub fn random_free_port() -> u16 {
     let addr = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0);
@@ -27,16 +24,6 @@ pub fn random_free_port() -> u16 {
 lazy_static! {
     #[derive(Debug)]
     pub static ref SERVER_PORT: u16 = random_free_port();
-}
-
-#[derive(Serialize)]
-struct CLIResponseSuccess {
-    data: Value,
-}
-
-#[derive(Serialize)]
-struct CLIResponseError {
-    error: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -101,26 +88,11 @@ async fn command() -> impl Responder {
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct SDKResponse {
-    #[allow(dead_code)]
-    command: Command,
-    pub typegraph_name: String,
-    pub typegraph_path: PathBuf,
-    /// Payload from the SDK (serialized typegraph, response from typegate)
-    pub data: Option<serde_json::Value>,
-    pub error: Option<serde_json::Value>,
-}
-
 #[post("/response")]
 async fn response(req_body: String) -> impl Responder {
     let sdk_response: SDKResponse = serde_json::from_str(&req_body).unwrap();
-
     // to be used later
     ServerStore::add_response(sdk_response.typegraph_path.clone(), sdk_response.clone());
-    eprintln!("RECEIVED {:?}", sdk_response);
-
     HttpResponse::Ok()
         .status(StatusCode::OK)
         .json(CLIResponseSuccess {
