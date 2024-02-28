@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::config::Config;
+use anyhow::{bail, Result};
 use common::node::BasicAuth;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
@@ -105,6 +106,13 @@ impl ServerStore {
 
     pub fn get_response(tg_path: &PathBuf) -> Option<Arc<SDKResponse>> {
         with_store(|s| s.sdk_responses.get(tg_path).map(|v| v.to_owned()))
+    }
+
+    pub fn get_response_or_fail(tg_path: &PathBuf) -> Result<Arc<SDKResponse>> {
+        match Self::get_response(tg_path) {
+            Some(res) => Ok(res.to_owned()),
+            None => bail!("Invalid state, no response was sent by {:?}", &tg_path),
+        }
     }
 
     pub fn get_responses() -> HashMap<PathBuf, Arc<SDKResponse>> {

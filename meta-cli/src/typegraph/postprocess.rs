@@ -38,17 +38,6 @@ where
     }
 }
 
-pub fn apply_all<'a>(
-    postprocessors: impl Iterator<Item = &'a PostProcessorWrapper>,
-    tg: &mut Typegraph,
-    config: &Config,
-) -> Result<()> {
-    for pp in postprocessors {
-        pp.0.read().unwrap().postprocess(tg, config)?;
-    }
-    Ok(())
-}
-
 pub use deno_rt::DenoModules;
 
 pub struct Validator;

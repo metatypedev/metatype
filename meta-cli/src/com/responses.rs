@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use super::store::Command;
 use crate::deploy::actors::pusher::PushResultRaw;
 use anyhow::{bail, Result};
@@ -52,9 +55,9 @@ impl SDKResponse {
     }
 
     pub fn as_push_result(&self) -> Result<PushResultRaw> {
-        match &self.data {
-            Some(value) => serde_json::from_value(value.to_owned()).map_err(|e| e.into()),
-            None => todo!(),
-        }
+        self.validate()?;
+        let response: common::graphql::Response =
+            serde_json::from_value(self.data.clone().unwrap())?;
+        response.data("addTypegraph")
     }
 }

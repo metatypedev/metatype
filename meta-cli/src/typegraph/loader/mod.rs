@@ -22,6 +22,7 @@ use anyhow::{anyhow, Error, Result};
 use colored::Colorize;
 
 use crate::{
+    com::{responses::SDKResponse, store::ServerStore},
     config::{Config, ModuleType},
     utils::ensure_venv,
 };
@@ -33,12 +34,21 @@ pub struct TypegraphInfos {
 }
 
 impl TypegraphInfos {
+    pub fn get_response_or_fail(&self) -> Result<Arc<SDKResponse>> {
+        ServerStore::get_response_or_fail(&self.path)
+    }
+
+    pub fn name(&self) -> Result<String> {
+        let response = ServerStore::get_response_or_fail(&self.path)?;
+        Ok(response.typegraph_name.clone())
+    }
+
     pub fn get_key(&self) -> Result<String> {
         let path = self
             .path
             .to_str()
             .ok_or_else(|| anyhow::anyhow!("typegraph path is not valid unicode"))?;
-        Ok(format!("{}", path))
+        Ok(path.to_string())
     }
 }
 
@@ -303,6 +313,7 @@ async fn detect_deno_loader_cmd(tg_path: &Path) -> Result<TsLoaderRt> {
     ))
 }
 
+#[allow(unused)]
 #[derive(Debug)]
 pub enum LoaderError {
     PostProcessingError {

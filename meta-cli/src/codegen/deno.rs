@@ -473,7 +473,7 @@ mod tests {
     use super::*;
     use crate::config::Config;
     use crate::deploy::actors::console::ConsoleActor;
-    use crate::deploy::actors::loader::{LoadModule, LoaderActor, LoaderEvent, PostProcessOptions};
+    use crate::deploy::actors::loader::{LoadModule, LoaderActor, LoaderEvent};
     use crate::tests::utils::ensure_venv;
     use actix::prelude::*;
 
@@ -501,10 +501,10 @@ mod tests {
             ));
 
             let mut event_rx = event_rx;
-            let tg = match event_rx.recv().await.unwrap() {
-                LoaderEvent::Typegraph(tg) => tg,
-                evt => bail!("unexpected loader evt: {evt:?}"),
-            };
+            // let tg = match event_rx.recv().await.unwrap() {
+            //     LoaderEvent::Typegraph(tg) => tg,
+            //     evt => bail!("unexpected loader evt: {evt:?}"),
+            // };
 
             // TODO:
             // run typegraph! thenget serialized version

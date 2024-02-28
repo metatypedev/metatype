@@ -2,15 +2,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Action, GenArgs};
-use crate::com::responses::SDKResponse;
-use crate::com::server::response;
 use crate::com::store::{Command, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors::console::ConsoleActor;
-use crate::deploy::actors::loader::{
-    LoadModule, LoaderActor, LoaderEvent, PostProcessOptions, StopBehavior,
-};
-use crate::typegraph::loader::TypegraphInfos;
+use crate::deploy::actors::loader::{LoadModule, LoaderActor, LoaderEvent, StopBehavior};
 use actix::prelude::*;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
@@ -98,16 +93,7 @@ impl Action for Serialize {
         while let Some(event) = event_rx.recv().await {
             match event {
                 LoaderEvent::Typegraph(tg_infos) => {
-                    let tg = ServerStore::get_response(&tg_infos.path)
-                        .ok_or_else(|| -> Result<Arc<SDKResponse>> {
-                            bail!(
-                                "Invalid state, no response was sent by {:?}",
-                                &tg_infos.path
-                            )
-                        })
-                        .unwrap()
-                        .as_typegraph()?;
-
+                    let tg = ServerStore::get_response_or_fail(&tg_infos.path)?.as_typegraph()?;
                     loaded.push(tg)
                 }
                 LoaderEvent::Stopped(b) => {

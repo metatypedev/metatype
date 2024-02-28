@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -14,13 +13,9 @@ use serde::Deserialize;
 use super::console::input::ConfirmHandler;
 use crate::deploy::push::migration_resolution::{ForceReset, ManualResolution};
 use crate::typegraph::loader::TypegraphInfos;
-use common::graphql;
-use common::node::Node;
 
 use super::console::{Console, ConsoleActor};
 use super::push_manager::{PushFinished, PushManagerActor};
-
-type Secrets = HashMap<String, String>;
 
 #[derive(Clone, Debug)]
 struct Retry {
@@ -52,22 +47,13 @@ pub struct Migrations {
 
 pub struct PusherActor {
     console: Addr<ConsoleActor>,
-    node: Arc<Node>,
     push_manager: Addr<PushManagerActor>,
-    secrets: Arc<Secrets>,
 }
 
 impl PusherActor {
-    pub fn new(
-        console: Addr<ConsoleActor>,
-        node: Node,
-        secrets: Secrets,
-        push_manager: Addr<PushManagerActor>,
-    ) -> Self {
+    pub fn new(console: Addr<ConsoleActor>, push_manager: Addr<PushManagerActor>) -> Self {
         Self {
             console,
-            node: Arc::new(node),
-            secrets: secrets.into(),
             push_manager,
         }
     }
@@ -89,34 +75,16 @@ impl PusherActor {
         }
     }
 
-    async fn push(push: Push, node: Arc<Node>, secrets: Arc<Secrets>) -> Result<PushResult, Error> {
-        // TODO can we set the prefix before the push? // in the loader??
-        // so we wont need to clone
-        // let tg = &*push.typegraph;
-        // let tg = match node.prefix.as_ref() {
-        //     Some(prefix) => tg.with_prefix(prefix.clone()).map_err(Error::Other)?,
-        //     None => tg.clone(),
-        // };
+    async fn push(push: Push) -> Result<PushResult, Error> {
+        // TODO: PREFIXES
 
-        // let secrets: &Secrets = &secrets;
+        let response = push
+            .typegraph
+            .get_response_or_fail()
+            .map_err(Error::Other)?;
+        let res = response.as_push_result().map_err(Error::Response)?;
 
-        // TODO: tg_info.try_deploy()
-
-        // let res = node
-        //     .try_deploy(&tg, secrets, crate::build::PKG_VERSION.to_owned())
-        //     .map_err(|e| match e {
-        //         common::node::Error::Graphql(payload) => Error::Graphql(payload),
-        //         common::node::Error::Other(payload) => Error::Other(payload),
-        //     })
-        //     .await?;
-
-        // let res: PushResultRaw = res
-        //     .data("addTypegraph")
-        //     .context("addTypegraph field in the response")
-        //     .map_err(|e| Error::invalid_response(e.to_string()))?;
-
-        // PushResult::from_raw(res, push).map_err(|e| Error::invalid_response(e.to_string()))
-        todo!("use try_deploy from tg_info")
+        PushResult::from_raw(res, push).map_err(Error::Response)
     }
 
     fn handle_error(
@@ -126,23 +94,10 @@ impl PusherActor {
         push_manager: Addr<PushManagerActor>,
     ) {
         match error {
-            Error::Graphql(e) => match e {
-                graphql::Error::EndpointNotReachable(e) => {
-                    console.error(format!("Failed to push typegraph:\n{e}"));
-                    push_manager.do_send(PushFinished::new(push, false).schedule_retry());
-                }
-                graphql::Error::InvalidResponse(e) => {
-                    console.error(format!("Invalid resposes from typegate:\n{e}"));
-                    push_manager.do_send(PushFinished::new(push, false));
-                }
-                graphql::Error::FailedQuery(errs) => {
-                    console.error("Failed to push typegraph:".to_string());
-                    for err in errs {
-                        console.error(format!(" * {}", err.message));
-                    }
-                    push_manager.do_send(PushFinished::new(push, false));
-                }
-            },
+            Error::Response(e) => {
+                console.error(format!("Failed to push typegraph:\n{e}"));
+                push_manager.do_send(PushFinished::new(push, false).schedule_retry());
+            }
             Error::Other(e) => {
                 console.error(format!("Unexpected error: {e}"));
                 push_manager.do_send(PushFinished::new(push, false));
@@ -272,14 +227,8 @@ pub struct GenericPushFailure {
 #[derive(Message, Debug)]
 #[rtype(result = "Result<()>")]
 enum Error {
-    Graphql(graphql::Error),
+    Response(anyhow::Error),
     Other(anyhow::Error),
-}
-
-impl Error {
-    fn invalid_response(msg: String) -> Self {
-        Self::Graphql(graphql::Error::InvalidResponse(msg))
-    }
 }
 
 #[derive(Message)]
@@ -302,10 +251,8 @@ impl Handler<Push> for PusherActor {
     type Result = ();
 
     fn handle(&mut self, push: Push, ctx: &mut Self::Context) {
-        let node = Arc::clone(&self.node);
         let self_addr = ctx.address();
         let console = self.console.clone();
-        let secrets = Arc::clone(&self.secrets);
         let push_manager = self.push_manager.clone();
 
         Arbiter::current().spawn(async move {
@@ -315,24 +262,22 @@ impl Handler<Push> for PusherActor {
                 "".dimmed()
             };
 
-            // let tg_name = push.typegraph.name().unwrap().cyan();
+            // TODO:
+            // old spec: loader => push
+            // new spec: push => loader
 
-            // let file_name = push
-            //     .typegraph
-            //     .path
-            //     .as_ref()
-            //     .unwrap()
-            //     .display()
-            //     .to_string()
-            //     .dimmed();
-            // console.info(format!(
-            //     "Pushing typegraph {tg_name}{retry} (from '{file_name}')"
-            // ));
+            let name = push.typegraph.name().unwrap();
+            let name_colored = push.typegraph.name().unwrap().cyan();
+            let file_name = push.typegraph.path.display().to_string().dimmed();
 
-            match Self::push(push.clone(), node, secrets).await {
+            console.info(format!(
+                "Pushing typegraph {name_colored}{retry} (from '{file_name}')"
+            ));
+
+            match Self::push(push.clone()).await {
                 Ok(mut res) => {
-                    // res.original_name = Some(push.typegraph.name().unwrap().clone());
-                    // self_addr.do_send(res);
+                    res.original_name = Some(name.clone());
+                    self_addr.do_send(res);
                 }
                 Err(e) => {
                     Self::handle_error(push, e, console, push_manager);
@@ -502,16 +447,17 @@ impl Handler<ResolveNullConstraintViolation> for PusherActor {
 #[derive(Debug)]
 struct ConfirmDatabaseResetRequired {
     push_manager: Addr<PushManagerActor>,
+    #[allow(unused)]
     runtime_name: String,
     typegraph: Arc<TypegraphInfos>,
 }
 
 impl ConfirmHandler for ConfirmDatabaseResetRequired {
     fn on_confirm(&self) {
-        let _typegraph = (*self.typegraph).clone();
-        // TODO:
-        todo!("CONFIRM DATABASE RESET");
-        // self.push_manager.do_send(Push::new(typegraph.into()))
+        // TODO: interactivity
+        #[allow(unused)]
+        let typegraph = (*self.typegraph).clone();
+        self.push_manager.do_send(Push::new(typegraph.into()))
     }
 }
 

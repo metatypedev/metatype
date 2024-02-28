@@ -204,6 +204,8 @@ mod default_mode {
             let secrets =
                 lade_sdk::hydrate(deploy.node.env.clone(), deploy.base_dir.to_path_buf()).await?;
 
+            ServerStore::set_secrets(secrets);
+
             let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
 
             let loader = LoaderActor::new(
@@ -215,8 +217,7 @@ mod default_mode {
             .auto_stop()
             .start();
 
-            let pusher =
-                PushManagerBuilder::new(console.clone()).start(deploy.node.clone(), secrets);
+            let pusher = PushManagerBuilder::new(console.clone()).start();
 
             Ok(Self {
                 deploy,
@@ -347,7 +348,7 @@ mod watch_mode {
 
             let pusher = PushManagerBuilder::new(console.clone())
                 .linear_backoff(Duration::from_secs(5), 3)
-                .start(deploy.node.clone(), secrets);
+                .start();
 
             let actor_system = ActorSystem {
                 console: console.clone(),
