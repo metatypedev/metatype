@@ -31,5 +31,3 @@ await typegraph({
     ).withPolicy(pub),
   });
 });
-
-console.error("HLLO THERE");
