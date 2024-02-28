@@ -67,7 +67,7 @@ async fn config(req: HttpRequest) -> impl Responder {
                     "dir": config.base_dir.display().to_string(),
                     "prismaMigration": {
                         "migrationDir": config.prisma_migrations_dir(&folder),
-                        "action": serde_json::to_string(&migration).unwrap()
+                        "action": serde_json::to_value(&migration).unwrap()
                     },
                 }),
             });
