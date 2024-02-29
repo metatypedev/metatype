@@ -47,6 +47,7 @@ interface core {
 
     record artifact-resolution-config {
         dir: option<string>, // cwd() if none
+        prefix: option<string>, // overrides tg.meta.prefix field if defined
         prisma-migration: migration-config
     }
 

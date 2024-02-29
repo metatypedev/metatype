@@ -41,6 +41,7 @@ async fn config(req: HttpRequest) -> impl Responder {
     let endpoint = ServerStore::get_endpoint();
     let secrets = ServerStore::get_secrets();
     let migration_action = ServerStore::get_migration_action();
+    let prefix = ServerStore::get_prefix();
 
     match ServerStore::get_config() {
         Some(config) => {
@@ -50,7 +51,7 @@ async fn config(req: HttpRequest) -> impl Responder {
                     "auth": endpoint.auth
                 },
                 "secrets": secrets,
-                // "prefix": config.prefix,
+                "prefix": prefix,
                 "artifactsConfig": json!({
                     "dir": config.base_dir.display().to_string(),
                     "prismaMigration": {
@@ -67,7 +68,7 @@ async fn config(req: HttpRequest) -> impl Responder {
         None => HttpResponse::Ok()
             .status(StatusCode::INTERNAL_SERVER_ERROR)
             .json(CLIResponseError {
-                error: "Could not get config".to_string(),
+                error: "Could not get config from meta-cli".to_string(),
             }),
     }
 }
@@ -83,7 +84,7 @@ async fn command() -> impl Responder {
         None => HttpResponse::Ok()
             .status(StatusCode::INTERNAL_SERVER_ERROR)
             .json(CLIResponseError {
-                error: "Could not get command".to_string(),
+                error: "Could not get command from meta-cli".to_string(),
             }),
     }
 }

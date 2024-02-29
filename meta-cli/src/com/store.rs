@@ -58,6 +58,7 @@ pub struct ServerStore {
     migration_action: MigrationAction,
     secrets: HashMap<String, String>,
     endpoint: Endpoint,
+    prefix: Option<String>,
     sdk_responses: HashMap<PathBuf, Arc<SDKResponse>>,
 }
 
@@ -125,5 +126,13 @@ impl ServerStore {
 
     pub fn get_migration_action() -> MigrationAction {
         with_store(|s| s.migration_action.to_owned())
+    }
+
+    pub fn set_prefix(prefix: Option<String>) {
+        with_store_mut(|s| s.prefix = prefix)
+    }
+
+    pub fn get_prefix() -> Option<String> {
+        with_store(|s| s.prefix.to_owned())
     }
 }

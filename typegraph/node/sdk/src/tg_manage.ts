@@ -26,6 +26,7 @@ type CLIConfigRequest = {
       password: string;
     };
   };
+  prefix?: string;
   secrets: Record<string, string>;
   artifactsConfig: ArtifactResolutionConfig;
 };
@@ -109,14 +110,17 @@ export class Manager {
     await this.#relayResultToCLI(
       "serialize",
       async () => {
-        const json = this.#typegraph.serialize(config.artifactsConfig);
+        const json = this.#typegraph.serialize({
+          ...config.artifactsConfig,
+          prefix: config.prefix,
+        });
         return JSON.parse(json);
       },
     );
   }
 
   async #deploy(
-    { typegate, artifactsConfig, secrets }: CLIConfigRequest,
+    { typegate, artifactsConfig, secrets, prefix }: CLIConfigRequest,
   ): Promise<void> {
     const { endpoint, auth } = typegate;
     if (!auth) {
@@ -129,7 +133,10 @@ export class Manager {
       async () => {
         const { typegate } = await tgDeploy(this.#typegraph, {
           baseUrl: endpoint,
-          artifactsConfig,
+          artifactsConfig: {
+            ...artifactsConfig,
+            prefix,
+          },
           cliVersion: VERSION,
           secrets,
           auth: new BasicAuth(auth.username, auth.password),

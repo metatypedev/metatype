@@ -67,7 +67,8 @@ impl Action for Serialize {
         };
 
         // Minimum setup
-        ServerStore::with(Some(Command::Serialize), Some(config.clone()));
+        ServerStore::with(Some(Command::Serialize), Some(config.to_owned()));
+        ServerStore::set_prefix(self.prefix.to_owned());
 
         let config = Arc::new(config);
 
@@ -105,14 +106,7 @@ impl Action for Serialize {
             }
         }
 
-        if let Some(prefix) = self.prefix.as_ref() {
-            for tg in loaded.iter_mut() {
-                tg.meta.prefix = Some(prefix.clone());
-            }
-        }
-
         let tgs = loaded;
-
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.iter().find(|tg| &tg.name().unwrap() == tg_name) {
                 self.write(&self.to_string(&tg)?).await?;

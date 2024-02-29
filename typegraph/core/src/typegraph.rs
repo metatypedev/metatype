@@ -216,6 +216,11 @@ pub fn finalize(res_config: Option<ArtifactResolutionConfig>) -> Result<String> 
     };
 
     if let Some(config) = res_config {
+        // Typically happens when the cli is used
+        if let Some(prefix) = config.prefix.clone() {
+            tg.meta.prefix = Some(prefix);
+        }
+
         TypegraphPostProcessor::new(config).postprocess(&mut tg)?;
     }
 
