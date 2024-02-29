@@ -88,12 +88,11 @@ export class Manager {
 
   async #requestCommands(): Promise<CLIServerResponse> {
     const { data: config } = await this.#requestConfig();
-    console.error("CONFIG", config);
+    // console.error("SDK received config", config);
     const { data: command } =
       await (await fetch(new URL("command", this.#endpoint)))
         .json() as CLISuccess<Command>;
-
-    console.error("Command", command);
+    // console.error("SDK received command", command);
 
     return { command, config };
   }

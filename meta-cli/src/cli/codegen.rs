@@ -1,13 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::path::PathBuf;
 
 use super::{Action, GenArgs};
-use crate::config::Config;
-use crate::typegraph::loader::LoaderPool;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use async_trait::async_trait;
 use clap::{Parser, Subcommand};
 
@@ -47,26 +44,29 @@ pub struct Deno {
 
 #[async_trait]
 impl Action for Deno {
-    async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir()?;
-        // try to find config file, else use default config as the options
-        // used for code generation have default values.
-        let config = Arc::new(
-            Config::load_or_find(args.config, &dir).unwrap_or_else(|_| Config::default_in(&dir)),
-        );
+    async fn run(&self, _args: GenArgs) -> Result<()> {
+        // TODO:
+        // how does this fits with the current impl?
 
-        let loader_pool = LoaderPool::new(config, 1);
+        // let dir = args.dir()?;
+        // // try to find config file, else use default config as the options
+        // // used for code generation have default values.
+        // let config = Arc::new(
+        //     Config::load_or_find(args.config, &dir).unwrap_or_else(|_| Config::default_in(&dir)),
+        // );
 
-        let loader = loader_pool.get_loader().await?;
+        // let loader_pool = LoaderPool::new(config, 1);
 
-        let file: Arc<Path> = self.file.clone().into();
-        loader.load_module(file.clone()).await.map_err(|e| {
-            anyhow!(
-                "An error occured while loading typegraphs from the {:?}: {}",
-                file,
-                e.to_string()
-            )
-        })?;
+        // let loader = loader_pool.get_loader().await?;
+
+        // let file: Arc<Path> = self.file.clone().into();
+        // loader.load_module(file.clone()).await.map_err(|e| {
+        //     anyhow!(
+        //         "An error occured while loading typegraphs from the {:?}: {}",
+        //         file,
+        //         e.to_string()
+        //     )
+        // })?;
 
         Ok(())
     }

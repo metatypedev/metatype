@@ -76,7 +76,21 @@ impl PusherActor {
     }
 
     async fn push(push: Push) -> Result<PushResult, Error> {
-        // TODO: PREFIXES
+        // TODO: retries do not work as expected
+        // reason: the loader allows preparing the response, push takes the results from that
+
+        // mental notes:
+
+        // serialize => Loader [ok]
+
+        // deploy => discovery == LoadModule(tg_path) ==> Loader runs tg_path ==> Push [works with previous impl]
+        // this model works with the current approach if the gate is guaranteed to be always ready (no retries needed)
+
+        // deploy => discovery == PushModule(tg_path) ==> Push may re-run the tg through Loader as much as we want [current goal]
+
+        // A better approach would be to send a load here THEN retrieve the result
+        // 1. pass the loader on the constructor to the push actor
+        // 2.
 
         let response = push
             .typegraph
@@ -261,10 +275,6 @@ impl Handler<Push> for PusherActor {
             } else {
                 "".dimmed()
             };
-
-            // TODO:
-            // old spec: loader => push
-            // new spec: push => loader
 
             let name = push.typegraph.name().unwrap();
             let name_colored = push.typegraph.name().unwrap().cyan();

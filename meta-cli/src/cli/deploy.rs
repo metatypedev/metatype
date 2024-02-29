@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use std::path::{Path, PathBuf};
+use std::process::exit;
 use std::sync::{Arc, Mutex};
 
 use super::{Action, CommonArgs, GenArgs};
@@ -123,6 +124,7 @@ impl Deploy {
             typegate: node.base_url.clone().into(),
             auth: node.auth.clone(),
         });
+        ServerStore::set_prefix(node_config.prefix);
 
         Ok(Self {
             config,
@@ -168,14 +170,18 @@ impl Action for DeploySubcommand {
         }
 
         if deploy.options.watch {
+            // watch the content of a folder
             if self.file.is_some() {
                 bail!("Cannot use --file in watch mode");
             }
             watch_mode::enter_watch_mode(deploy).await?;
         } else {
+            // deploy a single file
             let deploy = default_mode::DefaultMode::init(deploy).await?;
             deploy.run().await?;
+            exit(0); // kill the server (TODO: use a global handle maybe?)
         }
+
         Ok(())
     }
 }
