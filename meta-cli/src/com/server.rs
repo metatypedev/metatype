@@ -10,20 +10,31 @@ use lazy_static::lazy_static;
 use reqwest::StatusCode;
 use serde::Deserialize;
 use serde_json::json;
-use std::net::{Ipv4Addr, SocketAddrV4, TcpListener};
+use std::{
+    io::{Error, ErrorKind},
+    net::{Ipv4Addr, SocketAddrV4, TcpListener},
+    sync::Arc,
+};
 
-pub fn random_free_port() -> u16 {
-    let addr = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0);
-    TcpListener::bind(addr)
-        .unwrap()
-        .local_addr()
-        .unwrap()
-        .port()
+pub struct PortManager {
+    pub tcp_listener: Arc<TcpListener>,
+}
+
+impl PortManager {
+    pub fn new() -> Self {
+        let addr = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0);
+        Self {
+            tcp_listener: Arc::new(TcpListener::bind(addr).unwrap()),
+        }
+    }
 }
 
 lazy_static! {
-    #[derive(Debug)]
-    pub static ref SERVER_PORT: u16 = random_free_port();
+    pub static ref PORT_MAN: Arc<PortManager> = Arc::new(PortManager::new());
+}
+
+pub fn get_instance_port() -> u16 {
+    PORT_MAN.tcp_listener.local_addr().unwrap().port()
 }
 
 #[derive(Debug, Deserialize)]
@@ -102,7 +113,13 @@ async fn response(req_body: String) -> impl Responder {
 }
 
 pub async fn spawn_server() -> std::io::Result<()> {
-    let port = SERVER_PORT.to_owned();
+    let port = get_instance_port();
+
+    let tcp_listener = PORT_MAN
+        .tcp_listener
+        .try_clone()
+        .map_err(|e| Error::new(ErrorKind::AddrNotAvailable, e.to_string()))?;
+
     eprintln!("Server is running at {:?}", port);
     HttpServer::new(|| {
         App::new()
@@ -110,7 +127,9 @@ pub async fn spawn_server() -> std::io::Result<()> {
             .service(command)
             .service(response)
     })
-    .bind(("127.0.0.1", port))?
+    .listen(tcp_listener)?
     .run()
-    .await
+    .await?;
+
+    Ok(())
 }
