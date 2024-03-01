@@ -8,6 +8,8 @@ use std::borrow::Cow;
 use config::Config;
 use envconfig::Envconfig;
 
+static SNAPSHOT: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/SNAPSHOT.bin"));
+
 pub fn init_sentry(config: &Config) -> sentry::ClientInitGuard {
     let env = if config.debug {
         "development".to_string()
@@ -43,6 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     runtime.block_on(typegate_engine::launch_typegate_deno(
         typegate_engine::resolve_url_or_path(&main_url, &cwd)?,
         Some(import_map_url),
+        Some(SNAPSHOT),
     ))?;
     Ok(())
 }

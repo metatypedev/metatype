@@ -8,7 +8,12 @@ use crate::{
 };
 
 use crate::OpDepInjector;
+
 pub fn extensions(seed: OpDepInjector) -> Vec<deno_core::Extension> {
+    vec![tg_metatype_ext::init_ops(seed)]
+}
+
+pub fn extensions_snapshot(seed: OpDepInjector) -> Vec<deno_core::Extension> {
     vec![tg_metatype_ext::init_ops_and_esm(seed)]
 }
 
@@ -51,8 +56,8 @@ deno_core::extension!(
         prisma::op_archive,
         deno_rt::op_deno_transform_typescript
     ],
-    esm_entry_point = "ext:tg_metatype_ext/runtime.js",
-    esm = ["runtime.js"],
+    esm_entry_point = "ext:tg_metatype_ext/00_runtime.js",
+    esm = ["00_runtime.js"],
     // parameters for when we initialize our extensions
     options = { seed: OpDepInjector, },
     // initialize the OpState

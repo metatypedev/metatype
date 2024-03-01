@@ -3,6 +3,7 @@
 
 mod ext;
 mod runtimes;
+mod snapshot;
 mod typegraph;
 mod typescript;
 
@@ -27,6 +28,8 @@ mod interlude {
 
 pub use deno_core::{resolve_url, resolve_url_or_path};
 pub use ext::extensions;
+pub use ext::extensions_snapshot;
+pub use snapshot::create_snapshot;
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
 use shadow_rs::shadow;
@@ -39,26 +42,42 @@ use crate::interlude::*;
 // used by the different ops
 #[derive(Clone)]
 pub struct OpDepInjector {
-    tmp_dir: Arc<Path>,
+    tmp_dir: Option<Arc<Path>>,
+    snapshot_seed: bool,
 }
 
 impl OpDepInjector {
     pub fn from_env() -> Self {
         use std::str::FromStr;
         Self {
-            tmp_dir: std::env::var("TMP_DIR")
-                .map(|p| PathBuf::from_str(&p).expect("invalid TMP_DIR"))
-                .unwrap_or_else(|_| std::env::current_dir().expect("no current dir").join("tmp"))
-                .into(),
+            tmp_dir: Some(
+                std::env::var("TMP_DIR")
+                    .map(|p| PathBuf::from_str(&p).expect("invalid TMP_DIR"))
+                    .unwrap_or_else(|_| {
+                        std::env::current_dir().expect("no current dir").join("tmp")
+                    })
+                    .into(),
+            ),
+            snapshot_seed: false,
+        }
+    }
+
+    pub fn for_snapshot() -> Self {
+        Self {
+            tmp_dir: None,
+            snapshot_seed: true,
         }
     }
 
     pub fn inject(self, state: &mut deno_core::OpState) {
+        if self.snapshot_seed {
+            return;
+        };
         #[cfg(test)]
         state.put(ext::tests::TestCtx { val: 10 });
         state.put(runtimes::temporal::Ctx::default());
         state.put(runtimes::python::python_bindings::Ctx::default());
-        state.put(runtimes::prisma::Ctx::new(self.tmp_dir));
+        state.put(runtimes::prisma::Ctx::new(self.tmp_dir.unwrap()));
     }
 }
 
@@ -102,6 +121,7 @@ pub fn runtime() -> tokio::runtime::Runtime {
 pub async fn launch_typegate_deno(
     main_mod: deno_core::ModuleSpecifier,
     import_map_url: Option<String>,
+    snapshot: Option<&'static [u8]>,
 ) -> Result<()> {
     std::env::var("REDIS_URL")
         .ok()
@@ -130,11 +150,19 @@ pub async fn launch_typegate_deno(
         allow_net: Some(vec![]),
         ..Default::default()
     };
+
+    #[cfg(feature = "__runtime_js_sources")]
+    let _ = snapshot;
+    #[cfg(not(feature = "__runtime_js_sources"))]
+    let snapshot = snapshot.unwrap();
+
     mt_deno::run(
         main_mod,
         import_map_url,
         permissions,
         Arc::new(|| ext::extensions(OpDepInjector::from_env())),
+        #[cfg(not(feature = "__runtime_js_sources"))]
+        Arc::new(|| Some(deno_core::Snapshot::Static(snapshot))),
     )
     .await
 }

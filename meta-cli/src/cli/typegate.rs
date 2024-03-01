@@ -40,6 +40,9 @@ pub fn command(_cmd: Typegate, _gen_args: GenArgs) -> Result<()> {
         let import_map_url = cmd.import_map_url.unwrap_or_else(|| {
             BASE_URL.to_owned() + crate::build::COMMIT_HASH + "/typegate/import_map.json"
         });
+
+        static SNAPSHOT: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/SNAPSHOT.bin"));
+
         runtime.block_on(typegate_engine::launch_typegate_deno(
             // typegate_core::resolve_url_or_path(
             //     "",
@@ -47,6 +50,7 @@ pub fn command(_cmd: Typegate, _gen_args: GenArgs) -> Result<()> {
             // )?,
             typegate_engine::resolve_url(&main_url)?,
             Some(import_map_url),
+            Some(SNAPSHOT),
         ))?;
         Ok(())
     }

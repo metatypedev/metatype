@@ -40,12 +40,20 @@ pub fn run_sync(
     import_map_url: Option<String>,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
+    #[cfg(not(feature = "__runtime_js_sources"))] custom_snapshot: Arc<worker::CustomSnapshotCb>,
 ) {
     create_and_run_current_thread_with_maybe_metrics(async move {
         spawn_subcommand(async move {
-            run(main_mod, import_map_url, permissions, custom_extensions)
-                .await
-                .unwrap()
+            run(
+                main_mod,
+                import_map_url,
+                permissions,
+                custom_extensions,
+                #[cfg(not(feature = "__runtime_js_sources"))]
+                custom_snapshot,
+            )
+            .await
+            .unwrap()
         })
         .await
         .unwrap()
@@ -57,6 +65,7 @@ pub async fn run(
     import_map_url: Option<String>,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
+    #[cfg(not(feature = "__runtime_js_sources"))] custom_snapshot: Arc<worker::CustomSnapshotCb>,
 ) -> anyhow::Result<()> {
     deno_runtime::permissions::set_prompt_callbacks(
         Box::new(util::draw_thread::DrawThread::hide),
@@ -82,6 +91,9 @@ pub async fn run(
         .await?
         .with_custom_ext_cb(custom_extensions);
 
+    #[cfg(not(feature = "__runtime_js_sources"))]
+    let cli_factory = cli_factory.with_custom_snapshot_cb(custom_snapshot);
+
     let worker_factory = cli_factory.create_cli_main_worker_factory().await?;
     let permissions = deno_runtime::permissions::PermissionsContainer::new(
         deno_runtime::permissions::Permissions::from_options(&permissions)?,
@@ -101,6 +113,7 @@ pub fn test_sync(
     permissions: PermissionsOptions,
     coverage_dir: Option<String>,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
+    #[cfg(not(feature = "__runtime_js_sources"))] custom_snapshot: Arc<worker::CustomSnapshotCb>,
     argv: Vec<String>,
 ) {
     new_thread_builder()
@@ -113,6 +126,8 @@ pub fn test_sync(
                         permissions,
                         coverage_dir,
                         custom_extensions,
+                        #[cfg(not(feature = "__runtime_js_sources"))]
+                        custom_snapshot,
                         argv,
                     )
                     .await
@@ -133,6 +148,7 @@ pub async fn test(
     permissions: PermissionsOptions,
     coverage_dir: Option<String>,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
+    #[cfg(not(feature = "__runtime_js_sources"))] custom_snapshot: Arc<worker::CustomSnapshotCb>,
     argv: Vec<String>,
 ) -> anyhow::Result<()> {
     use deno::tools::test::*;
@@ -188,6 +204,9 @@ pub async fn test(
     let cli_factory = factory::CliFactory::from_flags(flags)
         .await?
         .with_custom_ext_cb(custom_extensions);
+
+    #[cfg(not(feature = "__runtime_js_sources"))]
+    let cli_factory = cli_factory.with_custom_snapshot_cb(custom_snapshot);
 
     let options = cli_factory.cli_options().clone();
 
@@ -273,15 +292,24 @@ pub fn bench_sync(
     config_file: PathBuf,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
+    #[cfg(not(feature = "__runtime_js_sources"))] custom_snapshot: Arc<worker::CustomSnapshotCb>,
     argv: Vec<String>,
 ) {
     new_thread_builder()
         .spawn(|| {
             create_and_run_current_thread_with_maybe_metrics(async move {
                 spawn_subcommand(async move {
-                    bench(files, config_file, permissions, custom_extensions, argv)
-                        .await
-                        .unwrap()
+                    bench(
+                        files,
+                        config_file,
+                        permissions,
+                        custom_extensions,
+                        #[cfg(not(feature = "__runtime_js_sources"))]
+                        custom_snapshot,
+                        argv,
+                    )
+                    .await
+                    .unwrap()
                 })
                 .await
                 .unwrap()
@@ -297,6 +325,7 @@ pub async fn bench(
     config_file: PathBuf,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
+    #[cfg(not(feature = "__runtime_js_sources"))] custom_snapshot: Arc<worker::CustomSnapshotCb>,
     argv: Vec<String>,
 ) -> anyhow::Result<()> {
     use deno::tools::bench::*;
@@ -331,6 +360,10 @@ pub async fn bench(
     let cli_factory = factory::CliFactory::from_flags(flags)
         .await?
         .with_custom_ext_cb(custom_extensions);
+
+    #[cfg(not(feature = "__runtime_js_sources"))]
+    let cli_factory = cli_factory.with_custom_snapshot_cb(custom_snapshot);
+
     let options = cli_factory.cli_options();
 
     // Various bench files should not share the same permissions in terms of

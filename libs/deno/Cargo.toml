@@ -3,6 +3,9 @@ name = "mt_deno"
 edition.workspace = true
 version.workspace = true
 
+[features]
+__runtime_js_sources = ["deno/__runtime_js_sources"]
+
 [dependencies]
 deno.workspace = true
 log = "0.4.20"

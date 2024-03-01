@@ -3,6 +3,10 @@ name = "typegate_engine"
 edition.workspace = true
 version.workspace = true
 
+[features]
+default = []
+__runtime_js_sources = ["mt_deno/__runtime_js_sources"]
+
 [dependencies]
 anyhow = "1.0"
 thiserror = "1.0.50"
@@ -45,3 +49,5 @@ env_logger.workspace = true
 
 [build-dependencies]
 shadow-rs.workspace = true
+# we only need deno_runtime but this way, we avoid
+# the version match upkeep
