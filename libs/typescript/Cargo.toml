@@ -4,7 +4,7 @@ version = "0.3.5-0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.75"
+anyhow = "1.0.80"
 lazy_static = "1.4.0"
 dprint-plugin-typescript = "0.88.8"
 swc_common = { workspace = true, features = ["tty-emitter"] }

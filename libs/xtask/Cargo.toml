@@ -4,12 +4,12 @@ version = "0.3.5-0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.75"
+anyhow = "1.0.80"
 clap = { workspace = true, features = ["derive"] }
 common = { path = "../common", features = ["codegen"] }
 typescript = { path = "../typescript" }
 schemars = { version = "0.8.16", features = ["indexmap2"] }
-serde_json = "1.0.108"
+serde_json = "1.0.114"
 project-root = "0.2.2"
 mt_deno.workspace = true
 typegate_engine.workspace = true

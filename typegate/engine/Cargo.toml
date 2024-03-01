@@ -22,11 +22,11 @@ request-handlers = { git = "https://github.com/prisma/prisma-engines", tag = "5.
 prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
 datamodel-renderer = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
 user-facing-errors = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
+query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.10.2" }
 schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
 psl = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
 schema-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-tempfile = "3.8.1"
+tempfile = "3.10.1"
 tap = "1.0.1"
 convert_case = "0.6.0"
 connection-string = "0.2.0"
