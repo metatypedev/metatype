@@ -497,7 +497,11 @@ mod tests {
                 .auto_stop()
                 .start();
             loader.do_send(LoadModule(
-                test_folder.join(&typegraph_test).as_path().into(),
+                test_folder
+                    .join(&typegraph_test)
+                    .as_path()
+                    .to_owned()
+                    .into(),
             ));
 
             let mut event_rx = event_rx;

@@ -14,7 +14,7 @@ use crate::deploy::actors::discovery::DiscoveryActor;
 use crate::deploy::actors::loader::{
     self, LoaderActor, LoaderEvent, ReloadModule, ReloadReason, StopBehavior,
 };
-use crate::deploy::actors::pusher::Push;
+use crate::deploy::actors::pusher::PushResult;
 use crate::deploy::actors::watcher::WatcherActor;
 use actix::prelude::*;
 use anyhow::{bail, Context, Result};
@@ -188,11 +188,7 @@ impl Action for DeploySubcommand {
 
 mod default_mode {
     //! non-watch mode
-
-    use crate::deploy::actors::{
-        loader::LoadModule,
-        push_manager::{PushManager, PushManagerActor, PushManagerBuilder},
-    };
+    use default_mode::actors::loader::LoadModule;
 
     use super::*;
 
@@ -201,7 +197,6 @@ mod default_mode {
         console: Addr<ConsoleActor>,
         loader: Addr<LoaderActor>,
         loader_event_rx: mpsc::UnboundedReceiver<LoaderEvent>,
-        pusher: Addr<PushManagerActor>,
     }
 
     impl DefaultMode {
@@ -223,21 +218,18 @@ mod default_mode {
             .auto_stop()
             .start();
 
-            let pusher = PushManagerBuilder::new(console.clone()).start();
-
             Ok(Self {
                 deploy,
                 console,
                 loader,
                 loader_event_rx,
-                pusher,
             })
         }
 
         pub async fn run(self) -> Result<()> {
             log::debug!("file: {:?}", self.deploy.file);
             let _discovery = if let Some(file) = self.deploy.file.clone() {
-                self.loader.do_send(LoadModule(file));
+                self.loader.do_send(LoadModule(file.to_path_buf().into()));
                 None
             } else {
                 Some(
@@ -252,36 +244,32 @@ mod default_mode {
             };
 
             let loader = self.loader.clone();
-            let pusher = self.pusher.clone();
             self.push_loaded_typegraphs();
 
-            let ret = match loader::stopped(loader).await {
+            match loader::stopped(loader).await {
                 Ok(StopBehavior::Restart) => unreachable!("LoaderActor should not restart"),
                 Ok(StopBehavior::ExitSuccess) => Ok(()),
                 Ok(StopBehavior::ExitFailure(msg)) => bail!("{msg}"),
                 Err(e) => panic!("Loader actor stopped unexpectedly: {e:?}"),
-            };
-
-            log::debug!("loader stopped, stopping pusher");
-            let result = pusher.stop().await;
-            if let Err(e) = result {
-                System::current().stop_with_code(1);
-                return Err(e);
             }
-            ret
         }
 
         fn push_loaded_typegraphs(self) {
-            let pusher = self.pusher.clone();
             let mut event_rx = self.loader_event_rx;
-
             Arbiter::current().spawn(async move {
                 while let Some(event) = event_rx.recv().await {
                     match event {
-                        LoaderEvent::Typegraph(tg) => {
-                            // TODO await -- no queue
-                            pusher.do_send(Push::new(tg.into()));
-                        }
+                        LoaderEvent::Typegraph(tg) => match tg.get_response_or_fail() {
+                            Ok(res) => {
+                                let push =
+                                    PushResult::new(self.console.clone(), res.as_ref().clone())
+                                        .unwrap();
+                                if let Err(e) = push.finalize() {
+                                    panic!("{}", e.to_string());
+                                }
+                            }
+                            Err(e) => panic!("{}", e.to_string()),
+                        },
                         LoaderEvent::Stopped(b) => {
                             if let StopBehavior::ExitFailure(msg) = b {
                                 panic!("{msg}");
@@ -299,7 +287,7 @@ mod default_mode {
 mod watch_mode {
     use std::time::Duration;
 
-    use crate::deploy::actors::push_manager::{PushManager, PushManagerActor, PushManagerBuilder};
+    use watch_mode::actors::loader::LoadModule;
 
     use super::*;
 
@@ -352,33 +340,25 @@ mod watch_mode {
             )?
             .start();
 
-            let pusher = PushManagerBuilder::new(console.clone())
-                .linear_backoff(Duration::from_secs(5), 3)
-                .start();
-
             let actor_system = ActorSystem {
                 console: console.clone(),
                 watcher,
                 loader: loader.clone(),
-                pusher: pusher.clone(),
             };
 
-            actor_system.push_loaded_typegraphs(loader_event_rx);
+            actor_system.handle_loaded_typegraphs(loader_event_rx);
             actor_system.handle_watch_events(watch_event_rx);
             actor_system.update_ctrlc_handler(ctrlc_handler_data.clone());
 
             // TODO wait for push lifecycle
             match loader::stopped(loader).await {
                 Ok(StopBehavior::ExitSuccess) => {
-                    pusher.stop().await?;
                     break;
                 }
                 Ok(StopBehavior::Restart) => {
-                    pusher.stop().await?;
                     continue;
                 }
                 Ok(StopBehavior::ExitFailure(_)) => {
-                    pusher.stop().await?;
                     break;
                 }
                 Err(e) => {
@@ -394,19 +374,41 @@ mod watch_mode {
         console: Addr<ConsoleActor>,
         watcher: Addr<WatcherActor>,
         loader: Addr<LoaderActor>,
-        pusher: Addr<PushManagerActor>,
     }
 
     impl ActorSystem {
-        fn push_loaded_typegraphs(&self, event_rx: mpsc::UnboundedReceiver<LoaderEvent>) {
-            let pusher = self.pusher.clone();
+        fn handle_loaded_typegraphs(&self, event_rx: mpsc::UnboundedReceiver<LoaderEvent>) {
+            let console = self.console.clone();
+            let loader = self.loader.clone();
             Arbiter::current().spawn(async move {
                 let mut event_rx = event_rx;
                 while let Some(event) = event_rx.recv().await {
                     match event {
                         LoaderEvent::Typegraph(tg) => {
-                            pusher.do_send(Push::new(tg.into()));
-                            // TODO update deps
+                            let response = ServerStore::get_response_or_fail(&tg.path)
+                                .unwrap()
+                                .as_ref()
+                                .to_owned();
+                            match PushResult::new(console.clone(), response) {
+                                Ok(push) => {
+                                    if let Err(e) = push.finalize() {
+                                        panic!("{}", e.to_string());
+                                    }
+                                }
+                                Err(_) => {
+                                    // very basic retry
+                                    // TODO: implement something similar to the old 3 retries
+                                    let wait_ms = 3000;
+                                    console.warning(format!(
+                                        "Retrying {:?} after {}",
+                                        tg.path.display(),
+                                        wait_ms,
+                                    ));
+                                    tokio::time::sleep(Duration::from_millis(wait_ms)).await;
+
+                                    loader.do_send(LoadModule(Arc::new(tg.path)));
+                                }
+                            }
                         }
                         LoaderEvent::Stopped(b) => {
                             if let StopBehavior::ExitFailure(msg) = b {
@@ -427,7 +429,6 @@ mod watch_mode {
             let console = self.console.clone();
             let watcher = self.watcher.clone();
             let loader = self.loader.clone();
-            let pusher = self.pusher.clone();
             Arbiter::current().spawn(async move {
                 let mut watch_event_rx = watch_event_rx;
                 while let Some(event) = watch_event_rx.recv().await {
@@ -441,15 +442,12 @@ mod watch_mode {
                             watcher.do_send(actors::watcher::Stop);
                         }
                         E::TypegraphModuleChanged { typegraph_module } => {
-                            pusher.cancel_all_from(&typegraph_module).await.unwrap();
                             loader.do_send(ReloadModule(
                                 typegraph_module.into(),
                                 ReloadReason::FileChanged,
                             ));
                         }
                         E::TypegraphModuleDeleted { typegraph_module } => {
-                            // TODO registry
-                            pusher.cancel_all_from(&typegraph_module).await.unwrap();
                             // TODO internally by the watcher??
                             watcher.do_send(actors::watcher::RemoveTypegraph(
                                 typegraph_module.clone(),
@@ -460,7 +458,6 @@ mod watch_mode {
                             typegraph_module,
                             dependency_path,
                         } => {
-                            pusher.cancel_all_from(&typegraph_module).await.unwrap();
                             loader.do_send(ReloadModule(
                                 typegraph_module.into(),
                                 ReloadReason::DependencyChanged(dependency_path),

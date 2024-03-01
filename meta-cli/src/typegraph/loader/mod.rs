@@ -23,7 +23,7 @@ use colored::Colorize;
 
 use crate::{
     com::{responses::SDKResponse, store::ServerStore},
-    config::{Config, ModuleType},
+    config::ModuleType,
     utils::ensure_venv,
 };
 
@@ -55,35 +55,35 @@ impl TypegraphInfos {
 pub type LoaderResult = Result<TypegraphInfos, LoaderError>;
 
 pub struct LoaderPool {
-    config: Arc<Config>,
+    base_dir: PathBuf,
     semaphore: Semaphore,
 }
 
 pub struct Loader<'a> {
-    config: Arc<Config>,
+    base_dir: PathBuf,
     #[allow(dead_code)]
     permit: SemaphorePermit<'a>,
 }
 
 impl LoaderPool {
-    pub fn new(config: Arc<Config>, max_parallel_loads: usize) -> Self {
+    pub fn new(base_dir: PathBuf, max_parallel_loads: usize) -> Self {
         Self {
-            config,
+            base_dir,
             semaphore: Semaphore::new(max_parallel_loads),
         }
     }
 
     pub async fn get_loader(&self) -> Result<Loader<'_>> {
         Ok(Loader {
-            config: self.config.clone(),
+            base_dir: self.base_dir.clone(),
             permit: self.semaphore.acquire().await?,
         })
     }
 }
 
 impl<'a> Loader<'a> {
-    pub async fn load_module(&self, path: Arc<Path>) -> LoaderResult {
-        match tokio::fs::try_exists(&path).await {
+    pub async fn load_module(&self, path: Arc<PathBuf>) -> LoaderResult {
+        match tokio::fs::try_exists(path.as_ref()).await {
             Ok(exists) => {
                 if !exists {
                     return Err(LoaderError::ModuleFileNotFound { path });
@@ -97,16 +97,16 @@ impl<'a> Loader<'a> {
             }
         }
         let command = Self::get_load_command(
-            ModuleType::try_from(&*path).unwrap(),
+            ModuleType::try_from(path.as_path()).unwrap(),
             &path,
-            &self.config.base_dir,
+            &self.base_dir,
         )
         .await?;
         self.load_command(command, &path).await
     }
 
     async fn load_command(&self, mut command: Command, path: &Path) -> LoaderResult {
-        let path: Arc<Path> = path.into();
+        let path: Arc<PathBuf> = path.to_path_buf().into();
         eprintln!("File {} executed", path.clone().display());
         let p = command
             .borrow_mut()
@@ -133,7 +133,7 @@ impl<'a> Loader<'a> {
             }
             Ok(TypegraphInfos {
                 path: path.as_ref().to_owned(),
-                base_path: self.config.base_dir.clone(),
+                base_path: self.base_dir.clone(),
             })
         } else {
             Err(LoaderError::LoaderProcess {
@@ -194,7 +194,7 @@ impl<'a> Loader<'a> {
                 match detect_deno_loader_cmd(path)
                     .await
                     .map_err(|error| LoaderError::Unknown {
-                        path: path.into(),
+                        path: path.to_path_buf().into(),
                         error,
                     })? {
                     TsLoaderRt::Deno => {
@@ -317,28 +317,28 @@ async fn detect_deno_loader_cmd(tg_path: &Path) -> Result<TsLoaderRt> {
 #[derive(Debug)]
 pub enum LoaderError {
     PostProcessingError {
-        path: Arc<Path>,
+        path: Arc<PathBuf>,
         typegraph_name: String,
         error: Error,
     },
     SerdeJson {
-        path: Arc<Path>,
+        path: Arc<PathBuf>,
         content: String,
         error: serde_json::Error,
     },
     LoaderProcess {
-        path: Arc<Path>,
+        path: Arc<PathBuf>,
         error: Error,
     },
     ModuleFileNotFound {
-        path: Arc<Path>,
+        path: Arc<PathBuf>,
     },
     Unknown {
-        path: Arc<Path>,
+        path: Arc<PathBuf>,
         error: Error,
     },
     PythonVenvNotFound {
-        path: Arc<Path>,
+        path: Arc<PathBuf>,
         error: Error,
     },
 }

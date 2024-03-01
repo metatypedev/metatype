@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 
@@ -92,10 +92,10 @@ impl LoaderActor {
 
 impl LoaderActor {
     fn loader_pool(config: Arc<Config>, max_parallel_loads: usize) -> LoaderPool {
-        LoaderPool::new(config, max_parallel_loads)
+        LoaderPool::new(config.base_dir.clone(), max_parallel_loads)
     }
 
-    fn load_module(&self, self_addr: Addr<Self>, path: Arc<Path>) {
+    fn load_module(&self, self_addr: Addr<Self>, path: Arc<PathBuf>) {
         let loader_pool = self.loader_pool.clone();
         let console = self.console.clone();
         let counter = self.counter.clone();
@@ -103,7 +103,9 @@ impl LoaderActor {
             // TODO error handling?
             let loader = loader_pool.get_loader().await.unwrap();
             match loader.load_module(path.clone()).await {
-                Ok(tgs_infos) => self_addr.do_send(LoadedModule(path, tgs_infos)),
+                Ok(tgs_infos) => {
+                    self_addr.do_send(LoadedModule(path.as_ref().to_owned().into(), tgs_infos))
+                }
                 Err(e) => {
                     if counter.is_some() {
                         // auto stop
@@ -125,11 +127,11 @@ pub enum ReloadReason {
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct LoadModule(pub Arc<Path>);
+pub struct LoadModule(pub Arc<PathBuf>);
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct ReloadModule(pub Arc<Path>, pub ReloadReason);
+pub struct ReloadModule(pub Arc<PathBuf>, pub ReloadReason);
 
 #[derive(Message)]
 #[rtype(result = "()")]
@@ -141,7 +143,7 @@ struct SetStoppedTx(oneshot::Sender<StopBehavior>);
 
 #[derive(Message)]
 #[rtype(result = "()")]
-struct LoadedModule(pub Arc<Path>, TypegraphInfos);
+struct LoadedModule(pub Arc<PathBuf>, TypegraphInfos);
 
 impl Actor for LoaderActor {
     type Context = Context<Self>;
