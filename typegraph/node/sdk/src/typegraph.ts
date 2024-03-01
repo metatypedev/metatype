@@ -31,23 +31,23 @@ interface TypegraphArgs {
 }
 
 export class ApplyFromArg {
-  constructor(public name: string | null) { }
+  constructor(public name: string | null) {}
 }
 
 export class ApplyFromStatic {
-  constructor(public value: any) { }
+  constructor(public value: any) {}
 }
 
 export class ApplyFromSecret {
-  constructor(public key: string) { }
+  constructor(public key: string) {}
 }
 
 export class ApplyFromContext {
-  constructor(public key: string) { }
+  constructor(public key: string) {}
 }
 
 export class ApplyFromParent {
-  constructor(public typeName: string) { }
+  constructor(public typeName: string) {}
 }
 
 const InjectionSource = {
@@ -108,7 +108,7 @@ export class InheritDef {
 export type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
 
 export class RawAuth {
-  constructor(readonly jsonStr: string) { }
+  constructor(readonly jsonStr: string) {}
 }
 
 export interface TypegraphOutput {
@@ -204,33 +204,33 @@ export function typegraph(
     ref: (name: string) => {
       return genRef(name);
     },
-    configureRandomInjection: (params: { seed: number }) => {   
-    return core.setSeed(params.seed);
-  },
+    configureRandomInjection: (params: { seed: number }) => {
+      return core.setSeed(params.seed);
+    },
     ...InjectionSource,
   };
 
-builder(g);
+  builder(g);
 
-let serialize = () => "";
-if (!disableAutoSerialization) {
-  const tgJson = core.finalizeTypegraph({ tag: "simple" });
-  console.log(tgJson);
-  serialize = () => tgJson;
-} else {
-  // config is known at deploy time
-  serialize = (config?: ArtifactResolutionConfig) => {
-    const tgJson = core.finalizeTypegraph({
-      tag: "resolve-artifacts",
-      val: config,
-    });
-    return tgJson;
+  let serialize = () => "";
+  if (!disableAutoSerialization) {
+    const tgJson = core.finalizeTypegraph({ tag: "simple" });
+    console.log(tgJson);
+    serialize = () => tgJson;
+  } else {
+    // config is known at deploy time
+    serialize = (config?: ArtifactResolutionConfig) => {
+      const tgJson = core.finalizeTypegraph({
+        tag: "resolve-artifacts",
+        val: config,
+      });
+      return tgJson;
+    };
+  }
+  return {
+    serialize,
+    name,
   };
-}
-return {
-  serialize,
-  name,
-};
 }
 
 export function genRef(name: string) {

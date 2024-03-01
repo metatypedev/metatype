@@ -50,11 +50,11 @@ repos:
       - id: deno-fmt
         name: Deno format
         language: system
-        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs && cd ../dev && deno fmt'
+        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs && cd ../dev && deno fmt && cd ../typegraph/node && deno fmt --ignore=node_modules,dist'
         pass_filenames: false
         types:
           - ts
-        files: ^(typegate|dev)/
+        files: ^(typegate|dev|typegraph/node)/
       - id: deno-lint
         name: Deno lint
         language: system
