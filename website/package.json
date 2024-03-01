@@ -23,7 +23,7 @@
     "@giscus/react": "^3.0.0",
     "@graphiql/react": "^0.20.3",
     "@graphiql/toolkit": "^0.9.1",
-    "@mdx-js/react": "^3.0.0",
+    "@mdx-js/react": "^3.0.1",
     "@react-spring/konva": "^9.7.3",
     "@react-spring/shared": "^9.7.3",
     "@tailwindcss/container-queries": "^0.1.1",
