@@ -113,7 +113,7 @@ pub mod tests {
             ..Default::default()
         })
         .await?
-        .with_custom_ext_cb(Arc::new(|| extensions(OpDepInjector::from_env())));
+        .with_custom_ext_cb(Arc::new(|| extensions_snapshot(OpDepInjector::from_env())));
         let worker_factory = deno_factory.create_cli_main_worker_factory().await?;
         let main_module = "data:application/javascript;Meta.get_version()".parse()?;
         let permissions = PermissionsContainer::allow_all();
