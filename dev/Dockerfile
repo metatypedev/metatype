@@ -18,8 +18,7 @@ COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
 #
-# provides ARM binaries: https://github.com/LukeChannings/deno-arm64
-FROM lukechannings/deno:v${DENO_VERSION} AS deno-bin
+FROM denoland/deno:v${DENO_VERSION} AS deno-bin
 
 #
 FROM base AS builder
