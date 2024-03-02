@@ -31,23 +31,23 @@ interface TypegraphArgs {
 }
 
 export class ApplyFromArg {
-  constructor(public name: string | null) { }
+  constructor(public name: string | null) {}
 }
 
 export class ApplyFromStatic {
-  constructor(public value: any) { }
+  constructor(public value: any) {}
 }
 
 export class ApplyFromSecret {
-  constructor(public key: string) { }
+  constructor(public key: string) {}
 }
 
 export class ApplyFromContext {
-  constructor(public key: string) { }
+  constructor(public key: string) {}
 }
 
 export class ApplyFromParent {
-  constructor(public typeName: string) { }
+  constructor(public typeName: string) {}
 }
 
 const InjectionSource = {
@@ -61,12 +61,15 @@ const InjectionSource = {
 type InjectionSourceType = typeof InjectionSource;
 
 export interface TypegraphBuilderArgs extends InjectionSourceType {
-  expose: (exports: Exports, defaultPolicy?: Policy) => void;
+  expose: (
+    exports: Exports,
+    defaultPolicy?: t.PolicySpec | Array<t.PolicySpec>,
+  ) => void;
   inherit: () => InheritDef;
   rest: (graphql: string) => number;
   auth: (value: Auth | RawAuth) => number;
   ref: (name: string) => t.Typedef;
-  configureRandomInjection: (params: {seed: number}) => void;
+  configureRandomInjection: (params: { seed: number }) => void;
 }
 
 export class InheritDef {
@@ -105,7 +108,7 @@ export class InheritDef {
 export type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
 
 export class RawAuth {
-  constructor(readonly jsonStr: string) { }
+  constructor(readonly jsonStr: string) {}
 }
 
 export interface TypegraphOutput {
@@ -201,7 +204,7 @@ export function typegraph(
     ref: (name: string) => {
       return genRef(name);
     },
-    configureRandomInjection: (params: {seed: number}) => {
+    configureRandomInjection: (params: { seed: number }) => {
       return core.setSeed(params.seed);
     },
     ...InjectionSource,

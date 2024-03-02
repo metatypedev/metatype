@@ -3,6 +3,7 @@
 
 import { core, wit_utils } from "./wit.js";
 import {
+  ParameterTransform,
   PolicyPerEffect,
   PolicySpec as WitPolicySpec,
   TypeBase,
@@ -14,7 +15,6 @@ import {
   TypeOptional,
   TypeString,
   TypeUnion,
-  ParameterTransform,
 } from "./gen/interfaces/metatype-typegraph-core.js";
 import { Reduce } from "./gen/interfaces/metatype-typegraph-utils.js";
 import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.js";
@@ -28,7 +28,14 @@ import {
   serializeStaticInjection,
 } from "./utils/injection_utils.js";
 import { InjectionValue } from "./utils/type_utils.js";
-import { ApplyFromArg, ApplyFromContext, ApplyFromParent, ApplyFromSecret, ApplyFromStatic, InheritDef } from "./typegraph.js";
+import {
+  ApplyFromArg,
+  ApplyFromContext,
+  ApplyFromParent,
+  ApplyFromSecret,
+  ApplyFromStatic,
+  InheritDef,
+} from "./typegraph.js";
 
 export type PolicySpec = Policy | PolicyPerEffectObject | {
   none: Policy;
@@ -534,10 +541,20 @@ type ApplyParamObjectNode = {
   [key: string]: ApplyParamNode;
 };
 type ApplyParamArrayNode = Array<ApplyParamNode>;
-type ApplyParamLeafNode = ApplyFromArg | ApplyFromStatic | ApplyFromContext | ApplyFromSecret | ApplyFromParent;
-type ApplyParamNode = ApplyParamObjectNode | ApplyParamArrayNode | ApplyParamLeafNode;
+type ApplyParamLeafNode =
+  | ApplyFromArg
+  | ApplyFromStatic
+  | ApplyFromContext
+  | ApplyFromSecret
+  | ApplyFromParent;
+type ApplyParamNode =
+  | ApplyParamObjectNode
+  | ApplyParamArrayNode
+  | ApplyParamLeafNode;
 
-function serializeApplyParamNode(node: ApplyParamNode): Record<string, unknown> {
+function serializeApplyParamNode(
+  node: ApplyParamNode,
+): Record<string, unknown> {
   if (node instanceof ApplyFromArg) {
     return { source: "arg", name: node.name };
   } else if (node instanceof ApplyFromStatic) {
@@ -573,7 +590,14 @@ export class Func<
   parameterTransform: ParameterTransform | null;
   config: FuncConfig | null;
 
-  constructor(_id: number, inp: I, out: O, mat: M, parameterTransform: ParameterTransform | null = null, config: FuncConfig | null = null) {
+  constructor(
+    _id: number,
+    inp: I,
+    out: O,
+    mat: M,
+    parameterTransform: ParameterTransform | null = null,
+    config: FuncConfig | null = null,
+  ) {
     super(_id, {});
     this.inp = inp;
     this.out = out;
@@ -585,7 +609,9 @@ export class Func<
   extend(fields: Record<string, Typedef>): Func<I, Typedef, M> {
     const output = core.extendStruct(
       this.out._id,
-      Object.entries(fields).map(([name, typ]) => [name, typ._id] as [string, number])
+      Object.entries(fields).map(([name, typ]) =>
+        [name, typ._id] as [string, number]
+      ),
     );
 
     return func(
@@ -616,7 +642,10 @@ export class Func<
 
   apply(value: ApplyParamObjectNode): Func<Typedef, O, M> {
     const serialized = serializeApplyParamNode(value);
-    if (typeof serialized !== "object" || serialized == null || serialized.type !== "object") {
+    if (
+      typeof serialized !== "object" || serialized == null ||
+      serialized.type !== "object"
+    ) {
       throw new Error("Invalid apply value: root must be an object");
     }
     const transformTree = JSON.stringify(serialized.fields);
@@ -628,7 +657,7 @@ export class Func<
       this.mat,
       transformData.parameterTransform,
       this.config,
-    )
+    );
   }
 
   rate(
