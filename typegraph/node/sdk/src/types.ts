@@ -3,6 +3,7 @@
 
 import { core, wit_utils } from "./wit.js";
 import {
+  ParameterTransform,
   PolicyPerEffect,
   PolicySpec as WitPolicySpec,
   TypeBase,
@@ -14,7 +15,6 @@ import {
   TypeOptional,
   TypeString,
   TypeUnion,
-  ParameterTransform,
 } from "./gen/interfaces/metatype-typegraph-core.js";
 import { Reduce } from "./gen/interfaces/metatype-typegraph-utils.js";
 import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.js";
@@ -28,7 +28,16 @@ import {
   serializeStaticInjection,
 } from "./utils/injection_utils.js";
 import { InjectionValue } from "./utils/type_utils.js";
-import { ApplyFromArg, ApplyFromContext, ApplyFromParent, ApplyFromSecret, ApplyFromStatic, InheritDef } from "./typegraph.js";
+import {
+  ApplyFromArg,
+  ApplyFromContext,
+  ApplyFromParent,
+  ApplyFromSecret,
+  ApplyFromStatic,
+  InheritDef,
+} from "./typegraph.js";
+import { z } from "zod";
+import { jsonSchemaToZod } from "json-schema-to-zod";
 
 export type PolicySpec = Policy | PolicyPerEffectObject | {
   none: Policy;
@@ -70,7 +79,7 @@ export function getPolicyChain(
   });
 }
 
-export class Typedef {
+export class Typedef<Inner extends z.ZodType = z.ZodAny> {
   readonly name?: string;
   readonly runtimeConfig?: Array<[string, string]>;
   policy: Policy[] | null = null;
@@ -179,11 +188,37 @@ export class Typedef {
       serializeGenericInjection("random", null),
     );
   }
+
+  generateZodSchema(): z.ZodType {
+    return z.any();
+  }
+
+  generateCustomJsonType(): any {
+    return { type: "any" };
+  }
 }
 
-class Boolean extends Typedef {
+export type StructTypeBuilder<Type extends Struct<P>, P extends { [key: string]: Typedef }> = {
+  [Property in keyof P]: Property extends Typedef<infer Inner> ? Inner : never;
+}
+
+export type StructTypeBuilder2<S extends Struct<any>> = {
+  [Property in keyof S['props']]: S['props'][Property] extends Typedef<infer Inner> ? Inner : never;
+};
+
+export type inferType<T> = T extends Typedef<infer Inner> ? z.infer<Inner> : T;
+
+class Boolean extends Typedef<z.ZodBoolean> {
   constructor(_id: number, base: TypeBase) {
     super(_id, base);
+  }
+
+  generateZodSchema(): z.ZodType<any, z.ZodTypeDef, any> {
+    return z.boolean();
+  }
+
+  generateCustomJsonType() {
+    return { type: "boolean" };
   }
 }
 
@@ -196,14 +231,13 @@ export function boolean(base: SimplifiedBase<TypeBase> = {}) {
   return new Boolean(core.booleanb(completeBase), completeBase);
 }
 
-class Integer extends Typedef implements Readonly<TypeInteger> {
+class Integer extends Typedef<z.ZodNumber> implements Readonly<TypeInteger> {
   readonly min?: number;
   readonly max?: number;
   readonly exclusiveMinimum?: number;
   readonly exclusiveMaximum?: number;
   readonly multipleOf?: number;
   readonly enumeration?: Int32Array;
-  readonly zodType = "number";
 
   constructor(_id: number, data: TypeInteger, base: TypeBase) {
     super(_id, base);
@@ -213,6 +247,14 @@ class Integer extends Typedef implements Readonly<TypeInteger> {
     this.exclusiveMaximum = data.exclusiveMaximum;
     this.multipleOf = data.multipleOf;
     this.enumeration = data.enumeration;
+  }
+
+  generateZodSchema(): z.ZodType<any, z.ZodTypeDef, any> {
+    return z.number();
+  }
+
+  generateCustomJsonType() {
+    return { type: "integer" };
   }
 }
 
@@ -238,14 +280,13 @@ export function integer(
   );
 }
 
-class Float extends Typedef implements Readonly<TypeFloat> {
+class Float extends Typedef<z.ZodNumber> implements Readonly<TypeFloat> {
   readonly min?: number;
   readonly max?: number;
   readonly exclusiveMinimum?: number;
   readonly exclusiveMaximum?: number;
   readonly multipleOf?: number;
   readonly enumeration?: Float64Array;
-  readonly zodType = "number";
 
   constructor(_id: number, data: TypeFloat, base: TypeBase) {
     super(_id, base);
@@ -255,6 +296,14 @@ class Float extends Typedef implements Readonly<TypeFloat> {
     this.exclusiveMaximum = data.exclusiveMaximum;
     this.multipleOf = data.multipleOf;
     this.enumeration = data.enumeration;
+  }
+
+  generateZodSchema(): z.ZodType<any, z.ZodTypeDef, any> {
+    return z.number();
+  }
+
+  generateCustomJsonType() {
+    return { type: "number" };
   }
 }
 
@@ -280,13 +329,12 @@ export function float(
   );
 }
 
-class StringT extends Typedef implements Readonly<TypeString> {
+class StringT extends Typedef<z.ZodString> implements Readonly<TypeString> {
   readonly min?: number;
   readonly max?: number;
   readonly format?: string;
   readonly pattern?: string;
   readonly enumeration?: string[];
-  readonly zodType = "string";
 
   constructor(_id: number, data: TypeString, base: TypeBase) {
     super(_id, base);
@@ -295,6 +343,14 @@ class StringT extends Typedef implements Readonly<TypeString> {
     this.pattern = data.pattern;
     this.format = data.format;
     this.enumeration = data.enumeration;
+  }
+
+  generateZodSchema(): z.ZodType<any, z.ZodTypeDef, any> {
+    return z.string();
+  }
+
+  generateCustomJsonType() {
+    return { type: "string" };
   }
 }
 
@@ -357,7 +413,6 @@ class File extends Typedef {
   readonly min?: number;
   readonly max?: number;
   readonly allow?: string[];
-  readonly zodType = "unknown";
 
   constructor(_id: number, data: TypeFile, base: TypeBase) {
     super(_id, base);
@@ -379,12 +434,11 @@ export function file(
   return new File(core.fileb(data, completeBase), data, completeBase);
 }
 
-class List extends Typedef {
+class List extends Typedef<z.ZodArray<z.ZodAny>> {
   readonly min?: number;
   readonly max?: number;
   readonly items?: number;
   readonly uniqueItems?: boolean;
-  readonly zodType = "array";
 
   constructor(_id: number, data: TypeList, base: TypeBase) {
     super(_id, base);
@@ -392,6 +446,14 @@ class List extends Typedef {
     this.max = data.max;
     this.items = data.of;
     this.uniqueItems = data.uniqueItems;
+  }
+
+  generateZodSchema(): z.ZodType<any, z.ZodTypeDef, any> {
+    return z.array(z.any());
+  }
+
+  generateCustomJsonType() {
+    return { type: "array" };
   }
 }
 
@@ -416,15 +478,22 @@ export function list(
   );
 }
 
-class Optional extends Typedef {
+class Optional extends Typedef<z.ZodOptional<z.ZodAny>> {
   readonly item?: number;
   readonly defaultItem?: string;
-  readonly zodType = "optional";
 
   constructor(_id: number, data: TypeOptional, base: TypeBase) {
     super(_id, base);
     this.item = data.of;
     this.defaultItem = data.defaultItem;
+  }
+
+  generateZodSchema(): z.ZodType<any, z.ZodTypeDef, any> {
+    return z.any().optional();
+  }
+
+  generateCustomJsonType() {
+    return { type: "optional" };
   }
 }
 
@@ -450,12 +519,20 @@ export function optional(
   );
 }
 
-class Union extends Typedef {
+class Union extends Typedef<z.ZodUnion<any>> {
   readonly variants: Array<number>;
 
   constructor(_id: number, data: TypeUnion, base: TypeBase) {
     super(_id, base);
     this.variants = Array.from(data.variants);
+  }
+
+  generateZodSchema(): z.ZodType<any, z.ZodTypeDef, any> {
+    return z.union([z.string(), z.any()]);
+  }
+
+  generateCustomJsonType() {
+    return { type: "union" };
   }
 }
 
@@ -478,13 +555,20 @@ export function union(
   );
 }
 
-class Either extends Typedef {
+class Either extends Typedef<z.ZodUnion<any>> {
   readonly variants: Array<number>;
-  readonly zodType = "union";
 
   constructor(_id: number, data: TypeEither, base: TypeBase) {
     super(_id, base);
     this.variants = Array.from(data.variants);
+  }
+
+  generateZodSchema(): z.ZodType<any, z.ZodTypeDef, any> {
+    return z.union([z.string(), z.any()]);
+  }
+
+  generateCustomJsonType() {
+    return { type: "either" };
   }
 }
 
@@ -507,12 +591,38 @@ export function either(
   );
 }
 
-export class Struct<P extends { [key: string]: Typedef }> extends Typedef {
+
+export class Struct<P extends { [key: string]: Typedef }>
+  extends Typedef<z.ZodObject<any, any, any, any, any>> {
   props: P;
-  readonly zodType = "object";
   constructor(_id: number, { props }: { props: P }, base: TypeBase) {
     super(_id, base);
     this.props = props;
+  }
+
+  generateZodSchema(): z.ZodType<any, z.ZodObjectDef, any> {
+    type ObjectType = {
+      [key: string]: z.ZodTypeAny;
+    };
+    let objectNode: ObjectType = {};
+    for (const key in this.props) {
+      objectNode[key] = this.props[key].generateZodSchema();
+    }
+    return z.object(objectNode);
+  }
+
+  generateCustomJsonType() {
+    type JsonType = {
+      type: string;
+      properties?: { [key: string]: JsonType };
+    };
+
+    const jsonObject: JsonType = { type: "object", properties: {} };
+    for (const key in this.props) {
+      jsonObject.properties![key] = this.props[key].generateCustomJsonType();
+    }
+
+    return jsonObject as any;
   }
 }
 
@@ -542,10 +652,20 @@ type ApplyParamObjectNode = {
   [key: string]: ApplyParamNode;
 };
 type ApplyParamArrayNode = Array<ApplyParamNode>;
-type ApplyParamLeafNode = ApplyFromArg | ApplyFromStatic | ApplyFromContext | ApplyFromSecret | ApplyFromParent;
-type ApplyParamNode = ApplyParamObjectNode | ApplyParamArrayNode | ApplyParamLeafNode;
+type ApplyParamLeafNode =
+  | ApplyFromArg
+  | ApplyFromStatic
+  | ApplyFromContext
+  | ApplyFromSecret
+  | ApplyFromParent;
+type ApplyParamNode =
+  | ApplyParamObjectNode
+  | ApplyParamArrayNode
+  | ApplyParamLeafNode;
 
-function serializeApplyParamNode(node: ApplyParamNode): Record<string, unknown> {
+function serializeApplyParamNode(
+  node: ApplyParamNode,
+): Record<string, unknown> {
   if (node instanceof ApplyFromArg) {
     return { source: "arg", name: node.name };
   } else if (node instanceof ApplyFromStatic) {
@@ -582,7 +702,14 @@ export class Func<
   config: FuncConfig | null;
   readonly zodType = "function";
 
-  constructor(_id: number, inp: I, out: O, mat: M, parameterTransform: ParameterTransform | null = null, config: FuncConfig | null = null) {
+  constructor(
+    _id: number,
+    inp: I,
+    out: O,
+    mat: M,
+    parameterTransform: ParameterTransform | null = null,
+    config: FuncConfig | null = null,
+  ) {
     super(_id, {});
     this.inp = inp;
     this.out = out;
@@ -591,10 +718,16 @@ export class Func<
     this.config = config;
   }
 
+  generateZodSchema(): z.ZodType<any, z.ZodTypeDef, any> {
+    return z.function();
+  }
+
   extend(fields: Record<string, Typedef>): Func<I, Typedef, M> {
     const output = core.extendStruct(
       this.out._id,
-      Object.entries(fields).map(([name, typ]) => [name, typ._id] as [string, number])
+      Object.entries(fields).map(([name, typ]) =>
+        [name, typ._id] as [string, number]
+      ),
     );
 
     return func(
@@ -625,7 +758,10 @@ export class Func<
 
   apply(value: ApplyParamObjectNode): Func<Typedef, O, M> {
     const serialized = serializeApplyParamNode(value);
-    if (typeof serialized !== "object" || serialized == null || serialized.type !== "object") {
+    if (
+      typeof serialized !== "object" || serialized == null ||
+      serialized.type !== "object"
+    ) {
       throw new Error("Invalid apply value: root must be an object");
     }
     const transformTree = JSON.stringify(serialized.fields);

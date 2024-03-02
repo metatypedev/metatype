@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { t, typegraph } from "@typegraph/sdk/index.js";
+import { StructTypeBuilder2 } from "./../../../typegraph/node/sdk/src/types.ts";
 
 typegraph("type infer", (g: any) => {
   const address = t.struct({
@@ -14,6 +15,18 @@ typegraph("type infer", (g: any) => {
     married: t.boolean(),
     place: address,
   });
+
+  const user = t.struct({
+    id: t.uuid().fromRandom(),
+    ean: t.ean().fromRandom(),
+    name: t.string({}, { config: { gen: "name" } }).fromRandom(),
+    age: t.integer({}, { config: { gen: "age", type: "adult" } }).fromRandom(),
+    married: t.boolean().fromRandom(),
+  });
+
+  // const userJsonType = user.inferCustomJsonType();
+  type User = StructTypeBuilder2<typeof user>;
+  const _newUser: User = {};
 
   g.expose({
     test: person,
