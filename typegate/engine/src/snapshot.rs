@@ -21,6 +21,6 @@ pub fn create_snapshot(snapshot_path: std::path::PathBuf) {
     deno::deno_runtime::snapshot::create_runtime_snapshot(
         snapshot_path,
         snapshot_options,
-        crate::extensions_snapshot(crate::OpDepInjector::for_snapshot()),
+        crate::extensions(crate::OpDepInjector::for_snapshot()),
     );
 }

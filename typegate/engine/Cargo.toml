@@ -49,5 +49,3 @@ env_logger.workspace = true
 
 [build-dependencies]
 shadow-rs.workspace = true
-# we only need deno_runtime but this way, we avoid
-# the version match upkeep

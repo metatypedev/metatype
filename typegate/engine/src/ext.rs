@@ -10,11 +10,12 @@ use crate::{
 use crate::OpDepInjector;
 
 pub fn extensions(seed: OpDepInjector) -> Vec<deno_core::Extension> {
-    vec![tg_metatype_ext::init_ops(seed)]
+    vec![tg_metatype_ext::init_ops_and_esm(seed)]
 }
 
-pub fn extensions_snapshot(seed: OpDepInjector) -> Vec<deno_core::Extension> {
-    vec![tg_metatype_ext::init_ops_and_esm(seed)]
+pub fn extensions_ops_only(seed: OpDepInjector) -> Vec<deno_core::Extension> {
+    vec![tg_metatype_ext::init_ops(seed)]
+    // vec![tg_metatype_ext::init_ops_and_esm(seed)]
 }
 
 // NOTE: this is not a proc macro so ordering of sections is important
@@ -113,7 +114,8 @@ pub mod tests {
             ..Default::default()
         })
         .await?
-        .with_custom_ext_cb(Arc::new(|| extensions_snapshot(OpDepInjector::from_env())));
+        .with_custom_ext_cb(Arc::new(|| extensions(OpDepInjector::from_env())))
+        .with_custom_snapshot_cb(Arc::new(|| mt_deno::deno::js::deno_isolate_init()));
         let worker_factory = deno_factory.create_cli_main_worker_factory().await?;
         let main_module = "data:application/javascript;Meta.get_version()".parse()?;
         let permissions = PermissionsContainer::allow_all();
@@ -123,6 +125,7 @@ pub mod tests {
         worker.execute_script_static(
             deno_core::located_script_name!(),
             r#"
+console.log({ops: Deno[Deno.internal].core.ops})
 if (Deno[Deno.internal].core.ops.op_obj_go_round({ a: 10, b: "hey"}).a != 20) {
     throw Error("assert failed");
 }

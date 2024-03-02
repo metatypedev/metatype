@@ -28,7 +28,7 @@ mod interlude {
 
 pub use deno_core::{resolve_url, resolve_url_or_path};
 pub use ext::extensions;
-pub use ext::extensions_snapshot;
+pub use ext::extensions_ops_only;
 pub use snapshot::create_snapshot;
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
@@ -160,7 +160,7 @@ pub async fn launch_typegate_deno(
         main_mod,
         import_map_url,
         permissions,
-        Arc::new(|| ext::extensions(OpDepInjector::from_env())),
+        Arc::new(|| ext::extensions_ops_only(OpDepInjector::from_env())),
         #[cfg(not(feature = "__runtime_js_sources"))]
         Arc::new(|| Some(deno_core::Snapshot::Static(snapshot))),
     )
@@ -214,6 +214,7 @@ mod tests {
             ),
             permissions,
             Arc::new(|| crate::ext::extensions(crate::OpDepInjector::from_env())),
+            Arc::new(|| mt_deno::deno::js::deno_isolate_init()),
         );
         Ok(())
     }

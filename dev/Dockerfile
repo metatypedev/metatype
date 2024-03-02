@@ -18,7 +18,7 @@ COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
 #
-FROM denoland/deno:v${DENO_VERSION} AS deno-bin
+FROM denoland/deno:${DENO_VERSION} AS deno-bin
 
 #
 FROM base AS builder
