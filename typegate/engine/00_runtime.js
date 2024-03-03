@@ -7,6 +7,13 @@ const { ops } = core;
 // import * as ops from "ext:core/ops";
 
 function getOp(name) {
+  // Note: always get the op right away.
+  // the core.ops object is a proxy
+  // that retrieves the named op
+  // when requested i.e. not a
+  // hashmap prepopulated by the ops.
+  // If we don't get the op now, the
+  // proxy behvior won't be avail later at runtime
   const op = ops[name];
   if (!op) {
     throw Error(`op: ${name} not found`);
@@ -16,26 +23,24 @@ function getOp(name) {
 
 globalThis.Meta = {
   prisma: {
-    // NOTE: we need to curry async ops
-    registerEngine: (arg) => getOp("op_prisma_register_engine")(arg),
-    unregisterEngine: (arg) => getOp("op_prisma_unregister_engine")(arg),
-    query: (arg) => getOp("op_prisma_query")(arg),
-    diff: (arg) => getOp("op_prisma_diff")(arg),
-    apply: (arg) => getOp("op_prisma_apply")(arg),
-    deploy: (arg) => getOp("op_prisma_deploy")(arg),
-    create: (arg) => getOp("op_prisma_create")(arg),
-    reset: (arg) => getOp("op_prisma_reset")(arg),
-    // no need to curry sync ops
+    registerEngine: getOp("op_prisma_register_engine"),
+    unregisterEngine: getOp("op_prisma_unregister_engine"),
+    query: getOp("op_prisma_query"),
+    diff: getOp("op_prisma_diff"),
+    apply: getOp("op_prisma_apply"),
+    deploy: getOp("op_prisma_deploy"),
+    create: getOp("op_prisma_create"),
+    reset: getOp("op_prisma_reset"),
     unpack: getOp("op_unpack"),
     archive: getOp("op_archive"),
   },
   temporal: {
-    clientRegister: (arg) => getOp("op_temporal_register")(arg),
+    clientRegister: getOp("op_temporal_register"),
     clientUnregister: getOp("op_temporal_unregister"),
-    workflowStart: (arg) => getOp("op_temporal_workflow_start")(arg),
-    workflowSignal: (arg) => getOp("op_temporal_workflow_signal")(arg),
-    workflowQuery: (arg) => getOp("op_temporal_workflow_query")(arg),
-    workflowDescribe: (arg) => getOp("op_temporal_workflow_describe")(arg),
+    workflowStart: getOp("op_temporal_workflow_start"),
+    workflowSignal: getOp("op_temporal_workflow_signal"),
+    workflowQuery: getOp("op_temporal_workflow_query"),
+    workflowDescribe: getOp("op_temporal_workflow_describe"),
   },
   python: {
     registerVm: getOp("op_register_virtual_machine"),
