@@ -3,7 +3,7 @@ const { core } = Deno;
 const { ops } = core;
 // const fastops = core.ensureFastOps(); // TODO: investigate
 
-// NOTE: use the following import if every switching to snaphsots
+// NOTE: use the following import if ever switching to snaphsots
 // import * as ops from "ext:core/ops";
 
 function getOp(name) {
@@ -14,7 +14,6 @@ function getOp(name) {
   return op;
 }
 
-// console.log({ getOp('});
 globalThis.Meta = {
   prisma: {
     // NOTE: we need to curry async ops

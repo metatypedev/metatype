@@ -15,6 +15,3 @@ mt_deno.workspace = true
 typegate_engine.workspace = true
 log = "0.4.20"
 env_logger.workspace = true
-
-[build-dependencies]
-typegate_engine.workspace = true

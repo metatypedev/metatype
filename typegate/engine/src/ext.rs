@@ -13,10 +13,6 @@ pub fn extensions(seed: OpDepInjector) -> Vec<deno_core::Extension> {
     vec![tg_metatype_ext::init_ops_and_esm(seed)]
 }
 
-/* pub fn extensions_ops_only(seed: OpDepInjector) -> Vec<deno_core::Extension> {
-    vec![tg_metatype_ext::init_ops(seed)]
-} */
-
 // NOTE: this is not a proc macro so ordering of sections is important
 deno_core::extension!(
     tg_metatype_ext,
