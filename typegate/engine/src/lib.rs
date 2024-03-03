@@ -204,7 +204,6 @@ mod tests {
             ),
             permissions,
             Arc::new(|| crate::ext::extensions(crate::OpDepInjector::from_env())),
-            Arc::new(|| mt_deno::deno::js::deno_isolate_init()),
         );
         Ok(())
     }
