@@ -97,4 +97,3 @@ project-root = "0.2.2"
 
 [build-dependencies]
 shadow-rs.workspace = true
-typegate_engine = { workspace = true, optional = true }

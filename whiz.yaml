@@ -17,7 +17,9 @@ gate1: &tp
     REDIS_URL: "redis://:password@localhost:6379/0"
     TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
     TG_ADMIN_PASSWORD: "password"
-  command: "cargo run -p typegate"
+    LD_LIBRARY_PATH: /data/home/metatype/.ghjk/envs/default/shims/lib
+  # command: "cargo run -p typegate"
+  command: ~/.cargo/bin/typegate
   pipe:
     "^.+DEBUG http .*$": whiz://http
 

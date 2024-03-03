@@ -1,8 +1,10 @@
 // const { core } = Deno[Deno.internal];
-// const { core } = Deno;
-// const { getOp('} = core;
-// const fastgetOp('= core.ensureFastOps(); // TODO: investigate
-import * as ops from "ext:core/ops";
+const { core } = Deno;
+const { ops } = core;
+// const fastops = core.ensureFastOps(); // TODO: investigate
+
+// NOTE: use the following import if every switching to snaphsots
+// import * as ops from "ext:core/ops";
 
 function getOp(name) {
   const op = ops[name];

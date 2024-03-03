@@ -5,7 +5,6 @@ version.workspace = true
 
 [features]
 default = []
-__runtime_js_sources = ["mt_deno/__runtime_js_sources"]
 
 [dependencies]
 anyhow = "1.0"

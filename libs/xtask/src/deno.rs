@@ -5,8 +5,6 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
-static SNAPSHOT: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/SNAPSHOT.bin"));
-
 #[derive(Parser, Debug)]
 pub struct Deno {
     #[clap(subcommand)]
@@ -105,12 +103,7 @@ impl Test {
             self.config,
             permissions,
             self.coverage,
-            std::sync::Arc::new(move || typegate_engine::extensions_ops_only(inj.clone())),
-            std::sync::Arc::new(move || {
-                Some(mt_deno::deno::deno_runtime::deno_core::Snapshot::Static(
-                    SNAPSHOT,
-                ))
-            }),
+            std::sync::Arc::new(move || typegate_engine::extensions(inj.clone())),
             self.argv,
         );
         Ok(())
@@ -185,12 +178,7 @@ impl Bench {
             },
             self.config,
             permissions,
-            std::sync::Arc::new(move || typegate_engine::extensions_ops_only(inj.clone())),
-            std::sync::Arc::new(move || {
-                Some(mt_deno::deno::deno_runtime::deno_core::Snapshot::Static(
-                    SNAPSHOT,
-                ))
-            }),
+            std::sync::Arc::new(move || typegate_engine::extensions(inj.clone())),
             self.argv,
         );
         Ok(())
