@@ -120,33 +120,33 @@ jobs:
           # we cd next to the file so that the its parent dirs
           # aren't present in the tar
           cd target/${{ matrix.target }}/release/
-          tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
+          tar czvf ../../../meta-cli-thin-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
           cd ../../../
       - if: ${{ matrix.target != 'aarch64-unknown-linux-gnu' }}
         shell: bash
         run: |
           cargo build --release --locked --package meta-cli --target ${{ matrix.target }} --features typegate -v
           cd target/${{ matrix.target }}/release/
-          tar czvf ../../../meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
+          tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
           cd ../../../
 
           cargo build --release --locked --package meta-cli --target ${{ matrix.target }}
           cd target/${{ matrix.target }}/release/
-          tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
+          tar czvf ../../../meta-cli-thin-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
           cd ../../../
-      # full meta-cli is not avail for arm64 linux (waiting on arm64 linux machines for Gh CI)
+      # fat meta-cli is not avail for arm64 linux (waiting on arm64 linux machines for Gh CI)
       - if: ${{ matrix.target != 'aarch64-unknown-linux-gnu' }}
         uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
-          file: "meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
-          asset_name: "meta-cli-full-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
+          file: "meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
+          asset_name: "meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
           overwrite: ${{ inputs.ovewriteArtifacts }}
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
-          file: "meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
-          asset_name: "meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
+          file: "meta-cli-thin-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
+          asset_name: "meta-cli-thin-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
           overwrite: ${{ inputs.ovewriteArtifacts }}
 
   typegraph:
