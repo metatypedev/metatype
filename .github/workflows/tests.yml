@@ -121,9 +121,8 @@ jobs:
     strategy:
       matrix:
         include:
-          # TODO
-          # - os: macos-latest
-          #   activate: "source .venv/bin/activate"
+          - os: macos-latest
+            activate: "source .venv/bin/activate"
           - os: macos-14
             activate: "source .venv/bin/activate"
           #- os: windows-latest
