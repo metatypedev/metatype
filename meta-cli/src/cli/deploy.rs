@@ -244,7 +244,7 @@ mod default_mode {
             };
 
             let loader = self.loader.clone();
-            self.push_loaded_typegraphs();
+            self.handle_loaded_typegraphs();
 
             match loader::stopped(loader).await {
                 Ok(StopBehavior::Restart) => unreachable!("LoaderActor should not restart"),
@@ -254,18 +254,27 @@ mod default_mode {
             }
         }
 
-        fn push_loaded_typegraphs(self) {
+        fn handle_loaded_typegraphs(self) {
             let mut event_rx = self.loader_event_rx;
+            let console = self.console.clone();
             Arbiter::current().spawn(async move {
                 while let Some(event) = event_rx.recv().await {
                     match event {
                         LoaderEvent::Typegraph(tg) => match tg.get_response_or_fail() {
                             Ok(res) => {
-                                let push =
-                                    PushResult::new(self.console.clone(), res.as_ref().clone())
-                                        .unwrap();
-                                if let Err(e) = push.finalize() {
-                                    panic!("{}", e.to_string());
+                                match PushResult::new(self.console.clone(), res.as_ref().clone()) {
+                                    Ok(push) => {
+                                        if let Err(e) = push.finalize() {
+                                            panic!("{}", e.to_string());
+                                        }
+                                    }
+                                    Err(e) => {
+                                        console.error(format!(
+                                            "Failed pushing typegraph {:?}:\n{:?}",
+                                            tg.path.display(),
+                                            e.to_string()
+                                        ));
+                                    }
                                 }
                             }
                             Err(e) => panic!("{}", e.to_string()),
@@ -400,7 +409,7 @@ mod watch_mode {
                                 Err(e) => {
                                     let tg_path = tg.path.clone();
                                     console.error(format!(
-                                        "Failed pushing typegraph {:?}: {:?}",
+                                        "Failed pushing typegraph {:?}:\n{:?}",
                                         tg_path.display(),
                                         e.to_string()
                                     ));
