@@ -5,8 +5,7 @@ members = [
   "typegate/engine",
   "typegate/standalone",
   "meta-cli",
-  "typegraph/core",
-]
+  "typegraph/core", ]
 
 [workspace.package]
 version = "0.3.5-0"
@@ -14,7 +13,7 @@ edition = "2021"
 
 [workspace.dependencies]
 # deno = { path =  "../deno/cli"}
-deno = { git = "https://github.com/metatypedev/deno", branch = "v1.40.1-embeddable" }
+deno = { git = "https://github.com/metatypedev/deno", branch = "v1.41.0-embeddable" }
 
 # internal crates
 mt_deno = { path = "libs/deno/" }
@@ -34,7 +33,7 @@ wasmedge-sys = "=0.17.5"
 wasmedge-types = "=0.4.4"
 # https://github.com/denoland/deno_ast/blob/main/Cargo.toml
 swc_atoms = "=0.6.5"
-swc_common = "=0.33.12"
+swc_common = "=0.33.17"
 swc_ecma_ast = "=0.110.17"
 swc_ecma_codegen = "=0.146.54"
 swc_ecma_parser = "=0.141.37"

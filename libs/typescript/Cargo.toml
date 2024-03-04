@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.75"
 lazy_static = "1.4.0"
-dprint-plugin-typescript = "0.88.8"
+dprint-plugin-typescript = "0.89.2"
 swc_common = { workspace = true, features = ["tty-emitter"] }
 swc_ecma_ast.workspace = true
 swc_atoms.workspace = true
