@@ -182,6 +182,11 @@ pub struct DelayOutput {
 }
 
 impl RetryManager {
+    pub fn reset() {
+        let mut counters = RETRY_COUNTERS.lock().unwrap();
+        counters.clear();
+    }
+
     pub fn clear_counter(key: &PathBuf) {
         let mut counters = RETRY_COUNTERS.lock().unwrap();
         counters.remove_entry(key);

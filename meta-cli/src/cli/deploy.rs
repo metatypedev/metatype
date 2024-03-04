@@ -452,6 +452,8 @@ mod watch_mode {
                     use actors::watcher::Event as E;
                     match event {
                         E::ConfigChanged => {
+                            RetryManager::reset();
+
                             console.warning("Metatype configuration file changed.".to_string());
                             console.warning("Reloading everything.".to_string());
 
@@ -459,12 +461,16 @@ mod watch_mode {
                             watcher.do_send(actors::watcher::Stop);
                         }
                         E::TypegraphModuleChanged { typegraph_module } => {
+                            RetryManager::clear_counter(&typegraph_module);
+
                             loader.do_send(ReloadModule(
                                 typegraph_module.into(),
                                 ReloadReason::FileChanged,
                             ));
                         }
                         E::TypegraphModuleDeleted { typegraph_module } => {
+                            RetryManager::clear_counter(&typegraph_module);
+
                             // TODO internally by the watcher??
                             watcher.do_send(actors::watcher::RemoveTypegraph(
                                 typegraph_module.clone(),
@@ -475,6 +481,8 @@ mod watch_mode {
                             typegraph_module,
                             dependency_path,
                         } => {
+                            RetryManager::clear_counter(&typegraph_module);
+
                             loader.do_send(ReloadModule(
                                 typegraph_module.into(),
                                 ReloadReason::DependencyChanged(dependency_path),
