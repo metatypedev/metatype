@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::store::Command;
-use crate::deploy::actors::pusher::PushResultRaw;
+use crate::deploy::push::pusher::PushResultRaw;
 use anyhow::{bail, Result};
 use common::typegraph::Typegraph;
 use serde::{Deserialize, Serialize};

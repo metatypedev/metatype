@@ -14,8 +14,8 @@ use crate::deploy::actors::discovery::DiscoveryActor;
 use crate::deploy::actors::loader::{
     self, LoaderActor, LoaderEvent, ReloadModule, ReloadReason, StopBehavior,
 };
-use crate::deploy::actors::pusher::PushResult;
 use crate::deploy::actors::watcher::WatcherActor;
+use crate::deploy::push::pusher::PushResult;
 use actix::prelude::*;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
@@ -285,9 +285,10 @@ mod default_mode {
 }
 
 mod watch_mode {
-    use std::time::Duration;
 
     use watch_mode::actors::loader::LoadModule;
+
+    use crate::deploy::push::pusher::RetryManager;
 
     use super::*;
 
@@ -394,19 +395,26 @@ mod watch_mode {
                                     if let Err(e) = push.finalize() {
                                         panic!("{}", e.to_string());
                                     }
+                                    RetryManager::clear_counter(&tg.path);
                                 }
-                                Err(_) => {
-                                    // very basic retry
-                                    // TODO: implement something similar to the old 3 retries
-                                    let wait_ms = 3000;
-                                    console.warning(format!(
-                                        "Retrying {:?} after {}",
-                                        tg.path.display(),
-                                        wait_ms,
+                                Err(e) => {
+                                    let tg_path = tg.path.clone();
+                                    console.error(format!(
+                                        "Failed pushing typegraph {:?}: {:?}",
+                                        tg_path.display(),
+                                        e.to_string()
                                     ));
-                                    tokio::time::sleep(Duration::from_millis(wait_ms)).await;
-
-                                    loader.do_send(LoadModule(Arc::new(tg.path)));
+                                    if let Some(delay) = RetryManager::next_delay(&tg_path) {
+                                        console.info(format!(
+                                            "Retry {}/{}, retrying after {}s of {:?}",
+                                            delay.retry,
+                                            delay.max,
+                                            delay.duration.as_secs(),
+                                            tg_path.display(),
+                                        ));
+                                        tokio::time::sleep(delay.duration).await;
+                                        loader.do_send(LoadModule(Arc::new(tg_path)));
+                                    }
                                 }
                             }
                         }

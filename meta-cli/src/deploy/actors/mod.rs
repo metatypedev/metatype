@@ -4,5 +4,4 @@
 pub mod console;
 pub mod discovery;
 pub mod loader;
-pub mod pusher;
 pub mod watcher;
