@@ -6,7 +6,7 @@ from typing import Dict, Optional, Union
 from urllib import request
 import json
 from base64 import b64encode
-from typegraph.gen.exports.core import ArtifactResolutionConfig
+from typegraph.wit import ArtifactResolutionConfig
 from typegraph.gen.types import Err
 
 from typegraph.graph.typegraph import TypegraphOutput

@@ -17,6 +17,7 @@ from typegraph.gen.exports.core import (
 
 from typegraph.gen.types import Err
 from typegraph.graph.params import Auth, Cors, RawAuth
+from typegraph.graph.tg_manage import Manager
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph.wit import core, store, wit_utils
 
@@ -181,7 +182,6 @@ def typegraph(
     rate: Optional[Rate] = None,
     cors: Optional[Cors] = None,
     prefix: Optional[str] = None,
-    disable_auto_serialization: Optional[bool] = False,
 ) -> Callable[[Callable[[Graph], None]], Callable[[], TypegraphOutput]]:
     def decorator(builder: Callable[[Graph], None]) -> TypegraphOutput:
         actual_name = name
@@ -227,16 +227,12 @@ def typegraph(
                 raise Exception(tg_json.value)
             return tg_json.value
 
-        # TODO: remove
-        # print(serialize_with_artifacts(config=ArtifactResolutionConfig(
-        #     dir=".",
-        #     prisma_migration=MigrationConfig(
-        #         action=MigrationAction(create=True, reset=True),
-        #         migration_dir="."
-        #     )
-        # )))
+        tg_output = TypegraphOutput(name=tg.name, serialize=serialize_with_artifacts)
+        if Manager.is_run_from_cli():
+            manager = Manager(tg_output)
+            manager.run()
 
-        return lambda: TypegraphOutput(name=tg.name, serialize=serialize_with_artifacts)
+        return lambda: tg_output
 
     return decorator
 
