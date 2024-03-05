@@ -1,11 +1,10 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from ctypes import Union
 from dataclasses import dataclass
 from enum import Enum
 import os
-from typing import TYPE_CHECKING, Dict
+from typing import Dict, Union
 import json
 from typegraph.gen.exports.core import MigrationAction, MigrationConfig
 
@@ -13,8 +12,7 @@ from typegraph.graph.tg_deploy import BasicAuth
 from typegraph.wit import ArtifactResolutionConfig
 from urllib import request
 
-if TYPE_CHECKING:
-    from typegraph.graph.typegraph import TypegraphOutput
+from typegraph.graph.shared import TypegraphOutput
 
 
 VERSION = "0.3.5-0"
@@ -40,9 +38,9 @@ class Typegate:
 @dataclass
 class CLIConfigRequest:
     typegate: Typegate
-    prefix: Union[None, str] = None
     secrets: Dict[str, str]
     artifacts_config: ArtifactResolutionConfig
+    prefix: Union[None, str] = None
 
 
 @dataclass
@@ -88,7 +86,7 @@ class Manager:
             )  # prefix from cli overrides the current value
             return self.typegraph.serialize(artifact_cfg)
 
-        return self.relay_result_to_cli(command=Command.SERIALIZE, fn=fn)
+        return self.relay_result_to_cli(initiator=Command.SERIALIZE, fn=fn)
 
     def deploy(config: CLIConfigRequest):
         pass
@@ -100,27 +98,27 @@ class Manager:
         config = self.request_config()
         req = request.Request(f"{self.endpoint}/command")
         raw = request.urlopen(req).read().decode()
-        return CLIServerResponse(command=Command(raw["command"]), config=config)
+        cli_rep = json.loads(raw)["data"]
+        return CLIServerResponse(command=Command(cli_rep), config=config)
 
     def request_config(self) -> CLIConfigRequest:
         tg_name = self.typegraph.name
         req = request.Request(f"{self.endpoint}/config?typegraph={tg_name}")
         raw = request.urlopen(req).read().decode()
-        cli_res = json.loads(raw)
+        cli_res = json.loads(raw)["data"]
 
         prefix = None
-        if "prefix" in cli_res:
+        if exist_and_not_null(cli_res, prefix):
             prefix = cli_res["prefix"]
 
         auth = None
-        if "auth" in cli_res["endpoint"]:
-            auth = BasicAuth(
-                cli_res["endpoint"]["username"], cli_res["endpoint"]["password"]
-            )
+        if exist_and_not_null(cli_res["typegate"], "auth"):
+            raw_auth = cli_res["typegate"]["auth"]
+            auth = BasicAuth(raw_auth["username"], raw_auth["password"])
 
         artifact_config_raw = cli_res["artifactsConfig"]
         return CLIConfigRequest(
-            typegate=Typegate(endpoint=cli_res["endpoint"]["typegate"], auth=auth),
+            typegate=Typegate(endpoint=cli_res["typegate"]["endpoint"], auth=auth),
             prefix=prefix,
             secrets=cli_res["secrets"],
             artifacts_config=ArtifactResolutionConfig(
@@ -155,7 +153,13 @@ class Manager:
             url=f"{self.endpoint}/response",
             method="POST",
             headers={"Content-Type": "application/json"},
-            data=json.dumps(response),
+            data=json.dumps(response).encode("utf-8"),
         )
 
         request.urlopen(req)
+
+
+def exist_and_not_null(obj: dict, field: str):
+    if field in obj:
+        return obj[field] is not None
+    return False

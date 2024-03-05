@@ -45,6 +45,12 @@ impl SDKResponse {
                 self.typegraph_name
             );
         }
+
+        if let Some(error) = self.error.clone() {
+            let err: String = serde_json::from_value(error)?;
+            bail!(err);
+        }
+
         Ok(())
     }
 

@@ -17,9 +17,10 @@ from typegraph.gen.exports.core import (
 
 from typegraph.gen.types import Err
 from typegraph.graph.params import Auth, Cors, RawAuth
-from typegraph.graph.tg_manage import Manager
+from typegraph.graph.shared import TypegraphOutput
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph.wit import core, store, wit_utils
+from typegraph.graph.tg_manage import Manager
 
 if TYPE_CHECKING:
     from typegraph import t
@@ -169,12 +170,6 @@ class Graph:
         return ApplyFromParent(type_name)
 
 
-@dataclass
-class TypegraphOutput:
-    name: str
-    serialize: Callable[[Optional[ArtifactResolutionConfig]], str]
-
-
 def typegraph(
     name: Optional[str] = None,
     *,
@@ -228,6 +223,7 @@ def typegraph(
             return tg_json.value
 
         tg_output = TypegraphOutput(name=tg.name, serialize=serialize_with_artifacts)
+
         if Manager.is_run_from_cli():
             manager = Manager(tg_output)
             manager.run()

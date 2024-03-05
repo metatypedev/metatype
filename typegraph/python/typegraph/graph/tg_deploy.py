@@ -30,9 +30,9 @@ class BasicAuth:
 class TypegraphDeployParams:
     base_url: str
     cli_version: str
+    artifacts_config: ArtifactResolutionConfig
     auth: Optional[BasicAuth] = None
     secrets: Optional[Dict[str, str]] = None
-    artifacts_config: ArtifactResolutionConfig
 
 
 @dataclass
