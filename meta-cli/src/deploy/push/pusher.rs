@@ -129,7 +129,7 @@ impl PushResult {
 
         let migdir = ServerStore::get_config()
             .unwrap()
-            .prisma_migrations_dir(&self.original_name);
+            .prisma_migrations_dir_rel(&self.original_name);
 
         for migrations in self.migrations.iter() {
             let dest = migdir.join(&migrations.runtime);

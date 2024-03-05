@@ -13,6 +13,7 @@ use serde_json::json;
 use std::{
     io::{Error, ErrorKind},
     net::{Ipv4Addr, SocketAddrV4, TcpListener},
+    path::PathBuf,
     sync::Arc,
 };
 
@@ -40,20 +41,20 @@ pub fn get_instance_port() -> u16 {
 #[derive(Debug, Deserialize)]
 struct QueryConfigParams {
     typegraph: String,
+    typegraph_path: PathBuf,
 }
 
 #[get("/config")]
 async fn config(req: HttpRequest) -> impl Responder {
-    let parsed = Query::<QueryConfigParams>::from_query(req.query_string());
-    let folder = match parsed {
-        Ok(p) => p.typegraph.to_owned(),
-        Err(_) => "".to_string(),
-    };
+    let mut parsed = Query::<QueryConfigParams>::from_query(req.query_string()).unwrap();
+
+    parsed.typegraph_path.pop(); // pop file.ext
+    let artefact_base_dir = parsed.typegraph_path.clone();
+
     let endpoint = ServerStore::get_endpoint();
     let secrets = ServerStore::get_secrets();
     let migration_action = ServerStore::get_migration_action();
     let prefix = ServerStore::get_prefix();
-
     match ServerStore::get_config() {
         Some(config) => {
             let data = json!({
@@ -64,9 +65,9 @@ async fn config(req: HttpRequest) -> impl Responder {
                 "secrets": secrets,
                 "prefix": prefix,
                 "artifactsConfig": json!({
-                    "dir": config.base_dir.display().to_string(),
+                    "dir": artefact_base_dir,
                     "prismaMigration": {
-                        "migrationDir": config.prisma_migrations_dir(&folder),
+                        "migrationDir": config.prisma_migrations_dir_rel(&parsed.typegraph),
                         "action": serde_json::to_value(migration_action).unwrap()
                     },
                 }),

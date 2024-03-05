@@ -13,7 +13,7 @@ from typegraph.gen.exports.core import (
 )
 
 from typegraph.graph.tg_deploy import TypegraphDeployParams, tg_deploy
-from urllib import request
+from urllib import request, parse
 
 from typegraph.graph.shared_types import BasicAuth, TypegraphOutput
 
@@ -125,7 +125,10 @@ class Manager:
 
     def request_config(self) -> CLIConfigRequest:
         tg_name = self.typegraph.name
-        req = request.Request(f"{self.endpoint}/config?typegraph={tg_name}")
+        tg_path = parse.quote(self.typegraph_path)
+        req = request.Request(
+            f"{self.endpoint}/config?typegraph={tg_name}&typegraph_path={tg_path}"
+        )
         raw = request.urlopen(req).read().decode()
         cli_res = json.loads(raw)["data"]
 

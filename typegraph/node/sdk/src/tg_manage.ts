@@ -100,6 +100,7 @@ export class Manager {
   async #requestConfig(): Promise<CLISuccess<CLIConfigRequest>> {
     const params = new URLSearchParams({
       typegraph: this.#typegraph.name,
+      typegraph_path: this.#typegraphPath,
     });
     const response = await fetch(new URL("config?" + params, this.#endpoint));
     return (await response.json()) as CLISuccess<CLIConfigRequest>;
