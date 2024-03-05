@@ -8,7 +8,7 @@ from typing import Dict, Union
 import json
 from typegraph.gen.exports.core import MigrationAction, MigrationConfig
 
-from typegraph.graph.tg_deploy import BasicAuth
+from typegraph.graph.tg_deploy import BasicAuth, TypegraphDeployParams, tg_deploy
 from typegraph.wit import ArtifactResolutionConfig
 from urllib import request
 
@@ -88,8 +88,27 @@ class Manager:
 
         return self.relay_result_to_cli(initiator=Command.SERIALIZE, fn=fn)
 
-    def deploy(config: CLIConfigRequest):
-        pass
+    def deploy(self, config: CLIConfigRequest):
+        typegate = config.typegate
+        if typegate.auth is None:
+            raise Exception(
+                f'{self.typegraph.name}" received null or undefined "auth" field on the configuration'
+            )
+
+        def fn():
+            artifacts_config = config.artifacts_config
+            artifacts_config.prefix = config.prefix  # priority
+            params = TypegraphDeployParams(
+                base_url=typegate.endpoint,
+                auth=typegate.auth,
+                artifacts_config=artifacts_config,
+                cli_version=VERSION,
+                secrets=config.secrets,
+            )
+            ret = tg_deploy(self.typegraph, params)
+            return ret.typegate
+
+        return self.relay_result_to_cli(initiator=Command.DEPLOY, fn=fn)
 
     def unpack_migration(config: CLIConfigRequest):
         pass
@@ -108,7 +127,7 @@ class Manager:
         cli_res = json.loads(raw)["data"]
 
         prefix = None
-        if exist_and_not_null(cli_res, prefix):
+        if exist_and_not_null(cli_res, "prefix"):
             prefix = cli_res["prefix"]
 
         auth = None
@@ -145,7 +164,8 @@ class Manager:
             "typegraphPath": self.typegraph_path,
         }
         try:
-            response["data"] = fn()
+            res = fn()
+            response["data"] = json.loads(res) if isinstance(res, str) else res
         except Exception as e:
             response["error"] = str(e)
 
