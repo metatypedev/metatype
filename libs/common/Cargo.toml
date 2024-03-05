@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.75"
-base64 = "0.21.5"
+base64 = "0.22.0"
 flate2 = "1.0.28"
 indexmap = { version = "2.1.0", features = ["serde"] }
 schemars = { version = "0.8.16", features = ["derive", "preserve_order"], optional = true }
@@ -16,7 +16,7 @@ tar = "0.4.40"
 ignore = "0.4.20"
 reqwest = { workspace = true, features = ["json"] }
 async-trait = "0.1.74"
-itertools = "0.11.0"
+itertools = "0.12.1"
 colored = "2.0.4"
 indoc = "2.0.4"
 
