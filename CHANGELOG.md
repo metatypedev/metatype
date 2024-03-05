@@ -2,6 +2,354 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.5](https://github.com/metatypedev/metatype/releases/tag/v0.3.5) - 2024-03-05
+
+### Bug Fixes
+
+<details >
+<summary>
+(cli) Fix for `meta-cli deploy` exit with code `0` on failure (<a href="https://github.com/metatypedev/metatype/pull/600">#600</a>)
+</summary>
+
+fix the issue where `meta-cli deploy` command exits with code 0 on
+failure.
+
+#### Motivation and context
+
+bug fix
+
+#### Migration notes
+
+No changes needed.
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+(typegate,typegraph) Minor bugs (<a href="https://github.com/metatypedev/metatype/pull/596">#596</a>)
+</summary>
+
+Just a few very minor bugs I'd encountered this week. Tests pending.
+
+#### Motivation and context
+
+Bugs.
+
+#### Migration notes
+
+_No changes required_
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Show error message for unregistered type name (<a href="https://github.com/metatypedev/metatype/pull/594">#594</a>)
+</summary>
+
+Check and throw the error for the `expose` function when called from the
+Python SDK.
+
+#### Motivation and context
+
+We got a finalization failure when there are some unregistered type
+referenced with `g.ref`.
+
+#### Migration notes
+
+_No changes needed._
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [x] Hard-to-understand functions have explanatory comments
+- [x] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Remove injections from prisma output types (<a href="https://github.com/metatypedev/metatype/pull/597">#597</a>)
+</summary>
+
+Remove injections from generated output types for prisma operations.
+
+#### Motivation and context
+
+Generated types fail validations (_injection not allowed in output
+types_).
+
+#### Migration notes
+
+_No changes needed_.
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Esm customizer for typegate deno ext (<a href="https://github.com/metatypedev/metatype/pull/606">#606</a>)
+</summary>
+
+Enables v8 snapshots integration for `meta typegate` subcommand and the
+standalone typegate. Also bumps deno to 1.41.0.
+
+#### Motivation and context
+
+</details>
+<details >
+<summary>
+Re-enable macos-latest cli-compat test job (<a href="https://github.com/metatypedev/metatype/pull/608">#608</a>)
+</summary>
+
+Fixes and enables the broken job.
+
+#### Motivation and context
+
+Job was disabled earlier to mysterious breakages.
+
+#### Migration notes
+
+__No changes required__
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
+### Features
+
+<details >
+<summary>
+(deno/sdk) Native function embedding in typescript (<a href="https://github.com/metatypedev/metatype/pull/598">#598</a>)
+</summary>
+
+Add support for function or lambda definition typescript sdk for
+`deno.func` similarly to how `python.from_def` in python sdk works.
+
+#### Motivation and context
+
+Providing a string is a bit impractical and counter-intuitive espcially
+when the sdk language matches with runtime's language.
+
+#### Migration notes
+
+No changes needed.
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+(sdk) Testing framework integration 2 (<a href="https://github.com/metatypedev/metatype/pull/579">#579</a>)
+</summary>
+
+#### Motivation and context
+
+Continuation of #566 , focused on prisma runtime.
+
+#### Migration notes
+
+N/A
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+(sdk) From_random injection (<a href="https://github.com/metatypedev/metatype/pull/593">#593</a>)
+</summary>
+
+<!--
+Pull requests are squash merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog and understand when they need to update his code and
+how.
+-->
+
+<!-- Explain WHAT the change is -->
+This change includes changes in StringFormats(added some string
+formats), logic to provide random values for type nodes and tests to
+validate the changes.
+The changes are mostly in the typegraph sdk. 
+
+#### Motivation and context
+
+<!-- Explain WHY the was made or link an issue number -->
+This feature enables the user to inject random values for a field(**Type
+Node**) when defining a **Typegraph**.
+
+#### Migration notes
+_No changes needed_.
+
+<!-- Explain HOW users should update their code when required -->
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [x] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Remove obsolete restrictions on prisma (<a href="https://github.com/metatypedev/metatype/pull/592">#592</a>)
+</summary>
+
+#### Motivation and context
+
+Since v5, where on unique queries exposes all the fields, not just
+unique fields.
+
+</details>
+<details >
+<summary>
+Parameter transformation (<a href="https://github.com/metatypedev/metatype/pull/587">#587</a>)
+</summary>
+
+Enable parameter transformation with the `.apply()` method.
+It has more or less the same logic as `.reduce()` with the ability to
+flatten the input type.
+
+
+#### Motivation and context
+
+This feature enables simpler APIs (input types) on top of runtimes
+(e.g.: prisma).
+
+#### Migration notes
+
+_No changes needed_.
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [x] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details open>
+<summary>
+Nested context query (<a href="https://github.com/metatypedev/metatype/pull/595">#595</a>)
+  - BREAKING: Nested context query (<a href="https://github.com/metatypedev/metatype/pull/595">#595</a>)
+</summary>
+
+- Revert context flattening
+- Enable jsonpath-like key to access nested object fields or array items
+on the context.
+
+#### Migration notes
+
+If you access the context directly in your application (through the
+token), access to nested fields shall be updated.
+E.g. the expression `context["profile.id"]` have to turned to
+`context.profile.id`.
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [x] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
+### Miscellaneous Tasks
+
+<details >
+<summary>
+(release) Bump 0.3.5 (<a href="https://github.com/metatypedev/metatype/pull/613">#613</a>)
+</summary>
+
+Ready for release of v0.3.5
+
+#### Motivation and context
+
+Required by console.
+
+#### Migration notes
+
+_No changes required__.
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
+### Refactor
+
+<details >
+<summary>
+(sdk) Move post-processing functions to the typegate (<a href="https://github.com/metatypedev/metatype/pull/586">#586</a>)
+</summary>
+
+#### Motivation and context
+
+Depends on #579 
+Compiled `wasm` bin  size is too large, goal is to reduce it to ~3MB.
+
+#### Migration notes
+
+N/A
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details open>
+<summary>
+Make fat `meta-cli` the default (<a href="https://github.com/metatypedev/metatype/pull/607">#607</a>)
+  - BREAKING: make fat `meta-cli` the default (<a href="https://github.com/metatypedev/metatype/pull/607">#607</a>)
+</summary>
+
+Switch the default `meta-cli` release to the fat version (the one that
+includes the `typegate` subcommand).
+
+#### Motivation and context
+
+</details>
+
+
 ## [v0.3.4](https://github.com/metatypedev/metatype/releases/tag/v0.3.4) - 2024-02-10
 
 ### Bug Fixes
@@ -1893,98 +2241,10 @@ Duplicate the store entry instead of referencing.
 
 
 </details>
-<details >
-<summary>
-(sdk,deno,python) Generate func from frontend + prisma deno frontend (<a href="https://github.com/metatypedev/metatype/pull/416">#416</a>)
-</summary>
-
-
-
-</details>
 
 
 ### Features
 
-<details >
-<summary>
-(core) Set runtime field in types (<a href="https://github.com/metatypedev/metatype/pull/398">#398</a>)
-</summary>
-
-
-
-</details>
-<details >
-<summary>
-(sdk) Add wasmedge runtime (<a href="https://github.com/metatypedev/metatype/pull/397">#397</a>)
-</summary>
-
-
-
-</details>
-<details >
-<summary>
-(sdk) Random runtime (<a href="https://github.com/metatypedev/metatype/pull/396">#396</a>)
-</summary>
-
-* +runtime_config
-
-</details>
-<details >
-<summary>
-(sdk) Implement injection (<a href="https://github.com/metatypedev/metatype/pull/403">#403</a>)
-</summary>
-
-
-
-</details>
-<details >
-<summary>
-(sdk) Rate limiting, cors, etc.. (<a href="https://github.com/metatypedev/metatype/pull/411">#411</a>)
-</summary>
-
-
-
-</details>
-<details >
-<summary>
-(sdk) Add the prisma runtime to the new SDK (<a href="https://github.com/metatypedev/metatype/pull/395">#395</a>)
-</summary>
-
-
-
-</details>
-<details >
-<summary>
-(sdk) Apply syntax (<a href="https://github.com/metatypedev/metatype/pull/410">#410</a>)
-</summary>
-
-
-
-</details>
-<details >
-<summary>
-(sdk) Temporal runtime (<a href="https://github.com/metatypedev/metatype/pull/413">#413</a>)
-</summary>
-
-
-
-</details>
-<details >
-<summary>
-(sdk) Custom query exec for prisma runtime (<a href="https://github.com/metatypedev/metatype/pull/419">#419</a>)
-</summary>
-
-
-
-</details>
-<details >
-<summary>
-V0.2.x series + upgrades (<a href="https://github.com/metatypedev/metatype/pull/417">#417</a>)
-</summary>
-
-
-
-</details>
 <details >
 <summary>
 Upgrade jco and prepare sdk build (<a href="https://github.com/metatypedev/metatype/pull/420">#420</a>)
@@ -2021,14 +2281,6 @@ Release 0.2.0 (<a href="https://github.com/metatypedev/metatype/pull/434">#434</
 
 ### Miscellaneous Tasks
 
-<details >
-<summary>
-Migrate all the test typegraphs to the new Python SDK (<a href="https://github.com/metatypedev/metatype/pull/418">#418</a>)
-</summary>
-
-
-
-</details>
 <details >
 <summary>
 Migrate doc typegraphs (<a href="https://github.com/metatypedev/metatype/pull/429">#429</a>)
@@ -2071,13 +2323,4 @@ Hotfix release
 </details>
 
 
-### Refactor
 
-<details >
-<summary>
-Make `with_store` and `with_store_mut` private in `global_store` module (<a href="https://github.com/metatypedev/metatype/pull/414">#414</a>)
-</summary>
-
-
-
-</details>
