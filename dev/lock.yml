@@ -5,6 +5,8 @@ dev:
       - typegraph/node/LICENSE.md
       - typegraph/node/sdk/LICENSE.md
   lines:
+    installer.sh:
+      (WASMEDGE_VERSION=").+("): WASMEDGE_VERSION
     rust-toolchain.toml:
       (channel = ").+("): RUST_VERSION
     ghjk.ts:
