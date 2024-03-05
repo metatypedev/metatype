@@ -154,7 +154,6 @@ jobs:
         env: 
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
-          brew install openssl
           python3 -m venv .venv
           ${{ matrix.activate }}
 
