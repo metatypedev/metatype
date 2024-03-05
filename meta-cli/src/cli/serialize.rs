@@ -85,6 +85,10 @@ impl Action for Serialize {
         .auto_stop()
         .start();
 
+        if self.files.is_empty() {
+            exit(1);
+        }
+
         for path in self.files.iter() {
             loader.do_send(LoadModule(dir.join(path).into()));
         }
