@@ -1368,7 +1368,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.3.5-0"
+version = "0.3.5"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5829,7 +5829,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.3.5-0"
+version = "0.3.5"
 dependencies = [
  "actix",
  "anyhow",
@@ -6175,7 +6175,7 @@ dependencies = [
 
 [[package]]
 name = "mt_deno"
-version = "0.3.5-0"
+version = "0.3.5"
 dependencies = [
  "anyhow",
  "deno",
@@ -7240,18 +7240,18 @@ dependencies = [
 
 [[package]]
 name = "pin-project"
-version = "1.1.4"
+version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0302c4a0442c456bd56f841aee5c3bfd17967563f6fadc9ceb9f9c23cf3807e0"
+checksum = "b6bf43b791c5b9e34c3d182969b4abb522f9343702850a2e57f460d00d09b4b3"
 dependencies = [
  "pin-project-internal",
 ]
 
 [[package]]
 name = "pin-project-internal"
-version = "1.1.4"
+version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "266c042b60c9c76b8d53061e52b2e0d1116abc57cefc8c5cd671619a56ac3690"
+checksum = "2f38a4412a78282e09a2cf38d195ea5420d15ba0602cb375210efbc877243965"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -11273,7 +11273,7 @@ dependencies = [
 
 [[package]]
 name = "typegate"
-version = "0.3.5-0"
+version = "0.3.5"
 dependencies = [
  "colored",
  "env_logger",
@@ -11285,7 +11285,7 @@ dependencies = [
 
 [[package]]
 name = "typegate_engine"
-version = "0.3.5-0"
+version = "0.3.5"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
@@ -11327,7 +11327,7 @@ dependencies = [
 
 [[package]]
 name = "typegraph_core"
-version = "0.3.5-0"
+version = "0.3.5"
 dependencies = [
  "common",
  "enum_dispatch",
@@ -11354,7 +11354,7 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 
 [[package]]
 name = "typescript"
-version = "0.3.5-0"
+version = "0.3.5"
 dependencies = [
  "anyhow",
  "dprint-plugin-typescript",
@@ -12591,7 +12591,7 @@ checksum = "0fcb9cbac069e033553e8bb871be2fbdffcab578eb25bd0f7c508cedc6dcd75a"
 
 [[package]]
 name = "xtask"
-version = "0.3.5-0"
+version = "0.3.5"
 dependencies = [
  "anyhow",
  "clap",
