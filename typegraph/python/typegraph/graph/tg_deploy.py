@@ -5,25 +5,13 @@ from dataclasses import dataclass
 from typing import Dict, Optional, Union
 from urllib import request
 import json
-from base64 import b64encode
+from typegraph.graph.shared_types import BasicAuth
 from typegraph.wit import ArtifactResolutionConfig
 from typegraph.gen.types import Err
 
 from typegraph.graph.typegraph import TypegraphOutput
 from typegraph.gen.exports.utils import QueryDeployParams
 from typegraph.wit import store, wit_utils
-
-
-@dataclass
-class BasicAuth:
-    username: str
-    password: str
-
-    def as_header_value(self):
-        payload = b64encode(f"{self.username}:{self.password}".encode("utf-8")).decode(
-            "utf-8"
-        )
-        return f"Basic {payload}"
 
 
 @dataclass

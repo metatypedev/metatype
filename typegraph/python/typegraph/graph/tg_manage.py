@@ -6,13 +6,16 @@ from enum import Enum
 import os
 from typing import Dict, Union
 import json
-from typegraph.gen.exports.core import MigrationAction, MigrationConfig
+from typegraph.gen.exports.core import (
+    MigrationAction,
+    MigrationConfig,
+    ArtifactResolutionConfig,
+)
 
-from typegraph.graph.tg_deploy import BasicAuth, TypegraphDeployParams, tg_deploy
-from typegraph.wit import ArtifactResolutionConfig
+from typegraph.graph.tg_deploy import TypegraphDeployParams, tg_deploy
 from urllib import request
 
-from typegraph.graph.shared import TypegraphOutput
+from typegraph.graph.shared_types import BasicAuth, TypegraphOutput
 
 
 VERSION = "0.3.5-0"

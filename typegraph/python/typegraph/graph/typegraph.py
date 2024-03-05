@@ -17,10 +17,9 @@ from typegraph.gen.exports.core import (
 
 from typegraph.gen.types import Err
 from typegraph.graph.params import Auth, Cors, RawAuth
-from typegraph.graph.shared import TypegraphOutput
+from typegraph.graph.shared_types import TypegraphOutput
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph.wit import core, store, wit_utils
-from typegraph.graph.tg_manage import Manager
 
 if TYPE_CHECKING:
     from typegraph import t
@@ -79,6 +78,7 @@ class Typegraph:
         default_policy: Optional[PolicySpec] = None,
         **kwargs: ExposeItem,
     ):
+        print(str(kwargs))
         res = core.expose(
             store,
             [(k, v.id) for k, v in kwargs.items()],
@@ -223,6 +223,8 @@ def typegraph(
             return tg_json.value
 
         tg_output = TypegraphOutput(name=tg.name, serialize=serialize_with_artifacts)
+
+        from typegraph.graph.tg_manage import Manager
 
         if Manager.is_run_from_cli():
             manager = Manager(tg_output)
