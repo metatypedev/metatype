@@ -93,7 +93,7 @@ tgDeploy(tg, {
   },
   artifactsConfig: {
     ...artifactsConfig,
-    dir: "/home/afmika/dev-env/metatype/examples/deploy"
+    // dir: "."
   },
 }).then(({ typegate }) => {
   console.info(typegate);

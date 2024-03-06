@@ -41,7 +41,7 @@ pub fn common_prefix_paths(paths: &[PathBuf]) -> Option<PathBuf> {
             .collect::<_>();
     }
 
-    // a/b => if entry is absolute, paths[0] is an empty string
+    // [/]a/b => if path is absolute, path_chunk[0] is an empty string
     if prefix.components().count() == 0 {
         return None;
     }
@@ -61,7 +61,12 @@ pub fn relativize_paths(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
             .collect::<Result<Vec<_>, String>>()?;
         return Ok(ret);
     }
-    Ok(paths.to_owned())
+
+    if paths.is_empty() {
+        return Ok(vec![]);
+    }
+
+    Err("Cannot relativize path list if one item is already relative".to_string())
 }
 
 pub fn compress<P: Into<String>>(path: P, exclude: Option<Vec<String>>) -> Result<Vec<u8>, String> {
