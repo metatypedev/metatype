@@ -10,7 +10,7 @@ use indexmap::IndexMap;
 
 use crate::{
     global_store::Store,
-    wit::metatype::typegraph::host::{expand_glob, get_cwd, read_file, write_file},
+    wit::metatype::typegraph::host::{eprint, expand_glob, get_cwd, read_file, write_file},
 };
 
 pub fn read_text_file<P: Into<String>>(path: P) -> Result<String, String> {
@@ -25,20 +25,63 @@ pub fn write_text_file<P: Into<String>>(path: P, text: P) -> Result<(), String> 
     write_file(&path.into(), text.into().as_bytes())
 }
 
+pub fn common_prefix_paths(paths: &[PathBuf]) -> Option<PathBuf> {
+    if paths.is_empty() {
+        return None;
+    }
+
+    // always >= 1
+    let mut prefix = paths[0].clone();
+    for path in paths.iter().skip(1) {
+        prefix = prefix
+            .components()
+            .zip(path.components())
+            .take_while(|&(a, b)| a == b)
+            .map(|(a, _)| a)
+            .collect::<_>();
+    }
+
+    // a/b => if entry is absolute, paths[0] is an empty string
+    if prefix.components().count() == 0 {
+        return None;
+    }
+
+    Some(prefix)
+}
+
+pub fn relativize_paths(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
+    if let Some(common_dir) = common_prefix_paths(paths) {
+        let ret = paths
+            .iter()
+            .map(|path| {
+                path.strip_prefix(common_dir.clone())
+                    .map_err(|e| e.to_string())
+                    .map(|v| v.to_path_buf())
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        return Ok(ret);
+    }
+    Ok(paths.to_owned())
+}
+
 pub fn compress<P: Into<String>>(path: P, exclude: Option<Vec<String>>) -> Result<Vec<u8>, String> {
     // Note: each exclude entry is a regex pattern
     let exclude = exclude.unwrap_or_default();
     let paths = expand_glob(&path.into(), &exclude)?;
     let mut entries = IndexMap::new();
-    let cwd = get_cwd()?;
-    for path_str in paths.iter() {
-        let path = PathBuf::from(path_str)
-            .strip_prefix(cwd.clone()) // path in archives must be relative!
-            .unwrap_or(&PathBuf::from(path_str))
-            .display()
-            .to_string();
-        entries.insert(path.clone(), read_file(&path.clone())?);
+    eprint("Preparing tarball");
+
+    let abs_paths = paths.iter().map(PathBuf::from).collect::<Vec<PathBuf>>();
+    let rel_paths = relativize_paths(&abs_paths)?;
+
+    for (i, abs_path) in abs_paths.iter().enumerate() {
+        let rel_path_str = rel_paths[i].to_string_lossy();
+        eprint(&format!(" ++ {}", rel_path_str.clone()));
+        // Note: tarball paths should all be strictly relative
+        // Reason: Strip against workdir does not work when the sdk is spawn from another process
+        entries.insert(rel_path_str.into(), read_file(&abs_path.to_string_lossy())?);
     }
+
     archive_entries_from_bytes(entries).map_err(|e| e.to_string())
 }
 

@@ -12,8 +12,11 @@ import * as path from "path";
 // import { Policy, t, typegraph } from "../../typegraph/node/sdk/dist/index.js";
 // import { DenoRuntime } from "../../typegraph/node/sdk/dist/runtimes/deno.js";
 // import { PythonRuntime } from "../../typegraph/node/sdk/dist/runtimes/python.js";
+// import { WasmEdgeRuntime } from "../../typegraph/node/sdk/dist/runtimes/wasmedge.js";
 // import { tgDeploy } from "../../typegraph/node/sdk/dist/tg_deploy.js";
-
+// import { PrismaRuntime } from "../../typegraph/node/sdk/dist/providers/prisma.js";
+// import { BasicAuth } from "../../typegraph/node/sdk/dist/tg_deploy.js";
+// import { wit_utils } from "../../typegraph/node/sdk/dist/wit.js";
 
 const tg = await typegraph({
   name: "deploy-example-node",
@@ -83,16 +86,17 @@ const auth = new BasicAuth("admin", "password");
 
 tgDeploy(tg, {
   baseUrl,
-  cliVersion: "0.3.5-0",
+  cliVersion: "0.3.5",
   auth,
   secrets: {
     TG_DEPLOY_EXAMPLE_NODE_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
   },
   artifactsConfig: {
     ...artifactsConfig,
-    // dir: "."
+    dir: "/home/afmika/dev-env/metatype/examples/deploy"
   },
 }).then(({ typegate }) => {
+  console.info(typegate);
   const selection = typegate?.data?.addTypegraph;
   if (selection) {
     const { migrations, messages } = selection;
