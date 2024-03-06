@@ -5,7 +5,11 @@ use crate::com::{
     responses::{CLIResponseError, CLIResponseSuccess, SDKResponse},
     store::ServerStore,
 };
-use actix_web::{get, post, web::Query, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web::{
+    get, post,
+    web::{PayloadConfig, Query},
+    App, HttpRequest, HttpResponse, HttpServer, Responder,
+};
 use lazy_static::lazy_static;
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -127,6 +131,7 @@ pub async fn spawn_server() -> std::io::Result<()> {
             .service(config)
             .service(command)
             .service(response)
+            .app_data(PayloadConfig::new(1000000 * 100))
     })
     .listen(tcp_listener)?
     .run()
