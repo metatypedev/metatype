@@ -10,7 +10,7 @@ on:
 
 env:
   GHJK_VERSION: "f380522"
-  DENO_VERSION: "1.40.1"
+  DENO_VERSION: "1.41.0"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
 
@@ -121,9 +121,8 @@ jobs:
     strategy:
       matrix:
         include:
-          # TODO
-          # - os: macos-latest
-          #   activate: "source .venv/bin/activate"
+          - os: macos-latest
+            activate: "source .venv/bin/activate"
           - os: macos-14
             activate: "source .venv/bin/activate"
           #- os: windows-latest

@@ -75,7 +75,7 @@ export class HttpRuntime extends Runtime {
     options: Omit<MaterializerHttpRequest, "method">,
     effect?: Effect,
   ): t.Func<I, O> {
-    return this.#request("get", inp, out, options, effect ?? fx.create());
+    return this.#request("post", inp, out, options, effect ?? fx.create());
   }
 
   put<
@@ -87,7 +87,7 @@ export class HttpRuntime extends Runtime {
     options: Omit<MaterializerHttpRequest, "method">,
     effect?: Effect,
   ): t.Func<I, O> {
-    return this.#request("get", inp, out, options, effect ?? fx.update());
+    return this.#request("put", inp, out, options, effect ?? fx.update());
   }
 
   patch<
@@ -111,6 +111,6 @@ export class HttpRuntime extends Runtime {
     options: Omit<MaterializerHttpRequest, "method">,
     effect?: Effect,
   ): t.Func<I, O> {
-    return this.#request("get", inp, out, options, effect ?? fx.delete_());
+    return this.#request("delete", inp, out, options, effect ?? fx.delete_());
   }
 }

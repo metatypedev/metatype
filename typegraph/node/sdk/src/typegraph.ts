@@ -62,7 +62,10 @@ const InjectionSource = {
 type InjectionSourceType = typeof InjectionSource;
 
 export interface TypegraphBuilderArgs extends InjectionSourceType {
-  expose: (exports: Exports, defaultPolicy?: Policy) => void;
+  expose: (
+    exports: Exports,
+    defaultPolicy?: t.PolicySpec | Array<t.PolicySpec>,
+  ) => void;
   inherit: () => InheritDef;
   rest: (graphql: string) => number;
   auth: (value: Auth | RawAuth) => number;

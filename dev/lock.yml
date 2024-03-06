@@ -5,6 +5,8 @@ dev:
       - typegraph/node/LICENSE.md
       - typegraph/node/sdk/LICENSE.md
   lines:
+    installer.sh:
+      (WASMEDGE_VERSION=").+("): WASMEDGE_VERSION
     rust-toolchain.toml:
       (channel = ").+("): RUST_VERSION
     ghjk.ts:
@@ -84,18 +86,18 @@ dev:
     POETRY_VERSION: 1.7.0
     PROTOC_VERSION: v24.1
     RUST_VERSION: 1.75.0
-    DENO_VERSION: 1.40.1
+    DENO_VERSION: 1.41.0
     NODE_VERSION: 20.8.0
     PNPM_VERSION: v8.15.2
     CARGO_INSTA_VERSION: 1.33.0
     WASM_TOOLS_VERSION: 1.0.53
     JCO_VERSION: 1.0.0
-    WASMTIME_VERSION: 13.0.2
+    WASMTIME_VERSION: 18.0.2
     WASMEDGE_VERSION: 0.13.5
     TYPEGRAPH_VERSION: 0.0.3
     PRISMA_VERSION: 5.5.2
-    METATYPE_VERSION: 0.3.5-0
-    PUBLISHED_VERSION: 0.3.3
+    METATYPE_VERSION: 0.3.5
+    PUBLISHED_VERSION: 0.3.4
     WASM_OPT_VERSION: 0.116.0
     MOLD_VERSION: v2.4.0
     CMAKE_VERSION: 3.28.0-rc6

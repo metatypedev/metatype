@@ -27,7 +27,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "function",
-        "title": "func_27",
+        "title": "func_33",
         "runtime": 1,
         "policies": [
           0
@@ -42,7 +42,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "object",
-        "title": "object_4",
+        "title": "object_5",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -92,7 +92,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "string",
-        "title": "string_5",
+        "title": "string_4",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -100,7 +100,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "function",
-        "title": "func_28",
+        "title": "func_34",
         "runtime": 1,
         "policies": [
           0
@@ -115,7 +115,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "object",
-        "title": "object_10",
+        "title": "object_11",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -154,7 +154,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "string",
-        "title": "string_11",
+        "title": "string_10",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -162,7 +162,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "function",
-        "title": "func_29",
+        "title": "func_35",
         "runtime": 1,
         "policies": [
           0
@@ -222,7 +222,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "string",
-        "title": "string_17",
+        "title": "string_16",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -230,7 +230,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "function",
-        "title": "func_30",
+        "title": "func_36",
         "runtime": 1,
         "policies": [
           0
@@ -245,7 +245,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "object",
-        "title": "object_24",
+        "title": "object_31",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -273,8 +273,68 @@ snapshot[`Typegraph using temporal 1`] = `
         "as_id": false
       },
       {
-        "type": "string",
-        "title": "string_25",
+        "type": "object",
+        "title": "object_30",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "start_time": 25,
+          "close_time": 27,
+          "state": 29
+        },
+        "required": []
+      },
+      {
+        "type": "optional",
+        "title": "optional_25",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "item": 26,
+        "default_value": null
+      },
+      {
+        "type": "integer",
+        "title": "integer_24",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "optional",
+        "title": "optional_27",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "item": 28,
+        "default_value": null
+      },
+      {
+        "type": "integer",
+        "title": "integer_26",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "optional",
+        "title": "optional_29",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "item": 30,
+        "default_value": null
+      },
+      {
+        "type": "integer",
+        "title": "integer_28",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -424,7 +484,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "object",
-        "title": "object_4",
+        "title": "object_5",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -474,7 +534,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "string",
-        "title": "string_5",
+        "title": "string_4",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -497,7 +557,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "object",
-        "title": "object_11",
+        "title": "object_12",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -536,7 +596,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "string",
-        "title": "string_12",
+        "title": "string_11",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -604,7 +664,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "string",
-        "title": "string_19",
+        "title": "string_18",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -612,7 +672,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "function",
-        "title": "func_30",
+        "title": "func_36",
         "runtime": 1,
         "policies": [
           0
@@ -627,7 +687,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "object",
-        "title": "object_27",
+        "title": "object_34",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -655,8 +715,68 @@ snapshot[`Typegraph using temporal 2`] = `
         "as_id": false
       },
       {
-        "type": "string",
-        "title": "string_28",
+        "type": "object",
+        "title": "object_33",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "start_time": 25,
+          "close_time": 27,
+          "state": 29
+        },
+        "required": []
+      },
+      {
+        "type": "optional",
+        "title": "optional_28",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "item": 26,
+        "default_value": null
+      },
+      {
+        "type": "integer",
+        "title": "integer_27",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "optional",
+        "title": "optional_30",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "item": 28,
+        "default_value": null
+      },
+      {
+        "type": "integer",
+        "title": "integer_29",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "optional",
+        "title": "optional_32",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "item": 30,
+        "default_value": null
+      },
+      {
+        "type": "integer",
+        "title": "integer_31",
         "runtime": 1,
         "policies": [],
         "config": {},
