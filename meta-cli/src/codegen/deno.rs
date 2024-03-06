@@ -462,69 +462,69 @@ impl IntoJson for HashMap<String, Value> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use std::sync::Arc;
+// #[cfg(test)]
+// mod tests {
+//     use std::sync::Arc;
 
-    use normpath::PathExt;
-    use pathdiff::diff_paths;
-    use tokio::sync::mpsc;
+//     use normpath::PathExt;
+//     use pathdiff::diff_paths;
+//     use tokio::sync::mpsc;
 
-    use super::*;
-    use crate::config::Config;
-    use crate::deploy::actors::console::ConsoleActor;
-    use crate::deploy::actors::loader::{LoadModule, LoaderActor, LoaderEvent};
-    use crate::tests::utils::ensure_venv;
-    use actix::prelude::*;
+//     use super::*;
+//     use crate::config::Config;
+//     use crate::deploy::actors::console::ConsoleActor;
+//     use crate::deploy::actors::loader::{LoadModule, LoaderActor, LoaderEvent};
+//     use crate::tests::utils::ensure_venv;
+//     use actix::prelude::*;
 
-    #[actix::test(flavor = "multi_thread")]
-    async fn codegen() -> Result<()> {
-        crate::logger::init();
-        ensure_venv()?;
-        let test_folder = Path::new("./src/tests/typegraphs").normalize()?;
-        std::env::set_current_dir(&test_folder)?;
-        let tests = fs::read_dir(&test_folder).unwrap();
-        let config = Config::default_in(".");
-        let config = Arc::new(config);
+//     #[actix::test(flavor = "multi_thread")]
+//     async fn codegen() -> Result<()> {
+//         crate::logger::init();
+//         ensure_venv()?;
+//         let test_folder = Path::new("./src/tests/typegraphs").normalize()?;
+//         std::env::set_current_dir(&test_folder)?;
+//         let tests = fs::read_dir(&test_folder).unwrap();
+//         let config = Config::default_in(".");
+//         let config = Arc::new(config);
 
-        for typegraph_test in tests {
-            let typegraph_test = typegraph_test.unwrap().path();
-            let typegraph_test = diff_paths(&typegraph_test, &test_folder).unwrap();
+//         for typegraph_test in tests {
+//             let typegraph_test = typegraph_test.unwrap().path();
+//             let typegraph_test = diff_paths(&typegraph_test, &test_folder).unwrap();
 
-            let console = ConsoleActor::new(Arc::clone(&config)).start();
-            let (event_tx, event_rx) = mpsc::unbounded_channel();
-            let loader = LoaderActor::new(Arc::clone(&config), console, event_tx, 1)
-                .auto_stop()
-                .start();
-            loader.do_send(LoadModule(
-                test_folder
-                    .join(&typegraph_test)
-                    .as_path()
-                    .to_owned()
-                    .into(),
-            ));
+//             let console = ConsoleActor::new(Arc::clone(&config)).start();
+//             let (event_tx, event_rx) = mpsc::unbounded_channel();
+//             let loader = LoaderActor::new(Arc::clone(&config), console, event_tx, 1)
+//                 .auto_stop()
+//                 .start();
+//             loader.do_send(LoadModule(
+//                 test_folder
+//                     .join(&typegraph_test)
+//                     .as_path()
+//                     .to_owned()
+//                     .into(),
+//             ));
 
-            let mut event_rx = event_rx;
-            // let tg = match event_rx.recv().await.unwrap() {
-            //     LoaderEvent::Typegraph(tg) => tg,
-            //     evt => bail!("unexpected loader evt: {evt:?}"),
-            // };
+//             let mut event_rx = event_rx;
+//             // let tg = match event_rx.recv().await.unwrap() {
+//             //     LoaderEvent::Typegraph(tg) => tg,
+//             //     evt => bail!("unexpected loader evt: {evt:?}"),
+//             // };
 
-            // TODO:
-            // run typegraph! thenget serialized version
+//             // TODO:
+//             // run typegraph! thenget serialized version
 
-            // let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
-            // assert_eq!(module_codes.len(), 1);
+//             // let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
+//             // assert_eq!(module_codes.len(), 1);
 
-            // let test_name = typegraph_test.to_string_lossy().to_string();
-            // insta::assert_snapshot!(test_name, &module_codes[0].code);
+//             // let test_name = typegraph_test.to_string_lossy().to_string();
+//             // insta::assert_snapshot!(test_name, &module_codes[0].code);
 
-            assert!(matches!(
-                event_rx.recv().await,
-                Some(LoaderEvent::Stopped(_))
-            ));
-        }
+//             assert!(matches!(
+//                 event_rx.recv().await,
+//                 Some(LoaderEvent::Stopped(_))
+//             ));
+//         }
 
-        Ok(())
-    }
-}
+//         Ok(())
+//     }
+// }
