@@ -324,8 +324,6 @@ class TransformerCompilationContext {
         );
         break;
       }
-      // TODO boolean??
-      // TODO optional??
       default:
         throw new Error(
           `At "${path}": Unsupported type "${typeNode.type}" for secret injection`,
