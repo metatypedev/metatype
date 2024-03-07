@@ -63,12 +63,26 @@ fn main() -> Result<()> {
         // the deno task requires use of a single thread runtime which it'll spawn itself
         Some(cli::Commands::Typegate(cmd_args)) => cli::typegate::command(cmd_args, args.gen)?,
         Some(command) => actix::run(async move {
-            let command = command.run(args.gen);
-            let server = spawn_server().map_err(|e| e.into());
-            try_join!(command, server).unwrap_or_else(|e| {
-                error!("{}", e.to_string());
-                std::process::exit(1);
-            });
+            match command {
+                cli::Commands::Codegen(_) => {
+                    eprintln!("codegen command is disabled for now");
+                    std::process::exit(0)
+                }
+                cli::Commands::Undeploy(_) | cli::Commands::Typegate(_) => {
+                    command.run(args.gen).await.unwrap_or_else(|e| {
+                        error!("{}", e.to_string());
+                        std::process::exit(1);
+                    });
+                }
+                _ => {
+                    let command = command.run(args.gen);
+                    let server = spawn_server().map_err(|e| e.into());
+                    try_join!(command, server).unwrap_or_else(|e| {
+                        error!("{}", e.to_string());
+                        std::process::exit(1);
+                    });
+                }
+            }
         })?,
         None => Args::command().print_help()?,
     }
