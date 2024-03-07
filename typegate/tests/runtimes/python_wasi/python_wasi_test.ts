@@ -244,11 +244,11 @@ Meta.test("Python WASI: infinite loop or similar", async (t) => {
 
 Meta.test("Python WASI: typegate reloading", async (metaTest) => {
   const load = async () => {
-    const e = await metaTest.engine("runtimes/python_wasi/python_wasi.ts");
-    return e;
+    return await metaTest.engine("runtimes/python_wasi/python_wasi.ts");
   };
   const engine = await load();
   await metaTest.should("work before typegate is reloaded", async () => {
+    // def
     await gql`
       query {
         identityDef(
@@ -268,12 +268,54 @@ Meta.test("Python WASI: typegate reloading", async (metaTest) => {
         },
       })
       .on(engine);
+
+    // lambda
+    await gql`
+      query {
+        identityLambda(
+          input: {
+            a: "hello",
+            b: [1, 2, "three"]
+          }) {
+          a
+          b
+        }
+      }
+    `
+      .expectData({
+        identityLambda: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
+      })
+      .on(engine);
+
+    // module import
+    await gql`
+      query {
+        identityMod(input: {
+          a: "hello",
+          b: [1, 2, "three"],
+        }) {
+          a
+          b
+        }
+      }
+    `
+      .expectData({
+        identityMod: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
+      })
+      .on(engine);
   });
 
   // reload typegate
-  const reloaded_engine = await load();
+  const reloadedEngine = await load();
 
   await metaTest.should("work after typegate is reloaded", async () => {
+    // def
     await gql`
       query {
         identityDef(
@@ -292,6 +334,47 @@ Meta.test("Python WASI: typegate reloading", async (metaTest) => {
           b: [1, 2, "three"],
         },
       })
-      .on(reloaded_engine);
+      .on(reloadedEngine);
+
+    // lambda
+    await gql`
+    query {
+      identityLambda(
+        input: {
+          a: "hello",
+          b: [1, 2, "three"]
+        }) {
+        a
+        b
+      }
+    }
+  `
+      .expectData({
+        identityLambda: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
+      })
+      .on(reloadedEngine);
+
+    // module import
+    await gql`
+      query {
+        identityMod(input: {
+          a: "hello",
+          b: [1, 2, "three"],
+        }) {
+          a
+          b
+        }
+      }
+    `
+      .expectData({
+        identityMod: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
+      })
+      .on(reloadedEngine);
   });
 });
