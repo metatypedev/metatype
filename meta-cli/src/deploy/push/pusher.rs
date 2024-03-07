@@ -13,7 +13,9 @@ use anyhow::Result;
 use serde::Deserialize;
 
 use crate::com::{responses::SDKResponse, store::ServerStore};
+use crate::deploy::actors::console::input::{Confirm, ConfirmHandler};
 use crate::deploy::actors::console::{Console, ConsoleActor};
+use crate::deploy::actors::loader::{LoadModule, LoaderActor};
 
 use lazy_static::lazy_static;
 
@@ -96,11 +98,16 @@ pub struct PushResult {
     failure: Option<PushFailure>,
     original_name: String,
     console: Addr<ConsoleActor>,
+    loader: Addr<LoaderActor>,
     sdk_response: SDKResponse,
 }
 
 impl PushResult {
-    pub fn new(console: Addr<ConsoleActor>, sdk_response: SDKResponse) -> Result<Self> {
+    pub fn new(
+        console: Addr<ConsoleActor>,
+        loader: Addr<LoaderActor>,
+        sdk_response: SDKResponse,
+    ) -> Result<Self> {
         let raw = sdk_response.as_push_result()?;
 
         let failure = match raw.failure {
@@ -115,11 +122,12 @@ impl PushResult {
             failure,
             original_name: sdk_response.typegraph_name.clone(),
             console,
+            loader,
             sdk_response,
         })
     }
 
-    pub fn finalize(&self) -> Result<()> {
+    pub async fn finalize(&self) -> Result<()> {
         let name = self.name.clone();
         self.console.info(format!(
             "{} Successfully pushed typegraph {name}.",
@@ -131,9 +139,9 @@ impl PushResult {
             .unwrap()
             .prisma_migrations_dir_rel(&self.original_name);
 
+        // TODO: use unpack from sdk? This requires another load event though.
         for migrations in self.migrations.iter() {
             let dest = migdir.join(&migrations.runtime);
-            // TODO async??
             if let Err(e) = common::archive::unpack(&dest, Some(migrations.migrations.clone())) {
                 self.console.error(format!(
                     "Error while unpacking migrations into {:?}",
@@ -142,7 +150,7 @@ impl PushResult {
                 self.console.error(format!("{e:?}"));
             } else {
                 self.console.info(format!(
-                    "Successfully unpacked migrations for {name}/{} at {:?}!",
+                    "Successfully unpacked migrations for {name}/{} at {:?}",
                     migrations.runtime, dest
                 ));
             }
@@ -158,14 +166,139 @@ impl PushResult {
                     self.console.error(f.message);
                 }
                 PushFailure::DatabaseResetRequired(failure) => {
-                    todo!("database reset required {:?}", failure);
+                    handle_database_reset(
+                        self.console.clone(),
+                        self.loader.clone(),
+                        failure,
+                        self.sdk_response.clone(),
+                    )
+                    .await?
                 }
-                PushFailure::NullConstraintViolation(failure) => {
-                    todo!("null constraint violation {:?}", failure);
-                }
+                PushFailure::NullConstraintViolation(failure) => handle_null_constraint_violation(
+                    self.console.clone(),
+                    failure,
+                    self.sdk_response.clone(),
+                ),
             }
         }
         Ok(())
+    }
+}
+
+// DatabaseReset Handler + interactivity
+
+#[derive(Debug)]
+struct ConfirmDatabaseResetRequired {
+    sdk_response: SDKResponse,
+    loader: Addr<LoaderActor>,
+}
+
+impl ConfirmHandler for ConfirmDatabaseResetRequired {
+    fn on_confirm(&self) {
+        let tg_path = self.sdk_response.clone().typegraph_path;
+
+        // reset
+        let mut option = ServerStore::get_migration_action(&tg_path);
+        option.reset = true;
+        ServerStore::set_migration_action(tg_path.clone(), option);
+
+        // reload
+        self.loader.do_send(LoadModule(tg_path.into()));
+    }
+}
+
+async fn handle_database_reset(
+    console: Addr<ConsoleActor>,
+    loader: Addr<LoaderActor>,
+    failure: DatabaseResetRequired,
+    sdk_response: SDKResponse,
+) -> Result<()> {
+    let DatabaseResetRequired {
+        message,
+        runtime_name,
+    } = failure;
+
+    let name = sdk_response.typegraph_name.clone();
+
+    console.error(format!(
+        "Database reset required for prisma runtime {rt} in typegraph {name}",
+        rt = runtime_name.magenta(),
+    ));
+    console.error(message);
+
+    let rt = runtime_name.clone();
+    let _ = Confirm::new(
+        console,
+        format!("Do you want to reset the database for runtime {rt} on {name}?"),
+    )
+    .interact(Box::new(ConfirmDatabaseResetRequired {
+        sdk_response: sdk_response.clone(),
+        loader,
+    }))
+    .await?;
+
+    Ok(())
+}
+
+pub fn handle_null_constraint_violation(
+    console: Addr<ConsoleActor>,
+    failure: NullConstraintViolation,
+    sdk_response: SDKResponse,
+) {
+    #[allow(unused)]
+    let typegraph_name = sdk_response.typegraph_name;
+    #[allow(unused)]
+    let NullConstraintViolation {
+        message,
+        runtime_name,
+        migration_name,
+        is_new_column,
+        column,
+        table,
+    } = failure;
+
+    console.error(message);
+
+    if is_new_column {
+        console.info(format!("manually edit the migration {migration_name}; or remove the migration and add set a default value"));
+        todo!("interactive choice")
+        // let migration_dir: PathBuf = ServerStore::get_config()
+        //     .unwrap()
+        //     .prisma_migrations_dir_rel(&typegraph_name)
+        //     .join(&runtime_name)
+        //     .into();
+
+        // let remove_latest = RemoveLatestMigration {
+        //     runtime_name: runtime_name.clone(),
+        //     migration_name: migration_name.clone(),
+        //     migration_dir: migration_dir.clone(),
+        //     push_manager: self.push_manager.clone(),
+        //     console: self.console.clone(),
+        // };
+
+        // let manual = ManualResolution {
+        //     runtime_name: runtime_name.clone(),
+        //     migration_name: migration_name.clone(),
+        //     migration_dir,
+        //     message: Some(format!(
+        //         "Set a default value for the column `{}` in the table `{}`",
+        //         column, table
+        //     )),
+        //     push_manager: self.push_manager.clone(),
+        //     console: self.console.clone(),
+        // };
+
+        // let reset = ForceReset {
+        //     typegraph: typegraph.clone(),
+        //     runtime_name: runtime_name.clone(),
+        //     push_manager: self.push_manager.clone(),
+        // };
+
+        // self.push_manager
+        //     .do_send(PushFinished::new(msg.push, false).select(
+        //         "Choose one of the following options".to_string(),
+        //         vec![Box::new(remove_latest), Box::new(manual), Box::new(reset)],
+        //     ));
     }
 }
 

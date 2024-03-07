@@ -34,8 +34,6 @@ fn main() -> Result<()> {
     setup_panic_hook();
     logger::init();
 
-    std::env::set_var("META_CLI_SERVER_PORT", get_instance_port().to_string());
-
     let _ = actix::System::with_tokio_rt(|| {
         tokio::runtime::Builder::new_multi_thread()
             .enable_all()
@@ -75,6 +73,8 @@ fn main() -> Result<()> {
                     });
                 }
                 _ => {
+                    std::env::set_var("META_CLI_SERVER_PORT", get_instance_port().to_string());
+
                     let command = command.run(args.gen);
                     let server = spawn_server().map_err(|e| e.into());
                     try_join!(command, server).unwrap_or_else(|e| {

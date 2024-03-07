@@ -55,7 +55,8 @@ pub struct MigrationAction {
 pub struct ServerStore {
     config: Option<Config>,
     command: Option<Command>,
-    migration_action: MigrationAction,
+    migration_action_glob: MigrationAction,
+    migration_action: HashMap<PathBuf, Arc<MigrationAction>>,
     secrets: HashMap<String, String>,
     endpoint: Endpoint,
     prefix: Option<String>,
@@ -101,7 +102,7 @@ impl ServerStore {
 
     pub fn add_response(tg_name: PathBuf, response: SDKResponse) {
         with_store_mut(|s| {
-            s.sdk_responses.insert(tg_name, Arc::new(response));
+            s.sdk_responses.insert(tg_name, response.into());
         })
     }
 
@@ -120,12 +121,31 @@ impl ServerStore {
         with_store(|s| s.sdk_responses.clone())
     }
 
-    pub fn set_migration_action(option: MigrationAction) {
-        with_store_mut(|s| s.migration_action = option)
+    pub fn set_migration_action_glob(option: MigrationAction) {
+        with_store_mut(|s| s.migration_action_glob = option)
     }
 
-    pub fn get_migration_action() -> MigrationAction {
-        with_store(|s| s.migration_action.to_owned())
+    pub fn get_migration_action_glob() -> MigrationAction {
+        with_store(|s| s.migration_action_glob.to_owned())
+    }
+
+    pub fn set_migration_action(tg_path: PathBuf, option: MigrationAction) {
+        with_store_mut(|s| {
+            s.migration_action.insert(tg_path, option.into());
+        })
+    }
+
+    pub fn get_migration_action(tg_path: &PathBuf) -> MigrationAction {
+        with_store(|s| {
+            if let Some(mig_action) = s.migration_action.get(tg_path) {
+                println!(
+                    "Specific migration action was defined for {}",
+                    tg_path.display()
+                );
+                return mig_action.as_ref().to_owned();
+            }
+            s.migration_action_glob.to_owned()
+        })
     }
 
     pub fn set_prefix(prefix: Option<String>) {

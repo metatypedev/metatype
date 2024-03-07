@@ -15,7 +15,7 @@ from typegraph.wit import ArtifactResolutionConfig, MigrationConfig, MigrationAc
 from os import path
 
 
-@typegraph(disable_auto_serialization=True)  # disable print
+@typegraph()
 def deploy_example_python(g: Graph):
     deno = DenoRuntime()
     python = PythonRuntime()

@@ -116,7 +116,7 @@ impl Deploy {
             .with_context(|| format!("building node from config: {node_config:#?}"))?;
 
         ServerStore::with(Some(Command::Deploy), Some(config.as_ref().to_owned()));
-        ServerStore::set_migration_action(MigrationAction {
+        ServerStore::set_migration_action_glob(MigrationAction {
             create: deploy.options.create_migration,
             reset: deploy.options.allow_destructive, // reset on drift
         });
@@ -262,9 +262,13 @@ mod default_mode {
                     match event {
                         LoaderEvent::Typegraph(tg) => match tg.get_response_or_fail() {
                             Ok(res) => {
-                                match PushResult::new(self.console.clone(), res.as_ref().clone()) {
+                                match PushResult::new(
+                                    self.console.clone(),
+                                    self.loader.clone(),
+                                    res.as_ref().clone(),
+                                ) {
                                     Ok(push) => {
-                                        if let Err(e) = push.finalize() {
+                                        if let Err(e) = push.finalize().await {
                                             panic!("{}", e.to_string());
                                         }
                                     }
@@ -399,9 +403,9 @@ mod watch_mode {
                                 .unwrap()
                                 .as_ref()
                                 .to_owned();
-                            match PushResult::new(console.clone(), response) {
+                            match PushResult::new(console.clone(), loader.clone(), response) {
                                 Ok(push) => {
-                                    if let Err(e) = push.finalize() {
+                                    if let Err(e) = push.finalize().await {
                                         panic!("{}", e.to_string());
                                     }
                                     RetryManager::clear_counter(&tg.path);

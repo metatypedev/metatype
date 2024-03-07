@@ -20,7 +20,6 @@ import * as path from "path";
 
 const tg = await typegraph({
   name: "deploy-example-node",
-  disableAutoSerialization: true // disable print
 }, (g) => {
     const deno = new DenoRuntime();
     const python = new PythonRuntime();

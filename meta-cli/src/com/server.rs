@@ -50,14 +50,15 @@ struct QueryConfigParams {
 
 #[get("/config")]
 async fn config(req: HttpRequest) -> impl Responder {
-    let mut parsed = Query::<QueryConfigParams>::from_query(req.query_string()).unwrap();
+    let parsed = Query::<QueryConfigParams>::from_query(req.query_string()).unwrap();
 
-    parsed.typegraph_path.pop(); // pop file.ext
-    let artefact_base_dir = parsed.typegraph_path.clone();
+    let mut artefact_base_dir = parsed.typegraph_path.clone();
+    artefact_base_dir.pop(); // pop file.ext
 
     let endpoint = ServerStore::get_endpoint();
     let secrets = ServerStore::get_secrets();
-    let migration_action = ServerStore::get_migration_action();
+    let migration_action = ServerStore::get_migration_action(&parsed.typegraph_path);
+
     let prefix = ServerStore::get_prefix();
     match ServerStore::get_config() {
         Some(config) => {
