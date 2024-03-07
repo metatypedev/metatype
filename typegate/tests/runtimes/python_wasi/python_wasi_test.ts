@@ -4,6 +4,7 @@
 import { assert, assertEquals } from "std/assert/mod.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 import { PythonVirtualMachine } from "../../../src/runtimes/python_wasi/python_vm.ts";
+import { QueryEngine } from "../../../src/engine/query_engine.ts";
 
 Meta.test("Python WASI VM performance", async (t) => {
   const vm = new PythonVirtualMachine();
@@ -246,9 +247,8 @@ Meta.test("Python WASI: typegate reloading", async (metaTest) => {
   const load = async () => {
     return await metaTest.engine("runtimes/python_wasi/python_wasi.ts");
   };
-  const engine = await load();
-  await metaTest.should("work before typegate is reloaded", async () => {
-    // def
+
+  const runPythonOnPythonWasi = async (currentEngine: QueryEngine) => {
     await gql`
       query {
         identityDef(
@@ -258,109 +258,16 @@ Meta.test("Python WASI: typegate reloading", async (metaTest) => {
           }) {
           a
           b
-        }
-      }
-    `
-      .expectData({
-        identityDef: {
-          a: "hello",
-          b: [1, 2, "three"],
         },
-      })
-      .on(engine);
-
-    // lambda
-    await gql`
-      query {
         identityLambda(
-          input: {
-            a: "hello",
-            b: [1, 2, "three"]
-          }) {
-          a
-          b
-        }
-      }
-    `
-      .expectData({
-        identityLambda: {
-          a: "hello",
-          b: [1, 2, "three"],
-        },
-      })
-      .on(engine);
-
-    // module import
-    await gql`
-      query {
-        identityMod(input: {
-          a: "hello",
-          b: [1, 2, "three"],
-        }) {
-          a
-          b
-        }
-      }
-    `
-      .expectData({
-        identityMod: {
-          a: "hello",
-          b: [1, 2, "three"],
-        },
-      })
-      .on(engine);
-  });
-
-  // reload typegate
-  const reloadedEngine = await load();
-
-  await metaTest.should("work after typegate is reloaded", async () => {
-    // def
-    await gql`
-      query {
-        identityDef(
-          input: {
-            a: "hello",
-            b: [1, 2, "three"]
-          }) {
-          a
-          b
-        }
-      }
-    `
-      .expectData({
-        identityDef: {
-          a: "hello",
-          b: [1, 2, "three"],
-        },
-      })
-      .on(reloadedEngine);
-
-    // lambda
-    await gql`
-    query {
-      identityLambda(
         input: {
           a: "hello",
           b: [1, 2, "three"]
         }) {
         a
         b
-      }
-    }
-  `
-      .expectData({
-        identityLambda: {
-          a: "hello",
-          b: [1, 2, "three"],
-        },
-      })
-      .on(reloadedEngine);
-
-    // module import
-    await gql`
-      query {
-        identityMod(input: {
+      },
+      identityMod(input: {
           a: "hello",
           b: [1, 2, "three"],
         }) {
@@ -370,11 +277,30 @@ Meta.test("Python WASI: typegate reloading", async (metaTest) => {
       }
     `
       .expectData({
+        identityDef: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
+        identityLambda: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
         identityMod: {
           a: "hello",
           b: [1, 2, "three"],
         },
       })
-      .on(reloadedEngine);
+      .on(currentEngine);
+  };
+  const engine = await load();
+  await metaTest.should("work before typegate is reloaded", async () => {
+    await runPythonOnPythonWasi(engine);
+  });
+
+  // reload
+  const reloadedEngine = await load();
+
+  await metaTest.should("work after typegate is reloaded", async () => {
+    await runPythonOnPythonWasi(reloadedEngine);
   });
 });
