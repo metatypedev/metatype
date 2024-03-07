@@ -241,3 +241,57 @@ Meta.test("Python WASI: infinite loop or similar", async (t) => {
   //     .on(e);
   // });
 }, { sanitizeOps: false });
+
+Meta.test("Python WASI: typegate reloading", async (metaTest) => {
+  const load = async () => {
+    const e = await metaTest.engine("runtimes/python_wasi/python_wasi.ts");
+    return e;
+  };
+  const engine = await load();
+  await metaTest.should("work before typegate is reloaded", async () => {
+    await gql`
+      query {
+        identityDef(
+          input: {
+            a: "hello",
+            b: [1, 2, "three"]
+          }) {
+          a
+          b
+        }
+      }
+    `
+      .expectData({
+        identityDef: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
+      })
+      .on(engine);
+  });
+
+  // reload typegate
+  const reloaded_engine = await load();
+
+  await metaTest.should("work after typegate is reloaded", async () => {
+    await gql`
+      query {
+        identityDef(
+          input: {
+            a: "hello",
+            b: [1, 2, "three"]
+          }) {
+          a
+          b
+        }
+      }
+    `
+      .expectData({
+        identityDef: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
+      })
+      .on(reloaded_engine);
+  });
+});
