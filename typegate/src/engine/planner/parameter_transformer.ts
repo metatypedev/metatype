@@ -5,7 +5,7 @@ import { QueryFn, QueryFunction } from "../../libs/jsonpath.ts";
 import { TypeGraph } from "../../typegraph/mod.ts";
 import { Type } from "../../typegraph/type_node.ts";
 import { ParameterTransformNode } from "../../typegraph/types.ts";
-import { generateBooleanValidator } from "../typecheck/inline_validators/boolean.ts";
+import { ValidationContext, validationContext } from "../typecheck/common.ts";
 import { generateListValidator } from "../typecheck/inline_validators/list.ts";
 import { generateNumberValidator } from "../typecheck/inline_validators/number.ts";
 import {
@@ -13,6 +13,7 @@ import {
   getKeys,
 } from "../typecheck/inline_validators/object.ts";
 import { generateStringValidator } from "../typecheck/inline_validators/string.ts";
+import { InputValidationCompiler } from "../typecheck/input.ts";
 
 export type TransformParamsInput = {
   args: Record<string, any>;
@@ -35,7 +36,10 @@ type CompiledTransformerInput = {
 };
 
 type CompiledTransformer = {
-  (input: CompiledTransformerInput): Record<string, any>;
+  (
+    input: CompiledTransformerInput,
+    contxt: ValidationContext,
+  ): Record<string, any>;
 };
 
 export function compileParameterTransformer(
@@ -45,10 +49,10 @@ export function compileParameterTransformer(
 ): TransformParams {
   const ctx = new TransformerCompilationContext(typegraph, parentProps);
   const { fnBody, deps } = ctx.compile(transformerTreeRoot);
-  const fn = new Function("input", fnBody) as CompiledTransformer;
+  const fn = new Function("input", "context", fnBody) as CompiledTransformer;
   return ({ args, context, parent }) => {
     const getContext = compileContextQueries(deps.contexts)(context);
-    const res = fn({ args, getContext, parent });
+    const res = fn({ args, getContext, parent }, validationContext);
     return res;
   };
 }
@@ -105,10 +109,16 @@ class TransformerCompilationContext {
       nonStrictMode: new Set(),
     },
   };
+  #inputValidatorCompiler: InputValidationCompiler;
+  #typesWithCustomValidator: Set<number> = new Set();
 
   constructor(typegraph: TypeGraph, parentProps: Record<string, number>) {
     this.#tg = typegraph;
     this.#parentProps = parentProps;
+    this.#inputValidatorCompiler = new InputValidationCompiler(
+      typegraph,
+      (idx) => `validate_${idx}`,
+    );
   }
 
   #reset() {
@@ -127,8 +137,11 @@ class TransformerCompilationContext {
     this.#reset();
     const varName = this.#compileNode(rootNode);
     this.#collector.push(`return ${varName};`);
+    const customValidators = [...this.#typesWithCustomValidator]
+      .map((idx) => this.#inputValidatorCompiler.codes.get(idx))
+      .join("\n");
     const res = {
-      fnBody: this.#collector.join("\n"),
+      fnBody: customValidators + this.#collector.join("\n"),
       deps: this.#dependencies,
     };
 
@@ -232,7 +245,7 @@ class TransformerCompilationContext {
     const varName = this.#createVarName();
     let typeNode = this.#tg.type(typeIdx);
     let optional = false;
-    if (typeNode.type === Type.OPTIONAL) {
+    while (typeNode.type === Type.OPTIONAL) {
       typeNode = this.#tg.type(typeNode.item);
       optional = true;
     }
@@ -248,45 +261,24 @@ class TransformerCompilationContext {
 
     this.#collector.push(`if (${varName} != null) {`);
 
-    switch (typeNode.type) {
-      case Type.OPTIONAL:
-        throw new Error(`At "${path}": nested optional not supported`);
-      case Type.INTEGER: {
-        const parsedVar = this.#createVarName();
-        this.#collector.push(
-          `const ${parsedVar} = parseInt(${varName}, 10);`,
-          ...generateNumberValidator(typeNode, parsedVar, path),
-        );
-        break;
-      }
-      case Type.FLOAT: {
-        const parsedVar = this.#createVarName();
-        this.#collector.push(
-          `const ${parsedVar} = parseFloat(${varName});`,
-          ...generateNumberValidator(typeNode, parsedVar, path),
-        );
-        break;
-      }
-      case Type.STRING:
-        this.#collector.push(
-          ...generateStringValidator(typeNode, varName, path),
-        );
-        break;
-      case Type.BOOLEAN: {
-        const parsedVar = this.#createVarName();
-
-        this.#collector.push(
-          `const ${varName} = Boolean(${varName});`,
-          ...generateBooleanValidator(typeNode, parsedVar, path),
-        );
-        break;
-      }
-
-      default:
-        throw new Error(
-          `At "${path}": Unsupported type "${typeNode.type}" for context injection`,
-        );
+    const types = this.#inputValidatorCompiler.generateValidators(typeIdx);
+    for (const idx of types) {
+      this.#typesWithCustomValidator.add(idx);
     }
+    const errorVar = this.#createVarName();
+    this.#collector.push(`const ${errorVar} = [];`);
+    const args = [varName, JSON.stringify(path), errorVar, "context"];
+    this.#collector.push(`  validate_${typeIdx}(${args.join(", ")});`);
+    this.#collector.push(`  if (${errorVar}.length > 0) {`);
+    const errorStrVar = this.#createVarName();
+    const errMap = `([path, msg]) => \`  - at \${path}: \${msg}\``;
+    this.#collector.push(
+      `    const ${errorStrVar} = ${errorVar}.map(${errMap}).join("\\n");`,
+    );
+    this.#collector.push(
+      `    throw new Error(\`Context validation failed:\\n\${${errorStrVar}}\`);`,
+    );
+    this.#collector.push(`  }`);
 
     this.#collector.push("}");
     if (!optional) {
@@ -316,14 +308,25 @@ class TransformerCompilationContext {
           ...generateStringValidator(typeNode, varName, path),
         );
         break;
-      case Type.INTEGER:
-      case Type.FLOAT:
+      case Type.INTEGER: {
+        const parsedVar = this.#createVarName();
         this.#collector.push(
-          ...generateNumberValidator(typeNode, varName, path),
+          `const ${parsedVar} = parseInt(${varName}, 10);`,
+          ...generateNumberValidator(typeNode, parsedVar, path),
         );
         break;
+      }
+      case Type.FLOAT: {
+        const parsedVar = this.#createVarName();
+        this.#collector.push(
+          `const ${parsedVar} = parseFloat(${varName});`,
+          ...generateNumberValidator(typeNode, parsedVar, path),
+        );
+        break;
+      }
+      // TODO boolean??
+      // TODO optional??
       default:
-        // TODO optional??
         throw new Error(
           `At "${path}": Unsupported type "${typeNode.type}" for secret injection`,
         );
