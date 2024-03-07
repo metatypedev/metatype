@@ -15,12 +15,16 @@ import * as ast from "graphql/ast";
 
 const logger = getLogger(import.meta);
 
-function generateVmIdentifier(mat: Materializer) {
+function generateVmIdentifier(mat: Materializer, uuid: string) {
   const { mod } = mat.data ?? {};
+  let identifier = "";
   if (mod !== undefined) {
-    return `pymod_${mod}`;
+    identifier = `pymod_${mod}`;
+  } else {
+    identifier = `default`;
   }
-  return "default";
+  identifier = `${identifier}_${uuid}`;
+  return identifier;
 }
 
 export class PythonWasiRuntime extends Runtime {
@@ -69,7 +73,7 @@ export class PythonWasiRuntime extends Runtime {
           const code = pyModMat.data.code as string;
 
           const repr = await structureRepr(code);
-          const vmId = generateVmIdentifier(m) + "_" + uuid;
+          const vmId = generateVmIdentifier(m, uuid);
           const basePath = path.join(
             "tmp",
             "scripts",
@@ -167,7 +171,7 @@ export class PythonWasiRuntime extends Runtime {
 
   delegate(mat: Materializer): Resolver {
     const { name } = mat.data ?? {};
-    const vmId = generateVmIdentifier(mat) + "_" + this.uuid;
+    const vmId = generateVmIdentifier(mat, this.uuid);
     return (args: unknown) => this.w.execute(name as string, { vmId, args });
   }
 }
