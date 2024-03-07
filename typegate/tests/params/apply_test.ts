@@ -129,6 +129,21 @@ Meta.test("(python (sdk): apply)", async (t) => {
       })
       .on(e);
   });
+
+  await t.should("fail for context to union type", async () => {
+    await gql`
+      query {
+        contextToUnionType {
+          a
+        }
+      }
+    `
+      .withContext({
+        context_key: "hum",
+      }).expectData({
+        contextToUnionType: { a: "hum" },
+      }).on(e);
+  });
 });
 
 Meta.test("nested context access", async (t) => {

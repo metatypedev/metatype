@@ -74,6 +74,7 @@ function validate_44(value, path, errors, context) {
     errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
   }
 }
+
 return validate_38;
 "
 `;
@@ -143,6 +144,7 @@ function validate_50(value, path, errors, context) {
     errors.push([path, "value did not match to any of the enum values"]);
   }
 }
+
 return validate_46;
 '
 `;
@@ -357,6 +359,7 @@ function validate_26(value, path, errors, context) {
     errors.push([path, \`expected minimum length: 3, got \${value.length}\`]);
   }
 }
+
 return validate_9;
 "
 `;
