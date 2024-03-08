@@ -69,7 +69,7 @@ export const Edge = {
   ARRAY_ITEMS: "[items]",
   FUNCTION_INPUT: "[in]",
   FUNCTION_OUTPUT: "[out]",
-  FUNCTION_RESOLVER: "[resolver-in]",
+  FUNCTION_RESOLVER_INPUT: "[resolver-in]",
   // OBJECT_PROPERTY: <property name>
 };
 
@@ -96,7 +96,8 @@ export function getEdges(type: TypeNode): Record<string, number> {
         [Edge.FUNCTION_OUTPUT]: type.output,
       };
       if (type.parameterTransform) {
-        res[Edge.FUNCTION_RESOLVER] = type.parameterTransform.resolver_input;
+        res[Edge.FUNCTION_RESOLVER_INPUT] =
+          type.parameterTransform.resolver_input;
       }
       return res;
     }
