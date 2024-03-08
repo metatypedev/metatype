@@ -15,12 +15,16 @@ import * as ast from "graphql/ast";
 
 const logger = getLogger(import.meta);
 
-function generateVmIdentifier(mat: Materializer) {
+function generateVmIdentifier(mat: Materializer, uuid: string) {
   const { mod } = mat.data ?? {};
+  let identifier = "";
   if (mod !== undefined) {
-    return `pymod_${mod}`;
+    identifier = `pymod_${mod}`;
+  } else {
+    identifier = `default`;
   }
-  return "default";
+  identifier = `${identifier}_${uuid}`;
+  return identifier;
 }
 
 export class PythonWasiRuntime extends Runtime {
@@ -30,7 +34,9 @@ export class PythonWasiRuntime extends Runtime {
     private w: PythonWasmMessenger,
   ) {
     super(typegraphName, uuid);
+    this.uuid = uuid;
   }
+  uuid: string;
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
     const { materializers, typegraph, typegraphName } = params;
@@ -39,10 +45,10 @@ export class PythonWasiRuntime extends Runtime {
     logger.info(`initializing default vm: ${typegraphName}`);
 
     // add default vm for lambda/def
-    const defaultVm = new PythonVirtualMachine();
-    await defaultVm.setup("default");
-    w.vmMap.set("default", defaultVm);
     const uuid = crypto.randomUUID();
+    const defaultVm = new PythonVirtualMachine();
+    await defaultVm.setup(`default_${uuid}`);
+    w.vmMap.set(`default_${uuid}`, defaultVm);
 
     for (const m of materializers) {
       switch (m.name) {
@@ -67,7 +73,7 @@ export class PythonWasiRuntime extends Runtime {
           const code = pyModMat.data.code as string;
 
           const repr = await structureRepr(code);
-          const vmId = generateVmIdentifier(m);
+          const vmId = generateVmIdentifier(m, uuid);
           const basePath = path.join(
             "tmp",
             "scripts",
@@ -165,7 +171,7 @@ export class PythonWasiRuntime extends Runtime {
 
   delegate(mat: Materializer): Resolver {
     const { name } = mat.data ?? {};
-    const vmId = generateVmIdentifier(mat);
+    const vmId = generateVmIdentifier(mat, this.uuid);
     return (args: unknown) => this.w.execute(name as string, { vmId, args });
   }
 }
