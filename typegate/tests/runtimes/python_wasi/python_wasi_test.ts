@@ -4,6 +4,7 @@
 import { assert, assertEquals } from "std/assert/mod.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 import { PythonVirtualMachine } from "../../../src/runtimes/python_wasi/python_vm.ts";
+import { QueryEngine } from "../../../src/engine/query_engine.ts";
 
 Meta.test("Python WASI VM performance", async (t) => {
   const vm = new PythonVirtualMachine();
@@ -241,3 +242,65 @@ Meta.test("Python WASI: infinite loop or similar", async (t) => {
   //     .on(e);
   // });
 }, { sanitizeOps: false });
+
+Meta.test("Python WASI: typegate reloading", async (metaTest) => {
+  const load = async () => {
+    return await metaTest.engine("runtimes/python_wasi/python_wasi.ts");
+  };
+
+  const runPythonOnPythonWasi = async (currentEngine: QueryEngine) => {
+    await gql`
+      query {
+        identityDef(
+          input: {
+            a: "hello",
+            b: [1, 2, "three"]
+          }) {
+          a
+          b
+        },
+        identityLambda(
+        input: {
+          a: "hello",
+          b: [1, 2, "three"]
+        }) {
+        a
+        b
+      },
+      identityMod(input: {
+          a: "hello",
+          b: [1, 2, "three"],
+        }) {
+          a
+          b
+        }
+      }
+    `
+      .expectData({
+        identityDef: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
+        identityLambda: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
+        identityMod: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
+      })
+      .on(currentEngine);
+  };
+  const engine = await load();
+  await metaTest.should("work before typegate is reloaded", async () => {
+    await runPythonOnPythonWasi(engine);
+  });
+
+  // reload
+  const reloadedEngine = await load();
+
+  await metaTest.should("work after typegate is reloaded", async () => {
+    await runPythonOnPythonWasi(reloadedEngine);
+  });
+});
