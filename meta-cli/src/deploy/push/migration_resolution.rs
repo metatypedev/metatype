@@ -8,7 +8,7 @@ use anyhow::Result;
 use colored::Colorize;
 
 use crate::{
-    com::{responses::SDKResponse, store::ServerStore},
+    com::store::ServerStore,
     deploy::actors::{
         console::{
             input::{ConfirmHandler, OptionLabel, SelectOption},
@@ -22,13 +22,13 @@ use crate::{
 
 #[derive(Debug)]
 pub struct ConfirmDatabaseResetRequired {
-    pub sdk_response: SDKResponse,
+    pub typegraph_path: PathBuf,
     pub loader: Addr<LoaderActor>,
 }
 
 impl ConfirmHandler for ConfirmDatabaseResetRequired {
     fn on_confirm(&self) {
-        let tg_path = self.sdk_response.clone().typegraph_path;
+        let tg_path = self.typegraph_path.clone();
 
         // reset
         let mut option = ServerStore::get_migration_action(&tg_path);

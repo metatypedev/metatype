@@ -195,6 +195,7 @@ impl PushResult {
                         self.loader.clone(),
                         failure,
                         self.sdk_response.clone(),
+                        migdir.clone(),
                     )
                     .await?
                 }
@@ -233,7 +234,7 @@ async fn handle_database_reset(
         format!("Do you want to reset the database for runtime {rt} on {name}?"),
     )
     .interact(Box::new(ConfirmDatabaseResetRequired {
-        sdk_response: sdk_response.clone(),
+        typegraph_path: sdk_response.typegraph_path,
         loader,
     }))
     .await?;
@@ -248,6 +249,7 @@ pub async fn handle_null_constraint_violation(
     loader: Addr<LoaderActor>,
     failure: NullConstraintViolation,
     sdk_response: SDKResponse,
+    migration_dir: PathBuf,
 ) -> Result<()> {
     #[allow(unused)]
     let typegraph_name = sdk_response.typegraph_name;
@@ -265,10 +267,6 @@ pub async fn handle_null_constraint_violation(
 
     if is_new_column {
         console.info(format!("manually edit the migration {migration_name}; or remove the migration and add set a default value"));
-        let migration_dir = ServerStore::get_config()
-            .unwrap()
-            .prisma_migrations_dir_rel(&typegraph_name)
-            .join(&runtime_name);
 
         let remove_latest = RemoveLatestMigration {
             loader: loader.clone(),
