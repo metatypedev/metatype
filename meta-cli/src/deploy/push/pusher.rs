@@ -221,11 +221,11 @@ async fn handle_database_reset(
 
     let name = sdk_response.typegraph_name.clone();
 
-    console.error(format!(
+    console.error(message);
+    console.warning(format!(
         "Database reset required for prisma runtime {rt} in typegraph {name}",
         rt = runtime_name.magenta(),
     ));
-    console.error(message);
 
     let rt = runtime_name.clone();
     let _ = Confirm::new(
