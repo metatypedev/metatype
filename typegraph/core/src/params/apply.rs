@@ -413,11 +413,17 @@ mod test {
             let mut map = HashMap::new();
             map.insert(
                 "a".to_string(),
-                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg { name: None }),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                    name: None,
+                    type_id: None,
+                }),
             );
             map.insert(
                 "b".to_string(),
-                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg { name: None }),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                    name: None,
+                    type_id: None,
+                }),
             );
             map
         };
@@ -428,7 +434,7 @@ mod test {
         assert_eq!(
             print_options.print(transform_data.query_input.into()),
             indoc::indoc! {"
-                root: struct #3
+                root: struct #4
                     [a]: string #0
                     [b]: string #1
             "}
@@ -447,12 +453,14 @@ mod test {
                 "a".to_string(),
                 ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
                     name: Some("first".to_string()),
+                    type_id: None,
                 }),
             ),
             (
                 "b".to_string(),
                 ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
                     name: Some("second".to_string()),
+                    type_id: None,
                 }),
             ),
         ]
@@ -465,7 +473,7 @@ mod test {
         assert_eq!(
             print_options.print(transform_data.query_input.into()),
             indoc::indoc! {"
-                root: struct #3
+                root: struct #4
                     [first]: string #0
                     [second]: string #1
             "}
@@ -482,7 +490,10 @@ mod test {
         let root = vec![
             (
                 "a".to_string(),
-                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg { name: None }),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                    name: None,
+                    type_id: None,
+                }),
             ),
             (
                 "b".to_string(),
@@ -490,9 +501,11 @@ mod test {
                     items: vec![
                         ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
                             name: None,
+                            type_id: None,
                         }),
                         ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
                             name: None,
+                            type_id: None,
                         }),
                     ],
                 }),
@@ -510,7 +523,10 @@ mod test {
         let root = vec![
             (
                 "a".to_string(),
-                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg { name: None }),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                    name: None,
+                    type_id: None,
+                }),
             ),
             (
                 "b".to_string(),
@@ -518,9 +534,11 @@ mod test {
                     items: vec![
                         ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
                             name: Some("first".to_string()),
+                            type_id: None,
                         }),
                         ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
                             name: Some("second".to_string()),
+                            type_id: None,
                         }),
                     ],
                 }),
@@ -534,7 +552,7 @@ mod test {
         assert_eq!(
             print_options.print(transform_data.query_input.into()),
             indoc::indoc! {"
-                root: struct #4
+                root: struct #5
                     [a]: string #0
                     [first]: string #1
                     [second]: string #1
