@@ -7,13 +7,40 @@ use actix::prelude::*;
 use anyhow::Result;
 use colored::Colorize;
 
-use crate::deploy::actors::{
-    console::{
-        input::{OptionLabel, SelectOption},
-        Console, ConsoleActor,
+use crate::{
+    com::{responses::SDKResponse, store::ServerStore},
+    deploy::actors::{
+        console::{
+            input::{ConfirmHandler, OptionLabel, SelectOption},
+            Console, ConsoleActor,
+        },
+        loader::{LoadModule, LoaderActor},
     },
-    loader::{LoadModule, LoaderActor},
 };
+
+// DatabaseReset failure
+
+#[derive(Debug)]
+pub struct ConfirmDatabaseResetRequired {
+    pub sdk_response: SDKResponse,
+    pub loader: Addr<LoaderActor>,
+}
+
+impl ConfirmHandler for ConfirmDatabaseResetRequired {
+    fn on_confirm(&self) {
+        let tg_path = self.sdk_response.clone().typegraph_path;
+
+        // reset
+        let mut option = ServerStore::get_migration_action(&tg_path);
+        option.reset = true;
+        ServerStore::set_migration_action(tg_path.clone(), option);
+
+        // reload
+        self.loader.do_send(LoadModule(tg_path.into()));
+    }
+}
+
+// NullConstraintViolation failure
 
 #[derive(Debug)]
 pub struct ForceReset {

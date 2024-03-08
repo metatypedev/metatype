@@ -13,14 +13,14 @@ use anyhow::Result;
 use serde::Deserialize;
 
 use crate::com::{responses::SDKResponse, store::ServerStore};
-use crate::deploy::actors::console::input::{Confirm, ConfirmHandler, Select};
+use crate::deploy::actors::console::input::{Confirm, Select};
 use crate::deploy::actors::console::{Console, ConsoleActor};
-use crate::deploy::actors::loader::{LoadModule, LoaderActor};
+use crate::deploy::actors::loader::LoaderActor;
 use crate::deploy::push::migration_resolution::{ManualResolution, RemoveLatestMigration};
 
 use lazy_static::lazy_static;
 
-use super::migration_resolution::ForceReset;
+use super::migration_resolution::{ConfirmDatabaseResetRequired, ForceReset};
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -207,26 +207,6 @@ impl PushResult {
 }
 
 // DatabaseReset Handler + interactivity
-
-#[derive(Debug)]
-struct ConfirmDatabaseResetRequired {
-    sdk_response: SDKResponse,
-    loader: Addr<LoaderActor>,
-}
-
-impl ConfirmHandler for ConfirmDatabaseResetRequired {
-    fn on_confirm(&self) {
-        let tg_path = self.sdk_response.clone().typegraph_path;
-
-        // reset
-        let mut option = ServerStore::get_migration_action(&tg_path);
-        option.reset = true;
-        ServerStore::set_migration_action(tg_path.clone(), option);
-
-        // reload
-        self.loader.do_send(LoadModule(tg_path.into()));
-    }
-}
 
 async fn handle_database_reset(
     console: Addr<ConsoleActor>,

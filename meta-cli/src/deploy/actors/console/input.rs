@@ -122,10 +122,9 @@ impl Confirm {
     ) -> Result<bool> {
         let mut retry_left = self.max_retry_count as isize;
 
-        eprintln!("{} {}", "[confirm]".yellow(), self.prompt);
-
         loop {
-            eprint!("(y/N)> ");
+            self.console
+                .error(format!("{} {} (y/N)", "[confirm]".yellow(), self.prompt));
 
             let input = self.console.read_line().await;
 
