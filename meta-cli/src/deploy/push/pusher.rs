@@ -135,9 +135,10 @@ impl PushResult {
             name = name.cyan()
         ));
 
+        // tg workdir + prisma_migration_rel
         let migdir = ServerStore::get_config()
             .unwrap()
-            .prisma_migrations_dir_rel(&self.original_name);
+            .prisma_migration_dir_abs(&self.sdk_response.typegraph_path, &self.original_name)?;
 
         // TODO: use unpack from sdk? This requires another load event though.
         for migrations in self.migrations.iter() {

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use lazy_static::lazy_static;
 use reqwest::Url;
@@ -244,17 +244,28 @@ impl Config {
             .unwrap_or(&DEFAULT_LOADER_CONFIG)
     }
 
-    pub fn prisma_migrations_dir_rel(&self, typegraph: &str) -> PathBuf {
+    /// `config migration dir` + `runtime` + `tg_name`   
+    pub fn prisma_migrations_dir_rel(&self, tg_name: &str) -> PathBuf {
         let mut path = self
             .typegraphs
             .materializers
             .prisma
             .migrations_path
             .as_deref()
-            .unwrap_or_else(|| Path::new("prisma/migrations"))
+            .unwrap_or_else(|| Path::new("prisma-migrations"))
             .to_path_buf();
-        path.push(typegraph);
+        path.push(tg_name);
         path
+    }
+
+    /// canonical path to the migration given the typegraph path
+    pub fn prisma_migration_dir_abs(&self, tg_path: &Path, tg_name: &str) -> Result<PathBuf> {
+        if tg_path.is_dir() {
+            bail!("Given typegraph path {} is not a file", tg_path.display());
+        }
+        let mut base = tg_path.to_path_buf().clone();
+        base.pop(); // remove file
+        Ok(base.join(self.prisma_migrations_dir_rel(tg_name)))
     }
 }
 

@@ -70,8 +70,11 @@ async fn config(req: HttpRequest) -> impl Responder {
                 "secrets": secrets,
                 "prefix": prefix,
                 "artifactsConfig": {
+                    // on sdk's side, cwd will match to the parent process (cli)
+                    // thus `dir` must be explicitly set to the canonical typegraph's `workdir`
                     "dir": artefact_base_dir,
                     "prismaMigration": {
+                        // only the cli is aware of the convention migrationDir := tg_workdir + config_folder + tg_name
                         "migrationDir": config.prisma_migrations_dir_rel(&parsed.typegraph),
                         "action": serde_json::to_value(migration_action).unwrap()
                     },
