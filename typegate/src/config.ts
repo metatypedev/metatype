@@ -6,7 +6,6 @@ import { mapKeys } from "std/collections/map_keys.ts";
 
 import * as base64 from "std/encoding/base64.ts";
 import { parse } from "std/flags/mod.ts";
-import { RedisConnectOptions } from "redis";
 import { join } from "std/path/mod.ts";
 // This import ensure log loads before config, important for the version hydration
 import { configOrExit, zBooleanString } from "./log.ts";
@@ -82,12 +81,3 @@ const config = await configOrExit([
 ], schema);
 
 export default config;
-
-export const redisConfig: RedisConnectOptions = {
-  hostname: config.redis_url.hostname,
-  port: config.redis_url.port,
-  ...config.redis_url.password.length > 0
-    ? { password: config.redis_url.password }
-    : {},
-  db: parseInt(config.redis_url.pathname.substring(1), 10),
-};

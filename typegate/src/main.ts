@@ -5,7 +5,7 @@ import { deferred } from "std/async/deferred.ts";
 import { init_native } from "native";
 
 import { Register, ReplicatedRegister } from "./typegate/register.ts";
-import config, { redisConfig } from "./config.ts";
+import config from "./config.ts";
 import { Typegate } from "./typegate/mod.ts";
 import { RateLimiter, RedisRateLimiter } from "./typegate/rate_limiter.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
@@ -14,6 +14,7 @@ import { getLogger } from "./log.ts";
 import { init_runtimes } from "./runtimes/mod.ts";
 import { MemoryRegister } from "test-utils/memory_register.ts";
 import { NoLimiter } from "test-utils/no_limiter.ts";
+import syncConfig from "./sync/config.ts";
 
 const logger = getLogger(import.meta);
 
@@ -54,11 +55,15 @@ try {
   let register: Register | undefined;
   let limiter: RateLimiter | undefined;
 
-  if (redisConfig.hostname != "none") {
-    register = await ReplicatedRegister.init(deferredTypegate, redisConfig);
-    limiter = await RedisRateLimiter.init(redisConfig);
+  if (syncConfig != null) {
+    register = await ReplicatedRegister.init(
+      deferredTypegate,
+      syncConfig.redis,
+    );
+    limiter = await RedisRateLimiter.init(syncConfig.redis);
   } else {
-    logger.warning("Entering Redis-less mode");
+    logger.warning("Entering no-sync mode...");
+    logger.warning("Enable sync if you want to use accross multiple instances");
     register = new MemoryRegister();
     limiter = new NoLimiter();
   }

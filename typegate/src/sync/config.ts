@@ -6,18 +6,21 @@ import { zBooleanString } from "../log.ts";
 import { configOrExit } from "../log.ts";
 import { mapKeys } from "std/collections/map_keys.ts";
 import { parse } from "std/flags/mod.ts";
+import { RedisConnectOptions } from "redis";
+import { S3ClientConfig } from "aws-sdk/client-s3";
 
 export const syncConfigSchemaNaked = {
   sync_enabled: zBooleanString,
   sync_redis_url: z.string().optional().transform((s) => {
-    if (s == undefined) return null;
+    if (s == undefined) return undefined;
     const url = new URL(s);
     if (url.password === "") {
       url.password = Deno.env.get("SYNC_REDIS_PASSWORD") ?? "";
     }
+    return url;
   }),
   sync_s3_host: z.string().optional().transform((s) => {
-    if (s == undefined) return null;
+    if (s == undefined) return undefined;
     return new URL(s);
   }),
   sync_s3_region: z.string().optional(),
@@ -37,14 +40,15 @@ const syncConfigRaw = await configOrExit([
 
 const syncConfigSchema = z.object(syncConfigSchemaNaked);
 
-type SyncConfigRaw = z.output<typeof syncConfigSchema>;
-export type SyncConfig = Required<SyncConfigRaw>;
+export type SyncConfigRaw = Required<z.output<typeof syncConfigSchema>>;
 
-function validateSyncConfig(config: SyncConfigRaw): SyncConfig | null {
+function validateSyncConfig(
+  config: z.output<typeof syncConfigSchema>,
+): SyncConfigRaw | null {
   if (!config.sync_enabled) {
     const unexpectedVars = Object.entries(config).filter(([key, value]) => {
       if (key === "sync_enabled") return false;
-      if (value != null) {
+      if (value != undefined) {
         return true;
       }
     }).map(([key, _]) => key.toUpperCase());
@@ -62,7 +66,7 @@ function validateSyncConfig(config: SyncConfigRaw): SyncConfig | null {
   }
 
   const missingVars = Object.entries(config).filter(([key, value]) => {
-    if (value != null) return false;
+    if (value != undefined) return false;
     // not required
     if (key === "sync_s3_path_style") {
       config.sync_s3_path_style = false;
@@ -79,10 +83,41 @@ function validateSyncConfig(config: SyncConfigRaw): SyncConfig | null {
     throw new Error(`${msg}\n${suggestion}`);
   }
 
-  const finalConfig = config as SyncConfig;
+  const finalConfig = config as SyncConfigRaw;
   return finalConfig;
 }
 
-const syncConfig = validateSyncConfig(syncConfigRaw);
+export type SyncConfig = {
+  redis: RedisConnectOptions;
+  s3: S3ClientConfig;
+  s3Bucket: string;
+};
+
+function syncConfigFromRaw(config: SyncConfigRaw | null): SyncConfig | null {
+  if (config == null) return null;
+
+  return {
+    redis: {
+      hostname: config.sync_redis_url.hostname,
+      port: config.sync_redis_url.port,
+      ...config.sync_redis_url.password.length > 0
+        ? { password: config.sync_redis_url.password }
+        : {},
+      db: parseInt(config.sync_redis_url.pathname.substring(1), 10),
+    },
+    s3: {
+      endpoint: config.sync_s3_host.href,
+      region: config.sync_s3_region,
+      credentials: {
+        accessKeyId: config.sync_s3_access_key,
+        secretAccessKey: config.sync_s3_secret_key,
+      },
+      forcePathStyle: config.sync_s3_path_style,
+    },
+    s3Bucket: config.sync_s3_bucket,
+  };
+}
+
+const syncConfig = syncConfigFromRaw(validateSyncConfig(syncConfigRaw));
 
 export default syncConfig;
