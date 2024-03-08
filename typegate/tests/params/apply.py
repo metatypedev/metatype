@@ -123,4 +123,11 @@ def test_apply(g: Graph):
                 ]
             }
         ),
+        contextToUnionType=deno.identity(
+            t.struct(
+                {
+                    "a": t.union([t.integer(), t.string()]),
+                }
+            )
+        ).apply({"a": g.from_context("context_key")}),
     )

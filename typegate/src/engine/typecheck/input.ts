@@ -14,7 +14,8 @@ import {
 
 export function generateValidator(tg: TypeGraph, typeIdx: number): Validator {
   const validator = new Function(
-    new InputValidationCompiler(tg).generate(typeIdx),
+    new InputValidationCompiler(tg, (typeIdx) => `validate_${typeIdx}`)
+      .generate(typeIdx),
   )() as ValidatorFn;
   return (value: unknown) => {
     const errors: ErrorEntry[] = [];
@@ -103,16 +104,15 @@ function filterDeclaredFields(
   }
 }
 
-function functionName(typeIdx: number) {
-  return `validate_${typeIdx}`;
-}
-
 export class InputValidationCompiler {
   codes: Map<number, string> = new Map();
+  #getFunctionName: (idx: number) => string;
 
-  constructor(private tg: TypeGraph) {}
+  constructor(private tg: TypeGraph, getFunctionName: (idx: number) => string) {
+    this.#getFunctionName = getFunctionName;
+  }
 
-  generate(rootTypeIdx: number): string {
+  generateValidators(rootTypeIdx: number) {
     const cg = new CodeGenerator();
     const queue = [rootTypeIdx];
     const refs = new Set([rootTypeIdx]);
@@ -145,31 +145,37 @@ export class InputValidationCompiler {
             cg.generateFileValidator(typeNode);
             break;
           case "optional":
-            cg.generateOptionalValidator(typeNode, functionName(typeNode.item));
+            cg.generateOptionalValidator(
+              typeNode,
+              this.#getFunctionName(typeNode.item),
+            );
             queue.push(typeNode.item);
             break;
           case "list":
-            cg.generateArrayValidator(typeNode, functionName(typeNode.items));
+            cg.generateArrayValidator(
+              typeNode,
+              this.#getFunctionName(typeNode.items),
+            );
             queue.push(typeNode.items);
             break;
           case "object":
             cg.generateObjectValidator(
               typeNode,
-              mapValues(typeNode.properties, functionName),
+              mapValues(typeNode.properties, this.#getFunctionName),
             );
             queue.push(...Object.values(typeNode.properties));
             break;
           case "union":
             cg.generateUnionValidator(
               typeNode,
-              typeNode.anyOf.map(functionName),
+              typeNode.anyOf.map(this.#getFunctionName),
             );
             queue.push(...typeNode.anyOf);
             break;
           case "either":
             cg.generateEitherValidator(
               typeNode,
-              typeNode.oneOf.map(functionName),
+              typeNode.oneOf.map(this.#getFunctionName),
             );
             queue.push(...typeNode.oneOf);
             break;
@@ -178,7 +184,7 @@ export class InputValidationCompiler {
         }
       }
 
-      const fnName = functionName(typeIdx);
+      const fnName = this.#getFunctionName(typeIdx);
       const fnBody = cg.reset().join("\n");
       this.codes.set(
         typeIdx,
@@ -186,10 +192,15 @@ export class InputValidationCompiler {
       );
     }
 
-    const rootValidatorName = functionName(rootTypeIdx);
-    const rootValidator = `\nreturn ${rootValidatorName}`;
+    return refs;
+  }
 
-    return [...refs].map((idx) => this.codes.get(idx))
-      .join("\n") + rootValidator;
+  generate(rootTypeIdx: number): string {
+    const fns = this.generateValidators(rootTypeIdx);
+    const rootValidatorName = this.#getFunctionName(rootTypeIdx);
+    const codes = [...fns].map((idx) => this.codes.get(idx));
+    codes.push(`\nreturn ${rootValidatorName}`);
+
+    return codes.join("\n");
   }
 }
