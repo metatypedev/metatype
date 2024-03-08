@@ -11,11 +11,11 @@
       "properties": {
         "typegraphs": 1,
         "typegraph": 7,
-        "addTypegraph": 15,
-        "removeTypegraphs": 32,
-        "argInfoByPath": 37,
-        "findAvailableOperations": 66,
-        "findPrismaModels": 77
+        "addTypegraph": 13,
+        "removeTypegraphs": 22,
+        "argInfoByPath": 26,
+        "findAvailableOperations": 41,
+        "findPrismaModels": 48
       },
       "required": [
         "typegraphs",
@@ -157,29 +157,11 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "input": 13,
-      "output": 14,
+      "input": 2,
+      "output": 9,
       "materializer": 3,
       "rate_weight": null,
       "rate_calls": false
-    },
-    {
-      "type": "object",
-      "title": "object_1",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "properties": {},
-      "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_0",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "function",
@@ -190,8 +172,8 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 16,
-      "output": 20,
+      "input": 14,
+      "output": 16,
       "materializer": 4,
       "rate_weight": null,
       "rate_calls": true
@@ -204,9 +186,9 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "fromString": 17,
-        "secrets": 18,
-        "cliVersion": 19
+        "fromString": 15,
+        "secrets": 15,
+        "cliVersion": 9
       },
       "required": []
     },
@@ -220,23 +202,6 @@
       "format": "json"
     },
     {
-      "type": "string",
-      "title": "string_66",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "format": "json"
-    },
-    {
-      "type": "string",
-      "title": "string_67",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
       "type": "object",
       "title": "object_80",
       "runtime": 1,
@@ -244,20 +209,12 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "name": 21,
-        "messages": 22,
-        "migrations": 26,
-        "failure": 30
+        "name": 9,
+        "messages": 17,
+        "migrations": 19,
+        "failure": 21
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_69",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "list",
@@ -266,7 +223,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 23
+      "items": 18
     },
     {
       "type": "object",
@@ -276,31 +233,10 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "type": 24,
-        "text": 25
+        "type": 9,
+        "text": 9
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_70",
-      "runtime": 1,
-      "policies": [],
-      "enum": [
-        "\"info\"",
-        "\"warning\"",
-        "\"error\""
-      ],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "string",
-      "title": "string_71",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "list",
@@ -309,7 +245,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 27
+      "items": 20
     },
     {
       "type": "object",
@@ -319,26 +255,10 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "runtime": 28,
-        "migrations": 29
+        "runtime": 9,
+        "migrations": 9
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_74",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "string",
-      "title": "string_75",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "optional",
@@ -347,17 +267,8 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 31,
+      "item": 15,
       "default_value": null
-    },
-    {
-      "type": "string",
-      "title": "string_78",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "format": "json"
     },
     {
       "type": "function",
@@ -368,8 +279,8 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 33,
-      "output": 36,
+      "input": 23,
+      "output": 25,
       "materializer": 5,
       "rate_weight": null,
       "rate_calls": true
@@ -382,7 +293,7 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "names": 34
+        "names": 24
       },
       "required": []
     },
@@ -393,15 +304,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 35
-    },
-    {
-      "type": "string",
-      "title": "string_82",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
+      "items": 9
     },
     {
       "type": "boolean",
@@ -420,8 +323,8 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 38,
-      "output": 45,
+      "input": 27,
+      "output": 29,
       "materializer": 6,
       "rate_weight": null,
       "rate_calls": true
@@ -434,36 +337,12 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "typegraph": 39,
-        "queryType": 40,
-        "fn": 41,
-        "argPaths": 42
+        "typegraph": 9,
+        "queryType": 9,
+        "fn": 9,
+        "argPaths": 28
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_8",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "string",
-      "title": "string_9",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "string",
-      "title": "string_10",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "list",
@@ -472,24 +351,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 43
-    },
-    {
-      "type": "list",
-      "title": "list_7",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "items": 44
-    },
-    {
-      "type": "string",
-      "title": "string_6",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
+      "items": 24
     },
     {
       "type": "list",
@@ -498,7 +360,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 46
+      "items": 30
     },
     {
       "type": "object",
@@ -508,17 +370,17 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "optional": 47,
-        "as_id": 48,
-        "title": 49,
-        "type": 50,
-        "enum": 51,
-        "runtime": 54,
-        "config": 55,
-        "default": 57,
-        "format": 59,
-        "policies": 61,
-        "fields": 63
+        "optional": 31,
+        "as_id": 31,
+        "title": 5,
+        "type": 5,
+        "enum": 32,
+        "runtime": 5,
+        "config": 35,
+        "default": 35,
+        "format": 36,
+        "policies": 37,
+        "fields": 38
       },
       "required": []
     },
@@ -531,37 +393,13 @@
       "as_id": false
     },
     {
-      "type": "boolean",
-      "title": "boolean_14",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "string",
-      "title": "string_15",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "string",
-      "title": "string_16",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
       "type": "optional",
       "title": "optional_19",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 52,
+      "item": 33,
       "default_value": null
     },
     {
@@ -571,7 +409,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 53
+      "items": 34
     },
     {
       "type": "string",
@@ -583,50 +421,14 @@
       "format": "json"
     },
     {
-      "type": "string",
-      "title": "string_20",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
       "type": "optional",
       "title": "optional_22",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 56,
+      "item": 34,
       "default_value": null
-    },
-    {
-      "type": "string",
-      "title": "string_21",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "format": "json"
-    },
-    {
-      "type": "optional",
-      "title": "optional_24",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 58,
-      "default_value": null
-    },
-    {
-      "type": "string",
-      "title": "string_23",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "format": "json"
     },
     {
       "type": "optional",
@@ -635,16 +437,8 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 60,
+      "item": 5,
       "default_value": null
-    },
-    {
-      "type": "string",
-      "title": "string_25",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "list",
@@ -653,15 +447,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 62
-    },
-    {
-      "type": "string",
-      "title": "string_27",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
+      "items": 5
     },
     {
       "type": "optional",
@@ -670,7 +456,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 64,
+      "item": 39,
       "default_value": null
     },
     {
@@ -680,7 +466,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 65
+      "items": 40
     },
     {
       "type": "object",
@@ -690,8 +476,8 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "subPath": 43,
-        "termNode": 46
+        "subPath": 24,
+        "termNode": 30
       },
       "required": []
     },
@@ -704,8 +490,8 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 67,
-      "output": 69,
+      "input": 42,
+      "output": 43,
       "materializer": 7,
       "rate_weight": null,
       "rate_calls": true
@@ -718,17 +504,9 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "typegraph": 68
+        "typegraph": 9
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_43",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "list",
@@ -737,7 +515,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 70
+      "items": 44
     },
     {
       "type": "object",
@@ -747,33 +525,13 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "name": 71,
-        "type": 72,
-        "inputs": 73,
-        "output": 46,
-        "outputItem": 76
+        "name": 5,
+        "type": 5,
+        "inputs": 45,
+        "output": 30,
+        "outputItem": 47
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_38",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "string",
-      "title": "string_39",
-      "runtime": 1,
-      "policies": [],
-      "enum": [
-        "\"query\"",
-        "\"mutation\""
-      ],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "list",
@@ -782,7 +540,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 74
+      "items": 46
     },
     {
       "type": "object",
@@ -792,18 +550,10 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "name": 75,
-        "type": 46
+        "name": 5,
+        "type": 30
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_36",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "optional",
@@ -812,7 +562,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 46,
+      "item": 30,
       "default_value": null
     },
     {
@@ -824,31 +574,11 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 78,
-      "output": 80,
+      "input": 42,
+      "output": 49,
       "materializer": 8,
       "rate_weight": null,
       "rate_calls": true
-    },
-    {
-      "type": "object",
-      "title": "object_54",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "properties": {
-        "typegraph": 79
-      },
-      "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_53",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "list",
@@ -857,7 +587,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 81
+      "items": 50
     },
     {
       "type": "object",
@@ -867,27 +597,11 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "name": 82,
-        "runtime": 83,
-        "fields": 84
+        "name": 5,
+        "runtime": 5,
+        "fields": 51
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_47",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "string",
-      "title": "string_48",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "list",
@@ -896,7 +610,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 85
+      "items": 52
     },
     {
       "type": "object",
@@ -906,18 +620,10 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "name": 86,
-        "type": 87
+        "name": 5,
+        "type": 53
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_49",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "object",
@@ -927,16 +633,16 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "optional": 47,
-        "as_id": 48,
-        "title": 49,
-        "type": 50,
-        "enum": 51,
-        "runtime": 54,
-        "config": 55,
-        "default": 57,
-        "format": 59,
-        "policies": 61
+        "optional": 31,
+        "as_id": 31,
+        "title": 5,
+        "type": 5,
+        "enum": 32,
+        "runtime": 5,
+        "config": 35,
+        "default": 35,
+        "format": 36,
+        "policies": 37
       },
       "required": []
     }

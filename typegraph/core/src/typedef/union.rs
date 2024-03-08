@@ -70,7 +70,7 @@ impl Hashable for TypeUnion {
         "union".hash(hasher);
         for (index, type_id) in self.variants.iter().enumerate() {
             index.hash(hasher);
-            TypeId(*type_id).hash_child_type(hasher, tg, runtime_id)?; // TODO: runtime_id
+            TypeId(*type_id).hash_child_type(hasher, tg, runtime_id)?;
         }
         Ok(())
     }
