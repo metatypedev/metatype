@@ -9,7 +9,7 @@ use common::typegraph::Typegraph;
 use crate::utils::fs_host;
 use crate::utils::postprocess::PostProcessor;
 use crate::wit::core::MigrationConfig;
-use crate::wit::metatype::typegraph::host::file_exists;
+use crate::wit::metatype::typegraph::host::{eprint, file_exists};
 
 pub struct PrismaProcessor {
     config: MigrationConfig,
@@ -30,13 +30,14 @@ impl PostProcessor for PrismaProcessor {
 
 impl PrismaProcessor {
     pub fn embed_prisma_migrations(&self, tg: &mut Typegraph) -> Result<(), String> {
-        let tg_name = tg.name().map_err(|e| e.to_string())?;
-        let base_migration_path = self.prisma_migrations_dir(&tg_name)?;
+        let base_migration_path = self.prisma_migrations_dir()?;
 
         for rt in tg.runtimes.iter_mut() {
             if let TGRuntime::Known(Prisma(rt_data)) = rt {
                 let rt_name = &rt_data.name;
                 let path = base_migration_path.join(rt_name);
+                eprint(&format!("LOOKING FOR MIGRATION AT {}", path.display()));
+
                 rt_data.migration_options = Some(MigrationOptions {
                     migration_files: {
                         let path = fs_host::make_absolute(&path)?;
@@ -56,14 +57,10 @@ impl PrismaProcessor {
         Ok(())
     }
 
-    pub fn prisma_migrations_dir(&self, tg_name: &str) -> Result<PathBuf, String> {
-        let mut path = fs_host::cwd()?.join(PathBuf::from(
-            self.config
-                .migration_dir
-                .clone()
-                .unwrap_or("prisma-migrations".to_string()),
-        ));
-        path.push(tg_name);
+    /// Simply concat `cwd` with `migration-path` (provided manually or set by the cli)
+    pub fn prisma_migrations_dir(&self) -> Result<PathBuf, String> {
+        let migration_dir = self.config.migration_dir.clone();
+        let path = fs_host::cwd()?.join(PathBuf::from(migration_dir));
         Ok(path)
     }
 }

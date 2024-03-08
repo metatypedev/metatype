@@ -69,13 +69,13 @@ async fn config(req: HttpRequest) -> impl Responder {
                 },
                 "secrets": secrets,
                 "prefix": prefix,
-                "artifactsConfig": json!({
+                "artifactsConfig": {
                     "dir": artefact_base_dir,
                     "prismaMigration": {
                         "migrationDir": config.prisma_migrations_dir_rel(&parsed.typegraph),
                         "action": serde_json::to_value(migration_action).unwrap()
                     },
-                }),
+                },
             });
 
             HttpResponse::Ok()

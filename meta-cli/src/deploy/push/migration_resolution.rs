@@ -9,8 +9,6 @@ use colored::Colorize;
 use common::typegraph::Typegraph;
 use filetime::{set_file_mtime, FileTime};
 
-use crate::deploy::actors::push_manager::PushManagerActor;
-use crate::deploy::actors::push_manager::{AddOneTimeOptions, OneTimePushOption};
 use crate::{
     deploy::actors::console::{
         input::{OptionLabel, SelectOption},
@@ -23,17 +21,16 @@ use crate::{
 pub struct ForceReset {
     pub typegraph: Arc<TypegraphInfos>,
     pub runtime_name: String,
-    pub push_manager: Addr<PushManagerActor>,
 }
 
 impl SelectOption for ForceReset {
     fn on_select(&self) {
-        self.push_manager.do_send(AddOneTimeOptions {
-            typegraph_key: self.typegraph.get_key().unwrap(),
-            options: vec![OneTimePushOption::ForceReset {
-                runtime_name: self.runtime_name.clone(),
-            }],
-        });
+        // self.push_manager.do_send(AddOneTimeOptions {
+        //     typegraph_key: self.typegraph.get_key().unwrap(),
+        //     options: vec![OneTimePushOption::ForceReset {
+        //         runtime_name: self.runtime_name.clone(),
+        //     }],
+        // });
 
         // force reload
         set_file_mtime(self.typegraph.path.clone(), FileTime::now()).unwrap();
@@ -52,7 +49,6 @@ pub struct RemoveLatestMigration {
     pub runtime_name: String,
     pub migration_name: String, // is this necessary??
     pub migration_dir: Arc<Path>,
-    pub push_manager: Addr<PushManagerActor>,
     pub console: Addr<ConsoleActor>,
 }
 
@@ -61,7 +57,6 @@ impl RemoveLatestMigration {
         migration_path: &Path,
         typegraph_key: String,
         runtime_name: String,
-        push_manager: Addr<PushManagerActor>,
         console: Addr<ConsoleActor>,
     ) -> Result<()> {
         tokio::fs::remove_dir_all(migration_path).await?;
@@ -72,10 +67,10 @@ impl RemoveLatestMigration {
         ));
 
         // reset the database on the next reload
-        push_manager.do_send(AddOneTimeOptions {
-            typegraph_key,
-            options: vec![OneTimePushOption::ForceReset { runtime_name }],
-        });
+        // push_manager.do_send(AddOneTimeOptions {
+        //     typegraph_key,
+        //     options: vec![OneTimePushOption::ForceReset { runtime_name }],
+        // });
 
         Ok(())
     }
@@ -85,21 +80,20 @@ impl SelectOption for RemoveLatestMigration {
     fn on_select(&self) {
         let migration_path = self.migration_dir.join(&self.migration_name);
         let runtime_name = self.runtime_name.clone();
-        let push_manager = self.push_manager.clone();
         let console = self.console.clone();
         let typegraph_key = self.typegraph.get_key().unwrap();
 
-        Arbiter::current().spawn(async move {
-            Self::apply(
-                &migration_path,
-                typegraph_key,
-                runtime_name,
-                push_manager,
-                console,
-            )
-            .await
-            .unwrap(); // TODO handle error
-        });
+        // Arbiter::current().spawn(async move {
+        //     Self::apply(
+        //         &migration_path,
+        //         typegraph_key,
+        //         runtime_name,
+        //         push_manager,
+        //         console,
+        //     )
+        //     .await
+        //     .unwrap(); // TODO handle error
+        // });
     }
 
     fn label(&self) -> OptionLabel<'_> {
@@ -114,19 +108,18 @@ pub struct ManualResolution {
     pub migration_name: String,
     pub message: Option<String>,
     // pub migration_dir: Arc<Path>,
-    pub push_manager: Addr<PushManagerActor>,
     pub console: Addr<ConsoleActor>,
 }
 
 impl SelectOption for ManualResolution {
     fn on_select(&self) {
-        // let mig_path = self
-        //     .migration_dir
-        //     .join(format!("{}/migration.sql", self.migration_name));
-        // eprint!(
-        //     "Edit the migration file at {:?} then press enter to continue...",
-        //     mig_path
-        // );
+        let mig_path = self
+            .migration_dir
+            .join(format!("{}/migration.sql", self.migration_name));
+        eprint!(
+            "Edit the migration file at {:?} then press enter to continue...",
+            mig_path
+        );
 
         let console = self.console.clone();
         let push_manager = self.push_manager.clone();

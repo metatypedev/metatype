@@ -41,7 +41,7 @@ interface core {
     }
 
     record migration-config {
-        migration-dir: option<string>,
+        migration-dir: string,
         action: migration-action
     }
 

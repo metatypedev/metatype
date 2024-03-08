@@ -77,7 +77,7 @@ const artifactsConfig = {
       create: true,
       reset: false
     },
-    migrationDir: "prisma-migrations"
+    migrationDir: path.join("prisma-migrations", tg.name)
   }
 };
 const baseUrl = "http://localhost:7890";
@@ -95,21 +95,23 @@ tgDeploy(tg, {
     // dir: "."
   },
 }).then(({ typegate }) => {
-  console.info(typegate);
+  // console.info(typegate);
   const selection = typegate?.data?.addTypegraph;
   if (selection) {
     const { migrations, messages } = selection;
     // migration status.. etc
     console.log(messages.map(({ text }) => text).join("\n"));
     migrations.map(({ runtime, migrations }) => {
-      const baseDir = artifactsConfig.prismaMigration.migrationDir;
       // Convention, however if migrationDir is absolute then you might want to use that instead
-      const fullPath = path.join(baseDir, tg.name, runtime);
+      // cwd + tg_name
+      const baseDir = artifactsConfig.prismaMigration.migrationDir;
+      // cwd + tg_name + runtime_name
+      const fullPath = path.join(baseDir, runtime);
       wit_utils.unpackTarb64(migrations,  fullPath);
       console.log(`Unpacked migrations at ${fullPath}`)
     });
   } else {
     throw new Error(JSON.stringify(typegate));
   }
-})
+}) 
   .catch(console.error);

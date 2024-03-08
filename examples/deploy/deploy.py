@@ -72,14 +72,18 @@ def deploy_example_python(g: Graph):
 
 
 # Self-deploy
+tg = deploy_example_python()
+
 auth = BasicAuth(username="admin", password="password")
 
 config_params = MigrationConfig(
-    migration_dir="prisma-migrations", action=MigrationAction(create=True, reset=True)
+    migration_dir=path.join("prisma-migrations", tg.name),
+    action=MigrationAction(create=True, reset=True),
 )
-artifacts_config = ArtifactResolutionConfig(prisma_migration=config_params, dir=None)
+artifacts_config = ArtifactResolutionConfig(
+    prefix=None, dir=None, prisma_migration=config_params
+)
 
-tg = deploy_example_python()
 
 res = tg_deploy(
     tg,
@@ -106,6 +110,7 @@ for item in migrations:
     # what to do with the migration files?
     base_dir = artifacts_config.prisma_migration.migration_dir
     # Convention, however if migration_dir is absolute then you might want to use that instead
-    full_path = path.join(base_dir, tg.name, item["runtime"])
+    # cwd + tg_name + runtime_name
+    full_path = path.join(base_dir, item["runtime"])
     unpack_tarb64(item["migrations"], full_path)
     print(f"Unpacked migrations at {full_path}")

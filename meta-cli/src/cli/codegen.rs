@@ -46,7 +46,7 @@ pub struct Deno {
 impl Action for Deno {
     async fn run(&self, _args: GenArgs) -> Result<()> {
         // TODO:
-        // how does this fits with the current impl?
+        // how does this fit with the current impl?
 
         // let dir = args.dir()?;
         // // try to find config file, else use default config as the options
