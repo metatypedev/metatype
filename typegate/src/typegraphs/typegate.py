@@ -97,7 +97,7 @@ def typegate(g: Graph):
         }
     )
 
-    type_info = t.struct(
+    shallow_type_info = t.struct(
         {
             "optional": t.boolean(),
             "as_id": t.boolean(),
@@ -109,12 +109,17 @@ def typegate(g: Graph):
             "default": t.json().optional(),
             "format": t.string().optional(),
             "policies": t.list(t.string()),
+        },
+        name="ShallowTypeInfo",
+    )
+
+    type_info = shallow_type_info.extend(
+        {
             "fields": t.list(
                 t.struct({"subPath": path, "termNode": g.ref("TypeInfo")})
             ).optional(),
-        },
-        name="TypeInfo",
-    )
+        }
+    ).rename("TypeInfo")
 
     operation_parameter = t.struct(
         {
@@ -148,6 +153,38 @@ def typegate(g: Graph):
         t.struct({"typegraph": t.string()}),
         t.list(operation_info),
         find_list_queries_mat,
+        rate_calls=True,
+    )
+
+    prisma_model_info = t.struct(
+        {
+            "name": t.string(),
+            "runtime": t.string(),
+            "fields": t.list(
+                t.struct(
+                    {
+                        "name": t.string(),
+                        "type": shallow_type_info,
+                    }
+                )
+            ),
+        },
+        name="PrismaModelInfo",
+    )
+
+    find_prisma_models_mat_id = runtimes.register_typegate_materializer(
+        store,
+        TypegateOperation.FIND_PRISMA_MODELS,
+    )
+    if isinstance(find_prisma_models_mat_id, Err):
+        raise Exception(find_prisma_models_mat_id.value)
+    find_prisma_models_mat = Materializer(
+        find_prisma_models_mat_id.value, effect=fx.read()
+    )
+    find_prisma_models = t.func(
+        t.struct({"typegraph": t.string()}),
+        t.list(prisma_model_info),
+        find_prisma_models_mat,
         rate_calls=True,
     )
 
@@ -204,4 +241,5 @@ def typegate(g: Graph):
             arg_info_inp, t.list(type_info), arg_info_by_path_mat, rate_calls=True
         ),
         findAvailableOperations=find_available_operations,
+        findPrismaModels=find_prisma_models,
     )

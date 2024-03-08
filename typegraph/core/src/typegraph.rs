@@ -12,7 +12,6 @@ use crate::utils::postprocess::python_rt::PythonProcessor;
 use crate::utils::postprocess::wasmedge_rt::WasmedgeProcessor;
 use crate::utils::postprocess::PostProcessor;
 use crate::validation::validate_name;
-use crate::wit::metatype::typegraph::host::eprint;
 use crate::Lib;
 use crate::{
     errors::{self, Result},
@@ -338,7 +337,6 @@ impl TypegraphContext {
         runtime_id: Option<u32>,
     ) -> Result<TypeId, TgError> {
         let hash = self.hash_type(type_def.clone(), runtime_id)?;
-        eprint(&format!("hash: {hash}"));
 
         match self.mapping.hash_to_type.entry(hash) {
             Entry::Vacant(e) => {
