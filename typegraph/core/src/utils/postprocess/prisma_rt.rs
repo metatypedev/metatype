@@ -9,7 +9,7 @@ use common::typegraph::Typegraph;
 use crate::utils::fs_host;
 use crate::utils::postprocess::PostProcessor;
 use crate::wit::core::MigrationConfig;
-use crate::wit::metatype::typegraph::host::{eprint, path_exists};
+use crate::wit::metatype::typegraph::host::path_exists;
 
 pub struct PrismaProcessor {
     config: MigrationConfig,
@@ -36,21 +36,16 @@ impl PrismaProcessor {
             if let TGRuntime::Known(Prisma(rt_data)) = rt {
                 let rt_name = &rt_data.name;
                 let path = base_migration_path.join(rt_name);
-                eprint(&format!("LOOKING FOR MIGRATION AT {}", path.display()));
 
                 rt_data.migration_options = Some(MigrationOptions {
                     migration_files: {
                         let path = fs_host::make_absolute(&path)?;
                         match path_exists(&path.display().to_string())? {
                             true => {
-                                eprint("PACKING IT..");
                                 let base64 = fs_host::compress_and_encode_base64(path)?;
                                 Some(base64)
                             }
-                            false => {
-                                eprint(&format!("FOUND NOTHING AT {}", path.display()));
-                                None
-                            }
+                            false => None,
                         }
                     },
                     create: self.config.action.create,

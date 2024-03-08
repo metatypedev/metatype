@@ -1,39 +1,33 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{path::Path, sync::Arc};
+use std::path::{Path, PathBuf};
 
 use actix::prelude::*;
 use anyhow::Result;
 use colored::Colorize;
-use common::typegraph::Typegraph;
-use filetime::{set_file_mtime, FileTime};
 
-use crate::{
-    deploy::actors::console::{
+use crate::deploy::actors::{
+    console::{
         input::{OptionLabel, SelectOption},
         Console, ConsoleActor,
     },
-    typegraph::loader::TypegraphInfos,
+    loader::{LoadModule, LoaderActor},
 };
 
 #[derive(Debug)]
 pub struct ForceReset {
-    pub typegraph: Arc<TypegraphInfos>,
+    pub loader: Addr<LoaderActor>,
+    pub typegraph_path: PathBuf,
     pub runtime_name: String,
 }
 
 impl SelectOption for ForceReset {
     fn on_select(&self) {
-        // self.push_manager.do_send(AddOneTimeOptions {
-        //     typegraph_key: self.typegraph.get_key().unwrap(),
-        //     options: vec![OneTimePushOption::ForceReset {
-        //         runtime_name: self.runtime_name.clone(),
-        //     }],
-        // });
-
         // force reload
-        set_file_mtime(self.typegraph.path.clone(), FileTime::now()).unwrap();
+        // set_file_mtime(self.typegraph_path.clone(), FileTime::now()).unwrap();
+        self.loader
+            .do_send(LoadModule(self.typegraph_path.clone().into()));
     }
 
     fn label(&self) -> OptionLabel<'_> {
@@ -45,34 +39,32 @@ impl SelectOption for ForceReset {
 
 #[derive(Debug)]
 pub struct RemoveLatestMigration {
-    pub typegraph: Arc<Typegraph>,
+    pub loader: Addr<LoaderActor>,
+    pub typegraph_path: PathBuf,
+    pub migration_dir: PathBuf,
     pub runtime_name: String,
     pub migration_name: String, // is this necessary??
-    pub migration_dir: Arc<Path>,
     pub console: Addr<ConsoleActor>,
 }
 
 impl RemoveLatestMigration {
     pub async fn apply(
         migration_path: &Path,
-        typegraph_key: String,
+        typegraph_path: &Path,
         runtime_name: String,
         console: Addr<ConsoleActor>,
+        loader: Addr<LoaderActor>,
     ) -> Result<()> {
         tokio::fs::remove_dir_all(migration_path).await?;
         console.info(format!("Removed migration directory: {:?}", migration_path));
         console.info(format!(
             "You can now update your typegraph at {} to create an alternative non-breaking schema.",
-            typegraph_key.bold()
+            typegraph_path.display().to_string().bold()
         ));
 
-        // reset the database on the next reload
-        // push_manager.do_send(AddOneTimeOptions {
-        //     typegraph_key,
-        //     options: vec![OneTimePushOption::ForceReset { runtime_name }],
-        // });
-
-        Ok(())
+        loader.do_send(LoadModule(typegraph_path.to_path_buf().into()));
+        // QUESTION: Reload or is there anything else more to do??
+        todo!("OneTimePushOption::ForceReset {runtime_name}");
     }
 }
 
@@ -81,19 +73,20 @@ impl SelectOption for RemoveLatestMigration {
         let migration_path = self.migration_dir.join(&self.migration_name);
         let runtime_name = self.runtime_name.clone();
         let console = self.console.clone();
-        let typegraph_key = self.typegraph.get_key().unwrap();
+        let loader = self.loader.clone();
+        let typegraph_path = self.typegraph_path.clone();
 
-        // Arbiter::current().spawn(async move {
-        //     Self::apply(
-        //         &migration_path,
-        //         typegraph_key,
-        //         runtime_name,
-        //         push_manager,
-        //         console,
-        //     )
-        //     .await
-        //     .unwrap(); // TODO handle error
-        // });
+        Arbiter::current().spawn(async move {
+            Self::apply(
+                &migration_path,
+                &typegraph_path,
+                runtime_name,
+                console,
+                loader,
+            )
+            .await
+            .unwrap(); // TODO handle error
+        });
     }
 
     fn label(&self) -> OptionLabel<'_> {
@@ -103,11 +96,12 @@ impl SelectOption for RemoveLatestMigration {
 
 #[derive(Debug)]
 pub struct ManualResolution {
-    pub typegraph: Arc<TypegraphInfos>,
+    pub loader: Addr<LoaderActor>,
+    pub typegraph_path: PathBuf,
+    pub migration_dir: PathBuf,
     pub runtime_name: String,
     pub migration_name: String,
     pub message: Option<String>,
-    // pub migration_dir: Arc<Path>,
     pub console: Addr<ConsoleActor>,
 }
 
@@ -122,24 +116,17 @@ impl SelectOption for ManualResolution {
         );
 
         let console = self.console.clone();
-        let push_manager = self.push_manager.clone();
-        let typegraph_key = self.typegraph.get_key().unwrap();
         let runtime_name = self.runtime_name.clone();
-        let typegraph_path = self.typegraph.path.clone();
+        let typegraph_path = self.typegraph_path.clone();
+        let loader = self.loader.clone();
 
         Arbiter::current().spawn(async move {
             // TODO watch migration file??
             console.read_line().await;
 
-            push_manager.do_send(AddOneTimeOptions {
-                typegraph_key,
-                options: vec![OneTimePushOption::ForceReset {
-                    runtime_name: runtime_name.clone(),
-                }],
-            });
-
-            // force reload
-            set_file_mtime(typegraph_path, FileTime::now()).unwrap();
+            loader.do_send(LoadModule(typegraph_path.into()));
+            // QUESTION: Reload or is there anything else more to do??
+            todo!("OneTimePushOption::ForceReset {runtime_name}");
         });
     }
 

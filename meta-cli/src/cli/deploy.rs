@@ -466,7 +466,6 @@ mod watch_mode {
                         }
                         E::TypegraphModuleChanged { typegraph_module } => {
                             RetryManager::clear_counter(&typegraph_module);
-
                             loader.do_send(ReloadModule(
                                 typegraph_module.into(),
                                 ReloadReason::FileChanged,

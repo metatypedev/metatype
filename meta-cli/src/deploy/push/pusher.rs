@@ -13,11 +13,14 @@ use anyhow::Result;
 use serde::Deserialize;
 
 use crate::com::{responses::SDKResponse, store::ServerStore};
-use crate::deploy::actors::console::input::{Confirm, ConfirmHandler};
+use crate::deploy::actors::console::input::{Confirm, ConfirmHandler, Select};
 use crate::deploy::actors::console::{Console, ConsoleActor};
 use crate::deploy::actors::loader::{LoadModule, LoaderActor};
+use crate::deploy::push::migration_resolution::{ManualResolution, RemoveLatestMigration};
 
 use lazy_static::lazy_static;
+
+use super::migration_resolution::ForceReset;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -129,11 +132,21 @@ impl PushResult {
 
     pub async fn finalize(&self) -> Result<()> {
         let name = self.name.clone();
-        self.console.info(format!(
-            "{} Successfully pushed typegraph {name}.",
-            "✓".green(),
-            name = name.cyan()
-        ));
+        let print_failure = || {
+            self.console.error(format!(
+                "{} Error encountered while pushing {name}.",
+                "✕".red(),
+                name = name.cyan()
+            ));
+        };
+
+        let print_success = || {
+            self.console.info(format!(
+                "{} Successfully pushed typegraph {name}.",
+                "✓".green(),
+                name = name.cyan()
+            ));
+        };
 
         // tg workdir + prisma_migration_rel
         let migdir = ServerStore::get_config()
@@ -158,6 +171,7 @@ impl PushResult {
         }
 
         if let Some(failure) = self.failure.clone() {
+            print_failure();
             match failure {
                 PushFailure::Unknown(f) => {
                     self.console.error(format!(
@@ -175,12 +189,18 @@ impl PushResult {
                     )
                     .await?
                 }
-                PushFailure::NullConstraintViolation(failure) => handle_null_constraint_violation(
-                    self.console.clone(),
-                    failure,
-                    self.sdk_response.clone(),
-                ),
+                PushFailure::NullConstraintViolation(failure) => {
+                    handle_null_constraint_violation(
+                        self.console.clone(),
+                        self.loader.clone(),
+                        failure,
+                        self.sdk_response.clone(),
+                    )
+                    .await?
+                }
             }
+        } else {
+            print_success();
         }
         Ok(())
     }
@@ -241,11 +261,14 @@ async fn handle_database_reset(
     Ok(())
 }
 
-pub fn handle_null_constraint_violation(
+// NullConstraintViolation Handler + interactivity
+
+pub async fn handle_null_constraint_violation(
     console: Addr<ConsoleActor>,
+    loader: Addr<LoaderActor>,
     failure: NullConstraintViolation,
     sdk_response: SDKResponse,
-) {
+) -> Result<()> {
     #[allow(unused)]
     let typegraph_name = sdk_response.typegraph_name;
     #[allow(unused)]
@@ -262,45 +285,45 @@ pub fn handle_null_constraint_violation(
 
     if is_new_column {
         console.info(format!("manually edit the migration {migration_name}; or remove the migration and add set a default value"));
-        todo!("interactive choice")
-        // let migration_dir: PathBuf = ServerStore::get_config()
-        //     .unwrap()
-        //     .prisma_migrations_dir_rel(&typegraph_name)
-        //     .join(&runtime_name)
-        //     .into();
+        let migration_dir = ServerStore::get_config()
+            .unwrap()
+            .prisma_migrations_dir_rel(&typegraph_name)
+            .join(&runtime_name);
 
-        // let remove_latest = RemoveLatestMigration {
-        //     runtime_name: runtime_name.clone(),
-        //     migration_name: migration_name.clone(),
-        //     migration_dir: migration_dir.clone(),
-        //     push_manager: self.push_manager.clone(),
-        //     console: self.console.clone(),
-        // };
+        let remove_latest = RemoveLatestMigration {
+            loader: loader.clone(),
+            typegraph_path: sdk_response.typegraph_path.clone(),
+            migration_dir: migration_dir.clone(),
+            runtime_name: runtime_name.clone(),
+            migration_name: migration_name.clone(),
+            console: console.clone(),
+        };
 
-        // let manual = ManualResolution {
-        //     runtime_name: runtime_name.clone(),
-        //     migration_name: migration_name.clone(),
-        //     migration_dir,
-        //     message: Some(format!(
-        //         "Set a default value for the column `{}` in the table `{}`",
-        //         column, table
-        //     )),
-        //     push_manager: self.push_manager.clone(),
-        //     console: self.console.clone(),
-        // };
+        let manual = ManualResolution {
+            loader: loader.clone(),
+            typegraph_path: sdk_response.typegraph_path.clone(),
+            migration_dir: migration_dir.clone(),
+            runtime_name: runtime_name.clone(),
+            migration_name: migration_name.clone(),
+            message: Some(format!(
+                "Set a default value for the column `{}` in the table `{}`",
+                column, table
+            )),
+            console: console.clone(),
+        };
 
-        // let reset = ForceReset {
-        //     typegraph: typegraph.clone(),
-        //     runtime_name: runtime_name.clone(),
-        //     push_manager: self.push_manager.clone(),
-        // };
+        let reset = ForceReset {
+            loader: loader.clone(),
+            runtime_name: runtime_name.clone(),
+            typegraph_path: sdk_response.typegraph_path.clone(),
+        };
 
-        // self.push_manager
-        //     .do_send(PushFinished::new(msg.push, false).select(
-        //         "Choose one of the following options".to_string(),
-        //         vec![Box::new(remove_latest), Box::new(manual), Box::new(reset)],
-        //     ));
+        let _ = Select::new(console, "Choose one of the following options".to_string())
+            .interact(&[Box::new(remove_latest), Box::new(manual), Box::new(reset)])
+            .await?;
     }
+
+    Ok(())
 }
 
 lazy_static! {
