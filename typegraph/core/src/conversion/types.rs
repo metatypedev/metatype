@@ -5,11 +5,14 @@ use crate::wit::core::PolicySpec;
 use common::typegraph::{Injection, PolicyIndices, TypeNode, TypeNodeBase};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
+use std::hash::Hash as _;
 use std::rc::Rc;
 
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
 use crate::types::TypeId;
+
+use super::hash::Hashable;
 
 #[enum_dispatch]
 pub trait TypeConversion {
@@ -123,5 +126,56 @@ impl<'a> BaseBuilder<'a> {
     pub fn id(mut self, b: bool) -> Self {
         self.as_id = b;
         self
+    }
+}
+
+impl Hashable for Injection {
+    fn hash(
+        &self,
+        hasher: &mut crate::conversion::hash::Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()> {
+        match self {
+            Injection::Parent(data) => {
+                "injection:parent".hash(hasher);
+                for type_id in data.values() {
+                    let type_id = TypeId(*type_id);
+                    type_id.hash_child_type(hasher, tg, runtime_id)?;
+                }
+            }
+            Injection::Static(data) => {
+                "injection:static".hash(hasher);
+                for value in data.values() {
+                    value.hash(hasher);
+                }
+            }
+            Injection::Context(data) => {
+                "injection:context".hash(hasher);
+                for value in data.values() {
+                    value.hash(hasher);
+                }
+            }
+            Injection::Secret(data) => {
+                "injection:secret".hash(hasher);
+                for value in data.values() {
+                    value.hash(hasher);
+                }
+            }
+            Injection::Dynamic(data) => {
+                "injection:dynamic".hash(hasher);
+                for value in data.values() {
+                    value.hash(hasher);
+                }
+            }
+            Injection::Random(data) => {
+                "injection:random".hash(hasher);
+                for value in data.values() {
+                    value.hash(hasher);
+                }
+            }
+        }
+
+        Ok(())
     }
 }

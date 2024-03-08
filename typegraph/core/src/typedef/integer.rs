@@ -1,11 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::hash::Hash as _;
+
 use common::typegraph::{IntegerTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{BaseBuilderInit, TypeConversion},
+    conversion::{
+        hash::Hashable,
+        types::{BaseBuilderInit, TypeConversion},
+    },
     errors,
     typegraph::TypegraphContext,
     types::{Integer, TypeDefData},
@@ -61,5 +66,23 @@ impl TypeDefData for TypeInteger {
 
     fn variant_name(&self) -> &'static str {
         "integer"
+    }
+}
+
+impl Hashable for TypeInteger {
+    fn hash(
+        &self,
+        hasher: &mut crate::conversion::hash::Hasher,
+        _tg: &mut TypegraphContext,
+        _runtime_id: Option<u32>,
+    ) -> Result<()> {
+        "integer".hash(hasher);
+        self.min.hash(hasher);
+        self.max.hash(hasher);
+        self.exclusive_minimum.hash(hasher);
+        self.exclusive_maximum.hash(hasher);
+        self.multiple_of.hash(hasher);
+
+        Ok(())
     }
 }

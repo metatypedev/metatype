@@ -1,11 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use super::TypeDefExt;
 use super::{type_ref::RefData, Type, TypeDef};
 use crate::errors::Result;
 use crate::errors::TgError;
+use crate::typegraph::TypegraphContext;
 use crate::wit::core::TypeId as CoreTypeId;
 use std::fmt::Debug;
+use std::hash::Hash as _;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TypeId(pub CoreTypeId);
@@ -65,6 +68,26 @@ impl TypeId {
             Type::Ref(_) => Ok(None),
             Type::Def(type_def) => Ok(Some(type_def)),
         }
+    }
+
+    pub fn hash_child_type(
+        &self,
+        state: &mut crate::conversion::hash::Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()> {
+        match self.as_type()? {
+            Type::Ref(type_ref) => type_ref.name.hash(state),
+            Type::Def(type_def) => {
+                if let Some(name) = type_def.base().name.as_deref() {
+                    name.hash(state)
+                } else {
+                    tg.hash_type(type_def, runtime_id)?.hash(state)
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 

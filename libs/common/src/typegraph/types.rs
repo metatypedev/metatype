@@ -1,31 +1,32 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
 #[cfg(feature = "codegen")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use std::hash::Hash;
 
 use super::{parameter_transform::FunctionParameterTransform, EffectType, PolicyIndices};
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct SingleValue<T> {
+#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
+pub struct SingleValue<T: Hash> {
     pub value: T,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(untagged)]
-pub enum InjectionData<T> {
+pub enum InjectionData<T: Hash> {
     SingleValue(SingleValue<T>),
-    ValueByEffect(HashMap<EffectType, T>),
+    ValueByEffect(BTreeMap<EffectType, T>),
 }
 
-impl<T> InjectionData<T> {
+impl<T: Hash> InjectionData<T> {
     pub fn values(&self) -> Vec<&T> {
         match self {
             InjectionData::SingleValue(v) => vec![&v.value],

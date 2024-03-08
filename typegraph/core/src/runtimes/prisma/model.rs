@@ -4,6 +4,7 @@
 pub use common::typegraph::runtimes::prisma::{ScalarType, StringType};
 use common::typegraph::{EffectType, InjectionData};
 use indexmap::IndexMap;
+use std::hash::Hash;
 
 use crate::errors::Result;
 use crate::runtimes::prisma::errors;
@@ -243,7 +244,7 @@ impl Injection {
     /// return None if the injection implies that the property is unmanaged.
     /// Unmanaged properties are properties that will not be present in the
     /// prisma model.
-    fn convert_injection<T>(data: &InjectionData<T>) -> Option<Self> {
+    fn convert_injection<T: Hash>(data: &InjectionData<T>) -> Option<Self> {
         match data {
             InjectionData::SingleValue(_) => None, // unmanaged
             InjectionData::ValueByEffect(map) => {

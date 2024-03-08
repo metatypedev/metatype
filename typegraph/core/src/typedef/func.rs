@@ -1,10 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::hash::Hash as _;
+
 use common::typegraph::{
     parameter_transform::FunctionParameterTransform, FunctionTypeData, TypeNode,
 };
 
+use crate::conversion::hash::Hashable;
 use crate::conversion::parameter_transform::convert_tree;
 use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::errors::{self, Result, TgError};
@@ -84,5 +87,27 @@ impl TypeDefData for TypeFunc {
 
     fn variant_name(&self) -> &'static str {
         "func"
+    }
+}
+
+impl Hashable for TypeFunc {
+    fn hash(
+        &self,
+        hasher: &mut crate::conversion::hash::Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()> {
+        "func".hash(hasher);
+        tg.find_materializer_index_by_store_id(self.mat)
+            .hash(hasher);
+        self.rate_calls.hash(hasher);
+        self.rate_weight.hash(hasher);
+        if let Some(transform) = &self.parameter_transform {
+            transform.transform_tree.hash(hasher);
+            TypeId(transform.resolver_input).hash_child_type(hasher, tg, runtime_id)?;
+        }
+        TypeId(self.inp).hash_child_type(hasher, tg, runtime_id)?;
+        TypeId(self.out).hash_child_type(hasher, tg, runtime_id)?;
+        Ok(())
     }
 }

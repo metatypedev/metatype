@@ -556,11 +556,11 @@ function serializeApplyParamNode(
   node: ApplyParamNode,
 ): Record<string, unknown> {
   if (node instanceof ApplyFromArg) {
-    return { source: "arg", name: node.name };
+    return { source: "arg", name: node.name, typeId: node.type };
   } else if (node instanceof ApplyFromStatic) {
     return { source: "static", value: JSON.stringify(node.value) };
   } else if (node instanceof ApplyFromContext) {
-    return { source: "context", key: node.key };
+    return { source: "context", key: node.key, typeId: node.type };
   } else if (node instanceof ApplyFromSecret) {
     return { source: "secret", key: node.key };
   } else if (node instanceof ApplyFromParent) {

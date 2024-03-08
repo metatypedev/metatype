@@ -5,11 +5,15 @@ use common::typegraph::TypeNode;
 use errors::Result;
 
 use crate::{
-    conversion::types::{BaseBuilderInit, TypeConversion},
+    conversion::{
+        hash::Hashable,
+        types::{BaseBuilderInit, TypeConversion},
+    },
     errors,
     typegraph::TypegraphContext,
     types::{Boolean, TypeBoolean, TypeDefData},
 };
+use std::hash::Hash;
 
 impl TypeConversion for Boolean {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
@@ -35,5 +39,17 @@ impl TypeDefData for TypeBoolean {
 
     fn variant_name(&self) -> &'static str {
         "boolean"
+    }
+}
+
+impl Hashable for TypeBoolean {
+    fn hash(
+        &self,
+        hasher: &mut crate::conversion::hash::Hasher,
+        _tg: &mut TypegraphContext,
+        _runtime_id: Option<u32>,
+    ) -> Result<()> {
+        "boolean".hash(hasher);
+        Ok(())
     }
 }

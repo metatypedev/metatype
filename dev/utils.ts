@@ -22,8 +22,8 @@ export async function runOrExit(
   }).spawn();
 
   // keep pipe asynchronous till the command exists
-  void p.stdout.pipeTo(Deno.stdout.writable, { preventClose: true });
-  void p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
+  await p.stdout.pipeTo(Deno.stdout.writable, { preventClose: true });
+  await p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
 
   const { code, success } = await p.status;
   if (!success) {

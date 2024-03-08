@@ -1,11 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::hash::Hash as _;
+
 use common::typegraph::{TypeNode, UnionTypeData};
 use errors::Result;
 
 use crate::{
-    conversion::types::{BaseBuilderInit, TypeConversion},
+    conversion::{
+        hash::Hashable,
+        types::{BaseBuilderInit, TypeConversion},
+    },
     errors,
     typegraph::TypegraphContext,
     types::{TypeDefData, TypeId, Union},
@@ -52,5 +57,21 @@ impl TypeDefData for TypeUnion {
 
     fn variant_name(&self) -> &'static str {
         "union"
+    }
+}
+
+impl Hashable for TypeUnion {
+    fn hash(
+        &self,
+        hasher: &mut crate::conversion::hash::Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()> {
+        "union".hash(hasher);
+        for (index, type_id) in self.variants.iter().enumerate() {
+            index.hash(hasher);
+            TypeId(*type_id).hash_child_type(hasher, tg, runtime_id)?; // TODO: runtime_id
+        }
+        Ok(())
     }
 }

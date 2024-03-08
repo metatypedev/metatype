@@ -3,6 +3,7 @@
 
 use std::rc::Rc;
 
+use crate::conversion::hash::{Hashable, Hasher};
 use crate::conversion::types::TypeConversion;
 use crate::errors::Result;
 use crate::global_store::{NameRegistration, Store};
@@ -13,6 +14,7 @@ use crate::wit::core::{
 };
 use common::typegraph::{Injection, TypeNode};
 use enum_dispatch::enum_dispatch;
+use std::hash::Hash as _;
 
 use super::TypeId;
 
@@ -28,7 +30,7 @@ impl ExtendedTypeBase {
     }
 }
 
-pub trait TypeDefData {
+pub trait TypeDefData: Hashable {
     fn get_display_params_into(&self, params: &mut Vec<String>);
     fn variant_name(&self) -> &'static str;
     // fn into_type(self, type_id: TypeId, base: Option<TypeBase>) -> Result<Type>;
@@ -77,7 +79,7 @@ impl Default for TypeBase {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub struct TypeBoolean;
 
 pub type Struct = NonRefType<TypeStruct>;
@@ -124,6 +126,12 @@ pub trait TypeDefExt {
     fn base(&self) -> &TypeBase;
     fn x_base(&self) -> &ExtendedTypeBase;
     fn data(&self) -> &dyn TypeDefData;
+    fn hash_type(
+        &self,
+        hasher: &mut Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()>;
     // fn to_string(&self) -> String;
 
     fn name(&self) -> Option<&str> {
@@ -153,6 +161,15 @@ impl<T: TypeDefExt> TypeDefExt for Rc<T> {
 
     fn data(&self) -> &dyn TypeDefData {
         (**self).data()
+    }
+
+    fn hash_type(
+        &self,
+        hasher: &mut Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()> {
+        (**self).hash_type(hasher, tg, runtime_id)
     }
 
     fn variant_name(&self) -> &'static str {
@@ -223,5 +240,53 @@ where
         params.push(format!("#{}", self.id.0));
         self.data.get_display_params_into(&mut params);
         format!("{}({})", self.data.variant_name(), params.join(", "))
+    }
+
+    fn hash_type(
+        &self,
+        hasher: &mut Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()> {
+        self.base.hash(hasher, tg, runtime_id)?;
+        self.data.hash(hasher, tg, runtime_id)?;
+        self.extended_base.hash(hasher, tg, runtime_id)?;
+        runtime_id.hash(hasher);
+        Ok(())
+    }
+}
+
+impl Hashable for TypeBase {
+    fn hash(
+        &self,
+        hasher: &mut Hasher,
+        _tg: &mut TypegraphContext,
+        _runtime_id: Option<u32>,
+    ) -> Result<()> {
+        self.name.hash(hasher);
+        self.runtime_config.hash(hasher);
+        self.as_id.hash(hasher);
+
+        Ok(())
+    }
+}
+
+impl Hashable for ExtendedTypeBase {
+    fn hash(
+        &self,
+        hasher: &mut Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()> {
+        "injection".hash(hasher);
+        if let Some(injection) = &self.injection {
+            injection.hash(hasher, tg, runtime_id)?;
+        }
+        "policies".hash(hasher);
+        for policy in &self.policies {
+            policy.hash(hasher, tg, runtime_id)?;
+        }
+
+        Ok(())
     }
 }

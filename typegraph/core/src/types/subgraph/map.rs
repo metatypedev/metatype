@@ -134,9 +134,9 @@ where
             | TypeDef::Integer(_)
             | TypeDef::Float(_)
             | TypeDef::String(_)
-            | TypeDef::File(_) => Ok(type_id),
-
-            TypeDef::Func(_) => Err("not supported".into()),
+            | TypeDef::File(_)
+            | TypeDef::Func(_) => Ok(type_id),
+            // TypeDef::Func(_) => Err("not supported".into()),
         }
     }
 }
