@@ -17,18 +17,6 @@ const schema = {
   // If false, auto reload system typegraphs on change. Default: to true.
   packaged: zBooleanString,
   hostname: z.string(),
-  redis_url: z
-    .string()
-    .transform((s: string) => {
-      if (s == "none") {
-        return new URL("redis://none");
-      }
-      const url = new URL(s);
-      if (url.password === "") {
-        url.password = Deno.env.get("REDIS_PASSWORD") ?? "";
-      }
-      return url;
-    }),
   tg_port: z.coerce.number().positive().max(65535),
   tg_secret: z.string().transform((s: string, ctx) => {
     const bytes = base64.decode(s);
