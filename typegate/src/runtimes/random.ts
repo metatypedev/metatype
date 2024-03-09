@@ -94,8 +94,14 @@ export default function randomizeRecursively(
     return chance[gen as string](arg);
   }
   switch (typ.type) {
-    case "object":
-      return {};
+    case "object": {
+      const result: Record<string, any> = {};
+      for (const [field, idx] of Object.entries(typ.properties)) {
+        const nextNode = tgTypes[idx];
+        result[field] = randomizeRecursively(nextNode, chance, tgTypes);
+      }
+      return result;
+    }
     case "optional": {
       const childNodeName = tgTypes[typ.item];
       return chance.bool()
@@ -103,7 +109,15 @@ export default function randomizeRecursively(
         : null;
     }
     case "integer":
+      if (typ.enum) {
+        return chance.pickone(typ.enum.map((x) => parseInt(x)));
+      }
       return chance.integer();
+    case "float":
+      if (typ.enum) {
+        return chance.pickone(typ.enum.map((x) => parseFloat(x)));
+      }
+      return chance.floating();
     case "string":
       if (typ.format === "uuid") {
         return chance.guid();
@@ -136,6 +150,10 @@ export default function randomizeRecursively(
       if (typ.format == "ean") {
         return generateEAN(chance);
       }
+      if (typ.enum) {
+        // TODO: use sth simpler than regex, may be .map(x => string(x))
+        return chance.pickone(typ.enum).replace(/^"(.*)"$/, "$1");
+      }
       return chance.string();
     case "boolean":
       return chance.bool();
@@ -149,6 +167,20 @@ export default function randomizeRecursively(
         );
       }
       return res;
+    }
+    case "either": {
+      const result = randomizeRecursively(
+        tgTypes[
+          typ.oneOf[chance.integer({ min: 0, max: typ.oneOf.length - 1 })]
+        ],
+        chance,
+        tgTypes,
+      );
+      console.log(
+        "**********Either",
+        result,
+      );
+      return result;
     }
 
     default:
