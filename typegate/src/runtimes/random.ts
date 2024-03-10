@@ -151,7 +151,7 @@ export default function randomizeRecursively(
         return generateEAN(chance);
       }
       if (typ.enum) {
-        // TODO: use sth simpler than regex, may be .map(x => string(x))
+        // remove extra " from the string
         return chance.pickone(typ.enum).replace(/^"(.*)"$/, "$1");
       }
       return chance.string();
