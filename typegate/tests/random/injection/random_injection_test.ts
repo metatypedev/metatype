@@ -77,7 +77,7 @@ Meta.test("Python: Random Injection", async (metaTest) => {
   });
 
   await metaTest.should(
-    "generate random values for on enums, either and union variants",
+    "generate random values for enums, either and union variants",
     async () => {
       await gql`
       query {
@@ -100,6 +100,20 @@ Meta.test("Python: Random Injection", async (metaTest) => {
               size
             }
           }
+        },
+        testUnion {
+          field {
+            ... on Rgb {
+              R
+              G
+              B
+            }
+            ... on Vec {
+              x
+              y
+              z
+            }
+          }
         }
       }
     `.expectData({
@@ -116,6 +130,13 @@ Meta.test("Python: Random Injection", async (metaTest) => {
           toy: {
             name: "1*ajw]krgDnCzXD*N!Fx",
             size: 3336617896968192,
+          },
+        },
+        testUnion: {
+          field: {
+            B: 779226068287.488,
+            G: 396901315143.2704,
+            R: 895648526657.1263,
           },
         },
       }).on(engine);

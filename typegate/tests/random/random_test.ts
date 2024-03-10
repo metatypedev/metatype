@@ -19,10 +19,10 @@ Meta.test("Python: Random", async (t) => {
     `
       .expectData({
         randomRec: {
-          uuid: "1069ace0-cdb1-5c1f-8193-81f53d29da35",
-          int: 7457276839329792,
-          str: "HPFk*o570)7",
-          email: "vi@itabefir.bb",
+          email: "vu@jel.ml",
+          int: 7360602246742016,
+          str: "v%vijM",
+          uuid: "415013d6-efc5-5781-aa74-056ee27dbb22",
         },
       })
       .on(e);
@@ -46,14 +46,14 @@ Meta.test("Python: Random", async (t) => {
     `
       .expectData({
         randomUser: {
-          id: "415013d6-efc5-5781-aa74-056ee27dbb22",
-          name: "Gertrude Robertson",
-          age: 61,
+          age: 35,
+          id: "190a524b-b70b-52f4-911d-7974ea74cf43",
+          name: "Chase Dennis",
           address: {
-            street: "579 Dico Turnpike",
-            city: "Igpisi",
-            postcode: "NR1 5GS",
-            country: "Croatia",
+            city: "Peehhiz",
+            country: "Mexico",
+            postcode: "TA2G 2CP",
+            street: "103 Pafma Circle",
           },
         },
       })
@@ -73,47 +73,54 @@ Meta.test("Python: Random", async (t) => {
           randomList: {
             array_of_array_of_names: [
               [
-                "Olivia Smith",
-                "Sean Atkins",
-                "Arthur Parker",
-                "Jack Chavez",
-                "Hunter Franklin",
-                "Betty Gill",
-                "Louis Reeves",
-                "Rosa Hansen",
-                "Blanche White",
-                "Essie Marsh",
+                "Ethel Casey",
+                "Della Garner",
+                "Ronald Wade",
+                "Clayton Tate",
+                "Martin Neal",
+                "Charlie Soto",
               ],
               [
-                "Caleb Meyer",
-                "Glen Hayes",
-                "Bernice Delgado",
-                "Bernice Rose",
-                "Ronnie Vargas",
+                "Jessie Fleming",
               ],
               [
-                "Marguerite Tyler",
-                "Erik Robinson",
-                "Gregory King",
-                "Essie Collins",
-                "Henrietta Cummings",
-                "Esther Wade",
-                "Shane Holmes",
-                "Jacob Warner",
-                "Gussie Castillo",
+                "Bertha Watts",
+                "Cecelia Neal",
+                "Gabriel Ramirez",
+                "Jean Carpenter",
+                "Alfred Jenkins",
+                "Cecilia Bradley",
+                "Lee Potter",
+                "Eunice Cox",
               ],
-              ["Julian Curry"],
               [
-                "Lelia Daniels",
-                "Gabriel Webster",
-                "Ronald Baker",
-                "Dale Owen",
-                "Harry Poole",
-                "Frank Ward",
-                "Margaret Perez",
-                "Verna Wallace",
-                "Flora Daniels",
-                "Derek Allen",
+                "Mable Leonard",
+                "Belle Olson",
+                "Susie Hart",
+                "Nelle Banks",
+                "Loretta Davis",
+                "Delia Love",
+                "Jeffrey Adkins",
+                "Laura Harvey",
+                "Jeffery Figueroa",
+              ],
+              [
+                "Arthur Patton",
+                "Minerva Miles",
+                "James Maldonado",
+                "Myrtle Gardner",
+                "Evelyn Brown",
+              ],
+              [
+                "Belle Dean",
+                "Lilly Steele",
+                "Michael Mason",
+                "Gussie Burgess",
+                "Rosalie Adams",
+                "Cody Gray",
+                "Olivia Alexander",
+                "Lola Scott",
+                "Miguel Pearson",
               ],
             ],
           },
@@ -137,10 +144,55 @@ Meta.test("Deno: Random", async (t) => {
     `
       .expectData({
         test1: {
-          email: "wubju@de.cg",
-          country: "Guyana",
+          country: "Turkey",
+          email: "mummer@nubi.no",
         },
       })
       .on(e);
+  });
+
+  await t.should("work on enum, union, and either types", async () => {
+    await gql`
+      query {
+        test2 {
+          field {
+            ... on Rgb {
+              R
+              G
+              B
+            }
+            ... on Vec {
+              x
+              y
+              z
+            }
+          }
+          toy {
+            ... on Rubix {
+              name
+              size
+            }
+            ... on Toygun {
+              color
+            }
+          }
+          educationLevel
+          cents
+        }
+      }
+    `.expectData({
+      test2: {
+        field: {
+          x: -158908830187.52,
+          y: 59745273852.7232,
+          z: -544843873281.6384,
+        },
+        toy: {
+          color: "]W3wuH6qhfHI^h",
+        },
+        cents: 1,
+        educationLevel: "primary",
+      },
+    }).on(e);
   });
 });
