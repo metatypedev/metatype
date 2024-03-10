@@ -176,9 +176,15 @@ export default function randomizeRecursively(
         chance,
         tgTypes,
       );
-      console.log(
-        "**********Either",
-        result,
+      return result;
+    }
+    case "union": {
+      const result = randomizeRecursively(
+        tgTypes[
+          typ.anyOf[chance.integer({ min: 0, max: typ.anyOf.length - 1 })]
+        ],
+        chance,
+        tgTypes,
       );
       return result;
     }
