@@ -142,6 +142,8 @@ class Manager:
             auth = BasicAuth(raw_auth["username"], raw_auth["password"])
 
         artifact_config_raw = cli_res["artifactsConfig"]
+        migration_action_raw = artifact_config_raw["prismaMigration"]
+
         return CLIConfigRequest(
             typegate=Typegate(endpoint=cli_res["typegate"]["endpoint"], auth=auth),
             prefix=prefix,
@@ -150,12 +152,13 @@ class Manager:
                 dir=artifact_config_raw["dir"],
                 prefix=prefix,
                 prisma_migration=MigrationConfig(
-                    action=MigrationAction(
-                        create=artifact_config_raw["prismaMigration"]["action"][
-                            "create"
-                        ],
-                        reset=artifact_config_raw["prismaMigration"]["action"]["reset"],
+                    global_action=json_to_mig_action(
+                        migration_action_raw["globalAction"]
                     ),
+                    runtime_actions=[
+                        (rt, json_to_mig_action(act))
+                        for [rt, act] in migration_action_raw["runtimeAction"]
+                    ],
                     migration_dir=artifact_config_raw["prismaMigration"][
                         "migrationDir"
                     ],
@@ -174,7 +177,6 @@ class Manager:
             response["data"] = json.loads(res) if isinstance(res, str) else res
         except Exception as e:
             response["error"] = str(e)
-
         req = request.Request(
             url=f"{self.endpoint}/response",
             method="POST",
@@ -189,3 +191,10 @@ def exist_and_not_null(obj: dict, field: str):
     if field in obj:
         return obj[field] is not None
     return False
+
+
+def json_to_mig_action(obj: dict) -> MigrationAction:
+    return MigrationAction(
+        create=obj["create"],
+        reset=obj["reset"],
+    )

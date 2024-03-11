@@ -78,7 +78,6 @@ class Typegraph:
         default_policy: Optional[PolicySpec] = None,
         **kwargs: ExposeItem,
     ):
-        print(str(kwargs))
         res = core.expose(
             store,
             [(k, v.id) for k, v in kwargs.items()],

@@ -8,7 +8,7 @@ use anyhow::Result;
 use colored::Colorize;
 
 use crate::{
-    com::store::ServerStore,
+    com::store::{MigrationAction, RuntimeMigrationAction, ServerStore},
     deploy::actors::{
         console::{
             input::{ConfirmHandler, OptionLabel, SelectOption},
@@ -24,16 +24,26 @@ use crate::{
 pub struct ConfirmDatabaseResetRequired {
     pub typegraph_path: PathBuf,
     pub loader: Addr<LoaderActor>,
+    pub runtime_name: String,
 }
 
 impl ConfirmHandler for ConfirmDatabaseResetRequired {
     fn on_confirm(&self) {
         let tg_path = self.typegraph_path.clone();
+        let runtime_name = self.runtime_name.clone();
 
         // reset
-        let mut option = ServerStore::get_migration_action(&tg_path);
-        option.reset = true;
-        ServerStore::set_migration_action(tg_path.clone(), option);
+        let glob_cfg = ServerStore::get_migration_action_glob();
+        ServerStore::set_migration_action(
+            tg_path.clone(),
+            RuntimeMigrationAction {
+                runtime_name,
+                action: MigrationAction {
+                    reset: true, // !
+                    create: glob_cfg.create,
+                },
+            },
+        );
 
         // reload
         self.loader.do_send(LoadModule(tg_path.into()));

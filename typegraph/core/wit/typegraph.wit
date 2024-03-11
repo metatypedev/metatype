@@ -42,7 +42,8 @@ interface core {
 
     record migration-config {
         migration-dir: string,
-        action: migration-action
+        global-action: migration-action, // global config (all runtimes)
+        runtime-actions: option<list<tuple<string, migration-action>>> // config per runtime name (override global-action)
     }
 
     record artifact-resolution-config {

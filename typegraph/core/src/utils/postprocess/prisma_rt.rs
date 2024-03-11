@@ -8,8 +8,8 @@ use common::typegraph::Typegraph;
 
 use crate::utils::fs_host;
 use crate::utils::postprocess::PostProcessor;
-use crate::wit::core::MigrationConfig;
-use crate::wit::metatype::typegraph::host::path_exists;
+use crate::wit::core::{MigrationAction, MigrationConfig};
+use crate::wit::metatype::typegraph::host::{eprint, path_exists};
 
 pub struct PrismaProcessor {
     config: MigrationConfig,
@@ -36,6 +36,7 @@ impl PrismaProcessor {
             if let TGRuntime::Known(Prisma(rt_data)) = rt {
                 let rt_name = &rt_data.name;
                 let path = base_migration_path.join(rt_name);
+                let action = self.get_action_by_rt_name(rt_name);
 
                 rt_data.migration_options = Some(MigrationOptions {
                     migration_files: {
@@ -48,8 +49,8 @@ impl PrismaProcessor {
                             false => None,
                         }
                     },
-                    create: self.config.action.create,
-                    reset: self.config.action.reset,
+                    create: action.create,
+                    reset: action.reset,
                 });
             }
         }
@@ -61,5 +62,17 @@ impl PrismaProcessor {
         let migration_dir = self.config.migration_dir.clone();
         let path = fs_host::cwd()?.join(PathBuf::from(migration_dir));
         Ok(path)
+    }
+
+    /// Get migration action from runtime_name (usually set from the cli)
+    /// If nothing is found, find the global action config (set initially)
+    pub fn get_action_by_rt_name(&self, name: &str) -> MigrationAction {
+        if let Some(actions) = self.config.runtime_actions.clone() {
+            if let Some(action) = actions.iter().find(|(rt, _)| rt.eq(name)) {
+                eprint(&format!("Specific migration action found for {name}"));
+                return action.1;
+            }
+        }
+        self.config.global_action
     }
 }

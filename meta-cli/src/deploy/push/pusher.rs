@@ -235,6 +235,7 @@ async fn handle_database_reset(
     )
     .interact(Box::new(ConfirmDatabaseResetRequired {
         typegraph_path: sdk_response.typegraph_path,
+        runtime_name,
         loader,
     }))
     .await?;

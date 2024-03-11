@@ -73,7 +73,7 @@ const tg = await typegraph({
 
 const artifactsConfig = {
   prismaMigration: {
-    action: {
+    globalAction: {
       create: true,
       reset: false
     },

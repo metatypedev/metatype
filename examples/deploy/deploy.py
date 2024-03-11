@@ -78,7 +78,8 @@ auth = BasicAuth(username="admin", password="password")
 
 config_params = MigrationConfig(
     migration_dir=path.join("prisma-migrations", tg.name),
-    action=MigrationAction(create=True, reset=True),
+    global_action=MigrationAction(create=True, reset=True),  # all runtimes
+    runtime_actions=None,  # usually set from the cli
 )
 artifacts_config = ArtifactResolutionConfig(
     prefix=None, dir=None, prisma_migration=config_params

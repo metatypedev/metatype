@@ -57,7 +57,22 @@ async fn config(req: HttpRequest) -> impl Responder {
 
     let endpoint = ServerStore::get_endpoint();
     let secrets = ServerStore::get_secrets();
-    let migration_action = ServerStore::get_migration_action(&parsed.typegraph_path);
+    let migration_action_glob = ServerStore::get_migration_action_glob();
+
+    let mut migration_action_per_rt = vec![];
+    if let Some(per_rt_actions) = ServerStore::get_runtime_migration_actions(&parsed.typegraph_path)
+    {
+        migration_action_per_rt =
+            per_rt_actions
+                .iter()
+                .fold(migration_action_per_rt, |mut acc, local_cfg| {
+                    acc.push(json!([
+                        local_cfg.runtime_name.clone(),
+                        local_cfg.action.clone()
+                    ]));
+                    acc
+                });
+    }
 
     let prefix = ServerStore::get_prefix();
     match ServerStore::get_config() {
@@ -76,7 +91,8 @@ async fn config(req: HttpRequest) -> impl Responder {
                     "prismaMigration": {
                         // only the cli is aware of the convention migrationDir := tg_workdir + config_folder + tg_name
                         "migrationDir": config.prisma_migrations_dir_rel(&parsed.typegraph),
-                        "action": serde_json::to_value(migration_action).unwrap()
+                        "globalAction": migration_action_glob,
+                        "runtimeAction": migration_action_per_rt
                     },
                 },
             });

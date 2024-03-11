@@ -51,12 +51,20 @@ pub struct MigrationAction {
     pub create: bool,
 }
 
+#[derive(Default, Serialize, Clone, Debug)]
+pub struct RuntimeMigrationAction {
+    pub runtime_name: String,
+    pub action: MigrationAction,
+}
+
 #[derive(Default, Debug)]
 pub struct ServerStore {
     config: Option<Config>,
     command: Option<Command>,
+    /// default (all)
     migration_action_glob: MigrationAction,
-    migration_action: HashMap<PathBuf, Arc<MigrationAction>>,
+    /// per runtime per typegraph
+    migration_action: HashMap<PathBuf, Arc<Vec<RuntimeMigrationAction>>>,
     secrets: HashMap<String, String>,
     endpoint: Endpoint,
     prefix: Option<String>,
@@ -129,22 +137,27 @@ impl ServerStore {
         with_store(|s| s.migration_action_glob.to_owned())
     }
 
-    pub fn set_migration_action(tg_path: PathBuf, option: MigrationAction) {
+    pub fn set_migration_action(tg_path: PathBuf, rt_migration_option: RuntimeMigrationAction) {
         with_store_mut(|s| {
-            s.migration_action.insert(tg_path, option.into());
+            let mut items = vec![];
+            if let Some(actions) = s.migration_action.get(&tg_path) {
+                items = actions.as_ref().clone();
+            }
+            items.push(rt_migration_option);
+            s.migration_action.insert(tg_path, items.into());
         })
     }
 
-    pub fn get_migration_action(tg_path: &PathBuf) -> MigrationAction {
+    pub fn get_runtime_migration_actions(tg_path: &PathBuf) -> Option<Vec<RuntimeMigrationAction>> {
         with_store(|s| {
             if let Some(mig_action) = s.migration_action.get(tg_path) {
                 println!(
                     "Specific migration action was defined for {}",
                     tg_path.display()
                 );
-                return mig_action.as_ref().to_owned();
+                return Some(mig_action.as_ref().to_owned());
             }
-            s.migration_action_glob.to_owned()
+            None
         })
     }
 
