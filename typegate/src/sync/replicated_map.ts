@@ -32,6 +32,12 @@ type Serializer<T> = (elem: T) => Promise<string> | string;
 type Deserializer<T> = (value: string, initialLoad: boolean) => Promise<T> | T;
 type TerminateHook<T> = (elem: T) => Promise<void> | void;
 
+type RedisReplicatedMapOptions<T> = {
+  serialize: Serializer<T>;
+  deserialize: Deserializer<T>;
+  terminate: TerminateHook<T>;
+};
+
 export class RedisReplicatedMap<T> {
   private instance: string;
 
@@ -47,23 +53,19 @@ export class RedisReplicatedMap<T> {
     private redisObs: Redis,
     private serializer: Serializer<T>,
     private deserializer: Deserializer<T>,
-    private terminatateHook: TerminateHook<T>,
+    private terminateHook: TerminateHook<T>,
   ) {
     this.instance = crypto.randomUUID();
     this.memory = new Map();
     this.key = name;
     this.ekey = `${name}_event`;
-    this.serializer = serializer;
-    this.deserializer = deserializer;
     this.sync = null;
   }
 
   static async init<T>(
     name: string,
     connection: RedisConnectOptions,
-    serializer: Serializer<T>,
-    deserializer: Deserializer<T>,
-    terminatateHook: TerminateHook<T>,
+    { serialize, deserialize, terminate }: RedisReplicatedMapOptions<T>,
   ) {
     // needs two connections because
     // 1. xread with block delays other commands
@@ -75,9 +77,9 @@ export class RedisReplicatedMap<T> {
       name,
       redis,
       redisObs,
-      serializer,
-      deserializer,
-      terminatateHook,
+      serialize,
+      deserialize,
+      terminate,
     );
   }
 
@@ -106,7 +108,7 @@ export class RedisReplicatedMap<T> {
   }
 
   private async memorySet(name: string, elem: T | null): Promise<void> {
-    const { memory, terminatateHook } = this;
+    const { memory, terminateHook } = this;
     const old = memory.get(name);
     if (elem !== null) {
       this.memory.set(name, elem);
@@ -114,7 +116,7 @@ export class RedisReplicatedMap<T> {
       this.memory.delete(name);
     }
     if (old) {
-      await terminatateHook(old);
+      await terminateHook(old);
     }
   }
 
