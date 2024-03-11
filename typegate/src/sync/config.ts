@@ -3,9 +3,6 @@
 
 import { z } from "zod";
 import { zBooleanString } from "../log.ts";
-import { configOrExit } from "../log.ts";
-import { mapKeys } from "std/collections/map_keys.ts";
-import { parse } from "std/flags/mod.ts";
 import { RedisConnectOptions } from "redis";
 import { S3ClientConfig } from "aws-sdk/client-s3";
 
@@ -30,19 +27,11 @@ export const syncConfigSchemaNaked = {
   sync_s3_path_style: zBooleanString.optional(),
 };
 
-const syncConfigRaw = await configOrExit([
-  mapKeys(
-    Deno.env.toObject(),
-    (k: string) => k.toLowerCase(),
-  ),
-  parse(Deno.args) as Record<string, unknown>,
-], syncConfigSchemaNaked);
-
-const syncConfigSchema = z.object(syncConfigSchemaNaked);
+export const syncConfigSchema = z.object(syncConfigSchemaNaked);
 
 export type SyncConfigRaw = Required<z.output<typeof syncConfigSchema>>;
 
-function validateSyncConfig(
+export function validateSyncConfig(
   config: z.output<typeof syncConfigSchema>,
 ): SyncConfigRaw | null {
   if (!config.sync_enabled) {
@@ -93,7 +82,9 @@ export type SyncConfig = {
   s3Bucket: string;
 };
 
-function syncConfigFromRaw(config: SyncConfigRaw | null): SyncConfig | null {
+export function syncConfigFromRaw(
+  config: SyncConfigRaw | null,
+): SyncConfig | null {
   if (config == null) return null;
 
   return {
@@ -117,7 +108,3 @@ function syncConfigFromRaw(config: SyncConfigRaw | null): SyncConfig | null {
     s3Bucket: config.sync_s3_bucket,
   };
 }
-
-const syncConfig = syncConfigFromRaw(validateSyncConfig(syncConfigRaw));
-
-export default syncConfig;

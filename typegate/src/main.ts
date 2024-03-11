@@ -1,20 +1,21 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { deferred } from "std/async/deferred.ts";
 import { init_native } from "native";
 
-import { Register, ReplicatedRegister } from "./typegate/register.ts";
 import config from "./config.ts";
 import { Typegate } from "./typegate/mod.ts";
-import { RateLimiter, RedisRateLimiter } from "./typegate/rate_limiter.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import * as Sentry from "sentry";
-import { getLogger } from "./log.ts";
+import { configOrExit, getLogger } from "./log.ts";
 import { init_runtimes } from "./runtimes/mod.ts";
-import { MemoryRegister } from "test-utils/memory_register.ts";
-import { NoLimiter } from "test-utils/no_limiter.ts";
-import syncConfig from "./sync/config.ts";
+import {
+  syncConfigFromRaw,
+  syncConfigSchemaNaked,
+  validateSyncConfig,
+} from "./sync/config.ts";
+import { mapKeys } from "std/collections/map_keys.ts";
+import { parse } from "std/flags/mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -51,36 +52,16 @@ try {
   // load all runtimes
   await init_runtimes();
 
-  const deferredTypegate = deferred<Typegate>();
-  let register: Register | undefined;
-  let limiter: RateLimiter | undefined;
+  const syncConfigRaw = await configOrExit([
+    mapKeys(
+      Deno.env.toObject(),
+      (k: string) => k.toLowerCase(),
+    ),
+    parse(Deno.args) as Record<string, unknown>,
+  ], syncConfigSchemaNaked);
 
-  if (syncConfig != null) {
-    register = await ReplicatedRegister.init(
-      deferredTypegate,
-      syncConfig.redis,
-    );
-    limiter = await RedisRateLimiter.init(syncConfig.redis);
-  } else {
-    logger.warning("Entering no-sync mode...");
-    logger.warning("Enable sync if you want to use accross multiple instances");
-    register = new MemoryRegister();
-    limiter = new NoLimiter();
-  }
-
-  const typegate = new Typegate(register!, limiter!);
-
-  deferredTypegate.resolve(typegate);
-
-  if (register instanceof ReplicatedRegister) {
-    const lastSync = await register.historySync().catch((err) => {
-      logger.error(err);
-      throw new Error(
-        `failed to load history at boot, aborting: ${err.message}`,
-      );
-    });
-    register.startSync(lastSync);
-  }
+  const syncConfig = syncConfigFromRaw(validateSyncConfig(syncConfigRaw));
+  const typegate = await Typegate.init(syncConfig);
 
   await SystemTypegraph.loadAll(typegate, !config.packaged);
 

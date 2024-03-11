@@ -6,7 +6,6 @@ import { dirname, join } from "std/path/mod.ts";
 import { copy } from "std/streams/copy.ts";
 import { init_native } from "native";
 import { SingleRegister } from "./single_register.ts";
-import { NoLimiter } from "./no_limiter.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 import { RestQuery } from "./query/rest_query.ts";
 import { GraphQLQuery } from "./query/graphql_query.ts";
@@ -47,8 +46,7 @@ export async function execute(
   request: Request,
 ): Promise<Response> {
   const register = new SingleRegister(engine.name, engine);
-  const limiter = new NoLimiter();
-  const typegate = new Typegate(register, limiter);
+  const typegate = await Typegate.init(null, register);
   return await typegate.handle(request, {
     remoteAddr: { hostname: "localhost" },
   } as Deno.ServeHandlerInfo);

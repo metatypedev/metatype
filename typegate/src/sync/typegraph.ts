@@ -9,7 +9,8 @@ import {
   PutObjectCommandInput,
   S3Client,
 } from "aws-sdk/client-s3";
-import syncConfig from "./config.ts";
+import { SyncConfig } from "./config.ts";
+
 import { encodeHex } from "std/encoding/hex.ts";
 import { z } from "zod";
 
@@ -21,10 +22,7 @@ export const typegraphIdSchema = z.object({
 export type TypegraphId = z.infer<typeof typegraphIdSchema>;
 
 export class TypegraphStore {
-  static init() {
-    if (!syncConfig) {
-      throw new Error("Unreachable: syncConfig is not set");
-    }
+  static init(syncConfig: SyncConfig) {
     const clientInit = syncConfig.s3;
     const bucket = syncConfig.s3Bucket;
     const client = new S3Client(clientInit);

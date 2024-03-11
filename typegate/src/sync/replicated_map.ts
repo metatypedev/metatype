@@ -3,8 +3,8 @@
 
 import { connect, Redis, RedisConnectOptions, XIdInput } from "redis";
 import * as Sentry from "sentry";
-import { getLogger } from "./log.ts";
-import { ensure } from "./utils.ts";
+import { getLogger } from "../log.ts";
+import { ensure } from "../utils.ts";
 
 const logger = getLogger(import.meta);
 

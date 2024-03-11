@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { QueryEngine } from "../engine/query_engine.ts";
-import { RedisReplicatedMap } from "../replicated_map.ts";
 import { RedisConnectOptions, XIdInput } from "redis";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { Typegate } from "./mod.ts";
@@ -11,6 +10,7 @@ import {
   upgradeTypegraph,
 } from "../typegraph/versions.ts";
 import { typegraphIdSchema, TypegraphStore } from "../sync/typegraph.ts";
+import { RedisReplicatedMap } from "../sync/replicated_map.ts";
 
 export interface MessageEntry {
   type: "info" | "warning" | "error";
@@ -36,7 +36,7 @@ export abstract class Register {
 
 export class ReplicatedRegister extends Register {
   static async init(
-    deferredTypegate: Promise<Typegate>,
+    typegate: Typegate,
     redisConfig: RedisConnectOptions,
     typegraphStore: TypegraphStore,
   ): Promise<ReplicatedRegister> {
@@ -53,7 +53,6 @@ export class ReplicatedRegister extends Register {
         },
         async deserialize(json: string, initialLoad: boolean) {
           const typegraphId = typegraphIdSchema.parse(JSON.parse(json));
-          const typegate = await deferredTypegate;
 
           // TODO local cache??
           const [tg, secretManager] = await typegraphStore.download(

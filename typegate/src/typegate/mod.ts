@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import config from "../config.ts";
-import { Register } from "./register.ts";
+import { Register, ReplicatedRegister } from "./register.ts";
 import * as Sentry from "sentry";
-import { RateLimiter } from "./rate_limiter.ts";
+import { RateLimiter, RedisRateLimiter } from "./rate_limiter.ts";
 import { handlePlaygroundGraphQL } from "../services/playground_service.ts";
 import { ensureJWT, handleAuth } from "../services/auth/mod.ts";
 import { handleInfo } from "../services/info_service.ts";
@@ -35,6 +35,10 @@ import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
 import introspectionJson from "../typegraphs/introspection.json" with {
   type: "json",
 };
+import { SyncConfig } from "../sync/config.ts";
+import { MemoryRegister } from "test-utils/memory_register.ts";
+import { NoLimiter } from "test-utils/no_limiter.ts";
+import { TypegraphStore } from "../sync/typegraph.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -61,9 +65,50 @@ export type PushResult = {
 export class Typegate {
   #onPushHooks: PushHandler[] = [];
 
-  constructor(
+  static async init(
+    syncConfig: SyncConfig | null = null,
+    customRegister: Register | null = null,
+  ): Promise<Typegate> {
+    if (syncConfig == null) {
+      logger.warning("Entering no-sync mode...");
+      logger.warning(
+        "Enable sync if you want to use accross multiple instances",
+      );
+
+      const register = customRegister ?? new MemoryRegister();
+      return new Typegate(register, new NoLimiter(), null);
+    } else {
+      if (customRegister) {
+        throw new Error(
+          "Custom register is not supported in sync mode",
+        );
+      }
+      const limiter = await RedisRateLimiter.init(syncConfig.redis);
+      const typegate = new Typegate(null!, limiter, syncConfig);
+      const register = await ReplicatedRegister.init(
+        typegate,
+        syncConfig.redis,
+        TypegraphStore.init(syncConfig),
+      );
+
+      (typegate as { register: Register }).register = register;
+
+      const lastSync = await register.historySync().catch((err) => {
+        logger.error(err);
+        throw new Error(
+          `failed to load history at boot, aborting: ${err.message}`,
+        );
+      });
+      register.startSync(lastSync);
+
+      return typegate;
+    }
+  }
+
+  private constructor(
     public readonly register: Register,
     private limiter: RateLimiter,
+    public syncConfig: SyncConfig | null = null,
   ) {
     this.#onPush((tg) => Promise.resolve(upgradeTypegraph(tg)));
     this.#onPush((tg) => Promise.resolve(parseGraphQLTypeGraph(tg)));

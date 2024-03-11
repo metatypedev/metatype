@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { SystemTypegraph } from "../../src/system_typegraphs.ts";
-import { MemoryRegister } from "./memory_register.ts";
 import { dirname, join } from "std/path/mod.ts";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
@@ -12,7 +11,6 @@ import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 
-import { NoLimiter } from "./no_limiter.ts";
 import { createMetaCli, metaCli } from "./meta.ts";
 import { SecretManager, TypeGraph } from "../../src/typegraph/mod.ts";
 
@@ -246,7 +244,7 @@ export const test = ((name, fn, opts = {}): void => {
   return Deno.test({
     name,
     async fn(t) {
-      const typegate = new Typegate(new MemoryRegister(), new NoLimiter());
+      const typegate = await Typegate.init();
       const {
         systemTypegraphs = false,
         gitRepo = null,
