@@ -34,6 +34,46 @@ def random_injection(g: Graph):
         }
     )
 
+    # test int, str, float enum
+    test_enum_str = t.struct(
+        {
+            "educationLevel": t.enum(
+                ["primary", "secondary", "tertiary"]
+            ).from_random(),
+        }
+    )
+
+    test_enum_int = t.struct(
+        {
+            "bits": t.integer(enum=[0, 1]).from_random(),
+        }
+    )
+
+    test_enum_float = t.struct(
+        {
+            "cents": t.float(enum=[0.25, 0.5, 1.0]).from_random(),
+        }
+    )
+
+    # test either
+    rubix_cube = t.struct({"name": t.string(), "size": t.integer()}, name="Rubix")
+    toygun = t.struct({"color": t.string()}, name="Toygun")
+    toy = t.either([rubix_cube, toygun], name="Toy").from_random()
+    toy_struct = t.struct(
+        {
+            "toy": toy,
+        }
+    )
+
+    # test union
+    rgb = t.struct({"R": t.float(), "G": t.float(), "B": t.float()}, name="Rgb")
+    vec = t.struct({"x": t.float(), "y": t.float(), "z": t.float()}, name="Vec")
+    union_struct = t.struct(
+        {
+            "field": t.union([rgb, vec], name="UnionStruct").from_random(),
+        }
+    )
+
     random_list = t.struct(
         {
             "names": t.list(t.string(config={"gen": "name"})).from_random(),
@@ -45,4 +85,9 @@ def random_injection(g: Graph):
         pub,
         randomUser=deno.identity(user),
         randomList=deno.identity(random_list),
+        testEnumStr=deno.identity(test_enum_str),
+        testEnumInt=deno.identity(test_enum_int),
+        testEnumFloat=deno.identity(test_enum_float),
+        testEither=deno.identity(toy_struct),
+        testUnion=deno.identity(union_struct),
     )
