@@ -152,7 +152,7 @@ export default function randomizeRecursively(
       }
       if (typ.enum) {
         // remove extra " from the string
-        return chance.pickone(typ.enum).replace(/^"(.*)"$/, "$1");
+        return JSON.parse(chance.pickone(typ.enum));
       }
       return chance.string();
     case "boolean":
