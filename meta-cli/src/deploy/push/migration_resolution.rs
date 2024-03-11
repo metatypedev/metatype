@@ -31,22 +31,7 @@ impl ConfirmHandler for ConfirmDatabaseResetRequired {
     fn on_confirm(&self) {
         let tg_path = self.typegraph_path.clone();
         let runtime_name = self.runtime_name.clone();
-
-        // reset
-        let glob_cfg = ServerStore::get_migration_action_glob();
-        ServerStore::set_migration_action(
-            tg_path.clone(),
-            RuntimeMigrationAction {
-                runtime_name,
-                action: MigrationAction {
-                    reset: true, // !
-                    create: glob_cfg.create,
-                },
-            },
-        );
-
-        // reload
-        self.loader.do_send(LoadModule(tg_path.into()));
+        do_force_reset(&self.loader, tg_path, runtime_name);
     }
 }
 
@@ -61,10 +46,9 @@ pub struct ForceReset {
 
 impl SelectOption for ForceReset {
     fn on_select(&self) {
-        // force reload
-        // set_file_mtime(self.typegraph_path.clone(), FileTime::now()).unwrap();
-        self.loader
-            .do_send(LoadModule(self.typegraph_path.clone().into()));
+        let tg_path = self.typegraph_path.clone();
+        let runtime_name = self.runtime_name.clone();
+        do_force_reset(&self.loader, tg_path, runtime_name);
     }
 
     fn label(&self) -> OptionLabel<'_> {
@@ -92,16 +76,19 @@ impl RemoveLatestMigration {
         console: Addr<ConsoleActor>,
         loader: Addr<LoaderActor>,
     ) -> Result<()> {
-        tokio::fs::remove_dir_all(migration_path).await?;
+        tokio::fs::remove_dir_all(migration_path).await?; // !
+
         console.info(format!("Removed migration directory: {:?}", migration_path));
         console.info(format!(
             "You can now update your typegraph at {} to create an alternative non-breaking schema.",
             typegraph_path.display().to_string().bold()
         ));
 
-        loader.do_send(LoadModule(typegraph_path.to_path_buf().into()));
-        // QUESTION: Reload or is there anything else more to do??
-        todo!("OneTimePushOption::ForceReset {runtime_name}");
+        let tg_path = typegraph_path.to_path_buf();
+        let runtime_name = runtime_name.clone();
+        do_force_reset(&loader, tg_path, runtime_name);
+
+        Ok(())
     }
 }
 
@@ -114,15 +101,19 @@ impl SelectOption for RemoveLatestMigration {
         let typegraph_path = self.typegraph_path.clone();
 
         Arbiter::current().spawn(async move {
-            Self::apply(
+            if let Err(e) = Self::apply(
                 &migration_path,
                 &typegraph_path,
                 runtime_name,
-                console,
+                console.clone(),
                 loader,
             )
             .await
-            .unwrap(); // TODO handle error
+            {
+                console.warning(format!("Migration Path {}", migration_path.display()));
+                console.error(e.to_string());
+                panic!("{}", e.to_string()); // may occur if the latest migration does not match
+            }
         });
     }
 
@@ -160,10 +151,7 @@ impl SelectOption for ManualResolution {
         Arbiter::current().spawn(async move {
             // TODO watch migration file??
             console.read_line().await;
-
-            loader.do_send(LoadModule(typegraph_path.into()));
-            // QUESTION: Reload or is there anything else more to do??
-            todo!("OneTimePushOption::ForceReset {runtime_name}");
+            do_force_reset(&loader, typegraph_path, runtime_name);
         });
     }
 
@@ -175,4 +163,23 @@ impl SelectOption for ManualResolution {
             label
         }
     }
+}
+
+/// Set `reset` to `true` for the specified prisma runtime + re-run the typegraph
+fn do_force_reset(loader: &Addr<LoaderActor>, tg_path: PathBuf, runtime_name: String) {
+    // reset
+    let glob_cfg = ServerStore::get_migration_action_glob();
+    ServerStore::set_migration_action(
+        tg_path.clone(),
+        RuntimeMigrationAction {
+            runtime_name,
+            action: MigrationAction {
+                reset: true, // !
+                create: glob_cfg.create,
+            },
+        },
+    );
+
+    // reload
+    loader.do_send(LoadModule(tg_path.into()));
 }
