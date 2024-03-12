@@ -280,7 +280,7 @@ impl Hashable for ExtendedTypeBase {
     ) -> Result<()> {
         "injection".hash(hasher);
         if let Some(injection) = &self.injection {
-            injection.hash(hasher, tg, runtime_id)?;
+            injection.hash(hasher);
         }
         "policies".hash(hasher);
         for policy in &self.policies {

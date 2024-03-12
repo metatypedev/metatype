@@ -98,8 +98,7 @@ impl Hashable for TypeFunc {
         runtime_id: Option<u32>,
     ) -> Result<()> {
         "func".hash(hasher);
-        tg.find_materializer_index_by_store_id(self.mat)
-            .hash(hasher);
+        self.mat.hash(hasher);
         self.rate_calls.hash(hasher);
         self.rate_weight.hash(hasher);
         if let Some(transform) = &self.parameter_transform {

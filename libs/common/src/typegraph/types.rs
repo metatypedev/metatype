@@ -43,7 +43,7 @@ impl<T: Hash> InjectionData<T> {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(tag = "source", content = "data", rename_all = "lowercase")]
 pub enum Injection {
     Static(InjectionData<String>),
