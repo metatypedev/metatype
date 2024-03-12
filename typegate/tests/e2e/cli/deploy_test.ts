@@ -172,7 +172,7 @@ Meta.test(
 Meta.test(
   "cli:deploy - automatic migrations",
   async (t) => {
-    const e = await t.engine("runtimes/prisma/prisma.py", {
+    const e = await t.engine("prisma.py", {
       secrets: {
         POSTGRES:
           "postgresql://postgres:password@localhost:5432/db?schema=e2e7897",
@@ -264,7 +264,7 @@ Meta.test(
 Meta.test(
   "cli:deploy - with prefix",
   async (t) => {
-    const e = await t.engine("runtimes/prisma/prisma.py", {
+    const e = await t.engine("prisma.py", {
       secrets: {
         POSTGRES:
           "postgresql://postgres:password@localhost:5432/db?schema=e2e7894",
