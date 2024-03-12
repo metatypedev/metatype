@@ -10,6 +10,8 @@ import {
   ListObjectsV2Command,
   S3Client,
 } from "aws-sdk/client-s3";
+import { assertEquals } from "std/assert/mod.ts";
+import { Typegate } from "../../src/typegate/mod.ts";
 
 const syncConfig = {
   redis: {
@@ -29,6 +31,22 @@ const syncConfig = {
   },
   s3Bucket: "metatype-sync-test",
 };
+
+async function lazyAssert(timeoutMs: number, fn: () => Promise<void>) {
+  const start = Date.now();
+  let error: Error | null = null;
+  while (Date.now() - start < timeoutMs) {
+    try {
+      await fn();
+      return;
+    } catch (e) {
+      error = e;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+  }
+
+  throw new Error(`timeout: ${error?.message}`);
+}
 
 async function tryDeleteBucket(client: S3Client, bucket: string) {
   while (true) {
@@ -71,34 +89,85 @@ async function createBucket(client: S3Client, bucket: string) {
   await client.send(createCommand);
 }
 
-async function resetS3() {
-  const client = new S3Client(syncConfig.s3);
-  await tryDeleteBucket(client, syncConfig.s3Bucket);
-  await createBucket(client, syncConfig.s3Bucket);
-  client.destroy();
-}
-
+const redisKey = "typegraph";
 const redisEventKey = "typegraph_event";
 
+async function cleanUp() {
+  using redis = await connect(syncConfig.redis);
+  await redis.del(redisKey);
+  await redis.del(redisEventKey);
+
+  const s3 = new S3Client(syncConfig.s3);
+  await tryDeleteBucket(s3, syncConfig.s3Bucket);
+  await createBucket(s3, syncConfig.s3Bucket);
+  s3.destroy();
+}
+
+async function waitForRedisEvent(timeoutMs: number, cb: () => Promise<void>) {
+  using redis = await connect(syncConfig.redis);
+  const [lastMessage] = await redis.xrevrange(redisEventKey, "+", "-", 1);
+  const lastId = lastMessage ? lastMessage.xid : 0;
+
+  await cb();
+
+  console.log("waiting for event", lastId, timeoutMs);
+  const [stream] = await redis.xread([{ key: redisEventKey, xid: lastId }], {
+    block: timeoutMs,
+  });
+  if (!stream) {
+    throw new Error("timeout: no event received");
+  }
+}
+
 Meta.test("test sync through s3", async (t) => {
-  await resetS3();
-
   await t.should("successfully send redis event", async () => {
-    using redis = await connect(syncConfig.redis);
-    const [lastMessage] = await redis.xrevrange(redisEventKey, "+", "-", 1);
-    const lastId = lastMessage ? lastMessage.xid : 0;
+    const s3 = new S3Client(syncConfig.s3);
+    assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 0);
 
-    const _e = await t.engine("simple/simple.py");
-
-    const [stream] = await redis.xread([{ key: redisEventKey, xid: lastId }], {
-      block: 5000,
+    await waitForRedisEvent(5000, async () => {
+      const _e = await t.engine("simple/simple.py");
     });
-    if (!stream) {
-      throw new Error("timeout: no event received");
-    }
+
+    assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 1);
+    s3.destroy();
 
     // await t.undeploy(e.name);
   });
+
+  await t.should(
+    "sync typegraphs on new instances",
+    async () => {
+      const typegate2 = await Typegate.init(syncConfig);
+      assertEquals(typegate2.register.list().length, 1);
+
+      await typegate2.deinit();
+    },
+  );
+
+  await cleanUp();
+
+  await t.should("register new typegraph on all the instances", async () => {
+    const typegate2 = await Typegate.init(syncConfig);
+
+    await waitForRedisEvent(5000, async () => {
+      const _e = await t.engine("simple/simple.py");
+    });
+
+    assertEquals(t.typegate.register.list().length, 1);
+
+    await lazyAssert(5000, async () => {
+      await Promise.resolve();
+      assertEquals(typegate2.register.list().length, 1);
+    });
+
+    await typegate2.deinit();
+  });
 }, {
   syncConfig,
+  async setup() {
+    await cleanUp();
+  },
+  async teardown() {
+    await cleanUp();
+  },
 });

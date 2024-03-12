@@ -117,6 +117,7 @@ export class Typegate {
   }
 
   async deinit() {
+    await Promise.all(this.register.list().map((e) => e.terminate()));
     if (this.syncConfig) {
       await (this.register as ReplicatedRegister).stopSync();
       await (this.limiter as RedisRateLimiter).terminate();

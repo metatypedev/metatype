@@ -63,16 +63,12 @@ export class MetaTest {
     }
   }
 
-  private get register() {
-    return this.typegate.register;
-  }
-
   addCleanup(fn: MetaTestCleanupFn) {
     this.cleanups.push(fn);
   }
 
   getTypegraphEngine(name: string): QueryEngine | undefined {
-    return this.register.get(name);
+    return this.typegate.register.get(name);
   }
 
   async serialize(path: string, opts: ParseOptions = {}): Promise<string> {
@@ -111,7 +107,7 @@ export class MetaTest {
   }
 
   async undeploy(tgName: string) {
-    await this.register.remove(tgName);
+    await this.typegate.register.remove(tgName);
   }
 
   async engine(path: string, opts: ParseOptions = {}): Promise<QueryEngine> {
@@ -147,11 +143,11 @@ export class MetaTest {
 
   async unregister(engine: QueryEngine) {
     await Promise.all(
-      this.register
+      this.typegate.register
         .list()
         .filter((e) => e == engine)
         .map((e) => {
-          this.register.remove(e.name);
+          this.typegate.register.remove(e.name);
           return e.terminate();
         }),
     );
@@ -159,7 +155,6 @@ export class MetaTest {
 
   async terminate() {
     await Promise.all(this.cleanups.map((c) => c()));
-    await Promise.all(this.register.list().map((e) => e.terminate()));
     await this.typegate.deinit();
   }
 
@@ -232,6 +227,8 @@ interface TestConfig {
   // create a temporary clean git repo for the tests
   gitRepo?: TempGitRepo;
   syncConfig?: SyncConfig;
+  setup?: () => Promise<void>;
+  teardown?: () => Promise<void>;
 }
 
 interface Test {
@@ -251,6 +248,9 @@ export const test = ((name, fn, opts = {}): void => {
   return Deno.test({
     name,
     async fn(t) {
+      if (opts.setup != null) {
+        await opts.setup();
+      }
       const typegate = await Typegate.init(opts.syncConfig ?? null);
       const {
         systemTypegraphs = false,
@@ -294,6 +294,10 @@ export const test = ((name, fn, opts = {}): void => {
         throw error;
       } finally {
         await mt.terminate();
+      }
+
+      if (opts.teardown != null) {
+        await opts.teardown();
       }
     },
     ...opts,
