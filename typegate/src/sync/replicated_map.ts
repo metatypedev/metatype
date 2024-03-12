@@ -152,6 +152,16 @@ export class RedisReplicatedMap<T> {
     }
   }
 
+  async stopSync() {
+    if (this.sync) {
+      await this.sync.cancel();
+      this.sync = null;
+    }
+
+    this.redis.close();
+    this.redisObs.close();
+  }
+
   private subscribe(): SyncContext {
     const { ekey, redisObs } = this;
 

@@ -116,6 +116,13 @@ export class Typegate {
     this.#onPush(PrismaHooks.runMigrations);
   }
 
+  async deinit() {
+    if (this.syncConfig) {
+      await (this.register as ReplicatedRegister).stopSync();
+      await (this.limiter as RedisRateLimiter).terminate();
+    }
+  }
+
   #onPush(handler: PushHandler) {
     this.#onPushHooks.push(handler);
   }

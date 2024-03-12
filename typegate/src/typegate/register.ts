@@ -130,4 +130,8 @@ export class ReplicatedRegister extends Register {
   startSync(xid: XIdInput): void {
     void this.replicatedMap.startSync(xid);
   }
+
+  async stopSync() {
+    await this.replicatedMap.stopSync();
+  }
 }

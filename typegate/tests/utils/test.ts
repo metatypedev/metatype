@@ -11,8 +11,9 @@ import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 
-import { createMetaCli, metaCli } from "./meta.ts";
+import { createMetaCli } from "./meta.ts";
 import { SecretManager, TypeGraph } from "../../src/typegraph/mod.ts";
+import { SyncConfig } from "../../src/sync/config.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
@@ -101,12 +102,16 @@ export class MetaTest {
       cmd.push("--deploy");
     }
 
-    const { stdout } = await metaCli(...cmd);
+    const { stdout } = await this.meta(cmd);
     if (stdout.length == 0) {
       throw new Error("No typegraph");
     }
 
     return stdout;
+  }
+
+  async undeploy(tgName: string) {
+    await this.register.remove(tgName);
   }
 
   async engine(path: string, opts: ParseOptions = {}): Promise<QueryEngine> {
@@ -155,6 +160,7 @@ export class MetaTest {
   async terminate() {
     await Promise.all(this.cleanups.map((c) => c()));
     await Promise.all(this.register.list().map((e) => e.terminate()));
+    await this.typegate.deinit();
   }
 
   async should(
@@ -225,6 +231,7 @@ interface TestConfig {
   port?: number;
   // create a temporary clean git repo for the tests
   gitRepo?: TempGitRepo;
+  syncConfig?: SyncConfig;
 }
 
 interface Test {
@@ -244,7 +251,7 @@ export const test = ((name, fn, opts = {}): void => {
   return Deno.test({
     name,
     async fn(t) {
-      const typegate = await Typegate.init();
+      const typegate = await Typegate.init(opts.syncConfig ?? null);
       const {
         systemTypegraphs = false,
         gitRepo = null,
