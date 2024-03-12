@@ -143,6 +143,12 @@ pub trait TypeDefExt {
     fn with_base(&self, id: TypeId, base: TypeBase) -> TypeDef;
     fn with_x_base(&self, id: TypeId, base: ExtendedTypeBase) -> TypeDef;
 
+    fn with_name(&self, name: Option<String>) -> TypeDef {
+        let mut base = self.base().clone();
+        base.name = name;
+        self.with_base(self.id(), base)
+    }
+
     fn repr(&self) -> String;
 }
 

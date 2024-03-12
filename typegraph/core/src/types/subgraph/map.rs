@@ -55,8 +55,8 @@ where
         let (_, type_def) = type_id.resolve_ref()?;
 
         match type_def {
-            TypeDef::Struct(ty) => {
-                let props = ty
+            TypeDef::Struct(ty) => ty.type_with_data(TypeStruct {
+                props: ty
                     .data
                     .props
                     .iter()
@@ -64,71 +64,37 @@ where
                         let prop_type = self.map(prop.into(), ctx)?;
                         Ok((name.clone(), prop_type.0))
                     })
-                    .collect::<Result<Vec<(String, u32)>>>()?;
+                    .collect::<Result<Vec<(String, u32)>>>()?,
+                ..ty.data.clone()
+            }),
 
-                if props == ty.data.props {
-                    Ok(type_id)
-                } else {
-                    ty.type_with_data(TypeStruct {
-                        props,
-                        ..ty.data.clone()
-                    })
-                }
-            }
+            TypeDef::List(ty) => ty.type_with_data(TypeList {
+                of: self.map(ty.data.of.into(), ctx)?.0,
+                ..ty.data
+            }),
 
-            TypeDef::List(ty) => {
-                let item_type = self.map(ty.data.of.into(), ctx)?.0;
-                if item_type == ty.data.of {
-                    Ok(type_id)
-                } else {
-                    ty.type_with_data(TypeList {
-                        of: item_type,
-                        ..ty.data
-                    })
-                }
-            }
+            TypeDef::Optional(ty) => ty.type_with_data(TypeOptional {
+                of: self.map(ty.data.of.into(), ctx)?.0,
+                ..ty.data.clone()
+            }),
 
-            TypeDef::Optional(ty) => {
-                let item_type = self.map(ty.data.of.into(), ctx)?.0;
-                if item_type == ty.data.of {
-                    Ok(type_id)
-                } else {
-                    ty.type_with_data(TypeOptional {
-                        of: item_type,
-                        ..ty.data.clone()
-                    })
-                }
-            }
-
-            TypeDef::Union(ty) => {
-                let variants = ty
+            TypeDef::Union(ty) => ty.type_with_data(TypeUnion {
+                variants: ty
                     .data
                     .variants
                     .iter()
                     .map(|type_id| self.map(type_id.into(), ctx).map(|x| x.0))
-                    .collect::<Result<Vec<u32>>>()?;
+                    .collect::<Result<Vec<u32>>>()?,
+            }),
 
-                if variants == ty.data.variants {
-                    Ok(type_id)
-                } else {
-                    ty.type_with_data(TypeUnion { variants })
-                }
-            }
-
-            TypeDef::Either(ty) => {
-                let variants = ty
+            TypeDef::Either(ty) => ty.type_with_data(TypeEither {
+                variants: ty
                     .data
                     .variants
                     .iter()
                     .map(|type_id| self.map(type_id.into(), ctx).map(|x| x.0))
-                    .collect::<Result<Vec<u32>>>()?;
-
-                if variants == ty.data.variants {
-                    Ok(type_id)
-                } else {
-                    ty.type_with_data(TypeEither { variants })
-                }
-            }
+                    .collect::<Result<Vec<u32>>>()?,
+            }),
 
             TypeDef::Boolean(_)
             | TypeDef::Integer(_)
