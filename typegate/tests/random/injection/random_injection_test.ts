@@ -75,6 +75,73 @@ Meta.test("Python: Random Injection", async (metaTest) => {
       },
     }).on(engine);
   });
+
+  await metaTest.should(
+    "generate random values for enums, either and union variants",
+    async () => {
+      await gql`
+      query {
+        testEnumStr {
+          educationLevel
+        },
+        testEnumInt {
+          bits
+        },
+        testEnumFloat {
+          cents
+        },
+        testEither {
+          toy {
+            ... on Toygun {
+              color
+            }
+            ... on Rubix {
+              name,
+              size
+            }
+          }
+        },
+        testUnion {
+          field {
+            ... on Rgb {
+              R
+              G
+              B
+            }
+            ... on Vec {
+              x
+              y
+              z
+            }
+          }
+        }
+      }
+    `.expectData({
+        testEnumStr: {
+          educationLevel: "secondary",
+        },
+        testEnumInt: {
+          bits: 0,
+        },
+        testEnumFloat: {
+          cents: 0.5,
+        },
+        testEither: {
+          toy: {
+            name: "1*ajw]krgDnCzXD*N!Fx",
+            size: 3336617896968192,
+          },
+        },
+        testUnion: {
+          field: {
+            B: 779226068287.488,
+            G: 396901315143.2704,
+            R: 895648526657.1263,
+          },
+        },
+      }).on(engine);
+    },
+  );
 });
 
 Meta.test("Deno: Random Injection", async (metaTest) => {
