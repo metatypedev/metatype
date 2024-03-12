@@ -6,10 +6,9 @@ import {
   RateLimit,
   RedisRateLimiter,
 } from "../../src/typegate/rate_limiter.ts";
-import { redisConfig } from "../../src/config.ts";
 import { assertEquals, assertThrows } from "std/assert/mod.ts";
 import { connect, Raw } from "redis";
-import { sleep } from "../utils/mod.ts";
+import { sleep } from "test-utils/mod.ts";
 
 const assertRateLimited = (l: RateLimit, n: number) =>
   assertThrows(
@@ -19,6 +18,14 @@ const assertRateLimited = (l: RateLimit, n: number) =>
     Error,
     "rate-limited",
   );
+
+const redisUrl = new URL(Deno.env.get("REDIS_URL")!);
+const redisConfig = {
+  hostname: redisUrl.hostname,
+  port: parseInt(redisUrl.port),
+  password: redisUrl.password,
+  db: parseInt(redisUrl.pathname.slice(1), 10) ?? 0,
+};
 
 Deno.test("Rate limiter", async (t) => {
   const t1 = "test_key_1";
