@@ -153,7 +153,6 @@ impl PushResult {
             .unwrap()
             .prisma_migration_dir_abs(&self.sdk_response.typegraph_path, &self.original_name)?;
 
-        // TODO: use unpack from sdk? This requires another load event though.
         for migrations in self.migrations.iter() {
             let dest = migdir.join(&migrations.runtime);
             if let Err(e) = common::archive::unpack(&dest, Some(migrations.migrations.clone())) {
@@ -190,6 +189,7 @@ impl PushResult {
                     .await?
                 }
                 PushFailure::NullConstraintViolation(failure) => {
+                    eprintln!("NullConstr {:?}", failure);
                     handle_null_constraint_violation(
                         self.console.clone(),
                         self.loader.clone(),
@@ -252,9 +252,6 @@ pub async fn handle_null_constraint_violation(
     sdk_response: SDKResponse,
     migration_dir: PathBuf,
 ) -> Result<()> {
-    #[allow(unused)]
-    let typegraph_name = sdk_response.typegraph_name;
-    #[allow(unused)]
     let NullConstraintViolation {
         message,
         runtime_name,

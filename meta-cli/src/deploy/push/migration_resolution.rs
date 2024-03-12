@@ -94,7 +94,11 @@ impl RemoveLatestMigration {
 
 impl SelectOption for RemoveLatestMigration {
     fn on_select(&self) {
-        let migration_path = self.migration_dir.join(&self.migration_name);
+        let migration_path = self
+            .migration_dir
+            .join(&self.runtime_name)
+            .join(&self.migration_name);
+
         let runtime_name = self.runtime_name.clone();
         let console = self.console.clone();
         let loader = self.loader.clone();
@@ -112,7 +116,7 @@ impl SelectOption for RemoveLatestMigration {
             {
                 console.warning(format!("Migration Path {}", migration_path.display()));
                 console.error(e.to_string());
-                panic!("{}", e.to_string()); // may occur if the latest migration does not match
+                panic!("{}", e.to_string()); // could occur if the latest migration does not match
             }
         });
     }

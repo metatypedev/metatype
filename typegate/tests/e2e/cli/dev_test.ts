@@ -202,6 +202,7 @@ Meta.test(
       "prisma-migrations",
       "migration-failure-test/main",
     );
+    console.log("Typegate migration dir", migrationsDir);
 
     await t.should("load second version of the typegraph", async () => {
       await writeTypegraph(1, tgDefFile);
