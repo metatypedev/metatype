@@ -23,7 +23,7 @@ Meta.test("deploy and undeploy typegraph without meta-cli", async (_) => {
     secrets: {},
     artifactsConfig: {
       prismaMigration: {
-        action: {
+        globalAction: {
           create: true,
           reset: false,
         },
