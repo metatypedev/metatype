@@ -121,7 +121,7 @@ impl ServerStore {
     pub fn get_response_or_fail(tg_path: &PathBuf) -> Result<Arc<SDKResponse>> {
         match Self::get_response(tg_path) {
             Some(res) => Ok(res.to_owned()),
-            None => bail!("Invalid state, no response was sent by {:?}", &tg_path),
+            None => bail!("Invalid state, no response was sent by {:?}, this could be the result of an outdated sdk", &tg_path),
         }
     }
 
