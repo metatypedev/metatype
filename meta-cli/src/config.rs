@@ -100,10 +100,6 @@ impl NodeConfig {
             self.env.clone(),
         )
     }
-
-    pub fn get_auth_pair(&self) -> (Option<String>, Option<String>) {
-        (self.username.to_owned(), self.password.to_owned())
-    }
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]

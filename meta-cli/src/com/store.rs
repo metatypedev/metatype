@@ -63,7 +63,7 @@ pub struct ServerStore {
     command: Option<Command>,
     /// default (all)
     migration_action_glob: MigrationAction,
-    /// per runtime per typegraph
+    /// 1 typegraph => n runtimes
     migration_action: HashMap<PathBuf, Arc<Vec<RuntimeMigrationAction>>>,
     secrets: HashMap<String, String>,
     endpoint: Endpoint,
@@ -137,18 +137,22 @@ impl ServerStore {
         with_store(|s| s.migration_action_glob.to_owned())
     }
 
-    pub fn set_migration_action(tg_path: PathBuf, rt_migration_option: RuntimeMigrationAction) {
+    pub fn set_migration_action(tg_path: PathBuf, rt_migration: RuntimeMigrationAction) {
         with_store_mut(|s| {
             let mut items = vec![];
             if let Some(actions) = s.migration_action.get(&tg_path) {
+                // remove previous rt action if any
                 items = actions.as_ref().clone();
             }
-            items.push(rt_migration_option);
+            items.retain(|v| v.runtime_name.ne(&rt_migration.runtime_name));
+            items.push(rt_migration);
             s.migration_action.insert(tg_path, items.into());
         })
     }
 
-    pub fn get_runtime_migration_actions(tg_path: &PathBuf) -> Option<Vec<RuntimeMigrationAction>> {
+    pub fn get_per_runtime_migration_action(
+        tg_path: &PathBuf,
+    ) -> Option<Vec<RuntimeMigrationAction>> {
         with_store(|s| {
             if let Some(mig_action) = s.migration_action.get(tg_path) {
                 println!(

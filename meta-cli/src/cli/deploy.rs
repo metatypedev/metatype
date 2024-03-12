@@ -267,11 +267,7 @@ mod default_mode {
                                     self.loader.clone(),
                                     res.as_ref().clone(),
                                 ) {
-                                    Ok(push) => {
-                                        if let Err(e) = push.finalize().await {
-                                            panic!("{}", e.to_string());
-                                        }
-                                    }
+                                    Ok(push) => push.finalize().await.unwrap(),
                                     Err(e) => {
                                         console.error(format!(
                                             "Failed pushing typegraph {:?}:\n{:?}",

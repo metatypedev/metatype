@@ -60,7 +60,8 @@ async fn config(req: HttpRequest) -> impl Responder {
     let migration_action_glob = ServerStore::get_migration_action_glob();
 
     let mut migration_action_per_rt = vec![];
-    if let Some(per_rt_actions) = ServerStore::get_runtime_migration_actions(&parsed.typegraph_path)
+    if let Some(per_rt_actions) =
+        ServerStore::get_per_runtime_migration_action(&parsed.typegraph_path)
     {
         migration_action_per_rt =
             per_rt_actions
