@@ -28,7 +28,6 @@ SELF_PATH = (
 class Command(Enum):
     SERIALIZE = "serialize"
     DEPLOY = "deploy"
-    UNPACK_MIGRATION = "unpack_migration"
 
 
 # Types for CLI => SDK
@@ -76,8 +75,6 @@ class Manager:
             self.serialize(sdk.config)
         elif sdk.command == Command.DEPLOY:
             self.deploy(sdk.config)
-        elif sdk.command == Command.UNPACK_MIGRATION:
-            self.unpack_migration(sdk.config)
         else:
             raise Exception(f"command {sdk.command.value} not supported")
 
@@ -112,9 +109,6 @@ class Manager:
             return ret.typegate
 
         return self.relay_result_to_cli(initiator=Command.DEPLOY, fn=fn)
-
-    def unpack_migration(config: CLIConfigRequest):
-        pass
 
     def request_command(self) -> CLIServerResponse:
         config = self.request_config()

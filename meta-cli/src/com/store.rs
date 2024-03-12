@@ -36,7 +36,6 @@ fn with_store_mut<T, F: FnOnce(&mut ServerStore) -> T>(f: F) -> T {
 pub enum Command {
     Deploy,
     Serialize,
-    UnpackMigration,
 }
 
 #[derive(Default, Clone, Debug)]

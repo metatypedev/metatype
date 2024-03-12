@@ -82,8 +82,8 @@ pub fn compress<P: Into<String>>(path: P, exclude: Option<Vec<String>>) -> Resul
     for (i, abs_path) in abs_paths.iter().enumerate() {
         let rel_path_str = rel_paths[i].to_string_lossy();
         // eprint(&format!(" ++ {}", rel_path_str.clone()));
-        // Note: tarball paths should all be strictly relative
-        // Reason: Strip against workdir does not work when the sdk is spawn from another process
+        // Note: tarball path should be relative
+        // Note: Strip against workdir does not work when the sdk is spawn from another process
         entries.insert(rel_path_str.into(), read_file(&abs_path.to_string_lossy())?);
     }
 

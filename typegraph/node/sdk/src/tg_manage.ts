@@ -10,7 +10,7 @@ const VERSION = "0.3.5";
 const PORT = "META_CLI_SERVER_PORT"; // meta-cli instance that executes the current file
 const SELF_PATH = "META_CLI_TG_PATH"; // path to the current file to uniquely identify the run results
 
-type Command = "serialize" | "deploy" | "unpack_migration";
+type Command = "serialize" | "deploy";
 
 // Types for CLI => SDK
 type CLIServerResponse = {
@@ -78,9 +78,6 @@ export class Manager {
       case "deploy":
         await this.#deploy(config);
         break;
-      case "unpack_migration":
-        await this.#unpackMigration(config);
-        break;
       default:
         throw new Error(`command ${command} from meta-cli not supported`);
     }
@@ -144,10 +141,6 @@ export class Manager {
         return typegate;
       },
     );
-  }
-
-  async #unpackMigration(config: CLIConfigRequest): Promise<void> {
-    // TODO
   }
 
   async #relayResultToCLI<T>(initiator: Command, fn: () => Promise<T>) {
