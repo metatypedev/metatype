@@ -25,28 +25,31 @@ impl Hashable for PolicySpec {
     fn hash(
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
-        tg: &mut TypegraphContext,
+        _tg: &mut TypegraphContext,
         _runtime_id: Option<u32>,
     ) -> Result<()> {
         match self {
-            PolicySpec::Simple(id) => tg.find_policy_index_by_store_id(*id).hash(hasher),
+            PolicySpec::Simple(id) => {
+                "all:".hash(hasher);
+                id.hash(hasher);
+            }
             PolicySpec::PerEffect(per_fx) => {
-                per_fx
-                    .read
-                    .map(|id| tg.find_policy_index_by_store_id(id))
-                    .hash(hasher);
-                per_fx
-                    .create
-                    .map(|id| tg.find_policy_index_by_store_id(id))
-                    .hash(hasher);
-                per_fx
-                    .update
-                    .map(|id| tg.find_policy_index_by_store_id(id))
-                    .hash(hasher);
-                per_fx
-                    .delete
-                    .map(|id| tg.find_policy_index_by_store_id(id))
-                    .hash(hasher);
+                if let Some(id) = per_fx.read {
+                    "read:".hash(hasher);
+                    id.hash(hasher);
+                }
+                if let Some(id) = per_fx.create {
+                    "create:".hash(hasher);
+                    id.hash(hasher);
+                }
+                if let Some(id) = per_fx.update {
+                    "update:".hash(hasher);
+                    id.hash(hasher);
+                }
+                if let Some(id) = per_fx.delete {
+                    "delete:".hash(hasher);
+                    id.hash(hasher);
+                }
             }
         }
 
