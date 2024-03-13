@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { z } from "zod";
-import { zBooleanString } from "../log.ts";
+import { configOrExit, zBooleanString } from "../log.ts";
 import { RedisConnectOptions } from "redis";
 import { S3ClientConfig } from "aws-sdk/client-s3";
+import { mapKeys } from "std/collections/map_keys.ts";
+import { parse } from "std/flags/mod.ts";
 
 export const syncConfigSchemaNaked = {
   sync_enabled: zBooleanString,
@@ -54,15 +56,19 @@ export function validateSyncConfig(
     return null;
   }
 
-  const missingVars = Object.entries(config).filter(([key, value]) => {
-    if (value != undefined) return false;
-    // not required
-    if (key === "sync_s3_path_style") {
-      config.sync_s3_path_style = false;
-      return false;
-    }
-    return true;
-  }).map(([key, _]) => key.toUpperCase());
+  const missingVars = Object.keys(syncConfigSchemaNaked).filter(
+    (key) => {
+      const value = config[key as keyof typeof config];
+      if (value != undefined) return false;
+
+      // not required
+      if (key === "sync_s3_path_style") {
+        config.sync_s3_path_style = false;
+        return false;
+      }
+      return true;
+    },
+  ).map((key) => key.toUpperCase());
 
   if (missingVars.length > 0) {
     const missingVarsStr = missingVars.join(", ");
@@ -85,7 +91,14 @@ export type SyncConfig = {
 export function syncConfigFromRaw(
   config: SyncConfigRaw | null,
 ): SyncConfig | null {
+  console.log("raw config", config);
   if (config == null) return null;
+
+  const redisDbStr = config.sync_redis_url.pathname.substring(1);
+  const redisDb = parseInt(redisDbStr, 10);
+  if (isNaN(redisDb)) {
+    throw new Error(`Invalid redis db number: '${redisDbStr}'`);
+  }
 
   return {
     redis: {
@@ -107,4 +120,25 @@ export function syncConfigFromRaw(
     },
     s3Bucket: config.sync_s3_bucket,
   };
+}
+
+export type ConfigSource = "vars" | "args";
+
+export async function syncConfigFromEnv(
+  sources: ConfigSource[],
+): Promise<SyncConfig | null> {
+  const rawObjects = sources.map((source) => {
+    switch (source) {
+      case "vars":
+        return mapKeys(
+          Deno.env.toObject(),
+          (k: string) => k.toLowerCase(),
+        );
+      case "args":
+        return parse(Deno.args) as Record<string, unknown>;
+    }
+  });
+  const syncConfigRaw = await configOrExit(rawObjects, syncConfigSchemaNaked);
+
+  return syncConfigFromRaw(validateSyncConfig(syncConfigRaw));
 }

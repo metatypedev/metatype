@@ -7,15 +7,9 @@ import config from "./config.ts";
 import { Typegate } from "./typegate/mod.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import * as Sentry from "sentry";
-import { configOrExit, getLogger } from "./log.ts";
+import { getLogger } from "./log.ts";
 import { init_runtimes } from "./runtimes/mod.ts";
-import {
-  syncConfigFromRaw,
-  syncConfigSchemaNaked,
-  validateSyncConfig,
-} from "./sync/config.ts";
-import { mapKeys } from "std/collections/map_keys.ts";
-import { parse } from "std/flags/mod.ts";
+import { syncConfigFromEnv } from "./sync/config.ts";
 
 const logger = getLogger(import.meta);
 
@@ -52,15 +46,7 @@ try {
   // load all runtimes
   await init_runtimes();
 
-  const syncConfigRaw = await configOrExit([
-    mapKeys(
-      Deno.env.toObject(),
-      (k: string) => k.toLowerCase(),
-    ),
-    parse(Deno.args) as Record<string, unknown>,
-  ], syncConfigSchemaNaked);
-
-  const syncConfig = syncConfigFromRaw(validateSyncConfig(syncConfigRaw));
+  const syncConfig = await syncConfigFromEnv(["vars", "args"]);
   const typegate = await Typegate.init(syncConfig);
 
   await SystemTypegraph.loadAll(typegate, !config.packaged);
