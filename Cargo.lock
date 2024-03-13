@@ -1256,9 +1256,9 @@ dependencies = [
 
 [[package]]
 name = "bytemuck"
-version = "1.14.3"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2ef034f05691a48569bd920a96c81b9d91bbad1ab5ac7c4616c1f6ef36cb79f"
+checksum = "5d6d68c57235a3a081186990eca2867354726650f42f7516ca50c28d6281fd15"
 
 [[package]]
 name = "byteorder"
@@ -1545,7 +1545,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.3.5"
+version = "0.3.6-0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2349,7 +2349,7 @@ dependencies = [
  "serde_json",
  "serde_v8",
  "smallvec",
- "sourcemap 7.1.0",
+ "sourcemap 7.1.1",
  "static_assertions",
  "tokio",
  "url",
@@ -6040,7 +6040,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.3.5"
+version = "0.3.6-0"
 dependencies = [
  "actix",
  "actix-web",
@@ -6387,7 +6387,7 @@ dependencies = [
 
 [[package]]
 name = "mt_deno"
-version = "0.3.5"
+version = "0.3.6-0"
 dependencies = [
  "anyhow",
  "deno",
@@ -7082,13 +7082,13 @@ checksum = "a86ed3f5f244b372d6b1a00b72ef7f8876d0bc6a78a4c9985c53614041512063"
 
 [[package]]
 name = "os_info"
-version = "3.7.0"
+version = "3.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "006e42d5b888366f1880eda20371fedde764ed2213dc8496f49622fa0c99cd5e"
+checksum = "52a07930afc1bd77ac9e1101dc18d3fc4986c6568e939c31d1c26657eb0ccbf5"
 dependencies = [
  "log",
  "serde 1.0.197",
- "winapi",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -9754,9 +9754,9 @@ dependencies = [
 
 [[package]]
 name = "sourcemap"
-version = "7.1.0"
+version = "7.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86e71a5aa3a5e30faa7412996420331aa353b8a067f6524062a524d0e036180a"
+checksum = "e7768edd06c02535e0d50653968f46e1e0d3aa54742190d35dd9466f59de9c71"
 dependencies = [
  "base64-simd 0.7.0",
  "data-encoding",
@@ -11513,7 +11513,7 @@ dependencies = [
 
 [[package]]
 name = "typegate"
-version = "0.3.5"
+version = "0.3.6-0"
 dependencies = [
  "colored",
  "env_logger",
@@ -11525,7 +11525,7 @@ dependencies = [
 
 [[package]]
 name = "typegate_engine"
-version = "0.3.5"
+version = "0.3.6-0"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
@@ -11567,7 +11567,7 @@ dependencies = [
 
 [[package]]
 name = "typegraph_core"
-version = "0.3.5"
+version = "0.3.6-0"
 dependencies = [
  "common",
  "enum_dispatch",
@@ -11594,7 +11594,7 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 
 [[package]]
 name = "typescript"
-version = "0.3.5"
+version = "0.3.6-0"
 dependencies = [
  "anyhow",
  "dprint-plugin-typescript",
@@ -12837,7 +12837,7 @@ checksum = "0fcb9cbac069e033553e8bb871be2fbdffcab578eb25bd0f7c508cedc6dcd75a"
 
 [[package]]
 name = "xtask"
-version = "0.3.5"
+version = "0.3.6-0"
 dependencies = [
  "anyhow",
  "clap",

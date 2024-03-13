@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "metatype"
-version = "0.3.5"
+version = "0.3.6-0"
 description = ""
 authors = []
 
@@ -9,7 +9,7 @@ python = ">=3.8,<4.0"
 typegraph = { path = "typegraph/python", develop = true }
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.1.15"
+ruff = "^0.3.0"
 respx = "^0.20.2"
 pyyaml = "^6.0.1"
 

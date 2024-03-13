@@ -18,7 +18,7 @@ from urllib import request, parse
 from typegraph.graph.shared_types import BasicAuth, TypegraphOutput
 
 
-VERSION = "0.3.5"
+VERSION = "0.3.6-0"
 PORT = "META_CLI_SERVER_PORT"  # meta-cli instance that executes the current file
 SELF_PATH = (
     "META_CLI_TG_PATH"  # path to the current file to uniquely identify the run results
