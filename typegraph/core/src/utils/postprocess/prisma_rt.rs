@@ -64,8 +64,8 @@ impl PrismaProcessor {
         Ok(path)
     }
 
-    /// Get migration action from runtime_name (usually set from the cli)
-    /// If nothing is found, find the global action config (set initially)
+    /// Find the appropriate migration action (usually set from the cli)
+    /// If nothing is found, use the global action config (set initially)
     pub fn get_action_by_rt_name(&self, name: &str) -> MigrationAction {
         if let Some(actions) = self.config.runtime_actions.clone() {
             if let Some(action) = actions.iter().find(|(rt, _)| rt.eq(name)) {

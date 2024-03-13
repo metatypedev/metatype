@@ -140,9 +140,9 @@ impl ServerStore {
         with_store_mut(|s| {
             let mut items = vec![];
             if let Some(actions) = s.migration_action.get(&tg_path) {
-                // remove previous rt action if any
                 items = actions.as_ref().clone();
             }
+            // remove previous rt action if any
             items.retain(|v| v.runtime_name.ne(&rt_migration.runtime_name));
             items.push(rt_migration);
             s.migration_action.insert(tg_path, items.into());

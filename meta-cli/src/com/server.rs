@@ -90,7 +90,7 @@ async fn config(req: HttpRequest) -> impl Responder {
                     // thus `dir` must be explicitly set to the canonical typegraph's `workdir`
                     "dir": artefact_base_dir,
                     "prismaMigration": {
-                        // only the cli is aware of the convention migrationDir := tg_workdir + config_folder + tg_name
+                        // only the cli is aware of the convention migrationDir := tg_workdir + folder from config + tg_name
                         "migrationDir": config.prisma_migrations_dir_rel(&parsed.typegraph),
                         "globalAction": migration_action_glob,
                         "runtimeAction": migration_action_per_rt
@@ -153,7 +153,7 @@ pub async fn spawn_server() -> std::io::Result<()> {
             .service(config)
             .service(command)
             .service(response)
-            .app_data(PayloadConfig::new(1000000 * 100))
+            .app_data(PayloadConfig::new(1000000 * 100)) // 100 mb
     })
     .listen(tcp_listener)?
     .run()
