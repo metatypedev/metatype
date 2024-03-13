@@ -8,15 +8,18 @@ use std::path::Path;
 pub mod deno_rt;
 pub mod prisma_rt;
 pub mod python_rt;
+pub mod validation;
 pub mod wasmedge_rt;
 
 use self::deno_rt::DenoProcessor;
 use self::prisma_rt::PrismaProcessor;
 use self::python_rt::PythonProcessor;
+use self::validation::ValidationProcessor;
 use self::wasmedge_rt::WasmedgeProcessor;
+use crate::errors::TgError;
 
 pub trait PostProcessor {
-    fn postprocess(self, tg: &mut Typegraph) -> Result<(), String>;
+    fn postprocess(self, tg: &mut Typegraph) -> Result<(), TgError>;
 }
 
 /// Compose all postprocessors
@@ -31,12 +34,13 @@ impl TypegraphPostProcessor {
 }
 
 impl PostProcessor for TypegraphPostProcessor {
-    fn postprocess(self, tg: &mut Typegraph) -> Result<(), String> {
+    fn postprocess(self, tg: &mut Typegraph) -> Result<(), TgError> {
         Store::set_deploy_cwd(self.config.dir);
         PrismaProcessor::new(self.config.prisma_migration).postprocess(tg)?;
         DenoProcessor.postprocess(tg)?;
         PythonProcessor.postprocess(tg)?;
         WasmedgeProcessor.postprocess(tg)?;
+        ValidationProcessor.postprocess(tg)?;
         Ok(())
     }
 }

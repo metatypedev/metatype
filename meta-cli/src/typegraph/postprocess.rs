@@ -5,11 +5,8 @@ use std::sync::{Arc, RwLock};
 
 use crate::config::Config;
 
-use anyhow::{bail, Result};
-use colored::Colorize;
-use common::typegraph::validator::validate_typegraph;
+use anyhow::Result;
 use common::typegraph::Typegraph;
-use log::error;
 
 pub trait PostProcessor {
     fn postprocess(&self, tg: &mut Typegraph, config: &Config) -> Result<()>;
@@ -39,26 +36,6 @@ where
 }
 
 pub use deno_rt::DenoModules;
-
-pub struct Validator;
-impl PostProcessor for Validator {
-    fn postprocess(&self, tg: &mut Typegraph, _config: &Config) -> Result<()> {
-        let errors = validate_typegraph(tg);
-        let tg_name = tg.name()?.cyan();
-        if !errors.is_empty() {
-            for err in errors.iter() {
-                error!(
-                    "at {tg_name}:{err_path}: {msg}",
-                    err_path = err.path,
-                    msg = err.message
-                );
-            }
-            bail!("Typegraph {tg_name} failed validation");
-        } else {
-            Ok(())
-        }
-    }
-}
 
 pub mod deno_rt {
     use super::*;

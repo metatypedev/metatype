@@ -189,7 +189,6 @@ impl PushResult {
                     .await?
                 }
                 PushFailure::NullConstraintViolation(failure) => {
-                    eprintln!("NullConstr {:?}", failure);
                     handle_null_constraint_violation(
                         self.console.clone(),
                         self.loader.clone(),

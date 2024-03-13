@@ -146,7 +146,8 @@ pub async fn spawn_server() -> std::io::Result<()> {
         .try_clone()
         .map_err(|e| Error::new(ErrorKind::AddrNotAvailable, e.to_string()))?;
 
-    eprintln!("Server is running at {:?}", port);
+    log::trace!("Server is running at {:?}", port);
+
     HttpServer::new(|| {
         App::new()
             .service(config)

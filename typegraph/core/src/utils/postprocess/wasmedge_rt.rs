@@ -18,7 +18,7 @@ use crate::utils::postprocess::PostProcessor;
 pub struct WasmedgeProcessor;
 
 impl PostProcessor for WasmedgeProcessor {
-    fn postprocess(self, tg: &mut Typegraph) -> Result<(), String> {
+    fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         for mat in tg.materializers.iter_mut() {
             if mat.name.as_str() == "wasi" {
                 let mut mat_data: WasiMatData =

@@ -22,7 +22,7 @@ impl PrismaProcessor {
 }
 
 impl PostProcessor for PrismaProcessor {
-    fn postprocess(self, tg: &mut Typegraph) -> Result<(), String> {
+    fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         self.embed_prisma_migrations(tg)?;
         Ok(())
     }
