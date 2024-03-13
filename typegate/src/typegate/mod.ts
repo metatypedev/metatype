@@ -72,7 +72,7 @@ export class Typegate {
     if (syncConfig == null) {
       logger.warning("Entering no-sync mode...");
       logger.warning(
-        "Enable sync if you want to use accross multiple instances",
+        "Enable sync if you want to use accross multiple instances or if you want persistence.",
       );
 
       const register = customRegister ?? new MemoryRegister();
