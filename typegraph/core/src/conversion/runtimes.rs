@@ -292,9 +292,13 @@ impl MaterializerConverter for WasiMaterializer {
 
         let data = serde_json::from_value(json!({
             "wasm": mat.module,
-            "func": mat.func_name
+            "func": mat.func_name,
+            "artifact_hash": mat.artifact_hash
         }))
         .map_err(|e| e.to_string())?;
+
+        // add reference file to meta.ref_files
+        c.add_ref_files(mat.artifact_hash.clone(), mat.module.clone());
 
         let name = "wasi".to_string();
         Ok(Materializer {
