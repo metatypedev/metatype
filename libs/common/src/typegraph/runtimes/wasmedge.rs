@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 pub struct WasiMatData {
     pub wasm: String,
     pub func: String,
+    pub artifact_hash: String,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
