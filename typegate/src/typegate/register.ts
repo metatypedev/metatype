@@ -54,7 +54,6 @@ export class ReplicatedRegister extends Register {
         async deserialize(json: string, initialLoad: boolean) {
           const typegraphId = typegraphIdSchema.parse(JSON.parse(json));
 
-          // TODO local cache??
           const [tg, secretManager] = await typegraphStore.download(
             typegraphId,
           );

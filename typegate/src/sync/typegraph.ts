@@ -17,6 +17,7 @@ import { z } from "zod";
 export const typegraphIdSchema = z.object({
   name: z.string(),
   hash: z.string(),
+  uploadedAt: z.date(),
 });
 
 export type TypegraphId = z.infer<typeof typegraphIdSchema>;
@@ -46,21 +47,25 @@ export class TypegraphStore {
       ),
     );
 
+    const id = {
+      name: TypeGraph.formatName(typegraph),
+      hash,
+      uploadedAt: new Date(),
+    };
+
     await this.#uploadData(
       this.bucket,
-      TypegraphStore.#getKey(TypeGraph.formatName(typegraph), hash),
+      TypegraphStore.#getKey(id),
       data,
     );
 
-    const name = TypeGraph.formatName(typegraph);
-
-    return { name, hash };
+    return id;
   }
 
   public async download(
     id: TypegraphId,
   ): Promise<[TypeGraphDS, SecretManager]> {
-    const key = TypegraphStore.#getKey(id.name, id.hash);
+    const key = TypegraphStore.#getKey(id);
     const data = await this.#downloadData(this.bucket, key);
     const [typegraph, encryptedSecrets] = JSON.parse(data) as [
       TypeGraphDS,
@@ -72,8 +77,10 @@ export class TypegraphStore {
     return [typegraph, secretManager];
   }
 
-  static #getKey(name: string, hash: string) {
-    return `/typegraphs/${name}/typegraph.json.${hash}`;
+  static #getKey(typegraphId: TypegraphId) {
+    const { name, hash, uploadedAt } = typegraphId;
+    const uploadDate = uploadedAt.toISOString();
+    return `/typegraphs/${name}/typegraph.json.${uploadDate}.${hash}`;
   }
 
   async #uploadData(bucket: string, key: string, data: string) {
