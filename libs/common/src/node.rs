@@ -26,10 +26,12 @@ pub struct Node {
     pub env: HashMap<String, String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
-    Graphql(graphql::Error),
-    Other(anyhow::Error),
+    #[error(transparent)]
+    Graphql(#[from] graphql::Error),
+    #[error(transparent)]
+    Other(#[from] anyhow::Error),
 }
 
 impl Node {
@@ -115,5 +117,37 @@ impl Node {
             anyhow::bail!("undeploy failed");
         }
         Ok(())
+    }
+
+    pub async fn typegraph(&self, name: &str) -> Result<Option<Typegraph>, Error> {
+        let res = self
+            .post("/typegate")
+            .map_err(Error::Other)?
+            .timeout(Duration::from_secs(10))
+            .gql(
+                indoc! {"
+                query getTypegraph($name: String!){
+                    typegraph(name: $name){
+                        serialized
+                    }
+                }
+                "}
+                .to_string(),
+                Some(serde_json::json!({
+                    "name": name
+                })),
+            )
+            .await
+            .map_err(Error::Graphql)?;
+        #[derive(serde::Deserialize)]
+        struct Res {
+            serialized: String,
+        }
+        let Ok(res) = res.data::<Res>("typegraph") else {
+            return Ok(None);
+        };
+        serde_json::from_str::<Typegraph>(&res.serialized)
+            .map(Some)
+            .map_err(|err| Error::Other(anyhow::anyhow!(err)))
     }
 }
