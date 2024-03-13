@@ -109,6 +109,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             rate: params.rate.map(|v| v.into()),
             secrets: vec![],
             random_seed: Default::default(),
+            ref_files: Default::default(),
         },
         types: vec![],
         saved_store_state: Some(Store::save()),
@@ -210,6 +211,7 @@ pub fn finalize(res_config: Option<ArtifactResolutionConfig>) -> Result<String> 
                 dynamic: ctx.meta.queries.dynamic,
                 endpoints: Store::get_graphql_endpoints(),
             },
+            ref_files: ctx.meta.ref_files,
             random_seed: Store::get_random_seed(),
             auths,
             ..ctx.meta
@@ -466,5 +468,9 @@ impl TypegraphContext {
 
     pub fn find_policy_index_by_store_id(&self, id: u32) -> Option<u32> {
         self.mapping.policies.get(&id).copied()
+    }
+
+    pub fn add_ref_files(&mut self, file_hash: String, file: String) {
+        self.meta.ref_files.insert(file_hash, file);
     }
 }
