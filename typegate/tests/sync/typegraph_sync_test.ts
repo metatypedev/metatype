@@ -7,6 +7,7 @@ import { S3Client } from "aws-sdk/client-s3";
 import { assertEquals } from "std/assert/mod.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 import { createBucket, listObjects, tryDeleteBucket } from "test-utils/s3.ts";
+import { lazyAssert } from "test-utils/assert.ts";
 
 const syncConfig = {
   redis: {
@@ -26,22 +27,6 @@ const syncConfig = {
   },
   s3Bucket: "metatype-sync-test",
 };
-
-async function lazyAssert(timeoutMs: number, fn: () => Promise<void>) {
-  const start = Date.now();
-  let error: Error | null = null;
-  while (Date.now() - start < timeoutMs) {
-    try {
-      await fn();
-      return;
-    } catch (e) {
-      error = e;
-      await new Promise((r) => setTimeout(r, 100));
-    }
-  }
-
-  throw new Error(`timeout: ${error?.message}`);
-}
 
 const redisKey = "typegraph";
 const redisEventKey = "typegraph_event";
@@ -107,7 +92,7 @@ Meta.test("test sync through s3", async (t) => {
 
     assertEquals(t.typegate.register.list().length, 1);
 
-    await lazyAssert(5000, async () => {
+    await lazyAssert({ timeoutMs: 5000 }, async () => {
       await Promise.resolve();
       assertEquals(typegate2.register.list().length, 1);
     });
