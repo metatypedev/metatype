@@ -35,6 +35,10 @@ import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
 import introspectionJson from "../typegraphs/introspection.json" with {
   type: "json",
 };
+import {
+  handleFileUpload,
+  handleUploadUrl,
+} from "../services/file_upload_service.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -127,6 +131,14 @@ export class Typegate {
         return new Response(null, {
           headers: cors,
         });
+      }
+
+      if (serviceName === "get-upload-url") {
+        return handleUploadUrl(request, engineName);
+      }
+
+      if (serviceName === "upload-files") {
+        return handleFileUpload(request, engineName);
       }
 
       if (serviceName === "auth") {
