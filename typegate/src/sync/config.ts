@@ -9,7 +9,6 @@ import { mapKeys } from "std/collections/map_keys.ts";
 import { parse } from "std/flags/mod.ts";
 
 export const syncConfigSchemaNaked = {
-  sync_enabled: zBooleanString,
   sync_redis_url: z.string().optional().transform((s) => {
     if (s == undefined) return undefined;
     const url = new URL(s);
@@ -36,23 +35,11 @@ export type SyncConfigRaw = Required<z.output<typeof syncConfigSchema>>;
 export function validateSyncConfig(
   config: z.output<typeof syncConfigSchema>,
 ): SyncConfigRaw | null {
-  if (!config.sync_enabled) {
-    const unexpectedVars = Object.entries(config).filter(([key, value]) => {
-      if (key === "sync_enabled") return false;
-      if (value != undefined) {
-        return true;
-      }
-    }).map(([key, _]) => key.toUpperCase());
+  const syncVars = new Set(
+    Object.keys(config).filter((key) => key.startsWith("sync_")),
+  );
 
-    if (unexpectedVars.length > 0) {
-      const unexpectedVarsStr = unexpectedVars.join(", ");
-      const msg =
-        `Unexpected environment variables when sync is disabled: ${unexpectedVarsStr}.`;
-      const suggestion =
-        "Make sure to remove these variables or set SYNC_ENABLED=true.";
-      throw new Error(`${msg}\n${suggestion}`);
-    }
-
+  if (syncVars.size === 0) {
     return null;
   }
 
@@ -61,7 +48,7 @@ export function validateSyncConfig(
       const value = config[key as keyof typeof config];
       if (value != undefined) return false;
 
-      // not required
+      // not required - set to default
       if (key === "sync_s3_path_style") {
         config.sync_s3_path_style = false;
         return false;
@@ -91,7 +78,6 @@ export type SyncConfig = {
 export function syncConfigFromRaw(
   config: SyncConfigRaw | null,
 ): SyncConfig | null {
-  console.log("raw config", config);
   if (config == null) return null;
 
   const redisDbStr = config.sync_redis_url.pathname.substring(1);
