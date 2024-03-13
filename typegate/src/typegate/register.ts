@@ -45,11 +45,11 @@ export class ReplicatedRegister extends Register {
       redisConfig,
       {
         async serialize(engine: QueryEngine) {
-          const { name, hash } = await typegraphStore.upload(
+          const { name, hash, uploadedAt } = await typegraphStore.upload(
             engine.tg.tg,
             engine.tg.secretManager,
           );
-          return JSON.stringify({ name, hash });
+          return JSON.stringify({ name, hash, uploadedAt });
         },
         async deserialize(json: string, initialLoad: boolean) {
           const typegraphId = typegraphIdSchema.parse(JSON.parse(json));

@@ -17,7 +17,7 @@ import { z } from "zod";
 export const typegraphIdSchema = z.object({
   name: z.string(),
   hash: z.string(),
-  uploadedAt: z.date(),
+  uploadedAt: z.coerce.date(),
 });
 
 export type TypegraphId = z.infer<typeof typegraphIdSchema>;

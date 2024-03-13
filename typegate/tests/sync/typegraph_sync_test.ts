@@ -3,15 +3,10 @@
 
 import { Meta } from "test-utils/mod.ts";
 import { connect } from "redis";
-import {
-  CreateBucketCommand,
-  DeleteBucketCommand,
-  DeleteObjectCommand,
-  ListObjectsV2Command,
-  S3Client,
-} from "aws-sdk/client-s3";
+import { S3Client } from "aws-sdk/client-s3";
 import { assertEquals } from "std/assert/mod.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
+import { createBucket, listObjects, tryDeleteBucket } from "test-utils/s3.ts";
 
 const syncConfig = {
   redis: {
@@ -46,47 +41,6 @@ async function lazyAssert(timeoutMs: number, fn: () => Promise<void>) {
   }
 
   throw new Error(`timeout: ${error?.message}`);
-}
-
-async function tryDeleteBucket(client: S3Client, bucket: string) {
-  while (true) {
-    const list = await listObjects(client, bucket);
-    if (list == null) {
-      return;
-    }
-    if (list.length === 0) {
-      break;
-    }
-
-    for (const { Key } of list) {
-      await client.send(
-        new DeleteObjectCommand({ Bucket: bucket, Key: Key! }),
-      );
-    }
-  }
-
-  const deleteCommand = new DeleteBucketCommand({ Bucket: bucket });
-  await client.send(deleteCommand);
-}
-
-async function listObjects(client: S3Client, bucket: string) {
-  try {
-    const listCommand = new ListObjectsV2Command({
-      Bucket: bucket,
-    });
-    const res = await client.send(listCommand);
-    return res.Contents ?? [];
-  } catch (e) {
-    if (e.name === "NoSuchBucket") {
-      return null;
-    }
-    throw e;
-  }
-}
-
-async function createBucket(client: S3Client, bucket: string) {
-  const createCommand = new CreateBucketCommand({ Bucket: bucket });
-  await client.send(createCommand);
 }
 
 const redisKey = "typegraph";
@@ -130,8 +84,6 @@ Meta.test("test sync through s3", async (t) => {
 
     assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 1);
     s3.destroy();
-
-    // await t.undeploy(e.name);
   });
 
   await t.should(
