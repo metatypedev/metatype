@@ -82,6 +82,10 @@ impl Hashable for TypeInteger {
         self.exclusive_minimum.hash(hasher);
         self.exclusive_maximum.hash(hasher);
         self.multiple_of.hash(hasher);
+        if let Some(enumeration) = &self.enumeration {
+            "enum".hash(hasher);
+            enumeration.hash(hasher);
+        }
 
         Ok(())
     }

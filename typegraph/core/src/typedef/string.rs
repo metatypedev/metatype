@@ -87,6 +87,11 @@ impl Hashable for TypeString {
         self.pattern.hash(hasher);
         self.format.hash(hasher);
 
+        if let Some(enumeration) = self.enumeration.as_ref() {
+            "enum".hash(hasher);
+            enumeration.hash(hasher);
+        }
+
         Ok(())
     }
 }

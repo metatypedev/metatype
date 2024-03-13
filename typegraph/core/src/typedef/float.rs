@@ -82,6 +82,14 @@ impl Hashable for TypeFloat {
         self.exclusive_minimum.map(OrderedFloat).hash(hasher);
         self.exclusive_maximum.map(OrderedFloat).hash(hasher);
         self.multiple_of.map(OrderedFloat).hash(hasher);
+
+        if let Some(enumeration) = &self.enumeration {
+            "enum".hash(hasher);
+            for value in enumeration {
+                OrderedFloat(*value).hash(hasher);
+            }
+        }
+
         Ok(())
     }
 }
