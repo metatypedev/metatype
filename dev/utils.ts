@@ -1,18 +1,31 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dirname, fromFileUrl, resolve, yaml } from "./deps.ts";
+import { dirname, fromFileUrl, resolve, toArrayBuffer, yaml } from "./deps.ts";
 
 export const projectDir = resolve(
   dirname(fromFileUrl(import.meta.url)),
   "..",
 );
 
+export interface RunOrExitOptions {
+  cwd?: string;
+  env?: Record<string, string>;
+  bufferedOutput?: {
+    stdout?: boolean;
+    stderr?: boolean;
+  };
+}
+
+interface RunOrExitResult {
+  stdout?: ArrayBuffer;
+  stderr?: ArrayBuffer;
+}
+
 export async function runOrExit(
   cmd: string[],
-  cwd?: string,
-  env: Record<string, string> = {},
-) {
+  { bufferedOutput, cwd, env = {} }: RunOrExitOptions = {},
+): Promise<RunOrExitResult> {
   const p = new Deno.Command(cmd[0], {
     args: cmd.slice(1),
     cwd,
@@ -21,14 +34,32 @@ export async function runOrExit(
     env: { ...Deno.env.toObject(), ...env },
   }).spawn();
 
-  // keep pipe asynchronous till the command exists
-  void p.stdout.pipeTo(Deno.stdout.writable, { preventClose: true });
-  void p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
+  const { stdout: stdoutBuffered = false, stderr: stderrBuffered = false } =
+    bufferedOutput ?? {};
+
+  if (!stdoutBuffered) {
+    // keep pipe asynchronous till the command exists
+    void p.stdout.pipeTo(Deno.stdout.writable, { preventClose: true });
+  }
+  if (!stderrBuffered) {
+    // keep pipe asynchronous till the command exists
+    void p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
+  }
 
   const { code, success } = await p.status;
   if (!success) {
     Deno.exit(code);
   }
+
+  const res: RunOrExitResult = {};
+  if (stdoutBuffered) {
+    res.stdout = await toArrayBuffer(await p.stdout);
+  }
+  if (stderrBuffered) {
+    res.stderr = await toArrayBuffer(await p.stderr);
+  }
+
+  return res;
 }
 
 export function relPath(path: string) {
