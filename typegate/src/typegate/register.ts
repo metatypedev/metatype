@@ -59,7 +59,7 @@ export class ReplicatedRegister extends Register {
             typegraphId,
           );
 
-          // typegraph is updated while being pushed, this is only for iniial load
+          // typegraph is updated while being pushed, this is only for initial load
           const hasUpgrade = initialLoad && isTypegraphUpToDate(tg);
 
           const engine = await typegate.initQueryEngine(
