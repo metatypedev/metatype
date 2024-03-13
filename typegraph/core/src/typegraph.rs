@@ -215,14 +215,11 @@ pub fn finalize(res_config: Option<ArtifactResolutionConfig>) -> Result<String> 
         deps: Default::default(),
     };
 
-    if let Some(config) = res_config {
-        // Typically happens when the cli is used
-        if let Some(prefix) = config.prefix.clone() {
-            tg.meta.prefix = Some(prefix);
-        }
-
-        TypegraphPostProcessor::new(config).postprocess(&mut tg)?;
-    }
+    let config = res_config.map(|config| {
+        tg.meta.prefix = config.prefix.clone();
+        config
+    });
+    TypegraphPostProcessor::new(config).postprocess(&mut tg)?;
 
     Store::restore(ctx.saved_store_state.unwrap());
 

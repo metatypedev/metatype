@@ -24,22 +24,28 @@ pub trait PostProcessor {
 
 /// Compose all postprocessors
 pub struct TypegraphPostProcessor {
-    config: ArtifactResolutionConfig,
+    config: Option<ArtifactResolutionConfig>,
 }
 
 impl TypegraphPostProcessor {
-    pub fn new(config: ArtifactResolutionConfig) -> Self {
+    pub fn new(config: Option<ArtifactResolutionConfig>) -> Self {
         Self { config }
     }
 }
 
 impl PostProcessor for TypegraphPostProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), TgError> {
-        Store::set_deploy_cwd(self.config.dir);
-        PrismaProcessor::new(self.config.prisma_migration).postprocess(tg)?;
+        if let Some(config) = self.config {
+            Store::set_deploy_cwd(config.dir); // fs_host::cwd() will now use this value
+            PrismaProcessor::new(config.prisma_migration).postprocess(tg)?;
+        }
+
+        // Artifact resolution depends on the default cwd() (parent process)
+        // unless overwritten by `dir` through Store::set_deploy_cwd(..) (cli or custom dir with tgDeploy)
         DenoProcessor.postprocess(tg)?;
         PythonProcessor.postprocess(tg)?;
         WasmedgeProcessor.postprocess(tg)?;
+
         ValidationProcessor.postprocess(tg)?;
         Ok(())
     }
