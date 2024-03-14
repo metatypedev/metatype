@@ -541,6 +541,16 @@ impl wit::core::Guest for Lib {
     fn set_seed(seed: Option<u32>) -> Result<()> {
         typegraph::set_seed(seed)
     }
+
+    fn get_ref_files() -> Result<Vec<(String, String)>, ()> {
+        let result: Vec<(String, String)> = typegraph::get_ref_files()
+            .unwrap()
+            .iter()
+            .map(|(hash, path)| (hash.clone(), path.to_string_lossy().to_string()))
+            .collect();
+
+        Ok(result)
+    }
 }
 
 #[macro_export]
