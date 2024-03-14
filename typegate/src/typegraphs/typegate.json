@@ -12,10 +12,10 @@
         "typegraphs": 1,
         "typegraph": 7,
         "addTypegraph": 13,
-        "removeTypegraphs": 22,
-        "argInfoByPath": 26,
-        "findAvailableOperations": 41,
-        "findPrismaModels": 48
+        "removeTypegraphs": 23,
+        "argInfoByPath": 27,
+        "findAvailableOperations": 42,
+        "findPrismaModels": 50
       },
       "required": [
         "typegraphs",
@@ -211,8 +211,8 @@
       "properties": {
         "name": 9,
         "messages": 17,
-        "migrations": 19,
-        "failure": 21
+        "migrations": 20,
+        "failure": 22
       },
       "required": []
     },
@@ -233,10 +233,23 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "type": 9,
+        "type": 19,
         "text": 9
       },
       "required": []
+    },
+    {
+      "type": "string",
+      "title": "string_70",
+      "runtime": 1,
+      "policies": [],
+      "enum": [
+        "\"info\"",
+        "\"warning\"",
+        "\"error\""
+      ],
+      "config": {},
+      "as_id": false
     },
     {
       "type": "list",
@@ -245,7 +258,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 20
+      "items": 21
     },
     {
       "type": "object",
@@ -279,8 +292,8 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 23,
-      "output": 25,
+      "input": 24,
+      "output": 26,
       "materializer": 5,
       "rate_weight": null,
       "rate_calls": true
@@ -293,7 +306,7 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "names": 24
+        "names": 25
       },
       "required": []
     },
@@ -323,8 +336,8 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 27,
-      "output": 29,
+      "input": 28,
+      "output": 30,
       "materializer": 6,
       "rate_weight": null,
       "rate_calls": true
@@ -340,7 +353,7 @@
         "typegraph": 9,
         "queryType": 9,
         "fn": 9,
-        "argPaths": 28
+        "argPaths": 29
       },
       "required": []
     },
@@ -351,7 +364,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 24
+      "items": 25
     },
     {
       "type": "list",
@@ -360,7 +373,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 30
+      "items": 31
     },
     {
       "type": "object",
@@ -370,17 +383,17 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "optional": 31,
-        "as_id": 31,
+        "optional": 32,
+        "as_id": 32,
         "title": 5,
         "type": 5,
-        "enum": 32,
+        "enum": 33,
         "runtime": 5,
-        "config": 35,
-        "default": 35,
-        "format": 36,
-        "policies": 37,
-        "fields": 38
+        "config": 36,
+        "default": 36,
+        "format": 37,
+        "policies": 38,
+        "fields": 39
       },
       "required": []
     },
@@ -399,7 +412,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 33,
+      "item": 34,
       "default_value": null
     },
     {
@@ -409,7 +422,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 34
+      "items": 35
     },
     {
       "type": "string",
@@ -427,7 +440,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 34,
+      "item": 35,
       "default_value": null
     },
     {
@@ -456,7 +469,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 39,
+      "item": 40,
       "default_value": null
     },
     {
@@ -466,7 +479,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 40
+      "items": 41
     },
     {
       "type": "object",
@@ -476,8 +489,8 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "subPath": 24,
-        "termNode": 30
+        "subPath": 25,
+        "termNode": 31
       },
       "required": []
     },
@@ -490,8 +503,8 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 42,
-      "output": 43,
+      "input": 43,
+      "output": 44,
       "materializer": 7,
       "rate_weight": null,
       "rate_calls": true
@@ -515,7 +528,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 44
+      "items": 45
     },
     {
       "type": "object",
@@ -526,12 +539,24 @@
       "as_id": false,
       "properties": {
         "name": 5,
-        "type": 5,
-        "inputs": 45,
-        "output": 30,
-        "outputItem": 47
+        "type": 46,
+        "inputs": 47,
+        "output": 31,
+        "outputItem": 49
       },
       "required": []
+    },
+    {
+      "type": "string",
+      "title": "string_39",
+      "runtime": 1,
+      "policies": [],
+      "enum": [
+        "\"query\"",
+        "\"mutation\""
+      ],
+      "config": {},
+      "as_id": false
     },
     {
       "type": "list",
@@ -540,7 +565,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 46
+      "items": 48
     },
     {
       "type": "object",
@@ -551,7 +576,7 @@
       "as_id": false,
       "properties": {
         "name": 5,
-        "type": 30
+        "type": 31
       },
       "required": []
     },
@@ -562,7 +587,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 30,
+      "item": 31,
       "default_value": null
     },
     {
@@ -574,8 +599,8 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 42,
-      "output": 49,
+      "input": 43,
+      "output": 51,
       "materializer": 8,
       "rate_weight": null,
       "rate_calls": true
@@ -587,7 +612,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 50
+      "items": 52
     },
     {
       "type": "object",
@@ -599,7 +624,7 @@
       "properties": {
         "name": 5,
         "runtime": 5,
-        "fields": 51
+        "fields": 53
       },
       "required": []
     },
@@ -610,7 +635,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 52
+      "items": 54
     },
     {
       "type": "object",
@@ -621,7 +646,7 @@
       "as_id": false,
       "properties": {
         "name": 5,
-        "type": 53
+        "type": 55
       },
       "required": []
     },
@@ -633,16 +658,16 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "optional": 31,
-        "as_id": 31,
+        "optional": 32,
+        "as_id": 32,
         "title": 5,
         "type": 5,
-        "enum": 32,
+        "enum": 33,
         "runtime": 5,
-        "config": 35,
-        "default": 35,
-        "format": 36,
-        "policies": 37
+        "config": 36,
+        "default": 36,
+        "format": 37,
+        "policies": 38
       },
       "required": []
     }
