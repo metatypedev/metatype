@@ -29,7 +29,7 @@ snapshot[`typegraphs creation 1`] = `
         "config": {},
         "as_id": false,
         "input": 2,
-        "output": 16,
+        "output": 18,
         "materializer": 0,
         "rate_weight": null,
         "rate_calls": false
@@ -44,13 +44,13 @@ snapshot[`typegraphs creation 1`] = `
         "properties": {
           "a_string": 3,
           "a_float": 4,
-          "an_enum": 3,
-          "an_integer_enum": 5,
-          "a_float_enum": 6,
-          "a_struct": 7,
-          "nested": 8,
-          "nested_with_ref": 12,
-          "an_email": 15
+          "an_enum": 5,
+          "an_integer_enum": 6,
+          "a_float_enum": 7,
+          "a_struct": 8,
+          "nested": 10,
+          "nested_with_ref": 14,
+          "an_email": 17
         },
         "required": []
       },
@@ -71,6 +71,18 @@ snapshot[`typegraphs creation 1`] = `
         "as_id": false,
         "minimum": 1.0,
         "multipleOf": 2.0
+      },
+      {
+        "type": "string",
+        "title": "string_7",
+        "runtime": 0,
+        "policies": [],
+        "enum": [
+          "\\\\"one\\\\"",
+          "\\\\"two\\\\""
+        ],
+        "config": {},
+        "as_id": false
       },
       {
         "type": "integer",
@@ -106,9 +118,17 @@ snapshot[`typegraphs creation 1`] = `
         "config": {},
         "as_id": false,
         "properties": {
-          "value": 6
+          "value": 9
         },
         "required": []
+      },
+      {
+        "type": "float",
+        "title": "float_10",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
       },
       {
         "type": "optional",
@@ -117,7 +137,7 @@ snapshot[`typegraphs creation 1`] = `
         "policies": [],
         "config": {},
         "as_id": false,
-        "item": 9,
+        "item": 11,
         "default_value": null
       },
       {
@@ -127,7 +147,7 @@ snapshot[`typegraphs creation 1`] = `
         "policies": [],
         "config": {},
         "as_id": false,
-        "items": 10
+        "items": 12
       },
       {
         "type": "either",
@@ -138,7 +158,7 @@ snapshot[`typegraphs creation 1`] = `
         "as_id": false,
         "oneOf": [
           3,
-          11
+          13
         ]
       },
       {
@@ -157,8 +177,8 @@ snapshot[`typegraphs creation 1`] = `
         "config": {},
         "as_id": false,
         "properties": {
-          "one": 13,
-          "two": 14
+          "one": 15,
+          "two": 16
         },
         "required": []
       },
@@ -169,7 +189,7 @@ snapshot[`typegraphs creation 1`] = `
         "policies": [],
         "config": {},
         "as_id": false,
-        "items": 11,
+        "items": 13,
         "minItems": 3
       },
       {
@@ -179,7 +199,7 @@ snapshot[`typegraphs creation 1`] = `
         "policies": [],
         "config": {},
         "as_id": false,
-        "item": 12,
+        "item": 14,
         "default_value": null
       },
       {
@@ -756,7 +776,7 @@ snapshot[`typegraphs creation 4`] = `
         "config": {},
         "as_id": false,
         "input": 2,
-        "output": 16,
+        "output": 18,
         "materializer": 0,
         "rate_weight": null,
         "rate_calls": false
@@ -771,13 +791,13 @@ snapshot[`typegraphs creation 4`] = `
         "properties": {
           "a_string": 3,
           "a_float": 4,
-          "an_enum": 3,
-          "an_integer_enum": 5,
-          "a_float_enum": 6,
-          "a_struct": 7,
-          "nested": 8,
-          "nested_with_ref": 12,
-          "an_email": 15
+          "an_enum": 5,
+          "an_integer_enum": 6,
+          "a_float_enum": 7,
+          "a_struct": 8,
+          "nested": 10,
+          "nested_with_ref": 14,
+          "an_email": 17
         },
         "required": []
       },
@@ -798,6 +818,18 @@ snapshot[`typegraphs creation 4`] = `
         "as_id": false,
         "minimum": 1.0,
         "multipleOf": 2.0
+      },
+      {
+        "type": "string",
+        "title": "string_7",
+        "runtime": 0,
+        "policies": [],
+        "enum": [
+          "\\\\"one\\\\"",
+          "\\\\"two\\\\""
+        ],
+        "config": {},
+        "as_id": false
       },
       {
         "type": "integer",
@@ -833,9 +865,17 @@ snapshot[`typegraphs creation 4`] = `
         "config": {},
         "as_id": false,
         "properties": {
-          "value": 6
+          "value": 9
         },
         "required": []
+      },
+      {
+        "type": "float",
+        "title": "float_10",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
       },
       {
         "type": "optional",
@@ -844,7 +884,7 @@ snapshot[`typegraphs creation 4`] = `
         "policies": [],
         "config": {},
         "as_id": false,
-        "item": 9,
+        "item": 11,
         "default_value": null
       },
       {
@@ -854,7 +894,7 @@ snapshot[`typegraphs creation 4`] = `
         "policies": [],
         "config": {},
         "as_id": false,
-        "items": 10
+        "items": 12
       },
       {
         "type": "either",
@@ -865,7 +905,7 @@ snapshot[`typegraphs creation 4`] = `
         "as_id": false,
         "oneOf": [
           3,
-          11
+          13
         ]
       },
       {
@@ -884,8 +924,8 @@ snapshot[`typegraphs creation 4`] = `
         "config": {},
         "as_id": false,
         "properties": {
-          "one": 13,
-          "two": 14
+          "one": 15,
+          "two": 16
         },
         "required": []
       },
@@ -896,7 +936,7 @@ snapshot[`typegraphs creation 4`] = `
         "policies": [],
         "config": {},
         "as_id": false,
-        "items": 11,
+        "items": 13,
         "minItems": 3
       },
       {
@@ -906,7 +946,7 @@ snapshot[`typegraphs creation 4`] = `
         "policies": [],
         "config": {},
         "as_id": false,
-        "item": 12,
+        "item": 14,
         "default_value": null
       },
       {
