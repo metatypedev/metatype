@@ -208,8 +208,8 @@ impl crate::wit::utils::Guest for crate::Lib {
 
     fn gql_deploy_query(params: QueryDeployParams) -> Result<String> {
         let query = r"
-            mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
-                addTypegraph(fromString: $tg, secrets: $secrets, cliVersion: $cliVersion) {
+            mutation InsertTypegraph($tg: String!, $secrets: String!, $targetVersion: String!) {
+                addTypegraph(fromString: $tg, secrets: $secrets, targetVersion: $targetVersion) {
                     name
                     messages { type text }
                     migrations { runtime migrations }
