@@ -11,6 +11,7 @@ export {
 export { parse as parseFlags } from "https://deno.land/std@0.219.0/flags/mod.ts";
 export { expandGlobSync } from "https://deno.land/std@0.219.0/fs/mod.ts";
 export { cyan, green } from "https://deno.land/std@0.219.0/fmt/colors.ts";
+export { format as formatDuration } from "https://deno.land/std@0.219.0/fmt/duration.ts";
 export {
   mergeReadableStreams,
   TextLineStream,

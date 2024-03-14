@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { projectDir, runOrExit } from "./utils.ts";
-import { bytes, resolve } from "./deps.ts";
+import { bytes, formatDuration, resolve } from "./deps.ts";
 
 const cargoManifestPath = resolve(projectDir, "Cargo.toml");
 
@@ -13,6 +13,9 @@ if (!arg) {
   Deno.exit(1);
 }
 
+const tempDir = await Deno.makeTempDir();
+const tgJsonPath = resolve(tempDir, "typegraph.json");
+
 const cmd = [
   "cargo",
   "run",
@@ -22,6 +25,8 @@ const cmd = [
   "meta-cli",
   "--",
   "serialize",
+  "-o",
+  tgJsonPath,
   ...Deno.args,
 ];
 
@@ -29,13 +34,18 @@ if (!Deno.args.includes("-1")) {
   cmd.push("-1");
 }
 
-const out = await runOrExit(cmd, { bufferedOutput: { stdout: true } });
-const decoded = new TextDecoder().decode(out.stdout!);
+const start = performance.now();
 
-const typegraph = JSON.parse(decoded);
+await runOrExit(cmd);
+const processEnd = performance.now();
+
+console.log();
+console.log("Serialization time:", formatDuration(processEnd - start));
+
+const typegraphStr = await Deno.readTextFile(tgJsonPath);
+const typegraph = JSON.parse(typegraphStr);
 
 console.log();
 console.log("Typegraph:", typegraph.types[0].title);
-console.log("Size:", bytes(decoded.length));
-
+console.log("Size:", bytes(typegraphStr.length));
 console.log("Type count:", typegraph.types.length);
