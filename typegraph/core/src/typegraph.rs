@@ -24,6 +24,7 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::hash::Hasher as _;
 
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::wit::core::{
@@ -303,6 +304,10 @@ pub fn expose(
     })?
 }
 
+pub fn get_ref_files() -> Result<HashMap<String, PathBuf>> {
+    Ok(with_tg(|tg| tg.meta.ref_files.clone()).unwrap())
+}
+
 pub fn set_seed(seed: Option<u32>) -> Result<()> {
     Store::set_random_seed(seed);
     Ok(())
@@ -470,7 +475,7 @@ impl TypegraphContext {
         self.mapping.policies.get(&id).copied()
     }
 
-    pub fn add_ref_files(&mut self, file_hash: String, file: String) {
+    pub fn add_ref_files(&mut self, file_hash: String, file: PathBuf) {
         self.meta.ref_files.insert(file_hash, file);
     }
 }

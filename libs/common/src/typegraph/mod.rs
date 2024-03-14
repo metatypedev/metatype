@@ -100,7 +100,7 @@ pub struct TypeMeta {
     pub rate: Option<Rate>,
     pub version: String,
     pub random_seed: Option<u32>,
-    pub ref_files: HashMap<String, String>,
+    pub ref_files: HashMap<String, PathBuf>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
