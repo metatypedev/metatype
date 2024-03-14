@@ -205,7 +205,7 @@ pub mod python_rt {
 
 pub mod wasmedge_rt {
     use super::*;
-    use common::{archive::encode_to_base_64, typegraph::runtimes::wasmedge::WasiMatData};
+    use common::typegraph::runtimes::wasmedge::WasiMatData;
     use std::fs;
 
     #[derive(Default, Debug)]
@@ -213,17 +213,25 @@ pub mod wasmedge_rt {
 
     impl PostProcessor for WasmdegeModules {
         fn postprocess(&self, tg: &mut Typegraph, _config: &Config) -> Result<()> {
+            let tg_name = tg.name().unwrap().clone();
             for mat in tg.materializers.iter_mut().filter(|m| m.name == "wasi") {
                 let mut mat_data: WasiMatData = object_from_map(std::mem::take(&mut mat.data))?;
+                let artifact_hash = mat_data.artifact_hash.clone();
                 let path = mat_data
                     .wasm
                     .strip_prefix("file:")
                     .context("\"file:\" prefix is not present")?;
 
+                let file_name = path.split('/').last().unwrap();
+                let remote_file_path = format!(
+                    "metatype_artifacts/{}/files/{}.{}",
+                    tg_name, file_name, artifact_hash
+                );
+
                 // make sure tg_path is absolute
                 let tg_path = fs::canonicalize(tg.path.to_owned().unwrap()).unwrap();
                 let wasi_path = tg_path.parent().unwrap().join(path);
-                mat_data.wasm = encode_to_base_64(&wasi_path)?;
+                mat_data.wasm = remote_file_path;
 
                 mat.data = map_from_object(mat_data)?;
                 tg.deps.push(wasi_path);
