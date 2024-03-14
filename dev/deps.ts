@@ -15,7 +15,6 @@ export { format as formatDuration } from "https://deno.land/std@0.219.0/fmt/dura
 export {
   mergeReadableStreams,
   TextLineStream,
-  toArrayBuffer,
 } from "https://deno.land/std@0.219.0/streams/mod.ts";
 export type { WalkEntry } from "https://deno.land/std@0.219.0/fs/mod.ts";
 export * as yaml from "https://deno.land/std@0.219.0/yaml/mod.ts";
