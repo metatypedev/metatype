@@ -134,11 +134,11 @@ export class Typegate {
       }
 
       if (serviceName === "get-upload-url") {
-        return handleUploadUrl(request, engineName);
+        return handleUploadUrl(request, engine);
       }
 
       if (serviceName === "upload-files") {
-        return handleFileUpload(request, engineName);
+        return handleFileUpload(request, engine);
       }
 
       if (serviceName === "auth") {
