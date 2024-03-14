@@ -16,11 +16,23 @@ pub mod raw_tree {
     #[derive(Debug, Clone, Deserialize)]
     #[serde(tag = "source", rename_all = "lowercase")]
     pub enum ParameterTransformLeafNode {
-        Arg { name: Option<String> },
-        Static { value_json: String },
-        Secret { key: String },
-        Context { key: String },
-        Parent { type_name: String },
+        Arg {
+            name: Option<String>,
+            type_id: Option<u32>,
+        },
+        Static {
+            value_json: String,
+        },
+        Secret {
+            key: String,
+        },
+        Context {
+            key: String,
+            type_id: Option<u32>,
+        },
+        Parent {
+            type_name: String,
+        },
     }
 
     #[derive(Debug, Clone, Deserialize)]
@@ -137,8 +149,8 @@ pub fn build_transform_data(
     resolver_input: TypeId,
     root_fields: &HashMap<String, raw_tree::ParameterTransformNode>,
 ) -> Result<TransformData> {
-    let mut context = TransformDataBuildContext::new();
-    let new_tree = context.check_object_node(resolver_input, root_fields)?;
+    let mut context = TransformDataBuildContext::default();
+    let (new_tree, type_id) = context.check_object_node(resolver_input, root_fields)?;
 
     let mut query_input_type = t::struct_();
     for (name, param) in context.query_params.into_iter() {
@@ -148,26 +160,20 @@ pub fn build_transform_data(
     Ok(TransformData {
         query_input: query_input_type.build()?.0,
         parameter_transform: ParameterTransform {
-            resolver_input: resolver_input.0,
+            resolver_input: type_id.0,
             transform_tree: serde_json::to_string(&new_tree)
                 .map_err(|e| TgError::from(format!("Failed to serialize transform_root: {}", e)))?,
         },
     })
 }
 
+#[derive(Default)]
 pub struct TransformDataBuildContext {
     query_params: HashMap<String, QueryParam>,
     path: Vec<PathSeg>,
 }
 
 impl TransformDataBuildContext {
-    pub fn new() -> Self {
-        Self {
-            query_params: HashMap::new(),
-            path: vec![],
-        }
-    }
-
     fn get_param_name(&self, provided: Option<&str>) -> Result<String> {
         if let Some(provided) = provided {
             Ok(provided.to_string())
@@ -194,7 +200,11 @@ impl TransformDataBuildContext {
     ) -> Result<ParameterTransformNode> {
         use raw_tree::ParameterTransformLeafNode as N;
         match leaf {
-            N::Arg { name } => {
+            N::Arg {
+                name,
+                type_id: inp_type_id,
+            } => {
+                let type_id = inp_type_id.map(TypeId).unwrap_or(type_id);
                 let param_name = self.get_param_name(name.as_deref())?;
                 let old_param = self.query_params.insert(
                     param_name.clone(),
@@ -234,12 +244,18 @@ impl TransformDataBuildContext {
                     key: key.clone(),
                 }),
             }),
-            N::Context { key } => Ok(ParameterTransformNode {
-                type_id: type_id.0,
-                data: ParameterTransformNodeData::Leaf(ParameterTransformLeafNode::Context {
-                    key: key.clone(),
-                }),
-            }),
+            N::Context {
+                key,
+                type_id: inp_type_id,
+            } => {
+                let type_id = inp_type_id.map(TypeId).unwrap_or(type_id);
+                Ok(ParameterTransformNode {
+                    type_id: type_id.0,
+                    data: ParameterTransformNodeData::Leaf(ParameterTransformLeafNode::Context {
+                        key: key.clone(),
+                    }),
+                })
+            }
             N::Parent { type_name } => Ok(ParameterTransformNode {
                 type_id: type_id.0,
                 data: ParameterTransformNodeData::Leaf(ParameterTransformLeafNode::Parent {
@@ -253,7 +269,7 @@ impl TransformDataBuildContext {
         &mut self,
         type_id: TypeId,
         fields: &HashMap<String, raw_tree::ParameterTransformNode>,
-    ) -> Result<ParameterTransformNode> {
+    ) -> Result<(ParameterTransformNode, TypeId)> {
         let mut new_fields = HashMap::new();
         let type_id = type_id.resolve_optional()?;
         let ty = type_id.as_struct().with_context(|| {
@@ -313,12 +329,22 @@ impl TransformDataBuildContext {
             )
             .into())
         } else {
-            Ok(ParameterTransformNode {
-                type_id: type_id.0,
-                data: ParameterTransformNodeData::Parent(ParameterTransformParentNode::Object {
-                    fields: new_fields,
-                }),
-            })
+            let mut builder = t::struct_();
+            let mut fields = HashMap::default();
+            for (name, (node, type_id)) in new_fields.into_iter() {
+                builder.prop(&name, type_id);
+                fields.insert(name, node);
+            }
+
+            Ok((
+                ParameterTransformNode {
+                    type_id: type_id.0,
+                    data: ParameterTransformNodeData::Parent(
+                        ParameterTransformParentNode::Object { fields },
+                    ),
+                },
+                builder.build()?,
+            ))
         }
     }
 
@@ -340,7 +366,7 @@ impl TransformDataBuildContext {
 
         for (index, node) in items.iter().enumerate() {
             self.path.push(PathSeg::Index(index));
-            let extended_node = self.check_node(item_type_id, node)?;
+            let extended_node = self.check_node(item_type_id, node)?.0;
             self.path.pop();
             new_items.push(extended_node);
         }
@@ -356,14 +382,14 @@ impl TransformDataBuildContext {
         &mut self,
         type_id: TypeId,
         node: &raw_tree::ParameterTransformNode,
-    ) -> Result<ParameterTransformNode> {
+    ) -> Result<(ParameterTransformNode, TypeId)> {
         use raw_tree::ParameterTransformNode as N;
         use raw_tree::ParameterTransformParentNode as P;
         match node {
-            N::Leaf(leaf) => self.check_leaf_node(type_id, leaf),
+            N::Leaf(leaf) => Ok((self.check_leaf_node(type_id, leaf)?, type_id)),
             N::Parent(parent) => match parent {
                 P::Object { fields } => self.check_object_node(type_id, fields),
-                P::Array { items } => self.check_array_node(type_id, items),
+                P::Array { items } => Ok((self.check_array_node(type_id, items)?, type_id)),
             },
         }
     }
@@ -387,11 +413,17 @@ mod test {
             let mut map = HashMap::new();
             map.insert(
                 "a".to_string(),
-                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg { name: None }),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                    name: None,
+                    type_id: None,
+                }),
             );
             map.insert(
                 "b".to_string(),
-                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg { name: None }),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                    name: None,
+                    type_id: None,
+                }),
             );
             map
         };
@@ -402,7 +434,7 @@ mod test {
         assert_eq!(
             print_options.print(transform_data.query_input.into()),
             indoc::indoc! {"
-                root: struct #3
+                root: struct #4
                     [a]: string #0
                     [b]: string #1
             "}
@@ -421,12 +453,14 @@ mod test {
                 "a".to_string(),
                 ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
                     name: Some("first".to_string()),
+                    type_id: None,
                 }),
             ),
             (
                 "b".to_string(),
                 ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
                     name: Some("second".to_string()),
+                    type_id: None,
                 }),
             ),
         ]
@@ -439,7 +473,7 @@ mod test {
         assert_eq!(
             print_options.print(transform_data.query_input.into()),
             indoc::indoc! {"
-                root: struct #3
+                root: struct #4
                     [first]: string #0
                     [second]: string #1
             "}
@@ -456,7 +490,10 @@ mod test {
         let root = vec![
             (
                 "a".to_string(),
-                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg { name: None }),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                    name: None,
+                    type_id: None,
+                }),
             ),
             (
                 "b".to_string(),
@@ -464,9 +501,11 @@ mod test {
                     items: vec![
                         ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
                             name: None,
+                            type_id: None,
                         }),
                         ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
                             name: None,
+                            type_id: None,
                         }),
                     ],
                 }),
@@ -484,7 +523,10 @@ mod test {
         let root = vec![
             (
                 "a".to_string(),
-                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg { name: None }),
+                ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                    name: None,
+                    type_id: None,
+                }),
             ),
             (
                 "b".to_string(),
@@ -492,9 +534,11 @@ mod test {
                     items: vec![
                         ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
                             name: Some("first".to_string()),
+                            type_id: None,
                         }),
                         ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
                             name: Some("second".to_string()),
+                            type_id: None,
                         }),
                     ],
                 }),
@@ -508,7 +552,7 @@ mod test {
         assert_eq!(
             print_options.print(transform_data.query_input.into()),
             indoc::indoc! {"
-                root: struct #4
+                root: struct #5
                     [a]: string #0
                     [first]: string #1
                     [second]: string #1

@@ -18,6 +18,7 @@ pub enum TypegateOperation {
     GetSerializedTypegraph,
     GetArgInfoByPath,
     FindAvailableOperations,
+    FindPrismaModels,
 }
 
 impl MaterializerConverter for TypegateOperation {
@@ -38,6 +39,7 @@ impl MaterializerConverter for TypegateOperation {
                 Self::GetSerializedTypegraph => "serializedTypegraph",
                 Self::GetArgInfoByPath => "argInfoByPath",
                 Self::FindAvailableOperations => "findAvailableOperations",
+                Self::FindPrismaModels => "findPrismaModels",
             }
             .to_string(),
             runtime,

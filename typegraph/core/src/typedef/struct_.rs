@@ -1,12 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::hash::Hash as _;
+
 use common::typegraph::{ObjectTypeData, TypeNode};
 use errors::Result;
 use indexmap::IndexMap;
 
 use crate::{
-    conversion::types::{BaseBuilderInit, TypeConversion},
+    conversion::{
+        hash::Hashable,
+        types::{BaseBuilderInit, TypeConversion},
+    },
     errors,
     global_store::Store,
     typegraph::TypegraphContext,
@@ -77,6 +82,22 @@ impl TypeDefData for TypeStruct {
 
     fn variant_name(&self) -> &'static str {
         "struct"
+    }
+}
+
+impl Hashable for TypeStruct {
+    fn hash(
+        &self,
+        hasher: &mut crate::conversion::hash::Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()> {
+        "struct".hash(hasher);
+        for (name, tpe_id) in &self.props {
+            name.hash(hasher);
+            TypeId(*tpe_id).hash_child_type(hasher, tg, runtime_id)?;
+        }
+        Ok(())
     }
 }
 

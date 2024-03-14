@@ -10,10 +10,10 @@
       "as_id": false,
       "properties": {
         "diff": 1,
-        "apply": 11,
-        "create": 23,
-        "deploy": 39,
-        "reset": 49
+        "apply": 7,
+        "create": 11,
+        "deploy": 14,
+        "reset": 18
       },
       "required": [
         "diff",
@@ -33,7 +33,7 @@
       "config": {},
       "as_id": false,
       "input": 2,
-      "output": 7,
+      "output": 6,
       "materializer": 0,
       "rate_weight": null,
       "rate_calls": false
@@ -48,7 +48,7 @@
       "properties": {
         "typegraph": 3,
         "runtime": 4,
-        "script": 6
+        "script": 5
       },
       "required": []
     },
@@ -67,16 +67,8 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 5,
+      "item": 3,
       "default_value": null
-    },
-    {
-      "type": "string",
-      "title": "string_1",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "boolean",
@@ -94,36 +86,10 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "diff": 8,
-        "runtimeName": 10
+        "diff": 4,
+        "runtimeName": 3
       },
       "required": []
-    },
-    {
-      "type": "optional",
-      "title": "optional_6",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 9,
-      "default_value": null
-    },
-    {
-      "type": "string",
-      "title": "string_5",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "string",
-      "title": "string_7",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "function",
@@ -134,8 +100,8 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 12,
-      "output": 19,
+      "input": 8,
+      "output": 9,
       "materializer": 2,
       "rate_weight": null,
       "rate_calls": false
@@ -148,64 +114,12 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "typegraph": 13,
-        "runtime": 14,
-        "migrations": 16,
-        "resetDatabase": 18
+        "typegraph": 3,
+        "runtime": 4,
+        "migrations": 4,
+        "resetDatabase": 5
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_11",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "optional",
-      "title": "optional_13",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 15,
-      "default_value": null
-    },
-    {
-      "type": "string",
-      "title": "string_12",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "optional",
-      "title": "optional_15",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 17,
-      "default_value": null
-    },
-    {
-      "type": "string",
-      "title": "string_14",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "boolean",
-      "title": "boolean_16",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "object",
@@ -215,18 +129,10 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "databaseReset": 20,
-        "appliedMigrations": 21
+        "databaseReset": 5,
+        "appliedMigrations": 10
       },
       "required": []
-    },
-    {
-      "type": "boolean",
-      "title": "boolean_18",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "list",
@@ -235,15 +141,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 22
-    },
-    {
-      "type": "string",
-      "title": "string_19",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
+      "items": 3
     },
     {
       "type": "function",
@@ -254,8 +152,8 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 24,
-      "output": 32,
+      "input": 12,
+      "output": 13,
       "materializer": 3,
       "rate_weight": null,
       "rate_calls": false
@@ -268,73 +166,13 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "typegraph": 25,
-        "runtime": 26,
-        "name": 28,
-        "apply": 29,
-        "migrations": 30
+        "typegraph": 3,
+        "runtime": 4,
+        "name": 3,
+        "apply": 5,
+        "migrations": 4
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_24",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "optional",
-      "title": "optional_26",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 27,
-      "default_value": null
-    },
-    {
-      "type": "string",
-      "title": "string_25",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "string",
-      "title": "string_27",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "boolean",
-      "title": "boolean_28",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "optional",
-      "title": "optional_30",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 31,
-      "default_value": null
-    },
-    {
-      "type": "string",
-      "title": "string_29",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "object",
@@ -344,64 +182,12 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "createdMigrationName": 33,
-        "applyError": 34,
-        "migrations": 36,
-        "runtimeName": 38
+        "createdMigrationName": 3,
+        "applyError": 4,
+        "migrations": 4,
+        "runtimeName": 3
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_32",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "optional",
-      "title": "optional_34",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 35,
-      "default_value": null
-    },
-    {
-      "type": "string",
-      "title": "string_33",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "optional",
-      "title": "optional_36",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 37,
-      "default_value": null
-    },
-    {
-      "type": "string",
-      "title": "string_35",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "string",
-      "title": "string_37",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "function",
@@ -412,8 +198,8 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 40,
-      "output": 45,
+      "input": 15,
+      "output": 16,
       "materializer": 4,
       "rate_weight": null,
       "rate_calls": false
@@ -426,45 +212,11 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "typegraph": 41,
-        "runtime": 42,
-        "migrations": 44
+        "typegraph": 3,
+        "runtime": 4,
+        "migrations": 3
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_41",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "optional",
-      "title": "optional_43",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 43,
-      "default_value": null
-    },
-    {
-      "type": "string",
-      "title": "string_42",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "string",
-      "title": "string_44",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     },
     {
       "type": "object",
@@ -474,31 +226,14 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "migrationCount": 46,
-        "appliedMigrations": 47
+        "migrationCount": 17,
+        "appliedMigrations": 10
       },
       "required": []
     },
     {
       "type": "integer",
       "title": "integer_46",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "list",
-      "title": "list_48",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "items": 48
-    },
-    {
-      "type": "string",
-      "title": "string_47",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -513,8 +248,8 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 50,
-      "output": 54,
+      "input": 19,
+      "output": 5,
       "materializer": 5,
       "rate_weight": null,
       "rate_calls": false
@@ -527,44 +262,10 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "typegraph": 51,
-        "runtime": 52
+        "typegraph": 3,
+        "runtime": 4
       },
       "required": []
-    },
-    {
-      "type": "string",
-      "title": "string_52",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "optional",
-      "title": "optional_54",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 53,
-      "default_value": null
-    },
-    {
-      "type": "string",
-      "title": "string_53",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "boolean",
-      "title": "boolean_56",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     }
   ],
   "materializers": [
@@ -585,7 +286,8 @@
         "idempotent": true
       },
       "data": {
-        "script": "var _my_lambda=(_args,{context})=>context.username===\"admin\";"
+        "script": "var _my_lambda = (_args, { context }) => context.username === 'admin'",
+        "secrets": []
       }
     },
     {
@@ -677,6 +379,7 @@
       "context_identifier": "user",
       "local_excess": 5
     },
-    "version": "0.0.3"
+    "version": "0.0.3",
+    "random_seed": null
   }
 }

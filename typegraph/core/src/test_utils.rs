@@ -19,7 +19,7 @@ impl Default for Effect {
 }
 
 pub mod models {
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
     use common::typegraph::{EffectType, Injection, InjectionData};
 
@@ -28,7 +28,7 @@ pub mod models {
     use crate::types::TypeId;
 
     pub fn simple_record() -> Result<TypeId> {
-        let mut created_at_injection_map = HashMap::new();
+        let mut created_at_injection_map = BTreeMap::new();
         created_at_injection_map.insert(EffectType::Create, "now".to_string());
         let created_at = t::string()
             .format("date-time")

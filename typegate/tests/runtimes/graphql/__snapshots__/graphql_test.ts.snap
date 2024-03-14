@@ -84,31 +84,11 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       ],
       "config": {},
       "as_id": false,
-      "input": 7,
+      "input": 2,
       "output": 4,
       "materializer": 2,
       "rate_weight": null,
       "rate_calls": false
-    },
-    {
-      "type": "object",
-      "title": "object_7",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "properties": {
-        "id": 8
-      },
-      "required": []
-    },
-    {
-      "type": "integer",
-      "title": "integer_6",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
     }
   ],
   "materializers": [

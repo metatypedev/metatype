@@ -1,11 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::hash::Hash;
+
 use common::typegraph::{StringFormat, StringTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{BaseBuilderInit, TypeConversion},
+    conversion::{
+        hash::Hashable,
+        types::{BaseBuilderInit, TypeConversion},
+    },
     errors,
     typegraph::TypegraphContext,
     types::{StringT, TypeDefData},
@@ -66,5 +71,27 @@ impl TypeDefData for TypeString {
 
     fn variant_name(&self) -> &'static str {
         "string"
+    }
+}
+
+impl Hashable for TypeString {
+    fn hash(
+        &self,
+        hasher: &mut crate::conversion::hash::Hasher,
+        _tg: &mut TypegraphContext,
+        _runtime_id: Option<u32>,
+    ) -> Result<()> {
+        "string".hash(hasher);
+        self.min.hash(hasher);
+        self.max.hash(hasher);
+        self.pattern.hash(hasher);
+        self.format.hash(hasher);
+
+        if let Some(enumeration) = self.enumeration.as_ref() {
+            "enum".hash(hasher);
+            enumeration.hash(hasher);
+        }
+
+        Ok(())
     }
 }

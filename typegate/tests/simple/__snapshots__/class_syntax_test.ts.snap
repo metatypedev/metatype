@@ -60,10 +60,10 @@ snapshot[`Class Syntax 1`] = `
             name: "likes",
           },
           {
-            name: "id",
+            name: "content",
           },
           {
-            name: "content",
+            name: "id",
           },
           {
             name: "title",
@@ -104,10 +104,10 @@ snapshot[`Class Syntax 1`] = `
       {
         fields: [
           {
-            name: "content",
+            name: "title",
           },
           {
-            name: "title",
+            name: "content",
           },
         ],
         kind: "OBJECT",
@@ -137,10 +137,10 @@ snapshot[`Class Syntax 1`] = `
       {
         fields: [
           {
-            name: "c",
+            name: "struct",
           },
           {
-            name: "struct",
+            name: "c",
           },
         ],
         kind: "OBJECT",

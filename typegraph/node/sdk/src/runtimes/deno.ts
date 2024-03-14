@@ -112,10 +112,10 @@ export class DenoRuntime extends Runtime {
       _id: runtimes.getPredefinedDenoFunc({ name: "identity" }),
       name: "identity",
     };
-    const out = wit_utils.removeInjections(inp._id);
+    // const out = wit_utils.removeInjections(inp._id);
     return t.func(
       inp,
-      new t.Typedef(out, {}),
+      inp,
       mat,
     );
   }
