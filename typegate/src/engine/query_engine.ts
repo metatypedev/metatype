@@ -114,6 +114,13 @@ export interface EndpointToSchemaMap {
   [index: string]: { fnName: string; outputSchema: unknown };
 }
 
+export interface UploadUrlMeta {
+  fileName: string;
+  fileHash: string;
+  fileSizeInBytes: number;
+  urlUsed: boolean;
+}
+
 export class QueryEngine {
   name: string;
   queryCache: QueryCache;
@@ -131,6 +138,7 @@ export class QueryEngine {
       }
     >
   >;
+  fileUploadUrlCache: Map<string, UploadUrlMeta> = new Map();
 
   get rawName(): string {
     return this.tg.rawName;
