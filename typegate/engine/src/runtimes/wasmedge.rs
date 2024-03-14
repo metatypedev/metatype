@@ -54,9 +54,10 @@ fn param_cast(out: &str, res: &mut Vec<Box<dyn Any + Send + Sync>>) -> Result<St
 pub fn op_wasmedge_wasi(#[serde] input: WasiInput) -> Result<String> {
     // https://github.com/second-state/wasmedge-rustsdk-examples
 
-    let bytes = general_purpose::STANDARD
-        .decode(input.wasm.as_bytes())
-        .unwrap();
+    let wasm_path = PathBuf::from(input.wasm);
+    let wasm_binary = common::archive::encode_to_base_64(&wasm_path).unwrap();
+
+    let bytes = general_purpose::STANDARD.decode(wasm_binary).unwrap();
     let module = Module::from_bytes(None, bytes).unwrap();
 
     let config = ConfigBuilder::default()

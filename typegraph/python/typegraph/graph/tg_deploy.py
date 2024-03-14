@@ -73,6 +73,7 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     if isinstance(ref_files, Err):
         raise Exception(ref_files.value)
 
+    # TODO: fetch all the upload by one request
     get_upload_url = params.base_url + sep + "get-upload-url"
     for file_hash, file_path in ref_files.value:
         with open(file_path, "rb") as file:
