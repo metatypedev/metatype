@@ -81,6 +81,7 @@ export async function handleFileUpload(
     throw new Error("File size does not match");
   }
 
+  // adjust relative to the root path
   const fileStorageDir = `metatype_artifacts/${engine.name}/files`;
   await Deno.mkdir(fileStorageDir, { recursive: true });
   const filePath = `${fileStorageDir}/${fileName}.${fileHash}`;
