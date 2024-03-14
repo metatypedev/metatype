@@ -67,7 +67,7 @@ pub struct ServerStore {
     secrets: HashMap<String, String>,
     endpoint: Endpoint,
     prefix: Option<String>,
-    sdk_responses: HashMap<PathBuf, Arc<SDKResponse>>,
+    sdk_responses: HashMap<PathBuf, Arc<HashMap<String, SDKResponse>>>,
 }
 
 #[allow(dead_code)]
@@ -107,25 +107,30 @@ impl ServerStore {
         with_store(|s| s.endpoint.clone())
     }
 
-    pub fn add_response(tg_name: PathBuf, response: SDKResponse) {
+    pub fn add_response(response: SDKResponse) {
         with_store_mut(|s| {
-            s.sdk_responses.insert(tg_name, response.into());
+            let mut name_to_res = s
+                .sdk_responses
+                .get(&response.typegraph_path)
+                .map(|v| v.as_ref().to_owned())
+                .unwrap_or_default();
+
+            name_to_res.insert(response.typegraph_name.clone(), response.clone());
+
+            s.sdk_responses
+                .insert(response.typegraph_path.clone(), name_to_res.into());
         })
     }
 
-    pub fn get_response(tg_path: &PathBuf) -> Option<Arc<SDKResponse>> {
+    pub fn get_response(tg_path: &PathBuf) -> Option<Arc<HashMap<String, SDKResponse>>> {
         with_store(|s| s.sdk_responses.get(tg_path).map(|v| v.to_owned()))
     }
 
-    pub fn get_response_or_fail(tg_path: &PathBuf) -> Result<Arc<SDKResponse>> {
+    pub fn get_response_or_fail(tg_path: &PathBuf) -> Result<Arc<HashMap<String, SDKResponse>>> {
         match Self::get_response(tg_path) {
             Some(res) => Ok(res.to_owned()),
             None => bail!("Invalid state, no response was sent by {:?}, this could be the result of an outdated sdk", &tg_path),
         }
-    }
-
-    pub fn get_responses() -> HashMap<PathBuf, Arc<SDKResponse>> {
-        with_store(|s| s.sdk_responses.clone())
     }
 
     pub fn set_migration_action_glob(option: MigrationAction) {

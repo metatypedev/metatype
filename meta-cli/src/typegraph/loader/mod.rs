@@ -34,13 +34,8 @@ pub struct TypegraphInfos {
 }
 
 impl TypegraphInfos {
-    pub fn get_response_or_fail(&self) -> Result<Arc<SDKResponse>> {
+    pub fn get_response_or_fail(&self) -> Result<Arc<HashMap<String, SDKResponse>>> {
         ServerStore::get_response_or_fail(&self.path)
-    }
-
-    pub fn name(&self) -> Result<String> {
-        let response = ServerStore::get_response_or_fail(&self.path)?;
-        Ok(response.typegraph_name.clone())
     }
 
     pub fn get_key(&self) -> Result<String> {

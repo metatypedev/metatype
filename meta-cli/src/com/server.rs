@@ -130,7 +130,7 @@ async fn command() -> impl Responder {
 async fn response(req_body: String) -> impl Responder {
     let sdk_response: SDKResponse = serde_json::from_str(&req_body).unwrap();
     // to be used later
-    ServerStore::add_response(sdk_response.typegraph_path.clone(), sdk_response.clone());
+    ServerStore::add_response(sdk_response.clone());
     HttpResponse::Ok()
         .status(StatusCode::OK)
         .json(CLIResponseSuccess {
@@ -153,7 +153,7 @@ pub async fn spawn_server() -> std::io::Result<()> {
             .service(config)
             .service(command)
             .service(response)
-            .app_data(PayloadConfig::new(1000000 * 100)) // 100 mb
+            .app_data(PayloadConfig::new(1000000 * 100)) // mb
     })
     .listen(tcp_listener)?
     .run()

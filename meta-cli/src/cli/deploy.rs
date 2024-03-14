@@ -260,20 +260,23 @@ mod default_mode {
             Arbiter::current().spawn(async move {
                 while let Some(event) = event_rx.recv().await {
                     match event {
-                        LoaderEvent::Typegraph(tg) => match tg.get_response_or_fail() {
+                        LoaderEvent::Typegraph(tg_infos) => match tg_infos.get_response_or_fail() {
                             Ok(res) => {
-                                match PushResult::new(
-                                    self.console.clone(),
-                                    self.loader.clone(),
-                                    res.as_ref().clone(),
-                                ) {
-                                    Ok(push) => push.finalize().await.unwrap(),
-                                    Err(e) => {
-                                        console.error(format!(
-                                            "Failed pushing typegraph {:?}:\n{:?}",
-                                            tg.path.display(),
-                                            e.to_string()
-                                        ));
+                                for (name, res) in res.iter() {
+                                    match PushResult::new(
+                                        self.console.clone(),
+                                        self.loader.clone(),
+                                        res.clone(),
+                                    ) {
+                                        Ok(push) => push.finalize().await.unwrap(),
+                                        Err(e) => {
+                                            console.error(format!(
+                                                "Failed pushing typegraph {:?} at {}:\n{:?}",
+                                                name,
+                                                tg_infos.path.display(),
+                                                e.to_string()
+                                            ));
+                                        }
                                     }
                                 }
                             }
@@ -394,35 +397,38 @@ mod watch_mode {
                 let mut event_rx = event_rx;
                 while let Some(event) = event_rx.recv().await {
                     match event {
-                        LoaderEvent::Typegraph(tg) => {
-                            let response = ServerStore::get_response_or_fail(&tg.path)
+                        LoaderEvent::Typegraph(tg_infos) => {
+                            let responses = ServerStore::get_response_or_fail(&tg_infos.path)
                                 .unwrap()
                                 .as_ref()
                                 .to_owned();
-                            match PushResult::new(console.clone(), loader.clone(), response) {
-                                Ok(push) => {
-                                    if let Err(e) = push.finalize().await {
-                                        panic!("{}", e.to_string());
+                            for (name, response) in responses.into_iter() {
+                                match PushResult::new(console.clone(), loader.clone(), response) {
+                                    Ok(push) => {
+                                        if let Err(e) = push.finalize().await {
+                                            panic!("{}", e.to_string());
+                                        }
+                                        RetryManager::clear_counter(&tg_infos.path);
                                     }
-                                    RetryManager::clear_counter(&tg.path);
-                                }
-                                Err(e) => {
-                                    let tg_path = tg.path.clone();
-                                    console.error(format!(
-                                        "Failed pushing typegraph {:?}:\n{:?}",
-                                        tg_path.display(),
-                                        e.to_string()
-                                    ));
-                                    if let Some(delay) = RetryManager::next_delay(&tg_path) {
-                                        console.info(format!(
-                                            "Retry {}/{}, retrying after {}s of {:?}",
-                                            delay.retry,
-                                            delay.max,
-                                            delay.duration.as_secs(),
+                                    Err(e) => {
+                                        let tg_path = tg_infos.path.clone();
+                                        console.error(format!(
+                                            "Failed pushing typegraph {} at {:?}:\n{:?}",
+                                            name,
                                             tg_path.display(),
+                                            e.to_string()
                                         ));
-                                        tokio::time::sleep(delay.duration).await;
-                                        loader.do_send(LoadModule(Arc::new(tg_path)));
+                                        if let Some(delay) = RetryManager::next_delay(&tg_path) {
+                                            console.info(format!(
+                                                "Retry {}/{}, retrying after {}s of {:?}",
+                                                delay.retry,
+                                                delay.max,
+                                                delay.duration.as_secs(),
+                                                tg_path.display(),
+                                            ));
+                                            tokio::time::sleep(delay.duration).await;
+                                            loader.do_send(LoadModule(Arc::new(tg_path)));
+                                        }
                                     }
                                 }
                             }

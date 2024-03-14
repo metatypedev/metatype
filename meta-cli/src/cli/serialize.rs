@@ -98,8 +98,10 @@ impl Action for Serialize {
         while let Some(event) = event_rx.recv().await {
             match event {
                 LoaderEvent::Typegraph(tg_infos) => {
-                    let tg = ServerStore::get_response_or_fail(&tg_infos.path)?.as_typegraph()?;
-                    loaded.push(tg)
+                    let tgs = ServerStore::get_response_or_fail(&tg_infos.path)?;
+                    for (_, tg) in tgs.iter() {
+                        loaded.push(tg.as_typegraph()?);
+                    }
                 }
                 LoaderEvent::Stopped(b) => {
                     log::debug!("event: {b:?}");

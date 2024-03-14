@@ -125,6 +125,10 @@ pub enum ReloadReason {
     DependencyChanged(PathBuf),
 }
 
+pub struct ProcFlag {
+    pub include: Vec<String>,
+}
+
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct LoadModule(pub Arc<PathBuf>);
