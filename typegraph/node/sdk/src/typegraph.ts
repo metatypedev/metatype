@@ -32,7 +32,7 @@ interface TypegraphArgs {
 }
 
 export class ApplyFromArg {
-  constructor(public name: string | null) {}
+  constructor(public name: string | null, public type: number | null) {}
 }
 
 export class ApplyFromStatic {
@@ -44,7 +44,7 @@ export class ApplyFromSecret {
 }
 
 export class ApplyFromContext {
-  constructor(public key: string) {}
+  constructor(public key: string | null, public type: number | null) {}
 }
 
 export class ApplyFromParent {
@@ -52,10 +52,12 @@ export class ApplyFromParent {
 }
 
 const InjectionSource = {
-  asArg: (name?: string) => new ApplyFromArg(name ?? null),
+  asArg: (name?: string, type?: t.Typedef) =>
+    new ApplyFromArg(name ?? null, type?._id ?? null),
   set: (value: any) => new ApplyFromStatic(value),
   fromSecret: (key: string) => new ApplyFromSecret(key),
-  fromContext: (key: string) => new ApplyFromContext(key),
+  fromContext: (key: string, type?: t.Typedef) =>
+    new ApplyFromContext(key, type?._id ?? null),
   fromParent: (typeName: string) => new ApplyFromParent(typeName),
 } as const;
 

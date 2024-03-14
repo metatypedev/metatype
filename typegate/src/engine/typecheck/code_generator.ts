@@ -249,6 +249,7 @@ export class CodeGenerator {
     typeNode: UnionNode,
     variantValidatorNames: string[],
   ) {
+    this.line("const failed = [];");
     this.line("let errs;");
 
     const variantCount = typeNode.anyOf.length;
@@ -262,11 +263,14 @@ export class CodeGenerator {
       const validator = variantValidatorNames[i];
       this.line(`${validator}(value, path, errs, context)`);
       this.line("if (errs.length === 0) { return }");
+      this.line("failed.push(errs)");
     }
 
-    // TODO display variant errors
     this.line(
-      'errors.push([path, "Value does not match to any variant of the union type"])',
+      "const failedErrors = failed.map((errs, i) => `\\n  #${i} ${errs.join(', ')}`).join('')",
+    );
+    this.line(
+      "errors.push([path, `Value does not match to any variant of the union type ${failedErrors}`])",
     );
   }
 

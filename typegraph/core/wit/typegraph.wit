@@ -439,6 +439,7 @@ interface runtimes {
         get-serialized-typegraph,
         get-arg-info-by-path,
         find-available-operations,
+        find-prisma-models,
     }
 
     register-typegate-materializer: func(operation: typegate-operation) -> result<materializer-id, error>

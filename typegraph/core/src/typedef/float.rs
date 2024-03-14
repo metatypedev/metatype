@@ -1,11 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::hash::Hash as _;
+
 use common::typegraph::types::{FloatTypeData, TypeNode};
 use errors::Result;
+use ordered_float::OrderedFloat;
 
 use crate::{
-    conversion::types::{BaseBuilderInit, TypeConversion},
+    conversion::{
+        hash::Hashable,
+        types::{BaseBuilderInit, TypeConversion},
+    },
     errors,
     typegraph::TypegraphContext,
     types::{Float, TypeDefData},
@@ -60,5 +66,30 @@ impl TypeDefData for TypeFloat {
 
     fn variant_name(&self) -> &'static str {
         "float"
+    }
+}
+
+impl Hashable for TypeFloat {
+    fn hash(
+        &self,
+        hasher: &mut crate::conversion::hash::Hasher,
+        _tg: &mut TypegraphContext,
+        _runtime_id: Option<u32>,
+    ) -> Result<()> {
+        "float".hash(hasher);
+        self.min.map(OrderedFloat).hash(hasher);
+        self.max.map(OrderedFloat).hash(hasher);
+        self.exclusive_minimum.map(OrderedFloat).hash(hasher);
+        self.exclusive_maximum.map(OrderedFloat).hash(hasher);
+        self.multiple_of.map(OrderedFloat).hash(hasher);
+
+        if let Some(enumeration) = &self.enumeration {
+            "enum".hash(hasher);
+            for value in enumeration {
+                OrderedFloat(*value).hash(hasher);
+            }
+        }
+
+        Ok(())
     }
 }

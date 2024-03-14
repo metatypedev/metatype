@@ -47,8 +47,13 @@ export function getChildTypes(type: TypeNode): number[] {
       return [type.items];
     case Type.OBJECT:
       return Object.values(type.properties);
-    case Type.FUNCTION:
-      return [type.input, type.output];
+    case Type.FUNCTION: {
+      const res = [type.input, type.output];
+      if (type.parameterTransform) {
+        res.push(type.parameterTransform.resolver_input);
+      }
+      return res;
+    }
     case Type.UNION:
       return type.anyOf;
     case Type.EITHER:
@@ -64,6 +69,7 @@ export const Edge = {
   ARRAY_ITEMS: "[items]",
   FUNCTION_INPUT: "[in]",
   FUNCTION_OUTPUT: "[out]",
+  FUNCTION_RESOLVER_INPUT: "[resolver-in]",
   // OBJECT_PROPERTY: <property name>
 };
 
@@ -84,11 +90,17 @@ export function getEdges(type: TypeNode): Record<string, number> {
     }
     case Type.OBJECT:
       return { ...type.properties };
-    case Type.FUNCTION:
-      return {
+    case Type.FUNCTION: {
+      const res = {
         [Edge.FUNCTION_INPUT]: type.input,
         [Edge.FUNCTION_OUTPUT]: type.output,
       };
+      if (type.parameterTransform) {
+        res[Edge.FUNCTION_RESOLVER_INPUT] =
+          type.parameterTransform.resolver_input;
+      }
+      return res;
+    }
     default:
       return {};
   }

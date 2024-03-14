@@ -15,6 +15,7 @@ import { Type, TypeNode } from "../typegraph/type_node.ts";
 import { StringFormat } from "../typegraph/types.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { applyPostProcessors } from "../postprocess.ts";
+import { PrismaRT } from "./prisma/mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -90,6 +91,9 @@ export class TypeGateRuntime extends Runtime {
       }
       if (name === "findAvailableOperations") {
         return this.findAvailableOperations;
+      }
+      if (name === "findPrismaModels") {
+        return this.findPrismaModels;
       }
 
       return async ({ _: { parent }, ...args }) => {
@@ -246,6 +250,30 @@ export class TypeGateRuntime extends Runtime {
         output,
         outputItem,
       };
+    });
+  };
+
+  findPrismaModels: Resolver = ({ typegraph }) => {
+    const tg = this.typegate.register.get(typegraph)!.tg;
+
+    const prismaRuntimes = tg.tg.runtimes.filter(
+      (rt) => rt.name == "prisma",
+    );
+
+    return prismaRuntimes.map((rt) => {
+      const rtData = rt.data as PrismaRT.DataFinal;
+      return rtData.models.map((model) => {
+        return {
+          name: model.typeName,
+          runtime: rtData.name,
+          fields: model.props.map((prop) => {
+            return {
+              name: prop.key,
+              type: walkPath(tg, tg.type(prop.typeIdx), 0, []),
+            };
+          }),
+        };
+      });
     });
   };
 }

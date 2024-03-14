@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::conversion::hash::Hasher;
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
@@ -21,6 +22,7 @@ use indexmap::IndexMap;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::hash::Hasher as _;
 
 use std::rc::Rc;
 
@@ -31,7 +33,8 @@ use crate::wit::core::{
 
 #[derive(Default)]
 struct IdMapping {
-    types: HashMap<u32, u32>,
+    types_to_hash: HashMap<u32, u64>,
+    hash_to_type: HashMap<u64, u32>,
     runtimes: HashMap<u32, u32>,
     materializers: HashMap<u32, u32>,
     policies: HashMap<u32, u32>,
@@ -304,12 +307,27 @@ pub fn set_seed(seed: Option<u32>) -> Result<()> {
 }
 
 impl TypegraphContext {
+    pub fn hash_type(&mut self, type_def: TypeDef, runtime_id: Option<u32>) -> Result<u64> {
+        let type_id = type_def.id().into();
+        if let Some(hash) = self.mapping.types_to_hash.get(&type_id) {
+            Ok(*hash)
+        } else {
+            let mut hasher = Hasher::new();
+            type_def.hash_type(&mut hasher, self, runtime_id)?;
+            let hash = hasher.finish();
+            self.mapping.types_to_hash.insert(type_id, hash);
+            Ok(hash)
+        }
+    }
+
     pub fn register_type(
         &mut self,
         type_def: TypeDef,
         runtime_id: Option<u32>,
     ) -> Result<TypeId, TgError> {
-        match self.mapping.types.entry(type_def.id().into()) {
+        let hash = self.hash_type(type_def.clone(), runtime_id)?;
+
+        match self.mapping.hash_to_type.entry(hash) {
             Entry::Vacant(e) => {
                 // to prevent infinite loop from circular dependencies,
                 // we allocate first a slot in the array for the type with None
@@ -327,6 +345,7 @@ impl TypegraphContext {
                 self.types[idx] = Some(type_node);
                 Ok((idx as u32).into())
             }
+
             Entry::Occupied(e) => Ok((*e.get()).into()),
         }
     }
@@ -422,7 +441,8 @@ impl TypegraphContext {
     }
 
     pub fn find_type_index_by_store_id(&self, id: TypeId) -> Option<u32> {
-        self.mapping.types.get(&id.into()).copied()
+        let hash = self.mapping.types_to_hash.get(&id.into())?;
+        self.mapping.hash_to_type.get(hash).copied()
     }
 
     pub fn get_correct_id(&self, id: TypeId) -> Result<u32> {
@@ -438,5 +458,13 @@ impl TypegraphContext {
 
     pub fn get_prisma_typegen_cache(&self) -> Rc<RefCell<HashMap<String, TypeId>>> {
         Rc::clone(&self.runtime_contexts.prisma_typegen_cache)
+    }
+
+    pub fn find_materializer_index_by_store_id(&self, id: u32) -> Option<u32> {
+        self.mapping.materializers.get(&id).copied()
+    }
+
+    pub fn find_policy_index_by_store_id(&self, id: u32) -> Option<u32> {
+        self.mapping.policies.get(&id).copied()
     }
 }

@@ -5823,6 +5823,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4d873d7c67ce09b42110d801813efbc9364414e356be9935700d368351657487"
 
 [[package]]
+name = "location-macros"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e01cc93c35479eaa65adbf8b9aa933aa3f400d9e4e2fc553f516d4f822c8b13"
+dependencies = [
+ "syn 2.0.52",
+ "thiserror",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6178,7 +6188,7 @@ dependencies = [
  "indexmap 1.9.3",
  "metrics 0.18.1",
  "num_cpus",
- "ordered-float",
+ "ordered-float 2.10.1",
  "parking_lot 0.11.2",
  "quanta",
  "radix_trie",
@@ -7060,6 +7070,15 @@ name = "ordered-float"
 version = "2.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68f19d67e5a2795c94e73e0bb1cc1a7edeb2e28efd39e2e1c9b7a40c1108b11c"
+dependencies = [
+ "num-traits 0.2.18",
+]
+
+[[package]]
+name = "ordered-float"
+version = "4.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a76df7075c7d4d01fdcb46c912dd17fba5b60c78ea480b475f2b6ab6f666584e"
 dependencies = [
  "num-traits 0.2.18",
 ]
@@ -9314,7 +9333,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f3a1a3341211875ef120e117ea7fd5228530ae7e7036a779fdc9117be6b3282c"
 dependencies = [
- "ordered-float",
+ "ordered-float 2.10.1",
  "serde 1.0.197",
 ]
 
@@ -11518,6 +11537,7 @@ dependencies = [
  "colored",
  "env_logger",
  "envconfig",
+ "location-macros",
  "log",
  "sentry",
  "typegate_engine",
@@ -11576,10 +11596,12 @@ dependencies = [
  "indoc",
  "insta",
  "once_cell",
+ "ordered-float 4.2.0",
  "paste",
  "pathdiff",
  "ptree",
  "regex",
+ "seahash",
  "serde 1.0.197",
  "serde_json",
  "sha2 0.10.8",
