@@ -10,7 +10,7 @@ use indexmap::IndexMap;
 
 use crate::{
     global_store::Store,
-    wit::metatype::typegraph::host::{eprint, expand_glob, get_cwd, read_file, write_file},
+    wit::metatype::typegraph::host::{expand_glob, get_cwd, read_file, write_file},
 };
 
 pub fn read_text_file<P: Into<String>>(path: P) -> Result<String, String> {
@@ -74,14 +74,14 @@ pub fn compress<P: Into<String>>(path: P, exclude: Option<Vec<String>>) -> Resul
     let exclude = exclude.unwrap_or_default();
     let paths = expand_glob(&path.into(), &exclude)?;
     let mut entries = IndexMap::new();
-    eprint("Preparing tarball");
+    // eprint("Preparing tarball");
 
     let abs_paths = paths.iter().map(PathBuf::from).collect::<Vec<PathBuf>>();
     let rel_paths = relativize_paths(&abs_paths)?;
 
     for (i, abs_path) in abs_paths.iter().enumerate() {
         let rel_path_str = rel_paths[i].to_string_lossy();
-        eprint(&format!(" ++ {}", rel_path_str.clone()));
+        // eprint(&format!(" ++ {}", rel_path_str.clone()));
         // Note: tarball path should be relative
         // Note: Strip against workdir does not work when the sdk is spawn from another process
         entries.insert(rel_path_str.into(), read_file(&abs_path.to_string_lossy())?);

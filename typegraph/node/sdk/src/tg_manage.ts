@@ -6,7 +6,6 @@ import { BasicAuth, tgDeploy, tgRemove } from "./tg_deploy.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { getEnvVariable } from "./utils/func_utils.js";
 
-const VERSION = "0.3.6-0";
 const PORT = "META_CLI_SERVER_PORT"; // meta-cli instance that executes the current file
 const SELF_PATH = "META_CLI_TG_PATH"; // path to the current file to uniquely identify the run results
 
@@ -134,7 +133,6 @@ export class Manager {
             ...artifactsConfig,
             prefix,
           },
-          cliVersion: VERSION,
           secrets,
           auth: new BasicAuth(auth.username, auth.password),
         });

@@ -37,10 +37,8 @@ dev:
     typegraph/node/sdk/package.json:
       '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
       '(\s*"description"\s*:\s*").*(",?)': TAGLINE
-    typegraph/node/sdk/src/tg_manage.ts:
-      (const\s+VERSION\s*=\s*").*(";): METATYPE_VERSION
-    typegraph/python/typegraph/graph/tg_manage.py:
-      (VERSION\s*=\s*").*("): METATYPE_VERSION
+    typegraph/core/src/global_store.rs:
+      '(\s{4}pub static SDK_VERSION.+=\s?").*(".+;)': METATYPE_VERSION
     typegraph/node/package.json:
       '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
       '(\s*"description"\s*:\s*").*(",?)': TAGLINE

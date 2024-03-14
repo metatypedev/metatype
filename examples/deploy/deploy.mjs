@@ -85,7 +85,6 @@ const auth = new BasicAuth("admin", "password");
 
 tgDeploy(tg, {
   baseUrl,
-  cliVersion: "0.3.5",
   auth,
   secrets: {
     TG_DEPLOY_EXAMPLE_NODE_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"

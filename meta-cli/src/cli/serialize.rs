@@ -86,7 +86,7 @@ impl Action for Serialize {
         .start();
 
         if self.files.is_empty() {
-            exit(1);
+            bail!("No file provided");
         }
 
         for path in self.files.iter() {
@@ -98,7 +98,7 @@ impl Action for Serialize {
         while let Some(event) = event_rx.recv().await {
             match event {
                 LoaderEvent::Typegraph(tg_infos) => {
-                    let tgs = ServerStore::get_response_or_fail(&tg_infos.path)?;
+                    let tgs = ServerStore::get_responses_or_fail(&tg_infos.path)?;
                     for (_, tg) in tgs.iter() {
                         loaded.push(tg.as_typegraph()?);
                     }

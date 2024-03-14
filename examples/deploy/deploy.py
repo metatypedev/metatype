@@ -91,7 +91,6 @@ res = tg_deploy(
     TypegraphDeployParams(
         base_url="http://localhost:7890",
         auth=auth,
-        cli_version="0.3.5",
         artifacts_config=artifacts_config,
         secrets={
             "TG_DEPLOY_EXAMPLE_PYTHON_POSTGRES": "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"

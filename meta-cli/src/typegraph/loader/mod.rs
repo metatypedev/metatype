@@ -34,8 +34,8 @@ pub struct TypegraphInfos {
 }
 
 impl TypegraphInfos {
-    pub fn get_response_or_fail(&self) -> Result<Arc<HashMap<String, SDKResponse>>> {
-        ServerStore::get_response_or_fail(&self.path)
+    pub fn get_responses_or_fail(&self) -> Result<Arc<HashMap<String, SDKResponse>>> {
+        ServerStore::get_responses_or_fail(&self.path)
     }
 
     pub fn get_key(&self) -> Result<String> {

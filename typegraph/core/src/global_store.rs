@@ -105,6 +105,7 @@ const PREDEFINED_DENO_FUNCTIONS: &[&str] = &["identity", "true"];
 
 thread_local! {
     pub static STORE: RefCell<Store> = RefCell::new(Store::new());
+    pub static SDK_VERSION: String = "0.3.6-0".to_owned();
 }
 
 fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
@@ -113,6 +114,10 @@ fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
 
 fn with_store_mut<T, F: FnOnce(&mut Store) -> T>(f: F) -> T {
     STORE.with(|s| f(&mut s.borrow_mut()))
+}
+
+pub fn get_sdk_version() -> String {
+    SDK_VERSION.with(|v| v.clone())
 }
 
 /// Option to register or not a type name.

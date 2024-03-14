@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 
 use super::{Action, GenArgs};
-use anyhow::Result;
+use anyhow::{bail, Result};
 use async_trait::async_trait;
 use clap::{Parser, Subcommand};
 
@@ -45,8 +45,7 @@ pub struct Deno {
 #[async_trait]
 impl Action for Deno {
     async fn run(&self, _args: GenArgs) -> Result<()> {
-        // TODO:
-        // how does this fit with the current impl?
+        bail!("codegen is currently disabled")
 
         // let dir = args.dir()?;
         // // try to find config file, else use default config as the options
@@ -67,7 +66,5 @@ impl Action for Deno {
         //         e.to_string()
         //     )
         // })?;
-
-        Ok(())
     }
 }

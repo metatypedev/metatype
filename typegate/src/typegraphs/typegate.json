@@ -204,7 +204,7 @@
       "properties": {
         "fromString": 17,
         "secrets": 18,
-        "cliVersion": 19
+        "targetVersion": 19
       },
       "required": []
     },
@@ -945,6 +945,7 @@
       "context_identifier": "user",
       "local_excess": 5
     },
-    "version": "0.0.3"
+    "version": "0.0.3",
+    "random_seed": null
   }
 }

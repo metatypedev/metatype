@@ -140,11 +140,13 @@ export class TypeGateRuntime extends Runtime {
     return JSON.stringify(tg.tg.tg);
   };
 
-  addTypegraph: Resolver = async ({ fromString, secrets, cliVersion }) => {
+  addTypegraph: Resolver = async ({ fromString, secrets, targetVersion }) => {
     logger.info("Adding typegraph");
-    if (!semver.gte(semver.parse(cliVersion), semver.parse(config.version))) {
+    if (
+      !semver.gte(semver.parse(targetVersion), semver.parse(config.version))
+    ) {
       throw new Error(
-        `Meta CLI version ${cliVersion} must be greater than typegate version ${config.version} (until the releases are stable)`,
+        `Typegraph SDK version ${targetVersion} must be greater than typegate version ${config.version} (until the releases are stable)`,
       );
     }
 

@@ -18,7 +18,6 @@ from urllib import request, parse
 from typegraph.graph.shared_types import BasicAuth, TypegraphOutput
 
 
-VERSION = "0.3.6-0"
 PORT = "META_CLI_SERVER_PORT"  # meta-cli instance that executes the current file
 SELF_PATH = (
     "META_CLI_TG_PATH"  # path to the current file to uniquely identify the run results
@@ -102,7 +101,6 @@ class Manager:
                 base_url=typegate.endpoint,
                 auth=typegate.auth,
                 artifacts_config=artifacts_config,
-                cli_version=VERSION,
                 secrets=config.secrets,
             )
             ret = tg_deploy(self.typegraph, params)

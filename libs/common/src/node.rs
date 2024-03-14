@@ -58,12 +58,12 @@ impl Node {
     fn graphql_vars(
         tg: &Typegraph,
         secrets: &HashMap<String, String>,
-        cli_version: String,
+        target_version: String,
     ) -> Result<serde_json::Value> {
         Ok(serde_json::json!({
             "tg": serde_json::to_string(&tg)?,
             "secrets": serde_json::to_string(secrets)?,
-            "cliVersion": cli_version,
+            "targetVersion": target_version,
         }))
     }
 

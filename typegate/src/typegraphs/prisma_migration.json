@@ -678,6 +678,7 @@
       "context_identifier": "user",
       "local_excess": 5
     },
-    "version": "0.0.3"
+    "version": "0.0.3",
+    "random_seed": null
   }
 }

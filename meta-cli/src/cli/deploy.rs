@@ -260,28 +260,30 @@ mod default_mode {
             Arbiter::current().spawn(async move {
                 while let Some(event) = event_rx.recv().await {
                     match event {
-                        LoaderEvent::Typegraph(tg_infos) => match tg_infos.get_response_or_fail() {
-                            Ok(res) => {
-                                for (name, res) in res.iter() {
-                                    match PushResult::new(
-                                        self.console.clone(),
-                                        self.loader.clone(),
-                                        res.clone(),
-                                    ) {
-                                        Ok(push) => push.finalize().await.unwrap(),
-                                        Err(e) => {
-                                            console.error(format!(
-                                                "Failed pushing typegraph {:?} at {}:\n{:?}",
-                                                name,
-                                                tg_infos.path.display(),
-                                                e.to_string()
-                                            ));
+                        LoaderEvent::Typegraph(tg_infos) => {
+                            match tg_infos.get_responses_or_fail() {
+                                Ok(res) => {
+                                    for (name, res) in res.iter() {
+                                        match PushResult::new(
+                                            self.console.clone(),
+                                            self.loader.clone(),
+                                            res.clone(),
+                                        ) {
+                                            Ok(push) => push.finalize().await.unwrap(),
+                                            Err(e) => {
+                                                console.error(format!(
+                                                    "Failed pushing typegraph {:?} at {}:\n{:?}",
+                                                    name,
+                                                    tg_infos.path.display(),
+                                                    e.to_string()
+                                                ));
+                                            }
                                         }
                                     }
                                 }
+                                Err(e) => panic!("{}", e.to_string()),
                             }
-                            Err(e) => panic!("{}", e.to_string()),
-                        },
+                        }
                         LoaderEvent::Stopped(b) => {
                             if let StopBehavior::ExitFailure(msg) = b {
                                 panic!("{msg}");
@@ -398,7 +400,7 @@ mod watch_mode {
                 while let Some(event) = event_rx.recv().await {
                     match event {
                         LoaderEvent::Typegraph(tg_infos) => {
-                            let responses = ServerStore::get_response_or_fail(&tg_infos.path)
+                            let responses = ServerStore::get_responses_or_fail(&tg_infos.path)
                                 .unwrap()
                                 .as_ref()
                                 .to_owned();

@@ -538,7 +538,6 @@ interface utils {
 
     record query-deploy-params {
         tg: string,
-        cli-version: string,
         secrets: option<list<tuple<string, string>>>,
     }
 

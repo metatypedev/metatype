@@ -17,7 +17,6 @@ from typegraph.wit import store, wit_utils
 @dataclass
 class TypegraphDeployParams:
     base_url: str
-    cli_version: str
     artifacts_config: ArtifactResolutionConfig
     auth: Optional[BasicAuth] = None
     secrets: Optional[Dict[str, str]] = None
@@ -52,7 +51,6 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
         store,
         params=QueryDeployParams(
             tg=serialized,
-            cli_version=params.cli_version,
             secrets=[(k, v) for k, v in (params.secrets or {}).items()],
         ),
     )

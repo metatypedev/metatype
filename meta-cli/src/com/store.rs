@@ -122,12 +122,12 @@ impl ServerStore {
         })
     }
 
-    pub fn get_response(tg_path: &PathBuf) -> Option<Arc<HashMap<String, SDKResponse>>> {
+    pub fn get_responses(tg_path: &PathBuf) -> Option<Arc<HashMap<String, SDKResponse>>> {
         with_store(|s| s.sdk_responses.get(tg_path).map(|v| v.to_owned()))
     }
 
-    pub fn get_response_or_fail(tg_path: &PathBuf) -> Result<Arc<HashMap<String, SDKResponse>>> {
-        match Self::get_response(tg_path) {
+    pub fn get_responses_or_fail(tg_path: &PathBuf) -> Result<Arc<HashMap<String, SDKResponse>>> {
+        match Self::get_responses(tg_path) {
             Some(res) => Ok(res.to_owned()),
             None => bail!("Invalid state, no response was sent by {:?}, this could be the result of an outdated sdk", &tg_path),
         }
