@@ -63,7 +63,7 @@ pub async fn upgrade_check() -> Result<()> {
     let config_path = GlobalConfig::default_path()?;
     let mut local_config = GlobalConfig::load(&config_path).await?;
 
-    if local_config.update_check + Duration::days(1) < Utc::now() {
+    if local_config.update_check + Duration::try_days(1).unwrap() < Utc::now() {
         let current_version = build::PKG_VERSION;
         let latest = tokio::task::spawn_blocking(move || {
             let update = Update::configure()
