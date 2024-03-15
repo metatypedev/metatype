@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use std::path::{Path, PathBuf};
-use std::process::exit;
 use std::sync::{Arc, Mutex};
 
 use super::{Action, CommonArgs, GenArgs};
@@ -17,6 +16,7 @@ use crate::deploy::actors::loader::{
 use crate::deploy::actors::watcher::WatcherActor;
 use crate::deploy::push::pusher::PushResult;
 use actix::prelude::*;
+use actix_web::dev::ServerHandle;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
@@ -149,7 +149,7 @@ struct CtrlCHandlerData {
 
 #[async_trait]
 impl Action for DeploySubcommand {
-    async fn run(&self, args: GenArgs) -> Result<()> {
+    async fn run(&self, args: GenArgs, server_handle: Option<ServerHandle>) -> Result<()> {
         let deploy = Deploy::new(self, &args).await?;
 
         if !self.options.allow_dirty {
@@ -179,7 +179,8 @@ impl Action for DeploySubcommand {
             // deploy a single file
             let deploy = default_mode::DefaultMode::init(deploy).await?;
             deploy.run().await?;
-            exit(0); // kill the server (TODO: use a global handle maybe?)
+
+            server_handle.unwrap().stop(true).await;
         }
 
         Ok(())

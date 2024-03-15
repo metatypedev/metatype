@@ -4,6 +4,7 @@
 use std::path::PathBuf;
 
 use super::{Action, GenArgs};
+use actix_web::dev::ServerHandle;
 use anyhow::{bail, Ok, Result};
 use async_trait::async_trait;
 use clap::{Parser, ValueEnum};
@@ -43,7 +44,7 @@ pub struct New {
 
 #[async_trait]
 impl Action for New {
-    async fn run(&self, args: GenArgs) -> Result<()> {
+    async fn run(&self, args: GenArgs, _: Option<ServerHandle>) -> Result<()> {
         let dir = PathBuf::from(&self.dir);
         let target_dir = if dir.is_absolute() {
             dir

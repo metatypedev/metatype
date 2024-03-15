@@ -6,6 +6,7 @@ use crate::com::{
     store::ServerStore,
 };
 use actix_web::{
+    dev::Server,
     get, post,
     web::{PayloadConfig, Query},
     App, HttpRequest, HttpResponse, HttpServer, Responder,
@@ -138,7 +139,7 @@ async fn response(req_body: String) -> impl Responder {
         })
 }
 
-pub async fn spawn_server() -> std::io::Result<()> {
+pub fn init_server() -> std::io::Result<Server> {
     let port = get_instance_port();
 
     let tcp_listener = PORT_MAN
@@ -146,9 +147,9 @@ pub async fn spawn_server() -> std::io::Result<()> {
         .try_clone()
         .map_err(|e| Error::new(ErrorKind::AddrNotAvailable, e.to_string()))?;
 
-    log::trace!("Server is running at {:?}", port);
+    log::trace!("Server is listening at http://localhost:{:?}", port);
 
-    HttpServer::new(|| {
+    let server = HttpServer::new(|| {
         App::new()
             .service(config)
             .service(command)
@@ -156,8 +157,7 @@ pub async fn spawn_server() -> std::io::Result<()> {
             .app_data(PayloadConfig::new(1000000 * 100)) // mb
     })
     .listen(tcp_listener)?
-    .run()
-    .await?;
+    .run();
 
-    Ok(())
+    Ok(server)
 }
