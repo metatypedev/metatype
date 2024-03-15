@@ -1293,9 +1293,9 @@ checksum = "702fc72eb24e5a1e48ce58027a675bc24edd52096d5397d4aea7c6dd9eca0bd1"
 
 [[package]]
 name = "clipboard-win"
-version = "5.2.0"
+version = "5.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12f9a0700e0127ba15d1d52dd742097f821cd9c65939303a44d970465040a297"
+checksum = "d517d4b86184dbb111d3556a10f1c8a04da7428d2987bf1081602bf11c3aa9ee"
 dependencies = [
  "error-code",
 ]
@@ -1377,7 +1377,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.3.6"
+version = "0.3.7-0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5848,7 +5848,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.3.6"
+version = "0.3.7-0"
 dependencies = [
  "actix",
  "anyhow",
@@ -6194,7 +6194,7 @@ dependencies = [
 
 [[package]]
 name = "mt_deno"
-version = "0.3.6"
+version = "0.3.7-0"
 dependencies = [
  "anyhow",
  "deno",
@@ -10887,9 +10887,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-stream"
-version = "0.1.14"
+version = "0.1.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "397c988d37662c7dda6d2208364a706264bf3d6138b11d436cbac0ad38832842"
+checksum = "267ac89e0bec6e691e5813911606935d77c476ff49024f98abcea3e7b15e37af"
 dependencies = [
  "futures-core",
  "pin-project-lite",
@@ -11329,7 +11329,7 @@ dependencies = [
 
 [[package]]
 name = "typegate"
-version = "0.3.6"
+version = "0.3.7-0"
 dependencies = [
  "colored",
  "env_logger",
@@ -11342,7 +11342,7 @@ dependencies = [
 
 [[package]]
 name = "typegate_engine"
-version = "0.3.6"
+version = "0.3.7-0"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
@@ -11384,7 +11384,7 @@ dependencies = [
 
 [[package]]
 name = "typegraph_core"
-version = "0.3.6"
+version = "0.3.7-0"
 dependencies = [
  "common",
  "enum_dispatch",
@@ -11413,7 +11413,7 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 
 [[package]]
 name = "typescript"
-version = "0.3.6"
+version = "0.3.7-0"
 dependencies = [
  "anyhow",
  "dprint-plugin-typescript",
@@ -12656,7 +12656,7 @@ checksum = "0fcb9cbac069e033553e8bb871be2fbdffcab578eb25bd0f7c508cedc6dcd75a"
 
 [[package]]
 name = "xtask"
-version = "0.3.6"
+version = "0.3.7-0"
 dependencies = [
  "anyhow",
  "clap",

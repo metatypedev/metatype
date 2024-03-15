@@ -2,6 +2,130 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.6](https://github.com/metatypedev/metatype/releases/tag/v0.3.6) - 2024-03-14
+
+### Bug Fixes
+
+<details >
+<summary>
+(gate) `RandomRuntime` does not consider `enum`, `either`, `union` variants (<a href="https://github.com/metatypedev/metatype/pull/619">#619</a>)
+</summary>
+
+add either, enum, struct and union type support in Random Runtime. 
+
+#### Motivation and context
+
+generating random values for enums, either and union types was failing. 
+
+#### Migration notes
+
+_No Migrations Needed
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+(python-wasi) Fix for vm not initialized after consecutive deploy (<a href="https://github.com/metatypedev/metatype/pull/617">#617</a>)
+</summary>
+
+Bug fix for typegate throwing `vm not initialized` after reload
+
+#### Motivation and context
+
+Bug fix
+
+#### Migration notes
+
+No Migrations Needed
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Apply from context (<a href="https://github.com/metatypedev/metatype/pull/616">#616</a>)
+</summary>
+
+Fix type validators for apply from context.
+
+#### Motivation and context
+
+Bug.
+
+#### Migration notes
+
+_N/A_
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Optimize typegraph size (<a href="https://github.com/metatypedev/metatype/pull/618">#618</a>)
+</summary>
+
+- Hash all type data to compare them on the conversion phase in
+typegraph/core: remove duplicate types from type final typegraph
+(duplicate: same value for all the fields except for the "random"
+name/title).
+- Skip unreferenced types in `.apply`
+
+#### Motivation and context
+
+Typegraph is too big sometimes.
+
+#### Migration notes
+
+<!-- Explain HOW users should update their code when required -->
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
+### Miscellaneous Tasks
+
+<details >
+<summary>
+Prepare release v0.3.6 (<a href="https://github.com/metatypedev/metatype/pull/626">#626</a>)
+</summary>
+
+Prepare release v0.3.6
+
+#### Motivation and context
+
+_N/A_
+
+#### Migration notes
+
+_N/A_
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
 ## [v0.3.5](https://github.com/metatypedev/metatype/releases/tag/v0.3.5) - 2024-03-05
 
 ### Bug Fixes
@@ -2231,44 +2355,8 @@ Duplicate the store entry instead of referencing.
 
 ## [v0.2.0](https://github.com/metatypedev/metatype/releases/tag/v0.2.0) - 2023-10-04
 
-### Bug Fixes
-
-<details >
-<summary>
-(gate) Introspection if func has the same input/output (<a href="https://github.com/metatypedev/metatype/pull/431">#431</a>)
-</summary>
-
-
-
-</details>
-
-
 ### Features
 
-<details >
-<summary>
-Upgrade jco and prepare sdk build (<a href="https://github.com/metatypedev/metatype/pull/420">#420</a>)
-</summary>
-
-
-
-</details>
-<details >
-<summary>
-Sdk build with wasm (<a href="https://github.com/metatypedev/metatype/pull/421">#421</a>)
-</summary>
-
-
-
-</details>
-<details >
-<summary>
-Add `typedef.rename()` method (<a href="https://github.com/metatypedev/metatype/pull/426">#426</a>)
-</summary>
-
-
-
-</details>
 <details >
 <summary>
 Release 0.2.0 (<a href="https://github.com/metatypedev/metatype/pull/434">#434</a>)
@@ -2281,22 +2369,6 @@ Release 0.2.0 (<a href="https://github.com/metatypedev/metatype/pull/434">#434</
 
 ### Miscellaneous Tasks
 
-<details >
-<summary>
-Migrate doc typegraphs (<a href="https://github.com/metatypedev/metatype/pull/429">#429</a>)
-</summary>
-
-
-
-</details>
-<details >
-<summary>
-Remove old typegraph sdk (<a href="https://github.com/metatypedev/metatype/pull/430">#430</a>)
-</summary>
-
-
-
-</details>
 <details >
 <summary>
 Check that all interfaces are implemented in both sdk (<a href="https://github.com/metatypedev/metatype/pull/435">#435</a>)
@@ -2321,3 +2393,6 @@ Hotfix release
 
 
 </details>
+
+
+
