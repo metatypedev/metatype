@@ -102,7 +102,6 @@ impl Action for Serialize {
                     for (_, tg) in tgs.iter() {
                         loaded.push(tg.as_typegraph()?);
                     }
-                    log::trace!("Hello There");
                 }
                 LoaderEvent::Stopped(b) => {
                     log::debug!("event: {b:?}");
