@@ -52,7 +52,7 @@ interface core {
         prisma-migration: migration-config
     }
 
-    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<string, error>
+    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<tuple<string, list<tuple<string, string>>>, error>
 
     type type-id = u32
     record type-base {
@@ -215,8 +215,6 @@ interface core {
     expose: func(fns: list<tuple<string, type-id>>, default-policy: option<list<policy-spec>>) -> result<_, error>
 
     set-seed: func(seed: option<u32>) -> result<_, error>
-
-    get-ref-files: func() -> result<list<tuple<string, string>>>
     
     type runtime-id = u32
     type materializer-id = u32

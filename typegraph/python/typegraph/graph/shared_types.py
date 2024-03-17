@@ -3,14 +3,21 @@
 
 from base64 import b64encode
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable, List, Optional, Tuple
+
 from typegraph.wit import ArtifactResolutionConfig
+
+
+@dataclass
+class FinalizationResult:
+    tgJson: str
+    ref_files: List[Tuple[str, str]]
 
 
 @dataclass
 class TypegraphOutput:
     name: str
-    serialize: Callable[[Optional[ArtifactResolutionConfig]], str]
+    serialize: Callable[[Optional[ArtifactResolutionConfig]], FinalizationResult]
 
 
 @dataclass
@@ -22,4 +29,5 @@ class BasicAuth:
         payload = b64encode(f"{self.username}:{self.password}".encode("utf-8")).decode(
             "utf-8"
         )
+        return f"Basic {payload}"
         return f"Basic {payload}"

@@ -28,7 +28,7 @@ impl PostProcessor for WasmedgeProcessor {
                 let file_name = path.split('/').last().unwrap();
                 let artifact_hash = mat_data.artifact_hash.clone();
                 let wasm_path = format!(
-                    "tmp/metatype-artifacts/{}/files/{}.{}",
+                    "tmp/metatype_artifacts/{}/files/{}.{}",
                     tg_name, file_name, artifact_hash
                 );
 

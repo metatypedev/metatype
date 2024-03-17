@@ -40,6 +40,8 @@ export async function tgDeploy(
 ): Promise<DeployResult> {
   const { baseUrl, secrets, auth, artifactsConfig } = params;
   const serialized = typegraph.serialize(artifactsConfig);
+  const tgJson = serialized.tgJson;
+  const ref_files = serialized.ref_files;
 
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
@@ -51,12 +53,12 @@ export async function tgDeploy(
     method: "POST",
     headers,
     body: wit_utils.gqlDeployQuery({
-      tg: serialized,
+      tg: tgJson,
       secrets: Object.entries(secrets ?? {}),
     }),
   });
   return {
-    serialized,
+    serialized: tgJson,
     typegate: await handleResponse(response),
   };
 }

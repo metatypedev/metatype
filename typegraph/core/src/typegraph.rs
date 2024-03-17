@@ -182,7 +182,9 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
         .collect::<Result<Vec<_>>>()
 }
 
-pub fn finalize(res_config: Option<ArtifactResolutionConfig>) -> Result<String> {
+pub fn finalize(
+    res_config: Option<ArtifactResolutionConfig>,
+) -> Result<(String, Vec<(String, String)>)> {
     #[cfg(test)]
     eprintln!("Finalizing typegraph...");
 
@@ -193,6 +195,14 @@ pub fn finalize(res_config: Option<ArtifactResolutionConfig>) -> Result<String> 
     })?;
 
     let auths = finalize_auths(&mut ctx)?;
+
+    let referred_files: Vec<(String, String)> = ctx
+        .meta
+        .ref_files
+        .clone()
+        .iter()
+        .map(|(hash, path)| (hash.clone(), path.to_string_lossy().to_string()))
+        .collect();
 
     let mut tg = Typegraph {
         id: format!("https://metatype.dev/specs/{TYPEGRAPH_VERSION}.json"),
@@ -229,11 +239,16 @@ pub fn finalize(res_config: Option<ArtifactResolutionConfig>) -> Result<String> 
 
     Store::restore(ctx.saved_store_state.unwrap());
 
+    let result = match serde_json::to_string_pretty(&tg).map_err(|e| e.to_string().into()) {
+        Ok(res) => res,
+        Err(e) => return Err(e),
+    };
+
     #[cfg(test)]
-    return serde_json::to_string_pretty(&tg).map_err(|e| e.to_string().into());
+    return Ok((result, referred_files));
 
     #[cfg(not(test))]
-    return serde_json::to_string(&tg).map_err(|e| e.to_string().into());
+    return Ok((result, referred_files));
 }
 
 fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
@@ -302,10 +317,6 @@ pub fn expose(
         ctx.types[0] = Some(root);
         res.map(|_| ())
     })?
-}
-
-pub fn get_ref_files() -> Result<HashMap<String, PathBuf>> {
-    Ok(with_tg(|tg| tg.meta.ref_files.clone()).unwrap())
 }
 
 pub fn set_seed(seed: Option<u32>) -> Result<()> {

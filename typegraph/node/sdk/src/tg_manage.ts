@@ -106,11 +106,11 @@ export class Manager {
     await this.#relayResultToCLI(
       "serialize",
       async () => {
-        const json = this.#typegraph.serialize({
+        const finalizationResult = this.#typegraph.serialize({
           ...config.artifactsConfig,
           prefix: config.prefix,
         });
-        return JSON.parse(json);
+        return JSON.parse(finalizationResult.tgJson);
       },
     );
   }
