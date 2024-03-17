@@ -4,6 +4,9 @@
 import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
+import * as process from "process";
+import * as fs from "fs";
+import * as path from "path";
 
 export class BasicAuth {
   constructor(public username: string, public password: string) {
@@ -34,6 +37,12 @@ export interface RemoveResult {
   typegate: Record<string, any> | string;
 }
 
+export interface UploadArtifactMeta {
+  name: string;
+  file_hash: string;
+  file_size_in_bytes: number;
+}
+
 export async function tgDeploy(
   typegraph: TypegraphOutput,
   params: TypegraphDeployParams,
@@ -57,10 +66,66 @@ export async function tgDeploy(
       secrets: Object.entries(secrets ?? {}),
     }),
   });
-  return {
+
+  const result = {
     serialized: tgJson,
     typegate: await handleResponse(response),
   };
+
+  const getUploadUrl = new URL("/get-upload-url", baseUrl);
+  for (let [fileHash, filePath] of ref_files) {
+    const prefix = "file:";
+
+    if (!filePath.startsWith(prefix)) {
+      throw new Error(`file path ${filePath} should start with ${prefix}`);
+    }
+
+    const currDir = process.cwd();
+    filePath = filePath.slice(prefix.length);
+    filePath = `${currDir}/${filePath}`;
+    const fileContent: Buffer = fs.readFileSync(filePath);
+    const byteArray = new Uint8Array(fileContent);
+
+    const artifactMeta: UploadArtifactMeta = {
+      name: path.basename(filePath),
+      file_hash: fileHash,
+      file_size_in_bytes: fileContent.length,
+    };
+
+    const artifactJson = JSON.stringify(artifactMeta);
+    const uploadUrlResponse = await fetch(getUploadUrl, {
+      method: "PUT",
+      headers,
+      body: artifactJson,
+    });
+    const decodedResponse = await handleResponse(uploadUrlResponse) as Record<
+      string,
+      any
+    >;
+    const uploadUrl = decodedResponse.uploadUrl;
+
+    const uploadHeaders = new Headers({
+      "Content-Type": "application/octet-stream",
+    });
+
+    if (auth) {
+      uploadHeaders.append("Authorization", auth.asHeaderValue());
+    }
+
+    const artifactUploadResponse = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: uploadHeaders,
+      body: byteArray,
+    });
+
+    if (!artifactUploadResponse.ok) {
+      throw new Error(
+        `Failed to upload artifact ${filePath} to typegate: ${artifactUploadResponse.status} ${artifactUploadResponse.statusText}`,
+      );
+    }
+  }
+
+  return result;
 }
 
 export async function tgRemove(

@@ -55,11 +55,13 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     if params.auth is not None:
         headers["Authorization"] = params.auth.as_header_value()
     serialized = tg.serialize(params.artifacts_config)
+    tg_json = serialized.tgJson
+    ref_files = serialized.ref_files
 
     res = wit_utils.gql_deploy_query(
         store,
         params=QueryDeployParams(
-            tg=serialized,
+            tg=tg_json,
             secrets=[(k, v) for k, v in (params.secrets or {}).items()],
         ),
     )
@@ -75,21 +77,14 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     )
 
     result = DeployResult(
-        serialized=serialized,
+        serialized=tg_json,
         typegate=handle_response(request.urlopen(req).read().decode()),
     )
 
     # upload the referred files
-    # print("***************A")
-    ref_files = {
-        "662307922d7b879a17ce206d57db63b27630a7b4a8de2455a5730fb4bfe07a5c": "file:rust.wasm"
-    }
-    # if isinstance(ref_files, Err):
-    #     raise Exception(ref_files.value)
-
-    # TODO: fetch all the upload by one request
+    # TODO: fetch all the upload urls in one request
     get_upload_url = params.base_url + sep + tg.name + "/get-upload-url"
-    for file_hash, file_path in ref_files.items():
+    for file_hash, file_path in ref_files:
         prefix = "file:"
         if not file_path.startswith(prefix):
             raise Exception(f"file path {file_path} should start with {prefix}")
@@ -112,13 +107,21 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
 
             response = handle_response(request.urlopen(req).read().decode())
             file_upload_url = response["uploadUrl"]
+
+            upload_headers = {"Content-Type": "application/octet-stream"}
+            if params.auth is not None:
+                upload_headers["Authorization"] = params.auth.as_header_value()
             upload_req = request.Request(
                 url=file_upload_url,
                 method="PUT",
                 data=file_content,
-                headers={"Content-Type": "application/octet-stream"},
+                headers=upload_headers,
             )
             response = request.urlopen(upload_req)
+            if response.status != 200:
+                raise Exception(
+                    f"Failed to upload artifact {file_path} to typegate: {response.read()}"
+                )
 
     return result
 

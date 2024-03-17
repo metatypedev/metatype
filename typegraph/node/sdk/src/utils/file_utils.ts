@@ -40,5 +40,6 @@ export function getFileHash(filePath: string): Promise<string> {
     }
 
     readChunk();
+    return hash;
   });
 }
