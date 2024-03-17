@@ -1,38 +1,46 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import config from "../config.ts";
+import { signJWT, verifyJWT } from "../crypto.ts";
 import { UploadUrlMeta } from "../engine/query_engine.ts";
 import { QueryEngine } from "../engine/query_engine.ts";
 
 interface TypegraphFile {
   name: string;
-  fileHash: string;
-  fileSizeInBytes: number;
+  file_hash: string;
+  file_size_in_bytes: number;
 }
 
 function createUploadPath(origin: string, typegraphName: string) {
   const rand_path = crypto.randomUUID();
-  return `${origin}/upload-files/${typegraphName}/files/${rand_path}`;
+  return `${origin}/${typegraphName}/upload-files/files/${rand_path}`;
 }
 
 export async function handleUploadUrl(request: Request, engine: QueryEngine) {
   const url = new URL(request.url);
   const origin = url.origin;
-  const { name, fileHash, fileSizeInBytes }: TypegraphFile = await request
+  const { name, file_hash, file_size_in_bytes }: TypegraphFile = await request
     .json();
-
   const uploadUrlMeta: UploadUrlMeta = {
     fileName: name,
-    fileHash: fileHash,
-    fileSizeInBytes: fileSizeInBytes,
+    fileHash: file_hash,
+    fileSizeInBytes: file_size_in_bytes,
     urlUsed: false,
   };
 
-  const uploadUrl = createUploadPath(origin, engine.name);
+  let uploadUrl = createUploadPath(origin, engine.name);
+
+  const expiresIn = 5 * 60; // 5 minutes
+  const payload = {
+    "expiresIn": expiresIn,
+  };
+  const token = await signJWT(payload, expiresIn);
+  uploadUrl = `${uploadUrl}?token=${token}`;
 
   engine.fileUploadUrlCache.set(uploadUrl, uploadUrlMeta);
 
-  return new Response(JSON.stringify({ uploadUrl: [uploadUrl] }));
+  return new Response(JSON.stringify({ uploadUrl: uploadUrl }));
 }
 
 export async function handleFileUpload(
@@ -50,6 +58,13 @@ export async function handleFileUpload(
 
   if (!uploadMeta) {
     throw new Error(`Endpoint ${url.toString()} does not exist`);
+  }
+
+  const token = url.searchParams.get("token");
+  try {
+    const _ = await verifyJWT(token!);
+  } catch (e) {
+    throw new Error("Invalid token: " + e.toString());
   }
 
   const { fileName, fileHash, fileSizeInBytes, urlUsed }: UploadUrlMeta =
@@ -78,11 +93,14 @@ export async function handleFileUpload(
   }
 
   if (bytesRead !== fileSizeInBytes) {
-    throw new Error("File size does not match");
+    throw new Error(
+      `File size does not match ${bytesRead}, ${JSON.stringify(uploadMeta)}`,
+    );
   }
 
   // adjust relative to the root path
-  const fileStorageDir = `metatype_artifacts/${engine.name}/files`;
+  const fileStorageDir =
+    `${config.tmp_dir}/metatype_artifacts/${engine.name}/files`;
   await Deno.mkdir(fileStorageDir, { recursive: true });
   const filePath = `${fileStorageDir}/${fileName}.${fileHash}`;
   await Deno.writeFile(filePath, fileData);
