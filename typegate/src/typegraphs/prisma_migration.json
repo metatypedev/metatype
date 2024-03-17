@@ -15,21 +15,13 @@
         "deploy": 14,
         "reset": 18
       },
-      "required": [
-        "diff",
-        "apply",
-        "create",
-        "deploy",
-        "reset"
-      ]
+      "required": ["diff", "apply", "create", "deploy", "reset"]
     },
     {
       "type": "function",
       "title": "func_10",
       "runtime": 1,
-      "policies": [
-        0
-      ],
+      "policies": [0],
       "config": {},
       "as_id": false,
       "input": 2,
@@ -95,9 +87,7 @@
       "type": "function",
       "title": "func_23",
       "runtime": 1,
-      "policies": [
-        0
-      ],
+      "policies": [0],
       "config": {},
       "as_id": false,
       "input": 8,
@@ -147,9 +137,7 @@
       "type": "function",
       "title": "func_40",
       "runtime": 1,
-      "policies": [
-        0
-      ],
+      "policies": [0],
       "config": {},
       "as_id": false,
       "input": 12,
@@ -193,9 +181,7 @@
       "type": "function",
       "title": "func_51",
       "runtime": 1,
-      "policies": [
-        0
-      ],
+      "policies": [0],
       "config": {},
       "as_id": false,
       "input": 15,
@@ -243,9 +229,7 @@
       "type": "function",
       "title": "func_58",
       "runtime": 1,
-      "policies": [
-        0
-      ],
+      "policies": [0],
       "config": {},
       "as_id": false,
       "input": 19,
@@ -366,9 +350,7 @@
         "name": "basic",
         "protocol": "basic",
         "auth_data": {
-          "users": [
-            "admin"
-          ]
+          "users": ["admin"]
         }
       }
     ],
@@ -380,6 +362,7 @@
       "local_excess": 5
     },
     "version": "0.0.3",
-    "random_seed": null
+    "random_seed": null,
+    "ref_files": {}
   }
 }

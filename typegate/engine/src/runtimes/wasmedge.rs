@@ -18,6 +18,8 @@ use wasmedge_sdk::{
     Module,
 };
 
+use std::env;
+
 #[derive(Deserialize)]
 #[serde(crate = "serde")]
 pub struct WasiInput {
@@ -54,8 +56,14 @@ fn param_cast(out: &str, res: &mut Vec<Box<dyn Any + Send + Sync>>) -> Result<St
 pub fn op_wasmedge_wasi(#[serde] input: WasiInput) -> Result<String> {
     // https://github.com/second-state/wasmedge-rustsdk-examples
 
-    let wasm_path = PathBuf::from(input.wasm);
-    let wasm_binary = common::archive::encode_to_base_64(&wasm_path).unwrap();
+    let wasm_relative_path = PathBuf::from(input.wasm);
+
+    let wasm_absolute_path = match env::current_dir() {
+        Ok(cwd) => cwd.join(wasm_relative_path),
+        Err(e) => return Err(anyhow::anyhow!(e)),
+    };
+
+    let wasm_binary = common::archive::encode_to_base_64(&wasm_absolute_path).unwrap();
 
     let bytes = general_purpose::STANDARD.decode(wasm_binary).unwrap();
     let module = Module::from_bytes(None, bytes).unwrap();
