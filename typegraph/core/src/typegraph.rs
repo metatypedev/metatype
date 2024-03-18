@@ -6,6 +6,7 @@ use crate::conversion::runtimes::{convert_materializer, convert_runtime, Convert
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
 use crate::types::{TypeDef, TypeDefExt, TypeId};
+use crate::utils::fs_host;
 use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
 use crate::validation::validate_name;
 use crate::Lib;
@@ -486,7 +487,12 @@ impl TypegraphContext {
         self.mapping.policies.get(&id).copied()
     }
 
-    pub fn add_ref_files(&mut self, file_hash: String, file: PathBuf) {
-        self.meta.ref_files.insert(file_hash, file);
+    pub fn add_ref_files(&mut self, file_hash: String, file_path: PathBuf) -> Result<()> {
+        let absolute_file_path = match fs_host::make_absolute(&file_path) {
+            Ok(path) => path,
+            Err(e) => return Err(e.into()),
+        };
+        self.meta.ref_files.insert(file_hash, absolute_file_path);
+        Ok(())
     }
 }
