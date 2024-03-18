@@ -19,12 +19,11 @@ const assertRateLimited = (l: RateLimit, n: number) =>
     "rate-limited",
   );
 
-const redisUrl = new URL(Deno.env.get("REDIS_URL")!);
 const redisConfig = {
-  hostname: redisUrl.hostname,
-  port: parseInt(redisUrl.port),
-  password: redisUrl.password,
-  db: parseInt(redisUrl.pathname.slice(1), 10) ?? 0,
+  hostname: "localhost",
+  port: 6379,
+  password: "password",
+  db: 1,
 };
 
 Deno.test("Rate limiter", async (t) => {
