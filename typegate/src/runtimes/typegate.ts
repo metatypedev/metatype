@@ -274,7 +274,7 @@ export class TypeGateRuntime extends Runtime {
           }),
         };
       });
-    });
+    }).flat();
   };
 }
 
