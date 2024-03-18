@@ -140,12 +140,14 @@ pub fn cwd() -> Result<PathBuf, String> {
     }
 }
 
+/// Strip given path with `cwd`
 pub fn make_relative(path: &Path) -> Result<PathBuf, String> {
     path.strip_prefix(cwd()?)
         .map_err(|e| e.to_string())
         .map(|r| r.to_owned())
 }
 
+/// Join given path with `cwd`
 pub fn make_absolute(path: &Path) -> Result<PathBuf, String> {
     match path.is_relative() {
         true => Ok(cwd()?.join(path)),

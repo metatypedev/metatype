@@ -1,0 +1,7 @@
+# Note: each entry is a regex pattern
+\.git
+node_modules/
+
+\.json$
+\.yaml$
+\.sdkignore$
