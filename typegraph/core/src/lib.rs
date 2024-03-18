@@ -739,7 +739,7 @@ mod tests {
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::Read)?;
         Lib::expose(vec![("one".to_string(), t::func(s, b, mat)?.into())], None)?;
         let typegraph = Lib::finalize_typegraph(None)?;
-        insta::assert_snapshot!(typegraph);
+        insta::assert_snapshot!(typegraph.0);
         Ok(())
     }
 }
