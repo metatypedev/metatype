@@ -4,6 +4,7 @@
 use std::path::PathBuf;
 
 use super::{Action, GenArgs};
+use actix_web::dev::ServerHandle;
 use anyhow::{bail, Result};
 use async_trait::async_trait;
 use clap::{Parser, Subcommand};
@@ -22,10 +23,10 @@ pub enum Commands {
 
 #[async_trait]
 impl Action for Codegen {
-    async fn run(&self, args: GenArgs) -> Result<()> {
+    async fn run(&self, args: GenArgs, server_handle: Option<ServerHandle>) -> Result<()> {
         match &self.command {
             Commands::Deno(deno) => {
-                deno.run(args).await?;
+                deno.run(args, server_handle).await?;
             }
         }
         Ok(())
@@ -44,7 +45,7 @@ pub struct Deno {
 
 #[async_trait]
 impl Action for Deno {
-    async fn run(&self, _args: GenArgs) -> Result<()> {
+    async fn run(&self, _args: GenArgs, _: Option<ServerHandle>) -> Result<()> {
         bail!("codegen is currently disabled")
 
         // let dir = args.dir()?;

@@ -22,9 +22,9 @@ use clap::Parser;
 use cli::upgrade::upgrade_check;
 use cli::Action;
 use cli::Args;
-use com::server::{get_instance_port, spawn_server};
+use com::server::{get_instance_port, init_server};
 use futures::try_join;
-use futures::TryFutureExt;
+use futures::FutureExt;
 use log::{error, warn};
 use shadow_rs::shadow;
 
@@ -65,9 +65,10 @@ fn main() -> Result<()> {
                 cli::Commands::Serialize(_) | cli::Commands::Dev(_) | cli::Commands::Deploy(_) => {
                     std::env::set_var("META_CLI_SERVER_PORT", get_instance_port().to_string());
 
-                    let command = command.run(args.gen);
-                    let server = spawn_server().map_err(|e| e.into());
-                    try_join!(command, server).unwrap_or_else(|e| {
+                    let server = init_server().unwrap();
+                    let command = command.run(args.gen, Some(server.handle()));
+
+                    try_join!(command, server.map(|_| Ok(()))).unwrap_or_else(|e| {
                         error!("{}", e.to_string());
                         std::process::exit(1);
                     });
@@ -77,7 +78,7 @@ fn main() -> Result<()> {
                     std::process::exit(0)
                 }
                 _ => {
-                    command.run(args.gen).await.unwrap_or_else(|e| {
+                    command.run(args.gen, None).await.unwrap_or_else(|e| {
                         error!("{}", e.to_string());
                         std::process::exit(1);
                     });

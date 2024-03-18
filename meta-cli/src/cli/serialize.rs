@@ -7,6 +7,7 @@ use crate::config::Config;
 use crate::deploy::actors::console::ConsoleActor;
 use crate::deploy::actors::loader::{LoadModule, LoaderActor, LoaderEvent, StopBehavior};
 use actix::prelude::*;
+use actix_web::dev::ServerHandle;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
@@ -14,7 +15,6 @@ use common::typegraph::Typegraph;
 use core::fmt::Debug;
 use std::io::{self, Write};
 use std::path::PathBuf;
-use std::process::exit;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 use tokio::sync::mpsc;
@@ -54,7 +54,7 @@ pub struct Serialize {
 
 #[async_trait]
 impl Action for Serialize {
-    async fn run(&self, args: GenArgs) -> Result<()> {
+    async fn run(&self, args: GenArgs, server_handle: Option<ServerHandle>) -> Result<()> {
         let dir = &args.dir()?;
         let config_path = args.config;
 
@@ -137,7 +137,9 @@ impl Action for Serialize {
             self.write(&self.to_string(&tgs)?).await?;
         }
 
-        exit(0); // kill the server
+        server_handle.unwrap().stop(true).await;
+
+        Ok(())
     }
 }
 

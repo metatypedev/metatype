@@ -4,7 +4,6 @@
 from base64 import b64encode
 from dataclasses import dataclass
 from typing import Callable, List, Optional, Tuple
-
 from typegraph.wit import ArtifactResolutionConfig
 
 
@@ -29,5 +28,4 @@ class BasicAuth:
         payload = b64encode(f"{self.username}:{self.password}".encode("utf-8")).decode(
             "utf-8"
         )
-        return f"Basic {payload}"
         return f"Basic {payload}"
