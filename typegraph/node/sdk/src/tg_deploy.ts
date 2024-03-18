@@ -4,9 +4,9 @@
 import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
-import * as process from "process";
-import * as fs from "fs";
-import * as path from "path";
+import * as process from "node:process";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 export class BasicAuth {
   constructor(public username: string, public password: string) {
@@ -80,7 +80,7 @@ export async function tgDeploy(
       throw new Error(`file path ${filePath} should start with ${prefix}`);
     }
 
-    const currDir = process.cwd();
+    const currDir = path.dirname(path.resolve(process.argv[1]));
     filePath = filePath.slice(prefix.length);
     filePath = `${currDir}/${filePath}`;
     const fileContent: Buffer = fs.readFileSync(filePath);

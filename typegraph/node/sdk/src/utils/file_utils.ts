@@ -1,11 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import * as fs from "fs";
-import * as crypto from "crypto";
+import * as fs from "node:fs";
+import * as crypto from "node:crypto";
+import * as path from "node:path";
 
 export function getFileHash(filePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
+    const currDir = path.dirname(path.resolve(process.argv[1]));
+    filePath = `${currDir}/${filePath}`;
     const hash = crypto.createHash("sha256");
     const fileDescriptor = fs.openSync(filePath, "r");
 
