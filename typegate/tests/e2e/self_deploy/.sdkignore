@@ -1,0 +1,2 @@
+\.sdkignore$
+self_deploy(_test)?\.(ts|mjs)$

@@ -75,7 +75,7 @@ const artifactsConfig = {
   prismaMigration: {
     globalAction: {
       create: true,
-      reset: false
+      reset: true
     },
     migrationDir: path.join("prisma-migrations", tg.name)
   }

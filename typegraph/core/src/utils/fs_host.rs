@@ -26,7 +26,7 @@ pub fn write_text_file<P: Into<String>>(path: P, text: P) -> Result<(), String> 
 }
 
 pub fn common_prefix_paths(paths: &[PathBuf]) -> Option<PathBuf> {
-    if paths.is_empty() {
+    if paths.len() <= 1 {
         return None;
     }
 
@@ -52,6 +52,15 @@ pub fn common_prefix_paths(paths: &[PathBuf]) -> Option<PathBuf> {
 pub fn relativize_paths(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
     if paths.is_empty() {
         return Ok(vec![]);
+    }
+
+    // ambiguous case, assume it is under cwd
+    if paths.len() == 1 {
+        let possible_base = cwd()?;
+        return paths[0]
+            .strip_prefix(&possible_base)
+            .map(|stripped| vec![stripped.to_owned()])
+            .map_err(|_| format!("{:?} does not contain path", possible_base.display()));
     }
 
     if let Some(common_dir) = common_prefix_paths(paths) {
