@@ -116,8 +116,17 @@ pub fn archive_entries_from_bytes(entries: IndexMap<String, Vec<u8>>) -> Result<
 
     tar.mode(tar::HeaderMode::Deterministic);
 
+    let mut entries = entries.clone();
+    entries.sort_keys();
+
     for (path, bytes) in entries.iter() {
+        // https://www.gnu.org/software/tar/manual/html_section/Formats.html
+        // ustar: filesize < 8GiB, filename <= 255
+        // let mut header = Header::new_ustar();
+
+        // gnu: filesize, filename unlimited
         let mut header = Header::new_gnu();
+
         header.set_size(bytes.len() as u64);
         header.set_entry_type(tar::EntryType::Regular);
         header.set_mode(0o666); // rw-rw-rw

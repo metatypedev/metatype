@@ -7,7 +7,7 @@ import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 // highlight-next-line
 import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql.js";
 
-typegraph({
+await typegraph({
   name: "graphql",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },

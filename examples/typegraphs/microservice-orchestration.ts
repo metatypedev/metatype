@@ -15,7 +15,7 @@ function getEnvOrDefault(key: string, defaultValue: string) {
 }
 // skip:end
 
-typegraph({
+await typegraph({
   name: "team-a",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },

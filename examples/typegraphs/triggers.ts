@@ -4,7 +4,7 @@ import { HttpRuntime } from "@typegraph/sdk/runtimes/http.js";
 
 // skip:end
 
-typegraph({
+await typegraph({
   name: "triggers",
 }, (g) => {
   // skip:start

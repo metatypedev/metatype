@@ -14,7 +14,7 @@ use crate::utils::postprocess::{compress_and_encode, PostProcessor};
 pub struct PythonProcessor;
 
 impl PostProcessor for PythonProcessor {
-    fn postprocess(self, tg: &mut Typegraph) -> Result<(), String> {
+    fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         for mat in tg.materializers.iter_mut() {
             if mat.name.as_str() == "pymodule" {
                 let mut mat_data: ModuleMatData =

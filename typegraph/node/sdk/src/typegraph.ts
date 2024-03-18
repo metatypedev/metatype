@@ -14,6 +14,7 @@ import { Auth, Cors as CorsWit, Rate, wit_utils } from "./wit.js";
 import Policy from "./policy.js";
 import { getPolicyChain } from "./types.js";
 import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
+import { Manager } from "./tg_manage.js";
 
 type Exports = Record<string, t.Func>;
 
@@ -114,25 +115,25 @@ export class RawAuth {
 }
 
 export interface TypegraphOutput {
-  serialize: (config?: ArtifactResolutionConfig) => string;
+  serialize: (config: ArtifactResolutionConfig) => string;
   name: string;
 }
 
-export function typegraph(
+export async function typegraph(
   name: string,
   builder: TypegraphBuilder,
-): TypegraphOutput;
-export function typegraph(
+): Promise<TypegraphOutput>;
+export async function typegraph(
   args: TypegraphArgs,
-): TypegraphOutput;
-export function typegraph(
+): Promise<TypegraphOutput>;
+export async function typegraph(
   args: Omit<TypegraphArgs, "builder">,
   builder: TypegraphBuilder,
-): TypegraphOutput;
-export function typegraph(
+): Promise<TypegraphOutput>;
+export async function typegraph(
   nameOrArgs: string | TypegraphArgs | Omit<TypegraphArgs, "builder">,
   maybeBuilder?: TypegraphBuilder,
-): TypegraphOutput {
+): Promise<TypegraphOutput> {
   const args = typeof nameOrArgs === "string"
     ? { name: nameOrArgs }
     : nameOrArgs;
@@ -144,7 +145,6 @@ export function typegraph(
     prefix,
     rate,
     secrets,
-    disableAutoSerialization,
   } = args;
   const builder = "builder" in args
     ? args.builder as TypegraphBuilder
@@ -214,25 +214,20 @@ export function typegraph(
 
   builder(g);
 
-  let serialize = () => "";
-  if (!disableAutoSerialization) {
-    const tgJson = core.finalizeTypegraph({ tag: "simple" });
-    console.log(tgJson);
-    serialize = () => tgJson;
-  } else {
-    // config is known at deploy time
-    serialize = (config?: ArtifactResolutionConfig) => {
-      const tgJson = core.finalizeTypegraph({
-        tag: "resolve-artifacts",
-        val: config,
-      });
+  const ret = {
+    serialize(config: ArtifactResolutionConfig) {
+      const tgJson = core.finalizeTypegraph(config);
       return tgJson;
-    };
-  }
-  return {
-    serialize,
+    },
     name,
-  };
+  } as TypegraphOutput;
+
+  if (Manager.isRunFromCLI()) {
+    const manager = new Manager(ret);
+    await manager.run();
+  }
+
+  return ret;
 }
 
 export function genRef(name: string) {

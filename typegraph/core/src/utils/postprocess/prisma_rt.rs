@@ -8,8 +8,8 @@ use common::typegraph::Typegraph;
 
 use crate::utils::fs_host;
 use crate::utils::postprocess::PostProcessor;
-use crate::wit::core::MigrationConfig;
-use crate::wit::metatype::typegraph::host::file_exists;
+use crate::wit::core::{MigrationAction, MigrationConfig};
+use crate::wit::metatype::typegraph::host::{eprint, path_exists};
 
 pub struct PrismaProcessor {
     config: MigrationConfig,
@@ -22,7 +22,7 @@ impl PrismaProcessor {
 }
 
 impl PostProcessor for PrismaProcessor {
-    fn postprocess(self, tg: &mut Typegraph) -> Result<(), String> {
+    fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         self.embed_prisma_migrations(tg)?;
         Ok(())
     }
@@ -30,17 +30,18 @@ impl PostProcessor for PrismaProcessor {
 
 impl PrismaProcessor {
     pub fn embed_prisma_migrations(&self, tg: &mut Typegraph) -> Result<(), String> {
-        let tg_name = tg.name().map_err(|e| e.to_string())?;
-        let base_migration_path = self.prisma_migrations_dir(&tg_name)?;
+        let base_migration_path = self.prisma_migrations_dir()?;
 
         for rt in tg.runtimes.iter_mut() {
             if let TGRuntime::Known(Prisma(rt_data)) = rt {
                 let rt_name = &rt_data.name;
                 let path = base_migration_path.join(rt_name);
+                let action = self.get_action_by_rt_name(rt_name);
+
                 rt_data.migration_options = Some(MigrationOptions {
                     migration_files: {
                         let path = fs_host::make_absolute(&path)?;
-                        match file_exists(&path.display().to_string())? {
+                        match path_exists(&path.display().to_string())? {
                             true => {
                                 let base64 = fs_host::compress_and_encode_base64(path)?;
                                 Some(base64)
@@ -48,22 +49,30 @@ impl PrismaProcessor {
                             false => None,
                         }
                     },
-                    create: self.config.action.create,
-                    reset: self.config.action.reset,
+                    create: action.create,
+                    reset: action.reset,
                 });
             }
         }
         Ok(())
     }
 
-    pub fn prisma_migrations_dir(&self, tg_name: &str) -> Result<PathBuf, String> {
-        let mut path = fs_host::cwd()?.join(PathBuf::from(
-            self.config
-                .migration_dir
-                .clone()
-                .unwrap_or("prisma-migrations".to_string()),
-        ));
-        path.push(tg_name);
+    /// Simply concat `cwd` with `migration-path` (provided manually or set by the cli)
+    pub fn prisma_migrations_dir(&self) -> Result<PathBuf, String> {
+        let migration_dir = self.config.migration_dir.clone();
+        let path = fs_host::cwd()?.join(PathBuf::from(migration_dir));
         Ok(path)
+    }
+
+    /// Find the appropriate migration action (usually set from the cli)
+    /// If nothing is found, use the global action config (set initially)
+    pub fn get_action_by_rt_name(&self, name: &str) -> MigrationAction {
+        if let Some(actions) = self.config.runtime_actions.clone() {
+            if let Some(action) = actions.iter().find(|(rt, _)| rt.eq(name)) {
+                eprint(&format!("Specific migration action found for {name}"));
+                return action.1;
+            }
+        }
+        self.config.global_action
     }
 }

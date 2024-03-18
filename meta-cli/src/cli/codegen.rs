@@ -1,16 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
-
-use crate::typegraph::loader::LoaderPool;
-use crate::{config::Config, typegraph::postprocess};
-use anyhow::{anyhow, Result};
-use async_trait::async_trait;
-use clap::{Parser, Subcommand};
+use std::path::PathBuf;
 
 use super::{Action, GenArgs};
+use actix_web::dev::ServerHandle;
+use anyhow::{bail, Result};
+use async_trait::async_trait;
+use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
 pub struct Codegen {
@@ -26,10 +23,10 @@ pub enum Commands {
 
 #[async_trait]
 impl Action for Codegen {
-    async fn run(&self, args: GenArgs) -> Result<()> {
+    async fn run(&self, args: GenArgs, server_handle: Option<ServerHandle>) -> Result<()> {
         match &self.command {
             Commands::Deno(deno) => {
-                deno.run(args).await?;
+                deno.run(args, server_handle).await?;
             }
         }
         Ok(())
@@ -48,30 +45,27 @@ pub struct Deno {
 
 #[async_trait]
 impl Action for Deno {
-    async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir()?;
-        // try to find config file, else use default config as the options
-        // used for code generation have default values.
-        let config = Arc::new(
-            Config::load_or_find(args.config, &dir).unwrap_or_else(|_| Config::default_in(&dir)),
-        );
+    async fn run(&self, _args: GenArgs, _: Option<ServerHandle>) -> Result<()> {
+        bail!("codegen is currently disabled")
 
-        let loader_pool = LoaderPool::new(config, 1)
-            .with_postprocessor(postprocess::DenoModules::default().codegen(true))
-            .with_postprocessor(postprocess::PythonModules::default())
-            .with_postprocessor(postprocess::WasmdegeModules::default());
+        // let dir = args.dir()?;
+        // // try to find config file, else use default config as the options
+        // // used for code generation have default values.
+        // let config = Arc::new(
+        //     Config::load_or_find(args.config, &dir).unwrap_or_else(|_| Config::default_in(&dir)),
+        // );
 
-        let loader = loader_pool.get_loader().await?;
+        // let loader_pool = LoaderPool::new(config, 1);
 
-        let file: Arc<Path> = self.file.clone().into();
-        loader.load_module(file.clone()).await.map_err(|e| {
-            anyhow!(
-                "An error occured while loading typegraphs from the {:?}: {}",
-                file,
-                e.to_string()
-            )
-        })?;
+        // let loader = loader_pool.get_loader().await?;
 
-        Ok(())
+        // let file: Arc<Path> = self.file.clone().into();
+        // loader.load_module(file.clone()).await.map_err(|e| {
+        //     anyhow!(
+        //         "An error occured while loading typegraphs from the {:?}: {}",
+        //         file,
+        //         e.to_string()
+        //     )
+        // })?;
     }
 }

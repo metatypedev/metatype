@@ -9,8 +9,6 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Union, Any
 from typegraph.gen.exports.core import (
     ArtifactResolutionConfig,
     Rate,
-    TypegraphFinalizeModeResolveArtifacts,
-    TypegraphFinalizeModeSimple,
     TypegraphInitParams,
 )
 from typegraph.gen.exports.core import (
@@ -19,6 +17,7 @@ from typegraph.gen.exports.core import (
 
 from typegraph.gen.types import Err
 from typegraph.graph.params import Auth, Cors, RawAuth
+from typegraph.graph.shared_types import TypegraphOutput
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph.wit import core, store, wit_utils
 
@@ -170,12 +169,6 @@ class Graph:
         return ApplyFromParent(type_name)
 
 
-@dataclass
-class TypegraphOutput:
-    name: str
-    serialize: Callable[[Optional[ArtifactResolutionConfig]], str]
-
-
 def typegraph(
     name: Optional[str] = None,
     *,
@@ -183,7 +176,6 @@ def typegraph(
     rate: Optional[Rate] = None,
     cors: Optional[Cors] = None,
     prefix: Optional[str] = None,
-    disable_auto_serialization: Optional[bool] = False,
 ) -> Callable[[Callable[[Graph], None]], Callable[[], TypegraphOutput]]:
     def decorator(builder: Callable[[Graph], None]) -> TypegraphOutput:
         actual_name = name
@@ -220,33 +212,24 @@ def typegraph(
         popped = Typegraph._context.pop()
         assert tg == popped
 
-        serialize = None
-
-        if not disable_auto_serialization:
-            tg_json = core.finalize_typegraph(store, TypegraphFinalizeModeSimple())
+        # config is only known at deploy time
+        def serialize_with_artifacts(
+            config: ArtifactResolutionConfig,
+        ):
+            tg_json = core.finalize_typegraph(store, config)
             if isinstance(tg_json, Err):
                 raise Exception(tg_json.value)
+            return tg_json.value
 
-            print(tg_json.value)
+        tg_output = TypegraphOutput(name=tg.name, serialize=serialize_with_artifacts)
 
-            def no_conf():
-                return tg_json.value
+        from typegraph.graph.tg_manage import Manager
 
-            serialize = no_conf
-        else:
-            # config is only known at deploy time
-            def serialize_with_artifacts(
-                config: Optional[ArtifactResolutionConfig] = None,
-            ):
-                mode = TypegraphFinalizeModeResolveArtifacts(config)
-                tg_json = core.finalize_typegraph(store, mode)
-                if isinstance(tg_json, Err):
-                    raise Exception(tg_json.value)
-                return tg_json.value
+        if Manager.is_run_from_cli():
+            manager = Manager(tg_output)
+            manager.run()
 
-            serialize = serialize_with_artifacts
-
-        return lambda: TypegraphOutput(name=tg.name, serialize=serialize)
+        return lambda: tg_output
 
     return decorator
 

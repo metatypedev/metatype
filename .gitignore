@@ -24,6 +24,7 @@ dev-tools/*.vsix
 typegate/workers
 typegate/codegen
 typegate/tests/prisma-migrations
+typegate/tests/e2e/cli/prisma-migrations
 typegate/tests/importers/copy/
 .env
 typegate/native/bindings.json

@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use actix_web::dev::ServerHandle;
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
@@ -19,7 +20,7 @@ pub struct Typegate {
 
 #[async_trait]
 impl Action for Typegate {
-    async fn run(&self, _gen_args: GenArgs) -> Result<()> {
+    async fn run(&self, _gen_args: GenArgs, _: Option<ServerHandle>) -> Result<()> {
         unreachable!()
     }
 }

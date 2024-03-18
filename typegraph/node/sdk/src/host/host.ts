@@ -56,7 +56,7 @@ export function getCwd(): string {
   }
 }
 
-export function fileExists(filePath: string): boolean {
+export function pathExists(filePath: string): boolean {
   try {
     return fs.existsSync(filePath);
   } catch (err) {

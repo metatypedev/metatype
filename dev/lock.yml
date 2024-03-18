@@ -37,6 +37,8 @@ dev:
     typegraph/node/sdk/package.json:
       '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
       '(\s*"description"\s*:\s*").*(",?)': TAGLINE
+    typegraph/core/src/global_store.rs:
+      '(\s{4}pub static SDK_VERSION.+=\s?").*(".+;)': METATYPE_VERSION
     typegraph/node/package.json:
       '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
       '(\s*"description"\s*:\s*").*(",?)': TAGLINE
@@ -93,7 +95,7 @@ dev:
     TYPEGRAPH_VERSION: 0.0.3
     PRISMA_VERSION: 5.5.2
     METATYPE_VERSION: 0.3.7-0
-    PUBLISHED_VERSION: 0.3.4
+    PUBLISHED_VERSION: 0.3.6
     WASM_OPT_VERSION: 0.116.0
     MOLD_VERSION: v2.4.0
     CMAKE_VERSION: 3.28.0-rc6

@@ -6,6 +6,7 @@ use super::deploy::DeploySubcommand;
 use super::Action;
 use super::CommonArgs;
 use super::GenArgs;
+use actix_web::dev::ServerHandle;
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
@@ -28,7 +29,7 @@ pub struct Dev {
 
 #[async_trait]
 impl Action for Dev {
-    async fn run(&self, args: GenArgs) -> Result<()> {
+    async fn run(&self, args: GenArgs, server_handle: Option<ServerHandle>) -> Result<()> {
         log::info!("'meta dev' subcommand is an alias to 'meta deploy --codegen --allow-dirty --watch --create-migration'");
         let options = DeployOptions {
             codegen: true,
@@ -46,6 +47,6 @@ impl Action for Dev {
             None,
             self.max_parallel_loads,
         );
-        deploy.run(args).await
+        deploy.run(args, server_handle).await
     }
 }

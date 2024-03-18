@@ -4,7 +4,7 @@ import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
 // skip:end
 
-typegraph({
+await typegraph({
   name: "deno",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },

@@ -16,9 +16,8 @@ export class BasicAuth {
 export interface TypegraphDeployParams {
   baseUrl: string;
   auth?: BasicAuth;
-  artifactsConfig?: ArtifactResolutionConfig;
+  artifactsConfig: ArtifactResolutionConfig;
   secrets: Record<string, string>;
-  cliVersion: string;
 }
 
 export interface TypegraphRemoveParams {
@@ -39,7 +38,7 @@ export async function tgDeploy(
   typegraph: TypegraphOutput,
   params: TypegraphDeployParams,
 ): Promise<DeployResult> {
-  const { baseUrl, cliVersion, secrets, auth, artifactsConfig } = params;
+  const { baseUrl, secrets, auth, artifactsConfig } = params;
   const serialized = typegraph.serialize(artifactsConfig);
 
   const headers = new Headers();
@@ -52,7 +51,6 @@ export async function tgDeploy(
     method: "POST",
     headers,
     body: wit_utils.gqlDeployQuery({
-      cliVersion,
       tg: serialized,
       secrets: Object.entries(secrets ?? {}),
     }),

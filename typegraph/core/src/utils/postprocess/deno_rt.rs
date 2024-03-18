@@ -14,7 +14,7 @@ use crate::utils::postprocess::{compress_and_encode, PostProcessor};
 pub struct DenoProcessor;
 
 impl PostProcessor for DenoProcessor {
-    fn postprocess(self, tg: &mut Typegraph) -> Result<(), String> {
+    fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         for mat in tg.materializers.iter_mut() {
             if mat.name.as_str() == "module" {
                 match Self::resolve_module(mat)? {

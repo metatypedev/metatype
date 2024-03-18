@@ -4,66 +4,81 @@
 pub mod discovery;
 
 pub use discovery::Discovery;
-use pathdiff::diff_paths;
 use tokio::{
     process::Command,
     sync::{Semaphore, SemaphorePermit},
 };
 
-use std::{collections::HashMap, env, path::Path, process::Stdio, sync::Arc};
+use std::{
+    borrow::BorrowMut,
+    collections::HashMap,
+    env,
+    path::{Path, PathBuf},
+    process::Stdio,
+    sync::Arc,
+};
 
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{anyhow, Error, Result};
 use colored::Colorize;
-use common::typegraph::Typegraph;
 
 use crate::{
-    config::{Config, ModuleType},
+    com::{responses::SDKResponse, store::ServerStore},
+    config::ModuleType,
     utils::ensure_venv,
 };
 
-use super::postprocess::{self, apply_all, PostProcessorWrapper};
+#[derive(Debug, Clone)]
+pub struct TypegraphInfos {
+    pub path: PathBuf,
+    pub base_path: PathBuf,
+}
 
-pub type LoaderResult = Result<Vec<Typegraph>, LoaderError>;
+impl TypegraphInfos {
+    pub fn get_responses_or_fail(&self) -> Result<Arc<HashMap<String, SDKResponse>>> {
+        ServerStore::get_responses_or_fail(&self.path)
+    }
+
+    pub fn get_key(&self) -> Result<String> {
+        let path = self
+            .path
+            .to_str()
+            .ok_or_else(|| anyhow::anyhow!("typegraph path is not valid unicode"))?;
+        Ok(path.to_string())
+    }
+}
+
+pub type LoaderResult = Result<TypegraphInfos, LoaderError>;
 
 pub struct LoaderPool {
-    config: Arc<Config>,
-    postprocessors: Vec<PostProcessorWrapper>,
+    base_dir: PathBuf,
     semaphore: Semaphore,
 }
 
 pub struct Loader<'a> {
-    config: Arc<Config>,
-    postprocessors: &'a [PostProcessorWrapper],
+    base_dir: PathBuf,
     #[allow(dead_code)]
     permit: SemaphorePermit<'a>,
 }
 
 impl LoaderPool {
-    pub fn new(config: Arc<Config>, max_parallel_loads: usize) -> Self {
+    pub fn new(base_dir: PathBuf, max_parallel_loads: usize) -> Self {
         Self {
-            config,
-            postprocessors: vec![postprocess::Validator.into()],
+            base_dir,
             semaphore: Semaphore::new(max_parallel_loads),
         }
     }
 
-    pub fn with_postprocessor(mut self, postprocessor: impl Into<PostProcessorWrapper>) -> Self {
-        self.postprocessors.push(postprocessor.into());
-        self
-    }
-
     pub async fn get_loader(&self) -> Result<Loader<'_>> {
         Ok(Loader {
-            config: self.config.clone(),
-            postprocessors: &self.postprocessors,
+            base_dir: self.base_dir.clone(),
             permit: self.semaphore.acquire().await?,
         })
     }
 }
 
 impl<'a> Loader<'a> {
-    pub async fn load_module(&self, path: Arc<Path>) -> LoaderResult {
-        match tokio::fs::try_exists(&path).await {
+    pub async fn load_module(&self, path: Arc<PathBuf>) -> LoaderResult {
+        match tokio::fs::try_exists(path.as_ref()).await {
             Ok(exists) => {
                 if !exists {
                     return Err(LoaderError::ModuleFileNotFound { path });
@@ -77,17 +92,19 @@ impl<'a> Loader<'a> {
             }
         }
         let command = Self::get_load_command(
-            ModuleType::try_from(&*path).unwrap(),
+            ModuleType::try_from(path.as_path()).unwrap(),
             &path,
-            &self.config.base_dir,
+            &self.base_dir,
         )
         .await?;
         self.load_command(command, &path).await
     }
 
     async fn load_command(&self, mut command: Command, path: &Path) -> LoaderResult {
-        let path: Arc<Path> = path.into();
+        let path: Arc<PathBuf> = path.to_path_buf().into();
         let p = command
+            .borrow_mut()
+            .env("META_CLI_TG_PATH", path.display().to_string())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()
@@ -108,38 +125,10 @@ impl<'a> Loader<'a> {
                     );
                 }
             }
-            let base_path = &self.config.base_dir;
-
-            std::str::from_utf8(&p.stdout)
-                .with_context(|| "invalid utf-8 on stdout")
-                .map_err(|e| LoaderError::Unknown {
-                    error: e,
-                    path: path.to_owned(),
-                })?
-                .lines()
-                .map(|line| {
-                    serde_json::from_str::<Typegraph>(line)
-                        .map_err(|e| LoaderError::SerdeJson {
-                            path: path.to_owned(),
-                            content: line.to_string(),
-                            error: e,
-                        })
-                        .and_then(|mut tg| {
-                            tg.path = Some(path.clone());
-                            apply_all(self.postprocessors.iter(), &mut tg, &self.config).map_err(
-                                |e| {
-                                    let path = diff_paths(&path, base_path.clone()).unwrap();
-                                    LoaderError::PostProcessingError {
-                                        path: path.into(),
-                                        typegraph_name: tg.name().unwrap(),
-                                        error: e,
-                                    }
-                                },
-                            )?;
-                            Ok(tg)
-                        })
-                })
-                .collect()
+            Ok(TypegraphInfos {
+                path: path.as_ref().to_owned(),
+                base_path: self.base_dir.clone(),
+            })
         } else {
             Err(LoaderError::LoaderProcess {
                 path: path.clone(),
@@ -199,7 +188,7 @@ impl<'a> Loader<'a> {
                 match detect_deno_loader_cmd(path)
                     .await
                     .map_err(|error| LoaderError::Unknown {
-                        path: path.into(),
+                        path: path.to_path_buf().into(),
                         error,
                     })? {
                     TsLoaderRt::Deno => {
@@ -318,31 +307,32 @@ async fn detect_deno_loader_cmd(tg_path: &Path) -> Result<TsLoaderRt> {
     ))
 }
 
+#[allow(unused)]
 #[derive(Debug)]
 pub enum LoaderError {
     PostProcessingError {
-        path: Arc<Path>,
+        path: Arc<PathBuf>,
         typegraph_name: String,
         error: Error,
     },
     SerdeJson {
-        path: Arc<Path>,
+        path: Arc<PathBuf>,
         content: String,
         error: serde_json::Error,
     },
     LoaderProcess {
-        path: Arc<Path>,
+        path: Arc<PathBuf>,
         error: Error,
     },
     ModuleFileNotFound {
-        path: Arc<Path>,
+        path: Arc<PathBuf>,
     },
     Unknown {
-        path: Arc<Path>,
+        path: Arc<PathBuf>,
         error: Error,
     },
     PythonVenvNotFound {
-        path: Arc<Path>,
+        path: Arc<PathBuf>,
         error: Error,
     },
 }

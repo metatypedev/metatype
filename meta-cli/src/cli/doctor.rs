@@ -12,6 +12,7 @@ use crate::{
 };
 
 use super::{Action, GenArgs};
+use actix_web::dev::ServerHandle;
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
@@ -37,7 +38,7 @@ fn shell(cmds: Vec<&str>) -> Result<String> {
 
 #[async_trait]
 impl Action for Doctor {
-    async fn run(&self, args: GenArgs) -> Result<()> {
+    async fn run(&self, args: GenArgs, _: Option<ServerHandle>) -> Result<()> {
         let dir = &args.dir()?;
 
         let w = 60;

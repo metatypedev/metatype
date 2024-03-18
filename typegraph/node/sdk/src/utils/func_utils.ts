@@ -63,3 +63,19 @@ export function buildReduceData(
     `unsupported type "${typeof node}" at ${currPath.join(".")}`,
   );
 }
+
+export function getEnvVariable(
+  key: string,
+  defaultValue?: string,
+): string | undefined {
+  const glob = globalThis as any;
+  const value = glob?.process
+    ? glob?.process.env?.[key]
+    : glob?.Deno.env.get(key);
+  return value ?? defaultValue;
+}
+
+export function getAllEnvVariables(): any {
+  const glob = globalThis as any;
+  return glob?.process ? glob?.process.env : glob?.Deno.env.toObject();
+}

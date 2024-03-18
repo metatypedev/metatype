@@ -204,7 +204,11 @@ def typegate(g: Graph):
         ),
         addTypegraph=t.func(
             t.struct(
-                {"fromString": t.json(), "secrets": t.json(), "cliVersion": t.string()}
+                {
+                    "fromString": t.json(),
+                    "secrets": t.json(),
+                    "targetVersion": t.string(),
+                }
             ),
             t.struct(
                 {
