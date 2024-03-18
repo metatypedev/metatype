@@ -113,24 +113,22 @@ pub fn compress_and_encode_base64(path: PathBuf) -> Result<String, String> {
 
 /// Search for .sdkignore file at `cwd`, if nothing is found, an empty `Vec` is returned
 pub fn load_sdk_ignore_file() -> Result<Vec<String>, String> {
-    let file = cwd()?
-        .join(PathBuf::from(".sdkignore"))
-        .display()
-        .to_string();
+    let file = cwd()?.join(".sdkignore").display().to_string();
 
-    match path_exists(&file) {
-        Ok(_) => read_text_file(file).map(|content| {
+    match path_exists(&file)? {
+        true => read_text_file(file).map(|content| {
             content
                 .lines()
                 .filter_map(|line| {
-                    if line.trim().is_empty() {
+                    let trimmed = line.trim();
+                    if trimmed.is_empty() || trimmed.starts_with('#') {
                         return None;
                     }
                     Some(line.to_owned())
                 })
-                .collect::<Vec<_>>()
+                .collect()
         }),
-        Err(_) => Ok(vec![]),
+        false => Ok(vec![]),
     }
 }
 
