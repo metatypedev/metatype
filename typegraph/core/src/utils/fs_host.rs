@@ -10,7 +10,7 @@ use indexmap::IndexMap;
 
 use crate::{
     global_store::Store,
-    wit::metatype::typegraph::host::{expand_glob, get_cwd, read_file, write_file},
+    wit::metatype::typegraph::host::{expand_glob, get_cwd, path_exists, read_file, write_file},
 };
 
 pub fn read_text_file<P: Into<String>>(path: P) -> Result<String, String> {
@@ -103,9 +103,35 @@ pub fn unpack_base64<P: Into<String>>(tarb64: &str, dest: P) -> Result<(), Strin
 }
 
 pub fn compress_and_encode_base64(path: PathBuf) -> Result<String, String> {
-    let exclude = vec!["node_modules/".to_string(), "\\.git/".to_string()];
-    let bytes = compress(path.display().to_string(), Some(exclude))?;
+    let mut sdkignore = load_sdk_ignore_file()?;
+    let default = vec!["node_modules/".to_string(), "\\.git/".to_string()];
+    sdkignore.extend(default);
+
+    let bytes = compress(path.display().to_string(), Some(sdkignore))?;
     encode_bytes_to_base_64(bytes).map_err(|e| e.to_string())
+}
+
+/// Search for .sdkignore file at `cwd`, if nothing is found, an empty `Vec` is returned
+pub fn load_sdk_ignore_file() -> Result<Vec<String>, String> {
+    let file = cwd()?
+        .join(PathBuf::from(".sdkignore"))
+        .display()
+        .to_string();
+
+    match path_exists(&file) {
+        Ok(_) => read_text_file(file).map(|content| {
+            content
+                .lines()
+                .filter_map(|line| {
+                    if line.trim().is_empty() {
+                        return None;
+                    }
+                    Some(line.to_owned())
+                })
+                .collect::<Vec<_>>()
+        }),
+        Err(_) => Ok(vec![]),
+    }
 }
 
 /// Returns `get_cwd()` by default, custom `dir` otherwise
