@@ -5,9 +5,8 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
 // export the typegraph
-export const tg = typegraph({
+export const tg = await typegraph({
   name: "self-deploy",
-  disableAutoSerialization: true, // disable print
 }, (g) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();

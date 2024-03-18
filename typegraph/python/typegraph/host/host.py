@@ -36,9 +36,9 @@ class HostImpl(imports.HostHost):
         except Exception as e:
             return Err(str(e))
 
-    def file_exists(self, path: str) -> Result[bool, str]:
+    def path_exists(self, path: str) -> Result[bool, str]:
         try:
-            return Ok(os.path.isfile(path))
+            return Ok(os.path.isfile(path) or os.path.isdir(path))
         except Exception as e:
             return Err(str(e))
 

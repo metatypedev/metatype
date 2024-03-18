@@ -6,7 +6,7 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 // highlight-next-line
 import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 
-typegraph({
+await typegraph({
   name: "database",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },

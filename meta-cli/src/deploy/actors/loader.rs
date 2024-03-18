@@ -1,36 +1,29 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 
 use actix::prelude::Context;
 use actix::prelude::*;
-use colored::Colorize;
-use common::typegraph::Typegraph;
 use tokio::sync::{mpsc, oneshot};
 
 use crate::config::Config;
-use crate::typegraph::loader::LoaderPool;
-use crate::typegraph::postprocess::{self, DenoModules, EmbedPrismaMigrations};
-use crate::utils::plural_suffix;
+use crate::typegraph::loader::{LoaderPool, TypegraphInfos};
+use crate::typegraph::postprocess::DenoModules;
 
 use super::console::{Console, ConsoleActor};
 
 #[derive(Debug, Clone)]
 pub struct PostProcessOptions {
     pub deno: Option<DenoModules>,
-    pub prisma: Option<EmbedPrismaMigrations>,
-    pub allow_destructive: bool,
 }
 
 impl Default for PostProcessOptions {
     fn default() -> Self {
         Self {
             deno: Some(DenoModules::default()),
-            prisma: None,
-            allow_destructive: false,
         }
     }
 }
@@ -45,16 +38,6 @@ impl PostProcessOptions {
         self.deno = Some(DenoModules::default().codegen(codegen));
         self
     }
-
-    pub fn allow_destructive(mut self, allow: bool) -> Self {
-        self.allow_destructive = allow;
-        self
-    }
-
-    pub fn prisma(mut self, prisma: Option<EmbedPrismaMigrations>) -> Self {
-        self.prisma = prisma;
-        self
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -66,7 +49,7 @@ pub enum StopBehavior {
 
 #[derive(Clone, Debug)]
 pub enum LoaderEvent {
-    Typegraph(Box<Typegraph>),
+    Typegraph(Box<TypegraphInfos>),
     Stopped(StopBehavior),
 }
 
@@ -83,13 +66,11 @@ pub struct LoaderActor {
 impl LoaderActor {
     pub fn new(
         config: Arc<Config>,
-        postprocess_options: PostProcessOptions,
         console: Addr<ConsoleActor>,
         event_tx: mpsc::UnboundedSender<LoaderEvent>,
         max_parallel_loads: usize,
     ) -> Self {
-        let loader_pool =
-            Self::loader_pool(config.clone(), max_parallel_loads, postprocess_options);
+        let loader_pool = Self::loader_pool(config.clone(), max_parallel_loads);
         Self {
             // config,
             console,
@@ -110,32 +91,11 @@ impl LoaderActor {
 }
 
 impl LoaderActor {
-    fn loader_pool(
-        config: Arc<Config>,
-        max_parallel_loads: usize,
-        postprocess_options: PostProcessOptions,
-    ) -> LoaderPool {
-        let mut pool = LoaderPool::new(config, max_parallel_loads);
-        if let Some(deno) = &postprocess_options.deno {
-            pool = pool.with_postprocessor(deno.clone());
-        }
-
-        pool = pool
-            .with_postprocessor(postprocess::PythonModules::default())
-            .with_postprocessor(postprocess::WasmdegeModules::default());
-
-        if let Some(prisma) = &postprocess_options.prisma {
-            pool = pool.with_postprocessor(
-                prisma
-                    .clone()
-                    .reset_on_drift(postprocess_options.allow_destructive),
-            );
-        }
-
-        pool
+    fn loader_pool(config: Arc<Config>, max_parallel_loads: usize) -> LoaderPool {
+        LoaderPool::new(config.base_dir.clone(), max_parallel_loads)
     }
 
-    fn load_module(&self, self_addr: Addr<Self>, path: Arc<Path>) {
+    fn load_module(&self, self_addr: Addr<Self>, path: Arc<PathBuf>) {
         let loader_pool = self.loader_pool.clone();
         let console = self.console.clone();
         let counter = self.counter.clone();
@@ -143,7 +103,9 @@ impl LoaderActor {
             // TODO error handling?
             let loader = loader_pool.get_loader().await.unwrap();
             match loader.load_module(path.clone()).await {
-                Ok(tgs) => self_addr.do_send(LoadedModule(path, tgs)),
+                Ok(tgs_infos) => {
+                    self_addr.do_send(LoadedModule(path.as_ref().to_owned().into(), tgs_infos))
+                }
                 Err(e) => {
                     if counter.is_some() {
                         // auto stop
@@ -165,11 +127,11 @@ pub enum ReloadReason {
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct LoadModule(pub Arc<Path>);
+pub struct LoadModule(pub Arc<PathBuf>);
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct ReloadModule(pub Arc<Path>, pub ReloadReason);
+pub struct ReloadModule(pub Arc<PathBuf>, pub ReloadReason);
 
 #[derive(Message)]
 #[rtype(result = "()")]
@@ -181,7 +143,7 @@ struct SetStoppedTx(oneshot::Sender<StopBehavior>);
 
 #[derive(Message)]
 #[rtype(result = "()")]
-struct LoadedModule(pub Arc<Path>, Vec<Typegraph>);
+struct LoadedModule(pub Arc<PathBuf>, TypegraphInfos);
 
 impl Actor for LoaderActor {
     type Context = Context<Self>;
@@ -239,28 +201,22 @@ impl Handler<LoadedModule> for LoaderActor {
     type Result = ();
 
     fn handle(&mut self, msg: LoadedModule, ctx: &mut Context<Self>) -> Self::Result {
-        let LoadedModule(path, tgs) = msg;
-        let count = tgs.len();
-        self.console.info(format!(
-            "Loaded {count} typegraph{s} from {path:?}: {tgs}",
-            s = plural_suffix(count),
-            tgs = tgs
-                .iter()
-                .map(|tg| tg.name().unwrap().cyan().to_string())
-                .collect::<Vec<_>>()
-                .join(", ")
-        ));
-        for tg in tgs.into_iter() {
-            if let Err(e) = self.event_tx.send(LoaderEvent::Typegraph(Box::new(tg))) {
-                self.console
-                    .error(format!("failed to send typegraph: {:?}", e));
-                if self.counter.is_some() {
-                    // auto stop
-                    ctx.stop();
-                    return;
-                }
+        let LoadedModule(path, tg_infos) = msg;
+
+        if let Err(e) = self
+            .event_tx
+            .send(LoaderEvent::Typegraph(Box::new(tg_infos)))
+        {
+            self.console
+                .error(format!("failed to send typegraph: {:?}", e));
+            if self.counter.is_some() {
+                // auto stop
+                ctx.stop();
+                return;
             }
         }
+
+        self.console.info(format!("Loaded 1 file from {path:?}"));
         if let Some(counter) = self.counter.as_ref() {
             let count = counter.fetch_sub(1, Ordering::SeqCst);
             if count == 0 {

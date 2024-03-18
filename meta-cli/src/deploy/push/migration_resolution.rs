@@ -1,39 +1,54 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{path::Path, sync::Arc};
+use std::path::{Path, PathBuf};
 
 use actix::prelude::*;
 use anyhow::Result;
 use colored::Colorize;
-use common::typegraph::Typegraph;
-use filetime::{set_file_mtime, FileTime};
 
-use crate::deploy::actors::console::{
-    input::{OptionLabel, SelectOption},
-    Console, ConsoleActor,
+use crate::{
+    com::store::{MigrationAction, RuntimeMigrationAction, ServerStore},
+    deploy::actors::{
+        console::{
+            input::{ConfirmHandler, OptionLabel, SelectOption},
+            Console, ConsoleActor,
+        },
+        loader::{LoadModule, LoaderActor},
+    },
 };
-use crate::deploy::actors::push_manager::PushManagerActor;
-use crate::deploy::actors::push_manager::{AddOneTimeOptions, OneTimePushOption};
+
+// DatabaseReset failure
+
+#[derive(Debug)]
+pub struct ConfirmDatabaseResetRequired {
+    pub typegraph_path: PathBuf,
+    pub loader: Addr<LoaderActor>,
+    pub runtime_name: String,
+}
+
+impl ConfirmHandler for ConfirmDatabaseResetRequired {
+    fn on_confirm(&self) {
+        let tg_path = self.typegraph_path.clone();
+        let runtime_name = self.runtime_name.clone();
+        do_force_reset(&self.loader, tg_path, runtime_name);
+    }
+}
+
+// NullConstraintViolation failure
 
 #[derive(Debug)]
 pub struct ForceReset {
-    pub typegraph: Arc<Typegraph>,
+    pub loader: Addr<LoaderActor>,
+    pub typegraph_path: PathBuf,
     pub runtime_name: String,
-    pub push_manager: Addr<PushManagerActor>,
 }
 
 impl SelectOption for ForceReset {
     fn on_select(&self) {
-        self.push_manager.do_send(AddOneTimeOptions {
-            typegraph_key: self.typegraph.get_key().unwrap(),
-            options: vec![OneTimePushOption::ForceReset {
-                runtime_name: self.runtime_name.clone(),
-            }],
-        });
-
-        // force reload
-        set_file_mtime(self.typegraph.path.as_ref().unwrap(), FileTime::now()).unwrap();
+        let tg_path = self.typegraph_path.clone();
+        let runtime_name = self.runtime_name.clone();
+        do_force_reset(&self.loader, tg_path, runtime_name);
     }
 
     fn label(&self) -> OptionLabel<'_> {
@@ -45,34 +60,33 @@ impl SelectOption for ForceReset {
 
 #[derive(Debug)]
 pub struct RemoveLatestMigration {
-    pub typegraph: Arc<Typegraph>,
+    pub loader: Addr<LoaderActor>,
+    pub typegraph_path: PathBuf,
+    pub migration_dir: PathBuf,
     pub runtime_name: String,
     pub migration_name: String, // is this necessary??
-    pub migration_dir: Arc<Path>,
-    pub push_manager: Addr<PushManagerActor>,
     pub console: Addr<ConsoleActor>,
 }
 
 impl RemoveLatestMigration {
     pub async fn apply(
         migration_path: &Path,
-        typegraph_key: String,
+        typegraph_path: &Path,
         runtime_name: String,
-        push_manager: Addr<PushManagerActor>,
         console: Addr<ConsoleActor>,
+        loader: Addr<LoaderActor>,
     ) -> Result<()> {
-        tokio::fs::remove_dir_all(migration_path).await?;
+        tokio::fs::remove_dir_all(migration_path).await?; // !
+
         console.info(format!("Removed migration directory: {:?}", migration_path));
         console.info(format!(
             "You can now update your typegraph at {} to create an alternative non-breaking schema.",
-            typegraph_key.bold()
+            typegraph_path.display().to_string().bold()
         ));
 
-        // reset the database on the next reload
-        push_manager.do_send(AddOneTimeOptions {
-            typegraph_key,
-            options: vec![OneTimePushOption::ForceReset { runtime_name }],
-        });
+        let tg_path = typegraph_path.to_path_buf();
+        let runtime_name = runtime_name.clone();
+        do_force_reset(&loader, tg_path, runtime_name);
 
         Ok(())
     }
@@ -80,22 +94,30 @@ impl RemoveLatestMigration {
 
 impl SelectOption for RemoveLatestMigration {
     fn on_select(&self) {
-        let migration_path = self.migration_dir.join(&self.migration_name);
+        let migration_path = self
+            .migration_dir
+            .join(&self.runtime_name)
+            .join(&self.migration_name);
+
         let runtime_name = self.runtime_name.clone();
-        let push_manager = self.push_manager.clone();
         let console = self.console.clone();
-        let typegraph_key = self.typegraph.get_key().unwrap();
+        let loader = self.loader.clone();
+        let typegraph_path = self.typegraph_path.clone();
 
         Arbiter::current().spawn(async move {
-            Self::apply(
+            if let Err(e) = Self::apply(
                 &migration_path,
-                typegraph_key,
+                &typegraph_path,
                 runtime_name,
-                push_manager,
-                console,
+                console.clone(),
+                loader,
             )
             .await
-            .unwrap(); // TODO handle error
+            {
+                console.warning(format!("Migration Path {}", migration_path.display()));
+                console.error(e.to_string());
+                panic!("{}", e.to_string()); // could occur if the latest migration does not match
+            }
         });
     }
 
@@ -106,12 +128,12 @@ impl SelectOption for RemoveLatestMigration {
 
 #[derive(Debug)]
 pub struct ManualResolution {
-    pub typegraph: Arc<Typegraph>,
+    pub loader: Addr<LoaderActor>,
+    pub typegraph_path: PathBuf,
+    pub migration_dir: PathBuf,
     pub runtime_name: String,
     pub migration_name: String,
     pub message: Option<String>,
-    pub migration_dir: Arc<Path>,
-    pub push_manager: Addr<PushManagerActor>,
     pub console: Addr<ConsoleActor>,
 }
 
@@ -126,24 +148,14 @@ impl SelectOption for ManualResolution {
         );
 
         let console = self.console.clone();
-        let push_manager = self.push_manager.clone();
-        let typegraph_key = self.typegraph.get_key().unwrap();
         let runtime_name = self.runtime_name.clone();
-        let typegraph_path = self.typegraph.path.clone().unwrap();
+        let typegraph_path = self.typegraph_path.clone();
+        let loader = self.loader.clone();
 
         Arbiter::current().spawn(async move {
             // TODO watch migration file??
             console.read_line().await;
-
-            push_manager.do_send(AddOneTimeOptions {
-                typegraph_key,
-                options: vec![OneTimePushOption::ForceReset {
-                    runtime_name: runtime_name.clone(),
-                }],
-            });
-
-            // force reload
-            set_file_mtime(typegraph_path, FileTime::now()).unwrap();
+            do_force_reset(&loader, typegraph_path, runtime_name);
         });
     }
 
@@ -155,4 +167,23 @@ impl SelectOption for ManualResolution {
             label
         }
     }
+}
+
+/// Set `reset` to `true` for the specified prisma runtime + re-run the typegraph
+fn do_force_reset(loader: &Addr<LoaderActor>, tg_path: PathBuf, runtime_name: String) {
+    // reset
+    let glob_cfg = ServerStore::get_migration_action_glob();
+    ServerStore::set_migration_action(
+        tg_path.clone(),
+        RuntimeMigrationAction {
+            runtime_name,
+            action: MigrationAction {
+                reset: true, // !
+                create: glob_cfg.create,
+            },
+        },
+    );
+
+    // reload
+    loader.do_send(LoadModule(tg_path.into()));
 }

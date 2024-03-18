@@ -11,7 +11,7 @@ use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
 
 #[allow(unused)]
-use crate::wit::core::TypegraphFinalizeMode;
+use crate::wit::core::ArtifactResolutionConfig;
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
@@ -105,6 +105,7 @@ const PREDEFINED_DENO_FUNCTIONS: &[&str] = &["identity", "true"];
 
 thread_local! {
     pub static STORE: RefCell<Store> = RefCell::new(Store::new());
+    pub static SDK_VERSION: String = "0.3.7-0".to_owned();
 }
 
 fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
@@ -115,6 +116,10 @@ fn with_store_mut<T, F: FnOnce(&mut Store) -> T>(f: F) -> T {
     STORE.with(|s| f(&mut s.borrow_mut()))
 }
 
+pub fn get_sdk_version() -> String {
+    SDK_VERSION.with(|v| v.clone())
+}
+
 /// Option to register or not a type name.
 /// Should be disabled for type extensions, because they inherit the name.
 pub struct NameRegistration(pub bool);
@@ -122,7 +127,7 @@ pub struct NameRegistration(pub bool);
 #[cfg(test)]
 impl Store {
     pub fn reset() {
-        let _ = crate::typegraph::finalize(TypegraphFinalizeMode::Simple);
+        let _ = crate::typegraph::finalize(None);
         with_store_mut(|s| *s = Store::new());
     }
 }

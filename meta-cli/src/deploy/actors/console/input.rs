@@ -64,17 +64,19 @@ impl Select {
     ) -> Result<usize> {
         let mut retry_left = self.max_retry_count;
 
-        eprintln!("{} {}", "[select]".yellow(), self.prompt);
+        self.console
+            .error(format!("{} {}", "[select]".yellow(), self.prompt));
         for (i, option) in options.iter().enumerate() {
             let label = option.label();
-            eprintln!("{}) {}", i + 1, label.primary);
+            self.console.error(format!("{}) {}", i + 1, label.primary));
             if let Some(secondary_label) = label.secondary {
-                eprintln!("   {}", secondary_label.dimmed());
+                self.console
+                    .error(format!("   {}", secondary_label.dimmed()));
             }
         }
 
         loop {
-            eprint!("(1-{})> ", options.len());
+            self.console.error(format!("(1-{})> ", options.len()));
 
             let input = self.console.read_line().await;
 
@@ -122,10 +124,9 @@ impl Confirm {
     ) -> Result<bool> {
         let mut retry_left = self.max_retry_count as isize;
 
-        eprintln!("{} {}", "[confirm]".yellow(), self.prompt);
-
         loop {
-            eprint!("(y/N)> ");
+            self.console
+                .error(format!("{} {} (y/N)", "[confirm]".yellow(), self.prompt));
 
             let input = self.console.read_line().await;
 

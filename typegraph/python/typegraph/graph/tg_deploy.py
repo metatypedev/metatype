@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from typing import Dict, Optional, Union
 from urllib import request
 import json
-from base64 import b64encode
-from typegraph.gen.exports.core import ArtifactResolutionConfig
+from typegraph.graph.shared_types import BasicAuth
+from typegraph.wit import ArtifactResolutionConfig
 from typegraph.gen.types import Err
 
 from typegraph.graph.typegraph import TypegraphOutput
@@ -15,24 +15,11 @@ from typegraph.wit import store, wit_utils
 
 
 @dataclass
-class BasicAuth:
-    username: str
-    password: str
-
-    def as_header_value(self):
-        payload = b64encode(f"{self.username}:{self.password}".encode("utf-8")).decode(
-            "utf-8"
-        )
-        return f"Basic {payload}"
-
-
-@dataclass
 class TypegraphDeployParams:
     base_url: str
-    cli_version: str
+    artifacts_config: ArtifactResolutionConfig
     auth: Optional[BasicAuth] = None
     secrets: Optional[Dict[str, str]] = None
-    artifacts_config: Optional[ArtifactResolutionConfig] = None
 
 
 @dataclass
@@ -64,7 +51,6 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
         store,
         params=QueryDeployParams(
             tg=serialized,
-            cli_version=params.cli_version,
             secrets=[(k, v) for k, v in (params.secrets or {}).items()],
         ),
     )

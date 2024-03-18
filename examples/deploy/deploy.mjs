@@ -12,12 +12,14 @@ import * as path from "path";
 // import { Policy, t, typegraph } from "../../typegraph/node/sdk/dist/index.js";
 // import { DenoRuntime } from "../../typegraph/node/sdk/dist/runtimes/deno.js";
 // import { PythonRuntime } from "../../typegraph/node/sdk/dist/runtimes/python.js";
+// import { WasmEdgeRuntime } from "../../typegraph/node/sdk/dist/runtimes/wasmedge.js";
 // import { tgDeploy } from "../../typegraph/node/sdk/dist/tg_deploy.js";
+// import { PrismaRuntime } from "../../typegraph/node/sdk/dist/providers/prisma.js";
+// import { BasicAuth } from "../../typegraph/node/sdk/dist/tg_deploy.js";
+// import { wit_utils } from "../../typegraph/node/sdk/dist/wit.js";
 
-
-const tg = typegraph({
+const tg = await typegraph({
   name: "deploy-example-node",
-  disableAutoSerialization: true // disable print
 }, (g) => {
     const deno = new DenoRuntime();
     const python = new PythonRuntime();
@@ -71,11 +73,11 @@ const tg = typegraph({
 
 const artifactsConfig = {
   prismaMigration: {
-    action: {
+    globalAction: {
       create: true,
       reset: false
     },
-    migrationDir: "prisma-migrations"
+    migrationDir: path.join("prisma-migrations", tg.name)
   }
 };
 const baseUrl = "http://localhost:7890";
@@ -83,7 +85,6 @@ const auth = new BasicAuth("admin", "password");
 
 tgDeploy(tg, {
   baseUrl,
-  cliVersion: "0.3.4",
   auth,
   secrets: {
     TG_DEPLOY_EXAMPLE_NODE_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
@@ -93,20 +94,23 @@ tgDeploy(tg, {
     // dir: "."
   },
 }).then(({ typegate }) => {
+  // console.info(typegate);
   const selection = typegate?.data?.addTypegraph;
   if (selection) {
     const { migrations, messages } = selection;
     // migration status.. etc
     console.log(messages.map(({ text }) => text).join("\n"));
     migrations.map(({ runtime, migrations }) => {
-      const baseDir = artifactsConfig.prismaMigration.migrationDir;
       // Convention, however if migrationDir is absolute then you might want to use that instead
-      const fullPath = path.join(baseDir, tg.name, runtime);
+      // cwd + tg_name
+      const baseDir = artifactsConfig.prismaMigration.migrationDir;
+      // cwd + tg_name + runtime_name
+      const fullPath = path.join(baseDir, runtime);
       wit_utils.unpackTarb64(migrations,  fullPath);
       console.log(`Unpacked migrations at ${fullPath}`)
     });
   } else {
     throw new Error(JSON.stringify(typegate));
   }
-})
+}) 
   .catch(console.error);

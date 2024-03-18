@@ -4,6 +4,7 @@
 use anyhow::{Context, Result};
 use indoc::indoc;
 use reqwest::{Client, IntoUrl, RequestBuilder, Url};
+use serde::Serialize;
 use std::{collections::HashMap, time::Duration};
 
 use crate::{
@@ -11,7 +12,7 @@ use crate::{
     typegraph::Typegraph,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Serialize, Clone)]
 pub struct BasicAuth {
     pub username: String,
     pub password: String,
@@ -21,7 +22,7 @@ pub struct BasicAuth {
 pub struct Node {
     pub base_url: Url,
     pub prefix: Option<String>,
-    auth: Option<BasicAuth>,
+    pub auth: Option<BasicAuth>,
     pub env: HashMap<String, String>,
 }
 
@@ -57,12 +58,12 @@ impl Node {
     fn graphql_vars(
         tg: &Typegraph,
         secrets: &HashMap<String, String>,
-        cli_version: String,
+        target_version: String,
     ) -> Result<serde_json::Value> {
         Ok(serde_json::json!({
             "tg": serde_json::to_string(&tg)?,
             "secrets": serde_json::to_string(secrets)?,
-            "cliVersion": cli_version,
+            "targetVersion": target_version,
         }))
     }
 

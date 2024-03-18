@@ -8,7 +8,7 @@ use indexmap::IndexMap;
 use serde_json::json;
 
 use crate::errors::Result;
-use crate::global_store::{NameRegistration, Store};
+use crate::global_store::{get_sdk_version, NameRegistration, Store};
 use crate::types::subgraph::Subgraph;
 use crate::types::{TypeDefExt, TypeId};
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
@@ -208,8 +208,8 @@ impl crate::wit::utils::Guest for crate::Lib {
 
     fn gql_deploy_query(params: QueryDeployParams) -> Result<String> {
         let query = r"
-            mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
-                addTypegraph(fromString: $tg, secrets: $secrets, cliVersion: $cliVersion) {
+            mutation InsertTypegraph($tg: String!, $secrets: String!, $targetVersion: String!) {
+                addTypegraph(fromString: $tg, secrets: $secrets, targetVersion: $targetVersion) {
                     name
                     messages { type text }
                     migrations { runtime migrations }
@@ -231,7 +231,7 @@ impl crate::wit::utils::Guest for crate::Lib {
               "tg": params.tg,
               // map => json object => string
               "secrets": serde_json::to_value(secrets_map).unwrap().to_string(),
-              "cliVersion" : params.cli_version,
+              "targetVersion" : get_sdk_version(),
             }),
         });
 

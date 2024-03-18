@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::utils::clap::UrlValueParser;
+use actix_web::dev::ServerHandle;
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
@@ -86,7 +87,7 @@ pub(crate) enum Commands {
 #[async_trait]
 #[enum_dispatch(Commands)]
 pub trait Action {
-    async fn run(&self, args: GenArgs) -> Result<()>;
+    async fn run(&self, args: GenArgs, server_handle: Option<ServerHandle>) -> Result<()>;
 }
 
 #[derive(Parser, Debug, Clone)]

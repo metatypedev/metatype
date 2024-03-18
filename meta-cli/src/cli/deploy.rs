@@ -5,17 +5,18 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use super::{Action, CommonArgs, GenArgs};
+use crate::com::store::{Command, Endpoint, MigrationAction, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors;
 use crate::deploy::actors::console::{Console, ConsoleActor};
 use crate::deploy::actors::discovery::DiscoveryActor;
 use crate::deploy::actors::loader::{
-    self, LoaderActor, LoaderEvent, PostProcessOptions, ReloadModule, ReloadReason, StopBehavior,
+    self, LoaderActor, LoaderEvent, ReloadModule, ReloadReason, StopBehavior,
 };
-use crate::deploy::actors::pusher::Push;
 use crate::deploy::actors::watcher::WatcherActor;
-use crate::typegraph::postprocess::EmbedPrismaMigrations;
+use crate::deploy::push::pusher::PushResult;
 use actix::prelude::*;
+use actix_web::dev::ServerHandle;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
@@ -114,6 +115,17 @@ impl Deploy {
             .await
             .with_context(|| format!("building node from config: {node_config:#?}"))?;
 
+        ServerStore::with(Some(Command::Deploy), Some(config.as_ref().to_owned()));
+        ServerStore::set_migration_action_glob(MigrationAction {
+            create: deploy.options.create_migration,
+            reset: deploy.options.allow_destructive, // reset on drift
+        });
+        ServerStore::set_endpoint(Endpoint {
+            typegate: node.base_url.clone().into(),
+            auth: node.auth.clone(),
+        });
+        ServerStore::set_prefix(node_config.prefix);
+
         Ok(Self {
             config,
             base_dir: dir.into(),
@@ -137,7 +149,7 @@ struct CtrlCHandlerData {
 
 #[async_trait]
 impl Action for DeploySubcommand {
-    async fn run(&self, args: GenArgs) -> Result<()> {
+    async fn run(&self, args: GenArgs, server_handle: Option<ServerHandle>) -> Result<()> {
         let deploy = Deploy::new(self, &args).await?;
 
         if !self.options.allow_dirty {
@@ -158,25 +170,26 @@ impl Action for DeploySubcommand {
         }
 
         if deploy.options.watch {
+            // watch the content of a folder
             if self.file.is_some() {
                 bail!("Cannot use --file in watch mode");
             }
             watch_mode::enter_watch_mode(deploy).await?;
         } else {
+            // deploy a single file
             let deploy = default_mode::DefaultMode::init(deploy).await?;
             deploy.run().await?;
+
+            server_handle.unwrap().stop(true).await;
         }
+
         Ok(())
     }
 }
 
 mod default_mode {
     //! non-watch mode
-
-    use crate::deploy::actors::{
-        loader::LoadModule,
-        push_manager::{PushManager, PushManagerActor, PushManagerBuilder},
-    };
+    use default_mode::actors::loader::LoadModule;
 
     use super::*;
 
@@ -185,7 +198,6 @@ mod default_mode {
         console: Addr<ConsoleActor>,
         loader: Addr<LoaderActor>,
         loader_event_rx: mpsc::UnboundedReceiver<LoaderEvent>,
-        pusher: Addr<PushManagerActor>,
     }
 
     impl DefaultMode {
@@ -194,19 +206,12 @@ mod default_mode {
             let secrets =
                 lade_sdk::hydrate(deploy.node.env.clone(), deploy.base_dir.to_path_buf()).await?;
 
+            ServerStore::set_secrets(secrets);
+
             let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
 
             let loader = LoaderActor::new(
                 Arc::clone(&deploy.config),
-                PostProcessOptions::default()
-                    .deno_codegen(deploy.options.codegen)
-                    .prisma(
-                        (!deploy.options.no_migration).then_some(
-                            EmbedPrismaMigrations::default()
-                                .create_migration(deploy.options.create_migration),
-                        ),
-                    )
-                    .allow_destructive(deploy.options.allow_destructive),
                 console.clone(),
                 loader_event_tx,
                 deploy.max_parallel_loads.unwrap_or_else(num_cpus::get),
@@ -214,26 +219,18 @@ mod default_mode {
             .auto_stop()
             .start();
 
-            let pusher = PushManagerBuilder::new(console.clone()).start(
-                Arc::clone(&deploy.config),
-                deploy.base_dir.clone(),
-                deploy.node.clone(),
-                secrets,
-            );
-
             Ok(Self {
                 deploy,
                 console,
                 loader,
                 loader_event_rx,
-                pusher,
             })
         }
 
         pub async fn run(self) -> Result<()> {
             log::debug!("file: {:?}", self.deploy.file);
             let _discovery = if let Some(file) = self.deploy.file.clone() {
-                self.loader.do_send(LoadModule(file));
+                self.loader.do_send(LoadModule(file.to_path_buf().into()));
                 None
             } else {
                 Some(
@@ -248,35 +245,45 @@ mod default_mode {
             };
 
             let loader = self.loader.clone();
-            let pusher = self.pusher.clone();
-            self.push_loaded_typegraphs();
+            self.handle_loaded_typegraphs();
 
-            let ret = match loader::stopped(loader).await {
+            match loader::stopped(loader).await {
                 Ok(StopBehavior::Restart) => unreachable!("LoaderActor should not restart"),
                 Ok(StopBehavior::ExitSuccess) => Ok(()),
                 Ok(StopBehavior::ExitFailure(msg)) => bail!("{msg}"),
                 Err(e) => panic!("Loader actor stopped unexpectedly: {e:?}"),
-            };
-
-            log::debug!("loader stopped, stopping pusher");
-            let result = pusher.stop().await;
-            if let Err(e) = result {
-                System::current().stop_with_code(1);
-                return Err(e);
             }
-            ret
         }
 
-        fn push_loaded_typegraphs(self) {
-            let pusher = self.pusher.clone();
+        fn handle_loaded_typegraphs(self) {
             let mut event_rx = self.loader_event_rx;
-
+            let console = self.console.clone();
             Arbiter::current().spawn(async move {
                 while let Some(event) = event_rx.recv().await {
                     match event {
-                        LoaderEvent::Typegraph(tg) => {
-                            // TODO await -- no queue
-                            pusher.do_send(Push::new(tg.into()));
+                        LoaderEvent::Typegraph(tg_infos) => {
+                            match tg_infos.get_responses_or_fail() {
+                                Ok(res) => {
+                                    for (name, res) in res.iter() {
+                                        match PushResult::new(
+                                            self.console.clone(),
+                                            self.loader.clone(),
+                                            res.clone(),
+                                        ) {
+                                            Ok(push) => push.finalize().await.unwrap(),
+                                            Err(e) => {
+                                                console.error(format!(
+                                                    "Failed pushing typegraph {:?} at {}:\n{:?}",
+                                                    name,
+                                                    tg_infos.path.display(),
+                                                    e.to_string()
+                                                ));
+                                            }
+                                        }
+                                    }
+                                }
+                                Err(e) => panic!("{}", e.to_string()),
+                            }
                         }
                         LoaderEvent::Stopped(b) => {
                             if let StopBehavior::ExitFailure(msg) = b {
@@ -293,9 +300,10 @@ mod default_mode {
 }
 
 mod watch_mode {
-    use std::time::Duration;
 
-    use crate::deploy::actors::push_manager::{PushManager, PushManagerActor, PushManagerBuilder};
+    use watch_mode::actors::loader::LoadModule;
+
+    use crate::deploy::push::pusher::RetryManager;
 
     use super::*;
 
@@ -318,19 +326,12 @@ mod watch_mode {
             let secrets =
                 lade_sdk::hydrate(deploy.node.env.clone(), deploy.base_dir.to_path_buf()).await?;
 
+            ServerStore::set_secrets(secrets.clone());
+
             let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
 
             let loader = LoaderActor::new(
                 Arc::clone(&deploy.config),
-                PostProcessOptions::default()
-                    .deno_codegen(deploy.options.codegen)
-                    .prisma(
-                        (!deploy.options.no_migration).then_some(
-                            EmbedPrismaMigrations::default()
-                                .create_migration(deploy.options.create_migration),
-                        ),
-                    )
-                    .allow_destructive(deploy.options.allow_destructive),
                 console.clone(),
                 loader_event_tx,
                 deploy.max_parallel_loads.unwrap_or_else(num_cpus::get),
@@ -355,38 +356,25 @@ mod watch_mode {
             )?
             .start();
 
-            let pusher = PushManagerBuilder::new(console.clone())
-                .linear_backoff(Duration::from_secs(5), 3)
-                .start(
-                    Arc::clone(&deploy.config),
-                    deploy.base_dir.clone(),
-                    deploy.node.clone(),
-                    secrets,
-                );
-
             let actor_system = ActorSystem {
                 console: console.clone(),
                 watcher,
                 loader: loader.clone(),
-                pusher: pusher.clone(),
             };
 
-            actor_system.push_loaded_typegraphs(loader_event_rx);
+            actor_system.handle_loaded_typegraphs(loader_event_rx);
             actor_system.handle_watch_events(watch_event_rx);
             actor_system.update_ctrlc_handler(ctrlc_handler_data.clone());
 
             // TODO wait for push lifecycle
             match loader::stopped(loader).await {
                 Ok(StopBehavior::ExitSuccess) => {
-                    pusher.stop().await?;
                     break;
                 }
                 Ok(StopBehavior::Restart) => {
-                    pusher.stop().await?;
                     continue;
                 }
                 Ok(StopBehavior::ExitFailure(_)) => {
-                    pusher.stop().await?;
                     break;
                 }
                 Err(e) => {
@@ -402,19 +390,51 @@ mod watch_mode {
         console: Addr<ConsoleActor>,
         watcher: Addr<WatcherActor>,
         loader: Addr<LoaderActor>,
-        pusher: Addr<PushManagerActor>,
     }
 
     impl ActorSystem {
-        fn push_loaded_typegraphs(&self, event_rx: mpsc::UnboundedReceiver<LoaderEvent>) {
-            let pusher = self.pusher.clone();
+        fn handle_loaded_typegraphs(&self, event_rx: mpsc::UnboundedReceiver<LoaderEvent>) {
+            let console = self.console.clone();
+            let loader = self.loader.clone();
             Arbiter::current().spawn(async move {
                 let mut event_rx = event_rx;
                 while let Some(event) = event_rx.recv().await {
                     match event {
-                        LoaderEvent::Typegraph(tg) => {
-                            pusher.do_send(Push::new(tg.into()));
-                            // TODO update deps
+                        LoaderEvent::Typegraph(tg_infos) => {
+                            let responses = ServerStore::get_responses_or_fail(&tg_infos.path)
+                                .unwrap()
+                                .as_ref()
+                                .to_owned();
+                            for (name, response) in responses.into_iter() {
+                                match PushResult::new(console.clone(), loader.clone(), response) {
+                                    Ok(push) => {
+                                        if let Err(e) = push.finalize().await {
+                                            panic!("{}", e.to_string());
+                                        }
+                                        RetryManager::clear_counter(&tg_infos.path);
+                                    }
+                                    Err(e) => {
+                                        let tg_path = tg_infos.path.clone();
+                                        console.error(format!(
+                                            "Failed pushing typegraph {} at {:?}:\n{:?}",
+                                            name,
+                                            tg_path.display(),
+                                            e.to_string()
+                                        ));
+                                        if let Some(delay) = RetryManager::next_delay(&tg_path) {
+                                            console.info(format!(
+                                                "Retry {}/{}, retrying after {}s of {:?}",
+                                                delay.retry,
+                                                delay.max,
+                                                delay.duration.as_secs(),
+                                                tg_path.display(),
+                                            ));
+                                            tokio::time::sleep(delay.duration).await;
+                                            loader.do_send(LoadModule(Arc::new(tg_path)));
+                                        }
+                                    }
+                                }
+                            }
                         }
                         LoaderEvent::Stopped(b) => {
                             if let StopBehavior::ExitFailure(msg) = b {
@@ -435,13 +455,14 @@ mod watch_mode {
             let console = self.console.clone();
             let watcher = self.watcher.clone();
             let loader = self.loader.clone();
-            let pusher = self.pusher.clone();
             Arbiter::current().spawn(async move {
                 let mut watch_event_rx = watch_event_rx;
                 while let Some(event) = watch_event_rx.recv().await {
                     use actors::watcher::Event as E;
                     match event {
                         E::ConfigChanged => {
+                            RetryManager::reset();
+
                             console.warning("Metatype configuration file changed.".to_string());
                             console.warning("Reloading everything.".to_string());
 
@@ -449,15 +470,15 @@ mod watch_mode {
                             watcher.do_send(actors::watcher::Stop);
                         }
                         E::TypegraphModuleChanged { typegraph_module } => {
-                            pusher.cancel_all_from(&typegraph_module).await.unwrap();
+                            RetryManager::clear_counter(&typegraph_module);
                             loader.do_send(ReloadModule(
                                 typegraph_module.into(),
                                 ReloadReason::FileChanged,
                             ));
                         }
                         E::TypegraphModuleDeleted { typegraph_module } => {
-                            // TODO registry
-                            pusher.cancel_all_from(&typegraph_module).await.unwrap();
+                            RetryManager::clear_counter(&typegraph_module);
+
                             // TODO internally by the watcher??
                             watcher.do_send(actors::watcher::RemoveTypegraph(
                                 typegraph_module.clone(),
@@ -468,7 +489,8 @@ mod watch_mode {
                             typegraph_module,
                             dependency_path,
                         } => {
-                            pusher.cancel_all_from(&typegraph_module).await.unwrap();
+                            RetryManager::clear_counter(&typegraph_module);
+
                             loader.do_send(ReloadModule(
                                 typegraph_module.into(),
                                 ReloadReason::DependencyChanged(dependency_path),

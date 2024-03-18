@@ -41,21 +41,18 @@ interface core {
     }
 
     record migration-config {
-        migration-dir: option<string>,
-        action: migration-action
+        migration-dir: string,
+        global-action: migration-action, // global config (all runtimes)
+        runtime-actions: option<list<tuple<string, migration-action>>> // config per runtime name (override global-action)
     }
 
     record artifact-resolution-config {
         dir: option<string>, // cwd() if none
+        prefix: option<string>, // overrides tg.meta.prefix field if defined
         prisma-migration: migration-config
     }
 
-    variant typegraph-finalize-mode {
-        simple,
-        resolve-artifacts(option<artifact-resolution-config>)
-    }
-
-    finalize-typegraph: func(mode: typegraph-finalize-mode) -> result<string, error>
+    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<string, error>
 
     type type-id = u32
     record type-base {
@@ -542,7 +539,6 @@ interface utils {
 
     record query-deploy-params {
         tg: string,
-        cli-version: string,
         secrets: option<list<tuple<string, string>>>,
     }
 
@@ -558,7 +554,7 @@ interface host {
     print: func(s: string)
     eprint: func(s: string)
     expand-glob: func(root: string, exclude: list<string>) -> result<list<string>, string>
-    file-exists: func(path: string) -> result<bool, string>
+    path-exists: func(path: string) -> result<bool, string>
     read-file: func(path: string) -> result<list<u8>, string>
     write-file: func(path: string, data: list<u8>) -> result<_, string>
     get-cwd: func() -> result<string, string>

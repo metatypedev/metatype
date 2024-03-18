@@ -15,7 +15,7 @@ from typegraph.wit import ArtifactResolutionConfig, MigrationConfig, MigrationAc
 from os import path
 
 
-@typegraph(disable_auto_serialization=True)  # disable print
+@typegraph()
 def deploy_example_python(g: Graph):
     deno = DenoRuntime()
     python = PythonRuntime()
@@ -72,21 +72,25 @@ def deploy_example_python(g: Graph):
 
 
 # Self-deploy
+tg = deploy_example_python()
+
 auth = BasicAuth(username="admin", password="password")
 
 config_params = MigrationConfig(
-    migration_dir="prisma-migrations", action=MigrationAction(create=True, reset=True)
+    migration_dir=path.join("prisma-migrations", tg.name),
+    global_action=MigrationAction(create=True, reset=True),  # all runtimes
+    runtime_actions=None,  # usually set from the cli
 )
-artifacts_config = ArtifactResolutionConfig(prisma_migration=config_params, dir=None)
+artifacts_config = ArtifactResolutionConfig(
+    prefix=None, dir=None, prisma_migration=config_params
+)
 
-tg = deploy_example_python()
 
 res = tg_deploy(
     tg,
     TypegraphDeployParams(
         base_url="http://localhost:7890",
         auth=auth,
-        cli_version="0.3.4",
         artifacts_config=artifacts_config,
         secrets={
             "TG_DEPLOY_EXAMPLE_PYTHON_POSTGRES": "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
@@ -106,6 +110,7 @@ for item in migrations:
     # what to do with the migration files?
     base_dir = artifacts_config.prisma_migration.migration_dir
     # Convention, however if migration_dir is absolute then you might want to use that instead
-    full_path = path.join(base_dir, tg.name, item["runtime"])
+    # cwd + tg_name + runtime_name
+    full_path = path.join(base_dir, item["runtime"])
     unpack_tarb64(item["migrations"], full_path)
     print(f"Unpacked migrations at {full_path}")

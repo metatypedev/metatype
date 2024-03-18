@@ -1,7 +1,7 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
-typegraph({
+await typegraph({
   name: "math",
 }, (g) => {
   // we need a runtime to run the functions on

@@ -188,7 +188,7 @@
       "properties": {
         "fromString": 15,
         "secrets": 15,
-        "cliVersion": 9
+        "targetVersion": 9
       },
       "required": []
     },
