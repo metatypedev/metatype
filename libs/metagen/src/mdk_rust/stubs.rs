@@ -3,11 +3,12 @@
 
 use super::utils::normalize_type_title;
 use crate::interlude::*;
+use crate::mdk::*;
 use crate::utils::*;
-use crate::*;
 use std::fmt::Write;
 
 pub struct GenStubOptions {}
+
 pub fn gen_stub(
     fun: &StubbedFunction,
     dest: &mut GenDestBuf,
@@ -24,19 +25,19 @@ pub fn gen_stub(
         .get(&data.output)
         .context("output type for function not found")?;
     let trait_name: Arc<str> = normalize_type_title(&base.title).into();
-    dest.buf.write_fmt(format_args!(
+    writeln!(
+        &mut dest.buf,
         r#"pub trait {trait_name} {{
     fn handle(input: {inp_ty}, cx: Ctx) -> anyhow::Result<{out_ty}>;
-}}
-"#
-    ))?;
+}}"#
+    )?;
     Ok(trait_name)
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::mdk_rust::*;
+    use crate::{mdk_rust::*, tests::default_type_node_base};
     use common::typegraph::*;
 
     #[test]
@@ -107,9 +108,10 @@ mod test {
         let generator = Generator::new(MdkRustGenConfig {
             base: crate::config::MdkGeneratorConfigBase {
                 path: "/tmp".into(),
-                typegraph: tg_name.clone(),
+                typegraph_name: tg_name.clone(),
             },
             stubbed_runtimes: Some(vec!["wasm".into()]),
+            no_crate_manifest: None,
         })?;
         let out = generator.generate(
             [(
@@ -119,32 +121,35 @@ mod test {
             .into_iter()
             .collect(),
         )?;
-        let (_, buf) = out.0.iter().next().unwrap();
+        let (_, buf) = out
+            .0
+            .iter()
+            .find(|(path, _)| path.file_name().unwrap() == "mod.rs")
+            .unwrap();
         assert_eq!(
-            &format!(
-                r#"{stat}
+            r#"// gen-static-end
 pub type MyInt = i64;
-pub triat MyFunc {{
+pub trait MyFunc {
     fn handle(input: MyInt, cx: Ctx) -> anyhow::Result<MyInt>;
-}}
+}
 "#,
-                stat = include_str!("static/lib.rs")
-            ),
-            buf
+            &buf[buf.find("// gen-static-end").unwrap()..]
         );
         Ok(())
     }
+}
 
-    fn default_type_node_base() -> TypeNodeBase {
-        TypeNodeBase {
-            title: String::new(),
-            as_id: false,
-            config: Default::default(),
-            runtime: 0,
-            policies: vec![],
-            injection: None,
-            description: None,
-            enumeration: None,
-        }
-    }
+trait MyT {
+    fn hey() {}
+}
+trait MyT2 {
+    fn you() {}
+}
+
+struct T {}
+impl MyT for T {
+    fn hey() {}
+}
+impl MyT2 for T {
+    fn you() {}
 }

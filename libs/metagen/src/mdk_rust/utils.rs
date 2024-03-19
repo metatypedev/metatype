@@ -1,8 +1,23 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-use heck::ToPascalCase;
+use heck::*;
 
 pub fn normalize_type_title(title: &str) -> String {
+    use once_cell::sync::Lazy;
+    static RE: Lazy<regex::Regex> =
+        Lazy::new(|| regex::Regex::new(r"^(?<startd>\d+)(?<rest>.*)").unwrap());
+
+    // TODO: clean out rust keywords
+    // TODO: clean up non valid chars
+
+    // clean out underscores at start/end
+    let title = title.trim_matches('_');
+    // move any numbers at start to end
+    let title = RE.replace(title, "$rest$startd");
     title.to_pascal_case()
+}
+
+pub fn normalize_struct_prop_name(title: &str) -> String {
+    title.to_snek_case()
 }

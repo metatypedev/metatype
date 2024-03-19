@@ -53,7 +53,7 @@ RUN set -eux; \
     ; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
-ARG GHJK_VERSION=f380522
+ARG GHJK_VERSION=423d38
 RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash \
     deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
