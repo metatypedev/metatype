@@ -4,6 +4,10 @@
 import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 
+const adminHeaders = {
+  "Authorization": `Basic ${btoa("admin:password")}`,
+};
+
 Meta.test("typegate: find available operations", async (t) => {
   const prismaEngine = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
@@ -48,8 +52,46 @@ Meta.test("typegate: find available operations", async (t) => {
         typegraph: "prisma",
       })
       .matchSnapshot(t)
-      .withHeaders({
-        "Authorization": `Basic ${btoa("admin:password")}`,
+      .withHeaders(adminHeaders)
+      .on(e);
+  });
+
+  await t.should("run a custom read query", async () => {
+    await gql`
+      query ExecuteRawPrismaRead(
+        $typegraph: String!,
+        $runtime: String!,
+        $query: String!
+      ) {
+        execRawPrismaRead(
+          typegraph: $typegraph,
+          runtime: $runtime,
+          query: $query
+        )
+      }
+    `
+      .withVars({
+        typegraph: "prisma",
+        runtime: "prisma",
+        query: {
+          modelName: "users",
+          action: "findUnique",
+          query: {
+            selection: JSON.stringify({
+              id: true,
+              name: true,
+            }),
+            arguments: JSON.stringify({
+              where: {
+                id: 1,
+              },
+            }),
+          },
+        },
+      })
+      .withHeaders(adminHeaders)
+      .expectData({
+        execRawPrismaRead: "null",
       })
       .on(e);
   });
