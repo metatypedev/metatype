@@ -4,12 +4,12 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { WasmEdgeRuntime } from "@typegraph/sdk/runtimes/wasmedge.js";
 
-typegraph("wasmedge ts", (g: any) => {
+typegraph("wasmedge_ts", async (g: any) => {
   const pub = Policy.public();
   const wasmedge = new WasmEdgeRuntime();
 
-  g.expose({
-    test_wasi_ts: wasmedge
+  try {
+    const mat = await wasmedge
       .wasi(
         t.struct({
           "a": t.float(),
@@ -18,8 +18,13 @@ typegraph("wasmedge ts", (g: any) => {
         t.integer(),
         {
           func: "add",
-          wasm: "rust.wasm",
+          wasm: "artifacts/rust.wasm",
         },
-      ).withPolicy(pub),
-  });
+      );
+    g.expose({
+      test_wasi_ts: mat.withPolicy(pub),
+    });
+  } catch (e) {
+    console.error(e);
+  }
 });

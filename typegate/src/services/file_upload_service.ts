@@ -109,5 +109,7 @@ export async function handleFileUpload(
   uploadMeta.urlUsed = true;
   engine.fileUploadUrlCache.set(url.toString(), uploadMeta);
 
-  return new Response();
+  return new Response(JSON.stringify({
+    "success": true,
+  }));
 }

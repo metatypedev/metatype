@@ -488,7 +488,12 @@ impl TypegraphContext {
     }
 
     pub fn add_ref_files(&mut self, file_hash: String, file_path: PathBuf) -> Result<()> {
-        let absolute_file_path = match fs_host::make_absolute(&file_path) {
+        let binding = file_path.to_string_lossy().to_string();
+        let path = match binding.strip_prefix("file:") {
+            Some(path) => path,
+            None => return Err("file path has no prefix".into()),
+        };
+        let absolute_file_path = match fs_host::make_absolute(&PathBuf::from(path)) {
             Ok(path) => path,
             Err(e) => return Err(e.into()),
         };

@@ -19,7 +19,7 @@ export class WasmEdgeRuntime extends Runtime {
     super(runtimes.registerWasmedgeRuntime());
   }
 
-  wasi<
+  async wasi<
     I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
@@ -30,13 +30,8 @@ export class WasmEdgeRuntime extends Runtime {
       wasm: string;
       effect?: Effect;
     },
-  ): t.Func<I, O, WasiMat> {
-    let fileHash = "";
-    getFileHash(wasm).then((hash) => {
-      fileHash = hash;
-    }).catch((err) => {
-      console.error(err);
-    });
+  ): Promise<t.Func<I, O, WasiMat>> {
+    let fileHash = await getFileHash(wasm);
 
     const matId = runtimes.fromWasiModule(
       {

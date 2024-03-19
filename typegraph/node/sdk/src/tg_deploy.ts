@@ -4,7 +4,6 @@
 import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
-import * as process from "node:process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -72,17 +71,9 @@ export async function tgDeploy(
     typegate: await handleResponse(response),
   };
 
-  const getUploadUrl = new URL("/get-upload-url", baseUrl);
+  const suffix = `${typegraph.name}/get-upload-url`;
+  const getUploadUrl = new URL(suffix, baseUrl);
   for (let [fileHash, filePath] of ref_files) {
-    const prefix = "file:";
-
-    if (!filePath.startsWith(prefix)) {
-      throw new Error(`file path ${filePath} should start with ${prefix}`);
-    }
-
-    const currDir = path.dirname(path.resolve(process.argv[1]));
-    filePath = filePath.slice(prefix.length);
-    filePath = `${currDir}/${filePath}`;
     const fileContent: Buffer = fs.readFileSync(filePath);
     const byteArray = new Uint8Array(fileContent);
 
@@ -98,11 +89,9 @@ export async function tgDeploy(
       headers,
       body: artifactJson,
     });
-    const decodedResponse = await handleResponse(uploadUrlResponse) as Record<
-      string,
-      any
-    >;
-    const uploadUrl = decodedResponse.uploadUrl;
+    const decodedResponse = await uploadUrlResponse.json();
+
+    const uploadUrl = decodedResponse.uploadUrl as string;
 
     const uploadHeaders = new Headers({
       "Content-Type": "application/octet-stream",

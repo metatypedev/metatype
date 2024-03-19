@@ -3,7 +3,6 @@
 
 import json
 import os
-import sys
 from dataclasses import dataclass
 from typing import Dict, Optional, Union
 from urllib import request
@@ -85,13 +84,6 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     # TODO: fetch all the upload urls in one request
     get_upload_url = params.base_url + sep + tg.name + "/get-upload-url"
     for file_hash, file_path in ref_files:
-        prefix = "file:"
-        if not file_path.startswith(prefix):
-            raise Exception(f"file path {file_path} should start with {prefix}")
-
-        curr_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-        file_path = os.path.join(curr_dir, file_path[len(prefix) :])
-
         with open(file_path, "rb") as file:
             file_content = file.read()
             artifact = UploadArtifactMeta(

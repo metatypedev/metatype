@@ -3,17 +3,17 @@
 
 import * as fs from "node:fs";
 import * as crypto from "node:crypto";
-import * as path from "node:path";
+import { wit_utils } from "../wit.js";
 
 export function getFileHash(filePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const currDir = path.dirname(path.resolve(process.argv[1]));
+    const currDir = wit_utils.getCwd();
     filePath = `${currDir}/${filePath}`;
     const hash = crypto.createHash("sha256");
     const fileDescriptor = fs.openSync(filePath, "r");
 
     const CHUNK_SIZE = 4096;
-    let buffer = Buffer.alloc(CHUNK_SIZE);
+    let buffer = new Uint8Array(CHUNK_SIZE);
     let bytesRead = 0;
 
     function readChunk() {
@@ -23,26 +23,26 @@ export function getFileHash(filePath: string): Promise<string> {
         0,
         CHUNK_SIZE,
         bytesRead,
-        (err, bytesRead) => {
+        (err, numBytesRead) => {
           if (err) {
             fs.closeSync(fileDescriptor);
             reject(err);
             return;
           }
 
-          if (bytesRead === 0) {
+          if (numBytesRead === 0) {
             fs.closeSync(fileDescriptor);
             resolve(hash.digest("hex"));
             return;
           }
 
-          hash.update(buffer.subarray(0, bytesRead));
+          bytesRead += numBytesRead;
+          hash.update(buffer.subarray(0, numBytesRead));
           readChunk();
         },
       );
     }
 
     readChunk();
-    return hash;
   });
 }

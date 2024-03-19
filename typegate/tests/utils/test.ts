@@ -114,7 +114,7 @@ export class MetaTest {
   async engine(path: string, opts: ParseOptions = {}): Promise<QueryEngine> {
     const tgString = await this.serialize(path, opts);
     const tgJson = await TypeGraph.parseJson(tgString);
-    console.log(tgJson.meta);
+
     // for convience, automatically prefix secrets
     const secrets = opts.secrets ?? {};
     if (opts.autoSecretName !== false) {
