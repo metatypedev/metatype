@@ -98,6 +98,10 @@ pub fn expand_path(path: &Path, exclude_glob: &[String]) -> Result<Vec<PathBuf>,
                     }
                 }
             }
+            // test as suffix if glob star is present
+            if glob_pattern.contains('*') {
+                regex_pattern.push('$');
+            }
             regex_pattern
         })
         .collect::<Vec<_>>();
