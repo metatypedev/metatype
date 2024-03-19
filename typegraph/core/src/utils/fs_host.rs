@@ -10,7 +10,9 @@ use indexmap::IndexMap;
 
 use crate::{
     global_store::Store,
-    wit::metatype::typegraph::host::{expand_glob, get_cwd, path_exists, read_file, write_file},
+    wit::metatype::typegraph::host::{
+        expand_glob as expand_glob_host, get_cwd, path_exists, read_file, write_file,
+    },
 };
 
 pub fn read_text_file<P: Into<String>>(path: P) -> Result<String, String> {
@@ -78,10 +80,40 @@ pub fn relativize_paths(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
     Err("Cannot relativize path list if one item is already relative".to_string())
 }
 
+pub fn expand_glob(path: &Path, exclude_glob: &[String]) -> Result<Vec<PathBuf>, String> {
+    let exclude_as_regex = exclude_glob
+        .iter()
+        .map(|glob_pattern| {
+            let mut regex_pattern = String::new();
+            for c in glob_pattern.chars() {
+                match c {
+                    '*' => regex_pattern.push_str(".*"),
+                    '?' => regex_pattern.push('.'),
+                    _ => {
+                        if ".()+-[]^$|".contains(c) {
+                            // escape native regex
+                            regex_pattern.push('\\');
+                        }
+                        regex_pattern.push(c);
+                    }
+                }
+            }
+            regex_pattern
+        })
+        .collect::<Vec<_>>();
+
+    let ret = expand_glob_host(&path.display().to_string(), &exclude_as_regex)?
+        .iter()
+        .map(PathBuf::from)
+        .collect();
+
+    Ok(ret)
+}
+
 pub fn compress<P: Into<String>>(path: P, exclude: Option<Vec<String>>) -> Result<Vec<u8>, String> {
     // Note: each exclude entry is a regex pattern
     let exclude = exclude.unwrap_or_default();
-    let paths = expand_glob(&path.into(), &exclude)?;
+    let paths = expand_glob(&PathBuf::from(path.into()), &exclude)?;
     let mut entries = IndexMap::new();
     // eprint("Preparing tarball");
 
@@ -113,7 +145,7 @@ pub fn unpack_base64<P: Into<String>>(tarb64: &str, dest: P) -> Result<(), Strin
 
 pub fn compress_and_encode_base64(path: PathBuf) -> Result<String, String> {
     let mut sdkignore = load_sdk_ignore_file()?;
-    let default = vec!["node_modules/".to_string(), "\\.git/".to_string()];
+    let default = vec!["node_modules".to_string(), ".git".to_string()];
     sdkignore.extend(default);
 
     let bytes = compress(path.display().to_string(), Some(sdkignore))?;

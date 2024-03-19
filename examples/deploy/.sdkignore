@@ -1,7 +1,6 @@
-# Note: each entry is a regex pattern
-\.git
-node_modules/
+.git
+node_modules
 
-\.json$
-\.yaml$
-\.sdkignore$
+*.json
+*.y*ml
+.*ignore

@@ -1,2 +1,3 @@
-\.sdkignore$
-self_deploy(_test)?\.(ts|mjs)$
+.sdkignore
+self_deploy_*.ts
+*.mjs
