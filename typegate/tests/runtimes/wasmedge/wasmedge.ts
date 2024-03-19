@@ -4,7 +4,7 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { WasmEdgeRuntime } from "@typegraph/sdk/runtimes/wasmedge.js";
 
-typegraph("wasmedge_ts", async (g: any) => {
+export const tg = await typegraph("wasmedge_ts", async (g: any) => {
   const pub = Policy.public();
   const wasmedge = new WasmEdgeRuntime();
 
@@ -18,7 +18,7 @@ typegraph("wasmedge_ts", async (g: any) => {
         t.integer(),
         {
           func: "add",
-          wasm: "artifacts/rust.wasm",
+          wasm: "typegate/tests/artifacts/rust.wasm",
         },
       );
     g.expose({

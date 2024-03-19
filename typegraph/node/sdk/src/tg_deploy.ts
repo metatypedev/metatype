@@ -107,6 +107,7 @@ export async function tgDeploy(
       body: byteArray,
     });
 
+    const _ = await artifactUploadResponse.json();
     if (!artifactUploadResponse.ok) {
       throw new Error(
         `Failed to upload artifact ${filePath} to typegate: ${artifactUploadResponse.status} ${artifactUploadResponse.statusText}`,
