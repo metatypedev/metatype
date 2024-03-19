@@ -17,9 +17,10 @@
         "findAvailableOperations": 42,
         "findPrismaModels": 50,
         "execRawPrismaRead": 56,
-        "execRawPrismaCreate": 56,
-        "execRawPrismaUpdate": 56,
-        "execRawPrismaDelete": 56
+        "execRawPrismaCreate": 61,
+        "execRawPrismaUpdate": 62,
+        "execRawPrismaDelete": 63,
+        "queryPrismaModel": 64
       },
       "required": [
         "typegraphs",
@@ -32,12 +33,13 @@
         "execRawPrismaRead",
         "execRawPrismaCreate",
         "execRawPrismaUpdate",
-        "execRawPrismaDelete"
+        "execRawPrismaDelete",
+        "queryPrismaModel"
       ]
     },
     {
       "type": "function",
-      "title": "func_105",
+      "title": "func_119",
       "runtime": 1,
       "policies": [
         0
@@ -52,7 +54,7 @@
     },
     {
       "type": "object",
-      "title": "object_69",
+      "title": "object_83",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -62,7 +64,7 @@
     },
     {
       "type": "list",
-      "title": "_70_Typegraph[]",
+      "title": "_84_Typegraph[]",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -101,7 +103,7 @@
     },
     {
       "type": "function",
-      "title": "func_106",
+      "title": "func_120",
       "runtime": 1,
       "policies": [
         0
@@ -116,7 +118,7 @@
     },
     {
       "type": "object",
-      "title": "object_73",
+      "title": "object_87",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -128,7 +130,7 @@
     },
     {
       "type": "string",
-      "title": "string_72",
+      "title": "string_86",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -136,7 +138,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_75",
+      "title": "optional_89",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -146,7 +148,7 @@
     },
     {
       "type": "object",
-      "title": "object_74",
+      "title": "object_88",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -173,7 +175,7 @@
     },
     {
       "type": "function",
-      "title": "func_107",
+      "title": "func_121",
       "runtime": 1,
       "policies": [
         0
@@ -188,7 +190,7 @@
     },
     {
       "type": "object",
-      "title": "object_80",
+      "title": "object_94",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -202,7 +204,7 @@
     },
     {
       "type": "string",
-      "title": "string_77",
+      "title": "string_91",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -211,7 +213,7 @@
     },
     {
       "type": "object",
-      "title": "object_92",
+      "title": "object_106",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -226,7 +228,7 @@
     },
     {
       "type": "list",
-      "title": "list_85",
+      "title": "list_99",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -235,7 +237,7 @@
     },
     {
       "type": "object",
-      "title": "object_84",
+      "title": "object_98",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -248,7 +250,7 @@
     },
     {
       "type": "string",
-      "title": "string_82",
+      "title": "string_96",
       "runtime": 1,
       "policies": [],
       "enum": [
@@ -261,7 +263,7 @@
     },
     {
       "type": "list",
-      "title": "list_89",
+      "title": "list_103",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -270,7 +272,7 @@
     },
     {
       "type": "object",
-      "title": "object_88",
+      "title": "object_102",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -283,7 +285,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_91",
+      "title": "optional_105",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -293,7 +295,7 @@
     },
     {
       "type": "function",
-      "title": "func_108",
+      "title": "func_122",
       "runtime": 1,
       "policies": [
         0
@@ -308,7 +310,7 @@
     },
     {
       "type": "object",
-      "title": "object_96",
+      "title": "object_110",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -320,7 +322,7 @@
     },
     {
       "type": "list",
-      "title": "list_95",
+      "title": "list_109",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -329,7 +331,7 @@
     },
     {
       "type": "boolean",
-      "title": "boolean_97",
+      "title": "boolean_111",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -337,7 +339,7 @@
     },
     {
       "type": "function",
-      "title": "func_109",
+      "title": "func_123",
       "runtime": 1,
       "policies": [
         0
@@ -376,7 +378,7 @@
     },
     {
       "type": "list",
-      "title": "_99_TypeInfo[]",
+      "title": "_113_TypeInfo[]",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -504,7 +506,7 @@
     },
     {
       "type": "function",
-      "title": "func_110",
+      "title": "func_124",
       "runtime": 1,
       "policies": [
         0
@@ -600,7 +602,7 @@
     },
     {
       "type": "function",
-      "title": "func_111",
+      "title": "func_125",
       "runtime": 1,
       "policies": [
         0
@@ -681,7 +683,7 @@
     },
     {
       "type": "function",
-      "title": "func_112",
+      "title": "func_126",
       "runtime": 1,
       "policies": [
         0
@@ -762,6 +764,135 @@
         "selection": 35
       },
       "required": []
+    },
+    {
+      "type": "function",
+      "title": "func_127",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 57,
+      "output": 15,
+      "materializer": 10,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "function",
+      "title": "func_128",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 57,
+      "output": 15,
+      "materializer": 11,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "function",
+      "title": "func_129",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 57,
+      "output": 15,
+      "materializer": 12,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "function",
+      "title": "func_130",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 65,
+      "output": 67,
+      "materializer": 13,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "object_74",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "typegraph": 9,
+        "runtime": 9,
+        "model": 9,
+        "offset": 66,
+        "limit": 66
+      },
+      "required": []
+    },
+    {
+      "type": "integer",
+      "title": "integer_72",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "object",
+      "title": "object_81",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "fields": 68,
+        "rowCount": 66,
+        "data": 70
+      },
+      "required": []
+    },
+    {
+      "type": "list",
+      "title": "list_77",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 69
+    },
+    {
+      "type": "object",
+      "title": "object_76",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "name": 9,
+        "type": 55
+      },
+      "required": []
+    },
+    {
+      "type": "list",
+      "title": "list_80",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 15
     }
   ],
   "materializers": [
@@ -851,6 +982,42 @@
     },
     {
       "name": "execRawPrismaQuery",
+      "runtime": 1,
+      "effect": {
+        "effect": "read",
+        "idempotent": true
+      },
+      "data": {}
+    },
+    {
+      "name": "execRawPrismaQuery",
+      "runtime": 1,
+      "effect": {
+        "effect": "create",
+        "idempotent": false
+      },
+      "data": {}
+    },
+    {
+      "name": "execRawPrismaQuery",
+      "runtime": 1,
+      "effect": {
+        "effect": "update",
+        "idempotent": false
+      },
+      "data": {}
+    },
+    {
+      "name": "execRawPrismaQuery",
+      "runtime": 1,
+      "effect": {
+        "effect": "delete",
+        "idempotent": true
+      },
+      "data": {}
+    },
+    {
+      "name": "queryPrismaModel",
       "runtime": 1,
       "effect": {
         "effect": "read",

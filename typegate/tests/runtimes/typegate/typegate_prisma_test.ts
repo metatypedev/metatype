@@ -56,14 +56,14 @@ Meta.test("typegate: find available operations", async (t) => {
       .on(e);
   });
 
-  await t.should("run a custom read query", async () => {
+  await t.should("run a custom create query", async () => {
     await gql`
-      query ExecuteRawPrismaRead(
+      mutation ExecuteRawPrismaCreate(
         $typegraph: String!,
         $runtime: String!,
         $query: String!
       ) {
-        execRawPrismaRead(
+        execRawPrismaCreate(
           typegraph: $typegraph,
           runtime: $runtime,
           query: $query
@@ -75,15 +75,17 @@ Meta.test("typegate: find available operations", async (t) => {
         runtime: "prisma",
         query: {
           modelName: "users",
-          action: "findUnique",
+          action: "createOne",
           query: {
             selection: JSON.stringify({
               id: true,
               name: true,
+              email: true,
             }),
             arguments: JSON.stringify({
-              where: {
-                id: 1,
+              data: {
+                name: "John Doe",
+                email: "john.doe@example.com",
               },
             }),
           },
@@ -91,7 +93,85 @@ Meta.test("typegate: find available operations", async (t) => {
       })
       .withHeaders(adminHeaders)
       .expectData({
-        execRawPrismaRead: "null",
+        execRawPrismaCreate: JSON.stringify({
+          id: 1,
+          name: "John Doe",
+          email: "john.doe@example.com",
+        }),
+      })
+      .on(e);
+  });
+
+  await t.should("query prisma model", async () => {
+    await gql`
+      query QueryPrismaModel($typegraph: String!, $runtime: String!, $model: String!) {
+        queryPrismaModel(
+          typegraph: $typegraph,
+          runtime: $runtime,
+          model: $model,
+          offset: 0,
+          limit: 50,
+        ) {
+          fields {
+            name
+            type {
+              as_id
+            }
+          }
+          rowCount
+          data
+        }
+      }
+    `
+      .withVars({
+        typegraph: "prisma",
+        runtime: "prisma",
+        model: "users",
+      })
+      .withHeaders(adminHeaders)
+      .expectData({
+        queryPrismaModel: {
+          fields: [
+            {
+              name: "id",
+              type: {
+                as_id: true,
+              },
+            },
+            {
+              name: "identities",
+              type: {
+                as_id: false,
+              },
+            },
+            {
+              name: "email",
+              type: {
+                as_id: false,
+              },
+            },
+            {
+              name: "name",
+              type: {
+                as_id: false,
+              },
+            },
+            {
+              name: "messages",
+              type: {
+                as_id: false,
+              },
+            },
+          ],
+          rowCount: 1,
+          data: [
+            JSON.stringify({
+              id: 1,
+              email: "john.doe@example.com",
+              name: "John Doe",
+            }),
+          ],
+        },
       })
       .on(e);
   });
