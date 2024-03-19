@@ -24,7 +24,7 @@ class HostImpl(imports.HostHost):
     def eprint(self, msg: str):
         print(msg, file=sys.stderr)
 
-    def expand_glob(self, root: str, exclude: List[str]) -> Result[List[str], str]:
+    def expand_path(self, root: str, exclude: List[str]) -> Result[List[str], str]:
         try:
             result = []
             for path, _, files in os.walk(root):

@@ -11,7 +11,7 @@ use indexmap::IndexMap;
 use crate::{
     global_store::Store,
     wit::metatype::typegraph::host::{
-        expand_glob as expand_glob_host, get_cwd, path_exists, read_file, write_file,
+        expand_path as expand_path_host, get_cwd, path_exists, read_file, write_file,
     },
 };
 
@@ -80,7 +80,7 @@ pub fn relativize_paths(paths: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
     Err("Cannot relativize path list if one item is already relative".to_string())
 }
 
-pub fn expand_glob(path: &Path, exclude_glob: &[String]) -> Result<Vec<PathBuf>, String> {
+pub fn expand_path(path: &Path, exclude_glob: &[String]) -> Result<Vec<PathBuf>, String> {
     let exclude_as_regex = exclude_glob
         .iter()
         .map(|glob_pattern| {
@@ -102,7 +102,7 @@ pub fn expand_glob(path: &Path, exclude_glob: &[String]) -> Result<Vec<PathBuf>,
         })
         .collect::<Vec<_>>();
 
-    let ret = expand_glob_host(&path.display().to_string(), &exclude_as_regex)?
+    let ret = expand_path_host(&path.display().to_string(), &exclude_as_regex)?
         .iter()
         .map(PathBuf::from)
         .collect();
@@ -113,7 +113,7 @@ pub fn expand_glob(path: &Path, exclude_glob: &[String]) -> Result<Vec<PathBuf>,
 pub fn compress<P: Into<String>>(path: P, exclude: Option<Vec<String>>) -> Result<Vec<u8>, String> {
     // Note: each exclude entry is a regex pattern
     let exclude = exclude.unwrap_or_default();
-    let paths = expand_glob(&PathBuf::from(path.into()), &exclude)?;
+    let paths = expand_path(&PathBuf::from(path.into()), &exclude)?;
     let mut entries = IndexMap::new();
     // eprint("Preparing tarball");
 
