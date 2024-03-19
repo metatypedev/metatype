@@ -8,17 +8,15 @@ await typegraph("example", (g) => {
   const python = new PythonRuntime();
 
   g.expose({
-    add: python
-      .fromLambda(
-        t.struct({ first: t.float(), second: t.float() }),
-        t.float(),
-        { code: "lambda x: x['first'] + x['second']" }
-      )
-      .withPolicy(pub),
-    multiply: deno
-      .func(t.struct({ first: t.float(), second: t.float() }), t.float(), {
-        code: "({first, second}) => first * second",
-      })
-      .withPolicy(pub),
+    add: python.fromLambda(
+      t.struct({ "first": t.float(), "second": t.float() }),
+      t.float(),
+      { code: "lambda x: x['first'] + x['second']" },
+    ).withPolicy(pub),
+    multiply: deno.func(
+      t.struct({ "first": t.float(), "second": t.float() }),
+      t.float(),
+      { code: "({first, second}) => first * second" },
+    ).withPolicy(pub),
   });
 });
