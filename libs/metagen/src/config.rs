@@ -27,7 +27,8 @@ pub struct Target(pub HashMap<String, serde_json::Value>);
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
 pub struct MdkGeneratorConfigBase {
     #[garde(length(min = 1))]
-    pub typegraph: String,
+    #[serde(rename = "typegraph")]
+    pub typegraph_name: String,
     #[garde(skip)]
     pub path: PathBuf,
 }

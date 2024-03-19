@@ -109,7 +109,7 @@ repos:
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
           - rust
-        files: ^(typegate|libs)/
+        files: ^(typegate|libs!(.*/static/.*))/
       - id: insert-license
         name: "License MPL-2.0 rust"
         args:
