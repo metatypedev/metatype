@@ -4,10 +4,12 @@ use common::typegraph::*;
 pub async fn test_typegraph_1() -> anyhow::Result<Typegraph> {
     let out = tokio::process::Command::new("cargo")
         .args(
-            "run -p meta-cli -- serialize -f tests/tg.ts"
+            // "run -p meta-cli -- serialize -f tests/tg.ts"
+            "run -p meta-cli -- serialize -f ../../examples/typegraphs/reduce.py"
                 .split(' ')
                 .collect::<Vec<_>>(),
         )
+        .kill_on_drop(true)
         .output()
         .await?;
     let mut tg: Vec<Typegraph> = serde_json::from_slice(&out.stdout)

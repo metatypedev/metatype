@@ -46,8 +46,12 @@ pub fn gen_type(
         | TypeNode::File { base, .. }
         | TypeNode::Any { base, .. }
         | TypeNode::Object { base, .. }
-        | TypeNode::Float { base, .. } => normalize_type_title(&base.title),
-        TypeNode::Union { base, .. } => {
+        | TypeNode::Float { base, .. }
+        | TypeNode::Optional { base, .. }
+        | TypeNode::List { base, .. }
+        | TypeNode::Union { base, .. }
+        | TypeNode::Either { base, .. } => normalize_type_title(&base.title),
+        /* TypeNode::Union { base, .. } => {
             format!("{}Union", normalize_type_title(&base.title))
         }
         TypeNode::Either { base, .. } => {
@@ -57,9 +61,9 @@ pub fn gen_type(
         // the name of the inner type, we use placeholders at this ploint
         TypeNode::Optional { .. } | TypeNode::List { .. } => {
             normalize_type_title(&format!("Placeholder{id}"))
-        }
+        } */
     };
-    let mut ty_name: Arc<str> = ty_name.into();
+    let ty_name: Arc<str> = ty_name.into();
 
     // insert typename into memo before generation to allow cyclic resolution
     // if this function is recursively called when generating dependent branches
@@ -166,39 +170,42 @@ pub fn gen_type(
             // TODO: handle cyclic case where entire cycle is aliases
             let (inner_ty_name, inner_visited_types) =
                 gen_type(data.item, nodes, dest, memo, opts, &my_path)?;
+            // let optional_ty_name: Arc<str> = format!("{inner_ty_name}Maybe").into();
+            let inner_ty_name = if let Some(true) =
+                is_path_unsized_cyclic(id, &my_path, &inner_visited_types, nodes)
+            {
+                format!("Box<{inner_ty_name}>")
+            } else {
+                inner_ty_name.to_string()
+            };
             merge_visited_paths_into(inner_visited_types, &mut visited_types);
-            let optional_ty_name: Arc<str> = format!("{inner_ty_name}Maybe").into();
-            gen_alias(
-                &mut dest.buf,
-                &optional_ty_name,
-                &format!("Option<{inner_ty_name}>"),
-            )?;
-            dest.buf = replace_placeholder_ty_name(&dest.buf, &ty_name, &optional_ty_name);
-            memo.insert(id, optional_ty_name.clone());
-            ty_name = optional_ty_name;
+            gen_alias(&mut dest.buf, &ty_name, &format!("Option<{inner_ty_name}>"))?;
+            // dest.buf = replace_placeholder_ty_name(&dest.buf, &ty_name, &optional_ty_name);
+            // memo.insert(id, optional_ty_name.clone());
+            // ty_name = optional_ty_name;
         }
         TypeNode::List { data, .. } => {
             // TODO: handle cyclic case where entire cycle is aliases
             let (inner_ty_name, inner_visited_types) =
                 gen_type(data.items, nodes, dest, memo, opts, &my_path)?;
             merge_visited_paths_into(inner_visited_types, &mut visited_types);
-            let true_ty_name = if let Some(true) = data.unique_items {
-                let ty_name = format!("{inner_ty_name}Set");
+            if let Some(true) = data.unique_items {
+                // let ty_name = format!("{inner_ty_name}Set");
                 gen_alias(
                     &mut dest.buf,
                     &ty_name,
                     &format!("std::collections::HashSet<{inner_ty_name}>"),
                 )?;
-                ty_name
+                // ty_name
             } else {
-                let ty_name = format!("{inner_ty_name}List");
+                // let ty_name = format!("{inner_ty_name}List");
                 gen_alias(&mut dest.buf, &ty_name, &format!("Vec<{inner_ty_name}>"))?;
-                ty_name
+                // ty_name
             };
-            let true_ty_name: Arc<str> = true_ty_name.into();
-            dest.buf = replace_placeholder_ty_name(&dest.buf, &ty_name, &true_ty_name);
-            memo.insert(id, true_ty_name.clone());
-            ty_name = true_ty_name;
+            // let true_ty_name: Arc<str> = true_ty_name.into();
+            // dest.buf = replace_placeholder_ty_name(&dest.buf, &ty_name, &true_ty_name);
+            // memo.insert(id, true_ty_name.clone());
+            // ty_name = true_ty_name;
         }
     };
     Ok((ty_name, visited_types))
@@ -235,6 +242,7 @@ fn is_path_unsized_cyclic(
     })
 }
 
+#[allow(unused)]
 fn replace_placeholder_ty_name(buf: &str, placeholder: &str, replacement: &str) -> String {
     buf.replace(placeholder, replacement).replace(
         &normalize_struct_prop_name(placeholder),
@@ -335,7 +343,7 @@ mod test {
                             unique_items: None,
                         },
                         base: TypeNodeBase {
-                            title: "random_name".into(),
+                            title: "my_str_list".into(),
                             ..default_type_node_base()
                         },
                     },
@@ -347,7 +355,7 @@ mod test {
                             unique_items: Some(true),
                         },
                         base: TypeNodeBase {
-                            title: "random_name".into(),
+                            title: "my_str_set".into(),
                             ..default_type_node_base()
                         },
                     },
@@ -357,7 +365,7 @@ mod test {
                             default_value: None,
                         },
                         base: TypeNodeBase {
-                            title: "random_name".into(),
+                            title: "my_str_maybe".into(),
                             ..default_type_node_base()
                         },
                     },
@@ -426,7 +434,7 @@ mod test {
                             one_of: vec![0, 1, 2, 3, 4, 5, 6, 7, 8],
                         },
                         base: TypeNodeBase {
-                            title: "my_enum".into(),
+                            title: "my_either".into(),
                             ..default_type_node_base()
                         },
                     },
@@ -435,12 +443,12 @@ mod test {
                             any_of: vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
                         },
                         base: TypeNodeBase {
-                            title: "my_enum".into(),
+                            title: "my_union".into(),
                             ..default_type_node_base()
                         },
                     },
                 ],
-                "MyEnumUnion",
+                "MyUnion",
                 r#"pub type MyStr = String;
 pub type MyStrList = Vec<MyStr>;
 pub type MyStrSet = std::collections::HashSet<MyStr>;
@@ -459,7 +467,7 @@ pub struct MyObj {
     pub optional_optional: Option<MyStrMaybe>,
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub enum MyEnumEither {
+pub enum MyEither {
     MyStr(MyStr),
     MyStrList(MyStrList),
     MyStrSet(MyStrSet),
@@ -471,7 +479,7 @@ pub enum MyEnumEither {
     MyObj(MyObj),
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub enum MyEnumUnion {
+pub enum MyUnion {
     MyStr(MyStr),
     MyStrList(MyStrList),
     MyStrSet(MyStrSet),
@@ -481,7 +489,7 @@ pub enum MyEnumUnion {
     MyBool(MyBool),
     MyFile(MyFile),
     MyObj(MyObj),
-    MyEnumEither(MyEnumEither),
+    MyEither(MyEither),
 }
 "#,
             ),
@@ -560,7 +568,7 @@ pub struct ObjC {
                     TypeNode::Union {
                         data: UnionTypeData { any_of: vec![0] },
                         base: TypeNodeBase {
-                            title: "C".into(),
+                            title: "CUnion".into(),
                             ..default_type_node_base()
                         },
                     },
@@ -606,7 +614,7 @@ pub enum CUnion {
                     TypeNode::Either {
                         data: EitherTypeData { one_of: vec![0] },
                         base: TypeNodeBase {
-                            title: "C".into(),
+                            title: "CEither".into(),
                             ..default_type_node_base()
                         },
                     },

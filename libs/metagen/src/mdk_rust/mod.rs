@@ -57,7 +57,7 @@ impl crate::Plugin for Generator {
         let mut out = HashMap::new();
         out.insert(
             self.config.base.path.join("mod.rs"),
-            gen_mod_rs(&self.config, &tg)?,
+            gen_mod_rs(&self.config, tg)?,
         );
         if self.config.no_crate_manifest.unwrap_or(true) {
             use heck::ToSnekCase;
@@ -107,7 +107,7 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
 pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
     let lib_rs = include_str!("static/Cargo.toml");
     if let Some(crate_name) = crate_name {
-        static DEF_CRATE_NAME: &'static str = "metagen_mdk_rust_static";
+        const DEF_CRATE_NAME: &str = "metagen_mdk_rust_static";
         lib_rs.replace(DEF_CRATE_NAME, crate_name)
     } else {
         lib_rs.to_string()
@@ -128,7 +128,7 @@ pub fn gen_static(dest: &mut GenDestBuf) -> anyhow::Result<Arc<str>> {
     writeln!(
         &mut dest.buf,
         r#"
-    inline: "{mdk_wit}"
+        inline: "{mdk_wit}"
 "#
     )?;
     write!(
