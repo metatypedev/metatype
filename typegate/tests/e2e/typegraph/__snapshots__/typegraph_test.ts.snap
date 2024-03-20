@@ -312,7 +312,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       "version": "0.0.3",
       "random_seed": null,
-      "ref_files": {}
+      "ref_artifacts": {}
     }
   }
 ]'
@@ -468,7 +468,7 @@ snapshot[`typegraphs creation 2`] = `
       "rate": null,
       "version": "0.0.3",
       "random_seed": null,
-      "ref_files": {}
+      "ref_artifacts": {}
     }
   }
 ]\`
@@ -744,7 +744,7 @@ snapshot[`typegraphs creation 3`] = `
       "rate": null,
       "version": "0.0.3",
       "random_seed": null,
-      "ref_files": {}
+      "ref_artifacts": {}
     }
   }
 ]\`
@@ -1062,7 +1062,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       "version": "0.0.3",
       "random_seed": null,
-      "ref_files": {}
+      "ref_artifacts": {}
     }
   }
 ]'
@@ -1218,7 +1218,7 @@ snapshot[`typegraphs creation 5`] = `
       "rate": null,
       "version": "0.0.3",
       "random_seed": null,
-      "ref_files": {}
+      "ref_artifacts": {}
     }
   }
 ]\`
@@ -1494,7 +1494,7 @@ snapshot[`typegraphs creation 6`] = `
       "rate": null,
       "version": "0.0.3",
       "random_seed": null,
-      "ref_files": {}
+      "ref_artifacts": {}
     }
   }
 ]\`

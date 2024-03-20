@@ -138,7 +138,7 @@ Deno.test("typegraphValidate", () => {
       "rate": null,
       "version": "0.0.3",
       "random_seed": null,
-      "ref_files": {},
+      "ref_artifacts": {},
     },
   };
   const str = JSON.stringify(json);

@@ -30,13 +30,13 @@ class WasmEdgeRuntime(Runtime):
         effect: Optional[Effect] = None,
     ):
         effect = effect or EffectRead()
-        file_hash = get_file_hash(wasm)
+        artifact_hash = get_file_hash(wasm)
         wasm = f"file:{wasm}"
 
         mat_id = runtimes.from_wasi_module(
             store,
             BaseMaterializer(runtime=self.id.value, effect=effect),
-            MaterializerWasi(module=wasm, func_name=func, artifact_hash=file_hash),
+            MaterializerWasi(module=wasm, func_name=func, artifact_hash=artifact_hash),
         )
 
         if isinstance(mat_id, Err):

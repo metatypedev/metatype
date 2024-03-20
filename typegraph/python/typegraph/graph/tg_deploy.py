@@ -42,8 +42,8 @@ class RemoveResult:
 @dataclass
 class UploadArtifactMeta:
     name: str
-    file_hash: str
-    file_size_in_bytes: int
+    artifact_hash: str
+    artifact_size_in_bytes: int
 
 
 def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResult:
@@ -55,18 +55,18 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
         headers["Authorization"] = params.auth.as_header_value()
     serialized = tg.serialize(params.artifacts_config)
     tg_json = serialized.tgJson
-    ref_files = serialized.ref_files
+    ref_artifacts = serialized.ref_artifacts
 
-    # upload the referred files
+    # upload the referred artifacts
     # TODO: fetch all the upload urls in one request
     get_upload_url = params.base_url + sep + tg.name + "/get-upload-url"
-    for file_hash, file_path in ref_files:
-        with open(file_path, "rb") as file:
-            file_content = file.read()
+    for artifact_hash, artifact_path in ref_artifacts:
+        with open(artifact_path, "rb") as artifact:
+            artifact_content = artifact.read()
             artifact = UploadArtifactMeta(
-                name=os.path.basename(file_path),
-                file_hash=file_hash,
-                file_size_in_bytes=len(file_content),
+                name=os.path.basename(artifact_path),
+                artifact_hash=artifact_hash,
+                artifact_size_in_bytes=len(artifact_content),
             )
 
             artifact_json = json.dumps(artifact.__dict__).encode()
@@ -75,21 +75,21 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
             )
 
             response = handle_response(request.urlopen(req).read().decode())
-            file_upload_url = response["uploadUrl"]
+            artifact_upload_url = response["uploadUrl"]
 
             upload_headers = {"Content-Type": "application/octet-stream"}
             if params.auth is not None:
                 upload_headers["Authorization"] = params.auth.as_header_value()
             upload_req = request.Request(
-                url=file_upload_url,
+                url=artifact_upload_url,
                 method="PUT",
-                data=file_content,
+                data=artifact_content,
                 headers=upload_headers,
             )
             response = request.urlopen(upload_req)
             if response.status != 200:
                 raise Exception(
-                    f"Failed to upload artifact {file_path} to typegate: {response.read()}"
+                    f"Failed to upload artifact {artifact_path} to typegate: {response.read()}"
                 )
 
     # deploy the typegraph

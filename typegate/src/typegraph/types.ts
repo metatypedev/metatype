@@ -507,7 +507,7 @@ export interface TypeMeta {
   rate?: Rate | null;
   version: string;
   random_seed: number | undefined;
-  ref_files: Map<string, string>;
+  ref_artifacts: Map<string, string>;
 }
 export interface Queries {
   dynamic: boolean;

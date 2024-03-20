@@ -311,7 +311,7 @@ snapshot[`Typegraph using temporal 1`] = `
       "rate": null,
       "version": "0.0.3",
       "random_seed": null,
-      "ref_files": {}
+      "ref_artifacts": {}
     }
   }
 ]'
@@ -628,7 +628,7 @@ snapshot[`Typegraph using temporal 2`] = `
       "rate": null,
       "version": "0.0.3",
       "random_seed": null,
-      "ref_files": {}
+      "ref_artifacts": {}
     }
   }
 ]'

@@ -38,8 +38,8 @@ export interface RemoveResult {
 
 export interface UploadArtifactMeta {
   name: string;
-  file_hash: string;
-  file_size_in_bytes: number;
+  artifact_hash: string;
+  artifact_size_in_bytes: number;
 }
 
 export async function tgDeploy(
@@ -49,7 +49,7 @@ export async function tgDeploy(
   const { baseUrl, secrets, auth, artifactsConfig } = params;
   const serialized = typegraph.serialize(artifactsConfig);
   const tgJson = serialized.tgJson;
-  const ref_files = serialized.ref_files;
+  const ref_artifacts = serialized.ref_artifacts;
 
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
@@ -60,14 +60,14 @@ export async function tgDeploy(
   // upload the artifacts
   const suffix = `${typegraph.name}/get-upload-url`;
   const getUploadUrl = new URL(suffix, baseUrl);
-  for (let [fileHash, filePath] of ref_files) {
-    const fileContent: Buffer = fs.readFileSync(filePath);
-    const byteArray = new Uint8Array(fileContent);
+  for (let [artifactHash, artifactPath] of ref_artifacts) {
+    const artifactContent: Buffer = fs.readFileSync(artifactPath);
+    const byteArray = new Uint8Array(artifactContent);
 
     const artifactMeta: UploadArtifactMeta = {
-      name: path.basename(filePath),
-      file_hash: fileHash,
-      file_size_in_bytes: fileContent.length,
+      name: path.basename(artifactPath),
+      artifact_hash: artifactHash,
+      artifact_size_in_bytes: artifactContent.length,
     };
 
     const artifactJson = JSON.stringify(artifactMeta);
@@ -97,7 +97,7 @@ export async function tgDeploy(
     const _ = await artifactUploadResponse.json();
     if (!artifactUploadResponse.ok) {
       throw new Error(
-        `Failed to upload artifact ${filePath} to typegate: ${artifactUploadResponse.status} ${artifactUploadResponse.statusText}`,
+        `Failed to upload artifact ${artifactPath} to typegate: ${artifactUploadResponse.status} ${artifactUploadResponse.statusText}`,
       );
     }
   }

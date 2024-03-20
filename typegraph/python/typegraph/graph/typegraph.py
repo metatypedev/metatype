@@ -220,8 +220,8 @@ def typegraph(
             if isinstance(finalization_result, Err):
                 raise Exception(finalization_result.value)
 
-            tg_json, ref_files = finalization_result.value
-            return FinalizationResult(tg_json, ref_files)
+            tg_json, ref_artifacts = finalization_result.value
+            return FinalizationResult(tg_json, ref_artifacts)
 
         tg_output = TypegraphOutput(name=tg.name, serialize=serialize_with_artifacts)
 

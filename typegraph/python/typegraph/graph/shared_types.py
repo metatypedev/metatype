@@ -10,7 +10,7 @@ from typegraph.wit import ArtifactResolutionConfig
 @dataclass
 class FinalizationResult:
     tgJson: str
-    ref_files: List[Tuple[str, str]]
+    ref_artifacts: List[Tuple[str, str]]
 
 
 @dataclass

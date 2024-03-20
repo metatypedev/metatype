@@ -42,7 +42,7 @@ export class WasmEdgeRuntime extends Runtime {
           {
             func: func as string,
             wasm:
-              `${config.tmp_dir}/metatype_artifacts/${tg_name as string}/files/${wasm as string}.${artifact_hash as string}`,
+              `${config.tmp_dir}/metatype_artifacts/${tg_name as string}/artifacts/${wasm as string}.${artifact_hash as string}`,
             args: transfert,
             out: outType.type,
           },

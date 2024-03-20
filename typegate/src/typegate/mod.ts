@@ -36,9 +36,9 @@ import introspectionJson from "../typegraphs/introspection.json" with {
   type: "json",
 };
 import {
-  handleFileUpload,
+  handleArtifactUpload,
   handleUploadUrl,
-} from "../services/file_upload_service.ts";
+} from "../services/artifact_upload_service.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -63,15 +63,15 @@ export type PushResult = {
 };
 
 export interface UploadUrlMeta {
-  fileName: string;
-  fileHash: string;
-  fileSizeInBytes: number;
+  artifactName: string;
+  artifactHash: string;
+  artifactSizeInBytes: number;
   urlUsed: boolean;
 }
 
 export class Typegate {
   #onPushHooks: PushHandler[] = [];
-  fileUploadUrlCache: Map<string, UploadUrlMeta> = new Map();
+  artifactUploadUrlCache: Map<string, UploadUrlMeta> = new Map();
 
   constructor(
     public readonly register: Register,
@@ -126,13 +126,21 @@ export class Typegate {
 
       const [engineName, serviceName] = parsePath(url.pathname);
 
-      // file upload handlers
+      // artifact upload handlers
       if (serviceName === "get-upload-url") {
-        return handleUploadUrl(request, engineName, this.fileUploadUrlCache);
+        return handleUploadUrl(
+          request,
+          engineName,
+          this.artifactUploadUrlCache,
+        );
       }
 
-      if (serviceName === "upload-files") {
-        return handleFileUpload(request, engineName, this.fileUploadUrlCache);
+      if (serviceName === "upload-artifacts") {
+        return handleArtifactUpload(
+          request,
+          engineName,
+          this.artifactUploadUrlCache,
+        );
       }
 
       if (!engineName || ignoreList.has(engineName)) {

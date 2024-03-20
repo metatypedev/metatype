@@ -31,7 +31,7 @@ export class WasmEdgeRuntime extends Runtime {
       effect?: Effect;
     },
   ): Promise<t.Func<I, O, WasiMat>> {
-    let fileHash = await getFileHash(wasm);
+    let artifactHash = await getFileHash(wasm);
 
     const matId = runtimes.fromWasiModule(
       {
@@ -41,7 +41,7 @@ export class WasmEdgeRuntime extends Runtime {
       {
         module: `file:${wasm}`,
         funcName: func,
-        artifactHash: fileHash,
+        artifactHash: artifactHash,
       },
     );
 

@@ -121,7 +121,7 @@ export interface TypegraphOutput {
 
 export interface TgFinalizationResult {
   tgJson: string;
-  ref_files: [string, string][];
+  ref_artifacts: [string, string][];
 }
 
 export async function typegraph(
@@ -221,10 +221,10 @@ export async function typegraph(
 
   const ret = {
     serialize(config: ArtifactResolutionConfig) {
-      const [tgJson, ref_files] = core.finalizeTypegraph(config);
+      const [tgJson, ref_artifacts] = core.finalizeTypegraph(config);
       const result: TgFinalizationResult = {
         tgJson: tgJson,
-        ref_files: ref_files,
+        ref_artifacts: ref_artifacts,
       };
       return result;
     },

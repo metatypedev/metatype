@@ -111,7 +111,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             rate: params.rate.map(|v| v.into()),
             secrets: vec![],
             random_seed: Default::default(),
-            ref_files: Default::default(),
+            ref_artifacts: Default::default(),
         },
         types: vec![],
         saved_store_state: Some(Store::save()),
@@ -197,9 +197,9 @@ pub fn finalize(
 
     let auths = finalize_auths(&mut ctx)?;
 
-    let referred_files: Vec<(String, String)> = ctx
+    let referred_artifacts: Vec<(String, String)> = ctx
         .meta
-        .ref_files
+        .ref_artifacts
         .clone()
         .iter()
         .map(|(hash, path)| (hash.clone(), path.to_string_lossy().to_string()))
@@ -223,7 +223,7 @@ pub fn finalize(
                 dynamic: ctx.meta.queries.dynamic,
                 endpoints: Store::get_graphql_endpoints(),
             },
-            ref_files: ctx.meta.ref_files,
+            ref_artifacts: ctx.meta.ref_artifacts,
             random_seed: Store::get_random_seed(),
             auths,
             ..ctx.meta
@@ -246,10 +246,10 @@ pub fn finalize(
     };
 
     #[cfg(test)]
-    return Ok((result, referred_files));
+    return Ok((result, referred_artifacts));
 
     #[cfg(not(test))]
-    return Ok((result, referred_files));
+    return Ok((result, referred_artifacts));
 }
 
 fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
@@ -487,7 +487,7 @@ impl TypegraphContext {
         self.mapping.policies.get(&id).copied()
     }
 
-    pub fn add_ref_files(&mut self, file_hash: String, file_path: PathBuf) -> Result<()> {
+    pub fn add_ref_artifacts(&mut self, file_hash: String, file_path: PathBuf) -> Result<()> {
         let binding = file_path.to_string_lossy().to_string();
         let path = match binding.strip_prefix("file:") {
             Some(path) => path,
@@ -497,7 +497,9 @@ impl TypegraphContext {
             Ok(path) => path,
             Err(e) => return Err(e.into()),
         };
-        self.meta.ref_files.insert(file_hash, absolute_file_path);
+        self.meta
+            .ref_artifacts
+            .insert(file_hash, absolute_file_path);
         Ok(())
     }
 }

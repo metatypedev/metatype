@@ -298,7 +298,7 @@ impl MaterializerConverter for WasiMaterializer {
         }))
         .map_err(|e| e.to_string())?;
 
-        c.add_ref_files(mat.artifact_hash.clone(), mat.module.clone().into())?;
+        c.add_ref_artifacts(mat.artifact_hash.clone(), mat.module.clone().into())?;
 
         let name = "wasi".to_string();
         Ok(Materializer {
