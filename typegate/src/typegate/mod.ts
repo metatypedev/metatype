@@ -62,8 +62,16 @@ export type PushResult = {
   response: PushResponse;
 };
 
+export interface UploadUrlMeta {
+  fileName: string;
+  fileHash: string;
+  fileSizeInBytes: number;
+  urlUsed: boolean;
+}
+
 export class Typegate {
   #onPushHooks: PushHandler[] = [];
+  fileUploadUrlCache: Map<string, UploadUrlMeta> = new Map();
 
   constructor(
     public readonly register: Register,
@@ -117,6 +125,16 @@ export class Typegate {
       }
 
       const [engineName, serviceName] = parsePath(url.pathname);
+
+      // file upload handlers
+      if (serviceName === "get-upload-url") {
+        return handleUploadUrl(request, engineName, this.fileUploadUrlCache);
+      }
+
+      if (serviceName === "upload-files") {
+        return handleFileUpload(request, engineName, this.fileUploadUrlCache);
+      }
+
       if (!engineName || ignoreList.has(engineName)) {
         return notFound();
       }
@@ -131,14 +149,6 @@ export class Typegate {
         return new Response(null, {
           headers: cors,
         });
-      }
-
-      if (serviceName === "get-upload-url") {
-        return handleUploadUrl(request, engine);
-      }
-
-      if (serviceName === "upload-files") {
-        return handleFileUpload(request, engine);
       }
 
       if (serviceName === "auth") {

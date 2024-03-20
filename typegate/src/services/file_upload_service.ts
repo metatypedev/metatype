@@ -3,8 +3,7 @@
 
 import config from "../config.ts";
 import { signJWT, verifyJWT } from "../crypto.ts";
-import { UploadUrlMeta } from "../engine/query_engine.ts";
-import { QueryEngine } from "../engine/query_engine.ts";
+import { UploadUrlMeta } from "../typegate/mod.ts";
 
 interface TypegraphFile {
   name: string;
@@ -17,7 +16,11 @@ function createUploadPath(origin: string, typegraphName: string) {
   return `${origin}/${typegraphName}/upload-files/files/${rand_path}`;
 }
 
-export async function handleUploadUrl(request: Request, engine: QueryEngine) {
+export async function handleUploadUrl(
+  request: Request,
+  tgName: string,
+  urlCache: Map<string, UploadUrlMeta>,
+) {
   const url = new URL(request.url);
   const origin = url.origin;
   const { name, file_hash, file_size_in_bytes }: TypegraphFile = await request
@@ -29,7 +32,7 @@ export async function handleUploadUrl(request: Request, engine: QueryEngine) {
     urlUsed: false,
   };
 
-  let uploadUrl = createUploadPath(origin, engine.name);
+  let uploadUrl = createUploadPath(origin, tgName);
 
   const expiresIn = 5 * 60; // 5 minutes
   const payload = {
@@ -38,14 +41,15 @@ export async function handleUploadUrl(request: Request, engine: QueryEngine) {
   const token = await signJWT(payload, expiresIn);
   uploadUrl = `${uploadUrl}?token=${token}`;
 
-  engine.fileUploadUrlCache.set(uploadUrl, uploadUrlMeta);
+  urlCache.set(uploadUrl, uploadUrlMeta);
 
   return new Response(JSON.stringify({ uploadUrl: uploadUrl }));
 }
 
 export async function handleFileUpload(
   request: Request,
-  engine: QueryEngine,
+  tgName: string,
+  urlCache: Map<string, UploadUrlMeta>,
 ) {
   const url = new URL(request.url);
   if (request.method !== "PUT") {
@@ -54,7 +58,7 @@ export async function handleFileUpload(
     );
   }
 
-  const uploadMeta = engine.fileUploadUrlCache.get(url.toString());
+  const uploadMeta = urlCache.get(url.toString());
 
   if (!uploadMeta) {
     throw new Error(`Endpoint ${url.toString()} does not exist`);
@@ -99,15 +103,14 @@ export async function handleFileUpload(
   }
 
   // adjust relative to the root path
-  const fileStorageDir =
-    `${config.tmp_dir}/metatype_artifacts/${engine.name}/files`;
+  const fileStorageDir = `${config.tmp_dir}/metatype_artifacts/${tgName}/files`;
   await Deno.mkdir(fileStorageDir, { recursive: true });
   const filePath = `${fileStorageDir}/${fileName}.${fileHash}`;
   await Deno.writeFile(filePath, fileData);
 
   // mark as the url used once the request completes.
   uploadMeta.urlUsed = true;
-  engine.fileUploadUrlCache.set(url.toString(), uploadMeta);
+  urlCache.set(url.toString(), uploadMeta);
 
   return new Response(JSON.stringify({
     "success": true,

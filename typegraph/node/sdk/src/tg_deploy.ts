@@ -57,20 +57,7 @@ export async function tgDeploy(
     headers.append("Authorization", auth.asHeaderValue());
   }
 
-  const response = await fetch(new URL("/typegate", baseUrl), {
-    method: "POST",
-    headers,
-    body: wit_utils.gqlDeployQuery({
-      tg: tgJson,
-      secrets: Object.entries(secrets ?? {}),
-    }),
-  });
-
-  const result = {
-    serialized: tgJson,
-    typegate: await handleResponse(response),
-  };
-
+  // upload the artifacts
   const suffix = `${typegraph.name}/get-upload-url`;
   const getUploadUrl = new URL(suffix, baseUrl);
   for (let [fileHash, filePath] of ref_files) {
@@ -115,7 +102,20 @@ export async function tgDeploy(
     }
   }
 
-  return result;
+  // deploy the typegraph
+  const response = await fetch(new URL("/typegate", baseUrl), {
+    method: "POST",
+    headers,
+    body: wit_utils.gqlDeployQuery({
+      tg: tgJson,
+      secrets: Object.entries(secrets ?? {}),
+    }),
+  });
+
+  return {
+    serialized: tgJson,
+    typegate: await handleResponse(response),
+  };
 }
 
 export async function tgRemove(

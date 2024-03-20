@@ -57,29 +57,6 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     tg_json = serialized.tgJson
     ref_files = serialized.ref_files
 
-    res = wit_utils.gql_deploy_query(
-        store,
-        params=QueryDeployParams(
-            tg=tg_json,
-            secrets=[(k, v) for k, v in (params.secrets or {}).items()],
-        ),
-    )
-
-    if isinstance(res, Err):
-        raise Exception(res.value)
-
-    req = request.Request(
-        url=url,
-        method="POST",
-        headers=headers,
-        data=res.value.encode(),
-    )
-
-    result = DeployResult(
-        serialized=tg_json,
-        typegate=handle_response(request.urlopen(req).read().decode()),
-    )
-
     # upload the referred files
     # TODO: fetch all the upload urls in one request
     get_upload_url = params.base_url + sep + tg.name + "/get-upload-url"
@@ -115,7 +92,29 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
                     f"Failed to upload artifact {file_path} to typegate: {response.read()}"
                 )
 
-    return result
+    # deploy the typegraph
+    res = wit_utils.gql_deploy_query(
+        store,
+        params=QueryDeployParams(
+            tg=tg_json,
+            secrets=[(k, v) for k, v in (params.secrets or {}).items()],
+        ),
+    )
+
+    if isinstance(res, Err):
+        raise Exception(res.value)
+
+    req = request.Request(
+        url=url,
+        method="POST",
+        headers=headers,
+        data=res.value.encode(),
+    )
+
+    return DeployResult(
+        serialized=tg_json,
+        typegate=handle_response(request.urlopen(req).read().decode()),
+    )
 
 
 def tg_remove(tg: TypegraphOutput, params: TypegraphRemoveParams):
