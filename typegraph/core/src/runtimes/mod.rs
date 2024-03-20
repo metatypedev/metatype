@@ -586,6 +586,7 @@ impl crate::wit::runtimes::Guest for crate::Lib {
             WitOp::GetArgInfoByPath => (WitEffect::Read, Op::GetArgInfoByPath),
             WitOp::FindAvailableOperations => (WitEffect::Read, Op::FindAvailableOperations),
             WitOp::FindPrismaModels => (WitEffect::Read, Op::FindPrismaModels),
+            WitOp::RawPrismaQuery => (WitEffect::Read, Op::RawPrismaQuery),
         };
 
         Ok(Store::register_materializer(Materializer::typegate(
