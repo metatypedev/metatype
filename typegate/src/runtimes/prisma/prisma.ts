@@ -115,7 +115,12 @@ export class PrismaRuntime extends Runtime {
         datamodel: this.datamodel,
       }),
     );
-    return JSON.parse(res) as PrismaResult;
+    const result = JSON.parse(res);
+    if ("errors" in result) {
+      console.error("remote prisma errors", result.errors);
+      throw new ResolverError(result.errors[0].user_facing_error.message);
+    }
+    return result.data;
   }
 
   execute(
@@ -136,12 +141,7 @@ export class PrismaRuntime extends Runtime {
       const endTime = performance.now();
       logger.debug(`queried prisma in ${(endTime - startTime).toFixed(2)}ms`);
 
-      if ("errors" in res) {
-        console.error("remote prisma errors", res.errors);
-        throw new ResolverError(res.errors[0].user_facing_error.message);
-      }
-
-      return path.reduce((r, field) => r[field], res.data);
+      return path.reduce((r, field) => r[field], res);
     };
   }
 
