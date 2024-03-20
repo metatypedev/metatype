@@ -40,9 +40,8 @@ export class WasmEdgeRuntime extends Runtime {
         await native.wasmedge_wasi(
           {
             func: func as string,
-            wasm: wasm as string,
-            artifact_hash: artifact_hash as string,
-            tg_name: tg_name as string,
+            wasm:
+              `tmp/metatype_artifacts/${tg_name as string}/files/${wasm as string}.${artifact_hash as string}`,
             args: transfert,
             out: outType.type,
           },

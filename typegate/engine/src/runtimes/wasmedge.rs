@@ -24,8 +24,6 @@ use std::{env, fs};
 pub struct WasiInput {
     func: String,
     wasm: String,
-    artifact_hash: String,
-    tg_name: String,
     args: Vec<String>,
     out: String,
 }
@@ -57,10 +55,7 @@ fn param_cast(out: &str, res: &mut Vec<Box<dyn Any + Send + Sync>>) -> Result<St
 pub fn op_wasmedge_wasi(#[serde] input: WasiInput) -> Result<String> {
     // https://github.com/second-state/wasmedge-rustsdk-examples
 
-    let wasm_relative_path = PathBuf::from(format!(
-        "tmp/metatype_artifacts/{}/files/{}.{}",
-        input.tg_name, input.wasm, input.artifact_hash
-    ));
+    let wasm_relative_path = PathBuf::from(input.wasm);
 
     let wasm_absolute_path = match env::current_dir() {
         Ok(cwd) => cwd.join(wasm_relative_path),
