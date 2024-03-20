@@ -7,6 +7,7 @@ import { Resolver, RuntimeInitParams } from "../types.ts";
 import { nativeResult } from "../utils.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
 import { registerRuntime } from "./mod.ts";
+import config from "../config.ts";
 
 @registerRuntime("wasmedge")
 export class WasmEdgeRuntime extends Runtime {
@@ -41,7 +42,7 @@ export class WasmEdgeRuntime extends Runtime {
           {
             func: func as string,
             wasm:
-              `tmp/metatype_artifacts/${tg_name as string}/files/${wasm as string}.${artifact_hash as string}`,
+              `${config.tmp_dir}/metatype_artifacts/${tg_name as string}/files/${wasm as string}.${artifact_hash as string}`,
             args: transfert,
             out: outType.type,
           },
