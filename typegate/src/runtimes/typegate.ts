@@ -16,7 +16,6 @@ import { StringFormat } from "../typegraph/types.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { applyPostProcessors } from "../postprocess.ts";
 import { PrismaRT, PrismaRuntime } from "./prisma/mod.ts";
-import { PrismaRT, PrismaRuntime } from "./prisma/mod.ts";
 
 const logger = getLogger(import.meta);
 
