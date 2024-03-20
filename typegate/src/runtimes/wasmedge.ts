@@ -29,7 +29,7 @@ export class WasmEdgeRuntime extends Runtime {
     _verbose: boolean,
   ): ComputeStage[] {
     const { materializer, argumentTypes, outType } = stage.props;
-    const { wasm, func } = materializer?.data ?? {};
+    const { wasm, func, artifact_hash, tg_name } = materializer?.data ?? {};
     const order = Object.keys(argumentTypes ?? {});
 
     // always wasi
@@ -41,6 +41,8 @@ export class WasmEdgeRuntime extends Runtime {
           {
             func: func as string,
             wasm: wasm as string,
+            artifact_hash: artifact_hash as string,
+            tg_name: tg_name as string,
             args: transfert,
             out: outType.type,
           },

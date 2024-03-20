@@ -27,12 +27,10 @@ impl PostProcessor for WasmedgeProcessor {
                 let wasi_path = fs_host::make_absolute(&PathBuf::from(path))?;
                 let file_name = path.split('/').last().unwrap();
                 let artifact_hash = mat_data.artifact_hash.clone();
-                let wasm_path = format!(
-                    "tmp/metatype_artifacts/{}/files/{}.{}",
-                    tg_name, file_name, artifact_hash
-                );
 
-                mat_data.wasm = wasm_path;
+                mat_data.wasm = file_name.into();
+                mat_data.artifact_hash = artifact_hash;
+                mat_data.tg_name = Some(tg_name.clone());
 
                 mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
                 tg.deps.push(wasi_path);

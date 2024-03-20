@@ -4,6 +4,8 @@
 interface WasiInput {
   func: string;
   wasm: string;
+  artifact_hash: string;
+  tg_name: string;
   args: Array<string>;
   out: string;
 }
