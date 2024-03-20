@@ -148,17 +148,17 @@ pub fn unpack_base64<P: Into<String>>(tarb64: &str, dest: P) -> Result<(), Strin
 }
 
 pub fn compress_and_encode_base64(path: PathBuf) -> Result<String, String> {
-    let mut sdkignore = load_sdk_ignore_file()?;
+    let mut tgignore = load_tg_ignore_file()?;
     let default = vec!["node_modules".to_string(), ".git".to_string()];
-    sdkignore.extend(default);
+    tgignore.extend(default);
 
-    let bytes = compress(path.display().to_string(), Some(sdkignore))?;
+    let bytes = compress(path.display().to_string(), Some(tgignore))?;
     encode_bytes_to_base_64(bytes).map_err(|e| e.to_string())
 }
 
-/// Search for .sdkignore file at `cwd`, if nothing is found, an empty `Vec` is returned
-pub fn load_sdk_ignore_file() -> Result<Vec<String>, String> {
-    let file = cwd()?.join(".sdkignore").display().to_string();
+/// Search for .tgignore file at `cwd`, if nothing is found, an empty `Vec` is returned
+pub fn load_tg_ignore_file() -> Result<Vec<String>, String> {
+    let file = cwd()?.join(".tgignore").display().to_string();
 
     match path_exists(&file)? {
         true => read_text_file(file).map(|content| {

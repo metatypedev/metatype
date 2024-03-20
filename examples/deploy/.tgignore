@@ -4,3 +4,4 @@ node_modules
 *.json
 *.y*ml
 .*ignore
+deploy.*
