@@ -6,6 +6,7 @@ import { runtimes } from "../wit.js";
 import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import { Materializer, Runtime } from "./mod.js";
 import { fx } from "../index.js";
+import { getFileHash } from "../utils/file_utils.js";
 
 interface LambdaMat extends Materializer {
   fn: string;
@@ -84,22 +85,25 @@ export class PythonRuntime extends Runtime {
     } as DefMat);
   }
 
-  import<
+  async import<
     I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
     { name, module, effect = fx.read(), secrets = [] }: PythonImport,
-  ): t.Func<I, O, ImportMat> {
+  ): Promise<t.Func<I, O, ImportMat>> {
     const base = {
       runtime: this._id,
       effect,
     };
 
+    const artifactHash = await getFileHash(module);
+
     const matId = runtimes.fromPythonModule(base, {
-      file: module,
+      artifact: module,
       runtime: this._id,
+      artifactHash: artifactHash,
     });
 
     const pyModMatId = runtimes.fromPythonImport(base, {

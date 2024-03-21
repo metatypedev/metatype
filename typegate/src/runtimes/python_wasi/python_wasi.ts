@@ -12,6 +12,7 @@ import { Materializer } from "../../typegraph/types.ts";
 import { structureRepr } from "../../utils.ts";
 import { uncompress } from "../../utils.ts";
 import * as ast from "graphql/ast";
+import config from "../../config.ts";
 
 const logger = getLogger(import.meta);
 
@@ -71,6 +72,11 @@ export class PythonWasiRuntime extends Runtime {
         case "import_function": {
           const pyModMat = typegraph.materializers[m.data.mod as number];
           const code = pyModMat.data.code as string;
+
+          // resolve the python module artifacts/files
+          const { artifact, artifact_hash, tg_name } = pyModMat.data;
+          const _artifact_path =
+            `${config.tmp_dir}/metatype_artifacts/${tg_name}/artifacts/${artifact}.${artifact_hash}`;
 
           const repr = await structureRepr(code);
           const vmId = generateVmIdentifier(m, uuid);

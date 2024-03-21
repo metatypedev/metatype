@@ -229,11 +229,15 @@ impl MaterializerConverter for PythonMaterializer {
                 ("def".to_string(), data)
             }
             Module(module) => {
-                let mut data = IndexMap::new();
-                data.insert(
-                    "code".to_string(),
-                    serde_json::Value::String(format!("file:{}", module.file)),
-                );
+                c.add_ref_artifacts(module.artifact_hash.clone(), module.artifact.clone().into())?;
+
+                let data = serde_json::from_value(json!({
+                    "artifact": module.artifact,
+                    "artifact_hash": module.artifact_hash,
+                    "tg_name": None::<String>,
+                }))
+                .map_err(|e| e.to_string())?;
+
                 ("pymodule".to_string(), data)
             }
             Import(import) => {

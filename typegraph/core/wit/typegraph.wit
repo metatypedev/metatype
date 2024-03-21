@@ -328,7 +328,8 @@ interface runtimes {
 
     record materializer-python-module {
         runtime: runtime-id,
-        file: string,
+        artifact: string,
+        artifact-hash: string,
     }
 
     record materializer-python-import {

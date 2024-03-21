@@ -8,7 +8,9 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ModuleMatData {
-    pub code: String,
+    pub artifact: String,
+    pub artifact_hash: String,
+    pub tg_name: Option<String>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

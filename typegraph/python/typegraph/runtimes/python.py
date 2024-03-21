@@ -18,6 +18,7 @@ from typegraph.gen.exports.runtimes import (
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.utils import get_file_hash
 from typegraph.wit import runtimes, store
 
 if TYPE_CHECKING:
@@ -99,9 +100,15 @@ class PythonRuntime(Runtime):
         effect = effect or EffectRead()
         secrets = secrets or []
 
+        artifact_hash = get_file_hash(module)
+
         base = BaseMaterializer(runtime=self.id.value, effect=effect)
         mat_id = runtimes.from_python_module(
-            store, base, MaterializerPythonModule(file=module, runtime=self.id.value)
+            store,
+            base,
+            MaterializerPythonModule(
+                artifact=module, artifact_hash=artifact_hash, runtime=self.id.value
+            ),
         )
 
         if isinstance(mat_id, Err):
