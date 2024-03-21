@@ -59,26 +59,25 @@ fn main() -> Result<()> {
 
     match args.command {
         // the deno task requires use of a single thread runtime which it'll spawn itself
-        Some(cli::Commands::Typegate(cmd_args)) => cli::typegate::command(cmd_args, args.gen)?,
+        Some(cli::Commands::Typegate(cmd_args)) => cli::typegate::command(cmd_args, args.config)?,
         Some(command) => actix::run(async move {
             match command {
-                cli::Commands::Serialize(_) | cli::Commands::Dev(_) | cli::Commands::Deploy(_) => {
+                cli::Commands::Serialize(_)
+                | cli::Commands::Dev(_)
+                | cli::Commands::Deploy(_)
+                | cli::Commands::Gen(_) => {
                     std::env::set_var("META_CLI_SERVER_PORT", get_instance_port().to_string());
 
                     let server = init_server().unwrap();
-                    let command = command.run(args.gen, Some(server.handle()));
+                    let command = command.run(args.config, Some(server.handle()));
 
                     try_join!(command, server.map(|_| Ok(()))).unwrap_or_else(|e| {
                         error!("{}", e.to_string());
                         std::process::exit(1);
                     });
                 }
-                cli::Commands::Codegen(_) => {
-                    eprintln!("codegen command is disabled for now");
-                    std::process::exit(0)
-                }
                 _ => {
-                    command.run(args.gen, None).await.unwrap_or_else(|e| {
+                    command.run(args.config, None).await.unwrap_or_else(|e| {
                         error!("{}", e.to_string());
                         std::process::exit(1);
                     });

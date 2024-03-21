@@ -14,11 +14,12 @@ struct TestCtx {
 impl InputResolver for TestCtx {
     async fn resolve(&self, order: GeneratorInputOrder) -> anyhow::Result<GeneratorInputResolved> {
         match order {
-            GeneratorInputOrder::TypegraphDesc { name } => {
-                Ok(GeneratorInputResolved::TypegraphDesc {
+            GeneratorInputOrder::TypegraphFromTypegate { name } => {
+                Ok(GeneratorInputResolved::TypegraphFromTypegate {
                     raw: self.typegraphs.get(&name).unwrap().clone(),
                 })
             }
+            GeneratorInputOrder::TypegraphFromPath { .. } => unimplemented!(),
         }
     }
 }
@@ -78,7 +79,7 @@ pub async fn e2e_test(cases: Vec<E2eTestCase>) -> anyhow::Result<()> {
         // TODO: query generated stub functions
 
         // cleanup
-        tokio::fs::remove_dir_all(tmp_dir).await?;
+        // tokio::fs::remove_dir_all(tmp_dir).await?;
         // node.try_undeploy(&typegraphs.keys().cloned().collect::<Vec<_>>()).await?;
     }
     Ok(())
