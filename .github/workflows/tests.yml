@@ -13,6 +13,7 @@ env:
   DENO_VERSION: "1.41.0"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
+  DENO_DIR: deno-dir
 
 jobs:
   changes:
