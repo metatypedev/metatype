@@ -60,6 +60,9 @@ trait Plugin: Send + Sync {
     ) -> anyhow::Result<GeneratorOutput>;
 }
 
+/// This function makes use of a JoinSet to process
+/// items in parallel. This makes using actix workers in InputResolver
+/// is a no no.
 pub async fn generate_target(
     config: &config::Config,
     target_name: &str,

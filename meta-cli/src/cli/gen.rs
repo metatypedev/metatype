@@ -83,8 +83,17 @@ impl InputResolver for MetagenCtx {
                 }
             }
             GeneratorInputOrder::TypegraphFromPath { path, name } => {
-                let raw =
-                    load_tg_at(self.config.clone(), self.dir.join(path), name.as_deref()).await?;
+                let (tx, rx) = tokio::sync::oneshot::channel();
+                let config = self.config.clone();
+                let dir = self.dir.join(path);
+                tokio::task::spawn_blocking(move || {
+                    actix::run(async move {
+                        let res = load_tg_at(config, dir, name.as_deref()).await;
+                        tx.send(res).unwrap();
+                    })
+                })
+                .await??;
+                let raw = rx.await??;
                 GeneratorInputResolved::TypegraphFromTypegate { raw }
             }
         })
@@ -152,13 +161,8 @@ async fn metagen_test() -> anyhow::Result<()> {
         .await??
         .into_path();
 
+    let typegraph_path = std::env::current_dir()?.join("../examples/typegraphs/basic.ts");
     let gen_crate_path = tmp_dir.join("gen");
-
-    tokio::fs::write(
-        tmp_dir.join("tg.py"),
-        include_str!("../../../examples/typegraphs/basic.py"),
-    )
-    .await?;
 
     tokio::fs::write(
         tmp_dir.join("metatype.yaml"),
@@ -187,9 +191,10 @@ metagen:
     main:
       mdk_rust:
         path: {gen_crate_path}
-        typegraph_path: ./tg.py
+        typegraph_path: {typegraph_path}
 "#,
-            gen_crate_path = gen_crate_path.to_string_lossy()
+            gen_crate_path = gen_crate_path.to_string_lossy(),
+            typegraph_path = typegraph_path.to_string_lossy(),
         ),
     )
     .await?;
