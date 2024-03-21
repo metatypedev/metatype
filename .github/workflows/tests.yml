@@ -185,6 +185,8 @@ jobs:
         include:
           - platform: linux/amd64
             runner: ubuntu-latest
+          - platform: linux/amd64
+            runner: custom-ubuntu-large
           # FIXME: try macos-14 runner once all actions support it
           # docker buildx action broken as of 2024-02-09
 
