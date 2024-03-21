@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{Action, GenArgs};
+use super::{Action, ConfigArgs};
 use crate::com::store::{Command, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors::console::ConsoleActor;
@@ -54,7 +54,7 @@ pub struct Serialize {
 
 #[async_trait]
 impl Action for Serialize {
-    async fn run(&self, args: GenArgs, server_handle: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
         let dir = &args.dir()?;
         let config_path = args.config;
 

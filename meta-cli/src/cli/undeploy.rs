@@ -7,12 +7,12 @@ use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
 
-use super::{Action, CommonArgs};
+use super::{Action, NodeArgs};
 
 #[derive(Parser, Debug)]
 pub struct Undeploy {
     #[command(flatten)]
-    node: CommonArgs,
+    node: NodeArgs,
 
     #[clap(short, long)]
     pub target: String,
@@ -24,7 +24,7 @@ pub struct Undeploy {
 
 #[async_trait]
 impl Action for Undeploy {
-    async fn run(&self, args: super::GenArgs, _: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, args: super::ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
         let dir = args.dir()?;
         let config_path = args.config.clone();
         let config = Config::load_or_find(config_path, &dir)?;
