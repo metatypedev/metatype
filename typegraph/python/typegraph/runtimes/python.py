@@ -9,6 +9,7 @@ from astunparse import unparse
 
 from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
+    DependencyMeta,
     Effect,
     EffectRead,
     MaterializerPythonDef,
@@ -94,6 +95,7 @@ class PythonRuntime(Runtime):
         *,
         module: str,
         name: str,
+        deps: List[str] = [],
         effect: Optional[Effect] = None,
         secrets: Optional[List[str]] = None,
     ):
@@ -102,12 +104,22 @@ class PythonRuntime(Runtime):
 
         artifact_hash = get_file_hash(module)
 
+        # generate dep_metas
+        dep_metas = []
+        for dep in deps:
+            dep_hash = get_file_hash(dep)
+            dep_meta = DependencyMeta(path=dep, dep_hash=dep_hash)
+            dep_metas.append(dep_meta)
+
         base = BaseMaterializer(runtime=self.id.value, effect=effect)
         mat_id = runtimes.from_python_module(
             store,
             base,
             MaterializerPythonModule(
-                artifact=module, artifact_hash=artifact_hash, runtime=self.id.value
+                artifact=module,
+                artifact_hash=artifact_hash,
+                deps=deps,
+                runtime=self.id.value,
             ),
         )
 

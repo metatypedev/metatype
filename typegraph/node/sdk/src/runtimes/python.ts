@@ -3,7 +3,10 @@
 
 import * as t from "../types.js";
 import { runtimes } from "../wit.js";
-import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
+import {
+  DependencyMeta,
+  Effect,
+} from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import { Materializer, Runtime } from "./mod.js";
 import { fx } from "../index.js";
 import { getFileHash } from "../utils/file_utils.js";
@@ -22,9 +25,15 @@ interface DefMat extends Materializer {
 interface PythonImport {
   name: string;
   module: string;
+  deps: Array<string>;
   secrets?: Array<string>;
   effect?: Effect;
 }
+
+// interface DependencyMeta {
+//   path: string;
+//   hash: string;
+// }
 
 interface ImportMat extends Materializer {
   module: string;
@@ -91,7 +100,7 @@ export class PythonRuntime extends Runtime {
   >(
     inp: I,
     out: O,
-    { name, module, effect = fx.read(), secrets = [] }: PythonImport,
+    { name, module, deps = [], effect = fx.read(), secrets = [] }: PythonImport,
   ): Promise<t.Func<I, O, ImportMat>> {
     const base = {
       runtime: this._id,
@@ -100,10 +109,22 @@ export class PythonRuntime extends Runtime {
 
     const artifactHash = await getFileHash(module);
 
+    // generate dep meta
+    const depMetas: DependencyMeta[] = [];
+    for (const dep of deps) {
+      const depHash = await getFileHash(dep);
+      const depMeta: DependencyMeta = {
+        path: dep,
+        depHash: depHash,
+      };
+      depMetas.push(depMeta);
+    }
+
     const matId = runtimes.fromPythonModule(base, {
       artifact: module,
       runtime: this._id,
       artifactHash: artifactHash,
+      deps: depMetas,
     });
 
     const pyModMatId = runtimes.fromPythonImport(base, {
