@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
-import { gql, Meta } from "../../utils/mod.ts";
+import { gql, Meta } from "test-utils/mod.ts";
 import { testDir } from "test-utils/dir.ts";
 import { tg } from "./wasmedge.ts";
 
