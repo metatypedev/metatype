@@ -115,8 +115,13 @@ export class RawAuth {
 }
 
 export interface TypegraphOutput {
-  serialize: (config: ArtifactResolutionConfig) => string;
+  serialize: (config: ArtifactResolutionConfig) => TgFinalizationResult;
   name: string;
+}
+
+export interface TgFinalizationResult {
+  tgJson: string;
+  ref_artifacts: [string, string][];
 }
 
 export async function typegraph(
@@ -216,8 +221,12 @@ export async function typegraph(
 
   const ret = {
     serialize(config: ArtifactResolutionConfig) {
-      const tgJson = core.finalizeTypegraph(config);
-      return tgJson;
+      const [tgJson, ref_artifacts] = core.finalizeTypegraph(config);
+      const result: TgFinalizationResult = {
+        tgJson: tgJson,
+        ref_artifacts: ref_artifacts,
+      };
+      return result;
     },
     name,
   } as TypegraphOutput;

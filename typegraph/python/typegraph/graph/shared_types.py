@@ -3,14 +3,20 @@
 
 from base64 import b64encode
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable, List, Optional, Tuple
 from typegraph.wit import ArtifactResolutionConfig
+
+
+@dataclass
+class FinalizationResult:
+    tgJson: str
+    ref_artifacts: List[Tuple[str, str]]
 
 
 @dataclass
 class TypegraphOutput:
     name: str
-    serialize: Callable[[Optional[ArtifactResolutionConfig]], str]
+    serialize: Callable[[Optional[ArtifactResolutionConfig]], FinalizationResult]
 
 
 @dataclass

@@ -2,14 +2,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::utils::fs_host;
-use crate::wit::metatype::typegraph::host::read_file;
-use common::{
-    archive::encode_bytes_to_base_64,
-    typegraph::{
-        runtimes::wasmedge::WasiMatData,
-        utils::{map_from_object, object_from_map},
-        Typegraph,
-    },
+use common::typegraph::{
+    runtimes::wasmedge::WasiMatData,
+    utils::{map_from_object, object_from_map},
+    Typegraph,
 };
 use std::path::PathBuf;
 
@@ -19,6 +15,7 @@ pub struct WasmedgeProcessor;
 
 impl PostProcessor for WasmedgeProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
+        let tg_name = tg.name().unwrap();
         for mat in tg.materializers.iter_mut() {
             if mat.name.as_str() == "wasi" {
                 let mut mat_data: WasiMatData =
@@ -28,8 +25,12 @@ impl PostProcessor for WasmedgeProcessor {
                 };
 
                 let wasi_path = fs_host::make_absolute(&PathBuf::from(path))?;
-                let bytes = read_file(&wasi_path.display().to_string())?;
-                mat_data.wasm = encode_bytes_to_base_64(bytes).map_err(|e| e.to_string())?;
+                let file_name = path.split('/').last().unwrap();
+                let artifact_hash = mat_data.artifact_hash.clone();
+
+                mat_data.wasm = file_name.into();
+                mat_data.artifact_hash = artifact_hash;
+                mat_data.tg_name = Some(tg_name.clone());
 
                 mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
                 tg.deps.push(wasi_path);

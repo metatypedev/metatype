@@ -260,6 +260,13 @@ impl crate::wit::utils::Guest for crate::Lib {
     fn remove_injections(id: CoreTypeId) -> Result<CoreTypeId> {
         remove_injections_recursive(id.into()).map(|id| id.into())
     }
+
+    fn get_cwd() -> Result<String, String> {
+        match fs_host::cwd() {
+            Ok(path) => Ok(path.display().to_string()),
+            Err(e) => Err(e),
+        }
+    }
 }
 
 pub fn remove_injection(type_id: TypeId) -> Result<TypeId> {

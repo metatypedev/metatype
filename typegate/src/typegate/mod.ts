@@ -39,6 +39,10 @@ import { SyncConfig } from "../sync/config.ts";
 import { MemoryRegister } from "test-utils/memory_register.ts";
 import { NoLimiter } from "test-utils/no_limiter.ts";
 import { TypegraphStore } from "../sync/typegraph.ts";
+import {
+  handleArtifactUpload,
+  handleUploadUrl,
+} from "../services/artifact_upload_service.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -61,6 +65,13 @@ export type PushResult = {
   engine: QueryEngine | null;
   response: PushResponse;
 };
+
+export interface UploadUrlMeta {
+  artifactName: string;
+  artifactHash: string;
+  artifactSizeInBytes: number;
+  urlUsed: boolean;
+}
 
 export class Typegate {
   #onPushHooks: PushHandler[] = [];
@@ -166,6 +177,24 @@ export class Typegate {
       }
 
       const [engineName, serviceName] = parsePath(url.pathname);
+
+      // artifact upload handlers
+      if (serviceName === "get-upload-url") {
+        return handleUploadUrl(
+          request,
+          engineName,
+          this.artifactUploadUrlCache,
+        );
+      }
+
+      if (serviceName === "upload-artifacts") {
+        return handleArtifactUpload(
+          request,
+          engineName,
+          this.artifactUploadUrlCache,
+        );
+      }
+
       if (!engineName || ignoreList.has(engineName)) {
         return notFound();
       }

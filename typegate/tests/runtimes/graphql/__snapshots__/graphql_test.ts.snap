@@ -165,7 +165,8 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     "auths": [],
     "rate": null,
     "version": "0.0.3",
-    "random_seed": null
+    "random_seed": null,
+    "ref_artifacts": {}
   }
 }'
 `;

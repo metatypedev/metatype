@@ -52,7 +52,7 @@ interface core {
         prisma-migration: migration-config
     }
 
-    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<string, error>
+    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<tuple<string, list<tuple<string, string>>>, error>
 
     type type-id = u32
     record type-base {
@@ -360,6 +360,7 @@ interface runtimes {
     record materializer-wasi {
         func-name: string,
         module: string,
+        artifact-hash: string,
     }
 
     register-wasmedge-runtime: func() -> result<runtime-id, error>
@@ -549,6 +550,8 @@ interface utils {
     unpack-tarb64: func(tar-b64: string, dest: string) -> result<_, error>
 
     remove-injections: func(type-id: type-id) -> result<type-id, error>
+
+    get-cwd: func() -> result<string, string>
 }
 
 interface host {

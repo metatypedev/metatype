@@ -141,6 +141,21 @@ export class MetaTest {
     return engine;
   }
 
+  async engineFromDeployed(tgString: string): Promise<QueryEngine> {
+    const tg = await TypeGraph.parseJson(tgString);
+    const { engine, response } = await this.typegate.pushTypegraph(
+      tg,
+      {},
+      this.introspection,
+    );
+
+    if (engine == null) {
+      throw response.failure!;
+    }
+
+    return engine;
+  }
+
   async unregister(engine: QueryEngine) {
     await Promise.all(
       this.typegate.register

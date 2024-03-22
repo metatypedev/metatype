@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import * as base64 from "std/encoding/base64.ts";
 import {
   get_version,
   typegraph_validate,
@@ -139,6 +138,7 @@ Deno.test("typegraphValidate", () => {
       "rate": null,
       "version": "0.0.3",
       "random_seed": null,
+      "ref_artifacts": {},
     },
   };
   const str = JSON.stringify(json);
@@ -150,11 +150,7 @@ Deno.test("typegraphValidate", () => {
 
 Deno.test("wasmedgeWasi", async () => {
   const input: WasiInput = {
-    wasm: base64.encode(
-      await Deno.readFile(
-        new URL(import.meta.resolve("../runtimes/wasmedge/rust.wasm")),
-      ),
-    ),
+    wasm: "typegate/tests/runtimes/wasmedge/rust.wasm",
     func: "add",
     out: "integer",
     args: [JSON.stringify(1), JSON.stringify(2)],
