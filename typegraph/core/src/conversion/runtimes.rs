@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::errors::Result;
+use crate::global_store::Store;
 use crate::runtimes::prisma::get_prisma_context;
 use crate::runtimes::{
     DenoMaterializer, Materializer as RawMaterializer, PythonMaterializer, RandomMaterializer,
@@ -230,6 +231,11 @@ impl MaterializerConverter for PythonMaterializer {
             }
             Module(module) => {
                 c.add_ref_artifacts(module.artifact_hash.clone(), module.artifact.clone().into())?;
+
+                let deps = module.deps.clone();
+                for dep in deps {
+                    Store::register_dep(module.artifact_hash.clone(), dep);
+                }
 
                 let data = serde_json::from_value(json!({
                     "artifact": module.artifact,

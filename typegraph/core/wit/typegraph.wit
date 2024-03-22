@@ -326,10 +326,17 @@ interface runtimes {
         fn: string,
     }
 
+    record module-dependency-meta {
+        path: string,
+        dep-hash: string,
+        relative-path-prefix: string,
+    }
+
     record materializer-python-module {
         runtime: runtime-id,
         artifact: string,
         artifact-hash: string,
+        deps: list<module-dependency-meta>,
     }
 
     record materializer-python-import {

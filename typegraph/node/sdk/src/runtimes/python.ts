@@ -3,10 +3,7 @@
 
 import * as t from "../types.js";
 import { runtimes } from "../wit.js";
-import {
-  DependencyMeta,
-  Effect,
-} from "../gen/interfaces/metatype-typegraph-runtimes.js";
+import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import { Materializer, Runtime } from "./mod.js";
 import { fx } from "../index.js";
 import { getFileHash } from "../utils/file_utils.js";
@@ -110,21 +107,21 @@ export class PythonRuntime extends Runtime {
     const artifactHash = await getFileHash(module);
 
     // generate dep meta
-    const depMetas: DependencyMeta[] = [];
-    for (const dep of deps) {
-      const depHash = await getFileHash(dep);
-      const depMeta: DependencyMeta = {
-        path: dep,
-        depHash: depHash,
-      };
-      depMetas.push(depMeta);
-    }
+    // const depMetas: DependencyMeta[] = [];
+    // for (const dep of deps) {
+    //   const depHash = await getFileHash(dep);
+    //   const depMeta: DependencyMeta = {
+    //     path: dep,
+    //     depHash: depHash,
+    //   };
+    //   depMetas.push(depMeta);
+    // }
 
     const matId = runtimes.fromPythonModule(base, {
       artifact: module,
       runtime: this._id,
       artifactHash: artifactHash,
-      deps: depMetas,
+      deps: [],
     });
 
     const pyModMatId = runtimes.fromPythonImport(base, {

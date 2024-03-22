@@ -6,10 +6,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional
 
 from astunparse import unparse
-
 from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
-    DependencyMeta,
     Effect,
     EffectRead,
     MaterializerPythonDef,
@@ -106,10 +104,10 @@ class PythonRuntime(Runtime):
 
         # generate dep_metas
         dep_metas = []
-        for dep in deps:
-            dep_hash = get_file_hash(dep)
-            dep_meta = DependencyMeta(path=dep, dep_hash=dep_hash)
-            dep_metas.append(dep_meta)
+        # for dep in deps:
+        #     dep_hash = get_file_hash(dep)
+        #     dep_meta = DependencyMeta(path=dep, dep_hash=dep_hash)
+        #     dep_metas.append(dep_meta)
 
         base = BaseMaterializer(runtime=self.id.value, effect=effect)
         mat_id = runtimes.from_python_module(
@@ -118,7 +116,7 @@ class PythonRuntime(Runtime):
             MaterializerPythonModule(
                 artifact=module,
                 artifact_hash=artifact_hash,
-                deps=deps,
+                deps=dep_metas,
                 runtime=self.id.value,
             ),
         )
