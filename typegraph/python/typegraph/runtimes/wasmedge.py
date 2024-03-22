@@ -12,6 +12,7 @@ from typegraph.gen.exports.runtimes import (
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.utils import get_file_hash
 from typegraph.wit import runtimes, store
 
 
@@ -29,12 +30,13 @@ class WasmEdgeRuntime(Runtime):
         effect: Optional[Effect] = None,
     ):
         effect = effect or EffectRead()
+        artifact_hash = get_file_hash(wasm)
         wasm = f"file:{wasm}"
 
         mat_id = runtimes.from_wasi_module(
             store,
             BaseMaterializer(runtime=self.id.value, effect=effect),
-            MaterializerWasi(module=wasm, func_name=func),
+            MaterializerWasi(module=wasm, func_name=func, artifact_hash=artifact_hash),
         )
 
         if isinstance(mat_id, Err):

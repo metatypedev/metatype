@@ -6,6 +6,7 @@ use crate::conversion::runtimes::{convert_materializer, convert_runtime, Convert
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
 use crate::types::{TypeDef, TypeDefExt, TypeId};
+use crate::utils::fs_host;
 use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
 use crate::validation::validate_name;
 use crate::Lib;
@@ -24,6 +25,7 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::hash::Hasher as _;
 
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::wit::core::{
@@ -109,6 +111,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             rate: params.rate.map(|v| v.into()),
             secrets: vec![],
             random_seed: Default::default(),
+            ref_artifacts: Default::default(),
         },
         types: vec![],
         saved_store_state: Some(Store::save()),
@@ -180,7 +183,9 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
         .collect::<Result<Vec<_>>>()
 }
 
-pub fn finalize(res_config: Option<ArtifactResolutionConfig>) -> Result<String> {
+pub fn finalize(
+    res_config: Option<ArtifactResolutionConfig>,
+) -> Result<(String, Vec<(String, String)>)> {
     #[cfg(test)]
     eprintln!("Finalizing typegraph...");
 
@@ -191,6 +196,14 @@ pub fn finalize(res_config: Option<ArtifactResolutionConfig>) -> Result<String> 
     })?;
 
     let auths = finalize_auths(&mut ctx)?;
+
+    let referred_artifacts: Vec<(String, String)> = ctx
+        .meta
+        .ref_artifacts
+        .clone()
+        .iter()
+        .map(|(hash, path)| (hash.clone(), path.to_string_lossy().to_string()))
+        .collect();
 
     let mut tg = Typegraph {
         id: format!("https://metatype.dev/specs/{TYPEGRAPH_VERSION}.json"),
@@ -210,6 +223,7 @@ pub fn finalize(res_config: Option<ArtifactResolutionConfig>) -> Result<String> 
                 dynamic: ctx.meta.queries.dynamic,
                 endpoints: Store::get_graphql_endpoints(),
             },
+            ref_artifacts: ctx.meta.ref_artifacts,
             random_seed: Store::get_random_seed(),
             auths,
             ..ctx.meta
@@ -226,11 +240,16 @@ pub fn finalize(res_config: Option<ArtifactResolutionConfig>) -> Result<String> 
 
     Store::restore(ctx.saved_store_state.unwrap());
 
+    let result = match serde_json::to_string_pretty(&tg).map_err(|e| e.to_string().into()) {
+        Ok(res) => res,
+        Err(e) => return Err(e),
+    };
+
     #[cfg(test)]
-    return serde_json::to_string_pretty(&tg).map_err(|e| e.to_string().into());
+    return Ok((result, referred_artifacts));
 
     #[cfg(not(test))]
-    return serde_json::to_string(&tg).map_err(|e| e.to_string().into());
+    return Ok((result, referred_artifacts));
 }
 
 fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
@@ -466,5 +485,21 @@ impl TypegraphContext {
 
     pub fn find_policy_index_by_store_id(&self, id: u32) -> Option<u32> {
         self.mapping.policies.get(&id).copied()
+    }
+
+    pub fn add_ref_artifacts(&mut self, file_hash: String, file_path: PathBuf) -> Result<()> {
+        let binding = file_path.to_string_lossy().to_string();
+        let path = match binding.strip_prefix("file:") {
+            Some(path) => path,
+            None => return Err("file path has no prefix".into()),
+        };
+        let absolute_file_path = match fs_host::make_absolute(&PathBuf::from(path)) {
+            Ok(path) => path,
+            Err(e) => return Err(e.into()),
+        };
+        self.meta
+            .ref_artifacts
+            .insert(file_hash, absolute_file_path);
+        Ok(())
     }
 }

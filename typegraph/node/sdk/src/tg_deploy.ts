@@ -4,6 +4,8 @@
 import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 export class BasicAuth {
   constructor(public username: string, public password: string) {
@@ -34,12 +36,20 @@ export interface RemoveResult {
   typegate: Record<string, any> | string;
 }
 
+export interface UploadArtifactMeta {
+  name: string;
+  artifact_hash: string;
+  artifact_size_in_bytes: number;
+}
+
 export async function tgDeploy(
   typegraph: TypegraphOutput,
   params: TypegraphDeployParams,
 ): Promise<DeployResult> {
   const { baseUrl, secrets, auth, artifactsConfig } = params;
   const serialized = typegraph.serialize(artifactsConfig);
+  const tgJson = serialized.tgJson;
+  const ref_artifacts = serialized.ref_artifacts;
 
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
@@ -47,16 +57,73 @@ export async function tgDeploy(
     headers.append("Authorization", auth.asHeaderValue());
   }
 
+  // upload the artifacts
+  const suffix = `${typegraph.name}/get-upload-url`;
+  const getUploadUrl = new URL(suffix, baseUrl);
+  for (let [artifactHash, artifactPath] of ref_artifacts) {
+    try {
+      await fs.promises.access(artifactPath);
+    } catch (err) {
+      throw new Error(`Failed to access artifact ${artifactPath}: ${err}`);
+    }
+    let artifactContent: Buffer;
+    try {
+      artifactContent = await fs.promises.readFile(artifactPath);
+    } catch (err) {
+      throw new Error(`Failed to read artifact ${artifactPath}: ${err}`);
+    }
+    const byteArray = new Uint8Array(artifactContent);
+
+    const artifactMeta: UploadArtifactMeta = {
+      name: path.basename(artifactPath),
+      artifact_hash: artifactHash,
+      artifact_size_in_bytes: artifactContent.length,
+    };
+
+    const artifactJson = JSON.stringify(artifactMeta);
+    const uploadUrlResponse = await fetch(getUploadUrl, {
+      method: "PUT",
+      headers,
+      body: artifactJson,
+    });
+    const decodedResponse = await uploadUrlResponse.json();
+
+    const uploadUrl = decodedResponse.uploadUrl as string;
+
+    const uploadHeaders = new Headers({
+      "Content-Type": "application/octet-stream",
+    });
+
+    if (auth) {
+      uploadHeaders.append("Authorization", auth.asHeaderValue());
+    }
+
+    const artifactUploadResponse = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: uploadHeaders,
+      body: byteArray,
+    });
+
+    const _ = await artifactUploadResponse.json();
+    if (!artifactUploadResponse.ok) {
+      throw new Error(
+        `Failed to upload artifact ${artifactPath} to typegate: ${artifactUploadResponse.status} ${artifactUploadResponse.statusText}`,
+      );
+    }
+  }
+
+  // deploy the typegraph
   const response = await fetch(new URL("/typegate", baseUrl), {
     method: "POST",
     headers,
     body: wit_utils.gqlDeployQuery({
-      tg: serialized,
+      tg: tgJson,
       secrets: Object.entries(secrets ?? {}),
     }),
   });
+
   return {
-    serialized,
+    serialized: tgJson,
     typegate: await handleResponse(response),
   };
 }
