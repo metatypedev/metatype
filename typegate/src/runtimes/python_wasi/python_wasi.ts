@@ -74,9 +74,9 @@ export class PythonWasiRuntime extends Runtime {
           const code = pyModMat.data.code as string;
 
           // resolve the python module artifacts/files
-          const { artifact, artifact_hash, tg_name } = pyModMat.data;
+          const { artifact, artifact_hash } = pyModMat.data;
           const _artifact_path =
-            `${config.tmp_dir}/metatype_artifacts/${tg_name}/artifacts/${artifact}.${artifact_hash}`;
+            `${config.tmp_dir}/metatype_artifacts/${typegraphName}/artifacts/${artifact}.${artifact_hash}`;
 
           const repr = await structureRepr(code);
           const vmId = generateVmIdentifier(m, uuid);
