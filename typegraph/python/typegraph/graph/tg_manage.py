@@ -83,7 +83,7 @@ class Manager:
             artifact_cfg.prefix = (
                 config.prefix
             )  # prefix from cli overrides the current value
-            return self.typegraph.serialize(artifact_cfg)
+            return self.typegraph.serialize(artifact_cfg).tgJson
 
         return self.relay_result_to_cli(initiator=Command.SERIALIZE, fn=fn)
 

@@ -35,6 +35,10 @@ import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
 import introspectionJson from "../typegraphs/introspection.json" with {
   type: "json",
 };
+import {
+  handleArtifactUpload,
+  handleUploadUrl,
+} from "../services/artifact_upload_service.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -58,8 +62,16 @@ export type PushResult = {
   response: PushResponse;
 };
 
+export interface UploadUrlMeta {
+  artifactName: string;
+  artifactHash: string;
+  artifactSizeInBytes: number;
+  urlUsed: boolean;
+}
+
 export class Typegate {
   #onPushHooks: PushHandler[] = [];
+  artifactUploadUrlCache: Map<string, UploadUrlMeta> = new Map();
 
   constructor(
     public readonly register: Register,
@@ -113,6 +125,24 @@ export class Typegate {
       }
 
       const [engineName, serviceName] = parsePath(url.pathname);
+
+      // artifact upload handlers
+      if (serviceName === "get-upload-url") {
+        return handleUploadUrl(
+          request,
+          engineName,
+          this.artifactUploadUrlCache,
+        );
+      }
+
+      if (serviceName === "upload-artifacts") {
+        return handleArtifactUpload(
+          request,
+          engineName,
+          this.artifactUploadUrlCache,
+        );
+      }
+
       if (!engineName || ignoreList.has(engineName)) {
         return notFound();
       }

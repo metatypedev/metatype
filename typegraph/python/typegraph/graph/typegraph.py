@@ -17,7 +17,7 @@ from typegraph.gen.exports.core import (
 
 from typegraph.gen.types import Err
 from typegraph.graph.params import Auth, Cors, RawAuth
-from typegraph.graph.shared_types import TypegraphOutput
+from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph.wit import core, store, wit_utils
 
@@ -216,10 +216,12 @@ def typegraph(
         def serialize_with_artifacts(
             config: ArtifactResolutionConfig,
         ):
-            tg_json = core.finalize_typegraph(store, config)
-            if isinstance(tg_json, Err):
-                raise Exception(tg_json.value)
-            return tg_json.value
+            finalization_result = core.finalize_typegraph(store, config)
+            if isinstance(finalization_result, Err):
+                raise Exception(finalization_result.value)
+
+            tg_json, ref_artifacts = finalization_result.value
+            return FinalizationResult(tg_json, ref_artifacts)
 
         tg_output = TypegraphOutput(name=tg.name, serialize=serialize_with_artifacts)
 
