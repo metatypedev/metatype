@@ -28,24 +28,24 @@ const auth = new BasicAuth("admin", "password");
 // }, { port: port });
 
 Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
-  const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
-    baseUrl: gate,
-    auth,
-    artifactsConfig: {
-      prismaMigration: {
-        globalAction: {
-          create: true,
-          reset: false,
-        },
-        migrationDir: "prisma-migrations",
-      },
-      dir: cwdDir,
-    },
-  });
-
-  const engine = await metaTest.engineFromDeployed(serialized);
-
   await metaTest.should("work after deploying artifact", async () => {
+    const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
+      baseUrl: gate,
+      auth,
+      artifactsConfig: {
+        prismaMigration: {
+          globalAction: {
+            create: true,
+            reset: false,
+          },
+          migrationDir: "prisma-migrations",
+        },
+        dir: cwdDir,
+      },
+    });
+
+    const engine = await metaTest.engineFromDeployed(serialized);
+
     await gql`
       query {
         test_wasi_ts(a: 11, b: 2)
@@ -55,6 +55,6 @@ Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
         test_wasi_ts: 13,
       })
       .on(engine);
+    await engine.terminate();
   });
-  await engine.terminate();
 }, { port: port, systemTypegraphs: true });
