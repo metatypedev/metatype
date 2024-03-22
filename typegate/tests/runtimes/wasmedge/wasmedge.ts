@@ -7,9 +7,10 @@ import { WasmEdgeRuntime } from "@typegraph/sdk/runtimes/wasmedge.js";
 export const tg = await typegraph("wasmedge_ts", async (g: any) => {
   const pub = Policy.public();
   const wasmedge = new WasmEdgeRuntime();
+  let mat;
 
   try {
-    const mat = await wasmedge
+    mat = await wasmedge
       .wasi(
         t.struct({
           "a": t.float(),
@@ -21,10 +22,12 @@ export const tg = await typegraph("wasmedge_ts", async (g: any) => {
           wasm: "typegate/tests/artifacts/rust.wasm",
         },
       );
-    g.expose({
-      test_wasi_ts: mat.withPolicy(pub),
-    });
   } catch (e) {
-    console.error(e);
+    throw new Error(`Failed to create wasi materializer: ${e}`);
   }
+
+  // expose the wasi materializer
+  g.expose({
+    test_wasi_ts: mat.withPolicy(pub),
+  });
 });
