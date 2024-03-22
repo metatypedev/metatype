@@ -61,7 +61,17 @@ export async function tgDeploy(
   const suffix = `${typegraph.name}/get-upload-url`;
   const getUploadUrl = new URL(suffix, baseUrl);
   for (let [artifactHash, artifactPath] of ref_artifacts) {
-    const artifactContent: Buffer = fs.readFileSync(artifactPath);
+    try {
+      await fs.promises.access(artifactPath);
+    } catch (err) {
+      throw new Error(`Failed to access artifact ${artifactPath}: ${err}`);
+    }
+    let artifactContent: Buffer;
+    try {
+      artifactContent = await fs.promises.readFile(artifactPath);
+    } catch (err) {
+      throw new Error(`Failed to read artifact ${artifactPath}: ${err}`);
+    }
     const byteArray = new Uint8Array(artifactContent);
 
     const artifactMeta: UploadArtifactMeta = {
