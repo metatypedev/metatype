@@ -75,6 +75,7 @@ export interface UploadUrlMeta {
 
 export class Typegate {
   #onPushHooks: PushHandler[] = [];
+  artifactUploadUrlCache: Map<string, UploadUrlMeta> = new Map();
 
   static async init(
     syncConfig: SyncConfig | null = null,
