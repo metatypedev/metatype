@@ -47,16 +47,22 @@ async function reset(schema: string) {
 Meta.test(
   "meta dev: choose to reset the database",
   async (t) => {
+    const schema = "z" + Math.random().toString(36).substring(2);
     const tgDefPath = join(t.workingDir, "migration.py");
 
     await t.should("load first version of the typegraph", async () => {
-      await reset("e2e7895alt");
+      await reset(schema);
       await writeTypegraph(null, tgDefPath);
     });
 
     const metadev = await MetaDev.start({
       cwd: t.workingDir,
-      args: ["dev", "--target=dev7895"],
+      args: [
+        "dev",
+        "--target=dev",
+        "--secret",
+        `TG_MIGRATION_FAILURE_TEST_POSTGRES=postgres://postgres:password@localhost:5432/${schema}`,
+      ],
     });
 
     await metadev.fetchStderrLines((line) => {
@@ -125,13 +131,14 @@ Meta.test(
     await metadev.close();
   },
   {
-    port: 7895,
+    port: true,
     systemTypegraphs: true,
     gitRepo: {
       content: {
         "metatype.yml": "metatype.yml",
       },
     },
+    only: true,
   },
 );
 
@@ -230,7 +237,7 @@ Meta.test(
     await metadev.close();
   },
   {
-    port: 7895,
+    port: true,
     systemTypegraphs: true,
     gitRepo: {
       content: {

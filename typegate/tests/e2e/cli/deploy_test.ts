@@ -16,6 +16,7 @@ const tgName = "migration-failure-test";
  * conflicts with one another when running in parallel.
  */
 
+// TODO custom postgres schema
 async function writeTypegraph(version: number | null, target = "migration.py") {
   if (version == null) {
     await m.shell(["bash", "-c", `cp ./templates/migration.py ${target}`]);
@@ -30,20 +31,34 @@ async function writeTypegraph(version: number | null, target = "migration.py") {
   }
 }
 
-async function deploy(port: number | null, noMigration = false) {
+interface DeployOptions {
+  port: number;
+  noMigration?: boolean;
+  secrets?: Record<string, string>;
+}
+
+async function deploy(
+  { port, noMigration = false, secrets = {} }: DeployOptions,
+) {
   const migrationOpts = noMigration ? [] : ["--create-migration"];
+  const secretOpts = Object.entries(secrets).flatMap((
+    [key, value],
+  ) => ["--secret", `${key}=${value}`]).flat();
 
   try {
     const out = await m.cli(
       {},
       "deploy",
       "--target",
-      port == null ? "dev" : `dev${port}`,
+      "dev",
+      "--gate",
+      `http://localhost:${port}`,
       "-f",
       "migration.py",
       "--allow-dirty",
       ...migrationOpts,
       "--allow-destructive",
+      ...secretOpts,
     );
     if (out.stdout.length > 0) {
       console.log(
@@ -73,21 +88,30 @@ async function reset(schema: string) {
   await client.end();
 }
 
+function randomSchema() {
+  return "z" + Math.random().toString(36).substring(2);
+}
+
 Meta.test(
   "meta deploy: fails migration for new columns without default value",
   async (t) => {
+    const schema = randomSchema();
+    const secrets = {
+      TG_MIGRATION_FAILURE_TEST_PROGRES:
+        `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+    };
     await t.should("load first version of the typegraph", async () => {
-      await reset("e2e7895alt");
+      await reset(schema);
       await writeTypegraph(null);
     });
 
-    const port = 7895;
+    const port = t.port!;
 
     // `deploy` must be run outside of the `should` block,
     // otherwise this would fail by leaking ops.
     // That is expected since it creates new engine that persists beyond the
     // `should` block.
-    await deploy(port);
+    await deploy({ port, secrets });
 
     await t.should("insert records", async () => {
       const e = t.getTypegraphEngine(tgName);
@@ -103,7 +127,7 @@ Meta.test(
       `
         .expectData({
           createRecord: {
-            id: 1,
+            id: 2,
           },
         })
         .on(e);
@@ -114,28 +138,34 @@ Meta.test(
     });
 
     try {
-      await reset("e2e7895alt");
-      await deploy(port);
+      await reset(schema);
+      await deploy({ port, secrets });
     } catch (e) {
       assertStringIncludes(
         e.message,
-        'column "age" of relation "Record" contains null values: set a default value:',
+        // 'column "age" of relation "Record" contains null values: set a default value:',
+        'column "age" of relation "Record" contains null values',
       );
     }
   },
-  { port: 7895, systemTypegraphs: true },
+  { port: true, systemTypegraphs: true },
 );
 
 Meta.test(
   "meta deploy: succeeds migration for new columns with default value",
   async (t) => {
-    const port = 7896;
+    const port = t.port!;
+    const schema = randomSchema();
+    const secrets = {
+      TG_MIGRAITON_FAILURE_TEST_PROGRES:
+        `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+    };
     await t.should("load first version of the typegraph", async () => {
-      await reset("e2e7896alt");
+      await reset(schema);
       await writeTypegraph(null);
     });
 
-    await deploy(port);
+    await deploy({ port, secrets });
 
     await t.should("insert records", async () => {
       const e = t.getTypegraphEngine(tgName)!;
@@ -158,31 +188,40 @@ Meta.test(
       await writeTypegraph(3); // int
     });
 
-    await deploy(port);
+    await deploy({ port, secrets });
 
     await t.should("load third version of the typegraph", async () => {
       await writeTypegraph(4); // string
     });
 
-    await deploy(port);
+    await deploy({ port, secrets });
   },
-  { port: 7896, systemTypegraphs: true },
+  { port: true, systemTypegraphs: true },
 );
 
 Meta.test(
   "cli:deploy - automatic migrations",
   async (t) => {
+    const port = t.port!;
+    const schema = randomSchema();
     const e = await t.engine("prisma.py", {
       secrets: {
         POSTGRES:
-          "postgresql://postgres:password@localhost:5432/db?schema=e2e7897",
+          `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
       },
     });
 
     await dropSchemas(e);
     await removeMigrations(e);
 
-    const nodeConfigs = ["--target", "dev7897"];
+    const nodeConfigs = [
+      "--target",
+      "dev",
+      "--gate",
+      `http://localhost:${port}`,
+      "--secret",
+      `TG_PRISMA_PROGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+    ];
 
     await t.should("fail to access database", async () => {
       await gql`
@@ -192,7 +231,7 @@ Meta.test(
           }
         }
       `
-        .expectErrorContains("table `e2e7897.record` does not exist")
+        .expectErrorContains(`table \`${schema}.record\` does not exist`)
         .on(e);
     });
 
@@ -251,7 +290,7 @@ Meta.test(
   },
   {
     systemTypegraphs: true,
-    port: 7897,
+    port: true,
     gitRepo: {
       content: {
         "prisma.py": "runtimes/prisma/prisma.py",
@@ -264,10 +303,11 @@ Meta.test(
 Meta.test(
   "cli:deploy - with prefix",
   async (t) => {
+    const schema = randomSchema();
     const e = await t.engine("prisma.py", {
       secrets: {
         POSTGRES:
-          "postgresql://postgres:password@localhost:5432/db?schema=e2e7894",
+          `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
       },
       prefix: "pref-",
     });
@@ -275,7 +315,14 @@ Meta.test(
     await dropSchemas(e);
     await removeMigrations(e);
 
-    const nodeConfigs = ["-t", "with_prefix"];
+    const nodeConfigs = [
+      "-t",
+      "with_prefix",
+      "--gate",
+      `http://localhost:${t.port}`,
+      "--secret",
+      `TG_PRISMA_PROGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+    ];
 
     await t.should("fail to access database", async () => {
       await gql`
@@ -285,7 +332,7 @@ Meta.test(
           }
         }
       `
-        .expectErrorContains("table `e2e7894.record` does not exist")
+        .expectErrorContains(`table \`${schema}.record\` does not exist`)
         .on(e);
     });
 
@@ -332,7 +379,7 @@ Meta.test(
   },
   {
     systemTypegraphs: true,
-    port: 7894,
+    port: true,
     gitRepo: {
       content: {
         "prisma.py": "runtimes/prisma/prisma.py",

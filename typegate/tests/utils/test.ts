@@ -30,16 +30,29 @@ export interface ParseOptions {
   pretty?: boolean;
 }
 
-function serve(typegate: Typegate, port: number): () => void {
-  const server = Deno.serve({ port }, (req) => {
-    return typegate.handle(req, {
-      remoteAddr: { hostname: "localhost" },
-    } as Deno.ServeHandlerInfo);
-  });
+interface Serve2Result {
+  port: number;
+  cleanup: () => Promise<void>;
+}
 
-  return async () => {
-    await server.shutdown();
-  };
+function serve(typegate: Typegate): Promise<Serve2Result> {
+  return new Promise((resolve) => {
+    const server = Deno.serve({
+      port: 0,
+      onListen: ({ port }) => {
+        resolve({
+          port,
+          cleanup: async () => {
+            await server.shutdown();
+          },
+        });
+      },
+    }, (req) => {
+      return typegate.handle(req, {
+        remoteAddr: { hostname: "localhost" },
+      } as Deno.ServeHandlerInfo);
+    });
+  });
 }
 
 type MetaTestCleanupFn = () => void | Promise<void>;
@@ -51,17 +64,29 @@ export class MetaTest {
   shell = shell;
   meta = defaultCli;
   workingDir = testDir;
+  port: number | null = null;
 
-  constructor(
+  static async init(
+    t: Deno.TestContext,
+    typegate: Typegate,
+    introspection: boolean,
+    port = false,
+  ): Promise<MetaTest> {
+    const mt = new MetaTest(t, typegate, introspection);
+    if (port) {
+      const { port: p, cleanup } = await serve(typegate);
+      mt.port = p;
+      mt.addCleanup(cleanup);
+    }
+
+    return mt;
+  }
+
+  private constructor(
     public t: Deno.TestContext,
     public typegate: Typegate,
     private introspection: boolean,
-    port: number | null,
-  ) {
-    if (port != null) {
-      this.cleanups.push(serve(typegate, port));
-    }
-  }
+  ) {}
 
   addCleanup(fn: MetaTestCleanupFn) {
     this.cleanups.push(fn);
@@ -238,7 +263,7 @@ interface TestConfig {
   systemTypegraphs?: boolean;
   introspection?: boolean;
   // port on which the typegate instance will be exposed on expose the typegate instance
-  port?: number;
+  port?: boolean;
   // create a temporary clean git repo for the tests
   gitRepo?: TempGitRepo;
   syncConfig?: SyncConfig;
@@ -276,7 +301,12 @@ export const test = ((name, fn, opts = {}): void => {
         await SystemTypegraph.loadAll(typegate);
       }
 
-      const mt = new MetaTest(t, typegate, introspection, opts.port ?? null);
+      const mt = await MetaTest.init(
+        t,
+        typegate,
+        introspection,
+        opts.port != null,
+      );
 
       try {
         if (gitRepo != null) {

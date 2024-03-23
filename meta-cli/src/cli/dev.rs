@@ -25,6 +25,10 @@ pub struct Dev {
 
     #[clap(long)]
     max_parallel_loads: Option<usize>,
+
+    /// secrets overload
+    #[clap(long = "secret")]
+    secrets: Vec<String>,
 }
 
 #[async_trait]
@@ -38,6 +42,7 @@ impl Action for Dev {
             watch: true,
             no_migration: false,
             create_migration: true,
+            secrets: self.secrets.clone(),
         };
 
         let deploy = DeploySubcommand::new(

@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
@@ -89,6 +90,26 @@ pub struct DeployOptions {
     /// Run in watch mode
     #[clap(long, default_value_t = false)]
     pub watch: bool,
+
+    /// secret overrides
+    #[clap(long = "secret")]
+    pub secrets: Vec<String>,
+}
+
+fn override_secrets(
+    secrets: HashMap<String, String>,
+    overrides: Vec<String>,
+) -> Result<HashMap<String, String>> {
+    let mut secrets = secrets;
+    for override_str in overrides {
+        let parts: Vec<&str> = override_str.splitn(2, '=').collect();
+        if parts.len() != 2 {
+            bail!("Invalid secret override: {}", override_str);
+        }
+        secrets.insert(parts[0].to_string(), parts[1].to_string());
+    }
+
+    Ok(secrets)
 }
 
 pub struct Deploy {
@@ -203,8 +224,11 @@ mod default_mode {
     impl DefaultMode {
         pub async fn init(deploy: Deploy) -> Result<Self> {
             let console = ConsoleActor::new(Arc::clone(&deploy.config)).start();
-            let secrets =
-                lade_sdk::hydrate(deploy.node.env.clone(), deploy.base_dir.to_path_buf()).await?;
+            let secrets = lade_sdk::hydrate(
+                override_secrets(deploy.node.env.clone(), deploy.options.secrets.clone())?,
+                deploy.base_dir.to_path_buf(),
+            )
+            .await?;
 
             ServerStore::set_secrets(secrets);
 
@@ -323,8 +347,11 @@ mod watch_mode {
         .context("setting Ctrl-C handler")?;
 
         loop {
-            let secrets =
-                lade_sdk::hydrate(deploy.node.env.clone(), deploy.base_dir.to_path_buf()).await?;
+            let secrets = lade_sdk::hydrate(
+                override_secrets(deploy.node.env.clone(), deploy.options.secrets.clone())?,
+                deploy.base_dir.to_path_buf(),
+            )
+            .await?;
 
             ServerStore::set_secrets(secrets.clone());
 
