@@ -78,7 +78,6 @@ export async function tgDeploy(
 
   if (!res.ok) {
     const err = await res.text();
-    console.log({ err });
     throw new Error(`Failed to get upload URLs for all artifacts: ${err}`);
   }
 
@@ -113,7 +112,6 @@ export async function tgDeploy(
     } as RequestInit);
     if (!res.ok) {
       const err = await res.text();
-      console.log({ err });
       throw new Error(
         `Failed to upload artifact '${meta.relativePath}' (${res.status}): ${err}`,
       );
