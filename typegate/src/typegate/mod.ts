@@ -35,10 +35,8 @@ import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
 import introspectionJson from "../typegraphs/introspection.json" with {
   type: "json",
 };
-import {
-  handleArtifactUpload,
-  handleUploadUrl,
-} from "../services/artifact_upload_service.ts";
+import { ArtifactService } from "../services/artifact_service.ts";
+import { ArtifactStore } from "./artifacts/mod.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -71,16 +69,18 @@ export interface UploadUrlMeta {
 
 export class Typegate {
   #onPushHooks: PushHandler[] = [];
-  artifactUploadUrlCache: Map<string, UploadUrlMeta> = new Map();
+  #artifactService: ArtifactService;
 
   constructor(
     public readonly register: Register,
     private limiter: RateLimiter,
+    public artifactStore: ArtifactStore,
   ) {
     this.#onPush((tg) => Promise.resolve(upgradeTypegraph(tg)));
     this.#onPush((tg) => Promise.resolve(parseGraphQLTypeGraph(tg)));
     this.#onPush(PrismaHooks.generateSchema);
     this.#onPush(PrismaHooks.runMigrations);
+    this.#artifactService = new ArtifactService(artifactStore);
   }
 
   #onPush(handler: PushHandler) {
@@ -126,21 +126,8 @@ export class Typegate {
 
       const [engineName, serviceName] = parsePath(url.pathname);
 
-      // artifact upload handlers
-      if (serviceName === "get-upload-url") {
-        return handleUploadUrl(
-          request,
-          engineName,
-          this.artifactUploadUrlCache,
-        );
-      }
-
-      if (serviceName === "upload-artifacts") {
-        return handleArtifactUpload(
-          request,
-          engineName,
-          this.artifactUploadUrlCache,
-        );
+      if (serviceName === "artifacts") {
+        return this.#artifactService.handle(request, engineName);
       }
 
       if (!engineName || ignoreList.has(engineName)) {
@@ -290,6 +277,7 @@ export class Typegate {
 
     const introspection = enableIntrospection
       ? await TypeGraph.init(
+        this,
         introspectionDef,
         new SecretManager(introspectionDef, {}),
         {
@@ -304,6 +292,7 @@ export class Typegate {
       : null;
 
     const tg = await TypeGraph.init(
+      this,
       tgDS,
       secretManager,
       customRuntime,
@@ -313,5 +302,10 @@ export class Typegate {
     const engine = new QueryEngine(tg);
     await engine.registerEndpoints();
     return engine;
+  }
+
+  async terminate() {
+    await Promise.all(this.register.list().map((e) => e.terminate()));
+    await this.artifactStore.close();
   }
 }

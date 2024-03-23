@@ -10,7 +10,6 @@ pub mod visitor;
 
 pub use types::*;
 
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -22,6 +21,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_with::skip_serializing_none;
 
+use self::runtimes::Artifact;
 use self::runtimes::TGRuntime;
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -91,6 +91,7 @@ pub struct Queries {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct TypeMeta {
     pub prefix: Option<String>,
     pub secrets: Vec<String>,
@@ -100,7 +101,7 @@ pub struct TypeMeta {
     pub rate: Option<Rate>,
     pub version: String,
     pub random_seed: Option<u32>,
-    pub ref_artifacts: HashMap<String, PathBuf>,
+    pub artifacts: Vec<Artifact>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

@@ -6,13 +6,12 @@ import { MemoryRegister } from "./memory_register.ts";
 import { dirname, join } from "std/path/mod.ts";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
-
 import { assertSnapshot } from "std/testing/snapshot.ts";
 import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
-
 import { NoLimiter } from "./no_limiter.ts";
+import { LocalArtifactStore } from "../../src/typegate/artifacts/local.ts";
 import { createMetaCli, metaCli } from "./meta.ts";
 import { SecretManager, TypeGraph } from "../../src/typegraph/mod.ts";
 
@@ -171,7 +170,7 @@ export class MetaTest {
 
   async terminate() {
     await Promise.all(this.cleanups.map((c) => c()));
-    await Promise.all(this.register.list().map((e) => e.terminate()));
+    await this.typegate.terminate();
   }
 
   async should(
@@ -261,7 +260,11 @@ export const test = ((name, fn, opts = {}): void => {
   return Deno.test({
     name,
     async fn(t) {
-      const typegate = new Typegate(new MemoryRegister(), new NoLimiter());
+      const typegate = new Typegate(
+        new MemoryRegister(),
+        new NoLimiter(),
+        new LocalArtifactStore(),
+      );
       const {
         systemTypegraphs = false,
         gitRepo = null,

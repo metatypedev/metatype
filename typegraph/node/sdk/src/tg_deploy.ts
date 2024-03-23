@@ -4,8 +4,7 @@
 import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
-import * as fs from "node:fs";
-import * as path from "node:path";
+import * as fsp from "node:fs/promises";
 
 export class BasicAuth {
   constructor(public username: string, public password: string) {
@@ -36,10 +35,11 @@ export interface RemoveResult {
   typegate: Record<string, any> | string;
 }
 
-export interface UploadArtifactMeta {
-  name: string;
-  artifact_hash: string;
-  artifact_size_in_bytes: number;
+export interface ArtifactMeta {
+  typegraphName: string;
+  relativePath: string;
+  hash: string;
+  sizeInBytes: number;
 }
 
 export async function tgDeploy(
@@ -49,7 +49,7 @@ export async function tgDeploy(
   const { baseUrl, secrets, auth, artifactsConfig } = params;
   const serialized = typegraph.serialize(artifactsConfig);
   const tgJson = serialized.tgJson;
-  const ref_artifacts = serialized.ref_artifacts;
+  const refArtifacts = serialized.ref_artifacts;
 
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
@@ -58,57 +58,78 @@ export async function tgDeploy(
   }
 
   // upload the artifacts
-  const suffix = `${typegraph.name}/get-upload-url`;
-  const getUploadUrl = new URL(suffix, baseUrl);
-  for (let [artifactHash, artifactPath] of ref_artifacts) {
-    try {
-      await fs.promises.access(artifactPath);
-    } catch (err) {
-      throw new Error(`Failed to access artifact ${artifactPath}: ${err}`);
-    }
-    let artifactContent: Buffer;
-    try {
-      artifactContent = await fs.promises.readFile(artifactPath);
-    } catch (err) {
-      throw new Error(`Failed to read artifact ${artifactPath}: ${err}`);
-    }
-    const byteArray = new Uint8Array(artifactContent);
+  const suffix = `${typegraph.name}/artifacts/upload-urls`;
+  const createUploadUrlEndpoint = new URL(suffix, baseUrl);
 
-    const artifactMeta: UploadArtifactMeta = {
-      name: path.basename(artifactPath),
-      artifact_hash: artifactHash,
-      artifact_size_in_bytes: artifactContent.length,
+  const artifacts = refArtifacts.map(({ path, hash, size }) => {
+    return {
+      typegraphName: typegraph.name,
+      relativePath: path,
+      hash: hash,
+      sizeInBytes: size,
     };
+  });
 
-    const artifactJson = JSON.stringify(artifactMeta);
-    const uploadUrlResponse = await fetch(getUploadUrl, {
-      method: "PUT",
-      headers,
-      body: artifactJson,
-    });
-    const decodedResponse = await uploadUrlResponse.json();
+  const res = await fetch(createUploadUrlEndpoint, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(artifacts),
+  } as RequestInit);
 
-    const uploadUrl = decodedResponse.uploadUrl as string;
+  if (!res.ok) {
+    const err = await res.text();
+    console.log({ err });
+    throw new Error(`Failed to get upload URLs for all artifacts: ${err}`);
+  }
 
-    const uploadHeaders = new Headers({
-      "Content-Type": "application/octet-stream",
-    });
+  const uploadUrls: Array<string | null> = await res.json();
+  if (uploadUrls.length !== artifacts.length) {
+    const diff =
+      `array length mismatch: ${uploadUrls.length} !== ${artifacts.length}`;
+    throw new Error(`Failed to get upload URLs for all artifacts: ${diff}`);
+  }
 
-    if (auth) {
-      uploadHeaders.append("Authorization", auth.asHeaderValue());
+  const uploadHeaders = new Headers({
+    // TODO match to file extennsion??
+    "Content-Type": "application/octet-stream",
+  });
+
+  if (auth) {
+    uploadHeaders.append("Authorization", auth.asHeaderValue());
+  }
+
+  const results = await Promise.allSettled(uploadUrls.map(async (url, i) => {
+    if (url == null) {
+      console.log(`Skipping upload for artifact: ${artifacts[i].relativePath}`);
+      return;
     }
+    const meta = artifacts[i];
 
-    const artifactUploadResponse = await fetch(uploadUrl, {
-      method: "PUT",
+    const file = await fsp.open(meta.relativePath, "r");
+    const res = await fetch(url, {
+      method: "POST",
       headers: uploadHeaders,
-      body: byteArray,
-    });
-
-    const _ = await artifactUploadResponse.json();
-    if (!artifactUploadResponse.ok) {
+      body: file.readableWebStream(),
+    } as RequestInit);
+    if (!res.ok) {
+      const err = await res.text();
+      console.log({ err });
       throw new Error(
-        `Failed to upload artifact ${artifactPath} to typegate: ${artifactUploadResponse.status} ${artifactUploadResponse.statusText}`,
+        `Failed to upload artifact '${meta.relativePath}' (${res.status}): ${err}`,
       );
+    }
+    return res.json();
+  }));
+
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    const meta = artifacts[i];
+    if (result.status === "rejected") {
+      console.error(
+        `Failed to upload artifact '${meta.relativePath}': ${result.reason}`,
+      );
+    } else {
+      console.log(`Successfully uploaded artifact '${meta.relativePath}'`);
     }
   }
 

@@ -506,8 +506,8 @@ export interface TypeMeta {
   auths: Auth[];
   rate?: Rate | null;
   version: string;
-  random_seed: number | undefined;
-  ref_artifacts: Map<string, string>;
+  randomSeed?: number | null;
+  artifacts: Artifact[];
 }
 export interface Queries {
   dynamic: boolean;
@@ -535,6 +535,11 @@ export interface Rate {
   context_identifier?: string | null;
   local_excess: number;
 }
+export interface Artifact {
+  path: string;
+  hash: string;
+  size: number;
+}
 export interface FunctionMatData {
   script: string;
 }
@@ -545,4 +550,8 @@ export interface PrismaOperationMatData {
   table: string;
   operation: string;
   ordered_keys?: string[] | null;
+}
+export interface WasiMatData {
+  func: string;
+  wasmArtifact: Artifact;
 }

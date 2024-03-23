@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+use std::path::PathBuf;
+
 use indexmap::IndexMap;
 #[cfg(feature = "codegen")]
 use schemars::JsonSchema;
@@ -73,4 +75,12 @@ pub struct UnknownRuntime {
 pub enum TGRuntime {
     Known(KnownRuntime),
     Unknown(UnknownRuntime),
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Artifact {
+    pub path: PathBuf,
+    pub hash: String,
+    pub size: u32,
 }

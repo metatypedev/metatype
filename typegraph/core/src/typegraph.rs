@@ -6,7 +6,6 @@ use crate::conversion::runtimes::{convert_materializer, convert_runtime, Convert
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
 use crate::types::{TypeDef, TypeDefExt, TypeId};
-use crate::utils::fs_host;
 use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
 use crate::validation::validate_name;
 use crate::Lib;
@@ -14,7 +13,7 @@ use crate::{
     errors::{self, Result},
     global_store::Store,
 };
-use common::typegraph::runtimes::TGRuntime;
+use common::typegraph::runtimes::{Artifact, TGRuntime};
 use common::typegraph::{
     Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TypeMeta,
     TypeNode, TypeNodeBase, Typegraph,
@@ -25,12 +24,11 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::hash::Hasher as _;
 
-use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::wit::core::{
-    ArtifactResolutionConfig, Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec,
-    RuntimeId, TypegraphInitParams,
+    Artifact as WitArtifact, ArtifactResolutionConfig, Error as TgError, Guest, MaterializerId,
+    PolicyId, PolicySpec, RuntimeId, TypegraphInitParams,
 };
 
 #[derive(Default)]
@@ -111,7 +109,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             rate: params.rate.map(|v| v.into()),
             secrets: vec![],
             random_seed: Default::default(),
-            ref_artifacts: Default::default(),
+            artifacts: Default::default(),
         },
         types: vec![],
         saved_store_state: Some(Store::save()),
@@ -185,7 +183,7 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
 
 pub fn finalize(
     res_config: Option<ArtifactResolutionConfig>,
-) -> Result<(String, Vec<(String, String)>)> {
+) -> Result<(String, Vec<WitArtifact>)> {
     #[cfg(test)]
     eprintln!("Finalizing typegraph...");
 
@@ -197,13 +195,13 @@ pub fn finalize(
 
     let auths = finalize_auths(&mut ctx)?;
 
-    let referred_artifacts: Vec<(String, String)> = ctx
+    let artifacts = ctx
         .meta
-        .ref_artifacts
-        .clone()
+        .artifacts
         .iter()
-        .map(|(hash, path)| (hash.clone(), path.to_string_lossy().to_string()))
-        .collect();
+        .cloned()
+        .map(Into::into)
+        .collect::<Vec<_>>();
 
     let mut tg = Typegraph {
         id: format!("https://metatype.dev/specs/{TYPEGRAPH_VERSION}.json"),
@@ -223,7 +221,7 @@ pub fn finalize(
                 dynamic: ctx.meta.queries.dynamic,
                 endpoints: Store::get_graphql_endpoints(),
             },
-            ref_artifacts: ctx.meta.ref_artifacts,
+            artifacts: ctx.meta.artifacts,
             random_seed: Store::get_random_seed(),
             auths,
             ..ctx.meta
@@ -245,11 +243,7 @@ pub fn finalize(
         Err(e) => return Err(e),
     };
 
-    #[cfg(test)]
-    return Ok((result, referred_artifacts));
-
-    #[cfg(not(test))]
-    return Ok((result, referred_artifacts));
+    Ok((result, artifacts))
 }
 
 fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
@@ -487,19 +481,26 @@ impl TypegraphContext {
         self.mapping.policies.get(&id).copied()
     }
 
-    pub fn add_ref_artifacts(&mut self, file_hash: String, file_path: PathBuf) -> Result<()> {
-        let binding = file_path.to_string_lossy().to_string();
-        let path = match binding.strip_prefix("file:") {
-            Some(path) => path,
-            None => return Err("file path has no prefix".into()),
-        };
-        let absolute_file_path = match fs_host::make_absolute(&PathBuf::from(path)) {
-            Ok(path) => path,
-            Err(e) => return Err(e.into()),
-        };
-        self.meta
-            .ref_artifacts
-            .insert(file_hash, absolute_file_path);
-        Ok(())
+    pub fn register_artifact(&mut self, artifact: &Artifact) -> Result<()> {
+        let matching_artifacts = self
+            .meta
+            .artifacts
+            .iter()
+            .filter(|a| a.path == artifact.path)
+            .collect::<Vec<_>>();
+
+        if !matching_artifacts.is_empty() {
+            if matching_artifacts
+                .iter()
+                .any(|a| a.hash != artifact.hash && a.size != artifact.size)
+            {
+                Err("artifact with same path but different hash or size already registered".into())
+            } else {
+                Ok(())
+            }
+        } else {
+            self.meta.artifacts.push(artifact.clone());
+            Ok(())
+        }
     }
 }

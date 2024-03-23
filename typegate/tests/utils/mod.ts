@@ -15,6 +15,7 @@ import { metaCli } from "./meta.ts";
 import { testDir } from "./dir.ts";
 import { autoTest } from "./autotest.ts";
 import { init_runtimes } from "../../src/runtimes/mod.ts";
+import { LocalArtifactStore } from "../../src/typegate/artifacts/local.ts";
 
 // native must load first to avoid import race conditions and panic
 init_native();
@@ -42,16 +43,26 @@ export const Meta = {
   cli: metaCli,
 };
 
+// TODO use pre-existing Typegate for the test
 export async function execute(
   engine: QueryEngine,
   request: Request,
 ): Promise<Response> {
   const register = new SingleRegister(engine.name, engine);
   const limiter = new NoLimiter();
-  const typegate = new Typegate(register, limiter);
-  return await typegate.handle(request, {
-    remoteAddr: { hostname: "localhost" },
-  } as Deno.ServeHandlerInfo);
+  const artifactStore = new LocalArtifactStore();
+  const typegate = new Typegate(
+    register,
+    limiter,
+    artifactStore,
+  );
+  try {
+    return await typegate.handle(request, {
+      remoteAddr: { hostname: "localhost" },
+    } as Deno.ServeHandlerInfo);
+  } finally {
+    await artifactStore.close();
+  }
 }
 
 export const sleep = (ms: number) =>
