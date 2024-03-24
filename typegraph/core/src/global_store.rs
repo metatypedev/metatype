@@ -242,12 +242,12 @@ impl Store {
         with_store_mut(|store| store.random_seed = value)
     }
 
-    // pub fn get_deps(artifact_hash: String) -> Vec<ModuleDependencyMeta> {
-    //     with_store(|store| match store.artifact_deps.get(&artifact_hash) {
-    //         Some(deps) => deps.clone(),
-    //         None => vec![],
-    //     })
-    // }
+    pub fn get_deps(artifact_hash: String) -> Vec<ModuleDependencyMeta> {
+        with_store(|store| match store.artifact_deps.get(&artifact_hash) {
+            Some(deps) => deps.clone(),
+            None => vec![],
+        })
+    }
 
     pub fn register_dep(artifact_hash: String, dep: ModuleDependencyMeta) {
         with_store_mut(|store| {

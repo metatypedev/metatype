@@ -7,7 +7,7 @@ use common::typegraph::{
     utils::{map_from_object, object_from_map},
     Typegraph,
 };
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::utils::postprocess::PostProcessor;
 
@@ -25,7 +25,7 @@ impl PostProcessor for PythonProcessor {
                 };
 
                 let main_path = fs_host::make_absolute(&PathBuf::from(path))?;
-                let artifact_name = path.split('/').last().unwrap();
+                let artifact_name = Path::new(path).file_name().unwrap().to_str().unwrap();
                 mat_data.artifact = artifact_name.into();
                 mat_data.tg_name = Some(tg_name.clone());
 

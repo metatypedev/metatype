@@ -7,7 +7,7 @@ use common::typegraph::{
     utils::{map_from_object, object_from_map},
     Typegraph,
 };
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::utils::postprocess::PostProcessor;
 
@@ -25,7 +25,7 @@ impl PostProcessor for WasmedgeProcessor {
                 };
 
                 let wasi_path = fs_host::make_absolute(&PathBuf::from(path))?;
-                let file_name = path.split('/').last().unwrap();
+                let file_name = Path::new(path).file_name().unwrap().to_str().unwrap();
                 let artifact_hash = mat_data.artifact_hash.clone();
 
                 mat_data.wasm = file_name.into();

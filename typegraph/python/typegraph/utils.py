@@ -95,3 +95,18 @@ def get_file_hash(file_path: str) -> str:
             sha256_hasher.update(chunk)
 
     return sha256_hasher.hexdigest()
+
+
+def get_parent_directories(path):
+    parents = []
+
+    while True:
+        path, folder = os.path.split(path)
+        if folder:
+            parents.append(folder)
+        else:
+            if path:
+                parents.append(path)
+            break
+
+    return parents[::-1]

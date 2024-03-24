@@ -4,11 +4,13 @@
 import config from "../config.ts";
 import { signJWT, verifyJWT } from "../crypto.ts";
 import { UploadUrlMeta } from "../typegate/mod.ts";
+import { path } from "compress/deps.ts";
 
 interface TypegraphArtifact {
   name: string;
   artifact_hash: string;
   artifact_size_in_bytes: number;
+  path_suffix: string[];
 }
 
 function createUploadPath(origin: string, typegraphName: string) {
@@ -23,13 +25,16 @@ export async function handleUploadUrl(
 ) {
   const url = new URL(request.url);
   const origin = url.origin;
-  const { name, artifact_hash, artifact_size_in_bytes }: TypegraphArtifact =
-    await request
+  const { name, artifact_hash, artifact_size_in_bytes, path_suffix }:
+    TypegraphArtifact = await request
       .json();
+
+  const artifactPathSuffix = path.join(...path_suffix);
   const uploadUrlMeta: UploadUrlMeta = {
     artifactName: name,
     artifactHash: artifact_hash,
     artifactSizeInBytes: artifact_size_in_bytes,
+    pathSuffix: artifactPathSuffix,
     urlUsed: false,
   };
 
@@ -72,8 +77,13 @@ export async function handleArtifactUpload(
     throw new Error("Invalid token: " + e.toString());
   }
 
-  const { artifactName, artifactHash, artifactSizeInBytes, urlUsed }:
-    UploadUrlMeta = uploadMeta!;
+  const {
+    artifactName,
+    artifactHash,
+    artifactSizeInBytes,
+    urlUsed,
+    pathSuffix,
+  }: UploadUrlMeta = uploadMeta!;
 
   if (urlUsed) {
     throw new Error(`Endpoint ${url.toString()} is disabled`);
@@ -104,10 +114,19 @@ export async function handleArtifactUpload(
   }
 
   // adjust relative to the root path
-  const artifactStorageDir =
-    `${config.tmp_dir}/metatype_artifacts/${tgName}/artifacts`;
+  const artifactStorageDir = path.join(
+    config.tmp_dir,
+    "metatype_artifacts",
+    tgName,
+    "artifacts",
+    pathSuffix,
+  );
+
   await Deno.mkdir(artifactStorageDir, { recursive: true });
-  const artifactPath = `${artifactStorageDir}/${artifactName}.${artifactHash}`;
+  const artifactPath = path.join(
+    artifactStorageDir,
+    `${artifactName}.${artifactHash}`,
+  );
   await Deno.writeFile(artifactPath, artifactData);
 
   // mark as the url used once the request completes.

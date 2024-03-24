@@ -3,10 +3,13 @@
 
 import * as t from "../types.js";
 import { runtimes } from "../wit.js";
-import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
+import {
+  Effect,
+  ModuleDependencyMeta,
+} from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import { Materializer, Runtime } from "./mod.js";
 import { fx } from "../index.js";
-import { getFileHash } from "../utils/file_utils.js";
+import { getFileHash, getParentDirectories } from "../utils/file_utils.js";
 
 interface LambdaMat extends Materializer {
   fn: string;
@@ -107,15 +110,17 @@ export class PythonRuntime extends Runtime {
     const artifactHash = await getFileHash(module);
 
     // generate dep meta
-    // const depMetas: DependencyMeta[] = [];
-    // for (const dep of deps) {
-    //   const depHash = await getFileHash(dep);
-    //   const depMeta: DependencyMeta = {
-    //     path: dep,
-    //     depHash: depHash,
-    //   };
-    //   depMetas.push(depMeta);
-    // }
+    const depMetas: ModuleDependencyMeta[] = [];
+    for (const dep of deps) {
+      const depHash = await getFileHash(dep);
+      const parentDirs = getParentDirectories(dep);
+      const depMeta: ModuleDependencyMeta = {
+        path: dep,
+        depHash: depHash,
+        relativePathPrefix: parentDirs,
+      };
+      depMetas.push(depMeta);
+    }
 
     const matId = runtimes.fromPythonModule(base, {
       artifact: module,

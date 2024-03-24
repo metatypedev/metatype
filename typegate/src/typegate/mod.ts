@@ -67,6 +67,7 @@ export interface UploadUrlMeta {
   artifactHash: string;
   artifactSizeInBytes: number;
   urlUsed: boolean;
+  pathSuffix: string;
 }
 
 export class Typegate {

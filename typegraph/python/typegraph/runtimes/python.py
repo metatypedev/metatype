@@ -14,10 +14,11 @@ from typegraph.gen.exports.runtimes import (
     MaterializerPythonImport,
     MaterializerPythonLambda,
     MaterializerPythonModule,
+    ModuleDependencyMeta,
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.utils import get_file_hash
+from typegraph.utils import get_file_hash, get_parent_directories
 from typegraph.wit import runtimes, store
 
 if TYPE_CHECKING:
@@ -104,10 +105,13 @@ class PythonRuntime(Runtime):
 
         # generate dep_metas
         dep_metas = []
-        # for dep in deps:
-        #     dep_hash = get_file_hash(dep)
-        #     dep_meta = DependencyMeta(path=dep, dep_hash=dep_hash)
-        #     dep_metas.append(dep_meta)
+        for dep in deps:
+            dep_hash = get_file_hash(dep)
+            parent_dirs = get_parent_directories(dep)
+            dep_meta = ModuleDependencyMeta(
+                path=dep, dep_hash=dep_hash, relative_path_prefix=parent_dirs
+            )
+            dep_metas.append(dep_meta)
 
         base = BaseMaterializer(runtime=self.id.value, effect=effect)
         mat_id = runtimes.from_python_module(
