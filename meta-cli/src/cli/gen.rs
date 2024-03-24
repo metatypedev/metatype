@@ -55,7 +55,18 @@ impl Action for Gen {
             typegate: Arc::new(node),
         };
 
-        metagen::generate_target(mgen_conf, &self.gen_target, resolver).await?;
+        let files = metagen::generate_target(mgen_conf, &self.gen_target, resolver).await?;
+        let mut set = tokio::task::JoinSet::new();
+        for (path, file) in files {
+            set.spawn(async move {
+                tokio::fs::create_dir_all(path.parent().unwrap()).await?;
+                tokio::fs::write(path, file).await?;
+                Ok::<_, tokio::io::Error>(())
+            });
+        }
+        while let Some(res) = set.join_next().await {
+            res??;
+        }
 
         server_handle.unwrap().stop(true).await;
 
@@ -105,6 +116,12 @@ async fn load_tg_at(
     path: PathBuf,
     name: Option<&str>,
 ) -> anyhow::Result<Typegraph> {
+    ServerStore::with(
+        Some(crate::com::store::Command::Serialize),
+        Some(config.as_ref().clone()),
+    );
+    // ServerStore::set_prefix(self.prefix.to_owned());
+
     let console = ConsoleActor::new(Arc::clone(&config)).start();
 
     let (loader_event_tx, loader_event_rx) = tokio::sync::mpsc::unbounded_channel();
@@ -206,6 +223,10 @@ metagen:
                     .split(' ')
                     .collect::<Vec<_>>(),
             )
+            .env(
+                "MCLI_LOADER_CMD",
+                "deno run -A --config ../typegate/deno.jsonc",
+            )
             .kill_on_drop(true)
             .spawn()?
             .wait()
@@ -214,7 +235,7 @@ metagen:
     }
     {
         let out = tokio::process::Command::new("cargo")
-            .args("build".split(' ').collect::<Vec<_>>())
+            .args("build --target wasm32-wasi".split(' ').collect::<Vec<_>>())
             .current_dir(&gen_crate_path)
             .kill_on_drop(true)
             .spawn()?

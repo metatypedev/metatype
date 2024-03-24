@@ -196,11 +196,7 @@ fn mdk_rs_e2e() -> anyhow::Result<()> {
                 build_fn: |args| {
                     Box::pin(async move {
                         let status = tokio::process::Command::new("cargo")
-                            .args(
-                                "build --target wasm32-wasi --target-dir target/wasi"
-                                    .split(' ')
-                                    .collect::<Vec<_>>(),
-                            )
+                            .args("build --target wasm32-wasi".split(' ').collect::<Vec<_>>())
                             .current_dir(args.path)
                             .kill_on_drop(true)
                             .spawn()?
