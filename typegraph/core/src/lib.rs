@@ -642,9 +642,8 @@ mod tests {
             Err(errors::expected_typegraph_context())
         );
 
-        assert_eq!(
-            Lib::finalize_typegraph(None),
-            Err(errors::expected_typegraph_context())
+        assert!(
+            matches!(Lib::finalize_typegraph(None), Err(e) if e == errors::expected_typegraph_context())
         );
 
         Ok(())
