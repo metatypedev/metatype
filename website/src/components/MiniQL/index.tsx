@@ -77,7 +77,7 @@ function MiniQLBrowser({
 
   console.log(code);
   return (
-    <div className="@container miniql mb-5">
+    <div className="@container miniql mb-4">
       {defaultMode ? (
         <ChoicePicker choices={modes} choice={mode} onChange={setMode} />
       ) : null}
@@ -103,6 +103,7 @@ function MiniQLBrowser({
                 }}
                 choice={sdk}
                 onChange={setSDK}
+                className="ml-2"
               >
                 {code?.map((lang) => (
                   <TabItem key={lang.codeLanguage} value={lang.codeLanguage}>
@@ -110,7 +111,7 @@ function MiniQLBrowser({
                       href={`https://github.com/metatypedev/metatype/blob/main/${lang?.codeFileUrl}`}
                       className={"absolute top-0 right-0 m-2 p-1"}
                     >
-                      {lang?.codeFileUrl?.split("/").pop()}
+                      {lang?.codeFileUrl?.split("/").pop()} ↗
                     </Link>
                     <CodeBlock
                       language={lang?.codeLanguage}

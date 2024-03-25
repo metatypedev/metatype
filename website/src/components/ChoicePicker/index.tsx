@@ -29,9 +29,12 @@ export function ChoicePicker<T>({
 
   return (
     <>
-      <ul className={`pl-0 m-0 list-none ${className ?? ""}`}>
+      <ul className={`pl-0 m-0 list-none text-sm ${className ?? ""}`}>
         {Object.entries(choices).map(([value, key]) => (
-          <li key={value} className="inline-block rounded-md overflow-clip m-2">
+          <li
+            key={value}
+            className="inline-block rounded-md overflow-clip my-2 mr-2"
+          >
             <div>
               <label className="cursor-pointer">
                 <input

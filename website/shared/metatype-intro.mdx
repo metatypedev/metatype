@@ -1,13 +1,14 @@
-Metatype is an open platform for developers to **declaratively build APIs**. It offers a new approach to creating backends, where the developers focus on data modelling and delegate the implementation to the platform.
+Metatype is an open source platform to author and deploy APIs for the cloud and components eras. It provides a declarative programming model that helps you to efficiently design APIs and delegate the non-functional requirements to the platform. Metatype currently supports Typescript/Javascript, Python and Rust.
 
-The intent is to address the following challenges:
+<div className="max-w-[650px] mx-auto">
 
-- developers are often a bottleneck, and may spend less than 50% of their time on tasks that matter
-- most of the developments needs are similar, yet most of the systems are not interoperable
-- infrastructure management takes time and slows down the deployment velocity
+![](image.drawio.svg)
 
-The platform is composed of the following components:
+</div>
+
+The platform consists of multiple elements:
 
 - [**Typegraph**](/docs/reference/typegraph): a multi-language SDK to manage typegraphs - virtual graphs of types - and compose them
-- [**Typegate**](/docs/reference/typegate): a serverless REST/GraphQL gateway to execute queries over typegraphs
-- [**Meta CLI**](/docs/reference/meta-cli): a command-line tool to offer a great developer experience and fast deployment
+- [**Typegate**](/docs/reference/typegate): a serverless GraphQL/REST gateway to execute queries over typegraphs
+- [**Meta CLI**](/docs/reference/meta-cli): a command-line tool to securely and efficiently deploy the typegraphs on the gateway
+- [**Meta LSP**](/docs/reference/meta-lsp): a language server protocol implementation to offer a great developer experience

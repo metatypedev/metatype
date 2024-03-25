@@ -12,8 +12,8 @@ on:
         type: boolean
         default: false
   push:
-      tags:
-        - v*
+    tags:
+      - v*
 
 env:
   GHJK_VERSION: "423d38e"
@@ -23,11 +23,7 @@ env:
 jobs:
   check-bump:
     runs-on: ubuntu-latest
-    if: github.ref_type == 'tag' 
-      || (
-        github.event_name == 'workflow_dispatch'
-        && inputs.checkBump
-      )
+    if: github.ref_type == 'tag' || ( github.event_name == 'workflow_dispatch' && inputs.checkBump )
     steps:
       - uses: actions/checkout@v4
         with:
@@ -308,7 +304,7 @@ jobs:
       - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
       - shell: bash
         run: |
-          cd dev-tools
+          cd meta-lsp
           pnpm install --frozen-lockfile
           cd ts-language-server
           pnpm install --frozen-lockfile
@@ -318,14 +314,14 @@ jobs:
           pnpm compile:ts-server
           pnpm compile:vscode
           pnpm vscode:package
-          
+
           [ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
             && pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }} --skip-duplicate \
-            || pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }} 
+            || pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }}
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
-          file: "dev-tools/*.vsix"
+          file: "meta-lsp/*.vsix"
           file_glob: true
           overwrite: ${{ inputs.ovewriteArtifacts }}
 
