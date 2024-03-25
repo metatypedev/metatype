@@ -7,4 +7,4 @@ from typegraph.runtimes.random import RandomRuntime  # noqa
 from typegraph.runtimes.http import HttpRuntime  # noqa
 from typegraph.runtimes.python import PythonRuntime  # noqa
 from typegraph.runtimes.random import RandomRuntime  # noqa
-from typegraph.runtimes.wasmedge import WasmEdgeRuntime  # noqa
+from typegraph.runtimes.wasm import WasmRuntime  # noqa

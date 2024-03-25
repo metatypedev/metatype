@@ -9,8 +9,8 @@ import { ComputeStage } from "../engine/query_engine.ts";
 import { registerRuntime } from "./mod.ts";
 import config from "../config.ts";
 
-@registerRuntime("wasmedge")
-export class WasmEdgeRuntime extends Runtime {
+@registerRuntime("wasm")
+export class WasmRuntime extends Runtime {
   private constructor(typegraphName: string) {
     super(typegraphName);
   }
@@ -18,7 +18,7 @@ export class WasmEdgeRuntime extends Runtime {
   static init(params: RuntimeInitParams): Promise<Runtime> {
     const { typegraphName } = params;
 
-    return Promise.resolve(new WasmEdgeRuntime(typegraphName));
+    return Promise.resolve(new WasmRuntime(typegraphName));
   }
 
   async deinit(): Promise<void> {
