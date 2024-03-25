@@ -19,23 +19,36 @@ impl Default for Effect {
 }
 
 pub mod models {
+    use std::collections::BTreeMap;
+
+    use common::typegraph::{EffectType, Injection, InjectionData};
+
     use crate::errors::Result;
     use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
     use crate::types::TypeId;
 
     pub fn simple_record() -> Result<TypeId> {
+        let mut created_at_injection_map = BTreeMap::new();
+        created_at_injection_map.insert(EffectType::Create, "now".to_string());
+        let created_at = t::string()
+            .format("date-time")
+            .inject(Injection::Dynamic(InjectionData::ValueByEffect(
+                created_at_injection_map,
+            )))
+            .build()?;
+
         t::struct_()
             .named("Record")
-            .prop(
+            .propx(
                 "id",
                 t::string()
                     .as_id(true)
                     .format("uuid")
-                    .config("auto", "true")
-                    .build()?,
-            )
-            .prop("name", t::string().build()?)
-            .prop("age", t::optional(t::integer().build()?).build()?)
+                    .config("auto", "true"),
+            )?
+            .propx("name", t::string())?
+            .propx("age", t::optionalx(t::integer())?)?
+            .prop("created_at", created_at)
             .build()
     }
 
@@ -76,9 +89,62 @@ pub fn setup(name: Option<&str>) -> crate::errors::Result<()> {
 pub mod tree {
     use std::{borrow::Cow, io::Write, rc::Rc};
 
-    use ptree::{Style, TreeItem};
+    use ptree::{print_config::StyleWhen, IndentChars, PrintConfig, Style, TreeItem};
 
     use crate::types::{Type, TypeDef, TypeDefExt, TypeId};
+
+    pub struct PrintOptions {
+        no_indent_lines: bool,
+        indent_size: u16,
+    }
+
+    impl PrintOptions {
+        pub fn new() -> Self {
+            Self {
+                no_indent_lines: false,
+                indent_size: 4,
+            }
+        }
+
+        pub fn no_indent_lines(mut self) -> Self {
+            self.no_indent_lines = true;
+            self
+        }
+
+        #[allow(dead_code)]
+        pub fn indent_size(mut self, size: u16) -> Self {
+            self.indent_size = size;
+            self
+        }
+
+        pub fn print(&self, type_id: TypeId) -> String {
+            let mut config = PrintConfig {
+                indent: self.indent_size as usize,
+                styled: StyleWhen::Never,
+                ..Default::default()
+            };
+            if self.no_indent_lines {
+                config.characters = IndentChars {
+                    down_and_right: " ".to_string(),
+                    down: " ".to_string(),
+                    turn_right: " ".to_string(),
+                    right: " ".to_string(),
+                    empty: " ".to_string(),
+                };
+            }
+
+            let root = Node {
+                label: "root".into(),
+                type_id,
+                parents: Rc::new(vec![]),
+            };
+
+            let mut buf: Vec<u8> = vec![];
+            ptree::write_tree_with(&root, &mut buf, &config).expect("could not write tree");
+
+            String::from_utf8(buf).unwrap()
+        }
+    }
 
     #[derive(Clone)]
     struct Node {
@@ -88,16 +154,7 @@ pub mod tree {
     }
 
     pub fn print(type_id: TypeId) -> String {
-        let root = Node {
-            label: "root".into(),
-            type_id,
-            parents: Rc::new(vec![]),
-        };
-
-        let mut buf: Vec<u8> = vec![];
-        ptree::write_tree(&root, &mut buf).expect("could not write tree");
-
-        String::from_utf8(buf).unwrap()
+        PrintOptions::new().print(type_id)
     }
 
     impl TreeItem for Node {
@@ -175,17 +232,21 @@ pub mod tree {
                     | TypeDef::String(_)
                     | TypeDef::File(_)
                     | TypeDef::Boolean(_) => Cow::Owned(vec![]),
-                    TypeDef::Struct(ty) => Cow::Owned(
-                        ty.data
+                    TypeDef::Struct(ty) => {
+                        let mut children = ty
+                            .data
                             .props
                             .iter()
                             .map(|(k, id)| Node {
                                 label: format!("[{k}]"),
-                                type_id: (*id).into(),
+                                type_id: id.into(),
                                 parents: Rc::clone(&parents),
                             })
-                            .collect(),
-                    ),
+                            .collect::<Vec<_>>();
+                        children.sort_unstable_by_key(|n| n.label.clone());
+
+                        Cow::Owned(children)
+                    }
                     TypeDef::Func(ty) => Cow::Owned(vec![
                         Node {
                             label: "input".to_string(),

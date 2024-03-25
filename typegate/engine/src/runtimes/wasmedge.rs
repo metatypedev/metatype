@@ -10,13 +10,14 @@ use anyhow::bail;
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
 
-use base64::{engine::general_purpose, Engine as _};
 use wasmedge_sdk::VmBuilder;
 use wasmedge_sdk::{
     config::{ConfigBuilder, HostRegistrationConfigOptions},
     dock::{Param, VmDock},
     Module,
 };
+
+use std::{env, fs};
 
 #[derive(Deserialize)]
 #[serde(crate = "serde")]
@@ -54,9 +55,14 @@ fn param_cast(out: &str, res: &mut Vec<Box<dyn Any + Send + Sync>>) -> Result<St
 pub fn op_wasmedge_wasi(#[serde] input: WasiInput) -> Result<String> {
     // https://github.com/second-state/wasmedge-rustsdk-examples
 
-    let bytes = general_purpose::STANDARD
-        .decode(input.wasm.as_bytes())
-        .unwrap();
+    let wasm_relative_path = PathBuf::from(input.wasm);
+
+    let wasm_absolute_path = match env::current_dir() {
+        Ok(cwd) => cwd.join(wasm_relative_path),
+        Err(e) => return Err(anyhow::anyhow!(e)),
+    };
+
+    let bytes = fs::read(wasm_absolute_path).unwrap();
     let module = Module::from_bytes(None, bytes).unwrap();
 
     let config = ConfigBuilder::default()

@@ -4,7 +4,7 @@ import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
 // skip:end
 
-typegraph({
+await typegraph({
   name: "auth",
   // highlight-next-line
   cors: {

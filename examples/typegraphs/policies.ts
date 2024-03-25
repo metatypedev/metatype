@@ -6,7 +6,7 @@ import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
 // skip:end
 
-typegraph({
+await typegraph({
   name: "policies",
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {

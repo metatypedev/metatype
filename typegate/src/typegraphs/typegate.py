@@ -8,6 +8,51 @@ from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.deno import DenoRuntime
 from typegraph.wit import runtimes, store
 
+### Prisma query (Json protocol):
+# https://github.com/prisma/prisma-engines/blob/93f79ec1ca7867558f10130d8db84fb7bf150357/query-engine/request-handlers/src/protocols/json/body.rs#L13C10-L13C18
+
+# https://github.com/prisma/prisma-engines/blob/93f79ec1ca7867558f10130d8db84fb7bf150357/query-engine/schema/src/query_schema.rs#L227
+prisma_query_tags = [
+    "findUnique",
+    # "findUniqueOrThrow",
+    "findFirst",
+    # "findFirstOrThrow",
+    "findMany",
+    "createOne",
+    "createMany",
+    "updateOne",
+    "updateMany",
+    "deleteOne",
+    "deleteMany",
+    "upsertOne",
+    "upsertMany",
+    "aggregate",
+    "groupBy",
+    #
+    # raw operations
+    "executeRaw",
+    "queryRaw",
+    "runCommandRaw",
+    "findRaw",
+    "aggregateRaw",
+]
+
+# https://github.com/prisma/prisma-engines/blob/93f79ec1ca7867558f10130d8db84fb7bf150357/query-engine/request-handlers/src/protocols/json/body.rs#L50
+prisma_json_query = t.struct(
+    {
+        "modelName": t.string().optional(),
+        "action": t.enum(prisma_query_tags, name="PrismaQueryTag"),
+        "query": t.struct(
+            {
+                "arguments": t.json().optional(),  # TODO t.record([t.string(), t.json()])
+                "selection": t.json(),  # TODO t.record([t.string(), t.enum([t.boolean(), g.ref("PrismaFieldQuery")])])
+            },
+            name="PrismaFieldQuery",
+        ),
+    },
+    name="PrismaJsonSingleQuery",
+)
+
 
 @typegraph(
     cors=Cors(
@@ -97,7 +142,7 @@ def typegate(g: Graph):
         }
     )
 
-    type_info = t.struct(
+    shallow_type_info = t.struct(
         {
             "optional": t.boolean(),
             "as_id": t.boolean(),
@@ -109,12 +154,17 @@ def typegate(g: Graph):
             "default": t.json().optional(),
             "format": t.string().optional(),
             "policies": t.list(t.string()),
+        },
+        name="ShallowTypeInfo",
+    )
+
+    type_info = shallow_type_info.extend(
+        {
             "fields": t.list(
                 t.struct({"subPath": path, "termNode": g.ref("TypeInfo")})
             ).optional(),
-        },
-        name="TypeInfo",
-    )
+        }
+    ).rename("TypeInfo")
 
     operation_parameter = t.struct(
         {
@@ -151,6 +201,71 @@ def typegate(g: Graph):
         rate_calls=True,
     )
 
+    prisma_model_info = t.struct(
+        {
+            "name": t.string(),
+            "runtime": t.string(),
+            "fields": t.list(
+                t.struct(
+                    {
+                        "name": t.string(),
+                        "type": shallow_type_info,
+                    }
+                )
+            ),
+        },
+        name="PrismaModelInfo",
+    )
+
+    find_prisma_models_mat_id = runtimes.register_typegate_materializer(
+        store,
+        TypegateOperation.FIND_PRISMA_MODELS,
+    )
+    if isinstance(find_prisma_models_mat_id, Err):
+        raise Exception(find_prisma_models_mat_id.value)
+    find_prisma_models_mat = Materializer(
+        find_prisma_models_mat_id.value, effect=fx.read()
+    )
+    find_prisma_models = t.func(
+        t.struct({"typegraph": t.string()}),
+        t.list(prisma_model_info),
+        find_prisma_models_mat,
+        rate_calls=True,
+    )
+
+    raw_prisma_query_mat_id = runtimes.register_typegate_materializer(
+        store, TypegateOperation.RAW_PRISMA_QUERY
+    )
+    if isinstance(raw_prisma_query_mat_id, Err):
+        raise Exception(raw_prisma_query_mat_id.value)
+    raw_prisma_read_mat = Materializer(
+        raw_prisma_query_mat_id.value,
+        effect=fx.read(),
+    )
+    raw_prisma_create_mat = Materializer(
+        raw_prisma_query_mat_id.value,
+        effect=fx.create(False),
+    )
+    raw_prisma_update_mat = Materializer(
+        raw_prisma_query_mat_id.value,
+        effect=fx.update(False),
+    )
+    raw_prisma_delete_mat = Materializer(
+        raw_prisma_query_mat_id.value,
+        effect=fx.delete(False),
+    )
+
+    raw_prisma_op_inp = t.struct(
+        {
+            # typegraph name
+            "typegraph": t.string(),
+            # prisma runtime name
+            "runtime": t.string(),
+            "query": prisma_json_query,
+        }
+    )
+    raw_prisma_op_out = t.json()
+
     g.expose(
         admin_only,
         typegraphs=t.func(
@@ -167,7 +282,11 @@ def typegate(g: Graph):
         ),
         addTypegraph=t.func(
             t.struct(
-                {"fromString": t.json(), "secrets": t.json(), "cliVersion": t.string()}
+                {
+                    "fromString": t.json(),
+                    "secrets": t.json(),
+                    "targetVersion": t.string(),
+                }
             ),
             t.struct(
                 {
@@ -204,4 +323,25 @@ def typegate(g: Graph):
             arg_info_inp, t.list(type_info), arg_info_by_path_mat, rate_calls=True
         ),
         findAvailableOperations=find_available_operations,
+        findPrismaModels=find_prisma_models,
+        execRawPrismaRead=t.func(
+            raw_prisma_op_inp,
+            raw_prisma_op_out,
+            raw_prisma_read_mat,
+        ),
+        execRawPrismaCreate=t.func(
+            raw_prisma_op_inp,
+            raw_prisma_op_out,
+            raw_prisma_create_mat,
+        ),
+        execRawPrismaUpdate=t.func(
+            raw_prisma_op_inp,
+            raw_prisma_op_out,
+            raw_prisma_update_mat,
+        ),
+        execRawPrismaDelete=t.func(
+            raw_prisma_op_inp,
+            raw_prisma_op_out,
+            raw_prisma_delete_mat,
+        ),
     )

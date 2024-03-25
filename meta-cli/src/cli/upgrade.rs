@@ -5,6 +5,7 @@ use crate::global_config::GlobalConfig;
 
 use super::{Action, GenArgs};
 use crate::build;
+use actix_web::dev::ServerHandle;
 use anyhow::{Ok, Result};
 use async_trait::async_trait;
 use chrono::{Duration, Utc};
@@ -25,7 +26,7 @@ pub struct Upgrade {
 
 #[async_trait]
 impl Action for Upgrade {
-    async fn run(&self, _args: GenArgs) -> Result<()> {
+    async fn run(&self, _args: GenArgs, _: Option<ServerHandle>) -> Result<()> {
         // https://github.com/jaemk/self_update/issues/44
         let opts = self.clone();
         tokio::task::spawn_blocking(move || {
@@ -63,7 +64,7 @@ pub async fn upgrade_check() -> Result<()> {
     let config_path = GlobalConfig::default_path()?;
     let mut local_config = GlobalConfig::load(&config_path).await?;
 
-    if local_config.update_check + Duration::days(1) < Utc::now() {
+    if local_config.update_check + Duration::try_days(1).unwrap() < Utc::now() {
         let current_version = build::PKG_VERSION;
         let latest = tokio::task::spawn_blocking(move || {
             let update = Update::configure()

@@ -16,7 +16,7 @@ def authentication(g: Graph):
     deno = DenoRuntime()
     public = Policy.public()
 
-    ctx = t.struct({"username": t.string().optional().from_context("username")})
+    ctx = t.struct({"username": t.string().optional()})
 
     # highlight-start
     # expects a secret in metatype.yml
@@ -26,6 +26,10 @@ def authentication(g: Graph):
     # highlight-end
 
     g.expose(
-        get_context=deno.identity(ctx),
+        get_context=deno.identity(ctx).apply(
+            {
+                "username": g.from_context("username"),
+            }
+        ),
         default_policy=[public],
     )

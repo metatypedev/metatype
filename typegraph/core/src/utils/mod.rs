@@ -8,10 +8,11 @@ use indexmap::IndexMap;
 use serde_json::json;
 
 use crate::errors::Result;
-use crate::global_store::Store;
-use crate::types::TypeId;
+use crate::global_store::{get_sdk_version, NameRegistration, Store};
+use crate::types::subgraph::Subgraph;
+use crate::types::{TypeDefExt, TypeId};
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
-use crate::wit::utils::{Auth as WitAuth, QueryBodyParams};
+use crate::wit::utils::{Auth as WitAuth, QueryDeployParams};
 use crate::Lib;
 
 use self::oauth2::std::{named_provider, Oauth2Builder};
@@ -205,10 +206,10 @@ impl crate::wit::utils::Guest for crate::Lib {
             .build(named_provider(&service_name)?)
     }
 
-    fn gen_gqlquery(params: QueryBodyParams) -> Result<String> {
+    fn gql_deploy_query(params: QueryDeployParams) -> Result<String> {
         let query = r"
-            mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
-                addTypegraph(fromString: $tg, secrets: $secrets, cliVersion: $cliVersion) {
+            mutation InsertTypegraph($tg: String!, $secrets: String!, $targetVersion: String!) {
+                addTypegraph(fromString: $tg, secrets: $secrets, targetVersion: $targetVersion) {
                     name
                     messages { type text }
                     migrations { runtime migrations }
@@ -230,10 +231,68 @@ impl crate::wit::utils::Guest for crate::Lib {
               "tg": params.tg,
               // map => json object => string
               "secrets": serde_json::to_value(secrets_map).unwrap().to_string(),
-              "cliVersion" : params.cli_version,
+              "targetVersion" : get_sdk_version(),
             }),
         });
 
         Ok(req_body.to_string())
+    }
+
+    fn gql_remove_query(names: Vec<String>) -> Result<String> {
+        let query = r"
+            mutation($names: [String!]!) {
+                removeTypegraphs(names: $names)
+            }
+        ";
+        let req_body = json!({
+            "query": query,
+            "variables": json!({
+                "names":  names,
+              }),
+        });
+        Ok(req_body.to_string())
+    }
+
+    fn unpack_tarb64(tar_b64: String, dest: String) -> Result<()> {
+        fs_host::unpack_base64(&tar_b64, dest).map_err(|e| e.into())
+    }
+
+    fn remove_injections(id: CoreTypeId) -> Result<CoreTypeId> {
+        remove_injections_recursive(id.into()).map(|id| id.into())
+    }
+
+    fn get_cwd() -> Result<String, String> {
+        match fs_host::cwd() {
+            Ok(path) => Ok(path.display().to_string()),
+            Err(e) => Err(e),
+        }
+    }
+}
+
+pub fn remove_injection(type_id: TypeId) -> Result<TypeId> {
+    let (_, type_def) = type_id.resolve_ref()?;
+
+    let x_base = type_def.x_base();
+    if x_base.injection.is_none() {
+        return Ok(type_id);
+    }
+
+    let mut x_base = x_base.clone();
+    x_base.injection = None;
+
+    Store::register_type_def(
+        move |id| type_def.with_x_base(id, x_base),
+        NameRegistration(false),
+    )
+}
+
+pub fn remove_injections_recursive(type_id: TypeId) -> Result<TypeId> {
+    Subgraph::new(type_id).map(remove_injection)
+}
+
+pub fn clear_name(base: &TypeBase) -> TypeBase {
+    TypeBase {
+        name: None,
+        ..base.clone()
     }
 }

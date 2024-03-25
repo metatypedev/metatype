@@ -1,7 +1,6 @@
 package metatype:typegraph
 
 interface core {
-
     record error {
         stack: list<string>,
     }
@@ -34,13 +33,26 @@ interface core {
         rate: option<rate>,
     }
 
-    enum typegraph-finalize-mode {
-        simple,
-        resolve-artifacts
+    init-typegraph: func(params: typegraph-init-params) -> result<_, error>
+
+    record migration-action {
+        create: bool,
+        reset: bool
     }
 
-    init-typegraph: func(params: typegraph-init-params) -> result<_, error>
-    finalize-typegraph: func(mode: typegraph-finalize-mode) -> result<string, error>
+    record migration-config {
+        migration-dir: string,
+        global-action: migration-action, // global config (all runtimes)
+        runtime-actions: option<list<tuple<string, migration-action>>> // config per runtime name (override global-action)
+    }
+
+    record artifact-resolution-config {
+        dir: option<string>, // cwd() if none
+        prefix: option<string>, // overrides tg.meta.prefix field if defined
+        prisma-migration: migration-config
+    }
+
+    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<tuple<string, list<tuple<string, string>>>, error>
 
     type type-id = u32
     record type-base {
@@ -129,17 +141,40 @@ interface core {
         enumeration: option<list<string>>,
     }
     structb: func(data: type-struct, base: type-base) -> result<type-id, error>
+    extend-struct: func(tpe: type-id, props: list<tuple<string, type-id>>) -> result<type-id, error>
 
     get-type-repr: func(id: type-id) -> result<string, error>
 
+    variant value-source {
+        raw(string),  // json
+        context(string),  // key
+        secret(string),  // key
+        parent(string),  // name
+        param(string),  // name
+    }
+
+    record parameter-transform {
+        resolver-input: type-id,
+        transform-tree: string,
+    }
+
     record type-func {
         inp: type-id,
+        parameter-transform: option<parameter-transform>,
         out: type-id,
         mat: materializer-id,
         rate-calls: bool,
         rate-weight: option<u32>,
     }
+
     funcb: func(data: type-func) -> result<type-id, error>
+
+    record transform-data {
+        query-input: type-id,
+        parameter-transform: parameter-transform,
+    }
+
+    get-transform-data: func(resolver-input: type-id, transform-tree: string) -> result<transform-data, error>
 
     type policy-id = u32
 
@@ -169,6 +204,7 @@ interface core {
     get-internal-policy: func() -> result<tuple<policy-id, string>, error>
 
     variant context-check {
+        not-null,
         value(string),
         pattern(string),
     }
@@ -177,6 +213,8 @@ interface core {
     rename-type: func(tpe: type-id, new-name: string) -> result<type-id, error>
 
     expose: func(fns: list<tuple<string, type-id>>, default-policy: option<list<policy-spec>>) -> result<_, error>
+
+    set-seed: func(seed: option<u32>) -> result<_, error>
     
     type runtime-id = u32
     type materializer-id = u32
@@ -322,6 +360,7 @@ interface runtimes {
     record materializer-wasi {
         func-name: string,
         module: string,
+        artifact-hash: string,
     }
 
     register-wasmedge-runtime: func() -> result<runtime-id, error>
@@ -401,6 +440,8 @@ interface runtimes {
         get-serialized-typegraph,
         get-arg-info-by-path,
         find-available-operations,
+        find-prisma-models,
+        raw-prisma-query,
     }
 
     register-typegate-materializer: func(operation: typegate-operation) -> result<materializer-id, error>
@@ -498,19 +539,26 @@ interface utils {
     oauth2-with-extended-profiler: func(service-name: string, scopes: string, extension: string) -> result<string, error>
     oauth2-with-custom-profiler: func(service-name: string, scopes: string, profiler: type-id) -> result<string, error>
 
-    record query-body-params {
+    record query-deploy-params {
         tg: string,
-        cli-version: string,
         secrets: option<list<tuple<string, string>>>,
     }
 
-    gen-gqlquery: func(params: query-body-params) -> result<string, error>
+    gql-deploy-query: func(params: query-deploy-params) -> result<string, error>
+    gql-remove-query: func(tg-name: list<string>) -> result<string, error>
+
+    unpack-tarb64: func(tar-b64: string, dest: string) -> result<_, error>
+
+    remove-injections: func(type-id: type-id) -> result<type-id, error>
+
+    get-cwd: func() -> result<string, string>
 }
 
 interface host {
     print: func(s: string)
-    expand-glob: func(root: string, exclude: list<string>) -> result<list<string>, string>
-    file-exists: func(path: string) -> result<bool, string>
+    eprint: func(s: string)
+    expand-path: func(root: string, exclude: list<string>) -> result<list<string>, string>
+    path-exists: func(path: string) -> result<bool, string>
     read-file: func(path: string) -> result<list<u8>, string>
     write-file: func(path: string, data: list<u8>) -> result<_, string>
     get-cwd: func() -> result<string, string>

@@ -5,7 +5,7 @@ import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
 // skip:end
 
-typegraph({
+await typegraph({
   name: "oauth2-authentication",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
@@ -13,7 +13,7 @@ typegraph({
   const deno = new DenoRuntime();
   const pub = Policy.public();
 
-  const ctx = t.struct({ "exp": t.integer().optional().fromContext("exp") });
+  const ctx = t.struct({ "exp": t.integer().optional() });
 
   // highlight-start
   g.auth(
@@ -22,6 +22,8 @@ typegraph({
   // highlight-end
 
   g.expose({
-    get_context: deno.identity(ctx),
+    get_context: deno.identity(ctx).apply({
+      exp: g.fromContext("exp"),
+    }),
   }, pub);
 });

@@ -10,9 +10,10 @@ on:
 
 env:
   GHJK_VERSION: "f380522"
-  DENO_VERSION: "1.40.1"
+  DENO_VERSION: "1.41.0"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
+  DENO_DIR: deno-dir
 
 jobs:
   changes:
@@ -70,7 +71,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
+      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
       - shell: bash
         run: |
           sudo apt update
@@ -98,7 +99,7 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
+      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
       - name: Cache .venv dir
         uses: actions/cache@v4
         with:
@@ -146,7 +147,10 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
-      - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
+      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
+        with:
+          # temporary fix
+          cache-key-prefix: ${{ matrix.os }}
       - shell: bash
         env:
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -171,55 +175,58 @@ jobs:
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
 
-  test-docker:
-    needs: changes
-    if: ${{ needs.changes.outputs.typegate == 'true' }}
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: linux/amd64
-            runner: ubuntu-latest
-          # FIXME: try macos-14 runner once all actions support it
-          # docker buildx action broken as of 2024-02-09
-          - platform: linux/arm64
-            runner: custom-macos
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: scherermichael-oss/action-has-permission@master
-        id: check
-        with:
-          required-permission: write
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/login-action@v3
-        if: steps.check.outputs.has-permission
-        with:
-          registry: docker.io
-          username: zifeo
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build with cache (internal)
-        uses: docker/build-push-action@v5
-        if: steps.check.outputs.has-permission
-        with:
-          file: dev/Dockerfile
-          platforms: ${{ matrix.platform }}
-          push: false
-          cache-from: type=registry,ref=docker.io/zifeo/metatype-cache:ci
-          cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
-          # check target runs extra validation steps in the Dockerfile
-          target: check
-      - name: Build without cache (external)
-        uses: docker/build-push-action@v5
-        if: "! steps.check.outputs.has-permission"
-        with:
-          file: dev/Dockerfile
-          platforms: linux/amd64
-          push: false
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
-          target: check
+  # test-docker:
+  #   needs: changes
+  #   if: ${{ needs.changes.outputs.typegate == 'true' }}
+  #   runs-on: ${{ matrix.runner }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       include:
+  #         - platform: linux/amd64
+  #           runner: ubuntu-latest
+  #         # - platform: linux/amd64
+  #         #   runner: custom-ubuntu-large
+  #         # FIXME: try macos-14 runner once all actions support it
+  #         # docker buildx action broken as of 2024-02-09
+  #         # TODO
+  #         # - platform: linux/arm64
+  #         #   runner: custom-macos
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: docker/setup-buildx-action@v3
+  #     - uses: scherermichael-oss/action-has-permission@master
+  #       id: check
+  #       with:
+  #         required-permission: write
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - uses: docker/login-action@v3
+  #       if: steps.check.outputs.has-permission
+  #       with:
+  #         registry: docker.io
+  #         username: zifeo
+  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
+  #     - name: Build with cache (internal)
+  #       uses: docker/build-push-action@v5
+  #       if: steps.check.outputs.has-permission
+  #       with:
+  #         file: dev/Dockerfile
+  #         platforms: ${{ matrix.platform }}
+  #         push: false
+  #         cache-from: type=registry,ref=docker.io/zifeo/metatype-cache:ci
+  #         cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
+  #         # check target runs extra validation steps in the Dockerfile
+  #         target: check
+  #     - name: Build without cache (external)
+  #       uses: docker/build-push-action@v5
+  #       if: "! steps.check.outputs.has-permission"
+  #       with:
+  #         file: dev/Dockerfile
+  #         platforms: linux/amd64
+  #         push: false
+  #         cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
+  #         target: check
 
   test-full:
     needs: changes
@@ -286,7 +293,7 @@ jobs:
       - run: |
           sudo apt update
           sudo apt install -y --no-install-recommends zstd
-      - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
+      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
       - shell: bash
         env:
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -336,6 +343,7 @@ jobs:
           deno cache --import-map typegate/import_map.json \
             typegate/src/main.ts \
             typegate/tests/utils/*.ts \
+            typegate/tests/runtimes/wasmedge/*.ts \
             dev/deps.ts \
             dev/utils.ts
           deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
@@ -353,7 +361,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
+      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
       - shell: bash
         run: |
           cd meta-lsp

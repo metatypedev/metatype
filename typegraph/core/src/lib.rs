@@ -4,6 +4,7 @@
 mod conversion;
 mod errors;
 mod global_store;
+mod params;
 mod runtimes;
 mod t;
 mod typedef;
@@ -17,9 +18,10 @@ mod test_utils;
 
 use std::collections::HashSet;
 
-use errors::Result;
+use errors::{Result, TgError};
 use global_store::{NameRegistration, Store};
 use indoc::formatdoc;
+use params::apply;
 use regex::Regex;
 use runtimes::{DenoMaterializer, Materializer};
 use types::{
@@ -27,10 +29,11 @@ use types::{
     TypeDef, TypeDefExt, TypeId, Union,
 };
 
+use utils::clear_name;
 use wit::core::{
-    ContextCheck, Policy, PolicyId, PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat,
-    TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList, TypeOptional, TypeString, TypeStruct,
-    TypeUnion, TypegraphFinalizeMode, TypegraphInitParams,
+    ArtifactResolutionConfig, ContextCheck, Policy, PolicyId, PolicySpec, TransformData, TypeBase,
+    TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList,
+    TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
 };
 use wit::runtimes::{Guest, MaterializerDenoFunc};
 
@@ -57,8 +60,10 @@ impl wit::core::Guest for Lib {
         typegraph::init(params)
     }
 
-    fn finalize_typegraph(mode: TypegraphFinalizeMode) -> Result<String> {
-        typegraph::finalize(mode)
+    fn finalize_typegraph(
+        res_config: Option<ArtifactResolutionConfig>,
+    ) -> Result<(String, Vec<(String, String)>)> {
+        typegraph::finalize(res_config)
     }
 
     fn refb(name: String, attributes: Vec<(String, String)>) -> Result<CoreTypeId> {
@@ -315,11 +320,40 @@ impl wit::core::Guest for Lib {
         .into())
     }
 
+    fn extend_struct(
+        type_id: CoreTypeId,
+        new_props: Vec<(String, CoreTypeId)>,
+    ) -> Result<CoreTypeId> {
+        let type_def = TypeId(type_id).as_struct()?;
+        let mut props = type_def.data.props.clone();
+        props.extend(new_props);
+
+        Ok(Store::register_type_def(
+            |id| {
+                TypeDef::Struct(
+                    Struct {
+                        id,
+                        base: clear_name(&type_def.base),
+                        extended_base: type_def.extended_base.clone(),
+                        data: TypeStruct {
+                            props,
+                            ..type_def.data.clone()
+                        },
+                    }
+                    .into(),
+                )
+            },
+            NameRegistration(false),
+        )?
+        .into())
+    }
+
     fn funcb(data: TypeFunc) -> Result<CoreTypeId> {
         let wrapper_type = TypeId(data.inp);
         if !matches!(TypeDef::try_from(wrapper_type)?, TypeDef::Struct(_)) {
             return Err(errors::invalid_input_type(&wrapper_type.repr()?));
         }
+
         let base = TypeBase::default();
         Ok(Store::register_type_def(
             |id| {
@@ -336,6 +370,18 @@ impl wit::core::Guest for Lib {
             NameRegistration(true),
         )?
         .into())
+    }
+
+    fn get_transform_data(
+        resolver_input: CoreTypeId,
+        transform_tree: String,
+    ) -> Result<TransformData> {
+        apply::build_transform_data(
+            resolver_input.into(),
+            &serde_json::from_str(&transform_tree).map_err(|e| -> TgError {
+                format!("Error while parsing transform tree: {e:?}").into()
+            })?,
+        )
     }
 
     fn with_injection(type_id: CoreTypeId, injection: String) -> Result<CoreTypeId> {
@@ -415,6 +461,7 @@ impl wit::core::Guest for Lib {
 
     fn register_context_policy(key: String, check: ContextCheck) -> Result<(PolicyId, String)> {
         let name = match &check {
+            ContextCheck::NotNull => format!("__ctx_{}", key),
             ContextCheck::Value(v) => format!("__ctx_{}_{}", key, v),
             ContextCheck::Pattern(p) => format!("__ctx_p_{}_{}", key, p),
         };
@@ -424,6 +471,7 @@ impl wit::core::Guest for Lib {
             .to_string();
 
         let check = match check {
+            ContextCheck::NotNull => "value != null".to_string(),
             ContextCheck::Value(val) => {
                 format!("value === {}", serde_json::to_string(&val).unwrap())
             }
@@ -491,6 +539,10 @@ impl wit::core::Guest for Lib {
             default_policy,
         )
     }
+
+    fn set_seed(seed: Option<u32>) -> Result<()> {
+        typegraph::set_seed(seed)
+    }
 }
 
 #[macro_export]
@@ -510,7 +562,7 @@ mod tests {
     use crate::wit::core::Guest;
     use crate::wit::runtimes::{Effect, Guest as GuestRuntimes, MaterializerDenoFunc};
     use crate::Lib;
-    use crate::{TypegraphFinalizeMode, TypegraphInitParams};
+    use crate::TypegraphInitParams;
 
     impl Default for TypegraphInitParams {
         fn default() -> Self {
@@ -578,7 +630,7 @@ mod tests {
             crate::test_utils::setup(Some("test-2")),
             Err(errors::nested_typegraph_context("test-1"))
         );
-        Lib::finalize_typegraph(TypegraphFinalizeMode::Simple)?;
+        Lib::finalize_typegraph(None)?;
         Ok(())
     }
 
@@ -591,7 +643,7 @@ mod tests {
         );
 
         assert_eq!(
-            Lib::finalize_typegraph(TypegraphFinalizeMode::Simple),
+            Lib::finalize_typegraph(None),
             Err(errors::expected_typegraph_context())
         );
 
@@ -686,8 +738,8 @@ mod tests {
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::Read)?;
         Lib::expose(vec![("one".to_string(), t::func(s, b, mat)?.into())], None)?;
-        let typegraph = Lib::finalize_typegraph(TypegraphFinalizeMode::Simple)?;
-        insta::assert_snapshot!(typegraph);
+        let typegraph = Lib::finalize_typegraph(None)?;
+        insta::assert_snapshot!(typegraph.0);
         Ok(())
     }
 }

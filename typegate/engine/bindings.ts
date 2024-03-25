@@ -570,3 +570,7 @@ export function archive(a0: ArchiveInp): ArchiveResult {
     return { Err: { message: err.toString() } };
   }
 }
+
+export function transformTypescript(a0: string): string {
+  return Meta.deno.transformTypescript(a0);
+}

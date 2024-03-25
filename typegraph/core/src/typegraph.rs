@@ -1,14 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::conversion::hash::Hasher;
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
 use crate::types::{TypeDef, TypeDefExt, TypeId};
-use crate::utils::postprocess::deno_rt::DenoProcessor;
-use crate::utils::postprocess::python_rt::PythonProcessor;
-use crate::utils::postprocess::wasmedge_rt::WasmedgeProcessor;
-use crate::utils::postprocess::PostProcessor;
+use crate::utils::fs_host;
+use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
 use crate::validation::validate_name;
 use crate::Lib;
 use crate::{
@@ -24,17 +23,20 @@ use indexmap::IndexMap;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::hash::Hasher as _;
 
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::wit::core::{
-    Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec, RuntimeId,
-    TypegraphFinalizeMode, TypegraphInitParams,
+    ArtifactResolutionConfig, Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec,
+    RuntimeId, TypegraphInitParams,
 };
 
 #[derive(Default)]
 struct IdMapping {
-    types: HashMap<u32, u32>,
+    types_to_hash: HashMap<u32, u64>,
+    hash_to_type: HashMap<u64, u32>,
     runtimes: HashMap<u32, u32>,
     materializers: HashMap<u32, u32>,
     policies: HashMap<u32, u32>,
@@ -108,6 +110,8 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             prefix: params.prefix,
             rate: params.rate.map(|v| v.into()),
             secrets: vec![],
+            random_seed: Default::default(),
+            ref_artifacts: Default::default(),
         },
         types: vec![],
         saved_store_state: Some(Store::save()),
@@ -179,7 +183,9 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
         .collect::<Result<Vec<_>>>()
 }
 
-pub fn finalize(mode: TypegraphFinalizeMode) -> Result<String> {
+pub fn finalize(
+    res_config: Option<ArtifactResolutionConfig>,
+) -> Result<(String, Vec<(String, String)>)> {
     #[cfg(test)]
     eprintln!("Finalizing typegraph...");
 
@@ -190,6 +196,14 @@ pub fn finalize(mode: TypegraphFinalizeMode) -> Result<String> {
     })?;
 
     let auths = finalize_auths(&mut ctx)?;
+
+    let referred_artifacts: Vec<(String, String)> = ctx
+        .meta
+        .ref_artifacts
+        .clone()
+        .iter()
+        .map(|(hash, path)| (hash.clone(), path.to_string_lossy().to_string()))
+        .collect();
 
     let mut tg = Typegraph {
         id: format!("https://metatype.dev/specs/{TYPEGRAPH_VERSION}.json"),
@@ -209,6 +223,8 @@ pub fn finalize(mode: TypegraphFinalizeMode) -> Result<String> {
                 dynamic: ctx.meta.queries.dynamic,
                 endpoints: Store::get_graphql_endpoints(),
             },
+            ref_artifacts: ctx.meta.ref_artifacts,
+            random_seed: Store::get_random_seed(),
             auths,
             ..ctx.meta
         },
@@ -216,22 +232,24 @@ pub fn finalize(mode: TypegraphFinalizeMode) -> Result<String> {
         deps: Default::default(),
     };
 
-    match mode {
-        TypegraphFinalizeMode::ResolveArtifacts => {
-            DenoProcessor.postprocess(&mut tg)?;
-            PythonProcessor.postprocess(&mut tg)?;
-            WasmedgeProcessor.postprocess(&mut tg)?;
-        }
-        TypegraphFinalizeMode::Simple => {}
-    }
+    let config = res_config.map(|config| {
+        tg.meta.prefix = config.prefix.clone();
+        config
+    });
+    TypegraphPostProcessor::new(config).postprocess(&mut tg)?;
 
     Store::restore(ctx.saved_store_state.unwrap());
 
+    let result = match serde_json::to_string_pretty(&tg).map_err(|e| e.to_string().into()) {
+        Ok(res) => res,
+        Err(e) => return Err(e),
+    };
+
     #[cfg(test)]
-    return serde_json::to_string_pretty(&tg).map_err(|e| e.to_string().into());
+    return Ok((result, referred_artifacts));
 
     #[cfg(not(test))]
-    return serde_json::to_string(&tg).map_err(|e| e.to_string().into());
+    return Ok((result, referred_artifacts));
 }
 
 fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
@@ -302,13 +320,33 @@ pub fn expose(
     })?
 }
 
+pub fn set_seed(seed: Option<u32>) -> Result<()> {
+    Store::set_random_seed(seed);
+    Ok(())
+}
+
 impl TypegraphContext {
+    pub fn hash_type(&mut self, type_def: TypeDef, runtime_id: Option<u32>) -> Result<u64> {
+        let type_id = type_def.id().into();
+        if let Some(hash) = self.mapping.types_to_hash.get(&type_id) {
+            Ok(*hash)
+        } else {
+            let mut hasher = Hasher::new();
+            type_def.hash_type(&mut hasher, self, runtime_id)?;
+            let hash = hasher.finish();
+            self.mapping.types_to_hash.insert(type_id, hash);
+            Ok(hash)
+        }
+    }
+
     pub fn register_type(
         &mut self,
         type_def: TypeDef,
         runtime_id: Option<u32>,
     ) -> Result<TypeId, TgError> {
-        match self.mapping.types.entry(type_def.id().into()) {
+        let hash = self.hash_type(type_def.clone(), runtime_id)?;
+
+        match self.mapping.hash_to_type.entry(hash) {
             Entry::Vacant(e) => {
                 // to prevent infinite loop from circular dependencies,
                 // we allocate first a slot in the array for the type with None
@@ -326,6 +364,7 @@ impl TypegraphContext {
                 self.types[idx] = Some(type_node);
                 Ok((idx as u32).into())
             }
+
             Entry::Occupied(e) => Ok((*e.get()).into()),
         }
     }
@@ -421,7 +460,8 @@ impl TypegraphContext {
     }
 
     pub fn find_type_index_by_store_id(&self, id: TypeId) -> Option<u32> {
-        self.mapping.types.get(&id.into()).copied()
+        let hash = self.mapping.types_to_hash.get(&id.into())?;
+        self.mapping.hash_to_type.get(hash).copied()
     }
 
     pub fn get_correct_id(&self, id: TypeId) -> Result<u32> {
@@ -437,5 +477,29 @@ impl TypegraphContext {
 
     pub fn get_prisma_typegen_cache(&self) -> Rc<RefCell<HashMap<String, TypeId>>> {
         Rc::clone(&self.runtime_contexts.prisma_typegen_cache)
+    }
+
+    pub fn find_materializer_index_by_store_id(&self, id: u32) -> Option<u32> {
+        self.mapping.materializers.get(&id).copied()
+    }
+
+    pub fn find_policy_index_by_store_id(&self, id: u32) -> Option<u32> {
+        self.mapping.policies.get(&id).copied()
+    }
+
+    pub fn add_ref_artifacts(&mut self, file_hash: String, file_path: PathBuf) -> Result<()> {
+        let binding = file_path.to_string_lossy().to_string();
+        let path = match binding.strip_prefix("file:") {
+            Some(path) => path,
+            None => return Err("file path has no prefix".into()),
+        };
+        let absolute_file_path = match fs_host::make_absolute(&PathBuf::from(path)) {
+            Ok(path) => path,
+            Err(e) => return Err(e.into()),
+        };
+        self.meta
+            .ref_artifacts
+            .insert(file_hash, absolute_file_path);
+        Ok(())
     }
 }

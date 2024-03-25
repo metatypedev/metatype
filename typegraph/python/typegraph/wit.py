@@ -10,6 +10,13 @@ from typegraph.gen.exports.runtimes import Runtimes
 from typegraph.gen.exports.utils import Utils
 from typegraph.host.host import HostImpl
 
+# Make sure the imports are similar to the node implementation
+from typegraph.gen.exports.core import (
+    ArtifactResolutionConfig,  # noqa
+    MigrationConfig,  # noqa
+    MigrationAction,  # noqa
+)
+
 store = Store()
 _typegraph_core = Root(store, RootImports(HostImpl()))
 

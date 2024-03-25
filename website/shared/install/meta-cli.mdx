@@ -12,6 +12,18 @@ executable and add it to your `PATH` or use the automated method below.
 # the installer may ask for your password
 curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/installer.sh | bash
 
+# (optional, read below) install libwasmedge and... 
+curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
+# (linux) ...add it to dynamic libraries path
+export LD_LIBRARY_PATH=~/.wasmedge/lib 
+# (macos) ...add it to dynamic libraries path 
+export DYLD_LIBRARY_PATH=~/.wasmedge/lib
+# consider permanently adding this to your shell rc
+
 # (for later) upgrade to a newer version
 meta upgrade
 ```
+
+A `thin` version of the cli that doesn't rely on libwasmedge is also provided.
+This version of the cli doesn't offer the `typegate` command that lets you spin up a typegate for development purposes.
+To install it, you can pass `META_THIN=1` environment variable to the installer script or download it from the github relases.

@@ -14,7 +14,7 @@ def oauth2_authentication(g: Graph):
     deno = DenoRuntime()
     public = Policy.public()
 
-    ctx = t.struct({"exp": t.integer().optional().from_context("exp")})
+    ctx = t.struct({"exp": t.integer().optional()})
 
     # highlight-start
     g.auth(Auth.oauth2_github("openid profile email"))
@@ -22,5 +22,9 @@ def oauth2_authentication(g: Graph):
 
     g.expose(
         public,
-        get_context=deno.identity(ctx),
+        get_context=deno.identity(ctx).apply(
+            {
+                "exp": g.from_context("exp"),
+            }
+        ),
     )

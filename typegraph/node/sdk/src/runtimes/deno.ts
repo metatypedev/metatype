@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as t from "../types.js";
-import { runtimes } from "../wit.js";
+import { runtimes, wit_utils } from "../wit.js";
 import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import Policy from "../policy.js";
 import { Materializer, Runtime } from "./mod.js";
@@ -26,7 +26,7 @@ interface PredefinedFuncMat extends Materializer {
 }
 
 export interface DenoFunc {
-  code: string;
+  code: string | Function;
   secrets?: Array<string>;
   effect?: Effect;
 }
@@ -38,24 +38,44 @@ export interface DenoImport {
   effect?: Effect;
 }
 
+function stringifyFn(code: string | Function) {
+  if (typeof code == "function") {
+    const source = code.toString();
+    const namedFnMatch = source.match(/function\s*(\*?\s*[a-zA-Z0-9_]+)/);
+    if (namedFnMatch) {
+      const [, name] = namedFnMatch;
+      if (name.replace(/\s/g, "").startsWith("*")) {
+        throw new Error(`Generator function "${name}" not supported`);
+      }
+      if (/function\s[a-zA-Z0-9_]+\(\) { \[native code\] }/.test(source)) {
+        throw new Error(
+          `"${name}" is not supported as it is a native function`,
+        );
+      }
+    }
+    return source;
+  }
+  return code;
+}
+
 export class DenoRuntime extends Runtime {
   constructor() {
     super(runtimes.getDenoRuntime());
   }
 
   func<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
+    I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
     { code, secrets = [], effect = fx.read() }: DenoFunc,
-  ): t.Func<P, I, O, FunMat> {
-    const matId = runtimes.registerDenoFunc({ code, secrets }, effect);
+  ): t.Func<I, O, FunMat> {
+    const source = stringifyFn(code);
+    const matId = runtimes.registerDenoFunc({ code: source, secrets }, effect);
     const mat: FunMat = {
       _id: matId,
-      code,
+      code: source,
       secrets,
       effect,
     };
@@ -63,14 +83,13 @@ export class DenoRuntime extends Runtime {
   }
 
   import<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
+    I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
     { name, module, effect = fx.read(), secrets = [] }: DenoImport,
-  ): t.Func<P, I, O, ImportMat> {
+  ): t.Func<I, O, ImportMat> {
     const matId = runtimes.importDenoFunction({
       funcName: name,
       module,
@@ -87,13 +106,13 @@ export class DenoRuntime extends Runtime {
   }
 
   identity<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
-  >(inp: I): t.Func<P, I, I, PredefinedFuncMat> {
+    I extends t.Typedef = t.Typedef,
+  >(inp: I): t.Func<I, t.Typedef, PredefinedFuncMat> {
     const mat: PredefinedFuncMat = {
       _id: runtimes.getPredefinedDenoFunc({ name: "identity" }),
       name: "identity",
     };
+    // const out = wit_utils.removeInjections(inp._id);
     return t.func(
       inp,
       inp,
@@ -125,7 +144,10 @@ export class DenoRuntime extends Runtime {
 
     return Policy.create(
       name,
-      runtimes.registerDenoFunc(params, fx.read()),
+      runtimes.registerDenoFunc(
+        { ...params, code: stringifyFn(params.code) },
+        fx.read(),
+      ),
     );
   }
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::config::Config;
+use actix_web::dev::ServerHandle;
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
@@ -23,14 +24,14 @@ pub struct Undeploy {
 
 #[async_trait]
 impl Action for Undeploy {
-    async fn run(&self, args: super::GenArgs) -> Result<()> {
+    async fn run(&self, args: super::GenArgs, _: Option<ServerHandle>) -> Result<()> {
         let dir = args.dir()?;
         let config_path = args.config.clone();
         let config = Config::load_or_find(config_path, &dir)?;
         let node_config = config.node(&self.node, &self.target);
         let node = node_config.build(&dir).await?;
-        node.try_undeploy(&self.typegraphs).await?;
 
+        node.try_undeploy(&self.typegraphs).await?;
         Ok(())
     }
 }

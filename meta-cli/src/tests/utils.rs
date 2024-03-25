@@ -5,6 +5,7 @@ use anyhow::{bail, Context, Result};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
+#[allow(unused)]
 fn get_workspace_root() -> Result<PathBuf> {
     let p = Command::new("cargo")
         .arg("metadata")
@@ -30,6 +31,7 @@ fn get_workspace_root() -> Result<PathBuf> {
     bail!("could not read workspace root from cargo metadata")
 }
 
+#[allow(unused)]
 pub fn ensure_venv() -> Result<()> {
     crate::utils::ensure_venv(get_workspace_root()?.join("typegraph"))
 }

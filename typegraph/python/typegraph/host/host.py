@@ -6,6 +6,7 @@ from typegraph.gen import imports
 from typegraph.gen.types import Err, Ok, Result
 import os
 import re
+import sys
 
 
 def has_match(text: str, items: List[str]) -> bool:
@@ -20,7 +21,10 @@ class HostImpl(imports.HostHost):
     def print(self, msg: str):
         print(msg)
 
-    def expand_glob(self, root: str, exclude: List[str]) -> Result[List[str], str]:
+    def eprint(self, msg: str):
+        print(msg, file=sys.stderr)
+
+    def expand_path(self, root: str, exclude: List[str]) -> Result[List[str], str]:
         try:
             result = []
             for path, _, files in os.walk(root):
@@ -32,9 +36,9 @@ class HostImpl(imports.HostHost):
         except Exception as e:
             return Err(str(e))
 
-    def file_exists(self, path: str) -> Result[bool, str]:
+    def path_exists(self, path: str) -> Result[bool, str]:
         try:
-            return Ok(os.path.isfile(path))
+            return Ok(os.path.isfile(path) or os.path.isdir(path))
         except Exception as e:
             return Err(str(e))
 
@@ -47,6 +51,8 @@ class HostImpl(imports.HostHost):
 
     def write_file(self, path: str, data: bytes) -> Result[None, str]:
         try:
+            dirname = os.path.dirname(path)
+            os.makedirs(dirname, exist_ok=True)
             file = open(path, "wb")
             file.write(data)
             return Ok(None)

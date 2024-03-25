@@ -1,8 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::hash::Hash as _;
+
 use common::typegraph::{FileTypeData, TypeNode};
 
+use crate::conversion::hash::Hashable;
 use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
@@ -29,6 +32,20 @@ impl TypeDefData for TypeFile {
 
     fn variant_name(&self) -> &'static str {
         "file"
+    }
+}
+
+impl Hashable for TypeFile {
+    fn hash(
+        &self,
+        hasher: &mut crate::conversion::hash::Hasher,
+        _tg: &mut TypegraphContext,
+        _runtime_id: Option<u32>,
+    ) -> Result<()> {
+        self.min.hash(hasher);
+        self.max.hash(hasher);
+        self.allow.hash(hasher);
+        Ok(())
     }
 }
 

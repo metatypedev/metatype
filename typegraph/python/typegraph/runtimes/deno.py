@@ -19,6 +19,9 @@ from typegraph.policy import Policy
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.wit import runtimes, store
 
+# from typegraph.wit import wit_utils
+
+
 if TYPE_CHECKING:
     from typegraph import t
 
@@ -116,6 +119,11 @@ class DenoRuntime(Runtime):
         )
         if isinstance(res, Err):
             raise Exception(res.value)
+
+        # out_res = wit_utils.remove_injections(store, inp.id)
+        # if isinstance(res, Err):
+        #     raise Exception(res.value)
+        # out = t.typedef(out_res.value)
 
         return t.func(
             inp,

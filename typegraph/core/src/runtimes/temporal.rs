@@ -20,7 +20,7 @@ pub enum TemporalMaterializer {
 
 pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Result<FuncParams> {
     let mut inp = t::struct_();
-    let (effect, mat_data) = match data.operation {
+    let (effect, mat_data, out_ty) = match data.operation {
         TemporalOperationType::StartWorkflow => {
             let arg = data
                 .func_arg
@@ -35,6 +35,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
                 TemporalMaterializer::Start {
                     workflow_type: mat_arg,
                 },
+                t::string().build()?,
             )
         }
         TemporalOperationType::SignalWorkflow => {
@@ -52,6 +53,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
                 TemporalMaterializer::Signal {
                     signal_name: mat_arg,
                 },
+                t::string().build()?,
             )
         }
         TemporalOperationType::QueryWorkflow => {
@@ -69,21 +71,40 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
                 TemporalMaterializer::Query {
                     query_type: mat_arg,
                 },
+                t::string().build()?,
             )
         }
         TemporalOperationType::DescribeWorkflow => {
             inp.prop("workflow_id", t::string().build()?);
             inp.prop("run_id", t::string().build()?);
-            (WitEffect::Read, TemporalMaterializer::Describe)
+            let mut out_ty = t::struct_();
+            out_ty.props([
+                (
+                    "start_time".to_string(),
+                    t::optional(t::integer().build()?).build()?,
+                ),
+                (
+                    "close_time".to_string(),
+                    t::optional(t::integer().build()?).build()?,
+                ),
+                (
+                    "state".to_string(),
+                    t::optional(t::integer().build()?).build()?,
+                ),
+            ]);
+            (
+                WitEffect::Read,
+                TemporalMaterializer::Describe,
+                out_ty.build()?,
+            )
         }
     };
 
     let mat = Materializer::temporal(runtime, mat_data, effect);
     let mat_id = Store::register_materializer(mat);
-
     Ok(FuncParams {
         inp: inp.build()?.into(),
-        out: t::string().build()?.into(),
+        out: out_ty.into(),
         mat: mat_id,
     })
 }

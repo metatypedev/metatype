@@ -1,11 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::hash::Hash as _;
+
 use common::typegraph::{OptionalTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{BaseBuilderInit, TypeConversion},
+    conversion::{
+        hash::Hashable,
+        types::{BaseBuilderInit, TypeConversion},
+    },
     errors,
     typegraph::TypegraphContext,
     types::{Optional, TypeDefData, TypeId},
@@ -61,5 +66,18 @@ impl TypeDefData for TypeOptional {
 
     fn variant_name(&self) -> &'static str {
         "optional"
+    }
+}
+
+impl Hashable for TypeOptional {
+    fn hash(
+        &self,
+        hasher: &mut crate::conversion::hash::Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()> {
+        self.default_item.hash(hasher);
+        TypeId(self.of).hash_child_type(hasher, tg, runtime_id)?;
+        Ok(())
     }
 }

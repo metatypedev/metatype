@@ -3,7 +3,7 @@ import { Auth } from "@typegraph/sdk/params.js";
 import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
-typegraph({
+await typegraph({
   name: "roadmap-rest",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },

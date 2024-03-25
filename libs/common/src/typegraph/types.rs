@@ -1,31 +1,32 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
 #[cfg(feature = "codegen")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
+use std::hash::Hash;
 
-use super::{EffectType, PolicyIndices};
+use super::{parameter_transform::FunctionParameterTransform, EffectType, PolicyIndices};
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct SingleValue<T> {
+#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
+pub struct SingleValue<T: Hash> {
     pub value: T,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(untagged)]
-pub enum InjectionData<T> {
+pub enum InjectionData<T: Hash> {
     SingleValue(SingleValue<T>),
-    ValueByEffect(HashMap<EffectType, T>),
+    ValueByEffect(BTreeMap<EffectType, T>),
 }
 
-impl<T> InjectionData<T> {
+impl<T: Hash> InjectionData<T> {
     pub fn values(&self) -> Vec<&T> {
         match self {
             InjectionData::SingleValue(v) => vec![&v.value],
@@ -42,7 +43,7 @@ impl<T> InjectionData<T> {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(tag = "source", content = "data", rename_all = "lowercase")]
 pub enum Injection {
     Static(InjectionData<String>),
@@ -50,6 +51,7 @@ pub enum Injection {
     Secret(InjectionData<String>),
     Parent(InjectionData<u32>),
     Dynamic(InjectionData<String>),
+    Random(InjectionData<String>),
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -105,7 +107,7 @@ pub struct IntegerTypeData {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum StringFormat {
     Uuid,
@@ -116,7 +118,6 @@ pub enum StringFormat {
     Ean,
     Date,
     DateTime,
-    // Path,
     Phone,
 }
 
@@ -166,6 +167,8 @@ pub struct ListTypeData {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FunctionTypeData {
     pub input: u32,
+    #[serde(rename = "parameterTransform")]
+    pub parameter_transform: Option<FunctionParameterTransform>,
     pub output: u32,
     pub materializer: u32,
     #[serialize_always]

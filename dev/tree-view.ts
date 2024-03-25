@@ -15,6 +15,7 @@
 import { cyan, green, parseFlags } from "./deps.ts";
 import { TypeGraphDS } from "../typegate/src/typegraph/mod.ts";
 import { visitType } from "../typegate/src/typegraph/visitor.ts";
+import { projectDir } from "./utils.ts";
 
 export function treeView(tg: TypeGraphDS, rootIdx = 0, depth = 4) {
   visitType(tg, rootIdx, ({ type, idx, path }) => {
@@ -48,6 +49,8 @@ if (files.length > 1) {
 const cmd = [
   "cargo",
   "run",
+  "--manifest-path",
+  `${projectDir}/Cargo.toml`,
   "-p",
   "meta-cli",
   "--",

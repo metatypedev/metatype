@@ -6,15 +6,16 @@ use crate::runtimes::{
     DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
 };
 use crate::types::type_ref::TypeRef;
-use crate::types::{Struct, Type, TypeDef, TypeDefExt, TypeId};
+use crate::types::{Type, TypeDef, TypeDefExt, TypeId};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
 
 #[allow(unused)]
-use crate::wit::core::TypegraphFinalizeMode;
+use crate::wit::core::ArtifactResolutionConfig;
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::{cell::RefCell, collections::HashMap};
 
@@ -58,6 +59,11 @@ pub struct Store {
     typegraph_runtime: RuntimeId,
     graphql_endpoints: Vec<String>,
     auths: Vec<common::typegraph::Auth>,
+
+    deploy_cwd_dir: Option<PathBuf>,
+    random_seed: Option<u32>,
+
+    latest_alias_no: u32,
 }
 
 impl Store {
@@ -99,6 +105,7 @@ const PREDEFINED_DENO_FUNCTIONS: &[&str] = &["identity", "true"];
 
 thread_local! {
     pub static STORE: RefCell<Store> = RefCell::new(Store::new());
+    pub static SDK_VERSION: String = "0.3.7-0".to_owned();
 }
 
 fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
@@ -109,6 +116,10 @@ fn with_store_mut<T, F: FnOnce(&mut Store) -> T>(f: F) -> T {
     STORE.with(|s| f(&mut s.borrow_mut()))
 }
 
+pub fn get_sdk_version() -> String {
+    SDK_VERSION.with(|v| v.clone())
+}
+
 /// Option to register or not a type name.
 /// Should be disabled for type extensions, because they inherit the name.
 pub struct NameRegistration(pub bool);
@@ -116,7 +127,7 @@ pub struct NameRegistration(pub bool);
 #[cfg(test)]
 impl Store {
     pub fn reset() {
-        let _ = crate::typegraph::finalize(TypegraphFinalizeMode::Simple);
+        let _ = crate::typegraph::finalize(None);
         with_store_mut(|s| *s = Store::new());
     }
 }
@@ -188,6 +199,42 @@ impl Store {
             s.type_by_names.insert(name, id);
             Ok(())
         })
+    }
+
+    pub fn generate_alias() -> String {
+        with_store_mut(|s| {
+            s.latest_alias_no += 1;
+            format!("__alias_{}", s.latest_alias_no)
+        })
+    }
+
+    pub fn register_alias(name: impl Into<String>, id: TypeId) -> Result<()> {
+        let name = name.into();
+        with_store_mut(|s| {
+            if s.type_by_names.contains_key(&name) {
+                return Err(format!("type with name {:?} already exists", name).into());
+            }
+            s.type_by_names.insert(name, id);
+            Ok(())
+        })
+    }
+
+    pub fn set_deploy_cwd(value: Option<String>) {
+        with_store_mut(|s| {
+            s.deploy_cwd_dir = value.map(PathBuf::from);
+        })
+    }
+
+    pub fn get_deploy_cwd() -> Option<PathBuf> {
+        with_store(|s| s.deploy_cwd_dir.clone())
+    }
+
+    pub fn get_random_seed() -> Option<u32> {
+        with_store(|store| store.random_seed)
+    }
+
+    pub fn set_random_seed(value: Option<u32>) {
+        with_store_mut(|store| store.random_seed = value)
     }
 
     pub fn pick_branch_by_path(supertype_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
@@ -463,6 +510,31 @@ impl Store {
     }
 }
 
+/// Generate a pub fn for asserting/unwrapping a Type as a specific TypeDef variant
+/// e.g.: `as_variant!(Struct)` gives
+/// ```rust
+/// pub fn as_struct(&self) -> Result<Rc<Struct>> {
+///     match self.as_type()? {
+///         Type::Def(TypeDef::Struct(inner)) => Ok(inner),
+///         Type::Ref(type_ref) => type_ref.try_resolve()?.id().as_struct(),
+///         _ => Err(errors::invalid_type("Struct", &self.repr()?)),
+///     }
+/// }
+/// ```
+macro_rules! as_variant {
+    ($variant:ident) => {
+        paste::paste! {
+            pub fn [<as_ $variant:lower>](&self) -> Result<Rc<crate::types::[<$variant>]>> {
+                match self.as_type()? {
+                    Type::Def(TypeDef::$variant(inner)) => Ok(inner),
+                    Type::Ref(type_ref) => type_ref.try_resolve()?.id().[<as_ $variant:lower>](),
+                    _ => Err(errors::invalid_type(stringify!($variant), &self.repr()?)),
+                }
+            }
+        }
+    };
+}
+
 impl TypeId {
     pub fn as_type(&self) -> Result<Type> {
         with_store(|s| {
@@ -473,13 +545,8 @@ impl TypeId {
         })
     }
 
-    pub fn as_struct(&self) -> Result<Rc<Struct>> {
-        match self.as_type()? {
-            Type::Def(TypeDef::Struct(inner)) => Ok(inner),
-            Type::Ref(type_ref) => type_ref.try_resolve()?.id().as_struct(),
-            _ => Err(errors::invalid_type("Struct", &self.repr()?)),
-        }
-    }
+    as_variant!(Struct);
+    as_variant!(List);
 
     pub fn is_func(&self) -> Result<bool> {
         Ok(matches!(self.as_type_def()?, Some(TypeDef::Func(_))))
@@ -489,6 +556,14 @@ impl TypeId {
         let type_id = *self;
         match type_id.as_type_def()? {
             Some(TypeDef::List(a)) => Ok(a.data.of.into()),
+            Some(TypeDef::Optional(o)) => Ok(o.data.of.into()),
+            _ => Ok(type_id),
+        }
+    }
+
+    pub fn resolve_optional(&self) -> Result<TypeId> {
+        let type_id = *self;
+        match type_id.as_type_def()? {
             Some(TypeDef::Optional(o)) => Ok(o.data.of.into()),
             _ => Ok(type_id),
         }

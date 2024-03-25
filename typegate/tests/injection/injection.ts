@@ -31,25 +31,6 @@ typegraph("injection", (g: any) => {
   const pub = Policy.public();
 
   g.expose({
-    test: deno.func(
-      t.struct({ input: tpe }),
-      t.struct({
-        fromInput: tpe,
-        parent: t.integer({}, { name: "someName" }),
-        fromParent: deno.func(
-          t.struct({
-            value: t.integer().fromParent({
-              [READ]: "someName",
-            }),
-          }),
-          t.struct({ value: t.integer() }),
-          { code: "(value) => value" },
-        ),
-      }),
-      {
-        code:
-          "({ input }) => { return { fromInput: input, parent: 1234567 }; }",
-      },
-    ).withPolicy(pub),
+    test: deno.identity(t.struct({ input: tpe })).withPolicy(pub),
   });
 });

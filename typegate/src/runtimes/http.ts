@@ -118,7 +118,9 @@ export class HTTPRuntime extends Runtime {
 
       const bodyFields: Record<string, unknown> = {};
       const searchParams = new URLSearchParams();
-      const hasBody = method !== "GET" && method !== "DELETE";
+      const hasBody = (options.body_fields?.length ?? 0) > 0 ||
+        method !== "GET" &&
+          method !== "DELETE";
 
       const { rename_fields } = options;
       for (const [key, value] of Object.entries(args)) {
@@ -163,7 +165,11 @@ export class HTTPRuntime extends Runtime {
       );
 
       if (res.status >= 400) {
-        this.logger.warning(`${pathname} → ${body}`);
+        this.logger.warning(
+          `${pathname} - ${searchParams} - ${body} => ${res.status} : ${
+            Deno.inspect({ res, options, args, bodyFields, hasBody, method })
+          }`,
+        );
         // TODO: only if return type is optional
       }
 

@@ -1,7 +1,8 @@
-from typegraph import t, typegraph
 from typegraph.graph.typegraph import Graph
 from typegraph.policy import Policy
 from typegraph.runtimes.wasmedge import WasmEdgeRuntime
+
+from typegraph import t, typegraph
 
 
 @typegraph()
@@ -13,7 +14,7 @@ def wasmedge(g: Graph):
         test=wasmedge.wasi(
             t.struct({"a": t.float(), "b": t.float()}),
             t.integer(),
-            wasm="rust.wasm",
+            wasm="artifacts/rust.wasm",
             func="add",
         ).with_policy(pub),
     )

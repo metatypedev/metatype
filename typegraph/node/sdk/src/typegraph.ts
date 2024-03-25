@@ -13,6 +13,8 @@ import {
 import { Auth, Cors as CorsWit, Rate, wit_utils } from "./wit.js";
 import Policy from "./policy.js";
 import { getPolicyChain } from "./types.js";
+import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
+import { Manager } from "./tg_manage.js";
 
 type Exports = Record<string, t.Func>;
 
@@ -29,12 +31,48 @@ interface TypegraphArgs {
   disableAutoSerialization?: boolean;
 }
 
-export interface TypegraphBuilderArgs {
-  expose: (exports: Exports, defaultPolicy?: Policy) => void;
+export class ApplyFromArg {
+  constructor(public name: string | null, public type: number | null) {}
+}
+
+export class ApplyFromStatic {
+  constructor(public value: any) {}
+}
+
+export class ApplyFromSecret {
+  constructor(public key: string) {}
+}
+
+export class ApplyFromContext {
+  constructor(public key: string | null, public type: number | null) {}
+}
+
+export class ApplyFromParent {
+  constructor(public typeName: string) {}
+}
+
+const InjectionSource = {
+  asArg: (name?: string, type?: t.Typedef) =>
+    new ApplyFromArg(name ?? null, type?._id ?? null),
+  set: (value: any) => new ApplyFromStatic(value),
+  fromSecret: (key: string) => new ApplyFromSecret(key),
+  fromContext: (key: string, type?: t.Typedef) =>
+    new ApplyFromContext(key, type?._id ?? null),
+  fromParent: (typeName: string) => new ApplyFromParent(typeName),
+} as const;
+
+type InjectionSourceType = typeof InjectionSource;
+
+export interface TypegraphBuilderArgs extends InjectionSourceType {
+  expose: (
+    exports: Exports,
+    defaultPolicy?: t.PolicySpec | Array<t.PolicySpec>,
+  ) => void;
   inherit: () => InheritDef;
   rest: (graphql: string) => number;
   auth: (value: Auth | RawAuth) => number;
   ref: (name: string) => t.Typedef;
+  configureRandomInjection: (params: { seed: number }) => void;
 }
 
 export class InheritDef {
@@ -63,6 +101,11 @@ export class InheritDef {
     this.payload = serializeFromParentInjection(value);
     return this;
   }
+
+  fromRandom() {
+    this.payload = serializeGenericInjection("random", null);
+    return this;
+  }
 }
 
 export type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
@@ -72,25 +115,30 @@ export class RawAuth {
 }
 
 export interface TypegraphOutput {
-  serialized: string;
-  args: Omit<TypegraphArgs, "builder">;
+  serialize: (config: ArtifactResolutionConfig) => TgFinalizationResult;
+  name: string;
 }
 
-export function typegraph(
+export interface TgFinalizationResult {
+  tgJson: string;
+  ref_artifacts: [string, string][];
+}
+
+export async function typegraph(
   name: string,
   builder: TypegraphBuilder,
-): void;
-export function typegraph(
+): Promise<TypegraphOutput>;
+export async function typegraph(
   args: TypegraphArgs,
-): void;
-export function typegraph(
+): Promise<TypegraphOutput>;
+export async function typegraph(
   args: Omit<TypegraphArgs, "builder">,
   builder: TypegraphBuilder,
-): void;
-export function typegraph(
+): Promise<TypegraphOutput>;
+export async function typegraph(
   nameOrArgs: string | TypegraphArgs | Omit<TypegraphArgs, "builder">,
   maybeBuilder?: TypegraphBuilder,
-): TypegraphOutput {
+): Promise<TypegraphOutput> {
   const args = typeof nameOrArgs === "string"
     ? { name: nameOrArgs }
     : nameOrArgs;
@@ -102,7 +150,6 @@ export function typegraph(
     prefix,
     rate,
     secrets,
-    disableAutoSerialization,
   } = args;
   const builder = "builder" in args
     ? args.builder as TypegraphBuilder
@@ -164,26 +211,32 @@ export function typegraph(
     ref: (name: string) => {
       return genRef(name);
     },
+    configureRandomInjection: (params: { seed: number }) => {
+      return core.setSeed(params.seed);
+    },
+    ...InjectionSource,
   };
 
   builder(g);
 
-  const tgJson = core.finalizeTypegraph(
-    disableAutoSerialization ? "resolve-artifacts" : "simple",
-  );
-  if (!disableAutoSerialization) {
-    console.log(tgJson);
-  }
-  return {
-    serialized: tgJson,
-    args: {
-      name,
-      cors,
-      dynamic,
-      rate,
-      secrets,
+  const ret = {
+    serialize(config: ArtifactResolutionConfig) {
+      const [tgJson, ref_artifacts] = core.finalizeTypegraph(config);
+      const result: TgFinalizationResult = {
+        tgJson: tgJson,
+        ref_artifacts: ref_artifacts,
+      };
+      return result;
     },
-  };
+    name,
+  } as TypegraphOutput;
+
+  if (Manager.isRunFromCLI()) {
+    const manager = new Manager(ret);
+    await manager.run();
+  }
+
+  return ret;
 }
 
 export function genRef(name: string) {

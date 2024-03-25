@@ -16,7 +16,7 @@ def test_auth(g: Graph):
     public = Policy.public()
     private = deno.policy("private", "(_args, { context }) => !!context.user1")
     with_token = deno.policy(
-        "with_token", "(_args, { context }) => !!context.accessToken"
+        "with_token", "(_args, { context }) => { return !!context.accessToken; }"
     )
 
     x = t.struct({"x": t.integer()})

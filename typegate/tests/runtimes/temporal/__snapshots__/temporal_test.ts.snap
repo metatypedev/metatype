@@ -14,9 +14,9 @@ snapshot[`Typegraph using temporal 1`] = `
         "as_id": false,
         "properties": {
           "start": 1,
-          "query": 8,
-          "signal": 14,
-          "describe": 20
+          "query": 6,
+          "signal": 8,
+          "describe": 11
         },
         "required": [
           "start",
@@ -27,7 +27,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "function",
-        "title": "func_27",
+        "title": "func_33",
         "runtime": 1,
         "policies": [
           0
@@ -35,14 +35,14 @@ snapshot[`Typegraph using temporal 1`] = `
         "config": {},
         "as_id": false,
         "input": 2,
-        "output": 7,
+        "output": 3,
         "materializer": 0,
         "rate_weight": null,
         "rate_calls": false
       },
       {
         "type": "object",
-        "title": "object_4",
+        "title": "object_5",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -78,29 +78,42 @@ snapshot[`Typegraph using temporal 1`] = `
         "config": {},
         "as_id": false,
         "properties": {
-          "some_field": 6
+          "some_field": 3
         },
         "required": []
       },
       {
-        "type": "string",
-        "title": "string_0",
+        "type": "function",
+        "title": "func_34",
         "runtime": 1,
-        "policies": [],
+        "policies": [
+          0
+        ],
         "config": {},
-        "as_id": false
+        "as_id": false,
+        "input": 7,
+        "output": 3,
+        "materializer": 2,
+        "rate_weight": null,
+        "rate_calls": false
       },
       {
-        "type": "string",
-        "title": "string_5",
+        "type": "object",
+        "title": "object_11",
         "runtime": 1,
         "policies": [],
         "config": {},
-        "as_id": false
+        "as_id": false,
+        "properties": {
+          "workflow_id": 3,
+          "run_id": 3,
+          "args": 4
+        },
+        "required": []
       },
       {
         "type": "function",
-        "title": "func_28",
+        "title": "func_35",
         "runtime": 1,
         "policies": [
           0
@@ -108,69 +121,7 @@ snapshot[`Typegraph using temporal 1`] = `
         "config": {},
         "as_id": false,
         "input": 9,
-        "output": 13,
-        "materializer": 2,
-        "rate_weight": null,
-        "rate_calls": false
-      },
-      {
-        "type": "object",
-        "title": "object_10",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false,
-        "properties": {
-          "workflow_id": 10,
-          "run_id": 11,
-          "args": 12
-        },
-        "required": []
-      },
-      {
-        "type": "string",
-        "title": "string_7",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
-        "type": "string",
-        "title": "string_8",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
-        "type": "list",
-        "title": "list_9",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false,
-        "items": 5
-      },
-      {
-        "type": "string",
-        "title": "string_11",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
-        "type": "function",
-        "title": "func_29",
-        "runtime": 1,
-        "policies": [
-          0
-        ],
-        "config": {},
-        "as_id": false,
-        "input": 15,
-        "output": 19,
+        "output": 3,
         "materializer": 3,
         "rate_weight": null,
         "rate_calls": false
@@ -183,9 +134,9 @@ snapshot[`Typegraph using temporal 1`] = `
         "config": {},
         "as_id": false,
         "properties": {
-          "workflow_id": 16,
-          "run_id": 17,
-          "args": 18
+          "workflow_id": 10,
+          "run_id": 3,
+          "args": 4
         },
         "required": []
       },
@@ -204,77 +155,60 @@ snapshot[`Typegraph using temporal 1`] = `
         "as_id": false
       },
       {
-        "type": "string",
-        "title": "string_14",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
-        "type": "list",
-        "title": "list_15",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false,
-        "items": 5
-      },
-      {
-        "type": "string",
-        "title": "string_17",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
         "type": "function",
-        "title": "func_30",
+        "title": "func_36",
         "runtime": 1,
         "policies": [
           0
         ],
         "config": {},
         "as_id": false,
-        "input": 21,
-        "output": 24,
+        "input": 12,
+        "output": 13,
         "materializer": 4,
         "rate_weight": null,
         "rate_calls": false
       },
       {
         "type": "object",
-        "title": "object_24",
+        "title": "object_31",
         "runtime": 1,
         "policies": [],
         "config": {},
         "as_id": false,
         "properties": {
-          "workflow_id": 22,
-          "run_id": 23
+          "workflow_id": 3,
+          "run_id": 3
         },
         "required": []
       },
       {
-        "type": "string",
-        "title": "string_22",
+        "type": "object",
+        "title": "object_30",
         "runtime": 1,
         "policies": [],
         "config": {},
-        "as_id": false
+        "as_id": false,
+        "properties": {
+          "start_time": 14,
+          "close_time": 14,
+          "state": 14
+        },
+        "required": []
       },
       {
-        "type": "string",
-        "title": "string_23",
+        "type": "optional",
+        "title": "optional_25",
         "runtime": 1,
         "policies": [],
         "config": {},
-        "as_id": false
+        "as_id": false,
+        "item": 15,
+        "default_value": null
       },
       {
-        "type": "string",
-        "title": "string_25",
+        "type": "integer",
+        "title": "integer_24",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -375,7 +309,9 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       "auths": [],
       "rate": null,
-      "version": "0.0.3"
+      "version": "0.0.3",
+      "random_seed": null,
+      "ref_artifacts": {}
     }
   }
 ]'
@@ -395,9 +331,9 @@ snapshot[`Typegraph using temporal 2`] = `
         "as_id": false,
         "properties": {
           "start": 1,
-          "query": 8,
-          "signal": 14,
-          "describe": 20
+          "query": 6,
+          "signal": 8,
+          "describe": 11
         },
         "required": [
           "start",
@@ -416,14 +352,14 @@ snapshot[`Typegraph using temporal 2`] = `
         "config": {},
         "as_id": false,
         "input": 2,
-        "output": 7,
+        "output": 3,
         "materializer": 0,
         "rate_weight": null,
         "rate_calls": false
       },
       {
         "type": "object",
-        "title": "object_4",
+        "title": "object_5",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -459,25 +395,9 @@ snapshot[`Typegraph using temporal 2`] = `
         "config": {},
         "as_id": false,
         "properties": {
-          "some_field": 6
+          "some_field": 3
         },
         "required": []
-      },
-      {
-        "type": "string",
-        "title": "string_0",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
-        "type": "string",
-        "title": "string_5",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
       },
       {
         "type": "function",
@@ -488,58 +408,25 @@ snapshot[`Typegraph using temporal 2`] = `
         ],
         "config": {},
         "as_id": false,
-        "input": 9,
-        "output": 13,
+        "input": 7,
+        "output": 3,
         "materializer": 2,
         "rate_weight": null,
         "rate_calls": false
       },
       {
         "type": "object",
-        "title": "object_11",
+        "title": "object_12",
         "runtime": 1,
         "policies": [],
         "config": {},
         "as_id": false,
         "properties": {
-          "workflow_id": 10,
-          "run_id": 11,
-          "args": 12
+          "workflow_id": 3,
+          "run_id": 3,
+          "args": 4
         },
         "required": []
-      },
-      {
-        "type": "string",
-        "title": "string_8",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
-        "type": "string",
-        "title": "string_9",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
-        "type": "list",
-        "title": "list_10",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false,
-        "items": 5
-      },
-      {
-        "type": "string",
-        "title": "string_12",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
       },
       {
         "type": "function",
@@ -550,8 +437,8 @@ snapshot[`Typegraph using temporal 2`] = `
         ],
         "config": {},
         "as_id": false,
-        "input": 15,
-        "output": 19,
+        "input": 9,
+        "output": 3,
         "materializer": 3,
         "rate_weight": null,
         "rate_calls": false
@@ -564,9 +451,9 @@ snapshot[`Typegraph using temporal 2`] = `
         "config": {},
         "as_id": false,
         "properties": {
-          "workflow_id": 16,
-          "run_id": 17,
-          "args": 18
+          "workflow_id": 10,
+          "run_id": 3,
+          "args": 4
         },
         "required": []
       },
@@ -585,77 +472,60 @@ snapshot[`Typegraph using temporal 2`] = `
         "as_id": false
       },
       {
-        "type": "string",
-        "title": "string_16",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
-        "type": "list",
-        "title": "list_17",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false,
-        "items": 5
-      },
-      {
-        "type": "string",
-        "title": "string_19",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
         "type": "function",
-        "title": "func_30",
+        "title": "func_36",
         "runtime": 1,
         "policies": [
           0
         ],
         "config": {},
         "as_id": false,
-        "input": 21,
-        "output": 24,
+        "input": 12,
+        "output": 13,
         "materializer": 4,
         "rate_weight": null,
         "rate_calls": false
       },
       {
         "type": "object",
-        "title": "object_27",
+        "title": "object_34",
         "runtime": 1,
         "policies": [],
         "config": {},
         "as_id": false,
         "properties": {
-          "workflow_id": 22,
-          "run_id": 23
+          "workflow_id": 3,
+          "run_id": 3
         },
         "required": []
       },
       {
-        "type": "string",
-        "title": "string_25",
+        "type": "object",
+        "title": "object_33",
         "runtime": 1,
         "policies": [],
         "config": {},
-        "as_id": false
+        "as_id": false,
+        "properties": {
+          "start_time": 14,
+          "close_time": 14,
+          "state": 14
+        },
+        "required": []
       },
       {
-        "type": "string",
-        "title": "string_26",
+        "type": "optional",
+        "title": "optional_28",
         "runtime": 1,
         "policies": [],
         "config": {},
-        "as_id": false
+        "as_id": false,
+        "item": 15,
+        "default_value": null
       },
       {
-        "type": "string",
-        "title": "string_28",
+        "type": "integer",
+        "title": "integer_27",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -756,7 +626,9 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       "auths": [],
       "rate": null,
-      "version": "0.0.3"
+      "version": "0.0.3",
+      "random_seed": null,
+      "ref_artifacts": {}
     }
   }
 ]'

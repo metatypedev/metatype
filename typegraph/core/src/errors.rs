@@ -11,6 +11,12 @@ impl From<String> for TgError {
     }
 }
 
+impl From<Vec<String>> for TgError {
+    fn from(vs: Vec<String>) -> Self {
+        Self { stack: vs }
+    }
+}
+
 impl PartialEq for TgError {
     fn eq(&self, other: &Self) -> bool {
         self.stack == other.stack

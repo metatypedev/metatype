@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
+      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
       - uses: actions/cache@v4
         with:
           path: .venv

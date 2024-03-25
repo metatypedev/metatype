@@ -75,6 +75,15 @@ def test(g: Graph):
         name="GuestUser",
     )
 
+    profile = t.struct(
+        {
+            "email": t.email(),
+            "firstName": t.string(),
+            "lastName": t.string(),
+            "profilePic": t.string(),
+        }
+    )
+
     public = Policy.public()
 
     g.expose(
@@ -92,24 +101,11 @@ def test(g: Graph):
                     "email": t.email(name="UserEmail"),
                     "profile": deno.func(
                         t.struct({"email": t.email().from_parent("UserEmail")}),
-                        t.struct(
-                            {
-                                "email": t.email(),
-                                "firstName": t.string(),
-                                "lastName": t.string(),
-                                "profilePic": t.string(),
-                            }
-                        ),
+                        profile,
                         code=dummy_func,
                     ).rename("UserProfile"),
                     "taggedPic": deno.func(
-                        t.struct(
-                            {
-                                "profile": t.struct(
-                                    {"email": t.email(), "profilePic": t.string()}
-                                ).from_parent("UserProfile")
-                            }
-                        ),
+                        t.struct({"profile": profile.from_parent("UserProfile")}),
                         t.string(),
                         code=dummy_func,
                     ),

@@ -75,7 +75,7 @@ Meta.test("prisma critical edgecases", async (t) => {
           id
         }
       }
-    `.expectErrorContains("Unexpected property 'firstname'")
+    `.expectErrorContains("Expected a minimum of 1 fields of (id, pseudo)")
       .on(e);
   });
 });

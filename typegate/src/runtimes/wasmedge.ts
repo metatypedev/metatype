@@ -7,6 +7,7 @@ import { Resolver, RuntimeInitParams } from "../types.ts";
 import { nativeResult } from "../utils.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
 import { registerRuntime } from "./mod.ts";
+import config from "../config.ts";
 
 @registerRuntime("wasmedge")
 export class WasmEdgeRuntime extends Runtime {
@@ -29,7 +30,7 @@ export class WasmEdgeRuntime extends Runtime {
     _verbose: boolean,
   ): ComputeStage[] {
     const { materializer, argumentTypes, outType } = stage.props;
-    const { wasm, func } = materializer?.data ?? {};
+    const { wasm, func, artifact_hash, tg_name } = materializer?.data ?? {};
     const order = Object.keys(argumentTypes ?? {});
 
     // always wasi
@@ -40,7 +41,8 @@ export class WasmEdgeRuntime extends Runtime {
         await native.wasmedge_wasi(
           {
             func: func as string,
-            wasm: wasm as string,
+            wasm:
+              `${config.tmp_dir}/metatype_artifacts/${tg_name as string}/artifacts/${wasm as string}.${artifact_hash as string}`,
             args: transfert,
             out: outType.type,
           },

@@ -3,8 +3,10 @@
 
 use std::rc::Rc;
 
+use crate::conversion::hash::{Hashable, Hasher};
 use crate::conversion::types::TypeConversion;
 use crate::errors::Result;
+use crate::global_store::{NameRegistration, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
     PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeInteger, TypeList,
@@ -12,6 +14,7 @@ use crate::wit::core::{
 };
 use common::typegraph::{Injection, TypeNode};
 use enum_dispatch::enum_dispatch;
+use std::hash::Hash as _;
 
 use super::TypeId;
 
@@ -27,7 +30,7 @@ impl ExtendedTypeBase {
     }
 }
 
-pub trait TypeDefData {
+pub trait TypeDefData: Hashable {
     fn get_display_params_into(&self, params: &mut Vec<String>);
     fn variant_name(&self) -> &'static str;
     // fn into_type(self, type_id: TypeId, base: Option<TypeBase>) -> Result<Type>;
@@ -41,6 +44,30 @@ pub struct NonRefType<T: TypeDefData> {
     pub data: T,
 }
 
+impl<T: TypeDefData> NonRefType<T>
+where
+    Rc<NonRefType<T>>: Into<TypeDef>,
+{
+    pub fn type_with_data(&self, data: T) -> Result<TypeId> {
+        let base = TypeBase {
+            name: None, // different name -- since it is now a different type
+            ..self.base.clone()
+        };
+        Store::register_type_def(
+            |type_id| {
+                Rc::new(Self {
+                    id: type_id,
+                    base,
+                    extended_base: self.extended_base.clone(),
+                    data,
+                })
+                .into()
+            },
+            NameRegistration(false),
+        )
+    }
+}
+
 #[allow(clippy::derivable_impls)]
 impl Default for TypeBase {
     fn default() -> Self {
@@ -52,7 +79,7 @@ impl Default for TypeBase {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub struct TypeBoolean;
 
 pub type Struct = NonRefType<TypeStruct>;
@@ -99,6 +126,12 @@ pub trait TypeDefExt {
     fn base(&self) -> &TypeBase;
     fn x_base(&self) -> &ExtendedTypeBase;
     fn data(&self) -> &dyn TypeDefData;
+    fn hash_type(
+        &self,
+        hasher: &mut Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()>;
     // fn to_string(&self) -> String;
 
     fn name(&self) -> Option<&str> {
@@ -109,6 +142,12 @@ pub trait TypeDefExt {
 
     fn with_base(&self, id: TypeId, base: TypeBase) -> TypeDef;
     fn with_x_base(&self, id: TypeId, base: ExtendedTypeBase) -> TypeDef;
+
+    fn with_name(&self, name: Option<String>) -> TypeDef {
+        let mut base = self.base().clone();
+        base.name = name;
+        self.with_base(self.id(), base)
+    }
 
     fn repr(&self) -> String;
 }
@@ -128,6 +167,15 @@ impl<T: TypeDefExt> TypeDefExt for Rc<T> {
 
     fn data(&self) -> &dyn TypeDefData {
         (**self).data()
+    }
+
+    fn hash_type(
+        &self,
+        hasher: &mut Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()> {
+        (**self).hash_type(hasher, tg, runtime_id)
     }
 
     fn variant_name(&self) -> &'static str {
@@ -198,5 +246,53 @@ where
         params.push(format!("#{}", self.id.0));
         self.data.get_display_params_into(&mut params);
         format!("{}({})", self.data.variant_name(), params.join(", "))
+    }
+
+    fn hash_type(
+        &self,
+        hasher: &mut Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()> {
+        self.base.hash(hasher, tg, runtime_id)?;
+        self.data.hash(hasher, tg, runtime_id)?;
+        self.extended_base.hash(hasher, tg, runtime_id)?;
+        runtime_id.hash(hasher);
+        Ok(())
+    }
+}
+
+impl Hashable for TypeBase {
+    fn hash(
+        &self,
+        hasher: &mut Hasher,
+        _tg: &mut TypegraphContext,
+        _runtime_id: Option<u32>,
+    ) -> Result<()> {
+        self.name.hash(hasher);
+        self.runtime_config.hash(hasher);
+        self.as_id.hash(hasher);
+
+        Ok(())
+    }
+}
+
+impl Hashable for ExtendedTypeBase {
+    fn hash(
+        &self,
+        hasher: &mut Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()> {
+        "injection".hash(hasher);
+        if let Some(injection) = &self.injection {
+            injection.hash(hasher);
+        }
+        "policies".hash(hasher);
+        for policy in &self.policies {
+            policy.hash(hasher, tg, runtime_id)?;
+        }
+
+        Ok(())
     }
 }

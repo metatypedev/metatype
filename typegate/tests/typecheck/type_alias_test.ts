@@ -18,9 +18,9 @@ Meta.test("Random", async (t) => {
     `
       .expectData({
         get_message: {
-          a: -1494798787674112,
-          title: "1*ajw]krgDnCzXD*N!Fx",
-          B: 3336617896968192,
+          B: -6252260489166848,
+          a: -6940119625891840,
+          title: "(eHAQ*ECr4%5Qwa5T",
         },
       })
       .on(e);
@@ -40,9 +40,9 @@ Meta.test("Random", async (t) => {
     `
         .expectData({
           one: {
-            two: 442220385665024,
-            three: "G#qcNX^E",
-            four: -770929621729280,
+            four: 7781716965982208,
+            three: "ye12M52^m",
+            two: 2221033285222400,
           },
         })
         .on(e);
@@ -72,23 +72,18 @@ Meta.test("Random", async (t) => {
       }
     `
       .expectData({
-        some_alias: { some_id: 1057261938016256, title: "k*o570)7xgZ" },
+        some_alias: { some_id: -8923192479449088, title: "tXIHACrEbD" },
         get_message: {
-          user_id: 327007237832704,
+          user_id: 6379176739209216,
           info: [
-            { title: "%9g9cume#XhRFX(ENo", content: "V1j$ZUV3Az4tA%3F$" },
-            { title: "vxkY59Ebc3U]W3wu", content: "aXKUfi6(eHAQ*ECr4%5Q" },
-            { title: "6qhfHI^hv%vi", content: "a5TlyQNa$" },
-            { title: "MbgY^p^", content: "AI^4UIbt&9ZO]fmI" },
-            { title: "wKRdPQTk(", content: "2*oZIer" },
-            { title: "tZrhNE(ZKEOd4N", content: "L3p&d0MjmbDbhcLsh" },
-            { title: "XkM6*", content: "vNrO)!ujrugRQ)EPBb" },
-            { title: "R$%Ok", content: "7vr17TCF@33FPFkAel" },
-            { title: "k%7BDNmW&AzQ", content: "*d^h5q" },
+            { content: "c(3]DC39H[", title: "Rg!mCL36" },
+            { content: "RJXJg7]D5%]c", title: "%Oq(27tcP0jIB" },
+            { content: "5cj1TYaTNhau(5%", title: "gqLtZgHFAi8Ud7CZH42z" },
+            { content: "6L^0kflTn9UZ^P]@032", title: "!uF88WUak2fSbYeRHQi" },
           ],
         },
-        some_alias_2: { some_title: "0cPWajfv)AQupf" },
-        some_alias_3: { some_title: "l3lo*RB)d" },
+        some_alias_2: { some_title: "KB2bni&" },
+        some_alias_3: { some_title: "S#4]L*K" },
       })
       .on(e);
   });

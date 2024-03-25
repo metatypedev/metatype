@@ -26,13 +26,12 @@ function listAllFilesHelper(
   }
 }
 
-export function expandGlob(
+export function expandPath(
   root: string,
   exclude: Array<string>,
 ): Array<string> {
   try {
     const ret = [] as Array<string>;
-    // console.log("[host] received args", root, exclude);
     listAllFilesHelper(root, ret, exclude);
     return ret;
   } catch (err) {
@@ -44,6 +43,10 @@ export function print(msg: string) {
   console.log(msg);
 }
 
+export function eprint(msg: string) {
+  console.error(msg);
+}
+
 export function getCwd(): string {
   try {
     return process.cwd();
@@ -52,26 +55,30 @@ export function getCwd(): string {
   }
 }
 
-export function fileExists(path: string): boolean {
+export function pathExists(filePath: string): boolean {
   try {
-    return fs.existsSync(path);
+    return fs.existsSync(filePath);
   } catch (err) {
     throw (err instanceof Error ? err.message : err);
   }
 }
 
-export function readFile(path: string): Uint8Array {
+export function readFile(filePath: string): Uint8Array {
   try {
-    const buffer = fs.readFileSync(path, null);
+    const buffer = fs.readFileSync(filePath, null);
     return new Uint8Array(buffer);
   } catch (err) {
     throw (err instanceof Error ? err.message : err);
   }
 }
 
-export function writeFile(path: string, data: Uint8Array): void {
+export function writeFile(filePath: string, data: Uint8Array): void {
   try {
-    void fs.writeFileSync(path, data);
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    void fs.writeFileSync(filePath, data, { flag: "w" });
   } catch (err) {
     throw (err instanceof Error ? err.message : err);
   }

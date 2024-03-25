@@ -3,207 +3,21 @@
 
 use std::collections::HashSet;
 
-use crate::typegraph::{TypeNode, Typegraph};
 use anyhow::{anyhow, bail, Result};
 use serde_json::Value;
 
-use super::{
-    visitor::{Path, PathSegment, TypeVisitor, VisitResult},
-    EitherTypeData, FloatTypeData, Injection, IntegerTypeData, ListTypeData, ObjectTypeData,
-    StringTypeData, UnionTypeData,
+use crate::typegraph::{
+    EitherTypeData, FloatTypeData, IntegerTypeData, ListTypeData, ObjectTypeData, StringTypeData,
+    TypeNode, Typegraph, UnionTypeData,
 };
-
-pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
-    let validator = Validator::default();
-    tg.traverse_types(validator).unwrap()
-}
-
-#[derive(Debug)]
-pub struct ValidatorError {
-    pub path: String,
-    pub message: String,
-}
-
-#[derive(Default)]
-struct Validator {
-    errors: Vec<ValidatorError>,
-}
-
-impl Validator {
-    fn push_error(&mut self, path: &[PathSegment], message: impl Into<String>) {
-        self.errors.push(ValidatorError {
-            path: Path(path).to_string(),
-            message: message.into(),
-        });
-    }
-}
 
 fn to_string(value: &Value) -> String {
     serde_json::to_string(value).unwrap()
 }
 
-impl Typegraph {
-    fn collect_nested_variants_into(&self, out: &mut Vec<u32>, variants: &[u32]) {
-        for idx in variants {
-            let node = self.types.get(*idx as usize).unwrap();
-            match node {
-                TypeNode::Union {
-                    data: UnionTypeData { any_of: variants },
-                    ..
-                }
-                | TypeNode::Either {
-                    data: EitherTypeData { one_of: variants },
-                    ..
-                } => self.collect_nested_variants_into(out, variants),
-                _ => out.push(*idx),
-            }
-        }
-    }
-}
-
-impl TypeVisitor for Validator {
-    type Return = Vec<ValidatorError>;
-
-    fn visit(
-        &mut self,
-        type_idx: u32,
-        path: &[PathSegment],
-        tg: &Typegraph,
-        as_input: bool,
-    ) -> VisitResult<Self::Return> {
-        let node = &tg.types[type_idx as usize];
-
-        if as_input {
-            // do not allow t.func in input types
-            if let TypeNode::Function { .. } = node {
-                self.push_error(path, "function is not allowed in input types");
-                return VisitResult::Continue(false);
-            }
-        } else {
-            match node {
-                TypeNode::Union { .. } | TypeNode::Either { .. } => {
-                    let mut variants = vec![];
-                    tg.collect_nested_variants_into(&mut variants, &[type_idx]);
-                    let mut object_count = 0;
-
-                    for variant_type in variants
-                        .iter()
-                        .map(|idx| tg.types.get(*idx as usize).unwrap())
-                    {
-                        match variant_type {
-                            TypeNode::Object { .. } => object_count += 1,
-                            TypeNode::Boolean { .. }
-                            | TypeNode::Float { .. }
-                            | TypeNode::Integer { .. }
-                            | TypeNode::String { .. } => {
-                                // scalar
-                            }
-                            TypeNode::List { data, .. } => {
-                                let item_type = tg.types.get(data.items as usize).unwrap();
-                                if !item_type.is_scalar() {
-                                    self.push_error(
-                                        path,
-                                        format!(
-                                            "array of '{}' not allowed as union/either variant",
-                                            item_type.type_name()
-                                        ),
-                                    );
-                                    return VisitResult::Continue(false);
-                                }
-                            }
-                            _ => {
-                                self.push_error(
-                                    path,
-                                    format!(
-                                        "type '{}' not allowed as union/either variant",
-                                        variant_type.type_name()
-                                    ),
-                                );
-                                return VisitResult::Continue(false);
-                            }
-                        }
-                    }
-
-                    if object_count != 0 && object_count != variants.len() {
-                        self.push_error(
-                            path,
-                            "union variants must either be all scalars or all objects",
-                        );
-                        return VisitResult::Continue(false);
-                    }
-                }
-                TypeNode::Function { .. } => {
-                    // validate materializer??
-                    // TODO deno static
-                }
-                _ => {}
-            }
-        }
-
-        if let Some(enumeration) = &node.base().enumeration {
-            if matches!(node, TypeNode::Optional { .. }) {
-                self.push_error(
-                    path,
-                    "optional not cannot have enumerated values".to_owned(),
-                );
-            } else {
-                for value in enumeration.iter() {
-                    match serde_json::from_str::<Value>(value) {
-                        Ok(val) => match tg.validate_value(type_idx, &val) {
-                            Ok(_) => {}
-                            Err(err) => self.push_error(path, err.to_string()),
-                        },
-                        Err(e) => self.push_error(
-                            path,
-                            format!("Error while deserializing enum value {value:?}: {e:?}"),
-                        ),
-                    }
-                }
-            }
-        }
-
-        if let Some(injection) = &node.base().injection {
-            match injection {
-                Injection::Static(data) => {
-                    for value in data.values().iter() {
-                        match serde_json::from_str::<Value>(value) {
-                            Ok(val) => match tg.validate_value(type_idx, &val) {
-                                Ok(_) => {}
-                                Err(err) => self.push_error(path, err.to_string()),
-                            },
-                            Err(e) => {
-                                self.push_error(
-                                    path,
-                                    format!(
-                                    "Error while parsing static injection value {value:?}: {e:?}",
-                                    value = value
-                                ),
-                                );
-                            }
-                        }
-                    }
-                }
-                Injection::Parent(_data) => {
-                    // TODO match type to parent type
-                }
-                _ => (),
-            }
-
-            //
-            VisitResult::Continue(false)
-        } else {
-            VisitResult::Continue(true)
-        }
-    }
-
-    fn get_result(self) -> Option<Self::Return> {
-        Some(self.errors)
-    }
-}
-
 // TODO validation path
 impl Typegraph {
-    fn validate_value(&self, type_idx: u32, value: &Value) -> Result<()> {
+    pub fn validate_value(&self, type_idx: u32, value: &Value) -> Result<()> {
         let type_node = &self.types[type_idx as usize];
 
         match type_node {

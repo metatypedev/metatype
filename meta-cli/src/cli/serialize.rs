@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Action, GenArgs};
+use crate::com::store::{Command, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors::console::ConsoleActor;
-use crate::deploy::actors::loader::{
-    LoadModule, LoaderActor, LoaderEvent, PostProcessOptions, StopBehavior,
-};
+use crate::deploy::actors::loader::{LoadModule, LoaderActor, LoaderEvent, StopBehavior};
 use actix::prelude::*;
+use actix_web::dev::ServerHandle;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
@@ -54,7 +54,7 @@ pub struct Serialize {
 
 #[async_trait]
 impl Action for Serialize {
-    async fn run(&self, args: GenArgs) -> Result<()> {
+    async fn run(&self, args: GenArgs, server_handle: Option<ServerHandle>) -> Result<()> {
         let dir = &args.dir()?;
         let config_path = args.config;
 
@@ -65,6 +65,11 @@ impl Action for Serialize {
         } else {
             Config::load_or_find(config_path, dir)?
         };
+
+        // Minimum setup
+        ServerStore::with(Some(Command::Serialize), Some(config.to_owned()));
+        ServerStore::set_prefix(self.prefix.to_owned());
+
         let config = Arc::new(config);
 
         let console = ConsoleActor::new(Arc::clone(&config)).start();
@@ -73,7 +78,6 @@ impl Action for Serialize {
 
         let loader = LoaderActor::new(
             Arc::clone(&config),
-            PostProcessOptions::default(),
             console.clone(),
             loader_event_tx,
             self.max_parallel_loads.unwrap_or_else(num_cpus::get),
@@ -81,16 +85,24 @@ impl Action for Serialize {
         .auto_stop()
         .start();
 
+        if self.files.is_empty() {
+            bail!("No file provided");
+        }
+
         for path in self.files.iter() {
             loader.do_send(LoadModule(dir.join(path).into()));
         }
 
-        let mut loaded: Vec<Box<Typegraph>> = vec![];
+        let mut loaded: Vec<Typegraph> = vec![];
         let mut event_rx = loader_event_rx;
         while let Some(event) = event_rx.recv().await {
-            log::debug!("event");
             match event {
-                LoaderEvent::Typegraph(tg) => loaded.push(tg),
+                LoaderEvent::Typegraph(tg_infos) => {
+                    let tgs = ServerStore::get_responses_or_fail(&tg_infos.path)?;
+                    for (_, tg) in tgs.iter() {
+                        loaded.push(tg.as_typegraph()?);
+                    }
+                }
                 LoaderEvent::Stopped(b) => {
                     log::debug!("event: {b:?}");
                     if let StopBehavior::ExitFailure(e) = b {
@@ -100,14 +112,7 @@ impl Action for Serialize {
             }
         }
 
-        if let Some(prefix) = self.prefix.as_ref() {
-            for tg in loaded.iter_mut() {
-                tg.meta.prefix = Some(prefix.clone());
-            }
-        }
-
         let tgs = loaded;
-
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.iter().find(|tg| &tg.name().unwrap() == tg_name) {
                 self.write(&self.to_string(&tg)?).await?;
@@ -131,6 +136,8 @@ impl Action for Serialize {
         } else {
             self.write(&self.to_string(&tgs)?).await?;
         }
+
+        server_handle.unwrap().stop(true).await;
 
         Ok(())
     }

@@ -3,11 +3,13 @@
 
 mod cli;
 mod codegen;
+mod com;
 mod config;
 pub mod deploy;
 mod fs;
 mod global_config;
 mod logger;
+
 #[cfg(test)]
 mod tests;
 mod typegraph;
@@ -20,8 +22,10 @@ use clap::Parser;
 use cli::upgrade::upgrade_check;
 use cli::Action;
 use cli::Args;
+use com::server::{get_instance_port, init_server};
+use futures::try_join;
+use futures::FutureExt;
 use log::{error, warn};
-
 use shadow_rs::shadow;
 
 shadow!(build);
@@ -57,10 +61,29 @@ fn main() -> Result<()> {
         // the deno task requires use of a single thread runtime which it'll spawn itself
         Some(cli::Commands::Typegate(cmd_args)) => cli::typegate::command(cmd_args, args.gen)?,
         Some(command) => actix::run(async move {
-            command.run(args.gen).await.unwrap_or_else(|e| {
-                error!("{}", e.to_string());
-                std::process::exit(1);
-            });
+            match command {
+                cli::Commands::Serialize(_) | cli::Commands::Dev(_) | cli::Commands::Deploy(_) => {
+                    std::env::set_var("META_CLI_SERVER_PORT", get_instance_port().to_string());
+
+                    let server = init_server().unwrap();
+                    let command = command.run(args.gen, Some(server.handle()));
+
+                    try_join!(command, server.map(|_| Ok(()))).unwrap_or_else(|e| {
+                        error!("{}", e.to_string());
+                        std::process::exit(1);
+                    });
+                }
+                cli::Commands::Codegen(_) => {
+                    eprintln!("codegen command is disabled for now");
+                    std::process::exit(0)
+                }
+                _ => {
+                    command.run(args.gen, None).await.unwrap_or_else(|e| {
+                        error!("{}", e.to_string());
+                        std::process::exit(1);
+                    });
+                }
+            }
         })?,
         None => Args::command().print_help()?,
     }

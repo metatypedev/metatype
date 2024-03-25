@@ -83,7 +83,6 @@ export class DenoRuntime extends Runtime {
     for (const mat of materializers) {
       if (mat.name === "function") {
         const code = mat.data.script as string;
-
         ops.set(registryCount, {
           type: "register_func",
           fnCode: code,

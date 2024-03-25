@@ -9,6 +9,10 @@ import { nativeResult } from "../../src/utils.ts";
 import * as native from "native";
 import { assert, assertEquals } from "std/assert/mod.ts";
 
+function getFunctionName(idx: number): string {
+  return `validate_${idx}`;
+}
+
 Meta.test("input validator compiler", async (t) => {
   const e = await t.engine("typecheck/typecheck.py");
   const { tg } = e;
@@ -22,9 +26,10 @@ Meta.test("input validator compiler", async (t) => {
       Type.FUNCTION,
     );
 
-    const generatedCode = new InputValidationCompiler(tg).generate(
-      createPost.input,
-    );
+    const generatedCode = new InputValidationCompiler(tg, getFunctionName)
+      .generate(
+        createPost.input,
+      );
     const code = nativeResult(native.typescript_format_code({
       source: generatedCode,
     }))!.formatted_code;
@@ -76,7 +81,8 @@ Meta.test("input validator compiler", async (t) => {
       Type.FUNCTION,
     );
 
-    const generatedCode = new InputValidationCompiler(tg).generate(enums.input);
+    const generatedCode = new InputValidationCompiler(tg, getFunctionName)
+      .generate(enums.input);
     const code = nativeResult(native.typescript_format_code({
       source: generatedCode,
     }))!.formatted_code;
@@ -127,7 +133,8 @@ Meta.test("input validator compiler", async (t) => {
       Type.FUNCTION,
     );
 
-    const generatedCode = new InputValidationCompiler(tg).generate(posts.input);
+    const generatedCode = new InputValidationCompiler(tg, getFunctionName)
+      .generate(posts.input);
     const code = nativeResult(native.typescript_format_code({
       source: generatedCode,
     }))!.formatted_code;

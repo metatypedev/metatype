@@ -1,7 +1,7 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
-typegraph({
+await typegraph({
   name: "example-rest",
   dynamic: false,
 }, (g) => {

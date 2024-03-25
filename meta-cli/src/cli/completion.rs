@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use actix_web::dev::ServerHandle;
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use clap::CommandFactory;
@@ -22,7 +23,7 @@ pub struct Completion {
 
 #[async_trait]
 impl Action for Completion {
-    async fn run(&self, _args: GenArgs) -> Result<()> {
+    async fn run(&self, _args: GenArgs, _: Option<ServerHandle>) -> Result<()> {
         let mut cmd = Args::command();
         let name = cmd.get_name().to_string();
         match self.shell.or_else(Shell::from_env) {

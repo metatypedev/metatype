@@ -129,7 +129,7 @@ impl FileFilter {
 
     fn deno_filters(config: &TypegraphLoaderConfig) -> Result<SpecificFilters> {
         Ok(SpecificFilters {
-            matcher: RegexMatcher::new_line_matcher("^typegraph\\(")?,
+            matcher: RegexMatcher::new_line_matcher("^(await\\s+)?typegraph\\(")?,
             globs: GlobFilter {
                 include_set: config.get_include_set()?,
                 exclude_set: config.get_exclude_set()?,

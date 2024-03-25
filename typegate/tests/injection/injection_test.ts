@@ -43,7 +43,7 @@ Meta.test("Injected values", async (t) => {
       }
     }
     `
-      .expectErrorContains("'userId' was not found in the context")
+      .expectErrorContains("'userId' not found at `<context>`")
       .on(e);
   });
 
@@ -263,7 +263,7 @@ Meta.test("Deno: value injection", async (t) => {
     await gql`
       query {
         test(input: {a: 12}) {
-          fromInput {
+          input {
             a
             context
             optional_context
@@ -275,8 +275,6 @@ Meta.test("Deno: value injection", async (t) => {
             alt_context_opt_missing
             date
           }
-          parent
-          fromParent { value }
         }
       }`
       .withContext({
@@ -284,7 +282,7 @@ Meta.test("Deno: value injection", async (t) => {
       })
       .expectData({
         test: {
-          fromInput: {
+          input: {
             a: 12,
             context: "123",
             raw_int: 4,
@@ -295,11 +293,122 @@ Meta.test("Deno: value injection", async (t) => {
             alt_context_opt_missing: "123",
             date: new Date().toISOString(),
           },
-          parent: 1234567,
-          fromParent: { value: 1234567 },
         },
       })
       .on(e);
   });
   unfreezeDate();
+});
+
+Meta.test("Injection from nested context", async (t) => {
+  const e = await t.engine("injection/nested_context.py");
+
+  await t.should("access injected nested context", async () => {
+    await gql`
+      query {
+        injectedId {
+          id
+        }
+      }
+    `
+      .withContext({ profile: { id: 123 } })
+      .expectData({
+        injectedId: {
+          id: 123,
+        },
+      })
+      .on(e);
+  });
+
+  await t.should(
+    "access injected nested context with array index",
+    async () => {
+      await gql`
+      query {
+        secondProfileData {
+          second
+        }
+      }
+    `
+        .withContext({
+          profile: {
+            data: [1234, 5678],
+          },
+        })
+        .expectData({
+          secondProfileData: {
+            second: 5678,
+          },
+        })
+        .on(e);
+    },
+  );
+
+  await t.should(
+    "access injected nested context with custom key",
+    async () => {
+      await gql`
+        query {
+          customKey {
+            custom
+          }
+        }
+      `
+        .withContext({
+          profile: {
+            "custom key": 123,
+          },
+        })
+        .expectData({
+          customKey: {
+            custom: 123,
+          },
+        })
+        .on(e);
+    },
+  );
+
+  await t.should(
+    "fail for invalid context",
+    async () => {
+      await gql`
+        query {
+          secondProfileData {
+            second
+          }
+        }
+      `
+        .withContext({
+          profile: {
+            "invalid key": 123,
+          },
+        })
+        .expectErrorContains("Property 'data' not found at `<context>.profile`")
+        .on(e);
+    },
+  );
+
+  await t.should(
+    "work with missing context on optional type",
+    async () => {
+      await gql`
+        query {
+          optional {
+            optional
+          }
+        }
+      `
+        .withContext({
+          profile: {
+            id: 1234,
+          },
+        })
+        .expectData({
+          optional: {
+            optional: null,
+          },
+        })
+        .on(e);
+    },
+  );
 });

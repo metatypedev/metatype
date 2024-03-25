@@ -1,7 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { MaterializerId } from "./gen/interfaces/metatype-typegraph-core.js";
+import {
+  ContextCheck,
+  MaterializerId,
+} from "./gen/interfaces/metatype-typegraph-core.js";
 import { core } from "./wit.js";
 
 interface PolicyPerEffectAlt {
@@ -25,12 +28,25 @@ export default class Policy {
     return new Policy(id, name);
   }
 
-  static context(key: string, check: string | RegExp): Policy {
+  static #serializeContext(check: string | RegExp | null): ContextCheck {
+    if (check === null) {
+      return { tag: "not-null" };
+    }
+    if (typeof check === "string") {
+      return { tag: "value", val: check };
+    }
+    if (!(check instanceof RegExp)) {
+      throw new Error(
+        "Invalid context check: expected null, string, or RegExp",
+      );
+    }
+    return { tag: "pattern", val: check.source };
+  }
+
+  static context(key: string, check?: string | RegExp | null): Policy {
     const [id, name] = core.registerContextPolicy(
       key,
-      typeof check === "string"
-        ? { tag: "value", val: check }
-        : { tag: "pattern", val: check.source },
+      Policy.#serializeContext(check ?? null),
     );
     return new Policy(id, name);
   }

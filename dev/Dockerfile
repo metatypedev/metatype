@@ -1,6 +1,6 @@
 # disable SHELL cmd down below if switching to non-debug
 ARG RUST_VERSION=1.75.0
-ARG DENO_VERSION=1.40.1
+ARG DENO_VERSION=1.41.0
 ARG DISTROLESS_TAG=debug-nonroot
 
 #
@@ -18,8 +18,7 @@ COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
 #
-# provides ARM binaries: https://github.com/LukeChannings/deno-arm64
-FROM lukechannings/deno:v${DENO_VERSION} AS deno-bin
+FROM denoland/deno:${DENO_VERSION} AS deno-bin
 
 #
 FROM base AS builder

@@ -156,6 +156,7 @@ impl Bench {
             allow_net: Some(vec![]),
             ..Default::default()
         };
+        let inj = typegate_engine::OpDepInjector::from_env();
         use mt_deno::deno::deno_config;
         mt_deno::bench_sync(
             deno_config::glob::FilePatterns {
@@ -177,7 +178,7 @@ impl Bench {
             },
             self.config,
             permissions,
-            std::sync::Arc::new(Vec::new),
+            std::sync::Arc::new(move || typegate_engine::extensions(inj.clone())),
             self.argv,
         );
         Ok(())

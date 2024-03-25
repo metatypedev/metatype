@@ -28,9 +28,11 @@ def injection(g: Graph):
         }
     )
 
+    operation = t.enum(["insert", "modify", "remove", "read"])
+
     req2 = t.struct(
         {
-            "operation": t.enum(["insert", "modify", "remove", "read"]).set(
+            "operation": operation.set(
                 {
                     CREATE: "insert",
                     UPDATE: "modify",
@@ -40,6 +42,7 @@ def injection(g: Graph):
             )
         }
     )
+    res2 = t.struct({"operation": operation})
 
     copy = t.struct({"a2": t.integer().from_parent("A")})
 
@@ -82,10 +85,10 @@ def injection(g: Graph):
             }
         ),
         effect_none=deno.identity(req2),
-        effect_create=deno.func(req2, req2, code="(x) => x", effect=effects.create()),
-        effect_delete=deno.func(req2, req2, code="(x) => x", effect=effects.delete()),
-        effect_update=deno.func(req2, req2, code="(x) => x", effect=effects.update()),
-        effect_upsert=deno.func(req2, req2, code="(x) => x", effect=effects.update()),
+        effect_create=deno.func(req2, res2, code="(x) => x", effect=effects.create()),
+        effect_delete=deno.func(req2, res2, code="(x) => x", effect=effects.delete()),
+        effect_update=deno.func(req2, res2, code="(x) => x", effect=effects.update()),
+        effect_upsert=deno.func(req2, res2, code="(x) => x", effect=effects.update()),
         user=gql.query(
             t.struct({"id": t.integer()}),
             user.extend(

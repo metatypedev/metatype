@@ -6,15 +6,12 @@ import { newTempDir, workspaceDir } from "test-utils/dir.ts";
 import { exists, expandGlob } from "std/fs/mod.ts";
 import { join } from "std/path/mod.ts";
 import { assert } from "std/assert/mod.ts";
-import { get_version } from "native";
 import { projectDir } from "../../../../dev/utils.ts";
 // import { shell } from "test-utils/shell.ts";
 
 const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
   "python": () => {},
   "deno": async (dir: string) => {
-    const version = await get_version();
-    console.log(version);
     for await (const f of expandGlob("**/*.ts", { root: dir })) {
       // FIXME: deno is unable to map the types from .d.ts files when used locally
       const data = (await Deno.readTextFile(f.path)).replace(
@@ -23,7 +20,7 @@ const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
       );
       const level = f.path.replace(projectDir, "").split("/").length - 2;
       const newData = data.replaceAll(
-        `npm:@typegraph/sdk@${version}`,
+        /npm:@typegraph\/sdk@[0-9]+\.[0-9]+\.[0-9]+/g,
         `${Array(level).fill("..").join("/")}/typegraph/node/sdk/dist`,
       );
 

@@ -1,10 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::hash::Hash as _;
+
 use common::typegraph::{ListTypeData, TypeNode};
 
 use crate::{
-    conversion::types::{BaseBuilderInit, TypeConversion},
+    conversion::{
+        hash::Hashable,
+        types::{BaseBuilderInit, TypeConversion},
+    },
     errors::Result,
     typegraph::TypegraphContext,
     types::{List, TypeDefData, TypeId},
@@ -54,5 +59,21 @@ impl TypeDefData for TypeList {
 
     fn variant_name(&self) -> &'static str {
         "list"
+    }
+}
+
+impl Hashable for TypeList {
+    fn hash(
+        &self,
+        hasher: &mut crate::conversion::hash::Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()> {
+        "list".hash(hasher);
+        self.min.hash(hasher);
+        self.max.hash(hasher);
+        self.unique_items.hash(hasher);
+        TypeId(self.of).hash_child_type(hasher, tg, runtime_id)?;
+        Ok(())
     }
 }

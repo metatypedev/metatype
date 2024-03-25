@@ -114,6 +114,7 @@ Meta.test(
     });
 
     try {
+      await reset("e2e7895alt");
       await deploy(port);
     } catch (e) {
       assertStringIncludes(

@@ -198,4 +198,8 @@ declare namespace Meta {
     function registerModule(inp: PythonRegisterInp): string;
     function unregisterModule(inp: PythonUnregisterInp): string;
   }
+
+  namespace deno {
+    function transformTypescript(inp: string): string;
+  }
 }

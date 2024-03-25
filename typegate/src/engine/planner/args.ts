@@ -24,13 +24,22 @@ import {
 import { mapValues } from "std/collections/map_values.ts";
 import { filterValues } from "std/collections/filter_values.ts";
 
-import { EffectType, EitherNode } from "../../typegraph/types.ts";
+import {
+  EffectType,
+  EitherNode,
+  FunctionParameterTransform,
+} from "../../typegraph/types.ts";
 
 import { getChildTypes, visitTypes } from "../../typegraph/visitor.ts";
 import { generateValidator } from "../typecheck/input.ts";
 import { getParentId } from "../stage_id.ts";
 import { BadContext } from "../../errors.ts";
 import { selectInjection } from "./injection_utils.ts";
+import {
+  compileParameterTransformer,
+  defaultParameterTransformer,
+} from "./parameter_transformer.ts";
+import { QueryFunction as JsonPathQuery } from "../../libs/jsonpath.ts";
 
 class MandatoryArgumentError extends Error {
   constructor(argDetails: string) {
@@ -84,6 +93,7 @@ export function collectArgs(
   parentProps: Record<string, number>,
   typeIdx: TypeIdx,
   astNodes: Record<string, ast.ArgumentNode>,
+  parameterTransform: FunctionParameterTransform | null,
 ): CollectedArgs {
   const collector = new ArgumentCollector(
     typegraph,
@@ -108,6 +118,13 @@ export function collectArgs(
   }
 
   const validate = generateValidator(typegraph, typeIdx);
+  const parameterTransformer = parameterTransform == null
+    ? defaultParameterTransformer
+    : compileParameterTransformer(
+      typegraph,
+      parentProps,
+      parameterTransform.transform_root,
+    );
 
   const policies = collector.policies;
 
@@ -124,7 +141,10 @@ export function collectArgs(
     // typecheck
     validate(value);
     return {
-      compute: () => value,
+      compute: (c) => {
+        const { parent, context } = c;
+        return parameterTransformer({ args: value, parent, context });
+      },
       deps: [],
       policies,
     };
@@ -136,7 +156,8 @@ export function collectArgs(
     compute: (params) => {
       const value = mapValues(compute, (c) => c(params));
       validate(value);
-      return value;
+      const { parent, context } = params;
+      return parameterTransformer({ args: value, parent, context });
     },
     deps: Array.from(collector.deps.parent).map((dep) => `${parentId}.${dep}`),
     policies,
@@ -225,7 +246,7 @@ class ArgumentCollector {
   private collectArgImpl(node: CollectNode): ComputeArg {
     const { astNode, typeIdx } = node;
 
-    const typ = this.tg.type(typeIdx);
+    const typ: TypeNode = this.tg.type(typeIdx);
 
     this.addPoliciesFrom(typeIdx);
 
@@ -637,20 +658,23 @@ class ArgumentCollector {
         return () => this.tg.parseSecret(typ, secretName);
       }
       case "context": {
-        const contextKey = selectInjection(injection.data, this.effect);
-        if (contextKey == null) {
+        const contextPath = selectInjection(injection.data, this.effect);
+        if (contextPath == null) {
           return null;
         }
-        this.deps.context.add(contextKey);
+        this.deps.context.add(contextPath);
+        const queryContext = JsonPathQuery.create(contextPath, {
+          strict: typ.type !== Type.OPTIONAL,
+          rootPath: "<context>",
+        })
+          .asFunction();
         return ({ context }) => {
-          const { [contextKey]: value = null } = context;
-          if (value === null && typ.type != Type.OPTIONAL) {
-            const suggestions = Object.keys(context).join(", ");
-            throw new BadContext(
-              `Non optional injection '${contextKey}' was not found in the context, available context keys are ${suggestions}`,
-            );
+          try {
+            return queryContext(context) ?? null;
+          } catch (e) {
+            const msg = e.message;
+            throw new BadContext("Error while querying context: " + msg);
           }
-          return value;
         };
       }
 
@@ -674,6 +698,10 @@ class ArgumentCollector {
           );
         }
         return generator;
+      }
+
+      case "random": {
+        return () => this.tg.getRandom(typ);
       }
     }
   }

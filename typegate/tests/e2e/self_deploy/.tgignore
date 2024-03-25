@@ -1,0 +1,3 @@
+.tgignore
+self_deploy_*.ts
+*.mjs

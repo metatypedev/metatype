@@ -384,6 +384,11 @@
           },
           "portRef": "npmi_npm@0.1.0",
           "packageName": "@bytecodealliance/jco"
+        },
+        "f4760b34b6c9f9f96207cfb380deb77007a212a60bd10bdb3dc9d20b94c2785c": {
+          "version": "v8.15.2",
+          "depConfigs": {},
+          "portRef": "pnpm_ghrel@0.1.0"
         }
       }
     },
@@ -746,7 +751,7 @@
               }
             },
             {
-              "version": "v8.8.0",
+              "version": "v8.15.2",
               "port": {
                 "ty": "denoWorker@v1",
                 "name": "pnpm_ghrel",

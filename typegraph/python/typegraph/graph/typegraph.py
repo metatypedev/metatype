@@ -4,11 +4,11 @@
 import inspect
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, Optional, Union
+from typing import TYPE_CHECKING, Callable, List, Optional, Union, Any
 
 from typegraph.gen.exports.core import (
+    ArtifactResolutionConfig,
     Rate,
-    TypegraphFinalizeMode,
     TypegraphInitParams,
 )
 from typegraph.gen.exports.core import (
@@ -17,6 +17,7 @@ from typegraph.gen.exports.core import (
 
 from typegraph.gen.types import Err
 from typegraph.graph.params import Auth, Cors, RawAuth
+from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph.wit import core, store, wit_utils
 
@@ -77,11 +78,39 @@ class Typegraph:
         default_policy: Optional[PolicySpec] = None,
         **kwargs: ExposeItem,
     ):
-        core.expose(
+        res = core.expose(
             store,
             [(k, v.id) for k, v in kwargs.items()],
             default_policy=get_policy_chain(default_policy) if default_policy else None,
         )
+
+        if isinstance(res, Err):
+            raise Exception(res.value)
+
+
+@dataclass
+class ApplyFromArg:
+    name: Optional[str]
+
+
+@dataclass
+class ApplyFromStatic:
+    value: Any
+
+
+@dataclass
+class ApplyFromSecret:
+    key: str
+
+
+@dataclass
+class ApplyFromContext:
+    key: str
+
+
+@dataclass
+class ApplyFromParent:
+    type_name: str
 
 
 @dataclass
@@ -119,11 +148,25 @@ class Graph:
     def ref(self, name: str) -> "t.typedef":
         return gen_ref(name)
 
+    def configure_random_injection(self, seed: int):
+        res = core.set_seed(store, seed)
+        if isinstance(res, Err):
+            raise Exception(res.value)
 
-@dataclass
-class TypegraphOutput:
-    tg: Typegraph
-    serialized: str
+    def as_arg(self, name: Optional[str] = None):
+        return ApplyFromArg(name)
+
+    def set(self, value: Any):
+        return ApplyFromStatic(value)
+
+    def from_secret(self, key: str):
+        return ApplyFromSecret(key)
+
+    def from_context(self, key: str):
+        return ApplyFromContext(key)
+
+    def from_parent(self, type_name: str):
+        return ApplyFromParent(type_name)
 
 
 def typegraph(
@@ -133,7 +176,6 @@ def typegraph(
     rate: Optional[Rate] = None,
     cors: Optional[Cors] = None,
     prefix: Optional[str] = None,
-    disable_auto_serialization: Optional[bool] = False,
 ) -> Callable[[Callable[[Graph], None]], Callable[[], TypegraphOutput]]:
     def decorator(builder: Callable[[Graph], None]) -> TypegraphOutput:
         actual_name = name
@@ -170,20 +212,26 @@ def typegraph(
         popped = Typegraph._context.pop()
         assert tg == popped
 
-        tg_json = core.finalize_typegraph(
-            store,
-            TypegraphFinalizeMode.RESOLVE_ARTIFACTS
-            if disable_auto_serialization
-            else TypegraphFinalizeMode.SIMPLE,
-        )
+        # config is only known at deploy time
+        def serialize_with_artifacts(
+            config: ArtifactResolutionConfig,
+        ):
+            finalization_result = core.finalize_typegraph(store, config)
+            if isinstance(finalization_result, Err):
+                raise Exception(finalization_result.value)
 
-        if isinstance(tg_json, Err):
-            raise Exception(tg_json.value)
+            tg_json, ref_artifacts = finalization_result.value
+            return FinalizationResult(tg_json, ref_artifacts)
 
-        if not disable_auto_serialization:
-            print(tg_json.value)
+        tg_output = TypegraphOutput(name=tg.name, serialize=serialize_with_artifacts)
 
-        return lambda: TypegraphOutput(tg=tg, serialized=tg_json.value)
+        from typegraph.graph.tg_manage import Manager
+
+        if Manager.is_run_from_cli():
+            manager = Manager(tg_output)
+            manager.run()
+
+        return lambda: tg_output
 
     return decorator
 

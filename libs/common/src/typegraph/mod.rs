@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+pub mod parameter_transform;
 pub mod runtimes;
 pub mod types;
 pub mod utils;
@@ -9,6 +10,7 @@ pub mod visitor;
 
 pub use types::*;
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -97,10 +99,12 @@ pub struct TypeMeta {
     pub auths: Vec<Auth>,
     pub rate: Option<Rate>,
     pub version: String,
+    pub random_seed: Option<u32>,
+    pub ref_artifacts: HashMap<String, PathBuf>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[serde(rename_all = "lowercase")]
 pub enum EffectType {
     Create,

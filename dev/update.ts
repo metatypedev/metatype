@@ -1,14 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import {
-  expandGlobSync,
-  groupBy,
-  parseFlags,
-  resolve,
-  udd,
-  WalkEntry,
-} from "./deps.ts";
+import { expandGlobSync, parseFlags, resolve, udd, WalkEntry } from "./deps.ts";
 import { projectDir, relPath, runOrExit } from "./utils.ts";
 
 const denoConfigPath = resolve(projectDir, "typegate/deno.jsonc");
@@ -32,7 +25,7 @@ if (flags.outdated || flags.upgrade) {
     const deps = await udd(configPath, { dryRun: flags.outdated });
     console.log();
 
-    const depCats = groupBy(deps, (d) => String(d.success));
+    const depCats = Object.groupBy(deps, (d) => String(d.success));
 
     if (depCats["undefined"]) {
       console.log("No upgrade available:");

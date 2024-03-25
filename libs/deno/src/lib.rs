@@ -331,6 +331,7 @@ pub async fn bench(
     let cli_factory = factory::CliFactory::from_flags(flags)
         .await?
         .with_custom_ext_cb(custom_extensions);
+
     let options = cli_factory.cli_options();
 
     // Various bench files should not share the same permissions in terms of

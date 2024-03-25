@@ -14,6 +14,8 @@ import { closestWord } from "../utils.ts";
 import { Type, TypeNode } from "../typegraph/type_node.ts";
 import { StringFormat } from "../typegraph/types.ts";
 import { mapValues } from "std/collections/map_values.ts";
+import { applyPostProcessors } from "../postprocess.ts";
+import { PrismaRT, PrismaRuntime } from "./prisma/mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -90,6 +92,16 @@ export class TypeGateRuntime extends Runtime {
       if (name === "findAvailableOperations") {
         return this.findAvailableOperations;
       }
+      if (name === "findPrismaModels") {
+        return this.findPrismaModels;
+      }
+      if (name === "execRawPrismaQuery") {
+        return this.execRawPrismaQuery;
+      }
+
+      if (name != null) {
+        throw new Error(`materializer '${name}' not implemented`);
+      }
 
       return async ({ _: { parent }, ...args }) => {
         const resolver = parent[stage.props.node];
@@ -139,15 +151,19 @@ export class TypeGateRuntime extends Runtime {
     return JSON.stringify(tg.tg.tg);
   };
 
-  addTypegraph: Resolver = async ({ fromString, secrets, cliVersion }) => {
+  addTypegraph: Resolver = async ({ fromString, secrets, targetVersion }) => {
     logger.info("Adding typegraph");
-    if (!semver.gte(semver.parse(cliVersion), semver.parse(config.version))) {
+    if (
+      !semver.gte(semver.parse(targetVersion), semver.parse(config.version))
+    ) {
       throw new Error(
-        `Meta CLI version ${cliVersion} must be greater than typegate version ${config.version} (until the releases are stable)`,
+        `Typegraph SDK version ${targetVersion} must be greater than typegate version ${config.version} (until the releases are stable)`,
       );
     }
 
     const tgJson = await TypeGraph.parseJson(fromString);
+    applyPostProcessors([tgJson]);
+
     const { engine, response, name } = await this.typegate.pushTypegraph(
       tgJson,
       JSON.parse(secrets),
@@ -242,6 +258,54 @@ export class TypeGateRuntime extends Runtime {
         outputItem,
       };
     });
+  };
+
+  findPrismaModels: Resolver = ({ typegraph }) => {
+    const tg = this.typegate.register.get(typegraph)!.tg;
+
+    const prismaRuntimes = tg.tg.runtimes.filter(
+      (rt) => rt.name == "prisma",
+    );
+
+    return prismaRuntimes.map((rt) => {
+      const rtData = rt.data as PrismaRT.DataFinal;
+      return rtData.models.map((model) => {
+        return {
+          name: model.typeName,
+          runtime: rtData.name,
+          fields: model.props.map((prop) => {
+            return {
+              name: prop.key,
+              type: walkPath(tg, tg.type(prop.typeIdx), 0, []),
+            };
+          }),
+        };
+      });
+    }).flat();
+  };
+
+  execRawPrismaQuery: Resolver = async ({ typegraph, runtime, query }) => {
+    const engine = this.typegate.register.get(typegraph);
+    if (!engine) {
+      throw new Error("typegate engine not found");
+    }
+    const runtimeIdx = engine.tg.tg.runtimes.findIndex(
+      (rt) => rt.name === "prisma" && rt.data.name === runtime,
+    );
+    if (runtimeIdx === -1) {
+      throw new Error(`prisma runtime '${runtime}' not found`);
+    }
+    const rt = engine.tg.runtimeReferences[runtimeIdx] as PrismaRuntime;
+    const fieldQuery = query.query;
+    const selection = JSON.parse(fieldQuery.selection);
+    const queryArgs = fieldQuery.arguments &&
+      JSON.parse(fieldQuery.arguments);
+    return JSON.stringify(
+      (await rt.query({
+        ...query,
+        query: { selection, arguments: queryArgs },
+      }))[query.action + query.modelName ?? ""],
+    );
   };
 }
 

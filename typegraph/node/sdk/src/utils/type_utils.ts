@@ -23,5 +23,6 @@ export type InjectionSource =
   | "static"
   | "context"
   | "parent"
-  | "secret";
+  | "secret"
+  | "random";
 export type InjectionValue<T> = T | PerEffect;

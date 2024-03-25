@@ -8,6 +8,7 @@ use crate::runtimes::prisma::relationship::Cardinality;
 use crate::runtimes::prisma::type_generation::count::Count;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::{TypeDefExt, TypeId};
+use crate::utils::{remove_injection, remove_injections_recursive};
 
 use super::TypeGen;
 
@@ -64,14 +65,14 @@ impl TypeGen for WithNestedCount {
                         }
 
                         Cardinality::One => {
-                            builder.prop(key, prop.model_id);
+                            builder.prop(key, remove_injections_recursive(prop.model_id)?);
                         }
                     }
                 }
 
                 Property::Scalar(prop) => {
                     let type_id = prop.wrapper_type_id.resolve_ref()?.1.id();
-                    builder.prop(key, type_id);
+                    builder.prop(key, remove_injection(type_id)?);
                 }
 
                 Property::Unmanaged(type_id) => {

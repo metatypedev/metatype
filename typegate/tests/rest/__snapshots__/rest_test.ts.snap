@@ -7,13 +7,13 @@ snapshot[`Rest queries in Deno 1`] = `
       ComplexType: {
         properties: {
           a: {
-            title: "integer_4",
+            title: "integer_0",
             type: "integer",
           },
           b: {
             properties: {
               c: {
-                title: "integer_5",
+                title: "integer_0",
                 type: "integer",
               },
             },
@@ -87,7 +87,7 @@ snapshot[`Rest queries in Deno 1`] = `
             type: "object",
           },
           id: {
-            title: "integer_2",
+            title: "integer_0",
             type: "integer",
           },
         },
@@ -115,7 +115,7 @@ snapshot[`Rest queries in Deno 1`] = `
             type: "string",
           },
           {
-            title: "integer_9",
+            title: "integer_0",
             type: "integer",
           },
         ],
@@ -132,22 +132,6 @@ snapshot[`Rest queries in Deno 1`] = `
         title: "integer_0",
         type: "integer",
       },
-      integer_2: {
-        title: "integer_2",
-        type: "integer",
-      },
-      integer_4: {
-        title: "integer_4",
-        type: "integer",
-      },
-      integer_5: {
-        title: "integer_5",
-        type: "integer",
-      },
-      integer_9: {
-        title: "integer_9",
-        type: "integer",
-      },
       list_11: {
         items: {
           oneOf: [
@@ -156,7 +140,7 @@ snapshot[`Rest queries in Deno 1`] = `
               type: "string",
             },
             {
-              title: "integer_9",
+              title: "integer_0",
               type: "integer",
             },
           ],
@@ -168,7 +152,7 @@ snapshot[`Rest queries in Deno 1`] = `
       object_6: {
         properties: {
           c: {
-            title: "integer_5",
+            title: "integer_0",
             type: "integer",
           },
         },
@@ -224,13 +208,13 @@ snapshot[`Rest queries in Deno 1`] = `
                     identity: {
                       properties: {
                         a: {
-                          title: "integer_4",
+                          title: "integer_0",
                           type: "integer",
                         },
                         b: {
                           properties: {
                             c: {
-                              title: "integer_5",
+                              title: "integer_0",
                               type: "integer",
                             },
                           },
@@ -332,7 +316,7 @@ snapshot[`Rest queries in Deno 1`] = `
                           type: "object",
                         },
                         id: {
-                          title: "integer_2",
+                          title: "integer_0",
                           type: "integer",
                         },
                       },
@@ -412,7 +396,7 @@ snapshot[`Rest queries in Deno 1`] = `
                           type: "object",
                         },
                         id: {
-                          title: "integer_2",
+                          title: "integer_0",
                           type: "integer",
                         },
                       },
@@ -564,7 +548,7 @@ snapshot[`Rest queries in Deno 2`] = `
 
 snapshot[`Rest schema generator 1`] = `
 {
-  refs: Map(7) {
+  refs: Map(6) {
     "ComplexType" => {
       properties: {
         a: {
@@ -574,7 +558,7 @@ snapshot[`Rest schema generator 1`] = `
         b: {
           properties: {
             c: {
-              title: "integer_1",
+              title: "integer_0",
               type: "integer",
             },
             d: {
@@ -602,7 +586,7 @@ snapshot[`Rest schema generator 1`] = `
             b: {
               properties: {
                 c: {
-                  title: "integer_1",
+                  title: "integer_0",
                   type: "integer",
                 },
                 d: {
@@ -627,14 +611,10 @@ snapshot[`Rest schema generator 1`] = `
       title: "integer_0",
       type: "integer",
     },
-    "integer_1" => {
-      title: "integer_1",
-      type: "integer",
-    },
     "object_3" => {
       properties: {
         c: {
-          title: "integer_1",
+          title: "integer_0",
           type: "integer",
         },
         d: {
@@ -655,7 +635,7 @@ snapshot[`Rest schema generator 1`] = `
             b: {
               properties: {
                 c: {
-                  title: "integer_1",
+                  title: "integer_0",
                   type: "integer",
                 },
                 d: {
@@ -689,7 +669,7 @@ snapshot[`Rest schema generator 1`] = `
                 b: {
                   properties: {
                     c: {
-                      title: "integer_1",
+                      title: "integer_0",
                       type: "integer",
                     },
                     d: {
@@ -715,7 +695,7 @@ snapshot[`Rest schema generator 1`] = `
       type: "object",
     },
   },
-  schema: Map(8) {
+  schema: Map(7) {
     0 => {
       properties: {
         query: {
@@ -729,7 +709,7 @@ snapshot[`Rest schema generator 1`] = `
                 b: {
                   properties: {
                     c: {
-                      title: "integer_1",
+                      title: "integer_0",
                       type: "integer",
                     },
                     d: {
@@ -763,7 +743,7 @@ snapshot[`Rest schema generator 1`] = `
         b: {
           properties: {
             c: {
-              title: "integer_1",
+              title: "integer_0",
               type: "integer",
             },
             d: {
@@ -791,7 +771,7 @@ snapshot[`Rest schema generator 1`] = `
             b: {
               properties: {
                 c: {
-                  title: "integer_1",
+                  title: "integer_0",
                   type: "integer",
                 },
                 d: {
@@ -821,7 +801,7 @@ snapshot[`Rest schema generator 1`] = `
         b: {
           properties: {
             c: {
-              title: "integer_1",
+              title: "integer_0",
               type: "integer",
             },
             d: {
@@ -845,7 +825,7 @@ snapshot[`Rest schema generator 1`] = `
     5 => {
       properties: {
         c: {
-          title: "integer_1",
+          title: "integer_0",
           type: "integer",
         },
         d: {
@@ -856,10 +836,6 @@ snapshot[`Rest schema generator 1`] = `
       type: "object",
     },
     6 => {
-      title: "integer_1",
-      type: "integer",
-    },
-    7 => {
       properties: {
         identity: {
           properties: {
@@ -870,7 +846,7 @@ snapshot[`Rest schema generator 1`] = `
             b: {
               properties: {
                 c: {
-                  title: "integer_1",
+                  title: "integer_0",
                   type: "integer",
                 },
                 d: {
