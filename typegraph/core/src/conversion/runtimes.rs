@@ -295,6 +295,7 @@ impl MaterializerConverter for WasmMaterializer {
             "func": mat.func_name,
             "artifact_hash": mat.artifact_hash,
             "tg_name": None::<String>,
+            "mdk_enabled": mat.mdk_enabled
         }))
         .map_err(|e| e.to_string())?;
 

@@ -30,8 +30,17 @@ export class WasmRuntime extends Runtime {
     _verbose: boolean,
   ): ComputeStage[] {
     const { materializer, argumentTypes, outType } = stage.props;
-    const { wasm, func, artifact_hash, tg_name } = materializer?.data ?? {};
+    const { wasm, func, artifact_hash, tg_name, mdk_enabled } =
+      materializer?.data ?? {};
     const order = Object.keys(argumentTypes ?? {});
+
+    if (mdk_enabled) {
+      // TODO:
+      // 1. run the wasm binary as a wit component
+      // 2. func <=> op_name ====> find a way to populate the Req obj
+      // 3. interface gql (gate(host) <=> wasm (guest)), try wasmedge future? or make it somewhat sync
+      throw new Error("TODO: mdk interface");
+    }
 
     // always wasi
     const resolver: Resolver = async (args) => {

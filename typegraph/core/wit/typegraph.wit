@@ -361,6 +361,7 @@ interface runtimes {
         func-name: string,
         module: string,
         artifact-hash: string,
+        mdk-enabled: bool
     }
 
     register-wasm-runtime: func() -> result<runtime-id, error>

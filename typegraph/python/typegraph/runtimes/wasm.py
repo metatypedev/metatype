@@ -9,6 +9,7 @@ from typegraph.gen.exports.runtimes import (
     Effect,
     EffectRead,
     MaterializerWasm,
+    RuntimeId,
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
@@ -29,24 +30,54 @@ class WasmRuntime(Runtime):
         wasm: str,
         effect: Optional[Effect] = None,
     ):
-        effect = effect or EffectRead()
-        artifact_hash = get_file_hash(wasm)
-        wasm = f"file:{wasm}"
+        enable_mdk = False
+        return gen_wasm(self.id, enable_mdk, inp, out, func, wasm, effect)
 
-        mat_id = runtimes.from_wasm_module(
-            store,
-            BaseMaterializer(runtime=self.id.value, effect=effect),
-            MaterializerWasm(module=wasm, func_name=func, artifact_hash=artifact_hash),
-        )
+    def from_mdk(
+        self,
+        inp: "t.struct",
+        out: "t.typedef",
+        *,
+        op_name: str,
+        wasm: str,
+        effect: Optional[Effect] = None,
+    ):
+        enable_mdk = True
+        return gen_wasm(self.id, enable_mdk, inp, out, op_name, wasm, effect)
 
-        if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
 
-        return t.func(
-            inp,
-            out,
-            WasmMat(id=mat_id.value, module=wasm, func_name=func, effect=effect),
-        )
+def gen_wasm(
+    runtime_id: RuntimeId,
+    enable_mdk: bool,
+    inp: "t.struct",
+    out: "t.typedef",
+    op_name: str,
+    wasm: str,
+    effect: Optional[Effect] = None,
+):
+    effect = effect or EffectRead()
+    artifact_hash = get_file_hash(wasm)
+    wasm = f"file:{wasm}"
+
+    mat_id = runtimes.from_wasm_module(
+        store,
+        BaseMaterializer(runtime=runtime_id, effect=effect),
+        MaterializerWasm(
+            module=wasm,
+            func_name=op_name,
+            artifact_hash=artifact_hash,
+            mdk_enabled=enable_mdk,
+        ),
+    )
+
+    if isinstance(mat_id, Err):
+        raise Exception(mat_id.value)
+
+    return t.func(
+        inp,
+        out,
+        WasmMat(id=mat_id.value, module=wasm, func_name=op_name, effect=effect),
+    )
 
 
 @dataclass

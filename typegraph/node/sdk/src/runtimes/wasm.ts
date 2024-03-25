@@ -25,31 +25,69 @@ export class WasmRuntime extends Runtime {
   >(
     inp: I,
     out: O,
-    { func, wasm, effect = fx.read() }: {
+    data: {
       func: string;
       wasm: string;
       effect?: Effect;
     },
   ): Promise<t.Func<I, O, WasmMat>> {
-    let artifactHash = await getFileHash(wasm);
-
-    const matId = runtimes.fromWasmModule(
-      {
-        runtime: this._id,
-        effect,
-      },
-      {
-        module: `file:${wasm}`,
-        funcName: func,
-        artifactHash: artifactHash,
-      },
-    );
-
-    return t.func(inp, out, {
-      _id: matId,
-      effect,
-      module: wasm,
-      funcMame: func,
+    const enableMdk = false;
+    return genWasm(this._id, enableMdk, inp, out, {
+      ...data,
+      opName: data.func,
     });
   }
+
+  async fromMdk<
+    I extends t.Typedef = t.Typedef,
+    O extends t.Typedef = t.Typedef,
+  >(
+    inp: I,
+    out: O,
+    data: {
+      opName: string;
+      wasm: string;
+      effect?: Effect;
+    },
+  ): Promise<t.Func<I, O, WasmMat>> {
+    const enableMdk = true;
+    return genWasm(this._id, enableMdk, inp, out, data);
+  }
+}
+
+async function genWasm<
+  I extends t.Typedef = t.Typedef,
+  O extends t.Typedef = t.Typedef,
+>(
+  runtimeId: number,
+  enableMdk: boolean,
+  inp: I,
+  out: O,
+  { opName, wasm, effect = fx.read() }: {
+    opName: string;
+    wasm: string;
+    effect?: Effect;
+  },
+): Promise<t.Func<I, O, WasmMat>> {
+  let artifactHash = await getFileHash(wasm);
+
+  const matId = runtimes.fromWasmModule(
+    {
+      runtime: runtimeId,
+      effect,
+    },
+    {
+      module: `file:${wasm}`,
+      funcName: opName,
+      artifactHash: artifactHash,
+      mdkEnabled: enableMdk,
+    },
+  );
+
+  return t.func(inp, out, {
+    _id: matId,
+    effect,
+    module: wasm,
+    funcMame: opName,
+  });
 }
