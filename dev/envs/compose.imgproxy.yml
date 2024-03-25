@@ -1,7 +1,7 @@
 services:
   imgproxy:
     image: darthsim/imgproxy:v3.9
-    restart: always
+    restart: unless-stopped
     ports:
       - "9002:8080"
     environment:

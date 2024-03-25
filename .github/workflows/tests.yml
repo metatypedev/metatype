@@ -78,7 +78,7 @@ jobs:
           cd website
           pnpm install --frozen-lockfile
           cd ..
-          cd dev-tools
+          cd meta-lsp
           pnpm install --frozen-lockfile --recursive
           cd ..
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
@@ -148,7 +148,7 @@ jobs:
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
       - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
       - shell: bash
-        env: 
+        env:
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
           python3 -m venv .venv
@@ -236,10 +236,8 @@ jobs:
         ports:
           - 6379:6379
         options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+
       postgres:
         image: postgres:15
         env:
@@ -249,10 +247,8 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
       minio:
         image: bitnami/minio:2022
         env:
@@ -285,14 +281,14 @@ jobs:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
       # FIXME: the custom runner is missing some ambient items found in
-      # github runner images by default. remove this hack when ghjk handles 
+      # github runner images by default. remove this hack when ghjk handles
       # zstd/bsdtar on it's own
       - run: |
           sudo apt update
           sudo apt install -y --no-install-recommends zstd
       - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
       - shell: bash
-        env: 
+        env:
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
           echo pwd in $(pwd)
@@ -360,7 +356,7 @@ jobs:
       - uses: metatypedev/setup-ghjk@32fe7ad4eab41d5e62189208afa6fe17112a5563
       - shell: bash
         run: |
-          cd dev-tools
+          cd meta-lsp
           pnpm install --frozen-lockfile --recursive
           cd ts-language-server
           # node --test --import=tsx --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage.lcov tests/*.test.ts
@@ -369,5 +365,5 @@ jobs:
       # - uses: codecov/codecov-action@v4
       #   with:
       #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     files: ./dev-tools/ts-language-server/coverage.lcov
+      #     files: ./meta-lsp/ts-language-server/coverage.lcov
       #     fail_ci_if_error: true

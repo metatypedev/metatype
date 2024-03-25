@@ -106,10 +106,7 @@ export default function GraphiQLInterface(
   return (
     <Tooltip.Provider>
       <div className="graphiql-editors">
-        <section
-          className="graphiql-query-editor shadow-sm"
-          aria-label="Query Editor"
-        >
+        <section className="graphiql-query-editor " aria-label="Query Editor">
           <div className="graphiql-query-editor-wrapper">
             <QueryEditor
               editorTheme={props.editorTheme}

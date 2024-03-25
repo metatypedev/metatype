@@ -8,10 +8,10 @@
 			"name": "Launch Client",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceRoot}/dev-tools"
+				"--extensionDevelopmentPath=${workspaceRoot}/meta-lsp"
 			],
 			"outFiles": [
-				"${workspaceRoot}/dev-tools/vscode-metatype-support/out/**/*.js"
+				"${workspaceRoot}/meta-lsp/vscode-metatype-support/out/**/*.js"
 			],
 			"preLaunchTask": "vscode-ext:build"
 		},
