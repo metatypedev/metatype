@@ -3,23 +3,22 @@
 
 import { Meta } from "test-utils/mod.ts";
 import { TestModule } from "test-utils/test_module.ts";
-import { dropSchema } from "test-utils/database.ts";
+import { dropSchema, randomSchema } from "test-utils/database.ts";
 
 const m = new TestModule(import.meta);
 
-const port = 7897;
-
 Meta.test("meta undeploy", async (t) => {
+  const schema = randomSchema();
   // prepare
-  await dropSchema(`e2e${port}alt`);
+  await dropSchema(schema);
 
   // no leaked resources error
   await t.should("free resources", async () => {
     await m.cli(
       {},
       "deploy",
-      "--target",
-      `dev${port}`,
+      "--target=dev",
+      `--gate=http://localhost:${t.port}`,
       "-f",
       "templates/migration.py",
       "--allow-dirty",
@@ -28,10 +27,10 @@ Meta.test("meta undeploy", async (t) => {
     await m.cli(
       {},
       "undeploy",
-      "--target",
-      `dev${port}`,
+      "--target=dev",
+      `--gate=http://localhost:${t.port}`,
       "--typegraph",
       "migration-failure-test",
     );
   });
-}, { port, systemTypegraphs: true });
+}, { port: true, systemTypegraphs: true });
