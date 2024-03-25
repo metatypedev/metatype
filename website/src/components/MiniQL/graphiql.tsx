@@ -46,16 +46,16 @@ const autoHeight = (codeMirror) => {
   target.style.height = `${codeMirror.doc.height}px`;
 };
 
-export type Tab = "variables" | "headers" | "";
+export type Panel = "variables" | "headers" | "";
 
 export default function GraphiQLInterface(
-  props: GraphiQLInterfaceProps & { defaultTab: Tab; noTool: boolean }
+  props: GraphiQLInterfaceProps & { defaultTab: Panel; noTool: boolean }
 ) {
   const { queryEditor, variableEditor, headerEditor } = useEditorContext({
     nonNull: true,
   });
 
-  const [tab, setTab] = useState<Tab>(props.defaultTab);
+  const [panel, setPanel] = useState<Panel>(props.defaultTab);
 
   const copy = useCopyQuery({ onCopyQuery: props.onCopyQuery });
   const prettify = usePrettifyEditors();
@@ -64,13 +64,13 @@ export default function GraphiQLInterface(
     if (variableEditor) {
       autoHeight(variableEditor);
     }
-  }, [tab, variableEditor]);
+  }, [panel, variableEditor]);
 
   useEffect(() => {
     if (headerEditor) {
       autoHeight(headerEditor);
     }
-  }, [tab, headerEditor]);
+  }, [panel, headerEditor]);
 
   useEffect(() => {
     if (queryEditor) {
@@ -106,10 +106,7 @@ export default function GraphiQLInterface(
   return (
     <Tooltip.Provider>
       <div className="graphiql-editors">
-        <section
-          className="graphiql-query-editor shadow-sm"
-          aria-label="Query Editor"
-        >
+        <section className="graphiql-query-editor " aria-label="Query Editor">
           <div className="graphiql-query-editor-wrapper">
             <QueryEditor
               editorTheme={props.editorTheme}
@@ -152,20 +149,20 @@ export default function GraphiQLInterface(
               <div className="graphiql-editor-tools-tabs">
                 <div
                   className={`${
-                    tab === "variables" ? "text-slate-800" : ""
+                    panel === "variables" ? "text-slate-800" : ""
                   } p-2 hover:text-slate-800 cursor-pointer`}
                   onClick={() => {
-                    setTab(tab === "variables" ? "" : "variables");
+                    setPanel(panel === "variables" ? "" : "variables");
                   }}
                 >
                   Variables
                 </div>
                 <div
                   className={`${
-                    tab === "headers" ? "text-slate-800" : ""
+                    panel === "headers" ? "text-slate-800" : ""
                   } p-2 hover:text-slate-800 cursor-pointer`}
                   onClick={() => {
-                    setTab(tab === "headers" ? "" : "headers");
+                    setPanel(panel === "headers" ? "" : "headers");
                   }}
                 >
                   Headers
@@ -175,20 +172,20 @@ export default function GraphiQLInterface(
 
             <section
               className={`graphiql-editor-tool ${
-                tab && tab.length > 0 ? "pt-0" : "hidden p-0"
+                panel && panel.length > 0 ? "pt-0" : "hidden p-0"
               }`}
-              aria-label={tab === "variables" ? "Variables" : "Headers"}
+              aria-label={panel === "variables" ? "Variables" : "Headers"}
             >
               <VariableEditor
                 editorTheme={props.editorTheme}
-                isHidden={tab !== "variables"}
+                isHidden={panel !== "variables"}
                 keyMap={props.keyMap}
                 onEdit={props.onEditVariables}
                 readOnly={props.readOnly}
               />
               <HeaderEditor
                 editorTheme={props.editorTheme}
-                isHidden={tab !== "headers"}
+                isHidden={panel !== "headers"}
                 keyMap={props.keyMap}
                 onEdit={props.onEditHeaders}
                 readOnly={props.readOnly}

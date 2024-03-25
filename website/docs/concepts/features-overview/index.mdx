@@ -8,7 +8,7 @@ sidebar_position: 1
 
 - When the project grows, you can easily introduce new APIs or break existing ones in smaller parts while keeping the same interface.
 
-- You can write complex business logic directly in Typescript, Python or WebAssembly and run them directly inside the query engine.
+- You can write complex business logic directly in Typescript, Python or WebAssembly and run them directly inside the composition engine.
 
 - Most of the frontend are today built on composable components, this brings a similar approach to backend development.
 
@@ -18,19 +18,18 @@ sidebar_position: 1
 
 - Metatype can be easily self-hosted or customized according to your needs.
 
-
 ## GraphQL and REST queries
 
 Easily expose business logic endpoints through using generated [GraphQl APIs](/docs/reference/runtimes/graphql).
 Including helpers to auto-generate and expose CRUD operations from your types on [myriad of databases](/docs/reference/runtimes/prisma).
-These are only helpers though. 
+These are only helpers though.
 They're built upon the typegraphs primitive that compose well with every other feature and allow [granular control](/docs/reference/types/reducers) when required.
 There are helpers to expose sections of your GraphQl through [REST queries as well](/docs/guides/rest).
 
 ## Authentication
 
-First class support for authentication primitives through the Policies object. 
-Oauth2 helpers for popular services included as well. 
+First class support for authentication primitives through the Policies object.
+Oauth2 helpers for popular services included as well.
 Read more [here](/docs/reference/typegate/authentication).
 
 ## Type checking
@@ -41,7 +40,7 @@ Type authoring isn't done with through static, declarative snippets but through 
 
 ## Live reload during development
 
-Metatype development is primarily done through the [meta-cil](/docs/reference/meta-cli) that's designed to get you up and productive in no time. 
+Metatype development is primarily done through the [meta-cil](/docs/reference/meta-cli) that's designed to get you up and productive in no time.
 Live auto-reload, database migration management, type-checking and linting, it's all there.
 
 ## Built-in CORS and rate-limiting
@@ -52,5 +51,5 @@ Working with object files in Metatype is easy using the [S3Runtime](/docs/refere
 
 ## Function runner
 
-When the expressive powers of the typegate primitives are not up for the task, different runtimes are available for running the exact, turing complete, code you need. 
+When the expressive powers of the typegate primitives are not up for the task, different runtimes are available for running the exact, turing complete, code you need.
 Metatype supports [Typescript](/docs/reference/runtimes/deno), [Python](/docs/reference/runtimes/python) and [Wasm](/docs/reference/runtimes/wasmedge) functions today.

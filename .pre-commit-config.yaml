@@ -74,13 +74,13 @@ repos:
         files: ^website/
         exclude: ^website/typegraphs/
       - id: devtools-lint
-        name: ESLint the dev-tools
+        name: ESLint meta-lsp
         language: system
-        entry: bash -c 'cd dev-tools && pnpm lint --fix'
+        entry: bash -c 'cd meta-lsp && pnpm lint --fix'
         pass_filenames: false
         types:
           - ts
-        files: ^dev-tools/
+        files: ^meta-lsp/
       - id: version
         name: "Lock versions"
         always_run: true
