@@ -134,7 +134,7 @@ impl Deploy {
         let node = node_config
             .build(&dir)
             .await
-            .with_context(|| format!("building node from config: {node_config:#?}"))?;
+            .with_context(|| format!("error while building node from config: {node_config:#?}"))?;
 
         ServerStore::with(Some(Command::Deploy), Some(config.as_ref().to_owned()));
         ServerStore::set_migration_action_glob(MigrationAction {

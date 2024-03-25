@@ -5,7 +5,7 @@ import { gql, Meta } from "test-utils/mod.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { dropSchemas, removeMigrations } from "test-utils/migrations.ts";
 import { assertRejects, assertStringIncludes } from "std/assert/mod.ts";
-import pg from "npm:pg";
+import { randomSchema, reset } from "test-utils/database.ts";
 
 const m = new TestModule(import.meta);
 
@@ -76,22 +76,6 @@ async function deploy(
   }
 }
 
-async function reset(schema: string) {
-  await removeMigrations(tgName);
-
-  // remove the database schema
-  const client = new pg.Client({
-    connectionString: "postgres://postgres:password@localhost:5432/db",
-  });
-  await client.connect();
-  await client.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
-  await client.end();
-}
-
-function randomSchema() {
-  return "z" + Math.random().toString(36).substring(2);
-}
-
 Meta.test(
   "meta deploy: fails migration for new columns without default value",
   async (t) => {
@@ -101,7 +85,7 @@ Meta.test(
         `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
     };
     await t.should("load first version of the typegraph", async () => {
-      await reset(schema);
+      await reset(tgName, schema);
       await writeTypegraph(null);
     });
 
@@ -138,7 +122,7 @@ Meta.test(
     });
 
     try {
-      await reset(schema);
+      await reset(tgName, schema);
       await deploy({ port, secrets });
     } catch (e) {
       assertStringIncludes(
@@ -161,7 +145,7 @@ Meta.test(
         `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
     };
     await t.should("load first version of the typegraph", async () => {
-      await reset(schema);
+      await reset(tgName, schema);
       await writeTypegraph(null);
     });
 

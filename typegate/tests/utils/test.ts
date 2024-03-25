@@ -30,12 +30,12 @@ export interface ParseOptions {
   pretty?: boolean;
 }
 
-interface Serve2Result {
+interface ServeResult {
   port: number;
   cleanup: () => Promise<void>;
 }
 
-function serve(typegate: Typegate): Promise<Serve2Result> {
+function serve(typegate: Typegate): Promise<ServeResult> {
   return new Promise((resolve) => {
     const server = Deno.serve({
       port: 0,
