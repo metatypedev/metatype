@@ -69,7 +69,7 @@
           "pluginRepo": "https://github.com/asdf-community/asdf-cmake"
         },
         "402fae54fb94ffdba9cd2617602c7b33c55002275f3c3bb588615b01ff0c3c26": {
-          "version": "v1.6.4",
+          "version": "v1.6.5",
           "depConfigs": {},
           "portRef": "cargo_binstall_ghrel@0.1.0"
         },
@@ -82,15 +82,15 @@
           "version": "0.116.0",
           "depConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
+              "version": "v1.6.5",
               "depConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.2",
+              "version": "1.78.0",
               "depConfigs": {
                 "rustup_rustlang": {
-                  "version": "1.27.0",
+                  "version": "1.27.1",
                   "depConfigs": {
                     "git_aa": {
                       "version": "2.40.1",
@@ -110,10 +110,10 @@
           "locked": true
         },
         "4a077ef5a23a541cc6e372186951d640da541f7c4eba2613c2a1c427a5d95a5c": {
-          "version": "1.77.2",
+          "version": "1.78.0",
           "depConfigs": {
             "rustup_rustlang": {
-              "version": "1.27.0",
+              "version": "1.27.1",
               "depConfigs": {
                 "git_aa": {
                   "version": "2.40.1",
@@ -128,7 +128,7 @@
           "profile": "minimal"
         },
         "4b3f09c15ad572211f821a76c776adea93e3c4f686817fd64dad8a5c8356ddea": {
-          "version": "1.27.0",
+          "version": "1.27.1",
           "depConfigs": {
             "git_aa": {
               "version": "2.40.1",
@@ -142,15 +142,15 @@
           "version": "1.0.53",
           "depConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
+              "version": "v1.6.5",
               "depConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.2",
+              "version": "1.78.0",
               "depConfigs": {
                 "rustup_rustlang": {
-                  "version": "1.27.0",
+                  "version": "1.27.1",
                   "depConfigs": {
                     "git_aa": {
                       "version": "2.40.1",
@@ -173,15 +173,15 @@
           "version": "1.33.0",
           "depConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
+              "version": "v1.6.5",
               "depConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.2",
+              "version": "1.78.0",
               "depConfigs": {
                 "rustup_rustlang": {
-                  "version": "1.27.0",
+                  "version": "1.27.1",
                   "depConfigs": {
                     "git_aa": {
                       "version": "2.40.1",
@@ -357,7 +357,7 @@
           "packageName": "pre-commit"
         },
         "95dbc2b8c604a5996b88c5b1b4fb0c10b3e0d9cac68f57eb915b012c44288e93": {
-          "version": "v0.2.61",
+          "version": "v0.2.62",
           "depConfigs": {},
           "portRef": "act_ghrel@0.1.0"
         },
@@ -365,15 +365,15 @@
           "version": "0.5.0",
           "depConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
+              "version": "v1.6.5",
               "depConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.2",
+              "version": "1.78.0",
               "depConfigs": {
                 "rustup_rustlang": {
-                  "version": "1.27.0",
+                  "version": "1.27.1",
                   "depConfigs": {
                     "git_aa": {
                       "version": "2.40.1",
