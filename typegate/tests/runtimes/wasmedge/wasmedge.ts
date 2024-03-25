@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { WasmEdgeRuntime } from "@typegraph/sdk/runtimes/wasmedge.js";
+import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.js";
 
 export const tg = await typegraph("wasmedge_ts", async (g: any) => {
   const pub = Policy.public();
-  const wasmedge = new WasmEdgeRuntime();
+  const wasmedge = new WasmRuntime();
   let mat;
 
   try {
     mat = await wasmedge
-      .wasi(
+      .fromWasm(
         t.struct({
           "a": t.float(),
           "b": t.float(),
