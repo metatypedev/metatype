@@ -1,0 +1,66 @@
+export const snapshot = {};
+
+snapshot[`semantic analysis of expose 1`] = `
+[
+  {
+    message: "expected only one parameter for the typegraph builder",
+    range: {
+      end: {
+        character: 27,
+        line: 5,
+      },
+      start: {
+        character: 21,
+        line: 5,
+      },
+    },
+    severity: 1,
+    source: "typegraph",
+  },
+  {
+    message: "unknown type: t.floaty",
+    range: {
+      end: {
+        character: 57,
+        line: 18,
+      },
+      start: {
+        character: 47,
+        line: 18,
+      },
+    },
+    severity: 1,
+    source: "typegraph",
+  },
+  {
+    message: "expected type",
+    range: {
+      end: {
+        character: 60,
+        line: 18,
+      },
+      start: {
+        character: 6,
+        line: 18,
+      },
+    },
+    severity: 1,
+    source: "typegraph",
+  },
+  {
+    message: "Exposed function 'scalarInputType': expected input type to be a struct but got TgType(integer)",
+    range: {
+      end: {
+        character: 46,
+        line: 23,
+      },
+      start: {
+        character: 35,
+        line: 23,
+      },
+    },
+    severity: 1,
+    source: "typegraph",
+  },
+]
+`;
