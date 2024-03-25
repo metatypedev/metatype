@@ -1,0 +1,26 @@
+# The Node SDK is now available
+
+We are happy to announce that we have redesigned our SDKs to support Node and facilitate the integration of future languages. Most of the [typegraph features](/docs/reference/typegraph) have been rewritten in Rust and shaped around a core SDK targeting WebAssembly.
+
+This enables us to provide a consistent experience across all languages and reduce the work to maintain the existing Python SDK and bring Metatype to the Node ecosystem (with Deno compatibility).
+
+## Node
+
+```bash
+npm install @typegraph/sdk
+meta new --template node .
+```
+
+## Deno
+
+```bash
+meta new --template deno .
+```
+
+```typescript
+import { typegraph } from "npm:@typegraph/sdk/index.js";
+```
+
+## Give us feedback!
+
+As always, report issues and let us know what you think on [GitHub](https://github.com/metatypedev/metatype/discussions).
