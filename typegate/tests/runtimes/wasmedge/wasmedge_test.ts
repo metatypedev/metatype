@@ -5,27 +5,34 @@ import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 import { gql, Meta } from "../../utils/mod.ts";
 import { testDir } from "test-utils/dir.ts";
 import { tg } from "./wasmedge.ts";
+import { SDKLangugage } from "test-utils/test.ts";
 
 const port = 7698;
 const gate = `http://localhost:${port}`;
 const cwdDir = testDir;
 const auth = new BasicAuth("admin", "password");
 
-// Meta.test("WasmEdge runtime", async (t) => {
-//   const e = await t.engine("runtimes/wasmedge/wasmedge.py", {}, { port });
+Meta.test("WasmEdge runtime", async (t) => {
+  await t.should("works", async () => {
+    const serialized = await t.serializeTypegraphFromShell(
+      "runtimes/wasmedge/wasmedge.py",
+      SDKLangugage.Python,
+    );
 
-//   await t.should("works", async () => {
-//     await gql`
-//       query {
-//         test(a: 1, b: 2)
-//       }
-//     `
-//       .expectData({
-//         test: 3,
-//       })
-//       .on(e);
-//   });
-// }, { port: port });
+    const engine = await t.engineFromDeployed(serialized);
+
+    await gql`
+      query {
+        test(a: 1, b: 2)
+      }
+    `
+      .expectData({
+        test: 3,
+      })
+      .on(engine);
+    await engine.terminate();
+  });
+}, { port: port });
 
 Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
   await metaTest.should("work after deploying artifact", async () => {
