@@ -26,13 +26,12 @@ function listAllFilesHelper(
   }
 }
 
-export function expandGlob(
+export function expandPath(
   root: string,
   exclude: Array<string>,
 ): Array<string> {
   try {
     const ret = [] as Array<string>;
-    // console.log("[host] received args", root, exclude);
     listAllFilesHelper(root, ret, exclude);
     return ret;
   } catch (err) {
