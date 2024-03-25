@@ -8,18 +8,18 @@ import { Materializer, Runtime } from "./mod.js";
 import { fx } from "../index.js";
 import { getFileHash } from "../utils/file_utils.js";
 
-interface WasiMat extends Materializer {
+interface WasmMat extends Materializer {
   module: string;
   funcMame: string;
   effect: Effect;
 }
 
-export class WasmEdgeRuntime extends Runtime {
+export class WasmRuntime extends Runtime {
   constructor() {
-    super(runtimes.registerWasmedgeRuntime());
+    super(runtimes.registerWasmRuntime());
   }
 
-  async wasi<
+  async fromWasm<
     I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
@@ -30,10 +30,10 @@ export class WasmEdgeRuntime extends Runtime {
       wasm: string;
       effect?: Effect;
     },
-  ): Promise<t.Func<I, O, WasiMat>> {
+  ): Promise<t.Func<I, O, WasmMat>> {
     let artifactHash = await getFileHash(wasm);
 
-    const matId = runtimes.fromWasiModule(
+    const matId = runtimes.fromWasmModule(
       {
         runtime: this._id,
         effect,

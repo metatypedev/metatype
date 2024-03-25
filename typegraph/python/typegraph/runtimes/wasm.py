@@ -8,7 +8,7 @@ from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
     Effect,
     EffectRead,
-    MaterializerWasi,
+    MaterializerWasm,
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
@@ -16,11 +16,11 @@ from typegraph.utils import get_file_hash
 from typegraph.wit import runtimes, store
 
 
-class WasmEdgeRuntime(Runtime):
+class WasmRuntime(Runtime):
     def __init__(self):
-        super().__init__(runtimes.register_wasmedge_runtime(store))
+        super().__init__(runtimes.register_wasm_runtime(store))
 
-    def wasi(
+    def from_wasm(
         self,
         inp: "t.struct",
         out: "t.typedef",
@@ -33,10 +33,10 @@ class WasmEdgeRuntime(Runtime):
         artifact_hash = get_file_hash(wasm)
         wasm = f"file:{wasm}"
 
-        mat_id = runtimes.from_wasi_module(
+        mat_id = runtimes.from_wasm_module(
             store,
             BaseMaterializer(runtime=self.id.value, effect=effect),
-            MaterializerWasi(module=wasm, func_name=func, artifact_hash=artifact_hash),
+            MaterializerWasm(module=wasm, func_name=func, artifact_hash=artifact_hash),
         )
 
         if isinstance(mat_id, Err):
@@ -45,12 +45,12 @@ class WasmEdgeRuntime(Runtime):
         return t.func(
             inp,
             out,
-            WasiMat(id=mat_id.value, module=wasm, func_name=func, effect=effect),
+            WasmMat(id=mat_id.value, module=wasm, func_name=func, effect=effect),
         )
 
 
 @dataclass
-class WasiMat(Materializer):
+class WasmMat(Materializer):
     module: str
     func_name: str
     effect: List[str]

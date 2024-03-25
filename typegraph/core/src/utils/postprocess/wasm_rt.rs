@@ -3,7 +3,7 @@
 
 use crate::utils::fs_host;
 use common::typegraph::{
-    runtimes::wasmedge::WasiMatData,
+    runtimes::wasm::WasmMatData,
     utils::{map_from_object, object_from_map},
     Typegraph,
 };
@@ -11,20 +11,20 @@ use std::path::PathBuf;
 
 use crate::utils::postprocess::PostProcessor;
 
-pub struct WasmedgeProcessor;
+pub struct WasmProcessor;
 
-impl PostProcessor for WasmedgeProcessor {
+impl PostProcessor for WasmProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         let tg_name = tg.name().unwrap();
         for mat in tg.materializers.iter_mut() {
-            if mat.name.as_str() == "wasi" {
-                let mut mat_data: WasiMatData =
+            if mat.name.as_str() == "wasm" {
+                let mut mat_data: WasmMatData =
                     object_from_map(std::mem::take(&mut mat.data)).map_err(|e| e.to_string())?;
                 let Some(path) = mat_data.wasm.strip_prefix("file:").to_owned() else {
                     continue;
                 };
 
-                let wasi_path = fs_host::make_absolute(&PathBuf::from(path))?;
+                let wasm_path = fs_host::make_absolute(&PathBuf::from(path))?;
                 let file_name = path.split('/').last().unwrap();
                 let artifact_hash = mat_data.artifact_hash.clone();
 
@@ -33,7 +33,7 @@ impl PostProcessor for WasmedgeProcessor {
                 mat_data.tg_name = Some(tg_name.clone());
 
                 mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
-                tg.deps.push(wasi_path);
+                tg.deps.push(wasm_path);
             }
         }
         Ok(())
