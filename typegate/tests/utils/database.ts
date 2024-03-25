@@ -7,7 +7,7 @@ import { removeMigrations } from "test-utils/migrations.ts";
 export async function dropSchema(schema: string) {
   // remove the database schema
   const client = new pg.Client({
-    connectionString: "postgres://postgres:password@localhost:5432/db",
+    connectionString: "postgresql://postgres:password@localhost:5432/db",
   });
   await client.connect();
   await client.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
@@ -16,14 +16,9 @@ export async function dropSchema(schema: string) {
 
 export async function reset(tgName: string, schema: string) {
   await removeMigrations(tgName);
+  console.log("reset", { tgName, schema });
 
-  // remove the database schema
-  const client = new pg.Client({
-    connectionString: "postgres://postgres:password@localhost:5432/db",
-  });
-  await client.connect();
-  await client.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
-  await client.end();
+  await dropSchema(schema);
 }
 
 export function randomSchema() {

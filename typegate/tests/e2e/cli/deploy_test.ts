@@ -43,7 +43,7 @@ async function deploy(
   const migrationOpts = noMigration ? [] : ["--create-migration"];
   const secretOpts = Object.entries(secrets).flatMap((
     [key, value],
-  ) => ["--secret", `${key}=${value}`]).flat();
+  ) => `--secret=${key}=${value}`);
 
   try {
     const out = await m.cli(
@@ -51,14 +51,13 @@ async function deploy(
       "deploy",
       "--target",
       "dev",
-      "--gate",
-      `http://localhost:${port}`,
+      `--gate=http://localhost:${port}`,
+      ...secretOpts,
       "-f",
       "migration.py",
       "--allow-dirty",
       ...migrationOpts,
       "--allow-destructive",
-      ...secretOpts,
     );
     if (out.stdout.length > 0) {
       console.log(
@@ -102,6 +101,7 @@ Meta.test(
       if (!e) {
         throw new Error("typegraph not found");
       }
+
       await gql`
         mutation {
           createRecord(data: {}) {
@@ -111,7 +111,7 @@ Meta.test(
       `
         .expectData({
           createRecord: {
-            id: 2,
+            id: 1,
           },
         })
         .on(e);
@@ -141,7 +141,7 @@ Meta.test(
     const port = t.port!;
     const schema = randomSchema();
     const secrets = {
-      TG_MIGRAITON_FAILURE_TEST_PROGRES:
+      TG_MIGRATION_FAILURE_TEST_POSTGRES:
         `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
     };
     await t.should("load first version of the typegraph", async () => {
@@ -153,6 +153,7 @@ Meta.test(
 
     await t.should("insert records", async () => {
       const e = t.getTypegraphEngine(tgName)!;
+
       await gql`
         mutation {
           createRecord(data: {}) {
