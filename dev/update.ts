@@ -70,8 +70,6 @@ const tsFiles = [
 
 await runOrExit([
   Deno.execPath(),
-  // "--log-level",
-  // "trace",
   "cache",
   `--config=${denoConfigPath}`,
   "--unstable-worker-options",
