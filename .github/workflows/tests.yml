@@ -83,7 +83,7 @@ jobs:
           pnpm install --frozen-lockfile --recursive
           cd ..
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
-      - uses: pre-commit/action@v3.0.0
+      - uses: pre-commit/action@v3.0.1
 
   test-website:
     needs: changes
