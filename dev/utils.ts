@@ -13,16 +13,17 @@ export async function runOrExit(
   cwd?: string,
   env: Record<string, string> = {},
 ) {
+  // console.error("shell: ", cmd.join(" "), { env, cwd });
   const p = new Deno.Command(cmd[0], {
     args: cmd.slice(1),
     cwd,
-    stdout: "piped",
-    stderr: "piped",
+    // stdout: "piped",
+    // stderr: "piped",
     env: { ...Deno.env.toObject(), ...env },
   }).spawn();
 
-  await p.stdout.pipeTo(Deno.stdout.writable, { preventClose: true });
-  await p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
+  // await p.stdout.pipeTo(Deno.stdout.writable, { preventClose: true });
+  // await p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
 
   const { code, success } = await p.status;
   if (!success) {

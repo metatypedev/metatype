@@ -60,16 +60,22 @@ const tsFiles = [
     {
       root: projectDir,
       globstar: true,
-      exclude: ["typegate/tests/e2e/nextjs"],
+      exclude: [
+        "typegate/tests/e2e/nextjs",
+        "typegate/tests/runtimes/temporal/worker",
+      ],
     },
   ),
 ].map((f: WalkEntry) => f.path);
 
 await runOrExit([
-  "deno",
+  Deno.execPath(),
+  // "--log-level",
+  // "trace",
   "cache",
   `--config=${denoConfigPath}`,
-  "--unstable",
+  "--unstable-worker-options",
+  "--unstable-net",
   ...flags["cache-only"] ? [] : ["--reload", "--lock-write"],
   ...tsFiles,
 ], projectDir);
