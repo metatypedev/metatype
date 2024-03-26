@@ -8,12 +8,11 @@ import { testDir } from "test-utils/dir.ts";
 import { join } from "std/path/join.ts";
 import { assertEquals, assertExists } from "std/assert/mod.ts";
 
-const port = 7898;
-const auth = new BasicAuth("admin", "password");
-const gate = `http://localhost:${port}`;
-const cwdDir = join(testDir, "e2e", "self_deploy");
+Meta.test("deploy and undeploy typegraph without meta-cli", async (t) => {
+  const gate = `http://localhost:${t.port}`;
+  const auth = new BasicAuth("admin", "password");
+  const cwdDir = join(testDir, "e2e", "self_deploy");
 
-Meta.test("deploy and undeploy typegraph without meta-cli", async (_) => {
   const { serialized, typegate: gateResponseAdd } = await tgDeploy(tg, {
     baseUrl: gate,
     auth,
@@ -41,4 +40,4 @@ Meta.test("deploy and undeploy typegraph without meta-cli", async (_) => {
     auth,
   });
   assertEquals(gateResponseRem, { data: { removeTypegraphs: true } });
-}, { port, systemTypegraphs: true });
+}, { port: true, systemTypegraphs: true });
