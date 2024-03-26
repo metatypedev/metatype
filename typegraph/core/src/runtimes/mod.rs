@@ -586,7 +586,11 @@ impl crate::wit::runtimes::Guest for crate::Lib {
             WitOp::GetArgInfoByPath => (WitEffect::Read, Op::GetArgInfoByPath),
             WitOp::FindAvailableOperations => (WitEffect::Read, Op::FindAvailableOperations),
             WitOp::FindPrismaModels => (WitEffect::Read, Op::FindPrismaModels),
-            WitOp::RawPrismaQuery => (WitEffect::Read, Op::RawPrismaQuery),
+            WitOp::RawPrismaRead => (WitEffect::Read, Op::RawPrismaQuery),
+            WitOp::RawPrismaCreate => (WitEffect::Create(false), Op::RawPrismaQuery),
+            WitOp::RawPrismaUpdate => (WitEffect::Update(false), Op::RawPrismaQuery),
+            WitOp::RawPrismaDelete => (WitEffect::Delete(true), Op::RawPrismaQuery),
+            WitOp::QueryPrismaModel => (WitEffect::Read, Op::QueryPrismaModel),
         };
 
         Ok(Store::register_materializer(Materializer::typegate(
