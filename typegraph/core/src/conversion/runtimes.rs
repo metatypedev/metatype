@@ -311,9 +311,10 @@ impl MaterializerConverter for WasiMaterializer {
         let WasiMaterializer::Module(mat) = self;
 
         let data = serde_json::from_value(json!({
-            "wasm_artifact": {
+            "wasmArtifact": {
                 "hash": mat.wasm_artifact.hash,
                 "size": mat.wasm_artifact.size,
+                "path": mat.wasm_artifact.path,
             },
             "func": mat.func_name,
         }))

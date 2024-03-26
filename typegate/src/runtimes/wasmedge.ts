@@ -27,10 +27,11 @@ export class WasmEdgeRuntime extends Runtime {
 
   materialize(
     stage: ComputeStage,
-    _waitlist: ComputeStage[],
+    waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
     const { materializer, argumentTypes, outType } = stage.props;
+    console.log("materializer", materializer);
     const { wasmArtifact, func } = materializer?.data ?? {};
     const order = Object.keys(argumentTypes ?? {});
 
@@ -59,11 +60,16 @@ export class WasmEdgeRuntime extends Runtime {
       return JSON.parse(res);
     };
 
+    const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
+
     return [
       new ComputeStage({
         ...stage.props,
         resolver,
       }),
+      ...sameRuntime.map((s) =>
+        s.withResolver(Runtime.resolveFromParent(s.props.node))
+      ),
     ];
   }
 }

@@ -310,8 +310,8 @@ snapshot[`Typegraph using temporal 1`] = `
       "auths": [],
       "rate": null,
       "version": "0.0.3",
-      "random_seed": null,
-      "ref_artifacts": {}
+      "randomSeed": null,
+      "artifacts": []
     }
   }
 ]'
@@ -627,8 +627,8 @@ snapshot[`Typegraph using temporal 2`] = `
       "auths": [],
       "rate": null,
       "version": "0.0.3",
-      "random_seed": null,
-      "ref_artifacts": {}
+      "randomSeed": null,
+      "artifacts": []
     }
   }
 ]'
