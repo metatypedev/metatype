@@ -89,6 +89,11 @@
           "depConfigs": {},
           "portRef": "cargo_binstall_ghrel@0.1.0"
         },
+        "1c1870c8d78ff6ec1621711218174deb5ddb2b4133b30d390dda5fa223978dba": {
+          "version": "v0.10.7",
+          "depConfigs": {},
+          "portRef": "temporal_cli_ghrel@0.1.0"
+        },
         "f6c92b4425a3c13dfde7fe516efd376287e66cfa74aefd7b6a7a7bb0f3547a47": {
           "version": "0.116.0",
           "depConfigs": {
@@ -344,7 +349,7 @@
           "portRef": "cpy_bs_ghrel@0.1.0"
         },
         "076a5b8ee3bdc68ebf20a696378458465042bb7dc1e49ac2dc98e5fa0dab3e25": {
-          "version": "3.6.2",
+          "version": "3.7.0",
           "depConfigs": {
             "cpy_bs_ghrel": {
               "version": "3.12.1",
@@ -417,6 +422,7 @@
             "d4ca252ebf5bda1d22a1a8a796e7d934f9cece3a",
             "c0203b644293bdb58cac21fba277ef58a175ad67",
             "98e6699973c2da514713908660702cfbfd49e14c",
+            "f8b685b18a2bb55787741eec84f2be5b672b1953",
             "5ba4e48fe13b264e586f7bc2ca68f4649144d96f",
             "55cf0ca40c7c1e3af02695285123eb94588c6f8a",
             "386645977375df0d8f7ada7da257fee2113a1ed4",
@@ -554,6 +560,24 @@
             ],
             "version": "0.1.0",
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38/ports/cargo-binstall.ts"
+          }
+        },
+        "f8b685b18a2bb55787741eec84f2be5b672b1953": {
+          "version": "0.10.7",
+          "port": {
+            "ty": "denoWorker@v1",
+            "name": "temporal_cli_ghrel",
+            "platforms": [
+              "aarch64-linux",
+              "x86_64-linux",
+              "aarch64-darwin",
+              "x86_64-darwin",
+              "aarch64-windows",
+              "x86_64-windows"
+            ],
+            "version": "0.1.0",
+            "deps": [],
+            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38/ports/temporal_cli.ts"
           }
         },
         "5ba4e48fe13b264e586f7bc2ca68f4649144d96f": {
