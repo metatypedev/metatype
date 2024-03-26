@@ -6,7 +6,6 @@ import { dirname, join } from "std/path/mod.ts";
 import { copy } from "std/streams/copy.ts";
 import { init_native } from "native";
 import { SingleRegister } from "./single_register.ts";
-import { NoLimiter } from "./no_limiter.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 import { RestQuery } from "./query/rest_query.ts";
 import { GraphQLQuery } from "./query/graphql_query.ts";
@@ -15,7 +14,6 @@ import { metaCli } from "./meta.ts";
 import { testDir } from "./dir.ts";
 import { autoTest } from "./autotest.ts";
 import { init_runtimes } from "../../src/runtimes/mod.ts";
-import { LocalArtifactStore } from "../../src/typegate/artifacts/local.ts";
 
 // native must load first to avoid import race conditions and panic
 init_native();
@@ -49,19 +47,13 @@ export async function execute(
   request: Request,
 ): Promise<Response> {
   const register = new SingleRegister(engine.name, engine);
-  const limiter = new NoLimiter();
-  const artifactStore = new LocalArtifactStore();
-  const typegate = new Typegate(
-    register,
-    limiter,
-    artifactStore,
-  );
+  const typegate = await Typegate.init(null, register);
   try {
     return await typegate.handle(request, {
       remoteAddr: { hostname: "localhost" },
     } as Deno.ServeHandlerInfo);
   } finally {
-    await artifactStore.close();
+    await typegate.deinit({ engines: false });
   }
 }
 

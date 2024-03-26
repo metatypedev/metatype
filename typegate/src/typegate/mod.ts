@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import config from "../config.ts";
-import { Register } from "./register.ts";
+import { Register, ReplicatedRegister } from "./register.ts";
 import * as Sentry from "sentry";
-import { RateLimiter } from "./rate_limiter.ts";
+import { RateLimiter, RedisRateLimiter } from "./rate_limiter.ts";
 import { handlePlaygroundGraphQL } from "../services/playground_service.ts";
 import { ensureJWT, handleAuth } from "../services/auth/mod.ts";
 import { handleInfo } from "../services/info_service.ts";
@@ -37,6 +37,11 @@ import introspectionJson from "../typegraphs/introspection.json" with {
 };
 import { ArtifactService } from "../services/artifact_service.ts";
 import { ArtifactStore } from "./artifacts/mod.ts";
+import { LocalArtifactStore } from "./artifacts/local.ts";
+import { SyncConfig } from "../sync/config.ts";
+import { MemoryRegister } from "test-utils/memory_register.ts";
+import { NoLimiter } from "test-utils/no_limiter.ts";
+import { TypegraphStore } from "../sync/typegraph.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -67,20 +72,85 @@ export interface UploadUrlMeta {
   urlUsed: boolean;
 }
 
+export interface DeinitOptions {
+  engines?: boolean;
+}
+
 export class Typegate {
   #onPushHooks: PushHandler[] = [];
   #artifactService: ArtifactService;
 
-  constructor(
+  static async init(
+    syncConfig: SyncConfig | null = null,
+    customRegister: Register | null = null,
+  ): Promise<Typegate> {
+    if (syncConfig == null) {
+      logger.warning("Entering no-sync mode...");
+      logger.warning(
+        "Enable sync if you want to use accross multiple instances or if you want persistence.",
+      );
+
+      const register = customRegister ?? new MemoryRegister();
+      const artifactStore = await LocalArtifactStore.init();
+      return new Typegate(
+        register,
+        new NoLimiter(),
+        artifactStore,
+        null,
+      );
+    } else {
+      if (customRegister) {
+        throw new Error(
+          "Custom register is not supported in sync mode",
+        );
+      }
+      const limiter = await RedisRateLimiter.init(syncConfig.redis);
+      // TODO SharedArtifactStore
+      const artifactStore = await LocalArtifactStore.init();
+      const typegate = new Typegate(null!, limiter, artifactStore, syncConfig);
+      const register = await ReplicatedRegister.init(
+        typegate,
+        syncConfig.redis,
+        TypegraphStore.init(syncConfig),
+      );
+
+      (typegate as { register: Register }).register = register;
+
+      const lastSync = await register.historySync().catch((err) => {
+        logger.error(err);
+        throw new Error(
+          `failed to load history at boot, aborting: ${err.message}`,
+        );
+      });
+      register.startSync(lastSync);
+
+      return typegate;
+    }
+  }
+
+  private constructor(
     public readonly register: Register,
     private limiter: RateLimiter,
     public artifactStore: ArtifactStore,
+    public syncConfig: SyncConfig | null = null,
   ) {
     this.#onPush((tg) => Promise.resolve(upgradeTypegraph(tg)));
     this.#onPush((tg) => Promise.resolve(parseGraphQLTypeGraph(tg)));
     this.#onPush(PrismaHooks.generateSchema);
     this.#onPush(PrismaHooks.runMigrations);
     this.#artifactService = new ArtifactService(artifactStore);
+  }
+
+  async deinit(opts: DeinitOptions = {}) {
+    const engines = opts.engines ?? true;
+    if (engines) {
+      await Promise.all(this.register.list().map((e) => e.terminate()));
+    }
+    await this.artifactStore.close();
+    if (this.syncConfig) {
+      await (this.register as ReplicatedRegister).stopSync();
+      await (this.limiter as RedisRateLimiter).terminate();
+    }
   }
 
   #onPush(handler: PushHandler) {

@@ -45,7 +45,7 @@ function deinitUploadUrlStore(uploadUrls: UploadUrlStore) {
 export class LocalArtifactStore extends ArtifactStore {
   #uploadUrls: UploadUrlStore;
 
-  async init() {
+  static async init() {
     await Deno.mkdir(STORE_DIR, { recursive: true });
     await Deno.mkdir(STORE_TEMP_DIR, { recursive: true });
 

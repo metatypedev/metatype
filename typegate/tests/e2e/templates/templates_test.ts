@@ -67,9 +67,7 @@ const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
   },
 };
 
-let nextPort = 7900;
 for (const template of ["python", "deno", "node"]) {
-  const port = nextPort++;
   Meta.test(
     `${template} template`,
     async (t) => {
@@ -98,11 +96,11 @@ for (const template of ["python", "deno", "node"]) {
         "--target",
         "dev",
         "--gate",
-        `http://localhost:${port}`,
+        `http://localhost:${t.port}`,
         "--allow-dirty",
       );
       console.log(out);
     },
-    { port, systemTypegraphs: true },
+    { port: true, systemTypegraphs: true },
   );
 }
