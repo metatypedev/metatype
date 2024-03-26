@@ -128,7 +128,7 @@ class ArtifactUploader:
             with open(dep_path, "rb") as dep:
                 dep_content = dep.read()
                 dep_upload_url = self.__fetch_upload_url(
-                    dep_path, dep_hash, dep_content, [artifact_hash, relative_prefix]
+                    dep_path, dep_hash, dep_content, [artifact_hash, *relative_prefix]
                 )
 
                 _upload_result = self.__upload(dep_upload_url, dep_content, dep_path)

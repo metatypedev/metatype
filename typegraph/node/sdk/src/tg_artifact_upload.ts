@@ -108,7 +108,7 @@ export class ArtifactUploader {
       artifactPath,
       artifactHash,
       byteArray,
-      [],
+      [artifactHash],
     );
 
     await this.upload(artifactUploadUrl, byteArray, artifactPath);
@@ -142,7 +142,7 @@ export class ArtifactUploader {
         depPath,
         depHash,
         byteArray,
-        relativePathPrefix,
+        [artifactHash, ...relativePathPrefix],
       );
 
       await this.upload(depUploadUrl, byteArray, depPath);

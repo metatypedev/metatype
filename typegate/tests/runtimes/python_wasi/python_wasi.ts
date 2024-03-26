@@ -25,7 +25,7 @@ export const tg = await typegraph("python_wasi", async (g: any) => {
       },
     );
   } catch (e) {
-    throw new Error(`${e.message} `);
+    console.error(e);
   }
 
   g.expose({
@@ -44,6 +44,6 @@ export const tg = await typegraph("python_wasi", async (g: any) => {
         `,
       },
     ).withPolicy(pub),
-    identityMod: identityModule.withPolicy(pub),
+    identityMod: identityModule!.withPolicy(pub),
   });
 });

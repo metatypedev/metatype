@@ -108,7 +108,8 @@ export class PythonWasiRuntime extends Runtime {
           const vm = new PythonVirtualMachine();
 
           // for python modules, imports must be inside a folder above or same directory
-          const entryPointFullPath = path.join(outDir, artifact as string);
+          const entryFile = artifact as string + "." + artifact_hash as string;
+          const entryPointFullPath = path.join(outDir, entryFile);
           const sourceCode = Deno.readTextFileSync(entryPointFullPath);
 
           // prepare vm
