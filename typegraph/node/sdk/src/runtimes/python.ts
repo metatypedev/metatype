@@ -126,7 +126,7 @@ export class PythonRuntime extends Runtime {
       artifact: module,
       runtime: this._id,
       artifactHash: artifactHash,
-      deps: [],
+      deps: depMetas,
     });
 
     const pyModMatId = runtimes.fromPythonImport(base, {

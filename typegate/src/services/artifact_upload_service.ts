@@ -29,7 +29,9 @@ export async function handleUploadUrl(
     TypegraphArtifact = await request
       .json();
 
-  const artifactPathSuffix = path.join(...path_suffix);
+  const artifactPathSuffix = path_suffix.length > 0
+    ? path.join(...path_suffix)
+    : "";
   const uploadUrlMeta: UploadUrlMeta = {
     artifactName: name,
     artifactHash: artifact_hash,
@@ -39,7 +41,6 @@ export async function handleUploadUrl(
   };
 
   let uploadUrl = createUploadPath(origin, tgName);
-
   const expiresIn = 5 * 60; // 5 minutes
   const payload = {
     "expiresIn": expiresIn,
@@ -49,6 +50,7 @@ export async function handleUploadUrl(
 
   urlCache.set(uploadUrl, uploadUrlMeta);
 
+  // console.log("**************R", uploadUrlMeta);
   return new Response(JSON.stringify({ uploadUrl: uploadUrl }));
 }
 

@@ -3,6 +3,7 @@
 
 use std::collections::HashMap;
 
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::errors::Result;
@@ -308,7 +309,13 @@ impl MaterializerConverter for WasiMaterializer {
         }))
         .map_err(|e| e.to_string())?;
 
-        c.add_ref_artifacts(mat.artifact_hash.clone(), mat.module.clone().into())?;
+        let binding = mat.module.clone();
+        let path = match binding.strip_prefix("file:") {
+            Some(path) => path,
+            None => return Err("file path has no prefix".into()),
+        };
+
+        c.add_ref_artifacts(mat.artifact_hash.clone(), PathBuf::from(path))?;
 
         let name = "wasi".to_string();
         Ok(Materializer {

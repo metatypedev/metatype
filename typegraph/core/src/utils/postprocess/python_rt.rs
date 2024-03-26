@@ -20,9 +20,7 @@ impl PostProcessor for PythonProcessor {
             if mat.name.as_str() == "pymodule" {
                 let mut mat_data: ModuleMatData =
                     object_from_map(std::mem::take(&mut mat.data)).map_err(|e| e.to_string())?;
-                let Some(path) = mat_data.artifact.strip_prefix("file:").to_owned() else {
-                    continue;
-                };
+                let path = &mat_data.artifact;
 
                 let main_path = fs_host::make_absolute(&PathBuf::from(path))?;
                 let artifact_name = Path::new(path).file_name().unwrap().to_str().unwrap();

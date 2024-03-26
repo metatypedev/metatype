@@ -11,7 +11,7 @@ export interface UploadArtifactMeta {
   name: string;
   artifact_hash: string;
   artifact_size_in_bytes: number;
-  pathSuffix: string[];
+  path_suffix: string[];
 }
 
 export class ArtifactUploader {
@@ -38,7 +38,7 @@ export class ArtifactUploader {
       name: path.basename(artifactPath),
       artifact_hash: artifactHash,
       artifact_size_in_bytes: artifactContent.length,
-      pathSuffix,
+      path_suffix: pathSuffix,
     };
 
     const artifactJson = JSON.stringify(artifactMeta);
@@ -47,6 +47,8 @@ export class ArtifactUploader {
       headers: this.headers,
       body: artifactJson,
     });
+
+    // console.log("******************A", uploadUrlResponse);
     const decodedResponse = await uploadUrlResponse.json();
 
     return decodedResponse.uploadUrl as string;

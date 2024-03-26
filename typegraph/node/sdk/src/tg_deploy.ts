@@ -59,6 +59,8 @@ export async function tgDeploy(
     headers.append("Authorization", auth.asHeaderValue());
   }
 
+  // console.log("****************T", tgJson);
+
   // upload the artifacts
   const artifactUploader = new ArtifactUploader(
     baseUrl,
