@@ -20,5 +20,5 @@
   },
   "nodeModulesDir": false,
   "lock": "deno.lock",
-  "importMap": "./import_map.json"
+  "importMap": "import_map.json"
 }

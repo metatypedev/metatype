@@ -29,6 +29,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
                 .mat_arg
                 .ok_or("materializer arg is undefined".to_string())?;
             inp.prop("workflow_id", t::string().build()?);
+            inp.prop("task_queue", t::string().build()?);
             inp.prop("args", t::list(arg.into()).build()?);
             (
                 WitEffect::Create(false),
@@ -53,13 +54,13 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
                 TemporalMaterializer::Signal {
                     signal_name: mat_arg,
                 },
-                t::string().build()?,
+                t::boolean().build()?,
             )
         }
         TemporalOperationType::QueryWorkflow => {
-            let arg = data
-                .func_arg
-                .ok_or("workflow arg is undefined".to_string())?;
+            let arg = data.func_arg.ok_or("query arg is undefined".to_string())?;
+            let out =
+                crate::types::TypeId(data.func_out.ok_or("query out is undefined".to_string())?);
             let mat_arg = data
                 .mat_arg
                 .ok_or("materializer arg is undefined".to_string())?;
@@ -71,7 +72,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
                 TemporalMaterializer::Query {
                     query_type: mat_arg,
                 },
-                t::string().build()?,
+                out,
             )
         }
         TemporalOperationType::DescribeWorkflow => {

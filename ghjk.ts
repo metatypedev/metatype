@@ -14,6 +14,7 @@ const MOLD_VERSION = "v2.4.0";
 const CMAKE_VERSION = "3.28.0-rc6";
 const CARGO_INSTA_VERSION = "1.33.0";
 const NODE_VERSION = "20.8.0";
+const TEMPORAL_VERSION = "0.10.7";
 
 ghjk.install(
   ports.wasmedge({ version: WASMEDGE_VERSION }),
@@ -25,6 +26,7 @@ ghjk.install(
   }),
   // FIXME: replace with `cargobi` once that's ready
   ports.cargo_binstall(),
+  ports.temporal_cli(),
 );
 
 if (!Deno.env.has("OCI")) {

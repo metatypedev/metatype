@@ -479,7 +479,8 @@ export interface S3RuntimeData {
 }
 export interface TemporalRuntimeData {
   name: string;
-  host: string;
+  host_secret: string;
+  namespace_secret?: string;
 }
 export interface WasmEdgeRuntimeData {
   config?: string | null;

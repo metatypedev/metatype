@@ -24,7 +24,6 @@ pub struct Ctx {
 #[serde(crate = "serde")]
 pub struct TemporalRegisterInput {
     url: String,
-    #[allow(dead_code)]
     namespace: String,
     client_id: String,
 }
@@ -41,7 +40,7 @@ pub async fn op_temporal_register(
         .client_name("temporal-core".to_string())
         .client_version("0.1.0".to_string())
         .build()?;
-    let client = opts.connect("default", None, None).await?;
+    let client = opts.connect(input.namespace, None, None).await?;
 
     let state = state.borrow();
     let ctx = state.borrow::<Ctx>();
@@ -121,7 +120,7 @@ pub struct TemporalWorkflowSignalInput {
     run_id: String,
     signal_name: String,
     request_id: Option<String>,
-    args: Option<String>,
+    args: Option<Vec<String>>,
 }
 
 #[deno_core::op2(async)]
@@ -145,8 +144,8 @@ pub async fn op_temporal_workflow_signal(
             input.workflow_id,
             input.run_id,
             input.signal_name,
-            input.args.map(|arg| Payloads {
-                payloads: vec![json_payload(arg)],
+            input.args.map(|args| Payloads {
+                payloads: args.into_iter().map(json_payload).collect(),
             }),
             input.request_id,
         )
@@ -162,7 +161,7 @@ pub struct TemporalWorkflowQueryInput {
     workflow_id: String,
     run_id: String,
     query_type: String,
-    args: Option<String>,
+    args: Option<Vec<String>>,
 }
 
 #[deno_core::op2(async)]
@@ -183,15 +182,14 @@ pub async fn op_temporal_workflow_query(
         .get(&client_id)
         .with_context(|| format!("Could not find engine '{client_id}"))?;
 
-    // empty response
     let query = client
         .query_workflow_execution(
             input.workflow_id,
             input.run_id,
             WorkflowQuery {
                 query_type: input.query_type,
-                query_args: input.args.map(|arg| Payloads {
-                    payloads: vec![json_payload(arg)],
+                query_args: input.args.map(|args| Payloads {
+                    payloads: args.into_iter().map(json_payload).collect(),
                 }),
                 header: None,
             },
