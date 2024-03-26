@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 //! This module contains common logic for mdk generation
 //! imlementations
 use common::typegraph::{runtimes::TGRuntime, Materializer};
