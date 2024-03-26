@@ -13,7 +13,10 @@ import {
 import { Auth, Cors as CorsWit, Rate, wit_utils } from "./wit.js";
 import Policy from "./policy.js";
 import { getPolicyChain } from "./types.js";
-import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
+import {
+  Artifact,
+  ArtifactResolutionConfig,
+} from "./gen/interfaces/metatype-typegraph-core.js";
 import { Manager } from "./tg_manage.js";
 
 type Exports = Record<string, t.Func>;
@@ -121,7 +124,7 @@ export interface TypegraphOutput {
 
 export interface TgFinalizationResult {
   tgJson: string;
-  ref_artifacts: [string, string][];
+  ref_artifacts: Artifact[];
 }
 
 export async function typegraph(

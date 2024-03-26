@@ -9,13 +9,11 @@ pub mod deno_rt;
 pub mod prisma_rt;
 pub mod python_rt;
 pub mod validation;
-pub mod wasmedge_rt;
 
 use self::deno_rt::DenoProcessor;
 use self::prisma_rt::PrismaProcessor;
 use self::python_rt::PythonProcessor;
 use self::validation::ValidationProcessor;
-use self::wasmedge_rt::WasmedgeProcessor;
 use crate::errors::TgError;
 
 pub trait PostProcessor {
@@ -44,7 +42,6 @@ impl PostProcessor for TypegraphPostProcessor {
         // unless overwritten by `dir` through Store::set_deploy_cwd(..) (cli or custom dir with tgDeploy)
         DenoProcessor.postprocess(tg)?;
         PythonProcessor.postprocess(tg)?;
-        WasmedgeProcessor.postprocess(tg)?;
 
         ValidationProcessor.postprocess(tg)?;
         Ok(())

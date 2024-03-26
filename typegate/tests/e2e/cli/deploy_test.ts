@@ -80,7 +80,7 @@ Meta.test(
   async (t) => {
     const schema = randomSchema();
     const secrets = {
-      TG_MIGRATION_FAILURE_TEST_PROGRES:
+      TG_MIGRATION_FAILURE_TEST_POSTGRES:
         `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
     };
     await t.should("load first version of the typegraph", async () => {
@@ -205,7 +205,7 @@ Meta.test(
       "--gate",
       `http://localhost:${port}`,
       "--secret",
-      `TG_PRISMA_PROGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+      `TG_PRISMA_POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
     ];
 
     await t.should("fail to access database", async () => {
@@ -306,7 +306,7 @@ Meta.test(
       "--gate",
       `http://localhost:${t.port}`,
       "--secret",
-      `TG_PRISMA_PROGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+      `TG_PRISMA_POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
     ];
 
     await t.should("fail to access database", async () => {

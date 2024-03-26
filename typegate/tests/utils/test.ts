@@ -5,12 +5,10 @@ import { SystemTypegraph } from "../../src/system_typegraphs.ts";
 import { dirname, join } from "std/path/mod.ts";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
-
 import { assertSnapshot } from "std/testing/snapshot.ts";
 import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
-
 import { createMetaCli } from "./meta.ts";
 import { SecretManager, TypeGraph } from "../../src/typegraph/mod.ts";
 import { SyncConfig } from "../../src/sync/config.ts";
@@ -195,7 +193,7 @@ export class MetaTest {
 
   async terminate() {
     await Promise.all(this.cleanups.map((c) => c()));
-    await this.typegate.deinit();
+    await this.typegate.terminate();
   }
 
   async should(
@@ -291,7 +289,7 @@ export const test = ((name, fn, opts = {}): void => {
       if (opts.setup != null) {
         await opts.setup();
       }
-      const typegate = await Typegate.init(opts.syncConfig ?? null);
+      const typegate = await Typegate.init();
       const {
         systemTypegraphs = false,
         gitRepo = null,

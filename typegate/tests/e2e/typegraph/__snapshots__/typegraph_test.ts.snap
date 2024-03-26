@@ -311,8 +311,8 @@ snapshot[`typegraphs creation 1`] = `
         "local_excess": 5
       },
       "version": "0.0.3",
-      "random_seed": null,
-      "ref_artifacts": {}
+      "randomSeed": null,
+      "artifacts": []
     }
   }
 ]'
@@ -467,8 +467,8 @@ snapshot[`typegraphs creation 2`] = `
       "auths": [],
       "rate": null,
       "version": "0.0.3",
-      "random_seed": null,
-      "ref_artifacts": {}
+      "randomSeed": null,
+      "artifacts": []
     }
   }
 ]\`
@@ -743,8 +743,8 @@ snapshot[`typegraphs creation 3`] = `
       "auths": [],
       "rate": null,
       "version": "0.0.3",
-      "random_seed": null,
-      "ref_artifacts": {}
+      "randomSeed": null,
+      "artifacts": []
     }
   }
 ]\`
@@ -1061,8 +1061,8 @@ snapshot[`typegraphs creation 4`] = `
         "local_excess": 5
       },
       "version": "0.0.3",
-      "random_seed": null,
-      "ref_artifacts": {}
+      "randomSeed": null,
+      "artifacts": []
     }
   }
 ]'
@@ -1217,8 +1217,8 @@ snapshot[`typegraphs creation 5`] = `
       "auths": [],
       "rate": null,
       "version": "0.0.3",
-      "random_seed": null,
-      "ref_artifacts": {}
+      "randomSeed": null,
+      "artifacts": []
     }
   }
 ]\`
@@ -1493,8 +1493,8 @@ snapshot[`typegraphs creation 6`] = `
       "auths": [],
       "rate": null,
       "version": "0.0.3",
-      "random_seed": null,
-      "ref_artifacts": {}
+      "randomSeed": null,
+      "artifacts": []
     }
   }
 ]\`

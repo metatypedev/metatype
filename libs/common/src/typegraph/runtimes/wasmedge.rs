@@ -5,13 +5,14 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use super::Artifact;
+
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct WasiMatData {
-    pub wasm: String,
     pub func: String,
-    pub artifact_hash: String,
-    pub tg_name: Option<String>,
+    pub wasm_artifact: Artifact,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

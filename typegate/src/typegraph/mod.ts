@@ -43,6 +43,7 @@ import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { Protocol } from "../services/auth/protocols/protocol.ts";
 import { initRuntime } from "../runtimes/mod.ts";
 import randomizeRecursively from "../runtimes/random.ts";
+import { Typegate } from "../typegate/mod.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -174,6 +175,7 @@ export class TypeGraph {
   }
 
   static async init(
+    typegate: Typegate,
     typegraph: TypeGraphDS,
     secretManager: SecretManager,
     staticReference: RuntimeResolver,
@@ -235,6 +237,7 @@ export class TypeGraph {
         );
 
         return initRuntime(runtime.name, {
+          typegate,
           typegraph,
           typegraphName,
           materializers,
@@ -357,10 +360,10 @@ export class TypeGraph {
     const tgTypes: TypeNode[] = this.tg.types;
     let seed = 12; // default seed
     if (
-      this.tg.meta.random_seed !== undefined &&
-      this.tg.meta.random_seed !== null
+      this.tg.meta.randomSeed !== undefined &&
+      this.tg.meta.randomSeed !== null
     ) {
-      seed = this.tg.meta.random_seed;
+      seed = this.tg.meta.randomSeed;
     }
     const chance: typeof Chance = new Chance(seed);
 

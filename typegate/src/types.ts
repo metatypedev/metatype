@@ -13,6 +13,7 @@ import * as ast from "graphql/ast";
 import { ComputeArg } from "./engine/planner/args.ts";
 import { EffectType, PolicyIndices } from "./typegraph/types.ts";
 import { VariantMatcher } from "./engine/typecheck/matching_variant.ts";
+import { Typegate } from "./typegate/mod.ts";
 
 export interface Parents {
   [key: string]: (() => Promise<unknown> | unknown) | unknown;
@@ -61,6 +62,7 @@ export interface RuntimeInitParams<
   materializers: TypeMaterializer[];
   args: RTData;
   secretManager: SecretManager;
+  typegate: Typegate;
 }
 
 export interface RuntimeInit {

@@ -1,6 +1,6 @@
 ---
 source: typegraph/core/src/lib.rs
-expression: typegraph
+expression: typegraph.0
 ---
 {
   "$id": "https://metatype.dev/specs/0.0.3.json",
@@ -134,7 +134,7 @@ expression: typegraph
     "auths": [],
     "rate": null,
     "version": "0.0.3",
-    "random_seed": null,
-    "ref_artifacts": {}
+    "randomSeed": null,
+    "artifacts": []
   }
 }
