@@ -1,19 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { deferred } from "std/async/deferred.ts";
 import { init_native } from "native";
 
-import { Register, ReplicatedRegister } from "./typegate/register.ts";
-import config, { redisConfig } from "./config.ts";
+import config from "./config.ts";
 import { Typegate } from "./typegate/mod.ts";
-import { RateLimiter, RedisRateLimiter } from "./typegate/rate_limiter.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import * as Sentry from "sentry";
 import { getLogger } from "./log.ts";
 import { init_runtimes } from "./runtimes/mod.ts";
-import { MemoryRegister } from "test-utils/memory_register.ts";
-import { NoLimiter } from "test-utils/no_limiter.ts";
+import { syncConfigFromEnv } from "./sync/config.ts";
 
 const logger = getLogger(import.meta);
 
@@ -50,32 +46,8 @@ try {
   // load all runtimes
   await init_runtimes();
 
-  const deferredTypegate = deferred<Typegate>();
-  let register: Register | undefined;
-  let limiter: RateLimiter | undefined;
-
-  if (redisConfig.hostname != "none") {
-    register = await ReplicatedRegister.init(deferredTypegate, redisConfig);
-    limiter = await RedisRateLimiter.init(redisConfig);
-  } else {
-    logger.warning("Entering Redis-less mode");
-    register = new MemoryRegister();
-    limiter = new NoLimiter();
-  }
-
-  const typegate = new Typegate(register!, limiter!);
-
-  deferredTypegate.resolve(typegate);
-
-  if (register instanceof ReplicatedRegister) {
-    const lastSync = await register.historySync().catch((err) => {
-      logger.error(err);
-      throw new Error(
-        `failed to load history at boot, aborting: ${err.message}`,
-      );
-    });
-    register.startSync(lastSync);
-  }
+  const syncConfig = await syncConfigFromEnv(["vars", "args"]);
+  const typegate = await Typegate.init(syncConfig);
 
   await SystemTypegraph.loadAll(typegate, !config.packaged);
 

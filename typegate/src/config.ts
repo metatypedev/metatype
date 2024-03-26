@@ -6,7 +6,6 @@ import { mapKeys } from "std/collections/map_keys.ts";
 
 import * as base64 from "std/encoding/base64.ts";
 import { parse } from "std/flags/mod.ts";
-import { RedisConnectOptions } from "redis";
 import { join } from "std/path/mod.ts";
 // This import ensure log loads before config, important for the version hydration
 import { configOrExit, zBooleanString } from "./log.ts";
@@ -17,18 +16,6 @@ const schema = {
   // If false, auto reload system typegraphs on change. Default: to true.
   packaged: zBooleanString,
   hostname: z.string(),
-  redis_url: z
-    .string()
-    .transform((s: string) => {
-      if (s == "none") {
-        return new URL("redis://none");
-      }
-      const url = new URL(s);
-      if (url.password === "") {
-        url.password = Deno.env.get("REDIS_PASSWORD") ?? "";
-      }
-      return url;
-    }),
   tg_port: z.coerce.number().positive().max(65535),
   tg_secret: z.string().transform((s: string, ctx) => {
     const bytes = base64.decode(s);
@@ -94,12 +81,3 @@ const config = await configOrExit([
 ], schema);
 
 export default config;
-
-export const redisConfig: RedisConnectOptions = {
-  hostname: config.redis_url.hostname,
-  port: config.redis_url.port,
-  ...config.redis_url.password.length > 0
-    ? { password: config.redis_url.password }
-    : {},
-  db: parseInt(config.redis_url.pathname.substring(1), 10),
-};

@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta } from "test-utils/mod.ts";
-import { TestModule } from "test-utils/test_module.ts";
-import { removeMigrations } from "test-utils/migrations.ts";
-import pg from "npm:pg";
 import { MetaDev } from "test-utils/metadev.ts";
 import { join, resolve } from "std/path/mod.ts";
 import { assert, assertRejects } from "std/assert/mod.ts";
+import { randomSchema, reset } from "test-utils/database.ts";
+import { TestModule } from "test-utils/test_module.ts";
 
 const m = new TestModule(import.meta);
 
@@ -32,31 +31,26 @@ async function writeTypegraph(version: number | null, target = "migration.py") {
   }
 }
 
-async function reset(schema: string) {
-  await removeMigrations(tgName);
-
-  // remove the database schema
-  const client = new pg.Client({
-    connectionString: "postgres://postgres:password@localhost:5432/db",
-  });
-  await client.connect();
-  await client.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
-  await client.end();
-}
-
 Meta.test(
   "meta dev: choose to reset the database",
   async (t) => {
+    const schema = randomSchema();
     const tgDefPath = join(t.workingDir, "migration.py");
 
     await t.should("load first version of the typegraph", async () => {
-      await reset("e2e7895alt");
+      await reset(tgName, schema);
       await writeTypegraph(null, tgDefPath);
     });
 
     const metadev = await MetaDev.start({
       cwd: t.workingDir,
-      args: ["dev", "--target=dev7895"],
+      args: [
+        "dev",
+        "--target=dev",
+        `--gate=http://localhost:${t.port}`,
+        "--secret",
+        `TG_MIGRATION_FAILURE_TEST_POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+      ],
     });
 
     await metadev.fetchStderrLines((line) => {
@@ -125,7 +119,7 @@ Meta.test(
     await metadev.close();
   },
   {
-    port: 7895,
+    port: true,
     systemTypegraphs: true,
     gitRepo: {
       content: {
@@ -148,6 +142,7 @@ async function listSubdirs(path: string): Promise<string[]> {
 Meta.test(
   "meta dev: remove latest migration",
   async (t) => {
+    const schema = randomSchema();
     const tgDefFile = join(t.workingDir, "migration.py");
 
     await t.should("have no migration file", async () => {
@@ -157,13 +152,18 @@ Meta.test(
     });
 
     await t.should("load first version of the typegraph", async () => {
-      await reset("e2e7895alt");
+      await reset(tgName, schema);
       await writeTypegraph(null, tgDefFile);
     });
 
     const metadev = await MetaDev.start({
       cwd: t.workingDir,
-      args: ["dev", "--target=dev7895"],
+      args: [
+        "dev",
+        "--target=dev",
+        `--gate=http://localhost:${t.port}`,
+        `--secret=TG_MIGRATION_FAILURE_TEST_POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+      ],
     });
 
     await metadev.fetchStderrLines((line) => {
@@ -230,7 +230,7 @@ Meta.test(
     await metadev.close();
   },
   {
-    port: 7895,
+    port: true,
     systemTypegraphs: true,
     gitRepo: {
       content: {

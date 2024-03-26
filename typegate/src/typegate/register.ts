@@ -2,16 +2,15 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { QueryEngine } from "../engine/query_engine.ts";
-import { RedisReplicatedMap } from "../replicated_map.ts";
 import { RedisConnectOptions, XIdInput } from "redis";
 import { SystemTypegraph } from "../system_typegraphs.ts";
-import { decrypt, encrypt } from "../crypto.ts";
-import { SecretManager, TypeGraphDS } from "../typegraph/mod.ts";
 import { Typegate } from "./mod.ts";
 import {
   isTypegraphUpToDate,
   upgradeTypegraph,
 } from "../typegraph/versions.ts";
+import { typegraphIdSchema, TypegraphStore } from "../sync/typegraph.ts";
+import { RedisReplicatedMap } from "../sync/replicated_map.ts";
 
 export interface MessageEntry {
   type: "info" | "warning" | "error";
@@ -37,50 +36,48 @@ export abstract class Register {
 
 export class ReplicatedRegister extends Register {
   static async init(
-    deferredTypegate: Promise<Typegate>,
+    typegate: Typegate,
     redisConfig: RedisConnectOptions,
+    typegraphStore: TypegraphStore,
   ): Promise<ReplicatedRegister> {
     const replicatedMap = await RedisReplicatedMap.init<QueryEngine>(
       "typegraph",
       redisConfig,
-      async (engine: QueryEngine) => {
-        const encryptedSecrets = await encrypt(
-          JSON.stringify(engine.tg.secretManager.secrets),
-        );
-        return JSON.stringify([engine.tg.tg, encryptedSecrets]);
-      },
-      async (json: string, initialLoad: boolean) => {
-        const typegate = await deferredTypegate;
-        const [tg, encryptedSecrets] = JSON.parse(json) as [
-          TypeGraphDS,
-          string,
-        ];
-        //const name = TypeGraph.formatName(tg);
-        const secrets = JSON.parse(await decrypt(encryptedSecrets));
+      {
+        async serialize(engine: QueryEngine) {
+          const { name, hash, uploadedAt } = await typegraphStore.upload(
+            engine.tg.tg,
+            engine.tg.secretManager,
+          );
+          return JSON.stringify({ name, hash, uploadedAt });
+        },
+        async deserialize(json: string, initialLoad: boolean) {
+          const typegraphId = typegraphIdSchema.parse(JSON.parse(json));
 
-        // typegraph is updated while being pushed, this is only for iniial load
-        const hasUpgrade = initialLoad && isTypegraphUpToDate(tg);
+          const [tg, secretManager] = await typegraphStore.download(
+            typegraphId,
+          );
 
-        const secretManager = new SecretManager(
-          tg,
-          secrets,
-        );
-        const engine = await typegate.initQueryEngine(
-          hasUpgrade ? upgradeTypegraph(tg) : tg,
-          secretManager,
-          SystemTypegraph.getCustomRuntimes(typegate),
-          true,
-        );
+          // typegraph is updated while being pushed, this is only for initial load
+          const hasUpgrade = initialLoad && isTypegraphUpToDate(tg);
 
-        if (hasUpgrade) {
-          // update typegraph in storage, will trigger replica reloads but that's ok
-          replicatedMap.set(engine.name, engine);
-        }
+          const engine = await typegate.initQueryEngine(
+            hasUpgrade ? upgradeTypegraph(tg) : tg,
+            secretManager,
+            SystemTypegraph.getCustomRuntimes(typegate),
+            true,
+          );
 
-        return engine;
-      },
-      async (engine: QueryEngine) => {
-        await engine.terminate();
+          if (hasUpgrade) {
+            // update typegraph in storage, will trigger replica reloads but that's ok
+            replicatedMap.set(engine.name, engine);
+          }
+
+          return engine;
+        },
+        async terminate(engine: QueryEngine) {
+          await engine.terminate();
+        },
       },
     );
 
@@ -131,5 +128,9 @@ export class ReplicatedRegister extends Register {
 
   startSync(xid: XIdInput): void {
     void this.replicatedMap.startSync(xid);
+  }
+
+  async stopSync() {
+    await this.replicatedMap.stopSync();
   }
 }
