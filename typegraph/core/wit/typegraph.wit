@@ -562,7 +562,7 @@ interface utils {
 interface host {
     print: func(s: string)
     eprint: func(s: string)
-    expand-glob: func(root: string, exclude: list<string>) -> result<list<string>, string>
+    expand-path: func(root: string, exclude: list<string>) -> result<list<string>, string>
     path-exists: func(path: string) -> result<bool, string>
     read-file: func(path: string) -> result<list<u8>, string>
     write-file: func(path: string, data: list<u8>) -> result<_, string>
