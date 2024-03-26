@@ -22,6 +22,7 @@ dev:
       (const\s+MOLD_VERSION\s*=\s*").*(";): MOLD_VERSION
       (const\s+CMAKE_VERSION\s*=\s*").*(";): CMAKE_VERSION
       (const\s+CARGO_INSTA_VERSION\s*=\s*").*(";): CARGO_INSTA_VERSION
+      (const\s+TEMPORAL_VERSION\s*=\s*").*(";): TEMPORAL_VERSION
     .github/*/*.yml:
       '(  GHJK_VERSION: ").+(")': GHJK_VERSION
       '(  DENO_VERSION: ").+(")': DENO_VERSION
@@ -99,6 +100,7 @@ dev:
     WASM_OPT_VERSION: 0.116.0
     MOLD_VERSION: v2.4.0
     CMAKE_VERSION: 3.28.0-rc6
+    TEMPORAL_VERSION: 0.10.7
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with
       zero-trust and less code, no matter where and how your (legacy) systems

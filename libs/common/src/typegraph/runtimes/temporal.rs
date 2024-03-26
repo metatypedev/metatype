@@ -9,5 +9,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TemporalRuntimeData {
     pub name: String,
-    pub host: String,
+    pub host_secret: String,
+    pub namespace_secret: Option<String>,
+    // pub task_queue_secret: Option<String>,
 }
