@@ -61,7 +61,7 @@ def gen_wasm(
 
     mat_id = runtimes.from_wasm_module(
         store,
-        BaseMaterializer(runtime=runtime_id, effect=effect),
+        BaseMaterializer(runtime=runtime_id.value, effect=effect),
         MaterializerWasm(
             module=wasm,
             func_name=op_name,

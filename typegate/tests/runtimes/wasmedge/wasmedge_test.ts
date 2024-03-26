@@ -4,7 +4,11 @@
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 import { gql, Meta } from "../../utils/mod.ts";
 import { testDir } from "test-utils/dir.ts";
-import { tg } from "./wasmedge.ts";
+import { lazyTg } from "./wasmedge.ts";
+
+import * as path from "std/path/mod.ts";
+import { exists } from "std/fs/exists.ts";
+import { assert } from "std/assert/assert.ts";
 
 const port = 7698;
 const gate = `http://localhost:${port}`;
@@ -28,7 +32,27 @@ const auth = new BasicAuth("admin", "password");
 // }, { port: port });
 
 Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
+  await metaTest.should("build mdk project", async () => {
+    const proc = await (new Deno.Command("cargo", {
+      args: "build --target wasm32-wasi".split(/\s+/),
+      cwd: path.join(testDir, "runtimes/wasmedge/mdk"),
+    }).output());
+
+    console.error("sucess", new TextDecoder().decode(proc.stdout));
+    console.error("error", new TextDecoder().decode(proc.stderr));
+
+    assert(
+      exists(
+        path.join(
+          testDir,
+          "runtimes/wasmedge/mdk/target/wasm32-wasi/debug/mat_rust.wasm",
+        ),
+      ),
+    );
+  });
+
   await metaTest.should("work after deploying artifact", async () => {
+    const tg = await lazyTg();
     const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
       baseUrl: gate,
       auth,

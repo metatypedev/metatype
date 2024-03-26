@@ -4,13 +4,11 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.js";
 
-export const tg = await typegraph("wasmedge_ts", async (g: any) => {
-  const pub = Policy.public();
-  const wasmedge = new WasmRuntime();
-  let mat;
-
-  try {
-    mat = await wasmedge
+export const lazyTg = () =>
+  typegraph("wasmedge_ts", async (g: any) => {
+    const pub = Policy.public();
+    const wasm = new WasmRuntime();
+    const mat = await wasm
       .fromWasm(
         t.struct({
           "a": t.float(),
@@ -22,12 +20,22 @@ export const tg = await typegraph("wasmedge_ts", async (g: any) => {
           wasm: "typegate/tests/artifacts/rust.wasm",
         },
       );
-  } catch (e) {
-    throw new Error(`Failed to create wasi materializer: ${e}`);
-  }
 
-  // expose the wasi materializer
-  g.expose({
-    test_wasi_ts: mat.withPolicy(pub),
+    // const mdk = await wasm
+    //   .fromMdk(
+    //     t.struct({
+    //       "a": t.float(),
+    //       "b": t.float(),
+    //     }),
+    //     t.integer(),
+    //     {
+    //       opName: "add",
+    //       wasm: "typegate/tests/artifacts/rust.wasm",
+    //     },
+    //   );
+
+    g.expose({
+      test_wasi_ts: mat.withPolicy(pub),
+      // test_mdk_ts: mdk.withPolicy(pub),
+    });
   });
-});

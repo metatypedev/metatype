@@ -10,7 +10,7 @@ import { getFileHash } from "../utils/file_utils.js";
 
 interface WasmMat extends Materializer {
   module: string;
-  funcMame: string;
+  funcName: string;
   effect: Effect;
 }
 
@@ -34,7 +34,7 @@ export class WasmRuntime extends Runtime {
     const enableMdk = false;
     return genWasm(this._id, enableMdk, inp, out, {
       ...data,
-      opName: data.func,
+      funcName: data.func,
     });
   }
 
@@ -51,7 +51,11 @@ export class WasmRuntime extends Runtime {
     },
   ): Promise<t.Func<I, O, WasmMat>> {
     const enableMdk = true;
-    return genWasm(this._id, enableMdk, inp, out, data);
+    return genWasm(this._id, enableMdk, inp, out, {
+      funcName: data.opName,
+      wasm: data.wasm,
+      effect: data.effect,
+    });
   }
 }
 
@@ -63,8 +67,8 @@ async function genWasm<
   enableMdk: boolean,
   inp: I,
   out: O,
-  { opName, wasm, effect = fx.read() }: {
-    opName: string;
+  { funcName, wasm, effect = fx.read() }: {
+    funcName: string;
     wasm: string;
     effect?: Effect;
   },
@@ -78,8 +82,8 @@ async function genWasm<
     },
     {
       module: `file:${wasm}`,
-      funcName: opName,
-      artifactHash: artifactHash,
+      funcName,
+      artifactHash,
       mdkEnabled: enableMdk,
     },
   );
@@ -88,6 +92,6 @@ async function genWasm<
     _id: matId,
     effect,
     module: wasm,
-    funcMame: opName,
+    funcName,
   });
 }
