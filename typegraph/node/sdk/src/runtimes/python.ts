@@ -9,7 +9,11 @@ import {
 } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import { Materializer, Runtime } from "./mod.js";
 import { fx } from "../index.js";
-import { getFileHash, getParentDirectories } from "../utils/file_utils.js";
+import {
+  getFileHash,
+  getParentDirectories,
+  getRelativePath,
+} from "../utils/file_utils.js";
 
 interface LambdaMat extends Materializer {
   fn: string;
@@ -113,11 +117,14 @@ export class PythonRuntime extends Runtime {
     const depMetas: ModuleDependencyMeta[] = [];
     for (const dep of deps) {
       const depHash = await getFileHash(dep);
-      const parentDirs = getParentDirectories(dep);
+      const depParentDirs = getParentDirectories(dep);
       const depMeta: ModuleDependencyMeta = {
         path: dep,
         depHash: depHash,
-        relativePathPrefix: parentDirs,
+        relativePathPrefix: getRelativePath(
+          getParentDirectories(module),
+          depParentDirs,
+        ),
       };
       depMetas.push(depMeta);
     }

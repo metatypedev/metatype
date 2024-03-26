@@ -18,7 +18,7 @@ from typegraph.gen.exports.runtimes import (
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.utils import get_file_hash, get_parent_directories
+from typegraph.utils import get_file_hash, get_parent_directories, get_relative_path
 from typegraph.wit import runtimes, store
 
 if TYPE_CHECKING:
@@ -107,9 +107,13 @@ class PythonRuntime(Runtime):
         dep_metas = []
         for dep in deps:
             dep_hash = get_file_hash(dep)
-            parent_dirs = get_parent_directories(dep)
+            dep_parent_dirs = get_parent_directories(dep)
             dep_meta = ModuleDependencyMeta(
-                path=dep, dep_hash=dep_hash, relative_path_prefix=parent_dirs
+                path=dep,
+                dep_hash=dep_hash,
+                relative_path_prefix=get_relative_path(
+                    get_parent_directories(module), dep_parent_dirs
+                ),
             )
             dep_metas.append(dep_meta)
 
@@ -192,4 +196,5 @@ class DefinitionCollector(ast.NodeTransformer):
         self.lambdas.append(unparse(node).strip())
 
     def visit_FunctionDef(self, node):
+        self.defs.append((node.name, unparse(node).strip()))
         self.defs.append((node.name, unparse(node).strip()))

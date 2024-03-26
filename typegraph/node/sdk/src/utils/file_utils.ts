@@ -50,3 +50,21 @@ export function getParentDirectories(filePath: string) {
   }
   return directories.reverse();
 }
+
+export function getRelativePath(
+  moduleParentDirs: string[],
+  depParentDirs: string[],
+): string[] {
+  let common = 0;
+  let maxLength = Math.min(moduleParentDirs.length, depParentDirs.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    if (moduleParentDirs[i] === depParentDirs[i]) {
+      common += 1;
+    } else {
+      break;
+    }
+  }
+
+  return depParentDirs.slice(common);
+}

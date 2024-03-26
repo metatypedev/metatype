@@ -142,7 +142,7 @@ class ArtifactUploader:
         - upload them in parallel 
         
     
-    - serialize(done, not tested) => upload(ts sdk left, not tested) => resolve(done, not tested)
+    - serialize(done, not tested) => upload(done, not tested) => resolve(done, not tested)
     
     - testing left
 
