@@ -58,6 +58,8 @@ pub async fn run(
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) -> anyhow::Result<()> {
+    deno::util::v8::init_v8_flags(&[], &[], deno::util::v8::get_v8_flags_from_env());
+
     deno_runtime::permissions::set_prompt_callbacks(
         Box::new(util::draw_thread::DrawThread::hide),
         Box::new(util::draw_thread::DrawThread::show),
@@ -136,6 +138,8 @@ pub async fn test(
     argv: Vec<String>,
 ) -> anyhow::Result<()> {
     use deno::tools::test::*;
+
+    deno::util::v8::init_v8_flags(&[], &[], deno::util::v8::get_v8_flags_from_env());
 
     deno_runtime::permissions::set_prompt_callbacks(
         Box::new(util::draw_thread::DrawThread::hide),
@@ -301,6 +305,7 @@ pub async fn bench(
 ) -> anyhow::Result<()> {
     use deno::tools::bench::*;
     use deno::tools::test::TestFilter;
+    deno::util::v8::init_v8_flags(&[], &[], deno::util::v8::get_v8_flags_from_env());
 
     deno_runtime::permissions::set_prompt_callbacks(
         Box::new(util::draw_thread::DrawThread::hide),
