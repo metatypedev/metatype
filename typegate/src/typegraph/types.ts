@@ -506,7 +506,7 @@ export interface TypeMeta {
   auths: Auth[];
   rate?: Rate | null;
   version: string;
-  random_seed: number | undefined;
+  random_seed?: number | null;
   ref_artifacts: Map<string, string>;
 }
 export interface Queries {

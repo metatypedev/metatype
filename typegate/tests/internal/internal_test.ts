@@ -3,7 +3,6 @@
 
 import { gql, Meta } from "../utils/mod.ts";
 
-const port = 7896;
 Meta.test("Internal test", async (t) => {
   const e = await t.engine("internal/internal.py");
 
@@ -16,6 +15,6 @@ Meta.test("Internal test", async (t) => {
       .expectData({
         remoteSum: 3.5,
       })
-      .on(e, `http://localhost:${port}`);
+      .on(e, `http://localhost:${t.port}`);
   });
-}, { port });
+}, { port: true });

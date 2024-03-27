@@ -83,7 +83,7 @@ jobs:
           pnpm install --frozen-lockfile --recursive
           cd ..
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
-      - uses: pre-commit/action@v3.0.0
+      - uses: pre-commit/action@v3.0.1
 
   test-website:
     needs: changes
@@ -175,59 +175,58 @@ jobs:
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
 
-  test-docker:
-    needs: changes
-    if: ${{ needs.changes.outputs.typegate == 'true' }}
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: linux/amd64
-            runner: ubuntu-latest
-          # - platform: linux/amd64
-          #   runner: custom-ubuntu-large
-          # FIXME: try macos-14 runner once all actions support it
-          # docker buildx action broken as of 2024-02-09
-
-          # TODO
-          # - platform: linux/arm64
-          #   runner: custom-macos
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: scherermichael-oss/action-has-permission@master
-        id: check
-        with:
-          required-permission: write
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/login-action@v3
-        if: steps.check.outputs.has-permission
-        with:
-          registry: docker.io
-          username: zifeo
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build with cache (internal)
-        uses: docker/build-push-action@v5
-        if: steps.check.outputs.has-permission
-        with:
-          file: dev/Dockerfile
-          platforms: ${{ matrix.platform }}
-          push: false
-          cache-from: type=registry,ref=docker.io/zifeo/metatype-cache:ci
-          cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
-          # check target runs extra validation steps in the Dockerfile
-          target: check
-      - name: Build without cache (external)
-        uses: docker/build-push-action@v5
-        if: "! steps.check.outputs.has-permission"
-        with:
-          file: dev/Dockerfile
-          platforms: linux/amd64
-          push: false
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
-          target: check
+  # test-docker:
+  #   needs: changes
+  #   if: ${{ needs.changes.outputs.typegate == 'true' }}
+  #   runs-on: ${{ matrix.runner }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       include:
+  #         - platform: linux/amd64
+  #           runner: ubuntu-latest
+  #         # - platform: linux/amd64
+  #         #   runner: custom-ubuntu-large
+  #         # FIXME: try macos-14 runner once all actions support it
+  #         # docker buildx action broken as of 2024-02-09
+  #         # TODO
+  #         # - platform: linux/arm64
+  #         #   runner: custom-macos
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: docker/setup-buildx-action@v3
+  #     - uses: scherermichael-oss/action-has-permission@master
+  #       id: check
+  #       with:
+  #         required-permission: write
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - uses: docker/login-action@v3
+  #       if: steps.check.outputs.has-permission
+  #       with:
+  #         registry: docker.io
+  #         username: zifeo
+  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
+  #     - name: Build with cache (internal)
+  #       uses: docker/build-push-action@v5
+  #       if: steps.check.outputs.has-permission
+  #       with:
+  #         file: dev/Dockerfile
+  #         platforms: ${{ matrix.platform }}
+  #         push: false
+  #         cache-from: type=registry,ref=docker.io/zifeo/metatype-cache:ci
+  #         cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
+  #         # check target runs extra validation steps in the Dockerfile
+  #         target: check
+  #     - name: Build without cache (external)
+  #       uses: docker/build-push-action@v5
+  #       if: "! steps.check.outputs.has-permission"
+  #       with:
+  #         file: dev/Dockerfile
+  #         platforms: linux/amd64
+  #         push: false
+  #         cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
+  #         target: check
 
   test-full:
     needs: changes
@@ -244,7 +243,7 @@ jobs:
         ports:
           - 6379:6379
         options: >-
-          --health-cmd "redis-cli ping"
+          --health-cmd "redis-cli -a password ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5

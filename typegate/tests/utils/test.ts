@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { SystemTypegraph } from "../../src/system_typegraphs.ts";
-import { MemoryRegister } from "./memory_register.ts";
 import { dirname, join } from "std/path/mod.ts";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
@@ -12,9 +11,9 @@ import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 
-import { NoLimiter } from "./no_limiter.ts";
-import { createMetaCli, metaCli } from "./meta.ts";
+import { createMetaCli } from "./meta.ts";
 import { SecretManager, TypeGraph } from "../../src/typegraph/mod.ts";
+import { SyncConfig } from "../../src/sync/config.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
@@ -36,16 +35,29 @@ export enum SDKLangugage {
   TypeScript = "deno",
 }
 
-function serve(typegate: Typegate, port: number): () => void {
-  const server = Deno.serve({ port }, (req) => {
-    return typegate.handle(req, {
-      remoteAddr: { hostname: "localhost" },
-    } as Deno.ServeHandlerInfo);
-  });
+interface ServeResult {
+  port: number;
+  cleanup: () => Promise<void>;
+}
 
-  return async () => {
-    await server.shutdown();
-  };
+function serve(typegate: Typegate): Promise<ServeResult> {
+  return new Promise((resolve) => {
+    const server = Deno.serve({
+      port: 0,
+      onListen: ({ port }) => {
+        resolve({
+          port,
+          cleanup: async () => {
+            await server.shutdown();
+          },
+        });
+      },
+    }, (req) => {
+      return typegate.handle(req, {
+        remoteAddr: { hostname: "localhost" },
+      } as Deno.ServeHandlerInfo);
+    });
+  });
 }
 
 type MetaTestCleanupFn = () => void | Promise<void>;
@@ -57,28 +69,36 @@ export class MetaTest {
   shell = shell;
   meta = defaultCli;
   workingDir = testDir;
+  port: number | null = null;
 
-  constructor(
+  static async init(
+    t: Deno.TestContext,
+    typegate: Typegate,
+    introspection: boolean,
+    port = false,
+  ): Promise<MetaTest> {
+    const mt = new MetaTest(t, typegate, introspection);
+    if (port) {
+      const { port: p, cleanup } = await serve(typegate);
+      mt.port = p;
+      mt.addCleanup(cleanup);
+    }
+
+    return mt;
+  }
+
+  private constructor(
     public t: Deno.TestContext,
     public typegate: Typegate,
     private introspection: boolean,
-    port: number | null,
-  ) {
-    if (port != null) {
-      this.cleanups.push(serve(typegate, port));
-    }
-  }
-
-  private get register() {
-    return this.typegate.register;
-  }
+  ) {}
 
   addCleanup(fn: MetaTestCleanupFn) {
     this.cleanups.push(fn);
   }
 
   getTypegraphEngine(name: string): QueryEngine | undefined {
-    return this.register.get(name);
+    return this.typegate.register.get(name);
   }
 
   async serialize(path: string, opts: ParseOptions = {}): Promise<string> {
@@ -108,12 +128,16 @@ export class MetaTest {
       cmd.push("--deploy");
     }
 
-    const { stdout } = await metaCli(...cmd);
+    const { stdout } = await this.meta(cmd);
     if (stdout.length == 0) {
       throw new Error("No typegraph");
     }
 
     return stdout;
+  }
+
+  async undeploy(tgName: string) {
+    await this.typegate.register.remove(tgName);
   }
 
   async engine(path: string, opts: ParseOptions = {}): Promise<QueryEngine> {
@@ -182,11 +206,11 @@ export class MetaTest {
 
   async unregister(engine: QueryEngine) {
     await Promise.all(
-      this.register
+      this.typegate.register
         .list()
         .filter((e) => e == engine)
         .map((e) => {
-          this.register.remove(e.name);
+          this.typegate.register.remove(e.name);
           return e.terminate();
         }),
     );
@@ -194,7 +218,7 @@ export class MetaTest {
 
   async terminate() {
     await Promise.all(this.cleanups.map((c) => c()));
-    await Promise.all(this.register.list().map((e) => e.terminate()));
+    await this.typegate.deinit();
   }
 
   async should(
@@ -262,9 +286,12 @@ interface TestConfig {
   systemTypegraphs?: boolean;
   introspection?: boolean;
   // port on which the typegate instance will be exposed on expose the typegate instance
-  port?: number;
+  port?: boolean;
   // create a temporary clean git repo for the tests
   gitRepo?: TempGitRepo;
+  syncConfig?: SyncConfig;
+  setup?: () => Promise<void>;
+  teardown?: () => Promise<void>;
 }
 
 interface Test {
@@ -284,7 +311,10 @@ export const test = ((name, fn, opts = {}): void => {
   return Deno.test({
     name,
     async fn(t) {
-      const typegate = new Typegate(new MemoryRegister(), new NoLimiter());
+      if (opts.setup != null) {
+        await opts.setup();
+      }
+      const typegate = await Typegate.init(opts.syncConfig ?? null);
       const {
         systemTypegraphs = false,
         gitRepo = null,
@@ -294,7 +324,12 @@ export const test = ((name, fn, opts = {}): void => {
         await SystemTypegraph.loadAll(typegate);
       }
 
-      const mt = new MetaTest(t, typegate, introspection, opts.port ?? null);
+      const mt = await MetaTest.init(
+        t,
+        typegate,
+        introspection,
+        opts.port != null,
+      );
 
       try {
         if (gitRepo != null) {
@@ -327,6 +362,10 @@ export const test = ((name, fn, opts = {}): void => {
         throw error;
       } finally {
         await mt.terminate();
+      }
+
+      if (opts.teardown != null) {
+        await opts.teardown();
       }
     },
     ...opts,

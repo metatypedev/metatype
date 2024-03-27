@@ -2,12 +2,10 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
-import { gql, Meta } from "../../utils/mod.ts";
+import { gql, Meta } from "test-utils/mod.ts";
 import { testDir } from "test-utils/dir.ts";
 import { tg } from "./wasmedge.ts";
 
-const port = 7698;
-const gate = `http://localhost:${port}`;
 const cwdDir = testDir;
 const auth = new BasicAuth("admin", "password");
 
@@ -34,6 +32,9 @@ const auth = new BasicAuth("admin", "password");
 // }, { port: port });
 
 Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
+  const port = metaTest.port;
+  const gate = `http://localhost:${port}`;
+
   await metaTest.should("work after deploying artifact", async () => {
     const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
       baseUrl: gate,
@@ -63,4 +64,4 @@ Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
       .on(engine);
     await engine.terminate();
   });
-}, { port: port, systemTypegraphs: true });
+}, { port: true, systemTypegraphs: true });

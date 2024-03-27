@@ -100,7 +100,6 @@ const env: Record<string, string> = {
   "TG_SECRET":
     "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw==",
   "TG_ADMIN_PASSWORD": "password",
-  "REDIS_URL": "redis://:password@localhost:6379/0",
   "DENO_TESTING": "true",
   "TMP_DIR": tmpDir,
   "TIMER_MAX_TIMEOUT_MS": "30000",
