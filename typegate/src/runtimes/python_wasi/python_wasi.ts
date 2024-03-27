@@ -3,15 +3,15 @@
 
 import { getLogger } from "../../log.ts";
 import { Runtime } from "../Runtime.ts";
+import { basename } from "std/path/mod.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { ComputeStage } from "../../engine/query_engine.ts";
 import { PythonWasmMessenger } from "./python_wasm_messenger.ts";
 import { path } from "compress/deps.ts";
 import { PythonVirtualMachine } from "./python_vm.ts";
 import { Materializer } from "../../typegraph/types.ts";
-import { structureRepr } from "../../utils.ts";
-import { uncompress } from "../../utils.ts";
 import * as ast from "graphql/ast";
+import config from "../../config.ts";
 
 const logger = getLogger(import.meta);
 
@@ -70,26 +70,36 @@ export class PythonWasiRuntime extends Runtime {
         }
         case "import_function": {
           const pyModMat = typegraph.materializers[m.data.mod as number];
-          const code = pyModMat.data.code as string;
+          // const code = pyModMat.data.code as string;
 
-          const repr = await structureRepr(code);
-          const vmId = generateVmIdentifier(m, uuid);
-          const basePath = path.join(
-            "tmp",
-            "scripts",
+          // resolve the python module artifacts/files
+          const { artifact, artifact_hash } = pyModMat.data;
+
+          const outDir = path.join(
+            config.tmp_dir,
+            "metatype_artifacts",
             typegraphName,
-            uuid,
-            "python",
-            vmId,
+            "artifacts",
+            artifact_hash as string,
           );
-          const outDir = path.join(basePath, repr.hashes.entryPoint);
-          const entries = await uncompress(
-            outDir,
-            repr.base64,
-          );
-          logger.info(`uncompressed ${entries.join(", ")} at ${outDir}`);
 
-          const modName = path.parse(repr.entryPoint).name;
+          // const repr = await structureRepr(code);
+          const vmId = generateVmIdentifier(m, uuid);
+          // const basePath = path.join(
+          //   "tmp",
+          //   "scripts",
+          //   typegraphName,
+          //   uuid,
+          //   "python",
+          //   vmId,
+          // );
+          // const entries = await uncompress(
+          //   outDir,
+          //   repr.base64,
+          // );
+          // logger.info(`uncompressed ${entries.join(", ")} at ${outDir}`);
+
+          const modName = basename(artifact as string);
 
           // TODO: move this logic to postprocess or python runtime
           m.data.name = `${modName}.${m.data.name as string}`;
@@ -98,7 +108,8 @@ export class PythonWasiRuntime extends Runtime {
           const vm = new PythonVirtualMachine();
 
           // for python modules, imports must be inside a folder above or same directory
-          const entryPointFullPath = path.join(outDir, repr.entryPoint);
+          const entryFile = artifact as string + "." + artifact_hash as string;
+          const entryPointFullPath = path.join(outDir, entryFile);
           const sourceCode = Deno.readTextFileSync(entryPointFullPath);
 
           // prepare vm

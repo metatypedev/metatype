@@ -52,6 +52,7 @@ def python_wasi(g: Graph):
             t.struct({"name": t.string()}),
             t.string(),
             module="py/hello.py",
+            deps=["py/nested/dep.py"],
             name="sayHello",
         ).with_policy(public),
         identity=python.from_def(

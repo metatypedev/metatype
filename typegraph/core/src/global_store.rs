@@ -12,7 +12,9 @@ use crate::wit::utils::Auth as WitAuth;
 
 #[allow(unused)]
 use crate::wit::core::ArtifactResolutionConfig;
-use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
+use crate::wit::runtimes::{
+    Effect, MaterializerDenoPredefined, MaterializerId, ModuleDependencyMeta,
+};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
 use std::path::PathBuf;
@@ -51,6 +53,9 @@ pub struct Store {
     deno_runtime: RuntimeId,
     predefined_deno_functions: HashMap<String, MaterializerId>,
     deno_modules: HashMap<String, MaterializerId>,
+
+    // module dependencies
+    artifact_deps: HashMap<String, Vec<ModuleDependencyMeta>>,
 
     public_policy_id: PolicyId,
 
@@ -235,6 +240,23 @@ impl Store {
 
     pub fn set_random_seed(value: Option<u32>) {
         with_store_mut(|store| store.random_seed = value)
+    }
+
+    pub fn get_deps(artifact_hash: String) -> Vec<ModuleDependencyMeta> {
+        with_store(|store| match store.artifact_deps.get(&artifact_hash) {
+            Some(deps) => deps.clone(),
+            None => vec![],
+        })
+    }
+
+    pub fn register_dep(artifact_hash: String, dep: ModuleDependencyMeta) {
+        with_store_mut(|store| {
+            store
+                .artifact_deps
+                .entry(artifact_hash)
+                .or_default()
+                .push(dep)
+        })
     }
 
     pub fn pick_branch_by_path(supertype_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {

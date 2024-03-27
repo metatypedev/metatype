@@ -4,6 +4,7 @@
 import * as fs from "node:fs";
 import * as crypto from "node:crypto";
 import { wit_utils } from "../wit.js";
+import * as path from "node:path";
 
 export async function getFileHash(filePath: string): Promise<string> {
   const cwd = wit_utils.getCwd();
@@ -38,4 +39,32 @@ export async function getFileHash(filePath: string): Promise<string> {
       await file.close(); // Ensure file closure
     }
   }
+}
+
+export function getParentDirectories(filePath: string) {
+  const directories = [];
+  let currentDir = path.dirname(filePath);
+  while (currentDir !== path.dirname(currentDir)) {
+    directories.push(path.basename(currentDir));
+    currentDir = path.dirname(currentDir);
+  }
+  return directories.reverse();
+}
+
+export function getRelativePath(
+  moduleParentDirs: string[],
+  depParentDirs: string[],
+): string[] {
+  let common = 0;
+  let maxLength = Math.min(moduleParentDirs.length, depParentDirs.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    if (moduleParentDirs[i] === depParentDirs[i]) {
+      common += 1;
+    } else {
+      break;
+    }
+  }
+
+  return depParentDirs.slice(common);
 }

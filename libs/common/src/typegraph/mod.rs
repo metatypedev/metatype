@@ -89,6 +89,14 @@ pub struct Queries {
     pub endpoints: Vec<String>,
 }
 
+// #[cfg_attr(feature = "codegen", derive(JsonSchema))]
+// #[derive(Serialize, Deserialize, Clone, Debug, Default)]
+// pub struct DependencyMeta {
+//     pub name: String,
+//     pub dep_hash: String,
+//     pub relative_path_prefix: PathBuf,
+// }
+
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct TypeMeta {
@@ -101,6 +109,7 @@ pub struct TypeMeta {
     pub version: String,
     pub random_seed: Option<u32>,
     pub ref_artifacts: HashMap<String, PathBuf>,
+    // pub artifact_deps: HashMap<String, Vec<DependencyMeta>>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
