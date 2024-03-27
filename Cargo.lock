@@ -688,9 +688,9 @@ dependencies = [
 
 [[package]]
 name = "async-recursion"
-version = "1.0.5"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fd55a5ba1179988837d24ab4c7cc8ed6efdeff578ede0416b4225a5fca35bd0"
+checksum = "30c5ef0ede93efbf733c1a727f3b6b5a1060bbedd5600183e66f6e4be4af0ec5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -745,9 +745,9 @@ checksum = "fbb36e985947064623dbd357f727af08ffd077f93d696782f3c56365fa2e2799"
 
 [[package]]
 name = "async-trait"
-version = "0.1.77"
+version = "0.1.78"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c980ee35e870bd1a4d2c8294d4c04d0499e67bca1e4b5cefcc693c2fa00caea9"
+checksum = "461abc97219de0eaaf81fe3ef974a540158f3d079c2ab200f891f1a2ef201e85"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -936,15 +936,15 @@ checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 
 [[package]]
 name = "base64"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ea22880d78093b0cbe17c89f64a7d457941e65759157ec6cb31a31d652b05e5"
-
-[[package]]
-name = "base64"
 version = "0.21.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
+
+[[package]]
+name = "base64"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9475866fec1451be56a3c2400fd081ff546538961565ccb5b7142cbd22bc7a51"
 
 [[package]]
 name = "base64-simd"
@@ -1219,7 +1219,7 @@ dependencies = [
  "indoc",
  "lsp-types 0.91.1",
  "once_cell",
- "psl-core",
+ "psl-core 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "regex",
 ]
 
@@ -1549,13 +1549,13 @@ version = "0.3.7-0"
 dependencies = [
  "anyhow",
  "async-trait",
- "base64 0.21.7",
+ "base64 0.22.0",
  "colored",
  "flate2",
  "ignore",
  "indexmap 2.2.5",
  "indoc",
- "itertools 0.11.0",
+ "itertools 0.12.1",
  "reqwest",
  "schemars",
  "serde 1.0.197",
@@ -1835,6 +1835,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "248e3bacc7dc6baa3b21e405ee045c3047101a49145e7e9eca583ab4c2ca5345"
 
 [[package]]
+name = "crosstarget-utils"
+version = "0.1.0"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
+dependencies = [
+ "futures",
+ "js-sys",
+ "pin-project",
+ "tokio",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+]
+
+[[package]]
 name = "crunchy"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1924,6 +1937,7 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "curve25519-dalek-derive",
+ "digest 0.10.7",
  "fiat-crypto",
  "platforms",
  "rustc_version 0.4.0",
@@ -2086,11 +2100,22 @@ checksum = "41b319d1b62ffbd002e057f36bebd1f42b9f97927c9577461d855f3513c4289f"
 [[package]]
 name = "datamodel-renderer"
 version = "0.1.0"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
+dependencies = [
+ "base64 0.13.1",
+ "once_cell",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "regex",
+]
+
+[[package]]
+name = "datamodel-renderer"
+version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
 dependencies = [
  "base64 0.13.1",
  "once_cell",
- "psl",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "regex",
 ]
 
@@ -3197,6 +3222,16 @@ checksum = "b6e854126756c496b8c81dec88f9a706b15b875c5849d4097a3854476b9fdf94"
 [[package]]
 name = "diagnostics"
 version = "0.1.0"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
+dependencies = [
+ "colored",
+ "indoc",
+ "pest",
+]
+
+[[package]]
+name = "diagnostics"
+version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
 dependencies = [
  "colored",
@@ -3342,7 +3377,7 @@ dependencies = [
  "bigdecimal",
  "indexmap 1.9.3",
  "prisma-models",
- "psl",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "schema",
  "serde 1.0.197",
  "serde_json",
@@ -3514,6 +3549,31 @@ dependencies = [
  "rfc6979",
  "signature",
  "spki",
+]
+
+[[package]]
+name = "ed25519"
+version = "2.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "115531babc129696a58c64a4fef0a8bf9e9698629fb97e9e40767d235cfbcd53"
+dependencies = [
+ "pkcs8",
+ "signature",
+]
+
+[[package]]
+name = "ed25519-dalek"
+version = "2.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a3daa8e81a3963a60642bcc1f90a670680bd4a77535faa384e9d1c79d620871"
+dependencies = [
+ "curve25519-dalek",
+ "ed25519",
+ "serde 1.0.197",
+ "sha2 0.10.8",
+ "signature",
+ "subtle",
+ "zeroize",
 ]
 
 [[package]]
@@ -4565,9 +4625,9 @@ dependencies = [
 
 [[package]]
 name = "grep"
-version = "0.2.13"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd79f01019ef2fe3978232135f5a7237baca9a6c6ed4dbbe9e5a51234e2306c5"
+checksum = "6e2b024ec1e686cb64d78beb852030b0e632af93817f1ed25be0173af0e94939"
 dependencies = [
  "grep-cli",
  "grep-matcher",
@@ -4601,14 +4661,14 @@ dependencies = [
 
 [[package]]
 name = "grep-printer"
-version = "0.1.7"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e14551578f49da1f774b70da5bd1b8c20bbbead01620c426cb0a217536d95a6a"
+checksum = "743c12a03c8aee38b6e5bd0168d8ebb09345751323df4a01c56e792b1f38ceb2"
 dependencies = [
- "base64 0.20.0",
  "bstr",
  "grep-matcher",
  "grep-searcher",
+ "log",
  "serde 1.0.197",
  "serde_json",
  "termcolor",
@@ -5064,7 +5124,7 @@ dependencies = [
  "iana-time-zone-haiku",
  "js-sys",
  "wasm-bindgen",
- "windows-core 0.52.0",
+ "windows-core",
 ]
 
 [[package]]
@@ -5419,7 +5479,7 @@ dependencies = [
 [[package]]
 name = "json-rpc-api-build"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
 dependencies = [
  "backtrace",
  "heck 0.3.3",
@@ -6058,7 +6118,7 @@ dependencies = [
  "assert_cmd",
  "async-recursion",
  "async-trait",
- "base64 0.21.7",
+ "base64 0.22.0",
  "chrono",
  "clap",
  "clap-verbosity-flag",
@@ -6083,7 +6143,7 @@ dependencies = [
  "indexmap 2.2.5",
  "indoc",
  "insta",
- "itertools 0.11.0",
+ "itertools 0.12.1",
  "lade-sdk",
  "lazy_static 1.4.0",
  "log",
@@ -6321,6 +6381,17 @@ dependencies = [
 [[package]]
 name = "mongodb-client"
 version = "0.1.0"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
+dependencies = [
+ "mongodb",
+ "once_cell",
+ "percent-encoding",
+ "thiserror",
+]
+
+[[package]]
+name = "mongodb-client"
+version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
 dependencies = [
  "mongodb",
@@ -6344,12 +6415,12 @@ dependencies = [
  "indexmap 1.9.3",
  "itertools 0.10.5",
  "mongodb",
- "mongodb-client",
+ "mongodb-client 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "prisma-models",
- "prisma-value",
- "psl",
+ "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "query-connector",
- "query-engine-metrics",
+ "query-engine-metrics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "rand 0.7.3",
  "regex",
  "serde 1.0.197",
@@ -6358,37 +6429,37 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-futures",
- "user-facing-errors",
+ "user-facing-errors 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "uuid",
 ]
 
 [[package]]
 name = "mongodb-schema-connector"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
 dependencies = [
  "convert_case 0.6.0",
- "datamodel-renderer",
+ "datamodel-renderer 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
  "enumflags2",
  "futures",
  "indoc",
  "mongodb",
- "mongodb-client",
+ "mongodb-client 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
  "mongodb-schema-describer",
  "once_cell",
- "psl",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
  "regex",
- "schema-connector",
+ "schema-connector 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
  "serde_json",
  "tokio",
  "tracing",
- "user-facing-errors",
+ "user-facing-errors 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
 ]
 
 [[package]]
 name = "mongodb-schema-describer"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
 dependencies = [
  "futures",
  "mongodb",
@@ -7245,14 +7316,27 @@ dependencies = [
 [[package]]
 name = "parser-database"
 version = "0.1.0"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
+dependencies = [
+ "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "either",
+ "enumflags2",
+ "indexmap 2.2.5",
+ "rustc-hash",
+ "schema-ast 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+]
+
+[[package]]
+name = "parser-database"
+version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
 dependencies = [
- "diagnostics",
+ "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "either",
  "enumflags2",
  "indexmap 1.9.3",
  "rustc-hash",
- "schema-ast",
+ "schema-ast 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
 ]
 
 [[package]]
@@ -7774,9 +7858,24 @@ dependencies = [
  "cuid",
  "itertools 0.10.5",
  "nanoid",
- "prisma-value",
- "psl",
+ "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "thiserror",
+ "uuid",
+]
+
+[[package]]
+name = "prisma-value"
+version = "0.1.0"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
+dependencies = [
+ "base64 0.13.1",
+ "bigdecimal",
+ "chrono",
+ "once_cell",
+ "regex",
+ "serde 1.0.197",
+ "serde_json",
  "uuid",
 ]
 
@@ -7975,10 +8074,44 @@ dependencies = [
 [[package]]
 name = "psl"
 version = "0.1.0"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
+dependencies = [
+ "psl-core 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+]
+
+[[package]]
+name = "psl"
+version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
 dependencies = [
  "builtin-psl-connectors",
- "psl-core",
+ "psl-core 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
+]
+
+[[package]]
+name = "psl-core"
+version = "0.1.0"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
+dependencies = [
+ "bigdecimal",
+ "cfg-if",
+ "chrono",
+ "connection-string",
+ "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "either",
+ "enumflags2",
+ "hex",
+ "indoc",
+ "itertools 0.12.1",
+ "lsp-types 0.91.1",
+ "once_cell",
+ "parser-database 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "regex",
+ "schema-ast 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "serde 1.0.197",
+ "serde_json",
+ "url",
 ]
 
 [[package]]
@@ -7988,16 +8121,16 @@ source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88eb
 dependencies = [
  "bigdecimal",
  "chrono",
- "diagnostics",
+ "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "enumflags2",
  "indoc",
  "itertools 0.10.5",
  "lsp-types 0.91.1",
  "once_cell",
- "parser-database",
- "prisma-value",
+ "parser-database 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
+ "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "regex",
- "schema-ast",
+ "schema-ast 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "serde 1.0.197",
  "serde_json",
  "url",
@@ -8057,6 +8190,48 @@ dependencies = [
  "bitflags 2.4.2",
  "memchr",
  "unicase",
+]
+
+[[package]]
+name = "quaint"
+version = "0.2.0-alpha.13"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
+dependencies = [
+ "async-trait",
+ "base64 0.12.3",
+ "bigdecimal",
+ "bit-vec",
+ "byteorder",
+ "bytes",
+ "chrono",
+ "connection-string",
+ "crosstarget-utils",
+ "either",
+ "futures",
+ "getrandom 0.2.12",
+ "hex",
+ "itertools 0.12.1",
+ "lru-cache",
+ "metrics 0.18.1",
+ "mobc",
+ "mysql_async",
+ "native-tls",
+ "num_cpus",
+ "percent-encoding",
+ "postgres-native-tls",
+ "postgres-types",
+ "rusqlite",
+ "serde_json",
+ "sqlformat",
+ "thiserror",
+ "tiberius",
+ "tokio",
+ "tokio-postgres",
+ "tokio-util 0.6.10",
+ "tracing",
+ "tracing-core",
+ "url",
+ "uuid",
 ]
 
 [[package]]
@@ -8126,11 +8301,11 @@ dependencies = [
  "indexmap 1.9.3",
  "itertools 0.10.5",
  "prisma-models",
- "prisma-value",
+ "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "serde 1.0.197",
  "serde_json",
  "thiserror",
- "user-facing-errors",
+ "user-facing-errors 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "uuid",
 ]
 
@@ -8154,9 +8329,9 @@ dependencies = [
  "opentelemetry 0.17.0",
  "petgraph 0.4.13",
  "prisma-models",
- "psl",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "query-connector",
- "query-engine-metrics",
+ "query-engine-metrics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "schema",
  "serde 1.0.197",
  "serde_json",
@@ -8166,8 +8341,25 @@ dependencies = [
  "tracing-futures",
  "tracing-opentelemetry",
  "tracing-subscriber",
- "user-facing-errors",
+ "user-facing-errors 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "uuid",
+]
+
+[[package]]
+name = "query-engine-metrics"
+version = "0.1.0"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
+dependencies = [
+ "metrics 0.18.1",
+ "metrics-exporter-prometheus",
+ "metrics-util 0.12.1",
+ "once_cell",
+ "parking_lot 0.12.1",
+ "serde 1.0.197",
+ "serde_json",
+ "tracing",
+ "tracing-futures",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -8498,8 +8690,8 @@ dependencies = [
  "mongodb-query-connector",
  "once_cell",
  "prisma-models",
- "psl",
- "quaint",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
+ "quaint 0.2.0-alpha.13 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "query-core",
  "serde 1.0.197",
  "serde_json",
@@ -8507,7 +8699,7 @@ dependencies = [
  "thiserror",
  "tracing",
  "url",
- "user-facing-errors",
+ "user-facing-errors 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
 ]
 
 [[package]]
@@ -8967,8 +9159,18 @@ source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88eb
 dependencies = [
  "once_cell",
  "prisma-models",
- "psl",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "rustc-hash",
+]
+
+[[package]]
+name = "schema-ast"
+version = "0.1.0"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
+dependencies = [
+ "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "pest",
+ "pest_derive",
 ]
 
 [[package]]
@@ -8976,9 +9178,26 @@ name = "schema-ast"
 version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
 dependencies = [
- "diagnostics",
+ "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "pest",
  "pest_derive",
+]
+
+[[package]]
+name = "schema-connector"
+version = "0.1.0"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
+dependencies = [
+ "chrono",
+ "enumflags2",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "quaint 0.2.0-alpha.13 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "serde 1.0.197",
+ "serde_json",
+ "sha2 0.9.9",
+ "tracing",
+ "tracing-error",
+ "user-facing-errors 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
 ]
 
 [[package]]
@@ -8988,20 +9207,20 @@ source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88eb
 dependencies = [
  "chrono",
  "enumflags2",
- "psl",
- "quaint",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
+ "quaint 0.2.0-alpha.13 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "serde 1.0.197",
  "serde_json",
  "sha2 0.9.9",
  "tracing",
  "tracing-error",
- "user-facing-errors",
+ "user-facing-errors 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
 ]
 
 [[package]]
 name = "schema-core"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
 dependencies = [
  "async-trait",
  "chrono",
@@ -9009,8 +9228,8 @@ dependencies = [
  "json-rpc-api-build",
  "jsonrpc-core",
  "mongodb-schema-connector",
- "psl",
- "schema-connector",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "schema-connector 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
  "serde 1.0.197",
  "serde_json",
  "sql-schema-connector",
@@ -9019,7 +9238,7 @@ dependencies = [
  "tracing-futures",
  "tracing-subscriber",
  "url",
- "user-facing-errors",
+ "user-facing-errors 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
 ]
 
 [[package]]
@@ -9138,9 +9357,9 @@ dependencies = [
 
 [[package]]
 name = "self_update"
-version = "0.38.0"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b3c585a1ced6b97ac13bd5e56f66559e5a75f477da5913f70df98e114518446"
+checksum = "1a34ad8e4a86884ab42e9b8690e9343abdcfe5fa38a0318cfe1565ba9ad437b4"
 dependencies = [
  "either",
  "flate2",
@@ -9157,6 +9376,7 @@ dependencies = [
  "tempfile",
  "urlencoding",
  "zip",
+ "zipsign-api",
 ]
 
 [[package]]
@@ -9182,9 +9402,9 @@ checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 
 [[package]]
 name = "sentry"
-version = "0.31.8"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ce4b57f1b521f674df7a1d200be8ff5d74e3712020ee25b553146657b5377d5"
+checksum = "766448f12e44d68e675d5789a261515c46ac6ccd240abdd451a9c46c84a49523"
 dependencies = [
  "httpdate",
  "native-tls",
@@ -9202,9 +9422,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-anyhow"
-version = "0.31.8"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8868ca6e513f7a80b394b7e0f4b6071afeebb69e62b5e4aafe37b45e431fac8b"
+checksum = "4da4015667c99f88d68ca7ff02b90c762d6154a4ceb7c02922b9a1dbd3959eeb"
 dependencies = [
  "anyhow",
  "sentry-backtrace",
@@ -9213,9 +9433,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-backtrace"
-version = "0.31.8"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58cc8d4e04a73de8f718dc703943666d03f25d3e9e4d0fb271ca0b8c76dfa00e"
+checksum = "32701cad8b3c78101e1cd33039303154791b0ff22e7802ed8cc23212ef478b45"
 dependencies = [
  "backtrace",
  "once_cell",
@@ -9225,9 +9445,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-contexts"
-version = "0.31.8"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6436c1bad22cdeb02179ea8ef116ffc217797c028927def303bc593d9320c0d1"
+checksum = "17ddd2a91a13805bd8dab4ebf47323426f758c35f7bf24eacc1aded9668f3824"
 dependencies = [
  "hostname",
  "libc",
@@ -9239,9 +9459,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-core"
-version = "0.31.8"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "901f761681f97db3db836ef9e094acdd8756c40215326c194201941947164ef1"
+checksum = "b1189f68d7e7e102ef7171adf75f83a59607fafd1a5eecc9dc06c026ff3bdec4"
 dependencies = [
  "once_cell",
  "rand 0.8.5",
@@ -9252,9 +9472,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-debug-images"
-version = "0.31.8"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "afdb263e73d22f39946f6022ed455b7561b22ff5553aca9be3c6a047fa39c328"
+checksum = "7b4d0a615e5eeca5699030620c119a094e04c14cf6b486ea1030460a544111a7"
 dependencies = [
  "findshlibs",
  "once_cell",
@@ -9263,9 +9483,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-panic"
-version = "0.31.8"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74fbf1c163f8b6a9d05912e1b272afa27c652e8b47ea60cb9a57ad5e481eea99"
+checksum = "d1c18d0b5fba195a4950f2f4c31023725c76f00aabb5840b7950479ece21b5ca"
 dependencies = [
  "sentry-backtrace",
  "sentry-core",
@@ -9273,9 +9493,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-tracing"
-version = "0.31.8"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82eabcab0a047040befd44599a1da73d3adb228ff53b5ed9795ae04535577704"
+checksum = "3012699a9957d7f97047fd75d116e22d120668327db6e7c59824582e16e791b2"
 dependencies = [
  "sentry-backtrace",
  "sentry-core",
@@ -9285,9 +9505,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-types"
-version = "0.31.8"
+version = "0.32.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da956cca56e0101998c8688bc65ce1a96f00673a0e58e663664023d4c7911e82"
+checksum = "c7173fd594569091f68a7c37a886e202f4d0c1db1e1fa1d18a051ba695b2e2ec"
 dependencies = [
  "debugid",
  "hex",
@@ -9481,9 +9701,9 @@ dependencies = [
 
 [[package]]
 name = "serde_yaml"
-version = "0.9.32"
+version = "0.9.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fd075d994154d4a774f95b51fb96bdc2832b0ea48425c92546073816cda1f2f"
+checksum = "a0623d197252096520c6f2a5e1171ee436e5af99a5d7caa2891e55e61950e6d9"
 dependencies = [
  "indexmap 2.2.5",
  "itoa",
@@ -9832,7 +10052,7 @@ dependencies = [
 [[package]]
 name = "sql-ddl"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
 
 [[package]]
 name = "sql-query-connector"
@@ -9849,9 +10069,9 @@ dependencies = [
  "once_cell",
  "opentelemetry 0.17.0",
  "prisma-models",
- "prisma-value",
- "psl",
- "quaint",
+ "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
+ "quaint 0.2.0-alpha.13 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "query-connector",
  "rand 0.7.3",
  "serde 1.0.197",
@@ -9861,27 +10081,27 @@ dependencies = [
  "tracing",
  "tracing-futures",
  "tracing-opentelemetry",
- "user-facing-errors",
+ "user-facing-errors 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "uuid",
 ]
 
 [[package]]
 name = "sql-schema-connector"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
 dependencies = [
  "chrono",
  "connection-string",
- "datamodel-renderer",
+ "datamodel-renderer 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
  "either",
  "enumflags2",
  "indoc",
  "once_cell",
- "prisma-value",
- "psl",
- "quaint",
+ "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "quaint 0.2.0-alpha.13 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
  "regex",
- "schema-connector",
+ "schema-connector 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
  "serde 1.0.197",
  "serde_json",
  "sql-ddl",
@@ -9892,25 +10112,26 @@ dependencies = [
  "tracing",
  "tracing-futures",
  "url",
- "user-facing-errors",
+ "user-facing-errors 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
  "uuid",
+ "versions",
 ]
 
 [[package]]
 name = "sql-schema-describer"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
 dependencies = [
  "async-trait",
  "bigdecimal",
  "either",
  "enumflags2",
- "indexmap 1.9.3",
+ "indexmap 2.2.5",
  "indoc",
  "once_cell",
- "prisma-value",
- "psl",
- "quaint",
+ "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "quaint 0.2.0-alpha.13 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
  "regex",
  "serde 1.0.197",
  "tracing",
@@ -11548,12 +11769,12 @@ name = "typegate_engine"
 version = "0.3.7-0"
 dependencies = [
  "anyhow",
- "base64 0.21.7",
+ "base64 0.22.0",
  "common",
  "connection-string",
  "convert_case 0.6.0",
  "dashmap",
- "datamodel-renderer",
+ "datamodel-renderer 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "env_logger",
  "futures",
  "log",
@@ -11562,13 +11783,13 @@ dependencies = [
  "num-traits 0.2.18",
  "once_cell",
  "prisma-models",
- "psl",
+ "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "query-connector",
  "query-core",
- "query-engine-metrics",
+ "query-engine-metrics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
  "regex",
  "request-handlers",
- "schema-connector",
+ "schema-connector 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "schema-core",
  "serde 1.0.197",
  "shadow-rs",
@@ -11579,7 +11800,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "typescript",
- "user-facing-errors",
+ "user-facing-errors 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "wasmedge-sdk",
  "wasmedge-sys",
  "wasmedge-types",
@@ -11843,9 +12064,9 @@ dependencies = [
 
 [[package]]
 name = "unsafe-libyaml"
-version = "0.2.10"
+version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab4c90930b95a82d00dc9e9ac071b4991924390d46cbd0dfe566148667605e4b"
+checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
 name = "untrusted"
@@ -11906,6 +12127,16 @@ dependencies = [
 [[package]]
 name = "user-facing-error-macros"
 version = "0.1.0"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "user-facing-error-macros"
+version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
 dependencies = [
  "proc-macro2",
@@ -11916,16 +12147,31 @@ dependencies = [
 [[package]]
 name = "user-facing-errors"
 version = "0.1.0"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.11.0#efd2449663b3d73d637ea1fd226bafbcf45b3102"
+dependencies = [
+ "backtrace",
+ "indoc",
+ "itertools 0.12.1",
+ "quaint 0.2.0-alpha.13 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+ "serde 1.0.197",
+ "serde_json",
+ "tracing",
+ "user-facing-error-macros 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.11.0)",
+]
+
+[[package]]
+name = "user-facing-errors"
+version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.5.2#aebc046ce8b88ebbcb45efe31cbe7d06fd6abc0a"
 dependencies = [
  "backtrace",
  "indoc",
  "itertools 0.10.5",
- "quaint",
+ "quaint 0.2.0-alpha.13 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
  "serde 1.0.197",
  "serde_json",
  "tracing",
- "user-facing-error-macros",
+ "user-facing-error-macros 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.5.2)",
 ]
 
 [[package]]
@@ -11997,6 +12243,16 @@ name = "version_check"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
+
+[[package]]
+name = "versions"
+version = "6.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38a8931f8d167b6448076020e70b9de46dcf5ea1731212481a092d0071c4ac5b"
+dependencies = [
+ "itertools 0.12.1",
+ "nom 7.1.3",
+]
 
 [[package]]
 name = "void"
@@ -12158,24 +12414,6 @@ checksum = "af190c94f2773fdb3729c55b007a722abb5384da03bc0986df4c289bf5567e96"
 
 [[package]]
 name = "wasm-encoder"
-version = "0.33.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34180c89672b3e4825c3a8db4b61a674f1447afd5fe2445b2d22c3d8b6ea086c"
-dependencies = [
- "leb128",
-]
-
-[[package]]
-name = "wasm-encoder"
-version = "0.41.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "972f97a5d8318f908dded23594188a90bcd09365986b1163e66d70170e5287ae"
-dependencies = [
- "leb128",
-]
-
-[[package]]
-name = "wasm-encoder"
 version = "0.201.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9c7d2731df60006819b013f64ccc2019691deccf6e11a1804bc850cd6748f1a"
@@ -12185,9 +12423,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-metadata"
-version = "0.10.20"
+version = "0.201.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18ebaa7bd0f9e7a5e5dd29b9a998acf21c4abed74265524dd7e85934597bfb10"
+checksum = "0fd83062c17b9f4985d438603cde0a5e8c5c8198201a6937f778b607924c7da2"
 dependencies = [
  "anyhow",
  "indexmap 2.2.5",
@@ -12195,8 +12433,8 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "spdx",
- "wasm-encoder 0.41.2",
- "wasmparser 0.121.2",
+ "wasm-encoder",
+ "wasmparser",
 ]
 
 [[package]]
@@ -12278,19 +12516,9 @@ dependencies = [
 
 [[package]]
 name = "wasmparser"
-version = "0.113.3"
+version = "0.201.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "286049849b5a5bd09a8773171be96824afabffc7cc3df6caaf33a38db6cd07ae"
-dependencies = [
- "indexmap 2.2.5",
- "semver 1.0.22",
-]
-
-[[package]]
-name = "wasmparser"
-version = "0.121.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9dbe55c8f9d0dbd25d9447a5a889ff90c0cc3feaa7395310d3d826b2c703eaab"
+checksum = "84e5df6dba6c0d7fafc63a450f1738451ed7a0b52295d83e868218fa286bf708"
 dependencies = [
  "bitflags 2.4.2",
  "indexmap 2.2.5",
@@ -12307,7 +12535,7 @@ dependencies = [
  "leb128",
  "memchr",
  "unicode-width",
- "wasm-encoder 0.201.0",
+ "wasm-encoder",
 ]
 
 [[package]]
@@ -12515,7 +12743,7 @@ version = "0.51.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca229916c5ee38c2f2bc1e9d8f04df975b4bd93f9955dc69fabb5d91270045c9"
 dependencies = [
- "windows-core 0.51.1",
+ "windows-core",
  "windows-targets 0.48.5",
 ]
 
@@ -12526,15 +12754,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1f8cf84f35d2db49a46868f947758c7a1138116f7fac3bc844f43ade1292e64"
 dependencies = [
  "windows-targets 0.48.5",
-]
-
-[[package]]
-name = "windows-core"
-version = "0.52.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33ab640c8d7e35bf8ba19b884ba838ceb4fba93a4e8c65a9059d08afcfc683d9"
-dependencies = [
- "windows-targets 0.52.4",
 ]
 
 [[package]]
@@ -12708,98 +12927,94 @@ dependencies = [
 
 [[package]]
 name = "wit-bindgen"
-version = "0.12.0"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4f7c5d6f59ae013fc4c013c76eab667844a46e86b51987acb71b1e32953211a"
+checksum = "288f992ea30e6b5c531b52cdd5f3be81c148554b09ea416f058d16556ba92c27"
 dependencies = [
  "bitflags 2.4.2",
+ "wit-bindgen-rt",
  "wit-bindgen-rust-macro",
 ]
 
 [[package]]
 name = "wit-bindgen-core"
-version = "0.12.0"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f0371c47784e7559efb422f74473e395b49f7101725584e2673657e0b4fc104"
+checksum = "e85e72719ffbccf279359ad071497e47eb0675fe22106dea4ed2d8a7fcb60ba4"
 dependencies = [
  "anyhow",
- "wit-component",
  "wit-parser",
 ]
 
 [[package]]
-name = "wit-bindgen-rust"
-version = "0.12.0"
+name = "wit-bindgen-rt"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eeab5a09a85b1641690922ce05d79d868a2f2e78e9415a5302f58b9846fab8f1"
+checksum = "fcb8738270f32a2d6739973cbbb7c1b6dd8959ce515578a6e19165853272ee64"
+
+[[package]]
+name = "wit-bindgen-rust"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8a39a15d1ae2077688213611209849cad40e9e5cccf6e61951a425850677ff3"
 dependencies = [
  "anyhow",
  "heck 0.4.1",
+ "indexmap 2.2.5",
  "wasm-metadata",
  "wit-bindgen-core",
- "wit-bindgen-rust-lib",
  "wit-component",
-]
-
-[[package]]
-name = "wit-bindgen-rust-lib"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a13c89c9c1a93e164318745841026f63f889376f38664f86a7f678930280e728"
-dependencies = [
- "heck 0.4.1",
- "wit-bindgen-core",
 ]
 
 [[package]]
 name = "wit-bindgen-rust-macro"
-version = "0.12.0"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a70c97e09751a9a95a592bd8ef84e953e5cdce6ebbfdb35ceefa5cc511da3b71"
+checksum = "d376d3ae5850526dfd00d937faea0d81a06fa18f7ac1e26f386d760f241a8f4b"
 dependencies = [
  "anyhow",
  "proc-macro2",
+ "quote",
  "syn 2.0.52",
  "wit-bindgen-core",
  "wit-bindgen-rust",
- "wit-bindgen-rust-lib",
- "wit-component",
 ]
 
 [[package]]
 name = "wit-component"
-version = "0.14.7"
+version = "0.201.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66981fe851118de3b6b7a92f51ce8a86b919569c37becbeca8df9bd30141da25"
+checksum = "421c0c848a0660a8c22e2fd217929a0191f14476b68962afd2af89fd22e39825"
 dependencies = [
  "anyhow",
  "bitflags 2.4.2",
  "indexmap 2.2.5",
  "log",
  "serde 1.0.197",
+ "serde_derive",
  "serde_json",
- "wasm-encoder 0.33.2",
+ "wasm-encoder",
  "wasm-metadata",
- "wasmparser 0.113.3",
+ "wasmparser",
  "wit-parser",
 ]
 
 [[package]]
 name = "wit-parser"
-version = "0.11.3"
+version = "0.201.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a39edca9abb16309def3843af73b58d47d243fe33a9ceee572446bcc57556b9a"
+checksum = "196d3ecfc4b759a8573bf86a9b3f8996b304b3732e4c7de81655f875f6efdca6"
 dependencies = [
  "anyhow",
  "id-arena",
  "indexmap 2.2.5",
  "log",
- "pulldown-cmark",
  "semver 1.0.22",
  "serde 1.0.197",
+ "serde_derive",
  "serde_json",
  "unicode-xid",
- "url",
+ "wasmparser",
 ]
 
 [[package]]
@@ -12962,6 +13177,17 @@ dependencies = [
  "crossbeam-utils",
  "flate2",
  "time",
+]
+
+[[package]]
+name = "zipsign-api"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ba5aa1827d6b1a35a29b3413ec69ce5f796e4d897e3e5b38f461bef41d225ea"
+dependencies = [
+ "base64 0.21.7",
+ "ed25519-dalek",
+ "thiserror",
 ]
 
 [[package]]
