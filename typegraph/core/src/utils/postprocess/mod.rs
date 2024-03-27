@@ -38,13 +38,16 @@ impl PostProcessor for TypegraphPostProcessor {
         if let Some(config) = self.config {
             Store::set_deploy_cwd(config.dir); // fs_host::cwd() will now use this value
             PrismaProcessor::new(config.prisma_migration).postprocess(tg)?;
-        }
 
-        // Artifact resolution depends on the default cwd() (parent process)
-        // unless overwritten by `dir` through Store::set_deploy_cwd(..) (cli or custom dir with tgDeploy)
-        DenoProcessor.postprocess(tg)?;
-        PythonProcessor.postprocess(tg)?;
-        WasmedgeProcessor.postprocess(tg)?;
+            // Artifact resolution depends on the default cwd() (parent process)
+            // unless overwritten by `dir` through Store::set_deploy_cwd(..) (cli or custom dir with tgDeploy)
+            let allow_fs_read_artifacts = config.disable_artifact_resolution.unwrap_or(true);
+            if allow_fs_read_artifacts {
+                DenoProcessor.postprocess(tg)?;
+                PythonProcessor.postprocess(tg)?;
+                WasmedgeProcessor.postprocess(tg)?;
+            }
+        }
 
         ValidationProcessor.postprocess(tg)?;
         Ok(())
