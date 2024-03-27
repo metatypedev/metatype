@@ -59,6 +59,7 @@ async fn config(req: HttpRequest) -> impl Responder {
     let endpoint = ServerStore::get_endpoint();
     let secrets = ServerStore::get_secrets();
     let migration_action_glob = ServerStore::get_migration_action_glob();
+    let disable_artifact_resolution = !ServerStore::get_artifact_resolution_flag();
 
     let mut migration_action_per_rt = vec![];
     if let Some(per_rt_actions) =
@@ -96,6 +97,7 @@ async fn config(req: HttpRequest) -> impl Responder {
                         "globalAction": migration_action_glob,
                         "runtimeAction": migration_action_per_rt
                     },
+                    "disableArtifactResolution": disable_artifact_resolution
                 },
             });
 

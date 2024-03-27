@@ -41,7 +41,7 @@ impl PostProcessor for TypegraphPostProcessor {
 
             // Artifact resolution depends on the default cwd() (parent process)
             // unless overwritten by `dir` through Store::set_deploy_cwd(..) (cli or custom dir with tgDeploy)
-            let allow_fs_read_artifacts = config.disable_artifact_resolution.unwrap_or(true);
+            let allow_fs_read_artifacts = !config.disable_artifact_resolution.unwrap_or(false);
             if allow_fs_read_artifacts {
                 DenoProcessor.postprocess(tg)?;
                 PythonProcessor.postprocess(tg)?;
