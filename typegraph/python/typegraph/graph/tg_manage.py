@@ -155,6 +155,7 @@ class Manager:
                         "migrationDir"
                     ],
                 ),
+                disable_artifact_resolution=None,
             ),
         )
 
