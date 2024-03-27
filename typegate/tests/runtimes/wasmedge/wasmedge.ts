@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { WasmEdgeRuntime } from "@typegraph/sdk/runtimes/wasmedge.js";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { WasmEdgeRuntime } from "@typegraph/sdk/runtimes";
 
 export const tg = await typegraph("wasmedge_ts", async (g: any) => {
   const pub = Policy.public();

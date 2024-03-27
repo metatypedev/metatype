@@ -7,3 +7,4 @@ import Policy from "./policy.js";
 import * as fx from "./effects.js";
 
 export { fx, Policy, t, typegraph };
+export { BasicAuth, tgDeploy } from "./tg_deploy.js";

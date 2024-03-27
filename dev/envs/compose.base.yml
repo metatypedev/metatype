@@ -17,3 +17,11 @@ services:
       - "6379:6379"
     environment:
       REDIS_PASSWORD: password
+
+  verdaccio:
+    image: verdaccio/verdaccio
+    restart: always
+    ports:
+      - "4873:4873"
+    volumes:
+      - ../verdaccio/:/verdaccio/conf/:ro

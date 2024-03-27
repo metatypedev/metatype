@@ -3,6 +3,7 @@
   "packages": {
     "specifiers": {
       "npm:@sentry/node@7.70.0": "npm:@sentry/node@7.70.0",
+      "npm:@typegraph/sdk@0.3.7-0": "npm:@typegraph/sdk@0.3.7-0",
       "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:chance@1.1.11": "npm:chance@1.1.11",
       "npm:graphql@16.8.1": "npm:graphql@16.8.1",
@@ -59,6 +60,10 @@
           "@sentry/types": "@sentry/types@7.70.0",
           "tslib": "tslib@2.6.2"
         }
+      },
+      "@typegraph/sdk@0.3.7-0": {
+        "integrity": "sha512-6U5RWF4ooj7dNKpIu+nXG3GtQaYXfJuxcnGA5lWY5fZl8Wk8dHctzJ8cMCjiSg9DsOepfkLAK1aeyVTL6CpjCQ==",
+        "dependencies": {}
       },
       "@types/node@18.16.19": {
         "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
