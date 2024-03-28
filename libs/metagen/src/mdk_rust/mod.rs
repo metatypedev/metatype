@@ -38,8 +38,17 @@ impl crate::Plugin for Generator {
     fn bill_of_inputs(&self) -> HashMap<String, GeneratorInputOrder> {
         [(
             Self::INPUT_TG.to_string(),
-            GeneratorInputOrder::TypegraphDesc {
-                name: self.config.base.typegraph_name.clone(),
+            if let Some(tg_name) = &self.config.base.typegraph_name {
+                GeneratorInputOrder::TypegraphFromTypegate {
+                    name: tg_name.clone(),
+                }
+            } else if let Some(tg_path) = &self.config.base.typegraph_path {
+                GeneratorInputOrder::TypegraphFromPath {
+                    path: tg_path.clone(),
+                    name: self.config.base.typegraph_name.clone(),
+                }
+            } else {
+                unreachable!()
             },
         )]
         .into_iter()
@@ -51,9 +60,13 @@ impl crate::Plugin for Generator {
         inputs: HashMap<String, GeneratorInputResolved>,
     ) -> anyhow::Result<GeneratorOutput> {
         // return Ok(GeneratorOutput(Default::default()))
-        let GeneratorInputResolved::TypegraphDesc { raw: tg } = inputs
+        let tg = match inputs
             .get(Self::INPUT_TG)
-            .context("missing generator input")?;
+            .context("missing generator input")?
+        {
+            GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
+            GeneratorInputResolved::TypegraphFromPath { raw } => raw,
+        };
         let mut out = HashMap::new();
         out.insert(
             self.config.base.path.join("mod.rs"),
@@ -61,7 +74,8 @@ impl crate::Plugin for Generator {
         );
         if self.config.no_crate_manifest.unwrap_or(true) {
             use heck::ToSnekCase;
-            let crate_name = format!("{}_mdk", self.config.base.typegraph_name.to_snek_case());
+            let tg_name = tg.name().unwrap_or_else(|_| "generated".to_string());
+            let crate_name = format!("{}_mdk", tg_name.to_snek_case());
             out.insert(
                 self.config.base.path.join("Cargo.toml"),
                 gen_cargo_toml(Some(&crate_name)),
@@ -155,7 +169,8 @@ fn mdk_rs_e2e() -> anyhow::Result<()> {
                         stubbed_runtimes: None,
                         no_crate_manifest: None,
                         base: config::MdkGeneratorConfigBase {
-                            typegraph_name: tg_name.into(),
+                            typegraph_name: Some(tg_name.into()),
+                            typegraph_path: None,
                             // NOTE: root will map to the test's tempdir
                             path: "./gen/".into(),
                         },
@@ -181,11 +196,7 @@ fn mdk_rs_e2e() -> anyhow::Result<()> {
                 build_fn: |args| {
                     Box::pin(async move {
                         let status = tokio::process::Command::new("cargo")
-                            .args(
-                                "build --target wasm32-wasi --target-dir target/wasi"
-                                    .split(' ')
-                                    .collect::<Vec<_>>(),
-                            )
+                            .args("build --target wasm32-wasi".split(' ').collect::<Vec<_>>())
                             .current_dir(args.path)
                             .kill_on_drop(true)
                             .spawn()?

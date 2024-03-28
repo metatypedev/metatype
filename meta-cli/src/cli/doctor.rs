@@ -11,7 +11,7 @@ use crate::{
     typegraph::loader::Discovery,
 };
 
-use super::{Action, GenArgs};
+use super::{Action, ConfigArgs};
 use actix_web::dev::ServerHandle;
 use anyhow::Result;
 use async_trait::async_trait;
@@ -38,7 +38,7 @@ fn shell(cmds: Vec<&str>) -> Result<String> {
 
 #[async_trait]
 impl Action for Doctor {
-    async fn run(&self, args: GenArgs, _: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, args: ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
         let dir = &args.dir()?;
 
         let w = 60;

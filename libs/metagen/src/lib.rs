@@ -28,14 +28,18 @@ mod utils;
 
 use crate::interlude::*;
 
+pub use config::*;
+
 #[derive(Debug)]
 pub enum GeneratorInputOrder {
-    TypegraphDesc { name: String },
+    TypegraphFromTypegate { name: String },
+    TypegraphFromPath { path: PathBuf, name: Option<String> },
 }
 
 #[derive(Debug)]
 pub enum GeneratorInputResolved {
-    TypegraphDesc { raw: Typegraph },
+    TypegraphFromTypegate { raw: Typegraph },
+    TypegraphFromPath { raw: Typegraph },
 }
 
 pub trait InputResolver {
@@ -48,20 +52,6 @@ pub trait InputResolver {
 #[derive(Debug)]
 pub struct GeneratorOutput(pub HashMap<PathBuf, String>);
 
-impl InputResolver for Ctx {
-    async fn resolve(&self, order: GeneratorInputOrder) -> anyhow::Result<GeneratorInputResolved> {
-        Ok(match order {
-            GeneratorInputOrder::TypegraphDesc { name } => GeneratorInputResolved::TypegraphDesc {
-                raw: self
-                    .typegate
-                    .typegraph(&name)
-                    .await?
-                    .with_context(|| format!("no typegraph found under \"{name}\""))?,
-            },
-        })
-    }
-}
-
 trait Plugin: Send + Sync {
     fn bill_of_inputs(&self) -> HashMap<String, GeneratorInputOrder>;
     fn generate(
@@ -70,11 +60,9 @@ trait Plugin: Send + Sync {
     ) -> anyhow::Result<GeneratorOutput>;
 }
 
-#[derive(Clone)]
-struct Ctx {
-    typegate: Arc<common::node::Node>,
-}
-
+/// This function makes use of a JoinSet to process
+/// items in parallel. This makes using actix workers in InputResolver
+/// is a no no.
 pub async fn generate_target(
     config: &config::Config,
     target_name: &str,
