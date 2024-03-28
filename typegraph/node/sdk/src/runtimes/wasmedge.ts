@@ -19,7 +19,7 @@ export class WasmEdgeRuntime extends Runtime {
     super(runtimes.registerWasmedgeRuntime());
   }
 
-  async wasi<
+  wasi<
     I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
@@ -30,9 +30,7 @@ export class WasmEdgeRuntime extends Runtime {
       wasm: string;
       effect?: Effect;
     },
-  ): Promise<t.Func<I, O, WasiMat>> {
-    let artifact = await getArtifactMeta(wasm);
-
+  ): t.Func<I, O, WasiMat> {
     const matId = runtimes.fromWasiModule(
       {
         runtime: this._id,

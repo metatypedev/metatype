@@ -39,9 +39,7 @@
       "type": "function",
       "title": "func_105",
       "runtime": 1,
-      "policies": [
-        0
-      ],
+      "policies": [0],
       "config": {},
       "as_id": false,
       "input": 2,
@@ -103,9 +101,7 @@
       "type": "function",
       "title": "func_106",
       "runtime": 1,
-      "policies": [
-        0
-      ],
+      "policies": [0],
       "config": {},
       "as_id": false,
       "input": 8,
@@ -175,9 +171,7 @@
       "type": "function",
       "title": "func_107",
       "runtime": 1,
-      "policies": [
-        0
-      ],
+      "policies": [0],
       "config": {},
       "as_id": false,
       "input": 14,
@@ -251,11 +245,7 @@
       "title": "string_82",
       "runtime": 1,
       "policies": [],
-      "enum": [
-        "\"info\"",
-        "\"warning\"",
-        "\"error\""
-      ],
+      "enum": ["\"info\"", "\"warning\"", "\"error\""],
       "config": {},
       "as_id": false
     },
@@ -295,9 +285,7 @@
       "type": "function",
       "title": "func_108",
       "runtime": 1,
-      "policies": [
-        0
-      ],
+      "policies": [0],
       "config": {},
       "as_id": false,
       "input": 24,
@@ -339,9 +327,7 @@
       "type": "function",
       "title": "func_109",
       "runtime": 1,
-      "policies": [
-        0
-      ],
+      "policies": [0],
       "config": {},
       "as_id": false,
       "input": 28,
@@ -493,9 +479,7 @@
       "type": "object",
       "title": "object_39",
       "runtime": 1,
-      "policies": [
-        0
-      ],
+      "policies": [0],
       "config": {},
       "as_id": false,
       "properties": {
@@ -508,9 +492,7 @@
       "type": "function",
       "title": "func_110",
       "runtime": 1,
-      "policies": [
-        0
-      ],
+      "policies": [0],
       "config": {},
       "as_id": false,
       "input": 43,
@@ -545,10 +527,7 @@
       "title": "OperationInfo",
       "runtime": 1,
       "policies": [],
-      "enum": [
-        "\"query\"",
-        "\"mutation\""
-      ],
+      "enum": ["\"query\"", "\"mutation\""],
       "config": {},
       "as_id": false,
       "properties": {
@@ -565,10 +544,7 @@
       "title": "string_47",
       "runtime": 1,
       "policies": [],
-      "enum": [
-        "\"query\"",
-        "\"mutation\""
-      ],
+      "enum": ["\"query\"", "\"mutation\""],
       "config": {},
       "as_id": false,
       "properties": {
@@ -585,10 +561,7 @@
       "title": "list_48",
       "runtime": 1,
       "policies": [],
-      "enum": [
-        "\"query\"",
-        "\"mutation\""
-      ],
+      "enum": ["\"query\"", "\"mutation\""],
       "config": {},
       "as_id": false,
       "items": 48
@@ -630,9 +603,7 @@
       "type": "function",
       "title": "func_111",
       "runtime": 1,
-      "policies": [
-        0
-      ],
+      "policies": [0],
       "config": {},
       "as_id": false,
       "input": 43,
@@ -711,9 +682,7 @@
       "type": "function",
       "title": "func_112",
       "runtime": 1,
-      "policies": [
-        0
-      ],
+      "policies": [0],
       "config": {},
       "as_id": false,
       "input": 57,
@@ -914,9 +883,7 @@
       "endpoints": []
     },
     "cors": {
-      "allow_origin": [
-        "*"
-      ],
+      "allow_origin": ["*"],
       "allow_headers": [],
       "expose_headers": [],
       "allow_methods": [],
@@ -928,9 +895,7 @@
         "name": "basic",
         "protocol": "basic",
         "auth_data": {
-          "users": [
-            "admin"
-          ]
+          "users": ["admin"]
         }
       }
     ],

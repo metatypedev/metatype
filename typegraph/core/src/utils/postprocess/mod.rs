@@ -9,11 +9,13 @@ pub mod deno_rt;
 pub mod prisma_rt;
 pub mod python_rt;
 pub mod validation;
+pub mod wasmedge_rt;
 
 use self::deno_rt::DenoProcessor;
 use self::prisma_rt::PrismaProcessor;
 use self::python_rt::PythonProcessor;
 use self::validation::ValidationProcessor;
+use self::wasmedge_rt::WasmedgeProcessor;
 use crate::errors::TgError;
 
 pub trait PostProcessor {
@@ -36,12 +38,16 @@ impl PostProcessor for TypegraphPostProcessor {
         if let Some(config) = self.config {
             Store::set_deploy_cwd(config.dir); // fs_host::cwd() will now use this value
             PrismaProcessor::new(config.prisma_migration).postprocess(tg)?;
-        }
 
-        // Artifact resolution depends on the default cwd() (parent process)
-        // unless overwritten by `dir` through Store::set_deploy_cwd(..) (cli or custom dir with tgDeploy)
-        DenoProcessor.postprocess(tg)?;
-        PythonProcessor.postprocess(tg)?;
+            // Artifact resolution depends on the default cwd() (parent process)
+            // unless overwritten by `dir` through Store::set_deploy_cwd(..) (cli or custom dir with tgDeploy)
+            let allow_fs_read_artifacts = !config.disable_artifact_resolution.unwrap_or(false);
+            if allow_fs_read_artifacts {
+                DenoProcessor.postprocess(tg)?;
+                PythonProcessor.postprocess(tg)?;
+                WasmedgeProcessor.postprocess(tg)?;
+            }
+        }
 
         ValidationProcessor.postprocess(tg)?;
         Ok(())

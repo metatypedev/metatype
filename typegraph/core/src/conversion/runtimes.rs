@@ -3,7 +3,6 @@
 
 use std::collections::HashMap;
 
-use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::errors::Result;
@@ -231,7 +230,7 @@ impl MaterializerConverter for PythonMaterializer {
                 ("def".to_string(), data)
             }
             Module(module) => {
-                c.add_ref_artifacts(module.artifact_hash.clone(), module.artifact.clone().into())?;
+                // c.register_artifact(module.artifact_hash.clone(), module.artifact.clone().into())?;
 
                 let deps = module.deps.clone();
                 for dep in deps {

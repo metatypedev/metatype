@@ -15,7 +15,6 @@ use common::typegraph::Typegraph;
 use core::fmt::Debug;
 use std::io::{self, Write};
 use std::path::PathBuf;
-use std::process::exit;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 use tokio::sync::mpsc;

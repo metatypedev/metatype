@@ -1895,6 +1895,7 @@
         "auths",
         "cors",
         "queries",
+        "ref_artifacts",
         "secrets",
         "version"
       ],
