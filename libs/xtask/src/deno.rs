@@ -61,6 +61,8 @@ impl Test {
                     "bash",
                     "npm",
                     "pnpm",
+                    "setsid",
+                    "temporal",
                 ]
                 .into_iter()
                 .map(str::to_owned)
