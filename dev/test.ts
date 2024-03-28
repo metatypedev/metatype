@@ -103,6 +103,7 @@ const env: Record<string, string> = {
   "DENO_TESTING": "true",
   "TMP_DIR": tmpDir,
   "TIMER_MAX_TIMEOUT_MS": "30000",
+  "NPM_CONFIG_REGISTRY": "http://localhost:4873",
 };
 
 await Deno.mkdir(tmpDir, { recursive: true });

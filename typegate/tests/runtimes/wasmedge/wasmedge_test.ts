@@ -44,6 +44,7 @@ Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
         },
         dir: cwdDir,
       },
+      secrets: {},
     });
 
     const engine = await metaTest.engineFromDeployed(serialized);

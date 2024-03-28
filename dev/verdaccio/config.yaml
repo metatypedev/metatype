@@ -1,0 +1,22 @@
+storage: ../storage
+uplinks:
+  npmjs:
+    url: https://registry.npmjs.org/
+packages:
+  '@typegraph/*':
+    access: $all
+    publish: $all
+    proxy: npmjs
+  '@*/*':
+    access: $all
+    publish: $authenticated
+    proxy: npmjs
+  '**':
+    access: $all
+    publish: $authenticated
+    proxy: npmjs
+log:
+  type: stdout
+  format: pretty
+  level: http
+max_body_size: 100mb
