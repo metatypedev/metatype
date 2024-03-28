@@ -116,7 +116,7 @@ pub fn get_or_init_imports() -> anyhow::Result<&'static ImportObject<NeverType>>
 
 #[deno_core::op2]
 #[string]
-pub fn op_wasmedge_mdk_setup(#[serde] input: WasiInput) -> Result<String> {
+pub fn op_wasmedge_mdk(#[serde] input: WasiInput) -> Result<String> {
     // setup vm
     let common_options = CommonConfigOptions::default().threads(true);
     let host_options = HostRegistrationConfigOptions::default().wasi(true);
@@ -131,7 +131,7 @@ pub fn op_wasmedge_mdk_setup(#[serde] input: WasiInput) -> Result<String> {
     let vm = vm.register_module(None, mdk_module)?;
 
     // do fn calls
-    vm.run_func(None, "init", params!())?;
+    vm.run_func(None, "init", params!())?; // init_mdk!()
 
     let args: Vec<serde_json::Value> = input
         .args
@@ -142,6 +142,9 @@ pub fn op_wasmedge_mdk_setup(#[serde] input: WasiInput) -> Result<String> {
     let params: Vec<Param> = args.iter().map(|v| value_to_param(v).unwrap()).collect();
     let vm_dock = VmDock::new(vm);
 
+    // TODO: explore why wit-bindgen not working out of box on wasmedge?
+    // Their solution: https://github.com/second-state/witc
+    // match vm_dock.run_func(&format!("metatype:mdk/mat#{}", input.func), params)? {
     match vm_dock.run_func(&input.func, params)? {
         Ok(mut res) => Ok(param_cast(&input.out, &mut res).unwrap()),
         Err(e) => Err(anyhow::anyhow!(e)),

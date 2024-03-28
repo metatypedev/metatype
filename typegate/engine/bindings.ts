@@ -113,6 +113,15 @@ export function wasmedge_wasi(a0: WasiInput): Promise<WasiOutput> {
   }
 }
 
+export function wasmedge_mdk(a0: WasiInput): Promise<WasiOutput> {
+  try {
+    const out = Meta.wasmedgeMdk(a0);
+    return Promise.resolve({ Ok: { res: out } });
+  } catch (err) {
+    return Promise.resolve({ Err: { message: err.toString() } });
+  }
+}
+
 export type TemporalRegisterOutput =
   | "Ok"
   | {

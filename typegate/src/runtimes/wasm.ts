@@ -4,10 +4,9 @@
 import { Runtime } from "./Runtime.ts";
 import * as native from "native";
 import { Resolver, RuntimeInitParams } from "../types.ts";
-import { nativeResult } from "../utils.ts";
+import { artifactPath, nativeResult } from "../utils.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
 import { registerRuntime } from "./mod.ts";
-import config from "../config.ts";
 
 @registerRuntime("wasm")
 export class WasmRuntime extends Runtime {
@@ -30,16 +29,41 @@ export class WasmRuntime extends Runtime {
     _verbose: boolean,
   ): ComputeStage[] {
     if (stage.props.materializer?.data?.mdk_enabled) {
-      // TODO:
-      // 1. run the wasm binary as a wit component
-      // 2. func <=> op_name ====> find a way to populate the Req obj
-      // 3. interface gql (gate(host) <=> wasm (guest)), try wasmedge future? or make it somewhat sync
-      throw new Error(
-        "TODO: mdk interface ",
-      );
+      return this.#mdkResolver(stage);
     }
-
     return this.#genericWasiResolver(stage);
+  }
+
+  #mdkResolver(stage: ComputeStage) {
+    const { materializer, argumentTypes, outType } = stage.props;
+    const { wasm, func, artifact_hash, tg_name } = materializer?.data ?? {};
+    const order = Object.keys(argumentTypes ?? {});
+
+    const resolver: Resolver = async (args) => {
+      const transfert = order.map((k) => JSON.stringify(args[k]));
+      const { res } = nativeResult(
+        await native.wasmedge_mdk(
+          {
+            func: func as string,
+            wasm: artifactPath(
+              tg_name as string,
+              wasm as string,
+              artifact_hash as string,
+            ),
+            args: transfert,
+            out: outType.type,
+          },
+        ),
+      );
+      return JSON.parse(res);
+    };
+
+    return [
+      new ComputeStage({
+        ...stage.props,
+        resolver,
+      }),
+    ];
   }
 
   #genericWasiResolver(stage: ComputeStage) {
@@ -50,13 +74,15 @@ export class WasmRuntime extends Runtime {
     // always wasi
     const resolver: Resolver = async (args) => {
       const transfert = order.map((k) => JSON.stringify(args[k]));
-
       const { res } = nativeResult(
         await native.wasmedge_wasi(
           {
             func: func as string,
-            wasm:
-              `${config.tmp_dir}/metatype_artifacts/${tg_name as string}/artifacts/${wasm as string}.${artifact_hash as string}`,
+            wasm: artifactPath(
+              tg_name as string,
+              wasm as string,
+              artifact_hash as string,
+            ),
             args: transfert,
             out: outType.type,
           },

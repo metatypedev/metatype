@@ -62,4 +62,5 @@ globalThis.Meta = {
   typegraphValidate: getOp("op_typegraph_validate"),
   validatePrismaRuntimeData: getOp("op_validate_prisma_runtime_data"),
   wasmedgeWasi: getOp("op_wasmedge_wasi"),
+  wasmedgeMdk: getOp("op_wasmedge_mdk"),
 };

@@ -149,6 +149,7 @@ declare namespace Meta {
   function typegraphValidate(json: string): string;
   function validatePrismaRuntimeData(obj: any): void;
   function wasmedgeWasi(inp: WasiInput): string;
+  function wasmedgeMdk(inp: WasiInput): string;
 
   namespace prisma {
     function registerEngine(

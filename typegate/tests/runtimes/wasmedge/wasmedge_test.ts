@@ -29,23 +29,31 @@ const auth = new BasicAuth("admin", "password");
 // }, { port: port });
 
 Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
-  await metaTest.should("build mdk project", async () => {
-    const proc = await (new Deno.Command("cargo", {
-      args: "build --target wasm32-wasi".split(/\s+/),
+  const mdkCli = async (cmd: string, args: string) => {
+    console.log("===========");
+    console.log(`${cmd} ${args}`);
+    const proc = await (new Deno.Command(cmd, {
+      args: args.split(/\s+/),
       cwd: path.join(testDir, "runtimes/wasmedge/mdk"),
     }).output());
 
-    console.error("sucess", new TextDecoder().decode(proc.stdout));
-    console.error("error", new TextDecoder().decode(proc.stderr));
+    console.error("stdout", new TextDecoder().decode(proc.stdout));
+    console.error("stderr", new TextDecoder().decode(proc.stderr));
+  };
 
-    assert(
-      exists(
-        path.join(
-          testDir,
-          "runtimes/wasmedge/mdk/target/wasm32-wasi/debug/mat_rust.wasm",
-        ),
-      ),
+  await metaTest.should("build mdk project", async () => {
+    await mdkCli("cargo", "build --target wasm32-wasi");
+    const binPath = path.join(
+      testDir,
+      "runtimes/wasmedge/mdk/target/wasm32-wasi/debug/mat_rust.wasm",
     );
+    const _outPath = path.join(
+      testDir,
+      "runtimes/wasmedge/mdk_component.wasm",
+    );
+    assert(exists(binPath));
+
+    // await mdkCli("jco", `print ${binPath}`); // explore .wat
   });
 
   const port = metaTest.port;
@@ -73,6 +81,7 @@ Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
     await gql`
       query {
         test_wasi_ts(a: 11, b: 2)
+        test_mdk_ts(a: 11, b: 2)
       }
     `
       .expectData({

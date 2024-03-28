@@ -24,6 +24,7 @@ deno_core::extension!(
         typegraph::op_typegraph_validate,
         typegraph::op_validate_prisma_runtime_data,
         wasmedge::op_wasmedge_wasi,
+        wasmedge::op_wasmedge_mdk,
         temporal::op_temporal_register,
         temporal::op_temporal_unregister,
         temporal::op_temporal_workflow_start,

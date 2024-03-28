@@ -4,6 +4,17 @@
 // gen-static-start
 #![allow(unused)]
 
+macro_rules! init_mdk {
+    () => {
+        #[no_mangle]
+        fn init() {
+            println!("im in it");
+        }
+    };
+}
+
+macro_rules! mdk_materializer {}
+
 mod wit {
     wit_bindgen::generate!({
 

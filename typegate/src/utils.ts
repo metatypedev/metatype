@@ -16,6 +16,7 @@ import * as streams from "std/streams/mod.ts";
 import { path } from "compress/deps.ts";
 import { sha1 } from "./crypto.ts";
 import { BRANCH_NAME_SEPARATOR } from "./engine/computation_engine.ts";
+import config from "./config.ts";
 
 export const maxi32 = 2_147_483_647;
 
@@ -293,4 +294,14 @@ export async function structureRepr(str: string): Promise<FolderRepr> {
       content: contentHash,
     },
   };
+}
+
+export function artifactPath(tgName: string, file: string, hash: string) {
+  return path.join(
+    config.tmp_dir,
+    "metatype_artifacts",
+    tgName,
+    "artifacts",
+    `${file as string}.${hash as string}`,
+  );
 }
