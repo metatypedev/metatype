@@ -49,6 +49,7 @@ interface core {
     record artifact-resolution-config {
         dir: option<string>, // cwd() if none
         prefix: option<string>, // overrides tg.meta.prefix field if defined
+        disable-artifact-resolution: option<bool>, // any postprocess using fs ops should be disabled when set to true
         prisma-migration: migration-config
     }
 
@@ -360,7 +361,6 @@ interface runtimes {
     record materializer-wasm {
         func-name: string,
         module: string,
-        artifact-hash: string,
         mdk-enabled: bool
     }
 

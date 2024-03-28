@@ -13,7 +13,6 @@ from typegraph.gen.exports.runtimes import (
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.utils import get_file_hash
 from typegraph.wit import runtimes, store
 
 
@@ -56,7 +55,6 @@ def gen_wasm(
     effect: Optional[Effect] = None,
 ):
     effect = effect or EffectRead()
-    artifact_hash = get_file_hash(wasm)
     wasm = f"file:{wasm}"
 
     mat_id = runtimes.from_wasm_module(
@@ -65,7 +63,6 @@ def gen_wasm(
         MaterializerWasm(
             module=wasm,
             func_name=op_name,
-            artifact_hash=artifact_hash,
             mdk_enabled=enable_mdk,
         ),
     )

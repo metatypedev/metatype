@@ -6,7 +6,6 @@ import { runtimes } from "../wit.js";
 import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import { Materializer, Runtime } from "./mod.js";
 import { fx } from "../index.js";
-import { getFileHash } from "../utils/file_utils.js";
 
 interface WasmMat extends Materializer {
   module: string;
@@ -19,7 +18,7 @@ export class WasmRuntime extends Runtime {
     super(runtimes.registerWasmRuntime());
   }
 
-  async fromWasm<
+  fromWasm<
     I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
@@ -30,7 +29,7 @@ export class WasmRuntime extends Runtime {
       wasm: string;
       effect?: Effect;
     },
-  ): Promise<t.Func<I, O, WasmMat>> {
+  ): t.Func<I, O, WasmMat> {
     const enableMdk = false;
     return genWasm(this._id, enableMdk, inp, out, {
       ...data,
@@ -38,7 +37,7 @@ export class WasmRuntime extends Runtime {
     });
   }
 
-  async fromMdk<
+  fromMdk<
     I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
@@ -49,7 +48,7 @@ export class WasmRuntime extends Runtime {
       wasm: string;
       effect?: Effect;
     },
-  ): Promise<t.Func<I, O, WasmMat>> {
+  ): t.Func<I, O, WasmMat> {
     const enableMdk = true;
     return genWasm(this._id, enableMdk, inp, out, {
       funcName: data.opName,
@@ -59,7 +58,7 @@ export class WasmRuntime extends Runtime {
   }
 }
 
-async function genWasm<
+function genWasm<
   I extends t.Typedef = t.Typedef,
   O extends t.Typedef = t.Typedef,
 >(
@@ -72,9 +71,7 @@ async function genWasm<
     wasm: string;
     effect?: Effect;
   },
-): Promise<t.Func<I, O, WasmMat>> {
-  let artifactHash = await getFileHash(wasm);
-
+): t.Func<I, O, WasmMat> {
   const matId = runtimes.fromWasmModule(
     {
       runtime: runtimeId,
@@ -83,7 +80,6 @@ async function genWasm<
     {
       module: `file:${wasm}`,
       funcName,
-      artifactHash,
       mdkEnabled: enableMdk,
     },
   );

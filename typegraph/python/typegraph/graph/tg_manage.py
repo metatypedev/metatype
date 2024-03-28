@@ -155,6 +155,9 @@ class Manager:
                         "migrationDir"
                     ],
                 ),
+                disable_artifact_resolution=artifact_config_raw[
+                    "disableArtifactResolution"
+                ],
             ),
         )
 

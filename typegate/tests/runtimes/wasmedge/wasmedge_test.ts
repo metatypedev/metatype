@@ -2,17 +2,14 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
-import { gql, Meta } from "../../utils/mod.ts";
+import { gql, Meta } from "test-utils/mod.ts";
 import { testDir } from "test-utils/dir.ts";
-import { lazyTg } from "./wasmedge.ts";
 
 import * as path from "std/path/mod.ts";
 import { exists } from "std/fs/exists.ts";
 import { assert } from "std/assert/assert.ts";
 
-const port = 7698;
-const gate = `http://localhost:${port}`;
-const cwdDir = testDir;
+const cwdDir = path.join(testDir, "runtimes/wasmedge");
 const auth = new BasicAuth("admin", "password");
 
 // Meta.test("WasmEdge runtime", async (t) => {
@@ -51,8 +48,11 @@ Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
     );
   });
 
+  const port = metaTest.port;
+  const gate = `http://localhost:${port}`;
+
   await metaTest.should("work after deploying artifact", async () => {
-    const tg = await lazyTg();
+    const { tg } = await import("./wasmedge.ts");
     const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
       baseUrl: gate,
       auth,
@@ -81,4 +81,4 @@ Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
       .on(engine);
     await engine.terminate();
   });
-}, { port: port, systemTypegraphs: true });
+}, { port: true, systemTypegraphs: true });

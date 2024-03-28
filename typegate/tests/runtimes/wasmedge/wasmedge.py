@@ -14,7 +14,7 @@ def wasmedge(g: Graph):
         test=wasm.from_wasm(
             t.struct({"a": t.float(), "b": t.float()}),
             t.integer(),
-            wasm="artifacts/rust.wasm",
+            wasm="rust.wasm",
             func="add",
         ).with_policy(pub),
     )

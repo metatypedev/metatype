@@ -293,13 +293,11 @@ impl MaterializerConverter for WasmMaterializer {
         let data = serde_json::from_value(json!({
             "wasm": mat.module,
             "func": mat.func_name,
-            "artifact_hash": mat.artifact_hash,
+            "artifact_hash": "", // resolved at finalization
             "tg_name": None::<String>,
             "mdk_enabled": mat.mdk_enabled
         }))
         .map_err(|e| e.to_string())?;
-
-        c.add_ref_artifacts(mat.artifact_hash.clone(), mat.module.clone().into())?;
 
         let name = "wasm".to_string();
         Ok(Materializer {
