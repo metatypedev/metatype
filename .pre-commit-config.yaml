@@ -87,6 +87,11 @@ repos:
         language: system
         entry: bash -c 'deno run -A dev/lock.ts --check'
         pass_filenames: false
+      - id: clean-deno-lock
+        name: "Clean deno.lock"
+        always_run: true
+        language: system
+        entry: ghjk x clean-deno-lock
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.5.4
     hooks:

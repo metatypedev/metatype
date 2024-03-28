@@ -2,7 +2,6 @@ env:
   TYPEGRAPH_VERSION: "0.0.3"
   CLICOLOR_FORCE: "1"
   RUST_LOG: "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off,error"
-  METATYPE_VERSION: "0.3.7-0"
 
 gate1: &tp
   watch:
@@ -50,8 +49,6 @@ typegraph:
     - "typegraph/node/sdk/src/**/*.ts"
   env:
     WASM_FILE: target/debug/typegraph_core.wasm
-    JQ_OP_1: del(.packages.specifiers["npm:@typegraph/sdk@$METATYPE_VERSION"])
-    JQ_OP_2: del(.packages.npm["@typegraph/sdk@$METATYPE_VERSION"])
   command: |
     set -e
     cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
@@ -70,8 +67,7 @@ typegraph:
     npm publish --no-git-checks --force --registry http://localhost:4873
     cd ../../../..
 
-    cat typegate/deno.lock | jq "$JQ_OP_1 | $JQ_OP_2" > typegate/~deno.lock
-    mv typegate/~deno.lock typegate/deno.lock
+    ghjk x clean-deno-lock
 
     rm -rf typegraph/python/typegraph/gen
     poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
@@ -119,7 +115,7 @@ setup:
     - typegraph/python/pyproject.toml
     - website/package.json
   env:
-    GHJK_VERSION: "f380522"
+    GHJK_VERSION: "423d38e"
   command: |
     set -e
     curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh |  bash
