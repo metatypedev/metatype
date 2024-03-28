@@ -1,0 +1,14 @@
+package.name = "metagen_mdk_rust_static"
+package.edition = "2021"
+package.version = "0.0.1"
+
+[lib]
+path = "mod.rs"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# TODO: update typegraph_core bindgen version
+wit-bindgen = "0.22.0"

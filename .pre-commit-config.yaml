@@ -109,7 +109,7 @@ repos:
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
           - rust
-        files: ^(typegate|libs)/
+        files: ^(typegate|libs!(/metagen/.*))/
       - id: insert-license
         name: "License MPL-2.0 rust"
         args:
@@ -119,7 +119,7 @@ repos:
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
           - rust
-        files: ^(meta-cli|typegraph)/
+        files: ^(meta-cli|typegraph|libs/metagen)/
       - id: insert-license
         name: "License Elastic-2.0 deno"
         args:
