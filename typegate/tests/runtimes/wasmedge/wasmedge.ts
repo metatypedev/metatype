@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Policy, t, typegraph } from "@typegraph/sdk";
-import { WasmEdgeRuntime } from "@typegraph/sdk/runtimes";
+import { WasmEdgeRuntime } from "@typegraph/sdk/runtimes/wasmedge.js";
 
-export const tg = await typegraph("wasmedge_ts", async (g: any) => {
+export const tg = await typegraph("wasmedge_ts", async (g) => {
   const pub = Policy.public();
   const wasmedge = new WasmEdgeRuntime();
   let mat;

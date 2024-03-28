@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { fx, Policy, t, typegraph } from "@typegraph/sdk/index.js";
+import { fx, Policy, t, typegraph } from "@typegraph/sdk";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import { Auth } from "@typegraph/sdk/params.js";
 
@@ -25,7 +25,7 @@ typegraph(
       maxAgeSec: 120,
     },
   },
-  (g: any) => {
+  (g) => {
     const deno = new DenoRuntime();
     const pub = Policy.public();
 

@@ -62,7 +62,7 @@
         }
       },
       "@typegraph/sdk@0.3.7-0": {
-        "integrity": "sha512-6U5RWF4ooj7dNKpIu+nXG3GtQaYXfJuxcnGA5lWY5fZl8Wk8dHctzJ8cMCjiSg9DsOepfkLAK1aeyVTL6CpjCQ==",
+        "integrity": "sha512-2wNvgBPdLBsd3MbEoGwwbkHbdbRWoBRM7Dm1J3HwF9qOiO46+ALjTwTs83ZmeNn1mtJSafopDr+hBoUI62ittQ==",
         "dependencies": {}
       },
       "@types/node@18.16.19": {
