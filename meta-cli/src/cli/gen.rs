@@ -120,6 +120,7 @@ async fn load_tg_at(
         Some(crate::com::store::Command::Serialize),
         Some(config.as_ref().clone()),
     );
+    ServerStore::set_artifact_resolution_flag(false);
     // ServerStore::set_prefix(self.prefix.to_owned());
 
     let console = ConsoleActor::new(Arc::clone(&config)).start();
