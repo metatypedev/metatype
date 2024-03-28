@@ -1,0 +1,27 @@
+[package]
+name = "python-wasi-reactor"
+version = "0.3.7-0"
+edition = "2021"
+license = "MPL-2.0"
+
+[profile.release]
+opt-level = "z"
+lto = true
+
+[dependencies]
+pythonize = "0.19.0"
+serde = {version = "1.0.171", features = ["derive"] }
+serde_json = "1.0.102"
+wasmedge-bindgen-macro = "0.4.1"
+pyo3 = { version = "0.19.1", features = ["abi3-py311"] }
+
+[workspace]
+members = [
+    "wasmedge_reactor"
+]
+
+[features]
+wasm = []
+
+[build-dependencies]
+wlr-assets = { git = "https://github.com/vmware-labs/webassembly-language-runtimes.git" }

@@ -1,0 +1,8 @@
+
+[target.wasm32-wasi]
+rustflags = [
+    "-Z", "wasi-exec-model=reactor", 
+]
+
+[env]
+PYO3_NO_PYTHON = "1"
