@@ -6,7 +6,6 @@ import { runtimes } from "../wit.js";
 import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import { Materializer, Runtime } from "./mod.js";
 import { fx } from "../index.js";
-import { getFileHash } from "../utils/file_utils.js";
 
 interface WasiMat extends Materializer {
   module: string;
@@ -19,7 +18,7 @@ export class WasmEdgeRuntime extends Runtime {
     super(runtimes.registerWasmedgeRuntime());
   }
 
-  async wasi<
+  wasi<
     I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
@@ -30,9 +29,7 @@ export class WasmEdgeRuntime extends Runtime {
       wasm: string;
       effect?: Effect;
     },
-  ): Promise<t.Func<I, O, WasiMat>> {
-    let artifactHash = await getFileHash(wasm);
-
+  ): t.Func<I, O, WasiMat> {
     const matId = runtimes.fromWasiModule(
       {
         runtime: this._id,
@@ -41,7 +38,6 @@ export class WasmEdgeRuntime extends Runtime {
       {
         module: `file:${wasm}`,
         funcName: func,
-        artifactHash: artifactHash,
       },
     );
 
