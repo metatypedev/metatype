@@ -9,6 +9,8 @@ dev:
       (WASMEDGE_VERSION=").+("): WASMEDGE_VERSION
     rust-toolchain.toml:
       (channel = ").+("): RUST_VERSION
+    libs/python-wasi-reactor/rust-toolchain.toml:
+      (channel = ").+("): RUST_NIGHTLY_VERSION
     ghjk.ts:
       '(.*/metatypedev/ghjk/)[^/]*(/.*)': GHJK_VERSION
       (const\s+PROTOC_VERSION\s*=\s*").*(";): PROTOC_VERSION
@@ -78,12 +80,13 @@ dev:
     examples/**/*.ts:
       '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': PUBLISHED_VERSION
   lock:
-    GHJK_VERSION: f380522
+    GHJK_VERSION: 423d38e
     GHJK_ACTION_VERSION: a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
     PYTHON_VERSION: 3.8.18
     POETRY_VERSION: 1.7.0
     PROTOC_VERSION: v24.1
     RUST_VERSION: 1.75.0
+    RUST_NIGHTLY_VERSION: nightly-2024-03-07
     DENO_VERSION: 1.41.0
     NODE_VERSION: 20.8.0
     PNPM_VERSION: v8.15.2

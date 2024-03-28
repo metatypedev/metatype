@@ -1,0 +1,27 @@
+# FIXME: make sure ghjk subcmds die on restart
+reactor_guest:
+  watch: "src/**/*"
+  command: ghjk x build-pywasi-rx
+
+wasmedge_host:
+  watch: "wasmedge_reactor/**/*.rs"
+  command: "cargo run -p wasmedge_reactor"
+  depends_on:
+    - reactor_guest
+
+bindgen:
+  command: |
+    rm -rfv $(deno info --json | jq -r .denoDir)/plug/file wasmedge_reactor/bindings.json
+    deno_bindgen -- -p wasmedge_reactor
+  depends_on:
+    - wasmedge_host
+
+example:
+  command: "deno run -A --unstable deno/main.ts"
+  depends_on:
+    - bindgen
+
+example_parallel:
+  command: "deno run -A --unstable deno/parallel.ts"
+  depends_on:
+    - bindgen

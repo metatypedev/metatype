@@ -7,6 +7,10 @@ members = [
   "meta-cli",
   "typegraph/core", ]
 
+exclude = [
+  "libs/python-wasi-reactor/"
+]
+
 [workspace.package]
 version = "0.3.7-0"
 edition = "2021"
