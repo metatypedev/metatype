@@ -107,4 +107,6 @@ Meta.test("test sync through s3", async (t) => {
   async teardown() {
     await cleanUp();
   },
+  // FIXME: figure out problem with RedisConnection.processCommandQueue not cleaning up
+  sanitizeOps: false,
 });

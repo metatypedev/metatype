@@ -597,8 +597,8 @@
     },
     "auths": [],
     "rate": null,
-    "ref_artifacts": {},
     "version": "0.0.3",
-    "random_seed": null
+    "random_seed": null,
+    "ref_artifacts": {}
   }
 }

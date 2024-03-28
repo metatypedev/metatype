@@ -82,7 +82,10 @@ config_params = MigrationConfig(
     runtime_actions=None,  # usually set from the cli
 )
 artifacts_config = ArtifactResolutionConfig(
-    prefix=None, dir=None, prisma_migration=config_params
+    prefix=None,
+    dir=None,
+    prisma_migration=config_params,
+    disable_artifact_resolution=None,
 )
 
 

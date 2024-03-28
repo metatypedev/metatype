@@ -6,7 +6,6 @@ use crate::conversion::runtimes::{convert_materializer, convert_runtime, Convert
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
 use crate::types::{TypeDef, TypeDefExt, TypeId};
-use crate::utils::fs_host;
 use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
 use crate::validation::validate_name;
 use crate::Lib;
@@ -25,7 +24,6 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::hash::Hasher as _;
 
-use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::wit::core::{
@@ -197,14 +195,6 @@ pub fn finalize(
 
     let auths = finalize_auths(&mut ctx)?;
 
-    let referred_artifacts: Vec<(String, String)> = ctx
-        .meta
-        .ref_artifacts
-        .clone()
-        .iter()
-        .map(|(hash, path)| (hash.clone(), path.to_string_lossy().to_string()))
-        .collect();
-
     let mut tg = Typegraph {
         id: format!("https://metatype.dev/specs/{TYPEGRAPH_VERSION}.json"),
         types: ctx
@@ -244,6 +234,15 @@ pub fn finalize(
         Ok(res) => res,
         Err(e) => return Err(e),
     };
+
+    // TODO: maybe remove this extra return value? tg.meta.ref_artifacts can be accessed on the sdk frontend
+    let referred_artifacts: Vec<(String, String)> = tg
+        .meta
+        .ref_artifacts
+        .clone()
+        .iter()
+        .map(|(hash, path)| (hash.clone(), path.to_string_lossy().to_string()))
+        .collect();
 
     #[cfg(test)]
     return Ok((result, referred_artifacts));
@@ -485,21 +484,5 @@ impl TypegraphContext {
 
     pub fn find_policy_index_by_store_id(&self, id: u32) -> Option<u32> {
         self.mapping.policies.get(&id).copied()
-    }
-
-    pub fn add_ref_artifacts(&mut self, file_hash: String, file_path: PathBuf) -> Result<()> {
-        let binding = file_path.to_string_lossy().to_string();
-        let path = match binding.strip_prefix("file:") {
-            Some(path) => path,
-            None => return Err("file path has no prefix".into()),
-        };
-        let absolute_file_path = match fs_host::make_absolute(&PathBuf::from(path)) {
-            Ok(path) => path,
-            Err(e) => return Err(e.into()),
-        };
-        self.meta
-            .ref_artifacts
-            .insert(file_hash, absolute_file_path);
-        Ok(())
     }
 }

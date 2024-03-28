@@ -5,8 +5,9 @@ import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 import { gql, Meta } from "test-utils/mod.ts";
 import { testDir } from "test-utils/dir.ts";
 import { tg } from "./wasmedge.ts";
+import * as path from "std/path/mod.ts";
 
-const cwdDir = testDir;
+const cwdDir = path.join(testDir, "runtimes/wasmedge");
 const auth = new BasicAuth("admin", "password");
 
 // Meta.test("WasmEdge runtime", async (t) => {
