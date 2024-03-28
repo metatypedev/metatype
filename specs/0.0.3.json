@@ -2341,6 +2341,7 @@
         "auths",
         "cors",
         "queries",
+        "ref_artifacts",
         "secrets",
         "version"
       ],
@@ -2389,6 +2390,12 @@
           ],
           "format": "uint32",
           "minimum": 0.0
+        },
+        "ref_artifacts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },
