@@ -267,6 +267,12 @@ jobs:
         ports:
           - "9000:9000"
           - "9001:9001"
+      verdaccio:
+        image: verdaccio/verdaccio:5
+        ports:
+          - "4873:4873"
+        volumes:
+          - ./dev/verdaccio/:/verdaccio/conf/
     env:
       DENO_DIR: deno-dir
     steps:
