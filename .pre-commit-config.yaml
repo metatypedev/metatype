@@ -92,6 +92,7 @@ repos:
         always_run: true
         language: system
         entry: ghjk x clean-deno-lock
+        pass_filenames: false
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.5.4
     hooks:
