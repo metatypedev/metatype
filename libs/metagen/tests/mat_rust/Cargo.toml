@@ -1,0 +1,14 @@
+[package]
+name = "mat_rust"
+edition = "2021"
+version = "0.3.7-0"
+
+[workspace]
+members = ["gen"]
+
+[lib]
+path = "lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+gen_test_mdk.path = "./gen"

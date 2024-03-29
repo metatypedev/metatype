@@ -8,7 +8,6 @@ use itertools::Itertools;
 use reqwest::{header::CONTENT_TYPE, RequestBuilder, Response as HttpResponse};
 use serde::Deserialize;
 use serde_json;
-use std::fmt;
 
 #[derive(Debug, Deserialize)]
 pub struct Response {
@@ -87,10 +86,13 @@ struct FailedQueryResponse {
     errors: Vec<GraphqlError>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[error("{0}")]
     EndpointNotReachable(String),
+    #[error("query failed: {}", .0.error_messages())]
     FailedQuery(Vec<GraphqlError>),
+    #[error("invalid http resoponse: {0}")]
     InvalidResponse(String),
 }
 
@@ -101,24 +103,6 @@ pub trait GraphqlErrorMessages {
 impl GraphqlErrorMessages for Vec<GraphqlError> {
     fn error_messages(&self) -> String {
         self.iter().map(|e| format!(" - {}", e.message)).join("\n")
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use Error::*;
-        match self {
-            EndpointNotReachable(e) => write!(f, "{e}"),
-            FailedQuery(errors) => write!(f, "query failed: {}", errors.error_messages()),
-            InvalidResponse(e) => write!(f, "invalid http response: {e}"),
-        }
-    }
-}
-
-impl From<Error> for anyhow::Error {
-    fn from(e: Error) -> Self {
-        use anyhow::anyhow;
-        anyhow!("{e}")
     }
 }
 
