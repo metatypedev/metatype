@@ -12,9 +12,7 @@ use crate::wit::utils::Auth as WitAuth;
 
 #[allow(unused)]
 use crate::wit::core::ArtifactResolutionConfig;
-use crate::wit::runtimes::{
-    Effect, MaterializerDenoPredefined, MaterializerId, ModuleDependencyMeta,
-};
+use crate::wit::runtimes::{Artifact, Effect, MaterializerDenoPredefined, MaterializerId};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
 use std::path::PathBuf;
@@ -55,7 +53,7 @@ pub struct Store {
     deno_modules: HashMap<String, MaterializerId>,
 
     // module dependencies
-    artifact_deps: HashMap<String, Vec<ModuleDependencyMeta>>,
+    artifact_deps: HashMap<String, Vec<Artifact>>,
 
     public_policy_id: PolicyId,
 
@@ -242,14 +240,14 @@ impl Store {
         with_store_mut(|store| store.random_seed = value)
     }
 
-    pub fn get_deps(artifact_hash: String) -> Vec<ModuleDependencyMeta> {
+    pub fn get_deps(artifact_hash: String) -> Vec<Artifact> {
         with_store(|store| match store.artifact_deps.get(&artifact_hash) {
             Some(deps) => deps.clone(),
             None => vec![],
         })
     }
 
-    pub fn register_dep(artifact_hash: String, dep: ModuleDependencyMeta) {
+    pub fn register_dep(artifact_hash: String, dep: Artifact) {
         with_store_mut(|store| {
             store
                 .artifact_deps

@@ -222,6 +222,8 @@ interface core {
     expose: func(fns: list<tuple<string, type-id>>, default-policy: option<list<policy-spec>>) -> result<_, error>
 
     set-seed: func(seed: option<u32>) -> result<_, error>
+
+    get-deps: func(artifact-hash: string) -> result<list<artifact>, error>
     
     type runtime-id = u32
     type materializer-id = u32
@@ -333,17 +335,10 @@ interface runtimes {
         fn: string,
     }
 
-    record module-dependency-meta {
-        path: string,
-        dep-hash: string,
-        relative-path-prefix: list<string>,
-    }
-
     record materializer-python-module {
         runtime: runtime-id,
-        artifact: string,
-        artifact-hash: string,
-        deps: list<module-dependency-meta>,
+        python-artifact: string,
+        deps: list<string>,
     }
 
     record materializer-python-import {
@@ -357,7 +352,6 @@ interface runtimes {
     from-python-def: func(base: base-materializer, data: materializer-python-def) -> result<materializer-id, error>
     from-python-module: func(base: base-materializer, data: materializer-python-module) -> result<materializer-id, error>
     from-python-import: func(base: base-materializer, data: materializer-python-import) -> result<materializer-id, error>
-    get-deps: func(artifact-hash: string) -> result<list<module-dependency-meta>, error>
 
     // random
     record random-runtime-data {

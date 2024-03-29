@@ -195,14 +195,6 @@ pub fn finalize(
 
     let auths = finalize_auths(&mut ctx)?;
 
-    let artifacts = ctx
-        .meta
-        .artifacts
-        .iter()
-        .cloned()
-        .map(Into::into)
-        .collect::<Vec<_>>();
-
     let mut tg = Typegraph {
         id: format!("https://metatype.dev/specs/{TYPEGRAPH_VERSION}.json"),
         types: ctx
@@ -235,6 +227,14 @@ pub fn finalize(
         config
     });
     TypegraphPostProcessor::new(config).postprocess(&mut tg)?;
+
+    let artifacts = tg
+        .meta
+        .artifacts
+        .iter()
+        .cloned()
+        .map(Into::into)
+        .collect::<Vec<_>>();
 
     Store::restore(ctx.saved_store_state.unwrap());
 

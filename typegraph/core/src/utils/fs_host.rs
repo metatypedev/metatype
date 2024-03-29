@@ -200,9 +200,19 @@ pub fn make_absolute(path: &Path) -> Result<PathBuf, String> {
     }
 }
 
-pub fn hash_file(path: &Path) -> Result<String, String> {
+pub struct ArtifactMeta {
+    pub hash: String,
+    pub size: u32,
+}
+
+pub fn get_artifact_meta(path: &Path) -> Result<ArtifactMeta, String> {
     let mut sha256 = Sha256::new();
     let bytes = read_file(&path.to_string_lossy())?;
+    let artifact_size = bytes.len() as u32;
     sha256.update(bytes);
-    Ok(format!("{:x}", sha256.finalize()))
+    let artifact_meta = ArtifactMeta {
+        hash: format!("{:x}", sha256.finalize()),
+        size: artifact_size,
+    };
+    Ok(artifact_meta)
 }

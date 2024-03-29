@@ -543,6 +543,10 @@ impl wit::core::Guest for Lib {
     fn set_seed(seed: Option<u32>) -> Result<()> {
         typegraph::set_seed(seed)
     }
+
+    fn get_deps(artifact_hash: String) -> Result<Vec<Artifact>> {
+        Ok(Store::get_deps(artifact_hash))
+    }
 }
 
 #[macro_export]

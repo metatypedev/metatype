@@ -3,6 +3,7 @@
 
 use std::collections::HashMap;
 
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::errors::Result;
@@ -12,7 +13,8 @@ use crate::runtimes::{
     DenoMaterializer, Materializer as RawMaterializer, PythonMaterializer, RandomMaterializer,
     Runtime, TemporalMaterializer, WasiMaterializer,
 };
-use crate::wit::core::RuntimeId;
+use crate::utils::fs_host::{get_artifact_meta, make_absolute};
+use crate::wit::core::{Error, RuntimeId};
 use crate::wit::runtimes::{Artifact as WitArtifact, HttpMethod, MaterializerHttpRequest};
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
@@ -230,17 +232,28 @@ impl MaterializerConverter for PythonMaterializer {
                 ("def".to_string(), data)
             }
             Module(module) => {
-                // c.register_artifact(module.artifact_hash.clone(), module.artifact.clone().into())?;
+                let path = module.python_artifact.clone();
+                let Some(path) = path.strip_prefix("file:").to_owned() else {
+                    return Err(Error::from("Invalid artifact path"));
+                };
+
+                let artifact_path = make_absolute(&PathBuf::from(path))?;
+                let artifact_meta = get_artifact_meta(&artifact_path)?;
 
                 let deps = module.deps.clone();
                 for dep in deps {
-                    Store::register_dep(module.artifact_hash.clone(), dep);
+                    let dep_artifact = Artifact {
+                        path: make_absolute(&PathBuf::from(dep))?,
+                        hash: artifact_meta.hash.clone(),
+                        size: artifact_meta.size,
+                    };
+                    Store::register_dep(artifact_meta.hash.clone(), dep_artifact.into());
                 }
 
                 let data = serde_json::from_value(json!({
-                    "artifact": module.artifact,
-                    "artifact_hash": module.artifact_hash,
-                    "tg_name": None::<String>,
+                    "artifact": artifact_path,
+                    "artifact_hash": artifact_meta.hash,
+                    "size": artifact_meta.size,
                 }))
                 .map_err(|e| e.to_string())?;
 
@@ -329,8 +342,6 @@ impl MaterializerConverter for WasiMaterializer {
             "func": mat.func_name,
         }))
         .map_err(|e| e.to_string())?;
-
-        c.register_artifact(&mat.wasm_artifact.clone().into())?;
 
         let name = "wasi".to_string();
         Ok(Materializer {

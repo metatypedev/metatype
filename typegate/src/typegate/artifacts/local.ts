@@ -68,6 +68,7 @@ export class LocalArtifactStore extends ArtifactStore {
 
     const hash = hasher.digest("hex");
     const targetFile = resolve(STORE_DIR, hash);
+    console.log("*********************Dir", tmpFile, targetFile);
     await Deno.rename(tmpFile, targetFile);
 
     return hash;

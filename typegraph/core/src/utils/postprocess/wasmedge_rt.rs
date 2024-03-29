@@ -31,15 +31,16 @@ impl PostProcessor for WasmedgeProcessor {
 
                 let wasi_path = fs_host::make_absolute(&PathBuf::from(path))?;
 
-                let artifact_hash = fs_host::hash_file(&wasi_path.clone())?;
+                let artifact_meta = fs_host::get_artifact_meta(&wasi_path)?;
 
                 let mut artifact = mat_data.wasm_artifact.clone();
-                artifact.hash = artifact_hash;
+                artifact.path = wasi_path.clone();
+                artifact.hash = artifact_meta.hash;
+                artifact.size = artifact_meta.size;
 
                 mat_data.wasm_artifact = artifact.clone();
 
                 mat.data = map_from_object(mat_data.clone()).map_err(|e| e.to_string())?;
-
                 tg.deps.push(wasi_path.clone());
                 tg.meta.artifacts.push(artifact);
             }

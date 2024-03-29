@@ -340,10 +340,6 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         Ok(Store::register_materializer(mat))
     }
 
-    fn get_deps(artifact_hash: String) -> Result<Vec<wit::ModuleDependencyMeta>, wit::Error> {
-        Ok(Store::get_deps(artifact_hash))
-    }
-
     fn register_random_runtime(
         data: wit::RandomRuntimeData,
     ) -> Result<wit::MaterializerId, wit::Error> {

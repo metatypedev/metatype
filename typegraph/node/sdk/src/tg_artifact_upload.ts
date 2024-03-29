@@ -2,64 +2,70 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { BasicAuth } from "./tg_deploy.js";
-import * as fs from "node:fs";
-import * as path from "node:path";
-import { runtimes } from "./wit.js";
-import { ModuleDependencyMeta } from "./gen/interfaces/metatype-typegraph-runtimes.js";
+import { core } from "./wit.js";
+import { Artifact } from "./gen/interfaces/metatype-typegraph-core.js";
+import * as fsp from "node:fs/promises";
 
 export interface UploadArtifactMeta {
-  name: string;
-  artifact_hash: string;
-  artifact_size_in_bytes: number;
-  path_suffix: string[];
+  typegraphName: string;
+  hash: string;
+  sizeInBytes: number;
+  relativePath: string;
 }
 
 export class ArtifactUploader {
   private getUploadUrl: URL;
+  refArtifacts: UploadArtifactMeta[];
 
   constructor(
     private baseUrl: string,
-    private refArtifacts: [string, string][],
+    refArtifacts: Artifact[],
     private tgName: string,
     private auth: BasicAuth | undefined,
     private headers: Headers,
   ) {
-    const suffix = `${tgName}/get-upload-url`;
+    const suffix = `${tgName}/artifacts/upload-urls`;
     this.getUploadUrl = new URL(suffix, baseUrl);
+    this.refArtifacts = refArtifacts.map(({ path, hash, size }) => {
+      return {
+        typegraphName: tgName,
+        relativePath: path,
+        hash: hash,
+        sizeInBytes: size,
+      };
+    });
   }
 
-  private async fetchUploadUrl(
-    artifactPath: string,
-    artifactHash: string,
-    artifactContent: Uint8Array,
-    pathSuffix: string[],
-  ): Promise<string> {
-    const artifactMeta: UploadArtifactMeta = {
-      name: path.basename(artifactPath),
-      artifact_hash: artifactHash,
-      artifact_size_in_bytes: artifactContent.length,
-      path_suffix: pathSuffix,
-    };
-
-    const artifactJson = JSON.stringify(artifactMeta);
+  private async fetchUploadUrls(
+    artifactMetas: UploadArtifactMeta[],
+  ): Promise<(string | null)[]> {
+    const artifactsJson = JSON.stringify(artifactMetas);
     const uploadUrlResponse = await fetch(this.getUploadUrl, {
-      method: "PUT",
+      method: "POST",
       headers: this.headers,
-      body: artifactJson,
+      body: artifactsJson,
     });
 
-    // console.log("******************A", uploadUrlResponse);
-    const decodedResponse = await uploadUrlResponse.json();
+    if (!uploadUrlResponse.ok) {
+      const err = await uploadUrlResponse.text();
+      throw new Error(`Failed to get upload URLs for all artifacts: ${err}`);
+    }
 
-    return decodedResponse.uploadUrl as string;
+    const uploadUrls: Array<string | null> = await uploadUrlResponse.json();
+    if (uploadUrls.length !== artifactMetas.length) {
+      const diff =
+        `array length mismatch: ${uploadUrls.length} !== ${artifactMetas.length}`;
+      throw new Error(`Failed to get upload URLs for all artifacts: ${diff}`);
+    }
+    return uploadUrls;
   }
 
   private async upload(
     url: string,
-    content: Uint8Array,
     artifactPath: string,
   ): Promise<void> {
     const uploadHeaders = new Headers({
+      // TODO match to file extennsion??
       "Content-Type": "application/octet-stream",
     });
 
@@ -67,85 +73,73 @@ export class ArtifactUploader {
       uploadHeaders.append("Authorization", this.auth.asHeaderValue());
     }
 
-    const artifactUploadResponse = await fetch(url, {
-      method: "PUT",
+    const file = await fsp.open(artifactPath, "r");
+    const res = await fetch(url, {
+      method: "POST",
       headers: uploadHeaders,
-      body: content,
-    });
-
-    const _ = await artifactUploadResponse.json();
-    if (!artifactUploadResponse.ok) {
+      body: file.readableWebStream(),
+    } as RequestInit);
+    if (!res.ok) {
+      const err = await res.text();
       throw new Error(
-        `Failed to upload artifact ${artifactPath} to typegate: ${artifactUploadResponse.status} ${artifactUploadResponse.statusText}`,
+        `Failed to upload artifact '${artifactPath}' (${res.status}): ${err}`,
       );
     }
+    return res.json();
   }
 
   async uploadArtifacts(): Promise<void> {
-    for (let [artifactHash, artifactPath] of this.refArtifacts) {
-      await this.uploadArtifact(artifactHash, artifactPath);
+    this._uploadArtifacts(this.refArtifacts);
+
+    for (const artifact of this.refArtifacts) {
+      await this.uploadArtifactDependencies(artifact.hash);
     }
   }
 
-  private async uploadArtifact(
-    artifactHash: string,
-    artifactPath: string,
+  private async _uploadArtifacts(
+    artifactMetas: UploadArtifactMeta[],
   ): Promise<void> {
-    try {
-      await fs.promises.access(artifactPath);
-    } catch (err) {
-      throw new Error(`Failed to access artifact ${artifactPath}: ${err}`);
+    const uploadUrls = await this.fetchUploadUrls(this.refArtifacts);
+
+    const results = await Promise.allSettled(uploadUrls.map(async (url, i) => {
+      if (url == null) {
+        console.log(
+          `Skipping upload for artifact: ${this.refArtifacts[i].relativePath}`,
+        );
+        return;
+      }
+      const meta = this.refArtifacts[i];
+
+      return this.upload(url, meta.relativePath);
+    }));
+
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      const meta = this.refArtifacts[i];
+      if (result.status === "rejected") {
+        console.error(
+          `Failed to upload artifact '${meta.relativePath}': ${result.reason}`,
+        );
+      } else {
+        console.log(`Successfully uploaded artifact '${meta.relativePath}'`);
+      }
     }
-    let artifactContent: Buffer;
-    try {
-      artifactContent = await fs.promises.readFile(artifactPath);
-    } catch (err) {
-      throw new Error(`Failed to read artifact ${artifactPath}: ${err}`);
-    }
-    const byteArray = new Uint8Array(artifactContent);
-
-    const artifactUploadUrl = await this.fetchUploadUrl(
-      artifactPath,
-      artifactHash,
-      byteArray,
-      [artifactHash],
-    );
-
-    await this.upload(artifactUploadUrl, byteArray, artifactPath);
-
-    await this.uploadArtifactDependencies(artifactHash);
   }
 
   private async uploadArtifactDependencies(
     artifactHash: string,
   ): Promise<void> {
-    const depMetas = runtimes.getDeps(artifactHash);
+    const deps = core.getDeps(artifactHash);
 
-    for (let dep of depMetas) {
-      const { depHash, path: depPath, relativePathPrefix }:
-        ModuleDependencyMeta = dep;
+    const depMetas = deps.map(({ hash, size, path }) => {
+      return {
+        typegraphName: this.tgName,
+        relativePath: path,
+        hash: hash,
+        sizeInBytes: size,
+      };
+    });
 
-      try {
-        await fs.promises.access(depPath);
-      } catch (err) {
-        throw new Error(`Failed to access artifact ${path}: ${err}`);
-      }
-      let depContent: Buffer;
-      try {
-        depContent = await fs.promises.readFile(depPath);
-      } catch (err) {
-        throw new Error(`Failed to read artifact ${path}: ${err}`);
-      }
-      const byteArray = new Uint8Array(depContent);
-
-      const depUploadUrl = await this.fetchUploadUrl(
-        depPath,
-        depHash,
-        byteArray,
-        [artifactHash, ...relativePathPrefix],
-      );
-
-      await this.upload(depUploadUrl, byteArray, depPath);
-    }
+    this._uploadArtifacts(depMetas);
   }
 }

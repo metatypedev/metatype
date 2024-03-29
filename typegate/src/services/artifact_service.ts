@@ -22,7 +22,8 @@ export class ArtifactService {
         return new Response("method not allowed", { status: 405 });
       }
 
-      const metaList = getUploadUrlBodySchema.parse(await request.json());
+      const reqBody = await request.json();
+      const metaList = getUploadUrlBodySchema.parse(reqBody);
       try {
         const data = await this.#createUploadUrls(
           metaList,
@@ -45,6 +46,7 @@ export class ArtifactService {
       return new Response("method not allowed", { status: 405 });
     }
 
+    console.log("**********************up", tgName);
     return this.#handleUpload(url, request.body!, tgName);
   }
 
