@@ -9,9 +9,9 @@ import { ComputeStage } from "../../engine/query_engine.ts";
 import { PythonWasmMessenger } from "./python_wasm_messenger.ts";
 import { path } from "compress/deps.ts";
 import { PythonVirtualMachine } from "./python_vm.ts";
-import { Materializer } from "../../typegraph/types.ts";
+import { Artifact, Materializer } from "../../typegraph/types.ts";
 import * as ast from "graphql/ast";
-import config from "../../config.ts";
+import { Typegate } from "../../typegate/mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -30,16 +30,17 @@ function generateVmIdentifier(mat: Materializer, uuid: string) {
 export class PythonWasiRuntime extends Runtime {
   private constructor(
     typegraphName: string,
+    private typegate: Typegate,
     uuid: string,
     private w: PythonWasmMessenger,
   ) {
-    super(typegraphName, uuid);
+    super(typegraphName);
     this.uuid = uuid;
   }
   uuid: string;
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { materializers, typegraph, typegraphName } = params;
+    const { materializers, typegraph, typegraphName, typegate } = params;
     const w = await PythonWasmMessenger.init();
 
     logger.info(`initializing default vm: ${typegraphName}`);
@@ -73,15 +74,6 @@ export class PythonWasiRuntime extends Runtime {
           // const code = pyModMat.data.code as string;
 
           // resolve the python module artifacts/files
-          const { artifact, artifact_hash } = pyModMat.data;
-
-          const outDir = path.join(
-            config.tmp_dir,
-            "metatype_artifacts",
-            typegraphName,
-            "artifacts",
-            artifact_hash as string,
-          );
 
           // const repr = await structureRepr(code);
           const vmId = generateVmIdentifier(m, uuid);
@@ -99,7 +91,15 @@ export class PythonWasiRuntime extends Runtime {
           // );
           // logger.info(`uncompressed ${entries.join(", ")} at ${outDir}`);
 
-          const modName = basename(artifact as string);
+          const artifact = pyModMat.data.artifact as Artifact;
+          const artifactMeta = {
+            typegraphName: typegraphName,
+            relativePath: artifact.path,
+            hash: artifact.hash,
+            sizeInBytes: artifact.size,
+          };
+
+          const modName = basename(artifact.path);
 
           // TODO: move this logic to postprocess or python runtime
           m.data.name = `${modName}.${m.data.name as string}`;
@@ -108,8 +108,10 @@ export class PythonWasiRuntime extends Runtime {
           const vm = new PythonVirtualMachine();
 
           // for python modules, imports must be inside a folder above or same directory
-          const entryFile = artifact as string + "." + artifact_hash as string;
-          const entryPointFullPath = path.join(outDir, entryFile);
+          // const entryFile = typegate.artifactStore.getLocalPath(artifactMeta);
+          const entryPointFullPath = await typegate.artifactStore.getLocalPath(
+            artifactMeta,
+          );
           const sourceCode = Deno.readTextFileSync(entryPointFullPath);
 
           // prepare vm
@@ -125,7 +127,7 @@ export class PythonWasiRuntime extends Runtime {
       }
     }
 
-    return new PythonWasiRuntime(typegraphName, uuid, w);
+    return new PythonWasiRuntime(typegraphName, typegate, uuid, w);
   }
 
   async deinit(): Promise<void> {
