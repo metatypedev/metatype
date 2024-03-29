@@ -1,3 +1,13 @@
 # Temporal
 
-Interacts with Temporal server.
+[Temporal](https://temporal.io/) is an open-source durable execution engine that can be used to develop workflows that are long lived and failure resistant.
+Common usecases include:
+
+- Implementing multi-step, complicated transactionaly business logic. 
+- Guranteed event processing.
+- Control planes for driving processes.
+
+The `TemporalRuntime` in Metatype can be used to directly `start`, `query`, `signal` and `describe` workflows on your temporal cluster. 
+Refer to the [temporal docs](https://docs.temporal.io) for more on what you can accomplish with this tech.
+
+<!-- TODO: setup a test temporal cluster and workflow for demo purposes -->
