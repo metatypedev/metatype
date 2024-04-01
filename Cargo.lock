@@ -11589,7 +11589,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97fee6b57c6a41524a810daee9286c02d7752c4253064d0b05472833a438f675"
 dependencies = [
  "cfg-if",
- "rand 0.8.5",
+ "rand 0.7.3",
  "static_assertions",
 ]
 
@@ -11705,7 +11705,7 @@ dependencies = [
  "swc_common",
  "swc_ecma_ast 0.110.17",
  "swc_ecma_codegen 0.146.54",
- "swc_ecma_parser 0.141.37",
+ "swc_ecma_parser 0.143.3",
  "swc_ecma_transforms_typescript 0.186.17",
  "swc_ecma_visit 0.96.17",
 ]
