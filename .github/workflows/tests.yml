@@ -175,58 +175,55 @@ jobs:
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
 
-  # test-docker:
-  #   needs: changes
-  #   if: ${{ needs.changes.outputs.typegate == 'true' }}
-  #   runs-on: ${{ matrix.runner }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include:
-  #         - platform: linux/amd64
-  #           runner: ubuntu-latest
-  #         # - platform: linux/amd64
-  #         #   runner: custom-ubuntu-large
-  #         # FIXME: try macos-14 runner once all actions support it
-  #         # docker buildx action broken as of 2024-02-09
-  #         # TODO
-  #         # - platform: linux/arm64
-  #         #   runner: custom-macos
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: docker/setup-buildx-action@v3
-  #     - uses: scherermichael-oss/action-has-permission@master
-  #       id: check
-  #       with:
-  #         required-permission: write
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #     - uses: docker/login-action@v3
-  #       if: steps.check.outputs.has-permission
-  #       with:
-  #         registry: docker.io
-  #         username: zifeo
-  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
-  #     - name: Build with cache (internal)
-  #       uses: docker/build-push-action@v5
-  #       if: steps.check.outputs.has-permission
-  #       with:
-  #         file: dev/Dockerfile
-  #         platforms: ${{ matrix.platform }}
-  #         push: false
-  #         cache-from: type=registry,ref=docker.io/zifeo/metatype-cache:ci
-  #         cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
-  #         # check target runs extra validation steps in the Dockerfile
-  #         target: check
-  #     - name: Build without cache (external)
-  #       uses: docker/build-push-action@v5
-  #       if: "! steps.check.outputs.has-permission"
-  #       with:
-  #         file: dev/Dockerfile
-  #         platforms: linux/amd64
-  #         push: false
-  #         cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
-  #         target: check
+  test-docker:
+    needs: changes
+    if: ${{ needs.changes.outputs.typegate == 'true' }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          # FIXME: try macos-14 runner once all actions support it
+          # docker buildx action broken as of 2024-02-09
+          # - platform: linux/arm64
+          #   runner: custom-macos
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: scherermichael-oss/action-has-permission@master
+        id: check
+        with:
+          required-permission: write
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/login-action@v3
+        if: steps.check.outputs.has-permission
+        with:
+          registry: docker.io
+          username: zifeo
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build with cache (internal)
+        uses: docker/build-push-action@v5
+        if: steps.check.outputs.has-permission
+        with:
+          file: dev/Dockerfile
+          platforms: ${{ matrix.platform }}
+          push: false
+          cache-from: type=registry,ref=docker.io/zifeo/metatype-cache:ci
+          cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
+          # check target runs extra validation steps in the Dockerfile
+          target: check
+      - name: Build without cache (external)
+        uses: docker/build-push-action@v5
+        if: "! steps.check.outputs.has-permission"
+        with:
+          file: dev/Dockerfile
+          platforms: linux/amd64
+          push: false
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
+          target: check
 
   test-full:
     needs: changes
@@ -270,6 +267,12 @@ jobs:
         ports:
           - "9000:9000"
           - "9001:9001"
+      verdaccio:
+        image: verdaccio/verdaccio:5
+        ports:
+          - "4873:4873"
+        volumes:
+          - ./dev/verdaccio/:/verdaccio/conf/
     env:
       DENO_DIR: deno-dir
     steps:
@@ -337,7 +340,7 @@ jobs:
           cargo test --locked --package meta-cli
 
           # from old test-libs
-          cargo test --locked --exclude meta-cli --exclude typegate --exclude typegraph_engine --exclude typegraph_core --workspace
+          cargo test --locked --exclude meta-cli --exclude typegate --exclude typegraph_engine --exclude typegraph_core --exclude metagen_mdk_rust_static  --workspace
 
           deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
           cargo build -p meta-cli

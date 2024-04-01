@@ -3,17 +3,17 @@
 
 use std::path::{Path, PathBuf};
 
-use common::archive::{
-    archive_entries_from_bytes, encode_bytes_to_base_64, tarb64_unpack_entries_as_map,
-};
-use indexmap::IndexMap;
-
 use crate::{
     global_store::Store,
     wit::metatype::typegraph::host::{
         expand_path as expand_path_host, get_cwd, path_exists, read_file, write_file,
     },
 };
+use common::archive::{
+    archive_entries_from_bytes, encode_bytes_to_base_64, tarb64_unpack_entries_as_map,
+};
+use indexmap::IndexMap;
+// use sha2::{Digest, Sha256};
 
 pub fn read_text_file<P: Into<String>>(path: P) -> Result<String, String> {
     read_file(&path.into()).and_then(|bytes| {
@@ -199,3 +199,10 @@ pub fn make_absolute(path: &Path) -> Result<PathBuf, String> {
         false => Ok(path.to_owned()),
     }
 }
+
+// pub fn hash_file(path: &Path) -> Result<String, String> {
+//     let mut sha256 = Sha256::new();
+//     let bytes = read_file(&path.to_string_lossy())?;
+//     sha256.update(bytes);
+//     Ok(format!("{:x}", sha256.finalize()))
+// }

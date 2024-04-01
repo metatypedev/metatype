@@ -28,6 +28,7 @@ type CLIConfigRequest = {
   prefix?: string;
   secrets: Record<string, string>;
   artifactsConfig: ArtifactResolutionConfig;
+  disableArtifactResolution: boolean;
 };
 
 type CLISuccess<T> = {

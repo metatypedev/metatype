@@ -182,6 +182,7 @@ pub async fn test(
         config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
         argv,
         subcommand: args::DenoSubcommand::Test(test_flags.clone()),
+        cache_blocklist: vec!["npm:@typegraph/sdk".to_string()],
         ..Default::default()
     };
 

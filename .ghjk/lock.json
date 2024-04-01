@@ -89,7 +89,7 @@
           "depConfigs": {},
           "portRef": "cargo_binstall_ghrel@0.1.0"
         },
-        "f6c92b4425a3c13dfde7fe516efd376287e66cfa74aefd7b6a7a7bb0f3547a47": {
+        "80635b3a3967246789cc5f09137a8334fcfae9e96d507b6f8143d385093f024f": {
           "version": "0.116.0",
           "depConfigs": {
             "cargo_binstall_ghrel": {
@@ -98,7 +98,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.76.0",
+              "version": "1.77.1",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -117,10 +117,11 @@
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "wasm-opt"
+          "crateName": "wasm-opt",
+          "locked": true
         },
         "4a077ef5a23a541cc6e372186951d640da541f7c4eba2613c2a1c427a5d95a5c": {
-          "version": "1.76.0",
+          "version": "1.77.1",
           "depConfigs": {
             "rustup_rustlang": {
               "version": "1.27.0",
@@ -148,7 +149,7 @@
           },
           "portRef": "rustup_rustlang@0.1.0"
         },
-        "57ec6be4a4ae1b646f1b5416a3887cb862ce03a137b2cbad6f687f805091b4ac": {
+        "b0b40c14303632f7116dbf59b759f16cbe1b3da2b1e364b12beb90518f2994ef": {
           "version": "1.0.53",
           "depConfigs": {
             "cargo_binstall_ghrel": {
@@ -157,7 +158,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.76.0",
+              "version": "1.77.1",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -176,9 +177,10 @@
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "wasm-tools"
+          "crateName": "wasm-tools",
+          "locked": true
         },
-        "bc2d1e952b74bac2fbbb3b49d4f0cfcefce55f92f372972992e5445d9ca6b0f2": {
+        "341e0ef3c576b133b7dfeed1b425256fa5a6bf7143a3964e7376ec34de47f2bd": {
           "version": "1.33.0",
           "depConfigs": {
             "cargo_binstall_ghrel": {
@@ -187,7 +189,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.76.0",
+              "version": "1.77.1",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -206,7 +208,8 @@
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "cargo-insta"
+          "crateName": "cargo-insta",
+          "locked": true
         },
         "83443bd71fed2699b3245687aececa5b03834f11b1260dd5486045b7af35f471": {
           "version": "v20.8.0",
@@ -344,7 +347,7 @@
           "portRef": "cpy_bs_ghrel@0.1.0"
         },
         "076a5b8ee3bdc68ebf20a696378458465042bb7dc1e49ac2dc98e5fa0dab3e25": {
-          "version": "3.6.2",
+          "version": "3.7.0",
           "depConfigs": {
             "cpy_bs_ghrel": {
               "version": "3.12.1",
@@ -367,11 +370,11 @@
           "packageName": "pre-commit"
         },
         "95dbc2b8c604a5996b88c5b1b4fb0c10b3e0d9cac68f57eb915b012c44288e93": {
-          "version": "v0.2.60",
+          "version": "v0.2.61",
           "depConfigs": {},
           "portRef": "act_ghrel@0.1.0"
         },
-        "b58186482a94cfde789509044a515b8e96ff91d5417f50a9cc80d51f9f5368e4": {
+        "d6f8a6022488bb710cf0d94ebd37c56e7953f7f31a4d1d0689881f936a45445b": {
           "version": "0.5.0",
           "depConfigs": {
             "cargo_binstall_ghrel": {
@@ -380,7 +383,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.76.0",
+              "version": "1.77.1",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -399,7 +402,8 @@
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "whiz"
+          "crateName": "whiz",
+          "locked": true
         }
       }
     },
@@ -417,9 +421,9 @@
             "db5b506ba0936c6713a2efef3ee82df7ea271b06",
             "651e1043d59561e4e71e5fb0775daf746467a028",
             "e7b2f3414caa4c4441240c02dcb8f7c781fd01ee",
-            "fe8550bdc4c00b06864f384d9f236f5c96b0a0d7",
-            "41acac2c306bdc51ba13da901db80b76f8d15550",
-            "9b0262321dbfbab1999b8818124781b0a733d59c",
+            "a24f45ef0b2064658d87264a95d31fe4694f6f4e",
+            "57da4ca242ec52ba50359a7fd78653e6bf253df0",
+            "67d371eb0c4ae641830a955975d7134f7ee9a864",
             "4ca29edff5e070fd0885680b178ed6948d7a4c7f",
             "dd83a99f49f3f0fba11cdd014ff718cc9539316b",
             "4d1916871a40b6ac730709f7721f740df192c84d",
@@ -429,7 +433,7 @@
             "5549508f1f5eddf9cb2465f07cf0c7603dc0c849",
             "5c041a4209ae50657ea5acacc26683688f2913a9",
             "d0bcae26fcc8ca53ffbdb66de5735c608858a313",
-            "8c3a2d8b28a6d4981472780c7ca91ce8dcb27ecb"
+            "ca8e4bf52171b6a173a6ba349f33721806b86d48"
           ],
           "allowedDeps": {
             "tar_aa": "e0d1f160d2d7755765f6f01a27a0c33a02ff98d2",
@@ -450,7 +454,28 @@
       {
         "id": "tasks",
         "config": {
-          "tasks": {}
+          "tasks": {
+            "clean-deno-lock": {
+              "name": "clean-deno-lock",
+              "dependsOn": [],
+              "env": {
+                "installs": [],
+                "env": {},
+                "allowedPortDeps": [
+                  "e0d1f160d2d7755765f6f01a27a0c33a02ff98d2",
+                  "9d26d0d90f6ecdd69d0705a042b01a344aa626ee",
+                  "3c447f912abf18883bd05314f946740975ee0dd3",
+                  "dfb0f5e74666817e6ab8cbceca0c9da271142bca",
+                  "d9122eff1fe3ef56872e53dae725ff3ccb37472e",
+                  "89f6529a87b3d47e2ebdc50486bf0ed2f39049d4",
+                  "201f72d1b59c9377240c3d5008d835ea83d0ba74",
+                  "c8084cf4c423d1862a1d783c70b8221c0cf9d73c",
+                  "422c26d0e74744b87f0f6f0eefa25e54a1188e08",
+                  "f77828fcb8896a0df3511920d0055d0f89bfdec9"
+                ]
+              }
+            }
+          }
         }
       }
     ],
@@ -556,7 +581,7 @@
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/cargo-binstall.ts"
           }
         },
-        "fe8550bdc4c00b06864f384d9f236f5c96b0a0d7": {
+        "a24f45ef0b2064658d87264a95d31fe4694f6f4e": {
           "version": "0.116.0",
           "depConfigs": {
             "rust_rustup": {
@@ -598,9 +623,10 @@
             ],
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/cargobi.ts"
           },
-          "crateName": "wasm-opt"
+          "crateName": "wasm-opt",
+          "locked": true
         },
-        "41acac2c306bdc51ba13da901db80b76f8d15550": {
+        "57da4ca242ec52ba50359a7fd78653e6bf253df0": {
           "version": "1.0.53",
           "depConfigs": {
             "rust_rustup": {
@@ -642,9 +668,10 @@
             ],
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/cargobi.ts"
           },
-          "crateName": "wasm-tools"
+          "crateName": "wasm-tools",
+          "locked": true
         },
-        "9b0262321dbfbab1999b8818124781b0a733d59c": {
+        "67d371eb0c4ae641830a955975d7134f7ee9a864": {
           "version": "1.33.0",
           "depConfigs": {
             "rust_rustup": {
@@ -686,7 +713,8 @@
             ],
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/cargobi.ts"
           },
-          "crateName": "cargo-insta"
+          "crateName": "cargo-insta",
+          "locked": true
         },
         "4ca29edff5e070fd0885680b178ed6948d7a4c7f": {
           "version": "20.8.0",
@@ -926,7 +954,7 @@
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/act.ts"
           }
         },
-        "8c3a2d8b28a6d4981472780c7ca91ce8dcb27ecb": {
+        "ca8e4bf52171b6a173a6ba349f33721806b86d48": {
           "depConfigs": {
             "rust_rustup": {
               "portRef": "rust_rustup@0.1.0",
@@ -967,7 +995,8 @@
             ],
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/cargobi.ts"
           },
-          "crateName": "whiz"
+          "crateName": "whiz",
+          "locked": true
         }
       },
       "allowedPortDeps": {

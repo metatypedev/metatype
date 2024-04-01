@@ -1,0 +1,10 @@
+{
+  "name": "test",
+  "type": "module",
+  "version": "1.0.0",
+  "dependencies": {},
+  "devDependencies": {
+    "tsx": "^3.13.0",
+    "typescript": "^5.2.2"
+  }
+}

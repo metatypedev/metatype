@@ -1,14 +1,11 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-import hashlib
 import json
-import os
 from functools import reduce
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from typegraph.gen.exports.utils import ReducePath, ReduceValue
-from typegraph.gen.types import Err
 from typegraph.injection import InheritDef, serialize_static_injection
 from typegraph.wit import store, wit_utils
 
@@ -79,19 +76,3 @@ def build_reduce_data(node: Any, paths: List[ReducePath], curr_path: List[str]):
 
 def unpack_tarb64(tar_b64: str, dest: str):
     return wit_utils.unpack_tarb64(store, tar_b64, dest)
-
-
-def get_file_hash(file_path: str) -> str:
-    sha256_hasher = hashlib.sha256()
-
-    curr_dir = wit_utils.get_cwd(store)
-    if isinstance(curr_dir, Err):
-        raise Exception(curr_dir.value)
-    file_dir = os.path.join(curr_dir.value, file_path)
-
-    with open(file_dir, "rb") as file:
-        chunk = 0
-        while chunk := file.read(4096):
-            sha256_hasher.update(chunk)
-
-    return sha256_hasher.hexdigest()
