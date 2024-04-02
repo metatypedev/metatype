@@ -69,13 +69,13 @@ RUN cargo install wasm-tools@$WASM_TOOLS_VERSION --locked --debug
 COPY --from=plan /app/recipe.json recipe.json
 
 RUN . $GHJK_ENV \
-    && cargo chef cook --recipe-path recipe.json --release --package typegate \
+    && cargo chef cook --recipe-path recipe.json --package typegate \
     && rm recipe.json
 
 COPY . .
 
 RUN . $GHJK_ENV \
-    && cargo build --release --package typegate
+    && cargo build --package typegate
 
 RUN . $GHJK_ENV \
     && deno run -A dev/update.ts --cache-only --src-only \
@@ -122,7 +122,7 @@ COPY --from=runtime-bin /lib/sym /lib/sym
 COPY --from=runtime-bin /.wasmedge /.wasmedge
 COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 
-COPY --from=builder /app/target/release/typegate /bin/typegate
+COPY --from=builder /app/target/debug/typegate /bin/typegate
 # the typegate ecma sources
 COPY --from=builder /app/typegate/deno.jsonc /app/typegate/import_map.json ./typegate/
 COPY --from=builder /app/typegate/engine/*.js /app/typegate/engine/*.ts ./typegate/engine/

@@ -8,7 +8,7 @@ This is the easiest way to get started, yet it's not publicly accessible. You ca
 
 ### With Docker
 
-Install [Docker](https://docs.docker.com/get-docker/) and use the following `compose.yml` to launch a typegate node. Redis is the single required dependency, however in practice you will want to add database or other systems that the typegate can connect to.
+Install [Docker](https://docs.docker.com/get-docker/) and use the following `compose.yml` to launch a typegate node. For production workloads, Redis is a recommended dependency to be used as a persistence layer but the typegate will run using in-memory stores if no `REDIS_URL` env var is detected. In practice you might also want to add a database or other systems that the typegate can connect to.
 
 ```yml
 services:
