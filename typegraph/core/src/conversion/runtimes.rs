@@ -11,8 +11,8 @@ use crate::runtimes::{
     DenoMaterializer, Materializer as RawMaterializer, PythonMaterializer, RandomMaterializer,
     Runtime, TemporalMaterializer, WasiMaterializer,
 };
-use crate::wit::core::RuntimeId;
-use crate::wit::runtimes::{Artifact as WitArtifact, HttpMethod, MaterializerHttpRequest};
+use crate::wit::core::{Artifact as WitArtifact, RuntimeId};
+use crate::wit::runtimes::{HttpMethod, MaterializerHttpRequest};
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
 use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
@@ -311,16 +311,10 @@ impl MaterializerConverter for WasiMaterializer {
         let WasiMaterializer::Module(mat) = self;
 
         let data = serde_json::from_value(json!({
-            "wasmArtifact": {
-                "hash": mat.wasm_artifact.hash,
-                "size": mat.wasm_artifact.size,
-                "path": mat.wasm_artifact.path,
-            },
+            "wasmArtifact": mat.wasm_artifact,
             "func": mat.func_name,
         }))
         .map_err(|e| e.to_string())?;
-
-        c.register_artifact(&mat.wasm_artifact.clone().into())?;
 
         let name = "wasi".to_string();
         Ok(Materializer {

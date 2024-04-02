@@ -13,7 +13,7 @@ use crate::{
     errors::{self, Result},
     global_store::Store,
 };
-use common::typegraph::runtimes::{Artifact, TGRuntime};
+use common::typegraph::runtimes::TGRuntime;
 use common::typegraph::{
     Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TypeMeta,
     TypeNode, TypeNodeBase, Typegraph,
@@ -195,14 +195,6 @@ pub fn finalize(
 
     let auths = finalize_auths(&mut ctx)?;
 
-    let artifacts = ctx
-        .meta
-        .artifacts
-        .iter()
-        .cloned()
-        .map(Into::into)
-        .collect::<Vec<_>>();
-
     let mut tg = Typegraph {
         id: format!("https://metatype.dev/specs/{TYPEGRAPH_VERSION}.json"),
         types: ctx
@@ -235,6 +227,14 @@ pub fn finalize(
         config
     });
     TypegraphPostProcessor::new(config).postprocess(&mut tg)?;
+
+    let artifacts = tg
+        .meta
+        .artifacts
+        .values()
+        .cloned()
+        .map(Into::into)
+        .collect::<Vec<_>>();
 
     Store::restore(ctx.saved_store_state.unwrap());
 
@@ -479,28 +479,5 @@ impl TypegraphContext {
 
     pub fn find_policy_index_by_store_id(&self, id: u32) -> Option<u32> {
         self.mapping.policies.get(&id).copied()
-    }
-
-    pub fn register_artifact(&mut self, artifact: &Artifact) -> Result<()> {
-        let matching_artifacts = self
-            .meta
-            .artifacts
-            .iter()
-            .filter(|a| a.path == artifact.path)
-            .collect::<Vec<_>>();
-
-        if !matching_artifacts.is_empty() {
-            if matching_artifacts
-                .iter()
-                .any(|a| a.hash != artifact.hash && a.size != artifact.size)
-            {
-                Err("artifact with same path but different hash or size already registered".into())
-            } else {
-                Ok(())
-            }
-        } else {
-            self.meta.artifacts.push(artifact.clone());
-            Ok(())
-        }
     }
 }

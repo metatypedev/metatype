@@ -10,6 +10,8 @@ pub mod visitor;
 
 pub use types::*;
 
+use std::collections::HashMap;
+use std::hash::Hash;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -101,7 +103,7 @@ pub struct TypeMeta {
     pub rate: Option<Rate>,
     pub version: String,
     pub random_seed: Option<u32>,
-    pub artifacts: Vec<Artifact>,
+    pub artifacts: HashMap<PathBuf, Artifact>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

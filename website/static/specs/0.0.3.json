@@ -2342,7 +2342,6 @@
         "auths",
         "cors",
         "queries",
-        "ref_artifacts",
         "secrets",
         "version"
       ],
@@ -2393,8 +2392,8 @@
           "minimum": 0.0
         },
         "artifacts": {
-          "type": "array",
-          "items": {
+          "type": "object",
+          "additionalProperties": {
             "$ref": "#/definitions/Artifact"
           }
         }
@@ -2769,7 +2768,7 @@
           "type": "string"
         },
         "wasmArtifact": {
-          "$ref": "#/definitions/Artifact"
+          "type": "string"
         }
       }
     }

@@ -366,7 +366,7 @@ interface runtimes {
     // wasmedge
     record materializer-wasi {
         func-name: string,
-        wasm-artifact: artifact,
+        wasm-artifact: string,
     }
 
     register-wasmedge-runtime: func() -> result<runtime-id, error>

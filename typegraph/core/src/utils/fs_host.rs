@@ -13,7 +13,7 @@ use common::archive::{
     archive_entries_from_bytes, encode_bytes_to_base_64, tarb64_unpack_entries_as_map,
 };
 use indexmap::IndexMap;
-// use sha2::{Digest, Sha256};
+use sha2::{Digest, Sha256};
 
 pub fn read_text_file<P: Into<String>>(path: P) -> Result<String, String> {
     read_file(&path.into()).and_then(|bytes| {
@@ -200,9 +200,11 @@ pub fn make_absolute(path: &Path) -> Result<PathBuf, String> {
     }
 }
 
-// pub fn hash_file(path: &Path) -> Result<String, String> {
-//     let mut sha256 = Sha256::new();
-//     let bytes = read_file(&path.to_string_lossy())?;
-//     sha256.update(bytes);
-//     Ok(format!("{:x}", sha256.finalize()))
-// }
+// TODO: use smaller buffer?
+pub fn hash_file(path: &Path) -> Result<(String, u32), String> {
+    let mut sha256 = Sha256::new();
+    let bytes = read_file(&path.to_string_lossy())?;
+    let size = bytes.len() as u32;
+    sha256.update(bytes);
+    Ok((format!("{:x}", sha256.finalize()), size))
+}

@@ -37,6 +37,7 @@ export class WasmEdgeRuntime extends Runtime {
         effect,
       },
       {
+        wasmArtifact: wasm,
         funcName: func,
       },
     );

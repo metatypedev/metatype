@@ -5,6 +5,7 @@ import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-co
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
 import * as fsp from "node:fs/promises";
+import { dirname, join } from "node:path";
 
 export class BasicAuth {
   constructor(public username: string, public password: string) {
@@ -15,6 +16,7 @@ export class BasicAuth {
 }
 
 export interface TypegraphDeployParams {
+  typegraphPath: string;
   baseUrl: string;
   auth?: BasicAuth;
   artifactsConfig: ArtifactResolutionConfig;
@@ -89,7 +91,7 @@ export async function tgDeploy(
   }
 
   const uploadHeaders = new Headers({
-    // TODO match to file extennsion??
+    // TODO match to file extension??
     "Content-Type": "application/octet-stream",
   });
 
@@ -104,7 +106,8 @@ export async function tgDeploy(
     }
     const meta = artifacts[i];
 
-    const file = await fsp.open(meta.relativePath, "r");
+    const path = join(dirname(params.typegraphPath), meta.relativePath);
+    const file = await fsp.open(path, "r");
     const res = await fetch(url, {
       method: "POST",
       headers: uploadHeaders,
@@ -113,11 +116,13 @@ export async function tgDeploy(
     if (!res.ok) {
       const err = await res.text();
       throw new Error(
-        `Failed to upload artifact '${meta.relativePath}' (${res.status}): ${err}`,
+        `Failed to upload artifact '${path}' (${res.status}): ${err}`,
       );
     }
     return res.json();
   }));
+
+  let errors = 0;
 
   for (let i = 0; i < results.length; i++) {
     const result = results[i];
@@ -126,9 +131,14 @@ export async function tgDeploy(
       console.error(
         `Failed to upload artifact '${meta.relativePath}': ${result.reason}`,
       );
+      errors++;
     } else {
       console.log(`Successfully uploaded artifact '${meta.relativePath}'`);
     }
+  }
+
+  if (errors > 0) {
+    throw new Error(`Failed to upload ${errors} artifacts`);
   }
 
   // deploy the typegraph

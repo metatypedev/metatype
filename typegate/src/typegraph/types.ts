@@ -507,7 +507,9 @@ export interface TypeMeta {
   rate?: Rate | null;
   version: string;
   randomSeed?: number | null;
-  artifacts: Artifact[];
+  artifacts: {
+    [k: string]: Artifact;
+  };
 }
 export interface Queries {
   dynamic: boolean;
@@ -553,5 +555,5 @@ export interface PrismaOperationMatData {
 }
 export interface WasiMatData {
   func: string;
-  wasmArtifact: Artifact;
+  wasmArtifact: string;
 }

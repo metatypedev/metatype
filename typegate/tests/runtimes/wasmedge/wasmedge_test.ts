@@ -44,6 +44,7 @@ Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
         },
         dir: cwdDir,
       },
+      typegraphPath: path.join(cwdDir, "wasmedge.ts"),
       secrets: {},
     });
 

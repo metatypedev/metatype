@@ -8,7 +8,6 @@ import { nativeResult } from "../utils.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
 import { registerRuntime } from "./mod.ts";
 import { Typegate } from "../typegate/mod.ts";
-import { Artifact } from "../typegraph/types.ts";
 
 @registerRuntime("wasmedge")
 export class WasmEdgeRuntime extends Runtime {
@@ -35,7 +34,9 @@ export class WasmEdgeRuntime extends Runtime {
     const { wasmArtifact, func } = materializer?.data ?? {};
     const order = Object.keys(argumentTypes ?? {});
 
-    const art = wasmArtifact as Artifact;
+    const typegraph = this.typegate.register.get(this.typegraphName)!;
+    const art = typegraph.tg.tg.meta.artifacts[wasmArtifact as string];
+
     const artifactMeta = {
       typegraphName: this.typegraphName,
       relativePath: art.path,
