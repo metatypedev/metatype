@@ -4,8 +4,8 @@
 use super::deploy::DeployOptions;
 use super::deploy::DeploySubcommand;
 use super::Action;
-use super::CommonArgs;
-use super::GenArgs;
+use super::ConfigArgs;
+use super::NodeArgs;
 use actix_web::dev::ServerHandle;
 use anyhow::Result;
 use async_trait::async_trait;
@@ -14,7 +14,7 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 pub struct Dev {
     #[command(flatten)]
-    node: CommonArgs,
+    node: NodeArgs,
 
     /// Target typegate (cf config)
     #[clap(short, long)]
@@ -33,7 +33,7 @@ pub struct Dev {
 
 #[async_trait]
 impl Action for Dev {
-    async fn run(&self, args: GenArgs, server_handle: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
         log::info!("'meta dev' subcommand is an alias to 'meta deploy --codegen --allow-dirty --watch --create-migration'");
         let options = DeployOptions {
             codegen: true,

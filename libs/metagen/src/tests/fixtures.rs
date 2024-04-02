@@ -7,8 +7,8 @@ use common::typegraph::*;
 pub async fn test_typegraph_1() -> anyhow::Result<Typegraph> {
     let out = tokio::process::Command::new("cargo")
         .args(
-            // "run -p meta-cli -- serialize -f tests/tg.ts"
-            "run -p meta-cli -- serialize -f ../../examples/typegraphs/reduce.py"
+            "run -p meta-cli -- serialize -f tests/tg.ts"
+                // "run -p meta-cli -- serialize -f ../../examples/typegraphs/reduce.py"
                 .split(' ')
                 .collect::<Vec<_>>(),
         )

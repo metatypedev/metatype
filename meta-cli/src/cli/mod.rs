@@ -15,11 +15,11 @@ use std::path::PathBuf;
 
 mod ui;
 
-pub(crate) mod codegen;
 pub(crate) mod completion;
 pub(crate) mod deploy;
 pub(crate) mod dev;
 pub(crate) mod doctor;
+pub(crate) mod gen;
 pub(crate) mod new;
 pub(crate) mod serialize;
 pub(crate) mod typegate;
@@ -39,12 +39,12 @@ pub(crate) struct Args {
     pub command: Option<Commands>,
 
     #[clap(flatten)]
-    pub gen: GenArgs,
+    pub config: ConfigArgs,
 }
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None, disable_version_flag = true)]
-pub struct GenArgs {
+pub struct ConfigArgs {
     #[clap(short = 'C', long, value_parser, default_value = ".")]
     dir: PathBuf,
 
@@ -53,7 +53,7 @@ pub struct GenArgs {
     pub config: Option<PathBuf>,
 }
 
-impl GenArgs {
+impl ConfigArgs {
     pub fn dir(&self) -> Result<PathBuf> {
         Ok(PathBuf::from(&self.dir).normalize()?.into_path_buf())
     }
@@ -70,8 +70,8 @@ pub(crate) enum Commands {
     Deploy(deploy::DeploySubcommand),
     /// Undeploy typegraph(s) from typegate
     Undeploy(undeploy::Undeploy),
-    /// Generate materializers code from typegraph definition
-    Codegen(codegen::Codegen),
+    /// Access metagen generators
+    Gen(gen::Gen),
     /// Upgrade
     Upgrade(upgrade::Upgrade),
     /// Generate shell completion
@@ -87,11 +87,11 @@ pub(crate) enum Commands {
 #[async_trait]
 #[enum_dispatch(Commands)]
 pub trait Action {
-    async fn run(&self, args: GenArgs, server_handle: Option<ServerHandle>) -> Result<()>;
+    async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()>;
 }
 
 #[derive(Parser, Debug, Clone)]
-pub struct CommonArgs {
+pub struct NodeArgs {
     /// Address of the typegate.
     #[clap(short, long, value_parser = UrlValueParser::new().http())]
     pub gate: Option<Url>,

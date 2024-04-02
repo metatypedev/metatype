@@ -108,7 +108,8 @@ mod test {
         let generator = Generator::new(MdkRustGenConfig {
             base: crate::config::MdkGeneratorConfigBase {
                 path: "/tmp".into(),
-                typegraph_name: tg_name.clone(),
+                typegraph_name: Some(tg_name.clone()),
+                typegraph_path: None,
             },
             stubbed_runtimes: Some(vec!["wasm".into()]),
             no_crate_manifest: None,
@@ -116,7 +117,7 @@ mod test {
         let out = generator.generate(
             [(
                 Generator::INPUT_TG.to_owned(),
-                GeneratorInputResolved::TypegraphDesc { raw: tg },
+                GeneratorInputResolved::TypegraphFromTypegate { raw: tg },
             )]
             .into_iter()
             .collect(),
