@@ -22,7 +22,7 @@ use clap::Parser;
 use cli::upgrade::upgrade_check;
 use cli::Action;
 use cli::Args;
-use com::server::{get_instance_port, init_server};
+use com::server::init_server;
 use futures::try_join;
 use futures::FutureExt;
 use log::{error, warn};
@@ -69,8 +69,6 @@ fn main() -> Result<()> {
                 .enable_all()
                 .build()?
                 .block_on(async {
-                    std::env::set_var("META_CLI_SERVER_PORT", get_instance_port().to_string());
-
                     let server = init_server().unwrap();
                     let command = gen_args.run(args.config, Some(server.handle()));
 
@@ -83,8 +81,6 @@ fn main() -> Result<()> {
         Some(command) => actix::run(async move {
             match command {
                 cli::Commands::Serialize(_) | cli::Commands::Dev(_) | cli::Commands::Deploy(_) => {
-                    std::env::set_var("META_CLI_SERVER_PORT", get_instance_port().to_string());
-
                     let server = init_server().unwrap();
                     let command = command.run(args.config, Some(server.handle()));
 
