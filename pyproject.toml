@@ -9,8 +9,8 @@ python = ">=3.8,<4.0"
 typegraph = { path = "typegraph/python", develop = true }
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.3.0"
-respx = "^0.20.2"
+ruff = "^0.3.4"
+respx = "^0.21.1"
 pyyaml = "^6.0.1"
 
 [build-system]
