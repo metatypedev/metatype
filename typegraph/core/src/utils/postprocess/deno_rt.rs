@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::utils::fs_host;
+use crate::{global_store::Store, utils::fs_host};
 use common::typegraph::{
     runtimes::deno::ModuleMatData,
     utils::{map_from_object, object_from_map},
@@ -39,8 +39,14 @@ impl DenoProcessor {
         // if relative => make it absolute
         // fs::canonicalize wouldn't work in this setup
         let main_path = fs_host::make_absolute(&PathBuf::from(path))?;
-        mat_data.code = compress_and_encode(&main_path)?;
+        if !fs_host::path_exists(&main_path)? && !Store::get_cli_flag() {
+            return Err(format!(
+                "could not resolve module {:?}",
+                main_path.display()
+            ));
+        }
 
+        mat_data.code = compress_and_encode(&main_path)?;
         mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
 
         Ok(Some(main_path))

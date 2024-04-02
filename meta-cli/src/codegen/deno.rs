@@ -462,69 +462,103 @@ impl IntoJson for HashMap<String, Value> {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use std::sync::Arc;
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
 
-//     use normpath::PathExt;
-//     use pathdiff::diff_paths;
-//     use tokio::sync::mpsc;
+    use futures::try_join;
+    use futures::FutureExt;
+    use normpath::PathExt;
+    use pathdiff::diff_paths;
+    use tokio::sync::mpsc;
 
-//     use super::*;
-//     use crate::config::Config;
-//     use crate::deploy::actors::console::ConsoleActor;
-//     use crate::deploy::actors::loader::{LoadModule, LoaderActor, LoaderEvent};
-//     use crate::tests::utils::ensure_venv;
-//     use actix::prelude::*;
+    use super::*;
+    use crate::com::server::init_server;
+    use crate::com::store::ServerStore;
 
-//     #[actix::test(flavor = "multi_thread")]
-//     async fn codegen() -> Result<()> {
-//         crate::logger::init();
-//         ensure_venv()?;
-//         let test_folder = Path::new("./src/tests/typegraphs").normalize()?;
-//         std::env::set_current_dir(&test_folder)?;
-//         let tests = fs::read_dir(&test_folder).unwrap();
-//         let config = Config::default_in(".");
-//         let config = Arc::new(config);
+    use crate::com::store::Command;
+    use crate::config::Config;
+    use crate::deploy::actors::console::ConsoleActor;
+    use crate::deploy::actors::loader::{LoadModule, LoaderActor, LoaderEvent};
+    use crate::tests::utils::ensure_venv;
+    use actix::prelude::*;
 
-//         for typegraph_test in tests {
-//             let typegraph_test = typegraph_test.unwrap().path();
-//             let typegraph_test = diff_paths(&typegraph_test, &test_folder).unwrap();
+    #[actix::test(flavor = "multi_thread")]
+    async fn codegen() -> Result<()> {
+        crate::logger::init();
+        ensure_venv()?;
+        let test_folder = Path::new("./src/tests/typegraphs").normalize()?;
+        std::env::set_current_dir(&test_folder)?;
+        let tests = fs::read_dir(&test_folder).unwrap();
+        let config = Config::default_in(".");
+        let config = Arc::new(config);
 
-//             let console = ConsoleActor::new(Arc::clone(&config)).start();
-//             let (event_tx, event_rx) = mpsc::unbounded_channel();
-//             let loader = LoaderActor::new(Arc::clone(&config), console, event_tx, 1)
-//                 .auto_stop()
-//                 .start();
-//             loader.do_send(LoadModule(
-//                 test_folder
-//                     .join(&typegraph_test)
-//                     .as_path()
-//                     .to_owned()
-//                     .into(),
-//             ));
+        for typegraph_test in tests {
+            let typegraph_test = typegraph_test.unwrap().path();
+            let typegraph_test = diff_paths(&typegraph_test, &test_folder).unwrap();
 
-//             let mut event_rx = event_rx;
-//             // let tg = match event_rx.recv().await.unwrap() {
-//             //     LoaderEvent::Typegraph(tg) => tg,
-//             //     evt => bail!("unexpected loader evt: {evt:?}"),
-//             // };
+            let console = ConsoleActor::new(Arc::clone(&config)).start();
+            let (event_tx, event_rx) = mpsc::unbounded_channel();
+            let loader = LoaderActor::new(Arc::clone(&config), console, event_tx, 1)
+                .auto_stop()
+                .start();
 
-//             // TODO:
-//             // run typegraph! thenget serialized version
+            let server = init_server()?;
+            let server_handle = server.handle();
+            let config: Config = Default::default();
+            // config.base_dir = test_folder.clone().into();
 
-//             // let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
-//             // assert_eq!(module_codes.len(), 1);
+            ServerStore::with(Some(Command::Serialize), Some(config));
 
-//             // let test_name = typegraph_test.to_string_lossy().to_string();
-//             // insta::assert_snapshot!(test_name, &module_codes[0].code);
+            let test_scope = async {
+                loader.do_send(LoadModule(
+                    test_folder
+                        .join(&typegraph_test)
+                        .as_path()
+                        .to_owned()
+                        .into(),
+                ));
 
-//             assert!(matches!(
-//                 event_rx.recv().await,
-//                 Some(LoaderEvent::Stopped(_))
-//             ));
-//         }
+                let mut event_rx = event_rx;
+                let tg = match event_rx.recv().await.unwrap() {
+                    LoaderEvent::Typegraph(tg_infos) => {
+                        let (_name, res) = tg_infos
+                            .get_responses_or_fail()?
+                            .as_ref()
+                            .clone()
+                            .into_iter()
+                            .next()
+                            .unwrap();
+                        res.as_typegraph()?
+                    }
+                    evt => bail!("unexpected loader evt: {evt:?}"),
+                };
 
-//         Ok(())
-//     }
-// }
+                server_handle.stop(true).await;
+
+                let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
+                assert_eq!(module_codes.len(), 1);
+
+                let test_name = typegraph_test.to_string_lossy().to_string();
+                insta::assert_snapshot!(test_name, &module_codes[0].code);
+
+                assert!(matches!(
+                    event_rx.recv().await,
+                    Some(LoaderEvent::Stopped(_))
+                ));
+
+                Ok(())
+            };
+
+            match try_join!(server.map(|_| Ok(())), test_scope) {
+                Ok(((), ())) => {}
+                Err(e) => {
+                    server_handle.stop(true).await;
+                    panic!("{}", e)
+                }
+            };
+        }
+
+        Ok(())
+    }
+}

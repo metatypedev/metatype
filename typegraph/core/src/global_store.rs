@@ -64,6 +64,7 @@ pub struct Store {
     random_seed: Option<u32>,
 
     latest_alias_no: u32,
+    is_run_from_cli: Option<bool>,
 }
 
 impl Store {
@@ -507,6 +508,16 @@ impl Store {
 
     pub fn get_auths() -> Vec<common::typegraph::Auth> {
         with_store(|s| s.auths.clone())
+    }
+
+    pub fn set_cli_flag(status: Option<bool>) {
+        with_store_mut(|s| {
+            s.is_run_from_cli = status;
+        })
+    }
+
+    pub fn get_cli_flag() -> bool {
+        with_store(|s| s.is_run_from_cli.unwrap_or(false))
     }
 }
 
