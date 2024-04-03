@@ -10,27 +10,38 @@ import {
 } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 
 export class TemporalRuntime extends Runtime {
-  host: string;
   name: string;
+  hostSecret: string;
+  namespaceSecret?: string;
 
-  constructor(name: string, host: string) {
+  constructor(
+    { name, hostSecret, namespaceSecret }: {
+      name: string;
+      hostSecret: string;
+      namespaceSecret?: string;
+    },
+  ) {
     const id = runtimes.registerTemporalRuntime({
       name,
-      host,
+      hostSecret,
+      namespaceSecret,
     });
     super(id);
     this.name = name;
-    this.host = host;
+    this.hostSecret = hostSecret;
+    this.namespaceSecret = namespaceSecret;
   }
 
   #genericTemporalFunc(
     operation: TemporalOperationType,
     matArg?: string,
     funcArg?: Typedef,
+    funcOut?: Typedef,
   ) {
     const data = {
       matArg,
       funcArg: funcArg?._id,
+      funcOut: funcOut?._id,
       operation,
     } as TemporalOperationData;
     const dataFunc = runtimes.generateTemporalOperation(
@@ -60,13 +71,14 @@ export class TemporalRuntime extends Runtime {
     );
   }
 
-  queryWorkflow(queryType: string, arg: Typedef) {
+  queryWorkflow(queryType: string, arg: Typedef, out: Typedef) {
     return this.#genericTemporalFunc(
       {
         tag: "query-workflow",
       },
       queryType,
       arg,
+      out,
     );
   }
 

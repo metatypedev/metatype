@@ -412,7 +412,8 @@ interface runtimes {
     // temporal
     record temporal-runtime-data {
         name: string,
-        host: string,
+        host-secret: string,
+        namespace-secret: option<string>,
     }
 
     variant temporal-operation-type {
@@ -425,6 +426,7 @@ interface runtimes {
     record temporal-operation-data {
         mat-arg: option<string>,
         func-arg: option<type-id>,
+        func-out: option<type-id>,
         operation: temporal-operation-type,
     }
 

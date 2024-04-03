@@ -14,6 +14,7 @@ const MOLD_VERSION = "v2.4.0";
 const CMAKE_VERSION = "3.28.0-rc6";
 const CARGO_INSTA_VERSION = "1.33.0";
 const NODE_VERSION = "20.8.0";
+const TEMPORAL_VERSION = "0.10.7";
 
 ghjk.install(
   ports.wasmedge({ version: WASMEDGE_VERSION }),
@@ -23,13 +24,12 @@ ghjk.install(
     installType: "version",
     version: CMAKE_VERSION,
   }),
-  // FIXME: replace with `cargobi` once that's ready
   ports.cargo_binstall(),
+  ports.temporal_cli({ version: TEMPORAL_VERSION }),
 );
 
 if (!Deno.env.has("OCI")) {
   ghjk.install(
-    // FIXME: use cargobi when avail
     ports.cargobi({ crateName: "wasm-opt", version: WASM_OPT_VERSION }),
     ports.cargobi({ crateName: "wasm-tools", version: WASM_TOOLS_VERSION }),
     // these aren't required by the typegate build process
