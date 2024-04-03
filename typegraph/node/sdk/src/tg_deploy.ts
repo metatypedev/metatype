@@ -107,11 +107,12 @@ export async function tgDeploy(
     const meta = artifacts[i];
 
     const path = join(dirname(params.typegraphPath), meta.relativePath);
-    const file = await fsp.open(path, "r");
+    // TODO: stream
+    const content = await fsp.readFile(path);
     const res = await fetch(url, {
       method: "POST",
       headers: uploadHeaders,
-      body: file.readableWebStream(),
+      body: new Uint8Array(content),
     } as RequestInit);
     if (!res.ok) {
       const err = await res.text();

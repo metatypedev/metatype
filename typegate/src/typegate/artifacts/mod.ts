@@ -5,7 +5,9 @@ import { signJWT, verifyJWT } from "../../crypto.ts";
 import * as jwt from "jwt";
 import { z } from "zod";
 
-const UPLOAD_PATH = "/artifacts";
+function getUploadPath(tgName: string) {
+  return `/${tgName}/artifacts`;
+}
 
 export const artifactMetaSchema = z.object({
   typegraphName: z.string(),
@@ -82,17 +84,20 @@ export abstract class ArtifactStore {
    * @param origin The origin of the request.
    * @returns The URL to upload the artifact to and the expiration time.
    */
-  static async createUploadUrl(origin: URL): Promise<[string, number]> {
+  static async createUploadUrl(
+    origin: URL,
+    tgName: string,
+  ): Promise<[string, number]> {
     const expiresIn = 5 * 60;
     const token = await signJWT({ expiresIn }, expiresIn);
-    const url = new URL(UPLOAD_PATH, origin);
+    const url = new URL(getUploadPath(tgName), origin);
     url.searchParams.set("token", token);
     return [url.toString(), jwt.getNumericDate(expiresIn)];
   }
 
   static async validateUploadUrl(url: URL) {
     const token = url.searchParams.get("token");
-    if (url.pathname !== UPLOAD_PATH || !token) {
+    if (/^\/([^\/])\/artifacts/.test(url.pathname) || !token) {
       throw new Error("Invalid upload URL");
     }
 

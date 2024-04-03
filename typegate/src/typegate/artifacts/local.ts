@@ -7,6 +7,7 @@ import { HashTransformStream } from "../../utils/hash.ts";
 import { ArtifactMeta, ArtifactStore } from "./mod.ts";
 import { createHash } from "node:crypto";
 import * as jwt from "jwt";
+import { dirname } from "std/path/dirname.ts";
 
 // The directory where artifacts are stored -- by hash
 const STORE_DIR = `${config.tmp_dir}/artifacts-cache`;
@@ -64,10 +65,10 @@ export class LocalArtifactStore extends ArtifactStore {
     await stream
       .pipeThrough(new HashTransformStream(hasher))
       .pipeTo(file.writable);
-    file.close();
 
     const hash = hasher.digest("hex");
     const targetFile = resolve(STORE_DIR, hash);
+    console.log(`Persisting artifact to ${targetFile}`);
     await Deno.rename(tmpFile, targetFile);
 
     return hash;
@@ -102,7 +103,10 @@ export class LocalArtifactStore extends ArtifactStore {
       return null;
     }
 
-    const [url, expirationTime] = await ArtifactStore.createUploadUrl(origin);
+    const [url, expirationTime] = await ArtifactStore.createUploadUrl(
+      origin,
+      meta.typegraphName,
+    );
     this.#uploadUrls.mapToMeta.set(url, meta);
     this.#uploadUrls.expirationQueue.push([url, expirationTime]);
 
@@ -142,6 +146,7 @@ async function getLocalPath(meta: ArtifactMeta) {
     meta.typegraphName,
     meta.relativePath,
   );
+  await Deno.mkdir(dirname(localPath), { recursive: true });
   await Deno.link(cachedPath, localPath);
 
   return localPath;

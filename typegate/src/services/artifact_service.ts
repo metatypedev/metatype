@@ -19,9 +19,11 @@ export class ArtifactService {
 
     if (operation === "upload-urls") {
       if (request.method !== "POST") {
-        return new Response("method not allowed", { status: 405 });
+        return new Response(JSON.stringify({ error: "method not allowed" }), {
+          status: 405,
+          headers: { "Content-Type": "application/json" },
+        });
       }
-
       const metaList = getUploadUrlBodySchema.parse(await request.json());
       try {
         const data = await this.#createUploadUrls(
@@ -33,16 +35,28 @@ export class ArtifactService {
           headers: { "Content-Type": "application/json" },
         });
       } catch (e) {
-        return new Response(`forbidden: ${e.message}`, { status: 403 });
+        return new Response(
+          JSON.stringify({ error: `forbidden: ${e.message}` }),
+          {
+            status: 403,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
       }
     }
 
     if (operation) {
-      return new Response("not found", { status: 404 });
+      return new Response(JSON.stringify({ message: "not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     if (request.method !== "POST") {
-      return new Response("method not allowed", { status: 405 });
+      return new Response(JSON.stringify({ error: "method not allowed" }), {
+        status: 405,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     return this.#handleUpload(url, request.body!, tgName);
@@ -70,7 +84,10 @@ export class ArtifactService {
     try {
       meta = await this.store.takeUploadUrl(url);
     } catch (e) {
-      return new Response(e.message, { status: 403 });
+      return new Response(JSON.stringify({ error: e.message }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     if (meta.typegraphName !== tgName) {
@@ -81,9 +98,17 @@ export class ArtifactService {
     const hash = await this.store.persist(stream);
     if (hash !== meta.hash) {
       await this.store.delete(hash);
-      return new Response("hash mismatch", { status: 403 });
+      return new Response(JSON.stringify({ error: "hash mismatch" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    return new Response("ok", { status: 201 });
+    return new Response(JSON.stringify({ status: "ok" }), {
+      status: 201,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 }
