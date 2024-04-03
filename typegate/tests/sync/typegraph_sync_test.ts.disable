@@ -58,6 +58,7 @@ async function waitForRedisEvent(timeoutMs: number, cb: () => Promise<void>) {
   }
 }
 
+// FIXME: figure out problem with RedisConnection.processCommandQueue not cleaning up
 Meta.test("test sync through s3", async (t) => {
   await t.should("successfully send redis event", async () => {
     const s3 = new S3Client(syncConfig.s3);
@@ -107,6 +108,4 @@ Meta.test("test sync through s3", async (t) => {
   async teardown() {
     await cleanUp();
   },
-  // FIXME: figure out problem with RedisConnection.processCommandQueue not cleaning up
-  sanitizeOps: false,
 });

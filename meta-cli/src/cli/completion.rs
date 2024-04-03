@@ -13,7 +13,7 @@ use itertools::Itertools;
 
 use super::Action;
 use super::Args;
-use super::GenArgs;
+use super::ConfigArgs;
 
 #[derive(Parser, Debug)]
 pub struct Completion {
@@ -23,7 +23,7 @@ pub struct Completion {
 
 #[async_trait]
 impl Action for Completion {
-    async fn run(&self, _args: GenArgs, _: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, _args: ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
         let mut cmd = Args::command();
         let name = cmd.get_name().to_string();
         match self.shell.or_else(Shell::from_env) {

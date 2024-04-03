@@ -340,7 +340,7 @@ jobs:
           cargo test --locked --package meta-cli
 
           # from old test-libs
-          cargo test --locked --exclude meta-cli --exclude typegate --exclude typegraph_engine --exclude typegraph_core --exclude metagen_mdk_rust_static  --workspace
+          cargo test --locked --exclude meta-cli --exclude typegate --exclude typegate_engine --exclude typegraph_core --exclude metagen_mdk_rust_static  --workspace
 
           deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
           cargo build -p meta-cli
