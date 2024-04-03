@@ -13,7 +13,7 @@ use std::path::{Path, PathBuf};
 use std::slice;
 use std::str::FromStr;
 
-use crate::cli::CommonArgs;
+use crate::cli::NodeArgs;
 use crate::fs::find_in_parents;
 use crate::utils::BasicAuth;
 use common::node::Node;
@@ -71,7 +71,7 @@ impl Default for NodeConfig {
 }
 
 impl NodeConfig {
-    pub fn with_args(&self, args: &CommonArgs) -> Self {
+    pub fn with_args(&self, args: &NodeArgs) -> Self {
         let mut res = self.clone();
         if let Some(gate) = &args.gate {
             res.url = gate.clone();
@@ -163,6 +163,8 @@ pub struct Config {
     pub typegates: HashMap<String, NodeConfig>,
     #[serde(default)]
     pub typegraphs: Typegraphs,
+    #[serde(default)]
+    pub metagen: Option<metagen::Config>,
 }
 
 impl FromStr for Config {
@@ -226,7 +228,7 @@ impl Config {
         }
     }
 
-    pub fn node(&self, args: &CommonArgs, target: &str) -> NodeConfig {
+    pub fn node(&self, args: &NodeArgs, target: &str) -> NodeConfig {
         self.typegates
             .get(target)
             .unwrap_or(&DEFAULT_NODE_CONFIG)

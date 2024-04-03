@@ -8,7 +8,7 @@ members = [
   "meta-cli",
   "typegraph/core", ]
 
-[workspace.package]
+[workspace.package] 
 version = "0.3.7-0"
 edition = "2021"
 
@@ -20,6 +20,7 @@ deno = { git = "https://github.com/metatypedev/deno", branch = "v1.41.0-embeddab
 mt_deno = { path = "libs/deno/" }
 common = { path = "libs/common/" }
 typescript = { path = "libs/typescript/" }
+metagen = { path = "libs/metagen/" }
 typegate_engine = { path = "typegate/engine" }
 
 # pinned to match version brought in
