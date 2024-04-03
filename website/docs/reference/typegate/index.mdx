@@ -52,26 +52,33 @@ GraphQL, being a query language, offers a great asset for Metatype's philosophy:
 
 ### Environment variables.
 
+The following environment variables can be used to configure the typegate. `SYNC_*` variables have special semantics which you can read about [here](/docs/reference/typegate/synchronization).
 
-| Environment variables     | Desc                                                             | Default                 |
-| ------------------------- | ---------------------------------------------------------------- | ----------------------- |
-| HOSTNAME                  | Hostname that typegate is deployed on.                           | `getHostname()` result. |
-| TG_PORT                   | Tcp port to serve typegate APIs at.                              | 7890                    |
-| TG_ADMIN_PASSWORD         | Password use by the CLI/SDK to configure the typegate.           | **Required**            |
-| TG_SECRET                 | Symmetric key used to encrypt cookies and other things.          | **Required**.           |
-| TMP_DIR                   | Top-level temporary directory.                                   | `$PWD/tmp`              |
-| DEBUG                     | Enable debug output and other development paths.                 | false                   |
-| TIMER_MAX_TIMEOUT_MS      | Timeout for custom runtime functions and other proccesses.       | 3000                    |
-| TIMER_DESTROY_RESOURCES   |                                                                  | true                    |
-| TIMER_POLICY_EVAL_RETRIES |                                                                  | 1                       |
-| JWT_MAX_DURATION_SEC      | The lifetime of generated JWT access tokens.                     | `30 * 24 * 3600`        |
-| JWT_REFRESH_DURATION_SEC  | The lifetime of generated JWT refresh tokens.                    | `5 * 60`                |
-| SENTRY_DSN                |                                                                  |                         |
-| SENTRY_SAMPLE_RATE        |                                                                  | 1                       |
-| SENTRY_TRACES_SAMPLE_RATE |                                                                  | 1                       |
-| TRUST_PROXY               | Weather to accept proxy headers when resolving request contexts. | false                   |
-| TRUST_HEADER_IP           | The header key on which to resolve request origin addresses.     | X-Forwarded-For         |
-| DENO_V8_FLAGS             | Flags for tuning the v8 javascript engine.                       |                         |
-
-
+| Environment variables     | Desc                                                                                                     | Default                 |
+| ------------------------- | -------------------------------------------------------------------------------------------------------- | ----------------------- |
+| HOSTNAME                  | Hostname that typegate is deployed on.                                                                   | `getHostname()` result. |
+| TG_PORT                   | Tcp port to serve typegate APIs at.                                                                      | 7890                    |
+| TG_ADMIN_PASSWORD         | Password use by the CLI/SDK to configure the typegate.                                                   | **Required**            |
+| TG_SECRET                 | Symmetric key used to encrypt cookies and other things.                                                  | **Required**.           |
+| TMP_DIR                   | Top-level temporary directory.                                                                           | `$PWD/tmp`              |
+| DEBUG                     | Enable debug output and other development paths.                                                         | false                   |
+| TIMER_MAX_TIMEOUT_MS      | Timeout for custom runtime functions and other proccesses.                                               | 3000                    |
+| TIMER_DESTROY_RESOURCES   |                                                                                                          | true                    |
+| TIMER_POLICY_EVAL_RETRIES |                                                                                                          | 1                       |
+| JWT_MAX_DURATION_SEC      | The lifetime of generated JWT access tokens.                                                             | `30 * 24 * 3600`        |
+| JWT_REFRESH_DURATION_SEC  | The lifetime of generated JWT refresh tokens.                                                            | `5 * 60`                |
+| SENTRY_DSN                |                                                                                                          |                         |
+| SENTRY_SAMPLE_RATE        |                                                                                                          | 1                       |
+| SENTRY_TRACES_SAMPLE_RATE |                                                                                                          | 1                       |
+| TRUST_PROXY               | Whether to accept proxy headers when resolving request contexts.                                         | false                   |
+| TRUST_HEADER_IP           | The header key on which to resolve request origin addresses.                                             | X-Forwarded-For         |
+| DENO_V8_FLAGS             | Flags for tuning the v8 javascript engine. Use the `--help` flag here to see what options are available. |                         |
+| SYNC_REDIS_URL            | URL to the Redis database. Must include the database number.                                             |                         |
+| SYNC_REDIS_PASSWORD       | Redis database password, can be included in SYNC_REDIS_URL.                                              |                         |
+| SYNC_S3_HOST              | Hostname of the S3 store.                                                                                |                         |
+| SYNC_S3_REGION            | S3 region.                                                                                               |                         |
+| SYNC_S3_ACCESS_KEY        | Access key for the S3 store credentials.                                                                 |                         |
+| SYNC_S3_SECRET_KEY        | Access key secret for the S3 store credentials.                                                          |                         |
+| SYNC_S3_PATH_STYLE        | `true` or `false`, force path style if `true`.                                                           |                         |
+| SYNC_S3_BUCKET            | The bucket to be used for the system (dedicated).                                                        |                         |
 

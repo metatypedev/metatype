@@ -69,13 +69,13 @@ RUN cargo install wasm-tools@$WASM_TOOLS_VERSION --locked --debug
 COPY --from=plan /app/recipe.json recipe.json
 
 RUN . $GHJK_ENV \
-    && cargo chef cook --recipe-path recipe.json --package typegate \
+    && cargo chef cook --recipe-path recipe.json --release --package typegate \
     && rm recipe.json
 
 COPY . .
 
 RUN . $GHJK_ENV \
-    && cargo build --package typegate
+    && cargo build --release --package typegate
 
 RUN . $GHJK_ENV \
     && deno run -A dev/update.ts --cache-only --src-only \
