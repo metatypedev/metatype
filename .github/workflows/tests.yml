@@ -277,18 +277,24 @@ jobs:
           mkdir -p $(dirname $WASM_FILE)
           wasm-opt -Oz target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE.opt
           wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
-          rm -rf typegraph/node/sdk/src/gen typegraph/node/sdk/dist
+          
           jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen --map metatype:typegraph/host=../host/host.js
           cd typegraph/node
           pnpm install
           pnpm run sdk-build
           cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
           cd ../..
-          rm -rf typegraph/python/typegraph/gen
+          
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
           # start the docker containers
           deno run -A dev/env.ts base s3 prisma
+
+          # publish the sdk to the local registry
+          cd typegate/node/sdk/dist
+          npm config set "//localhost:4873/:_authToken" fooBar
+          npm publish --registry http://localhost:4873
+          cd ../../../..
 
           # from old test-typegraph-core
           # test in native rust, not in wasm for a future rust SDK
