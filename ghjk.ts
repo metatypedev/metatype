@@ -14,6 +14,7 @@ const MOLD_VERSION = "v2.4.0";
 const CMAKE_VERSION = "3.28.0-rc6";
 const CARGO_INSTA_VERSION = "1.33.0";
 const NODE_VERSION = "20.8.0";
+const TEMPORAL_VERSION = "0.10.7";
 const METATYPE_VERSION = "0.3.7-0";
 
 ghjk.install(
@@ -24,17 +25,29 @@ ghjk.install(
     installType: "version",
     version: CMAKE_VERSION,
   }),
-  // FIXME: replace with `cargobi` once that's ready
   ports.cargo_binstall(),
+  ports.temporal_cli({ version: TEMPORAL_VERSION }),
 );
 
 if (!Deno.env.has("OCI")) {
   ghjk.install(
     // FIXME: use cargobi when avail
-    ports.cargobi({ crateName: "wasm-opt", version: WASM_OPT_VERSION, locked: true }),
-    ports.cargobi({ crateName: "wasm-tools", version: WASM_TOOLS_VERSION, locked: true}),
+    ports.cargobi({
+      crateName: "wasm-opt",
+      version: WASM_OPT_VERSION,
+      locked: true,
+    }),
+    ports.cargobi({
+      crateName: "wasm-tools",
+      version: WASM_TOOLS_VERSION,
+      locked: true,
+    }),
     // these aren't required by the typegate build process
-    ports.cargobi({ crateName: "cargo-insta", version: CARGO_INSTA_VERSION, locked: true }),
+    ports.cargobi({
+      crateName: "cargo-insta",
+      version: CARGO_INSTA_VERSION,
+      locked: true,
+    }),
     ports.node({ version: NODE_VERSION }),
     ports.pnpm({ version: PNPM_VERSION }),
     // FIXME: jco installs node as a dep
@@ -82,12 +95,13 @@ ghjk.task("clean-deno-lock", {
     // jq
   ],
   async fn({ $ }) {
-    const jqOp1 = `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
+    const jqOp1 =
+      `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
     const jqOp2 = `del(.packages.npm["@typegraph/sdk@${METATYPE_VERSION}"])`;
     const jqOp = `${jqOp1} | ${jqOp2}`;
     const lock = await $`jq ${jqOp} typegate/deno.lock`.text();
     await Deno.writeTextFile("typegate/deno.lock", lock);
-  }
+  },
 });
 
 export const secureConfig = ghjk.secureConfig({

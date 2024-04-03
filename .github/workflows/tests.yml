@@ -232,49 +232,6 @@ jobs:
       - self-hosted # https://check-jsonschema.readthedocs.io/en/latest/faq.html#using-self-hosted-runners
       - custom-ubuntu-large
     timeout-minutes: 60
-    services:
-      redis:
-        image: bitnami/redis:7.0
-        env:
-          REDIS_PASSWORD: password
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli -a password ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_DB: db
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      minio:
-        image: bitnami/minio:2022
-        env:
-          MINIO_REGION_NAME: local
-          MINIO_ROOT_USER: minio
-          MINIO_ROOT_PASSWORD: password
-          MINIO_DEFAULT_BUCKETS: "bucket:none"
-        ports:
-          - "9000:9000"
-          - "9001:9001"
-      verdaccio:
-        image: verdaccio/verdaccio:5
-        ports:
-          - "4873:4873"
-        volumes:
-          - ./dev/verdaccio/:/verdaccio/conf/
-    env:
-      DENO_DIR: deno-dir
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
@@ -329,6 +286,9 @@ jobs:
           cd ../..
           rm -rf typegraph/python/typegraph/gen
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
+
+          # start the docker containers
+          deno run -A dev/env.ts base s3 prisma
 
           # from old test-typegraph-core
           # test in native rust, not in wasm for a future rust SDK

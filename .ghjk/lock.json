@@ -89,7 +89,12 @@
           "depConfigs": {},
           "portRef": "cargo_binstall_ghrel@0.1.0"
         },
-        "80635b3a3967246789cc5f09137a8334fcfae9e96d507b6f8143d385093f024f": {
+        "1c1870c8d78ff6ec1621711218174deb5ddb2b4133b30d390dda5fa223978dba": {
+          "version": "v0.10.7",
+          "depConfigs": {},
+          "portRef": "temporal_cli_ghrel@0.1.0"
+        },
+        "f6c92b4425a3c13dfde7fe516efd376287e66cfa74aefd7b6a7a7bb0f3547a47": {
           "version": "0.116.0",
           "depConfigs": {
             "cargo_binstall_ghrel": {
@@ -404,6 +409,37 @@
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "whiz",
           "locked": true
+        },
+        "80635b3a3967246789cc5f09137a8334fcfae9e96d507b6f8143d385093f024f": {
+          "version": "0.116.0",
+          "depConfigs": {
+            "cargo_binstall_ghrel": {
+              "version": "v1.6.4",
+              "depConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0"
+            },
+            "rust_rustup": {
+              "version": "1.76.0",
+              "depConfigs": {
+                "rustup_rustlang": {
+                  "version": "1.27.0",
+                  "depConfigs": {
+                    "git_aa": {
+                      "version": "2.43.0",
+                      "depConfigs": {},
+                      "portRef": "git_aa@0.1.0"
+                    }
+                  },
+                  "portRef": "rustup_rustlang@0.1.0"
+                }
+              },
+              "portRef": "rust_rustup@0.1.0",
+              "profile": "minimal"
+            }
+          },
+          "portRef": "cargobi_cratesio@0.1.0",
+          "crateName": "wasm-opt",
+          "locked": true
         }
       }
     },
@@ -421,6 +457,7 @@
             "db5b506ba0936c6713a2efef3ee82df7ea271b06",
             "651e1043d59561e4e71e5fb0775daf746467a028",
             "e7b2f3414caa4c4441240c02dcb8f7c781fd01ee",
+            "af5c6b39c783d32544799829316564ffe51861a9",
             "a24f45ef0b2064658d87264a95d31fe4694f6f4e",
             "57da4ca242ec52ba50359a7fd78653e6bf253df0",
             "67d371eb0c4ae641830a955975d7134f7ee9a864",
@@ -579,6 +616,24 @@
             ],
             "version": "0.1.0",
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/cargo-binstall.ts"
+          }
+        },
+        "af5c6b39c783d32544799829316564ffe51861a9": {
+          "version": "0.10.7",
+          "port": {
+            "ty": "denoWorker@v1",
+            "name": "temporal_cli_ghrel",
+            "platforms": [
+              "aarch64-linux",
+              "x86_64-linux",
+              "aarch64-darwin",
+              "x86_64-darwin",
+              "aarch64-windows",
+              "x86_64-windows"
+            ],
+            "version": "0.1.0",
+            "deps": [],
+            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/temporal_cli.ts"
           }
         },
         "a24f45ef0b2064658d87264a95d31fe4694f6f4e": {
