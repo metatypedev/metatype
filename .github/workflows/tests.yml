@@ -291,7 +291,7 @@ jobs:
           deno run -A dev/env.ts base s3 prisma
 
           # publish the sdk to the local registry
-          cd typegate/node/sdk/dist
+          cd typegraph/node/sdk/dist
           npm config set "//localhost:4873/:_authToken" fooBar
           npm publish --registry http://localhost:4873
           cd ../../../..
