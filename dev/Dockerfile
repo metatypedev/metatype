@@ -122,7 +122,7 @@ COPY --from=runtime-bin /lib/sym /lib/sym
 COPY --from=runtime-bin /.wasmedge /.wasmedge
 COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 
-COPY --from=builder /app/target/debug/typegate /bin/typegate
+COPY --from=builder /app/target/release/typegate /bin/typegate
 # the typegate ecma sources
 COPY --from=builder /app/typegate/deno.jsonc /app/typegate/import_map.json ./typegate/
 COPY --from=builder /app/typegate/engine/*.js /app/typegate/engine/*.ts ./typegate/engine/
