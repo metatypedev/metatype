@@ -39,7 +39,7 @@ swc_common = "=0.33.17"
 swc_ecma_ast = "=0.110.17"
 swc_ecma_codegen = "=0.146.54"
 swc_ecma_parser = "=0.141.37"
-swc_ecma_transforms_typescript = "=0.186.17"
+swc_ecma_transforms_typescript = "=0.188.6"
 swc_ecma_visit = "=0.96.17"
 
 shadow-rs = "0.24"
