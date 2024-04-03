@@ -303,9 +303,9 @@ jobs:
           cargo test --locked --exclude meta-cli --exclude typegate --exclude typegate_engine --exclude typegraph_core --exclude metagen_mdk_rust_static  --workspace
 
           deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
+          cargo build -p meta-cli -F typegate # used by the deno_v8_flags test
           cargo build -p meta-cli
           cargo build -p xtask # xtask and meta-cli are used by the test suite
-          cargo build -p typegate  # used by the deno_v8_flags test
           deno run -A dev/test.ts --threads 1 -- --coverage=coverage
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
           deno cache --import-map typegate/import_map.json \
