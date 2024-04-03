@@ -15,7 +15,7 @@ Meta.test("DENO_V8_FLAGS env var", async (t) => {
       )
     ),
     t.shell(
-      `cargo run -p meta-cli -F typegate -- typegate`.split(" "),
+      `cargo run -p typegate`.split(" "),
       {
         env: {
           DENO_V8_FLAGS: "--help",
