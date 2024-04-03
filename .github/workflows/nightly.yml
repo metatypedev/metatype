@@ -52,7 +52,7 @@ jobs:
           touch "digests/prd/${digest#sha256:}"
       - uses: actions/upload-artifact@v4
         with:
-          name: digests-${{ matrix.platform }}
+          name: digests-${{ matrix.runner }}
           path: ./digests/*
           if-no-files-found: error
           retention-days: 1
