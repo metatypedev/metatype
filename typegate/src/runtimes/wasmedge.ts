@@ -30,7 +30,6 @@ export class WasmEdgeRuntime extends Runtime {
     _verbose: boolean,
   ): ComputeStage[] {
     const { materializer, argumentTypes, outType } = stage.props;
-    console.log("materializer", materializer);
     const { wasmArtifact, func } = materializer?.data ?? {};
     const order = Object.keys(argumentTypes ?? {});
 
