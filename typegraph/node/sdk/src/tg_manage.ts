@@ -144,7 +144,7 @@ export class Manager {
         if (artifactsConfig.codegen) {
           await this.#relayResultToCLI(
             "codegen",
-            async () => JSON.parse(reusableTgOutput.serialize(config).tgJson),
+            async () => JSON.parse(localMemo.tgJson),
           );
         }
 
