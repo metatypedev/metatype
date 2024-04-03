@@ -308,7 +308,7 @@ jobs:
           # from old test-libs
           cargo test --locked --exclude meta-cli --exclude typegate --exclude typegate_engine --exclude typegraph_core --exclude metagen_mdk_rust_static  --workspace
 
-          NPM_CONFIG_REGISTRY=http://localhost:4783 deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
+          NPM_CONFIG_REGISTRY=http://localhost:4873 deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
           cargo build -p meta-cli
           cargo build -p xtask # xtask and meta-cli are used by the test suite
           deno run -A dev/test.ts --threads 1 -- --coverage=coverage
