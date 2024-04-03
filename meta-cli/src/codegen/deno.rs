@@ -91,7 +91,7 @@ pub struct Codegen<'a> {
 }
 
 impl<'a> Codegen<'a> {
-    fn new<P>(tg: &'a Typegraph, path: P) -> Self
+    pub fn new<P>(tg: &'a Typegraph, path: P) -> Self
     where
         P: AsRef<Path>,
     {
@@ -143,6 +143,21 @@ impl<'a> Codegen<'a> {
             tg,
             ts_modules,
         }
+    }
+
+    pub fn apply_codegen(self) -> Result<()> {
+        let modules = self.codegen()?;
+        for ModuleCode { path, code } in modules.into_iter() {
+            let mut dir = path.clone();
+            dir.pop();
+
+            fs::create_dir_all(dir.clone())
+                .with_context(|| format!("Error creating directory {}", dir.clone().display()))?;
+
+            fs::write(path.clone(), code)
+                .with_context(|| format!("Error generating {}", path.clone().display()))?
+        }
+        Ok(())
     }
 
     fn codegen(mut self) -> Result<Vec<ModuleCode>> {
@@ -509,6 +524,7 @@ mod tests {
             // config.base_dir = test_folder.clone().into();
 
             ServerStore::with(Some(Command::Serialize), Some(config));
+            ServerStore::set_codegen_flag(true); // !
 
             let test_scope = async {
                 loader.do_send(LoadModule(
@@ -529,11 +545,10 @@ mod tests {
                             .into_iter()
                             .next()
                             .unwrap();
-                        res.as_typegraph()?
+                        res.as_typegraph()? // !
                     }
                     evt => bail!("unexpected loader evt: {evt:?}"),
                 };
-
                 server_handle.stop(true).await;
 
                 let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;

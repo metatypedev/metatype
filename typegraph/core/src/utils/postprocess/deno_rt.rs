@@ -39,14 +39,19 @@ impl DenoProcessor {
         // if relative => make it absolute
         // fs::canonicalize wouldn't work in this setup
         let main_path = fs_host::make_absolute(&PathBuf::from(path))?;
-        if !fs_host::path_exists(&main_path)? && !Store::get_cli_flag() {
-            return Err(format!(
-                "could not resolve module {:?}",
-                main_path.display()
-            ));
+
+        match fs_host::path_exists(&main_path)? {
+            true => mat_data.code = compress_and_encode(&main_path)?,
+            false => {
+                if !Store::get_codegen_flag() {
+                    return Err(format!(
+                        "could not resolve module {:?}",
+                        main_path.display()
+                    ));
+                } // else cli codegen
+            }
         }
 
-        mat_data.code = compress_and_encode(&main_path)?;
         mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
 
         Ok(Some(main_path))

@@ -37,7 +37,7 @@ impl PostProcessor for TypegraphPostProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), TgError> {
         if let Some(config) = self.config {
             Store::set_deploy_cwd(config.dir); // fs_host::cwd() will now use this value
-            Store::set_cli_flag(config.cli);
+            Store::set_codegen_flag(config.codegen);
 
             PrismaProcessor::new(config.prisma_migration).postprocess(tg)?;
 

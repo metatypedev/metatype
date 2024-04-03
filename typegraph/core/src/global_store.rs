@@ -64,7 +64,7 @@ pub struct Store {
     random_seed: Option<u32>,
 
     latest_alias_no: u32,
-    is_run_from_cli: Option<bool>,
+    codegen_flag: Option<bool>,
 }
 
 impl Store {
@@ -510,14 +510,14 @@ impl Store {
         with_store(|s| s.auths.clone())
     }
 
-    pub fn set_cli_flag(status: Option<bool>) {
+    pub fn set_codegen_flag(status: Option<bool>) {
         with_store_mut(|s| {
-            s.is_run_from_cli = status;
+            s.codegen_flag = status;
         })
     }
 
-    pub fn get_cli_flag() -> bool {
-        with_store(|s| s.is_run_from_cli.unwrap_or(false))
+    pub fn get_codegen_flag() -> bool {
+        with_store(|s| s.codegen_flag.unwrap_or(false))
     }
 }
 
