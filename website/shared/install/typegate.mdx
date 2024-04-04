@@ -8,7 +8,7 @@ This is the easiest way to get started, yet it's not publicly accessible. You ca
 
 ### With Docker
 
-Install [Docker](https://docs.docker.com/get-docker/) and use the following `compose.yml` to launch a typegate node. Redis is the single required dependency, however in practice you will want to add database or other systems that the typegate can connect to.
+Install [Docker](https://docs.docker.com/get-docker/) and use the following `compose.yml` to launch a typegate node. For multi-instance production workloads, Redis and an S3 object store provider are required but the typegate will run using in-memory stores if no `SYNC_*` environment variable is detected. More details can be found [here](/docs/reference/typegate/synchronization). In practice you might also want to add a database or other systems that the typegate can connect to.
 
 ```yml
 services:
@@ -22,15 +22,7 @@ services:
       # only for dev, generate secure values for production
       TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
       TG_ADMIN_PASSWORD: password
-      REDIS_URL: redis://:password@redis:6379/0
       DEBUG: "true"
-    depends_on:
-      - redis
-
-  redis:
-    image: redis:7
-    restart: always
-    command: --requirepass password
 ```
 
 ```bash
