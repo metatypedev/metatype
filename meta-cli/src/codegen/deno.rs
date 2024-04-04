@@ -147,15 +147,12 @@ impl<'a> Codegen<'a> {
 
     pub fn apply_codegen(self) -> Result<()> {
         let modules = self.codegen()?;
-        for ModuleCode { path, code } in modules.into_iter() {
-            let mut dir = path.clone();
-            dir.pop();
-
-            fs::create_dir_all(dir.clone())
-                .with_context(|| format!("Error creating directory {}", dir.clone().display()))?;
-
-            fs::write(path.clone(), code)
-                .with_context(|| format!("Error generating {}", path.clone().display()))?
+        for ModuleCode { path, code } in modules.iter() {
+            if let Some(parent) = path.parent() {
+                fs::create_dir_all(parent)
+                    .with_context(|| format!("Error creating directory {}", parent.display()))?;
+            }
+            fs::write(path, code).with_context(|| format!("Error generating {}", path.display()))?
         }
         Ok(())
     }
@@ -520,10 +517,8 @@ mod tests {
 
             let server = init_server()?;
             let server_handle = server.handle();
-            let config: Config = Default::default();
-            // config.base_dir = test_folder.clone().into();
 
-            ServerStore::with(Some(Command::Serialize), Some(config));
+            ServerStore::with(Some(Command::Serialize), Some(config.as_ref().clone()));
             ServerStore::set_codegen_flag(true); // !
 
             let test_scope = async {

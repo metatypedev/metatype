@@ -20,6 +20,7 @@ pub(crate) mod deploy;
 pub(crate) mod dev;
 pub(crate) mod doctor;
 pub(crate) mod gen;
+pub(crate) mod generators;
 pub(crate) mod new;
 pub(crate) mod serialize;
 pub(crate) mod typegate;
