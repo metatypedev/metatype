@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Union
+from typing import Union, Optional
 
 from typegraph.runtimes.base import Runtime
 
@@ -21,27 +21,37 @@ from typegraph import t
 
 
 class TemporalRuntime(Runtime):
-    host: str
     name: str
+    host_secret: str
+    namespace_secret: Optional[str]
 
-    def __init__(self, name: str, host: str):
-        data = TemporalRuntimeData(name=name, host=host)
-        super().__init__(runtimes.register_temporal_runtime(store, data))
+    def __init__(
+        self, name: str, host_secret: str, *, namespace_secret: Optional[str] = None
+    ):
+        data = TemporalRuntimeData(
+            name=name, host_secret=host_secret, namespace_secret=namespace_secret
+        )
+        runtime_id = runtimes.register_temporal_runtime(store, data)
+        if isinstance(runtime_id, Err):
+            raise Exception(runtime_id.value)
+        super().__init__(runtime_id.value)
         self.name = name
-        self.host = host
+        self.host_secret = host_secret
 
     def _generic_temporal_func(
         self,
         operation: TemporalOperationType,
         mat_arg: Union[None, str] = None,
         func_arg: Union[None, t.typedef] = None,
+        func_out: Union[None, t.typedef] = None,
     ):
         data = TemporalOperationData(
             mat_arg=mat_arg,
             func_arg=None if func_arg is None else func_arg.id,
+            func_out=None if func_out is None else func_out.id,
             operation=operation,
         )
-        func_data = runtimes.generate_temporal_operation(store, self.id.value, data)
+        func_data = runtimes.generate_temporal_operation(store, self.id, data)
         if isinstance(func_data, Err):
             raise Exception(func_data.value)
 
@@ -59,9 +69,9 @@ class TemporalRuntime(Runtime):
             arg,
         )
 
-    def query_workflow(self, query_type: str, arg: t.typedef):
+    def query_workflow(self, query_type: str, arg: t.typedef, out: t.typedef):
         return self._generic_temporal_func(
-            TemporalOperationTypeQueryWorkflow(), query_type, arg
+            TemporalOperationTypeQueryWorkflow(), query_type, arg, out
         )
 
     def describe_workflow(self):

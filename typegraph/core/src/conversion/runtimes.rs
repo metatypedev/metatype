@@ -428,7 +428,8 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
         }
         Runtime::Temporal(d) => Ok(TGRuntime::Known(Rt::Temporal(TemporalRuntimeData {
             name: d.name.clone(),
-            host: d.host.clone(),
+            host_secret: d.host_secret.clone(),
+            namespace_secret: d.namespace_secret.clone(),
         }))
         .into()),
         Runtime::Typegate => Ok(TGRuntime::Known(Rt::Typegate(TypegateRuntimeData {})).into()),
