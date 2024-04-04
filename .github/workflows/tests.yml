@@ -146,7 +146,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
+          key: ${{ matrix.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
       - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
         with:
           # temporary fix
@@ -232,49 +232,6 @@ jobs:
       - self-hosted # https://check-jsonschema.readthedocs.io/en/latest/faq.html#using-self-hosted-runners
       - custom-ubuntu-large
     timeout-minutes: 60
-    services:
-      redis:
-        image: bitnami/redis:7.0
-        env:
-          REDIS_PASSWORD: password
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli -a password ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_DB: db
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      minio:
-        image: bitnami/minio:2022
-        env:
-          MINIO_REGION_NAME: local
-          MINIO_ROOT_USER: minio
-          MINIO_ROOT_PASSWORD: password
-          MINIO_DEFAULT_BUCKETS: "bucket:none"
-        ports:
-          - "9000:9000"
-          - "9001:9001"
-      verdaccio:
-        image: verdaccio/verdaccio:5
-        ports:
-          - "4873:4873"
-        volumes:
-          - ./dev/verdaccio/:/verdaccio/conf/
-    env:
-      DENO_DIR: deno-dir
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
@@ -320,15 +277,24 @@ jobs:
           mkdir -p $(dirname $WASM_FILE)
           wasm-opt -Oz target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE.opt
           wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
-          rm -rf typegraph/node/sdk/src/gen typegraph/node/sdk/dist
+          
           jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen --map metatype:typegraph/host=../host/host.js
           cd typegraph/node
           pnpm install
           pnpm run sdk-build
           cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
           cd ../..
-          rm -rf typegraph/python/typegraph/gen
+          
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
+
+          # start the docker containers
+          deno run -A dev/env.ts base s3 prisma
+
+          # publish the sdk to the local registry
+          cd typegraph/node/sdk/dist
+          npm config set "//localhost:4873/:_authToken" fooBar
+          npm publish --registry http://localhost:4873
+          cd ../../../..
 
           # from old test-typegraph-core
           # test in native rust, not in wasm for a future rust SDK
@@ -342,12 +308,12 @@ jobs:
           # from old test-libs
           cargo test --locked --exclude meta-cli --exclude typegate --exclude typegate_engine --exclude typegraph_core --exclude metagen_mdk_rust_static  --workspace
 
-          deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
+          NPM_CONFIG_REGISTRY=http://localhost:4873 deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
           cargo build -p meta-cli
           cargo build -p xtask # xtask and meta-cli are used by the test suite
           deno run -A dev/test.ts --threads 1 -- --coverage=coverage
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
-          deno cache --import-map typegate/import_map.json \
+          NPM_CONFIG_REGISTRY=http://localhost:4873 deno cache --import-map typegate/import_map.json \
             typegate/src/main.ts \
             typegate/tests/utils/*.ts \
             typegate/tests/runtimes/wasmedge/*.ts \
