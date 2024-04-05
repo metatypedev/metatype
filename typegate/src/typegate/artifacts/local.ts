@@ -2,17 +2,16 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { resolve } from "std/path/resolve.ts";
-import config from "../../config.ts";
 import { HashTransformStream } from "../../utils/hash.ts";
-import { ArtifactMeta, ArtifactStore } from "./mod.ts";
+import {
+  ArtifactMeta,
+  ArtifactStore,
+  getLocalPath,
+  STORE_DIR,
+  STORE_TEMP_DIR,
+} from "./mod.ts";
 import { createHash } from "node:crypto";
 import * as jwt from "jwt";
-import { dirname } from "std/path/dirname.ts";
-
-// The directory where artifacts are stored -- by hash
-export const STORE_DIR = `${config.tmp_dir}/artifacts-cache`;
-export const STORE_TEMP_DIR = `${config.tmp_dir}/artifacts-cache/tmp`;
-const ARTIFACTS_DIR = `${config.tmp_dir}/artifacts`;
 
 export interface UploadUrlStore {
   mapToMeta: Map<string, ArtifactMeta>;
@@ -20,7 +19,7 @@ export interface UploadUrlStore {
   expirationTimerId: number;
 }
 
-export function initUploadUrlStore() {
+function initUploadUrlStore() {
   const mapToMeta = new Map<string, ArtifactMeta>();
   const expirationQueue: [string, number][] = [];
   const expirationTimerId = setInterval(() => {
@@ -37,7 +36,7 @@ export function initUploadUrlStore() {
   return { mapToMeta, expirationQueue, expirationTimerId };
 }
 
-export function deinitUploadUrlStore(uploadUrls: UploadUrlStore) {
+function deinitUploadUrlStore(uploadUrls: UploadUrlStore) {
   clearInterval(uploadUrls.expirationTimerId);
   uploadUrls.mapToMeta.clear();
   uploadUrls.expirationQueue = [];
@@ -137,17 +136,4 @@ export class LocalArtifactStore extends ArtifactStore {
     deinitUploadUrlStore(this.#uploadUrls);
     return Promise.resolve(void null);
   }
-}
-
-export async function getLocalPath(meta: ArtifactMeta) {
-  const cachedPath = resolve(STORE_DIR, meta.hash);
-  const localPath = resolve(
-    ARTIFACTS_DIR,
-    meta.typegraphName,
-    meta.relativePath,
-  );
-  await Deno.mkdir(dirname(localPath), { recursive: true });
-  await Deno.link(cachedPath, localPath);
-
-  return localPath;
 }

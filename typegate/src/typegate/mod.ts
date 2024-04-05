@@ -106,11 +106,7 @@ export class Typegate {
         );
       }
       const limiter = await RedisRateLimiter.init(syncConfig.redis);
-      // TODO SharedArtifactStore
-      const artifactStore = SharedArtifactStore.init(
-        syncConfig.s3,
-        syncConfig.s3Bucket,
-      );
+      const artifactStore = SharedArtifactStore.init(syncConfig);
       const typegate = new Typegate(null!, limiter, artifactStore, syncConfig);
       const register = await ReplicatedRegister.init(
         typegate,

@@ -4,9 +4,30 @@
 import { signJWT, verifyJWT } from "../../crypto.ts";
 import * as jwt from "jwt";
 import { z } from "zod";
+import config from "../../config.ts";
+import { dirname } from "std/path/dirname.ts";
+import { resolve } from "std/path/resolve.ts";
+
+// The directory where artifacts are stored -- by hash
+export const STORE_DIR = `${config.tmp_dir}/artifacts-cache`;
+export const STORE_TEMP_DIR = `${config.tmp_dir}/artifacts-cache/tmp`;
+const ARTIFACTS_DIR = `${config.tmp_dir}/artifacts`;
 
 function getUploadPath(tgName: string) {
   return `/${tgName}/artifacts`;
+}
+
+export async function getLocalPath(meta: ArtifactMeta) {
+  const cachedPath = resolve(STORE_DIR, meta.hash);
+  const localPath = resolve(
+    ARTIFACTS_DIR,
+    meta.typegraphName,
+    meta.relativePath,
+  );
+  await Deno.mkdir(dirname(localPath), { recursive: true });
+  await Deno.link(cachedPath, localPath);
+
+  return localPath;
 }
 
 export const artifactMetaSchema = z.object({

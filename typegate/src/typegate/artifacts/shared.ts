@@ -1,34 +1,82 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { connect, RedisConnectOptions } from "redis";
 import { createHash } from "node:crypto";
-import { S3, S3ClientConfig } from "aws-sdk/client-s3";
-import {
-  deinitUploadUrlStore,
-  getLocalPath,
-  initUploadUrlStore,
-  STORE_DIR,
-  STORE_TEMP_DIR,
-  UploadUrlStore,
-} from "./local.ts";
-import { ArtifactStore } from "./mod.ts";
+import { S3 } from "aws-sdk/client-s3";
+import { getLocalPath, STORE_DIR, STORE_TEMP_DIR } from "./mod.ts";
+import { ArtifactMeta, ArtifactStore } from "./mod.ts";
 import { HashTransformStream } from "../../utils/hash.ts";
 import { resolve } from "std/path/resolve.ts";
+import { SyncConfig } from "../../sync/config.ts";
+import { Redis } from "redis";
+import * as jwt from "jwt";
+import { readableStreamFromReader } from "https://deno.land/std@0.129.0/streams/conversion.ts";
+
+export interface RemoteUploadUrlStore {
+  mapToMeta: Redis;
+  expirationQueue: [string, number][];
+  expirationTimerId: number;
+}
+
+async function initRemoteUploadUrlStore(
+  redisConfig: RedisConnectOptions,
+): Promise<RemoteUploadUrlStore> {
+  const mapToMeta = await connect(redisConfig);
+  const expirationQueue: [string, number][] = [];
+  const expirationTimerId = setInterval(() => {
+    const now = jwt.getNumericDate(new Date());
+    while (expirationQueue.length > 0) {
+      const [url, expirationTime] = expirationQueue[0];
+      if (expirationTime > now) {
+        break;
+      }
+      expirationQueue.shift();
+      mapToMeta.del(url);
+    }
+  }, 5000);
+  return { mapToMeta, expirationQueue, expirationTimerId };
+}
+
+function deinitRemoteUploadUrlStore(uploadUrls: RemoteUploadUrlStore) {
+  uploadUrls.mapToMeta.quit();
+  clearInterval(uploadUrls.expirationTimerId);
+  uploadUrls.expirationQueue = [];
+}
+
+function serializeArtifactMeta(meta: ArtifactMeta): string {
+  return JSON.stringify(meta);
+}
+
+function deserializeToArtifactMeta(value: string): ArtifactMeta {
+  try {
+    return JSON.parse(value) as ArtifactMeta;
+  } catch (error) {
+    throw error;
+  }
+}
+
+function resolveS3Key(hash: string) {
+  return `${REMOTE_ARTIFACT_DIR}/${hash}`;
+}
+
+const REMOTE_ARTIFACT_DIR = "artifacts-cache";
 
 export class SharedArtifactStore extends ArtifactStore {
-  #uploadUrls: UploadUrlStore;
+  #uploadUrls: RemoteUploadUrlStore;
   #s3!: S3;
-  #s3Bucket: string;
+  #syncConfig: SyncConfig;
 
-  static init(s3Config: S3ClientConfig, s3Bucket: string) {
-    return new SharedArtifactStore(s3Config, s3Bucket);
+  static async init(syncConfig: SyncConfig) {
+    const urlStore = await initRemoteUploadUrlStore(syncConfig.redis);
+    return new SharedArtifactStore(syncConfig, urlStore);
   }
 
-  constructor(s3Config: S3ClientConfig, s3Bucket: string) {
+  constructor(syncConfig: SyncConfig, urlStore: RemoteUploadUrlStore) {
     super();
-    this.#s3 = new S3(s3Config);
-    this.#s3Bucket = s3Bucket;
-    this.#uploadUrls = initUploadUrlStore();
+    this.#s3 = new S3(syncConfig.s3);
+    this.#syncConfig = syncConfig;
+    this.#uploadUrls = urlStore;
   }
 
   override async persist(stream: ReadableStream<any>): Promise<string> {
@@ -43,9 +91,9 @@ export class SharedArtifactStore extends ArtifactStore {
 
     const hash = hasher.digest("hex");
     await this.#s3.putObject({
-      Bucket: this.#s3Bucket,
-      Key: hash,
-      Body: stream,
+      Bucket: this.#syncConfig.s3Bucket,
+      Key: resolveS3Key(hash),
+      Body: readableStreamFromReader(file),
     });
 
     return hash;
@@ -53,16 +101,16 @@ export class SharedArtifactStore extends ArtifactStore {
 
   override async delete(hash: string): Promise<void> {
     await this.#s3.deleteObject({
-      Bucket: this.#s3Bucket,
-      Key: hash,
+      Bucket: this.#syncConfig.s3Bucket,
+      Key: resolveS3Key(hash),
     });
   }
 
   override async has(hash: string): Promise<boolean> {
     try {
       await this.#s3.headObject({
-        Bucket: this.#s3Bucket,
-        Key: hash,
+        Bucket: this.#syncConfig.s3Bucket,
+        Key: resolveS3Key(hash),
       });
       return true;
     } catch (error) {
@@ -74,18 +122,8 @@ export class SharedArtifactStore extends ArtifactStore {
   }
 
   override async getLocalPath(
-    meta: {
-      typegraphName: string;
-      relativePath: string;
-      hash: string;
-      sizeInBytes: number;
-    },
-    deps?: {
-      typegraphName: string;
-      relativePath: string;
-      hash: string;
-      sizeInBytes: number;
-    }[] | undefined,
+    meta: ArtifactMeta,
+    deps?: ArtifactMeta[] | undefined,
   ): Promise<string> {
     for (const dep of deps ?? []) {
       await this.#downloadFromRemote(dep.hash, dep.relativePath);
@@ -97,10 +135,13 @@ export class SharedArtifactStore extends ArtifactStore {
   }
 
   async #downloadFromRemote(hash: string, relativePath: string) {
+    if (await this.#existsLocally(hash)) {
+      return;
+    }
     const targetFile = resolve(STORE_DIR, hash);
     const response = await this.#s3.getObject({
-      Bucket: this.#s3Bucket,
-      Key: hash,
+      Bucket: this.#syncConfig.s3Bucket,
+      Key: resolveS3Key(hash),
     });
 
     if (response.$metadata.httpStatusCode === 404) {
@@ -110,10 +151,21 @@ export class SharedArtifactStore extends ArtifactStore {
     }
 
     if (response.Body) {
-      const content = await response.Body.transformToByteArray();
-      await Deno.writeFile(targetFile, content);
+      const file =
+        (await Deno.open(targetFile, { write: true, create: true })).writable;
+      await response.Body.transformToWebStream().pipeTo(file);
+      file.close();
     } else {
       throw new Error(`Failed to download artifact ${relativePath} from s3`);
+    }
+  }
+
+  async #existsLocally(hash: string) {
+    try {
+      await Deno.stat(resolve(STORE_DIR, hash));
+      return true;
+    } catch {
+      return false;
     }
   }
 
@@ -135,13 +187,13 @@ export class SharedArtifactStore extends ArtifactStore {
       origin,
       meta.typegraphName,
     );
-    this.#uploadUrls.mapToMeta.set(url, meta);
+    this.#uploadUrls.mapToMeta.set(url, serializeArtifactMeta(meta));
     this.#uploadUrls.expirationQueue.push([url, expirationTime]);
 
     return url;
   }
 
-  override takeUploadUrl(
+  override async takeUploadUrl(
     url: URL,
   ): Promise<
     {
@@ -153,17 +205,17 @@ export class SharedArtifactStore extends ArtifactStore {
   > {
     ArtifactStore.validateUploadUrl(url);
 
-    const meta = this.#uploadUrls.mapToMeta.get(url.toString());
+    const meta = await this.#uploadUrls.mapToMeta.get(url.toString());
     if (!meta) {
       throw new Error("Invalid upload URL");
     }
 
-    this.#uploadUrls.mapToMeta.delete(url.toString());
-    return Promise.resolve(meta);
+    this.#uploadUrls.mapToMeta.del(url.toString());
+    return Promise.resolve(deserializeToArtifactMeta(meta));
   }
 
   override close(): Promise<void> {
-    deinitUploadUrlStore(this.#uploadUrls);
+    deinitRemoteUploadUrlStore(this.#uploadUrls);
     return Promise.resolve(void null);
   }
 }
