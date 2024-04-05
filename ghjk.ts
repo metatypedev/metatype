@@ -1,6 +1,6 @@
-export { ghjk } from "https://raw.github.com/metatypedev/ghjk/423d38/mod.ts";
-import * as ghjk from "https://raw.github.com/metatypedev/ghjk/423d38/mod.ts";
-import * as ports from "https://raw.github.com/metatypedev/ghjk/423d38/ports/mod.ts";
+export { ghjk } from "https://raw.github.com/metatypedev/ghjk/423d38e/mod.ts";
+import * as ghjk from "https://raw.github.com/metatypedev/ghjk/423d38e/mod.ts";
+import * as ports from "https://raw.github.com/metatypedev/ghjk/423d38e/ports/mod.ts";
 
 const PROTOC_VERSION = "v24.1";
 const POETRY_VERSION = "1.7.0";
@@ -15,6 +15,7 @@ const CMAKE_VERSION = "3.28.0-rc6";
 const CARGO_INSTA_VERSION = "1.33.0";
 const NODE_VERSION = "20.8.0";
 const TEMPORAL_VERSION = "0.10.7";
+const METATYPE_VERSION = "0.3.7-0";
 
 ghjk.install(
   ports.wasmedge({ version: WASMEDGE_VERSION }),
@@ -30,10 +31,23 @@ ghjk.install(
 
 if (!Deno.env.has("OCI")) {
   ghjk.install(
-    ports.cargobi({ crateName: "wasm-opt", version: WASM_OPT_VERSION }),
-    ports.cargobi({ crateName: "wasm-tools", version: WASM_TOOLS_VERSION }),
+    // FIXME: use cargobi when avail
+    ports.cargobi({
+      crateName: "wasm-opt",
+      version: WASM_OPT_VERSION,
+      locked: true,
+    }),
+    ports.cargobi({
+      crateName: "wasm-tools",
+      version: WASM_TOOLS_VERSION,
+      locked: true,
+    }),
     // these aren't required by the typegate build process
-    ports.cargobi({ crateName: "cargo-insta", version: CARGO_INSTA_VERSION }),
+    ports.cargobi({
+      crateName: "cargo-insta",
+      version: CARGO_INSTA_VERSION,
+      locked: true,
+    }),
     ports.node({ version: NODE_VERSION }),
     ports.pnpm({ version: PNPM_VERSION }),
     // FIXME: jco installs node as a dep
@@ -72,9 +86,23 @@ if (!Deno.env.has("NO_PYTHON")) {
 if (!Deno.env.has("CI") && !Deno.env.has("OCI")) {
   ghjk.install(
     ports.act({}),
-    ports.cargobi({ crateName: "whiz" }),
+    ports.cargobi({ crateName: "whiz", locked: true }),
   );
 }
+
+ghjk.task("clean-deno-lock", {
+  installs: [
+    // jq
+  ],
+  async fn({ $ }) {
+    const jqOp1 =
+      `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
+    const jqOp2 = `del(.packages.npm["@typegraph/sdk@${METATYPE_VERSION}"])`;
+    const jqOp = `${jqOp1} | ${jqOp2}`;
+    const lock = await $`jq ${jqOp} typegate/deno.lock`.text();
+    await Deno.writeTextFile("typegate/deno.lock", lock);
+  },
+});
 
 export const secureConfig = ghjk.secureConfig({
   allowedPortDeps: [...ghjk.stdDeps({ enableRuntimes: true })],

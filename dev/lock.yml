@@ -23,6 +23,7 @@ dev:
       (const\s+CMAKE_VERSION\s*=\s*").*(";): CMAKE_VERSION
       (const\s+CARGO_INSTA_VERSION\s*=\s*").*(";): CARGO_INSTA_VERSION
       (const\s+TEMPORAL_VERSION\s*=\s*").*(";): TEMPORAL_VERSION
+      (const\s+METATYPE_VERSION\s*=\s*").*(";): METATYPE_VERSION
     .github/*/*.yml:
       '(  GHJK_VERSION: ").+(")': GHJK_VERSION
       '(  DENO_VERSION: ").+(")': DENO_VERSION
@@ -78,8 +79,11 @@ dev:
       '(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)': PUBLISHED_VERSION
     examples/**/*.ts:
       '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': PUBLISHED_VERSION
+    typegate/import_map.json:
+      '(\s*"@typegraph\/sdk"\s*:\s*"npm:@typegraph\/sdk@).+(",?)': METATYPE_VERSION
+      '(\s*"@typegraph\/sdk\/"\s*:\s*"npm:/@typegraph\/sdk@).+(\/",?)': METATYPE_VERSION
   lock:
-    GHJK_VERSION: 423d38
+    GHJK_VERSION: 423d38e
     GHJK_ACTION_VERSION: a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
     PYTHON_VERSION: 3.8.18
     POETRY_VERSION: 1.7.0
