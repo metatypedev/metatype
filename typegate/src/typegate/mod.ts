@@ -42,6 +42,7 @@ import { SyncConfig } from "../sync/config.ts";
 import { MemoryRegister } from "test-utils/memory_register.ts";
 import { NoLimiter } from "test-utils/no_limiter.ts";
 import { TypegraphStore } from "../sync/typegraph.ts";
+import { SharedArtifactStore } from "./artifacts/shared.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -106,7 +107,10 @@ export class Typegate {
       }
       const limiter = await RedisRateLimiter.init(syncConfig.redis);
       // TODO SharedArtifactStore
-      const artifactStore = await LocalArtifactStore.init();
+      const artifactStore = SharedArtifactStore.init(
+        syncConfig.s3,
+        syncConfig.s3Bucket,
+      );
       const typegate = new Typegate(null!, limiter, artifactStore, syncConfig);
       const register = await ReplicatedRegister.init(
         typegate,

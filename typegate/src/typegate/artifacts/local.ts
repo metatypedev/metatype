@@ -10,17 +10,17 @@ import * as jwt from "jwt";
 import { dirname } from "std/path/dirname.ts";
 
 // The directory where artifacts are stored -- by hash
-const STORE_DIR = `${config.tmp_dir}/artifacts-cache`;
-const STORE_TEMP_DIR = `${config.tmp_dir}/artifacts-cache/tmp`;
+export const STORE_DIR = `${config.tmp_dir}/artifacts-cache`;
+export const STORE_TEMP_DIR = `${config.tmp_dir}/artifacts-cache/tmp`;
 const ARTIFACTS_DIR = `${config.tmp_dir}/artifacts`;
 
-interface UploadUrlStore {
+export interface UploadUrlStore {
   mapToMeta: Map<string, ArtifactMeta>;
   expirationQueue: [string, number][];
   expirationTimerId: number;
 }
 
-function initUploadUrlStore() {
+export function initUploadUrlStore() {
   const mapToMeta = new Map<string, ArtifactMeta>();
   const expirationQueue: [string, number][] = [];
   const expirationTimerId = setInterval(() => {
@@ -37,7 +37,7 @@ function initUploadUrlStore() {
   return { mapToMeta, expirationQueue, expirationTimerId };
 }
 
-function deinitUploadUrlStore(uploadUrls: UploadUrlStore) {
+export function deinitUploadUrlStore(uploadUrls: UploadUrlStore) {
   clearInterval(uploadUrls.expirationTimerId);
   uploadUrls.mapToMeta.clear();
   uploadUrls.expirationQueue = [];
@@ -139,7 +139,7 @@ export class LocalArtifactStore extends ArtifactStore {
   }
 }
 
-async function getLocalPath(meta: ArtifactMeta) {
+export async function getLocalPath(meta: ArtifactMeta) {
   const cachedPath = resolve(STORE_DIR, meta.hash);
   const localPath = resolve(
     ARTIFACTS_DIR,
