@@ -61,7 +61,13 @@ typegraph:
     pnpm install
     pnpm run sdk-build
     cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
-    cd ../..
+    cd ./sdk/dist
+    npm config set "//localhost:4873/:_authToken" fooBar
+    npm unpublish @typegraph/sdk --force --registry http://localhost:4873
+    npm publish --no-git-checks --force --registry http://localhost:4873
+    cd ../../../..
+
+    ghjk x clean-deno-lock
 
     rm -rf typegraph/python/typegraph/gen
     poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
@@ -109,7 +115,7 @@ setup:
     - typegraph/python/pyproject.toml
     - website/package.json
   env:
-    GHJK_VERSION: "423d38"
+    GHJK_VERSION: "423d38e"
   command: |
     set -e
     curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh |  bash
