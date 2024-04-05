@@ -53,6 +53,8 @@ fn main() -> Result<()> {
         Err(e) => e.exit(),
     };
 
+    log::set_max_level(args.verbose.log_level_filter());
+
     if args.version {
         println!("meta {}", build::PKG_VERSION);
         return Ok(());
