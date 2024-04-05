@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
@@ -16,12 +15,12 @@ use crate::deploy::actors::loader::{
 };
 use crate::deploy::actors::watcher::WatcherActor;
 use crate::deploy::push::pusher::PushResult;
+use crate::secrets::Secrets;
 use actix::prelude::*;
 use actix_web::dev::ServerHandle;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
-use common::node::Node;
 use log::warn;
 use normpath::PathExt;
 use tokio::sync::mpsc;
@@ -96,27 +95,11 @@ pub struct DeployOptions {
     pub secrets: Vec<String>,
 }
 
-fn override_secrets(
-    secrets: HashMap<String, String>,
-    overrides: Vec<String>,
-) -> Result<HashMap<String, String>> {
-    let mut secrets = secrets;
-    for override_str in overrides {
-        let parts: Vec<&str> = override_str.splitn(2, '=').collect();
-        if parts.len() != 2 {
-            bail!("Invalid secret override: {}", override_str);
-        }
-        secrets.insert(parts[0].to_string(), parts[1].to_string());
-    }
-
-    Ok(secrets)
-}
-
 pub struct Deploy {
     config: Arc<Config>,
     base_dir: Arc<Path>,
     options: DeployOptions,
-    node: Node,
+    node_envs: Secrets,
     file: Option<Arc<Path>>,
     max_parallel_loads: Option<usize>,
 }
@@ -131,6 +114,7 @@ impl Deploy {
         let options = deploy.options.clone();
 
         let node_config = config.node(&deploy.node, &deploy.target);
+        let node_envs = Secrets::load_from_node_config(&node_config)?;
         let node = node_config
             .build(&dir)
             .await
@@ -151,7 +135,7 @@ impl Deploy {
             config,
             base_dir: dir.into(),
             options,
-            node,
+            node_envs,
             file: deploy
                 .file
                 .as_ref()
@@ -224,11 +208,10 @@ mod default_mode {
     impl DefaultMode {
         pub async fn init(deploy: Deploy) -> Result<Self> {
             let console = ConsoleActor::new(Arc::clone(&deploy.config)).start();
-            let secrets = lade_sdk::hydrate(
-                override_secrets(deploy.node.env.clone(), deploy.options.secrets.clone())?,
-                deploy.base_dir.to_path_buf(),
-            )
-            .await?;
+
+            let mut secrets = deploy.node_envs.clone();
+            secrets.apply_overrides(&deploy.options.secrets)?;
+            let secrets = secrets.hydrate(deploy.base_dir.to_path_buf()).await?;
 
             ServerStore::set_secrets(secrets);
 
@@ -347,11 +330,9 @@ mod watch_mode {
         .context("setting Ctrl-C handler")?;
 
         loop {
-            let secrets = lade_sdk::hydrate(
-                override_secrets(deploy.node.env.clone(), deploy.options.secrets.clone())?,
-                deploy.base_dir.to_path_buf(),
-            )
-            .await?;
+            let mut secrets = deploy.node_envs.clone();
+            secrets.apply_overrides(&deploy.options.secrets)?;
+            let secrets = secrets.hydrate(deploy.base_dir.to_path_buf()).await?;
 
             ServerStore::set_secrets(secrets.clone());
 

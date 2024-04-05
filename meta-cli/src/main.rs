@@ -9,6 +9,7 @@ pub mod deploy;
 mod fs;
 mod global_config;
 mod logger;
+mod secrets;
 
 #[cfg(test)]
 mod tests;
