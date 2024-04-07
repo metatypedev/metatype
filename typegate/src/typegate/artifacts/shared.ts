@@ -90,6 +90,7 @@ export class SharedArtifactStore extends ArtifactStore {
       .pipeTo(file.writable);
 
     const hash = hasher.digest("hex");
+    console.log(`Persisting artifact to S3`);
     await this.#s3.putObject({
       Bucket: this.#syncConfig.s3Bucket,
       Key: resolveS3Key(hash),

@@ -89,4 +89,5 @@ Meta.test("WasmEdge Runtime typescript SDK: Sync Config", async (metaTest) => {
   async teardown() {
     await cleanUp();
   },
+  port: true,
 });
