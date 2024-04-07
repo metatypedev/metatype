@@ -11,7 +11,7 @@ import { resolve } from "std/path/resolve.ts";
 import { SyncConfig } from "../../sync/config.ts";
 import { Redis } from "redis";
 import * as jwt from "jwt";
-import { readableStreamFromReader } from "https://deno.land/std@0.129.0/streams/conversion.ts";
+import { readAll } from "https://deno.land/std@0.129.0/streams/conversion.ts";
 
 export interface RemoteUploadUrlStore {
   mapToMeta: Redis;
@@ -69,6 +69,9 @@ export class SharedArtifactStore extends ArtifactStore {
 
   static async init(syncConfig: SyncConfig) {
     const urlStore = await initRemoteUploadUrlStore(syncConfig.redis);
+    await Deno.mkdir(STORE_DIR, { recursive: true });
+    await Deno.mkdir(STORE_TEMP_DIR, { recursive: true });
+
     return new SharedArtifactStore(syncConfig, urlStore);
   }
 
@@ -83,18 +86,25 @@ export class SharedArtifactStore extends ArtifactStore {
     const tmpFile = await Deno.makeTempFile({
       dir: STORE_TEMP_DIR,
     });
-    const file = await Deno.open(tmpFile, { write: true, truncate: true });
+    const file = await Deno.open(tmpFile, {
+      write: true,
+      truncate: true,
+    });
     const hasher = createHash("sha256");
     await stream
       .pipeThrough(new HashTransformStream(hasher))
       .pipeTo(file.writable);
 
     const hash = hasher.digest("hex");
+
+    const readFile = await Deno.open(tmpFile, { read: true });
+    // Read file content into a Uint8Array
+    const fileContent = await readAll(readFile);
     console.log(`Persisting artifact to S3`);
     await this.#s3.putObject({
       Bucket: this.#syncConfig.s3Bucket,
       Key: resolveS3Key(hash),
-      Body: readableStreamFromReader(file),
+      Body: fileContent,
     });
 
     return hash;
@@ -114,11 +124,8 @@ export class SharedArtifactStore extends ArtifactStore {
         Key: resolveS3Key(hash),
       });
       return true;
-    } catch (error) {
-      if (error.name === "NoSuchKey") {
-        return false;
-      }
-      throw error;
+    } catch {
+      return false;
     }
   }
 
@@ -155,7 +162,6 @@ export class SharedArtifactStore extends ArtifactStore {
       const file =
         (await Deno.open(targetFile, { write: true, create: true })).writable;
       await response.Body.transformToWebStream().pipeTo(file);
-      file.close();
     } else {
       throw new Error(`Failed to download artifact ${relativePath} from s3`);
     }
@@ -183,7 +189,6 @@ export class SharedArtifactStore extends ArtifactStore {
     if (await this.has(ArtifactStore.getArtifactKey(meta))) {
       return null;
     }
-
     const [url, expirationTime] = await ArtifactStore.createUploadUrl(
       origin,
       meta.typegraphName,

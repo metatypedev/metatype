@@ -8,7 +8,8 @@ import { tg } from "./wasmedge.ts";
 import * as path from "std/path/mod.ts";
 import { connect } from "redis";
 import { S3Client } from "aws-sdk/client-s3";
-import { createBucket, tryDeleteBucket } from "test-utils/s3.ts";
+import { createBucket, listObjects, tryDeleteBucket } from "test-utils/s3.ts";
+import { assertEquals } from "std/assert/mod.ts";
 
 const redisKey = "typegraph";
 const redisEventKey = "typegraph_event";
@@ -50,7 +51,10 @@ Meta.test("WasmEdge Runtime typescript SDK: Sync Config", async (metaTest) => {
   const port = metaTest.port;
   const gate = `http://localhost:${port}`;
 
-  await metaTest.should("work after deploying artifact", async () => {
+  await metaTest.should("work after deploying artifact to S3", async () => {
+    const s3 = new S3Client(syncConfig.s3);
+    assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 0);
+
     const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
       baseUrl: gate,
       auth,
@@ -80,6 +84,7 @@ Meta.test("WasmEdge Runtime typescript SDK: Sync Config", async (metaTest) => {
       })
       .on(engine);
     await engine.terminate();
+    s3.destroy();
   });
 }, {
   syncConfig,

@@ -289,7 +289,7 @@ export const test = ((name, fn, opts = {}): void => {
       if (opts.setup != null) {
         await opts.setup();
       }
-      const typegate = await Typegate.init();
+      const typegate = await Typegate.init(opts.syncConfig);
       const {
         systemTypegraphs = false,
         gitRepo = null,
