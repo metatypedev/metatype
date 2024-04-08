@@ -14,43 +14,54 @@ import * as jwt from "jwt";
 import { readAll } from "https://deno.land/std@0.129.0/streams/conversion.ts";
 
 export interface RemoteUploadUrlStore {
-  mapToMeta: Redis;
-  expirationQueue: [string, number][];
+  redisClient: Redis;
+  expirationQueueKey: string;
   expirationTimerId: number;
+}
+
+interface ExpirationQueueValue {
+  url: string;
+  expirationTime: number;
 }
 
 async function initRemoteUploadUrlStore(
   redisConfig: RedisConnectOptions,
 ): Promise<RemoteUploadUrlStore> {
-  const mapToMeta = await connect(redisConfig);
-  const expirationQueue: [string, number][] = [];
-  const expirationTimerId = setInterval(() => {
+  const redisClient = await connect(redisConfig);
+  const expirationQueueKey = "queue:expiration";
+  const expirationTimerId = setInterval(async () => {
     const now = jwt.getNumericDate(new Date());
-    while (expirationQueue.length > 0) {
-      const [url, expirationTime] = expirationQueue[0];
+    while (await redisClient.llen(expirationQueueKey) > 0) {
+      const firstInQueue = await redisClient.lindex("expirationQueueKey", 0);
+      if (!firstInQueue) {
+        throw new Error("Expiration queue is empty but should not be.");
+      }
+      const { url, expirationTime } = deserializeToCustom<ExpirationQueueValue>(
+        firstInQueue,
+      );
       if (expirationTime > now) {
         break;
       }
-      expirationQueue.shift();
-      mapToMeta.del(url);
+      redisClient.lpop(expirationQueueKey);
+      redisClient.del(url);
     }
   }, 5000);
-  return { mapToMeta, expirationQueue, expirationTimerId };
+
+  return { redisClient, expirationQueueKey, expirationTimerId };
 }
 
 function deinitRemoteUploadUrlStore(uploadUrls: RemoteUploadUrlStore) {
-  uploadUrls.mapToMeta.quit();
+  uploadUrls.redisClient.quit();
   clearInterval(uploadUrls.expirationTimerId);
-  uploadUrls.expirationQueue = [];
 }
 
-function serializeArtifactMeta(meta: ArtifactMeta): string {
-  return JSON.stringify(meta);
+function serializeToRedisValue<T>(value: T): string {
+  return JSON.stringify(value);
 }
 
-function deserializeToArtifactMeta(value: string): ArtifactMeta {
+function deserializeToCustom<T>(value: string): T {
   try {
-    return JSON.parse(value) as ArtifactMeta;
+    return JSON.parse(value) as T;
   } catch (error) {
     throw error;
   }
@@ -90,6 +101,7 @@ export class SharedArtifactStore extends ArtifactStore {
       write: true,
       truncate: true,
     });
+
     const hasher = createHash("sha256");
     await stream
       .pipeThrough(new HashTransformStream(hasher))
@@ -103,8 +115,8 @@ export class SharedArtifactStore extends ArtifactStore {
     console.log(`Persisting artifact to S3`);
     await this.#s3.putObject({
       Bucket: this.#syncConfig.s3Bucket,
-      Key: resolveS3Key(hash),
       Body: fileContent,
+      Key: resolveS3Key(hash),
     });
 
     return hash;
@@ -177,12 +189,7 @@ export class SharedArtifactStore extends ArtifactStore {
   }
 
   override async prepareUpload(
-    meta: {
-      typegraphName: string;
-      relativePath: string;
-      hash: string;
-      sizeInBytes: number;
-    },
+    meta: ArtifactMeta,
     origin: URL,
   ): Promise<string | null> {
     // should not be uploaded again
@@ -193,8 +200,15 @@ export class SharedArtifactStore extends ArtifactStore {
       origin,
       meta.typegraphName,
     );
-    this.#uploadUrls.mapToMeta.set(url, serializeArtifactMeta(meta));
-    this.#uploadUrls.expirationQueue.push([url, expirationTime]);
+    this.#uploadUrls.redisClient.set(
+      url,
+      serializeToRedisValue<ArtifactMeta>(meta),
+    );
+    const queueValue: ExpirationQueueValue = { url, expirationTime };
+    await this.#uploadUrls.redisClient.rpush(
+      this.#uploadUrls.expirationQueueKey,
+      serializeToRedisValue(queueValue),
+    );
 
     return url;
   }
@@ -202,22 +216,17 @@ export class SharedArtifactStore extends ArtifactStore {
   override async takeUploadUrl(
     url: URL,
   ): Promise<
-    {
-      typegraphName: string;
-      relativePath: string;
-      hash: string;
-      sizeInBytes: number;
-    }
+    ArtifactMeta
   > {
     ArtifactStore.validateUploadUrl(url);
 
-    const meta = await this.#uploadUrls.mapToMeta.get(url.toString());
+    const meta = await this.#uploadUrls.redisClient.get(url.toString());
     if (!meta) {
       throw new Error("Invalid upload URL");
     }
 
-    this.#uploadUrls.mapToMeta.del(url.toString());
-    return Promise.resolve(deserializeToArtifactMeta(meta));
+    this.#uploadUrls.redisClient.del(url.toString());
+    return Promise.resolve(deserializeToCustom<ArtifactMeta>(meta));
   }
 
   override close(): Promise<void> {
