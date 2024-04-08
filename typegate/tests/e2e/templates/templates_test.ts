@@ -68,39 +68,39 @@ const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
 };
 
 for (const template of ["python", "deno", "node"]) {
-  Meta.test(
-    `${template} template`,
-    async (t) => {
-      const dir = await newTempDir();
+  Meta.test({
+    name: `${template} template`,
+    port: true,
+    systemTypegraphs: true,
+  }, async (t) => {
+    const dir = await newTempDir();
 
-      await t.should("should be extracted correctly", async () => {
-        const out = await Meta.cli("new", "--template", template, dir);
-        console.log(out.stdout);
-        const source = join(workspaceDir, "examples/templates", template);
-        const sourcesFiles = await Array.fromAsync(
-          expandGlob("**/*", {
-            root: source,
-          }),
-        );
-        assert(sourcesFiles.length > 0);
-        for (const f of sourcesFiles) {
-          const relPath = f.path.replace(source, "");
-          assert(exists(join(dir, relPath)));
-        }
-      });
-
-      await modifiers[template](dir);
-      const out = await Meta.cli(
-        { currentDir: dir },
-        "deploy",
-        "--target",
-        "dev",
-        "--gate",
-        `http://localhost:${t.port}`,
-        "--allow-dirty",
+    await t.should("should be extracted correctly", async () => {
+      const out = await Meta.cli("new", "--template", template, dir);
+      console.log(out.stdout);
+      const source = join(workspaceDir, "examples/templates", template);
+      const sourcesFiles = await Array.fromAsync(
+        expandGlob("**/*", {
+          root: source,
+        }),
       );
-      console.log(out);
-    },
-    { port: true, systemTypegraphs: true },
-  );
+      assert(sourcesFiles.length > 0);
+      for (const f of sourcesFiles) {
+        const relPath = f.path.replace(source, "");
+        assert(exists(join(dir, relPath)));
+      }
+    });
+
+    await modifiers[template](dir);
+    const out = await Meta.cli(
+      { currentDir: dir },
+      "deploy",
+      "--target",
+      "dev",
+      "--gate",
+      `http://localhost:${t.port}`,
+      "--allow-dirty",
+    );
+    console.log(out);
+  });
 }

@@ -3,7 +3,10 @@
 
 import { gql, Meta } from "../utils/mod.ts";
 
-Meta.test("Class Syntax", async (t) => {
+Meta.test({
+  name: "Class Syntax",
+  introspection: true,
+}, async (t) => {
   const e = await t.engine("simple/class_syntax.py");
   await t.should("work using the class syntax", async () => {
     await gql`
@@ -148,4 +151,4 @@ Meta.test("Class Syntax", async (t) => {
       .matchOkSnapshot(t)
       .on(e);
   });
-}, { introspection: true });
+});

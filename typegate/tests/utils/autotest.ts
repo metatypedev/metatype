@@ -72,7 +72,7 @@ export async function autoTest(rootDir: string, target = "dev") {
     const config = yaml.parse(await Deno.readTextFile(configFile)) as any;
     const secrets = config.typegates[target]?.env ?? {};
 
-    test(`Auto-tests for ${name}`, async (t) => {
+    test({ name: `Auto-tests for ${name}`, introspection: true }, async (t) => {
       const e = await t.engine(pythonFile.path, {
         secrets,
         autoSecretName: false,
@@ -113,6 +113,6 @@ export async function autoTest(rootDir: string, target = "dev") {
             .on(e);
         },
       );
-    }, { introspection: true });
+    });
   }
 }

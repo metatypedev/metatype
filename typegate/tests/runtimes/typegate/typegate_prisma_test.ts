@@ -8,7 +8,10 @@ const adminHeaders = {
   "Authorization": `Basic ${btoa("admin:password")}`,
 };
 
-Meta.test("typegate: find available operations", async (t) => {
+Meta.test({
+  name: "typegate: find available operations",
+  systemTypegraphs: true,
+}, async (t) => {
   const prismaEngine = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       POSTGRES:
@@ -95,6 +98,4 @@ Meta.test("typegate: find available operations", async (t) => {
       })
       .on(e);
   });
-}, {
-  systemTypegraphs: true,
 });
