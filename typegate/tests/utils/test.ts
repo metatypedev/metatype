@@ -289,6 +289,7 @@ export const test = ((name, fn, opts = {}): void => {
       if (opts.setup != null) {
         await opts.setup();
       }
+      // TODO: load balancing for multiple typegate instances
       const typegate = await Typegate.init(opts.syncConfig);
       const {
         systemTypegraphs = false,

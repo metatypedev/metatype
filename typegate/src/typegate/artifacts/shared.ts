@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { connect, RedisConnectOptions } from "redis";
+import { connect, Redis, RedisConnectOptions } from "redis";
 import { createHash } from "node:crypto";
 import { S3 } from "aws-sdk/client-s3";
 import { getLocalPath, STORE_DIR, STORE_TEMP_DIR } from "./mod.ts";
@@ -9,50 +9,41 @@ import { ArtifactMeta, ArtifactStore } from "./mod.ts";
 import { HashTransformStream } from "../../utils/hash.ts";
 import { resolve } from "std/path/resolve.ts";
 import { SyncConfig } from "../../sync/config.ts";
-import { Redis } from "redis";
-import * as jwt from "jwt";
 import { readAll } from "https://deno.land/std@0.129.0/streams/conversion.ts";
 
 export interface RemoteUploadUrlStore {
   redisClient: Redis;
-  expirationQueueKey: string;
-  expirationTimerId: number;
 }
 
-interface ExpirationQueueValue {
-  url: string;
-  expirationTime: number;
+const setCmd = `
+local key = KEYS[1]
+local value = ARGV[1]
+local expirationTime = ARGV[2]
+
+redis.call('HSET', key, 'url', value)
+redis.call('EXPIRE', key, expirationTime)
+`.trim();
+const existsCmd = `
+local key = KEYS[1]
+
+local exists = redis.call('EXISTS', key)
+return exists
+`.trim();
+
+function resolveRedisUrlKey(url: string) {
+  return `articact-upload-urls:${url}`;
 }
 
 async function initRemoteUploadUrlStore(
   redisConfig: RedisConnectOptions,
 ): Promise<RemoteUploadUrlStore> {
   const redisClient = await connect(redisConfig);
-  const expirationQueueKey = "queue:expiration";
-  const expirationTimerId = setInterval(async () => {
-    const now = jwt.getNumericDate(new Date());
-    while (await redisClient.llen(expirationQueueKey) > 0) {
-      const firstInQueue = await redisClient.lindex("expirationQueueKey", 0);
-      if (!firstInQueue) {
-        throw new Error("Expiration queue is empty but should not be.");
-      }
-      const { url, expirationTime } = deserializeToCustom<ExpirationQueueValue>(
-        firstInQueue,
-      );
-      if (expirationTime > now) {
-        break;
-      }
-      redisClient.lpop(expirationQueueKey);
-      redisClient.del(url);
-    }
-  }, 5000);
 
-  return { redisClient, expirationQueueKey, expirationTimerId };
+  return { redisClient };
 }
 
-function deinitRemoteUploadUrlStore(uploadUrls: RemoteUploadUrlStore) {
-  uploadUrls.redisClient.quit();
-  clearInterval(uploadUrls.expirationTimerId);
+async function deinitRemoteUploadUrlStore(uploadUrls: RemoteUploadUrlStore) {
+  await uploadUrls.redisClient.quit();
 }
 
 function serializeToRedisValue<T>(value: T): string {
@@ -200,15 +191,7 @@ export class SharedArtifactStore extends ArtifactStore {
       origin,
       meta.typegraphName,
     );
-    this.#uploadUrls.redisClient.set(
-      url,
-      serializeToRedisValue<ArtifactMeta>(meta),
-    );
-    const queueValue: ExpirationQueueValue = { url, expirationTime };
-    await this.#uploadUrls.redisClient.rpush(
-      this.#uploadUrls.expirationQueueKey,
-      serializeToRedisValue(queueValue),
-    );
+    await this.#addUrlToRedis(url, serializeToRedisValue(meta), expirationTime);
 
     return url;
   }
@@ -220,17 +203,51 @@ export class SharedArtifactStore extends ArtifactStore {
   > {
     ArtifactStore.validateUploadUrl(url);
 
-    const meta = await this.#uploadUrls.redisClient.get(url.toString());
+    const meta = await this.#getUrlFromRedis(url.toString());
     if (!meta) {
       throw new Error("Invalid upload URL");
     }
 
-    this.#uploadUrls.redisClient.del(url.toString());
-    return Promise.resolve(deserializeToCustom<ArtifactMeta>(meta));
+    await this.#removeFromRedis(url.toString());
+    return Promise.resolve(deserializeToCustom<ArtifactMeta>(meta as string));
   }
 
-  override close(): Promise<void> {
-    deinitRemoteUploadUrlStore(this.#uploadUrls);
+  async #addUrlToRedis(url: string, value: string, expirationDuration: number) {
+    await this.#uploadUrls.redisClient.eval(
+      setCmd,
+      [resolveRedisUrlKey(url)],
+      [value, expirationDuration],
+    );
+  }
+
+  async #getUrlFromRedis(url: string) {
+    return await this.#uploadUrls.redisClient.eval(
+      "return redis.call('HGET', KEYS[1], ARGV[1])",
+      [resolveRedisUrlKey(url)],
+      ["url"],
+    );
+  }
+
+  async #existsInRedis(url: string) {
+    return Boolean(
+      await this.#uploadUrls.redisClient.eval(
+        existsCmd,
+        [resolveRedisUrlKey(url)],
+        [],
+      ),
+    );
+  }
+
+  async #removeFromRedis(url: string) {
+    await this.#uploadUrls.redisClient.eval(
+      "redis.call('DEL', KEYS[1])",
+      [resolveRedisUrlKey(url)],
+      [],
+    );
+  }
+
+  override async close(): Promise<void> {
+    await deinitRemoteUploadUrlStore(this.#uploadUrls);
     return Promise.resolve(void null);
   }
 }
