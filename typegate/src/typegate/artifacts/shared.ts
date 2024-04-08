@@ -104,17 +104,18 @@ export class SharedArtifactStore extends ArtifactStore {
     // Read file content into a Uint8Array
     const fileContent = await readAll(readFile);
     console.log(`Persisting artifact to S3`);
-    await this.#s3.putObject({
+    const _ = await this.#s3.putObject({
       Bucket: this.#syncConfig.s3Bucket,
       Body: fileContent,
       Key: resolveS3Key(hash),
     });
+    readFile.close();
 
     return hash;
   }
 
   override async delete(hash: string): Promise<void> {
-    await this.#s3.deleteObject({
+    const _ = await this.#s3.deleteObject({
       Bucket: this.#syncConfig.s3Bucket,
       Key: resolveS3Key(hash),
     });
@@ -122,7 +123,7 @@ export class SharedArtifactStore extends ArtifactStore {
 
   override async has(hash: string): Promise<boolean> {
     try {
-      await this.#s3.headObject({
+      const _ = await this.#s3.headObject({
         Bucket: this.#syncConfig.s3Bucket,
         Key: resolveS3Key(hash),
       });
@@ -213,7 +214,7 @@ export class SharedArtifactStore extends ArtifactStore {
   }
 
   async #addUrlToRedis(url: string, value: string, expirationDuration: number) {
-    await this.#uploadUrls.redisClient.eval(
+    const _ = await this.#uploadUrls.redisClient.eval(
       setCmd,
       [resolveRedisUrlKey(url)],
       [value, expirationDuration],
@@ -239,7 +240,7 @@ export class SharedArtifactStore extends ArtifactStore {
   }
 
   async #removeFromRedis(url: string) {
-    await this.#uploadUrls.redisClient.eval(
+    const _ = await this.#uploadUrls.redisClient.eval(
       "redis.call('DEL', KEYS[1])",
       [resolveRedisUrlKey(url)],
       [],
@@ -247,6 +248,7 @@ export class SharedArtifactStore extends ArtifactStore {
   }
 
   override async close(): Promise<void> {
+    this.#s3.destroy();
     await deinitRemoteUploadUrlStore(this.#uploadUrls);
     return Promise.resolve(void null);
   }
