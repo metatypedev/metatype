@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Policy, t, typegraph } from "@typegraph/sdk";
-import { WasmEdgeRuntime } from "@typegraph/sdk/runtimes/wasmedge.js";
+import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.js";
 
 export const tg = await typegraph("wasmedge_ts", (g) => {
   const pub = Policy.public();
-  const wasmedge = new WasmEdgeRuntime();
+  const wasm = new WasmRuntime();
 
   g.expose({
     // expose the wasi materializer
-    test_wasi_ts: wasmedge
-      .wasi(
+    test_wasi_ts: wasm
+      .fromWasm(
         t.struct({
           "a": t.float(),
           "b": t.float(),

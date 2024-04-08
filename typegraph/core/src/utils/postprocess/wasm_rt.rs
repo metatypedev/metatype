@@ -31,8 +31,11 @@ impl PostProcessor for WasmProcessor {
                 mat_data.artifact_hash = fs_host::hash_file(&wasm_path)?;
                 mat_data.tg_name = Some(tg_name.clone());
 
-                mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
-                tg.deps.push(wasm_path);
+                mat.data = map_from_object(mat_data.clone()).map_err(|e| e.to_string())?;
+                tg.deps.push(wasm_path.clone());
+                tg.meta
+                    .ref_artifacts
+                    .insert(mat_data.artifact_hash.clone(), wasm_path.clone());
             }
         }
         Ok(())
