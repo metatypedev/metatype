@@ -63,16 +63,17 @@ export class MetaTest {
   meta = defaultCli;
   workingDir = testDir;
   port: number | null = null;
+  currentTypegateIndex = 0;
 
   static async init(
     t: Deno.TestContext,
-    typegate: Typegate,
+    typegates: Typegate[],
     introspection: boolean,
     port = false,
   ): Promise<MetaTest> {
-    const mt = new MetaTest(t, typegate, introspection);
+    const mt = new MetaTest(t, typegates, introspection);
     if (port) {
-      const { port: p, cleanup } = await serve(typegate);
+      const { port: p, cleanup } = await serve(typegates[0]);
       mt.port = p;
       mt.addCleanup(cleanup);
     }
@@ -82,12 +83,16 @@ export class MetaTest {
 
   private constructor(
     public t: Deno.TestContext,
-    public typegate: Typegate,
+    public typegates: Typegate[],
     private introspection: boolean,
   ) {}
 
   addCleanup(fn: MetaTestCleanupFn) {
     this.cleanups.push(fn);
+  }
+
+  get typegate(): Typegate {
+    return this.typegates[this.currentTypegateIndex];
   }
 
   getTypegraphEngine(name: string): QueryEngine | undefined {
@@ -262,6 +267,7 @@ interface TestConfig {
   introspection?: boolean;
   // port on which the typegate instance will be exposed on expose the typegate instance
   port?: boolean;
+  multipleTypegates?: boolean;
   // create a temporary clean git repo for the tests
   gitRepo?: TempGitRepo;
   syncConfig?: SyncConfig;
@@ -290,7 +296,13 @@ export const test = ((name, fn, opts = {}): void => {
         await opts.setup();
       }
       // TODO: load balancing for multiple typegate instances
-      const typegate = await Typegate.init(opts.syncConfig);
+      const typegates: Typegate[] = [];
+      const typegate = await Typegate.init(opts.syncConfig ?? null);
+      typegates.push(typegate);
+      if (opts.multipleTypegates) {
+        const typegate2 = await Typegate.init(opts.syncConfig ?? null);
+        typegates.push(typegate2);
+      }
       const {
         systemTypegraphs = false,
         gitRepo = null,
@@ -302,7 +314,7 @@ export const test = ((name, fn, opts = {}): void => {
 
       const mt = await MetaTest.init(
         t,
-        typegate,
+        typegates,
         introspection,
         opts.port != null,
       );
