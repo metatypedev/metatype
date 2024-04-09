@@ -106,7 +106,7 @@ pub fn value_to_wasmtime_val(
                 Some(hint) => match hint {
                     Type::Bool => component::Val::Bool(v.as_u64().unwrap() != 0),
                     // signed
-                    Type::S8 => component::Val::S8(v.as_u64().unwrap() as i8),
+                    Type::S8 => component::Val::S8(v.as_i64().unwrap() as i8),
                     Type::S16 => component::Val::S16(v.as_i64().unwrap() as i16),
                     Type::S32 => component::Val::S32(v.as_i64().unwrap() as i32),
                     Type::S64 => component::Val::S64(v.as_i64().unwrap()),
