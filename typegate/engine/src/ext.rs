@@ -23,7 +23,7 @@ deno_core::extension!(
         typescript::op_typescript_format_code,
         typegraph::op_typegraph_validate,
         typegraph::op_validate_prisma_runtime_data,
-        wasm::op_wasmedge_wasi,
+        wasm::op_wasmtime_wit,
         temporal::op_temporal_register,
         temporal::op_temporal_unregister,
         temporal::op_temporal_workflow_start,

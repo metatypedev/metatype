@@ -29,7 +29,7 @@ export class WasmRuntime extends Runtime {
     _waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
-    const { materializer, argumentTypes, outType } = stage.props;
+    const { materializer, argumentTypes, outType: _ } = stage.props;
     const { wasm, func, artifact_hash, tg_name } = materializer?.data ?? {};
     const order = Object.keys(argumentTypes ?? {});
 
@@ -38,13 +38,12 @@ export class WasmRuntime extends Runtime {
       const transfert = order.map((k) => JSON.stringify(args[k]));
 
       const { res } = nativeResult(
-        await native.wasmedge_wasi(
+        await native.wasmtime_wit(
           {
             func: func as string,
             wasm:
               `${config.tmp_dir}/metatype_artifacts/${tg_name as string}/artifacts/${wasm as string}.${artifact_hash as string}`,
             args: transfert,
-            out: outType.type,
           },
         ),
       );

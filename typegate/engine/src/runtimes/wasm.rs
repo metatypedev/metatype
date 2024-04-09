@@ -14,19 +14,15 @@ mod conversion;
 
 #[derive(Deserialize)]
 #[serde(crate = "serde")]
-pub struct WasiInput {
+pub struct WasmInput {
     func: String,
     wasm: String,
     args: Vec<String>,
-    #[allow(unused)]
-    out: String,
 }
 
 #[deno_core::op2]
 #[string]
-pub fn op_wasmedge_wasi(#[serde] input: WasiInput) -> Result<String> {
-    // https://github.com/second-state/wasmedge-rustsdk-examples
-
+pub fn op_wasmtime_wit(#[serde] input: WasmInput) -> Result<String> {
     let wasm_relative_path = PathBuf::from(input.wasm);
     let wasm_absolute_path = match env::current_dir() {
         Ok(cwd) => cwd.join(wasm_relative_path),

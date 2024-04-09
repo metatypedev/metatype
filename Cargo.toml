@@ -9,7 +9,7 @@ members = [
   "typegraph/core", ]
 
 exclude = [
-  "typegate/tests/runtimes/wasmedge/rust"
+  "typegate/tests/runtimes/wasm/rust"
 ]
 
 [workspace.package] 

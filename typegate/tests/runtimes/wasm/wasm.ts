@@ -4,7 +4,7 @@
 import { Policy, t, typegraph } from "@typegraph/sdk";
 import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.js";
 
-export const tg = await typegraph("wasmedge_ts", (g) => {
+export const tg = await typegraph("wasm-ts", (g) => {
   const pub = Policy.public();
   const wasm = new WasmRuntime();
 

@@ -6,7 +6,7 @@ from typegraph import t, typegraph
 
 
 @typegraph()
-def wasmedge(g: Graph):
+def wasm_py(g: Graph):
     pub = Policy.public()
     wasm = WasmRuntime()
 
