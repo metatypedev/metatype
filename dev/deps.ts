@@ -34,3 +34,4 @@ import Fuse from "https://deno.land/x/fuse@v6.4.1/dist/fuse.esm.min.js";
 export { Fuse };
 import bytes from "https://deno.land/x/convert_bytes@v2.1.1/mod.ts";
 export { bytes };
+export * as ctrlc from "https://deno.land/x/ctrlc@0.2.1/mod.ts";

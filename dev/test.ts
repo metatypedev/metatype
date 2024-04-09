@@ -23,6 +23,7 @@
 import {
   basename,
   blue,
+  ctrlc,
   expandGlobSync,
   Fuse,
   gray,
@@ -157,6 +158,7 @@ class TestResultConsumer {
   private results: TestResult[] = [];
   private successCount = 0;
   private failureCount = 0;
+  private cancelledCount = 0;
   private startTime: number;
 
   constructor(private options: OutputOptions) {
@@ -194,6 +196,10 @@ class TestResultConsumer {
     });
   }
 
+  setCancelledCount(count: number) {
+    this.cancelledCount = count;
+  }
+
   #displayResultOuput(result: TestResult) {
     console.log(gray("-- OUTPUT START <stdout>"), result.testFile, gray("--"));
     console.log(result.stdout);
@@ -208,19 +214,17 @@ class TestResultConsumer {
   finalize(): number {
     if (!this.options.stream) {
       for (const result of this.results) {
-        if (result.status) {
-          if (this.options.verbose) {
-            this.#displayResultOuput(result);
-          }
-        } else if (result.status === "failure") {
-          this.#displayResultOuput(result);
-        }
+        if (result.status === "success" && !this.options.verbose) continue;
+        this.#displayResultOuput(result);
       }
     }
 
     const duration = Date.now() - this.startTime;
 
     console.log();
+    if (this.cancelledCount > 0) {
+      console.log(`${this.cancelledCount} tests were cancelled`);
+    }
     console.log(`${this.results.length} tests completed in ${duration}ms:`);
     console.log(
       `  successes: ${this.successCount}/${this.results.length}`,
@@ -333,7 +337,7 @@ class TestThread {
 const queues = [...filteredTestFiles];
 const outputOptions: OutputOptions = {
   stream: threads === 1 || queues.length === 1,
-  verbose: true,
+  verbose: false,
 };
 
 console.log(`Discovered ${queues.length} test files`);
@@ -344,6 +348,36 @@ const testThreads: TestThread[] = [];
 for (let i = 0; i < threads; i++) {
   testThreads.push(new TestThread(i + 1, queues, results, outputOptions));
 }
+
+let ctrlcCount = 0;
+const _ctrlc = ctrlc.setHandler(() => {
+  ctrlcCount++;
+  switch (ctrlcCount) {
+    case 1: {
+      const remaining = queues.length;
+      queues.length = 0;
+      console.log(`Cancelling ${remaining} remaining tests...`);
+      console.log("Press Ctrl-C again to stop current tests...");
+      results.setCancelledCount(remaining);
+      break;
+    }
+
+    case 2: {
+      console.log(`Killing ${testThreads.length} running tests...`);
+      for (const t of testThreads) {
+        if (t.testProcess) {
+          t.testProcess.kill("SIGKILL");
+        }
+      }
+      break;
+    }
+
+    case 3:
+      console.log("Force exiting...");
+      Deno.exit(1);
+      break;
+  }
+});
 
 const runnerResults = await Promise.allSettled(testThreads.map(async (t) => {
   await t.run();
