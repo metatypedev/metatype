@@ -16,6 +16,7 @@ export {
   gray,
   green,
   red,
+  yellow,
 } from "https://deno.land/std@0.219.0/fmt/colors.ts";
 export { format as formatDuration } from "https://deno.land/std@0.219.0/fmt/duration.ts";
 export {

@@ -22,8 +22,8 @@
 
 import {
   basename,
-  blue,
   ctrlc,
+  cyan,
   expandGlobSync,
   Fuse,
   gray,
@@ -33,6 +33,7 @@ import {
   red,
   resolve,
   TextLineStream,
+  yellow,
 } from "./deps.ts";
 import { projectDir } from "./utils.ts";
 
@@ -134,10 +135,107 @@ const threads = flags.threads ? parseInt(flags.threads) : 4;
 const prefix = "[dev/test.ts]";
 console.log(`${prefix} Testing with ${threads} threads`);
 
-interface Result {
-  testFile: string;
-  duration: number;
-  success: boolean;
+type TestThreadState =
+  | { status: "idle" }
+  | { status: "running"; testFile: string }
+  | { status: "finished" };
+
+class Logger {
+  private threadStates: Array<TestThreadState>;
+  public testCommandOutputOptions: {
+    stdout: "piped" | "inherit";
+    stderr: "piped" | "inherit";
+  };
+
+  constructor(
+    private threadCount: number,
+    public readonly options: Readonly<OutputOptions>,
+  ) {
+    this.threadStates = Array.from({ length: threadCount }, () => ({
+      status: "idle",
+    }));
+    this.testCommandOutputOptions = {
+      stdout: options.stream ? "inherit" : "piped",
+      stderr: options.stream ? "inherit" : "piped",
+    };
+  }
+
+  threadState(threadId: number, state: TestThreadState) {
+    this.threadStates[threadId - 1] = state;
+    let displayedState: string;
+    switch (state.status) {
+      case "idle":
+      case "finished":
+        displayedState = gray(state.status);
+        break;
+      case "running":
+        displayedState = state.testFile;
+        break;
+    }
+    console.error(cyan(`thread #${threadId}`), displayedState);
+  }
+
+  result(result: TestResult) {
+    let status: string;
+    switch (result.status) {
+      case "success":
+        status = green("passed");
+        break;
+      case "failure":
+        status = red("failed");
+        break;
+      case "error":
+        status = red("error");
+        break;
+    }
+
+    if (this.options.stream) {
+      console.log();
+    }
+    console.log(
+      status,
+      result.testFile,
+      gray(`(${result.duration}ms)`),
+      gray(`#${result.runnerId}`),
+    );
+    if (this.options.stream) {
+      console.log();
+    }
+  }
+
+  resultOutputs(results: TestResult[]) {
+    if (this.options.stream) return;
+    for (const result of results) {
+      if (result.status === "success" && !this.options.verbose) continue;
+      this.#resultOuput(result);
+    }
+  }
+
+  #resultOuput(result: TestResult) {
+    console.error();
+    console.error(
+      gray("-- OUTPUT START <stdout>"),
+      result.testFile,
+      gray("--"),
+    );
+    console.error(result.stdout);
+    console.error(gray("-- OUTPUT END <stdout>"), result.testFile, gray("--"));
+    console.error();
+    console.error(
+      gray("-- OUTPUT START <stderr>"),
+      result.testFile,
+      gray("--"),
+    );
+    console.error(result.stderr);
+    console.error(gray("-- OUTPUT END <stderr>"), result.testFile, gray("--"));
+  }
+
+  cancelled(count: number) {
+    console.error(
+      yellow(`cancelled ${count} pending tests...`),
+      "Press Ctrl-C again to stop current tests...",
+    );
+  }
 }
 
 interface TestResult {
@@ -161,63 +259,27 @@ class TestResultConsumer {
   private cancelledCount = 0;
   private startTime: number;
 
-  constructor(private options: OutputOptions) {
+  constructor(private logger: Logger) {
     this.startTime = Date.now();
   }
 
-  consume(result: Omit<TestResult, "runnerId">, runner: TestThread) {
-    let status: string;
+  consume(r: Omit<TestResult, "runnerId">, runner: TestThread) {
+    const result: TestResult = { ...r, runnerId: runner.threadId };
+    this.logger.result(result);
     if (result.status === "success") {
-      status = green("✔️");
       this.successCount++;
-    } else if (result.status === "failure") {
-      status = red("✕");
-      this.failureCount++;
     } else {
-      status = red("✕✕");
       this.failureCount++;
     }
-
-    if (this.options.stream) {
-      console.log();
-    }
-    console.log(
-      status,
-      result.testFile,
-      gray(`(${result.duration}ms)`),
-      gray(`#${runner.threadId}`),
-    );
-    if (this.options.stream) {
-      console.log();
-    }
-    this.results.push({
-      ...result,
-      runnerId: runner.threadId,
-    });
+    this.results.push(result);
   }
 
   setCancelledCount(count: number) {
     this.cancelledCount = count;
   }
 
-  #displayResultOuput(result: TestResult) {
-    console.log(gray("-- OUTPUT START <stdout>"), result.testFile, gray("--"));
-    console.log(result.stdout);
-    console.log(gray("-- OUTPUT END <stdout>"), result.testFile, gray("--"));
-    console.log();
-    console.log(gray("-- OUTPUT START <stderr>"), result.testFile, gray("--"));
-    console.log(result.stderr);
-    console.log(gray("-- OUTPUT END <stderr>"), result.testFile, gray("--"));
-    console.log();
-  }
-
   finalize(): number {
-    if (!this.options.stream) {
-      for (const result of this.results) {
-        if (result.status === "success" && !this.options.verbose) continue;
-        this.#displayResultOuput(result);
-      }
-    }
+    this.logger.resultOutputs(this.results);
 
     const duration = Date.now() - this.startTime;
 
@@ -248,7 +310,7 @@ class TestThread {
     public threadId: number,
     private queue: string[],
     private results: TestResultConsumer,
-    private options: OutputOptions,
+    private logger: Logger,
   ) {}
 
   async run() {
@@ -258,11 +320,10 @@ class TestThread {
 
       const relativePath = testFile.slice(pathPrefix.length);
 
-      console.log(
-        blue("⚬"),
-        gray(`thread #${this.threadId}`),
-        `${blue(relativePath)}`,
-      );
+      this.logger.threadState(this.threadId, {
+        status: "running",
+        testFile: relativePath,
+      });
 
       const start = Date.now();
       this.testProcess = new Deno.Command("deno", {
@@ -274,9 +335,7 @@ class TestThread {
         ],
         cwd,
         env: { ...Deno.env.toObject(), ...env },
-        ...(this.options.stream
-          ? { stdout: "inherit", stderr: "inherit" }
-          : { stdout: "piped", stderr: "piped" }),
+        ...this.logger.testCommandOutputOptions,
       }).spawn();
 
       let streams: {
@@ -284,7 +343,7 @@ class TestThread {
         stderr: ReadableStream<string>;
       } | null = null;
 
-      if (!this.options.stream) {
+      if (!this.logger.options.stream) {
         streams = {
           stdout: this.testProcess.stdout.pipeThrough(new TextDecoderStream())
             .pipeThrough(new TextLineStream()),
@@ -330,7 +389,7 @@ class TestThread {
       }, this);
     }
 
-    console.log(`Thread #${this.threadId} finished`);
+    this.logger.threadState(this.threadId, { status: "finished" });
   }
 }
 
@@ -342,11 +401,12 @@ const outputOptions: OutputOptions = {
 
 console.log(`Discovered ${queues.length} test files`);
 
-const results = new TestResultConsumer(outputOptions);
+const logger = new Logger(threads, outputOptions);
+const results = new TestResultConsumer(logger);
 
 const testThreads: TestThread[] = [];
 for (let i = 0; i < threads; i++) {
-  testThreads.push(new TestThread(i + 1, queues, results, outputOptions));
+  testThreads.push(new TestThread(i + 1, queues, results, logger));
 }
 
 let ctrlcCount = 0;
@@ -356,8 +416,7 @@ const _ctrlc = ctrlc.setHandler(() => {
     case 1: {
       const remaining = queues.length;
       queues.length = 0;
-      console.log(`Cancelling ${remaining} remaining tests...`);
-      console.log("Press Ctrl-C again to stop current tests...");
+      logger.cancelled(remaining);
       results.setCancelledCount(remaining);
       break;
     }
