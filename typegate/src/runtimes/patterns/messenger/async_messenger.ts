@@ -85,7 +85,7 @@ export class AsyncMessenger<Broker, M, A> {
           }
         }
 
-        if (shouldStop && config.timer_destroy_ressources) {
+        if (shouldStop && config.timer_destroy_resources) {
           this.#stop(this.broker);
           logger.info("reset broker after timeout");
           this.broker = this.#start(this.receive.bind(this));

@@ -3,7 +3,10 @@
 
 import { gql, Meta } from "../utils/mod.ts";
 
-Meta.test("Internal test", async (t) => {
+Meta.test({
+  name: "Internal test",
+  port: true,
+}, async (t) => {
   const e = await t.engine("internal/internal.py");
 
   await t.should("work on the default worker", async () => {
@@ -17,4 +20,4 @@ Meta.test("Internal test", async (t) => {
       })
       .on(e, `http://localhost:${t.port}`);
   });
-}, { port: true });
+});

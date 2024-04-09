@@ -29,7 +29,7 @@ export class MetaDev {
   ) {
     this.#process = new Deno.Command(metaBin, {
       cwd: options.cwd ?? testDir,
-      args: options.args ?? [],
+      args: ["-vvvv", ...(options.args ?? [])],
       env: options.env ?? {},
       stdout: "piped",
       stderr: "piped",

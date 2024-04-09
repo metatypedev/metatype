@@ -84,6 +84,11 @@
           "portRef": "asdf_plugin_git@0.1.0",
           "pluginRepo": "https://github.com/asdf-community/asdf-cmake"
         },
+        "468769528cbf87576285bfcd000271d6398bf3c2b20083d90105d083d61854ba": {
+          "version": "2.40.1",
+          "depConfigs": {},
+          "portRef": "git_aa@0.1.0"
+        },
         "402fae54fb94ffdba9cd2617602c7b33c55002275f3c3bb588615b01ff0c3c26": {
           "version": "v1.6.4",
           "depConfigs": {},
@@ -103,7 +108,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.76.0",
+              "version": "1.77.1",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -126,7 +131,7 @@
           "locked": true
         },
         "4a077ef5a23a541cc6e372186951d640da541f7c4eba2613c2a1c427a5d95a5c": {
-          "version": "1.76.0",
+          "version": "1.77.1",
           "depConfigs": {
             "rustup_rustlang": {
               "version": "1.27.0",
@@ -163,7 +168,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.76.0",
+              "version": "1.77.1",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -194,7 +199,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.76.0",
+              "version": "1.77.1",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -375,7 +380,7 @@
           "packageName": "pre-commit"
         },
         "95dbc2b8c604a5996b88c5b1b4fb0c10b3e0d9cac68f57eb915b012c44288e93": {
-          "version": "v0.2.60",
+          "version": "v0.2.61",
           "depConfigs": {},
           "portRef": "act_ghrel@0.1.0"
         },
@@ -388,7 +393,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.76.0",
+              "version": "1.77.1",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",

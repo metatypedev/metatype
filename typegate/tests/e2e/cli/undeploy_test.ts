@@ -7,7 +7,11 @@ import { dropSchema, randomSchema } from "test-utils/database.ts";
 
 const m = new TestModule(import.meta);
 
-Meta.test("meta undeploy", async (t) => {
+Meta.test({
+  name: "meta undeploy",
+  port: true,
+  systemTypegraphs: true,
+}, async (t) => {
   const schema = randomSchema();
   // prepare
   await dropSchema(schema);
@@ -33,4 +37,4 @@ Meta.test("meta undeploy", async (t) => {
       "migration-failure-test",
     );
   });
-}, { port: true, systemTypegraphs: true });
+});
