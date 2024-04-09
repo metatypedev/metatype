@@ -126,9 +126,21 @@ pub fn value_to_wasmtime_val(
                 None => default_ret,
             }
         }
-        String(v) => component::Val::String(v.to_owned().into()),
+        String(v) => {
+            let mut default_ret = component::Val::String(v.to_owned().into());
+            if let Some(Type::Char) = coerce_hint {
+                default_ret = v
+                    .chars()
+                    .next()
+                    .map(component::Val::Char)
+                    .unwrap_or(default_ret);
+            }
+            default_ret
+        }
         Array(_) => {
             // FIXME: component::Val::List(ListVal(* is private, ..))
+            // TODO: coerce to a tuple if the provided hint is a tuple once a
+            // fix is found
             bail!("array not supported yet")
         }
         Null => {
@@ -179,7 +191,7 @@ pub fn wasmtime_val_to_value(value: &component::Val) -> anyhow::Result<serde_jso
                 .iter()
                 .map(wasmtime_val_to_value)
                 .collect::<anyhow::Result<serde_json::Value>>()?;
-            Ok(serde_json::json!([out]))
+            Ok(out)
         }
         Val::Tuple(items) => {
             let out = items
@@ -187,7 +199,7 @@ pub fn wasmtime_val_to_value(value: &component::Val) -> anyhow::Result<serde_jso
                 .iter()
                 .map(wasmtime_val_to_value)
                 .collect::<anyhow::Result<serde_json::Value>>()?;
-            Ok(serde_json::json!([out]))
+            Ok(out)
         }
         // TODO: object-like
         // Val::Record(value) => serde_json::to_string(value),

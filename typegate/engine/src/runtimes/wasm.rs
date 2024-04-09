@@ -53,7 +53,10 @@ pub fn op_wasmedge_wasi(#[serde] input: WasiInput) -> Result<String> {
         .expect("exported function not found");
 
     // The user provided values must be coerced to the canonical parameters if possible
-    // eg. Number can coerce to a u32, bool, f64
+    // Examples:
+    // 1. Number can coerce to a u32, bool, f64
+    // 2. String "h" can coerce to char 'h'
+    // 3. [1, 2, "3"] can coerce to tuple<f64, u8, string>
     let hint_params = func
         .params(&mut store)
         .iter()

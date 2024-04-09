@@ -19,8 +19,15 @@ export const tg = await typegraph("wasmedge_ts", (g) => {
     testWitList: wasm
       .fromWasm(
         t.struct({ "a": t.integer(), "b": t.integer() }),
-        t.integer(),
+        t.list(t.integer()),
         { func: "range", wasm: "rust.wasm" },
       ).withPolicy(pub),
+    // TODO: handle enum, variants (decide on the format) and object output
+    // testWitComplexOut: wasm
+    //   .fromWasm(
+    //     t.struct({}),
+    //     t.list(t.integer()),
+    //     { func: "complex-output", wasm: "rust.wasm" },
+    //   ).withPolicy(pub),
   });
 });

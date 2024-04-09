@@ -34,7 +34,7 @@ Meta.test({
   const port = metaTest.port;
   const gate = `http://localhost:${port}`;
 
-  await metaTest.should("work after deploying artifact", async () => {
+  await metaTest.should("work after deploying artifact", async (t) => {
     const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
       baseUrl: gate,
       auth,
@@ -53,17 +53,45 @@ Meta.test({
 
     const engine = await metaTest.engineFromDeployed(serialized);
 
-    await gql`
-      query {
-        testWitAdd(a: 11, b: 2)
-        # testWitList(a: 1, b: 4)
-      }
-    `
-      .expectData({
-        testWitAdd: 13,
-        // testWitList: [1, 2, 3, 4],
-      })
-      .on(engine);
+    await t.step("wit bindings", async () => {
+      await gql`
+          query {
+            testWitAdd(a: 11, b: 2)
+            testWitList(a: 1, b: 4)
+          }
+      `
+        .expectData({
+          testWitAdd: 13,
+          testWitList: [1, 2, 3, 4],
+        })
+        .on(engine);
+    });
+
+    await t.step("wit error should propagate gracefully", async () => {
+      await gql`
+        query {
+          testWitList(a: 100, b: 1)
+        }
+      `
+        .expectErrorContains("invalid range: 100 > 1")
+        .on(engine);
+    });
+
+    // await t.step(
+    //   "nested wit output value should deserialize properly",
+    //   async () => {
+    //     await gql`
+    //     query {
+    //       copmlexType()
+    //     }
+    //   `
+    //       .expectBody((body) => {
+    //         console.log(body);
+    //       })
+    //       .on(engine);
+    //   },
+    // );
+
     await engine.terminate();
   });
 });

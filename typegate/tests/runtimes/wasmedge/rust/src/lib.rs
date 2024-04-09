@@ -13,7 +13,7 @@ impl Guest for MyHost {
         if a > b {
             return Err(format!("invalid range: {a} > {b}"));
         }
-        Ok(Vec::from_iter(a..b))
+        Ok(Vec::from_iter(a..=b))
     }
 
     fn complex_output() -> (
