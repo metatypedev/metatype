@@ -23,6 +23,7 @@ async function cleanUp() {
   await tryDeleteBucket(s3, syncConfig.s3Bucket);
   await createBucket(s3, syncConfig.s3Bucket);
   s3.destroy();
+  await redis.quit();
 }
 
 const syncConfig = {
@@ -71,6 +72,8 @@ Meta.test("WasmEdge Runtime typescript SDK: Sync Config", async (metaTest) => {
       typegraphPath: path.join(cwd, "wasmedge.ts"),
       secrets: {},
     });
+
+    assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 1);
 
     const engine = await metaTest.engineFromDeployed(serialized);
 

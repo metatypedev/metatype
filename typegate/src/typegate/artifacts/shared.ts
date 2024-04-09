@@ -10,6 +10,7 @@ import { HashTransformStream } from "../../utils/hash.ts";
 import { resolve } from "std/path/resolve.ts";
 import { SyncConfig } from "../../sync/config.ts";
 import { readAll } from "https://deno.land/std@0.129.0/streams/conversion.ts";
+import config from "../../config.ts";
 
 export interface RemoteUploadUrlStore {
   redisClient: Redis;
@@ -188,11 +189,15 @@ export class SharedArtifactStore extends ArtifactStore {
     if (await this.has(ArtifactStore.getArtifactKey(meta))) {
       return null;
     }
-    const [url, expirationTime] = await ArtifactStore.createUploadUrl(
+    const [url, _] = await ArtifactStore.createUploadUrl(
       origin,
       meta.typegraphName,
     );
-    await this.#addUrlToRedis(url, serializeToRedisValue(meta), expirationTime);
+    await this.#addUrlToRedis(
+      url,
+      serializeToRedisValue(meta),
+      config.redis_url_queue_expire_sec,
+    );
 
     return url;
   }

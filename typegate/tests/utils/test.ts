@@ -198,7 +198,7 @@ export class MetaTest {
 
   async terminate() {
     await Promise.all(this.cleanups.map((c) => c()));
-    await this.typegate.terminate();
+    this.typegates.map(async (typegate) => await typegate.terminate());
   }
 
   async should(
@@ -267,7 +267,8 @@ interface TestConfig {
   introspection?: boolean;
   // port on which the typegate instance will be exposed on expose the typegate instance
   port?: boolean;
-  multipleTypegates?: boolean;
+  // number of typegate instances to create
+  multipleTypegates?: number;
   // create a temporary clean git repo for the tests
   gitRepo?: TempGitRepo;
   syncConfig?: SyncConfig;
@@ -300,8 +301,9 @@ export const test = ((name, fn, opts = {}): void => {
       const typegate = await Typegate.init(opts.syncConfig ?? null);
       typegates.push(typegate);
       if (opts.multipleTypegates) {
-        const typegate2 = await Typegate.init(opts.syncConfig ?? null);
-        typegates.push(typegate2);
+        for (let i = 0; i < opts.multipleTypegates - 1; i++) {
+          typegates.push(await Typegate.init(opts.syncConfig ?? null));
+        }
       }
       const {
         systemTypegraphs = false,
