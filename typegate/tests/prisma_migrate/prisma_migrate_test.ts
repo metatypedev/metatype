@@ -14,7 +14,10 @@ import { gql, Meta } from "../utils/mod.ts";
 import { dropSchemas, removeMigrations } from "../utils/migrations.ts";
 import { testDir } from "../utils/dir.ts";
 
-Meta.test("prisma migrations", async (t) => {
+Meta.test({
+  name: "prisma migrations",
+  systemTypegraphs: true,
+}, async (t) => {
   const tgPath = "runtimes/prisma/prisma.py";
   const migrations = t.getTypegraphEngine("typegate/prisma_migration")!;
   assertExists(migrations);
@@ -217,4 +220,4 @@ Meta.test("prisma migrations", async (t) => {
       .expectData({ findManyRecords: [] })
       .on(e);
   });
-}, { systemTypegraphs: true });
+});

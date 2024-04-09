@@ -51,6 +51,7 @@ typegraph:
     WASM_FILE: target/debug/typegraph_core.wasm
   command: |
     set -e
+    set -x
     cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
     wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
 

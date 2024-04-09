@@ -282,7 +282,12 @@ async function undeployTypegraph(port: number) {
   );
 }
 
-Meta.test("apollo client", async (t) => {
+Meta.test({
+  name: "apollo client",
+  port: true,
+  systemTypegraphs: true,
+  introspection: true
+}, async (t) => {
   await initBucket();
   await deployTypegraph(t.port!);
 
@@ -313,8 +318,4 @@ Meta.test("apollo client", async (t) => {
   }
 
   await undeployTypegraph(t.port!);
-}, {
-  port: true,
-  systemTypegraphs: true,
-  introspection: true,
 });
