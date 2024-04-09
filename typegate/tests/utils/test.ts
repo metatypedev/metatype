@@ -166,6 +166,9 @@ export class MetaTest {
       throw response.failure!;
     }
 
+    this.currentTypegateIndex += 1;
+    this.currentTypegateIndex %= this.typegates.length;
+
     return engine;
   }
 
@@ -295,7 +298,6 @@ export const test = ((o, fn): void => {
       if (opts.setup != null) {
         await opts.setup();
       }
-      // TODO: load balancing for multiple typegate instances
       const typegates: Typegate[] = [];
       const typegate = await Typegate.init(opts.syncConfig ?? null);
       typegates.push(typegate);

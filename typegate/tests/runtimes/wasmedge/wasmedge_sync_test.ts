@@ -48,54 +48,114 @@ const syncConfig = {
 const cwd = path.join(testDir, "runtimes/wasmedge");
 const auth = new BasicAuth("admin", "password");
 
-Meta.test("WasmEdge Runtime typescript SDK: Sync Config", async (metaTest) => {
-  const port = metaTest.port;
-  const gate = `http://localhost:${port}`;
+Meta.test(
+  {
+    name: "WasmEdge Runtime typescript SDK: Sync Config",
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
+    port: true,
+  },
+  async (metaTest) => {
+    const port = metaTest.port;
+    const gate = `http://localhost:${port}`;
 
-  await metaTest.should("work after deploying artifact to S3", async () => {
-    const s3 = new S3Client(syncConfig.s3);
-    assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 0);
+    await metaTest.should("work after deploying artifact to S3", async () => {
+      const s3 = new S3Client(syncConfig.s3);
+      assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 0);
 
-    const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
-      baseUrl: gate,
-      auth,
-      artifactsConfig: {
-        prismaMigration: {
-          globalAction: {
-            create: true,
-            reset: false,
+      const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
+        baseUrl: gate,
+        auth,
+        artifactsConfig: {
+          prismaMigration: {
+            globalAction: {
+              create: true,
+              reset: false,
+            },
+            migrationDir: "prisma-migrations",
           },
-          migrationDir: "prisma-migrations",
+          dir: cwd,
         },
-        dir: cwd,
-      },
-      typegraphPath: path.join(cwd, "wasmedge.ts"),
-      secrets: {},
-    });
+        typegraphPath: path.join(cwd, "wasmedge.ts"),
+        secrets: {},
+      });
 
-    assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 1);
+      assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 1);
 
-    const engine = await metaTest.engineFromDeployed(serialized);
+      const engine = await metaTest.engineFromDeployed(serialized);
 
-    await gql`
+      await gql`
       query {
         test_wasi_ts(a: 11, b: 2)
       }
     `
-      .expectData({
-        test_wasi_ts: 13,
-      })
-      .on(engine);
-    await engine.terminate();
-    s3.destroy();
-  });
-}, {
-  syncConfig,
-  async setup() {
-    await cleanUp();
+        .expectData({
+          test_wasi_ts: 13,
+        })
+        .on(engine);
+      await engine.terminate();
+      s3.destroy();
+    });
   },
-  async teardown() {
-    await cleanUp();
-  },
-  port: true,
-});
+);
+
+// Meta.test(
+//   {
+//     name: "WasmEdge Runtime typescript SDK: Multiple typegate instances",
+//     syncConfig,
+//     async setup() {
+//       await cleanUp();
+//     },
+//     async teardown() {
+//       await cleanUp();
+//     },
+//     port: true,
+//     multipleTypegates: 3,
+//   },
+//   async (metaTest) => {
+//     const port = metaTest.port;
+//     const gate = `http://localhost:${port}`;
+//     await metaTest.should("work with multiple typegate instances", async () => {
+//       const s3 = new S3Client(syncConfig.s3);
+//       assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 0);
+
+//       const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
+//         baseUrl: gate,
+//         auth,
+//         artifactsConfig: {
+//           prismaMigration: {
+//             globalAction: {
+//               create: true,
+//               reset: false,
+//             },
+//             migrationDir: "prisma-migrations",
+//           },
+//           dir: cwd,
+//         },
+//         typegraphPath: path.join(cwd, "wasmedge.ts"),
+//         secrets: {},
+//       });
+
+//       assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 1);
+
+//       const engine = await metaTest.engineFromDeployed(serialized);
+
+//       await gql`
+//       query {
+//         test_wasi_ts(a: 11, b: 2)
+//       }
+//     `
+//         .expectData({
+//           test_wasi_ts: 13,
+//         })
+//         .on(engine);
+//       await engine.terminate();
+//       s3.destroy();
+//     });
+//   },
+// );
