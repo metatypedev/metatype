@@ -22,15 +22,18 @@
 
 import {
   basename,
+  blue,
   expandGlobSync,
   Fuse,
+  gray,
+  green,
   join,
-  mergeReadableStreams,
   parseFlags,
+  red,
   resolve,
   TextLineStream,
 } from "./deps.ts";
-import { projectDir, relPath } from "./utils.ts";
+import { projectDir } from "./utils.ts";
 
 const flags = parseFlags(Deno.args, {
   "--": true,
@@ -78,15 +81,15 @@ if (flags._.length === 0) {
 }
 
 const filter: string | undefined = flags.filter || flags.f;
-const prefixLength = `${projectDir}/typegate/tests/`.length;
-const fuse = new Fuse(testFiles.map((f) => f.slice(prefixLength)), {
+const pathPrefix = `${projectDir}/typegate/tests/`;
+const fuse = new Fuse(testFiles.map((f) => f.slice(pathPrefix.length)), {
   includeScore: true,
   useExtendedSearch: true,
   threshold: 0.4,
 });
 const filtered = filter ? fuse.search(filter) : null;
 const filteredTestFiles = filter
-  ? filtered.map((res) => testFiles[res.refIndex])
+  ? filtered!.map((res) => testFiles[res.refIndex])
   : testFiles;
 
 const cwd = resolve(projectDir, "typegate");
@@ -136,122 +139,221 @@ interface Result {
   success: boolean;
 }
 
-interface Run {
-  promise: Promise<Result>;
-  output: ReadableStream<string>;
-  done: boolean;
-  streamed: boolean;
+interface TestResult {
+  testFile: string;
+  duration: number;
+  runnerId: number;
+  status: "success" | "failure" | "error";
+  stdout: string;
+  stderr: string;
 }
 
-function createRun(testFile: string): Run {
-  const start = Date.now();
-  const child = new Deno.Command("deno", {
-    args: [
-      "task",
-      "test",
-      testFile,
-      ...flags["--"],
-    ],
-    cwd,
-    stdout: "piped",
-    stderr: "piped",
-    env: { ...Deno.env.toObject(), ...env },
-  }).spawn();
+interface OutputOptions {
+  stream: boolean;
+  verbose: boolean;
+}
 
-  const output = mergeReadableStreams(child.stdout, child.stderr).pipeThrough(
-    new TextDecoderStream(),
-  ).pipeThrough(new TextLineStream());
+class TestResultConsumer {
+  private results: TestResult[] = [];
+  private successCount = 0;
+  private failureCount = 0;
+  private startTime: number;
 
-  const promise = child.status.then(({ success }) => {
-    const end = Date.now();
-    return { success, testFile, duration: end - start };
-  }).catch(({ success }) => {
-    const end = Date.now();
-    return { success, testFile, duration: end - start };
-  });
+  constructor(private options: OutputOptions) {
+    this.startTime = Date.now();
+  }
 
-  return {
-    promise,
-    output,
-    done: false,
-    streamed: false,
-  };
+  consume(result: Omit<TestResult, "runnerId">, runner: TestThread) {
+    let status: string;
+    if (result.status === "success") {
+      status = green("✔️");
+      this.successCount++;
+    } else if (result.status === "failure") {
+      status = red("✕");
+      this.failureCount++;
+    } else {
+      status = red("✕✕");
+      this.failureCount++;
+    }
+
+    if (this.options.stream) {
+      console.log();
+    }
+    console.log(
+      status,
+      result.testFile,
+      gray(`(${result.duration}ms)`),
+      gray(`#${runner.threadId}`),
+    );
+    if (this.options.stream) {
+      console.log();
+    }
+    this.results.push({
+      ...result,
+      runnerId: runner.threadId,
+    });
+  }
+
+  #displayResultOuput(result: TestResult) {
+    console.log(gray("-- OUTPUT START <stdout>"), result.testFile, gray("--"));
+    console.log(result.stdout);
+    console.log(gray("-- OUTPUT END <stdout>"), result.testFile, gray("--"));
+    console.log();
+    console.log(gray("-- OUTPUT START <stderr>"), result.testFile, gray("--"));
+    console.log(result.stderr);
+    console.log(gray("-- OUTPUT END <stderr>"), result.testFile, gray("--"));
+    console.log();
+  }
+
+  finalize(): number {
+    if (!this.options.stream) {
+      for (const result of this.results) {
+        if (result.status) {
+          if (this.options.verbose) {
+            this.#displayResultOuput(result);
+          }
+        } else if (result.status === "failure") {
+          this.#displayResultOuput(result);
+        }
+      }
+    }
+
+    const duration = Date.now() - this.startTime;
+
+    console.log();
+    console.log(`${this.results.length} tests completed in ${duration}ms:`);
+    console.log(
+      `  successes: ${this.successCount}/${this.results.length}`,
+    );
+    console.log(
+      `  failures: ${this.failureCount}/${this.results.length}`,
+    );
+
+    if (this.failureCount > 0) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+}
+
+class TestThread {
+  testProcess: Deno.ChildProcess | null = null;
+
+  constructor(
+    public threadId: number,
+    private queue: string[],
+    private results: TestResultConsumer,
+    private options: OutputOptions,
+  ) {}
+
+  async run() {
+    while (true) {
+      const testFile = this.queue.shift();
+      if (!testFile) break;
+
+      const relativePath = testFile.slice(pathPrefix.length);
+
+      console.log(
+        blue("⚬"),
+        gray(`thread #${this.threadId}`),
+        `${blue(relativePath)}`,
+      );
+
+      const start = Date.now();
+      this.testProcess = new Deno.Command("deno", {
+        args: [
+          "task",
+          "test",
+          testFile,
+          ...flags["--"],
+        ],
+        cwd,
+        env: { ...Deno.env.toObject(), ...env },
+        ...(this.options.stream
+          ? { stdout: "inherit", stderr: "inherit" }
+          : { stdout: "piped", stderr: "piped" }),
+      }).spawn();
+
+      let streams: {
+        stdout: ReadableStream<string>;
+        stderr: ReadableStream<string>;
+      } | null = null;
+
+      if (!this.options.stream) {
+        streams = {
+          stdout: this.testProcess.stdout.pipeThrough(new TextDecoderStream())
+            .pipeThrough(new TextLineStream()),
+          stderr: this.testProcess.stderr.pipeThrough(new TextDecoderStream())
+            .pipeThrough(new TextLineStream()),
+        };
+      }
+
+      let status: Deno.CommandStatus | null = null;
+      try {
+        status = await this.testProcess.status;
+      } catch (error) {
+        console.error(error);
+      }
+
+      const duration = Date.now() - start;
+
+      let stdout = "";
+      let stderr = "";
+      try {
+        if (streams) {
+          for await (const line of streams.stdout) {
+            stdout += line + "\n";
+          }
+          for await (const line of streams.stderr) {
+            stderr += line + "\n";
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
+      const statusString = status == null
+        ? "error"
+        : (status.success ? "success" : "failure");
+
+      this.results.consume({
+        testFile: relativePath,
+        duration,
+        status: statusString,
+        stdout,
+        stderr,
+      }, this);
+    }
+
+    console.log(`Thread #${this.threadId} finished`);
+  }
 }
 
 const queues = [...filteredTestFiles];
-const runs: Record<string, Run> = {};
-const globalStart = Date.now();
+const outputOptions: OutputOptions = {
+  stream: threads === 1 || queues.length === 1,
+  verbose: true,
+};
 
-void (async () => {
-  while (queues.length > 0) {
-    const current = Object.values(runs).filter((r) => !r.done).map((r) =>
-      r.promise
-    );
-    if (current.length <= threads) {
-      const next = queues.shift()!;
-      runs[next] = createRun(next);
-    } else {
-      const result = await Promise.any(current);
-      runs[result.testFile].done = true;
-    }
-  }
-})();
+console.log(`Discovered ${queues.length} test files`);
 
-let nexts = Object.keys(runs);
-do {
-  const file = nexts.find((f) => !runs[f].done) ??
-    nexts[0];
-  const run = runs[file];
-  run.streamed = true;
+const results = new TestResultConsumer(outputOptions);
 
-  console.log(`${prefix} Launched ${relPath(file)}`);
-  for await (const line of run.output) {
-    if (line.startsWith("warning: skipping duplicate package")) {
-      // https://github.com/rust-lang/cargo/issues/10752
-      continue;
-    }
-    console.log(line);
-  }
-
-  const { duration } = await run.promise;
-  console.log(
-    `${prefix} Completed ${relPath(file)} in ${duration / 1_000}s`,
-  );
-
-  nexts = Object.keys(runs).filter((f) => !runs[f].streamed);
-} while (nexts.length > 0);
-
-const globalDuration = Date.now() - globalStart;
-const finished = await Promise.all(Object.values(runs).map((r) => r.promise));
-const successes = finished.filter((r) => r.success);
-const failures = finished.filter((r) => !r.success);
-
-console.log("\n");
-console.log(
-  `Tests completed in ${Math.floor(globalDuration / 60_000)}m${
-    Math.floor(globalDuration / 1_000) % 60
-  }s:`,
-);
-
-console.log(
-  `  successes: ${successes.length}/${filteredTestFiles.length}`,
-);
-console.log(
-  `  failures: ${failures.length}/${filteredTestFiles.length}`,
-);
-const filteredOutCount = testFiles.length - filteredTestFiles.length;
-if (filteredOutCount > 0) {
-  console.log(
-    `  ${filteredOutCount} test files were filtered out`,
-  );
+const testThreads: TestThread[] = [];
+for (let i = 0; i < threads; i++) {
+  testThreads.push(new TestThread(i + 1, queues, results, outputOptions));
 }
 
-console.log("");
-
-if (failures.length > 0) {
-  console.log("Some errors were detected:");
-  for (const failure of failures) {
-    console.log(`- ${failure.testFile}`);
+const runnerResults = await Promise.allSettled(testThreads.map(async (t) => {
+  await t.run();
+  return t;
+}));
+for (const result of runnerResults) {
+  if (result.status === "rejected") {
+    console.error("Thread #${result.threadId} failed to run");
+    console.error(result.reason);
   }
-  Deno.exit(1);
 }
+
+Deno.exit(results.finalize());
