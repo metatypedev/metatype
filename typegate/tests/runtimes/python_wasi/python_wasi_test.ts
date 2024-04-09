@@ -212,7 +212,10 @@ Meta.test("Deno: def, lambda, import", async (t) => {
   });
 });
 
-Meta.test("Python WASI: infinite loop or similar", async (t) => {
+Meta.test({
+  name: "Python WASI: infinite loop or similar",
+  sanitizeOps: false,
+}, async (t) => {
   const e = await t.engine("runtimes/python_wasi/python_wasi.py");
 
   await t.should("safely fail upon stackoverflow", async () => {
@@ -241,7 +244,7 @@ Meta.test("Python WASI: infinite loop or similar", async (t) => {
   //     .expectErrorContains("timeout exceeded")
   //     .on(e);
   // });
-}, { sanitizeOps: false });
+});
 
 Meta.test("Python WASI: typegate reloading", async (metaTest) => {
   const load = async () => {

@@ -226,7 +226,10 @@ Meta.test("Deno runtime: script reloading", async (t) => {
   await testReload(2);
 });
 
-Meta.test("Deno runtime: infinite loop or similar", async (t) => {
+Meta.test({
+  name: "Deno runtime: infinite loop or similar",
+  sanitizeOps: false,
+}, async (t) => {
   const e = await t.engine("runtimes/deno/deno.py");
 
   await t.should("safely fail upon stack overflow", async () => {
@@ -255,4 +258,4 @@ Meta.test("Deno runtime: infinite loop or similar", async (t) => {
   const cooldownTime = 5;
   console.log(`cooldown ${cooldownTime}s`);
   await sleep(cooldownTime * 1000);
-}, { sanitizeOps: false });
+});

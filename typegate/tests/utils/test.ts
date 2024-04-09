@@ -278,9 +278,8 @@ interface TestConfig {
 
 interface Test {
   (
-    name: string,
+    opts: string | Omit<Deno.TestDefinition, "fn"> & TestConfig,
     fn: (t: MetaTest) => void | Promise<void>,
-    opts?: Omit<Deno.TestDefinition, "name" | "fn"> & TestConfig,
   ): void;
 }
 
@@ -289,9 +288,9 @@ interface TestExt extends Test {
   ignore: Test;
 }
 
-export const test = ((name, fn, opts = {}): void => {
+export const test = ((o, fn): void => {
+  const opts = typeof o === "string" ? { name: o } : o;
   return Deno.test({
-    name,
     async fn(t) {
       if (opts.setup != null) {
         await opts.setup();
@@ -362,7 +361,8 @@ export const test = ((name, fn, opts = {}): void => {
   });
 }) as TestExt;
 
-test.only = (name, fn, opts = {}) => test(name, fn, { ...opts, only: true });
+test.only = (o, fn) =>
+  test({ ...(typeof o === "string" ? { name: o } : o), only: true }, fn);
 
-test.ignore = (name, fn, opts = {}) =>
-  test(name, fn, { ...opts, ignore: true });
+test.ignore = (o, fn) =>
+  test({ ...(typeof o === "string" ? { name: o } : o), ignore: true }, fn);

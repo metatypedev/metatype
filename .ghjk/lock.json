@@ -84,6 +84,11 @@
           "portRef": "asdf_plugin_git@0.1.0",
           "pluginRepo": "https://github.com/asdf-community/asdf-cmake"
         },
+        "468769528cbf87576285bfcd000271d6398bf3c2b20083d90105d083d61854ba": {
+          "version": "2.40.1",
+          "depConfigs": {},
+          "portRef": "git_aa@0.1.0"
+        },
         "402fae54fb94ffdba9cd2617602c7b33c55002275f3c3bb588615b01ff0c3c26": {
           "version": "v1.6.4",
           "depConfigs": {},

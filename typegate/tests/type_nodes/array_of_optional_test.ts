@@ -3,7 +3,10 @@
 
 import { gql, Meta } from "../utils/mod.ts";
 
-Meta.test("array of optional", async (t) => {
+Meta.test({
+  name: "array of optional",
+  introspection: true,
+}, async (t) => {
   const e = await t.engine("type_nodes/array_of_optional.py");
   await t.should("work with array of optional scalars", async () => {
     await gql`
@@ -81,4 +84,4 @@ Meta.test("array of optional", async (t) => {
     `.matchErrorSnapshot(t)
       .on(e);
   });
-}, { introspection: true });
+});
