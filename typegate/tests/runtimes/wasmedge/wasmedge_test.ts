@@ -55,11 +55,13 @@ Meta.test({
 
     await gql`
       query {
-        test_wasi_ts(a: 11, b: 2)
+        testWitAdd(a: 11, b: 2)
+        # testWitList(a: 1, b: 4)
       }
     `
       .expectData({
-        test_wasi_ts: 13,
+        testWitAdd: 13,
+        // testWitList: [1, 2, 3, 4],
       })
       .on(engine);
     await engine.terminate();

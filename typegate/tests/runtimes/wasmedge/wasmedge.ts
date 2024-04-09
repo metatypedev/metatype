@@ -10,17 +10,17 @@ export const tg = await typegraph("wasmedge_ts", (g) => {
 
   g.expose({
     // expose the wasi materializer
-    test_wasi_ts: wasm
+    testWitAdd: wasm
       .fromWasm(
-        t.struct({
-          "a": t.float(),
-          "b": t.float(),
-        }),
+        t.struct({ "a": t.float(), "b": t.float() }),
         t.integer(),
-        {
-          func: "add",
-          wasm: "rust.wasm",
-        },
+        { func: "add", wasm: "rust.wasm" },
+      ).withPolicy(pub),
+    testWitList: wasm
+      .fromWasm(
+        t.struct({ "a": t.integer(), "b": t.integer() }),
+        t.integer(),
+        { func: "range", wasm: "rust.wasm" },
       ).withPolicy(pub),
   });
 });

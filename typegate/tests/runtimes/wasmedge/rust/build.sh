@@ -2,6 +2,9 @@
 
 set -e
 
-rustup target add wasm32-wasi
-cargo build --target wasm32-wasi --target-dir target/wasi --release
-mv target/wasm32-wasi/release/rust.wasm ..
+cargo build --target wasm32-unknown-unknown
+wasm-tools component new ./target/wasm32-unknown-unknown/debug/rust.wasm -o ./target/rust-opt.wasm
+# debug
+wasm-tools component wit target/rust-opt.wasm
+
+mv target/rust-opt.wasm ../rust.wasm

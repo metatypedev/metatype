@@ -1,0 +1,21 @@
+package example:host;
+
+world host {
+  variant category {
+    a, b(string), c
+  }
+
+  record some-entity {
+    name: string,
+    age: option<u8>,
+    category: category,
+  }
+
+  export add: func(a: f64, b: f64) -> f64;
+  export range: func(a: u32, b: u32) -> result<list<u32>, string>;
+  export complex-output: func() -> tuple<
+    some-entity,
+    string, option<u32>,
+    option<list<result<bool, string>>>
+  >;
+}
