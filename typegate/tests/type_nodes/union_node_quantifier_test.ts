@@ -3,102 +3,101 @@
 
 import { gql, Meta } from "../utils/mod.ts";
 
-Meta.test(
-  "Union type",
-  async (t) => {
-    const e = await t.engine("type_nodes/union_node_quantifier.py");
+Meta.test({
+  name: "Union type",
+  introspection: true,
+}, async (t) => {
+  const e = await t.engine("type_nodes/union_node_quantifier.py");
 
-    await t.should("work with optionals and list arguments", async () => {
-      await gql`
-          query {
-            registerPhone(
-              phone: {
-                name: "LG",
-                battery: 5000,
-                metadatas: [
-                  {label: "IMEI", content: "1234567891011", source: "Factory1234"},
-                  {label: "ref", content: "LG_1234"},
-                ]
-              }
-            ) {
-              message
-              type
-              phone {
-                ... on BasicPhone {
-                  name
-                  metadatas {
-                    label
-                    content
-                    source
-                  }
-                }
-                ... on SmartPhone {
-                  name
-                  metadatas {
-                    label
-                    content
-                    source
-                  }
-                }
-              }
-            }
-          }
-        `
-        .expectData({
-          registerPhone: {
-            message: "LG registered",
-            type: "Basic",
-            phone: {
-              name: "LG",
-              metadatas: [
-                {
-                  label: "IMEI",
-                  content: "1234567891011",
-                  source: "Factory1234",
-                },
-                {
-                  label: "ref",
-                  content: "LG_1234",
-                },
-              ],
-            },
-          },
-        })
-        .on(e);
-    });
-
-    await t.should("work with optional field completed", async () => {
-      await gql`
+  await t.should("work with optionals and list arguments", async () => {
+    await gql`
         query {
           registerPhone(
             phone: {
-              name: "SAMSUNG",
-              camera: 50,
+              name: "LG",
               battery: 5000,
-              os: "Android"
+              metadatas: [
+                {label: "IMEI", content: "1234567891011", source: "Factory1234"},
+                {label: "ref", content: "LG_1234"},
+              ]
             }
           ) {
             message
             type
             phone {
-              ... on SmartPhone { name os }
-              ... on BasicPhone { name os }
+              ... on BasicPhone {
+                name
+                metadatas {
+                  label
+                  content
+                  source
+                }
+              }
+              ... on SmartPhone {
+                name
+                metadatas {
+                  label
+                  content
+                  source
+                }
+              }
             }
           }
         }
       `
-        .expectData({
-          registerPhone: {
-            message: "SAMSUNG registered",
-            type: "Smartphone",
-            phone: {
-              name: "SAMSUNG",
-              os: "Android",
-            },
+      .expectData({
+        registerPhone: {
+          message: "LG registered",
+          type: "Basic",
+          phone: {
+            name: "LG",
+            metadatas: [
+              {
+                label: "IMEI",
+                content: "1234567891011",
+                source: "Factory1234",
+              },
+              {
+                label: "ref",
+                content: "LG_1234",
+              },
+            ],
           },
-        })
-        .on(e);
-    });
-  },
-  { introspection: true },
-);
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("work with optional field completed", async () => {
+    await gql`
+      query {
+        registerPhone(
+          phone: {
+            name: "SAMSUNG",
+            camera: 50,
+            battery: 5000,
+            os: "Android"
+          }
+        ) {
+          message
+          type
+          phone {
+            ... on SmartPhone { name os }
+            ... on BasicPhone { name os }
+          }
+        }
+      }
+    `
+      .expectData({
+        registerPhone: {
+          message: "SAMSUNG registered",
+          type: "Smartphone",
+          phone: {
+            name: "SAMSUNG",
+            os: "Android",
+          },
+        },
+      })
+      .on(e);
+  });
+});

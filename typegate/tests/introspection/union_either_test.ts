@@ -5,7 +5,10 @@ import { gql, Meta } from "../utils/mod.ts";
 
 // https://github.com/graphql/graphql-js/blob/main/src/__tests__/starWarsIntrospection-test.ts
 
-Meta.test("Basic introspection", async (t) => {
+Meta.test({
+  name: "Basic introspection",
+  introspection: true,
+}, async (t) => {
   const e = await t.engine("introspection/union_either.py");
   await t.should("allow querying the schema for query type", async () => {
     await gql`
@@ -28,4 +31,4 @@ Meta.test("Basic introspection", async (t) => {
       .matchOkSnapshot(t)
       .on(e);
   });
-}, { introspection: true });
+});

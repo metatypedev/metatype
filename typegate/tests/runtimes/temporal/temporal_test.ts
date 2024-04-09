@@ -31,10 +31,12 @@ async function waitForHealthy(
   throw Error("stderr lost before healthy");
 }
 
-Meta.test("Typegraph using temporal", async (t) => {
+Meta.test({
+  name: "Typegraph using temporal",
+}, async (t) => {
   await testSerialize(t, "runtimes/temporal/temporal.py");
   await testSerialize(t, "runtimes/temporal/temporal.ts");
-}, {});
+});
 
 Meta.test("temporal integ", async (t) => {
   const greenFlag = [];

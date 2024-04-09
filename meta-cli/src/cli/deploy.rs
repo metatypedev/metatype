@@ -130,6 +130,7 @@ impl Deploy {
             auth: node.auth.clone(),
         });
         ServerStore::set_prefix(node_config.prefix);
+        ServerStore::set_codegen_flag(deploy.options.codegen);
 
         Ok(Self {
             config,

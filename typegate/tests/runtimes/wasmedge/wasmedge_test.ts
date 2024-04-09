@@ -26,7 +26,11 @@ const auth = new BasicAuth("admin", "password");
 //   });
 // }, { port: port });
 
-Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
+Meta.test({
+  name: "WasmEdge Runtime typescript sdk",
+  port: true,
+  systemTypegraphs: true,
+}, async (metaTest) => {
   const port = metaTest.port;
   const gate = `http://localhost:${port}`;
 
@@ -60,4 +64,4 @@ Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
       .on(engine);
     await engine.terminate();
   });
-}, { port: true, systemTypegraphs: true });
+});
