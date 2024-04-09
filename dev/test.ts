@@ -140,14 +140,37 @@ type TestThreadState =
   | { status: "running"; testFile: string }
   | { status: "finished" };
 
+interface Counts {
+  success: number;
+  failure: number;
+  error: number;
+  cancelled: number;
+}
+
 class Logger {
   private threadStates: Array<TestThreadState>;
+  private dynamic = true; // TODO: make this configurable
   public testCommandOutputOptions: {
     stdout: "piped" | "inherit";
     stderr: "piped" | "inherit";
   };
 
+  #print(...args: unknown[]) {
+    Deno.stdout.writeSync(new TextEncoder().encode(args.join(" ")));
+  }
+  #println(...args: unknown[]) {
+    this.#print(...args, "\n");
+  }
+
+  #counts: Counts = {
+    success: 0,
+    failure: 0,
+    error: 0,
+    cancelled: 0,
+  };
+
   constructor(
+    private queue: string[],
     private threadCount: number,
     public readonly options: Readonly<OutputOptions>,
   ) {
@@ -158,10 +181,71 @@ class Logger {
       stdout: options.stream ? "inherit" : "piped",
       stderr: options.stream ? "inherit" : "piped",
     };
+
+    if (this.dynamic) {
+      this.#println();
+      this.#displayThreadStates();
+    }
   }
 
   threadState(threadId: number, state: TestThreadState) {
     this.threadStates[threadId - 1] = state;
+    if (!this.dynamic) {
+      this.#displayThreadState(threadId);
+    } else {
+      this.#clearThreadStates();
+      this.#displayThreadStates();
+    }
+  }
+
+  updateCounts(counts: Partial<Counts>) {
+    this.#counts = {
+      ...this.#counts,
+      ...counts,
+    };
+  }
+
+  #clearThreadStates() {
+    this.#print(`\x1b[${this.threadCount + 2}A\x1b[J`);
+  }
+  #displayThreadStates() {
+    this.#println();
+    for (let i = 1; i <= this.threadCount; i++) {
+      this.#displayThreadState(i);
+    }
+    this.#displayCounts();
+  }
+
+  #displayCounts() {
+    const fields = [];
+
+    const activeCount =
+      this.threadStates.filter((s) => s.status === "running").length;
+    fields.push(gray(`active=${activeCount}`));
+
+    fields.push(`pending=${this.queue.length}`);
+
+    if (this.#counts.success) {
+      fields.push(green(`success=${this.#counts.success}`));
+    }
+
+    if (this.#counts.failure) {
+      fields.push(red(`failure=${this.#counts.failure}`));
+    }
+
+    if (this.#counts.error) {
+      fields.push(yellow(`error=${this.#counts.error}`));
+    }
+
+    if (this.#counts.cancelled) {
+      fields.push(gray(`cancelled=${this.#counts.cancelled}`));
+    }
+
+    this.#println(" ", ...fields);
+  }
+
+  #displayThreadState(threadId: number) {
+    const state = this.threadStates[threadId - 1];
     let displayedState: string;
     switch (state.status) {
       case "idle":
@@ -172,10 +256,11 @@ class Logger {
         displayedState = state.testFile;
         break;
     }
-    console.error(cyan(`thread #${threadId}`), displayedState);
+    this.#println(cyan(`thread #${threadId}`), displayedState);
   }
 
-  result(result: TestResult) {
+  result(result: TestResult, counts: Counts) {
+    this.updateCounts(counts);
     let status: string;
     switch (result.status) {
       case "success":
@@ -189,18 +274,14 @@ class Logger {
         break;
     }
 
-    if (this.options.stream) {
-      console.log();
-    }
-    console.log(
-      status,
-      result.testFile,
-      gray(`(${result.duration}ms)`),
-      gray(`#${result.runnerId}`),
-    );
-    if (this.options.stream) {
-      console.log();
-    }
+    this.#output(() => {
+      this.#println(
+        status,
+        result.testFile,
+        gray(`(${result.duration}ms)`),
+        gray(`#${result.runnerId}`),
+      );
+    });
   }
 
   resultOutputs(results: TestResult[]) {
@@ -212,29 +293,47 @@ class Logger {
   }
 
   #resultOuput(result: TestResult) {
-    console.error();
-    console.error(
+    this.#println();
+    this.#println(
       gray("-- OUTPUT START <stdout>"),
       result.testFile,
       gray("--"),
     );
-    console.error(result.stdout);
-    console.error(gray("-- OUTPUT END <stdout>"), result.testFile, gray("--"));
-    console.error();
-    console.error(
+    this.#println(result.stdout);
+    this.#println(gray("-- OUTPUT END <stdout>"), result.testFile, gray("--"));
+    this.#println();
+    this.#println(
       gray("-- OUTPUT START <stderr>"),
       result.testFile,
       gray("--"),
     );
-    console.error(result.stderr);
-    console.error(gray("-- OUTPUT END <stderr>"), result.testFile, gray("--"));
+    this.#println(result.stderr);
+    this.#println(gray("-- OUTPUT END <stderr>"), result.testFile, gray("--"));
   }
 
   cancelled(count: number) {
-    console.error(
-      yellow(`cancelled ${count} pending tests...`),
-      "Press Ctrl-C again to stop current tests...",
-    );
+    this.#output(() => {
+      this.#println(
+        yellow(`cancelled ${count} pending tests...`),
+        "Press Ctrl-C again to stop current tests...",
+      );
+    });
+  }
+
+  #output(outputFn: () => void) {
+    if (!this.dynamic) {
+      if (this.options.stream) {
+        this.#println();
+      }
+      outputFn();
+      if (this.options.stream) {
+        this.#println();
+      }
+    } else {
+      this.#clearThreadStates();
+      outputFn();
+      this.#displayThreadStates();
+    }
   }
 }
 
@@ -254,9 +353,12 @@ interface OutputOptions {
 
 class TestResultConsumer {
   private results: TestResult[] = [];
-  private successCount = 0;
-  private failureCount = 0;
-  private cancelledCount = 0;
+  #counts: Counts = {
+    success: 0,
+    failure: 0,
+    error: 0,
+    cancelled: 0,
+  };
   private startTime: number;
 
   constructor(private logger: Logger) {
@@ -265,17 +367,23 @@ class TestResultConsumer {
 
   consume(r: Omit<TestResult, "runnerId">, runner: TestThread) {
     const result: TestResult = { ...r, runnerId: runner.threadId };
-    this.logger.result(result);
-    if (result.status === "success") {
-      this.successCount++;
-    } else {
-      this.failureCount++;
+    switch (result.status) {
+      case "success":
+        this.#counts.success++;
+        break;
+      case "failure":
+        this.#counts.failure++;
+        break;
+      case "error":
+        this.#counts.error++;
+        break;
     }
+    this.logger.result(result, this.#counts);
     this.results.push(result);
   }
 
   setCancelledCount(count: number) {
-    this.cancelledCount = count;
+    this.#counts.cancelled = count;
   }
 
   finalize(): number {
@@ -284,18 +392,20 @@ class TestResultConsumer {
     const duration = Date.now() - this.startTime;
 
     console.log();
-    if (this.cancelledCount > 0) {
-      console.log(`${this.cancelledCount} tests were cancelled`);
+    if (this.#counts.cancelled > 0) {
+      console.log(`${this.#counts.cancelled} tests were cancelled`);
     }
     console.log(`${this.results.length} tests completed in ${duration}ms:`);
     console.log(
-      `  successes: ${this.successCount}/${this.results.length}`,
-    );
-    console.log(
-      `  failures: ${this.failureCount}/${this.results.length}`,
+      `  successes: ${this.#counts.success}/${this.results.length}`,
     );
 
-    if (this.failureCount > 0) {
+    const failureCount = this.#counts.failure + this.#counts.error;
+    console.log(
+      `  failures: ${failureCount}/${this.results.length}`,
+    );
+
+    if (failureCount + this.#counts.cancelled > 0) {
       return 1;
     } else {
       return 0;
@@ -393,20 +503,20 @@ class TestThread {
   }
 }
 
-const queues = [...filteredTestFiles];
+const queue = [...filteredTestFiles];
 const outputOptions: OutputOptions = {
-  stream: threads === 1 || queues.length === 1,
+  stream: threads === 1 || queue.length === 1,
   verbose: false,
 };
 
-console.log(`Discovered ${queues.length} test files`);
+console.log(`Discovered ${queue.length} test files`);
 
-const logger = new Logger(threads, outputOptions);
+const logger = new Logger(queue, threads, outputOptions);
 const results = new TestResultConsumer(logger);
 
 const testThreads: TestThread[] = [];
 for (let i = 0; i < threads; i++) {
-  testThreads.push(new TestThread(i + 1, queues, results, logger));
+  testThreads.push(new TestThread(i + 1, queue, results, logger));
 }
 
 let ctrlcCount = 0;
@@ -414,8 +524,8 @@ const _ctrlc = ctrlc.setHandler(() => {
   ctrlcCount++;
   switch (ctrlcCount) {
     case 1: {
-      const remaining = queues.length;
-      queues.length = 0;
+      const remaining = queue.length;
+      queue.length = 0;
       logger.cancelled(remaining);
       results.setCancelledCount(remaining);
       break;
