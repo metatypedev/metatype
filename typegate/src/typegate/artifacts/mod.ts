@@ -24,10 +24,17 @@ export async function getLocalPath(meta: ArtifactMeta) {
     meta.typegraphName,
     meta.relativePath,
   );
-  await Deno.mkdir(dirname(localPath), { recursive: true });
-  await Deno.link(cachedPath, localPath);
 
-  return localPath;
+  // TODO: what happens when symlink already exists? or when same local path artifacts with different cachedPath
+  try {
+    await Deno.lstat(localPath);
+    return localPath;
+  } catch {
+    await Deno.mkdir(dirname(localPath), { recursive: true });
+    await Deno.link(cachedPath, localPath);
+
+    return localPath;
+  }
 }
 
 export const artifactMetaSchema = z.object({
