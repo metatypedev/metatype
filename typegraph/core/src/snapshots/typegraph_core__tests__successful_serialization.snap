@@ -135,6 +135,6 @@ expression: typegraph.0
     "rate": null,
     "version": "0.0.3",
     "randomSeed": null,
-    "artifacts": []
+    "artifacts": {}
   }
 }

@@ -405,7 +405,7 @@ snapshot[`s3 typegraphs 1`] = `
     "rate": null,
     "version": "0.0.3",
     "randomSeed": null,
-    "artifacts": []
+    "artifacts": {}
   }
 }'
 `;
