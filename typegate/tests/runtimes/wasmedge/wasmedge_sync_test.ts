@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
+import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
 import { gql, Meta } from "test-utils/mod.ts";
 import { testDir } from "test-utils/dir.ts";
 import { tg } from "./wasmedge.ts";
@@ -9,7 +9,7 @@ import * as path from "std/path/mod.ts";
 import { connect } from "redis";
 import { S3Client } from "aws-sdk/client-s3";
 import { createBucket, listObjects, tryDeleteBucket } from "test-utils/s3.ts";
-import { assertEquals } from "std/assert/mod.ts";
+import { assertEquals, assertExists } from "std/assert/mod.ts";
 
 const redisKey = "typegraph";
 const redisEventKey = "typegraph_event";
@@ -51,6 +51,8 @@ const auth = new BasicAuth("admin", "password");
 Meta.test(
   {
     name: "WasmEdge Runtime typescript SDK: Sync Config",
+    port: true,
+    systemTypegraphs: true,
     syncConfig,
     async setup() {
       await cleanUp();
@@ -58,7 +60,6 @@ Meta.test(
     async teardown() {
       await cleanUp();
     },
-    port: true,
   },
   async (metaTest) => {
     const port = metaTest.port;
@@ -68,7 +69,7 @@ Meta.test(
       const s3 = new S3Client(syncConfig.s3);
       assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 0);
 
-      const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
+      const { serialized, typegate: gateResponseAdd } = await tgDeploy(tg, {
         baseUrl: gate,
         auth,
         artifactsConfig: {
@@ -85,7 +86,16 @@ Meta.test(
         secrets: {},
       });
 
-      assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 1);
+      assertExists(serialized, "serialized has a value");
+      assertEquals(gateResponseAdd, {
+        data: {
+          addTypegraph: { name: "wasmedge_ts", messages: [], migrations: [] },
+        },
+      });
+
+      const s3Objects = await listObjects(s3, syncConfig.s3Bucket);
+      // two objects, the artifact and the typegraph
+      assertEquals(s3Objects?.length, 2);
 
       const engine = await metaTest.engineFromDeployed(serialized);
 
@@ -98,6 +108,14 @@ Meta.test(
           test_wasi_ts: 13,
         })
         .on(engine);
+
+      const { typegate: gateResponseRem } = await tgRemove(tg, {
+        baseUrl: gate,
+        auth,
+      });
+
+      assertEquals(gateResponseRem, { data: { removeTypegraphs: true } });
+
       await engine.terminate();
       s3.destroy();
     });

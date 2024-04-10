@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::store::Command;
-use crate::deploy::push::pusher::PushResultRaw;
+use crate::{codegen::deno::Codegen, deploy::push::pusher::PushResultRaw};
 use anyhow::{bail, Result};
 use common::typegraph::Typegraph;
 use serde::{Deserialize, Serialize};
@@ -26,8 +26,7 @@ pub struct CLIResponseError {
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SDKResponse {
-    #[allow(dead_code)]
-    command: Command,
+    pub command: Command,
     pub typegraph_name: String,
     pub typegraph_path: PathBuf,
     /// Payload from the SDK (serialized typegraph, response from typegate)
@@ -65,5 +64,17 @@ impl SDKResponse {
         let response: common::graphql::Response =
             serde_json::from_value(self.data.clone().unwrap())?;
         response.data("addTypegraph")
+    }
+
+    pub fn typegraph_dir(&self) -> PathBuf {
+        let mut ret = self.typegraph_path.clone();
+        ret.pop(); // pop file.ext
+        ret
+    }
+
+    pub fn codegen(&self) -> Result<()> {
+        let tg = self.as_typegraph()?;
+        let path = self.typegraph_path.clone();
+        Codegen::new(&tg, &path).apply_codegen()
     }
 }

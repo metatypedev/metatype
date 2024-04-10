@@ -6,7 +6,8 @@ use std::path::{Path, PathBuf};
 use crate::{
     global_store::Store,
     wit::metatype::typegraph::host::{
-        expand_path as expand_path_host, get_cwd, path_exists, read_file, write_file,
+        expand_path as expand_path_host, get_cwd, path_exists as path_exists_host, read_file,
+        write_file,
     },
 };
 use common::archive::{
@@ -158,10 +159,10 @@ pub fn compress_and_encode_base64(path: PathBuf) -> Result<String, String> {
 
 /// Search for .tgignore file at `cwd`, if nothing is found, an empty `Vec` is returned
 pub fn load_tg_ignore_file() -> Result<Vec<String>, String> {
-    let file = cwd()?.join(".tgignore").display().to_string();
+    let file = cwd()?.join(".tgignore");
 
     match path_exists(&file)? {
-        true => read_text_file(file).map(|content| {
+        true => read_text_file(file.to_string_lossy()).map(|content| {
             content
                 .lines()
                 .filter_map(|line| {
@@ -207,4 +208,8 @@ pub fn hash_file(path: &Path) -> Result<(String, u32), String> {
     let size = bytes.len() as u32;
     sha256.update(bytes);
     Ok((format!("{:x}", sha256.finalize()), size))
+}
+
+pub fn path_exists(path: &Path) -> Result<bool, String> {
+    path_exists_host(&path.to_string_lossy())
 }
