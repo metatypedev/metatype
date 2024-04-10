@@ -90,7 +90,7 @@ pub struct DeployOptions {
     #[clap(long, default_value_t = false)]
     pub watch: bool,
 
-    /// secret overrides
+    /// Overrides secrets in the format `[<typegraph-name>:]<secret-name>=<value>`
     #[clap(long = "secret")]
     pub secrets: Vec<String>,
 }

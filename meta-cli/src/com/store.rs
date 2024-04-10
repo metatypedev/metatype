@@ -98,8 +98,8 @@ impl ServerStore {
         with_store_mut(|s| s.secrets = secrets)
     }
 
-    pub fn get_secrets() -> Secrets {
-        with_store(|s| s.secrets.clone())
+    pub fn get_secrets(tg_name: &str) -> HashMap<String, String> {
+        with_store(|s| s.secrets.get(tg_name))
     }
 
     pub fn set_endpoint(endpoint: Endpoint) {
