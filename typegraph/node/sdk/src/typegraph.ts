@@ -221,12 +221,21 @@ export async function typegraph(
 
   const ret = {
     serialize(config: ArtifactResolutionConfig) {
-      const [tgJson, ref_artifacts] = core.finalizeTypegraph(config);
-      const result: TgFinalizationResult = {
-        tgJson: tgJson,
-        ref_artifacts: ref_artifacts,
-      };
-      return result;
+      try {
+        const [tgJson, ref_artifacts] = core.finalizeTypegraph(config);
+        const result: TgFinalizationResult = {
+          tgJson: tgJson,
+          ref_artifacts: ref_artifacts,
+        };
+        return result;
+      } catch (err) {
+        const stack = (err as any)?.payload?.stack;
+        if (stack) {
+          // FIXME: jco generated code throws new Error(object) => prints [Object object]
+          throw new Error(stack.join("\n"));
+        }
+        throw err;
+      }
     },
     name,
   } as TypegraphOutput;

@@ -51,7 +51,7 @@ members = ["mdk/"]
       env: {
         MCLI_LOADER_CMD: "deno run -A --config ../deno.jsonc",
       },
-    }, ...`-C ${tmpDir} gen`.split(" "))).code,
+    }, ...`-C ${tmpDir} gen mdk`.split(" "))).code,
     0,
   );
   assertEquals(

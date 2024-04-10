@@ -86,6 +86,7 @@ artifacts_config = ArtifactResolutionConfig(
     dir=None,
     prisma_migration=config_params,
     disable_artifact_resolution=None,
+    codegen=None,
 )
 
 
