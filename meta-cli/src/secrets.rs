@@ -2,70 +2,122 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::config::NodeConfig;
-use anyhow::{bail, Result};
-use std::collections::HashMap;
+use anyhow::{anyhow, Result};
+use std::{collections::HashMap, path::Path, sync::Arc};
 
 #[derive(Debug, Clone)]
-pub struct Secrets(HashMap<String, String>);
+pub struct Raw;
+#[derive(Debug, Clone, Default)]
+pub struct Hydrated;
 
-impl Secrets {
-    pub fn load_from_node_config(node_config: &NodeConfig) -> Result<Self> {
-        let mut secrets = HashMap::new();
+// tg_name -> key -> value
+#[derive(Debug, Clone, Default)]
+pub struct Secrets<T = Hydrated> {
+    by_typegraph: HashMap<String, HashMap<String, String>>,
+    overrides: HashMap<String, String>,
+    _type_state: std::marker::PhantomData<T>,
+}
 
-        for env in &node_config.env {
-            secrets.insert(env.0.clone(), env.1.clone());
+pub type RawSecrets = Secrets<Raw>;
+
+struct SecretOverride<'a> {
+    tg_name: Option<&'a str>,
+    key: &'a str,
+    value: &'a str,
+}
+
+impl<'a> SecretOverride<'a> {
+    pub fn from_str(override_str: &'a str) -> Result<Self> {
+        let mut parts = override_str.splitn(2, '=');
+        let (tg_name, key) = Self::parse_key(parts.next().unwrap());
+        let value = parts.next();
+
+        let value = value
+            .ok_or_else(|| anyhow!("Invalid secret override (missing value): {}", override_str))?;
+
+        Ok(Self {
+            tg_name,
+            key,
+            value,
+        })
+    }
+
+    fn parse_key(key: &str) -> (Option<&str>, &str) {
+        let mut parts = key.splitn(2, ':');
+        let first = parts.next().unwrap();
+
+        if let Some(second) = parts.next() {
+            (Some(first), second)
+        } else {
+            (None, first)
         }
+    }
+}
 
-        for (tg_name, tg_secrets) in &node_config.secrets {
-            for (key, value) in tg_secrets {
-                secrets.insert(encode_secret_env_key(tg_name, key), value.clone());
-            }
+impl Secrets<Raw> {
+    pub fn load_from_node_config(node_config: &NodeConfig) -> Secrets<Raw> {
+        Secrets {
+            by_typegraph: node_config.secrets.clone(),
+            overrides: HashMap::new(),
+            _type_state: std::marker::PhantomData,
         }
-
-        Ok(Self(secrets))
     }
 
     pub fn apply_overrides(&mut self, overrides: &[String]) -> Result<()> {
         for override_str in overrides {
-            let mut parts = override_str.splitn(2, '=');
-            let key = parts.next().unwrap();
-            let value = parts.next();
-            let Some(value) = value else {
-                bail!("Invalid secret override (key only): {}", override_str);
-            };
+            let SecretOverride {
+                tg_name,
+                key,
+                value,
+            } = SecretOverride::from_str(override_str)?;
 
-            self.0.insert(key.to_string(), value.to_string());
+            if let Some(tg_name) = tg_name {
+                if let Some(secrets) = self.by_typegraph.get_mut(tg_name) {
+                    secrets.insert(key.to_string(), value.to_string());
+                } else {
+                    let mut tg_secrets = HashMap::new();
+                    tg_secrets.insert(key.to_string(), value.to_string());
+                    self.by_typegraph.insert(tg_name.to_string(), tg_secrets);
+                }
+            } else {
+                self.overrides.insert(key.to_string(), value.to_string());
+            }
         }
 
         Ok(())
     }
 
-    pub async fn hydrate(self, dir: std::path::PathBuf) -> Result<HashMap<String, String>> {
-        lade_sdk::hydrate(self.0, dir).await
+    pub async fn hydrate(self, dir: Arc<Path>) -> Result<Secrets<Hydrated>> {
+        let by_typegraph: HashMap<String, _> =
+            futures::future::join_all(self.by_typegraph.into_iter().map(|(tg_name, secrets)| {
+                let dir = dir.clone();
+                async move {
+                    let secrets = lade_sdk::hydrate(secrets, dir.clone().to_path_buf()).await?;
+                    Ok((tg_name, secrets))
+                }
+            }))
+            .await
+            .into_iter()
+            .collect::<Result<_>>()?;
+
+        let overrides = lade_sdk::hydrate(self.overrides, dir.to_path_buf()).await?;
+
+        Ok(Secrets {
+            by_typegraph,
+            overrides,
+            _type_state: std::marker::PhantomData,
+        })
     }
 }
 
-// TODO fail on invalid characters -- what are valid characters?
-fn encode_secret_env_key(tg_name: &str, key: &str) -> String {
-    let mut res = "TG_".to_string();
+impl Secrets<Hydrated> {
+    pub fn get(&self, tg_name: &str) -> HashMap<String, String> {
+        let mut secrets = self.by_typegraph.get(tg_name).cloned().unwrap_or_default();
 
-    for ch in tg_name.chars() {
-        if !ch.is_ascii_alphanumeric() {
-            res.push('_');
-        } else {
-            res.extend(ch.to_uppercase());
+        for (key, value) in &self.overrides {
+            secrets.insert(key.clone(), value.clone());
         }
+
+        secrets
     }
-
-    res.push('_');
-
-    for ch in key.chars() {
-        if !ch.is_ascii_alphanumeric() {
-            res.push('_');
-        } else {
-            res.extend(ch.to_uppercase());
-        }
-    }
-
-    res
 }

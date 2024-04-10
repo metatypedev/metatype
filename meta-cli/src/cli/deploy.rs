@@ -15,7 +15,7 @@ use crate::deploy::actors::loader::{
 };
 use crate::deploy::actors::watcher::WatcherActor;
 use crate::deploy::push::pusher::PushResult;
-use crate::secrets::Secrets;
+use crate::secrets::{RawSecrets, Secrets};
 use actix::prelude::*;
 use actix_web::dev::ServerHandle;
 use anyhow::{bail, Context, Result};
@@ -99,7 +99,7 @@ pub struct Deploy {
     config: Arc<Config>,
     base_dir: Arc<Path>,
     options: DeployOptions,
-    node_envs: Secrets,
+    secrets: RawSecrets,
     file: Option<Arc<Path>>,
     max_parallel_loads: Option<usize>,
 }
@@ -114,7 +114,7 @@ impl Deploy {
         let options = deploy.options.clone();
 
         let node_config = config.node(&deploy.node, &deploy.target);
-        let node_envs = Secrets::load_from_node_config(&node_config)?;
+        let secrets = Secrets::load_from_node_config(&node_config);
         let node = node_config
             .build(&dir)
             .await
@@ -136,7 +136,7 @@ impl Deploy {
             config,
             base_dir: dir.into(),
             options,
-            node_envs,
+            secrets,
             file: deploy
                 .file
                 .as_ref()
@@ -210,11 +210,10 @@ mod default_mode {
         pub async fn init(deploy: Deploy) -> Result<Self> {
             let console = ConsoleActor::new(Arc::clone(&deploy.config)).start();
 
-            let mut secrets = deploy.node_envs.clone();
+            let mut secrets = deploy.secrets.clone();
             secrets.apply_overrides(&deploy.options.secrets)?;
-            let secrets = secrets.hydrate(deploy.base_dir.to_path_buf()).await?;
 
-            ServerStore::set_secrets(secrets);
+            ServerStore::set_secrets(secrets.hydrate(deploy.base_dir.clone()).await?);
 
             let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
 
@@ -331,11 +330,10 @@ mod watch_mode {
         .context("setting Ctrl-C handler")?;
 
         loop {
-            let mut secrets = deploy.node_envs.clone();
+            let mut secrets = deploy.secrets.clone();
             secrets.apply_overrides(&deploy.options.secrets)?;
-            let secrets = secrets.hydrate(deploy.base_dir.to_path_buf()).await?;
 
-            ServerStore::set_secrets(secrets.clone());
+            ServerStore::set_secrets(secrets.hydrate(deploy.base_dir.clone()).await?);
 
             let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
 

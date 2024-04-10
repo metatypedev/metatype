@@ -58,32 +58,13 @@ export class SecretManager {
     this.typegraphName = TypeGraph.formatName(typegraph, false);
   }
 
-  static formatSecretName(typegraphName: string, secretName: string): string {
-    return `TG_${typegraphName}_${secretName}`.replaceAll("-", "_")
-      .toUpperCase();
-  }
-
-  private valueOrNull(secretName: string): string | null {
-    const valueFromEnv = Deno.env.get(secretName);
-    const valueFromSecrets = this.secrets[secretName];
-    if (valueFromSecrets) {
-      ensure(
-        !valueFromEnv,
-        `secret "${secretName}" from metatype.yaml cannot override a secret defined by environment variable in the typegate: choose one of those two options`,
-      );
-      return valueFromSecrets;
-    }
-    return valueFromEnv ?? null;
-  }
-
   secretOrFail(
     name: string,
   ): string {
-    const secretName = SecretManager.formatSecretName(this.typegraphName, name);
-    const value = this.valueOrNull(secretName);
+    const value = this.secretOrNull(name);
     ensure(
       value != null,
-      `cannot find env "${secretName}" for "${this.typegraphName}"`,
+      `cannot find secret "${name}" for "${this.typegraphName}"`,
     );
     return value as string;
   }
@@ -91,11 +72,7 @@ export class SecretManager {
   secretOrNull(
     name: string,
   ): string | null {
-    const secretName = SecretManager.formatSecretName(
-      this.typegraphName,
-      name,
-    );
-    return this.valueOrNull(secretName);
+    return this.secrets[name] ?? null;
   }
 }
 

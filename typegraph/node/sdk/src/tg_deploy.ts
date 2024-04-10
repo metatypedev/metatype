@@ -112,6 +112,7 @@ export async function tgDeploy(
     }
   }
 
+  // TODO: filter secrets
   // deploy the typegraph
   const response = await fetch(new URL("/typegate", baseUrl), {
     method: "POST",
