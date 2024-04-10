@@ -22,7 +22,7 @@ use anyhow::{anyhow, Error, Result};
 use colored::Colorize;
 
 use crate::{
-    com::{responses::SDKResponse, store::ServerStore},
+    com::{responses::SDKResponse, server::get_instance_port, store::ServerStore},
     config::ModuleType,
     utils::ensure_venv,
 };
@@ -105,6 +105,7 @@ impl<'a> Loader<'a> {
         let p = command
             .borrow_mut()
             .env("META_CLI_TG_PATH", path.display().to_string())
+            .env("META_CLI_SERVER_PORT", get_instance_port().to_string())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()

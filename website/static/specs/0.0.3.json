@@ -2273,15 +2273,21 @@
     "TemporalRuntimeData": {
       "type": "object",
       "required": [
-        "host",
+        "host_secret",
         "name"
       ],
       "properties": {
         "name": {
           "type": "string"
         },
-        "host": {
+        "host_secret": {
           "type": "string"
+        },
+        "namespace_secret": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },

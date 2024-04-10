@@ -22,7 +22,7 @@ def math(g: Graph):
                 },
                 name="Output",
             ),
-            module="/inexisting/path/to/ts/module.ts",
+            module="inexisting/path/to/ts/module.ts",
             name="div",
         ).with_policy(public)
     )

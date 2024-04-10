@@ -56,7 +56,8 @@ interface core {
         dir: option<string>, // cwd() if none
         prefix: option<string>, // overrides tg.meta.prefix field if defined
         disable-artifact-resolution: option<bool>, // any postprocess using fs ops should be disabled when set to true
-        prisma-migration: migration-config
+        prisma-migration: migration-config,
+        codegen: option<bool> // if set, sdk should not throw errors when the script does not exist
     }
 
     finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<tuple<string, list<artifact>>, error>
