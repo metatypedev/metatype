@@ -13,29 +13,29 @@ ARG CROSS_DEB_ARCH=
 # in the target arch
 ENV ARCH=$CROSS_DEB_ARCH
 RUN set -eux \
-    && dpkg --add-architecture $ARCH \
-    && apt-get update \
-    && apt install --fix-broken --assume-yes --no-install-recommends \
-                make \
-                # libffi-sys cate build dep\
-                automake \
-                # protoc\
-                libprotoc-dev:$ARCH \
-                # wasmedge-sys crate build dep\
-                libclang-dev \
-                # openssl crate build deps \
-                pkg-config \
-                libssl-dev:$ARCH \
-                zlib1g-dev \
-                zlib1g-dev:$ARCH \
-                # base ghjk deps \ 
-                git \
-                curl \
-                # asdf deps \
-                xz-utils \
-                unzip
+   && dpkg --add-architecture $ARCH \
+   && apt-get update \
+   && apt install --fix-broken --assume-yes --no-install-recommends \
+   make \
+   # libffi-sys cate build dep\
+   automake \
+   # protoc\
+   libprotoc-dev:$ARCH \
+   # wasmedge-sys crate build dep\
+   libclang-dev \
+   # openssl crate build deps \
+   pkg-config \
+   libssl-dev:$ARCH \
+   zlib1g-dev \
+   zlib1g-dev:$ARCH \
+   # base ghjk deps \ 
+   git \
+   curl \
+   # asdf deps \
+   xz-utils \
+   unzip
 
-ARG GHJK_VERSION=f380522
+ARG GHJK_VERSION=423d38e
 ENV GHJK_SHARE_DIR=/ghjk
 RUN curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh \
    | GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash sh 

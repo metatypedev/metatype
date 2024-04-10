@@ -5,8 +5,9 @@ import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 import { gql, Meta } from "test-utils/mod.ts";
 import { testDir } from "test-utils/dir.ts";
 import { tg } from "./wasmedge.ts";
+import * as path from "std/path/mod.ts";
 
-const cwdDir = testDir;
+const cwdDir = path.join(testDir, "runtimes/wasmedge");
 const auth = new BasicAuth("admin", "password");
 
 // Meta.test("WasmEdge runtime: Python SDK", async (t) => {
@@ -31,7 +32,11 @@ const auth = new BasicAuth("admin", "password");
 //   });
 // }, { port: port });
 
-Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
+Meta.test({
+  name: "WasmEdge Runtime typescript sdk",
+  port: true,
+  systemTypegraphs: true,
+}, async (metaTest) => {
   const port = metaTest.port;
   const gate = `http://localhost:${port}`;
 
@@ -49,6 +54,8 @@ Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
         },
         dir: cwdDir,
       },
+      typegraphPath: path.join(cwdDir, "wasmedge.ts"),
+      secrets: {},
     });
 
     const engine = await metaTest.engineFromDeployed(serialized);
@@ -64,4 +71,4 @@ Meta.test("WasmEdge Runtime typescript sdk", async (metaTest) => {
       .on(engine);
     await engine.terminate();
   });
-}, { port: true, systemTypegraphs: true });
+});

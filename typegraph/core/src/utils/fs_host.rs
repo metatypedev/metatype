@@ -3,17 +3,18 @@
 
 use std::path::{Path, PathBuf};
 
+use crate::{
+    global_store::Store,
+    wit::metatype::typegraph::host::{
+        expand_path as expand_path_host, get_cwd, path_exists as path_exists_host, read_file,
+        write_file,
+    },
+};
 use common::archive::{
     archive_entries_from_bytes, encode_bytes_to_base_64, tarb64_unpack_entries_as_map,
 };
 use indexmap::IndexMap;
-
-use crate::{
-    global_store::Store,
-    wit::metatype::typegraph::host::{
-        expand_path as expand_path_host, get_cwd, path_exists, read_file, write_file,
-    },
-};
+use sha2::{Digest, Sha256};
 
 pub fn read_text_file<P: Into<String>>(path: P) -> Result<String, String> {
     read_file(&path.into()).and_then(|bytes| {
@@ -158,10 +159,10 @@ pub fn compress_and_encode_base64(path: PathBuf) -> Result<String, String> {
 
 /// Search for .tgignore file at `cwd`, if nothing is found, an empty `Vec` is returned
 pub fn load_tg_ignore_file() -> Result<Vec<String>, String> {
-    let file = cwd()?.join(".tgignore").display().to_string();
+    let file = cwd()?.join(".tgignore");
 
     match path_exists(&file)? {
-        true => read_text_file(file).map(|content| {
+        true => read_text_file(file.to_string_lossy()).map(|content| {
             content
                 .lines()
                 .filter_map(|line| {
@@ -198,4 +199,17 @@ pub fn make_absolute(path: &Path) -> Result<PathBuf, String> {
         true => Ok(cwd()?.join(path)),
         false => Ok(path.to_owned()),
     }
+}
+
+// TODO: use smaller buffer?
+pub fn hash_file(path: &Path) -> Result<(String, u32), String> {
+    let mut sha256 = Sha256::new();
+    let bytes = read_file(&path.to_string_lossy())?;
+    let size = bytes.len() as u32;
+    sha256.update(bytes);
+    Ok((format!("{:x}", sha256.finalize()), size))
+}
+
+pub fn path_exists(path: &Path) -> Result<bool, String> {
+    path_exists_host(&path.to_string_lossy())
 }

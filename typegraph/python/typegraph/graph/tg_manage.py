@@ -27,6 +27,7 @@ SELF_PATH = (
 class Command(Enum):
     SERIALIZE = "serialize"
     DEPLOY = "deploy"
+    CODEGEN = "codegen"
 
 
 # Types for CLI => SDK
@@ -103,7 +104,17 @@ class Manager:
                 artifacts_config=artifacts_config,
                 secrets=config.secrets,
             )
-            ret = tg_deploy(self.typegraph, params)
+
+            local_memo = self.typegraph.serialize(artifacts_config)
+            reusable_tg_output = TypegraphOutput(
+                name=self.typegraph.name, serialize=lambda _: local_memo
+            )
+            if artifacts_config.codegen:
+                self.relay_result_to_cli(
+                    initiator=Command.CODEGEN, fn=lambda: json.loads(local_memo.tgJson)
+                )
+
+            ret = tg_deploy(reusable_tg_output, params)
             return ret.typegate
 
         return self.relay_result_to_cli(initiator=Command.DEPLOY, fn=fn)
@@ -155,6 +166,10 @@ class Manager:
                         "migrationDir"
                     ],
                 ),
+                disable_artifact_resolution=artifact_config_raw[
+                    "disableArtifactResolution"
+                ],
+                codegen=artifact_config_raw["codegen"],
             ),
         )
 

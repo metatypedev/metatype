@@ -29,7 +29,7 @@ const schema = {
     return bytes;
   }),
   timer_max_timeout_ms: z.coerce.number().positive().max(60000),
-  timer_destroy_ressources: z.boolean(),
+  timer_destroy_resources: z.boolean(),
   timer_policy_eval_retries: z.number().nonnegative().max(5),
   tg_admin_password: z.string(),
   tmp_dir: z.string(),
@@ -42,6 +42,7 @@ const schema = {
   sentry_dsn: z.string().optional(),
   sentry_sample_rate: z.coerce.number().positive().min(0).max(1),
   sentry_traces_sample_rate: z.coerce.number().positive().min(0).max(1),
+  redis_url_queue_expire_sec: z.coerce.number().positive(),
 };
 
 async function getHostname() {
@@ -73,8 +74,9 @@ const config = await configOrExit([
     trust_header_ip: "X-Forwarded-For",
     tg_port: "7890",
     timer_max_timeout_ms: 3000,
-    timer_destroy_ressources: true,
+    timer_destroy_resources: true,
     timer_policy_eval_retries: 1,
+    redis_url_queue_expire_sec: 60 * 5, // 5 minutes
   },
   mapKeys(Deno.env.toObject(), (k: string) => k.toLowerCase()),
   parse(Deno.args) as Record<string, unknown>,

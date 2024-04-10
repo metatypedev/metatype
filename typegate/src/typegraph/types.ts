@@ -479,7 +479,8 @@ export interface S3RuntimeData {
 }
 export interface TemporalRuntimeData {
   name: string;
-  host: string;
+  host_secret: string;
+  namespace_secret?: string;
 }
 export interface WasmEdgeRuntimeData {
   config?: string | null;
@@ -506,8 +507,10 @@ export interface TypeMeta {
   auths: Auth[];
   rate?: Rate | null;
   version: string;
-  random_seed?: number | null;
-  ref_artifacts: Map<string, string>;
+  randomSeed?: number | null;
+  artifacts: {
+    [k: string]: Artifact;
+  };
 }
 export interface Queries {
   dynamic: boolean;
@@ -535,6 +538,11 @@ export interface Rate {
   context_identifier?: string | null;
   local_excess: number;
 }
+export interface Artifact {
+  path: string;
+  hash: string;
+  size: number;
+}
 export interface FunctionMatData {
   script: string;
 }
@@ -545,4 +553,8 @@ export interface PrismaOperationMatData {
   table: string;
   operation: string;
   ordered_keys?: string[] | null;
+}
+export interface WasiMatData {
+  func: string;
+  wasmArtifact: string;
 }

@@ -9,6 +9,9 @@ import { ComputeStage } from "../engine/query_engine.ts";
 import { TypeGraph } from "../typegraph/mod.ts";
 import { TemporalRuntimeData } from "../typegraph/types.ts";
 import { registerRuntime } from "./mod.ts";
+import { getLogger } from "../log.ts";
+
+const logger = getLogger(import.meta);
 
 @registerRuntime("temporal")
 export class TemporalRuntime extends Runtime {
@@ -21,7 +24,7 @@ export class TemporalRuntime extends Runtime {
   static async init(
     params: RuntimeInitParams,
   ): Promise<Runtime> {
-    const { typegraph, args } = params as RuntimeInitParams<
+    const { typegraph, args, secretManager } = params as RuntimeInitParams<
       TemporalRuntimeData
     >;
     const typegraphName = TypeGraph.formatName(typegraph);
@@ -29,8 +32,13 @@ export class TemporalRuntime extends Runtime {
     const instance = new TemporalRuntime(typegraphName);
     nativeVoid(
       await native.temporal_register({
-        url: args.host as string,
-        namespace: "default",
+        url: secretManager.secretOrFail(
+          args.host_secret as string,
+        ),
+        namespace: secretManager.secretOrNull(
+          args.namespace_secret as string,
+        ) ??
+          "default",
         client_id: instance.id,
       }),
     );
@@ -56,14 +64,14 @@ export class TemporalRuntime extends Runtime {
     const resolver: Resolver = (() => {
       if (name === "start_workflow") {
         const { workflow_type } = stage.props.materializer?.data ?? {};
-        return async ({ workflow_id, args }) => {
+        return async ({ workflow_id, args, task_queue }) => {
           const { run_id } = nativeResult(
             await native.temporal_workflow_start({
               client_id,
               args: args.map(JSON.stringify),
               workflow_id: workflow_id as string,
               workflow_type: workflow_type as string,
-              task_queue: "default",
+              task_queue: task_queue as string,
               request_id: null,
             }),
           );
@@ -75,15 +83,16 @@ export class TemporalRuntime extends Runtime {
       if (name === "signal_workflow") {
         const { signal_name } = stage.props.materializer?.data ?? {};
         return async ({ workflow_id, run_id, args }) => {
-          await native.temporal_workflow_signal({
-            client_id,
-            args: args.map(JSON.stringify),
-            workflow_id: workflow_id as string,
-            run_id: run_id as string,
-            signal_name: signal_name as string,
-            request_id: null,
-          });
-
+          nativeVoid(
+            await native.temporal_workflow_signal({
+              client_id,
+              args: args.map(JSON.stringify),
+              workflow_id: workflow_id as string,
+              run_id: run_id as string,
+              signal_name: signal_name as string,
+              request_id: null,
+            }),
+          );
           return true;
         };
       }
@@ -102,7 +111,9 @@ export class TemporalRuntime extends Runtime {
             }),
           );
 
-          return data;
+          logger.debug(Deno.inspect({ data, args }));
+          const out = JSON.parse(data[0]);
+          return out;
         };
       }
 

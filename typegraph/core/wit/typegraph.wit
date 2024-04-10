@@ -33,6 +33,12 @@ interface core {
         rate: option<rate>,
     }
 
+    record artifact {
+        path: string,
+        hash: string,
+        size: u32,
+    }
+
     init-typegraph: func(params: typegraph-init-params) -> result<_, error>
 
     record migration-action {
@@ -49,10 +55,12 @@ interface core {
     record artifact-resolution-config {
         dir: option<string>, // cwd() if none
         prefix: option<string>, // overrides tg.meta.prefix field if defined
-        prisma-migration: migration-config
+        disable-artifact-resolution: option<bool>, // any postprocess using fs ops should be disabled when set to true
+        prisma-migration: migration-config,
+        codegen: option<bool> // if set, sdk should not throw errors when the script does not exist
     }
 
-    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<tuple<string, list<tuple<string, string>>>, error>
+    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<tuple<string, list<artifact>>, error>
 
     type type-id = u32
     record type-base {
@@ -227,7 +235,7 @@ interface core {
 }
 
 interface runtimes {
-    use core.{error, type-id, func-params, runtime-id, materializer-id}
+    use core.{error, type-id, func-params, runtime-id, materializer-id, artifact}
     
     get-deno-runtime: func() -> runtime-id
 
@@ -368,8 +376,7 @@ interface runtimes {
     // wasmedge
     record materializer-wasi {
         func-name: string,
-        module: string,
-        artifact-hash: string,
+        wasm-artifact: string,
     }
 
     register-wasmedge-runtime: func() -> result<runtime-id, error>
@@ -421,7 +428,8 @@ interface runtimes {
     // temporal
     record temporal-runtime-data {
         name: string,
-        host: string,
+        host-secret: string,
+        namespace-secret: option<string>,
     }
 
     variant temporal-operation-type {
@@ -434,6 +442,7 @@ interface runtimes {
     record temporal-operation-data {
         mat-arg: option<string>,
         func-arg: option<type-id>,
+        func-out: option<type-id>,
         operation: temporal-operation-type,
     }
 

@@ -26,7 +26,7 @@ const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
 
 export class DenoRuntime extends Runtime {
   private constructor(
-    private typegraphName: string,
+    typegraphName: string,
     uuid: string,
     private tg: TypeGraphDS,
     private w: DenoMessenger,

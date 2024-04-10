@@ -36,6 +36,7 @@ fn with_store_mut<T, F: FnOnce(&mut ServerStore) -> T>(f: F) -> T {
 pub enum Command {
     Deploy,
     Serialize,
+    Codegen,
 }
 
 #[derive(Default, Clone, Debug)]
@@ -68,6 +69,8 @@ pub struct ServerStore {
     endpoint: Endpoint,
     prefix: Option<String>,
     sdk_responses: HashMap<PathBuf, Arc<HashMap<String, SDKResponse>>>,
+    artifact_resolution: Option<bool>,
+    codegen: Option<bool>,
 }
 
 #[allow(dead_code)]
@@ -175,5 +178,22 @@ impl ServerStore {
 
     pub fn get_prefix() -> Option<String> {
         with_store(|s| s.prefix.to_owned())
+    }
+
+    pub fn set_artifact_resolution_flag(value: bool) {
+        with_store_mut(|s| s.artifact_resolution = Some(value))
+    }
+
+    /// true by default
+    pub fn get_artifact_resolution_flag() -> bool {
+        with_store(|s| s.artifact_resolution.unwrap_or(true))
+    }
+
+    pub fn set_codegen_flag(value: bool) {
+        with_store_mut(|s| s.codegen = Some(value))
+    }
+
+    pub fn get_codegen_flag() -> bool {
+        with_store(|s| s.codegen.unwrap_or(false))
     }
 }

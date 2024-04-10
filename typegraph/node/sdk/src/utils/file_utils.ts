@@ -4,11 +4,12 @@
 import * as fs from "node:fs";
 import * as crypto from "node:crypto";
 import { wit_utils } from "../wit.js";
+import { Artifact } from "../gen/interfaces/metatype-typegraph-core.js";
 import * as path from "node:path";
 
-export async function getFileHash(filePath: string): Promise<string> {
+export async function getArtifactMeta(path: string): Promise<Artifact> {
   const cwd = wit_utils.getCwd();
-  filePath = `${cwd}/${filePath}`;
+  const filePath = `${cwd}/${path}`;
   const hash = crypto.createHash("sha256");
   let file;
 
@@ -31,7 +32,11 @@ export async function getFileHash(filePath: string): Promise<string> {
       hash.update(buffer.subarray(0, numBytesRead));
     } while (numBytesRead > 0);
 
-    return hash.digest("hex");
+    return {
+      path,
+      hash: hash.digest("hex"),
+      size: bytesRead,
+    };
   } catch (err) {
     throw new Error(`Failed to calculate hash for ${filePath}: \n${err}`);
   } finally {

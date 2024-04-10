@@ -27,6 +27,8 @@ impl PostProcessor for PythonProcessor {
                 mat_data.artifact = artifact_name.into();
                 mat_data.tg_name = Some(tg_name.clone());
 
+                // TODO: push artifact to meta.artifacts
+
                 mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
                 tg.deps.push(main_path);
             }

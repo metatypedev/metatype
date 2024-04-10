@@ -2273,15 +2273,21 @@
     "TemporalRuntimeData": {
       "type": "object",
       "required": [
-        "host",
+        "host_secret",
         "name"
       ],
       "properties": {
         "name": {
           "type": "string"
         },
-        "host": {
+        "host_secret": {
           "type": "string"
+        },
+        "namespace_secret": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -2338,6 +2344,7 @@
     "TypeMeta": {
       "type": "object",
       "required": [
+        "artifacts",
         "auths",
         "cors",
         "queries",
@@ -2382,13 +2389,19 @@
         "version": {
           "type": "string"
         },
-        "random_seed": {
+        "randomSeed": {
           "type": [
             "integer",
             "null"
           ],
           "format": "uint32",
           "minimum": 0.0
+        },
+        "artifacts": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Artifact"
+          }
         }
       }
     },
@@ -2516,6 +2529,27 @@
           ]
         },
         "local_excess": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "Artifact": {
+      "type": "object",
+      "required": [
+        "hash",
+        "path",
+        "size"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "size": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0.0
@@ -2725,6 +2759,22 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "WasiMatData": {
+      "title": "WasiMatData",
+      "type": "object",
+      "required": [
+        "func",
+        "wasmArtifact"
+      ],
+      "properties": {
+        "func": {
+          "type": "string"
+        },
+        "wasmArtifact": {
+          "type": "string"
         }
       }
     }

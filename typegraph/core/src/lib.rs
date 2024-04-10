@@ -31,9 +31,9 @@ use types::{
 
 use utils::clear_name;
 use wit::core::{
-    ArtifactResolutionConfig, ContextCheck, Policy, PolicyId, PolicySpec, TransformData, TypeBase,
-    TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList,
-    TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
+    Artifact, ArtifactResolutionConfig, ContextCheck, Policy, PolicyId, PolicySpec, TransformData,
+    TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger,
+    TypeList, TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
 };
 use wit::runtimes::{Guest, MaterializerDenoFunc};
 
@@ -62,7 +62,7 @@ impl wit::core::Guest for Lib {
 
     fn finalize_typegraph(
         res_config: Option<ArtifactResolutionConfig>,
-    ) -> Result<(String, Vec<(String, String)>)> {
+    ) -> Result<(String, Vec<Artifact>)> {
         typegraph::finalize(res_config)
     }
 
@@ -642,9 +642,8 @@ mod tests {
             Err(errors::expected_typegraph_context())
         );
 
-        assert_eq!(
-            Lib::finalize_typegraph(None),
-            Err(errors::expected_typegraph_context())
+        assert!(
+            matches!(Lib::finalize_typegraph(None), Err(e) if e == errors::expected_typegraph_context())
         );
 
         Ok(())

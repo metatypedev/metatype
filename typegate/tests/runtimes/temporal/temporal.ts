@@ -6,16 +6,29 @@ import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.js";
 
 typegraph("temporal", (g: any) => {
   const pub = Policy.public();
-  const temporal = new TemporalRuntime("<name>", "<host>");
-  const arg = t.struct({ some_field: t.string() });
-
+  const temporal = new TemporalRuntime({
+    name: "test",
+    hostSecret: "HOST",
+    namespaceSecret: "NAMESPACE",
+  });
   g.expose(
     {
-      start: temporal.startWorkflow("<workflow_type>", arg).withPolicy(pub),
-      query: temporal.queryWorkflow("<query_type>", arg).withPolicy(pub),
-      signal: temporal.signalWorkflow("<signal_name>", arg).reduce({
-        workflow_id: "1234",
-      }).withPolicy(pub),
+      startKv: temporal.startWorkflow(
+        "keyValueStore",
+        t.struct({}),
+      ).withPolicy(pub),
+
+      query: temporal.queryWorkflow(
+        "getValue",
+        t.string(),
+        t.string().optional(),
+      ).withPolicy(pub),
+
+      signal: temporal.signalWorkflow(
+        "setValue",
+        t.struct({ key: t.string(), value: t.string() }),
+      ).withPolicy(pub),
+
       describe: temporal.describeWorkflow().withPolicy(pub),
     },
   );

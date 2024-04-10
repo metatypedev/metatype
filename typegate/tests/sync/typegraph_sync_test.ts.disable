@@ -58,7 +58,17 @@ async function waitForRedisEvent(timeoutMs: number, cb: () => Promise<void>) {
   }
 }
 
-Meta.test("test sync through s3", async (t) => {
+// FIXME: figure out problem with RedisConnection.processCommandQueue not cleaning up
+Meta.test({
+  name: "test sync through s3",
+  syncConfig,
+  async setup() {
+    await cleanUp();
+  },
+  async teardown() {
+    await cleanUp();
+  },
+}, async (t) => {
   await t.should("successfully send redis event", async () => {
     const s3 = new S3Client(syncConfig.s3);
     assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 0);
@@ -99,12 +109,4 @@ Meta.test("test sync through s3", async (t) => {
 
     await typegate2.deinit();
   });
-}, {
-  syncConfig,
-  async setup() {
-    await cleanUp();
-  },
-  async teardown() {
-    await cleanUp();
-  },
 });

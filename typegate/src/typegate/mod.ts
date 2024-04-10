@@ -35,14 +35,14 @@ import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
 import introspectionJson from "../typegraphs/introspection.json" with {
   type: "json",
 };
+import { ArtifactService } from "../services/artifact_service.ts";
+import { ArtifactStore } from "./artifacts/mod.ts";
+import { LocalArtifactStore } from "./artifacts/local.ts";
 import { SyncConfig } from "../sync/config.ts";
 import { MemoryRegister } from "test-utils/memory_register.ts";
 import { NoLimiter } from "test-utils/no_limiter.ts";
 import { TypegraphStore } from "../sync/typegraph.ts";
-import {
-  handleArtifactUpload,
-  handleUploadUrl,
-} from "../services/artifact_upload_service.ts";
+import { SharedArtifactStore } from "./artifacts/shared.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -74,9 +74,13 @@ export interface UploadUrlMeta {
   pathSuffix: string;
 }
 
+export interface DeinitOptions {
+  engines?: boolean;
+}
+
 export class Typegate {
   #onPushHooks: PushHandler[] = [];
-  artifactUploadUrlCache: Map<string, UploadUrlMeta> = new Map();
+  #artifactService: ArtifactService;
 
   static async init(
     syncConfig: SyncConfig | null = null,
@@ -89,7 +93,13 @@ export class Typegate {
       );
 
       const register = customRegister ?? new MemoryRegister();
-      return new Typegate(register, new NoLimiter(), null);
+      const artifactStore = await LocalArtifactStore.init();
+      return new Typegate(
+        register,
+        new NoLimiter(),
+        artifactStore,
+        null,
+      );
     } else {
       if (customRegister) {
         throw new Error(
@@ -97,7 +107,8 @@ export class Typegate {
         );
       }
       const limiter = await RedisRateLimiter.init(syncConfig.redis);
-      const typegate = new Typegate(null!, limiter, syncConfig);
+      const artifactStore = await SharedArtifactStore.init(syncConfig);
+      const typegate = new Typegate(null!, limiter, artifactStore, syncConfig);
       const register = await ReplicatedRegister.init(
         typegate,
         syncConfig.redis,
@@ -121,16 +132,22 @@ export class Typegate {
   private constructor(
     public readonly register: Register,
     private limiter: RateLimiter,
+    public artifactStore: ArtifactStore,
     public syncConfig: SyncConfig | null = null,
   ) {
     this.#onPush((tg) => Promise.resolve(upgradeTypegraph(tg)));
     this.#onPush((tg) => Promise.resolve(parseGraphQLTypeGraph(tg)));
     this.#onPush(PrismaHooks.generateSchema);
     this.#onPush(PrismaHooks.runMigrations);
+    this.#artifactService = new ArtifactService(artifactStore);
   }
 
-  async deinit() {
-    await Promise.all(this.register.list().map((e) => e.terminate()));
+  async deinit(opts: DeinitOptions = {}) {
+    const engines = opts.engines ?? true;
+    if (engines) {
+      await Promise.all(this.register.list().map((e) => e.terminate()));
+    }
+    await this.artifactStore.close();
     if (this.syncConfig) {
       await (this.register as ReplicatedRegister).stopSync();
       await (this.limiter as RedisRateLimiter).terminate();
@@ -180,21 +197,8 @@ export class Typegate {
 
       const [engineName, serviceName] = parsePath(url.pathname);
 
-      // artifact upload handlers
-      if (serviceName === "get-upload-url") {
-        return handleUploadUrl(
-          request,
-          engineName,
-          this.artifactUploadUrlCache,
-        );
-      }
-
-      if (serviceName === "upload-artifacts") {
-        return handleArtifactUpload(
-          request,
-          engineName,
-          this.artifactUploadUrlCache,
-        );
+      if (serviceName === "artifacts") {
+        return this.#artifactService.handle(request, engineName);
       }
 
       if (!engineName || ignoreList.has(engineName)) {
@@ -344,6 +348,7 @@ export class Typegate {
 
     const introspection = enableIntrospection
       ? await TypeGraph.init(
+        this,
         introspectionDef,
         new SecretManager(introspectionDef, {}),
         {
@@ -358,6 +363,7 @@ export class Typegate {
       : null;
 
     const tg = await TypeGraph.init(
+      this,
       tgDS,
       secretManager,
       customRuntime,
@@ -367,5 +373,10 @@ export class Typegate {
     const engine = new QueryEngine(tg);
     await engine.registerEndpoints();
     return engine;
+  }
+
+  async terminate() {
+    await Promise.all(this.register.list().map((e) => e.terminate()));
+    await this.artifactStore.close();
   }
 }

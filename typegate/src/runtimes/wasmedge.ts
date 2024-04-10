@@ -7,18 +7,18 @@ import { Resolver, RuntimeInitParams } from "../types.ts";
 import { nativeResult } from "../utils.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
 import { registerRuntime } from "./mod.ts";
-import config from "../config.ts";
+import { Typegate } from "../typegate/mod.ts";
 
 @registerRuntime("wasmedge")
 export class WasmEdgeRuntime extends Runtime {
-  private constructor(typegraphName: string) {
+  private constructor(typegraphName: string, private typegate: Typegate) {
     super(typegraphName);
   }
 
   static init(params: RuntimeInitParams): Promise<Runtime> {
-    const { typegraphName } = params;
+    const { typegraphName, typegate } = params;
 
-    return Promise.resolve(new WasmEdgeRuntime(typegraphName));
+    return Promise.resolve(new WasmEdgeRuntime(typegraphName, typegate));
   }
 
   async deinit(): Promise<void> {
@@ -26,12 +26,22 @@ export class WasmEdgeRuntime extends Runtime {
 
   materialize(
     stage: ComputeStage,
-    _waitlist: ComputeStage[],
+    waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
     const { materializer, argumentTypes, outType } = stage.props;
-    const { wasm, func, artifact_hash, tg_name } = materializer?.data ?? {};
+    const { wasmArtifact, func } = materializer?.data ?? {};
     const order = Object.keys(argumentTypes ?? {});
+
+    const typegraph = this.typegate.register.get(this.typegraphName)!;
+    const art = typegraph.tg.tg.meta.artifacts[wasmArtifact as string];
+
+    const artifactMeta = {
+      typegraphName: this.typegraphName,
+      relativePath: art.path,
+      hash: art.hash,
+      sizeInBytes: art.size,
+    };
 
     // always wasi
     const resolver: Resolver = async (args) => {
@@ -41,8 +51,7 @@ export class WasmEdgeRuntime extends Runtime {
         await native.wasmedge_wasi(
           {
             func: func as string,
-            wasm:
-              `${config.tmp_dir}/metatype_artifacts/${tg_name as string}/artifacts/${wasm as string}.${artifact_hash as string}`,
+            wasm: await this.typegate.artifactStore.getLocalPath(artifactMeta),
             args: transfert,
             out: outType.type,
           },
@@ -51,11 +60,16 @@ export class WasmEdgeRuntime extends Runtime {
       return JSON.parse(res);
     };
 
+    const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
+
     return [
       new ComputeStage({
         ...stage.props,
         resolver,
       }),
+      ...sameRuntime.map((s) =>
+        s.withResolver(Runtime.resolveFromParent(s.props.node))
+      ),
     ];
   }
 }

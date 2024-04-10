@@ -13,7 +13,10 @@ import {
 import { Auth, Cors as CorsWit, Rate, wit_utils } from "./wit.js";
 import Policy from "./policy.js";
 import { getPolicyChain } from "./types.js";
-import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
+import {
+  Artifact,
+  ArtifactResolutionConfig,
+} from "./gen/interfaces/metatype-typegraph-core.js";
 import { Manager } from "./tg_manage.js";
 
 type Exports = Record<string, t.Func>;
@@ -121,7 +124,7 @@ export interface TypegraphOutput {
 
 export interface TgFinalizationResult {
   tgJson: string;
-  ref_artifacts: [string, string][];
+  ref_artifacts: Artifact[];
 }
 
 export async function typegraph(
@@ -221,12 +224,21 @@ export async function typegraph(
 
   const ret = {
     serialize(config: ArtifactResolutionConfig) {
-      const [tgJson, ref_artifacts] = core.finalizeTypegraph(config);
-      const result: TgFinalizationResult = {
-        tgJson: tgJson,
-        ref_artifacts: ref_artifacts,
-      };
-      return result;
+      try {
+        const [tgJson, ref_artifacts] = core.finalizeTypegraph(config);
+        const result: TgFinalizationResult = {
+          tgJson: tgJson,
+          ref_artifacts: ref_artifacts,
+        };
+        return result;
+      } catch (err) {
+        const stack = (err as any)?.payload?.stack;
+        if (stack) {
+          // FIXME: jco generated code throws new Error(object) => prints [Object object]
+          throw new Error(stack.join("\n"));
+        }
+        throw err;
+      }
     },
     name,
   } as TypegraphOutput;

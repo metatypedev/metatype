@@ -5,12 +5,10 @@ import { SystemTypegraph } from "../../src/system_typegraphs.ts";
 import { dirname, join } from "std/path/mod.ts";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
-
 import { assertSnapshot } from "std/testing/snapshot.ts";
 import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
-
 import { createMetaCli } from "./meta.ts";
 import { SecretManager, TypeGraph } from "../../src/typegraph/mod.ts";
 import { SyncConfig } from "../../src/sync/config.ts";
@@ -70,16 +68,17 @@ export class MetaTest {
   meta = defaultCli;
   workingDir = testDir;
   port: number | null = null;
+  currentTypegateIndex = 0;
 
   static async init(
     t: Deno.TestContext,
-    typegate: Typegate,
+    typegates: Typegate[],
     introspection: boolean,
     port = false,
   ): Promise<MetaTest> {
-    const mt = new MetaTest(t, typegate, introspection);
+    const mt = new MetaTest(t, typegates, introspection);
     if (port) {
-      const { port: p, cleanup } = await serve(typegate);
+      const { port: p, cleanup } = await serve(typegates[0]);
       mt.port = p;
       mt.addCleanup(cleanup);
     }
@@ -89,12 +88,16 @@ export class MetaTest {
 
   private constructor(
     public t: Deno.TestContext,
-    public typegate: Typegate,
+    public typegates: Typegate[],
     private introspection: boolean,
   ) {}
 
   addCleanup(fn: MetaTestCleanupFn) {
     this.cleanups.push(fn);
+  }
+
+  get typegate(): Typegate {
+    return this.typegates[this.currentTypegateIndex];
   }
 
   getTypegraphEngine(name: string): QueryEngine | undefined {
@@ -168,6 +171,9 @@ export class MetaTest {
       throw response.failure!;
     }
 
+    this.currentTypegateIndex += 1;
+    this.currentTypegateIndex %= this.typegates.length;
+
     return engine;
   }
 
@@ -218,7 +224,7 @@ export class MetaTest {
 
   async terminate() {
     await Promise.all(this.cleanups.map((c) => c()));
-    await this.typegate.deinit();
+    await Promise.all(this.typegates.map((tg) => tg.deinit()));
   }
 
   async should(
@@ -287,6 +293,8 @@ interface TestConfig {
   introspection?: boolean;
   // port on which the typegate instance will be exposed on expose the typegate instance
   port?: boolean;
+  // number of typegate instances to create
+  multipleTypegates?: number;
   // create a temporary clean git repo for the tests
   gitRepo?: TempGitRepo;
   syncConfig?: SyncConfig;
@@ -296,9 +304,8 @@ interface TestConfig {
 
 interface Test {
   (
-    name: string,
+    opts: string | Omit<Deno.TestDefinition, "fn"> & TestConfig,
     fn: (t: MetaTest) => void | Promise<void>,
-    opts?: Omit<Deno.TestDefinition, "name" | "fn"> & TestConfig,
   ): void;
 }
 
@@ -307,14 +314,21 @@ interface TestExt extends Test {
   ignore: Test;
 }
 
-export const test = ((name, fn, opts = {}): void => {
+export const test = ((o, fn): void => {
+  const opts = typeof o === "string" ? { name: o } : o;
   return Deno.test({
-    name,
     async fn(t) {
       if (opts.setup != null) {
         await opts.setup();
       }
+      const typegates: Typegate[] = [];
       const typegate = await Typegate.init(opts.syncConfig ?? null);
+      typegates.push(typegate);
+      if (opts.multipleTypegates) {
+        for (let i = 0; i < opts.multipleTypegates - 1; i++) {
+          typegates.push(await Typegate.init(opts.syncConfig ?? null));
+        }
+      }
       const {
         systemTypegraphs = false,
         gitRepo = null,
@@ -326,7 +340,7 @@ export const test = ((name, fn, opts = {}): void => {
 
       const mt = await MetaTest.init(
         t,
-        typegate,
+        typegates,
         introspection,
         opts.port != null,
       );
@@ -372,7 +386,8 @@ export const test = ((name, fn, opts = {}): void => {
   });
 }) as TestExt;
 
-test.only = (name, fn, opts = {}) => test(name, fn, { ...opts, only: true });
+test.only = (o, fn) =>
+  test({ ...(typeof o === "string" ? { name: o } : o), only: true }, fn);
 
-test.ignore = (name, fn, opts = {}) =>
-  test(name, fn, { ...opts, ignore: true });
+test.ignore = (o, fn) =>
+  test({ ...(typeof o === "string" ? { name: o } : o), ignore: true }, fn);

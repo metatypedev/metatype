@@ -87,6 +87,12 @@ repos:
         language: system
         entry: bash -c 'deno run -A dev/lock.ts --check'
         pass_filenames: false
+      - id: clean-deno-lock
+        name: "Clean deno.lock"
+        always_run: true
+        language: system
+        entry: ghjk x clean-deno-lock
+        pass_filenames: false
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.5.4
     hooks:
@@ -109,7 +115,7 @@ repos:
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
           - rust
-        files: ^(typegate|libs)/
+        files: ^(typegate|libs!(/metagen/.*))/
       - id: insert-license
         name: "License MPL-2.0 rust"
         args:
@@ -119,7 +125,7 @@ repos:
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
           - rust
-        files: ^(meta-cli|typegraph)/
+        files: ^(meta-cli|typegraph|libs/metagen)/
       - id: insert-license
         name: "License Elastic-2.0 deno"
         args:

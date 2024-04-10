@@ -5,8 +5,8 @@ import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-co
 import { ArtifactUploader } from "./tg_artifact_upload.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
-import * as fs from "node:fs";
-import * as path from "node:path";
+import * as fsp from "node:fs/promises";
+import { dirname, join } from "node:path";
 
 export class BasicAuth {
   constructor(public username: string, public password: string) {
@@ -17,6 +17,7 @@ export class BasicAuth {
 }
 
 export interface TypegraphDeployParams {
+  typegraphPath: string;
   baseUrl: string;
   auth?: BasicAuth;
   artifactsConfig: ArtifactResolutionConfig;
@@ -37,11 +38,11 @@ export interface RemoveResult {
   typegate: Record<string, any> | string;
 }
 
-export interface UploadArtifactMeta {
-  name: string;
-  artifact_hash: string;
-  artifact_size_in_bytes: number;
-  pathSuffix: string[];
+export interface ArtifactMeta {
+  typegraphName: string;
+  relativePath: string;
+  hash: string;
+  sizeInBytes: number;
 }
 
 export async function tgDeploy(
@@ -51,7 +52,7 @@ export async function tgDeploy(
   const { baseUrl, secrets, auth, artifactsConfig } = params;
   const serialized = typegraph.serialize(artifactsConfig);
   const tgJson = serialized.tgJson;
-  const ref_artifacts = serialized.ref_artifacts;
+  const refArtifacts = serialized.ref_artifacts;
 
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
@@ -62,14 +63,87 @@ export async function tgDeploy(
   // console.log("****************T", tgJson);
 
   // upload the artifacts
-  const artifactUploader = new ArtifactUploader(
-    baseUrl,
-    ref_artifacts,
-    typegraph.name,
-    auth,
+  const suffix = `${typegraph.name}/artifacts/upload-urls`;
+  const createUploadUrlEndpoint = new URL(suffix, baseUrl);
+
+  const artifacts = refArtifacts.map(({ path, hash, size }) => {
+    return {
+      typegraphName: typegraph.name,
+      relativePath: path,
+      hash: hash,
+      sizeInBytes: size,
+    };
+  });
+
+  const res = await fetch(createUploadUrlEndpoint, {
+    method: "POST",
     headers,
-  );
-  await artifactUploader.uploadArtifacts();
+    body: JSON.stringify(artifacts),
+  } as RequestInit);
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Failed to get upload URLs for all artifacts: ${err}`);
+  }
+
+  const uploadUrls: Array<string | null> = await res.json();
+  if (uploadUrls.length !== artifacts.length) {
+    const diff =
+      `array length mismatch: ${uploadUrls.length} !== ${artifacts.length}`;
+    throw new Error(`Failed to get upload URLs for all artifacts: ${diff}`);
+  }
+
+  const uploadHeaders = new Headers({
+    // TODO match to file extension??
+    "Content-Type": "application/octet-stream",
+  });
+
+  if (auth) {
+    uploadHeaders.append("Authorization", auth.asHeaderValue());
+  }
+
+  const results = await Promise.allSettled(uploadUrls.map(async (url, i) => {
+    if (url == null) {
+      console.log(`Skipping upload for artifact: ${artifacts[i].relativePath}`);
+      return;
+    }
+    const meta = artifacts[i];
+
+    const path = join(dirname(params.typegraphPath), meta.relativePath);
+    // TODO: stream
+    const content = await fsp.readFile(path);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: uploadHeaders,
+      body: new Uint8Array(content),
+    } as RequestInit);
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(
+        `Failed to upload artifact '${path}' (${res.status}): ${err}`,
+      );
+    }
+    return res.json();
+  }));
+
+  let errors = 0;
+
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    const meta = artifacts[i];
+    if (result.status === "rejected") {
+      console.error(
+        `Failed to upload artifact '${meta.relativePath}': ${result.reason}`,
+      );
+      errors++;
+    } else {
+      console.log(`Successfully uploaded artifact '${meta.relativePath}'`);
+    }
+  }
+
+  if (errors > 0) {
+    throw new Error(`Failed to upload ${errors} artifacts`);
+  }
 
   // deploy the typegraph
   const response = await fetch(new URL("/typegate", baseUrl), {

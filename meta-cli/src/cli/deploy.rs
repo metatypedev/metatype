@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-use super::{Action, CommonArgs, GenArgs};
+use super::{Action, ConfigArgs, NodeArgs};
 use crate::com::store::{Command, Endpoint, MigrationAction, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors;
@@ -29,7 +29,7 @@ use tokio::sync::mpsc;
 #[derive(Parser, Debug)]
 pub struct DeploySubcommand {
     #[command(flatten)]
-    node: CommonArgs,
+    node: NodeArgs,
 
     /// Target typegate (cf config)
     #[clap(short, long)]
@@ -48,7 +48,7 @@ pub struct DeploySubcommand {
 
 impl DeploySubcommand {
     pub fn new(
-        node: CommonArgs,
+        node: NodeArgs,
         target: String,
         options: DeployOptions,
         file: Option<PathBuf>,
@@ -122,7 +122,7 @@ pub struct Deploy {
 }
 
 impl Deploy {
-    pub async fn new(deploy: &DeploySubcommand, args: &GenArgs) -> Result<Self> {
+    pub async fn new(deploy: &DeploySubcommand, args: &ConfigArgs) -> Result<Self> {
         let dir = args.dir()?;
 
         let config_path = args.config.clone();
@@ -146,6 +146,7 @@ impl Deploy {
             auth: node.auth.clone(),
         });
         ServerStore::set_prefix(node_config.prefix);
+        ServerStore::set_codegen_flag(deploy.options.codegen);
 
         Ok(Self {
             config,
@@ -170,7 +171,7 @@ struct CtrlCHandlerData {
 
 #[async_trait]
 impl Action for DeploySubcommand {
-    async fn run(&self, args: GenArgs, server_handle: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
         let deploy = Deploy::new(self, &args).await?;
 
         if !self.options.allow_dirty {

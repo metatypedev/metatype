@@ -7,8 +7,13 @@ import { tg } from "./self_deploy.mjs"; // FIXME: deno coverage issues with tran
 import { testDir } from "test-utils/dir.ts";
 import { join } from "std/path/join.ts";
 import { assertEquals, assertExists } from "std/assert/mod.ts";
+import * as path from "std/path/mod.ts";
 
-Meta.test("deploy and undeploy typegraph without meta-cli", async (t) => {
+Meta.test({
+  name: "deploy and undeploy typegraph without meta-cli",
+  port: true,
+  systemTypegraphs: true,
+}, async (t) => {
   const gate = `http://localhost:${t.port}`;
   const auth = new BasicAuth("admin", "password");
   const cwdDir = join(testDir, "e2e", "self_deploy");
@@ -17,6 +22,7 @@ Meta.test("deploy and undeploy typegraph without meta-cli", async (t) => {
     baseUrl: gate,
     auth,
     secrets: {},
+    typegraphPath: path.join(cwdDir, "self_deploy.mjs"),
     artifactsConfig: {
       prismaMigration: {
         globalAction: {
@@ -40,4 +46,4 @@ Meta.test("deploy and undeploy typegraph without meta-cli", async (t) => {
     auth,
   });
   assertEquals(gateResponseRem, { data: { removeTypegraphs: true } });
-}, { port: true, systemTypegraphs: true });
+});
