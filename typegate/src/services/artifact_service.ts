@@ -59,7 +59,7 @@ export class ArtifactService {
       });
     }
 
-    return this.#handleUpload(url, request.body!, tgName);
+    return await this.#handleUpload(url, request.body!, tgName);
   }
 
   #createUploadUrls(

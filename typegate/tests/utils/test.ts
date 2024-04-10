@@ -201,7 +201,7 @@ export class MetaTest {
 
   async terminate() {
     await Promise.all(this.cleanups.map((c) => c()));
-    this.typegates.map(async (typegate) => await typegate.terminate());
+    await Promise.all(this.typegates.map((tg) => tg.deinit()));
   }
 
   async should(

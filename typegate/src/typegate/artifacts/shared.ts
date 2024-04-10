@@ -43,10 +43,6 @@ async function initRemoteUploadUrlStore(
   return { redisClient };
 }
 
-async function deinitRemoteUploadUrlStore(uploadUrls: RemoteUploadUrlStore) {
-  await uploadUrls.redisClient.quit();
-}
-
 function serializeToRedisValue<T>(value: T): string {
   return JSON.stringify(value);
 }
@@ -252,9 +248,8 @@ export class SharedArtifactStore extends ArtifactStore {
     );
   }
 
-  override async close(): Promise<void> {
+  override close(): Promise<void> {
     this.#s3.destroy();
-    await deinitRemoteUploadUrlStore(this.#uploadUrls);
     return Promise.resolve(void null);
   }
 }
