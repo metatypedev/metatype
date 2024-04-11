@@ -133,32 +133,11 @@ export class ArtifactUploader {
     const results = await Promise.allSettled(
       uploadUrls.map(
         async (url, i) => {
-          const result = await this.upload(url, artifactMetas[i]);
-          await this.uploadDeps(artifactMetas[i].hash);
-
-          return result;
+          return await this.upload(url, artifactMetas[i]);
         },
       ),
     );
 
     this.handleUploadErrors(results, artifactMetas);
-  }
-
-  private async uploadDeps(
-    artifactHash: string,
-  ): Promise<void> {
-    const deps = runtimes.getDeps(artifactHash);
-    const depMetas = this.getMetas(deps);
-
-    const depUploadUrls = await this.fetchUploadUrls(depMetas);
-    const results = await Promise.allSettled(
-      depUploadUrls.map(
-        async (url, i) => {
-          return await this.upload(url, depMetas[i]);
-        },
-      ),
-    );
-
-    this.handleUploadErrors(results, depMetas);
   }
 }

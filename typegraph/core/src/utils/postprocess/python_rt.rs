@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{global_store::Store, utils::fs_host};
+use crate::utils::fs_host;
 use common::typegraph::{
     runtimes::{python::ModuleMatData, Artifact},
     utils::{map_from_object, object_from_map},
@@ -17,7 +17,7 @@ impl PostProcessor for PythonProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         for mat in tg.materializers.iter_mut() {
             if mat.name.as_str() == "pymodule" {
-                let mat_data: ModuleMatData =
+                let mut mat_data: ModuleMatData =
                     object_from_map(std::mem::take(&mut mat.data)).map_err(|e| e.to_string())?;
                 let path = PathBuf::from(&mat_data.python_artifact);
 
@@ -46,15 +46,19 @@ impl PostProcessor for PythonProcessor {
                     let dep_abs_path = fs_host::make_absolute(&dep_rel_path)?;
 
                     let (dep_hash, dep_size) = fs_host::hash_file(&dep_abs_path)?;
-                    dep_artifacts.push(Artifact {
+                    let dep_artifact = Artifact {
+                        path: dep_rel_path.clone(),
                         hash: dep_hash,
                         size: dep_size,
-                        path: dep_rel_path,
-                    });
+                    };
+                    tg.meta.artifacts.insert(dep_rel_path, dep_artifact.clone());
+                    dep_artifacts.push(dep_artifact);
                     tg.deps.push(dep_abs_path);
                 }
-
-                Store::register_deps(module_hash, dep_artifacts);
+                mat_data.deps_meta = dep_artifacts
+                    .iter()
+                    .map(|dep| map_from_object(dep).map_err(|e| e.to_string()))
+                    .collect::<Result<Vec<_>, _>>()?;
 
                 mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
             }
