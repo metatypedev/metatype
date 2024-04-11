@@ -65,26 +65,26 @@ Meta.test(
     const port = metaTest.port;
     const gate = `http://localhost:${port}`;
 
+    const { serialized, typegate: gateResponseAdd } = await tgDeploy(tg, {
+      baseUrl: gate,
+      auth,
+      artifactsConfig: {
+        prismaMigration: {
+          globalAction: {
+            create: true,
+            reset: false,
+          },
+          migrationDir: "prisma-migrations",
+        },
+        dir: cwd,
+      },
+      typegraphPath: path.join(cwd, "wasmedge.ts"),
+      secrets: {},
+    });
+
     await metaTest.should("work after deploying artifact to S3", async () => {
       const s3 = new S3Client(syncConfig.s3);
-      assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 0);
-
-      const { serialized, typegate: gateResponseAdd } = await tgDeploy(tg, {
-        baseUrl: gate,
-        auth,
-        artifactsConfig: {
-          prismaMigration: {
-            globalAction: {
-              create: true,
-              reset: false,
-            },
-            migrationDir: "prisma-migrations",
-          },
-          dir: cwd,
-        },
-        typegraphPath: path.join(cwd, "wasmedge.ts"),
-        secrets: {},
-      });
+      assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 2);
 
       assertExists(serialized, "serialized has a value");
       assertEquals(gateResponseAdd, {
@@ -109,6 +109,41 @@ Meta.test(
         })
         .on(engine);
 
+      await engine.terminate();
+      s3.destroy();
+    });
+
+    await metaTest.should("work with multiple typegate instances", async () => {
+      const s3 = new S3Client(syncConfig.s3);
+
+      // typegraphs are pushed to s3 whenever pushed to a typegate
+      assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 3);
+
+      const engine = await metaTest.engineFromDeployed(serialized);
+
+      await gql`
+      query {
+        test_wasi_ts(a: 11, b: 12)
+      }
+    `
+        .expectData({
+          test_wasi_ts: 23,
+        })
+        .on(engine);
+
+      // second engine on the other typegate instance
+      const engine2 = await metaTest.engineFromDeployed(serialized);
+
+      await gql`
+        query {
+          test_wasi_ts(a: 15, b: 2)
+        }
+      `
+        .expectData({
+          test_wasi_ts: 17,
+        })
+        .on(engine2);
+
       const { typegate: gateResponseRem } = await tgRemove(tg, {
         baseUrl: gate,
         auth,
@@ -117,63 +152,8 @@ Meta.test(
       assertEquals(gateResponseRem, { data: { removeTypegraphs: true } });
 
       await engine.terminate();
+      await engine2.terminate();
       s3.destroy();
     });
   },
 );
-
-// Meta.test(
-//   {
-//     name: "WasmEdge Runtime typescript SDK: Multiple typegate instances",
-//     syncConfig,
-//     async setup() {
-//       await cleanUp();
-//     },
-//     async teardown() {
-//       await cleanUp();
-//     },
-//     port: true,
-//     multipleTypegates: 3,
-//   },
-//   async (metaTest) => {
-//     const port = metaTest.port;
-//     const gate = `http://localhost:${port}`;
-//     await metaTest.should("work with multiple typegate instances", async () => {
-//       const s3 = new S3Client(syncConfig.s3);
-//       assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 0);
-
-//       const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
-//         baseUrl: gate,
-//         auth,
-//         artifactsConfig: {
-//           prismaMigration: {
-//             globalAction: {
-//               create: true,
-//               reset: false,
-//             },
-//             migrationDir: "prisma-migrations",
-//           },
-//           dir: cwd,
-//         },
-//         typegraphPath: path.join(cwd, "wasmedge.ts"),
-//         secrets: {},
-//       });
-
-//       assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 1);
-
-//       const engine = await metaTest.engineFromDeployed(serialized);
-
-//       await gql`
-//       query {
-//         test_wasi_ts(a: 11, b: 2)
-//       }
-//     `
-//         .expectData({
-//           test_wasi_ts: 13,
-//         })
-//         .on(engine);
-//       await engine.terminate();
-//       s3.destroy();
-//     });
-//   },
-// );
