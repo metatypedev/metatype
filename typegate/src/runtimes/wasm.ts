@@ -89,7 +89,6 @@ export class WasmRuntime extends Runtime {
           },
         ),
       );
-      console.log("CAN ROOT", res);
       return JSON.parse(res);
     };
   }

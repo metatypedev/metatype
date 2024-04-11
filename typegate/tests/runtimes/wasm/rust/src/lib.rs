@@ -19,23 +19,25 @@ impl Guest for MyHost {
     fn record_creation() -> Vec<SomeEntity> {
         let a = SomeEntity {
             name: format!("Entity A"),
-            category: Category::A,
             age: None,
-            level: Level::Bronze,
-            attributes: Capabilities::from_bits_truncate(0b010),
+            profile: Profile {
+                category: Category::A,
+                level: Level::Bronze,
+                attributes: Capabilities::from_bits_truncate(0b010),
+                metadatas: vec![("strength".to_string(), 3.14)],
+            },
         };
         let b = SomeEntity {
             name: format!("Entity B"),
-            category: Category::B("bbb".to_string()),
             age: Some(11),
-            level: Level::Gold,
-            attributes: Capabilities::all(),
+            profile: Profile {
+                category: Category::B("bbb".to_string()),
+                level: Level::Gold,
+                attributes: Capabilities::all(),
+                metadatas: vec![],
+            },
         };
         vec![a, b]
-    }
-
-    fn output_coercion() -> (f32, u64, String, char) {
-        (0.3333, 1234, "hello from wit".to_string(), 'A')
     }
 }
 export!(MyHost);

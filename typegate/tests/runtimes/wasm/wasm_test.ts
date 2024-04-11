@@ -85,9 +85,12 @@ Meta.test({
           record {
             name
             age
-            level
-            attributes
-            category { tag value }
+            profile {
+              level
+              attributes
+              category { tag value }
+              metadatas
+            }
           }
         }
       `
@@ -97,16 +100,22 @@ Meta.test({
                 {
                   name: "Entity A",
                   age: null,
-                  attributes: ["defend"],
-                  level: "bronze",
-                  category: { tag: "a", value: null },
+                  profile: {
+                    attributes: ["defend"],
+                    level: "bronze",
+                    category: { tag: "a", value: null },
+                    metadatas: [["strength", 3.14]],
+                  },
                 },
                 {
                   name: "Entity B",
                   age: 11,
-                  attributes: ["attack", "defend", "cast"],
-                  level: "gold",
-                  category: { tag: "b", value: "bbb" },
+                  profile: {
+                    attributes: ["attack", "defend", "cast"],
+                    level: "gold",
+                    category: { tag: "b", value: "bbb" },
+                    metadatas: [],
+                  },
                 },
               ],
             },

@@ -15,24 +15,21 @@ world host {
     attack, defend, cast
   }
 
+  record profile {
+    category: category,
+    level: level,
+    attributes: capabilities,
+    metadatas: list<tuple<string, f64>>
+  }
+
   record some-entity {
     name: string,
     age: option<u8>,
-    category: category,
-    level: level,
-    attributes: capabilities
+    profile: profile
   }
 
   export add: func(a: f64, b: f64) -> f64;
   export range: func(a: u32, b: u32) -> result<list<u32>, string>;
 
   export record-creation: func() -> list<some-entity>;
-  export output-coercion: func() -> tuple<
-    f32,
-    u64,
-    string,
-    char
-  >;
-
-  // import substract: func() -> string;
 }

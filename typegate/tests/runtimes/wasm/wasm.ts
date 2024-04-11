@@ -10,11 +10,14 @@ export const tg = await typegraph("wasm-ts", (g) => {
   const entity = t.struct({
     name: t.string(),
     age: t.integer().optional(),
-    level: t.enum_(["bronze", "silver", "gold"]), // wit enum
-    attributes: t.list(t.enum_(["attack", "defend", "cast"])), // wit flags
-    category: t.struct({ // wit variant
-      tag: t.enum_(["a", "b", "c"]),
-      value: t.string().optional(),
+    profile: t.struct({
+      level: t.enum_(["bronze", "silver", "gold"]), // wit enum
+      attributes: t.list(t.enum_(["attack", "defend", "cast"])), // wit flags
+      category: t.struct({ // wit variant
+        tag: t.enum_(["a", "b", "c"]),
+        value: t.string().optional(),
+      }),
+      metadatas: t.list(t.list(t.either([t.string(), t.float()]))),
     }),
   });
 
