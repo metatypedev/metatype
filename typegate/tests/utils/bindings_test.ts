@@ -154,8 +154,8 @@ Deno.test("Wasm Wit", async () => {
     func: "add",
     args: [JSON.stringify(1), JSON.stringify(2)],
   };
-  assert(Meta.wasmtimeWit(input) == "3");
+  assert(Meta.wasmtimeWit(input) == "3.0");
 
   const out = await wasmtime_wit(input);
-  assert("Ok" in out && out.Ok.res == "3");
+  assert("Ok" in out && out.Ok.res == "3.0");
 });
