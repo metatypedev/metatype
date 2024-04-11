@@ -1,13 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::utils::fs_host;
+use crate::{global_store::Store, utils::fs_host};
 use common::typegraph::{
-    runtimes::python::ModuleMatData,
+    runtimes::{python::ModuleMatData, Artifact},
     utils::{map_from_object, object_from_map},
     Typegraph,
 };
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use crate::utils::postprocess::PostProcessor;
 
@@ -15,22 +15,48 @@ pub struct PythonProcessor;
 
 impl PostProcessor for PythonProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
-        let tg_name = tg.name().unwrap();
         for mat in tg.materializers.iter_mut() {
             if mat.name.as_str() == "pymodule" {
-                let mut mat_data: ModuleMatData =
+                let mat_data: ModuleMatData =
                     object_from_map(std::mem::take(&mut mat.data)).map_err(|e| e.to_string())?;
-                let path = &mat_data.artifact;
+                let path = PathBuf::from(&mat_data.python_artifact);
 
-                let main_path = fs_host::make_absolute(&PathBuf::from(path))?;
-                let artifact_name = Path::new(path).file_name().unwrap().to_str().unwrap();
-                mat_data.artifact = artifact_name.into();
-                mat_data.tg_name = Some(tg_name.clone());
+                if tg.meta.artifacts.contains_key(&path) {
+                    continue;
+                }
 
-                // TODO: push artifact to meta.artifacts
+                let python_module_path = fs_host::make_absolute(&path)?;
+
+                let (module_hash, size) = fs_host::hash_file(&python_module_path.clone())?;
+
+                tg.deps.push(python_module_path);
+                tg.meta.artifacts.insert(
+                    path.clone(),
+                    Artifact {
+                        hash: module_hash.clone(),
+                        size,
+                        path,
+                    },
+                );
+
+                let deps = mat_data.deps.clone();
+                let mut dep_artifacts = vec![];
+                for dep in deps {
+                    let dep_rel_path = PathBuf::from(dep);
+                    let dep_abs_path = fs_host::make_absolute(&dep_rel_path)?;
+
+                    let (dep_hash, dep_size) = fs_host::hash_file(&dep_abs_path)?;
+                    dep_artifacts.push(Artifact {
+                        hash: dep_hash,
+                        size: dep_size,
+                        path: dep_rel_path,
+                    });
+                    tg.deps.push(dep_abs_path);
+                }
+
+                Store::register_deps(module_hash, dep_artifacts);
 
                 mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
-                tg.deps.push(main_path);
             }
         }
         Ok(())

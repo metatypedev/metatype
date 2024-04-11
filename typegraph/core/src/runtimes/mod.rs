@@ -24,7 +24,9 @@ use crate::runtimes::typegraph::TypegraphOperation;
 use crate::t::TypeBuilder;
 use crate::validation::types::validate_value;
 use crate::wit::aws::S3RuntimeData;
-use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreTypeId};
+use crate::wit::core::{
+    Artifact as WitArtifact, FuncParams, MaterializerId, RuntimeId, TypeId as CoreTypeId,
+};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
     MaterializerHttpRequest, PrismaLinkData, PrismaMigrationOperation, PrismaRuntimeData,
@@ -340,8 +342,11 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         Ok(Store::register_materializer(mat))
     }
 
-    fn get_deps(artifact_hash: String) -> Result<Vec<wit::ModuleDependencyMeta>, wit::Error> {
-        Ok(Store::get_deps(artifact_hash))
+    fn get_deps(artifact_hash: String) -> Result<Vec<WitArtifact>, wit::Error> {
+        Ok(Store::get_deps(artifact_hash)
+            .iter()
+            .map(|artifact| WitArtifact::from(artifact.clone()))
+            .collect::<Vec<WitArtifact>>())
     }
 
     fn register_random_runtime(

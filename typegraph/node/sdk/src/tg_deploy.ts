@@ -60,8 +60,6 @@ export async function tgDeploy(
     headers.append("Authorization", auth.asHeaderValue());
   }
 
-  // console.log("****************T", tgJson);
-
   // upload the artifacts
   const suffix = `${typegraph.name}/artifacts/upload-urls`;
   const createUploadUrlEndpoint = new URL(suffix, baseUrl);
@@ -144,6 +142,16 @@ export async function tgDeploy(
   if (errors > 0) {
     throw new Error(`Failed to upload ${errors} artifacts`);
   }
+
+  const artifact_uploader = new ArtifactUploader(
+    baseUrl,
+    refArtifacts,
+    typegraph.name,
+    auth,
+    headers,
+    params.typegraphPath,
+  );
+  await artifact_uploader.uploadArtifacts();
 
   // deploy the typegraph
   const response = await fetch(new URL("/typegate", baseUrl), {
