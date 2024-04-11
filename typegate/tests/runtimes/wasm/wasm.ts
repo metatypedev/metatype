@@ -7,27 +7,35 @@ import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.js";
 export const tg = await typegraph("wasm-ts", (g) => {
   const pub = Policy.public();
   const wasm = new WasmRuntime();
+  const entity = t.struct({
+    name: t.string(),
+    age: t.integer().optional(),
+    level: t.enum_(["bronze", "silver", "gold"]), // wit enum
+    attributes: t.list(t.enum_(["attack", "defend", "cast"])), // wit flags
+    category: t.struct({ // wit variant
+      tag: t.enum_(["a", "b", "c"]),
+      value: t.string().optional(),
+    }),
+  });
 
   g.expose({
-    // expose the wasi materializer
-    testWitAdd: wasm
+    add: wasm
       .fromWasm(
         t.struct({ "a": t.float(), "b": t.float() }),
         t.integer(),
         { func: "add", wasm: "rust.wasm" },
       ).withPolicy(pub),
-    testWitList: wasm
+    range: wasm
       .fromWasm(
         t.struct({ "a": t.integer(), "b": t.integer() }),
         t.list(t.integer()),
         { func: "range", wasm: "rust.wasm" },
       ).withPolicy(pub),
-    // TODO: handle enum, variants (decide on the format) and object output
-    // testWitComplexOut: wasm
-    //   .fromWasm(
-    //     t.struct({}),
-    //     t.list(t.integer()),
-    //     { func: "complex-output", wasm: "rust.wasm" },
-    //   ).withPolicy(pub),
+    record: wasm
+      .fromWasm(
+        t.struct({}),
+        t.list(entity),
+        { func: "record-creation", wasm: "rust.wasm" },
+      ).withPolicy(pub),
   });
 });

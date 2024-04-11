@@ -56,13 +56,13 @@ Meta.test({
     await t.step("wit bindings", async () => {
       await gql`
           query {
-            testWitAdd(a: 11, b: 2)
-            testWitList(a: 1, b: 4)
+            add(a: 11, b: 2)
+            range(a: 1, b: 4)
           }
       `
         .expectData({
-          testWitAdd: 13,
-          testWitList: [1, 2, 3, 4],
+          add: 13,
+          range: [1, 2, 3, 4],
         })
         .on(engine);
     });
@@ -70,27 +70,50 @@ Meta.test({
     await t.step("wit error should propagate gracefully", async () => {
       await gql`
         query {
-          testWitList(a: 100, b: 1)
+          range(a: 100, b: 1)
         }
       `
         .expectErrorContains("invalid range: 100 > 1")
         .on(engine);
     });
 
-    // await t.step(
-    //   "nested wit output value should deserialize properly",
-    //   async () => {
-    //     await gql`
-    //     query {
-    //       copmlexType()
-    //     }
-    //   `
-    //       .expectBody((body) => {
-    //         console.log(body);
-    //       })
-    //       .on(engine);
-    //   },
-    // );
+    await t.step(
+      "nested wit output value should deserialize properly",
+      async () => {
+        await gql`
+        query {
+          record {
+            name
+            age
+            level
+            attributes
+            category { tag value }
+          }
+        }
+      `
+          .expectData(
+            {
+              record: [
+                {
+                  name: "Entity A",
+                  age: null,
+                  attributes: ["defend"],
+                  level: "bronze",
+                  category: { tag: "a", value: null },
+                },
+                {
+                  name: "Entity B",
+                  age: 11,
+                  attributes: ["attack", "defend", "cast"],
+                  level: "gold",
+                  category: { tag: "b", value: "bbb" },
+                },
+              ],
+            },
+          )
+          .on(engine);
+      },
+    );
 
     await engine.terminate();
   });
