@@ -3,14 +3,15 @@
 
 from base64 import b64encode
 from dataclasses import dataclass
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional
+from typegraph.gen.exports.core import Artifact
 from typegraph.wit import ArtifactResolutionConfig
 
 
 @dataclass
 class FinalizationResult:
     tgJson: str
-    ref_artifacts: List[Tuple[str, str]]
+    ref_artifacts: List[Artifact]
 
 
 @dataclass

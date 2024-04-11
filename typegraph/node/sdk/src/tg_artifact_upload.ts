@@ -32,11 +32,11 @@ export class ArtifactUploader {
   private async fetchUploadUrls(
     artifactMetas: UploadArtifactMeta[],
   ): Promise<Array<string | null>> {
-    const artifactJson = JSON.stringify(artifactMetas);
+    const artifactsJson = JSON.stringify(artifactMetas);
     const response = await fetch(this.getUploadUrl, {
       method: "POST",
       headers: this.headers,
-      body: artifactJson,
+      body: artifactsJson,
     });
 
     if (!response.ok) {

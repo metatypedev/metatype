@@ -3,7 +3,7 @@
 
 import json
 from dataclasses import dataclass
-from typing import Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 from urllib import request
 
 from typegraph.gen.exports.utils import QueryDeployParams
@@ -18,6 +18,7 @@ from typegraph.wit import ArtifactResolutionConfig, store, wit_utils
 class TypegraphDeployParams:
     base_url: str
     artifacts_config: ArtifactResolutionConfig
+    typegraph_path: str
     auth: Optional[BasicAuth] = None
     secrets: Optional[Dict[str, str]] = None
 
@@ -31,12 +32,12 @@ class TypegraphRemoveParams:
 @dataclass
 class DeployResult:
     serialized: str
-    typegate: Union[Dict[str, any], str]
+    typegate: Union[Dict[str, Any], str]
 
 
 @dataclass
 class RemoveResult:
-    typegate: Union[Dict[str, any], str]
+    typegate: Union[Dict[str, Any], str]
 
 
 @dataclass
@@ -64,6 +65,7 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
         tg.name,
         params.auth,
         headers,
+        params.typegraph_path,
     )
     artifact_uploader.upload_artifacts()
 
@@ -114,7 +116,7 @@ def tg_remove(tg: TypegraphOutput, params: TypegraphRemoveParams):
     return RemoveResult(typegate=handle_response(request.urlopen(req).read().decode()))
 
 
-def handle_response(res: any):
+def handle_response(res: Any):
     try:
         return json.loads(res)
     except Exception as _:
