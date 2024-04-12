@@ -112,6 +112,10 @@ export class MetaTest {
     this.cleanups.push(fn);
   }
 
+  get typegate() {
+    return this.typegates.next();
+  }
+
   getTypegraphEngine(name: string): QueryEngine | undefined {
     return this.typegates.next().register.get(name);
   }

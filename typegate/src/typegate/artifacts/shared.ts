@@ -52,11 +52,7 @@ function serializeToRedisValue<T>(value: T): string {
 }
 
 function deserializeToCustom<T>(value: string): T {
-  try {
-    return JSON.parse(value) as T;
-  } catch (error) {
-    throw error;
-  }
+  return JSON.parse(value) as T;
 }
 
 function resolveS3Key(hash: string) {

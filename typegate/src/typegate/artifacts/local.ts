@@ -19,7 +19,12 @@ export interface UploadUrlStore {
   expirationTimerId: number;
 }
 
+/**
+ * Initialize Upload URLs store. The URL store holds the upload URLs used for persisiting artifacts. Each URL is mapped to the Artifact Meta to be uploaded. The store uses an Expiration Queue to keep track of expiration status of URLs and discards the URLs upon expiration.
+ * @returns URL to Artifact Meta map, URL expiration queue and expiration timer Id
+ */
 function initUploadUrlStore() {
+  // stores one to one mapping between upload URLs and
   const mapToMeta = new Map<string, ArtifactMeta>();
   const expirationQueue: [string, number][] = [];
   const expirationTimerId = setInterval(() => {

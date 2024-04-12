@@ -1,6 +1,6 @@
 {
   "version": "0",
-  "platform": "x86_64-linux",
+  "platform": "aarch64-darwin",
   "moduleEntries": {
     "ports": {
       "version": "0",
@@ -434,7 +434,6 @@
             "dd83a99f49f3f0fba11cdd014ff718cc9539316b",
             "4d1916871a40b6ac730709f7721f740df192c84d",
             "4df902463d60efc5b8e760ea4899f6ab6df0f16e",
-            "88f6aa5ddb513712623d31a17096ea26286064da",
             "40d9babcd5c8e79379e58dbc2f2a967ef68fbb09",
             "5549508f1f5eddf9cb2465f07cf0c7603dc0c849",
             "5c041a4209ae50657ea5acacc26683688f2913a9",
@@ -848,25 +847,6 @@
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/npmi.ts"
           },
           "packageName": "node-gyp"
-        },
-        "88f6aa5ddb513712623d31a17096ea26286064da": {
-          "version": "v2.4.0",
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "mold_ghrel",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "tar_aa"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/mold.ts"
-          },
-          "replaceLd": false
         },
         "40d9babcd5c8e79379e58dbc2f2a967ef68fbb09": {
           "version": "3.8.18",
