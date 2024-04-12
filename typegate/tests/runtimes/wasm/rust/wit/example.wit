@@ -30,6 +30,6 @@ world host {
 
   export add: func(a: f64, b: f64) -> f64;
   export range: func(a: u32, b: u32) -> result<list<u32>, string>;
-
+  export identity: func(inp: some-entity) -> some-entity;
   export record-creation: func() -> list<some-entity>;
 }

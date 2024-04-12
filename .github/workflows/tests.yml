@@ -316,7 +316,7 @@ jobs:
           NPM_CONFIG_REGISTRY=http://localhost:4873 deno cache --import-map typegate/import_map.json \
             typegate/src/main.ts \
             typegate/tests/utils/*.ts \
-            typegate/tests/runtimes/wasmedge/*.ts \
+            typegate/tests/runtimes/wasm/*.ts \
             dev/deps.ts \
             dev/utils.ts
           deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov

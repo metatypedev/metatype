@@ -53,7 +53,7 @@ pub fn op_wasmtime_wit(#[serde] input: WasmInput) -> Result<String> {
     // 1. Number can coerce to a u32, bool, f64
     // 2. String "h" can coerce to char 'h'
     // 3. [1, 2, "3"] can coerce to tuple<f64, u8, string>
-    let hint_params = func
+    let canonical_ty = func
         .params(&mut store)
         .iter()
         .map(|v| v.to_owned())
@@ -62,7 +62,12 @@ pub fn op_wasmtime_wit(#[serde] input: WasmInput) -> Result<String> {
     let params = args
         .iter()
         .enumerate()
-        .map(|(pos, value)| value_to_wasmtime_val(value, hint_params.get(pos).cloned()))
+        .map(|(pos, value)| {
+            let canonical_ty = canonical_ty
+                .get(pos)
+                .context(format!("wit argument at pos {pos} is inexistent"))?;
+            value_to_wasmtime_val(value, canonical_ty)
+        })
         .collect::<Result<Vec<_>>>()?;
 
     let mut output = func

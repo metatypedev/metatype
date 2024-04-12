@@ -16,6 +16,10 @@ impl Guest for MyHost {
         Ok(Vec::from_iter(a..=b))
     }
 
+    fn identity(input: SomeEntity) -> SomeEntity {
+        input
+    }
+
     fn record_creation() -> Vec<SomeEntity> {
         let a = SomeEntity {
             name: format!("Entity A"),
