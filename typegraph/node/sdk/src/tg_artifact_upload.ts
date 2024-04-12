@@ -129,7 +129,6 @@ export class ArtifactUploader {
     const artifactMetas = this.getMetas(this.refArtifacts);
 
     const uploadUrls = await this.fetchUploadUrls(artifactMetas);
-
     const results = await Promise.allSettled(
       uploadUrls.map(
         async (url, i) => {

@@ -14,6 +14,12 @@ import * as ast from "graphql/ast";
 
 const logger = getLogger(import.meta);
 
+interface Artifact {
+  path: string;
+  hash: string;
+  size: number;
+}
+
 function generateVmIdentifier(mat: Materializer, uuid: string) {
   const { mod } = mat.data ?? {};
   let identifier = "";
@@ -71,34 +77,40 @@ export class PythonWasiRuntime extends Runtime {
           const pyModMat = typegraph.materializers[m.data.mod as number];
 
           // resolve the python module artifacts/files
-          const { pythonArtifact, _depsMeta } = pyModMat.data;
+          const { pythonArtifact, depsMeta: depArtifacts } = pyModMat.data;
 
-          // const deserialized_deps_meta =
+          const deps = depArtifacts as Artifact[];
 
-          // const repr = await structureRepr(code);
           const vmId = generateVmIdentifier(m, uuid);
 
-          const modName = basename(pythonArtifact as string);
+          const artifact = pythonArtifact as Artifact;
+          const modName = basename(artifact.path);
 
           // TODO: move this logic to postprocess or python runtime
-          // m.data.name = `${modName}.${m.data.name as string}`;
-
+          m.data.name = `${modName}.${m.data.name as string}`;
+          console.log("*************", m.data.name);
           logger.info(`setup vm "${vmId}" for module ${modName}`);
           const vm = new PythonVirtualMachine();
 
           // for python modules, imports must be inside a folder above or same directory
-          const _typegraph = typegate.register.get(typegraphName)!;
-          const artifact =
-            _typegraph.tg.tg.meta.artifacts[pythonArtifact as string];
           const artifactMeta = {
             typegraphName: typegraphName,
             relativePath: artifact.path,
             hash: artifact.hash,
             sizeInBytes: artifact.size,
           };
+          const depMetas = deps.map((dep) => {
+            return {
+              typegraphName: typegraphName,
+              relativePath: dep.path,
+              hash: dep.hash,
+              sizeInBytes: dep.size,
+            };
+          });
 
           const entryPointFullPath = await typegate.artifactStore.getLocalPath(
             artifactMeta,
+            depMetas,
           );
           const sourceCode = Deno.readTextFileSync(entryPointFullPath);
 

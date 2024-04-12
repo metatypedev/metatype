@@ -342,12 +342,12 @@ Meta.test({
     await gql`
       query {
         identityMod(input: {
-           a: "hello",
-           b: [1, 2, "three"],
-         }) {
-           a
-           b
-         }
+          a: "hello",
+          b: [1, 2, "three"],
+        }) {
+          a
+          b
+        }
       }
     `
       .expectData({

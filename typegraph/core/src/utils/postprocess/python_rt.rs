@@ -19,7 +19,9 @@ impl PostProcessor for PythonProcessor {
             if mat.name.as_str() == "pymodule" {
                 let mut mat_data: ModuleMatData =
                     object_from_map(std::mem::take(&mut mat.data)).map_err(|e| e.to_string())?;
-                let path = PathBuf::from(&mat_data.python_artifact);
+                let path = mat_data.python_artifact.get("path").unwrap();
+                let path: PathBuf = path.as_str().unwrap().into();
+                // eprint(&format!("***************** {}", path_value));
 
                 if tg.meta.artifacts.contains_key(&path) {
                     continue;
@@ -35,7 +37,7 @@ impl PostProcessor for PythonProcessor {
                     Artifact {
                         hash: module_hash.clone(),
                         size,
-                        path,
+                        path: path.clone(),
                     },
                 );
 
@@ -55,6 +57,14 @@ impl PostProcessor for PythonProcessor {
                     dep_artifacts.push(dep_artifact);
                     tg.deps.push(dep_abs_path);
                 }
+
+                mat_data.python_artifact = map_from_object(Artifact {
+                    hash: module_hash.clone(),
+                    size,
+                    path,
+                })
+                .map_err(|e| e.to_string())?;
+
                 mat_data.deps_meta = Some(
                     dep_artifacts
                         .iter()

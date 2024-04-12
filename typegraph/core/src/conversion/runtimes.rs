@@ -230,9 +230,11 @@ impl MaterializerConverter for PythonMaterializer {
             }
             Module(module) => {
                 let data = serde_json::from_value(json!({
-                    "python_artifact": module.file,
+                    "pythonArtifact":json!({
+                        "path": module.file
+                    }),
                     "deps": module.deps,
-                    "deps_meta": None::<serde_json::Value>,
+                    "depsMeta": None::<serde_json::Value>,
                 }))
                 .map_err(|e| e.to_string())?;
 
