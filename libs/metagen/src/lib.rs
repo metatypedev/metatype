@@ -50,7 +50,14 @@ pub trait InputResolver {
 }
 
 #[derive(Debug)]
-pub struct GeneratorOutput(pub HashMap<PathBuf, String>);
+pub struct GeneratedFile {
+    // pub path: PathBuf,
+    pub contents: String,
+    pub overwrite: bool,
+}
+
+#[derive(Debug)]
+pub struct GeneratorOutput(pub HashMap<PathBuf, GeneratedFile>);
 
 trait Plugin: Send + Sync {
     fn bill_of_inputs(&self) -> HashMap<String, GeneratorInputOrder>;
@@ -67,7 +74,7 @@ pub async fn generate_target(
     config: &config::Config,
     target_name: &str,
     resolver: impl InputResolver + Send + Sync + Clone + 'static,
-) -> anyhow::Result<HashMap<PathBuf, String>> {
+) -> anyhow::Result<GeneratorOutput> {
     let generators = [
         // builtin generators
         (
@@ -132,5 +139,5 @@ pub async fn generate_target(
         .into_iter()
         .map(|(path, (_, buf))| (path, buf))
         .collect();
-    Ok(out)
+    Ok(GeneratorOutput(out))
 }

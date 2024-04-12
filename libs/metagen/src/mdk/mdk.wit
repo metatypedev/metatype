@@ -20,20 +20,27 @@ interface mat {
 
   handle: func(req: req) -> res;
 
+  record mat-info {
+    op-name: string,
+    mat-title: string,
+    mat-hash: string,
+    mat-data: string,
+  }
+
   record init-args {
-  }
-
-  record mat-tag {
-    title: string,
-    hash: string,
-  }
-
-  record init-res {
     metatype-version: string,
-    implemented-mats: list<mat-tag>
+    expected-ops: list<mat-info>
   }
 
-  init: func(args: init-args) -> init-res;
+  record init-response {}
+
+  variant init-error {
+    version-mismatch(string),
+    unexpected-mat(mat-info),
+    other(string)
+  }
+
+  init: func(args: init-args) -> result<init-response, init-error>;
 }
 
 world wasi-mat {

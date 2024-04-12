@@ -17,8 +17,10 @@ pub struct MdkRustGenConfig {
     pub base: crate::config::MdkGeneratorConfigBase,
     #[garde(skip)]
     pub stubbed_runtimes: Option<Vec<String>>,
-    #[garde(skip)]
-    pub no_crate_manifest: Option<bool>,
+    #[garde(length(min = 1))]
+    crate_name: Option<String>,
+    // #[garde(skip)]
+    // pub no_crate_manifest: Option<bool>,
 }
 
 pub struct Generator {
@@ -69,18 +71,24 @@ impl crate::Plugin for Generator {
         };
         let mut out = HashMap::new();
         out.insert(
-            self.config.base.path.join("mod.rs"),
-            gen_mod_rs(&self.config, tg)?,
+            self.config.base.path.join("gen.rs"),
+            GeneratedFile {
+                contents: gen_mod_rs(&self.config, tg)?,
+                overwrite: true,
+            },
         );
-        if self.config.no_crate_manifest.unwrap_or(true) {
+        let crate_name = self.config.crate_name.clone().unwrap_or_else(|| {
             use heck::ToSnekCase;
             let tg_name = tg.name().unwrap_or_else(|_| "generated".to_string());
-            let crate_name = format!("{}_mdk", tg_name.to_snek_case());
-            out.insert(
-                self.config.base.path.join("Cargo.toml"),
-                gen_cargo_toml(Some(&crate_name)),
-            );
-        }
+            format!("{}_mdk", tg_name.to_snek_case())
+        });
+        out.insert(
+            self.config.base.path.join("Cargo.toml"),
+            GeneratedFile {
+                contents: gen_cargo_toml(Some(&crate_name)),
+                overwrite: false,
+            },
+        );
         Ok(GeneratorOutput(out))
     }
 }
@@ -108,13 +116,14 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
             &[],
         )?;
     }
-    if let Some(stubbed_rts) = &config.stubbed_runtimes {
-        let stubbed_funs = filter_stubbed_funcs(tg, stubbed_rts)?;
-        let gen_stub_opts = stubs::GenStubOptions {};
-        for fun in &stubbed_funs {
-            _ = stubs::gen_stub(fun, &mut mod_rs, &ty_memo, &gen_stub_opts)
-        }
+    let gen_stub_opts = stubs::GenStubOptions {};
+    let stubbed_rts = config.stubbed_runtimes.clone().unwrap_or_default();
+    let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts)?;
+    for fun in &stubbed_funs {
+        _ = stubs::gen_stub(fun, &mut mod_rs, &ty_memo, &gen_stub_opts)
     }
+    // TODO: op_to_mat_map
+    stubs::gen_op_to_mat_map(&Default::default(), &mut mod_rs, &ty_memo, &gen_stub_opts)?;
     Ok(mod_rs.buf)
 }
 
@@ -131,7 +140,9 @@ pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
 pub fn gen_static(dest: &mut GenDestBuf) -> anyhow::Result<Arc<str>> {
     use std::fmt::Write;
 
-    let mod_rs = include_str!("static/mod.rs");
+    let mod_rs = include_str!("static/gen.rs").to_string();
+    let mod_rs = mod_rs.replace("__METATYPE_VERSION__", std::env!("CARGO_PKG_VERSION"));
+
     let mdk_wit = include_str!("../mdk/mdk.wit");
     writeln!(&mut dest.buf, "// gen-static-start")?;
     write!(
@@ -142,8 +153,7 @@ pub fn gen_static(dest: &mut GenDestBuf) -> anyhow::Result<Arc<str>> {
     writeln!(
         &mut dest.buf,
         r#"
-        inline: "{mdk_wit}"
-"#
+        inline: "{mdk_wit}""#
     )?;
     write!(
         &mut dest.buf,
@@ -167,12 +177,12 @@ fn mdk_rs_e2e() -> anyhow::Result<()> {
                     "mdk_rust".to_string(),
                     serde_json::to_value(mdk_rust::MdkRustGenConfig {
                         stubbed_runtimes: None,
-                        no_crate_manifest: None,
+                        crate_name: None,
                         base: config::MdkGeneratorConfigBase {
                             typegraph_name: Some(tg_name.into()),
                             typegraph_path: None,
                             // NOTE: root will map to the test's tempdir
-                            path: "./gen/".into(),
+                            path: "./".into(),
                         },
                     })?,
                 )]

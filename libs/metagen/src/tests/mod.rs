@@ -61,10 +61,10 @@ pub async fn e2e_test(cases: Vec<E2eTestCase>) -> anyhow::Result<()> {
             typegraphs: typegraphs.clone(),
         };
         let files = crate::generate_target(&case.config, &case.target, test_cx).await?;
-        for (path, buf) in files {
+        for (path, buf) in files.0 {
             let path = tmp_dir.join(path);
             tokio::fs::create_dir_all(path.parent().unwrap()).await?;
-            tokio::fs::write(path, buf).await?;
+            tokio::fs::write(path, buf.contents).await?;
         }
         // compile
         (case.build_fn)(BuildArgs {

@@ -110,10 +110,12 @@ impl Action for Gen {
             GeneratorOp::Mdk => {
                 let files = metagen::generate_target(mgen_conf, &self.gen_target, resolver).await?;
                 let mut set = tokio::task::JoinSet::new();
-                for (path, file) in files {
+                for (path, file) in files.0 {
                     set.spawn(async move {
                         tokio::fs::create_dir_all(path.parent().unwrap()).await?;
-                        tokio::fs::write(path, file).await?;
+                        if file.overwrite || !tokio::fs::try_exists(&path).await? {
+                            tokio::fs::write(path, file.contents).await?;
+                        }
                         Ok::<_, tokio::io::Error>(())
                     });
                 }

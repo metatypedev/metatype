@@ -3,7 +3,7 @@ package.edition = "2021"
 package.version = "0.0.1"
 
 [lib]
-path = "mod.rs"
+path = "lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
