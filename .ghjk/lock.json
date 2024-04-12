@@ -1,6 +1,6 @@
 {
   "version": "0",
-  "platform": "aarch64-darwin",
+  "platform": "x86_64-linux",
   "moduleEntries": {
     "ports": {
       "version": "0",
@@ -84,11 +84,6 @@
           "portRef": "asdf_plugin_git@0.1.0",
           "pluginRepo": "https://github.com/asdf-community/asdf-cmake"
         },
-        "468769528cbf87576285bfcd000271d6398bf3c2b20083d90105d083d61854ba": {
-          "version": "2.40.1",
-          "depConfigs": {},
-          "portRef": "git_aa@0.1.0"
-        },
         "402fae54fb94ffdba9cd2617602c7b33c55002275f3c3bb588615b01ff0c3c26": {
           "version": "v1.6.4",
           "depConfigs": {},
@@ -99,7 +94,7 @@
           "depConfigs": {},
           "portRef": "temporal_cli_ghrel@0.1.0"
         },
-        "f6c92b4425a3c13dfde7fe516efd376287e66cfa74aefd7b6a7a7bb0f3547a47": {
+        "80635b3a3967246789cc5f09137a8334fcfae9e96d507b6f8143d385093f024f": {
           "version": "0.116.0",
           "depConfigs": {
             "cargo_binstall_ghrel": {
@@ -241,7 +236,7 @@
           "version": "1.0.0",
           "depConfigs": {
             "node_org": {
-              "version": "v21.7.1",
+              "version": "v21.7.2",
               "depConfigs": {
                 "tar_aa": {
                   "version": "1.35",
@@ -256,7 +251,7 @@
           "packageName": "@bytecodealliance/jco"
         },
         "77a0197285cae563176871bd72f2ea24504c195dc596f5c33d4c9cc95eda1fba": {
-          "version": "v21.7.1",
+          "version": "v21.7.2",
           "depConfigs": {
             "tar_aa": {
               "version": "1.35",
@@ -270,7 +265,7 @@
           "version": "10.0.1",
           "depConfigs": {
             "node_org": {
-              "version": "v21.7.1",
+              "version": "v21.7.2",
               "depConfigs": {
                 "tar_aa": {
                   "version": "1.35",
@@ -414,37 +409,6 @@
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "whiz",
           "locked": true
-        },
-        "80635b3a3967246789cc5f09137a8334fcfae9e96d507b6f8143d385093f024f": {
-          "version": "0.116.0",
-          "depConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
-            },
-            "rust_rustup": {
-              "version": "1.76.0",
-              "depConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.0",
-                  "depConfigs": {
-                    "git_aa": {
-                      "version": "2.43.0",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0"
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "wasm-opt",
-          "locked": true
         }
       }
     },
@@ -470,6 +434,7 @@
             "dd83a99f49f3f0fba11cdd014ff718cc9539316b",
             "4d1916871a40b6ac730709f7721f740df192c84d",
             "4df902463d60efc5b8e760ea4899f6ab6df0f16e",
+            "88f6aa5ddb513712623d31a17096ea26286064da",
             "40d9babcd5c8e79379e58dbc2f2a967ef68fbb09",
             "5549508f1f5eddf9cb2465f07cf0c7603dc0c849",
             "5c041a4209ae50657ea5acacc26683688f2913a9",
@@ -883,6 +848,25 @@
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/npmi.ts"
           },
           "packageName": "node-gyp"
+        },
+        "88f6aa5ddb513712623d31a17096ea26286064da": {
+          "version": "v2.4.0",
+          "port": {
+            "ty": "denoWorker@v1",
+            "name": "mold_ghrel",
+            "platforms": [
+              "aarch64-linux",
+              "x86_64-linux"
+            ],
+            "version": "0.1.0",
+            "deps": [
+              {
+                "name": "tar_aa"
+              }
+            ],
+            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/mold.ts"
+          },
+          "replaceLd": false
         },
         "40d9babcd5c8e79379e58dbc2f2a967ef68fbb09": {
           "version": "3.8.18",

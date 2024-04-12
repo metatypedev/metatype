@@ -8,6 +8,9 @@ typegates:
     url: http://localhost:7890
     username: admin
     password: password
+    secrets:
+      my-app:
+        POSTGRES_URL: postgres://user:password@localhost:5432/db?schema=public
 
 typegraphs:
   python:
@@ -16,6 +19,16 @@ typegraphs:
     prisma:
       migrations_path: "migrations"
 ```
+
+## Typegate configuration
+Each typegate node is configured under `typegates.<name>`.
+The typegate node selection is done by the `--target` option in the CLI.
+
+### Named secrets
+Named secrets are used to configure runtimes.
+Their values are provided in the `secrets` section of the configuration file
+directly or indirectly using [lade](https://github.com/zifeo/lade).
+Each secret is defined in `secrets.<typegraph-name>.<secret-name>`.
 
 ## Automatic secret loading support
 

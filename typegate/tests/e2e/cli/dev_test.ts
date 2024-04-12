@@ -57,7 +57,7 @@ Meta.test({
       "--target=dev",
       `--gate=http://localhost:${t.port}`,
       "--secret",
-      `TG_MIGRATION_FAILURE_TEST_POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+      `migration-failure-test:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
     ],
   });
 
@@ -168,7 +168,7 @@ Meta.test({
       "dev",
       "--target=dev",
       `--gate=http://localhost:${t.port}`,
-      `--secret=TG_MIGRATION_FAILURE_TEST_POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+      `--secret=migration-failure-test:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
     ],
   });
 

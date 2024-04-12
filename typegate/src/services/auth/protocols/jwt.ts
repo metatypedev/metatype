@@ -19,7 +19,8 @@ export class JWTAuth extends Protocol {
     _denoRuntime: DenoRuntime,
   ): Promise<Protocol> {
     const { format, algorithm } = auth.auth_data;
-    const sourceEnv = secretManager.secretOrFail(`${auth.name}_JWT`);
+    const authName = auth.name.toLocaleUpperCase();
+    const sourceEnv = secretManager.secretOrFail(`${authName}_JWT`);
     const key = format === "jwk"
       ? JSON.parse(sourceEnv)
       : encoder.encode(sourceEnv);
