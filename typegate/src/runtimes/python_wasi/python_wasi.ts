@@ -71,7 +71,9 @@ export class PythonWasiRuntime extends Runtime {
           const pyModMat = typegraph.materializers[m.data.mod as number];
 
           // resolve the python module artifacts/files
-          const { pythonArtifact, _deps } = pyModMat.data;
+          const { pythonArtifact, _depsMeta } = pyModMat.data;
+
+          // const deserialized_deps_meta =
 
           // const repr = await structureRepr(code);
           const vmId = generateVmIdentifier(m, uuid);

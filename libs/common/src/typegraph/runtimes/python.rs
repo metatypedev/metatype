@@ -9,10 +9,11 @@ use serde_json::Value;
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
 pub struct ModuleMatData {
     pub python_artifact: String,
     pub deps: Vec<String>,
-    pub deps_meta: Vec<IndexMap<String, Value>>,
+    pub deps_meta: Option<Vec<IndexMap<String, Value>>>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

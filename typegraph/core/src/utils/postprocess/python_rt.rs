@@ -55,10 +55,12 @@ impl PostProcessor for PythonProcessor {
                     dep_artifacts.push(dep_artifact);
                     tg.deps.push(dep_abs_path);
                 }
-                mat_data.deps_meta = dep_artifacts
-                    .iter()
-                    .map(|dep| map_from_object(dep).map_err(|e| e.to_string()))
-                    .collect::<Result<Vec<_>, _>>()?;
+                mat_data.deps_meta = Some(
+                    dep_artifacts
+                        .iter()
+                        .map(|dep| map_from_object(dep).map_err(|e| e.to_string()))
+                        .collect::<Result<Vec<_>, _>>()?,
+                );
 
                 mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
             }

@@ -91,14 +91,6 @@ pub struct Queries {
     pub endpoints: Vec<String>,
 }
 
-// #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-// #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-// pub struct DependencyMeta {
-//     pub name: String,
-//     pub dep_hash: String,
-//     pub relative_path_prefix: PathBuf,
-// }
-
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(rename_all = "camelCase")]

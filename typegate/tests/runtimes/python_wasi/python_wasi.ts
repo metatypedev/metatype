@@ -20,8 +20,8 @@ export const tg = await typegraph("python_wasi", async (g: any) => {
       tpe,
       {
         name: "identity",
-        module: "typegate/tests/runtimes/python_wasi/py/hello.py",
-        deps: ["typegate/tests/runtimes/python_wasi/py/nested/dep.py"],
+        module: "py/hello.py",
+        deps: ["py/nested/dep.py"],
       },
     );
   } catch (e) {

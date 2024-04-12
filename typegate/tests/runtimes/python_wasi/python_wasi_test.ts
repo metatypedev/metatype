@@ -8,6 +8,7 @@ import { gql, Meta } from "../../utils/mod.ts";
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 import { testDir } from "test-utils/dir.ts";
 import { tg } from "./python_wasi.ts";
+import * as path from "std/path/mod.ts";
 
 // Meta.test("Python WASI VM performance", async (t) => {
 //   const vm = new PythonVirtualMachine();
@@ -308,12 +309,16 @@ import { tg } from "./python_wasi.ts";
 //   });
 // });
 
-const port = 7698;
-const gate = `http://localhost:${port}`;
-const cwdDir = testDir;
+const cwdDir = path.join(testDir, "runtimes/python_wasi");
 const auth = new BasicAuth("admin", "password");
 
-Meta.test("Python WASI: upload artifacts with deps", async (metaTest) => {
+Meta.test({
+  name: "Python WASI: upload artifacts with deps",
+  port: true,
+}, async (metaTest) => {
+  const port = metaTest.port;
+  const gate = `http://localhost:${port}`;
+
   await metaTest.should("upload artifacts along with deps", async () => {
     const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
       baseUrl: gate,
@@ -328,6 +333,8 @@ Meta.test("Python WASI: upload artifacts with deps", async (metaTest) => {
         },
         dir: cwdDir,
       },
+      typegraphPath: path.join(cwdDir, "python_wasi.ts"),
+      secrets: {},
     });
 
     const engine = await metaTest.engineFromDeployed(serialized);
