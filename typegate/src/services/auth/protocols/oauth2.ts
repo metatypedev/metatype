@@ -104,9 +104,10 @@ export class OAuth2Auth extends Protocol {
     secretManager: SecretManager,
     authParameters: AdditionalAuthParams,
   ): Promise<Protocol> {
-    const clientId = secretManager.secretOrFail(`${auth.name}_CLIENT_ID`);
+    const authName = auth.name.toUpperCase();
+    const clientId = secretManager.secretOrFail(`${authName}_CLIENT_ID`);
     const clientSecret = secretManager.secretOrFail(
-      `${auth.name}_CLIENT_SECRET`,
+      `${authName}_CLIENT_SECRET`,
     );
     const { authorize_url, access_url, scopes, profile_url, profiler } =
       auth.auth_data;

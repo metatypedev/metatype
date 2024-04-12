@@ -57,7 +57,7 @@ async fn config(req: HttpRequest) -> impl Responder {
     artefact_base_dir.pop(); // pop file.ext
 
     let endpoint = ServerStore::get_endpoint();
-    let secrets = ServerStore::get_secrets();
+    let secrets = ServerStore::get_secrets(&parsed.typegraph);
     let migration_action_glob = ServerStore::get_migration_action_glob();
     let disable_artifact_resolution = !ServerStore::get_artifact_resolution_flag();
     let codegen = ServerStore::get_codegen_flag();
