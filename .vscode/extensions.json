@@ -13,6 +13,7 @@
         "chrischinchilla.vale-vscode",
         "hediet.vscode-drawio",
         "davidlday.languagetool-linter",
-        "dtsvet.vscode-wasm"
+        "dtsvet.vscode-wasm",
+        "bierner.comment-tagged-templates"
     ]
 }

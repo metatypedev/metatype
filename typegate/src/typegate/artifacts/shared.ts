@@ -4,47 +4,23 @@
 import { connect, Redis, RedisConnectOptions } from "redis";
 import { createHash } from "node:crypto";
 import { S3 } from "aws-sdk/client-s3";
-import { getLocalPath, STORE_DIR, STORE_TEMP_DIR } from "./mod.ts";
+import {
+  ArtifactPersistence,
+  RefCounter,
+  UploadEndpointManager,
+} from "./mod.ts";
 import { ArtifactMeta, ArtifactStore } from "./mod.ts";
 import { HashTransformStream } from "../../utils/hash.ts";
-import { resolve } from "std/path/resolve.ts";
 import { SyncConfig } from "../../sync/config.ts";
-import { readAll } from "https://deno.land/std@0.129.0/streams/conversion.ts";
-import config from "../../config.ts";
+import { LocalArtifactPersistence } from "./local.ts";
+import { exists } from "std/fs/exists.ts";
 
 export interface RemoteUploadUrlStore {
   redisClient: Redis;
 }
 
-const setCmd = `
-local key = KEYS[1]
-local value = ARGV[1]
-local expirationTime = ARGV[2]
-
-redis.call('HSET', key, 'url', value)
-redis.call('EXPIRE', key, expirationTime)
-`.trim();
-const existsCmd = `
-local key = KEYS[1]
-
-local exists = redis.call('EXISTS', key)
-return exists
-`.trim();
-
-function resolveRedisUrlKey(url: string) {
-  return `articact-upload-urls:${url}`;
-}
-
-async function initRemoteUploadUrlStore(
-  redisConfig: RedisConnectOptions,
-): Promise<RemoteUploadUrlStore> {
-  const redisClient = await connect(redisConfig);
-
-  return { redisClient };
-}
-
-async function deinitRemoteUploadUrlStore(urlStore: RemoteUploadUrlStore) {
-  await urlStore.redisClient.quit();
+function getRedisUploadUrlKey(token: string) {
+  return `typegate:artifacts:upload-urls:${token}`;
 }
 
 function serializeToRedisValue<T>(value: T): string {
@@ -52,11 +28,7 @@ function serializeToRedisValue<T>(value: T): string {
 }
 
 function deserializeToCustom<T>(value: string): T {
-  try {
-    return JSON.parse(value) as T;
-  } catch (error) {
-    throw error;
-  }
+  return JSON.parse(value) as T;
 }
 
 function resolveS3Key(hash: string) {
@@ -65,67 +37,69 @@ function resolveS3Key(hash: string) {
 
 const REMOTE_ARTIFACT_DIR = "artifacts-cache";
 
-export class SharedArtifactStore extends ArtifactStore {
-  #uploadUrls: RemoteUploadUrlStore;
-  #s3!: S3;
-  #syncConfig: SyncConfig;
-
-  static async init(syncConfig: SyncConfig) {
-    const urlStore = await initRemoteUploadUrlStore(syncConfig.redis);
-    await Deno.mkdir(STORE_DIR, { recursive: true });
-    await Deno.mkdir(STORE_TEMP_DIR, { recursive: true });
-
-    return new SharedArtifactStore(syncConfig, urlStore);
+class SharedArtifactPersistence implements ArtifactPersistence {
+  static async init(
+    baseDir: string,
+    syncConfig: SyncConfig,
+  ): Promise<SharedArtifactPersistence> {
+    const localShadow = await LocalArtifactPersistence.init(baseDir);
+    const s3 = new S3(syncConfig.s3);
+    return new SharedArtifactPersistence(localShadow, s3, syncConfig.s3Bucket);
   }
 
-  constructor(syncConfig: SyncConfig, urlStore: RemoteUploadUrlStore) {
-    super();
-    this.#s3 = new S3(syncConfig.s3);
-    this.#syncConfig = syncConfig;
-    this.#uploadUrls = urlStore;
+  constructor(
+    private localShadow: LocalArtifactPersistence,
+    private s3: S3,
+    private s3Bucket: string,
+  ) {
   }
 
-  override async persist(stream: ReadableStream<any>): Promise<string> {
-    const tmpFile = await Deno.makeTempFile({
-      dir: STORE_TEMP_DIR,
-    });
-    const file = await Deno.open(tmpFile, {
-      write: true,
-      truncate: true,
-    });
+  async [Symbol.asyncDispose]() {
+    await this.localShadow[Symbol.asyncDispose]();
+    this.s3.destroy();
+  }
 
+  async save(stream: ReadableStream<any>): Promise<string> {
     const hasher = createHash("sha256");
-    await stream
-      .pipeThrough(new HashTransformStream(hasher))
-      .pipeTo(file.writable);
+    const stream2 = stream
+      .pipeThrough(new HashTransformStream(hasher));
 
+    const tempKey = resolveS3Key(
+      `tmp/${Math.random().toString(36).substring(2)}`,
+    );
+
+    const _ = await this.s3.putObject({
+      Bucket: this.s3Bucket,
+      Body: stream2,
+      Key: tempKey,
+    });
     const hash = hasher.digest("hex");
 
-    const readFile = await Deno.open(tmpFile, { read: true });
-    // Read file content into a Uint8Array
-    const fileContent = await readAll(readFile);
-    console.log(`Persisting artifact to S3`);
-    const _ = await this.#s3.putObject({
-      Bucket: this.#syncConfig.s3Bucket,
-      Body: fileContent,
+    await this.s3.copyObject({
+      Bucket: this.s3Bucket,
+      CopySource: tempKey,
       Key: resolveS3Key(hash),
     });
-    readFile.close();
+
+    await this.s3.deleteObject({
+      Bucket: this.s3Bucket,
+      Key: tempKey,
+    });
 
     return hash;
   }
 
-  override async delete(hash: string): Promise<void> {
-    const _ = await this.#s3.deleteObject({
-      Bucket: this.#syncConfig.s3Bucket,
+  async delete(hash: string): Promise<void> {
+    await this.s3.deleteObject({
+      Bucket: this.s3Bucket,
       Key: resolveS3Key(hash),
     });
   }
 
-  override async has(hash: string): Promise<boolean> {
+  async has(hash: string): Promise<boolean> {
     try {
-      const _ = await this.#s3.headObject({
-        Bucket: this.#syncConfig.s3Bucket,
+      const _ = await this.s3.headObject({
+        Bucket: this.s3Bucket,
         Key: resolveS3Key(hash),
       });
       return true;
@@ -134,33 +108,20 @@ export class SharedArtifactStore extends ArtifactStore {
     }
   }
 
-  override async getLocalPath(
-    meta: ArtifactMeta,
-    deps?: ArtifactMeta[] | undefined,
-  ): Promise<string> {
-    for (const dep of deps ?? []) {
-      await this.#downloadFromRemote(dep.hash, dep.relativePath);
-      await getLocalPath(dep);
+  async fetch(hash: string): Promise<string> {
+    const targetFile = this.localShadow.resolveCache(hash);
+
+    if (await exists(targetFile)) {
+      return targetFile;
     }
 
-    await this.#downloadFromRemote(meta.hash, meta.relativePath);
-    return await getLocalPath(meta);
-  }
-
-  async #downloadFromRemote(hash: string, relativePath: string) {
-    if (await this.#existsLocally(hash)) {
-      return;
-    }
-    const targetFile = resolve(STORE_DIR, hash);
-    const response = await this.#s3.getObject({
-      Bucket: this.#syncConfig.s3Bucket,
+    const response = await this.s3.getObject({
+      Bucket: this.s3Bucket,
       Key: resolveS3Key(hash),
     });
 
     if (response.$metadata.httpStatusCode === 404) {
-      throw new Error(
-        `Artifact ${relativePath} with hash ${relativePath} not found`,
-      );
+      throw new Error(`Artifact '${hash}' not found`);
     }
 
     if (response.Body) {
@@ -168,92 +129,126 @@ export class SharedArtifactStore extends ArtifactStore {
         (await Deno.open(targetFile, { write: true, create: true })).writable;
       await response.Body.transformToWebStream().pipeTo(file);
     } else {
-      throw new Error(`Failed to download artifact ${relativePath} from s3`);
+      throw new Error(`Failed to download artifact with hash ${hash} from s3`);
     }
+
+    return this.localShadow.fetch(hash);
+  }
+}
+
+class SharedUploadEndpointManager implements UploadEndpointManager {
+  static async init(syncConfig: SyncConfig, expireSec = 5 * 60) {
+    const redis = await connect(syncConfig.redis);
+    return new SharedUploadEndpointManager(redis, expireSec);
   }
 
-  async #existsLocally(hash: string) {
-    try {
-      await Deno.stat(resolve(STORE_DIR, hash));
-      return true;
-    } catch {
-      return false;
-    }
+  private constructor(private redis: Redis, private expireSec: number) {
   }
 
-  override async prepareUpload(
+  async [Symbol.asyncDispose]() {
+    await this.redis.quit();
+  }
+
+  async prepareUpload(
     meta: ArtifactMeta,
     origin: URL,
+    persistence: ArtifactPersistence,
   ): Promise<string | null> {
     // should not be uploaded again
-    if (await this.has(ArtifactStore.getArtifactKey(meta))) {
+    if (await persistence.has(meta.hash)) {
       return null;
     }
-    const [url, _] = await ArtifactStore.createUploadUrl(
+
+    const url = await ArtifactStore.createUploadUrl(
       origin,
       meta.typegraphName,
+      this.expireSec,
     );
-    await this.#addUrlToRedis(
-      url,
-      serializeToRedisValue(meta),
-      config.redis_url_queue_expire_sec,
-    );
-
-    return url;
-  }
-
-  override async takeUploadUrl(
-    url: URL,
-  ): Promise<
-    ArtifactMeta
-  > {
-    ArtifactStore.validateUploadUrl(url);
-
-    const meta = await this.#getUrlFromRedis(url.toString());
-    if (!meta) {
-      throw new Error("Invalid upload URL");
+    const token = url.searchParams.get("token");
+    if (!token) {
+      throw new Error("Invalid upload URL generated");
     }
-
-    await this.#removeFromRedis(url.toString());
-    return Promise.resolve(deserializeToCustom<ArtifactMeta>(meta as string));
-  }
-
-  async #addUrlToRedis(url: string, value: string, expirationDuration: number) {
-    const _ = await this.#uploadUrls.redisClient.eval(
-      setCmd,
-      [resolveRedisUrlKey(url)],
-      [value, expirationDuration],
+    const _ = await this.redis.eval(
+      /* lua */ `
+        redis.call('SET', KEYS[1], ARGV[1])
+        redis.call('EXPIRE', KEYS[1], ARGV[2])
+      `,
+      [getRedisUploadUrlKey(token)],
+      [serializeToRedisValue(meta), this.expireSec],
     );
+
+    return url.toString();
   }
 
-  async #getUrlFromRedis(url: string) {
-    return await this.#uploadUrls.redisClient.eval(
-      "return redis.call('HGET', KEYS[1], ARGV[1])",
-      [resolveRedisUrlKey(url)],
-      ["url"],
-    );
-  }
+  async takeUploadUrl(url: URL): Promise<ArtifactMeta> {
+    const token = await ArtifactStore.validateUploadUrl(url);
 
-  async #existsInRedis(url: string) {
-    return Boolean(
-      await this.#uploadUrls.redisClient.eval(
-        existsCmd,
-        [resolveRedisUrlKey(url)],
-        [],
-      ),
-    );
-  }
-
-  async #removeFromRedis(url: string) {
-    const _ = await this.#uploadUrls.redisClient.eval(
-      "redis.call('DEL', KEYS[1])",
-      [resolveRedisUrlKey(url)],
+    const meta = await this.redis.eval(
+      /* lua */ `
+        local meta = redis.call('GET', KEYS[1])
+        redis.call('DEL', KEYS[1])
+        return meta
+      `,
+      [getRedisUploadUrlKey(token)],
       [],
     );
+    return Promise.resolve(deserializeToCustom<ArtifactMeta>(meta as string));
+  }
+}
+
+const REDIS_REF_COUNTER = "typegate:artifacts:refcounts";
+
+export class SharedArtifactRefCounter implements RefCounter {
+  static async init(
+    redisConfig: RedisConnectOptions,
+  ): Promise<SharedArtifactRefCounter> {
+    return new SharedArtifactRefCounter(await connect(redisConfig));
   }
 
-  override async close(): Promise<void> {
-    this.#s3.destroy();
-    await deinitRemoteUploadUrlStore(this.#uploadUrls);
+  #redisClient: Redis;
+
+  private constructor(redisClient: Redis) {
+    this.#redisClient = redisClient;
   }
+
+  async [Symbol.asyncDispose]() {
+    await this.#redisClient.quit();
+  }
+
+  async increment(key: string) {
+    await this.#redisClient.zincrby(REDIS_REF_COUNTER, 1, key);
+  }
+
+  async decrement(key: string) {
+    await this.#redisClient.zincrby(REDIS_REF_COUNTER, -1, key);
+  }
+
+  async resetAll() {
+    await this.#redisClient.del(REDIS_REF_COUNTER);
+  }
+
+  // TODO we should not remove them until they are garbage collected
+  async takeGarbage(): Promise<string[]> {
+    const keys = await this.#redisClient.eval(
+      /* lua */ `
+        local keys = redis.call('ZRANGEBYSCORE', KEYS[1], '-inf', '0')
+        redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', '0')
+        return keys
+      `,
+      [REDIS_REF_COUNTER],
+      [],
+    );
+
+    return keys as string[];
+  }
+}
+
+export async function createSharedArtifactStore(
+  baseDir: string,
+  syncConfig: SyncConfig,
+): Promise<ArtifactStore> {
+  const persistence = await SharedArtifactPersistence.init(baseDir, syncConfig);
+  const uploadEndpoints = await SharedUploadEndpointManager.init(syncConfig);
+  const refCounter = await SharedArtifactRefCounter.init(syncConfig.redis);
+  return ArtifactStore.init(persistence, uploadEndpoints, refCounter);
 }

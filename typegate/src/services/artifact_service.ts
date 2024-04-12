@@ -95,9 +95,9 @@ export class ArtifactService {
     }
 
     // TODO key?
-    const hash = await this.store.persist(stream);
+    const hash = await this.store.persistence.save(stream);
     if (hash !== meta.hash) {
-      await this.store.delete(hash);
+      await this.store.persistence.delete(hash);
       return new Response(JSON.stringify({ error: "hash mismatch" }), {
         status: 403,
         headers: { "Content-Type": "application/json" },
