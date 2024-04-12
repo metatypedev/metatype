@@ -109,7 +109,6 @@ Meta.test(
         })
         .on(engine);
 
-      await engine.terminate();
       s3.destroy();
     });
 
@@ -151,8 +150,6 @@ Meta.test(
 
       assertEquals(gateResponseRem, { data: { removeTypegraphs: true } });
 
-      await engine.terminate();
-      await engine2.terminate();
       s3.destroy();
     });
   },
