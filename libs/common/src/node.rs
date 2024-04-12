@@ -23,7 +23,6 @@ pub struct Node {
     pub base_url: Url,
     pub prefix: Option<String>,
     pub auth: Option<BasicAuth>,
-    pub env: HashMap<String, String>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -39,13 +38,11 @@ impl Node {
         url: U,
         prefix: Option<String>,
         auth: Option<BasicAuth>,
-        env: HashMap<String, String>,
     ) -> Result<Self> {
         Ok(Self {
             base_url: url.into_url()?,
             prefix,
             auth,
-            env,
         })
     }
 

@@ -42,7 +42,6 @@ export async function createMetaCli(
 ): Promise<MetaCli> {
   const metaCliExe = await getMetaCliExe();
   return (args, options) => {
-    console.log({ options });
     return shell([metaCliExe, ...args], options);
   };
 }

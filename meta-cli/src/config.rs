@@ -56,6 +56,9 @@ pub struct NodeConfig {
     password: Option<String>,
     #[serde(default)]
     pub env: HashMap<String, String>,
+    /// tg_name -> {key -> secret}
+    #[serde(default)]
+    pub secrets: HashMap<String, HashMap<String, String>>,
 }
 
 impl Default for NodeConfig {
@@ -66,6 +69,7 @@ impl Default for NodeConfig {
             username: None,
             password: None,
             env: HashMap::default(),
+            secrets: HashMap::default(),
         }
     }
 }
@@ -97,7 +101,6 @@ impl NodeConfig {
             self.url.clone(),
             self.prefix.clone(),
             Some(self.basic_auth(dir).await.context("basic auth")?.into()),
-            self.env.clone(),
         )
     }
 }
