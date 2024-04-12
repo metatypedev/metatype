@@ -89,6 +89,7 @@ export class WasmRuntime extends Runtime {
           },
         ),
       );
+      console.log("OUTPUT", res);
       return JSON.parse(res);
     };
   }

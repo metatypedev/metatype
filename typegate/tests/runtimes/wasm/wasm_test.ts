@@ -124,6 +124,53 @@ Meta.test({
       },
     );
 
+    await t.step(
+      "support nested wit input",
+      async () => {
+        await gql`
+        query {
+          identity(
+            arg0: {
+              name: "Monster A",
+              age: null,
+              profile: {
+                attributes: ["attack", "defend"],
+                level: "gold",
+                # category: { tag: "a", value: "unexpected" }, # fail!
+                category: { tag: "b", value: "payload" },
+                metadatas: [["a", 1.0], ["b", 1.3]], # list<tuple<string, f64>>
+              }
+            }
+          ) {
+            name
+            age
+            profile {
+              level
+              attributes
+              category { tag value }
+              metadatas
+            }
+          }
+        }
+      `
+          .expectData(
+            {
+              identity: {
+                name: "Monster A",
+                age: null,
+                profile: {
+                  attributes: ["attack", "defend"],
+                  level: "gold",
+                  category: { tag: "b", value: "payload" },
+                  metadatas: [["a", 1.0], ["b", 1.3]],
+                },
+              },
+            },
+          )
+          .on(engine);
+      },
+    );
+
     await engine.terminate();
   });
 });

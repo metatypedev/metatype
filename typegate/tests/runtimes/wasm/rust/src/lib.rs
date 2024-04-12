@@ -9,7 +9,8 @@ impl Guest for MyHost {
         a + b
     }
 
-    fn range(a: u32, b: u32) -> Result<Vec<u32>, String> {
+    fn range(a: Option<u32>, b: u32) -> Result<Vec<u32>, String> {
+        let a = a.unwrap_or(1);
         if a > b {
             return Err(format!("invalid range: {a} > {b}"));
         }

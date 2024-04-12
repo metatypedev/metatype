@@ -30,7 +30,7 @@ export const tg = await typegraph("wasm-ts", (g) => {
       ).withPolicy(pub),
     range: wasm
       .fromWasm(
-        t.struct({ "a": t.integer(), "b": t.integer() }),
+        t.struct({ "a": t.integer().optional(), "b": t.integer() }),
         t.list(t.integer()),
         { func: "range", wasm: "rust.wasm" },
       ).withPolicy(pub),
@@ -39,6 +39,12 @@ export const tg = await typegraph("wasm-ts", (g) => {
         t.struct({}),
         t.list(entity),
         { func: "record-creation", wasm: "rust.wasm" },
+      ).withPolicy(pub),
+    identity: wasm
+      .fromWasm(
+        t.struct({ "arg0": entity }),
+        entity,
+        { func: "identity", wasm: "rust.wasm" },
       ).withPolicy(pub),
   });
 });

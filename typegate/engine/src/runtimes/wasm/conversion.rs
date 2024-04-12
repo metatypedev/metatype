@@ -4,14 +4,14 @@
 use std::collections::HashSet;
 
 use anyhow::{bail, Context};
-use mt_deno::deno::deno_runtime::deno_core::serde_json::{self, json};
+use mt_deno::deno::deno_runtime::deno_core::serde_json;
 use serde::{Deserialize, Serialize};
 use wasmtime::component::{self, Type, Val};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WitVariant {
-    tag: String,
-    value: serde_json::Value,
+    pub tag: String,
+    pub value: serde_json::Value,
 }
 
 /// Provide a dummy value used for *allocating* function call results from a component
@@ -34,13 +34,11 @@ pub fn unlift_type_to_default_value(
         Type::String => Val::String("".into()),
         Type::List(list_ty) => {
             // let content = unlift_type_to_default_value(&list_ty.ty())?;
-            let list = component::List::new(list_ty, vec![].into())?;
-            Val::List(list)
+            list_ty.new_val(vec![].into())?
         }
         Type::Option(option_ty) => {
             let content = unlift_type_to_default_value(&option_ty.ty())?;
-            let option = component::OptionVal::new(option_ty, Some(content))?;
-            Val::Option(option)
+            option_ty.new_val(Some(content))?
         }
         Type::Result(result_ty) => {
             let content = match result_ty.ok() {
@@ -50,8 +48,7 @@ pub fn unlift_type_to_default_value(
                     Err(Some(unlift_type_to_default_value(&err_ty)?))
                 }
             };
-            let result = component::ResultVal::new(result_ty, content)?;
-            Val::Result(result)
+            result_ty.new_val(content)?
         }
         Type::Tuple(tuple_ty) => {
             // tuple<t1, t2, ..>
@@ -59,8 +56,7 @@ pub fn unlift_type_to_default_value(
                 .types()
                 .map(|ty| unlift_type_to_default_value(&ty))
                 .collect::<anyhow::Result<Vec<_>>>()?;
-            let tuple = component::Tuple::new(tuple_ty, out.into())?;
-            Val::Tuple(tuple)
+            tuple_ty.new_val(out.into())?
         }
         Type::Enum(enum_ty) => {
             // enum my-enum { a, b, c, .. }
@@ -68,8 +64,7 @@ pub fn unlift_type_to_default_value(
             if names.is_empty() {
                 bail!("invalid state: enum {:?} has no variant", ty);
             }
-            let enum_ = component::Enum::new(enum_ty, names.first().unwrap())?;
-            Val::Enum(enum_)
+            enum_ty.new_val(names.first().unwrap())?
         }
         Type::Variant(variant_ty) => {
             // variant my-variant { a(b), c(string), d, .. }
@@ -83,8 +78,7 @@ pub fn unlift_type_to_default_value(
                 .clone()
                 .map(|fst_ty| unlift_type_to_default_value(&fst_ty))
                 .map_or(Ok(None), |v| v.map(Some))?;
-            let variant = component::Variant::new(variant_ty, first_case.name, first_payload)?;
-            Val::Variant(variant)
+            variant_ty.new_val(first_case.name, first_payload)?
         }
         Type::Record(record_ty) => {
             // record some-rec { a: string, b: c, d: u8, .. }
@@ -92,10 +86,10 @@ pub fn unlift_type_to_default_value(
                 .fields()
                 .map(|f| unlift_type_to_default_value(&f.ty).map(|val| (f.name, val)))
                 .collect::<anyhow::Result<Vec<(_, _)>>>()?;
-            let record = component::Record::new(record_ty, values)?;
-            Val::Record(record)
+            record_ty.new_val(values)?
         }
-        Type::Flags(_) | Type::Own(_) | Type::Borrow(_) => {
+        Type::Flags(flags) => flags.new_val(&[])?,
+        Type::Own(_) | Type::Borrow(_) => {
             // TODO: research
             bail!("{:?} is currently not supported", ty)
         }
@@ -110,33 +104,19 @@ pub fn object_to_wasmtime_val(
 ) -> anyhow::Result<component::Val> {
     match canonical_ty {
         Type::Record(record) => {
-            let given_names = object
-                .iter()
-                .map(|(name, _)| name.to_owned())
-                .collect::<HashSet<String>>();
-            let canon_names = record
-                .fields()
-                .map(|f| f.name.to_owned())
-                .collect::<HashSet<String>>();
-
-            let extra_fields: Vec<_> = (&given_names - &canon_names).into_iter().collect();
-            let missing_fields: Vec<_> = (&canon_names - &given_names).into_iter().collect();
-            let mut error_messages = vec![];
-            if !extra_fields.is_empty() {
-                error_messages.push(format!("extra fields [{}]", extra_fields.join(", ")));
-            }
-            if !missing_fields.is_empty() {
-                error_messages.push(format!("missing fields [{}]", missing_fields.join(", ")));
-            }
-            if !error_messages.is_empty() {
-                bail!("conversion error: {}", error_messages.join(", "));
-            }
-
             let mut values = vec![];
-            for (k, v) in object.iter() {
-                let field = record.fields().find(|f| f.name == k).unwrap();
-                let converted = value_to_wasmtime_val(v, &field.ty)?;
-                values.push((k as &str, converted));
+            for field in record.fields() {
+                let converted_value = match object.get(field.name) {
+                    Some(value) => value_to_wasmtime_val(value, &field.ty),
+                    None => {
+                        if let Type::Option(option_ty) = field.ty {
+                            option_ty.new_val(None)
+                        } else {
+                            bail!("field '{}' is not optional", field.name);
+                        }
+                    }
+                }?;
+                values.push((field.name, converted_value));
             }
             record.new_val(values)
         }
@@ -156,7 +136,7 @@ pub fn object_to_wasmtime_val(
                     Some(payload_ty) => {
                         if repr.value == serde_json::Value::Null {
                             bail!(
-                                "variant {} expects a payload, none was provided",
+                                "variant '{}' expects a payload, none was provided",
                                 matching_tag.name
                             )
                         }
@@ -165,18 +145,18 @@ pub fn object_to_wasmtime_val(
                     }
                     None => {
                         if repr.value != serde_json::Value::Null {
-                            bail!("variant {} expects no payload", matching_tag.name)
+                            bail!("variant '{}' expects no payload", matching_tag.name)
                         }
                         variant.new_val(matching_tag.name, None)
                     }
                 },
-                None => bail!("none of {} matches {}", canon_tags.join(", "), repr.tag),
+                None => bail!("none of {} matches '{}'", canon_tags.join(", "), repr.tag),
             }
         }
-        // IDEA: coercing a string to an object implies deserialization, this enables t.json()
+        // IDEA: coercing a string to object implies deserialization, this enables t.json()
         // Type::String => todo!(),
         _ => bail!(
-            "cannot coerce {} to {:?}",
+            "cannot coerce '{}' to {:?}",
             serde_json::to_string(object)?,
             canonical_ty
         ),
@@ -223,7 +203,7 @@ pub fn array_to_wasmtime_val(
                 let invalid = Vec::from_iter(not_included);
                 let prop = Vec::from_iter(canon_names);
                 bail!(
-                    "none of {} match of {}",
+                    "none of {} match any of {}",
                     invalid.join(", "),
                     prop.join(", ")
                 );
@@ -236,7 +216,7 @@ pub fn array_to_wasmtime_val(
             flags.new_val(&conv_ordered)
         }
         _ => bail!(
-            "cannot coerce {} to {:?}",
+            "cannot coerce '{}' to {:?}",
             serde_json::to_string(array)?,
             canonical_ty
         ),
@@ -290,11 +270,20 @@ pub fn value_to_wasmtime_val(
                 .map(component::Val::Char)
                 .context(format!("cannot coerce string '{value}' to a char"))?,
             Type::String => component::Val::String(value.to_owned().into()),
-            _ => bail!("cannot coerce {} to {:?}", value, canonical_ty),
+            Type::Enum(enum_ty) => {
+                if !enum_ty.names().any(|v| v == value) {
+                    let prop = enum_ty.names().map(|v| v.to_owned()).collect::<Vec<_>>();
+                    bail!("expected one of {}, received '{}'", prop.join(", "), value);
+                }
+                enum_ty.new_val(value)?
+            }
+            _ => bail!("cannot coerce '{}' to {:?}", value, canonical_ty),
         },
         Array(values) => array_to_wasmtime_val(values, canonical_ty)?,
         Object(object) => object_to_wasmtime_val(object, canonical_ty)?,
-        Null => unreachable!(),
+        Null => {
+            bail!("cannot coerce null value to {:?}", canonical_ty)
+        }
     };
     Ok(p)
 }
@@ -362,10 +351,10 @@ pub fn wasmtime_val_to_value(value: &component::Val) -> anyhow::Result<serde_jso
                 Some(payload) => wasmtime_val_to_value(payload)?,
                 None => serde_json::Value::Null,
             };
-            Ok(json!({
-                "tag": tag,
-                "value": value
-            }))
+            serde_json::to_value(WitVariant {
+                tag: tag.to_string(),
+                value,
+            })
         }
         Val::Enum(value) => {
             let value = value.discriminant();
