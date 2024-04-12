@@ -104,6 +104,24 @@ pub fn object_to_wasmtime_val(
 ) -> anyhow::Result<component::Val> {
     match canonical_ty {
         Type::Record(record) => {
+            let given_fields = object
+                .iter()
+                .map(|(name, _)| name.to_owned())
+                .collect::<HashSet<_>>();
+            let canon_fields = record
+                .fields()
+                .map(|f| f.name.to_owned())
+                .collect::<HashSet<_>>();
+            let extra_field = &given_fields - &canon_fields;
+            if !extra_field.is_empty() {
+                let extra = Vec::from_iter(extra_field.iter().map(|v| format!("'{v}'")));
+                let prop = Vec::from_iter(canon_fields.iter().map(|v| format!("'{v}'")));
+                bail!(
+                    "none of the fields [{}] match any of [{}]",
+                    extra.join(", "),
+                    prop.join(", ")
+                )
+            }
             let mut values = vec![];
             for field in record.fields() {
                 let converted_value = match object.get(field.name) {
@@ -150,7 +168,7 @@ pub fn object_to_wasmtime_val(
                         variant.new_val(matching_tag.name, None)
                     }
                 },
-                None => bail!("none of {} matches '{}'", canon_tags.join(", "), repr.tag),
+                None => bail!("none of [{}] matches '{}'", canon_tags.join(", "), repr.tag),
             }
         }
         // IDEA: coercing a string to object implies deserialization, this enables t.json()
@@ -203,7 +221,7 @@ pub fn array_to_wasmtime_val(
                 let invalid = Vec::from_iter(not_included);
                 let prop = Vec::from_iter(canon_names);
                 bail!(
-                    "none of {} match any of {}",
+                    "none of [{}] match any of [{}]",
                     invalid.join(", "),
                     prop.join(", ")
                 );
