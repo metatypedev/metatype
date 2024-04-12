@@ -84,11 +84,10 @@ export class PythonWasiRuntime extends Runtime {
           const vmId = generateVmIdentifier(m, uuid);
 
           const artifact = pythonArtifact as Artifact;
-          const modName = basename(artifact.path);
+          const modName = path.parse(basename(artifact.path)).name;
 
           // TODO: move this logic to postprocess or python runtime
           m.data.name = `${modName}.${m.data.name as string}`;
-          console.log("*************", m.data.name);
           logger.info(`setup vm "${vmId}" for module ${modName}`);
           const vm = new PythonVirtualMachine();
 
