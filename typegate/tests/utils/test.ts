@@ -10,7 +10,7 @@ import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 import { createMetaCli } from "./meta.ts";
-import { SecretManager, TypeGraph } from "../../src/typegraph/mod.ts";
+import { TypeGraph } from "../../src/typegraph/mod.ts";
 import { SyncConfig } from "../../src/sync/config.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
@@ -117,6 +117,10 @@ export class MetaTest {
     this.cleanups.push(fn);
   }
 
+  get typegate() {
+    return this.typegates.next();
+  }
+
   getTypegraphEngine(name: string): QueryEngine | undefined {
     return this.typegates.next().register.get(name);
   }
@@ -166,19 +170,7 @@ export class MetaTest {
 
     // for convience, automatically prefix secrets
     const secrets = opts.secrets ?? {};
-    if (opts.autoSecretName !== false) {
-      const secretPrefx = SecretManager.formatSecretName(
-        // name without prefix as secrets are not prefixed
-        TypeGraph.formatName(tgJson, false),
-        "",
-      );
-      for (const k of Object.keys(secrets)) {
-        secrets[`${secretPrefx}${k}`] = secrets[k];
-        delete secrets[k];
-      }
-    }
-
-    const { engine, response } = await this.typegates.next().pushTypegraph(
+    const { engine, response } = await this.typegate.pushTypegraph(
       tgJson,
       secrets,
       this.introspection,

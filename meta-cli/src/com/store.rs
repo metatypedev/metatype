@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::config::Config;
+use crate::{config::Config, secrets::Secrets};
 use anyhow::{bail, Result};
 use common::node::BasicAuth;
 use lazy_static::lazy_static;
@@ -65,7 +65,7 @@ pub struct ServerStore {
     migration_action_glob: MigrationAction,
     /// 1 typegraph => n runtimes
     migration_action: HashMap<PathBuf, Arc<Vec<RuntimeMigrationAction>>>,
-    secrets: HashMap<String, String>,
+    secrets: Secrets,
     endpoint: Endpoint,
     prefix: Option<String>,
     sdk_responses: HashMap<PathBuf, Arc<HashMap<String, SDKResponse>>>,
@@ -94,12 +94,12 @@ impl ServerStore {
         with_store(|s| s.command.clone())
     }
 
-    pub fn set_secrets(secrets: HashMap<String, String>) {
+    pub fn set_secrets(secrets: Secrets) {
         with_store_mut(|s| s.secrets = secrets)
     }
 
-    pub fn get_secrets() -> HashMap<String, String> {
-        with_store(|s| s.secrets.clone())
+    pub fn get_secrets(tg_name: &str) -> HashMap<String, String> {
+        with_store(|s| s.secrets.get(tg_name))
     }
 
     pub fn set_endpoint(endpoint: Endpoint) {

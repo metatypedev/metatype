@@ -42,6 +42,9 @@ const schema = {
   sentry_dsn: z.string().optional(),
   sentry_sample_rate: z.coerce.number().positive().min(0).max(1),
   sentry_traces_sample_rate: z.coerce.number().positive().min(0).max(1),
+  /**
+   * Time in seconds in which a URL expires after being pushed to Redis
+   */
   redis_url_queue_expire_sec: z.coerce.number().positive(),
 };
 
