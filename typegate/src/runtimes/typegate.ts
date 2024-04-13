@@ -154,7 +154,10 @@ export class TypeGateRuntime extends Runtime {
   addTypegraph: Resolver = async ({ fromString, secrets, targetVersion }) => {
     logger.info("Adding typegraph");
     if (
-      !semver.gte(semver.parse(targetVersion), semver.parse(config.version))
+      !semver.greaterOrEqual(
+        semver.parse(targetVersion),
+        semver.parse(config.version),
+      )
     ) {
       throw new Error(
         `Typegraph SDK version ${targetVersion} must be greater than typegate version ${config.version} (until the releases are stable)`,

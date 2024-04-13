@@ -114,7 +114,7 @@ export interface EndpointToSchemaMap {
   [index: string]: { fnName: string; outputSchema: unknown };
 }
 
-export class QueryEngine {
+export class QueryEngine implements AsyncDisposable {
   name: string;
   queryCache: QueryCache;
   logger: log.Logger;
@@ -149,6 +149,9 @@ export class QueryEngine {
       "PUT": {},
       "DELETE": {},
     };
+  }
+  async [Symbol.asyncDispose]() {
+    await this.tg[Symbol.asyncDispose]();
   }
 
   async registerEndpoints() {
@@ -281,10 +284,6 @@ export class QueryEngine {
         refSchemas: schemaGenerator.refs,
       };
     }
-  }
-
-  async terminate() {
-    return await this.tg.deinit();
   }
 
   materialize(

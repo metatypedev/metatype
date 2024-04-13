@@ -29,7 +29,7 @@ export interface ParseOptions {
 }
 
 // with a round-robin load balancer emulation
-class TypegateManager {
+class TypegateManager implements AsyncDisposable {
   private index = 0;
 
   constructor(private typegates: Typegate[]) {}
@@ -44,14 +44,13 @@ class TypegateManager {
     return typegate;
   }
 
-  async terminate() {
-    await Promise.all(this.typegates.map((tg) => tg.deinit()));
+  async [Symbol.asyncDispose]() {
+    await Promise.all(this.typegates.map((tg) => tg[Symbol.asyncDispose]()));
   }
 }
 
-interface ServeResult {
+interface ServeResult extends AsyncDisposable {
   port: number;
-  cleanup: () => Promise<void>;
 }
 
 function serve(typegates: TypegateManager): Promise<ServeResult> {
@@ -61,7 +60,7 @@ function serve(typegates: TypegateManager): Promise<ServeResult> {
       onListen: ({ port }) => {
         resolve({
           port,
-          cleanup: async () => {
+          async [Symbol.asyncDispose]() {
             await server.shutdown();
           },
         });
@@ -79,12 +78,11 @@ type MetaTestCleanupFn = () => void | Promise<void>;
 const defaultCli = await createMetaCli(shell);
 
 export class MetaTest {
-  private cleanups: MetaTestCleanupFn[] = [];
   shell = shell;
   meta = defaultCli;
   workingDir = testDir;
-  port: number | null = null;
   currentTypegateIndex = 0;
+  #disposed = false;
 
   static async init(
     t: Deno.TestContext,
@@ -92,12 +90,24 @@ export class MetaTest {
     introspection: boolean,
     port = false,
   ): Promise<MetaTest> {
-    const mt = new MetaTest(t, typegates, introspection);
+    await using stack = new AsyncDisposableStack();
+    stack.use(typegates);
+
+    let portNumber: number | null = null;
+
     if (port) {
-      const { port: p, cleanup } = await serve(typegates);
-      mt.port = p;
-      mt.addCleanup(cleanup);
+      const server = await serve(typegates);
+      portNumber = server.port;
+      stack.use(server);
     }
+
+    const mt = new MetaTest(
+      t,
+      typegates,
+      introspection,
+      portNumber,
+      stack.move(),
+    );
 
     return mt;
   }
@@ -106,10 +116,19 @@ export class MetaTest {
     public t: Deno.TestContext,
     public typegates: TypegateManager,
     private introspection: boolean,
-  ) {}
+    private port: number | null,
+    public disposables: AsyncDisposableStack,
+  ) {
+  }
+
+  async [Symbol.asyncDispose]() {
+    if (this.#disposed) return;
+    this.#disposed = true;
+    await this.disposables[Symbol.asyncDispose]();
+  }
 
   addCleanup(fn: MetaTestCleanupFn) {
-    this.cleanups.push(fn);
+    this.disposables.defer(fn);
   }
 
   getTypegraphEngine(name: string): QueryEngine | undefined {
@@ -161,7 +180,7 @@ export class MetaTest {
 
     // for convience, automatically prefix secrets
     const secrets = opts.secrets ?? {};
-    const { engine, response } = await this.typegate.pushTypegraph(
+    const { engine, response } = await this.typegates.next().pushTypegraph(
       tgJson,
       secrets,
       this.introspection,
@@ -197,14 +216,9 @@ export class MetaTest {
         .filter((e) => e == engine)
         .map((e) => {
           typegate.register.remove(e.name);
-          return e.terminate();
+          return e[Symbol.asyncDispose]();
         }),
     );
-  }
-
-  async terminate() {
-    await Promise.all(this.cleanups.map((c) => c()));
-    await this.typegates.terminate();
   }
 
   async should(
@@ -328,12 +342,16 @@ export const test = ((o, fn): void => {
         );
       }
 
-      const mt = await MetaTest.init(
+      await using mt = await MetaTest.init(
         t,
         new TypegateManager(typegates),
         introspection,
         opts.port != null,
       );
+
+      if (opts.teardown != null) {
+        mt.disposables.defer(opts.teardown);
+      }
 
       try {
         if (gitRepo != null) {
@@ -364,12 +382,6 @@ export const test = ((o, fn): void => {
       } catch (error) {
         console.error(error);
         throw error;
-      } finally {
-        await mt.terminate();
-      }
-
-      if (opts.teardown != null) {
-        await opts.teardown();
       }
     },
     ...opts,

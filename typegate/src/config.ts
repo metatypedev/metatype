@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { mapKeys } from "std/collections/map_keys.ts";
 
-import * as base64 from "std/encoding/base64.ts";
+import { decodeBase64 } from "std/encoding/base64.ts";
 import { parse } from "std/flags/mod.ts";
 import { join } from "std/path/mod.ts";
 // This import ensure log loads before config, important for the version hydration
@@ -18,7 +18,7 @@ const schema = {
   hostname: z.string(),
   tg_port: z.coerce.number().positive().max(65535),
   tg_secret: z.string().transform((s: string, ctx) => {
-    const bytes = base64.decode(s);
+    const bytes = decodeBase64(s);
     if (bytes.length != 64) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

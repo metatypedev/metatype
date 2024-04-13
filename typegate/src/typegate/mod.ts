@@ -37,12 +37,12 @@ import introspectionJson from "../typegraphs/introspection.json" with {
 };
 import { ArtifactService } from "../services/artifact_service.ts";
 import { ArtifactStore } from "./artifacts/mod.ts";
-import { LocalArtifactStore } from "./artifacts/local.ts";
 import { SyncConfig } from "../sync/config.ts";
 import { MemoryRegister } from "test-utils/memory_register.ts";
 import { NoLimiter } from "test-utils/no_limiter.ts";
 import { TypegraphStore } from "../sync/typegraph.ts";
-import { SharedArtifactStore } from "./artifacts/shared.ts";
+import { createLocalArtifactStore } from "./artifacts/local.ts";
+import { createSharedArtifactStore } from "./artifacts/shared.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -77,27 +77,36 @@ export interface DeinitOptions {
   engines?: boolean;
 }
 
-export class Typegate {
+// TODO make tempDir configurable
+export class Typegate implements AsyncDisposable {
   #onPushHooks: PushHandler[] = [];
   #artifactService: ArtifactService;
+  #disposed = false;
 
   static async init(
     syncConfig: SyncConfig | null = null,
     customRegister: Register | null = null,
   ): Promise<Typegate> {
     if (syncConfig == null) {
-      logger.warning("Entering no-sync mode...");
-      logger.warning(
+      logger.warn("Entering no-sync mode...");
+      logger.warn(
         "Enable sync if you want to use accross multiple instances or if you want persistence.",
       );
 
+      await using stack = new AsyncDisposableStack();
+
       const register = customRegister ?? new MemoryRegister();
-      const artifactStore = await LocalArtifactStore.init();
+      const artifactStore = await createLocalArtifactStore(config.tmp_dir);
+
+      stack.use(register);
+      stack.use(artifactStore);
+
       return new Typegate(
         register,
         new NoLimiter(),
         artifactStore,
         null,
+        stack.move(),
       );
     } else {
       if (customRegister) {
@@ -105,14 +114,32 @@ export class Typegate {
           "Custom register is not supported in sync mode",
         );
       }
+
+      await using stack = new AsyncDisposableStack();
+
       const limiter = await RedisRateLimiter.init(syncConfig.redis);
-      const artifactStore = await SharedArtifactStore.init(syncConfig);
-      const typegate = new Typegate(null!, limiter, artifactStore, syncConfig);
+      stack.use(limiter);
+
+      const artifactStore = await createSharedArtifactStore(
+        config.tmp_dir,
+        syncConfig,
+      );
+      stack.use(artifactStore);
+
+      const typegate = new Typegate(
+        null!,
+        limiter,
+        artifactStore,
+        syncConfig,
+        stack.move(),
+      );
+
       const register = await ReplicatedRegister.init(
         typegate,
         syncConfig.redis,
         TypegraphStore.init(syncConfig),
       );
+      stack.use(register);
 
       (typegate as { register: Register }).register = register;
 
@@ -133,6 +160,7 @@ export class Typegate {
     private limiter: RateLimiter,
     public artifactStore: ArtifactStore,
     public syncConfig: SyncConfig | null = null,
+    private disposables: AsyncDisposableStack,
   ) {
     this.#onPush((tg) => Promise.resolve(upgradeTypegraph(tg)));
     this.#onPush((tg) => Promise.resolve(parseGraphQLTypeGraph(tg)));
@@ -141,16 +169,10 @@ export class Typegate {
     this.#artifactService = new ArtifactService(artifactStore);
   }
 
-  async deinit(opts: DeinitOptions = {}) {
-    const engines = opts.engines ?? true;
-    if (engines) {
-      await Promise.all(this.register.list().map((e) => e.terminate()));
-    }
-    await this.artifactStore.close();
-    if (this.syncConfig) {
-      await (this.register as ReplicatedRegister).stopSync();
-      await (this.limiter as RedisRateLimiter).terminate();
-    }
+  async [Symbol.asyncDispose]() {
+    if (this.#disposed) return;
+    this.#disposed = true;
+    await this.disposables[Symbol.asyncDispose]();
   }
 
   #onPush(handler: PushHandler) {
@@ -372,10 +394,5 @@ export class Typegate {
     const engine = new QueryEngine(tg);
     await engine.registerEndpoints();
     return engine;
-  }
-
-  async terminate() {
-    await Promise.all(this.register.list().map((e) => e.terminate()));
-    await this.artifactStore.close();
   }
 }

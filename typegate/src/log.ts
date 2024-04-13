@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { handlers, LevelName, Logger } from "std/log/mod.ts";
+import { ConsoleHandler, LevelName, Logger } from "std/log/mod.ts";
 import { basename } from "std/url/mod.ts";
 import { extname } from "std/path/mod.ts";
 import { z } from "zod";
@@ -93,7 +93,7 @@ if (!config.rust_log) {
   }
 }
 
-const consoleHandler = new handlers.ConsoleHandler(
+const consoleHandler = new ConsoleHandler(
   config.log_level as LevelName,
   {
     formatter: (log) => {

@@ -1,8 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Deferred } from "std/async/deferred.ts";
-
 export interface Message<T> {
   id: number;
   op: string | number | null;
@@ -10,11 +8,13 @@ export interface Message<T> {
   remainingPulseCount?: number;
 }
 
+type PromiseWithResolvers<T> = ReturnType<typeof Promise.withResolvers<T>>;
+
 export type Answer<T> =
   | ({ id: number; data: T; error?: never })
   | ({ id: number; data?: never; error: string });
 
 export interface TaskData {
-  promise: Deferred<unknown>;
+  promise: PromiseWithResolvers<unknown>;
   hooks: Array<() => void | Promise<void>>;
 }

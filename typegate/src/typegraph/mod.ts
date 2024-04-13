@@ -84,7 +84,7 @@ const GRAPHQL_SCALAR_TYPES = {
   [Type.STRING]: "String",
 } as Partial<Record<TypeNode["type"], string>>;
 
-export class TypeGraph {
+export class TypeGraph implements AsyncDisposable {
   static readonly emptyArgs: ast.ArgumentNode[] = [];
   static emptyFields: ast.SelectionSetNode = {
     kind: Kind.SELECTION_SET,
@@ -120,6 +120,13 @@ export class TypeGraph {
       typeByName[tpe.title] = tpe;
     }
     this.typeByName = typeByName;
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    await Promise.all(this.runtimeReferences.map((r) => r.deinit()));
+    if (this.introspection) {
+      await this.introspection[Symbol.asyncDispose]();
+    }
   }
 
   get rawName() {
@@ -259,13 +266,6 @@ export class TypeGraph {
     auths.set(internalAuthName, await InternalAuth.init(typegraphName));
 
     return tg;
-  }
-
-  async deinit(): Promise<void> {
-    await Promise.all(this.runtimeReferences.map((r) => r.deinit()));
-    if (this.introspection) {
-      await this.introspection.deinit();
-    }
   }
 
   type(idx: number): TypeNode;
