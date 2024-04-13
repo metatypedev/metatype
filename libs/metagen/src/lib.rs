@@ -30,18 +30,28 @@ use crate::interlude::*;
 
 pub use config::*;
 
+/// This implements a command object pattern API for generator
+/// implemntations to access the external world. See [InputResolver].
+///
+/// The rationale being that
+/// - Ease of mocking for tests through [InputResolver] implemntaiton.
+/// - Ease of translating to wasm API for any future user implemented generators.
 #[derive(Debug)]
 pub enum GeneratorInputOrder {
     TypegraphFromTypegate { name: String },
     TypegraphFromPath { path: PathBuf, name: Option<String> },
 }
 
+/// Response types for the command object API implemented
+/// by [GeneratorInputOrder].
 #[derive(Debug)]
 pub enum GeneratorInputResolved {
     TypegraphFromTypegate { raw: Typegraph },
     TypegraphFromPath { raw: Typegraph },
 }
 
+/// This type plays the "dispatcher" role to the command object
+/// API implemented by [GeneratorInputOrder] and [GeneratorInputResolved].
 pub trait InputResolver {
     fn resolve(
         &self,
@@ -59,8 +69,13 @@ pub struct GeneratedFile {
 #[derive(Debug)]
 pub struct GeneratorOutput(pub HashMap<PathBuf, GeneratedFile>);
 
+/// The core trait any metagen generator modules will implement.
 trait Plugin: Send + Sync {
+    /// A list of inputs required by an implementatoin to do it's job.
+    /// The [GeneratorInputOrder]s here will be resolved by the
+    /// host's [InputResolver].
     fn bill_of_inputs(&self) -> HashMap<String, GeneratorInputOrder>;
+
     fn generate(
         &self,
         inputs: HashMap<String, GeneratorInputResolved>,

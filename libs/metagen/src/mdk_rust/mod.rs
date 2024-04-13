@@ -1,6 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+//! Generates typegraph types and mdk interface for rust.
+//! - dir/Cargo.toml
+//!  - Will not be replaced on second generation.
+//! - dir/gen.rs
+//!  - Contains generated types and mdk interface.
+
 mod stubs;
 mod types;
 mod utils;
@@ -15,8 +21,10 @@ pub struct MdkRustGenConfig {
     #[serde(flatten)]
     #[garde(dive)]
     pub base: crate::config::MdkGeneratorConfigBase,
+    /// Runtimes to generate stubbed materializer implenetations for.
     #[garde(skip)]
     pub stubbed_runtimes: Option<Vec<String>>,
+    /// Name of the crate to be put in the generated `Cargo.toml`
     #[garde(length(min = 1))]
     crate_name: Option<String>,
     // #[garde(skip)]
