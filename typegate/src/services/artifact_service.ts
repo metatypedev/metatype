@@ -24,7 +24,21 @@ export class ArtifactService {
           headers: { "Content-Type": "application/json" },
         });
       }
-      const metaList = getUploadUrlBodySchema.parse(await request.json());
+
+      let metaList;
+      try {
+        metaList = getUploadUrlBodySchema.parse(await request.json());
+      } catch (error) {
+        console.error("Failed to parse data:", error);
+        return new Response(
+          JSON.stringify({ error: `Invalid Request Body: ${error.message}` }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
       try {
         const data = await this.#createUploadUrls(
           metaList,

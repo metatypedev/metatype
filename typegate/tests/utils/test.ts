@@ -131,6 +131,10 @@ export class MetaTest {
     this.disposables.defer(fn);
   }
 
+  get typegate() {
+    return this.typegates.next();
+  }
+
   getTypegraphEngine(name: string): QueryEngine | undefined {
     return this.typegates.next().register.get(name);
   }
