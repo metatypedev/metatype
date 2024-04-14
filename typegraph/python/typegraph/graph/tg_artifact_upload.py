@@ -10,7 +10,6 @@ from urllib import request
 from typegraph.gen.exports.core import Artifact
 from typegraph.gen.types import Err, Ok, Result
 from typegraph.graph.shared_types import BasicAuth
-from typegraph.graph.tg_deploy import handle_response
 
 
 @dataclass
@@ -132,3 +131,10 @@ class ArtifactUploader:
         self.__handle_errors(results, artifact_metas)
 
         return Ok(None)
+
+
+def handle_response(res: Any):
+    try:
+        return json.loads(res)
+    except Exception as _:
+        return res

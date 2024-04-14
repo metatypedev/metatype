@@ -178,4 +178,3 @@ class DefinitionCollector(ast.NodeTransformer):
 
     def visit_FunctionDef(self, node):
         self.defs.append((node.name, unparse(node).strip()))
-        self.defs.append((node.name, unparse(node).strip()))
