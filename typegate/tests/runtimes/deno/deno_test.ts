@@ -109,7 +109,7 @@ Meta.test("Deno runtime: permissions", async (t) => {
 });
 
 Meta.test("Deno runtime: use local imports", async (t) => {
-  const e = await t.engine("runtimes/deno/deno_dep.py");
+  const e = await t.engine("runtimes/deno/deno_dep.ts");
   await t.should("work for local imports", async () => {
     await gql`
       query {

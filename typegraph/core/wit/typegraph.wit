@@ -271,6 +271,7 @@ interface runtimes {
     record materializer-deno-import {
         func-name: string,
         module: string,
+        deps: list<string>,
         secrets: list<string>,
     }
 

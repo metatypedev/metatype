@@ -259,7 +259,7 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         data: wit::MaterializerDenoImport,
         effect: wit::Effect,
     ) -> Result<wit::MaterializerId> {
-        let module = Store::get_deno_module(data.module);
+        let module = Store::get_deno_module(data.module, data.deps);
         let data = MaterializerDenoImport {
             func_name: data.func_name,
             module,

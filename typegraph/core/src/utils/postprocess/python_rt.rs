@@ -21,7 +21,6 @@ impl PostProcessor for PythonProcessor {
                     object_from_map(std::mem::take(&mut mat.data)).map_err(|e| e.to_string())?;
                 let path = mat_data.python_artifact.get("path").unwrap();
                 let path: PathBuf = path.as_str().unwrap().into();
-                // eprint(&format!("***************** {}", path_value));
 
                 if tg.meta.artifacts.contains_key(&path) {
                     continue;
