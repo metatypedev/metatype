@@ -3,17 +3,22 @@
 
 import { getLogger } from "../../log.ts";
 import { Runtime } from "../Runtime.ts";
+import { basename } from "std/path/mod.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { ComputeStage } from "../../engine/query_engine.ts";
 import { PythonWasmMessenger } from "./python_wasm_messenger.ts";
 import { path } from "compress/deps.ts";
 import { PythonVirtualMachine } from "./python_vm.ts";
 import { Materializer } from "../../typegraph/types.ts";
-import { structureRepr } from "../../utils.ts";
-import { uncompress } from "../../utils.ts";
 import * as ast from "graphql/ast";
 
 const logger = getLogger(import.meta);
+
+interface Artifact {
+  path: string;
+  hash: string;
+  size: number;
+}
 
 function generateVmIdentifier(mat: Materializer, uuid: string) {
   const { mod } = mat.data ?? {};
@@ -39,7 +44,7 @@ export class PythonWasiRuntime extends Runtime {
   uuid: string;
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { materializers, typegraph, typegraphName } = params;
+    const { materializers, typegraph, typegraphName, typegate } = params;
     const w = await PythonWasmMessenger.init();
 
     logger.info(`initializing default vm: ${typegraphName}`);
@@ -70,35 +75,42 @@ export class PythonWasiRuntime extends Runtime {
         }
         case "import_function": {
           const pyModMat = typegraph.materializers[m.data.mod as number];
-          const code = pyModMat.data.code as string;
 
-          const repr = await structureRepr(code);
+          // resolve the python module artifacts/files
+          const { pythonArtifact, depsMeta: depArtifacts } = pyModMat.data;
+
+          const deps = depArtifacts as Artifact[];
+
           const vmId = generateVmIdentifier(m, uuid);
-          const basePath = path.join(
-            "tmp",
-            "scripts",
-            typegraphName,
-            uuid,
-            "python",
-            vmId,
-          );
-          const outDir = path.join(basePath, repr.hashes.entryPoint);
-          const entries = await uncompress(
-            outDir,
-            repr.base64,
-          );
-          logger.info(`uncompressed ${entries.join(", ")} at ${outDir}`);
 
-          const modName = path.parse(repr.entryPoint).name;
+          const artifact = pythonArtifact as Artifact;
+          const modName = path.parse(basename(artifact.path)).name;
 
           // TODO: move this logic to postprocess or python runtime
           m.data.name = `${modName}.${m.data.name as string}`;
-
           logger.info(`setup vm "${vmId}" for module ${modName}`);
           const vm = new PythonVirtualMachine();
 
           // for python modules, imports must be inside a folder above or same directory
-          const entryPointFullPath = path.join(outDir, repr.entryPoint);
+          const artifactMeta = {
+            typegraphName: typegraphName,
+            relativePath: artifact.path,
+            hash: artifact.hash,
+            sizeInBytes: artifact.size,
+          };
+          const depMetas = deps.map((dep) => {
+            return {
+              typegraphName: typegraphName,
+              relativePath: dep.path,
+              hash: dep.hash,
+              sizeInBytes: dep.size,
+            };
+          });
+
+          const entryPointFullPath = await typegate.artifactStore.getLocalPath(
+            artifactMeta,
+            depMetas,
+          );
           const sourceCode = Deno.readTextFileSync(entryPointFullPath);
 
           // prepare vm

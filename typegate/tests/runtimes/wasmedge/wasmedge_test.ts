@@ -10,10 +10,15 @@ import * as path from "std/path/mod.ts";
 const cwdDir = path.join(testDir, "runtimes/wasmedge");
 const auth = new BasicAuth("admin", "password");
 
-// Meta.test("WasmEdge runtime", async (t) => {
-//   const e = await t.engine("runtimes/wasmedge/wasmedge.py", {}, { port });
+// Meta.test("WasmEdge runtime: Python SDK", async (t) => {
+//   await t.should("works on the Python SDK", async () => {
+//     const serialized = await t.serializeTypegraphFromShell(
+//       "runtimes/wasmedge/wasmedge.py",
+//       SDKLangugage.Python,
+//     );
 
-//   await t.should("works", async () => {
+//     const engine = await t.engineFromDeployed(serialized);
+
 //     await gql`
 //       query {
 //         test(a: 1, b: 2)
@@ -22,7 +27,8 @@ const auth = new BasicAuth("admin", "password");
 //       .expectData({
 //         test: 3,
 //       })
-//       .on(e);
+//       .on(engine);
+//     await engine.terminate();
 //   });
 // }, { port: port });
 

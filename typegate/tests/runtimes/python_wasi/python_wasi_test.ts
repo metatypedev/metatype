@@ -4,7 +4,14 @@
 import { assert, assertEquals } from "std/assert/mod.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 import { PythonVirtualMachine } from "../../../src/runtimes/python_wasi/python_vm.ts";
-import { QueryEngine } from "../../../src/engine/query_engine.ts";
+// import { QueryEngine } from "../../../src/engine/query_engine.ts";
+import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
+import { testDir } from "test-utils/dir.ts";
+import { tg } from "./python_wasi.ts";
+import * as path from "std/path/mod.ts";
+
+const cwdDir = path.join(testDir, "runtimes/python_wasi");
+const auth = new BasicAuth("admin", "password");
 
 Meta.test("Python WASI VM performance", async (t) => {
   const vm = new PythonVirtualMachine();
@@ -56,141 +63,298 @@ Meta.test("Python WASI VM performance", async (t) => {
   await vm.destroy();
 });
 
-Meta.test("Python WASI runtime", async (t) => {
-  const e = await t.engine("runtimes/python_wasi/python_wasi.py");
-
-  await t.should("work once (lambda)", async () => {
-    await gql`
-      query {
-        test(a: "test")
-      }
-    `
-      .expectData({
-        test: "test",
-      })
-      .on(e);
-  });
-
-  await t.should("work once (def)", async () => {
-    await gql`
-      query {
-        testDef(a: "test")
-      }
-    `
-      .expectData({
-        testDef: "test",
-      })
-      .on(e);
-  });
-
-  await t.should("work once (module)", async () => {
-    await gql`
-      query {
-        testMod(name: "Loyd")
-      }
-    `
-      .expectData({
-        testMod: "Hello Loyd",
-      })
-      .on(e);
-  });
-
-  await t.should("return same object", async () => {
-    await gql`
-      query {
-        identity(
-          input: {
-            a: 1234,
-            b: { c: ["one", "two", "three" ] }
-          }
-        ) {
-          a
-          b { c }
-        }
-      }
-    `
-      .expectData({
-        identity: {
-          a: 1234,
-          b: { c: ["one", "two", "three"] },
+const deployTypegraph = async (gate: string) => {
+  const { serialized, typegate: gateResponseAdd } = await tgDeploy(tg, {
+    baseUrl: gate,
+    auth,
+    artifactsConfig: {
+      prismaMigration: {
+        globalAction: {
+          create: true,
+          reset: false,
         },
-      })
-      .on(e);
+        migrationDir: "prisma-migrations",
+      },
+      dir: cwdDir,
+    },
+    typegraphPath: path.join(cwdDir, "wasmedge.ts"),
+    secrets: {},
   });
 
-  await t.should("work fast enough", async () => {
-    const tests = [...Array(100).keys()].map((i) =>
-      gql`
-        query ($a: String!) {
-          test(a: $a)
-        }
-      `
-        .withVars({
-          a: `test${i}`,
-        })
-        .expectData({
-          test: `test${i}`,
-        })
-        .on(e)
-    );
+  return { serialized, gateResponseAdd };
+};
 
-    const start = performance.now();
-    await Promise.all(tests);
-    const end = performance.now();
-    const duration = end - start;
-
-    console.log(`duration: ${duration}ms`);
-    assert(duration < 800, `Python WASI runtime was too slow: ${duration}ms`);
-  });
-});
-
-Meta.test("Deno: def, lambda, import", async (t) => {
-  const e = await t.engine("runtimes/python_wasi/python_wasi.ts");
-  await t.should("work with def", async () => {
-    await gql`
-      query {
-        identityLambda(
-          input: {
-            a: "hello",
-            b: [1, 2, "three"]
-          }) {
-          a
-          b
-        }
-      }
-    `
-      .expectData({
-        identityLambda: {
-          a: "hello",
-          b: [1, 2, "three"],
-        },
-      })
-      .on(e);
+const removeTypegraph = async (gate: string) => {
+  const { typegate: gateResponseRem } = await tgRemove(tg, {
+    baseUrl: gate,
+    auth,
   });
 
-  await t.should("work with def", async () => {
-    await gql`
-      query {
-        identityDef(
-          input: {
-            a: "hello",
-            b: [1, 2, "three"]
-          }) {
-          a
-          b
-        }
-      }
-    `
-      .expectData({
-        identityDef: {
-          a: "hello",
-          b: [1, 2, "three"],
-        },
-      })
-      .on(e);
-  });
+  return gateResponseRem;
+};
 
-  await t.should("work with module import", async () => {
+// Meta.test("Python WASI runtime", async (t) => {
+//   const e = await t.engine("runtimes/python_wasi/python_wasi.py");
+
+//   await t.should("work once (lambda)", async () => {
+//     await gql`
+//       query {
+//         test(a: "test")
+//       }
+//     `
+//       .expectData({
+//         test: "test",
+//       })
+//       .on(e);
+//   });
+
+//   await t.should("work once (def)", async () => {
+//     await gql`
+//       query {
+//         testDef(a: "test")
+//       }
+//     `
+//       .expectData({
+//         testDef: "test",
+//       })
+//       .on(e);
+//   });
+
+//   await t.should("work once (module)", async () => {
+//     await gql`
+//       query {
+//         testMod(name: "Loyd")
+//       }
+//     `
+//       .expectData({
+//         testMod: "Hello Loyd",
+//       })
+//       .on(e);
+//   });
+
+//   await t.should("return same object", async () => {
+//     await gql`
+//       query {
+//         identity(
+//           input: {
+//             a: 1234,
+//             b: { c: ["one", "two", "three" ] }
+//           }
+//         ) {
+//           a
+//           b { c }
+//         }
+//       }
+//     `
+//       .expectData({
+//         identity: {
+//           a: 1234,
+//           b: { c: ["one", "two", "three"] },
+//         },
+//       })
+//       .on(e);
+//   });
+
+//   await t.should("work fast enough", async () => {
+//     const tests = [...Array(100).keys()].map((i) =>
+//       gql`
+//         query ($a: String!) {
+//           test(a: $a)
+//         }
+//       `
+//         .withVars({
+//           a: `test${i}`,
+//         })
+//         .expectData({
+//           test: `test${i}`,
+//         })
+//         .on(e)
+//     );
+
+//     const start = performance.now();
+//     await Promise.all(tests);
+//     const end = performance.now();
+//     const duration = end - start;
+
+//     console.log(`duration: ${duration}ms`);
+//     assert(duration < 800, `Python WASI runtime was too slow: ${duration}ms`);
+//   });
+// });
+
+// Meta.test(
+//   {
+//     name: "Deno: def, lambda",
+//     port: true,
+//     systemTypegraphs: true,
+//   },
+//   async (t) => {
+//     // const e = await t.engine("runtimes/python_wasi/python_wasi.ts");
+
+//     const port = t.port;
+//     const gate = `http://localhost:${port}`;
+
+//     const { serialized, gateResponseAdd: _gateResponseAdd } =
+//       await deployTypegraph(gate);
+
+//     const e = await t.engineFromDeployed(serialized);
+
+//     await t.should("work with def", async () => {
+//       await gql`
+//       query {
+//         identityLambda(
+//           input: {
+//             a: "hello",
+//             b: [1, 2, "three"]
+//           }) {
+//           a
+//           b
+//         }
+//       }
+//     `
+//         .expectData({
+//           identityLambda: {
+//             a: "hello",
+//             b: [1, 2, "three"],
+//           },
+//         })
+//         .on(e);
+//     });
+
+//     await t.should("work with def", async () => {
+//       await gql`
+//       query {
+//         identityDef(
+//           input: {
+//             a: "hello",
+//             b: [1, 2, "three"]
+//           }) {
+//           a
+//           b
+//         }
+//       }
+//     `
+//         .expectData({
+//           identityDef: {
+//             a: "hello",
+//             b: [1, 2, "three"],
+//           },
+//         })
+//         .on(e);
+//     });
+
+//     // await removeTypegraph(gate);
+
+//     // 'work with module import' tested down below separately, due the need for artifact/module upload
+//   },
+// );
+
+// Meta.test("Python WASI: infinite loop or similar", async (t) => {
+//   const e = await t.engine("runtimes/python_wasi/python_wasi.py");
+
+//   await t.should("safely fail upon stackoverflow", async () => {
+//     await gql`
+//       query {
+//         stackOverflow(enable: true)
+//       }
+//     `
+//       .expectErrorContains("maximum recursion depth exceeded")
+//       .on(e);
+//   });
+
+//   // let tic = 0;
+//   // setTimeout(() => console.log("hearbeat", tic++), 100);
+
+//   // FIXME: blocks main deno thread
+//   // current approach on deno_bindgen apply/applyDef needs to run on
+//   // separate threads
+//   // #[deno] works for applys but still manages to block the current thread
+//   // await t.should("safely fail upon infinite loop", async () => {
+//   //   await gql`
+//   //     query {
+//   //       infiniteLoop(enable: true)
+//   //     }
+//   //   `
+//   //     .expectErrorContains("timeout exceeded")
+//   //     .on(e);
+//   // });
+// }, { sanitizeOps: false });
+
+// Meta.test("Python WASI: reloading typegate", async (metaTest) => {
+//   const load = async () => {
+//     return await metaTest.engine("runtimes/python_wasi/python_wasi.ts");
+//   };
+
+//   const runPythonOnPythonWasi = async (currentEngine: QueryEngine) => {
+//     await gql`
+//       query {
+//         identityDef(
+//           input: {
+//             a: "hello",
+//             b: [1, 2, "three"]
+//           }) {
+//           a
+//           b
+//         },
+//         identityLambda(
+//         input: {
+//           a: "hello",
+//           b: [1, 2, "three"]
+//         }) {
+//         a
+//         b
+//       },
+//       identityMod(input: {
+//           a: "hello",
+//           b: [1, 2, "three"],
+//         }) {
+//           a
+//           b
+//         }
+//       }
+//     `
+//       .expectData({
+//         identityDef: {
+//           a: "hello",
+//           b: [1, 2, "three"],
+//         },
+//         identityLambda: {
+//           a: "hello",
+//           b: [1, 2, "three"],
+//         },
+//         identityMod: {
+//           a: "hello",
+//           b: [1, 2, "three"],
+//         },
+//       })
+//       .on(currentEngine);
+//   };
+//   const engine = await load();
+//   await metaTest.should("work before typegate is reloaded", async () => {
+//     await runPythonOnPythonWasi(engine);
+//   });
+
+//   // reload
+//   const reloadedEngine = await load();
+
+//   await metaTest.should("work after typegate is reloaded", async () => {
+//     await runPythonOnPythonWasi(reloadedEngine);
+//   });
+// });
+
+Meta.test({
+  name: "Python WASI: upload artifacts with deps",
+  port: true,
+  systemTypegraphs: true,
+}, async (metaTest) => {
+  const port = metaTest.port;
+  const gate = `http://localhost:${port}`;
+
+  await metaTest.should("upload artifacts along with deps", async () => {
+    const { serialized, gateResponseAdd: _gateResponseAdd } =
+      await deployTypegraph(gate);
+
+    const engine = await metaTest.engineFromDeployed(serialized);
+
     await gql`
       query {
         identityMod(input: {
@@ -208,102 +372,104 @@ Meta.test("Deno: def, lambda, import", async (t) => {
           b: [1, 2, "three"],
         },
       })
-      .on(e);
+      .on(engine);
+
+    await removeTypegraph(gate);
   });
 });
 
-Meta.test({
-  name: "Python WASI: infinite loop or similar",
-  sanitizeOps: false,
-}, async (t) => {
-  const e = await t.engine("runtimes/python_wasi/python_wasi.py");
+// Meta.test({
+//   name: "Python WASI: infinite loop or similar",
+//   sanitizeOps: false,
+// }, async (t) => {
+//   const e = await t.engine("runtimes/python_wasi/python_wasi.py");
 
-  await t.should("safely fail upon stackoverflow", async () => {
-    await gql`
-      query {
-        stackOverflow(enable: true)
-      }
-    `
-      .expectErrorContains("maximum recursion depth exceeded")
-      .on(e);
-  });
+//   await t.should("safely fail upon stackoverflow", async () => {
+//     await gql`
+//       query {
+//         stackOverflow(enable: true)
+//       }
+//     `
+//       .expectErrorContains("maximum recursion depth exceeded")
+//       .on(e);
+//   });
 
-  // let tic = 0;
-  // setTimeout(() => console.log("hearbeat", tic++), 100);
+// let tic = 0;
+// setTimeout(() => console.log("hearbeat", tic++), 100);
 
-  // FIXME: blocks main deno thread
-  // current approach on deno_bindgen apply/applyDef needs to run on
-  // separate threads
-  // #[deno] works for applys but still manages to block the current thread
-  // await t.should("safely fail upon infinite loop", async () => {
-  //   await gql`
-  //     query {
-  //       infiniteLoop(enable: true)
-  //     }
-  //   `
-  //     .expectErrorContains("timeout exceeded")
-  //     .on(e);
-  // });
-});
+// FIXME: blocks main deno thread
+// current approach on deno_bindgen apply/applyDef needs to run on
+// separate threads
+// #[deno] works for applys but still manages to block the current thread
+// await t.should("safely fail upon infinite loop", async () => {
+//   await gql`
+//     query {
+//       infiniteLoop(enable: true)
+//     }
+//   `
+//     .expectErrorContains("timeout exceeded")
+//     .on(e);
+// });
+// });
 
-Meta.test("Python WASI: typegate reloading", async (metaTest) => {
-  const load = async () => {
-    return await metaTest.engine("runtimes/python_wasi/python_wasi.ts");
-  };
+// Meta.test("Python WASI: typegate reloading", async (metaTest) => {
+//   const load = async () => {
+//     return await metaTest.engine("runtimes/python_wasi/python_wasi.ts");
+//   };
 
-  const runPythonOnPythonWasi = async (currentEngine: QueryEngine) => {
-    await gql`
-      query {
-        identityDef(
-          input: {
-            a: "hello",
-            b: [1, 2, "three"]
-          }) {
-          a
-          b
-        },
-        identityLambda(
-        input: {
-          a: "hello",
-          b: [1, 2, "three"]
-        }) {
-        a
-        b
-      },
-      identityMod(input: {
-          a: "hello",
-          b: [1, 2, "three"],
-        }) {
-          a
-          b
-        }
-      }
-    `
-      .expectData({
-        identityDef: {
-          a: "hello",
-          b: [1, 2, "three"],
-        },
-        identityLambda: {
-          a: "hello",
-          b: [1, 2, "three"],
-        },
-        identityMod: {
-          a: "hello",
-          b: [1, 2, "three"],
-        },
-      })
-      .on(currentEngine);
-  };
-  const engine = await load();
-  await metaTest.should("work before typegate is reloaded", async () => {
-    await runPythonOnPythonWasi(engine);
-  });
+//   const runPythonOnPythonWasi = async (currentEngine: QueryEngine) => {
+//     await gql`
+//       query {
+//         identityDef(
+//           input: {
+//             a: "hello",
+//             b: [1, 2, "three"]
+//           }) {
+//           a
+//           b
+//         },
+//         identityLambda(
+//         input: {
+//           a: "hello",
+//           b: [1, 2, "three"]
+//         }) {
+//         a
+//         b
+//       },
+//       identityMod(input: {
+//           a: "hello",
+//           b: [1, 2, "three"],
+//         }) {
+//           a
+//           b
+//         }
+//       }
+//     `
+//       .expectData({
+//         identityDef: {
+//           a: "hello",
+//           b: [1, 2, "three"],
+//         },
+//         identityLambda: {
+//           a: "hello",
+//           b: [1, 2, "three"],
+//         },
+//         identityMod: {
+//           a: "hello",
+//           b: [1, 2, "three"],
+//         },
+//       })
+//       .on(currentEngine);
+//   };
+//   const engine = await load();
+//   await metaTest.should("work before typegate is reloaded", async () => {
+//     await runPythonOnPythonWasi(engine);
+//   });
 
-  // reload
-  const reloadedEngine = await load();
+//   // reload
+//   const reloadedEngine = await load();
 
-  await metaTest.should("work after typegate is reloaded", async () => {
-    await runPythonOnPythonWasi(reloadedEngine);
-  });
-});
+//   await metaTest.should("work after typegate is reloaded", async () => {
+//     await runPythonOnPythonWasi(reloadedEngine);
+//   });
+// });

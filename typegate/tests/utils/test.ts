@@ -28,6 +28,11 @@ export interface ParseOptions {
   pretty?: boolean;
 }
 
+export enum SDKLangugage {
+  Python = "python3",
+  TypeScript = "deno",
+}
+
 // with a round-robin load balancer emulation
 class TypegateManager {
   private index = 0;
@@ -180,7 +185,7 @@ export class MetaTest {
 
   async engineFromDeployed(tgString: string): Promise<QueryEngine> {
     const tg = await TypeGraph.parseJson(tgString);
-    const { engine, response } = await this.typegates.next().pushTypegraph(
+    const { engine, response } = await this.typegate.pushTypegraph(
       tg,
       {},
       this.introspection,
@@ -191,6 +196,24 @@ export class MetaTest {
     }
 
     return engine;
+  }
+
+  async serializeTypegraphFromShell(
+    path: string,
+    lang: SDKLangugage,
+  ): Promise<string> {
+    // run self deployed typegraph
+    const { stderr, stdout } = await this.shell([lang.toString(), path]);
+
+    if (stderr.length > 0) {
+      throw new Error(`${stderr}`);
+    }
+
+    if (stdout.length === 0) {
+      throw new Error("No typegraph");
+    }
+
+    return stdout;
   }
 
   async unregister(engine: QueryEngine) {

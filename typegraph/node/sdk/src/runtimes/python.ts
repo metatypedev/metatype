@@ -21,6 +21,7 @@ interface DefMat extends Materializer {
 interface PythonImport {
   name: string;
   module: string;
+  deps: Array<string>;
   secrets?: Array<string>;
   effect?: Effect;
 }
@@ -90,7 +91,7 @@ export class PythonRuntime extends Runtime {
   >(
     inp: I,
     out: O,
-    { name, module, effect = fx.read(), secrets = [] }: PythonImport,
+    { name, module, deps = [], effect = fx.read(), secrets = [] }: PythonImport,
   ): t.Func<I, O, ImportMat> {
     const base = {
       runtime: this._id,
@@ -100,6 +101,7 @@ export class PythonRuntime extends Runtime {
     const matId = runtimes.fromPythonModule(base, {
       file: module,
       runtime: this._id,
+      deps: deps ?? [],
     });
 
     const pyModMatId = runtimes.fromPythonImport(base, {

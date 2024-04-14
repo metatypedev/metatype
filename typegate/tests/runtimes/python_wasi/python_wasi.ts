@@ -10,9 +10,23 @@ const tpe = t.struct({
   "b": t.list(t.either([t.integer(), t.string()])),
 });
 
-typegraph("python_wasi", (g: any) => {
+export const tg = await typegraph("python_wasi", async (g: any) => {
   const python = new PythonRuntime();
   const pub = Policy.public();
+  let identityModule;
+  try {
+    identityModule = await python.import(
+      t.struct({ input: tpe }),
+      tpe,
+      {
+        name: "identity",
+        module: "py/hello.py",
+        deps: ["py/nested/dep.py"],
+      },
+    );
+  } catch (e) {
+    console.error(e);
+  }
 
   g.expose({
     identityLambda: python.fromLambda(
@@ -30,10 +44,6 @@ typegraph("python_wasi", (g: any) => {
         `,
       },
     ).withPolicy(pub),
-    identityMod: python.import(
-      t.struct({ input: tpe }),
-      tpe,
-      { name: "identity", module: "py/hello.py" },
-    ).withPolicy(pub),
+    identityMod: identityModule!.withPolicy(pub),
   });
 });
