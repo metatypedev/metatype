@@ -1,64 +1,97 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-// import { assert, assertEquals } from "std/assert/mod.ts";
+import { assert, assertEquals } from "std/assert/mod.ts";
 import { gql, Meta } from "../../utils/mod.ts";
-// import { PythonVirtualMachine } from "../../../src/runtimes/python_wasi/python_vm.ts";
+import { PythonVirtualMachine } from "../../../src/runtimes/python_wasi/python_vm.ts";
 // import { QueryEngine } from "../../../src/engine/query_engine.ts";
-import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
+import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
 import { testDir } from "test-utils/dir.ts";
 import { tg } from "./python_wasi.ts";
 import * as path from "std/path/mod.ts";
 
-// Meta.test("Python WASI VM performance", async (t) => {
-//   const vm = new PythonVirtualMachine();
-//   await vm.setup("myVm");
+const cwdDir = path.join(testDir, "runtimes/python_wasi");
+const auth = new BasicAuth("admin", "password");
 
-//   await t.should("work with low latency for lambdas", async () => {
-//     await vm.registerLambda("test", "lambda x: x['a']");
-//     const samples = [...Array(100).keys()].map((i) =>
-//       vm.applyLambda(i, "test", [{ a: "test" }])
-//     );
-//     const start = performance.now();
-//     const items = await Promise.all(samples);
-//     const end = performance.now();
-//     const duration = end - start;
+Meta.test("Python WASI VM performance", async (t) => {
+  const vm = new PythonVirtualMachine();
+  await vm.setup("myVm");
 
-//     const randomItem = items[Math.floor(items.length * Math.random())];
-//     assertEquals(randomItem, "test"); // always resolved
-//     assert(
-//       duration < 5,
-//       `virtual machine execution was too slow: ${duration}ms`,
-//     );
-//   });
+  await t.should("work with low latency for lambdas", async () => {
+    await vm.registerLambda("test", "lambda x: x['a']");
+    const samples = [...Array(100).keys()].map((i) =>
+      vm.applyLambda(i, "test", [{ a: "test" }])
+    );
+    const start = performance.now();
+    const items = await Promise.all(samples);
+    const end = performance.now();
+    const duration = end - start;
 
-//   await t.should("work with low latency for defs", async () => {
-//     await vm.registerDef(
-//       "test",
-//       "def test(x):\n\treturn x['a']",
-//     );
-//     const samples = [...Array(100).keys()].map((i) =>
-//       vm.applyDef(
-//         i,
-//         "test",
-//         [{ a: "test" }],
-//       )
-//     );
-//     const start = performance.now();
-//     const items = await Promise.all(samples);
-//     const end = performance.now();
-//     const duration = end - start;
+    const randomItem = items[Math.floor(items.length * Math.random())];
+    assertEquals(randomItem, "test"); // always resolved
+    assert(
+      duration < 5,
+      `virtual machine execution was too slow: ${duration}ms`,
+    );
+  });
 
-//     const randomItem = items[Math.floor(items.length * Math.random())];
-//     assertEquals(randomItem, "test"); // always resolved
-//     assert(
-//       duration < 5,
-//       `virtual machine execution was too slow: ${duration}ms`,
-//     );
-//   });
+  await t.should("work with low latency for defs", async () => {
+    await vm.registerDef(
+      "test",
+      "def test(x):\n\treturn x['a']",
+    );
+    const samples = [...Array(100).keys()].map((i) =>
+      vm.applyDef(
+        i,
+        "test",
+        [{ a: "test" }],
+      )
+    );
+    const start = performance.now();
+    const items = await Promise.all(samples);
+    const end = performance.now();
+    const duration = end - start;
 
-//   await vm.destroy();
-// });
+    const randomItem = items[Math.floor(items.length * Math.random())];
+    assertEquals(randomItem, "test"); // always resolved
+    assert(
+      duration < 5,
+      `virtual machine execution was too slow: ${duration}ms`,
+    );
+  });
+
+  await vm.destroy();
+});
+
+const deployTypegraph = async (gate: string) => {
+  const { serialized, typegate: gateResponseAdd } = await tgDeploy(tg, {
+    baseUrl: gate,
+    auth,
+    artifactsConfig: {
+      prismaMigration: {
+        globalAction: {
+          create: true,
+          reset: false,
+        },
+        migrationDir: "prisma-migrations",
+      },
+      dir: cwdDir,
+    },
+    typegraphPath: path.join(cwdDir, "wasmedge.ts"),
+    secrets: {},
+  });
+
+  return { serialized, gateResponseAdd };
+};
+
+const removeTypegraph = async (gate: string) => {
+  const { typegate: gateResponseRem } = await tgRemove(tg, {
+    baseUrl: gate,
+    auth,
+  });
+
+  return gateResponseRem;
+};
 
 // Meta.test("Python WASI runtime", async (t) => {
 //   const e = await t.engine("runtimes/python_wasi/python_wasi.py");
@@ -148,10 +181,25 @@ import * as path from "std/path/mod.ts";
 //   });
 // });
 
-// Meta.test("Deno: def, lambda, import", async (t) => {
-//   const e = await t.engine("runtimes/python_wasi/python_wasi.ts");
-//   await t.should("work with def", async () => {
-//     await gql`
+// Meta.test(
+//   {
+//     name: "Deno: def, lambda",
+//     port: true,
+//     systemTypegraphs: true,
+//   },
+//   async (t) => {
+//     // const e = await t.engine("runtimes/python_wasi/python_wasi.ts");
+
+//     const port = t.port;
+//     const gate = `http://localhost:${port}`;
+
+//     const { serialized, gateResponseAdd: _gateResponseAdd } =
+//       await deployTypegraph(gate);
+
+//     const e = await t.engineFromDeployed(serialized);
+
+//     await t.should("work with def", async () => {
+//       await gql`
 //       query {
 //         identityLambda(
 //           input: {
@@ -163,17 +211,17 @@ import * as path from "std/path/mod.ts";
 //         }
 //       }
 //     `
-//       .expectData({
-//         identityLambda: {
-//           a: "hello",
-//           b: [1, 2, "three"],
-//         },
-//       })
-//       .on(e);
-//   });
+//         .expectData({
+//           identityLambda: {
+//             a: "hello",
+//             b: [1, 2, "three"],
+//           },
+//         })
+//         .on(e);
+//     });
 
-//   await t.should("work with def", async () => {
-//     await gql`
+//     await t.should("work with def", async () => {
+//       await gql`
 //       query {
 //         identityDef(
 //           input: {
@@ -185,36 +233,20 @@ import * as path from "std/path/mod.ts";
 //         }
 //       }
 //     `
-//       .expectData({
-//         identityDef: {
-//           a: "hello",
-//           b: [1, 2, "three"],
-//         },
-//       })
-//       .on(e);
-//   });
+//         .expectData({
+//           identityDef: {
+//             a: "hello",
+//             b: [1, 2, "three"],
+//           },
+//         })
+//         .on(e);
+//     });
 
-//   await t.should("work with module import", async () => {
-//     await gql`
-//       query {
-//         identityMod(input: {
-//           a: "hello",
-//           b: [1, 2, "three"],
-//         }) {
-//           a
-//           b
-//         }
-//       }
-//     `
-//       .expectData({
-//         identityMod: {
-//           a: "hello",
-//           b: [1, 2, "three"],
-//         },
-//       })
-//       .on(e);
-//   });
-// });
+//     // await removeTypegraph(gate);
+
+//     // 'work with module import' tested down below separately, due the need for artifact/module upload
+//   },
+// );
 
 // Meta.test("Python WASI: infinite loop or similar", async (t) => {
 //   const e = await t.engine("runtimes/python_wasi/python_wasi.py");
@@ -247,7 +279,7 @@ import * as path from "std/path/mod.ts";
 //   // });
 // }, { sanitizeOps: false });
 
-// Meta.test("Python WASI: typegate reloading", async (metaTest) => {
+// Meta.test("Python WASI: reloading typegate", async (metaTest) => {
 //   const load = async () => {
 //     return await metaTest.engine("runtimes/python_wasi/python_wasi.ts");
 //   };
@@ -309,33 +341,17 @@ import * as path from "std/path/mod.ts";
 //   });
 // });
 
-const cwdDir = path.join(testDir, "runtimes/python_wasi");
-const auth = new BasicAuth("admin", "password");
-
 Meta.test({
   name: "Python WASI: upload artifacts with deps",
   port: true,
+  systemTypegraphs: true,
 }, async (metaTest) => {
   const port = metaTest.port;
   const gate = `http://localhost:${port}`;
 
   await metaTest.should("upload artifacts along with deps", async () => {
-    const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
-      baseUrl: gate,
-      auth,
-      artifactsConfig: {
-        prismaMigration: {
-          globalAction: {
-            create: true,
-            reset: false,
-          },
-          migrationDir: "prisma-migrations",
-        },
-        dir: cwdDir,
-      },
-      typegraphPath: path.join(cwdDir, "python_wasi.ts"),
-      secrets: {},
-    });
+    const { serialized, gateResponseAdd: _gateResponseAdd } =
+      await deployTypegraph(gate);
 
     const engine = await metaTest.engineFromDeployed(serialized);
 
@@ -357,6 +373,8 @@ Meta.test({
         },
       })
       .on(engine);
+
+    await removeTypegraph(gate);
   });
 });
 
