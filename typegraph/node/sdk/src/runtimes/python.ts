@@ -26,11 +26,6 @@ interface PythonImport {
   effect?: Effect;
 }
 
-// interface DependencyMeta {
-//   path: string;
-//   hash: string;
-// }
-
 interface ImportMat extends Materializer {
   module: string;
   name: string;
@@ -90,14 +85,14 @@ export class PythonRuntime extends Runtime {
     } as DefMat);
   }
 
-  async import<
+  import<
     I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
     { name, module, deps = [], effect = fx.read(), secrets = [] }: PythonImport,
-  ): Promise<t.Func<I, O, ImportMat>> {
+  ): t.Func<I, O, ImportMat> {
     const base = {
       runtime: this._id,
       effect,
