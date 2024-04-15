@@ -9,16 +9,10 @@ import { ComputeStage } from "../../engine/query_engine.ts";
 import { PythonWasmMessenger } from "./python_wasm_messenger.ts";
 import { path } from "compress/deps.ts";
 import { PythonVirtualMachine } from "./python_vm.ts";
-import { Materializer } from "../../typegraph/types.ts";
+import { Artifact, Materializer } from "../../typegraph/types.ts";
 import * as ast from "graphql/ast";
 
 const logger = getLogger(import.meta);
-
-interface Artifact {
-  path: string;
-  hash: string;
-  size: number;
-}
 
 function generateVmIdentifier(mat: Materializer, uuid: string) {
   const { mod } = mat.data ?? {};
