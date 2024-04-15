@@ -4,14 +4,11 @@
 import { assert, assertEquals } from "std/assert/mod.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 import { PythonVirtualMachine } from "../../../src/runtimes/python_wasi/python_vm.ts";
-// import { QueryEngine } from "../../../src/engine/query_engine.ts";
-import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
 import { testDir } from "test-utils/dir.ts";
 import { tg } from "./python_wasi.ts";
 import * as path from "std/path/mod.ts";
 
-const cwdDir = path.join(testDir, "runtimes/python_wasi");
-const auth = new BasicAuth("admin", "password");
+const cwd = path.join(testDir, "runtimes/python_wasi");
 
 Meta.test("Python WASI VM performance", async (t) => {
   const vm = new PythonVirtualMachine();
@@ -62,36 +59,6 @@ Meta.test("Python WASI VM performance", async (t) => {
 
   await vm.destroy();
 });
-
-const deployTypegraph = async (gate: string) => {
-  const { serialized, typegate: gateResponseAdd } = await tgDeploy(tg, {
-    baseUrl: gate,
-    auth,
-    artifactsConfig: {
-      prismaMigration: {
-        globalAction: {
-          create: true,
-          reset: false,
-        },
-        migrationDir: "prisma-migrations",
-      },
-      dir: cwdDir,
-    },
-    typegraphPath: path.join(cwdDir, "wasmedge.ts"),
-    secrets: {},
-  });
-
-  return { serialized, gateResponseAdd };
-};
-
-const removeTypegraph = async (gate: string) => {
-  const { typegate: gateResponseRem } = await tgRemove(tg, {
-    baseUrl: gate,
-    auth,
-  });
-
-  return gateResponseRem;
-};
 
 // Meta.test("Python WASI runtime", async (t) => {
 //   const e = await t.engine("runtimes/python_wasi/python_wasi.py");
@@ -346,14 +313,12 @@ Meta.test({
   port: true,
   systemTypegraphs: true,
 }, async (metaTest) => {
-  const port = metaTest.port;
-  const gate = `http://localhost:${port}`;
-
   await metaTest.should("upload artifacts along with deps", async () => {
-    const { serialized, gateResponseAdd: _gateResponseAdd } =
-      await deployTypegraph(gate);
-
-    const engine = await metaTest.engineFromDeployed(serialized);
+    const engine = await metaTest.engineFromTgDeploy(
+      "runtimes/python_wasi/python_wasi.ts",
+      cwd,
+      tg,
+    );
 
     await gql`
       query {
@@ -373,8 +338,6 @@ Meta.test({
         },
       })
       .on(engine);
-
-    await removeTypegraph(gate);
   });
 });
 
