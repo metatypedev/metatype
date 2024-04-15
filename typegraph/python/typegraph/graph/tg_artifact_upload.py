@@ -14,10 +14,10 @@ from typegraph.graph.shared_types import BasicAuth
 
 @dataclass
 class UploadArtifactMeta:
-    typegraph_name: str
+    typegraphName: str
     hash: str
-    size_in_bytes: int
-    relative_path: str
+    sizeInBytes: int
+    relativePath: str
 
 
 class ArtifactUploader:
@@ -49,10 +49,11 @@ class ArtifactUploader:
         self,
         artifact_metas: List[UploadArtifactMeta],
     ) -> List[str]:
-        artifacts_json = json.dumps(artifact_metas.__dict__).encode()
+        artifacts_objs = [vars(meta) for meta in artifact_metas]
+        artifacts_json = json.dumps(artifacts_objs, indent=4).encode()
         req = request.Request(
             url=self.get_upload_url,
-            method="PUT",
+            method="POST",
             headers=self.headers,
             data=artifacts_json,
         )
@@ -71,22 +72,22 @@ class ArtifactUploader:
             upload_headers["Authorization"] = self.auth.as_header_value()
 
         if url is None:
-            print(f"Skipping upload for artifact: {meta.relative_path}")
+            print(f"Skipping upload for artifact: {meta.relativePath}")
             return Ok(None)
 
-        path = os.path.join(os.path.dirname(self.tg_path), meta.relative_path)
+        path = os.path.join(os.path.dirname(self.tg_path), meta.relativePath)
         # TODO: read in chunks?
-        with open(path, "r") as file:
+        with open(path, "rb") as file:
             content = file.read()
 
         upload_req = request.Request(
             url=url,
             method="POST",
-            data=content.encode(),
+            data=content,
             headers=upload_headers,
         )
         response = request.urlopen(upload_req)
-        if response.status != 200:
+        if response.status != 201:
             raise Exception(f"Failed to upload artifact {path} {response.status}")
 
         return handle_response(response.read().decode())
@@ -94,7 +95,10 @@ class ArtifactUploader:
     def get_metas(self, artifacts: List[Artifact]) -> List[UploadArtifactMeta]:
         return [
             UploadArtifactMeta(
-                self.tg_name, artifact.hash, artifact.size, artifact.path
+                typegraphName=self.tg_name,
+                hash=artifact.hash,
+                sizeInBytes=artifact.size,
+                relativePath=artifact.path,
             )
             for artifact in artifacts
         ]
@@ -107,10 +111,10 @@ class ArtifactUploader:
         errors = 0
         for result, meta in zip(results, artifact_metas):
             if isinstance(result, Err):
-                print(f"Failed to upload artifact {meta.relative_path}: {result.value}")
+                print(f"Failed to upload artifact {meta.relativePath}: {result.value}")
                 errors += 1
             else:
-                print(f"Successfuly uploaded artifact {meta.relative_path}")
+                print(f"Successfuly uploaded artifact {meta.relativePath}")
 
         if errors > 0:
             raise Exception(f"Failed to upload {errors} artifacts")
