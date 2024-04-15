@@ -54,7 +54,7 @@ GraphQL, being a query language, offers a great asset for Metatype's philosophy:
 
 The following environment variables can be used to configure the typegate. `SYNC_*` variables have special semantics which you can read about [here](/docs/reference/typegate/synchronization).
 
-| Environment variables     | Desc                                                                                                     | Default                 |
+|   Environment variables   |                                                   Desc                                                   |         Default         |
 | ------------------------- | -------------------------------------------------------------------------------------------------------- | ----------------------- |
 | HOSTNAME                  | Hostname that typegate is deployed on.                                                                   | `getHostname()` result. |
 | TG_PORT                   | Tcp port to serve typegate APIs at.                                                                      | 7890                    |
@@ -63,8 +63,8 @@ The following environment variables can be used to configure the typegate. `SYNC
 | TMP_DIR                   | Top-level temporary directory.                                                                           | `$PWD/tmp`              |
 | DEBUG                     | Enable debug output and other development paths.                                                         | false                   |
 | TIMER_MAX_TIMEOUT_MS      | Timeout for custom runtime functions and other proccesses.                                               | 3000                    |
-| TIMER_DESTROY_RESOURCES   |                                                                                                          | true                    |
-| TIMER_POLICY_EVAL_RETRIES |                                                                                                          | 1                       |
+| TIMER_POLICY_EVAL_RETRIES | Number of retries when evaluating policies that have timed out                                           | 1                       |
+| TIMER_DESTROY_RESOURCES   | Force abort and attempt to restart operations that did not respond after multiple retries                | true                    |
 | JWT_MAX_DURATION_SEC      | The lifetime of generated JWT access tokens.                                                             | `30 * 24 * 3600`        |
 | JWT_REFRESH_DURATION_SEC  | The lifetime of generated JWT refresh tokens.                                                            | `5 * 60`                |
 | SENTRY_DSN                |                                                                                                          |                         |
