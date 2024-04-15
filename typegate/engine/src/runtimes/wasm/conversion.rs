@@ -62,7 +62,7 @@ pub fn unlift_type_to_default_value(
             // enum my-enum { a, b, c, .. }
             let names = enum_ty.names().collect::<Vec<_>>();
             if names.is_empty() {
-                bail!("invalid state: enum {:?} has no variant", ty);
+                bail!("invalid state: enum {:?} has no variants", ty);
             }
             enum_ty.new_val(names.first().unwrap())?
         }
@@ -112,9 +112,9 @@ pub fn object_to_wasmtime_val(
                 .fields()
                 .map(|f| f.name.to_owned())
                 .collect::<HashSet<_>>();
-            let extra_field = &given_fields - &canon_fields;
-            if !extra_field.is_empty() {
-                let extra = Vec::from_iter(extra_field.iter().map(|v| format!("'{v}'")));
+            let extra_fields = &given_fields - &canon_fields;
+            if !extra_fields.is_empty() {
+                let extra = Vec::from_iter(extra_fields.iter().map(|v| format!("'{v}'")));
                 let prop = Vec::from_iter(canon_fields.iter().map(|v| format!("'{v}'")));
                 bail!(
                     "none of the fields [{}] match any of [{}]",
@@ -168,11 +168,9 @@ pub fn object_to_wasmtime_val(
                         variant.new_val(matching_tag.name, None)
                     }
                 },
-                None => bail!("none of [{}] matches '{}'", canon_tags.join(", "), repr.tag),
+                None => bail!("none of [{}] match '{}'", canon_tags.join(", "), repr.tag),
             }
         }
-        // IDEA: coercing a string to object implies deserialization, this enables t.json()
-        // Type::String => todo!(),
         _ => bail!(
             "cannot coerce '{}' to {:?}",
             serde_json::to_string(object)?,
@@ -216,7 +214,7 @@ pub fn array_to_wasmtime_val(
                 .map(|it| serde_json::from_value::<String>(it.clone()).map_err(|e| e.into()))
                 .collect::<anyhow::Result<HashSet<String>>>()?;
             let canon_names = flags.names().map(|n| n.to_owned()).collect::<HashSet<_>>();
-            let not_included: Vec<_> = (&given_names - &canon_names).into_iter().collect();
+            let not_included = &given_names - &canon_names;
             if !not_included.is_empty() {
                 let invalid = Vec::from_iter(not_included);
                 let prop = Vec::from_iter(canon_names);
@@ -295,6 +293,8 @@ pub fn value_to_wasmtime_val(
                 }
                 enum_ty.new_val(value)?
             }
+            // IDEA: coercing a string to object implies deserialization, this enables t.json()
+            // Type::Record => todo!(),
             _ => bail!("cannot coerce '{}' to {:?}", value, canonical_ty),
         },
         Array(values) => array_to_wasmtime_val(values, canonical_ty)?,
