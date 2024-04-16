@@ -1,6 +1,6 @@
 # skip:start
-from typegraph import typegraph, Policy, t, Graph
-from typegraph.graph.params import Cors, Auth
+from typegraph import Graph, Policy, t, typegraph
+from typegraph.graph.params import Auth, Cors
 from typegraph.runtimes.deno import DenoRuntime
 
 # skip:end
@@ -20,7 +20,7 @@ def authentication(g: Graph):
 
     # highlight-start
     # expects a secret in metatype.yml
-    # `TG_[typegraph]_BASIC_[username]`
+    # `BASIC_[username]`
     # highlight-next-line
     g.auth(Auth.basic(["admin"]))
     # highlight-end
