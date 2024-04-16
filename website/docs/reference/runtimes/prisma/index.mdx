@@ -45,9 +45,9 @@ Go ahead and update `typegraph.py` with the highlighted lines below:
 A few things to note on the changes:
 
 1. You can import runtimes from `typegraph.runtime.Y` or `typegraph.providers.X.runtimes.Y` for non-core providers.
-1. The `config` method allows specifying runtime specific attributes. In this case, `id` shall be automatically set and incremented by the database.
-1. Types get generated names unless you manually specify them. You can find the exact names in the playground documentation. Here you want to have a human friendly name as it will also be the name of the table in your database.
-1. Runtimes often come with some sugar syntax to generate types and avoid manipulating materializers directly. A corresponding declaration would have looked like this:
+2. The `config` method allows specifying runtime specific attributes. In this case, `id` shall be automatically set and incremented by the database.
+3. Types get generated names unless you manually specify them. You can find the exact names in the playground documentation. Here you want to have a human friendly name as it will also be the name of the table in your database.
+4. Runtimes often come with some sugar syntax to generate types and avoid manipulating materializers directly. A corresponding declaration would have looked like this:
 
 { /* <CodeBlock language="python">
   {require("../../../../../examples/typegraphs/prisma-no-sugar.py").content}
