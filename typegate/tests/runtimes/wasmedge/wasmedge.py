@@ -16,7 +16,7 @@ from typegraph import t, typegraph
 
 
 @typegraph()
-def wasmedge(g: Graph):
+def wasm(g: Graph):
     pub = Policy.public()
     wasmedge = WasmEdgeRuntime()
 
@@ -35,9 +35,9 @@ PORT = sys.argv[2]
 gate = f"http://localhost:{PORT}"
 auth = BasicAuth("admin", "password")
 
-wasmedge_tg = wasmedge()
+wasm_tg = wasm()
 deploy_result = tg_deploy(
-    wasmedge_tg,
+    wasm_tg,
     TypegraphDeployParams(
         base_url=gate,
         auth=auth,

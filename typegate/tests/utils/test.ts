@@ -213,7 +213,7 @@ export class MetaTest {
         sdkLang = SDKLangugage.TypeScript;
         break;
       default:
-        throw new Error("Unsupported file type");
+        throw new Error(`Unsupported file type ${extension}`);
     }
 
     const serialized = sdkLang === SDKLangugage.Python
