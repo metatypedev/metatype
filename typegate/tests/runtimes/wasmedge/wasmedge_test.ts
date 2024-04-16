@@ -8,31 +8,31 @@ import * as path from "std/path/mod.ts";
 
 const cwd = path.join(testDir, "runtimes/wasmedge");
 
-// Meta.test(
-//   {
-//     name: "WasmEdge runtime: Python SDK",
-//     port: true,
-//     systemTypegraphs: true,
-//   },
-//   async (t) => {
-//     await t.should("works on the Python SDK", async () => {
-//       const engine = await t.engineFromTgDeploy(
-//         "runtimes/wasmedge/wasmedge.py",
-//         cwdDir,
-//       );
+Meta.test(
+  {
+    name: "WasmEdge runtime: Python SDK",
+    port: true,
+    systemTypegraphs: true,
+  },
+  async (t) => {
+    await t.should("works on the Python SDK", async () => {
+      const engine = await t.engineFromTgDeploy(
+        "runtimes/wasmedge/wasmedge.py",
+        cwd,
+      );
 
-//       await gql`
-//       query {
-//         test(a: 1, b: 2)
-//       }
-//     `
-//         .expectData({
-//           test: 3,
-//         })
-//         .on(engine);
-//     });
-//   },
-// );
+      await gql`
+      query {
+        test(a: 1, b: 2)
+      }
+    `
+        .expectData({
+          test: 3,
+        })
+        .on(engine);
+    });
+  },
+);
 
 Meta.test({
   name: "WasmEdge Runtime typescript sdk",
