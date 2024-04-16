@@ -1,17 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { toFileUrl } from "std/path/mod.ts";
 import { ComputeStage } from "../../engine/query_engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../../typegraph/mod.ts";
 import { Runtime } from "../Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
-import { DenoRuntimeData } from "../../typegraph/types.ts";
+import { Artifact, DenoRuntimeData } from "../../typegraph/types.ts";
 import * as ast from "graphql/ast";
 import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
 import { Task } from "./shared_types.ts";
-import { structureRepr, uncompress } from "../../utils.ts";
 import { path } from "compress/deps.ts";
 import config from "../../config.ts";
 import { getLogger } from "../../log.ts";
@@ -39,8 +37,14 @@ export class DenoRuntime extends Runtime {
   static async init(
     params: RuntimeInitParams,
   ): Promise<Runtime> {
-    const { typegraph: tg, typegraphName, args, materializers, secretManager } =
-      params as RuntimeInitParams<DenoRuntimeData>;
+    const {
+      typegraph: tg,
+      typegraphName,
+      args,
+      materializers,
+      secretManager,
+      typegate,
+    } = params as RuntimeInitParams<DenoRuntimeData>;
 
     const { worker: name } = args as unknown as DenoRuntimeData;
     if (name == null) {
@@ -56,6 +60,7 @@ export class DenoRuntime extends Runtime {
       }
     }
 
+    // maps from the module code to the op number/id
     const registry = new Map<string, number>();
     const ops = new Map<number, Task>();
 
@@ -64,20 +69,8 @@ export class DenoRuntime extends Runtime {
     // => (gate) tmp/scripts/{tgname}/deno/*
     const basePath = path.join(
       config.tmp_dir,
-      "scripts",
-      typegraphName,
-      uuid,
-      "deno",
-      name.replaceAll(" ", "_"), // TODO: improve sanitization
+      "artifacts", // TODO: improve sanitization
     );
-
-    try {
-      // clean up old files
-      // logger.debug(`removes files at ${basePath}`);
-      await Deno.remove(basePath, { recursive: true });
-    } catch {
-      // ignore non-existent files
-    }
 
     let registryCount = 0;
     for (const mat of materializers) {
@@ -92,29 +85,50 @@ export class DenoRuntime extends Runtime {
         registry.set(code, registryCount);
         registryCount += 1;
       } else if (mat.name === "module") {
-        const code = mat.data.code as string;
+        const matData = mat.data;
+        const denoArtifact = matData.denoArtifact as Artifact;
+        const depArtifacts = matData.depsMeta as Artifact[];
 
-        const repr = await structureRepr(code);
-        const outDir = path.join(basePath, repr.hashes.entryPoint);
-        const entries = await uncompress(
-          outDir,
-          repr.base64,
+        const moduleMeta = {
+          typegraphName: typegraphName,
+          relativePath: denoArtifact.path,
+          hash: denoArtifact.hash,
+          sizeInBytes: denoArtifact.size,
+        };
+
+        const depMetas = depArtifacts.map(
+          (dep) => {
+            return {
+              typegraphName: typegraphName,
+              relativePath: dep.path,
+              hash: dep.hash,
+              sizeInBytes: dep.size,
+            };
+          },
         );
 
-        logger.info(`uncompressed ${entries.join(", ")} at ${outDir}`);
+        // Note:
+        // Worker destruction seems to have no effect on the import cache? (deinit() => stop(worker))
+        // hence the use of contentHash
+        const entryModulePath = await typegate.artifactStore.getLocalPath(
+          moduleMeta,
+          depMetas,
+        );
+
+        logger.info(`Resloved runtimes artifacts at ${basePath}`);
 
         // Note:
         // Worker destruction seems to have no effect on the import cache? (deinit() => stop(worker))
         // hence the use of contentHash
         ops.set(registryCount, {
           type: "register_import_func",
-          modulePath: toFileUrl(
-            path.resolve(outDir, repr.entryPoint),
-          ).toString() + `?hash=${repr.hashes.content}`,
+          modulePath: entryModulePath,
           op: registryCount,
           verbose: config.debug,
         });
-        registry.set(code, registryCount);
+
+        // TODO: can a single aritfact be used by multiple materializers?
+        registry.set(denoArtifact.hash, registryCount);
         registryCount += 1;
       }
     }
@@ -216,7 +230,9 @@ export class DenoRuntime extends Runtime {
 
     if (mat.name === "import_function") {
       const modMat = this.tg.materializers[mat.data.mod as number];
-      const op = this.registry.get(modMat.data.code as string)!;
+      const denoAritfact = modMat.data.denoArtifact as Artifact;
+      const op = this.registry.get(denoAritfact.hash)!;
+
       return async (
         { _: { context, parent, info: { url, headers } }, ...args },
       ) => {

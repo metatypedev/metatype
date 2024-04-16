@@ -4,10 +4,10 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
-export const tg = await typegraph({
-  name: "test-deno-dep",
+export const denoDepTg = await typegraph({
+  name: "test_deno_dep",
 }, (g: any) => {
-  const deno = DenoRuntime();
+  const deno = new DenoRuntime();
   const pub = Policy.public();
 
   g.expose({
@@ -17,6 +17,7 @@ export const tg = await typegraph({
       {
         module: "ts/dep/main.ts",
         name: "doAddition",
+        deps: ["ts/dep/nested/dep.ts"],
       },
     ).withPolicy(pub),
   });
