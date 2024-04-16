@@ -10,19 +10,11 @@ from typegraph.graph.params import Cors
     # skip:end
 )
 def roadmap(g: Graph):
+    # skip:start
     _bucket = t.struct(
         {
             "id": t.integer(as_id=True),
             "name": t.string(),
-        }
-    )
-    idea = t.struct(
-        {
-            "id": t.uuid(
-                as_id=True
-            ),  # email is just a shorthand alias for `t.string({format: "uuid"})`
-            "name": t.string(),
-            "authorEmail": t.email(),  # another string shorthand
         }
     )
     _vote = t.struct(
@@ -34,6 +26,16 @@ def roadmap(g: Graph):
             ).optional(),  # `enum_` is also a shorthand over `t.string`
             "createdAt": t.datetime(),
             "desc": t.string().optional(),  # makes it optional
+        }
+    )
+    # skip:end
+    idea = t.struct(
+        {
+            "id": t.uuid(
+                as_id=True
+            ),  # email is just a shorthand alias for `t.string({format: "uuid"})`
+            "name": t.string(),
+            "authorEmail": t.email(),  # another string shorthand
         }
     )
     random = RandomRuntime(reset=None)
