@@ -94,12 +94,12 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - name: Cache deno dir
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.DENO_DIR }}
-          key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      # - name: Cache deno dir
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ${{ env.DENO_DIR }}
+      #     key: deno-mac-${{ hashFiles('**/deno.lock') }}
+      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
       - name: Cache .venv dir
         uses: actions/cache@v4
         with:
