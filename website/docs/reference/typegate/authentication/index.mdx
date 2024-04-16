@@ -12,7 +12,7 @@ Basic authentication is the simplest way to authenticate requests. It is done by
 
 | Components | Values                                           |
 | ---------- | ------------------------------------------------ |
-| Secrets    | `TG_[typegraph]_BASIC_[username]=password`       |
+| Secrets    | `BASIC_[username]=password`       |
 | Header     | `Authorization: Basic base64(username:password)` |
 | Context    | `{ username }`                                   |
 
@@ -53,7 +53,7 @@ Even though, asymmetric encryption is recommended, HMAC-SHA256 is so commonly us
 
 | Components | Values                                       |
 | ---------- | -------------------------------------------- |
-| Secrets    | `TG_[typegraph]_[authentication]_JWT=secret` |
+| Secrets    | `[authentication]_JWT=secret` |
 | Header     | `Authorization: Bearer token`                |
 | Context    | `{ your_own_content }`                       |
 
@@ -79,7 +79,7 @@ Most of the time, the OAuth2 is managed by your identity provider and relies on 
 
 | Components | Values                                                                                                               |
 | ---------- | -------------------------------------------------------------------------------------------------------------------- |
-| Secrets    | `TG_[typegraph]_[authentication]_CLIENT_ID=client_id`, `TG_[typegraph]_[authentication]_CLIENT_SECRET=client_secret` |
+| Secrets    | `[authentication]_CLIENT_ID=client_id`, `[authentication]_CLIENT_SECRET=client_secret` |
 | Header     | `Authorization: Bearer token`                                                                                        |
 | Context    | `{ content_from_your_idp }`                                                                                          |
 

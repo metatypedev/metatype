@@ -214,7 +214,7 @@ Meta.test({
     "--gate",
     `http://localhost:${port}`,
     "--secret",
-    `TG_PRISMA_PROGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+    `prisma:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
   ];
 
   await t.should("fail to access database", async () => {
