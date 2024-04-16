@@ -1,18 +1,17 @@
-from typegraph import typegraph, Policy, t, Graph
+from os import path
+
+from typegraph import Graph, Policy, t, typegraph
+from typegraph.graph.tg_deploy import (
+    BasicAuth,
+    TypegraphDeployParams,
+    tg_deploy,
+)
 from typegraph.providers.prisma import PrismaRuntime
 from typegraph.runtimes.deno import DenoRuntime
-
-from typegraph.graph.tg_deploy import (
-    tg_deploy,
-    TypegraphDeployParams,
-    BasicAuth,
-)
 from typegraph.runtimes.python import PythonRuntime
 from typegraph.runtimes.wasmedge import WasmEdgeRuntime
 from typegraph.utils import unpack_tarb64
-from typegraph.wit import ArtifactResolutionConfig, MigrationConfig, MigrationAction
-
-from os import path
+from typegraph.wit import ArtifactResolutionConfig, MigrationAction, MigrationConfig
 
 
 @typegraph()
@@ -97,7 +96,7 @@ res = tg_deploy(
         auth=auth,
         artifacts_config=artifacts_config,
         secrets={
-            "TG_DEPLOY_EXAMPLE_PYTHON_POSTGRES": "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
+            "POSTGRES": "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
         },
     ),
 )

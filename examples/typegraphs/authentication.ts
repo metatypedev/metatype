@@ -19,7 +19,7 @@ await typegraph({
 
   // highlight-start
   // expects a secret in metatype.yml
-  // `TG_[typegraph]_BASIC_[username]`
+  // `BASIC_[username]`
   // highlight-next-line
   g.auth(Auth.basic(["admin"]));
   // highlight-end
