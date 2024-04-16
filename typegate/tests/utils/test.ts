@@ -213,7 +213,7 @@ export class MetaTest {
         sdkLang = SDKLangugage.TypeScript;
         break;
       default:
-        throw new Error("Unsupported file type");
+        throw new Error(`Unsupported file type ${extension}`);
     }
 
     const serialized = sdkLang === SDKLangugage.Python
@@ -286,7 +286,12 @@ export class MetaTest {
       throw new Error("No typegraph");
     }
 
-    return stdout;
+    const tg_json = extractJsonFromStdout(stdout);
+    if (!tg_json) {
+      throw new Error("No typegraph");
+    }
+
+    return tg_json;
   }
 
   async unregister(engine: QueryEngine) {
@@ -362,6 +367,22 @@ export class MetaTest {
       );
     }
   }
+}
+
+function extractJsonFromStdout(stdout: string): string | null {
+  let jsonStart = null;
+  let inJson = false;
+
+  for (const line of stdout.split("\n")) {
+    if (inJson) {
+      jsonStart += "\n" + line;
+    } else if (line.startsWith("{")) {
+      jsonStart = line;
+      inJson = true;
+    }
+  }
+
+  return jsonStart;
 }
 
 interface TempGitRepo {
