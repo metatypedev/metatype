@@ -66,6 +66,8 @@ typegates:
         BASIC_ADMIN: hunter2
       roadmap:
         BASIC_ADMIN: hunter2
+      func-gql:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=func_ctx"
 
   prd:
     url: https://demo.metatype.dev
@@ -139,3 +141,7 @@ typegraphs:
   materializers:
     prisma:
       migrations_path: "migrations"
+
+metagen:
+  targets:
+    main:

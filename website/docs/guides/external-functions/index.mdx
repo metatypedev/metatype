@@ -2,22 +2,129 @@
 sidebar_position: 50
 ---
 
-import TGExample from "@site/src/components/TGExample";
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
+import TGExample from "@site/src/components/TGExample"; 
 import CodeBlock from "@theme-original/CodeBlock";
 
-# Run serverless functions
+# Custom functions
 
-{/* ## Embedded runner
+Custom functions can be used to run custom code at different points of a typegraph. 
+These constructs fall under [materializers](/docs/concepts/mental-model#Materializers) which are, concretly, functions attached to a specific runtime.
+For some common tasks, like simple operations on database tables for example, runtime implementations provide materializer [generators](/docs/reference/runtimes/prisma#Generators) to minimize boilerplate.
+For cases not expressible by generators, runtimes like the `DenoRuntime` allow us to write more powerful custom functions.
 
-## External runner */}
+Custom functions are commonly used for:
 
-Typegraphs allow us to define and execute at different places to accomplish myriad of tasks:
+- Specialized business logic to respond directly to incoming requests
+- Authentication policy logic
 
-<TGExample typegraph="math" 
-    python={require("../../../../examples/typegraphs/math.py")}
-    query={require('./math.graphql')} 
-    />
+The following example uses the `DenoRuntime` to respond to requests and define a policy.
 
-Here's what `fib.ts` looks like:
+<SDKTabs>
+    <TabItem value="typescript">
 
-<CodeBlock language="typescript">{require("!!code-loader!../../../../examples/typegraphs/scripts/fib.ts").content}</CodeBlock>
+<TGExample 
+  typegraph="math"
+  python={require("!!code-loader!../../../../examples/typegraphs/math.ts")}
+  query={require('./math.graphql')}
+  />
+
+    </TabItem>
+
+    <TabItem value="python">
+  
+<TGExample 
+  typegraph="math"
+  python={require("../../../../examples/typegraphs/math.py")}
+  query={require('./math.graphql')}
+  />
+
+    </TabItem>
+</SDKTabs>
+
+Note for the `fib` root materializer, we're using an ECMA module in an external file.
+Here's what `scripts/fib.ts` looks like:
+
+<CodeBlock language="typescript">
+  {require("!!code-loader!../../../../examples/typegraphs/scripts/fib.ts").content}
+</CodeBlock>
+
+The following runtimes can be used to run custom functions:
+- [`DenoRuntime`](/docs/reference/runtimes/deno/) through typescript code.
+- [`PythonRuntime`](/docs/reference/runtimes/python/) through python code.
+- [`WasmedgeRuntime`](/docs/reference/runtimes/wasmedge/) through wasm modules.
+- [`PrismaRuntime`](/docs/reference/runtimes/prisma/) throw raw SQL queries.
+
+## The context object
+
+:::info Beta
+The following feature is currently only implemented for the `DenoRuntime`.
+:::
+
+On some runtimes, custom functions are passed the context object along with the materializer inputs.
+This object provides access to all kind of information about the context in which the function is running.
+The following example illustrates availaible fields:
+
+<SDKTabs>
+    <TabItem value="typescript">
+
+<TGExample 
+  typegraph="func-ctx"
+  typescript={require("!!code-loader!../../../../examples/typegraphs/func-ctx.ts")}
+  query={require('./ctx.graphql')}
+  />
+    </TabItem>
+
+    <TabItem value="python">
+  
+<TGExample 
+  typegraph="func-ctx"
+  typescript={require("!!code-loader!../../../../examples/typegraphs/func-ctx.py")}
+  query={require('./ctx.graphql')}
+  />
+
+    </TabItem>
+</SDKTabs>
+
+Note, the typescript version of the sample uses a closure instead of a string snippet to define the function.
+This is a simple syntax sugar availaible when using `DenoRuntime` through the typescript sdk or the `PythonRuntime` the python one.
+Consult the reference for each runtime to look at what's availaible.
+
+## Accessing the typegraph
+
+:::info Beta
+The following feature is currently only implemented for the `DenoRuntime`.
+:::
+
+To do anything meaningful with custom functions, you'll want to access the rest of functionality implemented on your typegraph.
+The primary way of doing this is by sending GraphqQl queries from within your function.
+On the `DenoRuntime`, to make this easier, there's a `gql` object passed to all functions.
+The following exapmle illustrates how it functions:
+
+<SDKTabs>
+    <TabItem value="typescript">
+
+<TGExample 
+  typegraph="func-gql"
+  typescript={require("!!code-loader!../../../../examples/typegraphs/func-gql.ts")}
+  query={require('./gql.graphql')}
+  />
+    </TabItem>
+
+    <TabItem value="python">
+  
+<TGExample 
+  typegraph="func-gql"
+  typescript={require("!!code-loader!../../../../examples/typegraphs/func-gql.py")}
+  query={require('./gql.graphql')}
+  />
+
+    </TabItem>
+</SDKTabs>
+
+And `scripts/createVote.ts` looks like:
+
+<CodeBlock language="typescript">
+  {require("!!code-loader!../../../../examples/typegraphs/scripts/createVote.ts").content}
+</CodeBlock>

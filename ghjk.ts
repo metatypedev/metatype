@@ -106,8 +106,10 @@ ghjk.task("clean-deno-lock", {
       `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
     const jqOp2 = `del(.packages.npm["@typegraph/sdk@${METATYPE_VERSION}"])`;
     const jqOp = `${jqOp1} | ${jqOp2}`;
-    const lock = await $`jq ${jqOp} typegate/deno.lock`.text();
-    await Deno.writeTextFile("typegate/deno.lock", lock);
+    await Deno.writeTextFile(
+      "typegate/deno.lock",
+      await $`jq ${jqOp} typegate/deno.lock`.text(),
+    );
   },
 });
 
