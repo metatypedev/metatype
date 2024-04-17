@@ -41,7 +41,7 @@ typegates:
       iam-provider:
         GITHUB_CLIENT_ID: "fake"
         GITHUB_CLIENT_SECRET: "fake"
-      retrend:
+      files-upload:
         S3_HOST: http://localhost:9000
         S3_REGION: local
         S3_ACCESS_KEY: minio
@@ -111,7 +111,7 @@ typegates:
       iam-provider:
         GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
         GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
-      retrend:
+      files-upload:
         S3_HOST: http://localhost:9000
         S3_REGION: local
         S3_ACCESS_KEY: minio
