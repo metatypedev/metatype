@@ -37,7 +37,7 @@ await typegraph({
     },
   );
 
-  const random = new RandomRuntime({});
+  const random = new RandomRuntime({ seed: 1 });
   const pub = Policy.public();
   g.expose({ get_idea: random.gen(idea) }, pub);
 });

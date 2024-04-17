@@ -1,0 +1,8 @@
+query {
+    facts(language: "en") {
+        id
+        text
+        # source_url
+        # permalink
+    }
+}

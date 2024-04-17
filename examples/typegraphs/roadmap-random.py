@@ -1,6 +1,9 @@
 from typegraph import typegraph, Policy, t, Graph
 from typegraph.runtimes.random import RandomRuntime
+
+# skip:start
 from typegraph.graph.params import Cors
+# skip:end
 
 
 @typegraph(
@@ -38,6 +41,6 @@ def roadmap(g: Graph):
             "authorEmail": t.email(),  # another string shorthand
         }
     )
-    random = RandomRuntime(reset=None)
+    random = RandomRuntime(reset=None, seed=1)
     pub = Policy.public()
     g.expose(pub, get_idea=random.gen(idea))

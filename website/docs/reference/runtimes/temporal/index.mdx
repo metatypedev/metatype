@@ -3,13 +3,45 @@
 ## Temporal runtime
 
 [Temporal](https://temporal.io/) is an open-source durable execution engine that can be used to develop workflows that are long lived and failure resistant.
-Common usecases include:
+Common use cases include:
 
 - Implementing multi-step, complicated transactionaly business logic. 
-- Guranteed event processing.
+- Guaranteed event processing.
 - Control planes for driving processes.
 
 The `TemporalRuntime` in Metatype can be used to directly `start`, `query`, `signal` and `describe` workflows on your temporal cluster. 
 Refer to the [temporal docs](https://docs.temporal.io) for more on what you can accomplish with this tech.
+
+An interesting use case is to dynamically describe the operations you want to expose, this enables reusing typegraphs accross different projects or even building a small framework around it.
+
+Here is a simple example of a typegraph that takes some value from an environment variable.
+
+```python
+from typegraph import t, typegraph, Policy, Graph
+from typegraph.providers.temporal import TemporalRuntime
+import os
+
+@typegraph()
+def temporal(g: Graph):
+    public = Policy.public()
+    temporal = TemporalRuntime(
+        "<name>", "<host_secret>", namespace_secret="<ns_secret>"
+    )
+
+    id = os.getenv("ID_FROM_ENV")
+    arg = t.struct({"some_field": t.string()})
+
+    g.expose(
+        public,
+        start=temporal.start_workflow("<workflow_type>", arg),
+        query=temporal.query_workflow("<query_type>", arg, t.string()),
+        signal=temporal.signal_workflow("<signal_name>", arg),
+        describe=temporal.describe_workflow().reduce(
+            {"workflow_id": id }
+        ) if id else temporal.describe_workflow(),
+    )
+
+```
+
 
 <!-- TODO: setup a test temporal cluster and workflow for demo purposes -->
