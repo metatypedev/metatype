@@ -1,3 +1,4 @@
+# skip:start
 from typegraph import Graph, Policy, t, typegraph
 from typegraph.runtimes.deno import DenoRuntime
 
@@ -16,9 +17,19 @@ def example_rest(g: Graph):
         },
         name="Post",
     )
+    # skip:end
+
+    g.expose(
+        postFromUser=deno.func(
+            user,
+            post,
+            code="(_) => ({ id: 12, author: {id: 1}  })",
+        ).with_policy(pub),
+    )
 
     # API docs {typegate_url}/example-rest/rest
     # In this example, the query below maps to {typegate_url}/example-rest/rest/get_post?id=..
+    # highlight-start
     g.rest(
         """
         query get_post($id: Integer) {
@@ -31,11 +42,4 @@ def example_rest(g: Graph):
         }
         """
     )
-
-    g.expose(
-        postFromUser=deno.func(
-            user,
-            post,
-            code="(_) => ({ id: 12, author: {id: 1}  })",
-        ).with_policy(pub),
-    )
+    # highlight-end

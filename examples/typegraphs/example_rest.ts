@@ -1,3 +1,4 @@
+// skip:start
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
@@ -17,9 +18,19 @@ await typegraph({
     },
     { name: "Post" },
   );
+  //  skip:end
+
+  g.expose({
+    postFromUser: deno.func(
+      user,
+      post,
+      { code: "(_) => ({ id: 12, author: {id: 1}  })" },
+    ).withPolicy(pub),
+  });
 
   // API docs {typegate_url}/example-rest/rest
   // In this example, the query below maps to {typegate_url}/example-rest/rest/get_post?id=..
+  // highlight-start
   g.rest(
     `
         query get_post($id: Integer) {
@@ -32,12 +43,6 @@ await typegraph({
         }
     `,
   );
-
-  g.expose({
-    postFromUser: deno.func(
-      user,
-      post,
-      { code: "(_) => ({ id: 12, author: {id: 1}  })" },
-    ).withPolicy(pub),
-  });
+  // highlight-end
+  // skip:start
 });
