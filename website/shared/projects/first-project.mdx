@@ -1,0 +1,77 @@
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
+import TGExample from "@site/src/components/TGExample"; 
+
+
+Now you are ready to develop for your first project! You can use [meta doctor](#4-verify-your-installation) to check if neccessary components are installed. 
+Let's start by creating a working directory for the project. Open your terminal and run the following commands. 
+```bash
+mkdir metatype-project
+cd metatype-project
+```
+
+Now that you have your workspace and development environment setup, let's start building a simple `CRUD` application.
+
+The SDK used for developing `Metatype` applications is the [Typegraph](/docs/reference/typegraph). Currently, it's available through Typescript and Python.
+
+<SDKTabs>
+    <TabItem value="typescript">
+        
+There are two variations to write our project using Typescript. We can either use `node` or `deno` as a runtime. For now, we will be using `node`. To bootstrap a `Metatype` project, we can run the following command.
+```bash
+meta new --template node
+```
+
+This will create the necessary files for development, some of which are:
+- `.graphqlrc.yaml`: configuration file to define settings and options related to 
+-  `compose.yml`: is where the typegate node and similar services are setup.
+- `metatype.yaml`: is where we configure different variables such as authentication, secrets... used by the backend.
+
+The command also creates a directory called `api` where we will be building much of our applications's business logic. Inside the `api` directory, you will find a single file called `example.ts` which defines a simple [Typegraph](/docs/reference/typegraph).
+{/* <TGExample 
+  typegraph="example"
+  python={require("../../../../examples/templates/node/api/example.ts")}
+  /> */}
+Let's break down the above code snippet.
+The `typegraph` function is our building block and it encompasses most of the our logic inside. It takes a name and a callback function as an argument. All the magic is done inside the callback function.
+
+Metatype uses Policy Based [Access Control](/docs/concepts/access-control) for accessing resources in your backend and here we have defined a public access.
+```typescript
+const pub = Policy.public();
+```
+
+There are two runtimes defined namely [PythonRuntime](/docs/reference/runtimes/python) and [DenoRuntime](/docs/reference/runtimes/deno). We will be using these two runtimes to perform different operations along with the other [runtimes](/docs/referenece/runtimes) Metatype provides. 
+```typescript
+const deno = new DenoRuntime();
+const python = new PythonRuntime();
+```
+
+Now that we have runtimes to process data and set our access control, we need to define endpoints to communicate with our backend. This is where we use the `g.expose` method to enumerate the endpoints we want in our application. From our starter file, we can see that we have defined two endpoints, `add` and `multiply`.
+```typescript
+g.expose({
+    add: python
+      .fromLambda(
+        t.struct({ first: t.float(), second: t.float() }),
+        t.float(),
+        { code: "lambda x: x['first'] + x['second']" },
+      )
+      .withPolicy(pub),
+    multiply: deno
+      .func(t.struct({ first: t.float(), second: t.float() }), t.float(), {
+        code: "({first, second}) => first * second",
+      })
+      .withPolicy(pub),
+  });
+```
+Let's dive into what the `add` endpoint is doing. The `add` endpoint defines a `custom function` which does some processing to data using the `PythonRuntime`. When we are defining the custom function, we pass the input type, output type and then a [materializer](/docs/concepts/mental-model#materializers). 
+
+That's it! We have created your first `Metatype` project. It's as easy as this. Before we go ahead and test our app, let's add two more endpoints which peform basic `Create` and `Read` database operation.
+
+TODO: Add Prisma Runtime
+
+
+    </TabItem>
+    <TabItem value="python">
+        TODO: 
+    </TabItem>
+</SDKTabs>
