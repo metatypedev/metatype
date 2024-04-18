@@ -480,7 +480,7 @@ export interface S3RuntimeData {
 export interface TemporalRuntimeData {
   name: string;
   host_secret: string;
-  namespace_secret?: string;
+  namespace_secret?: string | null;
 }
 export interface WasmEdgeRuntimeData {
   config?: string | null;
@@ -508,7 +508,9 @@ export interface TypeMeta {
   rate?: Rate | null;
   version: string;
   random_seed?: number | null;
-  ref_artifacts: Map<string, string>;
+  ref_artifacts: {
+    [k: string]: string;
+  };
 }
 export interface Queries {
   dynamic: boolean;
