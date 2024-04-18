@@ -6,26 +6,20 @@ from typegraph.runtimes.random import RandomRuntime
 
 # skip:end
 @typegraph(
-    # highlight-next-line
+    # highlight-start
     cors=Cors(
-        # highlight-next-line
         allow_origin=["https://not-this.domain"],
-        # highlight-next-line
         allow_headers=["x-custom-header"],
-        # highlight-next-line
         expose_headers=["header-1"],
-        # highlight-next-line
         allow_credentials=True,
-        # highlight-next-line
         max_age_sec=60,
-        # highlight-next-line
     ),
+    # highlight-end
 )
-def auth(g: Graph):
+def cors(g: Graph):
     random = RandomRuntime(seed=0, reset=None)
-    public = Policy.public()
 
     g.expose(
-        public,
+        Policy.public(),
         catch_me_if_you_can=random.gen(t.string()),
     )

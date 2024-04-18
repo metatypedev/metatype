@@ -27,7 +27,6 @@ def example_rest(g: Graph):
         ).with_policy(pub),
     )
 
-    # API docs {typegate_url}/example-rest/rest
     # In this example, the query below maps to {typegate_url}/example-rest/rest/get_post?id=..
     # highlight-start
     g.rest(

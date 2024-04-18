@@ -8,7 +8,25 @@ Object storages like S3 are commonly used to cover app needs around large blob d
 Most object storage services provide S3 compatible APIs including the open-source [MinIO](https://min.io/) engine which you can run locally for development.
 
 For the following example, you'll need to setup your S3 compatible store first.
-Provide the following vars to our `metatype.yml` then.
+The following snippet can get you started using minio on docker compose:
+
+```yaml
+services:
+  minio:
+    image: bitnami/minio:2022
+    platform: linux/amd64
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_REGION_NAME: local
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: password
+      MINIO_DEFAULT_BUCKETS: "bucket:none"
+```
+
+We then provide the following secrets to our typegraph through `metatype.yml`.
 
 ```yml
 typegates:

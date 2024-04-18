@@ -43,7 +43,7 @@ The following example uses the `DenoRuntime` to respond to requests and define a
     </TabItem>
 </SDKTabs>
 
-Note for the `fib` root materializer, we're using an ECMA module in an external file.
+Note that for the `fib` root materializer, we're using an ECMA module in an external file.
 Here's what `scripts/fib.ts` looks like:
 
 <CodeBlock language="typescript">
@@ -56,7 +56,7 @@ The following runtimes can be used to run custom functions:
 - [`WasmedgeRuntime`](/docs/reference/runtimes/wasmedge/) through wasm modules.
 - [`PrismaRuntime`](/docs/reference/runtimes/prisma/) throw raw SQL queries.
 
-## The context object
+## Accessing funciton context
 
 :::info Beta
 The following feature is currently only implemented for the `DenoRuntime`.
