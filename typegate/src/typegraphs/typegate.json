@@ -17,10 +17,10 @@
         "findAvailableOperations": 42,
         "findPrismaModels": 50,
         "execRawPrismaRead": 56,
-        "execRawPrismaCreate": 61,
-        "execRawPrismaUpdate": 62,
-        "execRawPrismaDelete": 63,
-        "queryPrismaModel": 64
+        "execRawPrismaCreate": 63,
+        "execRawPrismaUpdate": 64,
+        "execRawPrismaDelete": 65,
+        "queryPrismaModel": 66
       },
       "required": [
         "typegraphs",
@@ -711,16 +711,28 @@
       "required": []
     },
     {
+      "type": "either",
+      "title": "PrismaQuery",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "oneOf": [
+        59,
+        61
+      ]
+    },
+    {
       "type": "object",
-      "title": "PrismaJsonSingleQuery",
+      "title": "PrismaSingleQuery",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
         "modelName": 37,
-        "action": 59,
-        "query": 60
+        "action": 60,
+        "query": 35
       },
       "required": []
     },
@@ -754,16 +766,24 @@
     },
     {
       "type": "object",
-      "title": "PrismaFieldQuery",
+      "title": "PrismaBatchQuery",
       "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "arguments": 36,
-        "selection": 35
+        "batch": 62
       },
       "required": []
+    },
+    {
+      "type": "list",
+      "title": "_5_PrismaSingleQuery[]",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 59
     },
     {
       "type": "function",
@@ -819,8 +839,8 @@
       ],
       "config": {},
       "as_id": false,
-      "input": 65,
-      "output": 67,
+      "input": 67,
+      "output": 69,
       "materializer": 13,
       "rate_weight": null,
       "rate_calls": false
@@ -836,8 +856,8 @@
         "typegraph": 9,
         "runtime": 9,
         "model": 9,
-        "offset": 66,
-        "limit": 66
+        "offset": 68,
+        "limit": 68
       },
       "required": []
     },
@@ -857,9 +877,9 @@
       "config": {},
       "as_id": false,
       "properties": {
-        "fields": 68,
-        "rowCount": 66,
-        "data": 70
+        "fields": 70,
+        "rowCount": 68,
+        "data": 72
       },
       "required": []
     },
@@ -870,7 +890,7 @@
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 69
+      "items": 71
     },
     {
       "type": "object",

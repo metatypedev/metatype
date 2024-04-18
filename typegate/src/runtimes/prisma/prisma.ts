@@ -51,13 +51,13 @@ interface FieldQuery {
   arguments?: Record<string, unknown>;
 }
 
-interface SingleQuery {
+export interface SingleQuery {
   modelName?: string;
   action: string;
   query: FieldQuery;
 }
 
-interface BatchQuery {
+export interface BatchQuery {
   batch: SingleQuery[];
   // transaction
 }

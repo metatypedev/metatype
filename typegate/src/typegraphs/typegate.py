@@ -8,7 +8,6 @@ from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.deno import DenoRuntime
 from typegraph.wit import runtimes, store
 
-
 ### Prisma query (Json protocol):
 # https://github.com/prisma/prisma-engines/blob/93f79ec1ca7867558f10130d8db84fb7bf150357/query-engine/request-handlers/src/protocols/json/body.rs#L13C10-L13C18
 
@@ -39,20 +38,46 @@ prisma_query_tags = [
 ]
 
 # https://github.com/prisma/prisma-engines/blob/93f79ec1ca7867558f10130d8db84fb7bf150357/query-engine/request-handlers/src/protocols/json/body.rs#L50
-prisma_json_query = t.struct(
+prisma_query_single = t.struct(
     {
         "modelName": t.string().optional(),
         "action": t.enum(prisma_query_tags, name="PrismaQueryTag"),
-        "query": t.struct(
-            {
-                "arguments": t.json().optional(),  # TODO t.record([t.string(), t.json()])
-                "selection": t.json(),  # TODO t.record([t.string(), t.enum([t.boolean(), g.ref("PrismaFieldQuery")])])
-            },
-            name="PrismaFieldQuery",
-        ),
+        # "query": t.struct(
+        #     {
+        #         "arguments": t.json().optional(),  # TODO t.record([t.string(), t.json()])
+        #         "selection": t.json(),  # TODO t.record([t.string(), t.enum([t.boolean(), g.ref("PrismaFieldQuery")])])
+        #     },
+        #     name="PrismaFieldQuery",
+        # ),
+        "query": t.json(),
     },
-    name="PrismaJsonSingleQuery",
+    name="PrismaSingleQuery",
 )
+
+prisma_query_batch = t.struct(
+    {
+        "batch": t.list(prisma_query_single),
+        # "transaction": t.struct(
+        #     {
+        #         "isolation_level": t.enum(
+        #             [
+        #                 "read uncommitted",
+        #                 "readuncommitted",
+        #                 "read committed",
+        #                 "readcommitted",
+        #                 "repeatable read",
+        #                 "repeatableread",
+        #                 "snapshot",
+        #                 "serializable",
+        #             ]
+        #         ).optional(),
+        #     }
+        # ).optional(),
+    },
+    name="PrismaBatchQuery",
+)
+
+prisma_query = t.either([prisma_query_single, prisma_query_batch], name="PrismaQuery")
 
 
 @typegraph(
@@ -280,7 +305,7 @@ def typegate(g: Graph):
             "typegraph": t.string(),
             # prisma runtime name
             "runtime": t.string(),
-            "query": prisma_json_query,
+            "query": prisma_query,
         }
     )
     raw_prisma_op_out = t.json()

@@ -79,19 +79,19 @@ Meta.test({
         query: {
           modelName: "users",
           action: "createOne",
-          query: {
-            selection: JSON.stringify({
+          query: JSON.stringify({
+            selection: {
               id: true,
               name: true,
               email: true,
-            }),
-            arguments: JSON.stringify({
+            },
+            arguments: {
               data: {
                 name: "John Doe",
                 email: "john.doe@example.com",
               },
-            }),
-          },
+            },
+          }),
         },
       })
       .withHeaders(adminHeaders)
@@ -101,6 +101,79 @@ Meta.test({
           name: "John Doe",
           email: "john.doe@example.com",
         }),
+      })
+      .on(e);
+  });
+
+  await t.should("run multiple queries in a transition", async () => {
+    await gql`
+      mutation ExecuteRawPrismaCreate(
+        $typegraph: String!,
+        $runtime: String!,
+        $query: String!
+      ) {
+        execRawPrismaCreate(
+          typegraph: $typegraph,
+          runtime: $runtime,
+          query: $query
+        )
+      }
+    `
+      .withVars({
+        typegraph: "prisma",
+        runtime: "prisma",
+        query: {
+          batch: [
+            {
+              modelName: "users",
+              action: "createOne",
+              query: JSON.stringify({
+                selection: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+                arguments: {
+                  data: {
+                    name: "John Doe",
+                    email: "john.doe@example.com",
+                  },
+                },
+              }),
+            },
+            {
+              modelName: "users",
+              action: "deleteOne",
+              query: JSON.stringify({
+                selection: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+                arguments: {
+                  where: {
+                    id: 2,
+                  },
+                },
+              }),
+            },
+          ],
+        },
+      })
+      .withHeaders(adminHeaders)
+      .expectData({
+        execRawPrismaCreate: JSON.stringify([
+          {
+            id: 2,
+            name: "John Doe",
+            email: "john.doe@example.com",
+          },
+          {
+            id: 2,
+            name: "John Doe",
+            email: "john.doe@example.com",
+          },
+        ]),
       })
       .on(e);
   });
