@@ -1,7 +1,7 @@
 services:
   envoy:
     image: envoyproxy/envoy:v1.26-latest
-    restart: always
+    restart: unless-stopped
     ports:
       - "9901:9901"
       - "7890:10000"
@@ -12,7 +12,7 @@ services:
 
   redis:
     image: bitnami/redis:7.0
-    restart: always
+    restart: unless-stopped
     ports:
       - "6379:6379"
     environment:
@@ -25,3 +25,16 @@ services:
       - "4873:4873"
     volumes:
       - ../verdaccio/:/verdaccio/conf/:ro
+
+  minio:
+    image: bitnami/minio:2022
+    platform: linux/amd64
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_REGION_NAME: local
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: password
+      MINIO_DEFAULT_BUCKETS: "bucket:none"
