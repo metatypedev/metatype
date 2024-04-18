@@ -480,6 +480,15 @@
                   "f77828fcb8896a0df3511920d0055d0f89bfdec9"
                 ]
               }
+            },
+            "dev": {
+              "name": "dev",
+              "dependsOn": [],
+              "env": {
+                "installs": [],
+                "env": {},
+                "allowedPortDeps": []
+              }
             }
           }
         }

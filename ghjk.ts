@@ -104,6 +104,19 @@ ghjk.task("clean-deno-lock", {
   },
 });
 
+ghjk.task("dev", {
+  async fn({ $, argv }) {
+    if (argv.length == 0) {
+      console.log("Usage: dev <dev-script-name> [args...]");
+      return;
+    }
+    const [cmd, ...args] = argv;
+    const script = $.path(`dev/${cmd}.ts`);
+    console.log(`Running ${script}`, ...args.map(JSON.stringify));
+    await $`deno run --allow-all ${script} ${args}`;
+  },
+});
+
 export const secureConfig = ghjk.secureConfig({
   allowedPortDeps: [...ghjk.stdDeps({ enableRuntimes: true })],
 });
