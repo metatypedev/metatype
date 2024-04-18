@@ -9,13 +9,16 @@ import FirstProject from "../../../shared/projects/first-project.mdx";
 
 # Quick start
 
-**This page will show you how to install the different components used by Metatype.**
+**This page will show you how to install the different components used by Metatype. It will also go over a simple application to get you started.**
 
 :::note You will learn
 
 - how to install the meta CLI
 - how to install the typegraph SDK
 - how to run a typegate node
+- how to bootstrap a Metatype application
+- how to author typegraphs
+- how to deploy and run typegraphs on a typegate node.
 
 :::
 
@@ -38,7 +41,41 @@ The doctor subcommand will attempt to detect all the components and report any p
 ```bash
 meta doctor
 ```
-    TODO: Add result image/log
+After Sucessful installation, the above command produces an output somewhat similar to the one below.
+```console
+user@first-project:~$ meta doctor
+——————————————————————————— Global ———————————————————————————
+curr. directory      /Users/user/Documents/metatype-playground/projects/first-project
+global config        /Users/user/Library/Application Support/dev.metatype.meta/config.json
+meta-cli version     0.3.6
+docker version       Docker version 24.0.7, build afdd53b
+containers           bitnami/minio:2022 (Up 3 days), verdaccio/verdaccio (Up 3 days), postgres:15 (Up 3 days), bitnami/redis:7.0 (Up 3 days), envoyproxy/envoy:v1.26-latest (Up 3 days), redis:7 (Up 3 days), rabbitmq:3-management (Up 45 hours)
+
+—————————————————————————— Project  ——————————————————————————
+metatype file        metatype.yaml
+targets              [2] deploy (remote, 3 secrets), dev (local, 3 secrets)
+typegraphs           [0] 
+
+————————————————————————— Python SDK —————————————————————————
+python version       Python 3.11.3
+python bin           ../../../../../../Library/Caches/pypoetry/virtualenvs/example-paIt3smx-py3.11/bin/python
+venv folder          not found
+pyproject file       pyproject.toml
+pipfile file         not found
+requirements file    not found
+typegraph version    0.3.6
+
+——————————————————————— Typescript SDK ———————————————————————
+deno version         deno 1.39.4
+node version         v18.16.0
+
+┌————————————————————————————————————————————————————————————┐
+| In case of issue or question, please raise a ticket on:    |
+| https://github.com/metatypedev/metatype/issues             |
+| Or browse the documentation:                               |
+| https://metatype.dev/docs                                  |
+└————————————————————————————————————————————————————————————┘
+```
 
 ## 5. Install the development tools (Optional)
 

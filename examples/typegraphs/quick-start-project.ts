@@ -10,7 +10,7 @@ await typegraph("example", (g) => {
   // runtimes
   const deno = new DenoRuntime();
   const python = new PythonRuntime();
-  const db = new PrismaRuntime("database", "POSTGRES_CONN");
+  const db = new PrismaRuntime("database", "POSTGRES");
 
   // database tables
   const message = t.struct(

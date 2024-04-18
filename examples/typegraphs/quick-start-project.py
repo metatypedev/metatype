@@ -11,7 +11,7 @@ def example(g: Graph):
 
     # runtimes
     python = PythonRuntime()
-    db = PrismaRuntime("database", "POSTGRES_CONN")
+    db = PrismaRuntime("database", "POSTGRES")
 
     # types, database tables
     message = t.struct(
