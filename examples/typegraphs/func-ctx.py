@@ -43,7 +43,7 @@ def func_ctx(g: Graph):
             ),
             code="""(_: any, ctx: any) => ({
             ...ctx,
-            parent: JSON.stringify(ctx.context),
+            parent: JSON.stringify(ctx.parent),
             context: JSON.stringify(ctx.context),
 
             // modeling arbitrary associative arrays in
