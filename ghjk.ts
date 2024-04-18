@@ -1,5 +1,6 @@
 export { ghjk } from "https://raw.github.com/metatypedev/ghjk/423d38e/mod.ts";
 import * as ghjk from "https://raw.github.com/metatypedev/ghjk/423d38e/mod.ts";
+import { thinInstallConfig } from "https://raw.github.com/metatypedev/ghjk/423d38e/utils/mod.ts";
 import * as ports from "https://raw.github.com/metatypedev/ghjk/423d38e/ports/mod.ts";
 
 const PROTOC_VERSION = "v24.1";
@@ -16,6 +17,12 @@ const CARGO_INSTA_VERSION = "1.33.0";
 const NODE_VERSION = "20.8.0";
 const TEMPORAL_VERSION = "0.10.7";
 const METATYPE_VERSION = "0.3.7-0";
+
+const installs = {
+  python: ports.cpy_bs({ version: PYTHON_VERSION, releaseTag: "20240224" }),
+  python_latest: ports.cpy_bs({ releaseTag: "20240224" }),
+  node: ports.node({ version: NODE_VERSION }),
+};
 
 ghjk.install(
   ports.wasmedge({ version: WASMEDGE_VERSION }),
@@ -48,7 +55,7 @@ if (!Deno.env.has("OCI")) {
       version: CARGO_INSTA_VERSION,
       locked: true,
     }),
-    ports.node({ version: NODE_VERSION }),
+    installs.node,
     ports.pnpm({ version: PNPM_VERSION }),
     // FIXME: jco installs node as a dep
     ports.npmi({
@@ -70,13 +77,13 @@ if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
 
 if (!Deno.env.has("NO_PYTHON")) {
   ghjk.install(
-    ports.cpy_bs({ version: PYTHON_VERSION }),
+    installs.python,
     ports.pipi({
       packageName: "poetry",
       version: POETRY_VERSION,
     })[0],
   );
-  if (!Deno.env.has("CI") && !Deno.env.has("OCI")) {
+  if (!Deno.env.has("OCI")) {
     ghjk.install(
       ports.pipi({ packageName: "pre-commit" })[0],
     );
@@ -105,5 +112,11 @@ ghjk.task("clean-deno-lock", {
 });
 
 export const secureConfig = ghjk.secureConfig({
-  allowedPortDeps: [...ghjk.stdDeps({ enableRuntimes: true })],
+  allowedPortDeps: [
+    ...ghjk.stdDeps(),
+    ...[installs.python_latest, installs.node].map((fat) => ({
+      manifest: fat.port,
+      defaultInst: thinInstallConfig(fat),
+    })),
+  ],
 });
