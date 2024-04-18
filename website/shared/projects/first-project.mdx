@@ -2,6 +2,8 @@ import SDKTabs from "@site/src/components/SDKTabs";
 import TabItem from "@theme/TabItem";
 import TGExample from "@site/src/components/TGExample"; 
 import CodeBlock from "@theme-original/CodeBlock";
+import PythonTab from "./first-project-python-tab.mdx";
+import TypeScriptTab from "./first-project-ts.mdx";
 
 
 Now you are ready to develop for your first project! You can use [meta doctor](#4-verify-your-installation) to check if neccessary components are installed. 
@@ -17,108 +19,10 @@ The SDK used for developing `Metatype` applications is the [Typegraph](/docs/ref
 
 <SDKTabs>
     <TabItem value="typescript">
-        
-There are two variations to write our project using Typescript. We can either use `node` or `deno` as a runtime. For now, we will be using `node`. To bootstrap a node `Metatype` project, we can run the following command.
-```bash
-meta new --template node
-```
-
-This will create the necessary files for development, some of which are:
-- `.graphqlrc.yaml`: configuration file to define settings and options related to 
--  `compose.yml`: is where the typegate node and similar services are setup.
-- `metatype.yaml`: is where we configure different variables such as authentication, secrets... used by the backend.
-
-The command also creates a directory called `api` where we will be building much of our applications's business logic. Inside the `api` directory, you will find a single file called `example.ts` which defines a simple [Typegraph](/docs/reference/typegraph).
-<CodeBlock language="typescript">{require("!!code-loader!../../../examples/templates/node/api/example.ts").content}</CodeBlock>
-
-Let's break down the above code snippet.
-The `typegraph` function is our building block and it encompasses most of the our logic inside. It takes a name and a callback function as an argument. All the magic is done inside the callback function.
-
-Metatype uses Policy Based [Access Control](/docs/concepts/access-control) for accessing resources in your backend and here we have defined a public access.
-```typescript
-const pub = Policy.public();
-```
-
-There are two runtimes defined namely [PythonRuntime](/docs/reference/runtimes/python) and [DenoRuntime](/docs/reference/runtimes/deno). We will be using these two runtimes to perform different operations along with the other [runtimes](/docs/referenece/runtimes) Metatype provides. 
-```typescript
-const deno = new DenoRuntime();
-const python = new PythonRuntime();
-```
-
-Now that we have runtimes to process data and set our access control, we need to define endpoints to communicate with our backend. This is where we use the `g.expose` method to enumerate the endpoints we want in our application. From our starter file, we can see that we have defined two endpoints, `add` and `multiply`.
-```typescript
-g.expose({
-    add: python
-      .fromLambda(
-        t.struct({ first: t.float(), second: t.float() }),
-        t.float(),
-        { code: "lambda x: x['first'] + x['second']" },
-      )
-      .withPolicy(pub),
-    multiply: deno
-      .func(t.struct({ first: t.float(), second: t.float() }), t.float(), {
-        code: "({first, second}) => first * second",
-      })
-      .withPolicy(pub),
-  });
-```
-Let's dive into what the `add` endpoint is doing. The `add` endpoint defines a `custom function` which does some processing to data using the `PythonRuntime`. When we are defining the custom function, we pass the input type, output type and then a [materializer](/docs/concepts/mental-model#materializers). 
-
-That's it! We have created your first `Metatype` project. It's as easy as this. Before we go ahead and test our app, let's add two more endpoints which peform basic `Create` and `Read` database operation.
-
-In order to exercise database capabilities, we need to build a table schema or a model. The typegraph SDK provides rich [types](/docs/reference/types) which we can use to create any database table that fits to our usecase. Let's create a simple Message table which has fields `id`, `title` and `body`. This is what it will look like in code.
-```typescript
-const message = t.struct(
-    {
-      "id": t.integer({}, { asId: true, config: { auto: true } }), // configuring our primary key
-      "title": t.string(),
-      "body": t.string(),
-    },
-    { name: "message" }, // the name of our type
-  );
-```
-Great! Now we need a runtime which processes database requests. We will be using another runtime that comes out of the box with `Metatype`. i.e the [PrismaRuntime](/docs/reference/runtimes/prisma). Let's go ahead and introduce the `PrismaRuntime` to our app. We can add the following code below the two runtimes that were predefined.
-```typescript
-...
-const python = new PythonRuntime();
-const db = new PrismaRuntime("database", "POSTGRES_CONN");
-```
-
-Last, we need to expose a `Create` and `Read` endpoints to our database table. Let's add these two lines to `g.expose`.
-```typescript
-...
-g.expose({
-    ...,
-    // add following to our typegraph
-    create_message: db.create(message).withPolicy(pub),
-    list_messages: db.findMany(message).withPolicy(pub),
-});
-```
-With these three simple steps, we were able to build a basic backend with database capabilities. Finally, this is what our typegraph looks like in `example.ts`. 
-<CodeBlock language="typescript">{require("!!code-loader!../../../examples/typegraphs/quick-start-project.ts").content}</CodeBlock>
-
-We are all setup to test your first `Metatype` application. We now need to spin a [Tyepgate](/docs/reference/typegate) and deploy our typegraph to the instance. 
-To start the typegate instance, run the following command.
-```bash
-docker compose up --detach
-```
-    TODO: Add result image/log
-
-To deploy our typegraph to our typegate engine, there are two approaces we can follow. We can either use `self-deploy` which comes with the typegraph SDK or the [Meta CLI](/docs/reference/meta-cli). For now, we will be deploying our typegraph using `Meta CLI`. Execute the command below on your terminal to deploy the typegraph. 
-```bash
-meta -- -C api/example.ts deploy --allow-dirty --create-migration --target dev --gate http://localhost:7890
-```
-    TODO: Add result image
-
-You have deployed your first typegraph. It's time to run and test our backend which is running on our typegate instance. Click [here](http://localhost:7890/example) to open a `graphql` interface to interact with your backend on your browser. 
-    TODO: Add result image
-    TODO: Add example graphql queries
-
-You can also try out what we have built so far here on this playground. 
-    TODO: Add playground
-
+        <TypeScriptTab />
     </TabItem>
     <TabItem value="python">
-        TODO: 
+      <PythonTab />
     </TabItem>
+    
 </SDKTabs>
