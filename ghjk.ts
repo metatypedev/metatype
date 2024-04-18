@@ -104,6 +104,7 @@ ghjk.task("clean-deno-lock", {
   },
 });
 
+// run: deno run --allow-all dev/<script-name>.ts [args...]
 ghjk.task("dev", {
   async fn({ $, argv }) {
     if (argv.length == 0) {

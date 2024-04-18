@@ -53,7 +53,9 @@ interface PrismaSingleQuery {
 
 interface PrismaBatchQuery {
   batch: PrismaSingleQuery[];
-  // transaction
+  transaction?: {
+    isolationLevel?: string;
+  };
 }
 
 type PrismaQuery = PrismaSingleQuery | PrismaBatchQuery;
