@@ -4,6 +4,8 @@ sidebar_position: 2
 
 # Runtimes
 
+## General overview
+
 The status represents the maturity of the runtime implementation:
 
 - not documented: experiment at your own risk
@@ -26,3 +28,30 @@ Submit your request and vote for your preferred ones [here](https://github.com/m
 | [Temporal](./runtimes/temporal) | Query and trigger workflow orchestrated by Temporal        |                 | alpha  | >=0.0.3-dev.1    |
 | [Wasm](./runtimes/wasm)         | Execute WebAssembly functions                              |                 | alpha  | >=0.0.3-dev.6    |
 | [Python](./runtimes/python)     | Execute Python functions                                   |                 | alpha  | >=0.1.14         |
+
+## Tiers
+In total, metatype aims to supports 3 types of runtimes, each type corresponding to a tier.
+
+### Tier 1 - Embedded runtimes
+User defined runtimes, you can write your own runtime logic and package it along with your typegraph.\
+This type of runtime refers to any runtime that uses the materializer development kit, which can be generated from the `meta gen mdk` command.
+
+
+### Tier 2 - Embedded language runtimes
+This type of runtime covers any runtime that uses a sandboxed programming language runtime that you can define custom logic on.
+
+This includes:
+- Deno
+- Python
+- Wasm
+
+### Tier 3 - Specialized runtimes
+This includes any runtime that is already embedded within typegate that performs specialized tasks.
+
+This includes:
+- Prisma
+- Http
+- GraphQL
+- Random
+- Temporal
+- S3
