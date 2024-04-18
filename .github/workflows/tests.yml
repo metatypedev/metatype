@@ -79,11 +79,11 @@ jobs:
           cd website
           pnpm install --frozen-lockfile
           cd ..
-          cd dev-tools
+          cd meta-lsp
           pnpm install --frozen-lockfile --recursive
           cd ..
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
-      - uses: pre-commit/action@v3.0.1
+          pre-commit run --show-diff-on-failure --color=always --all-files
 
   test-website:
     needs: changes
@@ -288,7 +288,7 @@ jobs:
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
           # start the docker containers
-          deno run -A dev/env.ts base s3 prisma
+          deno run -A dev/env.ts base prisma
 
           # publish the sdk to the local registry
           cd typegraph/node/sdk/dist
@@ -337,7 +337,7 @@ jobs:
       - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
       - shell: bash
         run: |
-          cd dev-tools
+          cd meta-lsp
           pnpm install --frozen-lockfile --recursive
           cd ts-language-server
           # node --test --import=tsx --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage.lcov tests/*.test.ts
@@ -346,5 +346,5 @@ jobs:
       # - uses: codecov/codecov-action@v4
       #   with:
       #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     files: ./dev-tools/ts-language-server/coverage.lcov
+      #     files: ./meta-lsp/ts-language-server/coverage.lcov
       #     fail_ci_if_error: true
