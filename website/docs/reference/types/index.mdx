@@ -57,11 +57,19 @@ The `min` constraint on the type `t.integer()`
 from typegraph import t
 
 # represents integers greater than or equal to `12`
-t.integer().min(12)  
+t.integer(min=12)
+```
+
+```ts
+import { t } from "@typegraph/sdk";
+
+t.integer({ min: 12 });
 ```
 
 
 ### Names and type references
+
+Each type has a unique name. If none is setImmediate, a random name will be generated during typegraph serialization.
 
 ### Injection
 
