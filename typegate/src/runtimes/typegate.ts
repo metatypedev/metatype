@@ -324,7 +324,7 @@ export class TypeGateRuntime extends Runtime {
     const isBatch = "batch" in query;
 
     const queryObj = isBatch
-      ? { batch: query.batch.map(getQueryObject) }
+      ? { ...query, batch: query.batch.map(getQueryObject) }
       : getQueryObject(query);
 
     const result = await rt.query(queryObj);

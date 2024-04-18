@@ -118,11 +118,17 @@ export class PrismaRuntime extends Runtime {
     );
     const result = JSON.parse(res);
 
+    if ("errors" in result) {
+      console.error("remote prisma errors", result.errors);
+      throw new ResolverError(result.errors[0].user_facing_error.message);
+    }
+
     // TODO refactor when we support partial results in GraphQL
     const results = isBatchQuery ? result.batchResult : [result];
     const ret = [];
     for (const r of results) {
       if ("errors" in r) {
+        // TODO support for partial failures??
         console.error("remote prisma errors", r.errors);
         throw new ResolverError(r.errors[0].user_facing_error.message);
       }

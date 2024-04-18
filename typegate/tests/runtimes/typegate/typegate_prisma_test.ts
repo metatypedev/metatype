@@ -105,7 +105,7 @@ Meta.test({
       .on(e);
   });
 
-  await t.should("run multiple queries in a transition", async () => {
+  await t.should("run multiple queries in a transaction", async () => {
     await gql`
       mutation ExecuteRawPrismaCreate(
         $typegraph: String!,
@@ -158,6 +158,9 @@ Meta.test({
               }),
             },
           ],
+          transaction: {
+            isolationLevel: "serializable",
+          },
         },
       })
       .withHeaders(adminHeaders)

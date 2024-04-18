@@ -57,22 +57,22 @@ prisma_query_single = t.struct(
 prisma_query_batch = t.struct(
     {
         "batch": t.list(prisma_query_single),
-        # "transaction": t.struct(
-        #     {
-        #         "isolation_level": t.enum(
-        #             [
-        #                 "read uncommitted",
-        #                 "readuncommitted",
-        #                 "read committed",
-        #                 "readcommitted",
-        #                 "repeatable read",
-        #                 "repeatableread",
-        #                 "snapshot",
-        #                 "serializable",
-        #             ]
-        #         ).optional(),
-        #     }
-        # ).optional(),
+        "transaction": t.struct(
+            {
+                "isolationLevel": t.enum(
+                    [
+                        "read uncommitted",
+                        "readuncommitted",
+                        "read committed",
+                        "readcommitted",
+                        "repeatable read",
+                        "repeatableread",
+                        "snapshot",
+                        "serializable",
+                    ]
+                ).optional(),
+            }
+        ).optional(),
     },
     name="PrismaBatchQuery",
 )
