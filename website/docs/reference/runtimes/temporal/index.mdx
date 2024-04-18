@@ -1,3 +1,7 @@
+
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
+
 # Temporal
 
 ## Temporal runtime
@@ -16,6 +20,8 @@ An interesting use case is to dynamically describe the operations you want to ex
 
 Here is a simple example of a typegraph that takes some value from an environment variable.
 
+<SDKTabs>
+    <TabItem value="python">
 ```python
 from typegraph import t, typegraph, Policy, Graph
 from typegraph.providers.temporal import TemporalRuntime
@@ -28,7 +34,7 @@ def temporal(g: Graph):
         "<name>", "<host_secret>", namespace_secret="<ns_secret>"
     )
 
-    id = os.getenv("ID_FROM_ENV")
+    workflow_id = os.getenv("ID_FROM_ENV")
     arg = t.struct({"some_field": t.string()})
 
     g.expose(
@@ -37,11 +43,40 @@ def temporal(g: Graph):
         query=temporal.query_workflow("<query_type>", arg, t.string()),
         signal=temporal.signal_workflow("<signal_name>", arg),
         describe=temporal.describe_workflow().reduce(
-            {"workflow_id": id }
+            {"workflow_id": workflow_id }
         ) if id else temporal.describe_workflow(),
     )
 
 ```
+    </TabItem>
+    <TabItem value="typescript">
+```typescript
+import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
+import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.js";
+
+typegraph({ name: "temporal" }, (g) => {
+  const public = Policy.public();
+  const temporal = new TemporalRuntime({
+    name: "<name>",
+    hostSecret: "<host_secret>",
+    namespaceSecret: "<ns_secret>",
+  });
+
+  const workflow_id = process.env.ID_FROM_ENV;
+  const arg = t.struct({ some_field: t.string() });
+
+  g.expose({
+    start: temporal.startWorkflow("<workflow_type>", arg),
+    query: temporal.queryWorkflow("<query_type>", arg, t.string()),
+    signal: temporal.signalWorkflow("<signal_name>", arg),
+    describe: workflow_id
+      ? temporal.describeWorkflow().reduce({ workflow_id })
+      : temporal.describeWorkflow(),
+  }, public);
+});
+```
+    </TabItem>
+</SDKTabs>
 
 
 <!-- TODO: setup a test temporal cluster and workflow for demo purposes -->

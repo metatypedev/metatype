@@ -1,3 +1,7 @@
+
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
+
 # Wasm
 
 ## Wasm runtime
@@ -19,6 +23,9 @@ world host {
 ```
 
 In your typegraph:
+
+<SDKTabs>
+    <TabItem value="python">
 ```python
 from typegraph.runtimes.wasm import WasmRuntime
 
@@ -37,6 +44,30 @@ def example(g: Graph):
     )
 
 ```
+    </TabItem>
+    <TabItem value="typescript">
+```typescript
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.js";
+
+typegraph("example", (g) => {
+  const pub = Policy.public();
+  const wasm = new WasmRuntime();
+
+  g.expose({
+    add: wasm.fromWasm(
+        t.struct({ a: t.integer(), b: t.integer() }),
+        t.integer(),
+        { 
+          func: "add", // exported function
+          wasm: "path/to/your-compiled-component.wasm"
+        },
+      ).withPolicy(pub),
+  });
+});
+```
+    </TabItem>
+</SDKTabs>
 
 ## Wit to Typegraph types
 Wit ensures that you have statically typed values backed directly in your component.
