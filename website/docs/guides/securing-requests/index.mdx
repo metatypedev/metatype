@@ -63,7 +63,7 @@ Decoded, it'd read `andim:password`.
 
 If you were to try to send a request without the header, you'd notice that `get_full_context` still returns a result. 
 An empty object.
-Authentication is only responsible for populating the context object and without a policy to shoot down the reqest, it'll access the materalizers.
+Authentication is only responsible for populating the context object and without a policy to shoot down the request, it'll access the materalizers.
 
 On the other hand, `get_context` returns an empty object when no header is found. `from_context` acts as guard preventing the materalizer from being accessed unless the named data is found in the context.
 
