@@ -31,7 +31,7 @@ await typegraph({
 
   const idea = t.struct(
     {
-      "id": t.uuid({ asId: true }), // email is just a shorthand alias for `t.string({}, {{format: "uuid"}: undefined})`
+      "id": t.uuid({ asId: true }), // uuid is just a shorthand alias for `t.string({}, {{format: "uuid"}: undefined})`
       "name": t.string(),
       "authorEmail": t.email(), // another string shorthand
     },

@@ -36,7 +36,7 @@ def roadmap(g: Graph):
         {
             "id": t.uuid(
                 as_id=True
-            ),  # email is just a shorthand alias for `t.string({format: "uuid"})`
+            ),  # uuid is just a shorthand alias for `t.string({format: "uuid"})`
             "name": t.string(),
             "authorEmail": t.email(),  # another string shorthand
         }
