@@ -83,7 +83,7 @@ jobs:
           pnpm install --frozen-lockfile --recursive
           cd ..
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
-          pre-commit run --show-diff-on-failure --color=always
+          pre-commit run --show-diff-on-failure --color=always --all-files
 
   test-website:
     needs: changes
