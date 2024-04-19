@@ -1,15 +1,126 @@
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
+
+
 # Injections
 
-## Raw
+Injection is a mechanism to get the value of a parameter from other sources than the graphql query.
+When a parameter is injected, no value is expected in the query, otherwise, the query will fail.
+They are specified at the type level for input types that are direct children of a `t.struct`.
+
+
+## Static
+
+**Description:**
+Static injection sets a static value to the parameter.
+
+**Method:** `.set(value)`
+
+**Parameter:** The value to be set, it must be compatible with the target type.
+
 
 ## Parent
 
-:::caution
+**Description:**
+Parent injection gets the value the output of a sibling field in the parent struct.
+It adds a dependency to the sibling field, so make sure to prevent circular dependencies.
 
-Only supported for scalars type inside a struct.
+**Method:** `.from_parent(type_name)`
 
-:::
+**Parameter:** The type name of the sibling field in the parent struct.
+
 
 ## Context
 
+**Description:**
+Context injection gets the value from the request context that contains [authentication data](docs/reference/typegate/authentication).
+
+**Method:** `.from_context(prop_name)`
+
+**Parameter:** The name or jsonpath of the property in the context.
+
 ## Secret
+
+**Description:**
+Secret injection gets the value from the [secrets](/docs/reference/meta-cli/configuration-file#named-secrets)
+defined when deploying the typegraph.
+
+**Method:** `.from_secret(secret_name)`
+
+**Parameter:** The name of the secret.
+
+
+## Example
+
+<SDKTabs>
+    <TabItem value="python">
+```python
+from typegraph import typegraph, t, Graph
+from typegraph.runtimes.deno import DenoRuntime
+
+@typegraph()
+def injection_example(g: Graph):
+    deno = DenoRuntime()
+    pub = Policy.public()
+
+    g.expose(
+        get_injected=deno.identity(
+            t.struct({
+                static_value: t.integer().set(12),
+                context_value: t.uuid().from_context("profile.userId"),
+                secret_value: t.string().from_secret("secret_name")
+            }),
+            t.struct({
+                static_value: t.integer().rename("Static"),
+                context_value: t.uuid(),
+                secret_value: t.string(),
+                nested: deno.identity(
+                    t.struct({
+                        parent_value: t.integer().from_parent("Static")
+                    }),
+                    t.struct({
+                        parent_value: t.integer()
+                    })
+                )
+            })
+        ).with_policy(pub)
+    )
+
+```
+    </TabItem>
+    
+    <TabItem value="typescript">
+```ts
+import { Policy, typegraph, t } from "@typegraph/sdk";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
+
+typegraph("injection-example", (g) => {
+  const deno = new DenoRuntime();
+  const pub = Policy.public();
+
+    g.expose({
+        get_injected: deno.identity(
+            t.struct({
+                static_value: t.integer().set(12),
+                context_value: t.uuid().from_context("profile.userId"),
+                secret_value: t.string().from_secret("secret_name"),
+            }),
+            t.struct({
+                static_value: t.integer().rename("Static"),
+                context_value: t.uuid(),
+                secret_value: t.string(),
+                nested: deno.identity(
+                    t.struct({
+                        parent_value: t.integer().from_parent("Static"),
+                    }),
+                    t.struct({
+                        parent_value: t.integer(),
+                    })
+                ),
+            })
+        ).withPolicy(pub),
+    });
+});
+```
+    </TabItem>
+</SDKTabs>
