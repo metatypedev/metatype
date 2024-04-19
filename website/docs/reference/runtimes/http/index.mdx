@@ -1,4 +1,6 @@
 import TGExample from "@site/src/components/TGExample";
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
 
 # HTTP/REST 
 
@@ -16,4 +18,82 @@ Example:
     query={require("./http.graphql")}
 />
 
-For more details you can refer to the [how to guide](../../../guides/rest/index.mdx).
+
+## Verbs
+This runtime supports `GET`, `POST`, `PUT`, `DELETE` http verbs.
+
+In most cases, queries are not limited to a simple query parameter or use the default `application/json` content type. 
+You can assign what parts of your request description each field in the input struct belongs to.
+
+In the example bellow, this endpoint corresponds to `POST <API_URL>/submit_user?form_type=..` and the body requires the fields:
+`pseudo`, `age`.
+
+
+<SDKTabs>
+    <TabItem value="python">
+```python
+# ..
+    remote = HTTPRuntime("<API_URL>")
+    g.expose(
+        pub,
+        add_user=remote.post(
+            "/submit_user",
+            # define your input/output
+            t.struct(
+                {
+                    "id": t.uuid(),
+                    "username": t.float(),
+                    "years_lived": t.integer(),
+                    "form_type": t.integer()
+                },
+            ),
+            t.struct({ "message": t.string() }),
+            # specify where each field in your input should be associated with
+            body_fields=("username", "years_lived"),
+            query_fields=("form_type"),
+            # you may want to rename a few fields
+            # if you are using your own naming conventions or reusing types
+            rename_fields={
+                "username": "pseudo",
+                "years_lived": "age",
+            },
+            content_type="multipart/form-data",
+        )
+    )
+# ..
+```
+    </TabItem>
+    <TabItem value="typescript">
+```typescript
+// ..
+  const remote = new HttpRuntime("<API_URL>");
+  g.expose({
+    add_user: remote.post(
+      // define your input/output
+      t.struct(
+        {
+          id: t.uuid(),
+          username: t.float(),
+          years_lived: t.integer(),
+          form_type: t.integer()
+        },
+      ),
+      t.struct({ message: t.string() }),
+      {
+        path: "/submit_user",
+        // specify where each field in your input should be associated with
+        bodyFields: ["username", "years_lived"],
+        queryFields: ["form_type"],
+        // you may want to rename a few fields
+        // if you are using your own naming conventions or reusing types
+        renameFields: [
+          ["username", "pseudo"],
+          ["years_lived", "age"],
+        ],
+        contentType: "multipart/form-data",
+      }
+  )}, pub);
+// ..
+```
+    </TabItem>
+</SDKTabs>
