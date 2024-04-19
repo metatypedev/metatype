@@ -1,22 +1,42 @@
 ---
 sidebar_position: 1
 ---
+import SDKTabs, { NakedSdkPicker } from "@site/src/components/SDKTabs";
+import { Choice } from "@site/src/components/ChoicePicker";
+import TabItem from "@theme/TabItem";
 
 # Types
 
 ## Overview
 
 Types are used to describe the data to be processed.
-They constrains the range of value that can be accepted as input data
+They constrain the range of value that can be accepted as input data
 or expected as result on each computation running in a runtime.
+
+All the type definition functions are available under the `t` namespace.
+
+<SDKTabs>
+    <TabItem value="python">
+```python
+from typegraph import t
+```
+    </TabItem>
+    
+    <TabItem value="typescript">
+```ts
+import { t } from "@typegraph/sdk";
+```
+    </TabItem>
+</SDKTabs>
+
+
 
 ### Scalar types
 
 |Type|GraphQL type|Description|
 |---|---|---|
 |[`t.integer()`](#tinteger)|`Int`|Represents signed 32-bit integers.|
-|[`t.number()`](#tnumber)|`Float`|Represents signed double-precision values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_754).|
-|[`t.float()`](#tnumber)|`Float`|Alias to `t.number()`.|
+|[`t.float()`](#tfloat)|`Float`|Represents signed double-precision values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_754).|
 |[`t.boolean()`](#tboolean)|`Boolean`|Represents `true` or `false`.|
 |[`t.string()`](#tstring)|`String`|Represents textual data as UTF-8 character sequences.|
 |[`t.file()`](#tfile)|&mdash;|Represents a file for upload.|
@@ -50,21 +70,36 @@ The following scalar types are [aliases](#tstring-aliases) to a `t.string()` typ
 Type constraints define an additional narrowing of the range of values
 that can be accepted for the type.
 
+<NakedSdkPicker>
+    <Choice value="python">
+They can be set with named arguments on the type definition function.
+    </Choice>
+
+    <Choice value="typescript">
+They can be passed in an object after the last required parameter on the type definition.
+    </Choice>
+</NakedSdkPicker>
+
+See the reference for each type below for the list of constraints available.
+
 **Example:**
 The `min` constraint on the type `t.integer()`
 
+<SDKTabs>
+    <TabItem value="python">
 ```python
-from typegraph import t
-
 # represents integers greater than or equal to `12`
 t.integer(min=12)
 ```
-
+    </TabItem>
+    
+    <TabItem value="typescript">
 ```ts
-import { t } from "@typegraph/sdk";
-
+// represents integers greater than or equal to `12`
 t.integer({ min: 12 });
 ```
+    </TabItem>
+</SDKTabs>
 
 
 ### Names and type references
@@ -78,22 +113,16 @@ Each type has a unique name. If none is setImmediate, a random name will be gene
 
 ### `t.boolean()`
 
-```python
-from typegraph import t
-
-t.boolean()
-```
-
 The `t.boolean()` type represents boolean values, `true` or `false`.
 
 ### `t.integer()`
+
 The `t.integer()` type represents 32-bit integers.
 
-```python
-from typegraph import t
-
-t.integer()
+```ts
+t.integer([constraints]);
 ```
+
 
 #### Constraints
 |Constraint|Description|
@@ -106,48 +135,55 @@ t.integer()
 
 
 #### Examples
+
+<SDKTabs>
+    <TabItem value="python">
+
 ```python
-from typegraph import t
-
 # non-negative integer
-t.integer().min(0)
+non_negative = t.integer(min=0)
 
-# an integer in the rage [18, 120)
-adult_age = t.integer().min(18).x_max(120)
+# an integer in the range [18, 120)
+adult_age = t.integer(min=18, x_max=120)
 
 # an even integer
-t.integer().multiple_of(2)
+even = t.integer(multiple_of=2)
+```
+    </TabItem>
+    
+    <TabItem value="typescript">
+```ts
+// non-negative integer
+const nonNegative = t.integer({ min: 0 });
+
+// an integer in the range [18, 120)
+const adultAge = t.integer({ min: 18, x_max: 120 });
+
+// an even integer
+const even = t.integer({ multiple_of: 2 });
+```
+    </TabItem>
+</SDKTabs>
+
+
+### `t.float()`
+
+```ts
+t.float([constraints])
 ```
 
-### `t.number()`
-
-```python
-from typegraph import t
-
-t.number()
-```
-
-The `t.number()` type represents numbers, stored in double precision floating-point format ([IEEE 754](https://en.wikipedia.org/wiki/IEEE_754)).
+The `t.float()` type represents numbers, stored in double precision floating-point format ([IEEE 754](https://en.wikipedia.org/wiki/IEEE_754)).
 
 
 #### Constraints
-The `t.number()` type has the same constraints as `t.integer()`.
+The `t.float()` type has the same constraints as `t.integer()`.
 See [integer constraints](#tinteger).
-
-#### Aliases
-
-The following types are aliases to the `t.number()` type:
-- `t.float()`
-
-
 
 
 ### `t.string()`
 
-```python
-from typegraph import t
-
-t.string()
+```ts
+t.string([constraints])
 ```
 
 The `t.string()` type represents textual data represented as UTF-8 character sequences.
@@ -176,41 +212,72 @@ Here is the list of supported formats:
 
 #### Examples
 
+<SDKTabs>
+    <TabItem value="python">
+
 ```python
-from typegraph import t
-
 # a non-empty string of maximum 64 characters
-t.string().min(1).max(64)
+t.string(min=1, max=64)
 
-# a email address
-t.string().format("email")
+# an email address
+t.string(format="email")
 
 # a json data
-t.string().format("json")
+t.string(format="json")
 ```
+    </TabItem>
+    
+    <TabItem value="typescript">
+```ts
+// a non-empty string of maximum 64 characters
+t.string({ min: 1, max: 64 });
+
+// an email address
+t.string({ format: "email" });
+
+// a json data
+t.string({ format: "json" });
+```
+    </TabItem>
+</SDKTabs>
 
 
 #### Aliases {#tstring-aliases}
 
+<SDKTabs>
+    <TabItem value="python">
 |Alias|Equivalent declaration|
 |-----|----------------------|
-|`t.uuid()`|`t.string().format("uuid")`|
-|`t.email()`|`t.string().format("email")`|
-|`t.uri()`|`t.string().format("uri")`|
-|`t.json`|`t.string().format("json")`|
-|`t.ean()`|`t.string().format("ean")`|
-|`t.phone()`|`t.string().format("phone")`|
-|`t.date()`|`t.string().format("date")`|
-|`t.datetime()`|`t.string().format("date-time")`|
+|`t.uuid()`|`t.string(format="uuid")`|
+|`t.email()`|`t.string(format="email")`|
+|`t.uri()`|`t.string(format="uri")`|
+|`t.json`|`t.string(format="json")`|
+|`t.ean()`|`t.string(format="ean")`|
+|`t.phone()`|`t.string(format="phone")`|
+|`t.date()`|`t.string(format="date")`|
+|`t.datetime()`|`t.string(format="date-time")`|
+    </TabItem>
+    
+    <TabItem value="typescript">
+|Alias|Equivalent declaration|
+|-----|----------------------|
+|`t.uuid()`|`t.string({ format: "uuid" })`|
+|`t.email()`|`t.string({ format: "email" })`|
+|`t.uri()`|`t.string({ format: "uri" })`|
+|`t.json`|`t.string({ format: "json" })`|
+|`t.ean()`|`t.string({ format: "ean" })`|
+|`t.phone()`|`t.string({ format: "phone" })`|
+|`t.date()`|`t.string({ format: "date" })`|
+|`t.datetime()`|`t.string({ format: "date-time" })`|
+    </TabItem>
+</SDKTabs>
 
 
 
 ### `t.file()`
 
-```python
-from typegraph import t
-
-t.file()
+```ts
+t.file([constraints])
 ```
 
 The `t.file()` represents files for upload.
@@ -227,45 +294,63 @@ The `t.file()` represents files for upload.
 
 #### Examples
 
-```python
-from typegraph import t
+<SDKTabs>
+    <TabItem value="python">
 
+```python
 # A file of a minimum size of 1KB
-t.file().min(1024)
+t.file(min=1024)
 
 # A JPEG or PNG file less than 2KB
-t.file().max(2048).allow(["image/jpeg", "image/png"])
+t.file(max=2048, allow=["image/jpeg", "image/png"])
 ```
+    </TabItem>
+    
+    <TabItem value="typescript">
+```ts
+// A file of a minimum size of 1KB
+t.file({ min: 1024 })
+
+// A JPEG or PNG file less than 2KB
+t.file({ max: 2048, allow: ["image/jpeg", "image/png"] })
+```
+    </TabItem>
+</SDKTabs>
 
 
 ### `t.optional()`
 
-```python
-from typegraph import t
-
-t.optional(t.string())
-t.string().optional() # equivalent syntactic sugar
+```ts
+t.optional(item_type)
+item_type.optional() // equivalent syntactic sugar
 ```
 
 #### Default value
 
-<!-- The current implementation only set default value for inputs. -->
+{/* TODO: link to input-type */ }
 If the type is used as an input type, the default value can be specified
-using the `.default()` method.
+in the type definition.
+
+<SDKTabs>
+    <TabItem value="python">
 
 ```python
-from typegraph import t
-
-t.string().optional().default("default value")
+t.string().optional("default value")
 ```
-
+    </TabItem>
+    
+    <TabItem value="typescript">
+{/* TODO: Why not the same interface as Python? */}
+```ts
+t.string().optional({ defaultItem: "default value" })
+```
+    </TabItem>
+</SDKTabs>
 
 ### `t.list()`
 
-```python
-from typegraph import t
-
-t.list(t.string())
+```ts
+t.list(item_type, [constraints])
 ```
 
 The `t.list()` type represents a sequence of values of the same type.
@@ -280,39 +365,49 @@ The `t.list()` type represents a sequence of values of the same type.
 
 #### Examples
 
+<SDKTabs>
+    <TabItem value="python">
 ```python
-from typegraph import t
-
 # A list of strings
 t.list(t.string())
 
 # A list of unique strings
-t.list(t.string()).unique_items()
+t.list(t.string(), unique_items=True)
 
 # A list of strings with at least 3 items
 # and at most 10 items
-t.list(t.string()).min(3).max(10)
+t.list(t.string(), min=3, max=10)
 ```
+    </TabItem>
+    
+    <TabItem value="typescript">
+```python
+# A list of strings
+t.list(t.string())
+
+# A list of unique strings
+t.list(t.string(), { uniqueItems: true })
+
+# A list of strings with at least 3 items
+# and at most 10 items
+t.list(t.string(), { min: 3, max: 10 })
+```
+    </TabItem>
+</SDKTabs>
 
 
 ### `t.struct()`
 
-```python
-from typegraph import t
-
-user = t.struct({
-    "id": t.uuid().as_id,
-    "email": t.email(),
-    "username": t.string().min(3).max(64),
-})
+```ts
+t.struct(properties, [constraints])
 ```
 
-The `t.struct()` type represents structured data, consisting of fields
-which map to typed values.
 
-All the fields are required unless the corresponding type is wrapped in
-`t.optional()`.
-In that case, the field is allowed to be missing from the data or be `null`.
+The `t.struct()` type represents structured data, consisting of nemed properties
+with pre-defined types.
+
+All the prperies are required unless the corresponding type is [_optional_](#toptional).
+In that case, the field is allowed to be missing from the value or be `null`.
 
 #### Constraints
 
@@ -323,42 +418,68 @@ In that case, the field is allowed to be missing from the data or be `null`.
 
 #### Examples
 
+<SDKTabs>
+    <TabItem value="python">
 ```python
-from typegraph import t
-
 # A user profile
 user = t.struct({
-    "id": t.uuid().as_id,
+    "id": t.uuid(as_id=True),
     "email": t.email(),
-    "username": t.string().min(3).max(64),
+    "username": t.string(min=3, max=64),
 })
 
 # A user profile with an optional `name` field
 user = t.struct({
-    "id": t.uuid().as_id,
+    "id": t.uuid(as_id=True),
     "email": t.email(),
-    "username": t.string().min(3).max(64),
-    "name": t.optional(t.string().min(3).max(64)),
+    "username": t.string(min=3, max=64),
+    "name": t.string(min=3, max=64).optional(),
 })
 ```
+    </TabItem>
+    
+    <TabItem value="typescript">
+```ts
+// A user profile
+const user = t.struct({
+    id: t.uuid({ as_id: true }),
+    email: t.email(),
+    username: t.string({ min: 3, max: 64 }),
+});
+
+// A user profile with an optional `name
+const user = t.struct({
+    id: t.uuid({ as_id: true }),
+    email: t.email(),
+    username: t.string({ min: 3, max: 64 }),
+    name: t.string({ min: 3, max: 64 }).optional(),
+});
+```
+    </TabItem>
+</SDKTabs>
 
 
 ### `t.union()` and `t.either()`
 
-```python
-from typegraph import t
-
-t.union([t.string(), t.integer()])
-t.either([t.string(), t.integer()])
+```ts
+t.union(variants)
+t.either(variants)
 ```
 
-The `t.union` type represents a value that can be of any of the specified types.
-The `t.either` type represents a value that must be of one and only one of the specified types.
+The `t.union` type represents a value that can be of any of the specified variants.
+The `t.either` type represents a value that must be of one and only one of the specified variants.
 
+<NakedSdkPicker>
+    <Choice value="python">
+        The `variants` parameter is a list of types.
+    </Choice>
+    <Choice value="typescript">
+        The `variants` parameter is an array of types.
+    </Choice>
+</NakedSdkPicker>
 
 
 ### `t.func()`
-
 
 The `t.func()` type represents an operation to be performed on the typegate
 with the specified materializer.
@@ -366,49 +487,9 @@ with the specified materializer.
 Usually, the functions are not defined explicitly, but rather
 created with the [runtime](./runtimes) instance.
 
-#### Parameters
-
-|Parameter|Type|Description|
-|---------|----|-----------|
-|input type|`t.struct()`|The type of the input data.|
-|output type|any type|The type of the output data.|
-|materializer|[`Materializer`](./runtimes)|The materializer to use to perform the operation/computation.|
-
 #### Methods
 |Method|Purpose|Reference page|
 |---|---|---|
 |`rate`|Rate limiting|[Rate limiting](/docs/reference/typegate/rate-limiting)|
 |`reduce`|Parameter transformation|[`reduce`](/docs/reference/types/parameter-transformations#funcreducetree)|
 |`apply`|Parameter transformation|[`apply`](/docs/reference/types/parameter-transformations#funcapplytree)|
-
-
-#### Examples
-
-```python
-from typegraph import t
-from typegraph.runtimes.deno import FunMat
-from typegraph.providers.prisma.runtimes import PrismaRuntime
-
-with TypeGraph("math") as g:
-    add = t.func(
-        t.struct({
-            "a": t.integer(),
-            "b": t.integer(),
-        }),
-        t.integer(),
-        FunMat("(({a, b}) => a + b")
-    )
-
-    g.expose(add=add)
-
-    db = PrismaRuntime("main-db", "POSTGRES")
-
-    user = t.struct({
-        "id": t.uuid().as_id,
-        "email": t.email(),
-        "username": t.string().min(3).max(64),
-    })
-
-    g.expose(createUser=db.create(user))
-```
-
