@@ -197,7 +197,7 @@ impl<'a> Loader<'a> {
                         let mut command = Command::new("deno");
                         command
                             .arg("run")
-                            .arg("--unstable")
+                            // .arg("--unstable")
                             .arg("--allow-all")
                             .arg("--check")
                             .arg(path.to_str().unwrap())
@@ -210,6 +210,7 @@ impl<'a> Loader<'a> {
                         let mut command = Command::new("npm");
                         command
                             .arg("x")
+                            .arg("--yes")
                             .arg("tsx")
                             .current_dir(path.parent().unwrap())
                             .arg(path.to_str().unwrap())
