@@ -103,7 +103,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.1",
+              "version": "1.77.2",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -126,7 +126,7 @@
           "locked": true
         },
         "4a077ef5a23a541cc6e372186951d640da541f7c4eba2613c2a1c427a5d95a5c": {
-          "version": "1.77.1",
+          "version": "1.77.2",
           "depConfigs": {
             "rustup_rustlang": {
               "version": "1.27.0",
@@ -163,7 +163,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.1",
+              "version": "1.77.2",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -194,7 +194,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.1",
+              "version": "1.77.2",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -236,7 +236,7 @@
           "version": "1.0.0",
           "depConfigs": {
             "node_org": {
-              "version": "v21.7.2",
+              "version": "v20.8.0",
               "depConfigs": {
                 "tar_aa": {
                   "version": "1.35",
@@ -250,22 +250,11 @@
           "portRef": "npmi_npm@0.1.0",
           "packageName": "@bytecodealliance/jco"
         },
-        "77a0197285cae563176871bd72f2ea24504c195dc596f5c33d4c9cc95eda1fba": {
-          "version": "v21.7.2",
-          "depConfigs": {
-            "tar_aa": {
-              "version": "1.35",
-              "depConfigs": {},
-              "portRef": "tar_aa@0.1.0"
-            }
-          },
-          "portRef": "node_org@0.1.0"
-        },
         "23e2521c50a2a9ea95405def479e6fbcce0da681f6b97251070178c6cdbcb378": {
           "version": "10.0.1",
           "depConfigs": {
             "node_org": {
-              "version": "v21.7.2",
+              "version": "v20.8.0",
               "depConfigs": {
                 "tar_aa": {
                   "version": "1.35",
@@ -291,7 +280,7 @@
           "portRef": "mold_ghrel@0.1.0",
           "replaceLd": false
         },
-        "c6037cd6c9d0f07b7975f62b6770757c0d3a1e4fd1631380eff888c0a6a3b537": {
+        "46fdcefe10dc796143f7a41313e9359f1a8cf62791dfaa8994e26f21adb151ca": {
           "version": "3.8.18",
           "depConfigs": {
             "tar_aa": {
@@ -305,7 +294,8 @@
               "portRef": "zstd_aa@0.1.0"
             }
           },
-          "portRef": "cpy_bs_ghrel@0.1.0"
+          "portRef": "cpy_bs_ghrel@0.1.0",
+          "releaseTag": "20240224"
         },
         "4f16c72030e922711abf15474d30e3cb232b18144beb73322b297edecfcdb86f": {
           "version": "v1.5.5,",
@@ -316,7 +306,7 @@
           "version": "1.7.0",
           "depConfigs": {
             "cpy_bs_ghrel": {
-              "version": "3.12.1",
+              "version": "3.12.2",
               "depConfigs": {
                 "tar_aa": {
                   "version": "1.35",
@@ -329,14 +319,15 @@
                   "portRef": "zstd_aa@0.1.0"
                 }
               },
-              "portRef": "cpy_bs_ghrel@0.1.0"
+              "portRef": "cpy_bs_ghrel@0.1.0",
+              "releaseTag": "20240224"
             }
           },
           "portRef": "pipi_pypi@0.1.0",
           "packageName": "poetry"
         },
-        "84ecde630296f01e7cb8443c58d1596d668c357a0d9837c0a678b8a541ed0a39": {
-          "version": "3.12.1",
+        "89e00ff07918653b9c495b0fa4d554960ce8e30ac79e85eddf3e283baa5cc6b3": {
+          "version": "3.12.2",
           "depConfigs": {
             "tar_aa": {
               "version": "1.35",
@@ -349,13 +340,14 @@
               "portRef": "zstd_aa@0.1.0"
             }
           },
-          "portRef": "cpy_bs_ghrel@0.1.0"
+          "portRef": "cpy_bs_ghrel@0.1.0",
+          "releaseTag": "20240224"
         },
         "076a5b8ee3bdc68ebf20a696378458465042bb7dc1e49ac2dc98e5fa0dab3e25": {
           "version": "3.7.0",
           "depConfigs": {
             "cpy_bs_ghrel": {
-              "version": "3.12.1",
+              "version": "3.12.2",
               "depConfigs": {
                 "tar_aa": {
                   "version": "1.35",
@@ -368,7 +360,8 @@
                   "portRef": "zstd_aa@0.1.0"
                 }
               },
-              "portRef": "cpy_bs_ghrel@0.1.0"
+              "portRef": "cpy_bs_ghrel@0.1.0",
+              "releaseTag": "20240224"
             }
           },
           "portRef": "pipi_pypi@0.1.0",
@@ -388,7 +381,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.1",
+              "version": "1.77.2",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -409,23 +402,6 @@
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "whiz",
           "locked": true
-        },
-        "46fdcefe10dc796143f7a41313e9359f1a8cf62791dfaa8994e26f21adb151ca": {
-          "version": "3.8.18",
-          "depConfigs": {
-            "tar_aa": {
-              "version": "1.35",
-              "depConfigs": {},
-              "portRef": "tar_aa@0.1.0"
-            },
-            "zstd_aa": {
-              "version": "v1.5.5,",
-              "depConfigs": {},
-              "portRef": "zstd_aa@0.1.0"
-            }
-          },
-          "portRef": "cpy_bs_ghrel@0.1.0",
-          "releaseTag": "20240224"
         }
       }
     },
