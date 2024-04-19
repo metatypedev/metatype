@@ -25,8 +25,8 @@ This runtime supports `GET`, `POST`, `PUT`, `DELETE` http verbs.
 In most cases, queries are not limited to a simple query parameter or use the default `application/json` content type. 
 You can assign what parts of your request description each field in the input struct belongs to.
 
-In the example bellow, this endpoint corresponds to `POST <API_URL>/submit_user?form_type=..` and the body requires the fields:
-`pseudo`, `age`.
+In the example bellow, this endpoint corresponds to `POST <API_URL>/submit_user?form_type=..` with a body requiring the fields:
+`pseudo`, `age` and with header `accept` set as `application/json`.
 
 
 <SDKTabs>
@@ -44,7 +44,8 @@ In the example bellow, this endpoint corresponds to `POST <API_URL>/submit_user?
                     "id": t.uuid(),
                     "username": t.float(),
                     "years_lived": t.integer(),
-                    "form_type": t.integer()
+                    "form_type": t.integer(),
+                    "config_accept": t.string().set("application/json")
                 },
             ),
             t.struct({ "message": t.string() }),
@@ -58,6 +59,8 @@ In the example bellow, this endpoint corresponds to `POST <API_URL>/submit_user?
                 "years_lived": "age",
             },
             content_type="multipart/form-data",
+            # set a custom header prefix
+            header_prefix="config_"
         )
     )
 # ..

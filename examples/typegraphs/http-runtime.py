@@ -30,4 +30,15 @@ def http_example(g: Graph):
                 }
             ),
         ),
+        facts_as_text=facts.get(
+            "/random",
+            t.struct(
+                {
+                    "header_accept": t.string().set("text/plain"),
+                    "language": t.enum(["en", "de"]),
+                }
+            ),
+            t.string(),
+            header_prefix="header_",
+        ),
     )

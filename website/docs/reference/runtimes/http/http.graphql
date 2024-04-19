@@ -5,4 +5,5 @@ query {
         # source_url
         # permalink
     }
+    facts_as_text(language: "en")
 }
