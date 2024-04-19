@@ -260,9 +260,9 @@ Here is a list of all available generators:
 
 
 ## Dealing with migrations
-[Migrations](https://www.prisma.io/dataguide/types/relational/what-are-database-migrations) are basically blueprints that ensure that your local database and remote database both has the same schema.
-Migration files are generated as modifications are made in your typegraph after deploy.
+[Migrations](https://www.prisma.io/dataguide/types/relational/what-are-database-migrations) are basically blueprints that ensure that your local database and remote database both have the same schema.
+Migration files are generated as modifications are made in your typegraph as you deploy.
 
-meta cli offers various ways to deal with failing migrations. One common factor is that you have to manually edit the SQL changes that made your migration fails, most of the time failing migrations are related to columns/tables that were removed, renamed or added.
+meta cli offers various ways to deal with failing migrations. In general, you will be required manually edit the SQL changes that made your migration fails, most of the time failing migrations are related to columns/tables that were removed, renamed or added.
 
 However if you wish to ignore failing migrations (eg. in a testing environment), you can use the `--run-destructive-migrations` flag, it will try to reset your database schema.
