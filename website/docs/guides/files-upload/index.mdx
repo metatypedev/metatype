@@ -10,15 +10,13 @@ import S3Intro from "@site/shared/s3/index.mdx";
 
 We can then use this typegraph from our client code like so:
 
-### Uploading file using presigned url
-
 ```ts
 const image = await Deno.readFile("website/static/images/logo.png");
 
 // Get a presigned url
 const {
   data: { signUploadUrl: presigned },
-} = await fetch("http://localhost:7891/retrend", {
+} = await fetch("http://localhost:7891/files-upload", {
   method: "POST",
   body: JSON.stringify({
     query: `
