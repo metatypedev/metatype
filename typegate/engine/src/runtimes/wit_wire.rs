@@ -9,7 +9,7 @@ use deno_core::OpState;
 
 mod wit {
     wasmtime::component::bindgen!({
-        path: "../../libs/pyrt_component/wit",
+        path: "../../libs/pyrt_wit_wire/wit",
         async: true,
     });
 }

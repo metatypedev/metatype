@@ -5,22 +5,6 @@
     "ports": {
       "version": "0",
       "configResolutions": {
-        "9aaf6a4fddacb5a219afcb3a46e1fd21049cbbeb5808c49be95ea371e3928fc0": {
-          "version": "0.13.5",
-          "depConfigs": {
-            "tar_aa": {
-              "version": "1.34",
-              "depConfigs": {},
-              "portRef": "tar_aa@0.1.0"
-            }
-          },
-          "portRef": "wasmedge_ghrel@0.1.0"
-        },
-        "9e3fa7742c431c34ae7ba8d1e907e50c937ccfb631fb4dcfb7a1773742abe267": {
-          "version": "1.34",
-          "depConfigs": {},
-          "portRef": "tar_aa@0.1.0"
-        },
         "5155b24a1a756a5b91108ba34188d8bc4f5d6744f5ac29454450d6275663df86": {
           "version": "v24.1",
           "depConfigs": {},
@@ -226,6 +210,11 @@
             }
           },
           "portRef": "node_org@0.1.0"
+        },
+        "9e3fa7742c431c34ae7ba8d1e907e50c937ccfb631fb4dcfb7a1773742abe267": {
+          "version": "1.34",
+          "depConfigs": {},
+          "portRef": "tar_aa@0.1.0"
         },
         "66212eb79fbcb37961450d5dfffdaedc0b949e0e7c9257c3c63093d009a5fc75": {
           "version": "v9.0.5",
@@ -473,6 +462,37 @@
             }
           },
           "portRef": "cpy_bs_ghrel@0.1.0"
+        },
+        "f1552d80bc05967757fc8f6530cfb4a0f875a6e6d46167eedc2530b533abac26": {
+          "version": "19.0.2",
+          "depConfigs": {
+            "cargo_binstall_ghrel": {
+              "version": "v1.6.4",
+              "depConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0"
+            },
+            "rust_rustup": {
+              "version": "1.77.2",
+              "depConfigs": {
+                "rustup_rustlang": {
+                  "version": "1.27.0",
+                  "depConfigs": {
+                    "git_aa": {
+                      "version": "2.40.1",
+                      "depConfigs": {},
+                      "portRef": "git_aa@0.1.0"
+                    }
+                  },
+                  "portRef": "rustup_rustlang@0.1.0"
+                }
+              },
+              "portRef": "rust_rustup@0.1.0",
+              "profile": "minimal"
+            }
+          },
+          "portRef": "cargobi_cratesio@0.1.0",
+          "crateName": "wasmtime-cli",
+          "locked": true
         }
       }
     },
@@ -486,7 +506,6 @@
         "id": "ports",
         "config": {
           "installs": [
-            "269266fdca40e20f9361848270d3e0f8ca6d4616",
             "db5b506ba0936c6713a2efef3ee82df7ea271b06",
             "651e1043d59561e4e71e5fb0775daf746467a028",
             "e7b2f3414caa4c4441240c02dcb8f7c781fd01ee",
@@ -579,7 +598,8 @@
                 "installs": [
                   "be7e967b2420f3d6a8af7d3ff11192362ee4b5c8",
                   "5dfbf570fa87f14a3524560c40bd08d0d62a7526",
-                  "a24f45ef0b2064658d87264a95d31fe4694f6f4e"
+                  "a24f45ef0b2064658d87264a95d31fe4694f6f4e",
+                  "a4de04b77193fd53fed574b61e8568dc63a53544"
                 ],
                 "env": {},
                 "allowedPortDeps": [
@@ -604,26 +624,6 @@
     ],
     "globalEnv": {
       "installs": {
-        "269266fdca40e20f9361848270d3e0f8ca6d4616": {
-          "version": "0.13.5",
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "wasmedge_ghrel",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "tar_aa"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/wasmedge.ts"
-          }
-        },
         "db5b506ba0936c6713a2efef3ee82df7ea271b06": {
           "version": "v24.1",
           "port": {
@@ -1241,6 +1241,51 @@
             ],
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/cpy_bs.ts"
           }
+        },
+        "a4de04b77193fd53fed574b61e8568dc63a53544": {
+          "version": "19.0.2",
+          "depConfigs": {
+            "rust_rustup": {
+              "portRef": "rust_rustup@0.1.0",
+              "profile": "minimal"
+            }
+          },
+          "port": {
+            "ty": "denoWorker@v1",
+            "name": "cargobi_cratesio",
+            "platforms": [
+              "x86_64-linux",
+              "aarch64-linux",
+              "x86_64-darwin",
+              "aarch64-darwin",
+              "x86_64-windows",
+              "aarch64-windows",
+              "x86_64-freebsd",
+              "aarch64-freebsd",
+              "x86_64-netbsd",
+              "aarch64-netbsd",
+              "x86_64-aix",
+              "aarch64-aix",
+              "x86_64-solaris",
+              "aarch64-solaris",
+              "x86_64-illumos",
+              "aarch64-illumos",
+              "x86_64-android",
+              "aarch64-android"
+            ],
+            "version": "0.1.0",
+            "deps": [
+              {
+                "name": "cargo_binstall_ghrel"
+              },
+              {
+                "name": "rust_rustup"
+              }
+            ],
+            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/cargobi.ts"
+          },
+          "crateName": "wasmtime-cli",
+          "locked": true
         }
       },
       "allowedPortDeps": {

@@ -5,8 +5,8 @@ from abc import abstractmethod
 import weakref
 
 from ..types import Result, Ok, Err, Some
-from ..exports import mat_wire
 from ..imports import shared
+from ..exports import mat_wire
 
 class MatWire(Protocol):
 
@@ -20,3 +20,5 @@ class MatWire(Protocol):
     @abstractmethod
     def handle(self, req: shared.Req) -> Result[str, str]:
         raise NotImplementedError
+
+

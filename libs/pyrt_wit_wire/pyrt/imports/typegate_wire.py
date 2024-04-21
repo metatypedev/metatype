@@ -18,3 +18,4 @@ def hostcall(req: Req) -> str:
     Raises: `pyrt.types.Err(pyrt.imports.str)`
     """
     raise NotImplementedError
+

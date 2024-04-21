@@ -10,7 +10,7 @@ members = [
 
 exclude = [
   "typegate/tests/runtimes/wasm/rust",
-  "libs/pyrt_component"
+  "libs/pyrt_wit_wire"
 ]
 
 [workspace.package] 

@@ -20,8 +20,7 @@ repos:
           |typegate/deno.lock
           |.*\.snap$|typegate/src/typegraphs/.*\.json
           |website/docs/reference/
-          |libs/pyrt_component/pyrt/imports/.*
-          )
+          |libs/pyrt_wit_wire/pyrt)
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.27.2
     hooks:

@@ -9,7 +9,7 @@ const PYTHON_VERSION = "3.8.18";
 const PNPM_VERSION = "v9.0.5";
 const WASM_TOOLS_VERSION = "1.0.53";
 const JCO_VERSION = "1.0.0";
-const WASMEDGE_VERSION = "0.13.5";
+const WASMTIME_VERSION = "19.0.2";
 const WASM_OPT_VERSION = "0.116.0";
 const MOLD_VERSION = "v2.4.0";
 const CMAKE_VERSION = "3.28.0-rc6";
@@ -28,6 +28,11 @@ const installs = {
     version: WASM_OPT_VERSION,
     locked: true,
   }),
+  wasmtime: ports.cargobi({
+    crateName: "wasmtime-cli",
+    version: WASMTIME_VERSION,
+    locked: true,
+  }),
 };
 
 const allowedPortDeps = [
@@ -44,7 +49,6 @@ const inOci = () => !!Deno.env.get("OCI");
 const inDev = () => !inCi() && !inOci();
 
 ghjk.install(
-  ports.wasmedge({ version: WASMEDGE_VERSION }),
   ports.protoc({ version: PROTOC_VERSION }),
   ports.asdf({
     pluginRepo: "https://github.com/asdf-community/asdf-cmake",
@@ -134,18 +138,16 @@ ghjk.task("gen-pyrt-bind", {
   installs: installs.comp_py,
   allowedPortDeps,
   async fn({ $ }) {
-    await $.removeIfExists("./libs/pyrt_component/pyrt");
-    await $`componentize-py -d wit/ bindings .`.cwd("./libs/pyrt_component");
+    await $.removeIfExists("./libs/pyrt_wit_wire/pyrt");
+    await $`componentize-py -d wit/ bindings .`.cwd("./libs/pyrt_wit_wire");
   },
 });
 
 ghjk.task("build-pyrt", {
-  installs: [...installs.comp_py, installs.wasm_opt],
+  installs: [...installs.comp_py, installs.wasm_opt, installs.wasmtime],
   allowedPortDeps,
   async fn({ $ }) {
-    await $`componentize-py -d wit/ componentize -o ../../target/pyrt.wasm main`
-      .cwd("./libs/pyrt_component");
-    // TODO: explicitly install wasmtime
+    await $`componentize-py -d ./libs/pyrt_wit_wire/wit/ componentize -o ./target/pyrt.wasm libs.pyrt_wit_wire.main`;
     await $`wasmtime compile -W component-model  ./target/pyrt.wasm -o ./target/pyrt.cwasm`;
     // await $`wasm-opt -Oz ./target/pyrt.wasm -o ./target/pyrt.wasm2`;
   },

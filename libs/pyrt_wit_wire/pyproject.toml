@@ -1,14 +1,12 @@
 [tool.poetry]
-name = "pyrt-component"
+name = "pyrt_wit_wire"
 version = "0.3.7-0"
-description = "Wasm component implementing the PythonRuntime vm."
-authors = ["Your Name <you@example.com>"]
+description = "Wasm component implementing the PythonRuntime host using wit_wire protocol."
 license = "Elastic-2.0"
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-
 
 [build-system]
 requires = ["poetry-core"]

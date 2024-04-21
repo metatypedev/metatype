@@ -39,8 +39,6 @@ RUN set -eux; \
     automake \
     # wasm-opt deps \
     clang \
-    ## wasmedge-sys \
-    libclang-dev \
     ## openssl deps \
     pkg-config \
     libssl-dev \
@@ -101,8 +99,7 @@ RUN . $GHJK_ENV \
     && chmod +x /tini \
     && mkdir -p /lib/sym \
     && ln -s /lib/aarch64-linux-gnu /lib/sym/arm64 \
-    && ln -s /lib/x86_64-linux-gnu /lib/sym/amd64 \
-    && cp $(dirname $(realpath $(which wasmedge)))/.. /.wasmedge -r
+    && ln -s /lib/x86_64-linux-gnu /lib/sym/amd64
 
 #
 FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG} as prd
@@ -113,13 +110,11 @@ ARG TARGETARCH
 
 ENV NO_COLOR true
 ENV DENO_DIR /deno-dir/
-ENV LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:/.wasmedge/lib64"
 
 WORKDIR /app
 
 COPY --from=runtime-bin /tini /tini
 COPY --from=runtime-bin /lib/sym /lib/sym
-COPY --from=runtime-bin /.wasmedge /.wasmedge
 COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 
 COPY --from=builder /app/target/release/typegate /bin/typegate

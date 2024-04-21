@@ -1,6 +1,7 @@
 import pyrt.exports
 
 # NOTE: all imports must be toplevel as constrained by `componentize-py`
+# https://github.com/bytecodealliance/componentize-py/issues/23
 from pyrt.imports.shared import Req, Ok, Err
 
 # from pyrt.imports.typegate_wire import hostcall
