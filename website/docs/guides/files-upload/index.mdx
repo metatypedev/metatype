@@ -77,7 +77,7 @@ formData.append(
 formData.append("map", JSON.stringify({ 0: ["variables.file"] }));
 formData.append("0", image, "logo.png");
 
-const upload = await fetch("http://localhost:7891/retrend", {
+const upload = await fetch("http://localhost:7891/files-upload", {
   method: "POST",
   body: formData,
 });
