@@ -7,9 +7,9 @@ use std::path::PathBuf;
 
 use crate::utils::postprocess::PostProcessor;
 
-pub struct WasmedgeProcessor;
+pub struct WasmProcessor;
 
-impl PostProcessor for WasmedgeProcessor {
+impl PostProcessor for WasmProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         for mat in tg.materializers.iter_mut() {
             if mat.name.as_str() == "wasi" {

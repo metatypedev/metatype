@@ -301,8 +301,8 @@ export type KnownRuntime = {
   name: "temporal";
   data: TemporalRuntimeData;
 } | {
-  name: "wasmedge";
-  data: WasmEdgeRuntimeData;
+  name: "wasm";
+  data: WasmRuntimeData;
 } | {
   name: "typegate";
   data: TypegateRuntimeData;
@@ -482,7 +482,7 @@ export interface TemporalRuntimeData {
   host_secret: string;
   namespace_secret?: string;
 }
-export interface WasmEdgeRuntimeData {
+export interface WasmRuntimeData {
   config?: string | null;
 }
 export interface TypegateRuntimeData {

@@ -1754,11 +1754,11 @@
             "name": {
               "type": "string",
               "enum": [
-                "wasmedge"
+                "wasm"
               ]
             },
             "data": {
-              "$ref": "#/definitions/WasmEdgeRuntimeData"
+              "$ref": "#/definitions/WasmRuntimeData"
             }
           }
         },
@@ -2291,7 +2291,7 @@
         }
       }
     },
-    "WasmEdgeRuntimeData": {
+    "WasmRuntimeData": {
       "type": "object",
       "properties": {
         "config": {

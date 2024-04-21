@@ -1,0 +1,36 @@
+package example:host;
+
+world host {
+  // https://component-model.bytecodealliance.org/design/wit.html#type-aliases
+
+  variant category {
+    a, b(string), c
+  }
+
+  enum level {
+    bronze, silver, gold
+  }
+
+  flags capabilities {
+    attack, defend, cast
+  }
+
+  record profile {
+    category: category,
+    level: level,
+    attributes: capabilities,
+    metadatas: list<tuple<string, f64>>
+  }
+
+  record some-entity {
+    name: string,
+    age: option<u8>,
+    profile: profile
+  }
+
+  export add: func(a: f64, b: f64) -> f64;
+  export range: func(a: option<u32>, b: u32) -> result<list<u32>, string>;
+  export record-creation: func() -> list<some-entity>;
+
+  export identity: func(inp: some-entity) -> some-entity;
+}
