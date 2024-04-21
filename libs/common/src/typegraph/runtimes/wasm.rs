@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct WasiMatData {
+pub struct WasmMatData {
     pub wasm: String,
     pub func: String,
     pub artifact_hash: String,
@@ -16,6 +16,6 @@ pub struct WasiMatData {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct WasmEdgeRuntimeData {
+pub struct WasmRuntimeData {
     pub config: Option<String>, // placeholder (pre-commit fails on empty interfaces otherwise)
 }
