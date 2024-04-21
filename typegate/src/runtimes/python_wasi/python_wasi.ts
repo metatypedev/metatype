@@ -3,132 +3,74 @@
 
 import { getLogger } from "../../log.ts";
 import { Runtime } from "../Runtime.ts";
-import { basename } from "std/path/mod.ts";
-import { Resolver, RuntimeInitParams } from "../../types.ts";
+import type { Resolver, RuntimeInitParams } from "../../types.ts";
 import { ComputeStage } from "../../engine/query_engine.ts";
-import { PythonWasmMessenger } from "./python_wasm_messenger.ts";
-import { path } from "compress/deps.ts";
-import { PythonVirtualMachine } from "./python_vm.ts";
-import { Artifact, Materializer } from "../../typegraph/types.ts";
+import { Materializer } from "../../typegraph/types.ts";
 import * as ast from "graphql/ast";
+import { WitWireMessenger } from "./wit_wire.ts";
+import { WitWireMatInfo } from "../../../engine/runtime.js";
 
-const logger = getLogger(import.meta);
-
-function generateVmIdentifier(mat: Materializer, uuid: string) {
-  const { mod } = mat.data ?? {};
-  let identifier = "";
-  if (mod !== undefined) {
-    identifier = `pymod_${mod}`;
-  } else {
-    identifier = `default`;
-  }
-  identifier = `${identifier}_${uuid}`;
-  return identifier;
-}
+const _logger = getLogger(import.meta);
 
 export class PythonWasiRuntime extends Runtime {
   private constructor(
     typegraphName: string,
     uuid: string,
-    private w: PythonWasmMessenger,
+    private wire: WitWireMessenger,
   ) {
     super(typegraphName, uuid);
-    this.uuid = uuid;
   }
-  uuid: string;
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { materializers, typegraph, typegraphName, typegate } = params;
-    const w = await PythonWasmMessenger.init();
+    const { materializers, typegraphName } = params;
 
-    logger.info(`initializing default vm: ${typegraphName}`);
+    const wireMatInfos = materializers.map((mat) => {
+      let matData: object;
+      switch (mat.name) {
+        case "lambda":
+          matData = {
+            ty: "lambda",
+            source: mat.data.fn as string,
+            effect: mat.effect,
+          };
+          break;
+        case "def":
+          matData = {
+            ty: "def",
+            source: mat.data.fn as string,
+            func_name: mat.data.name as string,
+            effect: mat.effect,
+          };
+          break;
+        case "import_function": {
+        }
+        default:
+          throw new Error(`unsupported materializer type: ${mat.name}`);
+      }
+      const out: WitWireMatInfo = {
+        op_name: mat.data.name as string,
+        // TODO: hashing
+        mat_hash: mat.data.name as string,
+        // TODO: title of materializer type?
+        mat_title: mat.data.name as string,
+        mat_data_json: JSON.stringify(matData),
+      };
+      return out;
+    });
 
     // add default vm for lambda/def
     const uuid = crypto.randomUUID();
-    const defaultVm = new PythonVirtualMachine();
-    await defaultVm.setup(`default_${uuid}`);
-    w.vmMap.set(`default_${uuid}`, defaultVm);
+    const wire = await WitWireMessenger.init(
+      "./target/pyrt.cwasm",
+      uuid,
+      wireMatInfos,
+    );
 
-    for (const m of materializers) {
-      switch (m.name) {
-        case "lambda": {
-          logger.info(`registering lambda: ${m.data.name}`);
-          await defaultVm.registerLambda(
-            m.data.name as string,
-            m.data.fn as string,
-          );
-          break;
-        }
-        case "def": {
-          logger.info(`registering def: ${m.data.name}`);
-          await defaultVm.registerDef(
-            m.data.name as string,
-            m.data.fn as string,
-          );
-          break;
-        }
-        case "import_function": {
-          const pyModMat = typegraph.materializers[m.data.mod as number];
-
-          // resolve the python module artifacts/files
-          const { pythonArtifact, depsMeta: depArtifacts } = pyModMat.data;
-
-          const deps = depArtifacts as Artifact[];
-
-          const vmId = generateVmIdentifier(m, uuid);
-
-          const artifact = pythonArtifact as Artifact;
-          const modName = path.parse(basename(artifact.path)).name;
-
-          // TODO: move this logic to postprocess or python runtime
-          m.data.name = `${modName}.${m.data.name as string}`;
-          logger.info(`setup vm "${vmId}" for module ${modName}`);
-          const vm = new PythonVirtualMachine();
-
-          // for python modules, imports must be inside a folder above or same directory
-          const artifactMeta = {
-            typegraphName: typegraphName,
-            relativePath: artifact.path,
-            hash: artifact.hash,
-            sizeInBytes: artifact.size,
-          };
-          const depMetas = deps.map((dep) => {
-            return {
-              typegraphName: typegraphName,
-              relativePath: dep.path,
-              hash: dep.hash,
-              sizeInBytes: dep.size,
-            };
-          });
-
-          const entryPointFullPath = await typegate.artifactStore.getLocalPath(
-            artifactMeta,
-            depMetas,
-          );
-          const sourceCode = Deno.readTextFileSync(entryPointFullPath);
-
-          // prepare vm
-          await vm.setup(vmId, path.parse(entryPointFullPath).dir);
-          w.vmMap.set(vmId, vm);
-          await vm.registerModule(modName, sourceCode);
-
-          logger.info(
-            `register module "${modName}" to vm "${vmId}" located at "${entryPointFullPath}"`,
-          );
-          break;
-        }
-      }
-    }
-
-    return new PythonWasiRuntime(typegraphName, uuid, w);
+    return new PythonWasiRuntime(typegraphName, uuid, wire);
   }
 
   async deinit(): Promise<void> {
-    for (const vm of this.w.vmMap.values()) {
-      logger.info(`unregister vm: ${vm.getVmName()}`);
-      await vm.destroy();
-    }
-    await this.w.terminate();
+    await using _drop = this.wire;
   }
 
   materialize(
@@ -176,8 +118,7 @@ export class PythonWasiRuntime extends Runtime {
   }
 
   delegate(mat: Materializer): Resolver {
-    const { name } = mat.data ?? {};
-    const vmId = generateVmIdentifier(mat, this.uuid);
-    return (args: unknown) => this.w.execute(name as string, { vmId, args });
+    const { name } = mat.data;
+    return (args) => this.wire.handle(name as string, args);
   }
 }

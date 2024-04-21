@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "allowJs": false,
+    "strict": true,
+    "experimentalDecorators": true,
+    "types": [
+      "./engine/runtime.d.ts"
+    ],
+    "lib": [
+      "deno.ns",
+      "deno.unstable",
+      "deno.worker"
+    ]
+  },
+  "nodeModulesDir": false,
+  "lock": "deno.lock",
+  "importMap": "./typegate/import_map.json"
+}

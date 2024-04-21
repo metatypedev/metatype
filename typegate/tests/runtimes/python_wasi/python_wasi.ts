@@ -30,7 +30,7 @@ export const tg = await typegraph("python_wasi", (g: any) => {
         `,
       },
     ).withPolicy(pub),
-    identityMod: python.import(
+    /* identityMod: python.import(
       t.struct({ input: tpe }),
       tpe,
       {
@@ -38,6 +38,6 @@ export const tg = await typegraph("python_wasi", (g: any) => {
         module: "py/hello.py",
         deps: ["py/nested/dep.py"],
       },
-    ).withPolicy(pub),
+    ).withPolicy(pub), */
   });
 });

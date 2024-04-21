@@ -74,7 +74,9 @@ impl OpDepInjector {
         #[cfg(test)]
         state.put(ext::tests::TestCtx { val: 10 });
         state.put(runtimes::temporal::Ctx::default());
-        state.put(runtimes::python::python_bindings::Ctx::default());
+        let engine = wasmtime::Engine::new(wasmtime::Config::new().async_support(true))
+            .expect("invalid wasmtime engine config");
+        state.put(runtimes::wit_wire::Ctx::new(engine));
         state.put(runtimes::prisma::Ctx::new(self.tmp_dir.unwrap()));
     }
 }

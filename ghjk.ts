@@ -22,7 +22,26 @@ const installs = {
   python: ports.cpy_bs({ version: PYTHON_VERSION, releaseTag: "20240224" }),
   python_latest: ports.cpy_bs({ releaseTag: "20240224" }),
   node: ports.node({ version: NODE_VERSION }),
+  comp_py: ports.pipi({ packageName: "componentize-py" }),
+  wasm_opt: ports.cargobi({
+    crateName: "wasm-opt",
+    version: WASM_OPT_VERSION,
+    locked: true,
+  }),
 };
+
+const allowedPortDeps = [
+  ...ghjk.stdDeps(),
+  ...[installs.python_latest, installs.node].map((fat) => ({
+    manifest: fat.port,
+    defaultInst: thinInstallConfig(fat),
+  })),
+];
+export const secureConfig = ghjk.secureConfig({ allowedPortDeps });
+
+const inCi = () => !!Deno.env.get("CI");
+const inOci = () => !!Deno.env.get("OCI");
+const inDev = () => !inCi() && !inOci();
 
 ghjk.install(
   ports.wasmedge({ version: WASMEDGE_VERSION }),
@@ -36,14 +55,10 @@ ghjk.install(
   ports.temporal_cli({ version: TEMPORAL_VERSION }),
 );
 
-if (!Deno.env.has("OCI")) {
+if (!inOci()) {
   ghjk.install(
     // FIXME: use cargobi when avail
-    ports.cargobi({
-      crateName: "wasm-opt",
-      version: WASM_OPT_VERSION,
-      locked: true,
-    }),
+    installs.wasm_opt,
     ports.cargobi({
       crateName: "wasm-tools",
       version: WASM_TOOLS_VERSION,
@@ -83,17 +98,19 @@ if (!Deno.env.has("NO_PYTHON")) {
       version: POETRY_VERSION,
     })[0],
   );
-  if (!Deno.env.has("OCI")) {
+  if (inDev()) {
     ghjk.install(
       ports.pipi({ packageName: "pre-commit" })[0],
     );
   }
 }
 
-if (!Deno.env.has("CI") && !Deno.env.has("OCI")) {
+if (inDev()) {
   ghjk.install(
     ports.act({}),
     ports.cargobi({ crateName: "whiz", locked: true }),
+    ports.cargobi({ crateName: "wasmtime-cli", locked: true }),
+    installs.comp_py[0],
   );
 }
 
@@ -113,12 +130,23 @@ ghjk.task("clean-deno-lock", {
   },
 });
 
-export const secureConfig = ghjk.secureConfig({
-  allowedPortDeps: [
-    ...ghjk.stdDeps(),
-    ...[installs.python_latest, installs.node].map((fat) => ({
-      manifest: fat.port,
-      defaultInst: thinInstallConfig(fat),
-    })),
-  ],
+ghjk.task("gen-pyrt-bind", {
+  installs: installs.comp_py,
+  allowedPortDeps,
+  async fn({ $ }) {
+    await $.removeIfExists("./libs/pyrt_component/pyrt");
+    await $`componentize-py -d wit/ bindings .`.cwd("./libs/pyrt_component");
+  },
+});
+
+ghjk.task("build-pyrt", {
+  installs: [...installs.comp_py, installs.wasm_opt],
+  allowedPortDeps,
+  async fn({ $ }) {
+    await $`componentize-py -d wit/ componentize -o ../../target/pyrt.wasm main`
+      .cwd("./libs/pyrt_component");
+    // TODO: explicitly install wasmtime
+    await $`wasmtime compile -W component-model  ./target/pyrt.wasm -o ./target/pyrt.cwasm`;
+    // await $`wasm-opt -Oz ./target/pyrt.wasm -o ./target/pyrt.wasm2`;
+  },
 });

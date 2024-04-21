@@ -42,18 +42,6 @@ globalThis.Meta = {
     workflowQuery: getOp("op_temporal_workflow_query"),
     workflowDescribe: getOp("op_temporal_workflow_describe"),
   },
-  python: {
-    registerVm: getOp("op_register_virtual_machine"),
-    unregisterVm: getOp("op_unregister_virtual_machine"),
-    registerLambda: getOp("op_register_lambda"),
-    unregisterLambda: getOp("op_unregister_lambda"),
-    applyLambda: getOp("op_apply_lambda"),
-    registerDef: getOp("op_register_def"),
-    unregisterDef: getOp("op_unregister_def"),
-    applyDef: getOp("op_apply_def"),
-    registerModule: getOp("op_register_module"),
-    unregisterModule: getOp("op_unregister_module"),
-  },
   deno: {
     transformTypescript: getOp("op_deno_transform_typescript"),
   },
@@ -62,4 +50,9 @@ globalThis.Meta = {
   typegraphValidate: getOp("op_typegraph_validate"),
   validatePrismaRuntimeData: getOp("op_validate_prisma_runtime_data"),
   wasmtimeWit: getOp("op_wasmtime_wit"),
+  wit_wire: {
+    init: getOp("op_wit_wire_init"),
+    destroy: getOp("op_wit_wire_destroy"),
+    handle: getOp("op_wit_wire_handle"),
+  },
 };

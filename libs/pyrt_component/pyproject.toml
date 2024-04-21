@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "pyrt-component"
+version = "0.3.7-0"
+description = "Wasm component implementing the PythonRuntime vm."
+authors = ["Your Name <you@example.com>"]
+license = "Elastic-2.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

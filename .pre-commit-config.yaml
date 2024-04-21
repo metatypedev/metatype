@@ -15,7 +15,13 @@ repos:
       - id: check-merge-conflict
       - id: end-of-file-fixer
         # exclude all generated files
-        exclude: (.ghjk/.*|typegate/deno.lock|.*\.snap$|typegate/src/typegraphs/.*\.json|website/docs/reference/)
+        exclude: (
+          .ghjk/.*
+          |typegate/deno.lock
+          |.*\.snap$|typegate/src/typegraphs/.*\.json
+          |website/docs/reference/
+          |libs/pyrt_component/pyrt/imports/.*
+          )
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.27.2
     hooks:
