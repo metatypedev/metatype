@@ -82,7 +82,6 @@ export class WasmRuntime extends Runtime {
   ): Resolver {
     const { wasmArtifact, func } = materializer?.data ?? {};
     const order = Object.keys(argumentTypes ?? {});
-
     const typegraph = this.typegate.register.get(this.typegraphName)!;
     const art = typegraph.tg.tg.meta.artifacts[wasmArtifact as string];
 
