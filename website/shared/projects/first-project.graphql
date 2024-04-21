@@ -1,0 +1,18 @@
+mutation CreateMessage {
+  create_message(
+    data: {
+      title: "First typegraph"
+      body: "Congrats on your first typegraph."
+    }
+  ) {
+    id
+  }
+}
+
+query ListMessages {
+  list_messages {
+    id
+    title
+    body
+  }
+}
