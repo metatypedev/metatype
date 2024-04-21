@@ -1,17 +1,17 @@
 from typegraph.graph.typegraph import Graph
 from typegraph.policy import Policy
-from typegraph.runtimes.wasmedge import WasmEdgeRuntime
+from typegraph.runtimes.wasm import WasmRuntime
 
 from typegraph import t, typegraph
 
 
 @typegraph()
-def wasmedge(g: Graph):
+def wasm_py(g: Graph):
     pub = Policy.public()
-    wasmedge = WasmEdgeRuntime()
+    wasm = WasmRuntime()
 
     g.expose(
-        test=wasmedge.wasi(
+        test=wasm.from_wasm(
             t.struct({"a": t.float(), "b": t.float()}),
             t.integer(),
             wasm="rust.wasm",
