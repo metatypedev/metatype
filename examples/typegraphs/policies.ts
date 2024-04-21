@@ -4,18 +4,19 @@ import { Auth } from "@typegraph/sdk/params.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
-// skip:end
-
 await typegraph({
   name: "policies",
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
+  // skip:end
   const deno = new DenoRuntime();
   const random = new RandomRuntime({ seed: 0 });
+  // `public` is sugar for `(_args, _ctx) => true`
   const pub = Policy.public();
 
   const admin_only = deno.policy(
     "admin_only",
+    // note: policies either return true | false | null
     "(args, { context }) => context.username ? context.username === 'admin' : null",
   );
   const user_only = deno.policy(
@@ -29,6 +30,10 @@ await typegraph({
     public: random.gen(t.string()).withPolicy(pub),
     admin_only: random.gen(t.string()).withPolicy(admin_only),
     user_only: random.gen(t.string()).withPolicy(user_only),
+    // if both attached policies return null, access is denied
     both: random.gen(t.string()).withPolicy([user_only, admin_only]),
-  });
+    // set default policy for materializers
+  }, pub);
+  // skip:start
 });
+// skip:end
