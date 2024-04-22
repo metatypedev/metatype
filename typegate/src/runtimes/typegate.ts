@@ -71,45 +71,41 @@ export class TypeGateRuntime extends Runtime {
   ): ComputeStage[] {
     const resolver: Resolver = (() => {
       const name = stage.props.materializer?.name;
-      if (name === "addTypegraph") {
-        return this.addTypegraph;
-      }
-      if (name === "removeTypegraphs") {
-        return this.removeTypegraphs;
-      }
-      if (name === "typegraphs") {
-        return this.typegraphs;
-      }
-      if (name === "typegraph") {
-        return this.typegraph;
-      }
-      if (name === "serializedTypegraph") {
-        return this.serializedTypegraph;
-      }
-      if (name === "argInfoByPath") {
-        return this.argInfoByPath;
-      }
-      if (name === "findAvailableOperations") {
-        return this.findAvailableOperations;
-      }
-      if (name === "findPrismaModels") {
-        return this.findPrismaModels;
-      }
-      if (name === "execRawPrismaQuery") {
-        return this.execRawPrismaQuery;
-      }
+      switch (name) {
+        case "addTypegraph":
+          return this.addTypegraph;
+        case "removeTypegraphs":
+          return this.removeTypegraphs;
+        case "typegraphs":
+          return this.typegraphs;
+        case "typegraph":
+          return this.typegraph;
+        case "serializedTypegraph":
+          return this.serializedTypegraph;
+        case "argInfoByPath":
+          return this.argInfoByPath;
+        case "findAvailableOperations":
+          return this.findAvailableOperations;
+        case "findPrismaModels":
+          return this.findPrismaModels;
+        case "execRawPrismaQuery":
+          return this.execRawPrismaQuery;
+        case "queryPrismaModel":
+          return this.queryPrismaModel;
 
-      if (name != null) {
-        throw new Error(`materializer '${name}' not implemented`);
-      }
+        default:
+          if (name != null) {
+            throw new Error(`materializer '${name}' not implemented`);
+          }
 
-      return async ({ _: { parent }, ...args }) => {
-        const resolver = parent[stage.props.node];
-        const ret = typeof resolver === "function"
-          ? await resolver(args)
-          : resolver;
-        return ret;
-      };
+          return async ({ _: { parent }, ...args }) => {
+            const resolver = parent[stage.props.node];
+            const ret = typeof resolver === "function"
+              ? await resolver(args)
+              : resolver;
+            return ret;
+          };
+      }
     })();
 
     return [
@@ -306,6 +302,81 @@ export class TypeGateRuntime extends Runtime {
         query: { selection, arguments: queryArgs },
       }))[query.action + query.modelName ?? ""],
     );
+  };
+
+  queryPrismaModel: Resolver = async (
+    { typegraph, runtime, model, offset, limit },
+  ) => {
+    const engine = this.typegate.register.get(typegraph);
+    if (!engine) {
+      throw new Error(`typegraph not found: ${typegraph}`);
+    }
+    const runtimeIdx = engine.tg.tg.runtimes.findIndex(
+      (rt) => rt.name === "prisma" && rt.data.name === runtime,
+    );
+    if (runtimeIdx === -1) {
+      throw new Error(`prisma runtime '${runtime}' not found`);
+    }
+    const rtData = engine.tg.tg.runtimes[runtimeIdx].data as PrismaRT.DataFinal;
+    const rt = engine.tg.runtimeReferences[runtimeIdx] as PrismaRuntime;
+    const modelData = rtData.models.find((m) => m.typeName === model);
+    if (!modelData) {
+      throw new Error(
+        `prisma model '${model}' not found in the runtime '${runtime}'`,
+      );
+    }
+
+    const fields = modelData.props.map((prop) => ({
+      name: prop.key,
+      type: walkPath(engine.tg, engine.tg.type(prop.typeIdx), 0, []),
+    }));
+
+    const selection: Record<string, boolean> = {};
+    for (const field of fields) {
+      if (field.type == null) {
+        continue;
+      }
+      if (
+        ["integer", "float", "boolean", "string"].includes(field.type.type)
+      ) {
+        selection[field.name] = true;
+      }
+    }
+
+    const data = await rt.query({
+      batch: [
+        {
+          modelName: model,
+          action: "aggregate",
+          query: {
+            selection: {
+              _count: {
+                selection: {
+                  _all: true,
+                },
+              },
+            },
+          },
+        },
+        {
+          modelName: model,
+          action: "findMany",
+          query: {
+            selection,
+            arguments: {
+              skip: offset,
+              take: limit,
+            },
+          },
+        },
+      ],
+    });
+
+    return {
+      fields,
+      rowCount: data[0][`aggregate${model}`]._count._all,
+      data: data[1][`findMany${model}`].map((r: unknown) => JSON.stringify(r)),
+    };
   };
 }
 

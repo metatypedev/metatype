@@ -21,14 +21,19 @@ typegraphs:
 ```
 
 ## Typegate configuration
+
 Each typegate node is configured under `typegates.<name>`.
 The typegate node selection is done by the `--target` option in the CLI.
 
 ### Named secrets
+
 Named secrets are used to configure runtimes.
 Their values are provided in the `secrets` section of the configuration file
 directly or indirectly using [lade](https://github.com/zifeo/lade).
-Each secret is defined in `secrets.<typegraph-name>.<secret-name>`.
+Each entry in the `secrets` section is the set of secrets for a specific typegraph.
+The typegraph name is the key of the entry and the value is an object mapping each secret name to its value or vault source (see [next section](#automatic-secret-loading-support)).
+
+To sum up, each secret is defined in `secrets.<typegraph-name>.<secret-name>.<secret-value-or-source>`.
 
 ## Automatic secret loading support
 

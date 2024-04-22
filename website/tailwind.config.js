@@ -2,6 +2,8 @@
 module.exports = {
   content: [
     "./docs/**/*.{ts,tsx,mdx,md}",
+    "./blog/**/*.{ts,tsx,mdx,md}",
+    "./shared/**/*.{ts,tsx,mdx,md}",
     "./use-cases/**/*.{ts,tsx,mdx,md}",
     "./src/components/**/*.{ts,tsx,mdx,md}",
     "./src/pages/**/*.{ts,tsx,mdx,md}",

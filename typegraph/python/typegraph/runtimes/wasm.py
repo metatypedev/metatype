@@ -3,24 +3,23 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
+from typegraph import t
 from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
     Effect,
     EffectRead,
-    MaterializerWasi,
+    MaterializerWasm,
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.wit import runtimes, store
 
-from typegraph import t
 
-
-class WasmEdgeRuntime(Runtime):
+class WasmRuntime(Runtime):
     def __init__(self):
-        super().__init__(runtimes.register_wasmedge_runtime(store))
+        super().__init__(runtimes.register_wasm_runtime(store))
 
-    def wasi(
+    def from_wasm(
         self,
         inp: "t.struct",
         out: "t.typedef",
@@ -30,11 +29,12 @@ class WasmEdgeRuntime(Runtime):
         effect: Optional[Effect] = None,
     ):
         effect = effect or EffectRead()
+        wasm = f"file:{wasm}"
 
-        mat_id = runtimes.from_wasi_module(
+        mat_id = runtimes.from_wasm_module(
             store,
             BaseMaterializer(runtime=self.id.value, effect=effect),
-            MaterializerWasi(wasm_artifact=wasm, func_name=func),
+            MaterializerWasm(module=wasm, func_name=func),
         )
 
         if isinstance(mat_id, Err):
@@ -43,12 +43,12 @@ class WasmEdgeRuntime(Runtime):
         return t.func(
             inp,
             out,
-            WasiMat(id=mat_id.value, module=wasm, func_name=func, effect=effect),
+            WasmMat(id=mat_id.value, module=wasm, func_name=func, effect=effect),
         )
 
 
 @dataclass
-class WasiMat(Materializer):
+class WasmMat(Materializer):
     module: str
     func_name: str
     effect: List[str]

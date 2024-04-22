@@ -365,14 +365,14 @@ interface runtimes {
     register-random-runtime: func(data: random-runtime-data) -> result<materializer-id, error>
     create-random-mat: func(base: base-materializer, data: materializer-random) -> result<materializer-id, error>
 
-    // wasmedge
-    record materializer-wasi {
+    // wasm
+    record materializer-wasm {
         func-name: string,
         wasm-artifact: string,
     }
 
-    register-wasmedge-runtime: func() -> result<runtime-id, error>
-    from-wasi-module: func(base: base-materializer, data: materializer-wasi) -> result<materializer-id, error>
+    register-wasm-runtime: func() -> result<runtime-id, error>
+    from-wasm-module: func(base: base-materializer, data: materializer-wasm) -> result<materializer-id, error>
 
     // prisma
     record prisma-runtime-data {
@@ -451,7 +451,11 @@ interface runtimes {
         get-arg-info-by-path,
         find-available-operations,
         find-prisma-models,
-        raw-prisma-query,
+        raw-prisma-read,
+        raw-prisma-create,
+        raw-prisma-update,
+        raw-prisma-delete,
+        query-prisma-model,
     }
 
     register-typegate-materializer: func(operation: typegate-operation) -> result<materializer-id, error>

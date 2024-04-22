@@ -7,12 +7,12 @@ use std::path::PathBuf;
 
 use crate::utils::postprocess::PostProcessor;
 
-pub struct WasmedgeProcessor;
+pub struct WasmProcessor;
 
-impl PostProcessor for WasmedgeProcessor {
+impl PostProcessor for WasmProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         for mat in tg.materializers.iter_mut() {
-            if mat.name.as_str() == "wasi" {
+            if mat.name.as_str() == "wasm" {
                 let path = mat.data.get("wasmArtifact").unwrap();
                 let path: PathBuf = path.as_str().unwrap().into();
 

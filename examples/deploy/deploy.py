@@ -1,25 +1,24 @@
-from typegraph import typegraph, Policy, t, Graph
+from os import path
+
+from typegraph import Graph, Policy, t, typegraph
+from typegraph.graph.tg_deploy import (
+    BasicAuth,
+    TypegraphDeployParams,
+    tg_deploy,
+)
 from typegraph.providers.prisma import PrismaRuntime
 from typegraph.runtimes.deno import DenoRuntime
-
-from typegraph.graph.tg_deploy import (
-    tg_deploy,
-    TypegraphDeployParams,
-    BasicAuth,
-)
 from typegraph.runtimes.python import PythonRuntime
-from typegraph.runtimes.wasmedge import WasmEdgeRuntime
+from typegraph.runtimes.wasm import WasmRuntime
 from typegraph.utils import unpack_tarb64
-from typegraph.wit import ArtifactResolutionConfig, MigrationConfig, MigrationAction
-
-from os import path
+from typegraph.wit import ArtifactResolutionConfig, MigrationAction, MigrationConfig
 
 
 @typegraph()
 def deploy_example_python(g: Graph):
     deno = DenoRuntime()
     python = PythonRuntime()
-    wasmedge = WasmEdgeRuntime()
+    wasm = WasmRuntime()
     prisma = PrismaRuntime("prisma", "POSTGRES")
     pub = Policy.public()
 
@@ -59,7 +58,7 @@ def deploy_example_python(g: Graph):
             name="sayHello",
         ),
         # Wasmedge
-        testWasmedge=wasmedge.wasi(
+        testWasmedge=wasm.from_wasm(
             t.struct({"a": t.float(), "b": t.float()}),
             t.integer(),
             wasm="wasi/rust.wasm",
@@ -97,7 +96,7 @@ res = tg_deploy(
         auth=auth,
         artifacts_config=artifacts_config,
         secrets={
-            "TG_DEPLOY_EXAMPLE_PYTHON_POSTGRES": "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
+            "POSTGRES": "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
         },
     ),
 )

@@ -17,7 +17,7 @@
 				"$tsc"
 			],
 			"options": {
-				"cwd": "${workspaceFolder}/dev-tools"
+				"cwd": "${workspaceFolder}/meta-lsp"
 			}
 		},
 		{
@@ -39,7 +39,7 @@
 				"$tsc-watch"
 			],
 			"options": {
-				"cwd": "${workspaceFolder}/dev-tools/vscode-metatype-support"
+				"cwd": "${workspaceFolder}/meta-lsp/vscode-metatype-support"
 			}
 		}
 	]
