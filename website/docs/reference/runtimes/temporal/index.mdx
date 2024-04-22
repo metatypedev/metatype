@@ -1,6 +1,5 @@
 
-import SDKTabs from "@site/src/components/SDKTabs";
-import TabItem from "@theme/TabItem";
+import TGExample from "@site/src/components/TGExample";
 
 # Temporal
 
@@ -20,63 +19,15 @@ An interesting use case is to dynamically describe the operations you want to ex
 
 Here is a simple example of a typegraph that takes some value from an environment variable.
 
-<SDKTabs>
-    <TabItem value="python">
-```python
-from typegraph import t, typegraph, Policy, Graph
-from typegraph.providers.temporal import TemporalRuntime
-import os
 
-@typegraph()
-def temporal(g: Graph):
-    public = Policy.public()
-    temporal = TemporalRuntime(
-        "<name>", "<host_secret>", namespace_secret="<ns_secret>"
-    )
+<TGExample
+    typegraph="temporal"
+    python={require("../../../../../examples/typegraphs/temporal.py")}
+    typescript={require("!!code-loader!../../../../../examples/typegraphs/temporal.ts")}
+    mode="Typegraph"
+    query={{content: ""}}
+/>
 
-    workflow_id = os.getenv("ID_FROM_ENV")
-    arg = t.struct({"some_field": t.string()})
-
-    g.expose(
-        public,
-        start=temporal.start_workflow("<workflow_type>", arg),
-        query=temporal.query_workflow("<query_type>", arg, t.string()),
-        signal=temporal.signal_workflow("<signal_name>", arg),
-        describe=temporal.describe_workflow().reduce(
-            {"workflow_id": workflow_id }
-        ) if id else temporal.describe_workflow(),
-    )
-
-```
-    </TabItem>
-    <TabItem value="typescript">
-```typescript
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.js";
-
-typegraph({ name: "temporal" }, (g) => {
-  const public = Policy.public();
-  const temporal = new TemporalRuntime({
-    name: "<name>",
-    hostSecret: "<host_secret>",
-    namespaceSecret: "<ns_secret>",
-  });
-
-  const workflow_id = process.env.ID_FROM_ENV;
-  const arg = t.struct({ some_field: t.string() });
-
-  g.expose({
-    start: temporal.startWorkflow("<workflow_type>", arg),
-    query: temporal.queryWorkflow("<query_type>", arg, t.string()),
-    signal: temporal.signalWorkflow("<signal_name>", arg),
-    describe: workflow_id
-      ? temporal.describeWorkflow().reduce({ workflow_id })
-      : temporal.describeWorkflow(),
-  }, public);
-});
-```
-    </TabItem>
-</SDKTabs>
 
 
 <!-- TODO: setup a test temporal cluster and workflow for demo purposes -->
