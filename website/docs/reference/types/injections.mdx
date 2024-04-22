@@ -1,5 +1,4 @@
-import SDKTabs from "@site/src/components/SDKTabs";
-import TabItem from "@theme/TabItem";
+import TGExample from "@site/src/components/TGExample";
 
 
 # Injections
@@ -65,79 +64,10 @@ This value depends on the configuration of the typegate host machine.
 
 ## Example
 
-<SDKTabs>
-    <TabItem value="python">
-```python
-from typegraph import typegraph, t, Graph
-from typegraph.runtimes.deno import DenoRuntime
-
-@typegraph()
-def injection_example(g: Graph):
-    deno = DenoRuntime()
-    pub = Policy.public()
-
-    g.expose(
-        get_injected=deno.identity(
-            t.struct({
-                "static_value": t.integer().set(12),
-                "context_value": t.uuid().from_context("profile.userId"),
-                "secret_value": t.string().from_secret("secret_name"),
-                "dynamic": t.datetime().inject("now")
-            }),
-            t.struct({
-                "static_value": t.integer().rename("Static"),
-                "context_value": t.uuid(),
-                "secret_value": t.string(),
-                "nested": deno.identity(
-                    t.struct({
-                        "parent_value": t.integer().from_parent("Static")
-                    }),
-                    t.struct({
-                        "parent_value": t.integer()
-                    })
-                ),
-                "dynamic": t.datetime()
-            })
-        ).with_policy(pub)
-    )
-
-```
-    </TabItem>
-    
-    <TabItem value="typescript">
-```ts
-import { Policy, typegraph, t } from "@typegraph/sdk";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
-
-typegraph("injection-example", (g) => {
-  const deno = new DenoRuntime();
-  const pub = Policy.public();
-
-    g.expose({
-        get_injected: deno.identity(
-            t.struct({
-                static_value: t.integer().set(12),
-                context_value: t.uuid().from_context("profile.userId"),
-                secret_value: t.string().from_secret("secret_name"),
-                dynamic: t.datetime().inject("now")
-            }),
-            t.struct({
-                static_value: t.integer().rename("Static"),
-                context_value: t.uuid(),
-                secret_value: t.string(),
-                nested: deno.identity(
-                    t.struct({
-                        parent_value: t.integer().from_parent("Static"),
-                    }),
-                    t.struct({
-                        parent_value: t.integer(),
-                    })
-                ),
-                dynamic: t.datetime()
-            })
-        ).withPolicy(pub),
-    });
-});
-```
-    </TabItem>
-</SDKTabs>
+<TGExample
+    typegraph="injection-example"
+    python={require("../../../../examples/typegraphs/injections.py")}
+    typescript={require("!!code-loader!../../../../examples/typegraphs/injections.ts")}
+    disablePlayground={true}
+    query={{content: ""}}
+/>
