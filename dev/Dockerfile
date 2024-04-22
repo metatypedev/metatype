@@ -46,6 +46,7 @@ RUN set -eux; \
     git \
     curl \
     # asdf deps \
+    zstd \
     xz-utils \
     unzip \
     ; \
@@ -59,10 +60,10 @@ COPY ghjk.ts .
 RUN OCI=1 NO_PYTHON=1 ghjk ports sync
 ENV GHJK_ENV=/root/.local/share/ghjk/env.sh
 
-ARG WASM_OPT_VERSION=0.116.0
-ARG WASM_TOOLS_VERSION=1.0.53
-RUN cargo install wasm-opt@$WASM_OPT_VERSION --locked --debug
-RUN cargo install wasm-tools@$WASM_TOOLS_VERSION --locked --debug
+# ARG WASM_OPT_VERSION=0.116.0
+# ARG WASM_TOOLS_VERSION=1.0.53
+# RUN cargo install wasm-opt@$WASM_OPT_VERSION --locked --debug
+# RUN cargo install wasm-tools@$WASM_TOOLS_VERSION --locked --debug
 
 COPY --from=plan /app/recipe.json recipe.json
 

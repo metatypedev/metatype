@@ -92,10 +92,8 @@ export class WasmRuntime extends Runtime {
       sizeInBytes: art.size,
     };
 
-    // always wasi
-    const resolver: Resolver = async (args) => {
+    return async (args) => {
       const transfert = order.map((k) => JSON.stringify(args[k]));
-
       const { res } = nativeResult(
         await native.wasmtime_wit({
           func: func as string,
@@ -103,14 +101,8 @@ export class WasmRuntime extends Runtime {
           args: transfert,
         }),
       );
+      console.log("OUTPUT", res);
       return JSON.parse(res);
     };
-
-    return [
-      new ComputeStage({
-        ...stage.props,
-        resolver,
-      }),
-    ];
   }
 }

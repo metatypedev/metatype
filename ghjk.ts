@@ -57,17 +57,16 @@ ghjk.install(
   }),
   ports.cargo_binstall(),
   ports.temporal_cli({ version: TEMPORAL_VERSION }),
+  installs.wasm_opt,
+  ports.cargobi({
+    crateName: "wasm-tools",
+    version: WASM_TOOLS_VERSION,
+    locked: true,
+  }),
 );
 
 if (!inOci()) {
   ghjk.install(
-    // FIXME: use cargobi when avail
-    installs.wasm_opt,
-    ports.cargobi({
-      crateName: "wasm-tools",
-      version: WASM_TOOLS_VERSION,
-      locked: true,
-    }),
     // these aren't required by the typegate build process
     ports.cargobi({
       crateName: "cargo-insta",
