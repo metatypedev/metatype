@@ -1,6 +1,9 @@
 from typegraph import typegraph, Policy, t, Graph
 from typegraph.runtimes.random import RandomRuntime
+
+# skip:start
 from typegraph.graph.params import Cors
+# skip:end
 
 
 @typegraph(
@@ -10,19 +13,11 @@ from typegraph.graph.params import Cors
     # skip:end
 )
 def roadmap(g: Graph):
+    # skip:start
     _bucket = t.struct(
         {
             "id": t.integer(as_id=True),
             "name": t.string(),
-        }
-    )
-    idea = t.struct(
-        {
-            "id": t.uuid(
-                as_id=True
-            ),  # email is just a shorthand alias for `t.string({format: "uuid"})`
-            "name": t.string(),
-            "authorEmail": t.email(),  # another string shorthand
         }
     )
     _vote = t.struct(
@@ -36,6 +31,16 @@ def roadmap(g: Graph):
             "desc": t.string().optional(),  # makes it optional
         }
     )
-    random = RandomRuntime(reset=None)
+    # skip:end
+    idea = t.struct(
+        {
+            "id": t.uuid(
+                as_id=True
+            ),  # uuid is just a shorthand alias for `t.string({format: "uuid"})`
+            "name": t.string(),
+            "authorEmail": t.email(),  # another string shorthand
+        }
+    )
+    random = RandomRuntime(reset=None, seed=1)
     pub = Policy.public()
     g.expose(pub, get_idea=random.gen(idea))
