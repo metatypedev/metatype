@@ -4,7 +4,7 @@ import TGExample from "@site/src/components/TGExample";
 
 ## GraphQL runtime
 
-You currently have a single model to describe messages sent in the chat-based app. A reasonable next step is to add a user model and make a link between the two. While you can store users in the same database, it's wiser to avoid data duplication and re-use your service for user management available at [GraphQLZero](https://graphqlzero.almansi.me) endpoint. Let's introduce the [GraphQL](https://spec.graphql.org/October2021/) runtime that allows remote GraphQL queries.
+You currently have a single model to describe messages sent in the chat-based app. A reasonable next step is to add a user model and make a link between the two. While you can store users in the same database, it is wiser to avoid data duplication and re-use your service for user management available at [GraphQLZero](https://graphqlzero.almansi.me) endpoint. Let's introduce the [GraphQL](https://spec.graphql.org/October2021/) runtime that allows remote GraphQL queries.
 
 Update `typegraph.py` with the highlighted lines below:
 

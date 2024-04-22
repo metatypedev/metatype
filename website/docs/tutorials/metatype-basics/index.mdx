@@ -129,7 +129,7 @@ We can run it locally for development purposes.
 Typegate currently requires the Redis database to function and to make it eay to run both, we'll make use of a linux container runtime for this. 
 The Docker runtime to be specific which has installation guides located [here](https://docs.docker.com/get-docker/).
 
-We'll also need the Docker Compose orchestrator which usually comes by default with the `docker` command. Use the following command to check if it's available:
+We'll also need the Docker Compose orchestrator which usually comes by default with the `docker` command. Use the following command to check if it is available:
 
 ```bash
 docker compose version 
@@ -150,7 +150,7 @@ docker compose up --detach
 #                   Omit to get the all logs in the current terminal
 ```
 
-This should download and start typegate and it's dependent services. 
+This should download and start typegate and its dependent services. 
 
 We can observe their log of typegate or any of the other services with the following command. It has to be run from the same project directory.
 
@@ -344,7 +344,7 @@ Run the following command in your project root:
 meta dev 
 ```
 
-Typegate has first-class support for consuming the API through a GraphQl interface and it's enabled by default.
+Typegate has first-class support for consuming the API through a GraphQl interface and it is enabled by default.
 It also bundles the GrahpiQl API explorer and you should be able to access it at [http://localhost:7890/roadmap](http://localhost:7890/roadmap) once meta-cli has successfully pushed your typegraph.
 
 
@@ -719,7 +719,7 @@ typegates:
 When you save the files, meta-cli will reload the new additions to your typegraph.
 `create_bucket` is now only accessible to requests bearing the right tokens
 (For the provided example, `Basic YW5kaW06aHVudGVyMg==` should work).
-If you're using the GraphiQl interface from earlier, there should be a panel in the bottom left called "Headers" for setting http headers 
+If you are using the GraphiQl interface from earlier, there should be a panel in the bottom left called "Headers" for setting http headers 
 
 
     <TGExample
