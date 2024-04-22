@@ -8,6 +8,10 @@ members = [
   "meta-cli",
   "typegraph/core", ]
 
+exclude = [
+  "typegate/tests/runtimes/wasm/rust"
+]
+
 [workspace.package] 
 version = "0.3.7-0"
 edition = "2021"

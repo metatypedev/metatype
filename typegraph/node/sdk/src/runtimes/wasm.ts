@@ -7,18 +7,18 @@ import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import { Materializer, Runtime } from "./mod.js";
 import { fx } from "../index.js";
 
-interface WasiMat extends Materializer {
+interface WasmMat extends Materializer {
   module: string;
   funcMame: string;
   effect: Effect;
 }
 
-export class WasmEdgeRuntime extends Runtime {
+export class WasmRuntime extends Runtime {
   constructor() {
-    super(runtimes.registerWasmedgeRuntime());
+    super(runtimes.registerWasmRuntime());
   }
 
-  wasi<
+  fromWasm<
     I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
@@ -29,8 +29,8 @@ export class WasmEdgeRuntime extends Runtime {
       wasm: string;
       effect?: Effect;
     },
-  ): t.Func<I, O, WasiMat> {
-    const matId = runtimes.fromWasiModule(
+  ): t.Func<I, O, WasmMat> {
+    const matId = runtimes.fromWasmModule(
       {
         runtime: this._id,
         effect,
