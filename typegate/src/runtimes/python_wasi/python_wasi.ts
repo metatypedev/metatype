@@ -22,7 +22,7 @@ export class PythonWasiRuntime extends Runtime {
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { materializers, typegraphName } = params;
+    const { materializers, typegraphName, _typegraph } = params;
 
     const wireMatInfos = materializers.map((mat) => {
       let matData: object;
@@ -42,8 +42,15 @@ export class PythonWasiRuntime extends Runtime {
             effect: mat.effect,
           };
           break;
-        case "import_function": {
-        }
+        /* case "import_function": {
+          matData = {
+            ty: "def",
+            source: mat.data.fn as string,
+            func_name: mat.data.name as string,
+            effect: mat.effect,
+          };
+          break;
+        } */
         default:
           throw new Error(`unsupported materializer type: ${mat.name}`);
       }

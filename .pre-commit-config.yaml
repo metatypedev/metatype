@@ -15,9 +15,9 @@ repos:
       - id: check-merge-conflict
       - id: end-of-file-fixer
         # exclude all generated files
-        exclude: (
+        exclude: (?x)(
           .ghjk/.*
-          |typegate/deno.lock
+          |.*deno.lock
           |.*\.snap$|typegate/src/typegraphs/.*\.json
           |website/docs/reference/
           |libs/pyrt_wit_wire/pyrt)

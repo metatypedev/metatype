@@ -16,6 +16,9 @@ import json
 import types
 from typing import Callable, Any
 
+# the `MatWire` class is instantiated for each
+# external call. We have to put any persisted
+# state here.
 handlers = {}
 
 

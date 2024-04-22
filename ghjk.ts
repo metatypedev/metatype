@@ -113,7 +113,6 @@ if (inDev()) {
   ghjk.install(
     ports.act({}),
     ports.cargobi({ crateName: "whiz", locked: true }),
-    ports.cargobi({ crateName: "wasmtime-cli", locked: true }),
     installs.comp_py[0],
   );
 }
