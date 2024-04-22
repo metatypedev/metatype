@@ -9,21 +9,13 @@ await typegraph({
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
+  // skip:start
   const _bucket = t.struct(
     {
       "id": t.integer({}, { asId: true }),
       "name": t.string(),
     },
   );
-
-  const idea = t.struct(
-    {
-      "id": t.uuid({ asId: true }), // email is just a shorthand alias for `t.string({}, {{format: "uuid"}: undefined})`
-      "name": t.string(),
-      "authorEmail": t.email(), // another string shorthand
-    },
-  );
-
   const _vote = t.struct(
     {
       "id": t.uuid(),
@@ -35,8 +27,17 @@ await typegraph({
       "desc": t.string().optional(), // makes it optional
     },
   );
+  // skip:end
 
-  const random = new RandomRuntime({});
+  const idea = t.struct(
+    {
+      "id": t.uuid({ asId: true }), // uuid is just a shorthand alias for `t.string({}, {{format: "uuid"}: undefined})`
+      "name": t.string(),
+      "authorEmail": t.email(), // another string shorthand
+    },
+  );
+
+  const random = new RandomRuntime({ seed: 1 });
   const pub = Policy.public();
   g.expose({ get_idea: random.gen(idea) }, pub);
 });
