@@ -6,7 +6,7 @@ import {
   typegraph_validate,
   typescript_format_code,
   validate_prisma_runtime_data,
-  wasmedge_wasi,
+  wasmtime_wit,
 } from "native";
 
 function assert<T>(val: T) {
@@ -148,15 +148,14 @@ Deno.test("typegraphValidate", () => {
   assert("Valid" in out && JSON.stringify(JSON.parse(out.Valid.json)) == str);
 });
 
-Deno.test("wasmedgeWasi", async () => {
-  const input: WasiInput = {
-    wasm: "typegate/tests/runtimes/wasmedge/rust.wasm",
+Deno.test("Wasm Wit", async () => {
+  const input: WasmInput = {
+    wasm: "typegate/tests/runtimes/wasm/rust.wasm",
     func: "add",
-    out: "integer",
     args: [JSON.stringify(1), JSON.stringify(2)],
   };
-  assert(Meta.wasmedgeWasi(input) == "3");
+  assert(Meta.wasmtimeWit(input) == "3.0");
 
-  const out = await wasmedge_wasi(input);
-  assert("Ok" in out && out.Ok.res == "3");
+  const out = await wasmtime_wit(input);
+  assert("Ok" in out && out.Ok.res == "3.0");
 });

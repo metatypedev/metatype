@@ -104,9 +104,9 @@ export type WasiOutput =
     };
   };
 
-export function wasmedge_wasi(a0: WasiInput): Promise<WasiOutput> {
+export function wasmtime_wit(a0: WasmInput): Promise<WasiOutput> {
   try {
-    const out = Meta.wasmedgeWasi(a0);
+    const out = Meta.wasmtimeWit(a0);
     return Promise.resolve({ Ok: { res: out } });
   } catch (err) {
     return Promise.resolve({ Err: { message: err.toString() } });
