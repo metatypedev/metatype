@@ -22,7 +22,7 @@ Static injection sets a static value to the parameter.
 ## Parent
 
 **Description:**
-Parent injection gets the value the output of a sibling field in the parent struct.
+Parent injection gets the value output of a sibling field in the parent struct.
 It adds a dependency to the sibling field, so make sure to prevent circular dependencies.
 
 **Method:** `.from_parent(type_name)`
@@ -49,6 +49,19 @@ defined when deploying the typegraph.
 
 **Parameter:** The name of the secret.
 
+## Dynamic
+**Description:**
+Dynamic injection gets the value from a predefined generator evaluated at runtime.
+
+**Method:** `.inject(generator_name)`
+
+**Parameter:** The name of the generator.
+
+Available generators:
+- `now`: produces the current datetime as a valid [ISO](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+string format.
+This value depends on the configuration of the typegate host machine.
+
 
 ## Example
 
@@ -66,22 +79,23 @@ def injection_example(g: Graph):
     g.expose(
         get_injected=deno.identity(
             t.struct({
-                static_value: t.integer().set(12),
-                context_value: t.uuid().from_context("profile.userId"),
-                secret_value: t.string().from_secret("secret_name")
+                "static_value": t.integer().set(12),
+                "context_value": t.uuid().from_context("profile.userId"),
+                "secret_value": t.string().from_secret("secret_name")
             }),
             t.struct({
-                static_value: t.integer().rename("Static"),
-                context_value: t.uuid(),
-                secret_value: t.string(),
-                nested: deno.identity(
+                "static_value": t.integer().rename("Static"),
+                "context_value": t.uuid(),
+                "secret_value": t.string(),
+                "nested": deno.identity(
                     t.struct({
-                        parent_value: t.integer().from_parent("Static")
+                        "parent_value": t.integer().from_parent("Static")
                     }),
                     t.struct({
-                        parent_value: t.integer()
+                        "parent_value": t.integer()
                     })
-                )
+                ),
+                "dynamic": t.datetime().inject("now")
             })
         ).with_policy(pub)
     )
@@ -117,6 +131,7 @@ typegraph("injection-example", (g) => {
                         parent_value: t.integer(),
                     })
                 ),
+                dynamic: t.datetime().inject("now")
             })
         ).withPolicy(pub),
     });
