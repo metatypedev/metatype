@@ -12,7 +12,7 @@ typegraph("injection-example", (g) => {
         context_value: t.uuid().fromContext("profile.userId"),
         secret_value: t.string().fromSecret("secret_name"),
         dynamic_value: t.datetime().inject("now"),
-      }),
+      }).rename("Input"),
       t.struct({
         static_value: t.integer().rename("Static"),
         context_value: t.uuid(),
@@ -23,9 +23,9 @@ typegraph("injection-example", (g) => {
           })
         ),
         dynamic_value: t.datetime(),
-      }),
+      }).rename("Output"),
       { code: `
-        ({ static_value, context_value, secret_value, dynamic_value } ) => ({ static_value, context_value, secret_value, dynamic_value })
+        ({ static_value, context_value, secret_value, dynamic_value }) => ({ static_value, context_value, secret_value, dynamic_value })
       ` }
     ).withPolicy(pub),
   });

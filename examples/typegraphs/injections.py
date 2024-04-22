@@ -16,7 +16,7 @@ def injection_example(g: Graph):
                     "secret_value": t.string().from_secret("secret_name"),
                     "dynamic_value": t.datetime().inject("now"),
                 }
-            ),
+            ).rename("Input"),
             t.struct(
                 {
                     "static_value": t.integer().rename("Static"),
@@ -27,9 +27,9 @@ def injection_example(g: Graph):
                     ),
                     "dynamic_value": t.datetime(),
                 }
-            ),
+            ).rename("Output"),
             code="""
-            ({ static_value, context_value, secret_value, dynamic_value } ) => ({ static_value, context_value, secret_value, dynamic_value })
+            ({ static_value, context_value, secret_value, dynamic_value }) => ({ static_value, context_value, secret_value, dynamic_value })
             """,
         ).with_policy(pub)
     )
