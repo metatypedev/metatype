@@ -74,7 +74,7 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
                 url=get_upload_url, method="PUT", headers=headers, data=artifact_json
             )
 
-            response = handle_response(request.urlopen(req).read().decode())
+            response = handle_response(exec_request(req).read().decode())
             artifact_upload_url = response["uploadUrl"]
 
             upload_headers = {"Content-Type": "application/octet-stream"}
@@ -113,7 +113,7 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
 
     return DeployResult(
         serialized=tg_json,
-        typegate=handle_response(request.urlopen(req).read().decode()),
+        typegate=handle_response(exec_request(req).read().decode()),
     )
 
 
@@ -136,7 +136,8 @@ def tg_remove(tg: TypegraphOutput, params: TypegraphRemoveParams):
         headers=headers,
         data=res.value.encode(),
     )
-    return RemoveResult(typegate=handle_response(request.urlopen(req).read().decode()))
+
+    return RemoveResult(typegate=handle_response(exec_request(req).read().decode()))
 
 
 def handle_response(res: any):
@@ -144,3 +145,18 @@ def handle_response(res: any):
         return json.loads(res)
     except Exception as _:
         return res
+
+
+# simple wrapper for a more descriptive error
+def exec_request(req: any):
+    try:
+        # FIXME: urllib.request raises exception upon status 400
+        # and instead produce a generic error
+        # which discard any useful error stack from typegate
+        # is there a way to retrieve the response body with the native API?
+        # otherwise Try http.client
+        return request.urlopen(req)
+    # except URLError as e: # 400 also falls here?
+    #     raise Exception(f"{e}: {req.full_url}")
+    except Exception as e:
+        raise Exception(f"{e}: {req.full_url}")
