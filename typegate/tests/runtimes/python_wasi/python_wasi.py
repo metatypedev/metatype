@@ -97,7 +97,7 @@ deploy_result = tg_deploy(
     TypegraphDeployParams(
         base_url=gate,
         auth=auth,
-        typegraph_path=os.path.join(cwd, "wasmedge.py"),
+        typegraph_path=os.path.join(cwd, "python_wasi.py"),
         artifacts_config=ArtifactResolutionConfig(
             dir=cwd,
             prefix=None,

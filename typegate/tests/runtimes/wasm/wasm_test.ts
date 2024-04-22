@@ -13,16 +13,18 @@ const auth = new BasicAuth("admin", "password");
 Meta.test(
   {
     name: "Wasm runtime",
+    port: true,
+    systemTypegraphs: true,
   },
   async (t) => {
     const e = await t.engineFromTgDeployPython("runtimes/wasm/wasm.py", cwd);
 
     await t.should("works", async () => {
       await gql`
-      query {
-        test(a: 1, b: 2)
-      }
-    `
+        query {
+          test(a: 1, b: 2)
+        }
+      `
         .expectData({
           test: 3,
         })
