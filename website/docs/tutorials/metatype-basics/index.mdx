@@ -307,7 +307,7 @@ meta dev
 Typegate has first-class support for consuming the API through a GraphQl interface and it's enabled by default.
 It also bundles the GrahpiQl API explorer and you should be able to access it at [http://localhost:7890/roadmap](http://localhost:7890/roadmap) once meta-cli has successfully pushed your typegraph.
 
-You can go ahead and try out the following `graphql` on the GraphiQL interface and get a feel for it.
+You can go ahead and try out the following `graphql` on the interface and get a feel for it.
 ```graphql
 query {
   get_idea {
@@ -355,7 +355,7 @@ typegates:
       TG_ROADMAP_POSTGRES: "postgresql://postgres:password@postgres:5432/db"
 ```
 
-Meta-cli will auto-reload when it detects changes to `metatype.yaml` because Meta-cli was run in `dev` mode(through the `meta dev` command).
+Meta-cli will auto-reload when it detects changes to `metatype.yaml`. This is because Meta-cli was run in `dev` mode(through the `meta dev` command).
 
 We can add the Prisma runtime to our typegraph now.
 
