@@ -45,9 +45,9 @@ Go ahead and update `typegraph.py` with the highlighted lines below:
 A few things to note on the changes:
 
 1. You can import runtimes from `typegraph.runtime.Y` or `typegraph.providers.X.runtimes.Y` for non-core providers.
-1. The `config` method allows specifying runtime specific attributes. In this case, `id` shall be automatically set and incremented by the database.
-1. Types get generated names unless you manually specify them. You can find the exact names in the playground documentation. Here you want to have a human friendly name as it will also be the name of the table in your database.
-1. Runtimes often come with some sugar syntax to generate types and avoid manipulating materializers directly. A corresponding declaration would have looked like this:
+2. The `config` method allows specifying runtime specific attributes. In this case, `id` shall be automatically set and incremented by the database.
+3. Types get generated names unless you manually specify them. You can find the exact names in the playground documentation. Here you want to have a human friendly name as it will also be the name of the table in your database.
+4. Runtimes often come with some sugar syntax to generate types and avoid manipulating materializers directly. A corresponding declaration would have looked like this:
 
 { /* <CodeBlock language="python">
   {require("../../../../../examples/typegraphs/prisma-no-sugar.py").content}
@@ -257,3 +257,12 @@ Here is a list of all available generators:
 - `upsert`
 - `delete`
 - `delete_many`
+
+
+## Dealing with migrations
+[Migrations](https://www.prisma.io/dataguide/types/relational/what-are-database-migrations) are basically blueprints that ensure that your local database and remote database both have the same schema.
+Migration files are generated as modifications are made in your typegraph as you deploy.
+
+meta cli offers various ways to deal with failing migrations. In general, you will be required manually edit the SQL changes that made your migration fails, most of the time failing migrations are related to columns/tables that were removed, renamed or added.
+
+However, if you wish to ignore failing migrations (eg. in a testing environment), you can use the `--run-destructive-migrations` flag, it will reset your database schema.

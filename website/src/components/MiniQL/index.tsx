@@ -75,7 +75,7 @@ function MiniQLBrowser({
   const [mode, setMode] = useState(defaultMode);
   const [sdk, setSDK] = useSDK();
 
-  console.log(code);
+  // console.log(code);
   return (
     <div className="@container miniql mb-4">
       {defaultMode ? (
