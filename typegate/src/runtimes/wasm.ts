@@ -62,7 +62,7 @@ export class WasmRuntime extends Runtime {
       return [stage.withResolver(() => ({}))];
     }
 
-    const _sameRuntime = Runtime.collectRelativeStages(stage, _waitlist);
+    // const _sameRuntime = Runtime.collectRelativeStages(stage, _waitlist);
 
     return [
       stage.withResolver(({ _: { parent } }) => {

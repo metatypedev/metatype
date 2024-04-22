@@ -4,7 +4,7 @@
 import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
 import { gql, Meta } from "test-utils/mod.ts";
 import { testDir } from "test-utils/dir.ts";
-import { tg } from "./wasmedge.ts";
+import { tg } from "./wasm.ts";
 import * as path from "std/path/mod.ts";
 import { connect } from "redis";
 import { S3Client } from "aws-sdk/client-s3";
@@ -45,12 +45,12 @@ const syncConfig = {
   s3Bucket: "metatype-sync-test",
 };
 
-const cwd = path.join(testDir, "runtimes/wasmedge");
+const cwd = path.join(testDir, "runtimes/wasm");
 const auth = new BasicAuth("admin", "password");
 
 Meta.test(
   {
-    name: "WasmEdge Runtime typescript SDK: Sync Config",
+    name: "Wasm Runtime typescript SDK: Sync Config",
     port: true,
     systemTypegraphs: true,
     syncConfig,
@@ -78,7 +78,7 @@ Meta.test(
         },
         dir: cwd,
       },
-      typegraphPath: path.join(cwd, "wasmedge.ts"),
+      typegraphPath: path.join(cwd, "wasm.ts"),
       secrets: {},
     });
 
@@ -89,7 +89,7 @@ Meta.test(
       assertExists(serialized, "serialized has a value");
       assertEquals(gateResponseAdd, {
         data: {
-          addTypegraph: { name: "wasmedge_ts", messages: [], migrations: [] },
+          addTypegraph: { name: "wasm-ts", messages: [], migrations: [] },
         },
       });
 
@@ -100,12 +100,14 @@ Meta.test(
       const engine = await metaTest.engineFromDeployed(serialized);
 
       await gql`
-      query {
-        test_wasi_ts(a: 11, b: 2)
-      }
-    `
+        query {
+          add(a: 11, b: 2)
+          range(a: 1, b: 4)
+        }
+      `
         .expectData({
-          test_wasi_ts: 13,
+          add: 13,
+          range: [1, 2, 3, 4],
         })
         .on(engine);
 
@@ -121,12 +123,14 @@ Meta.test(
       const engine = await metaTest.engineFromDeployed(serialized);
 
       await gql`
-      query {
-        test_wasi_ts(a: 11, b: 12)
-      }
-    `
+        query {
+          add(a: 11, b: 2)
+          range(a: 1, b: 4)
+        }
+      `
         .expectData({
-          test_wasi_ts: 23,
+          add: 13,
+          range: [1, 2, 3, 4],
         })
         .on(engine);
 
@@ -135,11 +139,13 @@ Meta.test(
 
       await gql`
         query {
-          test_wasi_ts(a: 15, b: 2)
+          add(a: 11, b: 2)
+          range(a: 1, b: 4)
         }
       `
         .expectData({
-          test_wasi_ts: 17,
+          add: 13,
+          range: [1, 2, 3, 4],
         })
         .on(engine2);
 
