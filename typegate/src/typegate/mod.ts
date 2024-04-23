@@ -78,6 +78,10 @@ export interface DeinitOptions {
   engines?: boolean;
 }
 
+export interface DeinitOptions {
+  engines?: boolean;
+}
+
 export class Typegate {
   #onPushHooks: PushHandler[] = [];
   #artifactService: ArtifactService;

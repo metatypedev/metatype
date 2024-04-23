@@ -1,12 +1,14 @@
 import Newsletter from "@site/src/components/Newsletter";
 
-### With Metatype Cloud
 
-This is the easiest way to get started, yet it's not publicly accessible. You can sign up for the private beta below.
+### Using Metatype Cloud
 
-<Newsletter />
+This is the easiest way to get started, yet it's not publicly accessible. Signing up for the private beta will be available soon.
 
-### With Docker
+{/* TODO: uncomment when registration works */}
+{/* <Newsletter /> */}
+
+### Using Docker
 
 Install [Docker](https://docs.docker.com/get-docker/) and use the following `compose.yml` to launch a typegate node. For multi-instance production workloads, Redis and an S3 object store provider are required but the typegate will run using in-memory stores if no `SYNC_*` environment variable is detected. More details can be found [here](/docs/reference/typegate/synchronization). In practice you might also want to add a database or other systems that the typegate can connect to.
 
@@ -32,3 +34,4 @@ docker compose up --detach
 # watch the typegate logs
 docker compose logs typegate --follow
 ```
+  TODO: Add result image/log
