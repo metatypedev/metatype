@@ -26,76 +26,81 @@ const auth = new BasicAuth("admin", "password");
 //   });
 // }, { port: port });
 
-Meta.test({
-  name: "Wasm Runtime typescript sdk",
-  port: true,
-  systemTypegraphs: true,
-}, async (metaTest) => {
-  const port = metaTest.port;
-  const gate = `http://localhost:${port}`;
+Meta.test(
+  {
+    name: "Wasm Runtime typescript sdk",
+    port: true,
+    systemTypegraphs: true,
+  },
+  async (metaTest) => {
+    const port = metaTest.port;
+    const gate = `http://localhost:${port}`;
 
-  await metaTest.should("work after deploying artifact", async (t) => {
-    const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
-      baseUrl: gate,
-      auth,
-      artifactsConfig: {
-        prismaMigration: {
-          globalAction: {
-            create: true,
-            reset: false,
+    await metaTest.should("work after deploying artifact", async (t) => {
+      const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
+        baseUrl: gate,
+        auth,
+        artifactsConfig: {
+          prismaMigration: {
+            globalAction: {
+              create: true,
+              reset: false,
+            },
+            migrationDir: "prisma-migrations",
           },
-          migrationDir: "prisma-migrations",
+          dir: cwdDir,
         },
-        dir: cwdDir,
-      },
-      secrets: {},
-    });
+        typegraphPath: path.join(cwdDir, "wasm.ts"),
+        secrets: {},
+      });
 
-    const engine = await metaTest.engineFromDeployed(serialized);
+      const engine = await metaTest.engineFromDeployed(serialized);
 
-    await t.step("wit bindings", async () => {
-      await gql`
+      await t.step("wit bindings", async () => {
+        await gql`
           query {
             add(a: 11, b: 2)
             range(a: 1, b: 4)
           }
-      `
-        .expectData({
-          add: 13,
-          range: [1, 2, 3, 4],
-        })
-        .on(engine);
-    });
+        `
+          .expectData({
+            add: 13,
+            range: [1, 2, 3, 4],
+          })
+          .on(engine);
+      });
 
-    await t.step("wit error should propagate gracefully", async () => {
-      await gql`
-        query {
-          range(a: 100, b: 1)
-        }
-      `
-        .expectErrorContains("invalid range: 100 > 1")
-        .on(engine);
-    });
-
-    await t.step(
-      "nested wit output value should deserialize properly",
-      async () => {
+      await t.step("wit error should propagate gracefully", async () => {
         await gql`
-        query {
-          record {
-            name
-            age
-            profile {
-              level
-              attributes
-              category { tag value }
-              metadatas
-            }
+          query {
+            range(a: 100, b: 1)
           }
-        }
-      `
-          .expectData(
-            {
+        `
+          .expectErrorContains("invalid range: 100 > 1")
+          .on(engine);
+      });
+
+      await t.step(
+        "nested wit output value should deserialize properly",
+        async () => {
+          await gql`
+            query {
+              record {
+                name
+                age
+                profile {
+                  level
+                  attributes
+                  category {
+                    tag
+                    value
+                  }
+                  metadatas
+                }
+              }
+            }
+          `
+            .expectData({
               record: [
                 {
                   name: "Entity A",
@@ -118,59 +123,60 @@ Meta.test({
                   },
                 },
               ],
-            },
-          )
-          .on(engine);
-      },
-    );
+            })
+            .on(engine);
+        },
+      );
 
-    await t.step(
-      "support nested wit input",
-      async () => {
+      await t.step("support nested wit input", async () => {
         await gql`
-        query {
-          identity(
-            arg0: {
+          query {
+            identity(
+              arg0: {
+                name: "Monster A"
+                age: null
+                profile: {
+                  attributes: ["attack", "defend"]
+                  level: "gold"
+                  # category: { tag: "a", value: "unexpected" }, # fail!
+                  category: { tag: "b", value: "payload" }
+                  metadatas: [["a", 1.0], ["b", 1.3]] # list<tuple<string, f64>>
+                }
+              }
+            ) {
+              name
+              age
+              profile {
+                level
+                attributes
+                category {
+                  tag
+                  value
+                }
+                metadatas
+              }
+            }
+          }
+        `
+          .expectData({
+            identity: {
               name: "Monster A",
               age: null,
               profile: {
                 attributes: ["attack", "defend"],
                 level: "gold",
-                # category: { tag: "a", value: "unexpected" }, # fail!
                 category: { tag: "b", value: "payload" },
-                metadatas: [["a", 1.0], ["b", 1.3]], # list<tuple<string, f64>>
-              }
-            }
-          ) {
-            name
-            age
-            profile {
-              level
-              attributes
-              category { tag value }
-              metadatas
-            }
-          }
-        }
-      `
-          .expectData(
-            {
-              identity: {
-                name: "Monster A",
-                age: null,
-                profile: {
-                  attributes: ["attack", "defend"],
-                  level: "gold",
-                  category: { tag: "b", value: "payload" },
-                  metadatas: [["a", 1.0], ["b", 1.3]],
-                },
+                metadatas: [
+                  ["a", 1.0],
+                  ["b", 1.3],
+                ],
               },
             },
-          )
+          })
           .on(engine);
-      },
-    );
+      });
 
-    await engine.terminate();
-  });
-});
+      await engine.terminate();
+    });
+  },
+);

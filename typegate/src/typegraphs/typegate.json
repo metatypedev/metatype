@@ -1081,7 +1081,7 @@
       "local_excess": 5
     },
     "version": "0.0.3",
-    "random_seed": null,
-    "ref_artifacts": {}
+    "randomSeed": null,
+    "artifacts": {}
   }
 }
