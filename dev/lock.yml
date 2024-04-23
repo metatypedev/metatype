@@ -106,6 +106,5 @@ dev:
     CMAKE_VERSION: 3.28.0-rc6
     TEMPORAL_VERSION: 0.10.7
     TAGLINE: >-
-      Declarative API development platform. Build serverless backends with
-      zero-trust and less code, no matter where and how your (legacy) systems
-      are.
+      Declarative API development platform. Build backend components with
+      WASM/Typescript/Python, no matter where and how your (legacy) systems are.
