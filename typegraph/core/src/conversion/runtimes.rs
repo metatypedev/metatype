@@ -427,7 +427,7 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
             Ok(TGRuntime::Known(Rt::HTTP(data)).into())
         }
         Runtime::Python => {
-            Ok(TGRuntime::Known(Rt::PythonWasi(PythonRuntimeData { config: None })).into())
+            Ok(TGRuntime::Known(Rt::Python(PythonRuntimeData { config: None })).into())
         }
         Runtime::Random(d) => Ok(TGRuntime::Known(Rt::Random(RandomRuntimeData {
             seed: d.seed,

@@ -1,18 +1,20 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { getLogger } from "../../log.ts";
-import { Runtime } from "../Runtime.ts";
-import type { Resolver, RuntimeInitParams } from "../../types.ts";
-import { ComputeStage } from "../../engine/query_engine.ts";
-import { Materializer } from "../../typegraph/types.ts";
+import { registerRuntime } from "./mod.ts";
+import { getLogger } from "../log.ts";
+import { Runtime } from "./Runtime.ts";
+import type { Resolver, RuntimeInitParams } from "../types.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
+import { Materializer } from "../typegraph/types.ts";
 import * as ast from "graphql/ast";
-import { WitWireMessenger } from "./wit_wire.ts";
-import { WitWireMatInfo } from "../../../engine/runtime.js";
+import { WitWireMessenger } from "./wit_wire/mod.ts";
+import { WitWireMatInfo } from "../../engine/runtime.js";
 
 const _logger = getLogger(import.meta);
 
-export class PythonWasiRuntime extends Runtime {
+@registerRuntime("python")
+export class PythonRuntime extends Runtime {
   private constructor(
     typegraphName: string,
     uuid: string,
@@ -43,8 +45,10 @@ export class PythonWasiRuntime extends Runtime {
           };
           break;
         /* case "import_function": {
+          const pyModMat = typegraph.materializers[mat.data.mod as number];
+          const code = pyModMat.data.code as string;
           matData = {
-            ty: "def",
+            ty: "import_function",
             source: mat.data.fn as string,
             func_name: mat.data.name as string,
             effect: mat.effect,
@@ -73,7 +77,7 @@ export class PythonWasiRuntime extends Runtime {
       wireMatInfos,
     );
 
-    return new PythonWasiRuntime(typegraphName, uuid, wire);
+    return new PythonRuntime(typegraphName, uuid, wire);
   }
 
   async deinit(): Promise<void> {

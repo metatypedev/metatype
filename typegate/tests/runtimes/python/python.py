@@ -46,7 +46,7 @@ tpe = t.struct({"a": t.integer(), "b": t.struct({"c": t.list(t.string())})})
 
 
 @typegraph()
-def python_wasi(g: Graph):
+def python(g: Graph):
     public = Policy.public()
     python = PythonRuntime()
 
@@ -91,13 +91,13 @@ PORT = sys.argv[2]
 gate = f"http://localhost:{PORT}"
 auth = BasicAuth("admin", "password")
 
-pytho_wasi_tg = python_wasi()
+pytho_tg = python()
 deploy_result = tg_deploy(
-    pytho_wasi_tg,
+    pytho_tg,
     TypegraphDeployParams(
         base_url=gate,
         auth=auth,
-        typegraph_path=os.path.join(cwd, "python_wasi.py"),
+        typegraph_path=os.path.join(cwd, "python.py"),
         artifacts_config=ArtifactResolutionConfig(
             dir=cwd,
             prefix=None,

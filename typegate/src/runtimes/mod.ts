@@ -41,7 +41,7 @@ export async function init_runtimes(): Promise<void> {
     import("./graphql.ts"),
     import("./http.ts"),
     import("./prisma.ts"),
-    import("./python_wasi.ts"),
+    import("./python.ts"),
     import("./random.ts"),
     import("./s3.ts"),
     import("./temporal.ts"),

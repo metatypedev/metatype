@@ -58,5 +58,8 @@ def op_to_handler(op: MatInfo) -> ErasedHandler:
     elif data_parsed["ty"] == "lambda":
         fn = eval(data_parsed["source"])
         return ErasedHandler(handler_fn=lambda inp: fn(inp))
+    elif data_parsed["ty"] == "import_function":
+        fn = eval(data_parsed["source"])
+        return ErasedHandler(handler_fn=lambda inp: fn(inp))
     else:
         raise Err(InitError_UnexpectedMat(op))

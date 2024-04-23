@@ -49,8 +49,7 @@ pub enum KnownRuntime {
     GraphQL(GraphQLRuntimeData),
     #[serde(rename = "http")]
     HTTP(HTTPRuntimeData),
-    #[serde(rename = "python_wasi")]
-    PythonWasi(PythonRuntimeData),
+    Python(PythonRuntimeData),
     Random(RandomRuntimeData),
     Prisma(PrismaRuntimeData),
     PrismaMigration(PrismaMigrationRuntimeData),
@@ -83,7 +82,7 @@ impl TGRuntime {
                 KnownRuntime::Deno(_) => "deno",
                 KnownRuntime::GraphQL(_) => "graphql",
                 KnownRuntime::HTTP(_) => "http",
-                KnownRuntime::PythonWasi(_) => "python_wasi",
+                KnownRuntime::Python(_) => "python",
                 KnownRuntime::Random(_) => "random",
                 KnownRuntime::Prisma(_) => "prisma",
                 KnownRuntime::PrismaMigration(_) => "prisma_migration",

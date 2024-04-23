@@ -8,6 +8,7 @@ import {
   validate_prisma_runtime_data,
   wasmtime_wit,
 } from "native";
+import type { WasmInput } from "../../engine/runtime.js";
 
 function assert<T>(val: T) {
   if (!val) throw Error("assertion failed");

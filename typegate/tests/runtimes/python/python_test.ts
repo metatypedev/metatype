@@ -3,15 +3,16 @@
 
 import { assert, assertEquals } from "std/assert/mod.ts";
 import { gql, Meta } from "test-utils/mod.ts";
-import { WitWireMessenger } from "../../../src/runtimes/python_wasi/wit_wire.ts";
+import { WitWireMessenger } from "../../../src/runtimes/wit_wire/mod.ts";
+import { QueryEngine } from "../../../src/engine/query_engine.ts";
 import type { ResolverArgs } from "../../../src/types.ts";
 import { testDir } from "test-utils/dir.ts";
-import { tg } from "./python_wasi.ts";
+import { tg } from "./python.ts";
 import * as path from "std/path/mod.ts";
 import { QueryEngine } from "../../../src/engine/query_engine.ts";
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 
-const cwd = path.join(testDir, "runtimes/python_wasi");
+const cwd = path.join(testDir, "runtimes/python");
 const auth = new BasicAuth("admin", "password");
 
 const localSerializedMemo = tg.serialize({
@@ -29,7 +30,7 @@ const reusableTgOutput = {
   serialize: (_: any) => localSerializedMemo,
 };
 
-Meta.test("Python WASI VM performance", async (t) => {
+Meta.test("Python VM performance", async (t) => {
   await t.should("work with low latency for lambdas", async () => {
     await using wire = await WitWireMessenger.init(
       "inline://pyrt_wit_wire.cwasm",
@@ -106,13 +107,13 @@ Meta.test("Python WASI VM performance", async (t) => {
 
 Meta.test(
   {
-    name: "Python WASI runtime",
+    name: "Python runtime",
     port: true,
     systemTypegraphs: true,
   },
   async (t) => {
     const e = await t.engineFromTgDeployPython(
-      "runtimes/python_wasi/python_wasi.py",
+      "runtimes/python/python.py",
       cwd,
     );
 
@@ -194,7 +195,7 @@ Meta.test(
       const duration = end - start;
 
       console.log(`duration: ${duration}ms`);
-      assert(duration < 800, `Python WASI runtime was too slow: ${duration}ms`);
+      assert(duration < 800, `Python runtime was too slow: ${duration}ms`);
     });
   },
 );
@@ -224,7 +225,7 @@ Meta.test(
           },
           dir: cwd,
         },
-        typegraphPath: path.join(cwd, "python_wasi.ts"),
+        typegraphPath: path.join(cwd, "python.ts"),
         secrets: {},
       },
     );
@@ -272,7 +273,7 @@ Meta.test(
 
 /* Meta.test(
   {
-    name: "Python WASI: upload artifacts with deps",
+    name: "Python: upload artifacts with deps",
     port: true,
     systemTypegraphs: true,
   },
@@ -296,7 +297,7 @@ Meta.test(
             },
             dir: cwd,
           },
-          typegraphPath: path.join(cwd, "pyton_wasi.ts"),
+          typegraphPath: path.join(cwd, "pyton.ts"),
           secrets: {},
         },
       );
@@ -324,14 +325,14 @@ Meta.test(
 
 Meta.test(
   {
-    name: "Python WASI: infinite loop or similar",
+    name: "Python: infinite loop or similar",
     sanitizeOps: false,
     port: true,
     systemTypegraphs: true,
   },
   async (t) => {
     const e = await t.engineFromTgDeployPython(
-      "runtimes/python_wasi/python_wasi.py",
+      "runtimes/python/python.py",
       cwd,
     );
 
@@ -366,7 +367,7 @@ Meta.test(
 
 Meta.test(
   {
-    name: "Python WASI: typegate reloading",
+    name: "Python: typegate reloading",
     port: true,
     systemTypegraphs: true,
   },
@@ -390,7 +391,7 @@ Meta.test(
             },
             dir: cwd,
           },
-          typegraphPath: path.join(cwd, "python_wasi.ts"),
+          typegraphPath: path.join(cwd, "python.ts"),
           secrets: {},
         },
       );
@@ -398,7 +399,7 @@ Meta.test(
       return await metaTest.engineFromDeployed(serialized);
     };
 
-    const runPythonOnPythonWasi = async (currentEngine: QueryEngine) => {
+    const runPythonOnPython = async (currentEngine: QueryEngine) => {
       await gql`
         query {
           identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
@@ -433,14 +434,14 @@ Meta.test(
     };
     const engine = await load();
     await metaTest.should("work before typegate is reloaded", async () => {
-      await runPythonOnPythonWasi(engine);
+      await runPythonOnPython(engine);
     });
 
     // reload
     const reloadedEngine = await load();
 
     await metaTest.should("work after typegate is reloaded", async () => {
-      await runPythonOnPythonWasi(reloadedEngine);
+      await runPythonOnPython(reloadedEngine);
     });
   },
 );

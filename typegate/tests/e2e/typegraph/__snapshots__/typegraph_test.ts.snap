@@ -437,7 +437,7 @@ snapshot[`typegraphs creation 2`] = `
         }
       },
       {
-        "name": "python_wasi",
+        "name": "python",
         "data": {
           "config": null
         }
@@ -1199,7 +1199,7 @@ snapshot[`typegraphs creation 5`] = `
         }
       },
       {
-        "name": "python_wasi",
+        "name": "python",
         "data": {
           "config": null
         }

@@ -42,6 +42,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .target(&target)
             .map_err(|err| format!("error configuring wasmtime for target {target}: {err}"))?,
     )?;
+    // note: compilation here is extra-slow if building under the debug profile
+    // since wasmtime will also be in the debug profile
+    // consider upgrading the cranelift crates to opt3 if this proves
+    // to be an issue.
+    // At first, I was just using the wasmtime CLI for precomiplation.
+    // The  cli is distrubuted in release mode and did the deed in 3 secs max.
+    // The engine kept rejecting the checksum from the CLI even on the same
+    // version (19.0.0).
     let comp = wasmtime::component::Component::from_file(&engine, wasm_path)?;
     let cwasm = comp.serialize().unwrap();
 

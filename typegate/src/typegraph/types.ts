@@ -283,7 +283,7 @@ export type KnownRuntime = {
   name: "http";
   data: HTTPRuntimeData;
 } | {
-  name: "python_wasi";
+  name: "python";
   data: PythonRuntimeData;
 } | {
   name: "random";
