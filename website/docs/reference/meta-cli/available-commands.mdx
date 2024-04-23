@@ -1,0 +1,27 @@
+# Available commands
+
+## Managing typegraphs
+
+| Command  |                                                                Example of use                                                                 |                       Description                        |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| deploy   | <pre><p>meta deploy --target dev --file path/to/typegraph.py</p><p>meta --dir folder/to/typegraphs dev --run-destructive-migrations</p></pre> | Deploy typegraph to a typegate instance                  |
+| undeploy | <pre><p>meta undeploy --target dev --typegraph logs accounting services</p></pre>                                                             | Undeploy typegraphs by name                              |
+| gen      | <pre><p>meta gen mod --file path/to/typegraph.py</p><p></p>meta gen mdk</pre>                                                                 | Generate script or files that are used in your typegraph |
+| typegate | <pre><p>meta typegate --quiet</p></pre>                                                                                                       | Access a minimal deno CLI                                |
+
+## Troubleshooting and others
+
+|  Command   |                            Example of use                            |                               Description                                |
+| ---------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| doctor     | <pre><p>meta doctor</p></pre>                                        | Help troubleshoot all your installations                                 |
+| completion | <pre><p>meta completion</p><p>meta completion --shell bash</p></pre> | Generate shell completion (supports bash, elvish, fish, powershell, zsh) |
+| serialize  | <pre><p>meta serialize --file path/to/typegraph.py</p></pre>        | Inspect serialized version of your typegraph                             |
+| upgrade    | <pre><p>meta upgrade</p><p>meta upgrade --version 0.3.4</p></pre>    | Upgrade current cli                                                      |
+
+
+Feel free to use the `--help` flag if you want more informations on each commands/subcommands.
+```bash
+meta -h
+meta deploy -h
+meta gen mod -h
+```

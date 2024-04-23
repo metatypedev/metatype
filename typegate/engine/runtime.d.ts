@@ -1,11 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-interface WasiInput {
+interface WasmInput {
   func: string;
   wasm: string;
   args: Array<string>;
-  out: string;
 }
 interface PrismaRegisterEngineInp {
   datamodel: string;
@@ -148,7 +147,7 @@ declare namespace Meta {
   function typescriptFormatCode(source: string): string;
   function typegraphValidate(json: string): string;
   function validatePrismaRuntimeData(obj: any): void;
-  function wasmedgeWasi(inp: WasiInput): string;
+  function wasmtimeWit(inp: WasmInput): string;
 
   namespace prisma {
     function registerEngine(

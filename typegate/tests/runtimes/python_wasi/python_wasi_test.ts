@@ -8,8 +8,11 @@ import { testDir } from "test-utils/dir.ts";
 import { tg } from "./python_wasi.ts";
 import * as path from "std/path/mod.ts";
 import { QueryEngine } from "../../../src/engine/query_engine.ts";
+import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 
 const cwd = path.join(testDir, "runtimes/python_wasi");
+const auth = new BasicAuth("admin", "password");
+
 const localSerializedMemo = tg.serialize({
   prismaMigration: {
     globalAction: {
@@ -48,16 +51,9 @@ Meta.test("Python WASI VM performance", async (t) => {
   });
 
   await t.should("work with low latency for defs", async () => {
-    await vm.registerDef(
-      "test",
-      "def test(x):\n\treturn x['a']",
-    );
+    await vm.registerDef("test", "def test(x):\n\treturn x['a']");
     const samples = [...Array(100).keys()].map((i) =>
-      vm.applyDef(
-        i,
-        "test",
-        [{ a: "test" }],
-      )
+      vm.applyDef(i, "test", [{ a: "test" }])
     );
     const start = performance.now();
     const items = await Promise.all(samples);
@@ -82,17 +78,17 @@ Meta.test(
     systemTypegraphs: true,
   },
   async (t) => {
-    const e = await t.engineFromTgDeploy(
+    const e = await t.engineFromTgDeployPython(
       "runtimes/python_wasi/python_wasi.py",
       cwd,
     );
 
     await t.should("work once (lambda)", async () => {
       await gql`
-      query {
-        test(a: "test")
-      }
-    `
+        query {
+          test(a: "test")
+        }
+      `
         .expectData({
           test: "test",
         })
@@ -101,10 +97,10 @@ Meta.test(
 
     await t.should("work once (def)", async () => {
       await gql`
-      query {
-        testDef(a: "test")
-      }
-    `
+        query {
+          testDef(a: "test")
+        }
+      `
         .expectData({
           testDef: "test",
         })
@@ -113,10 +109,10 @@ Meta.test(
 
     await t.should("work once (module)", async () => {
       await gql`
-      query {
-        testMod(name: "Loyd")
-      }
-    `
+        query {
+          testMod(name: "Loyd")
+        }
+      `
         .expectData({
           testMod: "Hello Loyd",
         })
@@ -125,18 +121,15 @@ Meta.test(
 
     await t.should("return same object", async () => {
       await gql`
-      query {
-        identity(
-          input: {
-            a: 1234,
-            b: { c: ["one", "two", "three" ] }
+        query {
+          identity(input: { a: 1234, b: { c: ["one", "two", "three"] } }) {
+            a
+            b {
+              c
+            }
           }
-        ) {
-          a
-          b { c }
         }
-      }
-    `
+      `
         .expectData({
           identity: {
             a: 1234,
@@ -149,10 +142,10 @@ Meta.test(
     await t.should("work fast enough", async () => {
       const tests = [...Array(100).keys()].map((i) =>
         gql`
-        query ($a: String!) {
-          test(a: $a)
-        }
-      `
+          query ($a: String!) {
+            test(a: $a)
+          }
+        `
           .withVars({
             a: `test${i}`,
           })
@@ -180,25 +173,40 @@ Meta.test(
     systemTypegraphs: true,
   },
   async (t) => {
-    const e = await t.engineFromTgDeploy(
-      "runtimes/python_wasi/python_wasi.ts",
-      cwd,
+    const port = t.port;
+    const gate = `http://localhost:${port}`;
+
+    const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
       reusableTgOutput,
+      {
+        baseUrl: gate,
+        auth,
+        artifactsConfig: {
+          prismaMigration: {
+            globalAction: {
+              create: true,
+              reset: false,
+            },
+            migrationDir: "prisma-migrations",
+          },
+          dir: cwd,
+        },
+        typegraphPath: path.join(cwd, "python_wasi.ts"),
+        secrets: {},
+      },
     );
+
+    const e = await t.engineFromDeployed(serialized);
 
     await t.should("work with def", async () => {
       await gql`
-      query {
-        identityLambda(
-          input: {
-            a: "hello",
-            b: [1, 2, "three"]
-          }) {
-          a
-          b
+        query {
+          identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
         }
-      }
-    `
+      `
         .expectData({
           identityLambda: {
             a: "hello",
@@ -210,17 +218,13 @@ Meta.test(
 
     await t.should("work with def", async () => {
       await gql`
-      query {
-        identityDef(
-          input: {
-            a: "hello",
-            b: [1, 2, "three"]
-          }) {
-          a
-          b
+        query {
+          identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
         }
-      }
-    `
+      `
         .expectData({
           identityDef: {
             a: "hello",
@@ -240,17 +244,17 @@ Meta.test(
     systemTypegraphs: true,
   },
   async (t) => {
-    const e = await t.engineFromTgDeploy(
+    const e = await t.engineFromTgDeployPython(
       "runtimes/python_wasi/python_wasi.py",
       cwd,
     );
 
     await t.should("safely fail upon stackoverflow", async () => {
       await gql`
-      query {
-        stackOverflow(enable: true)
-      }
-    `
+        query {
+          stackOverflow(enable: true)
+        }
+      `
         .expectErrorContains("maximum recursion depth exceeded")
         .on(e);
     });
@@ -274,147 +278,180 @@ Meta.test(
   },
 );
 
-Meta.test({
-  name: "Python WASI: reloading typegate",
-  port: true,
-  systemTypegraphs: true,
-}, async (metaTest) => {
-  const load = async () => {
-    return await metaTest.engineFromTgDeploy(
-      "runtimes/python_wasi/python_wasi.ts",
-      cwd,
-      reusableTgOutput,
-    );
-  };
+Meta.test(
+  {
+    name: "Python WASI: reloading typegate",
+    port: true,
+    systemTypegraphs: true,
+  },
+  async (metaTest) => {
+    const port = metaTest.port;
+    const gate = `http://localhost:${port}`;
 
-  const runPythonOnPythonWasi = async (currentEngine: QueryEngine) => {
-    await gql`
-      query {
-        identityDef(
-          input: {
+    const load = async () => {
+      const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
+        reusableTgOutput,
+        {
+          baseUrl: gate,
+          auth,
+          artifactsConfig: {
+            prismaMigration: {
+              globalAction: {
+                create: true,
+                reset: false,
+              },
+              migrationDir: "prisma-migrations",
+            },
+            dir: cwd,
+          },
+          typegraphPath: path.join(cwd, "wasm.ts"),
+          secrets: {},
+        },
+      );
+
+      return await metaTest.engineFromDeployed(serialized);
+    };
+
+    const runPythonOnPythonWasi = async (currentEngine: QueryEngine) => {
+      await gql`
+        query {
+          identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
+          identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
+          identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
+        }
+      `
+        .expectData({
+          identityDef: {
             a: "hello",
-            b: [1, 2, "three"]
-          }) {
-          a
-          b
+            b: [1, 2, "three"],
+          },
+          identityLambda: {
+            a: "hello",
+            b: [1, 2, "three"],
+          },
+          identityMod: {
+            a: "hello",
+            b: [1, 2, "three"],
+          },
+        })
+        .on(currentEngine);
+    };
+    const engine = await load();
+    await metaTest.should("work before typegate is reloaded", async () => {
+      await runPythonOnPythonWasi(engine);
+    });
+
+    // reload
+    const reloadedEngine = await load();
+
+    await metaTest.should("work after typegate is reloaded", async () => {
+      await runPythonOnPythonWasi(reloadedEngine);
+    });
+  },
+);
+
+Meta.test(
+  {
+    name: "Python WASI: upload artifacts with deps",
+    port: true,
+    systemTypegraphs: true,
+  },
+  async (metaTest) => {
+    const port = metaTest.port;
+    const gate = `http://localhost:${port}`;
+
+    await metaTest.should("upload artifacts along with deps", async () => {
+      const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
+        reusableTgOutput,
+        {
+          baseUrl: gate,
+          auth,
+          artifactsConfig: {
+            prismaMigration: {
+              globalAction: {
+                create: true,
+                reset: false,
+              },
+              migrationDir: "prisma-migrations",
+            },
+            dir: cwd,
+          },
+          typegraphPath: path.join(cwd, "pyton_wasi.ts"),
+          secrets: {},
         },
-        identityLambda(
-        input: {
-          a: "hello",
-          b: [1, 2, "three"]
-        }) {
-        a
-        b
-      },
-      identityMod(input: {
-          a: "hello",
-          b: [1, 2, "three"],
-        }) {
-          a
-          b
+      );
+
+      const engine = await metaTest.engineFromDeployed(serialized);
+
+      await gql`
+        query {
+          identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
         }
-      }
-    `
-      .expectData({
-        identityDef: {
-          a: "hello",
-          b: [1, 2, "three"],
-        },
-        identityLambda: {
-          a: "hello",
-          b: [1, 2, "three"],
-        },
-        identityMod: {
-          a: "hello",
-          b: [1, 2, "three"],
-        },
-      })
-      .on(currentEngine);
-  };
-  const engine = await load();
-  await metaTest.should("work before typegate is reloaded", async () => {
-    await runPythonOnPythonWasi(engine);
-  });
+      `
+        .expectData({
+          identityMod: {
+            a: "hello",
+            b: [1, 2, "three"],
+          },
+        })
+        .on(engine);
+    });
+  },
+);
 
-  // reload
-  const reloadedEngine = await load();
-
-  await metaTest.should("work after typegate is reloaded", async () => {
-    await runPythonOnPythonWasi(reloadedEngine);
-  });
-});
-
-Meta.test({
-  name: "Python WASI: upload artifacts with deps",
-  port: true,
-  systemTypegraphs: true,
-}, async (metaTest) => {
-  await metaTest.should("upload artifacts along with deps", async () => {
-    const engine = await metaTest.engineFromTgDeploy(
-      "runtimes/python_wasi/python_wasi.ts",
+Meta.test(
+  {
+    name: "Python WASI: infinite loop or similar",
+    sanitizeOps: false,
+    port: true,
+    systemTypegraphs: true,
+  },
+  async (t) => {
+    const e = await t.engineFromTgDeployPython(
+      "runtimes/python_wasi/python_wasi.py",
       cwd,
-      reusableTgOutput,
     );
 
-    await gql`
-      query {
-        identityMod(input: {
-          a: "hello",
-          b: [1, 2, "three"],
-        }) {
-          a
-          b
+    await t.should("safely fail upon stackoverflow", async () => {
+      await gql`
+        query {
+          stackOverflow(enable: true)
         }
-      }
-    `
-      .expectData({
-        identityMod: {
-          a: "hello",
-          b: [1, 2, "three"],
-        },
-      })
-      .on(engine);
-  });
-});
+      `
+        .expectErrorContains("maximum recursion depth exceeded")
+        .on(e);
+    });
 
-Meta.test({
-  name: "Python WASI: infinite loop or similar",
-  sanitizeOps: false,
-  port: true,
-  systemTypegraphs: true,
-}, async (t) => {
-  const e = await t.engineFromTgDeploy(
-    "runtimes/python_wasi/python_wasi.py",
-    cwd,
-  );
+    // let tic = 0;
+    // setTimeout(() => console.log("hearbeat", tic++), 100);
 
-  await t.should("safely fail upon stackoverflow", async () => {
-    await gql`
-      query {
-        stackOverflow(enable: true)
-      }
-    `
-      .expectErrorContains("maximum recursion depth exceeded")
-      .on(e);
-  });
-
-  // let tic = 0;
-  // setTimeout(() => console.log("hearbeat", tic++), 100);
-
-  // FIXME: blocks main deno thread
-  // current approach on deno_bindgen apply/applyDef needs to run on
-  // separate threads
-  // #[deno] works for applys but still manages to block the current thread
-  // await t.should("safely fail upon infinite loop", async () => {
-  //   await gql`
-  //     query {
-  //       infiniteLoop(enable: true)
-  //     }
-  //   `
-  //     .expectErrorContains("timeout exceeded")
-  //     .on(e);
-  // });
-});
+    // FIXME: blocks main deno thread
+    // current approach on deno_bindgen apply/applyDef needs to run on
+    // separate threads
+    // #[deno] works for applys but still manages to block the current thread
+    // await t.should("safely fail upon infinite loop", async () => {
+    //   await gql`
+    //     query {
+    //       infiniteLoop(enable: true)
+    //     }
+    //   `
+    //     .expectErrorContains("timeout exceeded")
+    //     .on(e);
+    // });
+  },
+);
 
 Meta.test(
   {
@@ -423,42 +460,50 @@ Meta.test(
     systemTypegraphs: true,
   },
   async (metaTest) => {
+    const port = metaTest.port;
+    const gate = `http://localhost:${port}`;
+
     const load = async () => {
-      return await metaTest.engineFromTgDeploy(
-        "runtimes/python_wasi/python_wasi.ts",
-        cwd,
+      const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
         reusableTgOutput,
+        {
+          baseUrl: gate,
+          auth,
+          artifactsConfig: {
+            prismaMigration: {
+              globalAction: {
+                create: true,
+                reset: false,
+              },
+              migrationDir: "prisma-migrations",
+            },
+            dir: cwd,
+          },
+          typegraphPath: path.join(cwd, "python_wasi.ts"),
+          secrets: {},
+        },
       );
+
+      return await metaTest.engineFromDeployed(serialized);
     };
 
     const runPythonOnPythonWasi = async (currentEngine: QueryEngine) => {
       await gql`
-      query {
-        identityDef(
-          input: {
-            a: "hello",
-            b: [1, 2, "three"]
-          }) {
-          a
-          b
-        },
-        identityLambda(
-        input: {
-          a: "hello",
-          b: [1, 2, "three"]
-        }) {
-        a
-        b
-      },
-      identityMod(input: {
-          a: "hello",
-          b: [1, 2, "three"],
-        }) {
-          a
-          b
+        query {
+          identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
+          identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
+          identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
         }
-      }
-    `
+      `
         .expectData({
           identityDef: {
             a: "hello",

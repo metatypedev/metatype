@@ -10,7 +10,7 @@ pub mod random;
 pub mod temporal;
 pub mod typegate;
 pub mod typegraph;
-pub mod wasi;
+pub mod wasm;
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -46,7 +46,7 @@ pub use self::random::RandomMaterializer;
 use self::temporal::temporal_operation;
 pub use self::temporal::TemporalMaterializer;
 use self::typegate::TypegateOperation;
-pub use self::wasi::WasiMaterializer;
+pub use self::wasm::WasmMaterializer;
 
 type Result<T, E = TgError> = std::result::Result<T, E>;
 
@@ -57,7 +57,7 @@ pub enum Runtime {
     Http(Rc<HttpRuntimeData>),
     Python,
     Random(Rc<RandomRuntimeData>),
-    WasmEdge,
+    Wasm,
     Prisma(Rc<PrismaRuntimeData>, Rc<RefCell<PrismaContext>>),
     PrismaMigration,
     Temporal(Rc<TemporalRuntimeData>),
@@ -114,7 +114,7 @@ impl Materializer {
         }
     }
 
-    fn wasi(runtime_id: RuntimeId, data: WasiMaterializer, effect: wit::Effect) -> Self {
+    fn wasm(runtime_id: RuntimeId, data: WasmMaterializer, effect: wit::Effect) -> Self {
         Self {
             runtime_id,
             effect,
@@ -175,7 +175,7 @@ pub enum MaterializerData {
     Http(Rc<MaterializerHttpRequest>),
     Python(Rc<PythonMaterializer>),
     Random(Rc<RandomMaterializer>),
-    WasmEdge(Rc<WasiMaterializer>),
+    WasmEdge(Rc<WasmMaterializer>),
     Prisma(Rc<PrismaMaterializer>),
     PrismaMigration(PrismaMigrationOperation),
     Temporal(Rc<TemporalMaterializer>),
@@ -355,15 +355,15 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         Ok(Store::register_materializer(mat))
     }
 
-    fn register_wasmedge_runtime() -> Result<wit::RuntimeId, wit::Error> {
-        Ok(Store::register_runtime(Runtime::WasmEdge))
+    fn register_wasm_runtime() -> Result<wit::RuntimeId, wit::Error> {
+        Ok(Store::register_runtime(Runtime::Wasm))
     }
 
-    fn from_wasi_module(
+    fn from_wasm_module(
         base: wit::BaseMaterializer,
-        data: wit::MaterializerWasi,
+        data: wit::MaterializerWasm,
     ) -> Result<wit::MaterializerId, wit::Error> {
-        let mat = Materializer::wasi(base.runtime, WasiMaterializer::Module(data), base.effect);
+        let mat = Materializer::wasm(base.runtime, WasmMaterializer::Module(data), base.effect);
         Ok(Store::register_materializer(mat))
     }
 
@@ -586,7 +586,11 @@ impl crate::wit::runtimes::Guest for crate::Lib {
             WitOp::GetArgInfoByPath => (WitEffect::Read, Op::GetArgInfoByPath),
             WitOp::FindAvailableOperations => (WitEffect::Read, Op::FindAvailableOperations),
             WitOp::FindPrismaModels => (WitEffect::Read, Op::FindPrismaModels),
-            WitOp::RawPrismaQuery => (WitEffect::Read, Op::RawPrismaQuery),
+            WitOp::RawPrismaRead => (WitEffect::Read, Op::RawPrismaQuery),
+            WitOp::RawPrismaCreate => (WitEffect::Create(false), Op::RawPrismaQuery),
+            WitOp::RawPrismaUpdate => (WitEffect::Update(false), Op::RawPrismaQuery),
+            WitOp::RawPrismaDelete => (WitEffect::Delete(true), Op::RawPrismaQuery),
+            WitOp::QueryPrismaModel => (WitEffect::Read, Op::QueryPrismaModel),
         };
 
         Ok(Store::register_materializer(Materializer::typegate(

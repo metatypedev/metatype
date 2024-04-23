@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { SystemTypegraph } from "../../src/system_typegraphs.ts";
-import { basename, dirname, extname, join } from "std/path/mod.ts";
+import { dirname, extname, join } from "std/path/mod.ts";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
@@ -12,7 +12,6 @@ import { Typegate } from "../../src/typegate/mod.ts";
 import { createMetaCli } from "./meta.ts";
 import { TypeGraph } from "../../src/typegraph/mod.ts";
 import { SyncConfig } from "../../src/sync/config.ts";
-import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
@@ -186,7 +185,7 @@ export class MetaTest {
 
   async engineFromDeployed(tgString: string): Promise<QueryEngine> {
     const tg = await TypeGraph.parseJson(tgString);
-    const { engine, response } = await this.typegate.pushTypegraph(
+    const { engine, response } = await this.typegates.next().pushTypegraph(
       tg,
       {},
       this.introspection,
@@ -199,63 +198,24 @@ export class MetaTest {
     return engine;
   }
 
-  async engineFromTgDeploy(path: string, cwd: string, tg?: any) {
+  async engineFromTgDeployPython(path: string, cwd: string) {
     const extension = extname(path);
     let sdkLang: SDKLangugage;
     switch (extension) {
       case ".py":
         sdkLang = SDKLangugage.Python;
         break;
-      case ".ts":
-        sdkLang = SDKLangugage.TypeScript;
-        break;
-      case ".mjs":
-        sdkLang = SDKLangugage.TypeScript;
-        break;
       default:
         throw new Error(`Unsupported file type ${extension}`);
     }
 
-    const serialized = sdkLang === SDKLangugage.Python
-      ? await this.#serializeTypegraphFromShell(path, sdkLang, cwd)
-      : await this.#serializeTypegraphFromTgDeployTs(path, cwd, tg);
+    const serialized = await this.#serializeTypegraphFromShell(
+      path,
+      sdkLang,
+      cwd,
+    );
 
     return await this.engineFromDeployed(serialized);
-  }
-
-  async #serializeTypegraphFromTgDeployTs(path: string, cwd: string, tg?: any) {
-    if (!this.port) {
-      throw new Error(
-        "Error: port option in MetaTest config should be set to 'true'",
-      );
-    }
-
-    if (!tg) {
-      throw new Error(
-        "Error: Typegraph ouput needed for serialzing TS SDK typegraph",
-      );
-    }
-
-    const auth = new BasicAuth("admin", "password");
-    const gate = `http://localhost:${this.port}`;
-    const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
-      baseUrl: gate,
-      auth,
-      artifactsConfig: {
-        prismaMigration: {
-          globalAction: {
-            create: true,
-            reset: false,
-          },
-          migrationDir: "prisma-migrations",
-        },
-        dir: cwd,
-      },
-      typegraphPath: join(cwd, basename(path)),
-      secrets: {},
-    });
-
-    return serialized;
   }
 
   async #serializeTypegraphFromShell(

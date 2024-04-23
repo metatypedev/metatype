@@ -24,8 +24,6 @@ typegates:
     url: "http://localhost:7890"
     username: admin
     password: password
-    env:
-      TG_EXAMPLE_ENV_VAR: "example"
 
 metagen:
   targets: 

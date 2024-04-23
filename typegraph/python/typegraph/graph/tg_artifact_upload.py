@@ -4,7 +4,7 @@
 import json
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 from urllib import request
 
 from typegraph.gen.exports.core import Artifact
@@ -27,6 +27,7 @@ class ArtifactUploader:
     tg_name: str
     auth: Union[BasicAuth, None]
     headers: Dict[str, str]
+    tg_path: Optional[str]
 
     def __init__(
         self,
@@ -74,6 +75,9 @@ class ArtifactUploader:
         if url is None:
             print(f"Skipping upload for artifact: {meta.relativePath}")
             return Ok(None)
+
+        if self.tg_path is None:
+            raise Exception("Typegraph path not set in Deploy Params")
 
         path = os.path.join(os.path.dirname(self.tg_path), meta.relativePath)
         # TODO: read in chunks?

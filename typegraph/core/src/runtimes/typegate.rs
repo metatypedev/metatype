@@ -20,6 +20,7 @@ pub enum TypegateOperation {
     FindAvailableOperations,
     FindPrismaModels,
     RawPrismaQuery,
+    QueryPrismaModel,
 }
 
 impl MaterializerConverter for TypegateOperation {
@@ -42,6 +43,7 @@ impl MaterializerConverter for TypegateOperation {
                 Self::FindAvailableOperations => "findAvailableOperations",
                 Self::FindPrismaModels => "findPrismaModels",
                 Self::RawPrismaQuery => "execRawPrismaQuery",
+                Self::QueryPrismaModel => "queryPrismaModel",
             }
             .to_string(),
             runtime,
