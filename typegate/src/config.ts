@@ -42,6 +42,10 @@ const schema = {
   sentry_dsn: z.string().optional(),
   sentry_sample_rate: z.coerce.number().positive().min(0).max(1),
   sentry_traces_sample_rate: z.coerce.number().positive().min(0).max(1),
+  /**
+   * Time in seconds in which a URL expires after being pushed to Redis
+   */
+  redis_url_queue_expire_sec: z.coerce.number().positive(),
 };
 
 async function getHostname() {
@@ -75,6 +79,7 @@ const config = await configOrExit([
     timer_max_timeout_ms: 3000,
     timer_destroy_resources: true,
     timer_policy_eval_retries: 1,
+    redis_url_queue_expire_sec: 60 * 5, // 5 minutes
   },
   mapKeys(Deno.env.toObject(), (k: string) => k.toLowerCase()),
   parse(Deno.args) as Record<string, unknown>,
