@@ -25,8 +25,7 @@ const config = {
   },
   stylesheets: [
     {
-      href:
-        "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
+      href: "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
       type: "text/css",
     },
   ],
@@ -41,12 +40,6 @@ const config = {
         appUrl: "https://eu.posthog.com",
         enableInDevelopment: false,
         persistence: "memory",
-      },
-    ],
-    [
-      "docusaurus-plugin-sentry",
-      {
-        DSN: "d951b2e2b71d43e0b2fc41555cf8bf75@sentry.triage.dev/5",
       },
     ],
     [
