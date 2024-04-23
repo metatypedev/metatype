@@ -140,23 +140,20 @@ def tg_remove(tg: TypegraphOutput, params: TypegraphRemoveParams):
     return RemoveResult(typegate=handle_response(exec_request(req).read().decode()))
 
 
+# simple wrapper for a more descriptive error
+def exec_request(req: any):
+    try:
+        return request.urlopen(req)
+    except request.HTTPError as res:
+        # Note: 400 errors and such, the response body
+        # is hidden within the exception and can be consumed through .read()
+        return res
+    except Exception as e:
+        raise Exception(f"{e}: {req.full_url}")
+
+
 def handle_response(res: any):
     try:
         return json.loads(res)
     except Exception as _:
         return res
-
-
-# simple wrapper for a more descriptive error
-def exec_request(req: any):
-    try:
-        # FIXME: urllib.request raises exception upon status 400
-        # and instead produce a generic error
-        # which discard any useful error stack from typegate
-        # is there a way to retrieve the response body with the native API?
-        # otherwise Try http.client
-        return request.urlopen(req)
-    # except URLError as e: # 400 also falls here?
-    #     raise Exception(f"{e}: {req.full_url}")
-    except Exception as e:
-        raise Exception(f"{e}: {req.full_url}")
