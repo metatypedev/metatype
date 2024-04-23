@@ -3,7 +3,6 @@
 
 import json
 from dataclasses import dataclass
-import os
 from typing import Any, Dict, Optional, Union
 from urllib import request
 
@@ -60,42 +59,6 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     ref_artifacts = serialized.ref_artifacts
 
     # upload the referred artifacts
-    # TODO: fetch all the upload urls in one request
-    get_upload_url = params.base_url + sep + tg.name + "/get-upload-url"
-    for artifact in ref_artifacts:
-        artifact_hash, artifact_path = artifact.hash, artifact.path
-        with open(artifact_path, "rb") as artifact:
-            artifact_content = artifact.read()
-            artifact = UploadArtifactMeta(
-                name=os.path.basename(artifact_path),
-                artifact_hash=artifact_hash,
-                artifact_size_in_bytes=len(artifact_content),
-            )
-
-            artifact_json = json.dumps(artifact.__dict__).encode()
-            req = request.Request(
-                url=get_upload_url, method="PUT", headers=headers, data=artifact_json
-            )
-
-            response = exec_request(req).read().decode()
-            response = handle_response(response, req.full_url)
-            artifact_upload_url = response["uploadUrl"]
-
-            upload_headers = {"Content-Type": "application/octet-stream"}
-            if params.auth is not None:
-                upload_headers["Authorization"] = params.auth.as_header_value()
-            upload_req = request.Request(
-                url=artifact_upload_url,
-                method="PUT",
-                data=artifact_content,
-                headers=upload_headers,
-            )
-            response = request.urlopen(upload_req)
-            if response.status != 200:
-                raise Exception(
-                    f"Failed to upload artifact {artifact_path} to typegate: {response.read()}"
-                )
-
     artifact_uploader = ArtifactUploader(
         params.base_url,
         ref_artifacts,
@@ -125,12 +88,11 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
         data=res.value.encode(),
     )
 
-    response = exec_request(req).read().decode()
-    response = handle_response(response, req.full_url)
-
+    response = exec_request(req)
+    response = response.read().decode()
     return DeployResult(
         serialized=tg_json,
-        typegate=response,
+        typegate=handle_response(response),
     )
 
 

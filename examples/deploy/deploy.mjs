@@ -55,14 +55,18 @@ const tg = await typegraph({
     sayHelloPyMod: python.import(
       t.struct({ name: t.string() }),
       t.string(),
-      { module: "scripts/python/say_hello.py", name: "sayHello" },
+      {
+        module: "scripts/python/say_hello.py",
+        name: "sayHello",
+        deps: ["scripts/python/import_.py"]
+      },
     ),
     // Wasm
-    // testWasmAdd: wasm.fromWasm(
-    //   t.struct({ a: t.float(), b: t.float() }),
-    //   t.integer(),
-    //   { wasm: "wasm/rust.wasm", func: "add" }
-    // ),
+    testWasmAdd: wasm.fromWasm(
+      t.struct({ a: t.float(), b: t.float() }),
+      t.integer(),
+      { wasm: "wasm/rust.wasm", func: "add" }
+    ),
     // Prisma
     createStudent: prisma.create(student),
     findManyStudent: prisma.findMany(student),
@@ -91,6 +95,7 @@ tgDeploy(tg, {
     ...artifactsConfig,
     // dir: "."
   },
+  typegraphPath: "./deploy.mjs"
 }).then(({ typegate }) => {
   // console.info(typegate);
   const selection = typegate?.data?.addTypegraph;

@@ -55,15 +55,16 @@ def deploy_example_python(g: Graph):
             t.struct({"name": t.string()}),
             t.string(),
             module="scripts/python/say_hello.py",
+            deps=["scripts/python/import_.py"],
             name="sayHello",
         ),
         # Wasm
-        # testWasmAdd=wasm.from_wasm(
-        #     t.struct({"a": t.float(), "b": t.float()}),
-        #     t.integer(),
-        #     wasm="wasm/rust.wasm",
-        #     func="add",
-        # ),
+        testWasmAdd=wasm.from_wasm(
+            t.struct({"a": t.float(), "b": t.float()}),
+            t.integer(),
+            wasm="wasm/rust.wasm",
+            func="add",
+        ),
         # Prisma
         createStudent=prisma.create(student),
         findManyStudent=prisma.find_many(student),
@@ -88,7 +89,6 @@ artifacts_config = ArtifactResolutionConfig(
     codegen=None,
 )
 
-
 res = tg_deploy(
     tg,
     TypegraphDeployParams(
@@ -98,10 +98,14 @@ res = tg_deploy(
         secrets={
             "POSTGRES": "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
         },
+        typegraph_path="./deploy.py",
     ),
 )
 
 # print(res.serialized)
+if "errors" in res.typegate:
+    print(res.typegate)
+    exit
 
 # migration status.. etc
 print(
