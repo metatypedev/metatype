@@ -6,6 +6,9 @@ use dashmap::DashMap;
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
 use deno_core::OpState;
+use wasmtime::component::{Component, Linker};
+use wit::exports::metatype::pyrt::mat_wire::{InitArgs, InitError, MatInfo, Req as MatReq};
+use wit::metatype::pyrt::typegate_wire::{Host, Req as HostReq, Res as HostRes};
 
 mod wit {
     wasmtime::component::bindgen!({
@@ -13,15 +16,12 @@ mod wit {
         async: true,
     });
 }
-use wasmtime::component::{Component, Linker};
-use wit::exports::metatype::pyrt::mat_wire::{InitArgs, InitError, MatInfo, Req as MatReq};
-use wit::metatype::pyrt::typegate_wire::{Host, Req as HostReq, Res as HostRes};
 
 #[derive(Clone)]
 pub struct Ctx {
     engine: wasmtime::Engine,
     instances: Arc<DashMap<String, Instance>>,
-    components: Arc<DashMap<PathBuf, LinkedComponent>>,
+    components: Arc<DashMap<String, LinkedComponent>>,
 }
 
 #[derive(Clone)]
@@ -42,18 +42,30 @@ impl Ctx {
         }
     }
 
-    async fn get_component(&self, wasm_relative_path: PathBuf) -> Result<LinkedComponent, String> {
-        let wasm_absolute_path = match std::env::current_dir() {
-            Ok(cwd) => cwd.join(wasm_relative_path),
-            Err(err) => return Err(format!("error trying to find cwd: {err}")),
-        };
-
-        let comp = if let Some(comp) = self.components.get(&wasm_absolute_path) {
-            comp.clone()
+    async fn get_component(&self, wasm_relative_path: String) -> Result<LinkedComponent, String> {
+        if let Some(comp) = self.components.get(&wasm_relative_path[..]) {
+            return Ok(comp.clone());
+        }
+        let engine = self.engine.clone();
+        let comp = if wasm_relative_path == "inline://pyrt_wit_wire.cwasm" {
+            let cwasm_zst_bytes = include_bytes!(concat!(env!("OUT_DIR"), "/pyrt.cwasm.zst"));
+            tokio::task::spawn_blocking(move || unsafe {
+                let mut cwasm_bytes = vec![];
+                zstd::stream::copy_decode(&cwasm_zst_bytes[..], &mut cwasm_bytes)
+                    .map_err(|err| format!("error decompressing serialized component: {err}"))?;
+                Component::deserialize(&engine, cwasm_bytes)
+                    .map_err(|err| format!("error loading pyrt serialized component: {err}"))
+            })
+            .await
+            .map_err(|err| format!("tokio error loading serialized component: {err}"))??
         } else {
-            let engine = self.engine.clone();
+            let wasm_absolute_path = match std::env::current_dir() {
+                Ok(cwd) => cwd.join(&wasm_relative_path),
+                Err(err) => return Err(format!("error trying to find cwd: {err}")),
+            };
             let path_clone = wasm_absolute_path.clone();
-            let comp = if wasm_absolute_path
+
+            if wasm_absolute_path
                 .extension()
                 .map(|ext| ext == "cwasm")
                 .unwrap_or_default()
@@ -64,29 +76,32 @@ impl Ctx {
                 })
                 .await
                 .map_err(|err| format!("tokio error loading serialized component: {err}"))?
-                .map_err(|err| format!("error loading serialized component: {err}"))?
+                .map_err(|err| {
+                    format!("error loading serialized component from {wasm_relative_path}: {err}")
+                })?
             } else {
                 tokio::task::spawn_blocking(move || Component::from_file(&engine, &path_clone))
                     .await
                     .map_err(|err| format!("tokio error loading component: {err}"))?
-                    .map_err(|err| format!("error loading component: {err}"))?
-            };
-
-            let mut linker = Linker::<TypegateHost>::new(&self.engine);
-
-            for res in [
-                wasmtime_wasi::bindings::Imports::add_to_linker(&mut linker, |host| host),
-                wit::Pyrt::add_to_linker(&mut linker, |host| host),
-            ] {
-                res.map_err(|err| format!("erorr trying to link component: {err}"))?;
+                    .map_err(|err| {
+                        format!("error loading component from {wasm_relative_path}: {err}")
+                    })?
             }
-            self.components
-                .entry(wasm_absolute_path)
-                .insert_entry(LinkedComponent(comp, linker.into()))
-                .get()
-                .clone()
         };
-        Ok(comp)
+        let mut linker = Linker::<TypegateHost>::new(&self.engine);
+
+        for res in [
+            wasmtime_wasi::bindings::Imports::add_to_linker(&mut linker, |host| host),
+            wit::Pyrt::add_to_linker(&mut linker, |host| host),
+        ] {
+            res.map_err(|err| format!("erorr trying to link component: {err}"))?;
+        }
+        Ok(self
+            .components
+            .entry(wasm_relative_path)
+            .insert_entry(LinkedComponent(comp, linker.into()))
+            .get()
+            .clone())
     }
 }
 
@@ -221,7 +236,7 @@ pub async fn op_wit_wire_init(
     };
 
     let LinkedComponent(ref component, ref linker) = ctx
-        .get_component(PathBuf::from(component_path))
+        .get_component(component_path)
         .await
         .map_err(WitWireInitError::ModuleErr)?;
 

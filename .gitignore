@@ -47,3 +47,4 @@ typegraph/python/typegraph/gen
 *.egg-info/
 
 examples/typegraphs/migrations
+libs/pyrt_wit_wire/pyrt

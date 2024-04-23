@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { assert, assertEquals } from "std/assert/mod.ts";
-import { gql, Meta } from "../../utils/mod.ts";
+import { gql, Meta } from "test-utils/mod.ts";
 import { WitWireMessenger } from "../../../src/runtimes/python_wasi/wit_wire.ts";
 import type { ResolverArgs } from "../../../src/types.ts";
 import { testDir } from "test-utils/dir.ts";
@@ -32,7 +32,7 @@ const reusableTgOutput = {
 Meta.test("Python WASI VM performance", async (t) => {
   await t.should("work with low latency for lambdas", async () => {
     await using wire = await WitWireMessenger.init(
-      "./target/pyrt.cwasm",
+      "inline://pyrt_wit_wire.cwasm",
       crypto.randomUUID(),
       [
         {
@@ -69,7 +69,7 @@ Meta.test("Python WASI VM performance", async (t) => {
 
   await t.should("work with low latency for defs", async () => {
     await using wire = await WitWireMessenger.init(
-      "./target/pyrt.cwasm",
+      "inline://pyrt_wit_wire.cwasm",
       crypto.randomUUID(),
       [
         {

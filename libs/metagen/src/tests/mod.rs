@@ -41,7 +41,7 @@ pub struct E2eTestCase {
 pub async fn e2e_test(cases: Vec<E2eTestCase>) -> anyhow::Result<()> {
     // spin_up_typegate
     for case in cases {
-        let tmp_dir = tokio::task::spawn_blocking(|| tempfile::tempdir())
+        let tmp_dir = tokio::task::spawn_blocking(tempfile::tempdir)
             .await??
             .into_path();
         {
@@ -94,7 +94,7 @@ async fn spin_up_typegate() -> anyhow::Result<(tokio::process::Child, common::no
     let tg_admin_password = "password";
 
     let typegate = tokio::process::Command::new("cargo")
-        .args(&["r", "-p", "typegate"])
+        .args(["r", "-p", "typegate"])
         .envs([
             ("LOG_LEVEL".to_string(), "DEBUG".to_string()),
             ("TG_PORT".to_string(), tg_port.to_string()),

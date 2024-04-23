@@ -12080,6 +12080,7 @@ dependencies = [
  "user-facing-errors",
  "wasmtime",
  "wasmtime-wasi",
+ "zstd 0.13.1",
 ]
 
 [[package]]

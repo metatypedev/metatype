@@ -74,8 +74,14 @@ impl OpDepInjector {
         #[cfg(test)]
         state.put(ext::tests::TestCtx { val: 10 });
         state.put(runtimes::temporal::Ctx::default());
-        let engine = wasmtime::Engine::new(wasmtime::Config::new().async_support(true))
-            .expect("invalid wasmtime engine config");
+        let engine = wasmtime::Engine::new(
+            wasmtime::Config::new()
+                .async_support(true)
+                .cache_config_load_default()
+                .context("error reading system's wasmtime cache config")
+                .unwrap(),
+        )
+        .expect("invalid wasmtime engine config");
         state.put(runtimes::wit_wire::Ctx::new(engine));
         state.put(runtimes::prisma::Ctx::new(self.tmp_dir.unwrap()));
     }

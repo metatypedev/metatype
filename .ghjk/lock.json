@@ -493,6 +493,37 @@
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "wasmtime-cli",
           "locked": true
+        },
+        "d7e75b813748aaecfc889b73be7e9615eadceb4790eacb449f0c3a1bb24a5c42": {
+          "version": "19.0.0",
+          "depConfigs": {
+            "cargo_binstall_ghrel": {
+              "version": "v1.6.4",
+              "depConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0"
+            },
+            "rust_rustup": {
+              "version": "1.77.2",
+              "depConfigs": {
+                "rustup_rustlang": {
+                  "version": "1.27.0",
+                  "depConfigs": {
+                    "git_aa": {
+                      "version": "2.40.1",
+                      "depConfigs": {},
+                      "portRef": "git_aa@0.1.0"
+                    }
+                  },
+                  "portRef": "rustup_rustlang@0.1.0"
+                }
+              },
+              "portRef": "rust_rustup@0.1.0",
+              "profile": "minimal"
+            }
+          },
+          "portRef": "cargobi_cratesio@0.1.0",
+          "crateName": "wasmtime-cli",
+          "locked": true
         }
       }
     },
@@ -592,13 +623,14 @@
             },
             "build-pyrt": {
               "name": "build-pyrt",
-              "dependsOn": [],
+              "dependsOn": [
+                "gen-pyrt-bind"
+              ],
               "env": {
                 "installs": [
                   "be7e967b2420f3d6a8af7d3ff11192362ee4b5c8",
                   "5dfbf570fa87f14a3524560c40bd08d0d62a7526",
-                  "a24f45ef0b2064658d87264a95d31fe4694f6f4e",
-                  "a4de04b77193fd53fed574b61e8568dc63a53544"
+                  "a24f45ef0b2064658d87264a95d31fe4694f6f4e"
                 ],
                 "env": {},
                 "allowedPortDeps": [
@@ -1196,51 +1228,6 @@
             ],
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/cpy_bs.ts"
           }
-        },
-        "a4de04b77193fd53fed574b61e8568dc63a53544": {
-          "version": "19.0.2",
-          "depConfigs": {
-            "rust_rustup": {
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "cargobi_cratesio",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "cargo_binstall_ghrel"
-              },
-              {
-                "name": "rust_rustup"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/cargobi.ts"
-          },
-          "crateName": "wasmtime-cli",
-          "locked": true
         }
       },
       "allowedPortDeps": {

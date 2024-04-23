@@ -34,13 +34,13 @@ mt_deno.workspace = true
 common.workspace = true
 typescript.workspace = true
 
-wasmtime = { version = "20.0.0",  features = ["component-model"] }
-wasmtime-wasi = { version = "20.0.0" }
+wasmtime = { workspace = true,  features = ["component-model"] }
+wasmtime-wasi.workspace = true
 
 shadow-rs.workspace = true
 serde.workspace = true
 regex = "1.10.2"
-
+zstd = "0.13"
 async-trait = "0.1"
 
 [dev-dependencies]
@@ -48,3 +48,5 @@ env_logger.workspace = true
 
 [build-dependencies]
 shadow-rs.workspace = true
+wasmtime = { workspace = true,  features = ["component-model"] }
+zstd = "0.13"

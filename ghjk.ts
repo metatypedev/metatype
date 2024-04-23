@@ -9,7 +9,7 @@ const PYTHON_VERSION = "3.8.18";
 const PNPM_VERSION = "v9.0.5";
 const WASM_TOOLS_VERSION = "1.0.53";
 const JCO_VERSION = "1.0.0";
-const WASMTIME_VERSION = "19.0.2";
+const WASMTIME_VERSION = "20.0.0";
 const WASM_OPT_VERSION = "0.116.0";
 const MOLD_VERSION = "v2.4.0";
 const CMAKE_VERSION = "3.28.0-rc6";
@@ -142,11 +142,13 @@ ghjk.task("gen-pyrt-bind", {
 });
 
 ghjk.task("build-pyrt", {
-  installs: [...installs.comp_py, installs.wasm_opt, installs.wasmtime],
+  installs: [...installs.comp_py, installs.wasm_opt],
   allowedPortDeps,
-  async fn({ $ }) {
-    await $`componentize-py -d ./libs/pyrt_wit_wire/wit/ componentize -o ./target/pyrt.wasm libs.pyrt_wit_wire.main`;
-    await $`wasmtime compile -W component-model  ./target/pyrt.wasm -o ./target/pyrt.cwasm`;
-    // await $`wasm-opt -Oz ./target/pyrt.wasm -o ./target/pyrt.wasm2`;
+  dependsOn: ["gen-pyrt-bind"],
+  async fn({ $, argv, env }) {
+    const target = env["PYRT_TARGET"] ? `--target ${env["PYRT_TARGET"]}` : "";
+    const wasmOut = env["PYRT_WASM_OUT"] ?? "./target/pyrt.wasm";
+    const cwasmOut = env["PYRT_CWASM_OUT"] ?? "./target/pyrt.cwasm";
+    await $`componentize-py -d ./libs/pyrt_wit_wire/wit/ componentize -o ${wasmOut} libs.pyrt_wit_wire.main`;
   },
 });

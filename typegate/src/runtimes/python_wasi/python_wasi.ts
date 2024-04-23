@@ -22,7 +22,7 @@ export class PythonWasiRuntime extends Runtime {
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { materializers, typegraphName, _typegraph } = params;
+    const { materializers, typegraphName } = params;
 
     const wireMatInfos = materializers.map((mat) => {
       let matData: object;
@@ -68,7 +68,7 @@ export class PythonWasiRuntime extends Runtime {
     // add default vm for lambda/def
     const uuid = crypto.randomUUID();
     const wire = await WitWireMessenger.init(
-      "./target/pyrt.cwasm",
+      "inline://pyrt_wit_wire.cwasm",
       uuid,
       wireMatInfos,
     );

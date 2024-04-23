@@ -183,7 +183,7 @@ fn mdk_rs_e2e() -> anyhow::Result<()> {
         .into_iter()
         .collect(),
     };
-    let out = tokio::runtime::Builder::new_multi_thread()
+    tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .thread_stack_size(16 * 1024 * 1024)
         .build()?

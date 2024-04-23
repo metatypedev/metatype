@@ -139,18 +139,3 @@ pub trait MyFunc {
         Ok(())
     }
 }
-
-trait MyT {
-    fn hey() {}
-}
-trait MyT2 {
-    fn you() {}
-}
-
-struct T {}
-impl MyT for T {
-    fn hey() {}
-}
-impl MyT2 for T {
-    fn you() {}
-}
