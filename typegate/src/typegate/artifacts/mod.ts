@@ -117,8 +117,12 @@ export abstract class ArtifactStore {
     tgName: string,
   ): Promise<[string, number]> {
     const expiresIn = 5 * 60;
-    const token = await signJWT({ expiresIn }, expiresIn);
-    const url = new URL(getUploadPath(tgName), origin);
+    const uuid = crypto.randomUUID();
+    const token = await signJWT({ uuid }, expiresIn);
+    const url = new URL(
+      `${getUploadPath(tgName)}`,
+      origin,
+    );
     url.searchParams.set("token", token);
     return [url.toString(), jwt.getNumericDate(expiresIn)];
   }

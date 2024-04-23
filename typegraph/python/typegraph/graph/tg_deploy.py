@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import json
-import os
 from dataclasses import dataclass
-from typing import Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 from urllib import request
 
 from typegraph.gen.exports.utils import QueryDeployParams
 from typegraph.gen.types import Err
 from typegraph.graph.shared_types import BasicAuth
+from typegraph.graph.tg_artifact_upload import ArtifactUploader
 from typegraph.graph.typegraph import TypegraphOutput
 from typegraph.wit import ArtifactResolutionConfig, store, wit_utils
 
@@ -18,6 +18,7 @@ from typegraph.wit import ArtifactResolutionConfig, store, wit_utils
 class TypegraphDeployParams:
     base_url: str
     artifacts_config: ArtifactResolutionConfig
+    typegraph_path: Optional[str]
     auth: Optional[BasicAuth] = None
     secrets: Optional[Dict[str, str]] = None
 
@@ -31,12 +32,12 @@ class TypegraphRemoveParams:
 @dataclass
 class DeployResult:
     serialized: str
-    typegate: Union[Dict[str, any], str]
+    typegate: Union[Dict[str, Any], str]
 
 
 @dataclass
 class RemoveResult:
-    typegate: Union[Dict[str, any], str]
+    typegate: Union[Dict[str, Any], str]
 
 
 @dataclass
@@ -58,39 +59,15 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     ref_artifacts = serialized.ref_artifacts
 
     # upload the referred artifacts
-    # TODO: fetch all the upload urls in one request
-    get_upload_url = params.base_url + sep + tg.name + "/get-upload-url"
-    for artifact_hash, artifact_path in ref_artifacts:
-        with open(artifact_path, "rb") as artifact:
-            artifact_content = artifact.read()
-            artifact = UploadArtifactMeta(
-                name=os.path.basename(artifact_path),
-                artifact_hash=artifact_hash,
-                artifact_size_in_bytes=len(artifact_content),
-            )
-
-            artifact_json = json.dumps(artifact.__dict__).encode()
-            req = request.Request(
-                url=get_upload_url, method="PUT", headers=headers, data=artifact_json
-            )
-
-            response = handle_response(request.urlopen(req).read().decode())
-            artifact_upload_url = response["uploadUrl"]
-
-            upload_headers = {"Content-Type": "application/octet-stream"}
-            if params.auth is not None:
-                upload_headers["Authorization"] = params.auth.as_header_value()
-            upload_req = request.Request(
-                url=artifact_upload_url,
-                method="PUT",
-                data=artifact_content,
-                headers=upload_headers,
-            )
-            response = request.urlopen(upload_req)
-            if response.status != 200:
-                raise Exception(
-                    f"Failed to upload artifact {artifact_path} to typegate: {response.read()}"
-                )
+    artifact_uploader = ArtifactUploader(
+        params.base_url,
+        ref_artifacts,
+        tg.name,
+        params.auth,
+        headers,
+        params.typegraph_path,
+    )
+    artifact_uploader.upload_artifacts()
 
     # deploy the typegraph
     res = wit_utils.gql_deploy_query(
@@ -139,7 +116,7 @@ def tg_remove(tg: TypegraphOutput, params: TypegraphRemoveParams):
     return RemoveResult(typegate=handle_response(request.urlopen(req).read().decode()))
 
 
-def handle_response(res: any):
+def handle_response(res: Any):
     try:
         return json.loads(res)
     except Exception as _:
