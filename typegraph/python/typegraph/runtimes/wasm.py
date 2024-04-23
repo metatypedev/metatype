@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from typegraph import t
 from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
     Effect,
@@ -13,6 +12,8 @@ from typegraph.gen.exports.runtimes import (
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.wit import runtimes, store
+
+from typegraph import t
 
 
 class WasmRuntime(Runtime):
@@ -29,12 +30,11 @@ class WasmRuntime(Runtime):
         effect: Optional[Effect] = None,
     ):
         effect = effect or EffectRead()
-        wasm = f"file:{wasm}"
 
         mat_id = runtimes.from_wasm_module(
             store,
             BaseMaterializer(runtime=self.id.value, effect=effect),
-            MaterializerWasm(module=wasm, func_name=func),
+            MaterializerWasm(wasm_artifact=wasm, func_name=func),
         )
 
         if isinstance(mat_id, Err):

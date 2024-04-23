@@ -66,11 +66,8 @@ export type PushResult = {
   response: PushResponse;
 };
 
-export interface UploadUrlMeta {
-  artifactName: string;
-  artifactHash: string;
-  artifactSizeInBytes: number;
-  urlUsed: boolean;
+export interface DeinitOptions {
+  engines?: boolean;
 }
 
 export interface DeinitOptions {

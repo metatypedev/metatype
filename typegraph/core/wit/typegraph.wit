@@ -337,6 +337,7 @@ interface runtimes {
     record materializer-python-module {
         runtime: runtime-id,
         file: string,
+        deps: list<string>,
     }
 
     record materializer-python-import {

@@ -10,7 +10,7 @@ const tpe = t.struct({
   "b": t.list(t.either([t.integer(), t.string()])),
 });
 
-typegraph("python_wasi", (g: any) => {
+export const tg = await typegraph("python_wasi", (g: any) => {
   const python = new PythonRuntime();
   const pub = Policy.public();
 
@@ -33,7 +33,11 @@ typegraph("python_wasi", (g: any) => {
     identityMod: python.import(
       t.struct({ input: tpe }),
       tpe,
-      { name: "identity", module: "py/hello.py" },
+      {
+        name: "identity",
+        module: "py/hello.py",
+        deps: ["py/nested/dep.py"],
+      },
     ).withPolicy(pub),
   });
 });

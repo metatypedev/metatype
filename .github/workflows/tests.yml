@@ -47,6 +47,7 @@ jobs:
               - 'typegraph/**'
               - 'meta-cli/**'
               - 'Cargo.lock'
+              - 'examples/**'
             rust:
               - '.github/workflows/tests.yml'
               - 'libs/**'
@@ -296,6 +297,9 @@ jobs:
           npm publish --registry http://localhost:4873
           cd ../../../..
 
+          # install packages inside metatype examples
+          pnpm install -C examples/typegraphs
+
           # from old test-typegraph-core
           # test in native rust, not in wasm for a future rust SDK
           # without --tests, the --doc is causing a link error "syntax error in VERSION script"
@@ -317,6 +321,7 @@ jobs:
             typegate/src/main.ts \
             typegate/tests/utils/*.ts \
             typegate/tests/runtimes/wasm/*.ts \
+            typegate/tests/runtimes/python_wasi/*.ts \
             dev/deps.ts \
             dev/utils.ts
           deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
