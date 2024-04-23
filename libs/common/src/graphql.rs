@@ -21,16 +21,18 @@ impl Response {
         T: serde::de::DeserializeOwned,
     {
         if let Some(errors) = &self.errors {
-            println!("Error{s}:", s = if errors.len() > 1 { "s" } else { "" });
+            let len = errors.len();
+            let s = if len > 1 { "s" } else { "" };
+            println!("Error{s}:");
             for error in errors {
                 println!("{}", format!(" - {}", error.message).red());
             }
-            bail!("errors found in the response");
+            bail!("{len} error{s} found in the response");
         }
         if let Some(data) = &self.data {
             let value = &data[field];
             if value.is_null() {
-                bail!("value for {field} is not found in the response");
+                bail!("value for data.{field} is not found in the response");
             }
             return Ok(serde_json::from_value(value.clone())?);
         }

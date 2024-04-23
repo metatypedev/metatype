@@ -145,7 +145,7 @@ def exec_request(req: any):
     try:
         return request.urlopen(req)
     except request.HTTPError as res:
-        # Note: 400 errors and such, the response body
+        # Note: 400 status and such, the response body
         # is hidden within the exception and can be consumed through .read()
         return res
     except Exception as e:
