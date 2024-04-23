@@ -10,8 +10,8 @@ import CodeBlock from "@theme-original/CodeBlock";
 # Custom functions
 
 Custom functions can be used to run custom code at different points of a typegraph. 
-These constructs fall under [materializers](/docs/concepts/mental-model#Materializers) which are, concretly, functions attached to a specific runtime.
-For some common tasks, like simple operations on database tables for example, runtime implementations provide materializer [generators](/docs/reference/runtimes/prisma#Generators) to minimize boilerplate.
+These constructs fall under [materializers](/docs/concepts/mental-model#materializers) which are, concretly, functions attached to a specific runtime.
+For some common tasks, like simple operations on database tables for example, runtime implementations provide materializer [generators](/docs/reference/runtimes/prisma#generators) to minimize boilerplate.
 For cases not expressible by generators, runtimes like the `DenoRuntime` allow us to write more powerful custom functions.
 
 Custom functions are commonly used for:
@@ -53,7 +53,7 @@ Here's what `scripts/fib.ts` looks like:
 The following runtimes can be used to run custom functions:
 - [`DenoRuntime`](/docs/reference/runtimes/deno/) through typescript code.
 - [`PythonRuntime`](/docs/reference/runtimes/python/) through python code.
-- [`WasmedgeRuntime`](/docs/reference/runtimes/wasmedge/) through wasm modules.
+- [`WasmRuntime`](/docs/reference/runtimes/wasm/) through wasm modules.
 - [`PrismaRuntime`](/docs/reference/runtimes/prisma/) throw raw SQL queries.
 
 ## Accessing function context

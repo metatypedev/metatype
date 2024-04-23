@@ -6,7 +6,7 @@ from typegraph.graph.params import Cors
 
 
 @typegraph(
-    name="file-upload",
+    name="files-upload",
     # skip-next-line
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 )

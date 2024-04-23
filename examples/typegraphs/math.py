@@ -43,10 +43,10 @@ def math(g: Graph):
             t.struct({"items": t.list(t.string())}),
             t.string(),
             code=random_item_fn,
-        ).with_policy(public),
+        ),
         random=deno.func(
             t.struct(),
             t.float(),
             code="() => Math.random()",  # more inline code
-        ).with_policy(public),
+        ),
     )

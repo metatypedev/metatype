@@ -29,7 +29,7 @@ await typegraph({
       t.struct({}),
       t.string(),
       {
-        code: (_: any, ctx: any) => Deno.inspect(ctx.context),
+        code: "(_: any, ctx: any) => Deno.inspect(ctx.context)",
       },
     ),
   }, Policy.public());

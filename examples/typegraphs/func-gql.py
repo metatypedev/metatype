@@ -9,7 +9,7 @@ from typegraph.providers.prisma import PrismaRuntime
 @typegraph(
     name="func-gql",
     rate=Rate(window_limit=2000, window_sec=60, query_limit=200),
-    cors=Cors(allow_origin=["https:#metatype.dev", "http:#localhost:3000"]),
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 )
 def func_gql(g: Graph):
     # skip:end

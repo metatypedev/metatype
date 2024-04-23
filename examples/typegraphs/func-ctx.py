@@ -8,7 +8,7 @@ from typegraph.runtimes.deno import DenoRuntime
 @typegraph(
     name="func-ctx",
     rate=Rate(window_limit=2000, window_sec=60, query_limit=200),
-    cors=Cors(allow_origin=["https:#metatype.dev", "http://localhost:3000"]),
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 )
 def func_ctx(g: Graph):
     deno = DenoRuntime()
