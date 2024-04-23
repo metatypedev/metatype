@@ -27,8 +27,8 @@ use std::hash::Hasher as _;
 use std::rc::Rc;
 
 use crate::wit::core::{
-    ArtifactResolutionConfig, Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec,
-    RuntimeId, TypegraphInitParams,
+    Artifact as WitArtifact, ArtifactResolutionConfig, Error as TgError, Guest, MaterializerId,
+    PolicyId, PolicySpec, RuntimeId, TypegraphInitParams,
 };
 
 #[derive(Default)]
@@ -109,7 +109,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             rate: params.rate.map(|v| v.into()),
             secrets: vec![],
             random_seed: Default::default(),
-            ref_artifacts: Default::default(),
+            artifacts: Default::default(),
         },
         types: vec![],
         saved_store_state: Some(Store::save()),
@@ -183,7 +183,7 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
 
 pub fn finalize(
     res_config: Option<ArtifactResolutionConfig>,
-) -> Result<(String, Vec<(String, String)>)> {
+) -> Result<(String, Vec<WitArtifact>)> {
     #[cfg(test)]
     eprintln!("Finalizing typegraph...");
 
@@ -213,7 +213,7 @@ pub fn finalize(
                 dynamic: ctx.meta.queries.dynamic,
                 endpoints: Store::get_graphql_endpoints(),
             },
-            ref_artifacts: ctx.meta.ref_artifacts,
+            artifacts: ctx.meta.artifacts,
             random_seed: Store::get_random_seed(),
             auths,
             ..ctx.meta
@@ -228,6 +228,14 @@ pub fn finalize(
     });
     TypegraphPostProcessor::new(config).postprocess(&mut tg)?;
 
+    let artifacts = tg
+        .meta
+        .artifacts
+        .values()
+        .cloned()
+        .map(Into::into)
+        .collect::<Vec<_>>();
+
     Store::restore(ctx.saved_store_state.unwrap());
 
     let result = match serde_json::to_string_pretty(&tg).map_err(|e| e.to_string().into()) {
@@ -235,20 +243,7 @@ pub fn finalize(
         Err(e) => return Err(e),
     };
 
-    // TODO: maybe remove this extra return value? tg.meta.ref_artifacts can be accessed on the sdk frontend
-    let referred_artifacts: Vec<(String, String)> = tg
-        .meta
-        .ref_artifacts
-        .clone()
-        .iter()
-        .map(|(hash, path)| (hash.clone(), path.to_string_lossy().to_string()))
-        .collect();
-
-    #[cfg(test)]
-    return Ok((result, referred_artifacts));
-
-    #[cfg(not(test))]
-    return Ok((result, referred_artifacts));
+    Ok((result, artifacts))
 }
 
 fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {

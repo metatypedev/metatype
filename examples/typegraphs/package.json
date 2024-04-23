@@ -1,0 +1,11 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@typegraph/sdk": "link:../../typegraph/node/sdk/dist/",
+    "fs": "0.0.1-security"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.2",
+    "webpack-node-externals": "^3.0.0"
+  }
+}

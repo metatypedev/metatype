@@ -8,7 +8,7 @@ import { Resolver } from "../types.ts";
 export abstract class Runtime {
   readonly id: string;
 
-  constructor(typegraphName: string, uuid = crypto.randomUUID()) {
+  constructor(public typegraphName: string, uuid = crypto.randomUUID()) {
     this.id = `${typegraphName}_${this.constructor.name}_${uuid}`;
   }
 

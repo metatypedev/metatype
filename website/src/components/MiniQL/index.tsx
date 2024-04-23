@@ -34,6 +34,7 @@ export interface MiniQLProps {
   panel?: Panel;
   noTool?: boolean;
   defaultMode?: keyof typeof modes | null;
+  disablePlayground: boolean
 }
 
 function Loader() {
@@ -55,6 +56,7 @@ function MiniQLBrowser({
   panel = "",
   noTool = false,
   defaultMode = null,
+  disablePlayground = false,
 }: MiniQLProps) {
   const {
     siteConfig: {
@@ -125,7 +127,7 @@ function MiniQLBrowser({
               </ChoicePicker>
             </div>
           ) : null}
-          {!defaultMode || mode === "playground" ? (
+          {!disablePlayground && (!defaultMode || mode === "playground") ? (
             <div className="flex flex-col graphiql-container">
               <div className="flex-1 graphiql-session">
                 <GraphiQLInterface defaultTab={panel} noTool={noTool} />
