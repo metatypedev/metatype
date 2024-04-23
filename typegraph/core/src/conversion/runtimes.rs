@@ -11,7 +11,7 @@ use crate::runtimes::{
     DenoMaterializer, Materializer as RawMaterializer, PythonMaterializer, RandomMaterializer,
     Runtime, TemporalMaterializer, WasmMaterializer,
 };
-use crate::wit::core::RuntimeId;
+use crate::wit::core::{Artifact as WitArtifact, RuntimeId};
 use crate::wit::runtimes::{HttpMethod, MaterializerHttpRequest};
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
@@ -23,7 +23,7 @@ use common::typegraph::runtimes::s3::S3RuntimeData;
 use common::typegraph::runtimes::temporal::TemporalRuntimeData;
 use common::typegraph::runtimes::wasm::WasmRuntimeData;
 use common::typegraph::runtimes::{
-    KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData, TypegraphRuntimeData,
+    Artifact, KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData, TypegraphRuntimeData,
 };
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
@@ -280,6 +280,26 @@ impl MaterializerConverter for RandomMaterializer {
     }
 }
 
+impl From<WitArtifact> for Artifact {
+    fn from(artifact: WitArtifact) -> Self {
+        Artifact {
+            path: artifact.path.into(),
+            hash: artifact.hash,
+            size: artifact.size,
+        }
+    }
+}
+
+impl From<Artifact> for WitArtifact {
+    fn from(artifact: Artifact) -> Self {
+        WitArtifact {
+            path: artifact.path.as_os_str().to_str().unwrap().to_string(),
+            hash: artifact.hash,
+            size: artifact.size,
+        }
+    }
+}
+
 impl MaterializerConverter for WasmMaterializer {
     fn convert(
         &self,
@@ -291,10 +311,8 @@ impl MaterializerConverter for WasmMaterializer {
         let WasmMaterializer::Module(mat) = self;
 
         let data = serde_json::from_value(json!({
-            "wasm": mat.module,
+            "wasmArtifact": mat.wasm_artifact,
             "func": mat.func_name,
-            "artifact_hash": "", // resolved at finalization
-            "tg_name": None::<String>,
         }))
         .map_err(|e| e.to_string())?;
 

@@ -36,7 +36,7 @@ export class WasmRuntime extends Runtime {
         effect,
       },
       {
-        module: `file:${wasm}`,
+        wasmArtifact: wasm,
         funcName: func,
       },
     );

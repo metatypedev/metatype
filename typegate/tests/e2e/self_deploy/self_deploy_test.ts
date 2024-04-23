@@ -7,6 +7,7 @@ import { tg } from "./self_deploy.mjs"; // FIXME: deno coverage issues with tran
 import { testDir } from "test-utils/dir.ts";
 import { join } from "std/path/join.ts";
 import { assertEquals, assertExists } from "std/assert/mod.ts";
+import * as path from "std/path/mod.ts";
 
 Meta.test({
   name: "deploy and undeploy typegraph without meta-cli",
@@ -21,6 +22,7 @@ Meta.test({
     baseUrl: gate,
     auth,
     secrets: {},
+    typegraphPath: path.join(cwdDir, "self_deploy.mjs"),
     artifactsConfig: {
       prismaMigration: {
         globalAction: {

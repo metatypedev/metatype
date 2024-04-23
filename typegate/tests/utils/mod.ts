@@ -41,15 +41,20 @@ export const Meta = {
   cli: metaCli,
 };
 
+// TODO use pre-existing Typegate for the test
 export async function execute(
   engine: QueryEngine,
   request: Request,
 ): Promise<Response> {
   const register = new SingleRegister(engine.name, engine);
   const typegate = await Typegate.init(null, register);
-  return await typegate.handle(request, {
-    remoteAddr: { hostname: "localhost" },
-  } as Deno.ServeHandlerInfo);
+  try {
+    return await typegate.handle(request, {
+      remoteAddr: { hostname: "localhost" },
+    } as Deno.ServeHandlerInfo);
+  } finally {
+    await typegate.deinit({ engines: false });
+  }
 }
 
 export const sleep = (ms: number) =>
