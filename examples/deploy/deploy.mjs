@@ -57,7 +57,12 @@ const tg = await typegraph({
       t.string(),
       { module: "scripts/python/say_hello.py", name: "sayHello" },
     ),
-    // Wasmedge
+    // Wasm
+    // testWasmAdd: wasm.fromWasm(
+    //   t.struct({ a: t.float(), b: t.float() }),
+    //   t.integer(),
+    //   { wasm: "wasm/rust.wasm", func: "add" }
+    // ),
     // Prisma
     createStudent: prisma.create(student),
     findManyStudent: prisma.findMany(student),

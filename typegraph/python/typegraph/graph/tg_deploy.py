@@ -60,7 +60,8 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     # upload the referred artifacts
     # TODO: fetch all the upload urls in one request
     get_upload_url = params.base_url + sep + tg.name + "/get-upload-url"
-    for artifact_hash, artifact_path in ref_artifacts:
+    for artifact in ref_artifacts:
+        artifact_hash, artifact_path = artifact.hash, artifact.path
         with open(artifact_path, "rb") as artifact:
             artifact_content = artifact.read()
             artifact = UploadArtifactMeta(
@@ -74,7 +75,8 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
                 url=get_upload_url, method="PUT", headers=headers, data=artifact_json
             )
 
-            response = handle_response(exec_request(req).read().decode())
+            response = exec_request(req).read().decode()
+            response = handle_response(response, req.full_url)
             artifact_upload_url = response["uploadUrl"]
 
             upload_headers = {"Content-Type": "application/octet-stream"}
@@ -111,9 +113,12 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
         data=res.value.encode(),
     )
 
+    response = exec_request(req).read().decode()
+    response = handle_response(response, req.full_url)
+
     return DeployResult(
         serialized=tg_json,
-        typegate=handle_response(exec_request(req).read().decode()),
+        typegate=response,
     )
 
 
@@ -137,7 +142,9 @@ def tg_remove(tg: TypegraphOutput, params: TypegraphRemoveParams):
         data=res.value.encode(),
     )
 
-    return RemoveResult(typegate=handle_response(exec_request(req).read().decode()))
+    response = exec_request(req).read().decode()
+    response = handle_response(response, req.full_url)
+    return RemoveResult(typegate=response)
 
 
 # simple wrapper for a more descriptive error
@@ -152,8 +159,8 @@ def exec_request(req: any):
         raise Exception(f"{e}: {req.full_url}")
 
 
-def handle_response(res: any):
+def handle_response(res: any, url=""):
     try:
         return json.loads(res)
     except Exception as _:
-        return res
+        raise Exception(f'Expected json object: got "{res}": {url}')

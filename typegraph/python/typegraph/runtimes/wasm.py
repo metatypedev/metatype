@@ -29,12 +29,11 @@ class WasmRuntime(Runtime):
         effect: Optional[Effect] = None,
     ):
         effect = effect or EffectRead()
-        wasm = f"file:{wasm}"
 
         mat_id = runtimes.from_wasm_module(
             store,
             BaseMaterializer(runtime=self.id.value, effect=effect),
-            MaterializerWasm(module=wasm, func_name=func),
+            MaterializerWasm(wasm_artifact=wasm, func_name=func),
         )
 
         if isinstance(mat_id, Err):
