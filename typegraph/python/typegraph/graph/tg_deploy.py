@@ -18,7 +18,7 @@ from typegraph.wit import ArtifactResolutionConfig, store, wit_utils
 class TypegraphDeployParams:
     base_url: str
     artifacts_config: ArtifactResolutionConfig
-    typegraph_path: str
+    typegraph_path: Optional[str]
     auth: Optional[BasicAuth] = None
     secrets: Optional[Dict[str, str]] = None
 
