@@ -2,14 +2,15 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import json
-import os
 from dataclasses import dataclass
-from typing import Dict, Optional, Union
+import os
+from typing import Any, Dict, Optional, Union
 from urllib import request
 
 from typegraph.gen.exports.utils import QueryDeployParams
 from typegraph.gen.types import Err
 from typegraph.graph.shared_types import BasicAuth
+from typegraph.graph.tg_artifact_upload import ArtifactUploader
 from typegraph.graph.typegraph import TypegraphOutput
 from typegraph.wit import ArtifactResolutionConfig, store, wit_utils
 
@@ -18,6 +19,7 @@ from typegraph.wit import ArtifactResolutionConfig, store, wit_utils
 class TypegraphDeployParams:
     base_url: str
     artifacts_config: ArtifactResolutionConfig
+    typegraph_path: Optional[str]
     auth: Optional[BasicAuth] = None
     secrets: Optional[Dict[str, str]] = None
 
@@ -31,12 +33,12 @@ class TypegraphRemoveParams:
 @dataclass
 class DeployResult:
     serialized: str
-    typegate: Union[Dict[str, any], str]
+    typegate: Union[Dict[str, Any], str]
 
 
 @dataclass
 class RemoveResult:
-    typegate: Union[Dict[str, any], str]
+    typegate: Union[Dict[str, Any], str]
 
 
 @dataclass
@@ -93,6 +95,16 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
                 raise Exception(
                     f"Failed to upload artifact {artifact_path} to typegate: {response.read()}"
                 )
+
+    artifact_uploader = ArtifactUploader(
+        params.base_url,
+        ref_artifacts,
+        tg.name,
+        params.auth,
+        headers,
+        params.typegraph_path,
+    )
+    artifact_uploader.upload_artifacts()
 
     # deploy the typegraph
     res = wit_utils.gql_deploy_query(

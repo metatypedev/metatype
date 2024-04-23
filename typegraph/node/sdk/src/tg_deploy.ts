@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
+import { ArtifactUploader } from "./tg_artifact_upload.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
 import * as fsp from "node:fs/promises";

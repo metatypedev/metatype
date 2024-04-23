@@ -7,24 +7,31 @@ import { testDir } from "test-utils/dir.ts";
 import { tg } from "./wasm.ts";
 import * as path from "std/path/mod.ts";
 
-const cwdDir = path.join(testDir, "runtimes/wasm");
+const cwd = path.join(testDir, "runtimes/wasm");
 const auth = new BasicAuth("admin", "password");
 
-// Meta.test("Wasm runtime", async (t) => {
-//   const e = await t.engine("runtimes/wasm/wasm.py", {}, { port });
+Meta.test(
+  {
+    name: "Wasm runtime",
+    port: true,
+    systemTypegraphs: true,
+  },
+  async (t) => {
+    const e = await t.engineFromTgDeployPython("runtimes/wasm/wasm.py", cwd);
 
-//   await t.should("works", async () => {
-//     await gql`
-//       query {
-//         test(a: 1, b: 2)
-//       }
-//     `
-//       .expectData({
-//         test: 3,
-//       })
-//       .on(e);
-//   });
-// }, { port: port });
+    await t.should("works", async () => {
+      await gql`
+        query {
+          test(a: 1, b: 2)
+        }
+      `
+        .expectData({
+          test: 3,
+        })
+        .on(e);
+    });
+  },
+);
 
 Meta.test(
   {
@@ -48,9 +55,9 @@ Meta.test(
             },
             migrationDir: "prisma-migrations",
           },
-          dir: cwdDir,
+          dir: cwd,
         },
-        typegraphPath: path.join(cwdDir, "wasm.ts"),
+        typegraphPath: path.join(cwd, "wasm.ts"),
         secrets: {},
       });
 

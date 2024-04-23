@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from typegraph import t
 from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
     Effect,
@@ -13,6 +12,8 @@ from typegraph.gen.exports.runtimes import (
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.wit import runtimes, store
+
+from typegraph import t
 
 
 class WasmRuntime(Runtime):
