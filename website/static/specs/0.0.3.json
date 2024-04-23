@@ -2762,17 +2762,13 @@
         }
       }
     },
-    "WasiMatData": {
-      "title": "WasiMatData",
+    "WasmMatData": {
+      "title": "WasmMatData",
       "type": "object",
       "required": [
-        "func",
         "wasmArtifact"
       ],
       "properties": {
-        "func": {
-          "type": "string"
-        },
         "wasmArtifact": {
           "type": "string"
         }
