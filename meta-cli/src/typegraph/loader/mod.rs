@@ -5,8 +5,10 @@ pub mod discovery;
 
 pub use discovery::Discovery;
 use tokio::{
+    io::AsyncReadExt,
     process::Command,
     sync::{Semaphore, SemaphorePermit},
+    time::{timeout, Duration},
 };
 
 use std::{
@@ -14,7 +16,6 @@ use std::{
     collections::HashMap,
     env,
     path::{Path, PathBuf},
-    process::Stdio,
     sync::Arc,
 };
 
@@ -102,49 +103,83 @@ impl<'a> Loader<'a> {
 
     async fn load_command(&self, mut command: Command, path: &Path) -> LoaderResult {
         let path: Arc<PathBuf> = path.to_path_buf().into();
-        let p = command
+        let mut child: tokio::process::Child = command
             .borrow_mut()
             .env("META_CLI_TG_PATH", path.display().to_string())
             .env("META_CLI_SERVER_PORT", get_instance_port().to_string())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .output()
-            .await
+            .spawn()
             .map_err(|e| LoaderError::LoaderProcess {
                 path: path.clone(),
                 error: e.into(),
             })?;
 
-        if p.status.success() {
-            #[cfg(debug_assertions)]
-            {
-                if !p.stderr.is_empty() {
-                    // TODO console actor
-                    eprintln!(
-                        "{}",
-                        std::str::from_utf8(&p.stderr).expect("invalid utf-8 on stderr")
-                    );
+        // TODO: enable override from env.
+        let duration = Duration::from_secs(120);
+
+        match timeout(duration, child.wait()).await {
+            Err(_) => {
+                child.kill().await.unwrap();
+                Err(LoaderError::LoaderTimeout { path: path.clone() })
+            }
+            Ok(exit) => {
+                let exit = exit.map_err(|e| LoaderError::LoaderProcess {
+                    path: path.clone(),
+                    error: e.into(), // generic
+                })?;
+                if exit.success() {
+                    #[cfg(debug_assertions)]
+                    {
+                        if let Some(stderr) = child.stderr.take().as_mut() {
+                            // TODO console actor
+                            let mut buff = String::new();
+                            stderr.read_to_string(&mut buff).await.map_err(|e| {
+                                LoaderError::LoaderProcess {
+                                    path: path.clone(),
+                                    error: e.into(),
+                                }
+                            })?;
+                            eprintln!("{buff}");
+                        }
+                    }
+                    Ok(TypegraphInfos {
+                        path: path.as_ref().to_owned(),
+                        base_path: self.base_dir.clone(),
+                    })
+                } else {
+                    let stderr = match child.stderr.take().as_mut() {
+                        Some(value) => {
+                            let mut buff = String::new();
+                            value.read_to_string(&mut buff).await.map_err(|e| {
+                                LoaderError::LoaderProcess {
+                                    path: path.clone(),
+                                    error: e.into(),
+                                }
+                            })?;
+                            buff.to_owned()
+                        }
+                        None => "".to_string(),
+                    };
+
+                    let stdout = match child.stdout.take().as_mut() {
+                        Some(value) => {
+                            let mut buff = String::new();
+                            value.read_to_string(&mut buff).await.map_err(|e| {
+                                LoaderError::LoaderProcess {
+                                    path: path.clone(),
+                                    error: e.into(),
+                                }
+                            })?;
+                            buff.to_owned()
+                        }
+                        None => "".to_string(),
+                    };
+
+                    Err(LoaderError::LoaderProcess {
+                        path: path.clone(),
+                        error: anyhow::anyhow!("{}\n{}", stderr, stdout),
+                    })
                 }
             }
-            Ok(TypegraphInfos {
-                path: path.as_ref().to_owned(),
-                base_path: self.base_dir.clone(),
-            })
-        } else {
-            Err(LoaderError::LoaderProcess {
-                path: path.clone(),
-                error: anyhow::anyhow!(
-                    "{}\n{}",
-                    String::from_utf8(p.stderr).map_err(|e| LoaderError::Unknown {
-                        error: e.into(),
-                        path: path.clone(),
-                    })?,
-                    String::from_utf8(p.stdout).map_err(|e| LoaderError::Unknown {
-                        error: e.into(),
-                        path,
-                    })?
-                ),
-            })
         }
     }
 
@@ -326,6 +361,9 @@ pub enum LoaderError {
         path: Arc<PathBuf>,
         error: Error,
     },
+    LoaderTimeout {
+        path: Arc<PathBuf>,
+    },
     ModuleFileNotFound {
         path: Arc<PathBuf>,
     },
@@ -361,6 +399,9 @@ impl ToString for LoaderError {
             }
             Self::LoaderProcess { path, error } => {
                 format!("loader process error while loading typegraph(s) from {path:?}: {error:?}")
+            }
+            Self::LoaderTimeout { path } => {
+                format!("loader process timed out while loading typegraph(s) from {path:?}")
             }
             Self::Unknown { path, error } => {
                 format!("unknown error while loading typegraph(s) from {path:?}: {error:?}")
