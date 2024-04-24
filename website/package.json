@@ -63,7 +63,7 @@
     "@typescript-eslint/eslint-plugin": "^7.7.1",
     "@typescript-eslint/parser": "^7.7.1",
     "de-indent": "^1.0.2",
-    "eslint": "^9.1.1",
+    "eslint": "^8.57.0",
     "lunr": "^2.3.9",
     "posthog-docusaurus": "^2.0.0",
     "raw-loader": "^4.0.2",
