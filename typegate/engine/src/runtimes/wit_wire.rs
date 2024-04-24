@@ -22,23 +22,19 @@ pub struct Ctx {
     engine: wasmtime::Engine,
     instances: Arc<DashMap<String, Instance>>,
     components: Arc<DashMap<String, LinkedComponent>>,
+    instance_workdir: PathBuf,
 }
 
 #[derive(Clone)]
-struct LinkedComponent(Component, Arc<Linker<TypegateHost>>);
-
-/* static WASI_CTX: once_cell::sync::Lazy<wasmtime_wasi::WasiCtx> = once_cell::sync::Lazy::new(|| {
-    wasmtime_wasi::WasiCtxBuilder::new()
-        .allow_ip_name_lookup(true)
-        .build()
-}); */
+struct LinkedComponent(Component, Arc<Linker<InstanceState>>);
 
 impl Ctx {
-    pub fn new(engine: wasmtime::Engine) -> Self {
+    pub fn new(engine: wasmtime::Engine, instance_workdir: PathBuf) -> Self {
         Self {
             instances: Default::default(),
             components: Default::default(),
             engine,
+            instance_workdir,
         }
     }
 
@@ -88,11 +84,11 @@ impl Ctx {
                     })?
             }
         };
-        let mut linker = Linker::<TypegateHost>::new(&self.engine);
+        let mut linker = Linker::<InstanceState>::new(&self.engine);
 
         for res in [
-            wasmtime_wasi::bindings::Imports::add_to_linker(&mut linker, |host| host),
-            wit::Pyrt::add_to_linker(&mut linker, |host| host),
+            wasmtime_wasi::bindings::Imports::add_to_linker(&mut linker, |state| state),
+            wit::Pyrt::add_to_linker(&mut linker, |state| &mut state.tg_host),
         ] {
             res.map_err(|err| format!("erorr trying to link component: {err}"))?;
         }
@@ -108,37 +104,37 @@ impl Ctx {
 struct Instance {
     bindings: wit::Pyrt,
     _instance: wasmtime::component::Instance,
-    store: wasmtime::Store<TypegateHost>,
+    store: wasmtime::Store<InstanceState>,
 }
 
-struct TypegateHost {
+struct InstanceState {
     table: wasmtime_wasi::ResourceTable,
     ctx: wasmtime_wasi::WasiCtx,
+    tg_host: TypegateHost,
 }
 
-impl TypegateHost {
-    fn new() -> Self {
+impl InstanceState {
+    fn new(preopen_dir: impl AsRef<Path>, tg_host: TypegateHost) -> Self {
         Self {
             ctx: wasmtime_wasi::WasiCtxBuilder::new()
                 .allow_ip_name_lookup(true)
+                .preopened_dir(
+                    cap_std::fs::Dir::open_ambient_dir(preopen_dir, cap_std::ambient_authority())
+                        .unwrap(),
+                    wasmtime_wasi::DirPerms::all(),
+                    wasmtime_wasi::FilePerms::all(),
+                    ".",
+                )
                 // TODO: stream stdio to debug log
                 .inherit_stdio()
                 .build(),
             table: Default::default(),
+            tg_host,
         }
     }
 }
 
-#[async_trait::async_trait]
-impl Host for TypegateHost {
-    async fn hostcall(&mut self, _req: HostReq) -> wasmtime::Result<HostRes> {
-        todo!()
-    }
-}
-
-impl wit::metatype::pyrt::shared::Host for TypegateHost {}
-
-impl wasmtime_wasi::WasiView for TypegateHost {
+impl wasmtime_wasi::WasiView for InstanceState {
     fn table(&mut self) -> &mut wasmtime_wasi::ResourceTable {
         &mut self.table
     }
@@ -153,6 +149,16 @@ pub struct WitWireInitArgs {
     metatype_version: String,
     expected_ops: Vec<WitWireMatInfo>,
 }
+struct TypegateHost {}
+
+#[async_trait::async_trait]
+impl Host for TypegateHost {
+    async fn hostcall(&mut self, _req: HostReq) -> wasmtime::Result<HostRes> {
+        todo!()
+    }
+}
+
+impl wit::metatype::pyrt::shared::Host for TypegateHost {}
 
 impl From<WitWireInitArgs> for InitArgs {
     fn from(value: WitWireInitArgs) -> Self {
@@ -240,7 +246,10 @@ pub async fn op_wit_wire_init(
         .await
         .map_err(WitWireInitError::ModuleErr)?;
 
-    let mut store = wasmtime::Store::new(&ctx.engine, TypegateHost::new());
+    let mut store = wasmtime::Store::new(
+        &ctx.engine,
+        InstanceState::new(ctx.instance_workdir.join(&instance_id), TypegateHost {}),
+    );
     let (bindings, instance) = wit::Pyrt::instantiate_async(&mut store, component, linker)
         .await
         .map_err(|err| {

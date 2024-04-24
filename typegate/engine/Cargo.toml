@@ -36,6 +36,8 @@ typescript.workspace = true
 
 wasmtime = { workspace = true,  features = ["component-model"] }
 wasmtime-wasi.workspace = true
+# remove when bumping wasmtime to 20
+cap-std = "3"
 
 shadow-rs.workspace = true
 serde.workspace = true

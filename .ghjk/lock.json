@@ -392,37 +392,6 @@
           "crateName": "whiz",
           "locked": true
         },
-        "c9f51792ad7f2c2d6f64976a8b712ae3e37f07b568ff409013dacbd285ac19a0": {
-          "version": "20.0.0",
-          "depConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
-            },
-            "rust_rustup": {
-              "version": "1.77.2",
-              "depConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.0",
-                  "depConfigs": {
-                    "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0"
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "wasmtime-cli",
-          "locked": true
-        },
         "3552829e559260faef01394d084d1c64d8da0b0fde33000127ae676322402254": {
           "version": "0.13.3",
           "depConfigs": {
@@ -462,68 +431,6 @@
             }
           },
           "portRef": "cpy_bs_ghrel@0.1.0"
-        },
-        "f1552d80bc05967757fc8f6530cfb4a0f875a6e6d46167eedc2530b533abac26": {
-          "version": "19.0.2",
-          "depConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
-            },
-            "rust_rustup": {
-              "version": "1.77.2",
-              "depConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.0",
-                  "depConfigs": {
-                    "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0"
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "wasmtime-cli",
-          "locked": true
-        },
-        "d7e75b813748aaecfc889b73be7e9615eadceb4790eacb449f0c3a1bb24a5c42": {
-          "version": "19.0.0",
-          "depConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
-            },
-            "rust_rustup": {
-              "version": "1.77.2",
-              "depConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.0",
-                  "depConfigs": {
-                    "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0"
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "wasmtime-cli",
-          "locked": true
         }
       }
     },
