@@ -402,6 +402,11 @@
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "whiz",
           "locked": true
+        },
+        "66212eb79fbcb37961450d5dfffdaedc0b949e0e7c9257c3c63093d009a5fc75": {
+          "version": "v9.0.5",
+          "depConfigs": {},
+          "portRef": "pnpm_ghrel@0.1.0"
         }
       }
     },
@@ -424,7 +429,7 @@
             "57da4ca242ec52ba50359a7fd78653e6bf253df0",
             "67d371eb0c4ae641830a955975d7134f7ee9a864",
             "4ca29edff5e070fd0885680b178ed6948d7a4c7f",
-            "dd83a99f49f3f0fba11cdd014ff718cc9539316b",
+            "a12d1020fe585e5ea75d9a2035bdcbde8dd90044",
             "4d1916871a40b6ac730709f7721f740df192c84d",
             "4df902463d60efc5b8e760ea4899f6ab6df0f16e",
             "88f6aa5ddb513712623d31a17096ea26286064da",
@@ -755,8 +760,8 @@
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/node.ts"
           }
         },
-        "dd83a99f49f3f0fba11cdd014ff718cc9539316b": {
-          "version": "v8.15.2",
+        "a12d1020fe585e5ea75d9a2035bdcbde8dd90044": {
+          "version": "v9.0.5",
           "port": {
             "ty": "denoWorker@v1",
             "name": "pnpm_ghrel",

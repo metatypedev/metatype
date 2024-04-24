@@ -8,7 +8,8 @@
     "baseUrl": ".",
     "esModuleInterop": true,
     "types": [
-      "docusaurus-theme-frontmatter"
+      "docusaurus-theme-frontmatter",
+      "docusaurus-plugin-sass"
     ]
   }
 }

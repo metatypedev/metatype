@@ -517,7 +517,7 @@ export class Struct<P extends { [key: string]: Typedef }> extends Typedef {
 
 export function struct<P extends { [key: string]: Typedef }>(
   props: P,
-  base: SimplifiedBase<TypeBase> = {},
+  base: SimplifiedBase<TypeBase> & { additionalProps?: boolean } = {},
 ): Struct<P> {
   const completeBase = {
     ...base,
@@ -527,7 +527,7 @@ export function struct<P extends { [key: string]: Typedef }>(
   return new Struct(
     core.structb({
       props: Object.entries(props).map(([name, typ]) => [name, typ._id]),
-      additionalProps: false,
+      additionalProps: completeBase.additionalProps ?? false,
     }, completeBase),
     {
       props,

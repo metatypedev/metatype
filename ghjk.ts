@@ -6,7 +6,7 @@ import * as ports from "https://raw.github.com/metatypedev/ghjk/423d38e/ports/mo
 const PROTOC_VERSION = "v24.1";
 const POETRY_VERSION = "1.7.0";
 const PYTHON_VERSION = "3.8.18";
-const PNPM_VERSION = "v8.15.2";
+const PNPM_VERSION = "v9.0.5";
 const WASM_TOOLS_VERSION = "1.0.53";
 const JCO_VERSION = "1.0.0";
 const WASMEDGE_VERSION = "0.13.5";
@@ -106,8 +106,10 @@ ghjk.task("clean-deno-lock", {
       `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
     const jqOp2 = `del(.packages.npm["@typegraph/sdk@${METATYPE_VERSION}"])`;
     const jqOp = `${jqOp1} | ${jqOp2}`;
-    const lock = await $`jq ${jqOp} typegate/deno.lock`.text();
-    await Deno.writeTextFile("typegate/deno.lock", lock);
+    await Deno.writeTextFile(
+      "typegate/deno.lock",
+      await $`jq ${jqOp} typegate/deno.lock`.text(),
+    );
   },
 });
 
