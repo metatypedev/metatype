@@ -3,33 +3,32 @@ from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Auth, Cors
 from typegraph.runtimes.deno import DenoRuntime
 
-# skip:end
-
 
 @typegraph(
-    # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
-    # skip:end
-    # ..
 )
 def authentication(g: Graph):
+    # skip:end
     deno = DenoRuntime()
-    public = Policy.public()
-
     ctx = t.struct({"username": t.string().optional()})
 
     # highlight-start
     # expects a secret in metatype.yml
     # `BASIC_[username]`
     # highlight-next-line
-    g.auth(Auth.basic(["admin"]))
+    g.auth(Auth.basic(["andim"]))
     # highlight-end
 
     g.expose(
+        Policy.public(),
         get_context=deno.identity(ctx).apply(
             {
                 "username": g.from_context("username"),
             }
         ),
-        default_policy=[public],
+        get_full_context=deno.func(
+            t.struct({}),
+            t.string(),
+            code="(_: any, ctx: any) => Deno.inspect(ctx.context)",
+        ),
     )

@@ -12,7 +12,7 @@ typegates:
         GITHUB_CLIENT_ID: fake
         GITHUB_CLIENT_SECRET: fake
       authentication:
-        BASIC_ADMIN: "password"
+        BASIC_andim: "password"
       docs:
         SENDINBLUE_KEY: "fake"
       homepage:
@@ -26,8 +26,8 @@ typegates:
       database:
         POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=database"
       policies:
-        BASIC_ADMIN: "admin_pass"
-        BASIC_USER: "user_pass"
+        BASIC_admin: "admin_pass"
+        BASIC_user: "user_pass"
       auth:
         CUSTOM_JWT: "mysupersecretkey"
       graphql:
@@ -41,7 +41,7 @@ typegates:
       iam-provider:
         GITHUB_CLIENT_ID: "fake"
         GITHUB_CLIENT_SECRET: "fake"
-      retrend:
+      files-upload:
         S3_HOST: http://localhost:9000
         S3_REGION: local
         S3_ACCESS_KEY: minio
@@ -66,6 +66,8 @@ typegates:
         BASIC_ADMIN: hunter2
       roadmap:
         BASIC_ADMIN: hunter2
+      func-gql:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=func_ctx"
 
   prd:
     url: https://demo.metatype.dev
@@ -80,7 +82,7 @@ typegates:
         GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
         GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
       authentication:
-        BASIC_ADMIN: "password"
+        BASIC_andim: "password"
       docs:
         SENDINBLUE_KEY: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_DOCS_SENDINBLUE_KEY
       homepage:
@@ -94,8 +96,8 @@ typegates:
       database:
         POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_DATABASE_POSTGRES_CONN
       policies:
-        BASIC_ADMIN: "admin_pass"
-        BASIC_USER: "user_pass"
+        BASIC_admin: "admin_pass"
+        BASIC_user: "user_pass"
       auth:
         CUSTOM_JWT: "mysupersecretkey"
       graphql:
@@ -109,7 +111,7 @@ typegates:
       iam-provider:
         GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
         GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
-      retrend:
+      files-upload:
         S3_HOST: http://localhost:9000
         S3_REGION: local
         S3_ACCESS_KEY: minio
@@ -139,3 +141,7 @@ typegraphs:
   materializers:
     prisma:
       migrations_path: "migrations"
+
+metagen:
+  targets:
+    main:
