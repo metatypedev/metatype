@@ -278,23 +278,25 @@ jobs:
           mkdir -p $(dirname $WASM_FILE)
           wasm-opt -Oz target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE.opt
           wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
-          
+
           jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen --map metatype:typegraph/host=../host/host.js
           cd typegraph/node
           pnpm install
           pnpm run sdk-build
           cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
           cd ../..
-          
+
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
           # start the docker containers
           deno run -A dev/env.ts base prisma
 
+          export NPM_CONFIG_REGISTRY=http://localhost:4873
+
           # publish the sdk to the local registry
           cd typegraph/node/sdk/dist
           npm config set "//localhost:4873/:_authToken" fooBar
-          npm publish --registry http://localhost:4873
+          npm publish --registry $NPM_CONFIG_REGISTRY
           cd ../../../..
 
           # install packages inside metatype examples
@@ -312,12 +314,12 @@ jobs:
           # from old test-libs
           cargo test --locked --exclude meta-cli --exclude typegate --exclude typegate_engine --exclude typegraph_core --exclude metagen_mdk_rust_static  --workspace
 
-          NPM_CONFIG_REGISTRY=http://localhost:4873 deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
+          deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
           cargo build -p meta-cli
           cargo build -p xtask # xtask and meta-cli are used by the test suite
           deno run -A dev/test.ts --threads 1 -- --coverage=coverage
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
-          NPM_CONFIG_REGISTRY=http://localhost:4873 deno cache --import-map typegate/import_map.json \
+          deno cache --import-map typegate/import_map.json \
             typegate/src/main.ts \
             typegate/tests/utils/*.ts \
             typegate/tests/runtimes/wasm/*.ts \
