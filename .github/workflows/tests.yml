@@ -262,7 +262,6 @@ jobs:
       - shell: bash
         env:
           WASM_FILE: target/debug/typegraph_core.wasm
-          NPM_CONFIG_REGISTRY: http://localhost:4873
         run: |
           echo pwd in $(pwd)
 
@@ -291,6 +290,8 @@ jobs:
 
           # start the docker containers
           deno run -A dev/env.ts base prisma
+
+          export NPM_CONFIG_REGISTRY=http://localhost:4873
 
           # publish the sdk to the local registry
           cd typegraph/node/sdk/dist
