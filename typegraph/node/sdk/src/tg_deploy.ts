@@ -144,7 +144,7 @@ export async function tgDeploy(
   }
 
   // deploy the typegraph
-  const response = await fetch(new URL("/typegate", baseUrl), {
+  const response = await execRequest(new URL("/typegate", baseUrl), {
     method: "POST",
     headers,
     body: wit_utils.gqlDeployQuery({
@@ -155,7 +155,7 @@ export async function tgDeploy(
 
   return {
     serialized: tgJson,
-    typegate: await handleResponse(response),
+    typegate: response,
   };
 }
 
@@ -171,21 +171,27 @@ export async function tgRemove(
     headers.append("Authorization", auth.asHeaderValue());
   }
 
-  const response = await fetch(new URL("/typegate", baseUrl), {
+  const response = await execRequest(new URL("/typegate", baseUrl), {
     method: "POST",
     headers,
     body: wit_utils.gqlRemoveQuery([typegraph.name]),
   });
-  return {
-    typegate: await handleResponse(response),
-  };
+
+  return { typegate: response };
 }
 
-async function handleResponse(
-  response: Response,
-): Promise<Record<string, any> | string> {
-  if (response.headers.get("Content-Type") == "application/json") {
-    return await response.json();
+/**
+ * Simple fetch wrapper with more verbose errors
+ */
+async function execRequest(url: URL, reqInit: RequestInit) {
+  try {
+    const response = await fetch(url, reqInit);
+    if (response.headers.get("Content-Type") == "application/json") {
+      return await response.json();
+    }
+    throw Error(`Expected json object, got "${await response.text()}"`);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : err;
+    throw Error(`${message}: ${url.toString()}`);
   }
-  return await response.text();
 }
