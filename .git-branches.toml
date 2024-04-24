@@ -1,0 +1,19 @@
+push-hook = true
+push-new-branches = false
+ship-delete-tracking-branch = false
+sync-before-ship = true
+sync-upstream = true
+
+[branches]
+main = "main"
+perennials = []
+perennial-regex = ""
+
+[hosting]
+# platform = ""
+# origin-hostname = ""
+
+[sync-strategy]
+
+feature-branches = "rebase"
+perennial-branches = "rebase"

@@ -2,12 +2,10 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { S3Runtime } from "@typegraph/sdk/providers/aws.js";
 
 await typegraph({
-  name: "retrend",
+  name: "files-upload",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
-  const pub = Policy.public();
-
   const s3 = new S3Runtime({
     hostSecret: "S3_HOST",
     regionSecret: "S3_REGION",
@@ -22,5 +20,5 @@ await typegraph({
     signUploadUrl: s3.presignPut({ bucket: "bucket" }),
     upload: s3.upload("bucket", t.file({ allow: ["image/png", "image/jpeg"] })),
     uploadMany: s3.uploadAll("bucket"),
-  }, pub);
+  }, Policy.public());
 });

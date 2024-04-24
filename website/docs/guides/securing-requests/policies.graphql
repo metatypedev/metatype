@@ -1,0 +1,15 @@
+query A {
+  public
+}
+
+query B {
+  admin_only
+}
+
+query C {
+  user_only
+}
+
+query D {
+  both
+}
