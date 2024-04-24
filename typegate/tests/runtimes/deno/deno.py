@@ -8,8 +8,11 @@ from typegraph.gen.exports.core import (
 )
 from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_deploy import TypegraphDeployParams, tg_deploy
-from typegraph import typegraph, effects, Policy, t, Graph
+from typegraph.graph.typegraph import Graph
+from typegraph.policy import Policy
 from typegraph.runtimes.deno import DenoRuntime
+
+from typegraph import effects, t, typegraph
 
 
 @typegraph()

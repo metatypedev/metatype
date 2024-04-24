@@ -5,6 +5,7 @@ use anyhow::{bail, Context, Result};
 use colored::Colorize;
 use common::typegraph::runtimes::{KnownRuntime, TGRuntime};
 use common::typegraph::{TypeNode, Typegraph};
+use indexmap::IndexMap;
 use log::info;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -114,12 +115,13 @@ impl<'a> Codegen<'a> {
                 if mat.name != "module" {
                     continue;
                 }
-                let code: String =
-                    serde_json::from_value(mat.data.get("code").unwrap().clone()).unwrap();
-                if let Some(relpath) = code
-                    .strip_prefix("file:")
-                    .map(|s| s.find(';').map(|i| &s[..i]).unwrap_or(s))
-                {
+
+                let deno_artifact_map: IndexMap<String, Value> =
+                    serde_json::from_value(mat.data.get("denoArtifact").unwrap().clone()).unwrap();
+
+                if let Some(relpath) = deno_artifact_map.get("path") {
+                    let relpath = serde_json::to_string(relpath).unwrap();
+                    let relpath = relpath.as_str();
                     let path = {
                         let mut path = base_dir.clone();
                         // TODO is this necessary?? py-tg yields absolute path!!
@@ -173,13 +175,13 @@ impl<'a> Codegen<'a> {
                             || "invalid materializer data for function import".to_string(),
                         )?)?;
                     let module_mat = &self.tg.materializers[mat_data.module as usize];
-                    let path: String =
-                        serde_json::from_value(module_mat.data.get("code").unwrap().clone())
-                            .unwrap();
-                    if let Some(path) = path
-                        .strip_prefix("file:")
-                        .map(|s| s.find(';').map(|i| &s[..i]).unwrap_or(s))
-                    {
+                    let deno_artifact_map: IndexMap<String, Value> = serde_json::from_value(
+                        module_mat.data.get("denoArtifact").unwrap().clone(),
+                    )
+                    .unwrap();
+                    if let Some(path) = deno_artifact_map.get("path") {
+                        let path = serde_json::to_string(path).unwrap();
+                        let path = path.as_str();
                         if self.ts_modules.contains_key(path)
                             && self.check_func(path, &mat_data.name)
                         {

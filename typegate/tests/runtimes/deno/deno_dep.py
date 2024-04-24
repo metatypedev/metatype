@@ -8,9 +8,11 @@ from typegraph.gen.exports.core import (
 )
 from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_deploy import TypegraphDeployParams, tg_deploy
+from typegraph.graph.typegraph import Graph
+from typegraph.policy import Policy
 from typegraph.runtimes.deno import DenoRuntime
 
-from typegraph import Graph, Policy, t, typegraph
+from typegraph import t, typegraph
 
 
 @typegraph()
@@ -24,6 +26,7 @@ def deno_dep(g: Graph):
             t.struct({"a": t.float(), "b": t.float()}),
             t.float(),
             module="ts/dep/main.ts",
+            deps=["ts/dep/nested/dep.ts"],
             name="doAddition",
         ),
         simple=deno.func(

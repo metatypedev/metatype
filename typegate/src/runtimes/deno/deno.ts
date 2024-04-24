@@ -34,9 +34,7 @@ export class DenoRuntime extends Runtime {
     super(typegraphName, uuid);
   }
 
-  static async init(
-    params: RuntimeInitParams,
-  ): Promise<Runtime> {
+  static async init(params: RuntimeInitParams): Promise<Runtime> {
     const {
       typegraph: tg,
       typegraphName,
@@ -55,7 +53,7 @@ export class DenoRuntime extends Runtime {
 
     const secrets: Record<string, string> = {};
     for (const m of materializers) {
-      for (const secretName of m.data.secrets as [] ?? []) {
+      for (const secretName of (m.data.secrets as []) ?? []) {
         secrets[secretName] = secretManager.secretOrFail(secretName);
       }
     }
@@ -96,16 +94,14 @@ export class DenoRuntime extends Runtime {
           sizeInBytes: denoArtifact.size,
         };
 
-        const depMetas = depArtifacts.map(
-          (dep) => {
-            return {
-              typegraphName: typegraphName,
-              relativePath: dep.path,
-              hash: dep.hash,
-              sizeInBytes: dep.size,
-            };
-          },
-        );
+        const depMetas = depArtifacts.map((dep) => {
+          return {
+            typegraphName: typegraphName,
+            relativePath: dep.path,
+            hash: dep.hash,
+            sizeInBytes: dep.size,
+          };
+        });
 
         // Note:
         // Worker destruction seems to have no effect on the import cache? (deinit() => stop(worker))
@@ -115,7 +111,7 @@ export class DenoRuntime extends Runtime {
           depMetas,
         );
 
-        logger.info(`Resloved runtimes artifacts at ${basePath}`);
+        logger.info(`Resolved runtime artifacts at ${basePath}`);
 
         // Note:
         // Worker destruction seems to have no effect on the import cache? (deinit() => stop(worker))
@@ -147,14 +143,7 @@ export class DenoRuntime extends Runtime {
       await w.disableLazyness();
     }
 
-    const rt = new DenoRuntime(
-      typegraphName,
-      uuid,
-      tg,
-      w,
-      registry,
-      secrets,
-    );
+    const rt = new DenoRuntime(typegraphName, uuid, tg, w, registry, secrets);
 
     return rt;
   }
@@ -169,22 +158,24 @@ export class DenoRuntime extends Runtime {
     verbose: boolean,
   ): ComputeStage[] {
     if (stage.props.node === "__typename") {
-      return [stage.withResolver(() => {
-        const { parent: parentStage } = stage.props;
-        if (parentStage != null) {
-          return parentStage.props.outType.title;
-        }
-        switch (stage.props.operationType) {
-          case ast.OperationTypeNode.QUERY:
-            return "Query";
-          case ast.OperationTypeNode.MUTATION:
-            return "Mutation";
-          default:
-            throw new Error(
-              `Unsupported operation type '${stage.props.operationType}'`,
-            );
-        }
-      })];
+      return [
+        stage.withResolver(() => {
+          const { parent: parentStage } = stage.props;
+          if (parentStage != null) {
+            return parentStage.props.outType.title;
+          }
+          switch (stage.props.operationType) {
+            case ast.OperationTypeNode.QUERY:
+              return "Query";
+            case ast.OperationTypeNode.MUTATION:
+              return "Mutation";
+            default:
+              throw new Error(
+                `Unsupported operation type '${stage.props.operationType}'`,
+              );
+          }
+        }),
+      ];
     }
 
     if (stage.props.materializer != null) {
@@ -197,13 +188,16 @@ export class DenoRuntime extends Runtime {
       return [stage.withResolver(() => ({}))];
     }
 
-    return [stage.withResolver(({ _: { parent } }) => {
-      if (stage.props.parent == null) { // namespace
-        return {};
-      }
-      const resolver = parent[stage.props.node];
-      return typeof resolver === "function" ? resolver() : resolver;
-    })];
+    return [
+      stage.withResolver(({ _: { parent } }) => {
+        if (stage.props.parent == null) {
+          // namespace
+          return {};
+        }
+        const resolver = parent[stage.props.node];
+        return typeof resolver === "function" ? resolver() : resolver;
+      }),
+    ];
   }
 
   delegate(
@@ -223,7 +217,7 @@ export class DenoRuntime extends Runtime {
       return () => mat.data.value;
     }
 
-    const secrets = (mat.data.secrets as [] ?? []).reduce(
+    const secrets = ((mat.data.secrets as []) ?? []).reduce(
       (agg, secretName) => ({ ...agg, [secretName]: this.secrets[secretName] }),
       {},
     );
@@ -233,12 +227,17 @@ export class DenoRuntime extends Runtime {
       const denoAritfact = modMat.data.denoArtifact as Artifact;
       const op = this.registry.get(denoAritfact.hash)!;
 
-      return async (
-        { _: { context, parent, info: { url, headers } }, ...args },
-      ) => {
+      return async ({
+        _: {
+          context,
+          parent,
+          info: { url, headers },
+        },
+        ...args
+      }) => {
         const token = await InternalAuth.emit();
 
-        return this.w.execute(
+        return await this.w.execute(
           op,
           {
             type: "import_func",
@@ -265,12 +264,17 @@ export class DenoRuntime extends Runtime {
 
     if (mat.name === "function") {
       const op = this.registry.get(mat.data.script as string)!;
-      return async (
-        { _: { context, parent, info: { url, headers } }, ...args },
-      ) => {
+      return async ({
+        _: {
+          context,
+          parent,
+          info: { url, headers },
+        },
+        ...args
+      }) => {
         const token = await InternalAuth.emit();
 
-        return this.w.execute(
+        return await this.w.execute(
           op,
           {
             type: "func",
