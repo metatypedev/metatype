@@ -1,6 +1,6 @@
 {
   "version": "0",
-  "platform": "aarch64-darwin",
+  "platform": "x86_64-linux",
   "moduleEntries": {
     "ports": {
       "version": "0",
@@ -402,6 +402,11 @@
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "whiz",
           "locked": true
+        },
+        "66212eb79fbcb37961450d5dfffdaedc0b949e0e7c9257c3c63093d009a5fc75": {
+          "version": "v9.0.5",
+          "depConfigs": {},
+          "portRef": "pnpm_ghrel@0.1.0"
         }
       }
     },
@@ -424,9 +429,10 @@
             "57da4ca242ec52ba50359a7fd78653e6bf253df0",
             "67d371eb0c4ae641830a955975d7134f7ee9a864",
             "4ca29edff5e070fd0885680b178ed6948d7a4c7f",
-            "dd83a99f49f3f0fba11cdd014ff718cc9539316b",
+            "a12d1020fe585e5ea75d9a2035bdcbde8dd90044",
             "4d1916871a40b6ac730709f7721f740df192c84d",
             "4df902463d60efc5b8e760ea4899f6ab6df0f16e",
+            "88f6aa5ddb513712623d31a17096ea26286064da",
             "185be72d02330f9b3dfa3d0791274feb958e119d",
             "5549508f1f5eddf9cb2465f07cf0c7603dc0c849",
             "5c041a4209ae50657ea5acacc26683688f2913a9",
@@ -754,8 +760,8 @@
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/node.ts"
           }
         },
-        "dd83a99f49f3f0fba11cdd014ff718cc9539316b": {
-          "version": "v8.15.2",
+        "a12d1020fe585e5ea75d9a2035bdcbde8dd90044": {
+          "version": "v9.0.5",
           "port": {
             "ty": "denoWorker@v1",
             "name": "pnpm_ghrel",
@@ -840,6 +846,25 @@
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/npmi.ts"
           },
           "packageName": "node-gyp"
+        },
+        "88f6aa5ddb513712623d31a17096ea26286064da": {
+          "version": "v2.4.0",
+          "port": {
+            "ty": "denoWorker@v1",
+            "name": "mold_ghrel",
+            "platforms": [
+              "aarch64-linux",
+              "x86_64-linux"
+            ],
+            "version": "0.1.0",
+            "deps": [
+              {
+                "name": "tar_aa"
+              }
+            ],
+            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/mold.ts"
+          },
+          "replaceLd": false
         },
         "185be72d02330f9b3dfa3d0791274feb958e119d": {
           "version": "3.8.18",

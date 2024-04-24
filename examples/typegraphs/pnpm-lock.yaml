@@ -8,17 +8,11 @@ dependencies:
   '@typegraph/sdk':
     specifier: link:../../typegraph/node/sdk/dist/
     version: link:../../typegraph/node/sdk/dist
-  fs:
-    specifier: 0.0.1-security
-    version: 0.0.1-security
 
 devDependencies:
   tsx:
     specifier: ^4.7.2
     version: 4.7.2
-  webpack-node-externals:
-    specifier: ^3.0.0
-    version: 3.0.0
 
 packages:
 
@@ -260,10 +254,6 @@ packages:
       '@esbuild/win32-x64': 0.19.12
     dev: true
 
-  /fs@0.0.1-security:
-    resolution: {integrity: sha512-3XY9e1pP0CVEUCdj5BmfIZxRBTSDycnbqhIOGec9QYtmVH2fbLpj86CFWkrNOkt/Fvty4KZG5lTglL9j/gJ87w==}
-    dev: false
-
   /fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -291,9 +281,4 @@ packages:
       get-tsconfig: 4.7.3
     optionalDependencies:
       fsevents: 2.3.3
-    dev: true
-
-  /webpack-node-externals@3.0.0:
-    resolution: {integrity: sha512-LnL6Z3GGDPht/AigwRh2dvL9PQPFQ8skEpVrWZXLWBYmqcaojHNN0onvHzie6rq7EWKrrBfPYqNEzTJgiwEQDQ==}
-    engines: {node: '>=6'}
     dev: true

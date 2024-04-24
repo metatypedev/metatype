@@ -88,9 +88,11 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
         data=res.value.encode(),
     )
 
+    response = exec_request(req)
+    response = response.read().decode()
     return DeployResult(
         serialized=tg_json,
-        typegate=handle_response(request.urlopen(req).read().decode()),
+        typegate=handle_response(response),
     )
 
 
@@ -113,11 +115,26 @@ def tg_remove(tg: TypegraphOutput, params: TypegraphRemoveParams):
         headers=headers,
         data=res.value.encode(),
     )
-    return RemoveResult(typegate=handle_response(request.urlopen(req).read().decode()))
+
+    response = exec_request(req).read().decode()
+    response = handle_response(response, req.full_url)
+    return RemoveResult(typegate=response)
 
 
-def handle_response(res: Any):
+# simple wrapper for a more descriptive error
+def exec_request(req: any):
+    try:
+        return request.urlopen(req)
+    except request.HTTPError as res:
+        # Note: 400 status and such, the response body
+        # is hidden within the exception and can be consumed through .read()
+        return res
+    except Exception as e:
+        raise Exception(f"{e}: {req.full_url}")
+
+
+def handle_response(res: any, url=""):
     try:
         return json.loads(res)
     except Exception as _:
-        return res
+        raise Exception(f'Expected json object: got "{res}": {url}')

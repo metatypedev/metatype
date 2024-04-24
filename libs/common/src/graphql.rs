@@ -11,30 +11,32 @@ use serde_json;
 
 #[derive(Debug, Deserialize)]
 pub struct Response {
-    data: serde_json::Value,
+    data: Option<serde_json::Value>,
     errors: Option<Vec<GraphqlError>>,
 }
 
 impl Response {
-    #[allow(dead_code)]
-    pub fn display_errors(&self) {
-        if let Some(errors) = &self.errors {
-            println!("Error{s}:", s = if errors.len() > 1 { "s" } else { "" });
-            for error in errors {
-                println!("{}", format!(" - {}", error.message).red());
-            }
-        }
-    }
-
     pub fn data<T>(&self, field: &str) -> Result<T>
     where
         T: serde::de::DeserializeOwned,
     {
-        let value = &self.data[field];
-        if value.is_null() {
-            bail!("value for {field} is not found in the response");
+        if let Some(errors) = &self.errors {
+            let len = errors.len();
+            let s = if len > 1 { "s" } else { "" };
+            println!("Error{s}:");
+            for error in errors {
+                println!("{}", format!(" - {}", error.message).red());
+            }
+            bail!("{len} error{s} found in the response");
         }
-        Ok(serde_json::from_value(value.clone())?)
+        if let Some(data) = &self.data {
+            let value = &data[field];
+            if value.is_null() {
+                bail!("value for data.{field} is not found in the response");
+            }
+            return Ok(serde_json::from_value(value.clone())?);
+        }
+        bail!("invalid state: typegate response has no field 'data'")
     }
 }
 

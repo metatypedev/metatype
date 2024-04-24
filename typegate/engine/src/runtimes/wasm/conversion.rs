@@ -11,7 +11,7 @@ use wasmtime::component::{self, Type, Val};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WitVariant {
     pub tag: String,
-    pub value: serde_json::Value,
+    pub value: Option<serde_json::Value>,
 }
 
 /// Provide a dummy value used for *allocating* function call results from a component
@@ -151,22 +151,20 @@ pub fn object_to_wasmtime_val(
                 .find_map(|c| if c.name == repr.tag { Some(c) } else { None });
             match result {
                 Some(matching_tag) => match matching_tag.ty {
-                    Some(payload_ty) => {
-                        if repr.value == serde_json::Value::Null {
-                            bail!(
-                                "variant '{}' expects a payload, none was provided",
-                                matching_tag.name
-                            )
+                    Some(payload_ty) => match repr.value {
+                        Some(value) => {
+                            let payload = value_to_wasmtime_val(&value, &payload_ty)?;
+                            variant.new_val(matching_tag.name, Some(payload))
                         }
-                        let payload = value_to_wasmtime_val(&repr.value, &payload_ty)?;
-                        variant.new_val(matching_tag.name, Some(payload))
-                    }
-                    None => {
-                        if repr.value != serde_json::Value::Null {
-                            bail!("variant '{}' expects no payload", matching_tag.name)
-                        }
-                        variant.new_val(matching_tag.name, None)
-                    }
+                        None => bail!(
+                            "variant '{}' expects a payload, none was provided",
+                            matching_tag.name
+                        ),
+                    },
+                    None => match repr.value {
+                        Some(_) => bail!("variant '{}' expects no payload", matching_tag.name),
+                        None => variant.new_val(matching_tag.name, None),
+                    },
                 },
                 None => bail!("none of [{}] match '{}'", canon_tags.join(", "), repr.tag),
             }
@@ -366,8 +364,8 @@ pub fn wasmtime_val_to_value(value: &component::Val) -> anyhow::Result<serde_jso
         Val::Variant(value) => {
             let tag = value.discriminant();
             let value = match value.payload() {
-                Some(payload) => wasmtime_val_to_value(payload)?,
-                None => serde_json::Value::Null,
+                Some(payload) => Some(wasmtime_val_to_value(payload)?),
+                None => None,
             };
             serde_json::to_value(WitVariant {
                 tag: tag.to_string(),

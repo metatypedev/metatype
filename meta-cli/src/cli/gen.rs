@@ -68,7 +68,7 @@ impl Action for Gen {
             config.metagen = Some(dummy_gen_cfg(&self.generator, file));
         }
 
-        let config = Arc::new(dbg!(config));
+        let config = Arc::new(config);
         let Some(mgen_conf) = &config.metagen else {
             anyhow::bail!(
                 "no metagen section defined in config found at {:?}",

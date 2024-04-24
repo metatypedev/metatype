@@ -1,6 +1,7 @@
-// @tailwind base; // no pre-flight as incompatible with Docusaurus
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
+@tailwind screens;
 
 @layer utilities {
   .tooltip {

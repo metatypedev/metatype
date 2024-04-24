@@ -45,3 +45,5 @@ typegraph/node/sdk/src/gen
 typegraph/python/typegraph/gen
 
 *.egg-info/
+
+examples/typegraphs/migrations
