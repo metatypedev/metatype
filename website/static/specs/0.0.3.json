@@ -1754,11 +1754,11 @@
             "name": {
               "type": "string",
               "enum": [
-                "wasmedge"
+                "wasm"
               ]
             },
             "data": {
-              "$ref": "#/definitions/WasmEdgeRuntimeData"
+              "$ref": "#/definitions/WasmRuntimeData"
             }
           }
         },
@@ -2291,7 +2291,7 @@
         }
       }
     },
-    "WasmEdgeRuntimeData": {
+    "WasmRuntimeData": {
       "type": "object",
       "properties": {
         "config": {
@@ -2344,10 +2344,10 @@
     "TypeMeta": {
       "type": "object",
       "required": [
+        "artifacts",
         "auths",
         "cors",
         "queries",
-        "ref_artifacts",
         "secrets",
         "version"
       ],
@@ -2389,7 +2389,7 @@
         "version": {
           "type": "string"
         },
-        "random_seed": {
+        "randomSeed": {
           "type": [
             "integer",
             "null"
@@ -2397,10 +2397,10 @@
           "format": "uint32",
           "minimum": 0.0
         },
-        "ref_artifacts": {
+        "artifacts": {
           "type": "object",
           "additionalProperties": {
-            "type": "string"
+            "$ref": "#/definitions/Artifact"
           }
         }
       }
@@ -2529,6 +2529,27 @@
           ]
         },
         "local_excess": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "Artifact": {
+      "type": "object",
+      "required": [
+        "hash",
+        "path",
+        "size"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "size": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0.0
@@ -2738,6 +2759,22 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "WasiMatData": {
+      "title": "WasiMatData",
+      "type": "object",
+      "required": [
+        "func",
+        "wasmArtifact"
+      ],
+      "properties": {
+        "func": {
+          "type": "string"
+        },
+        "wasmArtifact": {
+          "type": "string"
         }
       }
     }

@@ -1,22 +1,20 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+import json
+import os
 from dataclasses import dataclass
 from enum import Enum
-import os
 from typing import Dict, Union
-import json
+from urllib import parse, request
+
 from typegraph.gen.exports.core import (
+    ArtifactResolutionConfig,
     MigrationAction,
     MigrationConfig,
-    ArtifactResolutionConfig,
 )
-
-from typegraph.graph.tg_deploy import TypegraphDeployParams, tg_deploy
-from urllib import request, parse
-
 from typegraph.graph.shared_types import BasicAuth, TypegraphOutput
-
+from typegraph.graph.tg_deploy import TypegraphDeployParams, tg_deploy
 
 PORT = "META_CLI_SERVER_PORT"  # meta-cli instance that executes the current file
 SELF_PATH = (
@@ -103,6 +101,7 @@ class Manager:
                 auth=typegate.auth,
                 artifacts_config=artifacts_config,
                 secrets=config.secrets,
+                typegraph_path=self.typegraph_path,
             )
 
             local_memo = self.typegraph.serialize(artifacts_config)

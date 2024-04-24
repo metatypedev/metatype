@@ -201,11 +201,13 @@ pub fn make_absolute(path: &Path) -> Result<PathBuf, String> {
     }
 }
 
-pub fn hash_file(path: &Path) -> Result<String, String> {
+// TODO: use smaller buffer?
+pub fn hash_file(path: &Path) -> Result<(String, u32), String> {
     let mut sha256 = Sha256::new();
     let bytes = read_file(&path.to_string_lossy())?;
+    let size = bytes.len() as u32;
     sha256.update(bytes);
-    Ok(format!("{:x}", sha256.finalize()))
+    Ok((format!("{:x}", sha256.finalize()), size))
 }
 
 pub fn path_exists(path: &Path) -> Result<bool, String> {

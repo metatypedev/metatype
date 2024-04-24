@@ -1,18 +1,28 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
-import { WasmEdgeRuntime } from "@typegraph/sdk/runtimes/wasmedge.js";
+import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.js";
 import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 import { wit_utils } from "@typegraph/sdk/wit.js";
 import * as path from "path";
+
+// deno
+// import { Policy, t, typegraph } from "../../typegraph/node/sdk/dist/index.js";
+// import { DenoRuntime } from "../../typegraph/node/sdk/dist/runtimes/deno.js";
+// import { PythonRuntime } from "../../typegraph/node/sdk/dist/runtimes/python.js";
+// import { WasmRuntime } from "../../typegraph/node/sdk/dist/runtimes/wasm.js";
+// import { tgDeploy } from "../../typegraph/node/sdk/dist/tg_deploy.js";
+// import { PrismaRuntime } from "../../typegraph/node/sdk/dist/providers/prisma.js";
+// import { BasicAuth } from "../../typegraph/node/sdk/dist/tg_deploy.js";
+// import { wit_utils } from "../../typegraph/node/sdk/dist/wit.js";
 
 const tg = await typegraph({
   name: "deploy-example-node",
 }, (g) => {
   const deno = new DenoRuntime();
   const python = new PythonRuntime();
-  const wasmedge = new WasmEdgeRuntime();
+  const wasm = new WasmRuntime();
   const prisma = new PrismaRuntime("prisma", "POSTGRES");
   const pub = Policy.public();
   const student = t.struct(
@@ -45,13 +55,17 @@ const tg = await typegraph({
     sayHelloPyMod: python.import(
       t.struct({ name: t.string() }),
       t.string(),
-      { module: "scripts/python/say_hello.py", name: "sayHello" },
+      {
+        module: "scripts/python/say_hello.py",
+        name: "sayHello",
+        deps: ["scripts/python/import_.py"]
+      },
     ),
-    // Wasmedge
-    testWasmedge: wasmedge.wasi(
-      t.struct({ "a": t.float(), "b": t.float() }),
+    // Wasm
+    testWasmAdd: wasm.fromWasm(
+      t.struct({ a: t.float(), b: t.float() }),
       t.integer(),
-      { wasm: "wasi/rust.wasm", func: "add" },
+      { wasm: "wasm/rust.wasm", func: "add" }
     ),
     // Prisma
     createStudent: prisma.create(student),
@@ -81,6 +95,7 @@ tgDeploy(tg, {
     ...artifactsConfig,
     // dir: "."
   },
+  typegraphPath: "./deploy.mjs"
 }).then(({ typegate }) => {
   // console.info(typegate);
   const selection = typegate?.data?.addTypegraph;

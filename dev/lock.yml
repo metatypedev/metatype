@@ -84,14 +84,14 @@ dev:
       '(\s*"@typegraph\/sdk\/"\s*:\s*"npm:/@typegraph\/sdk@).+(\/",?)': METATYPE_VERSION
   lock:
     GHJK_VERSION: 423d38e
-    GHJK_ACTION_VERSION: a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
+    GHJK_ACTION_VERSION: 2e8bbf084060a18828338a7cdd43fde6feb2a3cc
     PYTHON_VERSION: 3.8.18
     POETRY_VERSION: 1.7.0
     PROTOC_VERSION: v24.1
     RUST_VERSION: 1.75.0
     DENO_VERSION: 1.41.0
     NODE_VERSION: 20.8.0
-    PNPM_VERSION: v8.15.2
+    PNPM_VERSION: v9.0.5
     CARGO_INSTA_VERSION: 1.33.0
     WASM_TOOLS_VERSION: 1.0.53
     JCO_VERSION: 1.0.0
@@ -106,6 +106,5 @@ dev:
     CMAKE_VERSION: 3.28.0-rc6
     TEMPORAL_VERSION: 0.10.7
     TAGLINE: >-
-      Declarative API development platform. Build serverless backends with
-      zero-trust and less code, no matter where and how your (legacy) systems
-      are.
+      Declarative API development platform. Build backend components with
+      WASM/Typescript/Python, no matter where and how your (legacy) systems are.

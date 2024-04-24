@@ -33,9 +33,14 @@ connection-string = "0.2.0"
 mt_deno.workspace = true
 common.workspace = true
 typescript.workspace = true
+
+# remove wasmedge once python runtime has been migrated
 wasmedge-sdk.workspace = true
 wasmedge-sys.workspace = true
 wasmedge-types.workspace = true
+
+wasmtime = { version = "19.0.1",  features = ["component-model"] }
+
 shadow-rs.workspace = true
 serde.workspace = true
 regex = "1.10.2"

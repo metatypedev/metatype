@@ -33,6 +33,12 @@ interface core {
         rate: option<rate>,
     }
 
+    record artifact {
+        path: string,
+        hash: string,
+        size: u32,
+    }
+
     init-typegraph: func(params: typegraph-init-params) -> result<_, error>
 
     record migration-action {
@@ -54,7 +60,7 @@ interface core {
         codegen: option<bool> // if set, sdk should not throw errors when the script does not exist
     }
 
-    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<tuple<string, list<tuple<string, string>>>, error>
+    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<tuple<string, list<artifact>>, error>
 
     type type-id = u32
     record type-base {
@@ -229,7 +235,7 @@ interface core {
 }
 
 interface runtimes {
-    use core.{error, type-id, func-params, runtime-id, materializer-id}
+    use core.{error, type-id, func-params, runtime-id, materializer-id, artifact}
     
     get-deno-runtime: func() -> runtime-id
 
@@ -331,6 +337,7 @@ interface runtimes {
     record materializer-python-module {
         runtime: runtime-id,
         file: string,
+        deps: list<string>,
     }
 
     record materializer-python-import {
@@ -358,14 +365,14 @@ interface runtimes {
     register-random-runtime: func(data: random-runtime-data) -> result<materializer-id, error>
     create-random-mat: func(base: base-materializer, data: materializer-random) -> result<materializer-id, error>
 
-    // wasmedge
-    record materializer-wasi {
+    // wasm
+    record materializer-wasm {
         func-name: string,
-        module: string
+        wasm-artifact: string,
     }
 
-    register-wasmedge-runtime: func() -> result<runtime-id, error>
-    from-wasi-module: func(base: base-materializer, data: materializer-wasi) -> result<materializer-id, error>
+    register-wasm-runtime: func() -> result<runtime-id, error>
+    from-wasm-module: func(base: base-materializer, data: materializer-wasm) -> result<materializer-id, error>
 
     // prisma
     record prisma-runtime-data {
