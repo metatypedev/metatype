@@ -4,20 +4,23 @@
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 import { gql, Meta } from "test-utils/mod.ts";
 import { testDir } from "test-utils/dir.ts";
-import { tg } from "./wasm.ts";
+import { tg } from "./wasm_reflected.ts";
 import * as path from "std/path/mod.ts";
 
-const cwd = path.join(testDir, "runtimes/wasm");
+const cwd = path.join(testDir, "runtimes/wasm_reflected");
 const auth = new BasicAuth("admin", "password");
 
 Meta.test(
   {
-    name: "Wasm runtime",
+    name: "Wasm runtime: reflected",
     port: true,
     systemTypegraphs: true,
   },
   async (t) => {
-    const e = await t.engineFromTgDeployPython("runtimes/wasm/wasm.py", cwd);
+    const e = await t.engineFromTgDeployPython(
+      path.join(cwd, "wasm_reflected.py"),
+      cwd,
+    );
 
     await t.should("works", async () => {
       await gql`
@@ -35,7 +38,7 @@ Meta.test(
 
 Meta.test(
   {
-    name: "Wasm Runtime typescript sdk",
+    name: "Wasm Runtime typescript sdk: reflected",
     port: true,
     systemTypegraphs: true,
   },
@@ -57,7 +60,7 @@ Meta.test(
           },
           dir: cwd,
         },
-        typegraphPath: path.join(cwd, "wasm.ts"),
+        typegraphPath: path.join(cwd, "wasm_reflected.ts"),
         secrets: {},
       });
 

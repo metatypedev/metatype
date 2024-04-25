@@ -16,6 +16,8 @@ use crate::mdk::*;
 use crate::utils::*;
 use crate::*;
 
+use std::fmt::Write;
+
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
 pub struct MdkRustGenConfig {
     #[serde(flatten)]
@@ -111,27 +113,48 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
         derive_debug: true,
         derive_serde: true,
     };
-    // remove the root type which we don't want to generate types for
-    // TODO: gql types || function wrappers for exposed functions
-    // skip object 0, the root object where the `exposed` items are locted
-    for id in 1..tg.types.len() {
-        _ = types::gen_type(
-            id as u32,
-            &tg.types,
-            &mut mod_rs,
-            &mut ty_memo,
-            &gen_opts,
-            &[],
-        )?;
+    writeln!(&mut mod_rs.buf, "pub mod types {{")?;
+    {
+        let mut types_rs = GenDestBuf {
+            buf: Default::default(),
+        };
+        // remove the root type which we don't want to generate types for
+        // TODO: gql types || function wrappers for exposed functions
+        // skip object 0, the root object where the `exposed` items are locted
+        for id in 1..tg.types.len() {
+            _ = types::gen_type(
+                id as u32,
+                &tg.types,
+                &mut types_rs,
+                &mut ty_memo,
+                &gen_opts,
+                &[],
+            )?;
+        }
+        for line in types_rs.buf.lines() {
+            writeln!(&mut mod_rs.buf, "    ${line}")?;
+        }
     }
-    let gen_stub_opts = stubs::GenStubOptions {};
-    let stubbed_rts = config.stubbed_runtimes.clone().unwrap_or_default();
-    let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts)?;
-    for fun in &stubbed_funs {
-        _ = stubs::gen_stub(fun, &mut mod_rs, &ty_memo, &gen_stub_opts)
+    writeln!(&mut mod_rs.buf, "}}")?;
+    writeln!(&mut mod_rs.buf, "pub mod stubs {{")?;
+    {
+        let mut stubs_rs = GenDestBuf {
+            buf: Default::default(),
+        };
+        let gen_stub_opts = stubs::GenStubOptions {};
+        let stubbed_rts = config.stubbed_runtimes.clone().unwrap_or_default();
+        let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts)?;
+        for fun in &stubbed_funs {
+            _ = stubs::gen_stub(fun, &mut stubs_rs, &ty_memo, &gen_stub_opts)
+        }
+        // TODO: op_to_mat_map
+        stubs::gen_op_to_mat_map(&Default::default(), &mut stubs_rs, &ty_memo, &gen_stub_opts)?;
+
+        for line in stubs_rs.buf.lines() {
+            writeln!(&mut mod_rs.buf, "    ${line}")?;
+        }
     }
-    // TODO: op_to_mat_map
-    stubs::gen_op_to_mat_map(&Default::default(), &mut mod_rs, &ty_memo, &gen_stub_opts)?;
+    writeln!(&mut mod_rs.buf, "}}")?;
     Ok(mod_rs.buf)
 }
 
@@ -146,12 +169,10 @@ pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
 }
 
 pub fn gen_static(dest: &mut GenDestBuf) -> anyhow::Result<Arc<str>> {
-    use std::fmt::Write;
-
     let mod_rs = include_str!("static/gen.rs").to_string();
     let mod_rs = mod_rs.replace("__METATYPE_VERSION__", std::env!("CARGO_PKG_VERSION"));
 
-    let mdk_wit = include_str!("../mdk/mdk.wit");
+    let mdk_wit = include_str!("../../../../wit/wit-wire.wit");
     writeln!(&mut dest.buf, "// gen-static-start")?;
     write!(
         &mut dest.buf,

@@ -7,12 +7,13 @@ use dashmap::DashMap;
 use deno_core as deno_core; // necessary for re-exported macros to work
 use deno_core::OpState;
 use wasmtime::component::{Component, Linker};
-use wit::exports::metatype::pyrt::mat_wire::{InitArgs, InitError, MatInfo, Req as MatReq};
-use wit::metatype::pyrt::typegate_wire::{Host, Req as HostReq, Res as HostRes};
+use wit::exports::metatype::wit_wire::mat_wire::{InitArgs, InitError, MatInfo, Req as MatReq};
+use wit::metatype::wit_wire::typegate_wire::{Host, Req as HostReq, Res as HostRes};
 
 mod wit {
     wasmtime::component::bindgen!({
-        path: "../../libs/pyrt_wit_wire/wit",
+        world: "wit-wire",
+        path: "../../wit/",
         async: true,
     });
 }
@@ -88,7 +89,7 @@ impl Ctx {
 
         for res in [
             wasmtime_wasi::add_to_linker_async(&mut linker),
-            wit::Pyrt::add_to_linker(&mut linker, |state| &mut state.tg_host),
+            wit::WitWire::add_to_linker(&mut linker, |state| &mut state.tg_host),
         ] {
             res.map_err(|err| format!("erorr trying to link component: {err}"))?;
         }
@@ -102,7 +103,7 @@ impl Ctx {
 }
 
 struct Instance {
-    bindings: wit::Pyrt,
+    bindings: wit::WitWire,
     _instance: wasmtime::component::Instance,
     store: wasmtime::Store<InstanceState>,
 }
@@ -160,7 +161,7 @@ impl Host for TypegateHost {
     }
 }
 
-impl wit::metatype::pyrt::shared::Host for TypegateHost {}
+impl wit::metatype::wit_wire::shared::Host for TypegateHost {}
 
 impl From<WitWireInitArgs> for InitArgs {
     fn from(value: WitWireInitArgs) -> Self {
@@ -252,12 +253,12 @@ pub async fn op_wit_wire_init(
         &ctx.engine,
         InstanceState::new(ctx.instance_workdir.join(&instance_id), TypegateHost {}),
     );
-    let (bindings, instance) = wit::Pyrt::instantiate_async(&mut store, component, linker)
+    let (bindings, instance) = wit::WitWire::instantiate_async(&mut store, component, linker)
         .await
         .map_err(|err| {
             WitWireInitError::ModuleErr(format!("error tring to make component instance: {err}"))
         })?;
-    let guest = bindings.metatype_pyrt_mat_wire();
+    let guest = bindings.metatype_wit_wire_mat_wire();
     let args = input.into();
     let res = guest.call_init(&mut store, &args).await.map_err(|err| {
         WitWireInitError::ModuleErr(format!("module error calling init: {err}"))
@@ -331,7 +332,7 @@ pub async fn op_wit_wire_handle(
         .ok_or(WitWireHandleError::InstanceNotFound { id: instance_id })?;
     // reborrow https://bevy-cheatbook.github.io/pitfalls/split-borrows.html
     let instance = &mut *instance;
-    let guest = instance.bindings.metatype_pyrt_mat_wire();
+    let guest = instance.bindings.metatype_wit_wire_mat_wire();
     let res = guest
         .call_handle(&mut instance.store, &input.into())
         .await

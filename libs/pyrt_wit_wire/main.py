@@ -1,11 +1,11 @@
-import pyrt.exports
+import wit_wire.exports
 
 # NOTE: all imports must be toplevel as constrained by `componentize-py`
 # https://github.com/bytecodealliance/componentize-py/issues/23
-from pyrt.imports.shared import Req, Ok, Err
+from wit_wire.imports.shared import Req, Ok, Err
 
 # from pyrt.imports.typegate_wire import hostcall
-from pyrt.exports.mat_wire import (
+from wit_wire.exports.mat_wire import (
     InitArgs,
     InitResponse,
     InitError_UnexpectedMat,
@@ -22,7 +22,7 @@ from typing import Callable, Any
 handlers = {}
 
 
-class MatWire(pyrt.exports.MatWire):
+class MatWire(wit_wire.exports.MatWire):
     def init(self, args: InitArgs):
         for op in args.expected_ops:
             handlers[op.op_name] = op_to_handler(op)

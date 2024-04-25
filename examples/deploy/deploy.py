@@ -18,7 +18,7 @@ from typegraph.wit import ArtifactResolutionConfig, MigrationAction, MigrationCo
 def deploy_example_python(g: Graph):
     deno = DenoRuntime()
     python = PythonRuntime()
-    wasm = WasmRuntime()  # noqa
+    wasm = WasmRuntime.reflected("wasi/rust.wasm")
     prisma = PrismaRuntime("prisma", "POSTGRES")
     pub = Policy.public()
 
@@ -62,7 +62,6 @@ def deploy_example_python(g: Graph):
         testWasmAdd=wasm.from_wasm(
             t.struct({"a": t.float(), "b": t.float()}),
             t.integer(),
-            wasm="wasm/rust.wasm",
             func="add",
         ),
         # Prisma

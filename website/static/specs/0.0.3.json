@@ -1646,7 +1646,7 @@
             "name": {
               "type": "string",
               "enum": [
-                "python_wasi"
+                "python"
               ]
             },
             "data": {
@@ -2293,14 +2293,25 @@
     },
     "WasmRuntimeData": {
       "type": "object",
+      "required": [
+        "ty",
+        "wasm_artifact"
+      ],
       "properties": {
-        "config": {
-          "type": [
-            "string",
-            "null"
-          ]
+        "ty": {
+          "$ref": "#/definitions/WasmRuntimeType"
+        },
+        "wasm_artifact": {
+          "type": "string"
         }
       }
+    },
+    "WasmRuntimeType": {
+      "type": "string",
+      "enum": [
+        "wire",
+        "reflected"
+      ]
     },
     "TypegateRuntimeData": {
       "type": "object"
@@ -2766,10 +2777,10 @@
       "title": "WasmMatData",
       "type": "object",
       "required": [
-        "wasmArtifact"
+        "funcName"
       ],
       "properties": {
-        "wasmArtifact": {
+        "funcName": {
           "type": "string"
         }
       }

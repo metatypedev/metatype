@@ -16,15 +16,14 @@ from typegraph import t, typegraph
 
 
 @typegraph()
-def wasm_py(g: Graph):
+def wasm_reflected_py(g: Graph):
     pub = Policy.public()
-    wasm = WasmRuntime()
+    wasm = WasmRuntime.reflected("rust.wasm")
 
     g.expose(
-        test=wasm.from_wasm(
+        test=wasm.from_export(
             t.struct({"a": t.float(), "b": t.float()}),
             t.integer(),
-            wasm="rust.wasm",
             func="add",
         ).with_policy(pub),
     )
@@ -35,7 +34,7 @@ PORT = sys.argv[2]
 gate = f"http://localhost:{PORT}"
 auth = BasicAuth("admin", "password")
 
-wasm_tg = wasm_py()
+wasm_tg = wasm_reflected_py()
 deploy_result = tg_deploy(
     wasm_tg,
     TypegraphDeployParams(

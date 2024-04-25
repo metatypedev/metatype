@@ -121,7 +121,7 @@ setup:
     curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh |  bash
     . $(ghjk print share-dir-path)/env.sh
     ghjk p sync
-    echo "exec ./. to refresh env vars"
-    [ -d .venv ] || python3 -m venv .venv
+    echo "cd ./. to refresh env vars"
+    [ -d .venv ] || python3 -m venv .venv && echo "virtual env created"
     poetry install --sync --no-root
     yes | pnpm install --recursive --filter ./website/... --filter ./typegraph/node/...

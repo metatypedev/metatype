@@ -1,4 +1,4 @@
-package metatype:mdk;
+package metatype:wit-wire;
 
 interface shared {
   record req {
@@ -9,22 +9,24 @@ interface shared {
   type res = result<string, string>;
 }
 
-interface typegate-wasi-host {
-  use shared.{req, res};
+interface typegate-wire {
+  record req {
+    op-name: string,
+    in-json: string,
+  }
+  type res = result<string, string>;
 
   hostcall: func(req: req) -> res;
 }
 
-interface mat {
+interface mat-wire {
   use shared.{req, res};
-
-  handle: func(req: req) -> res;
 
   record mat-info {
     op-name: string,
     mat-title: string,
     mat-hash: string,
-    mat-data: string,
+    mat-data-json: string,
   }
 
   record init-args {
@@ -32,7 +34,9 @@ interface mat {
     expected-ops: list<mat-info>
   }
 
-  record init-response {}
+  record init-response {
+    ok: bool
+  }
 
   variant init-error {
     version-mismatch(string),
@@ -41,9 +45,10 @@ interface mat {
   }
 
   init: func(args: init-args) -> result<init-response, init-error>;
+  handle: func(req: req) -> res;
 }
 
-world wasi-mat {
-  import typegate-wasi-host;
-  export mat;
+world wit-wire {
+  import typegate-wire;
+  export mat-wire;
 }

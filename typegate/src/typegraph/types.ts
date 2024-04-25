@@ -483,7 +483,8 @@ export interface TemporalRuntimeData {
   namespace_secret?: string;
 }
 export interface WasmRuntimeData {
-  config?: string | null;
+  ty: "wire" | "reflected";
+  wasm_artifact: string;
 }
 export interface TypegateRuntimeData {
 }

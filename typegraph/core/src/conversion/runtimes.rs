@@ -21,7 +21,7 @@ use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
 use common::typegraph::runtimes::s3::S3RuntimeData;
 use common::typegraph::runtimes::temporal::TemporalRuntimeData;
-use common::typegraph::runtimes::wasm::WasmRuntimeData;
+use common::typegraph::runtimes::wasm::{WasmRuntimeData, WasmRuntimeType};
 use common::typegraph::runtimes::{
     Artifact, KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData, TypegraphRuntimeData,
 };
@@ -316,15 +316,17 @@ impl MaterializerConverter for WasmMaterializer {
         effect: WitEffect,
     ) -> Result<Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
-        let WasmMaterializer::Module(mat) = self;
+        let (name, func_name) = match &self {
+            WasmMaterializer::ReflectedFunc(func) => ("wasm_reflected_func", &func.func_name[..]),
+            WasmMaterializer::WireHandler(handler) => ("wasm_wire_handler", &handler.func_name[..]),
+        };
 
         let data = serde_json::from_value(json!({
-            "wasmArtifact": mat.wasm_artifact,
-            "func": mat.func_name,
+            "func": func_name,
         }))
         .map_err(|e| e.to_string())?;
 
-        let name = "wasm".to_string();
+        let name = name.to_string();
         Ok(Materializer {
             name,
             runtime,
@@ -434,7 +436,14 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
             reset: d.reset.clone(),
         }))
         .into()),
-        Runtime::Wasm => Ok(TGRuntime::Known(Rt::Wasm(WasmRuntimeData { config: None })).into()),
+        Runtime::Wasm(data) => Ok(TGRuntime::Known(Rt::Wasm(WasmRuntimeData {
+            wasm_artifact: std::path::PathBuf::from(&data.wasm_artifact),
+            ty: match data.ty {
+                crate::wit::runtimes::WasmRuntimeTy::Wire => WasmRuntimeType::Wire,
+                crate::wit::runtimes::WasmRuntimeTy::Reflected => WasmRuntimeType::Reflected,
+            },
+        }))
+        .into()),
         Runtime::Prisma(d, _) => Ok(ConvertedRuntime::Lazy(Box::new(
             move |runtime_id, runtime_idx, tg| -> Result<_> {
                 let ctx = get_prisma_context(runtime_id);

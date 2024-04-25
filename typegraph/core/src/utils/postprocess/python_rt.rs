@@ -28,7 +28,7 @@ impl PostProcessor for PythonProcessor {
 
                 let python_module_path = fs_host::make_absolute(&path)?;
 
-                let (module_hash, size) = fs_host::hash_file(&python_module_path.clone())?;
+                let (module_hash, size) = fs_host::hash_file(&python_module_path)?;
 
                 tg.deps.push(python_module_path);
                 tg.meta.artifacts.insert(

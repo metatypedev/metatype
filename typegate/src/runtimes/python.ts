@@ -8,7 +8,7 @@ import type { Resolver, RuntimeInitParams } from "../types.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
 import { Artifact, Materializer } from "../typegraph/types.ts";
 import * as ast from "graphql/ast";
-import { WitWireMessenger } from "./wit_wire/mod.ts";
+import { WitWireMessenger } from "./wasm/wit_wire.ts";
 import { WitWireMatInfo } from "../../engine/runtime.js";
 
 const _logger = getLogger(import.meta);
