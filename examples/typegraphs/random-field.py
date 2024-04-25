@@ -14,7 +14,7 @@ import time
     name="random-field",
     # skip:end
 )
-def roadmap(g: Graph):
+def random_field(g: Graph):
     deno = DenoRuntime()
     pub = Policy.public()
 

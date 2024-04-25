@@ -4,7 +4,7 @@ import { Auth } from "@typegraph/sdk/params.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
-await typegraph({
+typegraph({
   name: "policies",
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {

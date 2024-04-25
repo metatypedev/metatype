@@ -7,7 +7,7 @@ import { HttpRuntime } from "@typegraph/sdk/runtimes/http.js";
 
 // skip:end
 
-await typegraph({
+typegraph({
   name: "homepage",
   // skip:start
   rate: { windowLimit: 2000, windowSec: 60, queryLimit: 200, localExcess: 0 },
