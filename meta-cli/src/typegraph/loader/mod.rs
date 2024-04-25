@@ -19,7 +19,7 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::{anyhow, Error, Result};
+use anyhow::{anyhow, bail, Context, Error, Result};
 use colored::Colorize;
 
 use crate::{
@@ -113,9 +113,8 @@ impl<'a> Loader<'a> {
                 error: e.into(),
             })?;
 
-        // TODO: enable override from env.
-        let duration = Duration::from_secs(120);
-
+        let duration =
+            get_loader_timeout_duration().map_err(|e| LoaderError::Other { error: e })?;
         match timeout(duration, child.wait()).await {
             Err(_) => {
                 child.kill().await.unwrap();
@@ -364,6 +363,9 @@ pub enum LoaderError {
     LoaderTimeout {
         path: Arc<PathBuf>,
     },
+    Other {
+        error: Error,
+    },
     ModuleFileNotFound {
         path: Arc<PathBuf>,
     },
@@ -403,6 +405,9 @@ impl ToString for LoaderError {
             Self::LoaderTimeout { path } => {
                 format!("loader process timed out while loading typegraph(s) from {path:?}")
             }
+            Self::Other { error } => {
+                format!("{error}")
+            }
             Self::Unknown { path, error } => {
                 format!("unknown error while loading typegraph(s) from {path:?}: {error:?}")
             }
@@ -414,4 +419,21 @@ impl ToString for LoaderError {
             }
         }
     }
+}
+
+fn get_loader_timeout_duration() -> Result<Duration> {
+    let env_key = "LOADER_TIMEOUT";
+    let secs = match std::env::var(env_key) {
+        Ok(value) => {
+            let value = value
+                .parse::<u64>()
+                .context(format!("{env_key} is not a positive integer"))?;
+            if value < 1 {
+                bail!("{env_key:?} cannot be less than 1");
+            }
+            value
+        }
+        Err(_) => 120,
+    };
+    Ok(Duration::from_secs(secs))
 }
