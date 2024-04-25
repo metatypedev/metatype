@@ -5,7 +5,6 @@ from typegraph.runtimes.deno import DenoRuntime
 from typegraph.graph.params import Cors
 
 # skip:end
-import time
 
 
 @typegraph(
@@ -14,21 +13,20 @@ import time
     name="random-field",
     # skip:end
 )
-def roadmap(g: Graph):
+def random_field(g: Graph):
     deno = DenoRuntime()
     pub = Policy.public()
 
-    bonus = t.list(t.enum(["+1 gold", "+1 metal"]))
+    bonus_items = t.list(t.enum(["+1 gold", "+1 metal"]))
     daily_bonus = t.struct(
         {
             "performance": t.integer(),
-            "bonus": bonus.from_random(),  # this field is now generated randomly
+            "bonus": bonus_items.from_random(),  # this field is now generated randomly
         }
     )
 
     # set a custom seed
-    custom = int(round(time.time() * 1000)) % 1000
-    g.configure_random_injection(seed=custom)
+    g.configure_random_injection(seed=1234)
 
     g.expose(
         pub,
