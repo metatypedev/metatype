@@ -17,10 +17,14 @@ function getUploadPath(tgName: string) {
   return `/${tgName}/artifacts`;
 }
 
-export async function getLocalPath(meta: ArtifactMeta) {
+export async function getLocalPath(
+  meta: ArtifactMeta,
+  mainModuleMeta: ArtifactMeta,
+) {
   const cachedPath = resolve(STORE_DIR, meta.hash);
   const localPath = resolve(
     ARTIFACTS_DIR,
+    mainModuleMeta.hash,
     meta.typegraphName,
     meta.relativePath,
   );

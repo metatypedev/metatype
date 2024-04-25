@@ -94,12 +94,7 @@ async function register_import_func(_: null, task: RegisterImportFuncTask) {
   const { modulePath, verbose, op } = task;
   verbose &&
     logger.info(`register import func "${op}" from "${modulePath.toString()}`);
-  // const fileContent = await Deno.readTextFile(modulePath);
-  // console.log("************* From File =>", fileContent);
-  // console.log(
-  //   "************* From import =>",
-  //   (await import(modulePath))["fire"].toString()
-  // );
+
   registry.set(op, await import(modulePath));
 }
 

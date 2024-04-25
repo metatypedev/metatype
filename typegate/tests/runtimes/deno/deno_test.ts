@@ -5,7 +5,7 @@ import { gql, Meta, sleep } from "../../utils/mod.ts";
 import * as path from "std/path/mod.ts";
 import { testDir } from "test-utils/dir.ts";
 import { denoDepTg } from "./deno_dep.ts";
-import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
+import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
 
 const cwd = path.join(testDir, "runtimes/deno");
 const auth = new BasicAuth("admin", "password");
@@ -207,6 +207,7 @@ Meta.test(
   {
     name: "DenoRuntime using TS SDK: artifacts and deps",
     port: true,
+    systemTypegraphs: true,
   },
   async (metaTest) => {
     const port = metaTest.port;
@@ -245,103 +246,108 @@ Meta.test(
         })
         .on(engine);
     });
+
+    const { typegate: _gateResponseRem } = await tgRemove(reusableTgOutput, {
+      baseUrl: gate,
+      auth,
+    });
   },
 );
 
-// Meta.test(
-//   {
-//     name: "Deno runtime: file name reloading",
-//     port: true,
-//     systemTypegraphs: true,
-//   },
-//   async (t) => {
-//     const load = async (value: number) => {
-//       Deno.env.set("DYNAMIC", path.join("dynamic", `${value}.ts`));
-//       const e = await t.engineFromTgDeployPython(
-//         "runtimes/deno/deno_reload.py",
-//         cwd
-//       );
-//       Deno.env.delete("DYNAMIC");
-//       return e;
-//     };
+Meta.test(
+  {
+    name: "Deno runtime: file name reloading",
+    port: true,
+    systemTypegraphs: true,
+  },
+  async (t) => {
+    const load = async (value: number) => {
+      Deno.env.set("DYNAMIC", path.join("dynamic", `${value}.ts`));
+      const e = await t.engineFromTgDeployPython(
+        "runtimes/deno/deno_reload.py",
+        cwd,
+      );
+      Deno.env.delete("DYNAMIC");
+      return e;
+    };
 
-//     const v1 = await load(1);
-//     await t.should("work with v1", async () => {
-//       await gql`
-//         query {
-//           fire
-//         }
-//       `
-//         .expectData({
-//           fire: 1,
-//         })
-//         .on(v1);
-//     });
-//     await t.unregister(v1);
+    const v1 = await load(1);
+    await t.should("work with v1", async () => {
+      await gql`
+        query {
+          fire
+        }
+      `
+        .expectData({
+          fire: 1,
+        })
+        .on(v1);
+    });
+    await t.unregister(v1);
 
-//     const v2 = await load(2);
-//     await t.should("work with v2", async () => {
-//       await gql`
-//         query {
-//           fire
-//         }
-//       `
-//         .expectData({
-//           fire: 2,
-//         })
-//         .on(v2);
-//     });
-//     await t.unregister(v2);
-//   }
-// );
+    const v2 = await load(2);
+    await t.should("work with v2", async () => {
+      await gql`
+        query {
+          fire
+        }
+      `
+        .expectData({
+          fire: 2,
+        })
+        .on(v2);
+    });
+    await t.unregister(v2);
+  },
+);
 
-// Meta.test(
-//   {
-//     name: "Deno runtime: script reloading",
-//     port: true,
-//     systemTypegraphs: true,
-//   },
-//   async (t) => {
-//     const denoScript = path.join(
-//       "typegate/tests/runtimes/deno",
-//       "reload",
-//       "template.ts"
-//     );
-//     const originalContent = await Deno.readTextFile(denoScript);
-//     const testReload = async (value: number) => {
-//       try {
-//         Deno.env.set("DYNAMIC", "reload/template.ts");
-//         await Deno.writeTextFile(
-//           denoScript,
-//           originalContent.replace('"REWRITE_ME"', `${value}`)
-//         );
-//         const e = await t.engineFromTgDeployPython(
-//           "runtimes/deno/deno_reload.py",
-//           cwd
-//         );
-//         await t.should(`reload with new value ${value}`, async () => {
-//           await gql`
-//             query {
-//               fire
-//             }
-//           `
-//             .expectData({
-//               fire: value,
-//             })
-//             .on(e);
-//         });
-//         await t.unregister(e);
-//       } catch (err) {
-//         throw err;
-//       } finally {
-//         await Deno.writeTextFile(denoScript, originalContent);
-//       }
-//     };
+Meta.test(
+  {
+    name: "Deno runtime: script reloading",
+    port: true,
+    systemTypegraphs: true,
+  },
+  async (t) => {
+    const denoScript = path.join(
+      "typegate/tests/runtimes/deno",
+      "reload",
+      "template.ts",
+    );
+    const originalContent = await Deno.readTextFile(denoScript);
+    const testReload = async (value: number) => {
+      try {
+        Deno.env.set("DYNAMIC", "reload/template.ts");
+        await Deno.writeTextFile(
+          denoScript,
+          originalContent.replace('"REWRITE_ME"', `${value}`),
+        );
+        const e = await t.engineFromTgDeployPython(
+          "runtimes/deno/deno_reload.py",
+          cwd,
+        );
+        await t.should(`reload with new value ${value}`, async () => {
+          await gql`
+            query {
+              fire
+            }
+          `
+            .expectData({
+              fire: value,
+            })
+            .on(e);
+        });
+        await t.unregister(e);
+      } catch (err) {
+        throw err;
+      } finally {
+        await Deno.writeTextFile(denoScript, originalContent);
+      }
+    };
 
-//     await testReload(1);
-//     await testReload(2);
-//   }
-// );
+    await testReload(1);
+    await testReload(2);
+  },
+);
 
 Meta.test(
   {
