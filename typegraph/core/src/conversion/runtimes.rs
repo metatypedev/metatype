@@ -322,7 +322,7 @@ impl MaterializerConverter for WasmMaterializer {
         };
 
         let data = serde_json::from_value(json!({
-            "func": func_name,
+            "op_name": func_name,
         }))
         .map_err(|e| e.to_string())?;
 

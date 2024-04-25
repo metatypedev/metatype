@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 mod gen;
+use gen::stubs::*;
+use gen::types::*;
 use gen::*;
 
 init_mat! {
@@ -11,7 +13,7 @@ init_mat! {
 struct FaasImpl;
 
 impl MyFaas for FaasImpl {
-    fn handle(&self, _input: FaasIn, cx: Ctx) -> anyhow::Result<FaasOut> {
-        Ok(FaasOut)
+    fn handle(&self, input: FaasIn, _cx: Ctx) -> anyhow::Result<FaasOut> {
+        Ok(FaasOut { hi: input.hello })
     }
 }

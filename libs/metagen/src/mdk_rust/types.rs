@@ -649,17 +649,15 @@ pub enum CEither {
                 &[],
             )?;
 
-            assert_eq!(
+            pretty_assertions::assert_eq!(
                 &gen_name[..],
                 name,
                 "{test_name}: generated unexpected type name"
             );
-            assert_eq!(
+            pretty_assertions::assert_eq!(
                 dest.buf.as_str(),
                 out,
-                "{test_name}: output buffer was not equal for {name}\n{}{}",
-                dest.buf.as_str(),
-                out,
+                "{test_name}: output buffer was not equal for {name}",
             );
         }
         Ok(())

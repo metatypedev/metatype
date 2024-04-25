@@ -113,7 +113,9 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
         derive_debug: true,
         derive_serde: true,
     };
+    writeln!(&mut mod_rs.buf, "use types::*;")?;
     writeln!(&mut mod_rs.buf, "pub mod types {{")?;
+    writeln!(&mut mod_rs.buf, "    use super::*;")?;
     {
         let mut types_rs = GenDestBuf {
             buf: Default::default(),
@@ -132,11 +134,17 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
             )?;
         }
         for line in types_rs.buf.lines() {
-            writeln!(&mut mod_rs.buf, "    ${line}")?;
+            if !line.is_empty() {
+                writeln!(&mut mod_rs.buf, "    {line}")?;
+            } else {
+                writeln!(&mut mod_rs.buf)?;
+            }
         }
     }
     writeln!(&mut mod_rs.buf, "}}")?;
+    writeln!(&mut mod_rs.buf, "use stubs::*;")?;
     writeln!(&mut mod_rs.buf, "pub mod stubs {{")?;
+    writeln!(&mut mod_rs.buf, "    use super::*;")?;
     {
         let mut stubs_rs = GenDestBuf {
             buf: Default::default(),
@@ -144,14 +152,22 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
         let gen_stub_opts = stubs::GenStubOptions {};
         let stubbed_rts = config.stubbed_runtimes.clone().unwrap_or_default();
         let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts)?;
+        let mut op_to_mat_map = HashMap::new();
         for fun in &stubbed_funs {
-            _ = stubs::gen_stub(fun, &mut stubs_rs, &ty_memo, &gen_stub_opts)
+            let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &ty_memo, &gen_stub_opts)?;
+            if let Some(Some(op_name)) = fun.mat.data.get("op_name").map(|val| val.as_str()) {
+                op_to_mat_map.insert(op_name.to_string(), trait_name);
+            }
         }
         // TODO: op_to_mat_map
-        stubs::gen_op_to_mat_map(&Default::default(), &mut stubs_rs, &ty_memo, &gen_stub_opts)?;
+        stubs::gen_op_to_mat_map(&op_to_mat_map, &mut stubs_rs, &gen_stub_opts)?;
 
         for line in stubs_rs.buf.lines() {
-            writeln!(&mut mod_rs.buf, "    ${line}")?;
+            if !line.is_empty() {
+                writeln!(&mut mod_rs.buf, "    {line}")?;
+            } else {
+                writeln!(&mut mod_rs.buf)?;
+            }
         }
     }
     writeln!(&mut mod_rs.buf, "}}")?;
@@ -205,7 +221,7 @@ fn mdk_rs_e2e() -> anyhow::Result<()> {
                 [(
                     "mdk_rust".to_string(),
                     serde_json::to_value(mdk_rust::MdkRustGenConfig {
-                        stubbed_runtimes: None,
+                        stubbed_runtimes: Some(vec!["wasm".into()]),
                         crate_name: None,
                         base: config::MdkGeneratorConfigBase {
                             typegraph_name: Some(tg_name.into()),

@@ -3,7 +3,7 @@ import {
   t,
   typegraph,
 } from "../../../typegraph/node/sdk/dist/index.js";
-import { RandomRuntime } from "../../../typegraph/node/sdk/dist/runtimes/random.js";
+import { WasmRuntime } from "../../../typegraph/node/sdk/dist/runtimes/wasm.js";
 
 typegraph(
   {
@@ -25,10 +25,14 @@ typegraph(
         list: t.list(t.string()),
       });
 
-      const rand_rt = new RandomRuntime({});
+      const wasm = WasmRuntime.wire("placeholder");
       g.expose(
         {
-          random: rand_rt.gen(obj),
+          my_faas: wasm.handler(
+            t.struct({ hello: t.string() }).rename("FaasIn"),
+            t.struct({ hi: t.string() }).rename("FaasOut"),
+            { func: "my_faas" },
+          ).rename("my_faas"),
         },
         Policy.public(),
       );

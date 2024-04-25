@@ -18,12 +18,13 @@ use std::collections::HashMap;
 
 use anyhow::Context;
 
-use wit::exports::metatype::mdk::mat::*;
+use wit::exports::metatype::wit_wire::mat_wire::*;
 
 struct Module;
 
 pub struct ErasedHandler {
     mat_id: String,
+    mat_trait: String,
     mat_title: String,
     handler_fn: Box<dyn Fn(&str, Ctx) -> Res>,
 }
@@ -39,7 +40,8 @@ impl MatBuilder {
         }
     }
 
-    pub fn register_handler(self, handler: ErasedHandler) -> Self {
+    pub fn register_handler(mut self, handler: ErasedHandler) -> Self {
+        self.handlers.insert(handler.mat_trait.clone(), handler);
         self
     }
 }
@@ -61,16 +63,16 @@ impl Router {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
         for info in args.expected_ops {
-            let mat_trait = op_to_trait_name(&info.op_name);
+            let mat_trait = stubs::op_to_trait_name(&info.op_name);
             if !self.handlers.contains_key(mat_trait) {
                 return Err(InitError::UnexpectedMat(info));
             }
         }
-        Ok(InitResponse {})
+        Ok(InitResponse { ok: true })
     }
 
     pub fn handle(&self, req: Req) -> Res {
-        let mat_trait = op_to_trait_name(&req.op_name);
+        let mat_trait = stubs::op_to_trait_name(&req.op_name);
         let handler = self.handlers.get(mat_trait).unwrap();
         let cx = Ctx {
             gql: GraphqlClient {},
@@ -95,7 +97,7 @@ pub struct GraphqlClient {}
 macro_rules! init_mat {
     (hook: $init_hook:expr) => {
         struct MyMat;
-        use wit::exports::metatype::mdk::mat::*;
+        use wit::exports::metatype::wit_wire::mat_wire::*;
         wit::export!(MyMat with_types_in wit);
 
         #[allow(unused)]

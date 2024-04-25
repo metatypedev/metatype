@@ -14,7 +14,7 @@ pub fn gen_stub(
     dest: &mut GenDestBuf,
     type_names: &HashMap<u32, Arc<str>>,
     _opts: &GenStubOptions,
-) -> anyhow::Result<Arc<str>> {
+) -> anyhow::Result<String> {
     let TypeNode::Function { base, data } = &fun.node else {
         unreachable!()
     };
@@ -24,25 +24,18 @@ pub fn gen_stub(
     let out_ty = type_names
         .get(&data.output)
         .context("output type for function not found")?;
-    let trait_name: Arc<str> = normalize_type_title(&base.title).into();
+    let trait_name: String = normalize_type_title(&base.title);
     let title = &base.title;
     // FIXME: use hash or other stable id
     let id = title;
     writeln!(
         &mut dest.buf,
         r#"pub trait {trait_name}: Sized + 'static {{
-    fn mat_title() -> &'static str {{
-        "{title}"
-    }}
-
-    fn mat_id() -> &'static str {{
-        "{id}"
-    }}
-
     fn erased(self) -> ErasedHandler {{
         ErasedHandler {{
-            mat_id: Self::mat_id().into(),
-            mat_title: Self::mat_title().into(),
+            mat_id: "{id}".into(),
+            mat_title: "{title}".into(),
+            mat_trait: "{trait_name}".into(),
             handler_fn: Box::new(move |req, cx| {{
                 let req = serde_json::from_str(req).unwrap();
                 let res = self.handle(req, cx);
@@ -54,30 +47,25 @@ pub fn gen_stub(
         }}
     }}
 
-    fn handle(input: {inp_ty}, cx: Ctx) -> anyhow::Result<{out_ty}>;
+    fn handle(&self, input: {inp_ty}, cx: Ctx) -> anyhow::Result<{out_ty}>;
 }}"#
     )?;
     Ok(trait_name)
 }
 
 pub fn gen_op_to_mat_map(
-    op_to_mat_map: &HashMap<String, u32>,
+    op_to_trait_map: &HashMap<String, String>,
     dest: &mut GenDestBuf,
-    type_names: &HashMap<u32, Arc<str>>,
     _opts: &GenStubOptions,
 ) -> anyhow::Result<()> {
     writeln!(
         &mut dest.buf,
-        r#"fn op_to_trait_name(op_name: &str) -> &'static str {{
+        r#"pub fn op_to_trait_name(op_name: &str) -> &'static str {{
     match op_name {{"#
     )?;
-    for (op_name, mat_id) in op_to_mat_map {
-        let trait_name = type_names
-            .get(mat_id)
-            .context("materializer specified by operation not found in generated set")?;
-        writeln!(&mut dest.buf, r#"        "{op_name}" => "{trait_name}""#,)?;
+    for (op_name, trait_name) in op_to_trait_map {
+        writeln!(&mut dest.buf, r#"        "{op_name}" => "{trait_name}","#,)?;
     }
-    // "my_faas" => "MyFaas",
     writeln!(
         &mut dest.buf,
         r#"        _ => panic!("unrecognized op_name: {{op_name}}"),
@@ -113,7 +101,7 @@ mod test {
             materializers: vec![Materializer {
                 name: "function".into(),
                 runtime: 0,
-                data: Default::default(),
+                data: serde_json::from_value(serde_json::json!({ "op_name": "my_op" })).unwrap(),
                 effect: Effect {
                     effect: None,
                     idempotent: false,
@@ -180,38 +168,40 @@ mod test {
             .iter()
             .find(|(path, _)| path.file_name().unwrap() == "gen.rs")
             .unwrap();
-        assert_eq!(
+        pretty_assertions::assert_eq!(
             r#"// gen-static-end
-pub type MyInt = i64;
-pub trait MyFunc: Sized + 'static {
-    fn mat_title() -> &'static str {
-        "my_func"
-    }
-
-    fn mat_id() -> &'static str {
-        "my_func"
-    }
-
-    fn erased(self) -> ErasedHandler {
-        ErasedHandler {
-            mat_id: Self::mat_id().into(),
-            mat_title: Self::mat_title().into(),
-            handler_fn: Box::new(move |req, cx| {
-                let req = serde_json::from_str(req).unwrap();
-                let res = self.handle(req, cx);
-                match res {
-                    Ok(out) => Ok(serde_json::to_string(&out).unwrap()),
-                    Err(err) => Err(format!("{err}")),
-                }
-            }),
-        }
-    }
-
-    fn handle(input: MyInt, cx: Ctx) -> anyhow::Result<MyInt>;
+use types::*;
+pub mod types {
+    use super::*;
+    pub type MyInt = i64;
 }
-fn op_to_trait_name(op_name: &str) -> &'static str {
-    match op_name {
-        _ => panic!("unrecognized op_name: {op_name}"),
+use stubs::*;
+pub mod stubs {
+    use super::*;
+    pub trait MyFunc: Sized + 'static {
+        fn erased(self) -> ErasedHandler {
+            ErasedHandler {
+                mat_id: "my_func".into(),
+                mat_title: "my_func".into(),
+                mat_trait: "MyFunc".into(),
+                handler_fn: Box::new(move |req, cx| {
+                    let req = serde_json::from_str(req).unwrap();
+                    let res = Self::handle(req, cx);
+                    match res {
+                        Ok(out) => Ok(serde_json::to_string(&out).unwrap()),
+                        Err(err) => Err(format!("{err}")),
+                    }
+                }),
+            }
+        }
+
+        fn handle(input: MyInt, cx: Ctx) -> anyhow::Result<MyInt>;
+    }
+    pub fn op_to_trait_name(op_name: &str) -> &'static str {
+        match op_name {
+            "my_op" => "MyFunc",
+            _ => panic!("unrecognized op_name: {op_name}"),
+        }
     }
 }
 "#,

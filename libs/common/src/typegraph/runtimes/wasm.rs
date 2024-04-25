@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct WasmMatData {
-    pub func_name: String,
+    pub op_name: String,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

@@ -14,6 +14,7 @@ mod interlude {
     pub use anyhow::Context;
     pub use indexmap::IndexMap;
     pub use log::{debug, error, info, trace, warn};
+    pub use pretty_assertions::assert_str_eq;
     pub use serde::{Deserialize, Serialize};
     #[cfg(test)]
     pub use tokio::process::Command;
