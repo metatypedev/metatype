@@ -20,13 +20,15 @@ typegraph("injection-example", (g) => {
         nested: deno.identity(
           t.struct({
             parent_value: t.integer().fromParent("Static"),
-          })
+          }),
         ),
         dynamic_value: t.datetime(),
       }).rename("Output"),
-      { code: `
-        ({ static_value, context_value, secret_value, dynamic_value }) => ({ static_value, context_value, secret_value, dynamic_value })
-      ` }
+      {
+        code: (
+          { static_value, context_value, secret_value, dynamic_value },
+        ) => ({ static_value, context_value, secret_value, dynamic_value }),
+      },
     ).withPolicy(pub),
   });
 });
