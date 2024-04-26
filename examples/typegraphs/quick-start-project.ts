@@ -3,7 +3,7 @@ import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
 import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 
-await typegraph("example", (g) => {
+typegraph("example", (g) => {
   // access control
   const pub = Policy.public();
 

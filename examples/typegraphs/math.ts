@@ -3,7 +3,7 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 // skip:end
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
-await typegraph({
+typegraph({
   name: "math",
   // skip:start
   rate: { windowLimit: 2000, windowSec: 60, queryLimit: 200, localExcess: 0 },

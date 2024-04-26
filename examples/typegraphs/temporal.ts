@@ -2,7 +2,10 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.js";
 
 // skip:start
-function getEnvVariable(key: string, defaultValue?: string): string | undefined {
+function getEnvVariable(
+  key: string,
+  defaultValue?: string,
+): string | undefined {
   const glob = globalThis as any;
   const value = glob?.process
     ? glob?.process.env?.[key]

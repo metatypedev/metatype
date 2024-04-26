@@ -18,10 +18,15 @@
 | serialize  | <pre><p>meta serialize --file path/to/typegraph.py</p></pre>        | Inspect serialized version of your typegraph                             |
 | upgrade    | <pre><p>meta upgrade</p><p>meta upgrade --version 0.3.4</p></pre>    | Upgrade current cli                                                      |
 
-
 Feel free to use the `--help` flag if you want more informations on each commands/subcommands.
 ```bash
 meta -h
 meta deploy -h
 meta gen mod -h
 ```
+
+## Environment variables
+
+| Environment variables |             Desc              | Default |
+| --------------------- | ----------------------------- | ------- |
+| LOADER_TIMEOUT        | Set deploy timeout in seconds | 120     |
