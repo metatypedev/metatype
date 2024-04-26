@@ -5,7 +5,7 @@ import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
 
 // skip:end
 
-await typegraph({
+typegraph({
   name: "faas-runner",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
@@ -20,7 +20,7 @@ await typegraph({
 
   g.expose({
     pycumsum: python.fromLambda(inp, out, {
-      code: `lambda inp: sum(range(inp["n"])`,
+      code: `lambda inp: sum(range(inp["n"]))`,
     }),
     tscumsum: deno.func(
       inp,

@@ -6,7 +6,7 @@ import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { atomWithLocation } from "jotai-location";
 import { useCallback, useEffect } from "react";
 
-type SDK = "typecript" | "python";
+export type SDK = "typescript" | "python";
 const defaultValue = "typescript" as SDK;
 const key = "sdk";
 
