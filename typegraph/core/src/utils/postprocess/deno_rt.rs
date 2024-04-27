@@ -49,18 +49,14 @@ impl DenoProcessor {
         let mut mat_data: ModuleMatData =
             object_from_map(std::mem::take(&mut mat.data)).map_err(|e| e.to_string())?;
 
-        let prefixed_path = mat_data
+        let deno_module_path = mat_data
             .deno_artifact
             .get("path")
             .unwrap()
             .as_str()
             .unwrap();
 
-        let Some(path) = prefixed_path.strip_prefix("file:").to_owned() else {
-            return Ok(None);
-        };
-
-        let path = PathBuf::from(path);
+        let path = PathBuf::from(deno_module_path);
 
         // main_path can be either relative or absolute,
         // if relative => make it absolute

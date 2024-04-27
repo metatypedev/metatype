@@ -121,7 +121,7 @@ impl<'a> Codegen<'a> {
 
                 if let Some(relpath) = deno_artifact_map.get("path") {
                     let relpath = serde_json::to_string(relpath).unwrap();
-                    let relpath = relpath.as_str();
+                    let relpath = relpath.trim_matches('"');
                     let path = {
                         let mut path = base_dir.clone();
                         // TODO is this necessary?? py-tg yields absolute path!!
@@ -181,7 +181,7 @@ impl<'a> Codegen<'a> {
                     .unwrap();
                     if let Some(path) = deno_artifact_map.get("path") {
                         let path = serde_json::to_string(path).unwrap();
-                        let path = path.as_str();
+                        let path = path.trim_matches('"');
                         if self.ts_modules.contains_key(path)
                             && self.check_func(path, &mat_data.name)
                         {
