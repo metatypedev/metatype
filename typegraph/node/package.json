@@ -1,7 +1,7 @@
 {
   "name": "metatype",
   "version": "0.3.7-0",
-  "description": "Declarative API development platform. Build backend components with WASM/Typescript/Python, no matter where and how your (legacy) systems are.",
+  "description": "Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.",
   "scripts": {
     "sdk-build": "cd sdk && pnpm run build",
     "test": "echo \"Error: no test specified\" && exit 1"

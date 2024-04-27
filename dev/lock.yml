@@ -106,5 +106,5 @@ dev:
     CMAKE_VERSION: 3.28.0-rc6
     TEMPORAL_VERSION: 0.10.7
     TAGLINE: >-
-      Declarative API development platform. Build backend components with
-      WASM/Typescript/Python, no matter where and how your (legacy) systems are.
+      Declarative API development platform. Build backend components with WASM,
+      Typescript and Python, no matter where and how your (legacy) systems are.
