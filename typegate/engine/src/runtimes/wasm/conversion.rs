@@ -32,23 +32,20 @@ pub fn unlift_type_to_default_value(
         Type::Float64 => Val::Float64(0.0),
         Type::Char => Val::Char(0 as char),
         Type::String => Val::String("".into()),
-        Type::List(list_ty) => {
-            // let content = unlift_type_to_default_value(&list_ty.ty())?;
-            list_ty.new_val(vec![].into())?
-        }
+        Type::List(_) => component::Val::List(vec![]),
         Type::Option(option_ty) => {
             let content = unlift_type_to_default_value(&option_ty.ty())?;
-            option_ty.new_val(Some(content))?
+            component::Val::Option(Some(content.into()))
         }
         Type::Result(result_ty) => {
             let content = match result_ty.ok() {
-                Some(ok_ty) => Ok(Some(unlift_type_to_default_value(&ok_ty)?)),
+                Some(ok_ty) => Ok(Some(Box::new(unlift_type_to_default_value(&ok_ty)?))),
                 None => {
                     let err_ty = result_ty.err().unwrap();
-                    Err(Some(unlift_type_to_default_value(&err_ty)?))
+                    Err(Some(Box::new(unlift_type_to_default_value(&err_ty)?)))
                 }
             };
-            result_ty.new_val(content)?
+            component::Val::Result(content)
         }
         Type::Tuple(tuple_ty) => {
             // tuple<t1, t2, ..>
@@ -56,15 +53,16 @@ pub fn unlift_type_to_default_value(
                 .types()
                 .map(|ty| unlift_type_to_default_value(&ty))
                 .collect::<anyhow::Result<Vec<_>>>()?;
-            tuple_ty.new_val(out.into())?
+            component::Val::Tuple(out)
         }
         Type::Enum(enum_ty) => {
             // enum my-enum { a, b, c, .. }
             let names = enum_ty.names().collect::<Vec<_>>();
             if names.is_empty() {
-                bail!("invalid state: enum {:?} has no variants", ty);
+                bail!("invalid state: enum {:?} has no variant", ty);
             }
-            enum_ty.new_val(names.first().unwrap())?
+            let name = names.first().unwrap().to_owned();
+            component::Val::Enum(name.to_string())
         }
         Type::Variant(variant_ty) => {
             // variant my-variant { a(b), c(string), d, .. }
@@ -77,18 +75,18 @@ pub fn unlift_type_to_default_value(
                 .ty
                 .clone()
                 .map(|fst_ty| unlift_type_to_default_value(&fst_ty))
-                .map_or(Ok(None), |v| v.map(Some))?;
-            variant_ty.new_val(first_case.name, first_payload)?
+                .map_or(Ok(None), |v| v.map(|v| Some(Box::new(v))))?;
+            component::Val::Variant(first_case.name.to_string(), first_payload)
         }
         Type::Record(record_ty) => {
             // record some-rec { a: string, b: c, d: u8, .. }
             let values = record_ty
                 .fields()
-                .map(|f| unlift_type_to_default_value(&f.ty).map(|val| (f.name, val)))
+                .map(|f| unlift_type_to_default_value(&f.ty).map(|val| (f.name.to_owned(), val)))
                 .collect::<anyhow::Result<Vec<(_, _)>>>()?;
-            record_ty.new_val(values)?
+            component::Val::Record(values)
         }
-        Type::Flags(flags) => flags.new_val(&[])?,
+        Type::Flags(_) => component::Val::Flags(vec![]),
         Type::Own(_) | Type::Borrow(_) => {
             // TODO: research
             bail!("{:?} is currently not supported", ty)
@@ -126,17 +124,14 @@ pub fn object_to_wasmtime_val(
             for field in record.fields() {
                 let converted_value = match object.get(field.name) {
                     Some(value) => value_to_wasmtime_val(value, &field.ty),
-                    None => {
-                        if let Type::Option(option_ty) = field.ty {
-                            option_ty.new_val(None)
-                        } else {
-                            bail!("field '{}' is not optional", field.name);
-                        }
-                    }
+                    None => match field.ty {
+                        Type::Option(_) => Ok(component::Val::Option(None)),
+                        _ => bail!("field '{}' is not optional", field.name),
+                    },
                 }?;
-                values.push((field.name, converted_value));
+                values.push((field.name.to_owned(), converted_value));
             }
-            record.new_val(values)
+            Ok(component::Val::Record(values))
         }
         Type::Variant(variant) => {
             // t.struct({tag, value}) => variant { tag1(p1?), tag2(p2?), .. }
@@ -153,8 +148,11 @@ pub fn object_to_wasmtime_val(
                 Some(matching_tag) => match matching_tag.ty {
                     Some(payload_ty) => match repr.value {
                         Some(value) => {
-                            let payload = value_to_wasmtime_val(&value, &payload_ty)?;
-                            variant.new_val(matching_tag.name, Some(payload))
+                            let payload = Box::new(value_to_wasmtime_val(&value, &payload_ty)?);
+                            Ok(component::Val::Variant(
+                                matching_tag.name.to_owned(),
+                                Some(payload),
+                            ))
                         }
                         None => bail!(
                             "variant '{}' expects a payload, none was provided",
@@ -163,7 +161,7 @@ pub fn object_to_wasmtime_val(
                     },
                     None => match repr.value {
                         Some(_) => bail!("variant '{}' expects no payload", matching_tag.name),
-                        None => variant.new_val(matching_tag.name, None),
+                        None => Ok(component::Val::Variant(matching_tag.name.to_owned(), None)),
                     },
                 },
                 None => bail!("none of [{}] match '{}'", canon_tags.join(", "), repr.tag),
@@ -189,7 +187,7 @@ pub fn array_to_wasmtime_val(
                 .iter()
                 .map(|value| value_to_wasmtime_val(value, &hint_ty))
                 .collect::<anyhow::Result<Vec<_>>>()?;
-            list.new_val(converted.into())
+            Ok(component::Val::List(converted))
         }
         Type::Tuple(tuple) => {
             let canonical_len = tuple.types().len();
@@ -204,7 +202,7 @@ pub fn array_to_wasmtime_val(
                 .enumerate()
                 .map(|(pos, hint_ty)| value_to_wasmtime_val(array.get(pos).unwrap(), &hint_ty))
                 .collect::<anyhow::Result<Vec<_>>>()?;
-            tuple.new_val(converted.into())
+            Ok(component::Val::Tuple(converted))
         }
         Type::Flags(flags) => {
             let given_names = array
@@ -225,9 +223,15 @@ pub fn array_to_wasmtime_val(
 
             let conv_ordered = flags
                 .names()
-                .filter(|name| given_names.contains(*name))
+                .filter_map(|name| {
+                    if given_names.contains(name) {
+                        Some(name.to_owned())
+                    } else {
+                        None
+                    }
+                })
                 .collect::<Vec<_>>();
-            flags.new_val(&conv_ordered)
+            Ok(component::Val::Flags(conv_ordered))
         }
         _ => bail!(
             "cannot coerce '{}' to {:?}",
@@ -245,10 +249,10 @@ pub fn value_to_wasmtime_val(
     use serde_json::Value::*;
     if let Type::Option(option) = canonical_ty {
         return match value {
-            Null => option.new_val(None),
+            Null => Ok(component::Val::Option(None)),
             _ => {
                 let converted = value_to_wasmtime_val(value, &option.ty())?;
-                option.new_val(Some(converted))
+                Ok(component::Val::Option(Some(Box::new(converted))))
             }
         };
     }
@@ -283,13 +287,13 @@ pub fn value_to_wasmtime_val(
                 .next()
                 .map(component::Val::Char)
                 .context(format!("cannot coerce string '{value}' to a char"))?,
-            Type::String => component::Val::String(value.to_owned().into()),
+            Type::String => component::Val::String(value.to_owned()),
             Type::Enum(enum_ty) => {
                 if !enum_ty.names().any(|v| v == value) {
                     let prop = enum_ty.names().map(|v| v.to_owned()).collect::<Vec<_>>();
                     bail!("expected one of {}, received '{}'", prop.join(", "), value);
                 }
-                enum_ty.new_val(value)?
+                component::Val::Enum(value.to_owned())
             }
             // IDEA: coercing a string to object implies deserialization, this enables t.json()
             // Type::Record => todo!(),
@@ -321,16 +325,20 @@ pub fn wasmtime_val_to_value(value: &component::Val) -> anyhow::Result<serde_jso
         Val::String(value) => serde_json::to_value(value),
         // error-like
         Val::Result(value) => {
-            let ret = match value.value() {
-                Ok(payload) => wasmtime_val_to_value(payload.unwrap())?,
+            let ret = match value {
+                Ok(payload) => {
+                    let payload = payload.clone().unwrap();
+                    wasmtime_val_to_value(&payload)?
+                }
                 Err(payload) => {
-                    bail!("{:?}", wasmtime_val_to_value(payload.unwrap())?)
+                    let payload = payload.clone().unwrap();
+                    bail!("{:?}", wasmtime_val_to_value(&payload)?)
                 }
             };
             Ok(ret)
         }
         Val::Option(value) => {
-            let ret = match value.value() {
+            let ret = match value {
                 Some(payload) => wasmtime_val_to_value(payload)?,
                 None => serde_json::value::Value::Null,
             };
@@ -347,23 +355,21 @@ pub fn wasmtime_val_to_value(value: &component::Val) -> anyhow::Result<serde_jso
         }
         Val::Tuple(items) => {
             let out = items
-                .values()
                 .iter()
                 .map(wasmtime_val_to_value)
                 .collect::<anyhow::Result<serde_json::Value>>()?;
             Ok(out)
         }
         // object-like
-        Val::Record(value) => {
+        Val::Record(fields) => {
             let mut record = serde_json::Map::new();
-            for (k, v) in value.fields() {
+            for (k, v) in fields {
                 record.insert(k.to_string(), wasmtime_val_to_value(v)?);
             }
             serde_json::to_value(record)
         }
-        Val::Variant(value) => {
-            let tag = value.discriminant();
-            let value = match value.payload() {
+        Val::Variant(tag, payload) => {
+            let value = match payload {
                 Some(payload) => Some(wasmtime_val_to_value(payload)?),
                 None => None,
             };
@@ -372,13 +378,10 @@ pub fn wasmtime_val_to_value(value: &component::Val) -> anyhow::Result<serde_jso
                 value,
             })
         }
-        Val::Enum(value) => {
-            let value = value.discriminant();
-            serde_json::to_value(value)
-        }
-        Val::Flags(flags) => serde_json::to_value(flags.flags().collect::<Vec<&str>>()),
+        Val::Enum(value) => serde_json::to_value(value),
+        Val::Flags(flags) => serde_json::to_value(flags),
         _ => {
-            bail!("cannot convert unsupported value of type {:?}", value.ty())
+            bail!("cannot convert unsupported value {:?}", value)
         }
     }
     .map_err(|e| e.into())
