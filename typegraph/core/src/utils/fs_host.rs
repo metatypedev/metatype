@@ -13,6 +13,7 @@ use crate::{
 use common::archive::{
     archive_entries_from_bytes, encode_bytes_to_base_64, tarb64_unpack_entries_as_map,
 };
+use glob::Pattern as GlobPattern;
 use indexmap::IndexMap;
 use sha2::{Digest, Sha256};
 
@@ -213,4 +214,30 @@ pub fn hash_file(path: &Path) -> Result<(String, u32), String> {
 
 pub fn path_exists(path: &Path) -> Result<bool, String> {
     path_exists_host(&path.to_string_lossy())
+}
+
+pub fn is_glob(path: &str) -> bool {
+    GlobPattern::new(path).is_ok()
+}
+
+pub fn get_dir(path: &str) -> PathBuf {
+    let directory = PathBuf::from(path);
+
+    PathBuf::from(directory.parent().unwrap())
+}
+
+pub fn get_matching_files(glob_pattern: &str) -> Result<Vec<PathBuf>, String> {
+    let mut matching_files = vec![];
+    let glob_dir = get_dir(glob_pattern);
+
+    let all_files = expand_path(&glob_dir, &[])?;
+
+    let glob_pattern = GlobPattern::new(glob_pattern).unwrap();
+    for file in all_files {
+        if glob_pattern.matches(file.to_str().unwrap()) {
+            matching_files.push(file);
+        }
+    }
+
+    Ok(matching_files)
 }
