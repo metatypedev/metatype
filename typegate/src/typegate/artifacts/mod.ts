@@ -17,24 +17,33 @@ function getUploadPath(tgName: string) {
   return `/${tgName}/artifacts`;
 }
 
-export async function getLocalPath(meta: ArtifactMeta) {
+export async function getLocalPath(
+  meta: ArtifactMeta,
+  mainModuleMeta: ArtifactMeta,
+) {
   const cachedPath = resolve(STORE_DIR, meta.hash);
   const localPath = resolve(
     ARTIFACTS_DIR,
+    mainModuleMeta.hash,
     meta.typegraphName,
     meta.relativePath,
   );
 
   // TODO: what happens when symlink already exists? or when same local path artifacts with different cachedPath
   try {
-    await Deno.lstat(localPath);
-    return localPath;
+    const fileInfo = await Deno.lstat(localPath);
+    if (fileInfo.isFile || fileInfo.isSymlink) {
+      await Deno.remove(localPath);
+    }
+    console.log(`Removed existing link on: ${localPath}`);
   } catch {
-    await Deno.mkdir(dirname(localPath), { recursive: true });
-    await Deno.link(cachedPath, localPath);
-
-    return localPath;
+    // link doesn't exist before
   }
+
+  await Deno.mkdir(dirname(localPath), { recursive: true });
+  await Deno.link(cachedPath, localPath);
+
+  return localPath;
 }
 
 export const artifactMetaSchema = z.object({
@@ -119,10 +128,7 @@ export abstract class ArtifactStore {
     const expiresIn = 5 * 60;
     const uuid = crypto.randomUUID();
     const token = await signJWT({ uuid }, expiresIn);
-    const url = new URL(
-      `${getUploadPath(tgName)}`,
-      origin,
-    );
+    const url = new URL(`${getUploadPath(tgName)}`, origin);
     url.searchParams.set("token", token);
     return [url.toString(), jwt.getNumericDate(expiresIn)];
   }
@@ -134,7 +140,7 @@ export abstract class ArtifactStore {
     }
 
     const context = await verifyJWT(token);
-    if (context.exp as number < jwt.getNumericDate(new Date())) {
+    if ((context.exp as number) < jwt.getNumericDate(new Date())) {
       throw new Error("Expired upload URL");
     }
   }

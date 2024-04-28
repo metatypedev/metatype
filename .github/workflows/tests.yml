@@ -324,6 +324,7 @@ jobs:
             typegate/tests/utils/*.ts \
             typegate/tests/runtimes/wasm/*.ts \
             typegate/tests/runtimes/python_wasi/*.ts \
+            typegate/tests/runtimes/deno/*.ts \
             dev/deps.ts \
             dev/utils.ts
           deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
