@@ -84,7 +84,7 @@ export class WasmRuntimeReflected extends Runtime {
     materializer: Materializer,
     argumentTypes?: Record<string, string>,
   ): Resolver {
-    const { func } = materializer?.data ?? {};
+    const { op_name } = materializer?.data ?? {};
     const order = Object.keys(argumentTypes ?? {});
     const typegraph = this.typegate.register.get(this.typegraphName)!;
     const art = typegraph.tg.tg.meta.artifacts[this.modulePath as string];
@@ -100,7 +100,7 @@ export class WasmRuntimeReflected extends Runtime {
       const transfert = order.map((k) => JSON.stringify(args[k]));
       const { res } = nativeResult(
         await native.wasmtime_wit({
-          func: func as string,
+          func: op_name as string,
           wasm: await this.typegate.artifactStore.getLocalPath(artifactMeta),
           args: transfert,
         }),

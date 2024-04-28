@@ -11,7 +11,7 @@ pub struct GenStubOptions {}
 
 pub fn gen_stub(
     fun: &StubbedFunction,
-    dest: &mut GenDestBuf,
+    mod_stub_traits: &mut GenDestBuf,
     type_names: &HashMap<u32, Arc<str>>,
     _opts: &GenStubOptions,
 ) -> anyhow::Result<String> {
@@ -29,7 +29,7 @@ pub fn gen_stub(
     // FIXME: use hash or other stable id
     let id = title;
     writeln!(
-        &mut dest.buf,
+        &mut mod_stub_traits.buf,
         r#"pub trait {trait_name}: Sized + 'static {{
     fn erased(self) -> ErasedHandler {{
         ErasedHandler {{
@@ -37,12 +37,13 @@ pub fn gen_stub(
             mat_title: "{title}".into(),
             mat_trait: "{trait_name}".into(),
             handler_fn: Box::new(move |req, cx| {{
-                let req = serde_json::from_str(req).unwrap();
-                let res = self.handle(req, cx);
-                match res {{
-                    Ok(out) => Ok(serde_json::to_string(&out).unwrap()),
-                    Err(err) => Err(format!("{{err}}")),
-                }}
+                let req = serde_json::from_str(req)
+                    .map_err(|err| HandleErr::InJsonErr(format!("{{err}}")))?;
+                let res = self
+                    .handle(req, cx)
+                    .map_err(|err| HandleErr::HandlerErr(format!("{{err}}")))?;
+                serde_json::to_string(&res)
+                    .map_err(|err| HandleErr::HandlerErr(format!("{{err}}")))
             }}),
         }}
     }}
@@ -154,6 +155,8 @@ mod test {
             },
             stubbed_runtimes: Some(vec!["wasm".into()]),
             crate_name: None,
+            skip_lib_rs: None,
+            skip_cargo_toml: None,
         })?;
         let out = generator.generate(
             [(
@@ -166,7 +169,7 @@ mod test {
         let (_, buf) = out
             .0
             .iter()
-            .find(|(path, _)| path.file_name().unwrap() == "gen.rs")
+            .find(|(path, _)| path.file_name().unwrap() == "mdk.rs")
             .unwrap();
         pretty_assertions::assert_eq!(
             r#"// gen-static-end
@@ -185,17 +188,18 @@ pub mod stubs {
                 mat_title: "my_func".into(),
                 mat_trait: "MyFunc".into(),
                 handler_fn: Box::new(move |req, cx| {
-                    let req = serde_json::from_str(req).unwrap();
-                    let res = Self::handle(req, cx);
-                    match res {
-                        Ok(out) => Ok(serde_json::to_string(&out).unwrap()),
-                        Err(err) => Err(format!("{err}")),
-                    }
+                    let req = serde_json::from_str(req)
+                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
+                    let res = self
+                        .handle(req, cx)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
+                    serde_json::to_string(&res)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
                 }),
             }
         }
 
-        fn handle(input: MyInt, cx: Ctx) -> anyhow::Result<MyInt>;
+        fn handle(&self, input: MyInt, cx: Ctx) -> anyhow::Result<MyInt>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {

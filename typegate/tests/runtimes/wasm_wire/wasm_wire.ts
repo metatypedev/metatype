@@ -16,30 +16,32 @@ export const tg = await typegraph("wasm-wire-ts", (g: any) => {
         value: t.string().optional(),
       }),
       metadatas: t.list(t.list(t.either([t.string(), t.float()]))),
-    }),
-  });
+    }).rename("profile"),
+  }).rename("entity");
 
-  const wasm = WasmRuntime.wire("mat.wasm");
+  const wasm = WasmRuntime.wire("rust.wasm");
   g.expose({
     add: wasm.handler(
-      t.struct({ "a": t.float(), "b": t.float() }),
+      t.struct({ "a": t.float(), "b": t.float() }).rename("add_args"),
       t.integer(),
       { func: "add" },
-    ),
+    ).rename("add"),
     range: wasm.handler(
-      t.struct({ "a": t.integer().optional(), "b": t.integer() }),
+      t.struct({ "a": t.integer().optional(), "b": t.integer() }).rename(
+        "range_args",
+      ),
       t.list(t.integer()),
       { func: "range" },
-    ),
+    ).rename("range"),
     record: wasm.handler(
       t.struct({}),
       t.list(entity),
       { func: "record-creation" },
-    ),
+    ).rename("record-creation"),
     identity: wasm.handler(
       entity,
       entity,
       { func: "identity" },
-    ),
+    ).rename("identity"),
   }, Policy.public());
 });

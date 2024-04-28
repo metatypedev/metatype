@@ -8,6 +8,9 @@ import * as ast from "graphql/ast";
 import { Materializer } from "../../typegraph/types.ts";
 import type { WitWireMatInfo } from "../../../engine/runtime.js";
 import { ResolverArgs } from "../../types.ts";
+import { getLogger } from "../../log.ts";
+
+const logger = getLogger(import.meta);
 
 export class WasmRuntimeWire extends Runtime {
   private constructor(
@@ -33,14 +36,18 @@ export class WasmRuntimeWire extends Runtime {
     };
 
     const uuid = crypto.randomUUID();
+    logger.debug("initializing wit wire {}", {
+      instanceId: uuid,
+      module: artifactMeta,
+    });
     const wire = await WitWireMessenger.init(
       await typegate.artifactStore.getLocalPath(artifactMeta),
       uuid,
       materializers.map((mat) => ({
-        op_name: mat.data.func as string,
+        op_name: mat.data.op_name as string,
         // TODO; appropriately source the following
-        mat_hash: mat.data.func as string,
-        mat_title: mat.data.func as string,
+        mat_hash: mat.data.op_name as string,
+        mat_title: mat.data.op_name as string,
         mat_data_json: JSON.stringify({}),
       })),
     );
@@ -97,19 +104,24 @@ export class WasmRuntimeWire extends Runtime {
   }
 
   delegate(mat: Materializer): Resolver {
-    const { name } = mat.data;
-    return (args) => this.wire.handle(name as string, args);
+    const { op_name } = mat.data;
+    return (args) => this.wire.handle(op_name as string, args);
   }
 }
 
 export class WitWireMessenger {
-  static async init(componentPath: string, id: string, ops: WitWireMatInfo[]) {
+  static async init(
+    componentPath: string,
+    instanceId: string,
+    ops: WitWireMatInfo[],
+  ) {
     try {
-      const _res = await Meta.wit_wire.init(componentPath, id, {
+      const _res = await Meta.wit_wire.init(componentPath, instanceId, {
         expected_ops: ops,
-        metatype_version: "TODO",
+        // FIXME: source actual version
+        metatype_version: "0.3.7-0",
       });
-      return new WitWireMessenger(id);
+      return new WitWireMessenger(instanceId, componentPath);
     } catch (err) {
       throw new Error(`error on init for component at path: ${componentPath}`, {
         cause: {
@@ -121,7 +133,7 @@ export class WitWireMessenger {
     }
   }
 
-  constructor(public id: string) {
+  constructor(public id: string, public componentPath: string) {
   }
 
   async [Symbol.asyncDispose]() {
@@ -130,20 +142,60 @@ export class WitWireMessenger {
 
   async handle(opName: string, args: ResolverArgs) {
     const { _, ...inJson } = args;
+    let res;
     try {
-      const res = await Meta.wit_wire.handle(this.id, {
+      res = await Meta.wit_wire.handle(this.id, {
         op_name: opName,
         in_json: JSON.stringify(inJson),
       });
-      return JSON.parse(res);
     } catch (err) {
-      throw new Error(`error handling request for op ${opName}`, {
-        cause: {
-          opName,
-          args,
-          err,
+      throw new Error(
+        `unexpected error handling request for op ${opName}: ${err}`,
+        {
+          cause: {
+            opName,
+            args: inJson,
+            component: this.componentPath,
+            err,
+          },
         },
-      });
+      );
+    }
+    if ("Ok" in res) {
+      return JSON.parse(res.Ok);
+    } else if ("NoHandler" in res) {
+      throw new Error(
+        `materializer doesn't implement handler for op ${opName}`,
+        {
+          cause: {
+            opName,
+            args: inJson,
+            component: this.componentPath,
+          },
+        },
+      );
+    } else if ("InJsonErr" in res) {
+      throw new Error(
+        `materializer failed deserializing json args for op ${opName}: ${res.InJsonErr}`,
+        {
+          cause: {
+            opName,
+            args: inJson,
+            component: this.componentPath,
+          },
+        },
+      );
+    } else {
+      throw new Error(
+        `materializer handler error for op ${opName}: ${res.HandlerErr}`,
+        {
+          cause: {
+            opName,
+            args: inJson,
+            component: this.componentPath,
+          },
+        },
+      );
     }
   }
 }

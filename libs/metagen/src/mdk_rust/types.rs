@@ -4,6 +4,11 @@
 use super::utils::*;
 use crate::interlude::*;
 use crate::utils::*;
+use common::typegraph::FileTypeData;
+use common::typegraph::FloatTypeData;
+use common::typegraph::ListTypeData;
+use common::typegraph::OptionalTypeData;
+use common::typegraph::StringTypeData;
 use heck::ToPascalCase;
 use std::fmt::Write;
 
@@ -38,176 +43,292 @@ pub fn gen_type(
     };
 
     // generate the type name up first
-    let ty_name = match node {
-        TypeNode::Function { .. } => "()".to_string(),
-        TypeNode::Boolean { base, .. }
-        | TypeNode::Integer { base, .. }
-        | TypeNode::String { base, .. }
-        | TypeNode::File { base, .. }
-        | TypeNode::Any { base, .. }
-        | TypeNode::Object { base, .. }
-        | TypeNode::Float { base, .. }
-        | TypeNode::Optional { base, .. }
-        | TypeNode::List { base, .. }
-        | TypeNode::Union { base, .. }
-        | TypeNode::Either { base, .. } => normalize_type_title(&base.title),
-        /* TypeNode::Union { base, .. } => {
+    let (gen_code, ty_name) = match node {
+        // functions will be absent in our gnerated types
+        TypeNode::Function { .. } => (false, "()".to_string()),
+
+        // under certain conditionds, we don't want to  generate aliases
+        // for primitive types. this includes
+        // - types with defualt generated names
+        // - types with no special semantics
+        TypeNode::Boolean { base } if base.title.starts_with("boolean_") => {
+            (false, "bool".to_string())
+        }
+        TypeNode::Integer {
+            base,
+            data:
+                common::typegraph::IntegerTypeData {
+                    minimum: None,
+                    maximum: None,
+                    multiple_of: None,
+                    exclusive_minimum: None,
+                    exclusive_maximum: None,
+                },
+        } if base.title.starts_with("integer_") => (false, "i64".to_string()),
+        TypeNode::Float {
+            base,
+            data:
+                FloatTypeData {
+                    minimum: None,
+                    maximum: None,
+                    multiple_of: None,
+                    exclusive_minimum: None,
+                    exclusive_maximum: None,
+                },
+        } if base.title.starts_with("float_") => (false, "f64".to_string()),
+        TypeNode::String {
+            base,
+            data:
+                StringTypeData {
+                    min_length: None,
+                    max_length: None,
+                    format: None,
+                    pattern: None,
+                },
+        } if base.title.starts_with("string_") => (false, "String".to_string()),
+        TypeNode::File {
+            base,
+            data:
+                FileTypeData {
+                    min_size: None,
+                    max_size: None,
+                    mime_types: None,
+                },
+        } if base.title.starts_with("file_") => (false, "Vec<u8>".to_string()),
+        TypeNode::Optional {
+            // NOTE: keep this condition
+            // in sync with similar one
+            // below
+            base,
+            data:
+                OptionalTypeData {
+                    default_value: None,
+                    ..
+                },
+        } if base.title.starts_with("optional_") => {
+            // since the type name of Optionl<T> | Vec<T> depends on
+            // the name of the inner type, we use placeholders at this ploint
+            (true, normalize_type_title(&format!("&&placeholder{id}%%")))
+        }
+        TypeNode::List {
+            // NOTE: keep this condition
+            // in sync with similar one
+            // below
+            base,
+            data:
+                ListTypeData {
+                    min_items: None,
+                    max_items: None,
+                    ..
+                },
+        } if base.title.starts_with("list_") => {
+            // since the type name of Optionl<T> | Vec<T> depends on
+            // the name of the inner type, we use placeholders at this ploint
+            (true, normalize_type_title(&format!("&&placeholder{id}%%")))
+        }
+        ty => (true, normalize_type_title(&ty.base().title)),
+        /*
+         TypeNode::Union { base, .. } => {
             format!("{}Union", normalize_type_title(&base.title))
         }
         TypeNode::Either { base, .. } => {
             format!("{}Either", normalize_type_title(&base.title))
         }
-        // since the type name of Optionl<T> | Vec<T> depends on
-        // the name of the inner type, we use placeholders at this ploint
-        TypeNode::Optional { .. } | TypeNode::List { .. } => {
-            normalize_type_title(&format!("Placeholder{id}"))
-        } */
+        */
     };
-    let ty_name: Arc<str> = ty_name.into();
+    let mut ty_name: Arc<str> = ty_name.into();
 
     // insert typename into memo before generation to allow cyclic resolution
     // if this function is recursively called when generating dependent branches
     memo.insert(id, ty_name.clone());
 
-    match node {
-        TypeNode::Function { .. } => {}
-        TypeNode::Boolean { .. } => {
-            gen_alias(&mut dest.buf, &ty_name, "bool")?;
-        }
-        TypeNode::Float { .. } => {
-            gen_alias(&mut dest.buf, &ty_name, "f64")?;
-        }
-        TypeNode::Integer { .. } => {
-            gen_alias(&mut dest.buf, &ty_name, "i64")?;
-        }
-        TypeNode::String { .. } => {
-            gen_alias(&mut dest.buf, &ty_name, "String")?;
-        }
-        TypeNode::File { .. } => {
-            gen_alias(&mut dest.buf, &ty_name, "Vec<u8>")?;
-        }
-        TypeNode::Any { .. } => {
-            gen_alias(&mut dest.buf, &ty_name, "serde_json::Value")?;
-        }
-        TypeNode::Object { data, .. } => {
-            let props = data
-                .properties
-                .iter()
-                // generate property type sfirst
-                .map(|(name, &dep_id)| {
-                    let (ty_name, branch_visited_types) =
-                        gen_type(dep_id, nodes, dest, memo, opts, &my_path)?;
+    if gen_code {
+        match node {
+            TypeNode::Function { .. } => unreachable!(),
+            TypeNode::Boolean { .. } => {
+                gen_alias(&mut dest.buf, &ty_name, "bool")?;
+            }
+            TypeNode::Float { .. } => {
+                gen_alias(&mut dest.buf, &ty_name, "f64")?;
+            }
+            TypeNode::Integer { .. } => {
+                gen_alias(&mut dest.buf, &ty_name, "i64")?;
+            }
+            TypeNode::String { .. } => {
+                gen_alias(&mut dest.buf, &ty_name, "String")?;
+            }
+            TypeNode::File { .. } => {
+                gen_alias(&mut dest.buf, &ty_name, "Vec<u8>")?;
+            }
+            TypeNode::Any { .. } => {
+                gen_alias(&mut dest.buf, &ty_name, "serde_json::Value")?;
+            }
+            TypeNode::Object { data, .. } => {
+                let props = data
+                    .properties
+                    .iter()
+                    // generate property type sfirst
+                    .map(|(name, &dep_id)| {
+                        let (ty_name, branch_visited_types) =
+                            gen_type(dep_id, nodes, dest, memo, opts, &my_path)?;
 
-                    let ty_name = if data.required.contains(name) {
-                        ty_name.to_string()
-                    } else {
-                        format!("Option<{ty_name}>")
-                    };
+                        /* let ty_name = if data.required.contains(name) {
+                            ty_name.to_string()
+                        } else {
+                            format!("Option<{ty_name}>")
+                        }; */
 
-                    let ty_name = if let Some(true) =
-                        is_path_unsized_cyclic(id, &my_path, &branch_visited_types, nodes)
-                    {
-                        format!("Box<{ty_name}>")
-                    } else {
-                        ty_name
-                    };
-                    merge_visited_paths_into(branch_visited_types, &mut visited_types);
+                        let ty_name = if let Some(true) =
+                            is_path_unsized_cyclic(id, &my_path, &branch_visited_types, nodes)
+                        {
+                            format!("Box<{ty_name}>")
+                        } else {
+                            ty_name.to_string()
+                        };
+                        merge_visited_paths_into(branch_visited_types, &mut visited_types);
 
-                    let normalized_prop_name = normalize_struct_prop_name(name);
-                    let rename_name = if normalized_prop_name.as_str() != name.as_str() {
-                        Some(name.clone())
-                    } else {
-                        None
-                    };
-                    Ok::<_, anyhow::Error>((normalized_prop_name, (ty_name, rename_name)))
-                })
-                .collect::<Result<IndexMap<_, _>, _>>()?;
-            gen_struct(&mut dest.buf, opts, &ty_name[..], props)?;
-        }
-        TypeNode::Union { data, .. } => {
-            let variants = data
-                .any_of
-                .iter()
-                .map(|&inner| {
-                    let (ty_name, branch_visited_types) =
-                        gen_type(inner, nodes, dest, memo, opts, &my_path)?;
-                    let variant_name = ty_name.to_pascal_case();
-                    let ty_name = if let Some(true) =
-                        is_path_unsized_cyclic(id, &my_path, &branch_visited_types, nodes)
-                    {
-                        format!("Box<{ty_name}>")
-                    } else {
-                        ty_name.to_string()
-                    };
-                    merge_visited_paths_into(branch_visited_types, &mut visited_types);
-                    Ok::<_, anyhow::Error>((variant_name, ty_name))
-                })
-                .collect::<Result<Vec<_>, _>>()?;
-            gen_enum(&mut dest.buf, opts, &ty_name, variants)?;
-        }
-        TypeNode::Either { data, .. } => {
-            let variants = data
-                .one_of
-                .iter()
-                .map(|&inner| {
-                    let (ty_name, branch_visited_types) =
-                        gen_type(inner, nodes, dest, memo, opts, &my_path)?;
-                    let variant_name = ty_name.to_pascal_case();
-                    let ty_name = if let Some(true) =
-                        is_path_unsized_cyclic(id, &my_path, &branch_visited_types, nodes)
-                    {
-                        format!("Box<{ty_name}>")
-                    } else {
-                        ty_name.to_string()
-                    };
-                    merge_visited_paths_into(branch_visited_types, &mut visited_types);
-                    Ok::<_, anyhow::Error>((variant_name, ty_name))
-                })
-                .collect::<Result<Vec<_>, _>>()?;
-            gen_enum(&mut dest.buf, opts, &ty_name, variants)?;
-        }
-        TypeNode::Optional { data, .. } => {
-            // TODO: handle cyclic case where entire cycle is aliases
-            let (inner_ty_name, inner_visited_types) =
-                gen_type(data.item, nodes, dest, memo, opts, &my_path)?;
-            // let optional_ty_name: Arc<str> = format!("{inner_ty_name}Maybe").into();
-            let inner_ty_name = if let Some(true) =
-                is_path_unsized_cyclic(id, &my_path, &inner_visited_types, nodes)
-            {
-                format!("Box<{inner_ty_name}>")
-            } else {
-                inner_ty_name.to_string()
-            };
-            merge_visited_paths_into(inner_visited_types, &mut visited_types);
-            gen_alias(&mut dest.buf, &ty_name, &format!("Option<{inner_ty_name}>"))?;
-            // dest.buf = replace_placeholder_ty_name(&dest.buf, &ty_name, &optional_ty_name);
-            // memo.insert(id, optional_ty_name.clone());
-            // ty_name = optional_ty_name;
-        }
-        TypeNode::List { data, .. } => {
-            // TODO: handle cyclic case where entire cycle is aliases
-            let (inner_ty_name, inner_visited_types) =
-                gen_type(data.items, nodes, dest, memo, opts, &my_path)?;
-            merge_visited_paths_into(inner_visited_types, &mut visited_types);
-            if let Some(true) = data.unique_items {
-                // let ty_name = format!("{inner_ty_name}Set");
-                gen_alias(
-                    &mut dest.buf,
-                    &ty_name,
-                    &format!("std::collections::HashSet<{inner_ty_name}>"),
-                )?;
-                // ty_name
-            } else {
-                // let ty_name = format!("{inner_ty_name}List");
-                gen_alias(&mut dest.buf, &ty_name, &format!("Vec<{inner_ty_name}>"))?;
-                // ty_name
-            };
-            // let true_ty_name: Arc<str> = true_ty_name.into();
-            // dest.buf = replace_placeholder_ty_name(&dest.buf, &ty_name, &true_ty_name);
-            // memo.insert(id, true_ty_name.clone());
-            // ty_name = true_ty_name;
-        }
-    };
+                        let normalized_prop_name = normalize_struct_prop_name(name);
+                        let rename_name = if normalized_prop_name.as_str() != name.as_str() {
+                            Some(name.clone())
+                        } else {
+                            None
+                        };
+                        Ok::<_, anyhow::Error>((normalized_prop_name, (ty_name, rename_name)))
+                    })
+                    .collect::<Result<IndexMap<_, _>, _>>()?;
+                gen_struct(&mut dest.buf, opts, &ty_name[..], props)?;
+            }
+            TypeNode::Union { data, .. } => {
+                let variants = data
+                    .any_of
+                    .iter()
+                    .map(|&inner| {
+                        let (ty_name, branch_visited_types) =
+                            gen_type(inner, nodes, dest, memo, opts, &my_path)?;
+                        let variant_name = ty_name.to_pascal_case();
+                        let ty_name = if let Some(true) =
+                            is_path_unsized_cyclic(id, &my_path, &branch_visited_types, nodes)
+                        {
+                            format!("Box<{ty_name}>")
+                        } else {
+                            ty_name.to_string()
+                        };
+                        merge_visited_paths_into(branch_visited_types, &mut visited_types);
+                        Ok::<_, anyhow::Error>((variant_name, ty_name))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                gen_enum(&mut dest.buf, opts, &ty_name, variants)?;
+            }
+            TypeNode::Either { data, .. } => {
+                let variants = data
+                    .one_of
+                    .iter()
+                    .map(|&inner| {
+                        let (ty_name, branch_visited_types) =
+                            gen_type(inner, nodes, dest, memo, opts, &my_path)?;
+                        let variant_name = ty_name.to_pascal_case();
+                        let ty_name = if let Some(true) =
+                            is_path_unsized_cyclic(id, &my_path, &branch_visited_types, nodes)
+                        {
+                            format!("Box<{ty_name}>")
+                        } else {
+                            ty_name.to_string()
+                        };
+                        merge_visited_paths_into(branch_visited_types, &mut visited_types);
+                        Ok::<_, anyhow::Error>((variant_name, ty_name))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                gen_enum(&mut dest.buf, opts, &ty_name, variants)?;
+            }
+            TypeNode::Optional {
+                // NOTE: keep this condition
+                // in sync with similar one above
+                base,
+                data:
+                    OptionalTypeData {
+                        default_value: None,
+                        item,
+                    },
+            } if base.title.starts_with("optional_") => {
+                // TODO: handle cyclic case where entire cycle is aliases
+                let (inner_ty_name, inner_visited_types) =
+                    gen_type(*item, nodes, dest, memo, opts, &my_path)?;
+                let inner_ty_name = if let Some(true) =
+                    is_path_unsized_cyclic(id, &my_path, &inner_visited_types, nodes)
+                {
+                    format!("Box<{inner_ty_name}>")
+                } else {
+                    inner_ty_name.to_string()
+                };
+                merge_visited_paths_into(inner_visited_types, &mut visited_types);
+                let true_ty_name = format!("Option<{inner_ty_name}>");
+                let true_ty_name: Arc<str> = true_ty_name.into();
+                dest.buf = replace_placeholder_ty_name(&dest.buf, &ty_name, &true_ty_name);
+                memo.insert(id, true_ty_name.clone());
+                ty_name = true_ty_name;
+            }
+            TypeNode::Optional { data, .. } => {
+                // TODO: handle cyclic case where entire cycle is aliases
+                let (inner_ty_name, inner_visited_types) =
+                    gen_type(data.item, nodes, dest, memo, opts, &my_path)?;
+                // let optional_ty_name: Arc<str> = format!("{inner_ty_name}Maybe").into();
+                let inner_ty_name = if let Some(true) =
+                    is_path_unsized_cyclic(id, &my_path, &inner_visited_types, nodes)
+                {
+                    format!("Box<{inner_ty_name}>")
+                } else {
+                    inner_ty_name.to_string()
+                };
+                merge_visited_paths_into(inner_visited_types, &mut visited_types);
+                gen_alias(&mut dest.buf, &ty_name, &format!("Option<{inner_ty_name}>"))?;
+            }
+            TypeNode::List {
+                // NOTE: keep this condition
+                // in sync with similar one above
+                base,
+                data:
+                    ListTypeData {
+                        min_items: None,
+                        max_items: None,
+                        unique_items,
+                        items,
+                    },
+            } if base.title.starts_with("list_") => {
+                // TODO: handle cyclic case where entire cycle is aliases
+                let (inner_ty_name, inner_visited_types) =
+                    gen_type(*items, nodes, dest, memo, opts, &my_path)?;
+                merge_visited_paths_into(inner_visited_types, &mut visited_types);
+                let true_ty_name = if let Some(true) = unique_items {
+                    format!("std::collections::HashSet<{inner_ty_name}>")
+                } else {
+                    format!("Vec<{inner_ty_name}>")
+                };
+                let true_ty_name: Arc<str> = true_ty_name.into();
+                dest.buf = replace_placeholder_ty_name(&dest.buf, &ty_name, &true_ty_name);
+                memo.insert(id, true_ty_name.clone());
+                ty_name = true_ty_name;
+            }
+            TypeNode::List { data, .. } => {
+                // TODO: handle cyclic case where entire cycle is aliases
+                let (inner_ty_name, inner_visited_types) =
+                    gen_type(data.items, nodes, dest, memo, opts, &my_path)?;
+                merge_visited_paths_into(inner_visited_types, &mut visited_types);
+                if let Some(true) = data.unique_items {
+                    // let ty_name = format!("{inner_ty_name}Set");
+                    gen_alias(
+                        &mut dest.buf,
+                        &ty_name,
+                        &format!("std::collections::HashSet<{inner_ty_name}>"),
+                    )?;
+                    // ty_name
+                } else {
+                    // let ty_name = format!("{inner_ty_name}List");
+                    gen_alias(&mut dest.buf, &ty_name, &format!("Vec<{inner_ty_name}>"))?;
+                    // ty_name
+                };
+            }
+        };
+    }
     Ok((ty_name, visited_types))
 }
 
@@ -242,7 +363,6 @@ fn is_path_unsized_cyclic(
     })
 }
 
-#[allow(unused)]
 fn replace_placeholder_ty_name(buf: &str, placeholder: &str, replacement: &str) -> String {
     buf.replace(placeholder, replacement).replace(
         &normalize_struct_prop_name(placeholder),
@@ -302,6 +422,7 @@ fn gen_enum(
     variants: Vec<(String, String)>,
 ) -> std::fmt::Result {
     gen_derive(dest, opts)?;
+    writeln!(dest, "#[serde(untagged)]")?;
     writeln!(dest, "pub enum {ty_name} {{")?;
     for (var_name, ty_name) in variants.into_iter() {
         writeln!(dest, "    {var_name}({ty_name}),")?;
@@ -417,12 +538,12 @@ mod test {
                             properties: [
                                 ("myString".to_string(), 0),
                                 ("list".to_string(), 1),
-                                ("optional".to_string(), 0),
-                                ("optionalOptional".to_string(), 3),
+                                ("optional".to_string(), 3),
                             ]
                             .into_iter()
                             .collect(),
-                            required: ["myString", "list"].into_iter().map(Into::into).collect(),
+                            // FIXME: remove required
+                            required: vec![],
                         },
                         base: TypeNodeBase {
                             title: "my_obj".into(),
@@ -462,11 +583,10 @@ pub struct MyObj {
     #[serde(rename = "myString")]
     pub my_string: MyStr,
     pub list: MyStrList,
-    pub optional: Option<MyStr>,
-    #[serde(rename = "optionalOptional")]
-    pub optional_optional: Option<MyStrMaybe>,
+    pub optional: MyStrMaybe,
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
 pub enum MyEither {
     MyStr(MyStr),
     MyStrList(MyStrList),
@@ -479,6 +599,7 @@ pub enum MyEither {
     MyObj(MyObj),
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
 pub enum MyUnion {
     MyStr(MyStr),
     MyStrList(MyStrList),
@@ -492,6 +613,102 @@ pub enum MyUnion {
     MyEither(MyEither),
 }
 "#,
+            ),
+            (
+                "alias_avoidance",
+                vec![
+                    TypeNode::String {
+                        data: StringTypeData {
+                            format: None,
+                            pattern: None,
+                            min_length: None,
+                            max_length: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "string_0".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::List {
+                        data: ListTypeData {
+                            items: 0,
+                            max_items: None,
+                            min_items: None,
+                            unique_items: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "list_1".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::List {
+                        data: ListTypeData {
+                            items: 0,
+                            max_items: None,
+                            min_items: None,
+                            unique_items: Some(true),
+                        },
+                        base: TypeNodeBase {
+                            title: "list_2".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Optional {
+                        data: OptionalTypeData {
+                            item: 0,
+                            default_value: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "optional_3".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Integer {
+                        data: IntegerTypeData {
+                            maximum: None,
+                            multiple_of: None,
+                            exclusive_minimum: None,
+                            exclusive_maximum: None,
+                            minimum: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "integer_4".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Float {
+                        data: FloatTypeData {
+                            maximum: None,
+                            multiple_of: None,
+                            exclusive_minimum: None,
+                            exclusive_maximum: None,
+                            minimum: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "float_5".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Boolean {
+                        base: TypeNodeBase {
+                            title: "boolean_6".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::File {
+                        data: FileTypeData {
+                            min_size: None,
+                            max_size: None,
+                            mime_types: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "file_7".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                ],
+                "Vec<u8>",
+                r#""#,
             ),
             (
                 "cycles_obj",
@@ -583,6 +800,7 @@ pub struct ObjA {
     pub obj_b: ObjB,
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
 pub enum CUnion {
     ObjA(Box<ObjA>),
 }
@@ -629,6 +847,7 @@ pub struct ObjA {
     pub obj_b: ObjB,
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
 pub enum CEither {
     ObjA(Box<ObjA>),
 }

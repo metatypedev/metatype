@@ -29,14 +29,14 @@ export async function initRuntime(
 ): Promise<Runtime> {
   const init = registeredRuntimes.get(name);
   if (!init) {
+    console.log(registeredRuntimes);
     throw new Error(`Runtime ${name} is not registered`);
   }
   return await init(params);
 }
 
 export async function init_runtimes(): Promise<void> {
-  await Promise.allSettled([
-    import("./Runtime.ts"),
+  await Promise.all([
     import("./deno.ts"),
     import("./graphql.ts"),
     import("./http.ts"),

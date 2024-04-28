@@ -28,8 +28,8 @@ typegraphs:
 
 metagen:
   targets:
-    main:
+    wasm_wire:
       mdk_rust:
-        path: ./runtimes/wasm_wire/mat/
+        path: ./runtimes/wasm_wire/rust/
         typegraph_path: ./runtimes/wasm_wire/wasm_wire.ts
         stubbed_runtimes: ["wasm"]

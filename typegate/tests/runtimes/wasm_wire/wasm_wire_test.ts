@@ -1,6 +1,5 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
-
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 import { gql, Meta } from "test-utils/mod.ts";
 import { testDir } from "test-utils/dir.ts";
@@ -142,16 +141,14 @@ Meta.test(
         await gql`
           query {
             identity(
-              arg0: {
-                name: "Monster A"
-                age: null
-                profile: {
-                  attributes: ["attack", "defend"]
-                  level: "gold"
-                  # category: { tag: "a", value: "unexpected" }, # fail!
-                  category: { tag: "b", value: "payload" }
-                  metadatas: [["a", 1.0], ["b", 1.3]] # list<tuple<string, f64>>
-                }
+              name: "Monster A"
+              age: null
+              profile: {
+                attributes: ["attack", "defend"]
+                level: "gold"
+                # category: { tag: "a", value: "unexpected" }, # fail!
+                category: { tag: "b", value: "payload" }
+                metadatas: [["a", 1.0], ["b", 1.3]] # list<tuple<string, f64>>
               }
             ) {
               name

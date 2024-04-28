@@ -12,6 +12,8 @@ typegraph(
       const obj = t.struct({
         str: t.string(),
         int: t.integer(),
+        float: t.float(),
+        boolean: t.boolean(),
         file: t.file(),
         opt: t.optional(t.string()),
         either: t.either([
@@ -23,14 +25,14 @@ typegraph(
           t.struct({ b: t.string() }),
         ]),
         list: t.list(t.string()),
-      });
+      }).rename("MyObj");
 
       const wasm = WasmRuntime.wire("placeholder");
       g.expose(
         {
           my_faas: wasm.handler(
-            t.struct({ hello: t.string() }).rename("FaasIn"),
-            t.struct({ hi: t.string() }).rename("FaasOut"),
+            obj,
+            obj,
             { func: "my_faas" },
           ).rename("my_faas"),
         },

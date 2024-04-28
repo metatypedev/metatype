@@ -5,6 +5,7 @@
 
 pub mod wit {
     wit_bindgen::generate!({
+        pub_export_macro: true,
         //wit-start
         // this bit gets replaced by the inline wit string
         world: "wit-wire",
@@ -20,13 +21,13 @@ use anyhow::Context;
 
 use wit::exports::metatype::wit_wire::mat_wire::*;
 
-struct Module;
+pub type HandlerFn = Box<dyn Fn(&str, Ctx) -> Result<String, HandleErr>>;
 
 pub struct ErasedHandler {
     mat_id: String,
     mat_trait: String,
     mat_title: String,
-    handler_fn: Box<dyn Fn(&str, Ctx) -> Res>,
+    handler_fn: HandlerFn,
 }
 
 pub struct MatBuilder {
@@ -58,7 +59,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "__METATYPE_VERSION__";
+        static MT_VERSION: &str = "0.3.7-0";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -71,9 +72,11 @@ impl Router {
         Ok(InitResponse { ok: true })
     }
 
-    pub fn handle(&self, req: Req) -> Res {
+    pub fn handle(&self, req: HandleReq) -> Result<String, HandleErr> {
         let mat_trait = stubs::op_to_trait_name(&req.op_name);
-        let handler = self.handlers.get(mat_trait).unwrap();
+        let Some(handler) = self.handlers.get(mat_trait) else {
+            return Err(HandleErr::NoHandler);
+        };
         let cx = Ctx {
             gql: GraphqlClient {},
         };
@@ -96,13 +99,13 @@ pub struct GraphqlClient {}
 #[macro_export]
 macro_rules! init_mat {
     (hook: $init_hook:expr) => {
-        struct MyMat;
+        struct MatWireGuest;
         use wit::exports::metatype::wit_wire::mat_wire::*;
-        wit::export!(MyMat with_types_in wit);
+        wit::export!(MatWireGuest with_types_in wit);
 
         #[allow(unused)]
-        impl Guest for MyMat {
-            fn handle(req: Req) -> Res {
+        impl Guest for MatWireGuest {
+            fn handle(req: HandleReq) -> Result<String, HandleErr> {
                 MAT_STATE.with(|router| {
                     let router = router.borrow();
                     router.handle(req)
@@ -110,7 +113,8 @@ macro_rules! init_mat {
             }
 
             fn init(args: InitArgs) -> Result<InitResponse, InitError> {
-                let router = Router::from_builder($init_hook());
+                let hook = $init_hook;
+                let router = Router::from_builder(hook());
                 let resp = router.init(args)?;
                 MAT_STATE.set(router);
                 Ok(resp)

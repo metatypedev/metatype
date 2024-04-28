@@ -62,7 +62,7 @@ type MetaNS = {
     handle: (
       instanceId: string,
       args: WitWireReq,
-    ) => Promise<string>;
+    ) => Promise<WitWireHandleResponse>;
   };
 };
 
@@ -249,4 +249,18 @@ export type WitWireInitError =
   }
   | {
     Other: string;
+  };
+
+export type WitWireHandleResponse =
+  | {
+    Ok: string;
+  }
+  | {
+    NoHandler: void;
+  }
+  | {
+    InJsonErr: string;
+  }
+  | {
+    HandlerErr: string;
   };

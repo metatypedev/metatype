@@ -151,7 +151,7 @@ Deno.test("typegraphValidate", () => {
 
 Deno.test("Wasm Wit", async () => {
   const input: WasmInput = {
-    wasm: "typegate/tests/runtimes/wasm/rust.wasm",
+    wasm: "typegate/tests/runtimes/wasm_reflected/rust.wasm",
     func: "add",
     args: [JSON.stringify(1), JSON.stringify(2)],
   };

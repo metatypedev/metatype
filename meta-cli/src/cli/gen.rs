@@ -108,7 +108,13 @@ impl Action for Gen {
                 }
             }
             GeneratorOp::Mdk => {
-                let files = metagen::generate_target(mgen_conf, &self.gen_target, resolver).await?;
+                let files = metagen::generate_target(
+                    mgen_conf,
+                    &self.gen_target,
+                    config.path.as_ref().unwrap().parent().unwrap().into(),
+                    resolver,
+                )
+                .await?;
                 let mut set = tokio::task::JoinSet::new();
                 for (path, file) in files.0 {
                     set.spawn(async move {

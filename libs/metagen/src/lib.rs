@@ -89,6 +89,7 @@ trait Plugin: Send + Sync {
 pub async fn generate_target(
     config: &config::Config,
     target_name: &str,
+    workspace_path: PathBuf,
     resolver: impl InputResolver + Send + Sync + Clone + 'static,
 ) -> anyhow::Result<GeneratorOutput> {
     let generators = [
@@ -96,8 +97,8 @@ pub async fn generate_target(
         (
             "mdk_rust".to_string(),
             // initialize the impl
-            &|val| {
-                let config: mdk_rust::MdkRustGenConfig = serde_json::from_value(val)?;
+            &|workspace_path: &Path, val| {
+                let config = mdk_rust::MdkRustGenConfig::from_json(val, workspace_path)?;
                 let generator = mdk_rust::Generator::new(config)?;
                 Ok::<_, anyhow::Error>(Box::new(generator) as Box<dyn Plugin>)
             },
@@ -119,7 +120,7 @@ pub async fn generate_target(
             .get(&gen_name[..])
             .with_context(|| format!("generator \"{gen_name}\" not found in config"))?;
 
-        let gen_impl = get_gen_fn(config)?;
+        let gen_impl = get_gen_fn(&workspace_path, config)?;
         let bill = gen_impl.bill_of_inputs();
 
         let mut resolve_set = tokio::task::JoinSet::new();
