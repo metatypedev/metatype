@@ -39,7 +39,7 @@ wasmedge-sdk.workspace = true
 wasmedge-sys.workspace = true
 wasmedge-types.workspace = true
 
-wasmtime = { version = "19.0.1",  features = ["component-model"] }
+wasmtime = { version = "20.0.0",  features = ["component-model"] }
 
 shadow-rs.workspace = true
 serde.workspace = true
