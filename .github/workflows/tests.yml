@@ -134,11 +134,11 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - name: Cache deno dir
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.DENO_DIR }}
-          key: deno-mac-${{ hashFiles('**/deno.lock') }}
+      # - name: Cache deno dir
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ${{ env.DENO_DIR }}
+      #     key: deno-mac-${{ hashFiles('**/deno.lock') }}
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
