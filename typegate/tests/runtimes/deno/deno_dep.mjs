@@ -6,7 +6,7 @@ import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
 export const denoDepTg = await typegraph({
   name: "test_deno_dep",
-}, (g: any) => {
+}, (g) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
 

@@ -4,7 +4,7 @@
 import { gql, Meta, sleep } from "../../utils/mod.ts";
 import * as path from "std/path/mod.ts";
 import { testDir } from "test-utils/dir.ts";
-import { denoDepTg } from "./deno_dep.ts";
+import { denoDepTg } from "./deno_dep.mjs";
 import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
 
 const cwd = path.join(testDir, "runtimes/deno");
