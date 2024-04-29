@@ -90,6 +90,7 @@ struct Instance {
     bindings: wit::WitWire,
     _instance: wasmtime::component::Instance,
     store: wasmtime::Store<InstanceState>,
+    preopen_dir: PathBuf,
 }
 
 struct InstanceState {
@@ -237,7 +238,7 @@ pub async fn op_wit_wire_init(
     let work_dir = ctx.instance_workdir.join(&instance_id);
     tokio::fs::create_dir_all(&work_dir).await.unwrap();
     let mut store =
-        wasmtime::Store::new(&ctx.engine, InstanceState::new(work_dir, TypegateHost {}));
+        wasmtime::Store::new(&ctx.engine, InstanceState::new(&work_dir, TypegateHost {}));
     let (bindings, instance) = wit::WitWire::instantiate_async(&mut store, &component, &ctx.linker)
         .await
         .map_err(|err| {
@@ -247,7 +248,7 @@ pub async fn op_wit_wire_init(
     let args = input.into();
     let res = guest.call_init(&mut store, &args).await.map_err(|err| {
         WitWireInitError::ModuleErr(format!("module error calling init: {err}"))
-    })??;
+    })??; // <- note second try for the wit err. we have an into impl above
     assert!(res.ok);
     ctx.instances.insert(
         instance_id,
@@ -255,6 +256,7 @@ pub async fn op_wit_wire_init(
             _instance: instance,
             bindings,
             store,
+            preopen_dir: work_dir,
         },
     );
     Ok(WitWireInitResponse {})
@@ -268,7 +270,15 @@ pub async fn op_wit_wire_destroy(state: Rc<RefCell<OpState>>, #[string] instance
         ctx.clone()
     };
 
-    ctx.instances.remove(&instance_id);
+    let Some((_id, instance)) = ctx.instances.remove(&instance_id) else {
+        return;
+    };
+    if let Err(err) = tokio::fs::remove_dir_all(&instance.preopen_dir).await {
+        error!(
+            "error removing preopend dir for instance {_id} at {:?}: {err}",
+            instance.preopen_dir
+        )
+    }
 }
 
 #[derive(Deserialize)]

@@ -16,19 +16,26 @@ export class WitWireMessenger {
         // FIXME: source actual version
         metatype_version: "0.3.7-0",
       });
-      return new WitWireMessenger(instanceId, componentPath);
+      return new WitWireMessenger(instanceId, componentPath, ops);
     } catch (err) {
-      throw new Error(`error on init for component at path: ${componentPath}`, {
-        cause: {
-          componentPath,
-          ops,
-          err,
+      throw new Error(
+        `error on init for component at path: ${componentPath}: ${err}`,
+        {
+          cause: {
+            componentPath,
+            ops,
+            err,
+          },
         },
-      });
+      );
     }
   }
 
-  constructor(public id: string, public componentPath: string) {
+  constructor(
+    public id: string,
+    public componentPath: string,
+    public ops: WitWireMatInfo[],
+  ) {
   }
 
   async [Symbol.asyncDispose]() {
@@ -56,19 +63,32 @@ export class WitWireMessenger {
         },
       );
     }
-    if ("Ok" in res) {
-      return JSON.parse(res.Ok);
-    } else if ("NoHandler" in res) {
-      throw new Error(
-        `materializer doesn't implement handler for op ${opName}`,
-        {
+    if (
+      typeof res == "string"
+    ) {
+      if (res == "NoHandler") {
+        throw new Error(
+          `materializer doesn't implement handler for op ${opName}`,
+          {
+            cause: {
+              opName,
+              args: inJson,
+              component: this.componentPath,
+              ops: this.ops,
+            },
+          },
+        );
+      } else {
+        throw new Error(`unexpected mat result for op ${opName}: ${res}`, {
           cause: {
             opName,
             args: inJson,
             component: this.componentPath,
           },
-        },
-      );
+        });
+      }
+    } else if ("Ok" in res) {
+      return JSON.parse(res.Ok);
     } else if ("InJsonErr" in res) {
       throw new Error(
         `materializer failed deserializing json args for op ${opName}: ${res.InJsonErr}`,

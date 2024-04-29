@@ -255,9 +255,7 @@ export type WitWireHandleResponse =
   | {
     Ok: string;
   }
-  | {
-    NoHandler: void;
-  }
+  | "NoHandler"
   | {
     InJsonErr: string;
   }

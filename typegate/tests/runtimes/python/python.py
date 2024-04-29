@@ -61,13 +61,13 @@ def python(g: Graph):
             t.string(),
             test,
         ).with_policy(public),
-        # testMod=python.import_(
-        #     t.struct({"name": t.string()}),
-        #     t.string(),
-        #     module="py/hello.py",
-        #     deps=["py/nested/dep.py"],
-        #     name="sayHello",
-        # ).with_policy(public),
+        testMod=python.import_(
+            t.struct({"name": t.string()}),
+            t.string(),
+            module="py/hello.py",
+            deps=["py/nested/dep.py"],
+            name="sayHello",
+        ).with_policy(public),
         identity=python.from_def(
             t.struct({"input": tpe}),
             tpe,
