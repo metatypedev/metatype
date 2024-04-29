@@ -9381,7 +9381,6 @@ checksum = "45a28f4c49489add4ce10783f7911893516f15afe45d015608d41faca6bc4d29"
 dependencies = [
  "dyn-clone",
  "indexmap 1.9.3",
- "indexmap 2.2.6",
  "schemars_derive",
  "serde 1.0.198",
  "serde_json",
@@ -13656,23 +13655,6 @@ name = "xml-rs"
 version = "0.8.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "791978798f0597cfc70478424c2b4fdc2b7a8024aaff78497ef00f24ef674193"
-
-[[package]]
-name = "xtask"
-version = "0.3.7-0"
-dependencies = [
- "anyhow",
- "clap",
- "common",
- "env_logger",
- "log",
- "mt_deno",
- "project-root",
- "schemars",
- "serde_json",
- "typegate_engine",
- "typescript",
-]
 
 [[package]]
 name = "yaml-rust"
