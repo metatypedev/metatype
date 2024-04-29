@@ -194,7 +194,7 @@ export class Typegate {
       const [engineName, serviceName] = parsePath(url.pathname);
 
       if (serviceName === "artifacts") {
-        return this.#artifactService.handle(request, engineName);
+        return await this.#artifactService.handle(request, engineName);
       }
 
       if (!engineName || ignoreList.has(engineName)) {

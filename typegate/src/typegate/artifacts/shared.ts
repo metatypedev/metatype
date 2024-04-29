@@ -136,11 +136,11 @@ export class SharedArtifactStore extends ArtifactStore {
   ): Promise<string> {
     for (const dep of deps ?? []) {
       await this.#downloadFromRemote(dep.hash, dep.relativePath);
-      await getLocalPath(dep);
+      await getLocalPath(dep, meta);
     }
 
     await this.#downloadFromRemote(meta.hash, meta.relativePath);
-    return await getLocalPath(meta);
+    return await getLocalPath(meta, meta);
   }
 
   async #downloadFromRemote(hash: string, relativePath: string) {

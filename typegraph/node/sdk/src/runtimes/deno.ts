@@ -34,6 +34,7 @@ export interface DenoFunc {
 export interface DenoImport {
   name: string;
   module: string;
+  deps?: Array<string>;
   secrets?: Array<string>;
   effect?: Effect;
 }
@@ -88,11 +89,12 @@ export class DenoRuntime extends Runtime {
   >(
     inp: I,
     out: O,
-    { name, module, effect = fx.read(), secrets = [] }: DenoImport,
+    { name, module, deps = [], effect = fx.read(), secrets = [] }: DenoImport,
   ): t.Func<I, O, ImportMat> {
     const matId = runtimes.importDenoFunction({
       funcName: name,
       module,
+      deps,
       secrets,
     }, effect);
     const mat: ImportMat = {
@@ -162,6 +164,7 @@ export class DenoRuntime extends Runtime {
         funcName: data.name,
         module: data.module,
         secrets: data.secrets ?? [],
+        deps: data.deps ?? [],
       }, fx.read()),
     );
   }
