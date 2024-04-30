@@ -87,7 +87,7 @@ impl Ctx {
         let mut linker = Linker::<InstanceState>::new(&self.engine);
 
         for res in [
-            wasmtime_wasi::bindings::Imports::add_to_linker(&mut linker, |state| state),
+            wasmtime_wasi::add_to_linker_async(&mut linker),
             wit::Pyrt::add_to_linker(&mut linker, |state| &mut state.tg_host),
         ] {
             res.map_err(|err| format!("erorr trying to link component: {err}"))?;
@@ -115,16 +115,18 @@ struct InstanceState {
 
 impl InstanceState {
     fn new(preopen_dir: impl AsRef<Path>, tg_host: TypegateHost) -> Self {
+        let preopen_dir = preopen_dir.as_ref();
         Self {
             ctx: wasmtime_wasi::WasiCtxBuilder::new()
                 .allow_ip_name_lookup(true)
                 .preopened_dir(
-                    cap_std::fs::Dir::open_ambient_dir(preopen_dir, cap_std::ambient_authority())
-                        .unwrap(),
+                    preopen_dir,
+                    ".",
                     wasmtime_wasi::DirPerms::all(),
                     wasmtime_wasi::FilePerms::all(),
-                    ".",
                 )
+                .with_context(|| format!("error preopening dir for instance at {preopen_dir:?}"))
+                .unwrap()
                 // TODO: stream stdio to debug log
                 .inherit_stdio()
                 .build(),
@@ -151,7 +153,7 @@ pub struct WitWireInitArgs {
 }
 struct TypegateHost {}
 
-#[async_trait::async_trait]
+#[wasmtime_wasi::async_trait]
 impl Host for TypegateHost {
     async fn hostcall(&mut self, _req: HostReq) -> wasmtime::Result<HostRes> {
         todo!()

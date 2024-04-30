@@ -12045,9 +12045,7 @@ name = "typegate_engine"
 version = "0.3.7-0"
 dependencies = [
  "anyhow",
- "async-trait",
  "base64 0.21.7",
- "cap-std",
  "common",
  "connection-string",
  "convert_case 0.6.0",
