@@ -87,27 +87,41 @@ or start directly
 
 ## Development status
 
-Metatype is still in beta and some interfaces are being stabilized, yet most of the engine is close to production readiness. As such, minor versions can contain breaking changes, but we are committed to providing a smooth upgrade path and the changes will be detailed in the [changelog](https://github.com/metatypedev/metatype/releases) of each release (watch/subscribe to this repository to be notified).
+Metatype is still in beta and some interfaces are being stabilized, yet most of
+the engine is close to production readiness. As such, minor versions can contain
+breaking changes, but we are committed to providing a smooth upgrade path and
+the changes will be detailed in the
+[changelog](https://github.com/metatypedev/metatype/releases) of each release
+(watch/subscribe to this repository to be notified).
 
 <p align="right"><a href="#top">back to top ↑</a></p>
 
 ## Contributing
 
-If you have an idea or a suggestion that would make this better, please fork the repository and follow the step below to create a pull request. You can also simply open an issue with the tag "enhancement".
+If you have an idea or a suggestion that would make this better, please fork the
+repository and follow the step below to create a pull request. You can also
+simply open an issue with the tag "enhancement".
 
 1. Fork the repository
-2. Clone your fork and follow the [developer setup](https://metatype.dev/docs/guides/contributing)
+2. Clone your fork and follow the
+   [developer setup](https://metatype.dev/docs/guides/contributing)
 3. Create a feature branch: `git checkout -b feature/awesome-x`
-4. Commit your changes using [conventional commits](https://www.conventionalcommits.org): `git commit -am 'feat: add awesome x'`
+4. Commit your changes using
+   [conventional commits](https://www.conventionalcommits.org):
+   `git commit -am 'feat: add awesome x'`
 5. Push to the branch: `git push origin feature/awesome-x`
 6. Open a pull request
 
-First-time contributors can find a list of [friendly issues](https://github.com/metatypedev/metatype/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) for them to get started and discover step by step the platform.
+First-time contributors can find a list of
+[friendly issues](https://github.com/metatypedev/metatype/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+for them to get started and discover step by step the platform.
 
 <p align="right"><a href="#top">back to top ↑</a></p>
 
 ## License
 
-Copyright © Metatype OÜ. Distributed under various licenses, see [LICENSE](./LICENSE.md) for the details. Contributions are welcomed and subject to a Contributor License Agreement (CLA).
+Copyright © Metatype OÜ. Distributed under various licenses, see
+[LICENSE](./LICENSE.md) for the details. Contributions are welcomed and subject
+to a Contributor License Agreement (CLA).
 
 <p align="right"><a href="#top">back to top ↑</a></p>
