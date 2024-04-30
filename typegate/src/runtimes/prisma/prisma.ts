@@ -147,10 +147,6 @@ export class PrismaRuntime extends Runtime {
 
       const startTime = performance.now();
       const generatedQuery = q({ variables, context, effect, parent });
-      console.log(
-        "remote prisma query",
-        JSON.stringify(generatedQuery, null, 2),
-      );
       const res = await this.query(generatedQuery);
       const endTime = performance.now();
       logger.debug(`queried prisma in ${(endTime - startTime).toFixed(2)}ms`);
