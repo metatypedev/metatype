@@ -102,7 +102,11 @@ impl MaterializerConverter for DenoMaterializer {
             }
             Module(module) => {
                 let data = serde_json::from_value(json!({
-                    "code": format!("file:{}", module.file),
+                    "denoArtifact": json!({
+                        "path": module.file,
+                    }),
+                    "deps": module.deps,
+                    "depsMeta": None::<serde_json::Value>,
                 }))
                 .unwrap();
                 ("module".to_string(), data)

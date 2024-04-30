@@ -93,12 +93,12 @@ export class LocalArtifactStore extends ArtifactStore {
 
   override async getLocalPath(meta: ArtifactMeta, deps: ArtifactMeta[] = []) {
     for (const dep of deps) {
-      this.#assertArtifactExist(dep.hash, dep.typegraphName);
-      await getLocalPath(dep);
+      await this.#assertArtifactExist(dep.hash, dep.typegraphName);
+      await getLocalPath(dep, meta);
     }
 
-    this.#assertArtifactExist(meta.hash, meta.typegraphName);
-    return getLocalPath(meta);
+    await this.#assertArtifactExist(meta.hash, meta.typegraphName);
+    return await getLocalPath(meta, meta);
   }
 
   override async prepareUpload(meta: ArtifactMeta, origin: URL) {
@@ -129,8 +129,8 @@ export class LocalArtifactStore extends ArtifactStore {
     return Promise.resolve(meta);
   }
 
-  #assertArtifactExist(key: string, tgName: string) {
-    if (!this.has(key)) {
+  async #assertArtifactExist(key: string, tgName: string) {
+    if (!(await this.has(key))) {
       throw new Error(
         `Artifact with key '${key}' is not available for typegraph '${tgName}'`,
       );
