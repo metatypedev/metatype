@@ -555,6 +555,15 @@
                   "601d3ac573271b2e2fb3c453ccd54f22d151c64e"
                 ]
               }
+            },
+            "dev": {
+              "name": "dev",
+              "dependsOn": [],
+              "env": {
+                "installs": [],
+                "env": {},
+                "allowedPortDeps": []
+              }
             }
           }
         }

@@ -2,6 +2,7 @@ export { ghjk } from "https://raw.github.com/metatypedev/ghjk/423d38e/mod.ts";
 import * as ghjk from "https://raw.github.com/metatypedev/ghjk/423d38e/mod.ts";
 import { thinInstallConfig } from "https://raw.github.com/metatypedev/ghjk/423d38e/utils/mod.ts";
 import * as ports from "https://raw.github.com/metatypedev/ghjk/423d38e/ports/mod.ts";
+import { dirname, resolve } from "https://deno.land/std/path/mod.ts";
 
 const PROTOC_VERSION = "v24.1";
 const POETRY_VERSION = "1.7.0";
@@ -153,5 +154,21 @@ ghjk.task("build-pyrt", {
     // const target = env["PYRT_TARGET"] ? `--target ${env["PYRT_TARGET"]}` : "";
     // const cwasmOut = env["PYRT_CWASM_OUT"] ?? "./target/pyrt.cwasm";
     // await `wasmtime compile -W component-model ${target} ${wasmOut} -o ${cwasmOut}`;
+  },
+});
+
+const projectDir = resolve(dirname(new URL(import.meta.url).pathname));
+
+// run: deno run --allow-all dev/<script-name>.ts [args...]
+ghjk.task("dev", {
+  async fn({ $, argv }) {
+    if (argv.length == 0) {
+      console.log("Usage: dev <dev-script-name> [args...]");
+      return;
+    }
+    const [cmd, ...args] = argv;
+    const script = $.path(projectDir).join(`dev/${cmd}.ts`);
+    console.log(`Running ${script}`, ...args.map(JSON.stringify));
+    await $`deno run --allow-all ${script} ${args}`;
   },
 });

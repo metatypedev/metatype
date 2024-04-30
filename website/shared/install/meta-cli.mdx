@@ -8,36 +8,11 @@ You can download the binary from the
 [releases page](https://github.com/metatypedev/metatype/releases/), make it
 executable and add it to your `PATH` or use the automated method below.
 
-- First, you start by installing `Meta CLI`. The installer may ask for your password.
+- An installer script is also provided for the CLI in our repository. Curl and install in it with the following one-liner. The installer may ask for your password.
     ```bash
     curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/installer.sh | bash
     ```
     TODO: Add result image/log
-
-- Next, you need to install [libwasmedge](https://wasmedge.org/docs/contribute/source/build_from_src/#what-will-be-built), which is a dependency to run `Meta CLI` on your machine.
-    ```bash
-    export WASMEDGE_VERSION=0.13.8
-    curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
-    ```
-
-- After successfully installing `libwasmedge`, you need to set it as a path variable to access it from terminal. You can use the following command to set the path variable, but it's advisable to add it to your shell rc permanently. 
-    ```bash
-    # for macOS,
-    export DYLD_LIBRARY_PATH=~/.wasmedge/lib
-    ```
-
-    ```bash
-    # for linux,
-    export LD_LIBRARY_PATH=~/.wasmedge/lib 
-    ```
-
-- A `thin` version of the cli that doesn't rely on libwasmedge is also provided.
-This version of the cli doesn't offer the `typegate` command that lets you spin up a typegate for development purposes.
-To install it, you can pass `META_THIN=1` environment variable to the installer script or download it from the github releases.
-    ```bash
-    export META_THIN=1
-    curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/installer.sh | bash
-    ```
 
 - For later use, you can run the following command to upgrade `Meta CLI` to a newer version. If your Meta CLI is up to date, you will get an `Already up to date!` response.
     ```bash

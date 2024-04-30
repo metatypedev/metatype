@@ -171,14 +171,9 @@ cargo install whiz
 pipx install pre-commit
 # manange python dependencies
 pipx install poetry
-# wasmedge prerequisits
-brew install llvm
-sudo apt-get install libclang-dev 
 # grpc prerequisits
 brew install protobuf
 sudo apt-get install protobuf-compiler libprotobuf-dev
-# wasmedge runtime
-curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash
 ```
 
 #### Running The Project

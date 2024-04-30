@@ -66,6 +66,7 @@ typegraph:
     cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
     cd ./sdk/dist
     npm config set "//localhost:4873/:_authToken" fooBar
+    ln -s ../../../../README.md ./
     npm unpublish @typegraph/sdk --force --registry http://localhost:4873
     npm publish --no-git-checks --force --registry http://localhost:4873
     cd ../../../..
