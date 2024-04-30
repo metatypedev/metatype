@@ -8,3 +8,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wit-bindgen = "0.24.0"
+
+[profile.release]
+strip = "symbols"
+opt-level = "z"
