@@ -92,8 +92,9 @@ function MiniQLBrowser({
         storage={storage}
       >
         <div
-          className={`${defaultMode ? "" : "md:grid @2xl:grid-cols-2"
-            } gap-2 w-full order-first`}
+          className={`${
+            defaultMode ? "" : "md:grid @2xl:grid-cols-2"
+          } gap-2 w-full order-first`}
         >
           {!defaultMode || mode === "typegraph" ? (
             <div className=" bg-slate-100 rounded-lg flex flex-col mb-2 md:mb-0 relative">

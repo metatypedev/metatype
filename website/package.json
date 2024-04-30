@@ -94,6 +94,14 @@
         "dependencies": {
           "@docusaurus/theme-common": "*"
         }
+      },
+      "@docusaurus/theme-classic": {
+        "peerDependencies": {
+          "@docusaurus/theme-common": "*"
+        },
+        "dependencies": {
+          "@docusaurus/theme-common": "*"
+        }
       }
     }
   }
