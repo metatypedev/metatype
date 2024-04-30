@@ -9,7 +9,6 @@ import type { ResolverArgs } from "../../../src/types.ts";
 import { testDir } from "test-utils/dir.ts";
 import { tg } from "./python.ts";
 import * as path from "std/path/mod.ts";
-import { QueryEngine } from "../../../src/engine/query_engine.ts";
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 
 const cwd = path.join(testDir, "runtimes/python");
@@ -271,7 +270,7 @@ Meta.test(
   },
 );
 
-/* Meta.test(
+Meta.test(
   {
     name: "Python: upload artifacts with deps",
     port: true,
@@ -321,7 +320,7 @@ Meta.test(
         .on(engine);
     });
   },
-); */
+);
 
 Meta.test(
   {
@@ -410,10 +409,10 @@ Meta.test(
             a
             b
           }
-          # identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
-          #   a
-          #   b
-          # }
+          identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
         }
       `
         .expectData({
@@ -425,10 +424,10 @@ Meta.test(
             a: "hello",
             b: [1, 2, "three"],
           },
-          /* identityMod: {
+          identityMod: {
             a: "hello",
             b: [1, 2, "three"],
-          }, */
+          },
         })
         .on(currentEngine);
     };

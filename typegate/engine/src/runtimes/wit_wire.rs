@@ -7,12 +7,15 @@ use dashmap::DashMap;
 use deno_core as deno_core; // necessary for re-exported macros to work
 use deno_core::OpState;
 use wasmtime::component::{Component, Linker};
-use wit::exports::metatype::pyrt::mat_wire::{InitArgs, InitError, MatInfo, Req as MatReq};
-use wit::metatype::pyrt::typegate_wire::{Host, Req as HostReq, Res as HostRes};
+use wit::exports::metatype::wit_wire::mat_wire::{InitArgs, InitError, MatInfo};
+use wit::metatype::wit_wire::typegate_wire::Host;
+
+use self::wit::exports::metatype::wit_wire::mat_wire::{HandleErr, HandleReq};
 
 mod wit {
     wasmtime::component::bindgen!({
-        path: "../../libs/pyrt_wit_wire/wit",
+        world: "wit-wire",
+        path: "../../wit/",
         async: true,
     });
 }
@@ -21,31 +24,38 @@ mod wit {
 pub struct Ctx {
     engine: wasmtime::Engine,
     instances: Arc<DashMap<String, Instance>>,
-    components: Arc<DashMap<String, LinkedComponent>>,
     instance_workdir: PathBuf,
+    linker: Linker<InstanceState>,
+    cached_components: DashMap<String, Component>,
 }
 
-#[derive(Clone)]
-struct LinkedComponent(Component, Arc<Linker<InstanceState>>);
-
 impl Ctx {
-    pub fn new(engine: wasmtime::Engine, instance_workdir: PathBuf) -> Self {
-        Self {
+    pub fn new(engine: wasmtime::Engine, instance_workdir: PathBuf) -> anyhow::Result<Self> {
+        Ok(Self {
             instances: Default::default(),
-            components: Default::default(),
-            engine,
             instance_workdir,
-        }
+            cached_components: Default::default(),
+            linker: {
+                let mut linker = Linker::<InstanceState>::new(&engine);
+
+                wasmtime_wasi::add_to_linker_async(&mut linker)?;
+                wit::WitWire::add_to_linker(&mut linker, |state| &mut state.tg_host)?;
+
+                linker
+            },
+            engine,
+        })
     }
 
-    async fn get_component(&self, wasm_relative_path: String) -> Result<LinkedComponent, String> {
-        if let Some(comp) = self.components.get(&wasm_relative_path[..]) {
-            return Ok(comp.clone());
-        }
+    async fn get_component(&self, wasm_relative_path: String) -> Result<Component, String> {
         let engine = self.engine.clone();
         let comp = if wasm_relative_path == "inline://pyrt_wit_wire.cwasm" {
+            // we only manually cache inline components since they'll never change
+            if let Some(comp) = self.cached_components.get(&wasm_relative_path) {
+                return Ok(comp.clone());
+            }
             let cwasm_zst_bytes = include_bytes!(concat!(env!("OUT_DIR"), "/pyrt.cwasm.zst"));
-            tokio::task::spawn_blocking(move || unsafe {
+            let comp = tokio::task::spawn_blocking(move || unsafe {
                 let mut cwasm_bytes = vec![];
                 zstd::stream::copy_decode(&cwasm_zst_bytes[..], &mut cwasm_bytes)
                     .map_err(|err| format!("error decompressing serialized component: {err}"))?;
@@ -53,58 +63,34 @@ impl Ctx {
                     .map_err(|err| format!("error loading pyrt serialized component: {err}"))
             })
             .await
-            .map_err(|err| format!("tokio error loading serialized component: {err}"))??
+            .map_err(|err| format!("tokio error loading serialized component: {err}"))??;
+            self.cached_components
+                .insert(wasm_relative_path, comp.clone());
+            comp
         } else {
+            // for user provided components, we let wasmtime take care
+            // of the caching
             let wasm_absolute_path = match std::env::current_dir() {
                 Ok(cwd) => cwd.join(&wasm_relative_path),
                 Err(err) => return Err(format!("error trying to find cwd: {err}")),
             };
-            let path_clone = wasm_absolute_path.clone();
-
-            if wasm_absolute_path
-                .extension()
-                .map(|ext| ext == "cwasm")
-                .unwrap_or_default()
-            {
-                // TODO: self manage precompilation cache
-                tokio::task::spawn_blocking(move || unsafe {
-                    Component::deserialize_file(&engine, &path_clone)
-                })
+            let raw = tokio::fs::read(&wasm_absolute_path).await.map_err(|err| {
+                format!("error loading serialized component from {wasm_relative_path}: {err}")
+            })?;
+            tokio::task::spawn_blocking(move || Component::from_binary(&engine, &raw[..]))
                 .await
-                .map_err(|err| format!("tokio error loading serialized component: {err}"))?
-                .map_err(|err| {
-                    format!("error loading serialized component from {wasm_relative_path}: {err}")
-                })?
-            } else {
-                tokio::task::spawn_blocking(move || Component::from_file(&engine, &path_clone))
-                    .await
-                    .map_err(|err| format!("tokio error loading component: {err}"))?
-                    .map_err(|err| {
-                        format!("error loading component from {wasm_relative_path}: {err}")
-                    })?
-            }
+                .map_err(|err| format!("tokio error loading component: {err}"))?
+                .map_err(|err| format!("error loading component: {err}"))?
         };
-        let mut linker = Linker::<InstanceState>::new(&self.engine);
-
-        for res in [
-            wasmtime_wasi::add_to_linker_async(&mut linker),
-            wit::Pyrt::add_to_linker(&mut linker, |state| &mut state.tg_host),
-        ] {
-            res.map_err(|err| format!("erorr trying to link component: {err}"))?;
-        }
-        Ok(self
-            .components
-            .entry(wasm_relative_path)
-            .insert_entry(LinkedComponent(comp, linker.into()))
-            .get()
-            .clone())
+        Ok(comp)
     }
 }
 
 struct Instance {
-    bindings: wit::Pyrt,
+    bindings: wit::WitWire,
     _instance: wasmtime::component::Instance,
     store: wasmtime::Store<InstanceState>,
+    preopen_dir: PathBuf,
 }
 
 struct InstanceState {
@@ -155,12 +141,13 @@ struct TypegateHost {}
 
 #[wasmtime_wasi::async_trait]
 impl Host for TypegateHost {
-    async fn hostcall(&mut self, _req: HostReq) -> wasmtime::Result<HostRes> {
+    async fn hostcall(
+        &mut self,
+        _req: (String, String),
+    ) -> wasmtime::Result<Result<String, String>> {
         todo!()
     }
 }
-
-impl wit::metatype::pyrt::shared::Host for TypegateHost {}
 
 impl From<WitWireInitArgs> for InitArgs {
     fn from(value: WitWireInitArgs) -> Self {
@@ -243,25 +230,25 @@ pub async fn op_wit_wire_init(
         ctx.clone()
     };
 
-    let LinkedComponent(ref component, ref linker) = ctx
+    let component = ctx
         .get_component(component_path)
         .await
         .map_err(WitWireInitError::ModuleErr)?;
 
-    let mut store = wasmtime::Store::new(
-        &ctx.engine,
-        InstanceState::new(ctx.instance_workdir.join(&instance_id), TypegateHost {}),
-    );
-    let (bindings, instance) = wit::Pyrt::instantiate_async(&mut store, component, linker)
+    let work_dir = ctx.instance_workdir.join(&instance_id);
+    tokio::fs::create_dir_all(&work_dir).await.unwrap();
+    let mut store =
+        wasmtime::Store::new(&ctx.engine, InstanceState::new(&work_dir, TypegateHost {}));
+    let (bindings, instance) = wit::WitWire::instantiate_async(&mut store, &component, &ctx.linker)
         .await
         .map_err(|err| {
             WitWireInitError::ModuleErr(format!("error tring to make component instance: {err}"))
         })?;
-    let guest = bindings.metatype_pyrt_mat_wire();
+    let guest = bindings.metatype_wit_wire_mat_wire();
     let args = input.into();
     let res = guest.call_init(&mut store, &args).await.map_err(|err| {
         WitWireInitError::ModuleErr(format!("module error calling init: {err}"))
-    })??;
+    })??; // <- note second try for the wit err. we have an into impl above
     assert!(res.ok);
     ctx.instances.insert(
         instance_id,
@@ -269,6 +256,7 @@ pub async fn op_wit_wire_init(
             _instance: instance,
             bindings,
             store,
+            preopen_dir: work_dir,
         },
     );
     Ok(WitWireInitResponse {})
@@ -282,7 +270,15 @@ pub async fn op_wit_wire_destroy(state: Rc<RefCell<OpState>>, #[string] instance
         ctx.clone()
     };
 
-    ctx.instances.remove(&instance_id);
+    let Some((_id, instance)) = ctx.instances.remove(&instance_id) else {
+        return;
+    };
+    if let Err(err) = tokio::fs::remove_dir_all(&instance.preopen_dir).await {
+        error!(
+            "error removing preopend dir for instance {_id} at {:?}: {err}",
+            instance.preopen_dir
+        )
+    }
 }
 
 #[derive(Deserialize)]
@@ -292,7 +288,7 @@ pub struct WitWireReq {
     in_json: String,
 }
 
-impl From<WitWireReq> for MatReq {
+impl From<WitWireReq> for HandleReq {
     fn from(value: WitWireReq) -> Self {
         Self {
             op_name: value.op_name,
@@ -306,19 +302,26 @@ impl From<WitWireReq> for MatReq {
 pub enum WitWireHandleError {
     #[error("instance not found under id {id}")]
     InstanceNotFound { id: String },
-    #[error("mat error: {0:?}")]
-    MatErr(String),
     #[error("wasm module error: {0:?}")]
     ModuleErr(String),
 }
 
+#[derive(Serialize)]
+#[serde(crate = "serde")]
+pub enum HandleRes {
+    Ok(String),
+    NoHandler,
+    InJsonErr(String),
+    HandlerErr(String),
+}
+
 #[deno_core::op2(async)]
-#[string]
+#[serde]
 pub async fn op_wit_wire_handle(
     state: Rc<RefCell<OpState>>,
     #[string] instance_id: String,
     #[serde] input: WitWireReq,
-) -> Result<String, WitWireHandleError> {
+) -> Result<HandleRes, WitWireHandleError> {
     let ctx = {
         let state = state.borrow();
         let ctx = state.borrow::<Ctx>();
@@ -331,12 +334,19 @@ pub async fn op_wit_wire_handle(
         .ok_or(WitWireHandleError::InstanceNotFound { id: instance_id })?;
     // reborrow https://bevy-cheatbook.github.io/pitfalls/split-borrows.html
     let instance = &mut *instance;
-    let guest = instance.bindings.metatype_pyrt_mat_wire();
+    let guest = instance.bindings.metatype_wit_wire_mat_wire();
     let res = guest
         .call_handle(&mut instance.store, &input.into())
         .await
         .map_err(|err| {
             WitWireHandleError::ModuleErr(format!("module error calling handle: {err}"))
         })?;
-    res.map_err(WitWireHandleError::MatErr)
+    Ok(match res {
+        Ok(json) => HandleRes::Ok(json),
+        Err(err) => match err {
+            HandleErr::NoHandler => HandleRes::NoHandler,
+            HandleErr::InJsonErr(msg) => HandleRes::InJsonErr(msg),
+            HandleErr::HandlerErr(msg) => HandleRes::HandlerErr(msg),
+        },
+    })
 }

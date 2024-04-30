@@ -118,6 +118,7 @@ repos:
           - --license-filepath=dev/license-header-Elastic-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
+          - "--skip-license-insertion-comment=@generated"
         types_or:
           - rust
         files: ^(typegate|libs!(/metagen/.*))/

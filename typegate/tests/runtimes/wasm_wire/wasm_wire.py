@@ -16,17 +16,16 @@ from typegraph import t, typegraph
 
 
 @typegraph()
-def wasm_py(g: Graph):
-    pub = Policy.public()
-    wasm = WasmRuntime()
+def wasm_wire_py(g: Graph):
+    wasm = WasmRuntime.wire("rust.wasm")
 
     g.expose(
-        test=wasm.from_wasm(
-            t.struct({"a": t.float(), "b": t.float()}),
+        Policy.public(),
+        test=wasm.handler(
+            t.struct({"a": t.float(), "b": t.float()}).rename("add_args"),
             t.integer(),
-            wasm="rust.wasm",
             func="add",
-        ).with_policy(pub),
+        ).rename("add"),
     )
 
 
@@ -35,7 +34,7 @@ PORT = sys.argv[2]
 gate = f"http://localhost:{PORT}"
 auth = BasicAuth("admin", "password")
 
-wasm_tg = wasm_py()
+wasm_tg = wasm_wire_py()
 deploy_result = tg_deploy(
     wasm_tg,
     TypegraphDeployParams(

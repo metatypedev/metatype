@@ -4,7 +4,7 @@
 import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
 import { gql, Meta } from "test-utils/mod.ts";
 import { testDir } from "test-utils/dir.ts";
-import { tg } from "./wasm.ts";
+import { tg } from "./wasm_wire.ts";
 import * as path from "std/path/mod.ts";
 import { connect } from "redis";
 import { S3Client } from "aws-sdk/client-s3";
@@ -45,7 +45,7 @@ const syncConfig = {
   s3Bucket: "metatype-sync-test",
 };
 
-const cwd = path.join(testDir, "runtimes/wasm");
+const cwd = path.join(testDir, "runtimes/wasm_wire");
 const auth = new BasicAuth("admin", "password");
 
 Meta.test(
@@ -78,7 +78,7 @@ Meta.test(
         },
         dir: cwd,
       },
-      typegraphPath: path.join(cwd, "wasm.ts"),
+      typegraphPath: path.join(cwd, "wasm_wire.ts"),
       secrets: {},
     });
 
@@ -89,7 +89,11 @@ Meta.test(
       assertExists(serialized, "serialized has a value");
       assertEquals(gateResponseAdd, {
         data: {
-          addTypegraph: { name: "wasm-ts", messages: [], migrations: [] },
+          addTypegraph: {
+            name: "wasm-wire-ts",
+            messages: [],
+            migrations: [],
+          },
         },
       });
 

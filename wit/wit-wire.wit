@@ -1,28 +1,11 @@
-package metatype:pyrt;
-
-// use metatype:typegraph/runtimes;
-
-interface shared {
-  record req {
-    op-name: string,
-    in-json: string,
-  }
-
-  type res = result<string, string>;
-}
+package metatype:wit-wire;
 
 interface typegate-wire {
-  record req {
-    op-name: string,
-    in-json: string,
-  }
-  type res = result<string, string>;
-
-  hostcall: func(req: req) -> res;
+  hostcall: func(req: tuple<string, string>) -> result<string, string>;
 }
 
 interface mat-wire {
-  use shared.{req, res};
+  type json-str = string;
 
   record mat-info {
     op-name: string,
@@ -47,10 +30,22 @@ interface mat-wire {
   }
 
   init: func(args: init-args) -> result<init-response, init-error>;
-  handle: func(req: req) -> res;
+
+  record handle-req {
+    op-name: string,
+    in-json: json-str,
+  }
+
+  variant handle-err {
+    no-handler,
+    in-json-err(string),
+    handler-err(string),
+  }
+
+  handle: func(req: handle-req) -> result<json-str, handle-err>;
 }
 
-world pyrt {
+world wit-wire {
   import typegate-wire;
   export mat-wire;
 }

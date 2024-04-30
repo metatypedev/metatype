@@ -136,8 +136,9 @@ ghjk.task("gen-pyrt-bind", {
   installs: installs.comp_py,
   allowedPortDeps,
   async fn({ $ }) {
-    await $.removeIfExists("./libs/pyrt_wit_wire/pyrt");
-    await $`componentize-py -d wit/ bindings .`.cwd("./libs/pyrt_wit_wire");
+    await $.removeIfExists("./libs/pyrt_wit_wire/wit_wire");
+    await $`componentize-py -d ../../wit/wit-wire.wit bindings .`
+      .cwd("./libs/pyrt_wit_wire");
   },
 });
 
@@ -146,9 +147,11 @@ ghjk.task("build-pyrt", {
   allowedPortDeps,
   dependsOn: ["gen-pyrt-bind"],
   async fn({ $, argv, env }) {
-    const target = env["PYRT_TARGET"] ? `--target ${env["PYRT_TARGET"]}` : "";
     const wasmOut = env["PYRT_WASM_OUT"] ?? "./target/pyrt.wasm";
-    const cwasmOut = env["PYRT_CWASM_OUT"] ?? "./target/pyrt.cwasm";
-    await $`componentize-py -d ./libs/pyrt_wit_wire/wit/ componentize -o ${wasmOut} libs.pyrt_wit_wire.main`;
+    // TODO: support for `world-module` is missing on the `componentize` subcmd
+    await $`componentize-py -d ./wit/wit-wire.wit componentize -o ${wasmOut} libs.pyrt_wit_wire.main`;
+    // const target = env["PYRT_TARGET"] ? `--target ${env["PYRT_TARGET"]}` : "";
+    // const cwasmOut = env["PYRT_CWASM_OUT"] ?? "./target/pyrt.cwasm";
+    // await `wasmtime compile -W component-model ${target} ${wasmOut} -o ${cwasmOut}`;
   },
 });

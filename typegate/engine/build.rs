@@ -10,15 +10,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // into OUT_DIR/pyrt.cwasm.zst
 
     let cwd = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR")?);
-    let pyrt_path = cwd.join("../../libs/pyrt_wit_wire/");
     let out_dir = PathBuf::from(std::env::var("OUT_DIR")?);
     let target = std::env::var("TARGET")?;
 
     println!(
         "cargo:rerun-if-changed={}/main.py",
-        pyrt_path.to_string_lossy()
+        cwd.join("../../libs/pyrt_wit_wire/").to_string_lossy()
     );
-    println!("cargo:rerun-if-changed={}/wit", pyrt_path.to_string_lossy());
+    println!(
+        "cargo:rerun-if-changed={}/wit-wire.wit",
+        cwd.join("../../wit/").to_string_lossy()
+    );
 
     let wasm_path = out_dir.join("pyrt.wasm");
     // note: we're using ghjk here
@@ -59,7 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if std::env::var("PROFILE")? == "release" {
             19
         } else {
-            0
+            1
         },
     )?;
     // wasmtime::Component

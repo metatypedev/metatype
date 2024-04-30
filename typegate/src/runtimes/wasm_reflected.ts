@@ -1,26 +1,29 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { registerRuntime } from "./mod.ts";
 import { Runtime } from "./Runtime.ts";
 import * as native from "native";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { nativeResult } from "../utils.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
-import { registerRuntime } from "./mod.ts";
 import * as ast from "graphql/ast";
-import { Materializer } from "../typegraph/types.ts";
+import { Materializer, WasmRuntimeData } from "../typegraph/types.ts";
 import { Typegate } from "../typegate/mod.ts";
 
-@registerRuntime("wasm")
-export class WasmRuntime extends Runtime {
-  private constructor(typegraphName: string, private typegate: Typegate) {
+@registerRuntime("wasm_reflected")
+export class WasmRuntimeReflected extends Runtime {
+  private constructor(
+    public artifactKey: string,
+    typegraphName: string,
+    private typegate: Typegate,
+  ) {
     super(typegraphName);
   }
 
-  static init(params: RuntimeInitParams): Promise<Runtime> {
-    const { typegraphName, typegate } = params;
-
-    return Promise.resolve(new WasmRuntime(typegraphName, typegate));
+  static init(params: RuntimeInitParams<WasmRuntimeData>): Runtime {
+    const { typegraphName, typegate, args: { wasm_artifact } } = params;
+    return new WasmRuntimeReflected(wasm_artifact, typegraphName, typegate);
   }
 
   async deinit(): Promise<void> {}
@@ -80,10 +83,10 @@ export class WasmRuntime extends Runtime {
     materializer: Materializer,
     argumentTypes?: Record<string, string>,
   ): Resolver {
-    const { wasmArtifact, func } = materializer?.data ?? {};
+    const { op_name } = materializer?.data ?? {};
     const order = Object.keys(argumentTypes ?? {});
     const typegraph = this.typegate.register.get(this.typegraphName)!;
-    const art = typegraph.tg.tg.meta.artifacts[wasmArtifact as string];
+    const art = typegraph.tg.tg.meta.artifacts[this.artifactKey as string];
 
     const artifactMeta = {
       typegraphName: this.typegraphName,
@@ -96,7 +99,7 @@ export class WasmRuntime extends Runtime {
       const transfert = order.map((k) => JSON.stringify(args[k]));
       const { res } = nativeResult(
         await native.wasmtime_wit({
-          func: func as string,
+          func: op_name as string,
           wasm: await this.typegate.artifactStore.getLocalPath(artifactMeta),
           args: transfert,
         }),

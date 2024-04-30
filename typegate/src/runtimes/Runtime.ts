@@ -21,7 +21,7 @@ export abstract class Runtime {
     stage: ComputeStage,
     waitlist: ComputeStage[],
     verbose: boolean,
-  ): ComputeStage[];
+  ): ComputeStage[] | Promise<ComputeStage[]>;
 
   static collectRelativeStages(
     base: ComputeStage,

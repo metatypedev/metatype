@@ -83,10 +83,10 @@ impl OpDepInjector {
         )
         .expect("invalid wasmtime engine config");
         let tmp_dir = self.tmp_dir.unwrap();
-        state.put(runtimes::wit_wire::Ctx::new(
-            engine,
-            tmp_dir.join("wit_wire_workdir"),
-        ));
+        state.put(
+            runtimes::wit_wire::Ctx::new(engine, tmp_dir.join("wit_wire_workdir"))
+                .expect("error initializing wit_wire state"),
+        );
         state.put(runtimes::prisma::Ctx::new(tmp_dir));
     }
 }

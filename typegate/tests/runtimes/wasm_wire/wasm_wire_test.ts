@@ -1,23 +1,25 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
-
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 import { gql, Meta } from "test-utils/mod.ts";
 import { testDir } from "test-utils/dir.ts";
-import { tg } from "./wasm.ts";
+import { tg } from "./wasm_wire.ts";
 import * as path from "std/path/mod.ts";
 
-const cwd = path.join(testDir, "runtimes/wasm");
+const cwd = path.join(testDir, "runtimes/wasm_wire");
 const auth = new BasicAuth("admin", "password");
 
 Meta.test(
   {
-    name: "Wasm runtime",
+    name: "Wasm runtime: wire",
     port: true,
     systemTypegraphs: true,
   },
   async (t) => {
-    const e = await t.engineFromTgDeployPython("runtimes/wasm/wasm.py", cwd);
+    const e = await t.engineFromTgDeployPython(
+      path.join(cwd, "wasm_wire.py"),
+      cwd,
+    );
 
     await t.should("works", async () => {
       await gql`
@@ -35,7 +37,7 @@ Meta.test(
 
 Meta.test(
   {
-    name: "Wasm Runtime typescript sdk",
+    name: "Wasm Runtime typescript sdk: wire",
     port: true,
     systemTypegraphs: true,
   },
@@ -57,7 +59,7 @@ Meta.test(
           },
           dir: cwd,
         },
-        typegraphPath: path.join(cwd, "wasm.ts"),
+        typegraphPath: path.join(cwd, "wasm_wire.ts"),
         secrets: {},
       });
 
@@ -139,16 +141,14 @@ Meta.test(
         await gql`
           query {
             identity(
-              arg0: {
-                name: "Monster A"
-                age: null
-                profile: {
-                  attributes: ["attack", "defend"]
-                  level: "gold"
-                  # category: { tag: "a", value: "unexpected" }, # fail!
-                  category: { tag: "b", value: "payload" }
-                  metadatas: [["a", 1.0], ["b", 1.3]] # list<tuple<string, f64>>
-                }
+              name: "Monster A"
+              age: null
+              profile: {
+                attributes: ["attack", "defend"]
+                level: "gold"
+                # category: { tag: "a", value: "unexpected" }, # fail!
+                category: { tag: "b", value: "payload" }
+                metadatas: [["a", 1.0], ["b", 1.3]] # list<tuple<string, f64>>
               }
             ) {
               name
