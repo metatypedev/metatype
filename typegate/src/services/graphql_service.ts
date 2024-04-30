@@ -115,7 +115,9 @@ export async function handleGraphQL(
     } else {
       logger.error(`request err: ${Deno.inspect(e)}`);
       if (e.cause) {
-        logger.error(e.cause);
+        logger.error(
+          Deno.inspect(e.cause, { strAbbreviateSize: 1024, depth: 10 }),
+        );
       }
       return jsonError(e.message, headers, 400);
     }

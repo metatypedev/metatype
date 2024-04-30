@@ -152,5 +152,6 @@ ghjk.task("build-pyrt", {
     await $`componentize-py -d ./wit/wit-wire.wit componentize -o ${wasmOut} libs.pyrt_wit_wire.main`;
     // const target = env["PYRT_TARGET"] ? `--target ${env["PYRT_TARGET"]}` : "";
     // const cwasmOut = env["PYRT_CWASM_OUT"] ?? "./target/pyrt.cwasm";
+    // await `wasmtime compile -W component-model ${target} ${wasmOut} -o ${cwasmOut}`;
   },
 });

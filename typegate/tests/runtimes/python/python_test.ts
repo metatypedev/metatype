@@ -140,7 +140,7 @@ Meta.test(
         .on(e);
     });
 
-    /* await t.should("work once (module)", async () => {
+    await t.should("work once (module)", async () => {
       await gql`
         query {
           testMod(name: "Loyd")
@@ -150,7 +150,7 @@ Meta.test(
           testMod: "Hello Loyd",
         })
         .on(e);
-    }); */
+    });
 
     await t.should("return same object", async () => {
       await gql`
@@ -270,7 +270,7 @@ Meta.test(
   },
 );
 
-/* Meta.test(
+Meta.test(
   {
     name: "Python: upload artifacts with deps",
     port: true,
@@ -320,7 +320,7 @@ Meta.test(
         .on(engine);
     });
   },
-); */
+);
 
 Meta.test(
   {
@@ -409,10 +409,10 @@ Meta.test(
             a
             b
           }
-          # identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
-          #   a
-          #   b
-          # }
+          identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
         }
       `
         .expectData({
@@ -424,10 +424,10 @@ Meta.test(
             a: "hello",
             b: [1, 2, "three"],
           },
-          /* identityMod: {
+          identityMod: {
             a: "hello",
             b: [1, 2, "three"],
-          }, */
+          },
         })
         .on(currentEngine);
     };

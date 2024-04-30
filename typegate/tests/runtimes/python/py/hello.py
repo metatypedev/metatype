@@ -1,9 +1,10 @@
-from nested.dep import hello
+from .nested.dep import hello
+from typing import Dict
 
 
-def sayHello(x: any):
+def sayHello(x: Dict):
     return hello(x["name"])
 
 
-def identity(x: any):
+def identity(x: Dict):
     return x["input"]
