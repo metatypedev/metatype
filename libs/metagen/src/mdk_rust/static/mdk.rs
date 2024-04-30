@@ -1,16 +1,15 @@
+// no-auto-license-header | @generated (pre-commit doesn't support two headers)
+// gen-start
 #![allow(unused)]
-
-// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
-// SPDX-License-Identifier: MPL-2.0
 
 pub mod wit {
     wit_bindgen::generate!({
         pub_export_macro: true,
-        //wit-start
+        // wit-start
         // this bit gets replaced by the inline wit string
         world: "wit-wire",
-        path: "../../../wit/wit-wire.wit"
-        //wit-end
+        path: "../../../../../wit/wit-wire.wit"
+        // wit-end
     });
 }
 
@@ -121,4 +120,10 @@ macro_rules! init_mat {
             }
         }
     };
+}
+// gen-end
+mod stubs {
+    pub fn op_to_trait_name(op_name: &str) -> &'static str {
+        panic!("unrecognized op_name: {op_name}");
+    }
 }

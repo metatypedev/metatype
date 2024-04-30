@@ -219,21 +219,29 @@ pub fn gen_static(dest: &mut GenDestBuf) -> anyhow::Result<Arc<str>> {
 
     let mdk_wit = include_str!("../../../../wit/wit-wire.wit");
     writeln!(&mut dest.buf, "// gen-static-start")?;
+
+    let gen_start = "// gen-start\n";
+    let wit_start = "// wit-start\n";
     write!(
         &mut dest.buf,
         "{}",
-        &mod_rs[..mod_rs.find("//wit-start").unwrap()]
+        &mod_rs[mod_rs.find(gen_start).unwrap() + gen_start.len()..mod_rs.find(wit_start).unwrap()]
     )?;
+
     writeln!(
         &mut dest.buf,
         r#"
         inline: "{mdk_wit}""#
     )?;
+
+    let gen_end = "// gen-end\n";
+    let wit_end = "// wit-end\n";
     write!(
         &mut dest.buf,
         "{}",
-        &mod_rs[mod_rs.find("//wit-end").unwrap() + "//wit-end".len()..]
+        &mod_rs[mod_rs.find(wit_end).unwrap() + wit_end.len()..mod_rs.find(gen_end).unwrap()]
     )?;
+
     writeln!(&mut dest.buf, "// gen-static-end")?;
     Ok("Ctx".into())
 }

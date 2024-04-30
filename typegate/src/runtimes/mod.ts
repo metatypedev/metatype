@@ -29,7 +29,6 @@ export async function initRuntime(
 ): Promise<Runtime> {
   const init = registeredRuntimes.get(name);
   if (!init) {
-    console.log(registeredRuntimes);
     throw new Error(`Runtime ${name} is not registered`);
   }
   return await init(params);

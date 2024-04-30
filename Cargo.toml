@@ -13,7 +13,6 @@ exclude = [
   "typegate/tests/runtimes/wasm_reflected/rust",
   "typegate/tests/runtimes/wasm_wire/rust",
   "libs/pyrt_wit_wire",
-  "examples/demo2/mat"
 ]
 [workspace.package] 
 version = "0.3.7-0"

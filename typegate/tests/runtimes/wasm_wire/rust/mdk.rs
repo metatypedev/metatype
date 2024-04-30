@@ -5,9 +5,6 @@
 // gen-static-start
 #![allow(unused)]
 
-// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
-// SPDX-License-Identifier: MPL-2.0
-
 pub mod wit {
     wit_bindgen::generate!({
         pub_export_macro: true,
@@ -64,7 +61,6 @@ world wit-wire {
   export mat-wire;
 }
 "
-
     });
 }
 
@@ -305,9 +301,9 @@ pub mod stubs {
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
             "range" => "Range",
-            "add" => "Add",
             "record-creation" => "RecordCreation",
             "identity" => "Identity",
+            "add" => "Add",
             _ => panic!("unrecognized op_name: {op_name}"),
         }
     }
