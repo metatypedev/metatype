@@ -46,6 +46,7 @@ export async function init_runtimes(): Promise<void> {
     import("./temporal.ts"),
     import("./typegate.ts"),
     import("./typegraph.ts"),
-    import("./wasm.ts"),
+    import("./wasm_wire.ts"),
+    import("./wasm_reflected.ts"),
   ]);
 }

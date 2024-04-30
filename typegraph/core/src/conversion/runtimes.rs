@@ -21,7 +21,7 @@ use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
 use common::typegraph::runtimes::s3::S3RuntimeData;
 use common::typegraph::runtimes::temporal::TemporalRuntimeData;
-use common::typegraph::runtimes::wasm::{WasmRuntimeData, WasmRuntimeType};
+use common::typegraph::runtimes::wasm::WasmRuntimeData;
 use common::typegraph::runtimes::{
     Artifact, KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData, TypegraphRuntimeData,
 };
@@ -436,12 +436,12 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
             reset: d.reset.clone(),
         }))
         .into()),
-        Runtime::Wasm(data) => Ok(TGRuntime::Known(Rt::Wasm(WasmRuntimeData {
+        Runtime::WasmReflected(data) => Ok(TGRuntime::Known(Rt::WasmReflected(WasmRuntimeData {
             wasm_artifact: std::path::PathBuf::from(&data.wasm_artifact),
-            ty: match data.ty {
-                crate::wit::runtimes::WasmRuntimeTy::Wire => WasmRuntimeType::Wire,
-                crate::wit::runtimes::WasmRuntimeTy::Reflected => WasmRuntimeType::Reflected,
-            },
+        }))
+        .into()),
+        Runtime::WasmWire(data) => Ok(TGRuntime::Known(Rt::WasmWire(WasmRuntimeData {
+            wasm_artifact: std::path::PathBuf::from(&data.wasm_artifact),
         }))
         .into()),
         Runtime::Prisma(d, _) => Ok(ConvertedRuntime::Lazy(Box::new(

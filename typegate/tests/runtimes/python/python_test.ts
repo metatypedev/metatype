@@ -3,7 +3,7 @@
 
 import { assert, assertEquals } from "std/assert/mod.ts";
 import { gql, Meta } from "test-utils/mod.ts";
-import { WitWireMessenger } from "../../../src/runtimes/wasm/wire.ts";
+import { WitWireMessenger } from "../../../src/runtimes/wit_wire/mod.ts";
 import { QueryEngine } from "../../../src/engine/query_engine.ts";
 import type { ResolverArgs } from "../../../src/types.ts";
 import { testDir } from "test-utils/dir.ts";

@@ -1,30 +1,29 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Runtime } from "../Runtime.ts";
+import { registerRuntime } from "./mod.ts";
+import { Runtime } from "./Runtime.ts";
 import * as native from "native";
-import { Resolver, RuntimeInitParams } from "../../types.ts";
-import { nativeResult } from "../../utils.ts";
-import { ComputeStage } from "../../engine/query_engine.ts";
+import { Resolver, RuntimeInitParams } from "../types.ts";
+import { nativeResult } from "../utils.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
 import * as ast from "graphql/ast";
-import { Materializer } from "../../typegraph/types.ts";
-import { Typegate } from "../../typegate/mod.ts";
+import { Materializer, WasmRuntimeData } from "../typegraph/types.ts";
+import { Typegate } from "../typegate/mod.ts";
 
+@registerRuntime("wasm_reflected")
 export class WasmRuntimeReflected extends Runtime {
   private constructor(
-    public modulePath: string,
+    public artifactKey: string,
     typegraphName: string,
     private typegate: Typegate,
   ) {
     super(typegraphName);
   }
 
-  static init(
-    modulePath: string,
-    params: RuntimeInitParams,
-  ): Runtime {
-    const { typegraphName, typegate } = params;
-    return new WasmRuntimeReflected(modulePath, typegraphName, typegate);
+  static init(params: RuntimeInitParams<WasmRuntimeData>): Runtime {
+    const { typegraphName, typegate, args: { wasm_artifact } } = params;
+    return new WasmRuntimeReflected(wasm_artifact, typegraphName, typegate);
   }
 
   async deinit(): Promise<void> {}
@@ -87,7 +86,7 @@ export class WasmRuntimeReflected extends Runtime {
     const { op_name } = materializer?.data ?? {};
     const order = Object.keys(argumentTypes ?? {});
     const typegraph = this.typegate.register.get(this.typegraphName)!;
-    const art = typegraph.tg.tg.meta.artifacts[this.modulePath as string];
+    const art = typegraph.tg.tg.meta.artifacts[this.artifactKey as string];
 
     const artifactMeta = {
       typegraphName: this.typegraphName,

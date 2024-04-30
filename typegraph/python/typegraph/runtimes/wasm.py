@@ -10,8 +10,6 @@ from typegraph.gen.exports.runtimes import (
     WasmRuntimeData,
     MaterializerWasmReflectedFunc,
     MaterializerWasmWireHandler,
-    WasmRuntimeTyWire,
-    WasmRuntimeTyReflected,
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
@@ -37,9 +35,9 @@ class WireWasmMat(Materializer):
 
 class WasmRuntimeWire(WasmRuntime):
     def __init__(self, artifact_path: str):
-        runtime_id = runtimes.register_wasm_runtime(
+        runtime_id = runtimes.register_wasm_wire_runtime(
             store,
-            data=WasmRuntimeData(ty=WasmRuntimeTyWire(), wasm_artifact=artifact_path),
+            data=WasmRuntimeData(wasm_artifact=artifact_path),
         )
         if isinstance(runtime_id, Err):
             raise Exception(runtime_id.value)
@@ -79,11 +77,9 @@ class ReflectedWasmMat(Materializer):
 
 class WasmRuntimeReflected(WasmRuntime):
     def __init__(self, artifact_path: str):
-        runtime_id = runtimes.register_wasm_runtime(
+        runtime_id = runtimes.register_wasm_reflected_runtime(
             store,
-            data=WasmRuntimeData(
-                ty=WasmRuntimeTyReflected(), wasm_artifact=artifact_path
-            ),
+            data=WasmRuntimeData(wasm_artifact=artifact_path),
         )
         if isinstance(runtime_id, Err):
             raise Exception(runtime_id.value)

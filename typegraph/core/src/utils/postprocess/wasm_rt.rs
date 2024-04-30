@@ -15,8 +15,12 @@ pub struct WasmProcessor;
 impl PostProcessor for WasmProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         for rt in &tg.runtimes {
-            let TGRuntime::Known(KnownRuntime::Wasm(data)) = rt else {
-                continue;
+            let data = match rt {
+                TGRuntime::Known(KnownRuntime::WasmReflected(data))
+                | TGRuntime::Known(KnownRuntime::WasmWire(data)) => data,
+                _ => {
+                    continue;
+                }
             };
             let path = PathBuf::from(&data.wasm_artifact);
             if tg.meta.artifacts.contains_key(&path) {

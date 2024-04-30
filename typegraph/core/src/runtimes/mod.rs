@@ -57,7 +57,8 @@ pub enum Runtime {
     Http(Rc<HttpRuntimeData>),
     Python,
     Random(Rc<RandomRuntimeData>),
-    Wasm(Rc<WasmRuntimeData>),
+    WasmWire(Rc<WasmRuntimeData>),
+    WasmReflected(Rc<WasmRuntimeData>),
     Prisma(Rc<PrismaRuntimeData>, Rc<RefCell<PrismaContext>>),
     PrismaMigration,
     Temporal(Rc<TemporalRuntimeData>),
@@ -355,8 +356,16 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         Ok(Store::register_materializer(mat))
     }
 
-    fn register_wasm_runtime(data: wit::WasmRuntimeData) -> Result<wit::RuntimeId, wit::Error> {
-        Ok(Store::register_runtime(Runtime::Wasm(data.into())))
+    fn register_wasm_reflected_runtime(
+        data: wit::WasmRuntimeData,
+    ) -> Result<wit::RuntimeId, wit::Error> {
+        Ok(Store::register_runtime(Runtime::WasmReflected(data.into())))
+    }
+
+    fn register_wasm_wire_runtime(
+        data: wit::WasmRuntimeData,
+    ) -> Result<wit::RuntimeId, wit::Error> {
+        Ok(Store::register_runtime(Runtime::WasmWire(data.into())))
     }
 
     fn from_wasm_reflected_func(

@@ -29,8 +29,7 @@ interface WireHandlerWasmMat extends Materializer {
 class WasmRuntimeWire extends WasmRuntime {
   constructor(artifactPath: string) {
     super(
-      runtimes.registerWasmRuntime({
-        ty: { tag: "wire" },
+      runtimes.registerWasmWireRuntime({
         wasmArtifact: artifactPath,
       }),
     );
@@ -68,8 +67,7 @@ class WasmRuntimeWire extends WasmRuntime {
 class WasmRuntimeReflected extends WasmRuntime {
   constructor(artifactPath: string) {
     super(
-      runtimes.registerWasmRuntime({
-        ty: { tag: "reflected" },
+      runtimes.registerWasmReflectedRuntime({
         wasmArtifact: artifactPath,
       }),
     );

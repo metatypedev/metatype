@@ -16,15 +16,6 @@ pub struct WasmMatData {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub enum WasmRuntimeType {
-    Wire,
-    Reflected,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WasmRuntimeData {
-    pub ty: WasmRuntimeType,
     pub wasm_artifact: PathBuf,
 }
