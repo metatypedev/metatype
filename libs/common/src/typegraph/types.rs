@@ -4,21 +4,17 @@
 use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
-#[cfg(feature = "codegen")]
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use std::hash::Hash;
 
 use super::{parameter_transform::FunctionParameterTransform, EffectType, PolicyIndices};
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 pub struct SingleValue<T: Hash> {
     pub value: T,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(untagged)]
 pub enum InjectionData<T: Hash> {
@@ -42,7 +38,6 @@ impl<T: Hash> InjectionData<T> {
     }
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(tag = "source", content = "data", rename_all = "lowercase")]
 pub enum Injection {
@@ -54,7 +49,6 @@ pub enum Injection {
     Random(InjectionData<String>),
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TypeNodeBase {
@@ -72,7 +66,6 @@ pub struct TypeNodeBase {
     pub as_id: bool,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct OptionalTypeData {
@@ -81,7 +74,6 @@ pub struct OptionalTypeData {
     pub default_value: Option<serde_json::Value>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -93,7 +85,6 @@ pub struct FloatTypeData {
     pub multiple_of: Option<f64>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -106,7 +97,6 @@ pub struct IntegerTypeData {
     pub multiple_of: Option<i32>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum StringFormat {
@@ -121,7 +111,6 @@ pub enum StringFormat {
     Phone,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -132,7 +121,6 @@ pub struct StringTypeData {
     pub format: Option<StringFormat>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -142,7 +130,6 @@ pub struct FileTypeData {
     pub mime_types: Option<Vec<String>>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ObjectTypeData {
@@ -151,7 +138,6 @@ pub struct ObjectTypeData {
     pub required: Vec<String>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -162,7 +148,6 @@ pub struct ListTypeData {
     pub unique_items: Option<bool>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FunctionTypeData {
@@ -176,7 +161,6 @@ pub struct FunctionTypeData {
     pub rate_calls: bool,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -186,7 +170,6 @@ pub struct UnionTypeData {
     pub any_of: Vec<u32>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -196,7 +179,6 @@ pub struct EitherTypeData {
     pub one_of: Vec<u32>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type", rename_all = "lowercase")]
