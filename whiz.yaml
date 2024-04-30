@@ -8,7 +8,7 @@ gate1: &tp
   watch:
     - "typegate/src/**/*.ts"
     - "typegate/{engine,standalone}/**/*.rs"
-    - "libs/deno/**/*.rs"
+    - "libs/{xtask,deno}/**/*.rs"
   env: &tpenv
     TG_PORT: "7891"
     PACKAGED: "false"

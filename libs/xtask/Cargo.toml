@@ -1,0 +1,12 @@
+[package]
+name = "xtask"
+version = "0.3.7-0"
+edition = "2021"
+
+[dependencies]
+anyhow.workspace = true
+clap = { workspace = true, features = ["derive"] }
+mt_deno.workspace = true
+typegate_engine.workspace = true
+log.workspace = true
+env_logger.workspace = true
