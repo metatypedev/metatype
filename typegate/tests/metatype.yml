@@ -32,4 +32,4 @@ metagen:
       mdk_rust:
         path: ./runtimes/wasm_wire/rust/
         typegraph_path: ./runtimes/wasm_wire/wasm_wire.ts
-        stubbed_runtimes: ["wasm"]
+        stubbed_runtimes: ["wasm_wire"]

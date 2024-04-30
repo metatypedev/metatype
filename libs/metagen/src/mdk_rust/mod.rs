@@ -298,7 +298,7 @@ fn mdk_rs_e2e() -> anyhow::Result<()> {
                     serde_json::to_value(mdk_rust::MdkRustGenConfig {
                         skip_cargo_toml: None,
                         skip_lib_rs: Some(true),
-                        stubbed_runtimes: Some(vec!["wasm".into()]),
+                        stubbed_runtimes: Some(vec!["wasm_wire".into()]),
                         crate_name: None,
                         base: config::MdkGeneratorConfigBase {
                             typegraph_name: Some(tg_name.into()),

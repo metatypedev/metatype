@@ -102,7 +102,7 @@ if (!Deno.env.has("NO_PYTHON")) {
       version: POETRY_VERSION,
     })[0],
   );
-  if (inDev()) {
+  if (!inOci()) {
     ghjk.install(
       ports.pipi({ packageName: "pre-commit" })[0],
     );
