@@ -9,23 +9,21 @@ function helloFn({ name }: any) {
   return `Hello ${(name as string).toLowerCase()}`;
 }
 
-typegraph("test-deno-tyepscript", (g: any) => {
+await typegraph("test-deno-tyepscript", (g: any) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
 
   g.expose({
-    static: deno.static(t.struct({ a: t.string() }), {
-      a: "Hello World",
-    }).withPolicy(pub),
-    hello: deno.func(
-      t.struct({ name: t.string() }),
-      t.string(),
-      { code: hello },
-    ).withPolicy(pub),
-    helloFn: deno.func(
-      t.struct({ name: t.string() }),
-      t.string(),
-      { code: helloFn },
-    ).withPolicy(pub),
+    static: deno
+      .static(t.struct({ a: t.string() }), {
+        a: "Hello World",
+      })
+      .withPolicy(pub),
+    hello: deno
+      .func(t.struct({ name: t.string() }), t.string(), { code: hello })
+      .withPolicy(pub),
+    helloFn: deno
+      .func(t.struct({ name: t.string() }), t.string(), { code: helloFn })
+      .withPolicy(pub),
   });
 });

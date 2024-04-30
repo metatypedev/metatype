@@ -56,6 +56,7 @@ impl PostProcessor for TypegraphPostProcessor {
     }
 }
 
+#[allow(dead_code)]
 pub fn compress_and_encode(main_path: &Path) -> Result<String, String> {
     if let Err(e) = fs_host::read_text_file(main_path.display().to_string()) {
         return Err(format!("Unable to read {:?}: {}", main_path.display(), e));
