@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::utils::fs_host;
+use crate::utils::fs_host::{self, resolve_globs_dirs};
 use common::typegraph::{
     runtimes::{python::ModuleMatData, Artifact},
     utils::{map_from_object, object_from_map},
@@ -42,8 +42,9 @@ impl PostProcessor for PythonProcessor {
 
                 let deps = mat_data.deps.clone();
                 let mut dep_artifacts = vec![];
-                for dep in deps {
-                    let dep_rel_path = PathBuf::from(dep);
+                let resolved_deps = resolve_globs_dirs(deps)?;
+
+                for dep_rel_path in resolved_deps {
                     let dep_abs_path = fs_host::make_absolute(&dep_rel_path)?;
 
                     let (dep_hash, dep_size) = fs_host::hash_file(&dep_abs_path)?;

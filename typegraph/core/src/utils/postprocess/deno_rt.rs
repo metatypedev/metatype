@@ -3,7 +3,7 @@
 
 use crate::{
     global_store::Store,
-    utils::fs_host::{self, expand_path, get_matching_files, is_glob},
+    utils::fs_host::{self, resolve_globs_dirs},
 };
 use common::typegraph::{
     runtimes::{deno::ModuleMatData, Artifact},
@@ -38,6 +38,7 @@ impl PostProcessor for DenoProcessor {
                                 .artifacts
                                 .insert(artifact.path.clone(), artifact.clone());
                         }
+                        // print(&format!("@@@@@@@@@@@@@@ {:?}", tg.meta.artifacts));
                     }
                     None => continue,
                 }
@@ -83,19 +84,7 @@ impl DenoProcessor {
                 let deps = mat_data.deps.clone();
 
                 // resolve globs and dirs
-                let mut resolved_deps = vec![];
-                for dep in deps {
-                    if is_glob(&dep) {
-                        let _ = get_matching_files(&dep)
-                            .unwrap()
-                            .into_iter()
-                            .map(|file| resolved_deps.push(file));
-                    } else {
-                        let _ = expand_path(&PathBuf::from(dep), &[])?
-                            .into_iter()
-                            .map(|file| resolved_deps.push(file));
-                    }
-                }
+                let resolved_deps = resolve_globs_dirs(deps)?;
 
                 for dep_rel_path in resolved_deps {
                     let dep_abs_path = fs_host::make_absolute(&dep_rel_path)?;
