@@ -5,18 +5,18 @@ edition = "2021"
 
 [dependencies]
 anyhow.workspace = true
-base64 = "0.21.5"
-flate2 = "1.0.28"
+base64 = "0.22.1"
+flate2 = "1.0.30"
 indexmap.workspace = true
-schemars = { version = "0.8.16", features = ["derive", "preserve_order"], optional = true }
+schemars = { version = "0.8.17", features = ["derive", "preserve_order"], optional = true }
 serde.workspace = true
 serde_json = { workspace = true, features = ["preserve_order"] }
-serde_with = "3.4.0"
+serde_with = "3.8.1"
 tar = "0.4.40"
 ignore = "0.4.20"
 reqwest = { workspace = true, features = ["json"] }
 async-trait = "0.1.74"
-itertools = "0.11.0"
+itertools = "0.12.1"
 colored = "2.0.4"
 indoc.workspace = true
 thiserror.workspace = true

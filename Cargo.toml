@@ -48,7 +48,7 @@ swc_ecma_visit = "=0.96.17"
 
 shadow-rs = "0.24"
 
-serde = { version = "1.0.192", features = ["derive"] }
+serde = { version = "1.0.199", features = ["derive"] }
 serde_json = "1.0.108"
 anyhow = "1.0.75"
 log = "0.4.20"
