@@ -15,11 +15,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!(
         "cargo:rerun-if-changed={}/main.py",
-        cwd.join("../../libs/pyrt_wit_wire/").to_string_lossy()
+        cwd.join("../../libs/pyrt_wit_wire")
+            .canonicalize()
+            .unwrap()
+            .to_string_lossy()
     );
     println!(
         "cargo:rerun-if-changed={}/wit-wire.wit",
-        cwd.join("../../wit/").to_string_lossy()
+        cwd.join("../../wit")
+            .canonicalize()
+            .unwrap()
+            .to_string_lossy()
     );
 
     let wasm_path = out_dir.join("pyrt.wasm");
@@ -28,8 +34,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // task impl inline
     assert!(
         std::process::Command::new("ghjk")
-            .args(["x", "build-pyrt", "--target"])
+            .args(["x", "build-pyrt"])
             .env("PYRT_WASM_OUT", &wasm_path)
+            .env("PYRT_TARGET", &wasm_path)
             .current_dir(cwd.join("../../"))
             .output()?
             .status

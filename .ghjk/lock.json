@@ -536,8 +536,7 @@
               "env": {
                 "installs": [
                   "be7e967b2420f3d6a8af7d3ff11192362ee4b5c8",
-                  "5dfbf570fa87f14a3524560c40bd08d0d62a7526",
-                  "a24f45ef0b2064658d87264a95d31fe4694f6f4e"
+                  "5dfbf570fa87f14a3524560c40bd08d0d62a7526"
                 ],
                 "env": {},
                 "allowedPortDeps": [

@@ -144,7 +144,7 @@ ghjk.task("gen-pyrt-bind", {
 });
 
 ghjk.task("build-pyrt", {
-  installs: [...installs.comp_py, installs.wasm_opt],
+  installs: [...installs.comp_py],
   allowedPortDeps,
   dependsOn: ["gen-pyrt-bind"],
   async fn({ $, argv, env }) {

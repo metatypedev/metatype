@@ -26,7 +26,7 @@ export async function getLocalPath(
     ARTIFACTS_DIR,
     mainModuleMeta.hash,
     meta.typegraphName,
-    meta.hash,
+    meta.relativePath,
   );
 
   // TODO: what happens when symlink already exists? or when same local path artifacts with different cachedPath
