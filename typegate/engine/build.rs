@@ -38,8 +38,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .env("PYRT_WASM_OUT", &wasm_path)
             .env("PYRT_TARGET", &wasm_path)
             .current_dir(cwd.join("../../"))
-            .output()?
-            .status
+            .spawn()?
+            .wait()?
             .success(),
         "error building pyrt"
     );
