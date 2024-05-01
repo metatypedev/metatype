@@ -72,7 +72,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      - uses: metatypedev/setup-ghjk@a94fedd7988769ad9e86cb0c7d373f1032266f69
       - shell: bash
         run: |
           sudo apt update
@@ -100,7 +100,7 @@ jobs:
       #   with:
       #     path: ${{ env.DENO_DIR }}
       #     key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      - uses: metatypedev/setup-ghjk@a94fedd7988769ad9e86cb0c7d373f1032266f69
       - name: Cache .venv dir
         uses: actions/cache@v4
         with:
@@ -148,7 +148,7 @@ jobs:
         with:
           path: .venv
           key: ${{ matrix.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      - uses: metatypedev/setup-ghjk@a94fedd7988769ad9e86cb0c7d373f1032266f69
         with:
           # temporary fix
           cache-key-prefix: ${{ matrix.os }}
@@ -258,7 +258,7 @@ jobs:
       - run: |
           sudo apt update
           sudo apt install -y --no-install-recommends zstd
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      - uses: metatypedev/setup-ghjk@a94fedd7988769ad9e86cb0c7d373f1032266f69
       - shell: bash
         env:
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -341,7 +341,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      - uses: metatypedev/setup-ghjk@a94fedd7988769ad9e86cb0c7d373f1032266f69
       - shell: bash
         run: |
           cd meta-lsp
