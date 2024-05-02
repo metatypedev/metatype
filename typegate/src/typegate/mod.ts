@@ -66,13 +66,6 @@ export type PushResult = {
   response: PushResponse;
 };
 
-export interface UploadUrlMeta {
-  artifactName: string;
-  artifactHash: string;
-  artifactSizeInBytes: number;
-  urlUsed: boolean;
-}
-
 export interface DeinitOptions {
   engines?: boolean;
 }
@@ -219,7 +212,7 @@ export class Typegate implements AsyncDisposable {
       const [engineName, serviceName] = parsePath(url.pathname);
 
       if (serviceName === "artifacts") {
-        return this.#artifactService.handle(request, engineName);
+        return await this.#artifactService.handle(request, engineName);
       }
 
       if (!engineName || ignoreList.has(engineName)) {

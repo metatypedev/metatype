@@ -1,7 +1,7 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 
-await typegraph({
+typegraph({
   name: "roadmap-prisma",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },

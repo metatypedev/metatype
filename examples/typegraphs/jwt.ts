@@ -5,7 +5,7 @@ import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
 // skip:end
 
-await typegraph({
+typegraph({
   name: "jwt-authentication",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },

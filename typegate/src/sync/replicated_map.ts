@@ -18,12 +18,12 @@ const ADD = "add";
 const RM = "rm";
 
 // Deno Redis driver library does not support well txs (MULTI), prefer Lua scripts to avoid bugs
-const addCmd = `
+const addCmd = /* lua */ `
 redis.call('HSET', KEYS[1], ARGV[1], ARGV[3])
 redis.call('XADD', KEYS[2], 'MAXLEN', '~', '10000', '*', 'name', ARGV[1], 'event', '${ADD}', 'instance', ARGV[2])
 `.trim();
 
-const rmCmd = `
+const rmCmd = /* lua */ `
 redis.call('HDEL', KEYS[1], ARGV[1])
 redis.call('XADD', KEYS[2], 'MAXLEN', '~', '10000', '*', 'name', ARGV[1], 'event', '${RM}', 'instance', ARGV[2])
 `.trim();

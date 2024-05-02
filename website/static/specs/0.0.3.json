@@ -1754,11 +1754,11 @@
             "name": {
               "type": "string",
               "enum": [
-                "wasmedge"
+                "wasm"
               ]
             },
             "data": {
-              "$ref": "#/definitions/WasmEdgeRuntimeData"
+              "$ref": "#/definitions/WasmRuntimeData"
             }
           }
         },
@@ -2291,7 +2291,7 @@
         }
       }
     },
-    "WasmEdgeRuntimeData": {
+    "WasmRuntimeData": {
       "type": "object",
       "properties": {
         "config": {
@@ -2572,11 +2572,29 @@
       "title": "ModuleMatData",
       "type": "object",
       "required": [
-        "code"
+        "denoArtifact",
+        "deps"
       ],
       "properties": {
-        "code": {
-          "type": "string"
+        "denoArtifact": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "deps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "depsMeta": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
         }
       }
     },
@@ -2762,17 +2780,13 @@
         }
       }
     },
-    "WasiMatData": {
-      "title": "WasiMatData",
+    "WasmMatData": {
+      "title": "WasmMatData",
       "type": "object",
       "required": [
-        "func",
         "wasmArtifact"
       ],
       "properties": {
-        "func": {
-          "type": "string"
-        },
         "wasmArtifact": {
           "type": "string"
         }

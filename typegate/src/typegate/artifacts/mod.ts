@@ -18,10 +18,14 @@ function getUploadPath(tgName: string) {
   return `/${tgName}/artifacts`;
 }
 
-export async function getLocalPath(meta: ArtifactMeta) {
+export async function getLocalPath(
+  meta: ArtifactMeta,
+  mainModuleMeta: ArtifactMeta,
+) {
   const cachedPath = resolve(STORE_DIR, meta.hash);
   const localPath = resolve(
     ARTIFACTS_DIR,
+    mainModuleMeta.hash,
     meta.typegraphName,
     meta.relativePath,
   );
@@ -183,7 +187,7 @@ export class ArtifactStore implements AsyncDisposable {
     }
 
     const context = await verifyJWT(token);
-    if (context.exp as number < jwt.getNumericDate(new Date())) {
+    if ((context.exp as number) < jwt.getNumericDate(new Date())) {
       throw new Error("Expired upload URL");
     }
 

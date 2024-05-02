@@ -51,8 +51,7 @@ class SharedArtifactPersistence implements ArtifactPersistence {
     private localShadow: LocalArtifactPersistence,
     private s3: S3,
     private s3Bucket: string,
-  ) {
-  }
+  ) {}
 
   async [Symbol.asyncDispose]() {
     await this.localShadow[Symbol.asyncDispose]();
@@ -61,8 +60,7 @@ class SharedArtifactPersistence implements ArtifactPersistence {
 
   async save(stream: ReadableStream<any>): Promise<string> {
     const hasher = createHash("sha256");
-    const stream2 = stream
-      .pipeThrough(new HashTransformStream(hasher));
+    const stream2 = stream.pipeThrough(new HashTransformStream(hasher));
 
     const tempKey = resolveS3Key(
       `tmp/${Math.random().toString(36).substring(2)}`,
@@ -125,8 +123,8 @@ class SharedArtifactPersistence implements ArtifactPersistence {
     }
 
     if (response.Body) {
-      const file =
-        (await Deno.open(targetFile, { write: true, create: true })).writable;
+      const file = (await Deno.open(targetFile, { write: true, create: true }))
+        .writable;
       await response.Body.transformToWebStream().pipeTo(file);
     } else {
       throw new Error(`Failed to download artifact with hash ${hash} from s3`);
@@ -142,8 +140,7 @@ class SharedUploadEndpointManager implements UploadEndpointManager {
     return new SharedUploadEndpointManager(redis, expireSec);
   }
 
-  private constructor(private redis: Redis, private expireSec: number) {
-  }
+  private constructor(private redis: Redis, private expireSec: number) {}
 
   async [Symbol.asyncDispose]() {
     await this.redis.quit();

@@ -294,7 +294,8 @@ mod default_mode {
                         }
                         LoaderEvent::Stopped(b) => {
                             if let StopBehavior::ExitFailure(msg) = b {
-                                panic!("{msg}");
+                                eprintln!("{msg}");
+                                std::process::exit(1)
                             }
                         }
                     }

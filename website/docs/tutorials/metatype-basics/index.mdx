@@ -31,32 +31,23 @@ Looking through the app we can see that the api should allow:
  - Specify or vote on the importance of an "idea" from "medium" to "critical" or even submit text with more description.
  - Admins will be able to move ideas across buckets like "Backlog", "Planned", "In Progress".
 
-        {/* TODO: consider emailing people interested in an idea when things change */}
+        { /* TODO: consider emailing people interested in an idea when things change */}
 
 ## Setup
 
-Before anything, we'll first need to install the tooling required for development and create a new project. 
-
-### Install Meta CLI
-
-    <CodeBlock language="python">{require("../../../../examples/typegraphs/typecheck.py").content}</CodeBlock>
-
-The meta-cli tool manages and helps you develop your metatype based projects. 
-This include allowing you to run them locally for development, push them to production in the cloud, managing your database migrations and more.
-
-        <InstallMetaCli />
+To setup your Metatype development environment, please follow the installation guide [here](/docs/tutorials/quick-start#1-meta-cli)
 
 ### Create a new project
 
 Metatype projects are composed of modular bundles of types, logic and policies called typegraphs.
 We author typegraphs using modern programming languages & environments. 
-Python and ECMAScript/Typescript are currently available for use.
+Python and Typescript are currently available for use.
 The meta-cli allows us to create a new project based on pre-existing templates.
 
 
         <SDKTabs>
                       <TabItem value="typescript">
-                            {/**/}
+                            { /**/}
 
 Run one the following commands to create a new project under a new directory titled `tg_roadmap`.
 
@@ -65,12 +56,14 @@ Run one the following commands to create a new project under a new directory tit
 meta new --template node tg_roadmap 
 #                        ^ project name 
 #                   ^  Use `meta new --help` find out more available templates. 
+```
 
+```bash
 # using Deno
 meta new --template deno tg_roadmap 
 ```
 
-When using ECMAScript/Typescript, the `@typegraph/sdk` package exposes all the necessary functions and types we'll need to describe our typegraph.
+When using Typescript, the `@typegraph/sdk` package exposes all the necessary functions and types we'll need to describe our typegraph.
 The templates already specify it as as a dependency so all we need to do now is run the following command to download it:
 
 ```bash
@@ -93,7 +86,7 @@ yarn install
       </TabItem>
   <TabItem value="python">
 
-            {/**/}
+            { /**/}
 Run the following command to create a new project under a new directory titled `tg_roadmap`.
 
 ```bash
@@ -126,10 +119,10 @@ poetry install
 
 The typegate is a program that runs and orchestrates our typegraphs.
 We can run it locally for development purposes.
-Typegate currently requires the Redis database to function and to make it eay to run both, we'll make use of a linux container runtime for this. 
+Typegate currently requires the Redis database to function and to make it easy to run both, we'll make use of a linux container runtime for this. 
 The Docker runtime to be specific which has installation guides located [here](https://docs.docker.com/get-docker/).
 
-We'll also need the Docker Compose orchestrator which usually comes by default with the `docker` command. Use the following command to check if it's available:
+We'll also need the Docker Compose orchestrator which usually comes by default with the `docker` command. Use the following command to check if it is available:
 
 ```bash
 docker compose version 
@@ -142,7 +135,7 @@ If you have your docker runtime installed and running correctly, you will be abl
 The compose file by default includes the `postgres` and `mongo` databases.
 You can disable the latter by commenting it out or removing it as we'll not be needing it for this tutorial. 
 
-To launch the services, navigate you shell the the project directory and run the following command:
+To launch the services, navigate your shell to the project directory and run the following command:
 
 ```bash
 docker compose up --detach
@@ -150,7 +143,7 @@ docker compose up --detach
 #                   Omit to get the all logs in the current terminal
 ```
 
-This should download and start typegate and it's dependent services. 
+This should download and start typegate and its dependent services. 
 
 We can observe their log of typegate or any of the other services with the following command. It has to be run from the same project directory.
 
@@ -161,59 +154,26 @@ docker compose logs typegate --follow
 
 ### Make sure it's all working
 
-The meta-cli includes the `doctor` command that checks everything is in working order. 
-You can run the following to make sure everything's up and running. 
-
+Run the following to make sure everything's up and running. 
 ```bash
 meta doctor
-# ——————————————————————————— Global ———————————————————————————
-# curr. directory      /home/asdf/tg_roadmap
-# global config        /home/asdf/.config/meta/config.json
-# meta-cli version     0.2.4
-# docker version       Docker version 24.0.7, build afdd53b4e3
-# containers           ghcr.io/metatypedev/typegate:v0.2.4 (Up 7 minutes), redis:7 (Up 7 minutes), postgres:15 (Up 7 minutes)
-# 
-# —————————————————————————— Project  ——————————————————————————
-# metatype file        metatype.yaml
-# targets              [2] deploy (remote, 3 secrets), dev (local, 3 secrets)
-# typegraphs           [1] api/example.ts
-# 
-# ————————————————————————— Python SDK —————————————————————————
-# python version       Python 3.11.5
-# python bin           .venv/bin/python
-# venv folder          .venv
-# pyproject file       pyproject.toml
-# pipfile file         not found
-# requirements file    not found
-# typegraph version
-# 
-# ——————————————————————— Typescript SDK ———————————————————————
-# deno version         deno 1.38.0
-# node version         v20.9.0
-# 
-# ┌————————————————————————————————————————————————————————————┐
-# | Check that all versions match.                             |
-# | In case of issue or question, please raise a ticket on:    |
-# | https://github.com/metatypedev/metatype/issues             |
-# | Or browse the documentation:                               |
-# | https://metatype.dev/docs/reference                        |
-# └————————————————————————————————————————————————————————————┘
 ```
+After running the command, you should get a result similar to then one [here](/docs/tutorials/quick-start#4-verify-your-installation).
 
-## Types
+## Building our Models
 
-The types of our typegraph describe the shape of the data that flows through it.
+We will be using the [type system](/docs/reference/types) from the typegraph SDK to describe the shape of the data that flows through our application.
 In this case, we'll build our typegraph around types that represent "ideas", "votes" and "buckets".
 
 
         <SDKTabs>
                       <TabItem value="typescript">
-                            {/**/}
+                            { /**/}
 Modify the file at `api/example.ts` to look something like the following. 
 
 ```typescript
 // we'll need the following imports
-import { t, typegraph } from "@typegraph/sdk";
+import { t, typegraph } from "@typegraph/sdk.js";
 
 
 typegraph("roadmap", (g) => {
@@ -245,7 +205,7 @@ typegraph("roadmap", (g) => {
 
       </TabItem>
   <TabItem value="python">
-            {/**/}
+            { /**/}
 Modify the file at `api/example.py` to look something like the following. 
 
 ```python
@@ -283,7 +243,7 @@ def roadmap(g: Graph):
 
 The types here are very simple and we haven't yet added any thing that models their relationships but they should do for our purposes.
 
-## Materializers
+## Exposing our application
 
 Typegraphs expose an API to the external world using Materializer objects.
 Materializers describe functions that transform some input type into an output type and we define them in scope of different Runtimes, where the actual logic runs. 
@@ -292,12 +252,12 @@ At this early stage, we can make use of the Random runtime which allows us to ge
 
         <SDKTabs>
                       <TabItem value="typescript">
-                            {/**/}
+                            { /**/}
 
 ```typescript
 // add need the following imports
-import { Policy } from "@typegraph/sdk";
-import { RandomRuntime } from "@typegraph/sdk/runtimes/random";
+import { Policy } from "@typegraph/sdk/index.js";
+import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
 typegraph("roadmap", (g) => {
   // ...
@@ -316,7 +276,7 @@ typegraph("roadmap", (g) => {
 
       </TabItem>
   <TabItem value="python">
-            {/*  */}
+            { /*  */}
 ```python
 # add need the following imports
 from typegraph.runtimes.random import RandomRuntime
@@ -344,35 +304,45 @@ Run the following command in your project root:
 meta dev 
 ```
 
-Typegate has first-class support for consuming the API through a GraphQl interface and it's enabled by default.
+Typegate has first-class support for consuming the API through a GraphQl interface and it is enabled by default.
 It also bundles the GrahpiQl API explorer and you should be able to access it at [http://localhost:7890/roadmap](http://localhost:7890/roadmap) once meta-cli has successfully pushed your typegraph.
 
+You can go ahead and try out the following `graphql` on the interface and get a feel for it.
+```graphql
+query {
+  get_idea {
+    id,
+    name,
+    authorEmail
+  }
+}
+```
+
+Or, you can mess around on the playground below.
 
     <TGExample
-          typegraph="first-typegraph"
-          python={require("../../../../examples/typegraphs/first-typegraph.py")}
-          typescript={require("!!code-loader!../../../../examples/typegraphs/first-typegraph.ts")}
-          query={require("./query.graphql")}
-        />
+      typegraph="first-typegraph"
+      python={require("../../../../examples/typegraphs/first-typegraph.py")}
+      typescript={require("!!code-loader!../../../../examples/typegraphs/first-typegraph.ts")}
+      query={require("./query.graphql")}
+    />
 
 ### The Prisma Runtime
 
-A runtime most apps will be depend on is the [Prisma Runtime](/docs/reference/runtimes/prisma).
-It allows you to persist data and run queries on different kinds of databases and has support for popular SQL and NoSQL databases.
-We'll use it to add the CRUD (create, read, update, delete) operations our app needs.
+Now that we have created a simple endpoint that generates random values for our `idea` model/type, let's add a CRUD support to our app.
+A runtime most apps will be depend on is the [Prisma Runtime](/docs/reference/runtimes/prisma) which allows us to connect to different databases and peform database operations.
 
-For this tutorial, we'll be making use of the PostgreSQL database. 
+For this tutorial, we'll be making use of the `PostgreSQL` database. 
 If you made use of the `compose.yml` to run typegate as outlined in this tutorial, there should be an instance of Postgres already up.
 You can check if postgres container is currently running by using the `meta doctor` command.
 
 If a typegraph needs to access a database, it first needs to be made aware of its address.
-This is done through environment variables. 
+This is done through secrets.
 In the root of your project directory, you'll find a file titled `metatype.yaml`.
 It contains metatype specific configuration for our project such as the top level `typegates` object which we use to specify the location and credentials of the different typegate nodes we'll be using.
-Each typegate entry also takes an `env` object where we can specify environment variables to be passed to our typegraphs.
-This requires special syntax.
-If we want for a typegraph called, say `FOO`, to be able read a variable named `BAR`, we specify the variable as `TG_FOO_BAR: value` in our config.
+Each typegate entry also takes an [`secrets`](/docs/reference/meta-cli/configuration-file#named-secrets) object where we can specify secret to be passed to our typegraphs.
 
+The keys in the `secrets` object are the names of the typegraphs and the values are objects mapping secret names to their values/sources.
 
 The `metatype.yaml` should already have a few sample environment variables. 
 Add an entry like the following to give our typegraph access to the database's address:
@@ -381,23 +351,22 @@ Add an entry like the following to give our typegraph access to the database's a
 typegates:
   dev:
     # ..
-    env:
-      # values here assume default config
+    secrets:
       TG_ROADMAP_POSTGRES: "postgresql://postgres:password@postgres:5432/db"
 ```
 
-Meta-cli will auto-reload when it detects changes to `metatype.yaml`.
+Meta-cli will auto-reload when it detects changes to `metatype.yaml`. This is because Meta-cli was run in `dev` mode(through the `meta dev` command).
 
 We can add the Prisma runtime to our typegraph now.
 
 
         <SDKTabs>
                       <TabItem value="typescript">
-                            {/**/}
+                            { /**/}
 
 ```typescript
 // new imports
-import { PrismaRuntime } from "@typegraph/sdk/providers/prisma";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 
 typegraph("roadmap", (g) => {
   // ...
@@ -410,7 +379,7 @@ typegraph("roadmap", (g) => {
 
       </TabItem>
   <TabItem value="python">
-            {/*  */}
+            { /*  */}
 
 ```python
 # new imports
@@ -428,15 +397,15 @@ def roadmap(g: Graph):
       </TabItem>
                 </SDKTabs>
 
-One of the features that the Prisma runtime allows us to implement is relationships.
+One of the features that the Prisma runtime allows us to implement is relationships. Here, we are creating a one to many relationship between bucket and ideas, also another one to many between ideas and vote. We will be specifiying relationships by using the `t.list` List type and `g.ref`(method which accepts the name of the model/entity as a parameter) for creating the link. Check the example below for better understanding. 
 
 
         <SDKTabs>
                       <TabItem value="typescript">
-                            {/**/}
+                            { /**/}
 
 ```typescript
-import { PrismaRuntime } from "@typegraph/sdk/providers/prisma";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 
 typegraph("roadmap", (g) => {
   // ...
@@ -481,7 +450,7 @@ typegraph("roadmap", (g) => {
 
       </TabItem>
   <TabItem value="python">
-            {/*  */}
+            { /*  */}
 
 ```python
 from typegraph.providers.prisma import PrismaRuntime
@@ -556,10 +525,10 @@ We'll make use of those.
 
         <SDKTabs>
                       <TabItem value="typescript">
-                            {/**/}
+                            { /**/}
 
 ```typescript
-import { PrismaRuntime } from "@typegraph/sdk/providers/prisma";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 
 typegraph("roadmap", (g) => {
   // ...
@@ -579,7 +548,7 @@ typegraph("roadmap", (g) => {
 
       </TabItem>
   <TabItem value="python">
-            {/*  */}
+            { /*  */}
 
 ```python
 from typegraph.providers.prisma import PrismaRuntime
@@ -606,11 +575,11 @@ def roadmap(g: Graph):
 We should be able to add a few buckets and ideas now.
 
     <TGExample
-              typegraph="roadmap-prisma"
-              python={require("../../../../examples/typegraphs/prisma.py")}
-              typescript={require("!!code-loader!../../../../examples/typegraphs/prisma.ts")}
-              query={require("./prisma.graphql")}
-            />
+      typegraph="roadmap-prisma"
+      python={require("../../../../examples/typegraphs/prisma.py")}
+      typescript={require("!!code-loader!../../../../examples/typegraphs/prisma.ts")}
+      query={require("./prisma.graphql")}
+    />
 
 ## Policies
 
@@ -620,9 +589,7 @@ A way to control who can read or write what.
 The primary mechanism typegraphs use for this purpose are policies.
 
 Policies are small functions that get the context of a request as input and return a boolean signaling weather access should be granted.
-There are different kinds of extractors available that primarily work on HTTP request headers including `jwt`, `hmac`, `basic` and `oauth2` with support for different providers. 
-We register any extractors we're interested in for the entire typegraph.
-Any policies running within it can then access their extracted values in the context.  
+
 Metatype currently supports policies based on javascript functions that are run on the Deno runtime.
 
 For this tutorial, we'll be making use of the basic auth extractor.
@@ -631,11 +598,11 @@ The token is expected to be a base64 encoded string in the format `username:secr
 
         <SDKTabs>
                       <TabItem value="typescript">
-                            {/**/}
+                            { /**/}
 
 ```typescript
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
-import { Auth } from "@typegraph/sdk/params";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
+import { Auth } from "@typegraph/sdk/params.js";
 
 typegraph("roadmap", (g) => {
   // ...
@@ -668,7 +635,7 @@ typegraph("roadmap", (g) => {
 
       </TabItem>
   <TabItem value="python">
-            {/*  */}
+            { /*  */}
 
 ```python
 from typegraph.providers.prisma import PrismaRuntime
@@ -708,36 +675,37 @@ Add the following entries to the `metatype.yaml` file:
 typegates:
   dev:
     # ..
-    env:
-      # ..
-      # the basic extractor secret format
-      # TG_[typegraph]_BASIC_[username] 
-      TG_ROADMAP_BASIC_ANDIM: hunter2
+    secrets:
+      roadmap:  # your typegraph name
+        # ..
+        # the basic extractor secret format
+        # BASIC_[username] 
+        BASIC_ADMIN: hunter2
 ```
 
 When you save the files, meta-cli will reload the new additions to your typegraph.
 `create_bucket` is now only accessible to requests bearing the right tokens
 (For the provided example, `Basic YW5kaW06aHVudGVyMg==` should work).
-If you're using the GraphiQl interface from earlier, there should be a panel in the bottom left called "Headers" for setting http headers 
+If you are using the GraphiQl interface from earlier, there should be a panel in the bottom left called "Headers" for setting http headers 
 
 
     <TGExample
-              typegraph="roadmap-policies"
-              python={require("../../../../examples/typegraphs/policies.py")}
-              typescript={require("!!code-loader!../../../../examples/typegraphs/policies.ts")}
-              query={require("./policies.graphql")}
-            />
+      typegraph="roadmap-policies"
+      python={require("../../../../examples/typegraphs/policies.py")}
+      typescript={require("!!code-loader!../../../../examples/typegraphs/policies.ts")}
+      query={require("./policies.graphql")}
+    />
 
-## More
+## More Customization for our app
 
-### `reduce`
+### Preventing Unauthorized Creation of Related Objects
 
 **Reference**: [Parameter transformations](/docs/reference/types/parameter-transformations)
 
-We can use the `reduce` method to modify the input types of functions.
-This comes especially handy when dealing with generated functions like those from the CRUD helpers from the Prisma runtime.
 By default, Prisma generates types that supports the whole suite of usecases one might have on a CRUD operation such as allowing creation of objects of related types in a single operation.
 We don't always want this and in our case, we want to prevent users from being able to create buckets, which are protected, through the `create_idea` materializer which's public.
+We can use the `reduce` method to modify the input types of functions.
+
 
 ```graphql
 mutation CIdea {
@@ -761,7 +729,7 @@ Even though the `reduce` method doesn't allow us to change the shape of the type
 
         <SDKTabs>
                       <TabItem value="typescript">
-                            {/**/}
+                            { /**/}
 
 ```typescript
 typegraph("roadmap", (g) => {
@@ -791,7 +759,7 @@ typegraph("roadmap", (g) => {
 
       </TabItem>
   <TabItem value="python">
-            {/*  */}
+            { /*  */}
 
 ```python
 @typegraph()
@@ -821,15 +789,53 @@ def roadmap(g: Graph):
                 </SDKTabs>
 
 Requests are now only able to `connect` new ideas with pre-existing buckets and won't be able to create them.
+If you try to `create` new bucket through `create_idea`, the typgate will return this response.
+```json
+{
+  "errors": [
+    {
+      "message": "Unexpected property 'create' for argument 'data.bucket' of type 'object' ('object_288') at create_idea; valid properties are: connect",
+      "locations": [],
+      "path": [],
+      "extensions": {
+        "timestamp": "2024-04-21T09:46:33.177Z"
+      }
+    }
+  ]
+}
+```
+
+Instead, If you try using this mutation, it will work as expected. You can only specify buckets that are already created.
+```graphql
+mutation {
+  create_idea(
+    data: {
+      # we want to prevent bucket creation through `create_idea`
+      bucket: {
+        connect: {id: 1}
+      }, 
+      authorEmail: "asdf@as.df", 
+      name: "Add support for WASM GC"
+    }
+  ) {
+    id
+    name,
+    bucket {
+      id,
+      name
+    }
+  }
+}
+```
 
     <TGExample
-              typegraph="roadmap-reduce"
-              python={require("../../../../examples/typegraphs/reduce.py")}
-              typescript={require("!!code-loader!../../../../examples/typegraphs/reduce.ts")}
-              query={require("./reduce.graphql")}
-            />
+      typegraph="roadmap-reduce"
+      python={require("../../../../examples/typegraphs/reduce.py")}
+      typescript={require("!!code-loader!../../../../examples/typegraphs/reduce.ts")}
+      query={require("./reduce.graphql")}
+    />
 
-### `execute`
+### Restrict Update Operation on Selected Fields
 
 You'll notice that we had set the `importance` field on votes as optional.
 This is to allow users to just up-vote an idea from the main list without opening a form.
@@ -840,10 +846,10 @@ But we'll take this opportunity to explore the feature of the Prisma runtime to 
 
         <SDKTabs>
                       <TabItem value="typescript">
-                            {/**/}
+                            { /**/}
 
 ```typescript
-import * as effects from "@typegraph/sdk/effects";
+import * as effects from "@typegraph/sdk/effects.js";
 
 typegraph("roadmap", (g) => {
   // ...
@@ -872,7 +878,7 @@ typegraph("roadmap", (g) => {
 
       </TabItem>
   <TabItem value="python">
-            {/*  */}
+            { /*  */}
 
 ```python
 from typegraph.gen.exports.runtimes import EffectUpdate
@@ -906,20 +912,20 @@ def roadmap(g: Graph):
 Our query is exposed like any other materializer in the GraphQl api.
 
     <TGExample
-              typegraph="roadmap-execute"
-              python={require("../../../../examples/typegraphs/execute.py")}
-              typescript={require("!!code-loader!../../../../examples/typegraphs/execute.ts")}
-              query={require("./execute.graphql")}
-            />
+      typegraph="roadmap-execute"
+      python={require("../../../../examples/typegraphs/execute.py")}
+      typescript={require("!!code-loader!../../../../examples/typegraphs/execute.ts")}
+      query={require("./execute.graphql")}
+    />
 
-### `rest`
+### Creating REST endpoints
 
 We can easily expose an HTTP API for our typegraph using the `g.rest` method.
 It takes a string describe a graphql query to be executed when the http path is requested.
 
         <SDKTabs>
                       <TabItem value="typescript">
-                            {/**/}
+                            { /**/}
 
 ```typescript
 typegraph("roadmap", (g) => {
@@ -1009,82 +1015,8 @@ def roadmap(g: Graph):
                 </SDKTabs>
 
 The exposed query is served at the path `{typegate_url}/{typegraph_name}/rest/{query_name}`.
-Any parameters that the query takes are processed from the search params of the request.
-    {/*TODO: provide a link to the sample typegraph*/}
+Any parameters that the query takes are processed from the search params of the request. You can check this [link](http://localhost:7890/roadmap/rest/get_buckets) on your local machine and check the results.
+    { /*TODO: provide a link to the sample typegraph*/}
 
-### `import`
-
-So far, the materializers we've looked at have been generated by helpers like the CRUD helpers from the Prisma runtime or the the Random runtime's `generate` helper.
-The `deno.policy` function we used for authoring policies was also based on function objects. 
-All these helpers are shorthands for creating function objects and now we'll look at how to roll a custom function ourselves.
-We'll be using the Deno runtime to run our code.
-
-Instead of including the code inline through a string, the Deno runtime allows us to import modules from disk.
-Our modules are allowed to use ESM imports to access libraries on different registries like `npm` and `deno.land`.
-We'll use these features to write a simple materializer that converts markdown to html.
-
-```typescript
-import * as marked from "https://deno.land/x/marked/mod.ts";
-
-export function parse({ raw }: { raw: string }): string {
-  return marked.parse(raw);
-}
-```
-
-We'll expose our module using the deno runtime.
-
-    <SDKTabs>
-              <TabItem value="typescript">
-
-
-```typescript
-typegraph("roadmap", (g) => {
-  // ...
-  g.expose(
-    {
-      // ..
-      "parse_markdown": deno.import(
-          t.struct({"raw": t.string()}),
-          t.string(),
-          {
-            name: "parse",
-            // the path is parsed relative to the typegraph file
-            module: "md2html.ts",
-          }
-        ),
-      // ..
-    }, pub
-  );
-});
-```
-
-      </TabItem>
-  <TabItem value="python">
-
-
-```python
-@typegraph()
-def roadmap(g: Graph):
-    g.expose(
-        pub,
-        # ..
-        parse_markdown=deno.import_(
-            t.struct({"raw": t.string()}),
-            t.string(),
-            # the path is parsed relative to the typegraph file
-            module="md2html.ts",
-            name="parse",
-        ),
-    )
-
-```
-      </TabItem>
-                </SDKTabs>
-
-We can now access our func through the GraphQl api.
-    <TGExample
-              typegraph="roadmap-func"
-              python={require("../../../../examples/typegraphs/func.py")}
-              typescript={require("!!code-loader!../../../../examples/typegraphs/func.ts")}
-              query={require("./func.graphql")}
-            />
+This is it for this tutorial and thanks for following till the end!
+This was a long one but we hope it gave you an overview to the vast capabilties of Metatype. We ecourage you to keep exploring!

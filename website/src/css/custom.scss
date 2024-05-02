@@ -1,6 +1,7 @@
-// @tailwind base; // no pre-flight as incompatible with Docusaurus
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
+@tailwind screens;
 
 @layer utilities {
   .tooltip {
@@ -67,6 +68,7 @@
 
         .graphiql-query-editor {
           @apply pb-4 border-none;
+          height: 100%;
 
           .graphiql-query-editor-wrapper {
             width: 100%;

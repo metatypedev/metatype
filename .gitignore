@@ -17,9 +17,9 @@ crash.log
 target
 **/*.rs.bk
 
-dev-tools/ts-language-server/out/
-dev-tools/vscode-metatype-support/out/
-dev-tools/*.vsix
+meta-lsp/ts-language-server/out/
+meta-lsp/vscode-metatype-support/out/
+meta-lsp/*.vsix
 
 typegate/workers
 typegate/codegen
@@ -45,3 +45,5 @@ typegraph/node/sdk/src/gen
 typegraph/python/typegraph/gen
 
 *.egg-info/
+
+examples/typegraphs/migrations

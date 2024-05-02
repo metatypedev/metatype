@@ -14,7 +14,7 @@ function getEnvOrDefault(key: string, defaultValue: string) {
 }
 // skip:end
 
-await typegraph({
+typegraph({
   name: "iam-provider",
   // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },

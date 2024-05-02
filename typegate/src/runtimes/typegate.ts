@@ -3,7 +3,7 @@
 
 import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
-import { Resolver } from "../types.ts";
+import { Resolver, ResolverArgs } from "../types.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { getLogger } from "../log.ts";
 import config from "../config.ts";
@@ -16,6 +16,7 @@ import { StringFormat } from "../typegraph/types.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { applyPostProcessors } from "../postprocess.ts";
 import { PrismaRT, PrismaRuntime } from "./prisma/mod.ts";
+import { SingleQuery } from "./prisma/prisma.ts";
 
 const logger = getLogger(import.meta);
 
@@ -42,6 +43,32 @@ interface ObjectNodeResult {
   subPath: Array<string>;
   termNode: TypeInfo;
 }
+
+// https://github.com/prisma/prisma-engines/blob/93f79ec1ca7867558f10130d8db84fb7bf150357/query-engine/request-handlers/src/protocols/json/body.rs#L50
+interface PrismaSingleQuery {
+  modelName?: string;
+  action: string;
+  query: string; // JSON stringified - until we have a proper type for the typegraph
+}
+
+interface PrismaBatchQuery {
+  batch: PrismaSingleQuery[];
+  transaction?: {
+    isolationLevel?: string;
+  };
+}
+
+type PrismaQuery = PrismaSingleQuery | PrismaBatchQuery;
+
+const getQueryObject = (
+  { modelName, action, query }: PrismaSingleQuery,
+): SingleQuery => {
+  return {
+    modelName,
+    action,
+    query: JSON.parse(query),
+  };
+};
 
 export class TypeGateRuntime extends Runtime {
   static singleton: TypeGateRuntime | null = null;
@@ -71,45 +98,41 @@ export class TypeGateRuntime extends Runtime {
   ): ComputeStage[] {
     const resolver: Resolver = (() => {
       const name = stage.props.materializer?.name;
-      if (name === "addTypegraph") {
-        return this.addTypegraph;
-      }
-      if (name === "removeTypegraphs") {
-        return this.removeTypegraphs;
-      }
-      if (name === "typegraphs") {
-        return this.typegraphs;
-      }
-      if (name === "typegraph") {
-        return this.typegraph;
-      }
-      if (name === "serializedTypegraph") {
-        return this.serializedTypegraph;
-      }
-      if (name === "argInfoByPath") {
-        return this.argInfoByPath;
-      }
-      if (name === "findAvailableOperations") {
-        return this.findAvailableOperations;
-      }
-      if (name === "findPrismaModels") {
-        return this.findPrismaModels;
-      }
-      if (name === "execRawPrismaQuery") {
-        return this.execRawPrismaQuery;
-      }
+      switch (name) {
+        case "addTypegraph":
+          return this.addTypegraph;
+        case "removeTypegraphs":
+          return this.removeTypegraphs;
+        case "typegraphs":
+          return this.typegraphs;
+        case "typegraph":
+          return this.typegraph;
+        case "serializedTypegraph":
+          return this.serializedTypegraph;
+        case "argInfoByPath":
+          return this.argInfoByPath;
+        case "findAvailableOperations":
+          return this.findAvailableOperations;
+        case "findPrismaModels":
+          return this.findPrismaModels;
+        case "execRawPrismaQuery":
+          return this.execRawPrismaQuery;
+        case "queryPrismaModel":
+          return this.queryPrismaModel;
 
-      if (name != null) {
-        throw new Error(`materializer '${name}' not implemented`);
-      }
+        default:
+          if (name != null) {
+            throw new Error(`materializer '${name}' not implemented`);
+          }
 
-      return async ({ _: { parent }, ...args }) => {
-        const resolver = parent[stage.props.node];
-        const ret = typeof resolver === "function"
-          ? await resolver(args)
-          : resolver;
-        return ret;
-      };
+          return async ({ _: { parent }, ...args }) => {
+            const resolver = parent[stage.props.node];
+            const ret = typeof resolver === "function"
+              ? await resolver(args)
+              : resolver;
+            return ret;
+          };
+      }
     })();
 
     return [
@@ -287,7 +310,10 @@ export class TypeGateRuntime extends Runtime {
     }).flat();
   };
 
-  execRawPrismaQuery: Resolver = async ({ typegraph, runtime, query }) => {
+  execRawPrismaQuery: Resolver = async (args) => {
+    const { typegraph, runtime, query } = args as ResolverArgs<
+      { typegraph: string; runtime: string; query: PrismaQuery }
+    >;
     const engine = this.typegate.register.get(typegraph);
     if (!engine) {
       throw new Error("typegate engine not found");
@@ -299,16 +325,100 @@ export class TypeGateRuntime extends Runtime {
       throw new Error(`prisma runtime '${runtime}' not found`);
     }
     const rt = engine.tg.runtimeReferences[runtimeIdx] as PrismaRuntime;
-    const fieldQuery = query.query;
-    const selection = JSON.parse(fieldQuery.selection);
-    const queryArgs = fieldQuery.arguments &&
-      JSON.parse(fieldQuery.arguments);
-    return JSON.stringify(
-      (await rt.query({
-        ...query,
-        query: { selection, arguments: queryArgs },
-      }))[query.action + query.modelName ?? ""],
+
+    const isBatch = "batch" in query;
+
+    const queryObj = isBatch
+      ? { ...query, batch: query.batch.map(getQueryObject) }
+      : getQueryObject(query);
+
+    const result = await rt.query(queryObj);
+
+    const queries = isBatch ? query.batch : [query];
+    const resultValues =
+      ((isBatch ? result : [result]) as Array<Record<string, unknown>>)
+        .map((r, i) => {
+          const q = queries[i];
+          const key = q.action + q.modelName ?? "";
+          return r[key];
+        });
+
+    return JSON.stringify(isBatch ? resultValues : resultValues[0]);
+  };
+
+  queryPrismaModel: Resolver = async (
+    { typegraph, runtime, model, offset, limit },
+  ) => {
+    const engine = this.typegate.register.get(typegraph);
+    if (!engine) {
+      throw new Error(`typegraph not found: ${typegraph}`);
+    }
+    const runtimeIdx = engine.tg.tg.runtimes.findIndex(
+      (rt) => rt.name === "prisma" && rt.data.name === runtime,
     );
+    if (runtimeIdx === -1) {
+      throw new Error(`prisma runtime '${runtime}' not found`);
+    }
+    const rtData = engine.tg.tg.runtimes[runtimeIdx].data as PrismaRT.DataFinal;
+    const rt = engine.tg.runtimeReferences[runtimeIdx] as PrismaRuntime;
+    const modelData = rtData.models.find((m) => m.typeName === model);
+    if (!modelData) {
+      throw new Error(
+        `prisma model '${model}' not found in the runtime '${runtime}'`,
+      );
+    }
+
+    const fields = modelData.props.map((prop) => ({
+      name: prop.key,
+      type: walkPath(engine.tg, engine.tg.type(prop.typeIdx), 0, []),
+    }));
+
+    const selection: Record<string, boolean> = {};
+    for (const field of fields) {
+      if (field.type == null) {
+        continue;
+      }
+      if (
+        ["integer", "float", "boolean", "string"].includes(field.type.type)
+      ) {
+        selection[field.name] = true;
+      }
+    }
+
+    const data = await rt.query({
+      batch: [
+        {
+          modelName: model,
+          action: "aggregate",
+          query: {
+            selection: {
+              _count: {
+                selection: {
+                  _all: true,
+                },
+              },
+            },
+          },
+        },
+        {
+          modelName: model,
+          action: "findMany",
+          query: {
+            selection,
+            arguments: {
+              skip: offset,
+              take: limit,
+            },
+          },
+        },
+      ],
+    });
+
+    return {
+      fields,
+      rowCount: data[0][`aggregate${model}`]._count._all,
+      data: data[1][`findMany${model}`].map((r: unknown) => JSON.stringify(r)),
+    };
   };
 }
 

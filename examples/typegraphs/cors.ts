@@ -5,25 +5,20 @@ import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 // skip:end
 
 await typegraph({
-  name: "auth",
-  // highlight-next-line
+  name: "cors",
+  // highlight-start
   cors: {
-    // highlight-next-line
     allowOrigin: ["https://not-this.domain"],
-    // highlight-next-line
     allowHeaders: ["x-custom-header"],
-    // highlight-next-line
     exposeHeaders: ["header-1"],
-    // highlight-next-line
     allowCredentials: true,
-    // highlight-next-line
     maxAgeSec: 60,
   },
+  // highlight-end
 }, (g) => {
   const random = new RandomRuntime({ seed: 0 });
-  const pub = Policy.public();
 
   g.expose({
-    catch_me_if_you_can: random.gen(t.string()).withPolicy(pub),
-  });
+    catch_me_if_you_can: random.gen(t.string()),
+  }, Policy.public());
 });

@@ -41,8 +41,7 @@ export class LocalArtifactPersistence implements ArtifactPersistence {
     });
   }
 
-  constructor(private dirs: Dirs) {
-  }
+  constructor(private dirs: Dirs) {}
 
   async [Symbol.asyncDispose]() {
     await Deno.remove(this.dirs.cache, { recursive: true });
@@ -165,7 +164,7 @@ class InMemoryRefCounter implements RefCounter {
   }
 
   async decrement(key: string) {
-    this.#updateRefCount(key, (count) => count ? count - 1 : 0);
+    this.#updateRefCount(key, (count) => (count ? count - 1 : 0));
     await Promise.resolve(void null);
   }
 
@@ -176,7 +175,7 @@ class InMemoryRefCounter implements RefCounter {
   }
 
   takeGarbage(): Promise<string[]> {
-    const garbage = [...this.#byRefCounts.get(0) ?? []];
+    const garbage = [...(this.#byRefCounts.get(0) ?? [])];
     for (const key of garbage) {
       this.#refCounts.delete(key);
     }

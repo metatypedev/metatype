@@ -11,7 +11,7 @@ const projectName = "metatype";
 const config = {
   title: "Metatype",
   // prettier-ignore
-  tagline: "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are.",
+  tagline: "Declarative API development platform. Build backend components with WASM/Typescript/Python, no matter where and how your (legacy) systems are.",
   url: "https://metatype.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
@@ -25,8 +25,7 @@ const config = {
   },
   stylesheets: [
     {
-      href:
-        "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
+      href: "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
       type: "text/css",
     },
   ],
@@ -41,12 +40,6 @@ const config = {
         appUrl: "https://eu.posthog.com",
         enableInDevelopment: false,
         persistence: "memory",
-      },
-    ],
-    [
-      "docusaurus-plugin-sentry",
-      {
-        DSN: "d951b2e2b71d43e0b2fc41555cf8bf75@sentry.triage.dev/5",
       },
     ],
     [

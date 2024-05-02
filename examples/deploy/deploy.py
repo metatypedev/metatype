@@ -1,25 +1,24 @@
-from typegraph import typegraph, Policy, t, Graph
+from os import path
+
+from typegraph import Graph, Policy, t, typegraph
+from typegraph.graph.tg_deploy import (
+    BasicAuth,
+    TypegraphDeployParams,
+    tg_deploy,
+)
 from typegraph.providers.prisma import PrismaRuntime
 from typegraph.runtimes.deno import DenoRuntime
-
-from typegraph.graph.tg_deploy import (
-    tg_deploy,
-    TypegraphDeployParams,
-    BasicAuth,
-)
 from typegraph.runtimes.python import PythonRuntime
-from typegraph.runtimes.wasmedge import WasmEdgeRuntime
+from typegraph.runtimes.wasm import WasmRuntime
 from typegraph.utils import unpack_tarb64
-from typegraph.wit import ArtifactResolutionConfig, MigrationConfig, MigrationAction
-
-from os import path
+from typegraph.wit import ArtifactResolutionConfig, MigrationAction, MigrationConfig
 
 
 @typegraph()
 def deploy_example_python(g: Graph):
     deno = DenoRuntime()
     python = PythonRuntime()
-    wasmedge = WasmEdgeRuntime()
+    wasm = WasmRuntime()  # noqa
     prisma = PrismaRuntime("prisma", "POSTGRES")
     pub = Policy.public()
 
@@ -56,13 +55,14 @@ def deploy_example_python(g: Graph):
             t.struct({"name": t.string()}),
             t.string(),
             module="scripts/python/say_hello.py",
+            deps=["scripts/python/import_.py"],
             name="sayHello",
         ),
-        # Wasmedge
-        testWasmedge=wasmedge.wasi(
+        # Wasm
+        testWasmAdd=wasm.from_wasm(
             t.struct({"a": t.float(), "b": t.float()}),
             t.integer(),
-            wasm="wasi/rust.wasm",
+            wasm="wasm/rust.wasm",
             func="add",
         ),
         # Prisma
@@ -89,7 +89,6 @@ artifacts_config = ArtifactResolutionConfig(
     codegen=None,
 )
 
-
 res = tg_deploy(
     tg,
     TypegraphDeployParams(
@@ -97,12 +96,16 @@ res = tg_deploy(
         auth=auth,
         artifacts_config=artifacts_config,
         secrets={
-            "TG_DEPLOY_EXAMPLE_PYTHON_POSTGRES": "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
+            "POSTGRES": "postgresql://postgres:password@localhost:5432/db?schema=e2e7894"
         },
+        typegraph_path="./deploy.py",
     ),
 )
 
 # print(res.serialized)
+if "errors" in res.typegate:
+    print(res.typegate)
+    exit
 
 # migration status.. etc
 print(

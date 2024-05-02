@@ -1,11 +1,13 @@
 export { ghjk } from "https://raw.github.com/metatypedev/ghjk/423d38e/mod.ts";
 import * as ghjk from "https://raw.github.com/metatypedev/ghjk/423d38e/mod.ts";
+import { thinInstallConfig } from "https://raw.github.com/metatypedev/ghjk/423d38e/utils/mod.ts";
 import * as ports from "https://raw.github.com/metatypedev/ghjk/423d38e/ports/mod.ts";
+import { dirname, resolve } from "https://deno.land/std/path/mod.ts";
 
 const PROTOC_VERSION = "v24.1";
 const POETRY_VERSION = "1.7.0";
 const PYTHON_VERSION = "3.8.18";
-const PNPM_VERSION = "v8.15.2";
+const PNPM_VERSION = "v9.0.5";
 const WASM_TOOLS_VERSION = "1.0.53";
 const JCO_VERSION = "1.0.0";
 const WASMEDGE_VERSION = "0.13.5";
@@ -16,6 +18,12 @@ const CARGO_INSTA_VERSION = "1.33.0";
 const NODE_VERSION = "20.8.0";
 const TEMPORAL_VERSION = "0.10.7";
 const METATYPE_VERSION = "0.3.7-0";
+
+const installs = {
+  python: ports.cpy_bs({ version: PYTHON_VERSION, releaseTag: "20240224" }),
+  python_latest: ports.cpy_bs({ releaseTag: "20240224" }),
+  node: ports.node({ version: NODE_VERSION }),
+};
 
 ghjk.install(
   ports.wasmedge({ version: WASMEDGE_VERSION }),
@@ -48,7 +56,7 @@ if (!Deno.env.has("OCI")) {
       version: CARGO_INSTA_VERSION,
       locked: true,
     }),
-    ports.node({ version: NODE_VERSION }),
+    installs.node,
     ports.pnpm({ version: PNPM_VERSION }),
     // FIXME: jco installs node as a dep
     ports.npmi({
@@ -70,13 +78,13 @@ if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
 
 if (!Deno.env.has("NO_PYTHON")) {
   ghjk.install(
-    ports.cpy_bs({ version: PYTHON_VERSION }),
+    installs.python,
     ports.pipi({
       packageName: "poetry",
       version: POETRY_VERSION,
     })[0],
   );
-  if (!Deno.env.has("CI") && !Deno.env.has("OCI")) {
+  if (!Deno.env.has("OCI")) {
     ghjk.install(
       ports.pipi({ packageName: "pre-commit" })[0],
     );
@@ -99,11 +107,36 @@ ghjk.task("clean-deno-lock", {
       `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
     const jqOp2 = `del(.packages.npm["@typegraph/sdk@${METATYPE_VERSION}"])`;
     const jqOp = `${jqOp1} | ${jqOp2}`;
-    const lock = await $`jq ${jqOp} typegate/deno.lock`.text();
-    await Deno.writeTextFile("typegate/deno.lock", lock);
+    await Deno.writeTextFile(
+      "typegate/deno.lock",
+      await $`jq ${jqOp} typegate/deno.lock`.text(),
+    );
+  },
+});
+
+
+const projectDir = resolve(dirname(new URL(import.meta.url).pathname));
+
+// run: deno run --allow-all dev/<script-name>.ts [args...]
+ghjk.task("dev", {
+  async fn({ $, argv }) {
+    if (argv.length == 0) {
+      console.log("Usage: dev <dev-script-name> [args...]");
+      return;
+    }
+    const [cmd, ...args] = argv;
+    const script = $.path(projectDir).join(`dev/${cmd}.ts`);
+    console.log(`Running ${script}`, ...args.map(JSON.stringify));
+    await $`deno run --allow-all ${script} ${args}`;
   },
 });
 
 export const secureConfig = ghjk.secureConfig({
-  allowedPortDeps: [...ghjk.stdDeps({ enableRuntimes: true })],
+  allowedPortDeps: [
+    ...ghjk.stdDeps(),
+    ...[installs.python_latest, installs.node].map((fat) => ({
+      manifest: fat.port,
+      defaultInst: thinInstallConfig(fat),
+    })),
+  ],
 });

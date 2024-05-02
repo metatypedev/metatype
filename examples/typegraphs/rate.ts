@@ -4,7 +4,7 @@ import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
 // skip:end
 
-await typegraph({
+typegraph({
   name: "rate",
   // highlight-next-line
   rate: {

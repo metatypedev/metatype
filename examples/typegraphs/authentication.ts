@@ -3,15 +3,12 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { Auth } from "@typegraph/sdk/params.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
-// skip:end
-
 await typegraph({
   name: "authentication",
-  // skip:next-line
   cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
+  // skip:end
   const deno = new DenoRuntime();
-  const pub = Policy.public();
 
   const ctx = t.struct({
     "username": t.string().optional(),
@@ -19,14 +16,23 @@ await typegraph({
 
   // highlight-start
   // expects a secret in metatype.yml
-  // `TG_[typegraph]_BASIC_[username]`
+  // `BASIC_[username]`
   // highlight-next-line
-  g.auth(Auth.basic(["admin"]));
+  g.auth(Auth.basic(["andim"]));
   // highlight-end
 
   g.expose({
     get_context: deno.identity(ctx).apply({
       username: g.fromContext("username"),
-    }).withPolicy(pub),
-  });
+    }),
+    get_full_context: deno.func(
+      t.struct({}),
+      t.string(),
+      {
+        code: "(_: any, ctx: any) => Deno.inspect(ctx.context)",
+      },
+    ),
+  }, Policy.public());
+  // skip:start
 });
+// skip:end

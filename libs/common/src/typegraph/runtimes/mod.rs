@@ -16,7 +16,7 @@ use self::python::PythonRuntimeData;
 use self::random::RandomRuntimeData;
 use self::s3::S3RuntimeData;
 use self::temporal::TemporalRuntimeData;
-use self::wasmedge::WasmEdgeRuntimeData;
+use self::wasm::WasmRuntimeData;
 
 pub mod deno;
 pub mod graphql;
@@ -26,7 +26,7 @@ pub mod python;
 pub mod random;
 pub mod s3;
 pub mod temporal;
-pub mod wasmedge;
+pub mod wasm;
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -56,8 +56,7 @@ pub enum KnownRuntime {
     PrismaMigration(PrismaMigrationRuntimeData),
     S3(S3RuntimeData),
     Temporal(TemporalRuntimeData),
-    #[serde(rename = "wasmedge")]
-    WasmEdge(WasmEdgeRuntimeData),
+    Wasm(WasmRuntimeData),
     Typegate(TypegateRuntimeData),
     Typegraph(TypegraphRuntimeData),
 }
@@ -90,7 +89,7 @@ impl TGRuntime {
                 KnownRuntime::PrismaMigration(_) => "prisma_migration",
                 KnownRuntime::S3(_) => "s3",
                 KnownRuntime::Temporal(_) => "temporal",
-                KnownRuntime::WasmEdge(_) => "wasmedge",
+                KnownRuntime::Wasm(_) => "wasm",
                 KnownRuntime::Typegate(_) => "typegate",
                 KnownRuntime::Typegraph(_) => "typegraph",
             },

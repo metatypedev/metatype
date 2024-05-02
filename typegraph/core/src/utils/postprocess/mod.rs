@@ -9,13 +9,13 @@ pub mod deno_rt;
 pub mod prisma_rt;
 pub mod python_rt;
 pub mod validation;
-pub mod wasmedge_rt;
+pub mod wasm_rt;
 
 use self::deno_rt::DenoProcessor;
 use self::prisma_rt::PrismaProcessor;
 use self::python_rt::PythonProcessor;
 use self::validation::ValidationProcessor;
-use self::wasmedge_rt::WasmedgeProcessor;
+use self::wasm_rt::WasmProcessor;
 use crate::errors::TgError;
 
 pub trait PostProcessor {
@@ -47,7 +47,7 @@ impl PostProcessor for TypegraphPostProcessor {
             if allow_fs_read_artifacts {
                 DenoProcessor.postprocess(tg)?;
                 PythonProcessor.postprocess(tg)?;
-                WasmedgeProcessor.postprocess(tg)?;
+                WasmProcessor.postprocess(tg)?;
             }
         }
 
@@ -56,6 +56,7 @@ impl PostProcessor for TypegraphPostProcessor {
     }
 }
 
+#[allow(dead_code)]
 pub fn compress_and_encode(main_path: &Path) -> Result<String, String> {
     if let Err(e) = fs_host::read_text_file(main_path.display().to_string()) {
         return Err(format!("Unable to read {:?}: {}", main_path.display(), e));

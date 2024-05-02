@@ -15,8 +15,11 @@ pub struct FunctionMatData {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct ModuleMatData {
-    pub code: String,
+    pub deno_artifact: IndexMap<String, Value>,
+    pub deps: Vec<String>,
+    pub deps_meta: Option<Vec<IndexMap<String, Value>>>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

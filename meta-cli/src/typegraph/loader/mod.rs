@@ -5,8 +5,10 @@ pub mod discovery;
 
 pub use discovery::Discovery;
 use tokio::{
+    io::AsyncReadExt,
     process::Command,
     sync::{Semaphore, SemaphorePermit},
+    time::{timeout, Duration},
 };
 
 use std::{
@@ -14,11 +16,10 @@ use std::{
     collections::HashMap,
     env,
     path::{Path, PathBuf},
-    process::Stdio,
     sync::Arc,
 };
 
-use anyhow::{anyhow, Error, Result};
+use anyhow::{anyhow, bail, Context, Error, Result};
 use colored::Colorize;
 
 use crate::{
@@ -102,49 +103,82 @@ impl<'a> Loader<'a> {
 
     async fn load_command(&self, mut command: Command, path: &Path) -> LoaderResult {
         let path: Arc<PathBuf> = path.to_path_buf().into();
-        let p = command
+        let mut child: tokio::process::Child = command
             .borrow_mut()
             .env("META_CLI_TG_PATH", path.display().to_string())
             .env("META_CLI_SERVER_PORT", get_instance_port().to_string())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .output()
-            .await
+            .spawn()
             .map_err(|e| LoaderError::LoaderProcess {
                 path: path.clone(),
                 error: e.into(),
             })?;
 
-        if p.status.success() {
-            #[cfg(debug_assertions)]
-            {
-                if !p.stderr.is_empty() {
-                    // TODO console actor
-                    eprintln!(
-                        "{}",
-                        std::str::from_utf8(&p.stderr).expect("invalid utf-8 on stderr")
-                    );
+        let duration =
+            get_loader_timeout_duration().map_err(|e| LoaderError::Other { error: e })?;
+        match timeout(duration, child.wait()).await {
+            Err(_) => {
+                child.kill().await.unwrap();
+                Err(LoaderError::LoaderTimeout { path: path.clone() })
+            }
+            Ok(exit) => {
+                let exit = exit.map_err(|e| LoaderError::LoaderProcess {
+                    path: path.clone(),
+                    error: e.into(), // generic
+                })?;
+                if exit.success() {
+                    #[cfg(debug_assertions)]
+                    {
+                        if let Some(stderr) = child.stderr.take().as_mut() {
+                            // TODO console actor
+                            let mut buff = String::new();
+                            stderr.read_to_string(&mut buff).await.map_err(|e| {
+                                LoaderError::LoaderProcess {
+                                    path: path.clone(),
+                                    error: e.into(),
+                                }
+                            })?;
+                            eprintln!("{buff}");
+                        }
+                    }
+                    Ok(TypegraphInfos {
+                        path: path.as_ref().to_owned(),
+                        base_path: self.base_dir.clone(),
+                    })
+                } else {
+                    let stderr = match child.stderr.take().as_mut() {
+                        Some(value) => {
+                            let mut buff = String::new();
+                            value.read_to_string(&mut buff).await.map_err(|e| {
+                                LoaderError::LoaderProcess {
+                                    path: path.clone(),
+                                    error: e.into(),
+                                }
+                            })?;
+                            buff.to_owned()
+                        }
+                        None => "".to_string(),
+                    };
+
+                    let stdout = match child.stdout.take().as_mut() {
+                        Some(value) => {
+                            let mut buff = String::new();
+                            value.read_to_string(&mut buff).await.map_err(|e| {
+                                LoaderError::LoaderProcess {
+                                    path: path.clone(),
+                                    error: e.into(),
+                                }
+                            })?;
+                            buff.to_owned()
+                        }
+                        None => "".to_string(),
+                    };
+
+                    Err(LoaderError::LoaderProcess {
+                        path: path.clone(),
+                        error: anyhow::anyhow!("{}\n{}", stderr, stdout),
+                    })
                 }
             }
-            Ok(TypegraphInfos {
-                path: path.as_ref().to_owned(),
-                base_path: self.base_dir.clone(),
-            })
-        } else {
-            Err(LoaderError::LoaderProcess {
-                path: path.clone(),
-                error: anyhow::anyhow!(
-                    "{}\n{}",
-                    String::from_utf8(p.stderr).map_err(|e| LoaderError::Unknown {
-                        error: e.into(),
-                        path: path.clone(),
-                    })?,
-                    String::from_utf8(p.stdout).map_err(|e| LoaderError::Unknown {
-                        error: e.into(),
-                        path,
-                    })?
-                ),
-            })
         }
     }
 
@@ -197,7 +231,7 @@ impl<'a> Loader<'a> {
                         let mut command = Command::new("deno");
                         command
                             .arg("run")
-                            .arg("--unstable")
+                            // .arg("--unstable")
                             .arg("--allow-all")
                             .arg("--check")
                             .arg(path.to_str().unwrap())
@@ -210,6 +244,7 @@ impl<'a> Loader<'a> {
                         let mut command = Command::new("npm");
                         command
                             .arg("x")
+                            .arg("--yes")
                             .arg("tsx")
                             .current_dir(path.parent().unwrap())
                             .arg(path.to_str().unwrap())
@@ -325,6 +360,12 @@ pub enum LoaderError {
         path: Arc<PathBuf>,
         error: Error,
     },
+    LoaderTimeout {
+        path: Arc<PathBuf>,
+    },
+    Other {
+        error: Error,
+    },
     ModuleFileNotFound {
         path: Arc<PathBuf>,
     },
@@ -361,6 +402,12 @@ impl ToString for LoaderError {
             Self::LoaderProcess { path, error } => {
                 format!("loader process error while loading typegraph(s) from {path:?}: {error:?}")
             }
+            Self::LoaderTimeout { path } => {
+                format!("loader process timed out while loading typegraph(s) from {path:?}")
+            }
+            Self::Other { error } => {
+                format!("{error}")
+            }
             Self::Unknown { path, error } => {
                 format!("unknown error while loading typegraph(s) from {path:?}: {error:?}")
             }
@@ -372,4 +419,21 @@ impl ToString for LoaderError {
             }
         }
     }
+}
+
+fn get_loader_timeout_duration() -> Result<Duration> {
+    let env_key = "LOADER_TIMEOUT";
+    let secs = match std::env::var(env_key) {
+        Ok(value) => {
+            let value = value
+                .parse::<u64>()
+                .context(format!("{env_key} is not a positive integer"))?;
+            if value < 1 {
+                bail!("{env_key:?} cannot be less than 1");
+            }
+            value
+        }
+        Err(_) => 120,
+    };
+    Ok(Duration::from_secs(secs))
 }
