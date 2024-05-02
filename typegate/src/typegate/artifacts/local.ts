@@ -94,11 +94,11 @@ export class LocalArtifactStore extends ArtifactStore {
   override async getLocalPath(meta: ArtifactMeta, deps: ArtifactMeta[] = []) {
     for (const dep of deps) {
       this.#assertArtifactExist(dep.hash, dep.typegraphName);
-      await getLocalPath(dep);
+      await getLocalPath(dep, meta);
     }
 
     this.#assertArtifactExist(meta.hash, meta.typegraphName);
-    return getLocalPath(meta);
+    return getLocalPath(meta, meta);
   }
 
   override async prepareUpload(meta: ArtifactMeta, origin: URL) {

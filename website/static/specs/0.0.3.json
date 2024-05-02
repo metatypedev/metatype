@@ -2572,11 +2572,29 @@
       "title": "ModuleMatData",
       "type": "object",
       "required": [
-        "code"
+        "denoArtifact",
+        "deps"
       ],
       "properties": {
-        "code": {
-          "type": "string"
+        "denoArtifact": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "deps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "depsMeta": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
         }
       }
     },

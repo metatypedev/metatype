@@ -7,8 +7,6 @@ import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
 import * as fsp from "node:fs/promises";
 import { dirname, join } from "node:path";
-import * as fsp from "node:fs/promises";
-import { dirname, join } from "node:path";
 
 export class BasicAuth {
   constructor(public username: string, public password: string) {
@@ -19,7 +17,6 @@ export class BasicAuth {
 }
 
 export interface TypegraphDeployParams {
-  typegraphPath: string;
   typegraphPath: string;
   baseUrl: string;
   auth?: BasicAuth;
@@ -46,11 +43,6 @@ export interface ArtifactMeta {
   relativePath: string;
   hash: string;
   sizeInBytes: number;
-export interface ArtifactMeta {
-  typegraphName: string;
-  relativePath: string;
-  hash: string;
-  sizeInBytes: number;
 }
 
 export async function tgDeploy(
@@ -60,7 +52,6 @@ export async function tgDeploy(
   const { baseUrl, secrets, auth, artifactsConfig } = params;
   const serialized = typegraph.serialize(artifactsConfig);
   const tgJson = serialized.tgJson;
-  const refArtifacts = serialized.ref_artifacts;
   const refArtifacts = serialized.ref_artifacts;
 
   const headers = new Headers();
