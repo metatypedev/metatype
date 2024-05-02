@@ -43,6 +43,7 @@ import { NoLimiter } from "test-utils/no_limiter.ts";
 import { TypegraphStore } from "../sync/typegraph.ts";
 import { createLocalArtifactStore } from "./artifacts/local.ts";
 import { createSharedArtifactStore } from "./artifacts/shared.ts";
+import { AsyncDisposableStack } from "dispose";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 

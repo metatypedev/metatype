@@ -309,6 +309,7 @@
   "redirects": {
     "https://cdn.pika.dev/big.js/^5.2.2": "https://cdn.skypack.dev/big.js@^5.2.2",
     "https://crux.land/router@0.0.5": "https://crux.land/api/get/2KNRVU.ts",
+    "https://deno.land/x/dispose/mod.ts": "https://deno.land/x/dispose@1.1.0/mod.ts",
     "https://github.com/levibostian/deno-udd/raw/ignore-prerelease/mod.ts": "https://raw.githubusercontent.com/levibostian/deno-udd/ignore-prerelease/mod.ts"
   },
   "remote": {
@@ -1253,6 +1254,11 @@
     "https://deno.land/x/deno_graph@0.26.0/lib/snippets/deno_graph-de651bc9c240ed8d/src/deno_apis.js": "41192baaa550a5c6a146280fae358cede917ae16ec4e4315be51bef6631ca892",
     "https://deno.land/x/deno_graph@0.26.0/mod.ts": "11131ae166580a1c7fa8506ff553751465a81c263d94443f18f353d0c320bc14",
     "https://deno.land/x/dir@1.5.1/data_local_dir/mod.ts": "91eb1c4bfadfbeda30171007bac6d85aadacd43224a5ed721bbe56bc64e9eb66",
+    "https://deno.land/x/dispose@1.1.0/async-disposable-stack.ts": "15bb66608a6145be63eabf12fa63462fb7553af9440671261424b6e3d4042405",
+    "https://deno.land/x/dispose@1.1.0/async-disposable.ts": "38399695820f15de40a36e732448f45bdd262ec0a6a281a8fd4f9449831655d3",
+    "https://deno.land/x/dispose@1.1.0/disposable-stack.ts": "97bd374fcbfd19cb5311302b7b3b4fd03c06a7aebf59f1ade735906eb5e2888c",
+    "https://deno.land/x/dispose@1.1.0/disposable.ts": "4e47a6d4229f9fe6fc500e7b88c1aa68e2e815e4d3b2c1d661570f4b0b2c41cc",
+    "https://deno.land/x/dispose@1.1.0/mod.ts": "90b3c6db83c29d3f2bcf4bd7c0a3676b79dd356708562339adb3e79daba34efd",
     "https://deno.land/x/djwt@v2.7/algorithm.ts": "ba9941961c46838f35a507414407e48aa9a4eca69c679b04fbbede55fe276a09",
     "https://deno.land/x/djwt@v2.7/deps.ts": "a5d7952aaf7fad421717c9a2db0b2e736b409632cb70f3f7f9e68f8e96e04f45",
     "https://deno.land/x/djwt@v2.7/mod.ts": "08cb2c745c9bc33883c2d027fc4af5c157f0a30564c3ba503a56fe0ab6959c8e",

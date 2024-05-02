@@ -8,6 +8,8 @@ import config from "../../config.ts";
 import { dirname } from "std/path/dirname.ts";
 import { resolve } from "std/path/resolve.ts";
 import { exists } from "std/fs/exists.ts";
+// until deno supports it...
+import { AsyncDisposableStack } from "dispose";
 
 // The directory where artifacts are stored -- by hash
 export const STORE_DIR = `${config.tmp_dir}/artifacts-cache`;
@@ -143,11 +145,11 @@ export class ArtifactStore implements AsyncDisposable {
   ): Promise<string> {
     for (const dep of deps) {
       await this.persistence.fetch(dep.hash);
-      await getLocalPath(dep);
+      await getLocalPath(dep, meta);
     }
 
     await this.persistence.fetch(meta.hash);
-    return getLocalPath(meta);
+    return getLocalPath(meta, meta);
   }
 
   prepareUpload(meta: ArtifactMeta, origin: URL) {
@@ -174,7 +176,8 @@ export class ArtifactStore implements AsyncDisposable {
     tgName: string,
     expireSec: number,
   ): Promise<URL> {
-    const token = await signJWT({ expiresIn: expireSec }, expireSec);
+    const uuid = crypto.randomUUID();
+    const token = await signJWT({ uuid, expiresIn: expireSec }, expireSec);
     const url = new URL(getUploadPath(tgName), origin);
     url.searchParams.set("token", token);
     return url;

@@ -5,8 +5,6 @@ import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { dirname, join } from "std/path/mod.ts";
 import { copy } from "std/fs/copy.ts";
 import { init_native } from "native";
-import { SingleRegister } from "./single_register.ts";
-import { Typegate } from "../../src/typegate/mod.ts";
 import { RestQuery } from "./query/rest_query.ts";
 import { GraphQLQuery } from "./query/graphql_query.ts";
 import { test } from "./test.ts";
@@ -14,6 +12,7 @@ import { metaCli } from "./meta.ts";
 import { testDir } from "./dir.ts";
 import { autoTest } from "./autotest.ts";
 import { init_runtimes } from "../../src/runtimes/mod.ts";
+import { getCurrentTest } from "./test.ts";
 
 // native must load first to avoid import race conditions and panic
 init_native();
@@ -41,13 +40,12 @@ export const Meta = {
   cli: metaCli,
 };
 
-// TODO use pre-existing Typegate for the test
+// TODO
 export async function execute(
-  engine: QueryEngine,
+  _engine: QueryEngine,
   request: Request,
 ): Promise<Response> {
-  const register = new SingleRegister(engine.name, engine);
-  await using typegate = await Typegate.init(null, register);
+  const typegate = getCurrentTest().typegates.next();
   return await typegate.handle(request, {
     remoteAddr: { hostname: "localhost" },
   } as Deno.ServeHandlerInfo);

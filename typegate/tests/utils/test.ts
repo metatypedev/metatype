@@ -12,6 +12,8 @@ import { Typegate } from "../../src/typegate/mod.ts";
 import { createMetaCli } from "./meta.ts";
 import { TypeGraph } from "../../src/typegraph/mod.ts";
 import { SyncConfig } from "../../src/sync/config.ts";
+// until deno supports it...
+import { AsyncDisposableStack } from "dispose";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
@@ -121,7 +123,7 @@ export class MetaTest {
     public t: Deno.TestContext,
     public typegates: TypegateManager,
     private introspection: boolean,
-    private port: number | null,
+    public port: number | null,
     public disposables: AsyncDisposableStack,
   ) {
   }
@@ -387,6 +389,14 @@ interface TestExt extends Test {
   ignore: Test;
 }
 
+let currentTest: MetaTest | null = null;
+export function getCurrentTest(): MetaTest {
+  if (currentTest == null) {
+    throw new Error("No current test");
+  }
+  return currentTest;
+}
+
 export const test = ((o, fn): void => {
   const opts = typeof o === "string" ? { name: o } : o;
   return Deno.test({
@@ -457,9 +467,10 @@ export const test = ((o, fn): void => {
           await sh(["git", "commit", "-m", "Initial commit"]);
         }
 
+        currentTest = mt;
         await fn(mt);
+        currentTest = null;
       } catch (error) {
-        console.error(error);
         throw error;
       }
     },
