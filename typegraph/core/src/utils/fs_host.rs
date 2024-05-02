@@ -262,10 +262,10 @@ pub fn resolve_globs_dirs(deps: Vec<String>) -> Result<Vec<PathBuf>, String> {
                 .into_iter()
                 .map(|file| resolved_deps.push(file));
         } else {
-            // print(&format!(
-            //     "***************** {:?}",
-            //     make_absolute(&PathBuf::from(dep.clone()))?
-            // ));
+            print(&format!(
+                "***************** {:?}",
+                make_absolute(&PathBuf::from(dep.clone()))?
+            ));
             let all_files = expand_path(&make_absolute(&PathBuf::from(dep))?, &[])?;
             for file in all_files {
                 let rel_path = make_relative(&file)?;

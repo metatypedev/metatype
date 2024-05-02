@@ -61,21 +61,24 @@ interface ServeResult {
 
 function serve(typegates: TypegateManager): Promise<ServeResult> {
   return new Promise((resolve) => {
-    const server = Deno.serve({
-      port: 0,
-      onListen: ({ port }) => {
-        resolve({
-          port,
-          cleanup: async () => {
-            await server.shutdown();
-          },
-        });
+    const server = Deno.serve(
+      {
+        port: 0,
+        onListen: ({ port }) => {
+          resolve({
+            port,
+            cleanup: async () => {
+              await server.shutdown();
+            },
+          });
+        },
       },
-    }, (req) => {
-      return typegates.next().handle(req, {
-        remoteAddr: { hostname: "localhost" },
-      } as Deno.ServeHandlerInfo);
-    });
+      (req) => {
+        return typegates.next().handle(req, {
+          remoteAddr: { hostname: "localhost" },
+        } as Deno.ServeHandlerInfo);
+      },
+    );
   });
 }
 
@@ -185,11 +188,9 @@ export class MetaTest {
 
   async engineFromDeployed(tgString: string): Promise<QueryEngine> {
     const tg = await TypeGraph.parseJson(tgString);
-    const { engine, response } = await this.typegates.next().pushTypegraph(
-      tg,
-      {},
-      this.introspection,
-    );
+    const { engine, response } = await this.typegates
+      .next()
+      .pushTypegraph(tg, {}, this.introspection);
 
     if (engine == null) {
       throw response.failure!;
@@ -214,6 +215,8 @@ export class MetaTest {
       sdkLang,
       cwd,
     );
+
+    console.log(serialized);
 
     return await this.engineFromDeployed(serialized);
   }
@@ -365,7 +368,7 @@ interface TestConfig {
 
 interface Test {
   (
-    opts: string | Omit<Deno.TestDefinition, "fn"> & TestConfig,
+    opts: string | (Omit<Deno.TestDefinition, "fn"> & TestConfig),
     fn: (t: MetaTest) => void | Promise<void>,
   ): void;
 }
