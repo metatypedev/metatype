@@ -1,9 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { InheritDef } from "../typegraph.js";
+import {
+  InheritDef,
+  TgFinalizationResult,
+  TypegraphOutput,
+} from "../typegraph.js";
 import { ReducePath } from "../gen/interfaces/metatype-typegraph-utils.js";
 import { serializeStaticInjection } from "./injection_utils.js";
+import { ArtifactResolutionConfig } from "../gen/interfaces/metatype-typegraph-core.js";
 
 export function stringifySymbol(symbol: symbol) {
   const name = symbol.toString().match(/\((.+)\)/)?.[1];
@@ -78,4 +83,19 @@ export function getEnvVariable(
 export function getAllEnvVariables(): any {
   const glob = globalThis as any;
   return glob?.process ? glob?.process.env : glob?.Deno.env.toObject();
+}
+
+const frozenMemo: Record<string, TgFinalizationResult> = {};
+
+/** Create a reusable version of a `TypegraphOutput` */
+export function freezeTgOutput(
+  config: ArtifactResolutionConfig,
+  tgOutput: TypegraphOutput,
+): TypegraphOutput {
+  frozenMemo[tgOutput.name] = frozenMemo[tgOutput.name] ??
+    tgOutput.serialize(config);
+  return {
+    ...tgOutput,
+    serialize: (_: ArtifactResolutionConfig) => frozenMemo[tgOutput.name],
+  };
 }

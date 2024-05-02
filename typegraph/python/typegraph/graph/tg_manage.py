@@ -15,6 +15,7 @@ from typegraph.gen.exports.core import (
 )
 from typegraph.graph.shared_types import BasicAuth, TypegraphOutput
 from typegraph.graph.tg_deploy import TypegraphDeployParams, tg_deploy
+from typegraph.utils import freeze_tg_output
 
 PORT = "META_CLI_SERVER_PORT"  # meta-cli instance that executes the current file
 SELF_PATH = (
