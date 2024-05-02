@@ -21,6 +21,7 @@ mod interlude {
 
 mod config;
 mod mdk;
+mod mdk_python;
 mod mdk_rust;
 #[cfg(test)]
 mod tests;
@@ -78,10 +79,13 @@ pub async fn generate_target(
                 let generator = mdk_rust::Generator::new(config)?;
                 Ok::<_, anyhow::Error>(Box::new(generator) as Box<dyn Plugin>)
             },
+            &|val| {
+                let config: mdk_python::MdkPythonGenConfig = serde_json::from_value(val)?;
+                let generator = mdk_python::PythonGenerator::new(config)?;
+                Ok::<_, anyhow::Error>(Box::new(generator) as Box<dyn Plugin>)
+            },
         ),
-    ]
-    .into_iter()
-    .collect::<HashMap<String, _>>();
+    ];
 
     let target_conf = config
         .targets
@@ -93,10 +97,11 @@ pub async fn generate_target(
         let config = config.to_owned();
 
         let get_gen_fn = generators
-            .get(&gen_name[..])
+            .iter()
+            .find(|item| item.0.eq(gen_name))
             .with_context(|| format!("generator \"{gen_name}\" not found in config"))?;
 
-        let gen_impl = get_gen_fn(config)?;
+        let gen_impl = get_gen_fn.1(config)?;
         let bill = gen_impl.bill_of_inputs();
 
         let mut resolve_set = tokio::task::JoinSet::new();
