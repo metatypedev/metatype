@@ -12,8 +12,8 @@ on:
         type: boolean
         default: false
   push:
-      tags:
-        - v*
+    tags:
+      - v*
 
 env:
   GHJK_VERSION: "423d38e"
@@ -23,11 +23,7 @@ env:
 jobs:
   check-bump:
     runs-on: ubuntu-latest
-    if: github.ref_type == 'tag' 
-      || (
-        github.event_name == 'workflow_dispatch'
-        && inputs.checkBump
-      )
+    if: github.ref_type == 'tag' || ( github.event_name == 'workflow_dispatch' && inputs.checkBump )
     steps:
       - uses: actions/checkout@v4
         with:
@@ -98,7 +94,7 @@ jobs:
         with:
           targets: ${{ matrix.target }}
       # some targets don't use cross so will require the deps in the host
-      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
+      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}-${{ matrix.target }}
@@ -172,7 +168,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
+      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
       - shell: bash
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
@@ -305,10 +301,10 @@ jobs:
           fetch-depth: 0
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
-      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
+      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
       - shell: bash
         run: |
-          cd dev-tools
+          cd meta-lsp
           pnpm install --frozen-lockfile
           cd ts-language-server
           pnpm install --frozen-lockfile
@@ -318,14 +314,14 @@ jobs:
           pnpm compile:ts-server
           pnpm compile:vscode
           pnpm vscode:package
-          
+
           [ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
             && pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }} --skip-duplicate \
-            || pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }} 
+            || pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }}
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
-          file: "dev-tools/*.vsix"
+          file: "meta-lsp/*.vsix"
           file_glob: true
           overwrite: ${{ inputs.ovewriteArtifacts }}
 

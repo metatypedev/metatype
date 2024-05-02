@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { SystemTypegraph } from "../../src/system_typegraphs.ts";
-import { dirname, join } from "std/path/mod.ts";
+import { dirname, extname, join } from "std/path/mod.ts";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
@@ -26,6 +26,11 @@ export interface ParseOptions {
   autoSecretName?: boolean;
   prefix?: string;
   pretty?: boolean;
+}
+
+export enum SDKLangugage {
+  Python = "python3",
+  TypeScript = "deno",
 }
 
 // with a round-robin load balancer emulation
@@ -56,21 +61,24 @@ interface ServeResult {
 
 function serve(typegates: TypegateManager): Promise<ServeResult> {
   return new Promise((resolve) => {
-    const server = Deno.serve({
-      port: 0,
-      onListen: ({ port }) => {
-        resolve({
-          port,
-          cleanup: async () => {
-            await server.shutdown();
-          },
-        });
+    const server = Deno.serve(
+      {
+        port: 0,
+        onListen: ({ port }) => {
+          resolve({
+            port,
+            cleanup: async () => {
+              await server.shutdown();
+            },
+          });
+        },
       },
-    }, (req) => {
-      return typegates.next().handle(req, {
-        remoteAddr: { hostname: "localhost" },
-      } as Deno.ServeHandlerInfo);
-    });
+      (req) => {
+        return typegates.next().handle(req, {
+          remoteAddr: { hostname: "localhost" },
+        } as Deno.ServeHandlerInfo);
+      },
+    );
   });
 }
 
@@ -180,17 +188,71 @@ export class MetaTest {
 
   async engineFromDeployed(tgString: string): Promise<QueryEngine> {
     const tg = await TypeGraph.parseJson(tgString);
-    const { engine, response } = await this.typegates.next().pushTypegraph(
-      tg,
-      {},
-      this.introspection,
-    );
+    const { engine, response } = await this.typegates
+      .next()
+      .pushTypegraph(tg, {}, this.introspection);
 
     if (engine == null) {
       throw response.failure!;
     }
 
     return engine;
+  }
+
+  async engineFromTgDeployPython(path: string, cwd: string) {
+    const extension = extname(path);
+    let sdkLang: SDKLangugage;
+    switch (extension) {
+      case ".py":
+        sdkLang = SDKLangugage.Python;
+        break;
+      default:
+        throw new Error(`Unsupported file type ${extension}`);
+    }
+
+    const serialized = await this.#serializeTypegraphFromShell(
+      path,
+      sdkLang,
+      cwd,
+    );
+
+    return await this.engineFromDeployed(serialized);
+  }
+
+  async #serializeTypegraphFromShell(
+    path: string,
+    lang: SDKLangugage,
+    cwd: string,
+  ): Promise<string> {
+    // run self deployed typegraph
+
+    if (!this.port) {
+      throw new Error(
+        "Error: port option in MetaTest config should be set to 'true'",
+      );
+    }
+
+    const { stderr, stdout } = await this.shell([
+      lang.toString(),
+      path,
+      cwd,
+      this.port.toString(),
+    ]);
+
+    if (stderr.length > 0) {
+      throw new Error(`${stderr}`);
+    }
+
+    if (stdout.length === 0) {
+      throw new Error("No typegraph");
+    }
+
+    const tg_json = extractJsonFromStdout(stdout);
+    if (!tg_json) {
+      throw new Error("No typegraph");
+    }
+
+    return tg_json;
   }
 
   async unregister(engine: QueryEngine) {
@@ -268,6 +330,22 @@ export class MetaTest {
   }
 }
 
+function extractJsonFromStdout(stdout: string): string | null {
+  let jsonStart = null;
+  let inJson = false;
+
+  for (const line of stdout.split("\n")) {
+    if (inJson) {
+      jsonStart += "\n" + line;
+    } else if (line.startsWith("{")) {
+      jsonStart = line;
+      inJson = true;
+    }
+  }
+
+  return jsonStart;
+}
+
 interface TempGitRepo {
   content: Record<string, string>;
 }
@@ -288,7 +366,7 @@ interface TestConfig {
 
 interface Test {
   (
-    opts: string | Omit<Deno.TestDefinition, "fn"> & TestConfig,
+    opts: string | (Omit<Deno.TestDefinition, "fn"> & TestConfig),
     fn: (t: MetaTest) => void | Promise<void>,
   ): void;
 }

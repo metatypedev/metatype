@@ -130,7 +130,7 @@ export abstract class ArtifactStore {
     }
 
     const context = await verifyJWT(token);
-    if (context.exp as number < jwt.getNumericDate(new Date())) {
+    if ((context.exp as number) < jwt.getNumericDate(new Date())) {
       throw new Error("Expired upload URL");
     }
   }

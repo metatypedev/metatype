@@ -1,4 +1,5 @@
-package metatype:typegraph
+package metatype:typegraph;
+
 
 interface core {
     record error {
@@ -39,7 +40,7 @@ interface core {
         size: u32,
     }
 
-    init-typegraph: func(params: typegraph-init-params) -> result<_, error>
+    init-typegraph: func(params: typegraph-init-params) -> result<_, error>;
 
     record migration-action {
         create: bool,
@@ -60,9 +61,9 @@ interface core {
         codegen: option<bool> // if set, sdk should not throw errors when the script does not exist
     }
 
-    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<tuple<string, list<artifact>>, error>
+    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<tuple<string, list<artifact>>, error>;
 
-    type type-id = u32
+    type type-id = u32;
     record type-base {
         name: option<string>,
         // string => json string
@@ -70,13 +71,13 @@ interface core {
         as-id: bool,
     }
 
-    with-injection: func(type-id: type-id, injection: string) -> result<type-id, error>
+    with-injection: func(type-id: type-id, injection: string) -> result<type-id, error>;
 
     record type-proxy {
         name: string,
         extras: list<tuple<string, string>>,
     }
-    refb: func(name: string, attributes: list<tuple<string, string>>) -> result<type-id, error>
+    refb: func(name: string, attributes: list<tuple<string, string>>) -> result<type-id, error>;
 
     record type-integer {
         min: option<s32>,
@@ -86,7 +87,7 @@ interface core {
         multiple-of: option<s32>,
         enumeration: option<list<s32>>
     }
-    integerb: func(data: type-integer, base: type-base) -> result<type-id, error>
+    integerb: func(data: type-integer, base: type-base) -> result<type-id, error>;
 
     record type-float {
         min: option<float64>,
@@ -96,9 +97,9 @@ interface core {
         multiple-of: option<float64>,
         enumeration: option<list<float64>>
     }
-    floatb: func(data: type-float, base: type-base) -> result<type-id, error>
+    floatb: func(data: type-float, base: type-base) -> result<type-id, error>;
 
-    booleanb: func(base: type-base) -> result<type-id, error>
+    booleanb: func(base: type-base) -> result<type-id, error>;
 
     record type-string {
         min: option<u32>,
@@ -107,14 +108,14 @@ interface core {
         pattern: option<string>,
         enumeration: option<list<string>>
     }
-    stringb: func(data: type-string, base: type-base) -> result<type-id, error>
+    stringb: func(data: type-string, base: type-base) -> result<type-id, error>;
 
     record type-file {
         min: option<u32>,
         max: option<u32>,
         allow: option<list<string>>,
     }
-    fileb: func(data: type-file, base: type-base) -> result<type-id, error>
+    fileb: func(data: type-file, base: type-base) -> result<type-id, error>;
 
 
     record type-list {
@@ -123,23 +124,23 @@ interface core {
         max: option<u32>,
         unique-items: option<bool>
     }
-    listb: func(data: type-list, base: type-base) -> result<type-id, error>
+    listb: func(data: type-list, base: type-base) -> result<type-id, error>;
 
     record type-optional {
         of: type-id,
         default-item: option<string>
     }
-    optionalb: func(data: type-optional, base: type-base) -> result<type-id, error>
+    optionalb: func(data: type-optional, base: type-base) -> result<type-id, error>;
 
     record type-union {
         variants: list<type-id>,
     }
-    unionb: func(data: type-union, base: type-base) -> result<type-id, error>
+    unionb: func(data: type-union, base: type-base) -> result<type-id, error>;
 
     record type-either {
         variants: list<type-id>,
     }
-    eitherb: func(data: type-either, base: type-base) -> result<type-id, error>
+    eitherb: func(data: type-either, base: type-base) -> result<type-id, error>;
 
     record type-struct {
         props: list<tuple<string, type-id>>,
@@ -148,10 +149,10 @@ interface core {
         max: option<u32>,
         enumeration: option<list<string>>,
     }
-    structb: func(data: type-struct, base: type-base) -> result<type-id, error>
-    extend-struct: func(tpe: type-id, props: list<tuple<string, type-id>>) -> result<type-id, error>
+    structb: func(data: type-struct, base: type-base) -> result<type-id, error>;
+    extend-struct: func(tpe: type-id, props: list<tuple<string, type-id>>) -> result<type-id, error>;
 
-    get-type-repr: func(id: type-id) -> result<string, error>
+    get-type-repr: func(id: type-id) -> result<string, error>;
 
     variant value-source {
         raw(string),  // json
@@ -175,16 +176,16 @@ interface core {
         rate-weight: option<u32>,
     }
 
-    funcb: func(data: type-func) -> result<type-id, error>
+    funcb: func(data: type-func) -> result<type-id, error>;
 
     record transform-data {
         query-input: type-id,
         parameter-transform: parameter-transform,
     }
 
-    get-transform-data: func(resolver-input: type-id, transform-tree: string) -> result<transform-data, error>
+    get-transform-data: func(resolver-input: type-id, transform-tree: string) -> result<transform-data, error>;
 
-    type policy-id = u32
+    type policy-id = u32;
 
     record policy {
         name: string,
@@ -203,29 +204,29 @@ interface core {
         per-effect(policy-per-effect),
     }
 
-    register-policy: func(pol: policy) -> result<policy-id, error>
+    register-policy: func(pol: policy) -> result<policy-id, error>;
 
-    with-policy: func(type-id: type-id, policy-chain: list<policy-spec>) -> result<type-id, error>
+    with-policy: func(type-id: type-id, policy-chain: list<policy-spec>) -> result<type-id, error>;
 
     // policy-id, policy-name
-    get-public-policy: func() -> result<tuple<policy-id, string>, error>
-    get-internal-policy: func() -> result<tuple<policy-id, string>, error>
+    get-public-policy: func() -> result<tuple<policy-id, string>, error>;
+    get-internal-policy: func() -> result<tuple<policy-id, string>, error>;
 
     variant context-check {
         not-null,
         value(string),
         pattern(string),
     }
-    register-context-policy: func(key: string, check: context-check) -> result<tuple<policy-id, string>, error>
+    register-context-policy: func(key: string, check: context-check) -> result<tuple<policy-id, string>, error>;
 
-    rename-type: func(tpe: type-id, new-name: string) -> result<type-id, error>
+    rename-type: func(tpe: type-id, new-name: string) -> result<type-id, error>;
 
-    expose: func(fns: list<tuple<string, type-id>>, default-policy: option<list<policy-spec>>) -> result<_, error>
+    expose: func(fns: list<tuple<string, type-id>>, default-policy: option<list<policy-spec>>) -> result<_, error>;
 
-    set-seed: func(seed: option<u32>) -> result<_, error>
+    set-seed: func(seed: option<u32>) -> result<_, error>;
     
-    type runtime-id = u32
-    type materializer-id = u32
+    type runtime-id = u32;
+    type materializer-id = u32;
 
     record func-params {
         inp: type-id,
@@ -235,11 +236,11 @@ interface core {
 }
 
 interface runtimes {
-    use core.{error, type-id, func-params, runtime-id, materializer-id, artifact}
+    use core.{error, type-id, func-params, runtime-id, materializer-id, artifact};
     
-    get-deno-runtime: func() -> runtime-id
+    get-deno-runtime: func() -> runtime-id;
 
-    type idempotency = bool
+    type idempotency = bool;
 
     variant effect {
         read,
@@ -271,14 +272,15 @@ interface runtimes {
     record materializer-deno-import {
         func-name: string,
         module: string,
+        deps: list<string>,
         secrets: list<string>,
     }
 
-    register-deno-func: func(data: materializer-deno-func, effect: effect) -> result<materializer-id, error>
-    register-deno-static: func(data: materializer-deno-static, type-id: type-id) -> result<materializer-id, error>
+    register-deno-func: func(data: materializer-deno-func, effect: effect) -> result<materializer-id, error>;
+    register-deno-static: func(data: materializer-deno-static, type-id: type-id) -> result<materializer-id, error>;
 
-    get-predefined-deno-func: func(data: materializer-deno-predefined) -> result<materializer-id, error>
-    import-deno-function: func(data: materializer-deno-import, effect: effect) -> result<materializer-id, error>
+    get-predefined-deno-func: func(data: materializer-deno-predefined) -> result<materializer-id, error>;
+    import-deno-function: func(data: materializer-deno-import, effect: effect) -> result<materializer-id, error>;
 
 
     // graphql
@@ -290,9 +292,9 @@ interface runtimes {
         path: option<list<string>>,
     }
 
-    register-graphql-runtime: func(data: graphql-runtime-data) -> result<runtime-id, error>
-    graphql-query: func(base: base-materializer, data: materializer-graphql-query) -> result<materializer-id, error>
-    graphql-mutation: func(base: base-materializer, data: materializer-graphql-query) -> result<materializer-id, error>
+    register-graphql-runtime: func(data: graphql-runtime-data) -> result<runtime-id, error>;
+    graphql-query: func(base: base-materializer, data: materializer-graphql-query) -> result<materializer-id, error>;
+    graphql-mutation: func(base: base-materializer, data: materializer-graphql-query) -> result<materializer-id, error>;
 
     record http-runtime-data {
         endpoint: string,
@@ -319,8 +321,8 @@ interface runtimes {
         auth-token-field: option<string>,
     }
 
-    register-http-runtime: func(data: http-runtime-data) -> result<runtime-id, error>
-    http-request: func(base: base-materializer, data: materializer-http-request) -> result<materializer-id, error>
+    register-http-runtime: func(data: http-runtime-data) -> result<runtime-id, error>;
+    http-request: func(base: base-materializer, data: materializer-http-request) -> result<materializer-id, error>;
 
     // python
     record materializer-python-def {
@@ -337,6 +339,7 @@ interface runtimes {
     record materializer-python-module {
         runtime: runtime-id,
         file: string,
+        deps: list<string>,
     }
 
     record materializer-python-import {
@@ -345,11 +348,11 @@ interface runtimes {
         secrets: list<string>
     }
 
-    register-python-runtime: func() -> result<runtime-id, error>
-    from-python-lambda: func(base: base-materializer, data: materializer-python-lambda) -> result<materializer-id, error>
-    from-python-def: func(base: base-materializer, data: materializer-python-def) -> result<materializer-id, error>
-    from-python-module: func(base: base-materializer, data: materializer-python-module) -> result<materializer-id, error>
-    from-python-import: func(base: base-materializer, data: materializer-python-import) -> result<materializer-id, error>
+    register-python-runtime: func() -> result<runtime-id, error>;
+    from-python-lambda: func(base: base-materializer, data: materializer-python-lambda) -> result<materializer-id, error>;
+    from-python-def: func(base: base-materializer, data: materializer-python-def) -> result<materializer-id, error>;
+    from-python-module: func(base: base-materializer, data: materializer-python-module) -> result<materializer-id, error>;
+    from-python-import: func(base: base-materializer, data: materializer-python-import) -> result<materializer-id, error>;
 
     // random
     record random-runtime-data {
@@ -361,17 +364,17 @@ interface runtimes {
         runtime: runtime-id,
     }
 
-    register-random-runtime: func(data: random-runtime-data) -> result<materializer-id, error>
-    create-random-mat: func(base: base-materializer, data: materializer-random) -> result<materializer-id, error>
+    register-random-runtime: func(data: random-runtime-data) -> result<materializer-id, error>;
+    create-random-mat: func(base: base-materializer, data: materializer-random) -> result<materializer-id, error>;
 
-    // wasmedge
-    record materializer-wasi {
+    // wasm
+    record materializer-wasm {
         func-name: string,
         wasm-artifact: string,
     }
 
-    register-wasmedge-runtime: func() -> result<runtime-id, error>
-    from-wasi-module: func(base: base-materializer, data: materializer-wasi) -> result<materializer-id, error>
+    register-wasm-runtime: func() -> result<runtime-id, error>;
+    from-wasm-module: func(base: base-materializer, data: materializer-wasm) -> result<materializer-id, error>;
 
     // prisma
     record prisma-runtime-data {
@@ -387,23 +390,23 @@ interface runtimes {
         unique: option<bool>,
     }
 
-    register-prisma-runtime: func(data: prisma-runtime-data) -> result<runtime-id, error>
-    prisma-find-unique: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
-    prisma-find-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
-    prisma-find-first: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
-    prisma-aggregate: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
-    prisma-count: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
-    prisma-group-by: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
-    prisma-create-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
-    prisma-create-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
-    prisma-update-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
-    prisma-update-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
-    prisma-upsert-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
-    prisma-delete-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
-    prisma-delete-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>
-    prisma-execute: func(runtime: runtime-id, query: string, param: type-id, effect: effect) -> result<func-params, error>
-    prisma-query-raw: func(runtime: runtime-id, query: string, param: option<type-id>, out: type-id) -> result<func-params, error>
-    prisma-link: func(data: prisma-link-data) -> result<type-id, error>
+    register-prisma-runtime: func(data: prisma-runtime-data) -> result<runtime-id, error>;
+    prisma-find-unique: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
+    prisma-find-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
+    prisma-find-first: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
+    prisma-aggregate: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
+    prisma-count: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
+    prisma-group-by: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
+    prisma-create-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
+    prisma-create-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
+    prisma-update-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
+    prisma-update-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
+    prisma-upsert-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
+    prisma-delete-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
+    prisma-delete-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
+    prisma-execute: func(runtime: runtime-id, query: string, param: type-id, effect: effect) -> result<func-params, error>;
+    prisma-query-raw: func(runtime: runtime-id, query: string, param: option<type-id>, out: type-id) -> result<func-params, error>;
+    prisma-link: func(data: prisma-link-data) -> result<type-id, error>;
 
 
     // prisma-migrate
@@ -414,7 +417,7 @@ interface runtimes {
         deploy,
         reset,
     }
-    prisma-migration: func(operation: prisma-migration-operation) -> result<func-params, error>
+    prisma-migration: func(operation: prisma-migration-operation) -> result<func-params, error>;
 
     // temporal
     record temporal-runtime-data {
@@ -437,8 +440,8 @@ interface runtimes {
         operation: temporal-operation-type,
     }
 
-    register-temporal-runtime: func(data: temporal-runtime-data) -> result<runtime-id, error>
-    generate-temporal-operation: func(runtime: runtime-id, data: temporal-operation-data) -> result<func-params, error>
+    register-temporal-runtime: func(data: temporal-runtime-data) -> result<runtime-id, error>;
+    generate-temporal-operation: func(runtime: runtime-id, data: temporal-operation-data) -> result<func-params, error>;
 
     // typegate
     enum typegate-operation {
@@ -450,10 +453,14 @@ interface runtimes {
         get-arg-info-by-path,
         find-available-operations,
         find-prisma-models,
-        raw-prisma-query,
+        raw-prisma-read,
+        raw-prisma-create,
+        raw-prisma-update,
+        raw-prisma-delete,
+        query-prisma-model,
     }
 
-    register-typegate-materializer: func(operation: typegate-operation) -> result<materializer-id, error>
+    register-typegate-materializer: func(operation: typegate-operation) -> result<materializer-id, error>;
 
     // typegraph  (introspection)
     enum typegraph-operation {
@@ -462,11 +469,11 @@ interface runtimes {
         get-schema,
     }
 
-    register-typegraph-materializer: func(operation: typegraph-operation) -> result<materializer-id, error>
+    register-typegraph-materializer: func(operation: typegraph-operation) -> result<materializer-id, error>;
 }
 
 interface aws {
-    use core.{error, runtime-id, materializer-id}
+    use core.{error, runtime-id, materializer-id};
 
     record s3-runtime-data {
         host-secret: string,
@@ -487,18 +494,18 @@ interface aws {
         content-type: option<string>,
     }
 
-    register-s3-runtime: func(data: s3-runtime-data) -> result<runtime-id, error>
-    s3-presign-get: func(runtime: runtime-id, data: s3-presign-get-params) -> result<materializer-id, error>
-    s3-presign-put: func(runtime: runtime-id, data: s3-presign-put-params) -> result<materializer-id, error>
-    s3-list: func(runtime: runtime-id, bucket: string) -> result<materializer-id, error>
-    s3-upload: func(runtime: runtime-id, bucket: string) -> result<materializer-id, error>
-    s3-upload-all: func(runtime: runtime-id, bucket: string) -> result<materializer-id, error>
+    register-s3-runtime: func(data: s3-runtime-data) -> result<runtime-id, error>;
+    s3-presign-get: func(runtime: runtime-id, data: s3-presign-get-params) -> result<materializer-id, error>;
+    s3-presign-put: func(runtime: runtime-id, data: s3-presign-put-params) -> result<materializer-id, error>;
+    s3-list: func(runtime: runtime-id, bucket: string) -> result<materializer-id, error>;
+    s3-upload: func(runtime: runtime-id, bucket: string) -> result<materializer-id, error>;
+    s3-upload-all: func(runtime: runtime-id, bucket: string) -> result<materializer-id, error>;
 }
 
 
 interface utils {
-    use core.{error}
-    type type-id = u32
+    use core.{error};
+    type type-id = u32;
 
 
     // Example:
@@ -524,9 +531,9 @@ interface utils {
         paths: list<reduce-path>
     }
 
-    gen-reduceb: func(supertype-id: type-id, data: reduce) -> result<type-id, error>
+    gen-reduceb: func(supertype-id: type-id, data: reduce) -> result<type-id, error>;
 
-    add-graphql-endpoint: func(graphql: string) -> result<u32, error>
+    add-graphql-endpoint: func(graphql: string) -> result<u32, error>;
 
     variant auth-protocol {
         oauth2,
@@ -541,43 +548,43 @@ interface utils {
         auth-data: list<tuple<string, string>>,
     }
 
-    add-auth: func(data: auth) -> result<u32, error>
-    add-raw-auth: func(data: string) -> result<u32, error>
-    oauth2: func(service-name: string, scopes: string) -> result<string, error> 
-    oauth2-without-profiler: func(service-name: string, scopes: string) -> result<string, error>
-    oauth2-with-extended-profiler: func(service-name: string, scopes: string, extension: string) -> result<string, error>
-    oauth2-with-custom-profiler: func(service-name: string, scopes: string, profiler: type-id) -> result<string, error>
+    add-auth: func(data: auth) -> result<u32, error>;
+    add-raw-auth: func(data: string) -> result<u32, error>;
+    oauth2: func(service-name: string, scopes: string) -> result<string, error>;
+    oauth2-without-profiler: func(service-name: string, scopes: string) -> result<string, error>;
+    oauth2-with-extended-profiler: func(service-name: string, scopes: string, extension: string) -> result<string, error>;
+    oauth2-with-custom-profiler: func(service-name: string, scopes: string, profiler: type-id) -> result<string, error>;
 
     record query-deploy-params {
         tg: string,
         secrets: option<list<tuple<string, string>>>,
     }
 
-    gql-deploy-query: func(params: query-deploy-params) -> result<string, error>
-    gql-remove-query: func(tg-name: list<string>) -> result<string, error>
+    gql-deploy-query: func(params: query-deploy-params) -> result<string, error>;
+    gql-remove-query: func(tg-name: list<string>) -> result<string, error>;
 
-    unpack-tarb64: func(tar-b64: string, dest: string) -> result<_, error>
+    unpack-tarb64: func(tar-b64: string, dest: string) -> result<_, error>;
 
-    remove-injections: func(type-id: type-id) -> result<type-id, error>
+    remove-injections: func(type-id: type-id) -> result<type-id, error>;
 
-    get-cwd: func() -> result<string, string>
+    get-cwd: func() -> result<string, string>;
 }
 
 interface host {
-    print: func(s: string)
-    eprint: func(s: string)
-    expand-path: func(root: string, exclude: list<string>) -> result<list<string>, string>
-    path-exists: func(path: string) -> result<bool, string>
-    read-file: func(path: string) -> result<list<u8>, string>
-    write-file: func(path: string, data: list<u8>) -> result<_, string>
-    get-cwd: func() -> result<string, string>
+    print: func(s: string);
+    eprint: func(s: string);
+    expand-path: func(root: string, exclude: list<string>) -> result<list<string>, string>;
+    path-exists: func(path: string) -> result<bool, string>;
+    read-file: func(path: string) -> result<list<u8>, string>;
+    write-file: func(path: string, data: list<u8>) -> result<_, string>;
+    get-cwd: func() -> result<string, string>;
 }
 
 
 world typegraph {
-    export core
-    export runtimes
-    export utils
-    export aws
-    import host
+    export core;
+    export runtimes;
+    export utils;
+    export aws;
+    import host;
 }

@@ -136,11 +136,11 @@ export class SharedArtifactStore extends ArtifactStore {
   ): Promise<string> {
     for (const dep of deps ?? []) {
       await this.#downloadFromRemote(dep.hash, dep.relativePath);
-      await getLocalPath(dep);
+      await getLocalPath(dep, meta);
     }
 
     await this.#downloadFromRemote(meta.hash, meta.relativePath);
-    return await getLocalPath(meta);
+    return await getLocalPath(meta, meta);
   }
 
   async #downloadFromRemote(hash: string, relativePath: string) {
@@ -160,8 +160,8 @@ export class SharedArtifactStore extends ArtifactStore {
     }
 
     if (response.Body) {
-      const file =
-        (await Deno.open(targetFile, { write: true, create: true })).writable;
+      const file = (await Deno.open(targetFile, { write: true, create: true }))
+        .writable;
       await response.Body.transformToWebStream().pipeTo(file);
     } else {
       throw new Error(`Failed to download artifact ${relativePath} from s3`);
@@ -198,11 +198,7 @@ export class SharedArtifactStore extends ArtifactStore {
     return url;
   }
 
-  override async takeUploadUrl(
-    url: URL,
-  ): Promise<
-    ArtifactMeta
-  > {
+  override async takeUploadUrl(url: URL): Promise<ArtifactMeta> {
     ArtifactStore.validateUploadUrl(url);
 
     const meta = await this.#getUrlFromRedis(url.toString());

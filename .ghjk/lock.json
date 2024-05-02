@@ -1,6 +1,6 @@
 {
   "version": "0",
-  "platform": "aarch64-darwin",
+  "platform": "x86_64-linux",
   "moduleEntries": {
     "ports": {
       "version": "0",
@@ -103,7 +103,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.1",
+              "version": "1.77.2",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -126,7 +126,7 @@
           "locked": true
         },
         "4a077ef5a23a541cc6e372186951d640da541f7c4eba2613c2a1c427a5d95a5c": {
-          "version": "1.77.1",
+          "version": "1.77.2",
           "depConfigs": {
             "rustup_rustlang": {
               "version": "1.27.0",
@@ -163,7 +163,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.1",
+              "version": "1.77.2",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -194,7 +194,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.1",
+              "version": "1.77.2",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -236,7 +236,7 @@
           "version": "1.0.0",
           "depConfigs": {
             "node_org": {
-              "version": "v21.7.2",
+              "version": "v20.8.0",
               "depConfigs": {
                 "tar_aa": {
                   "version": "1.35",
@@ -250,22 +250,11 @@
           "portRef": "npmi_npm@0.1.0",
           "packageName": "@bytecodealliance/jco"
         },
-        "77a0197285cae563176871bd72f2ea24504c195dc596f5c33d4c9cc95eda1fba": {
-          "version": "v21.7.2",
-          "depConfigs": {
-            "tar_aa": {
-              "version": "1.35",
-              "depConfigs": {},
-              "portRef": "tar_aa@0.1.0"
-            }
-          },
-          "portRef": "node_org@0.1.0"
-        },
         "23e2521c50a2a9ea95405def479e6fbcce0da681f6b97251070178c6cdbcb378": {
           "version": "10.0.1",
           "depConfigs": {
             "node_org": {
-              "version": "v21.7.2",
+              "version": "v20.8.0",
               "depConfigs": {
                 "tar_aa": {
                   "version": "1.35",
@@ -291,7 +280,7 @@
           "portRef": "mold_ghrel@0.1.0",
           "replaceLd": false
         },
-        "c6037cd6c9d0f07b7975f62b6770757c0d3a1e4fd1631380eff888c0a6a3b537": {
+        "46fdcefe10dc796143f7a41313e9359f1a8cf62791dfaa8994e26f21adb151ca": {
           "version": "3.8.18",
           "depConfigs": {
             "tar_aa": {
@@ -305,7 +294,8 @@
               "portRef": "zstd_aa@0.1.0"
             }
           },
-          "portRef": "cpy_bs_ghrel@0.1.0"
+          "portRef": "cpy_bs_ghrel@0.1.0",
+          "releaseTag": "20240224"
         },
         "4f16c72030e922711abf15474d30e3cb232b18144beb73322b297edecfcdb86f": {
           "version": "v1.5.5,",
@@ -316,7 +306,7 @@
           "version": "1.7.0",
           "depConfigs": {
             "cpy_bs_ghrel": {
-              "version": "3.12.1",
+              "version": "3.12.2",
               "depConfigs": {
                 "tar_aa": {
                   "version": "1.35",
@@ -329,14 +319,15 @@
                   "portRef": "zstd_aa@0.1.0"
                 }
               },
-              "portRef": "cpy_bs_ghrel@0.1.0"
+              "portRef": "cpy_bs_ghrel@0.1.0",
+              "releaseTag": "20240224"
             }
           },
           "portRef": "pipi_pypi@0.1.0",
           "packageName": "poetry"
         },
-        "84ecde630296f01e7cb8443c58d1596d668c357a0d9837c0a678b8a541ed0a39": {
-          "version": "3.12.1",
+        "89e00ff07918653b9c495b0fa4d554960ce8e30ac79e85eddf3e283baa5cc6b3": {
+          "version": "3.12.2",
           "depConfigs": {
             "tar_aa": {
               "version": "1.35",
@@ -349,13 +340,14 @@
               "portRef": "zstd_aa@0.1.0"
             }
           },
-          "portRef": "cpy_bs_ghrel@0.1.0"
+          "portRef": "cpy_bs_ghrel@0.1.0",
+          "releaseTag": "20240224"
         },
         "076a5b8ee3bdc68ebf20a696378458465042bb7dc1e49ac2dc98e5fa0dab3e25": {
           "version": "3.7.0",
           "depConfigs": {
             "cpy_bs_ghrel": {
-              "version": "3.12.1",
+              "version": "3.12.2",
               "depConfigs": {
                 "tar_aa": {
                   "version": "1.35",
@@ -368,7 +360,8 @@
                   "portRef": "zstd_aa@0.1.0"
                 }
               },
-              "portRef": "cpy_bs_ghrel@0.1.0"
+              "portRef": "cpy_bs_ghrel@0.1.0",
+              "releaseTag": "20240224"
             }
           },
           "portRef": "pipi_pypi@0.1.0",
@@ -388,7 +381,7 @@
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.1",
+              "version": "1.77.2",
               "depConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.0",
@@ -409,6 +402,11 @@
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "whiz",
           "locked": true
+        },
+        "66212eb79fbcb37961450d5dfffdaedc0b949e0e7c9257c3c63093d009a5fc75": {
+          "version": "v9.0.5",
+          "depConfigs": {},
+          "portRef": "pnpm_ghrel@0.1.0"
         }
       }
     },
@@ -431,10 +429,11 @@
             "57da4ca242ec52ba50359a7fd78653e6bf253df0",
             "67d371eb0c4ae641830a955975d7134f7ee9a864",
             "4ca29edff5e070fd0885680b178ed6948d7a4c7f",
-            "dd83a99f49f3f0fba11cdd014ff718cc9539316b",
+            "a12d1020fe585e5ea75d9a2035bdcbde8dd90044",
             "4d1916871a40b6ac730709f7721f740df192c84d",
             "4df902463d60efc5b8e760ea4899f6ab6df0f16e",
-            "40d9babcd5c8e79379e58dbc2f2a967ef68fbb09",
+            "88f6aa5ddb513712623d31a17096ea26286064da",
+            "185be72d02330f9b3dfa3d0791274feb958e119d",
             "5549508f1f5eddf9cb2465f07cf0c7603dc0c849",
             "5c041a4209ae50657ea5acacc26683688f2913a9",
             "d0bcae26fcc8ca53ffbdb66de5735c608858a313",
@@ -451,8 +450,8 @@
             "cargo_binstall_ghrel": "c8084cf4c423d1862a1d783c70b8221c0cf9d73c",
             "pnpm_ghrel": "422c26d0e74744b87f0f6f0eefa25e54a1188e08",
             "asdf_plugin_git": "f77828fcb8896a0df3511920d0055d0f89bfdec9",
-            "node_org": "61d8e9cfc48284f60358b8c0e717e58c1da60176",
-            "cpy_bs_ghrel": "2048e8e42478e9e6d803d7c7559bedaf976a51b5"
+            "cpy_bs_ghrel": "ff0a30a4efc90a6a49611e273e167ac3d3444441",
+            "node_org": "601d3ac573271b2e2fb3c453ccd54f22d151c64e"
           }
         }
       },
@@ -478,6 +477,15 @@
                   "422c26d0e74744b87f0f6f0eefa25e54a1188e08",
                   "f77828fcb8896a0df3511920d0055d0f89bfdec9"
                 ]
+              }
+            },
+            "dev": {
+              "name": "dev",
+              "dependsOn": [],
+              "env": {
+                "installs": [],
+                "env": {},
+                "allowedPortDeps": []
               }
             }
           }
@@ -761,8 +769,8 @@
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/node.ts"
           }
         },
-        "dd83a99f49f3f0fba11cdd014ff718cc9539316b": {
-          "version": "v8.15.2",
+        "a12d1020fe585e5ea75d9a2035bdcbde8dd90044": {
+          "version": "v9.0.5",
           "port": {
             "ty": "denoWorker@v1",
             "name": "pnpm_ghrel",
@@ -848,7 +856,26 @@
           },
           "packageName": "node-gyp"
         },
-        "40d9babcd5c8e79379e58dbc2f2a967ef68fbb09": {
+        "88f6aa5ddb513712623d31a17096ea26286064da": {
+          "version": "v2.4.0",
+          "port": {
+            "ty": "denoWorker@v1",
+            "name": "mold_ghrel",
+            "platforms": [
+              "aarch64-linux",
+              "x86_64-linux"
+            ],
+            "version": "0.1.0",
+            "deps": [
+              {
+                "name": "tar_aa"
+              }
+            ],
+            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/mold.ts"
+          },
+          "replaceLd": false
+        },
+        "185be72d02330f9b3dfa3d0791274feb958e119d": {
           "version": "3.8.18",
           "port": {
             "ty": "denoWorker@v1",
@@ -871,7 +898,8 @@
               }
             ],
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/cpy_bs.ts"
-          }
+          },
+          "releaseTag": "20240224"
         },
         "5549508f1f5eddf9cb2465f07cf0c7603dc0c849": {
           "version": "1.7.0",
@@ -1266,31 +1294,7 @@
             "portRef": "asdf_plugin_git@0.1.0"
           }
         },
-        "61d8e9cfc48284f60358b8c0e717e58c1da60176": {
-          "manifest": {
-            "ty": "denoWorker@v1",
-            "name": "node_org",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin",
-              "aarch64-windows",
-              "x86_64-windows"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "tar_aa"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/node.ts"
-          },
-          "defaultInst": {
-            "portRef": "node_org@0.1.0"
-          }
-        },
-        "2048e8e42478e9e6d803d7c7559bedaf976a51b5": {
+        "ff0a30a4efc90a6a49611e273e167ac3d3444441": {
           "manifest": {
             "ty": "denoWorker@v1",
             "name": "cpy_bs_ghrel",
@@ -1314,7 +1318,33 @@
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/cpy_bs.ts"
           },
           "defaultInst": {
-            "portRef": "cpy_bs_ghrel@0.1.0"
+            "portRef": "cpy_bs_ghrel@0.1.0",
+            "releaseTag": "20240224"
+          }
+        },
+        "601d3ac573271b2e2fb3c453ccd54f22d151c64e": {
+          "manifest": {
+            "ty": "denoWorker@v1",
+            "name": "node_org",
+            "platforms": [
+              "aarch64-linux",
+              "x86_64-linux",
+              "aarch64-darwin",
+              "x86_64-darwin",
+              "aarch64-windows",
+              "x86_64-windows"
+            ],
+            "version": "0.1.0",
+            "deps": [
+              {
+                "name": "tar_aa"
+              }
+            ],
+            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/423d38e/ports/node.ts"
+          },
+          "defaultInst": {
+            "version": "20.8.0",
+            "portRef": "node_org@0.1.0"
           }
         }
       }

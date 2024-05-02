@@ -687,7 +687,13 @@ snapshot[`typegraphs creation 3`] = `
           "idempotent": true
         },
         "data": {
-          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1Y727bNhD3Zz0FoX6ROlX1n8QZvKnY1nZdgRYL2mwYEAQCLdG2UEnUSGqxZ/hN9jZ7sR1J/becpEASDK0PSEzyjse7I3n86QKaZDFZu9lm8GA0BJpOp73jQJPJ6UnZliTb05Ozs8Fw8AiUc4EZQoOvlJ6glzTbsGi5Eug9EVhsMoJ+/fcfB8VRQFJOQpSnIWFIrAh6T/+O4hij83wOXPROS6DfCeMRTdHYHbrGE/Tx/NUfzwres7chSUW0iAiboffn756BjGEsGE2QXGnJcLZCUZJRJpBw6rGOiKv/Z5jhhJfyP+Zi5YD5jDvoAxakf87eMm/69GcUHNqUIueq15VhOXiSEO6CS7QUfQXtD5phGMYPlbRlIKAAjPOkhborCccxvfYDRlRgcMy9n+EfcToCK4Ih6ty7vOpyEiJWNASO+eb1hbnHprCXUQrcp00eWWeUk16tCV77eEl8TgJvNB5qhq1/GITVk7Gt7b+O0hCWkdLTodMdjqMkEqDm25rzZ07YpmA0hmMa4Ngn64Bw7p3W4wFNBVkLP6oOjmfmnDCzMsw2QrJAgnDhBzp7+TLs3FrO9ObaMyWqtslr7pBlK0aWz2Fcb7KbqbMMHMXiNCEX8gp4SLhcsDwQtevbqiXJpCkxZyAWR1xYwo3A7iVhlu2gBDZg4qAUJ8QzL66paTvtqQLG5FSaCbg4OLaWLiMLy/xYLG/ajRm7uqk1VlJFSIzirKlY3NV67INAlC6VHbppdc3E/iKmWCgR1bKkZyN3CC7msYhgPZ8uPLjTezNTn6R5ombKhnWpwuVo1696xIvw1dPKeMoB73LkoPGVI0/HIlp6W/MT2YCU+ReOc2LuDhheK9PWF6rcU1Dmnu5b4euYlSGR4dsWS9RK7L3VUjiKJGyeBRJBumTWZSOyDY/sK9uut75fm38NKnw4FKC2PJQ9MU5wFOsgy5Z106l5WZ+P9sFZuhgyqSXTqTvHHC7DpSlv10+yLUdhv+w9yVWCg/Hp1FKiv0BHSdqVTp1x6uMnxTx5Jd1FngZWy5XG0W37KNw5pTHBaTdKAQ3BJctG3gsEG1V6pLxyVeh0Rrfgetult4Mj7VF1j6vX7f6R4C34b3Ry1sV/o+F0ND7iv0egfiimnlHnRkR2L4jpkHy2AYyTVspVrxdlNbDA3knu4gH90ve8/JJ5GCxoU7y2FdbBPIfD0NNzXOmdH+NkHmKrk9a6j3NJ270RleoXEePNZ7iTDSs5QGU0DW8W3LVG7G7C7Z2nnUDrGVpfFsZcoW9kp1jx6ob8C78NdcU2bQ69BY2Xd9/rPg93d3OheDG2SGl1kFaEduoJUWPoaTFo3smZL+M94QGLMsGfixUjxBV88AB0S/4fnkwn3e//s+n4mP8fg54//5wCwOsYc9H48ldf/KDi4Cd/MUF/9kv8yxY4IOhCnra3aZYLlfHmMwTIfE7Yd9DBdWdnGDK9whMg84TEy0idU5kxtgg7aI52s4YyeTG3MLItvyJn6APcaBZ+r2G4A658Sul1+kLCY3umFsfNxRuW7BSXEZGztFpN2jT4kohHEno/aPnvVvw3ne7X/ybjyfH+PwL9T+t/TgHSnP5y3e2lOKxqINUXt2HwUbMqsjUxYAi40+a8VWxQ9Y0xYArDmLc0aIYjq2XeycQ+iEI/uxJ1GJKqdAkVgppdjpToU9bF2l5FYcsdiZgAnkoQVVSYzmXP3pXFqd9kZa2wBTi3KpPf/5TV6vT8Sp3WfggaQwWogfo4lHTmTutLfjQ224CrdLiB5aB+1FAiI+Ao0ytNckhpA6wXhTMkd00Famd3tLfwodJZMEzobGSxSpu1kAXaIkodzKyeI22PPoW+8kv+6YgoAVCV0DCPod/FWzeZpE9Dd9ljHeNIRzrS/dB/B6n8KQAeAAA="
+          "denoArtifact": {
+            "path": "scripts/three.ts",
+            "hash": "564fe4792102c50aac9801faeb3c6402c49b1f7c7cbb22dc6d54886e45cfa3b2",
+            "size": 307
+          },
+          "deps": [],
+          "depsMeta": []
         }
       },
       {
@@ -744,7 +750,13 @@ snapshot[`typegraphs creation 3`] = `
       "rate": null,
       "version": "0.0.3",
       "randomSeed": null,
-      "artifacts": {}
+      "artifacts": {
+        "scripts/three.ts": {
+          "path": "scripts/three.ts",
+          "hash": "564fe4792102c50aac9801faeb3c6402c49b1f7c7cbb22dc6d54886e45cfa3b2",
+          "size": 307
+        }
+      }
     }
   }
 ]\`
@@ -1437,7 +1449,13 @@ snapshot[`typegraphs creation 6`] = `
           "idempotent": true
         },
         "data": {
-          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1Y/W7bNhDP336Kg/6p3CnyV+wO6lqsa4u1QIcGbQYMCAyDlihHiyRqIjXbMPwme5u92I4fkmjnsxiSYa2JxKKOx+Pd8Xj86UKWFSld+YIfPVjrY5tMJtfSsY1Go0ndl032JyfPxkf9o0doFRekBDj6RluvB69ZsS6TxYWAX6ggYl1Q+Pj3Xx6kSUhzTiOo8oiWIC4ovE0JF0kIH/QQDP2+30ERn0/f/HZsiMfvI5qLJE5oGdQTjpGx00mygpUCNhCvPDhlKH/tgcA/XHJRkuICthCXLAPnx4bU49Gl87yd+obm7FOF8jN6A3ev1MO8h3ow/3duT39ViZtW6RWkJBnXEzrNkNsB2OA/QE4yGoAjKBfHoT42x5KNO54a5zQsqeABnDu6O3A8MN1h2x05U81fEoHytGyAZZJHbPmZhgFM+t4O8UOSJSKAwfD7mv5HRcu1ITfElIUkfbsKKUcdxjU1ZLmgK2FvilNxWhqlt/oRspK3upA0ZcvXJVVzSIojMf5Szx5+RwlGhbR2ukPHGLpgkfLCz2/PnN3BjxhnSS7HnrYjdFUwTq+Rl5HVqwVVLhkM+5a+6sdddOHFS6MzWskFyA2HF5DTpR0nbve5xVNUc2TR0efjCz4lg8XBWUbP5Cl4AcLnoqxC4daeYTlumfDThAtX+Am6dkFLt+thaGXSsBHqhn0TKmdL5sC2W9sjlkxOZoVIWE5Sd+GXNHadz2Y9p9utbWxFNIMoZ0dLE4E3KUpmSEjyRaCHsOc2epBZnDIi5JDquEb5gQdZlYoE5X6MAxhaqpN8RvMqk1Pkc+aeO+gKGdRolDO1+YxTGv7aSRuQFIpRj9bjNuNqw6my1cxVlsUJqryBS7pG4/8kaSUtr6Vv901oFqnt2FvCH+Mi/ni6M1N7KrB8BmqhVk7X4s/xuNPI2nSaYCYs3XPLr5aV3Wm32+7wnpTZEufOcNODJshsB2ckSZWHZce9Jhhet3tuxcPCJ5jVXJna/DnhGM/nKkn9JPuSivtjjoDNepGRcDieuIr3Hb4o1m4rVZ/LJqIkW6COmB9Xeehau9Zo5TVE4c8ZSynJWx+AtdNyViRNctUhxn2gjmeN0jimco/iFZ4REtlCmmjo+tKd+iS7eJJrhylbkQufR4d2R6sP/Ky+NR8ACd6B/wbjwcke/hv0J/3RAf89QvtP8N8XYL8eIiD8PNlFcf8SBJ6uEaLk9xVQKO4rsFDjwPr4HNfseCW6eIORfN2gk1txx32gixGg9DA8OyYY/LKXsUmEt5ZRXlr4gWTziNRp27r8nDgpuXCs609jVZZHzvV3YstoCJs6nadqEVgFsDp/ouQ+mcJ38kULfDJtrvMb0rfx6Pqaq+aBdHY3SpgHev5WbZwiwVNDu11peeNs/6e3DQ/LpBC8Jy5KSh+oCnBH/u+fTEb73//PJsPhIf8/QnvU/I8YuYxJSOFMRtv7vKiEypDzABC3z2kpsx1pX7adjkxpmLRlGpCYGlScqm9yIB7MYRtYwuRh3GwDdbTVV28An/D8ltEPGqp7aMplzpb5S4UP9QcvsRe3NNmqUfxgr8q8WU3qdPQ1NZ5I8P6g5b+7zv+wPxxfqf+NBoPD+X+E9g3hv47GUUSVS5rv9YbOBzt1FHXgd+sXukgiyyL641vPm+/Ia7g8Wb4K4GSkefeBoykc3gAW74EGb4eTKtViBaLlqSkGLGo2WQi8Wj1KIttuA5gQWWI6NSWrU3xxNPaxyhO/yrJiXZcwaiLjPReQlQmGISN12pes1qsl7+FcVZJrsSLHutK8LSrtlBkGw7rquYPjatcYRVSZrhWo9FGGXJUqx5Rk3HdplNx25dNt99qVlNRC9x18WcsKmtZNVVibEqC65owWOuxrEIz2Xek1flLTUGbGoiqVhH149/UC2UM7tEM7tEP7ovYPKoqBEgAgAAA="
+          "denoArtifact": {
+            "path": "scripts/three.ts",
+            "hash": "564fe4792102c50aac9801faeb3c6402c49b1f7c7cbb22dc6d54886e45cfa3b2",
+            "size": 307
+          },
+          "deps": [],
+          "depsMeta": []
         }
       },
       {
@@ -1494,7 +1512,13 @@ snapshot[`typegraphs creation 6`] = `
       "rate": null,
       "version": "0.0.3",
       "randomSeed": null,
-      "artifacts": {}
+      "artifacts": {
+        "scripts/three.ts": {
+          "path": "scripts/three.ts",
+          "hash": "564fe4792102c50aac9801faeb3c6402c49b1f7c7cbb22dc6d54886e45cfa3b2",
+          "size": 307
+        }
+      }
     }
   }
 ]\`

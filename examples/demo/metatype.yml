@@ -3,7 +3,8 @@ typegates:
     url: "http://localhost:7890"
     username: admin
     password: password
-    env:
-      TG_PUBLIC_API_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=public-api"
-      TG_PUBLIC_API_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
-      TG_PUBLIC_API_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
+    secrets:
+      public-api:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=public-api"
+        GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
+        GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET

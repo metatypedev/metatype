@@ -47,6 +47,7 @@ jobs:
               - 'typegraph/**'
               - 'meta-cli/**'
               - 'Cargo.lock'
+              - 'examples/**'
             rust:
               - '.github/workflows/tests.yml'
               - 'libs/**'
@@ -71,7 +72,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
+      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
       - shell: bash
         run: |
           sudo apt update
@@ -79,11 +80,11 @@ jobs:
           cd website
           pnpm install --frozen-lockfile
           cd ..
-          cd dev-tools
+          cd meta-lsp
           pnpm install --frozen-lockfile --recursive
           cd ..
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
-      - uses: pre-commit/action@v3.0.1
+          pre-commit run --show-diff-on-failure --color=always --all-files
 
   test-website:
     needs: changes
@@ -94,12 +95,12 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - name: Cache deno dir
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.DENO_DIR }}
-          key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
+      # - name: Cache deno dir
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ${{ env.DENO_DIR }}
+      #     key: deno-mac-${{ hashFiles('**/deno.lock') }}
+      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
       - name: Cache .venv dir
         uses: actions/cache@v4
         with:
@@ -147,7 +148,7 @@ jobs:
         with:
           path: .venv
           key: ${{ matrix.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
-      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
+      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
         with:
           # temporary fix
           cache-key-prefix: ${{ matrix.os }}
@@ -241,11 +242,11 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - name: Cache deno dir
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.DENO_DIR }}
-          key: deno-${{ hashFiles('**/deno.lock') }}
+      # - name: Cache deno dir
+      #  uses: actions/cache@v4
+      #  with:
+      #    path: ${{ env.DENO_DIR }}
+      #    key: deno-${{ hashFiles('**/deno.lock') }}
       - name: Cache .venv dir
         uses: actions/cache@v4
         with:
@@ -257,7 +258,7 @@ jobs:
       - run: |
           sudo apt update
           sudo apt install -y --no-install-recommends zstd
-      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
+      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
       - shell: bash
         env:
           WASM_FILE: target/debug/typegraph_core.wasm
@@ -277,24 +278,29 @@ jobs:
           mkdir -p $(dirname $WASM_FILE)
           wasm-opt -Oz target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE.opt
           wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
-          
+
           jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen --map metatype:typegraph/host=../host/host.js
           cd typegraph/node
           pnpm install
           pnpm run sdk-build
           cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
           cd ../..
-          
+
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
           # start the docker containers
-          deno run -A dev/env.ts base s3 prisma
+          deno run -A dev/env.ts base prisma
+
+          export NPM_CONFIG_REGISTRY=http://localhost:4873
 
           # publish the sdk to the local registry
           cd typegraph/node/sdk/dist
           npm config set "//localhost:4873/:_authToken" fooBar
-          npm publish --registry http://localhost:4873
+          npm publish --registry $NPM_CONFIG_REGISTRY
           cd ../../../..
+
+          # install packages inside metatype examples
+          pnpm install -C examples/typegraphs
 
           # from old test-typegraph-core
           # test in native rust, not in wasm for a future rust SDK
@@ -308,15 +314,16 @@ jobs:
           # from old test-libs
           cargo test --locked --exclude meta-cli --exclude typegate --exclude typegate_engine --exclude typegraph_core --exclude metagen_mdk_rust_static  --workspace
 
-          NPM_CONFIG_REGISTRY=http://localhost:4873 deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
+          deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
           cargo build -p meta-cli
           cargo build -p xtask # xtask and meta-cli are used by the test suite
           deno run -A dev/test.ts --threads 1 -- --coverage=coverage
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
-          NPM_CONFIG_REGISTRY=http://localhost:4873 deno cache --import-map typegate/import_map.json \
+          deno cache --import-map typegate/import_map.json \
             typegate/src/main.ts \
             typegate/tests/utils/*.ts \
-            typegate/tests/runtimes/wasmedge/*.ts \
+            typegate/tests/runtimes/wasm/*.ts \
+            typegate/tests/runtimes/python_wasi/*.ts \
             dev/deps.ts \
             dev/utils.ts
           deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
@@ -334,10 +341,10 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@a7bbf22959e3c0f80b8ba9f800b0a9f1ff17fa7b
+      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
       - shell: bash
         run: |
-          cd dev-tools
+          cd meta-lsp
           pnpm install --frozen-lockfile --recursive
           cd ts-language-server
           # node --test --import=tsx --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage.lcov tests/*.test.ts
@@ -346,5 +353,5 @@ jobs:
       # - uses: codecov/codecov-action@v4
       #   with:
       #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     files: ./dev-tools/ts-language-server/coverage.lcov
+      #     files: ./meta-lsp/ts-language-server/coverage.lcov
       #     fail_ci_if_error: true

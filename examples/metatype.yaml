@@ -3,90 +3,145 @@ typegates:
     url: "http://localhost:7890"
     username: admin
     password: password
-    env:
-      TG_BASIC_AUTHENTICATION_BASIC_ADMIN: "password"
-      TG_JWT_AUTHENTICATION_CUSTOM_JWT: "wOoyc8ijEHP99oASvJ0IXmHDOMYQH6"
-      TG_OAUTH2_AUTHENTICATION_GITHUB_CLIENT_ID: fake
-      TG_OAUTH2_AUTHENTICATION_GITHUB_CLIENT_SECRET: fake
-      TG_AUTHENTICATION_BASIC_ADMIN: "password"
-      TG_DOCS_SENDINBLUE_KEY: "fake"
-      TG_HOMEPAGE_GITHUB_CLIENT_ID: "fake"
-      TG_HOMEPAGE_GITHUB_CLIENT_SECRET: "fake"
-      TG_HOMEPAGE_POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=homepage"
-      TG_PRISMA_RUNTIME_POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=orm_edge"
-      TG_BLOG_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=blog"
-      TG_DATABASE_POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=database"
-      TG_POLICIES_BASIC_ADMIN: "admin_pass"
-      TG_POLICIES_BASIC_USER: "user_pass"
-      TG_AUTH_CUSTOM_JWT: "mysupersecretkey"
-      TG_GRAPHQL_POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=graphql"
-      TG_FCM_POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=fcm"
-      TG_BUSINESS_LOGIC_BASIC_ADMIN: "password"
-      TG_BUSINESS_LOGIC_BASIC_USER: "user"
-      TG_BUSINESS_LOGIC_POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=business_logic"
-      TG_IAM_PROVIDER_GITHUB_CLIENT_ID: "fake"
-      TG_IAM_PROVIDER_GITHUB_CLIENT_SECRET: "fake"
-      TG_RETREND_S3_HOST: http://localhost:9000
-      TG_RETREND_S3_REGION: local
-      TG_RETREND_S3_ACCESS_KEY: minio
-      TG_RETREND_S3_SECRET_KEY: password
-      TG_ROADMAP_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_prisma"
-      TG_ROADMAP_POLICIES_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_policies"
-      TG_ROADMAP_REDUCE_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_reduce"
-      TG_ROADMAP_EXECUTE_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_execute"
-      TG_ROADMAP_REST_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_rest"
-      TG_ROADMAP_FUNC_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_func"
-      TG_ROADMAP_BASIC_ANDIM: hunter2
-      TG_ROADMAP_POLICIES_BASIC_ANDIM: hunter2
-      TG_ROADMAP_REDUCE_BASIC_ANDIM: hunter2
-      TG_ROADMAP_EXECUTE_BASIC_ANDIM: hunter2
-      TG_ROADMAP_REST_BASIC_ANDIM: hunter2
-      TG_ROADMAP_FUNC_BASIC_ANDIM: hunter2
+    secrets:
+      basic-authentification:
+        BASIC_ADMIN: "password"
+      jwt-authentification:
+        CUSTOM_JWT: "wOoyc8ijEHP99oASvJ0IXmHDOMYQH6"
+      oauth2-authentication:
+        GITHUB_CLIENT_ID: fake
+        GITHUB_CLIENT_SECRET: fake
+      authentication:
+        BASIC_andim: "password"
+      docs:
+        SENDINBLUE_KEY: "fake"
+      homepage:
+        GITHUB_CLIENT_ID: "fake"
+        GITHUB_CLIENT_SECRET: "fake"
+        POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=homepage"
+      prisma-runtime:
+        POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=orm_edge"
+      blog:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=blog"
+      database:
+        POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=database"
+      policies:
+        BASIC_admin: "admin_pass"
+        BASIC_user: "user_pass"
+      auth:
+        CUSTOM_JWT: "mysupersecretkey"
+      graphql:
+        POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=graphql"
+      fcm:
+        POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=fcm"
+      business-logic:
+        BASIC_ADMIN: "password"
+        BASIC_USER: "user"
+        POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=business_logic"
+      iam-provider:
+        GITHUB_CLIENT_ID: "fake"
+        GITHUB_CLIENT_SECRET: "fake"
+      files-upload:
+        S3_HOST: http://localhost:9000
+        S3_REGION: local
+        S3_ACCESS_KEY: minio
+        S3_SECRET_KEY: password
+      roadmap-prisma:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_prisma"
+        BASIC_ADMIN: hunter2
+      roadmap-policies:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_policies"
+        BASIC_ADMIN: hunter2
+      roadmap-reduce:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_reduce"
+        BASIC_ADMIN: hunter2
+      roadmap-execute:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_execute"
+        BASIC_ADMIN: hunter2
+      roadmap-rest:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_rest"
+        BASIC_ADMIN: hunter2
+      roadmap-func:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_func"
+        BASIC_ADMIN: hunter2
+      roadmap:
+        BASIC_ADMIN: hunter2
+      func-gql:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=func_ctx"
+
   prd:
     url: https://demo.metatype.dev
     username: admin
     password: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ADMIN_PASSWORD
-    env:
-      TG_BASIC_AUTHENTIFICATION_BASIC_ADMIN: "password"
-      TG_JWT_AUTHENTIFICATION_CUSTOM_JWT: "wOoyc8ijEHP99oASvJ0IXmHDOMYQH6"
-      TG_OAUTH2_AUTHENTICATION_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
-      TG_OAUTH2_AUTHENTICATION_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
-      TG_AUTHENTICATION_BASIC_ADMIN: "password"
-      TG_DOCS_SENDINBLUE_KEY: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_DOCS_SENDINBLUE_KEY
-      TG_HOMEPAGE_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
-      TG_HOMEPAGE_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
-      TG_HOMEPAGE_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_HOMEPAGE_POSTGRES_CONN
-      TG_PRISMA_RUNTIME_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_PRISMA_RUNTIME_POSTGRES_CONN
-      TG_BLOG_POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_BLOG_POSTGRES
-      TG_DATABASE_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_DATABASE_POSTGRES_CONN
-      TG_POLICIES_BASIC_ADMIN: "admin_pass"
-      TG_POLICIES_BASIC_USER: "user_pass"
-      TG_AUTH_CUSTOM_JWT: "mysupersecretkey"
-      TG_GRAPHQL_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_GRAPHQL_POSTGRES_CONN
-      TG_FCM_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_FCM_POSTGRES_CONN
-      TG_BUSINESS_LOGIC_BASIC_ADMIN: "password"
-      TG_BUSINESS_LOGIC_BASIC_USER: "user"
-      TG_BUSINESS_LOGIC_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_BUSINESS_LOGIC_POSTGRES_CONN
-      TG_IAM_PROVIDER_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
-      TG_IAM_PROVIDER_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
-      TG_RETREND_S3_HOST: http://localhost:9000
-      TG_RETREND_S3_REGION: local
-      TG_RETREND_S3_ACCESS_KEY: minio
-      TG_RETREND_S3_SECRET_KEY: password
-      TG_ROADMAP_PRISMA_POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_PRISMA_POSTGRES
-      TG_ROADMAP_POLICIES_POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_POLICIES_POSTGRES
-      TG_ROADMAP_REDUCE_POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_REDUCE_POSTGRES
-      TG_ROADMAP_EXECUTE_POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_EXECUTE_POSTGRES
-      TG_ROADMAP_REST_POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_REST_POSTGRES
-      TG_ROADMAP_FUNC_POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_FUNC_POSTGRES
-      TG_ROADMAP_BASIC_ANDIM: hunter2
-      TG_ROADMAP_POLICIES_BASIC_ANDIM: hunter2
-      TG_ROADMAP_REDUCE_BASIC_ANDIM: hunter2
-      TG_ROADMAP_EXECUTE_BASIC_ANDIM: hunter2
-      TG_ROADMAP_REST_BASIC_ANDIM: hunter2
-      TG_ROADMAP_FUNC_BASIC_ANDIM: hunter2
+    secrets:
+      basic-authentification:
+        BASIC_ADMIN: "password"
+      jwt-authentification:
+        CUSTOM_JWT: "wOoyc8ijEHP99oASvJ0IXmHDOMYQH6"
+      oauth2-authentication:
+        GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
+        GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
+      authentication:
+        BASIC_andim: "password"
+      docs:
+        SENDINBLUE_KEY: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_DOCS_SENDINBLUE_KEY
+      homepage:
+        GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
+        GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
+        POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_HOMEPAGE_POSTGRES_CONN
+      prisma-runtime:
+        POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_PRISMA_RUNTIME_POSTGRES_CONN
+      blog:
+        POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_BLOG_POSTGRES
+      database:
+        POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_DATABASE_POSTGRES_CONN
+      policies:
+        BASIC_admin: "admin_pass"
+        BASIC_user: "user_pass"
+      auth:
+        CUSTOM_JWT: "mysupersecretkey"
+      graphql:
+        POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_GRAPHQL_POSTGRES_CONN
+      fcm:
+        POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_FCM_POSTGRES_CONN
+      business-logic:
+        BASIC_ADMIN: "password"
+        BASIC_USER: "user"
+        POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_BUSINESS_LOGIC_POSTGRES_CONN
+      iam-provider:
+        GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
+        GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
+      files-upload:
+        S3_HOST: http://localhost:9000
+        S3_REGION: local
+        S3_ACCESS_KEY: minio
+        S3_SECRET_KEY: password
+      roadmap-prisma:
+        POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_PRISMA_POSTGRES
+        BASIC_ADMIN: hunter2
+      roadmap-policies:
+        POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_POLICIES_POSTGRES
+        BASIC_ADMIN: hunter2
+      roadmap-reduce:
+        POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_REDUCE_POSTGRES
+        BASIC_ADMIN: hunter2
+      roadmap-execute:
+        POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_EXECUTE_POSTGRES
+        BASIC_ADMIN: hunter2
+      roadmap-rest:
+        POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_REST_POSTGRES
+        BASIC_ADMIN: hunter2
+      roadmap-func:
+        POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_FUNC_POSTGRES
+        BASIC_ADMIN: hunter2
+      roadmap:
+        BASIC_ADMIN: hunter2
 
 typegraphs:
   materializers:
     prisma:
       migrations_path: "migrations"
+
+metagen:
+  targets:
+    main:

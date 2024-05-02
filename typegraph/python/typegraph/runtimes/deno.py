@@ -83,6 +83,7 @@ class DenoRuntime(Runtime):
         *,
         module: str,
         name: str,
+        deps: List[str] = [],
         effect: Optional[Effect] = None,
         secrets: Optional[List[str]] = None,
     ):
@@ -90,7 +91,9 @@ class DenoRuntime(Runtime):
         secrets = secrets or []
         mat_id = runtimes.import_deno_function(
             store,
-            MaterializerDenoImport(func_name=name, module=module, secrets=secrets),
+            MaterializerDenoImport(
+                func_name=name, module=module, secrets=secrets, deps=deps
+            ),
             effect,
         )
 

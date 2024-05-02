@@ -9,7 +9,7 @@ use crate::errors::Result;
 use crate::runtimes::prisma::get_prisma_context;
 use crate::runtimes::{
     DenoMaterializer, Materializer as RawMaterializer, PythonMaterializer, RandomMaterializer,
-    Runtime, TemporalMaterializer, WasiMaterializer,
+    Runtime, TemporalMaterializer, WasmMaterializer,
 };
 use crate::wit::core::{Artifact as WitArtifact, RuntimeId};
 use crate::wit::runtimes::{HttpMethod, MaterializerHttpRequest};
@@ -21,7 +21,7 @@ use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
 use common::typegraph::runtimes::s3::S3RuntimeData;
 use common::typegraph::runtimes::temporal::TemporalRuntimeData;
-use common::typegraph::runtimes::wasmedge::WasmEdgeRuntimeData;
+use common::typegraph::runtimes::wasm::WasmRuntimeData;
 use common::typegraph::runtimes::{
     Artifact, KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData, TypegraphRuntimeData,
 };
@@ -102,7 +102,11 @@ impl MaterializerConverter for DenoMaterializer {
             }
             Module(module) => {
                 let data = serde_json::from_value(json!({
-                    "code": format!("file:{}", module.file),
+                    "denoArtifact": json!({
+                        "path": module.file,
+                    }),
+                    "deps": module.deps,
+                    "depsMeta": None::<serde_json::Value>,
                 }))
                 .unwrap();
                 ("module".to_string(), data)
@@ -229,11 +233,15 @@ impl MaterializerConverter for PythonMaterializer {
                 ("def".to_string(), data)
             }
             Module(module) => {
-                let mut data = IndexMap::new();
-                data.insert(
-                    "code".to_string(),
-                    serde_json::Value::String(format!("file:{}", module.file)),
-                );
+                let data = serde_json::from_value(json!({
+                    "pythonArtifact":json!({
+                        "path": module.file
+                    }),
+                    "deps": module.deps,
+                    "depsMeta": None::<serde_json::Value>,
+                }))
+                .map_err(|e| e.to_string())?;
+
                 ("pymodule".to_string(), data)
             }
             Import(import) => {
@@ -300,7 +308,7 @@ impl From<Artifact> for WitArtifact {
     }
 }
 
-impl MaterializerConverter for WasiMaterializer {
+impl MaterializerConverter for WasmMaterializer {
     fn convert(
         &self,
         c: &mut TypegraphContext,
@@ -308,7 +316,7 @@ impl MaterializerConverter for WasiMaterializer {
         effect: WitEffect,
     ) -> Result<Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
-        let WasiMaterializer::Module(mat) = self;
+        let WasmMaterializer::Module(mat) = self;
 
         let data = serde_json::from_value(json!({
             "wasmArtifact": mat.wasm_artifact,
@@ -316,7 +324,7 @@ impl MaterializerConverter for WasiMaterializer {
         }))
         .map_err(|e| e.to_string())?;
 
-        let name = "wasi".to_string();
+        let name = "wasm".to_string();
         Ok(Materializer {
             name,
             runtime,
@@ -426,9 +434,7 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
             reset: d.reset.clone(),
         }))
         .into()),
-        Runtime::WasmEdge => {
-            Ok(TGRuntime::Known(Rt::WasmEdge(WasmEdgeRuntimeData { config: None })).into())
-        }
+        Runtime::Wasm => Ok(TGRuntime::Known(Rt::Wasm(WasmRuntimeData { config: None })).into()),
         Runtime::Prisma(d, _) => Ok(ConvertedRuntime::Lazy(Box::new(
             move |runtime_id, runtime_idx, tg| -> Result<_> {
                 let ctx = get_prisma_context(runtime_id);

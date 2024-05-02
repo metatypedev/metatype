@@ -212,6 +212,5 @@ fn mdk_rs_e2e() -> anyhow::Result<()> {
             }])
             .await
         })?;
-    dbg!(out);
     Ok(())
 }

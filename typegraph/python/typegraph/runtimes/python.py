@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional
 
 from astunparse import unparse
-
 from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
     Effect,
@@ -93,6 +92,7 @@ class PythonRuntime(Runtime):
         *,
         module: str,
         name: str,
+        deps: List[str] = [],
         effect: Optional[Effect] = None,
         secrets: Optional[List[str]] = None,
     ):
@@ -101,7 +101,13 @@ class PythonRuntime(Runtime):
 
         base = BaseMaterializer(runtime=self.id.value, effect=effect)
         mat_id = runtimes.from_python_module(
-            store, base, MaterializerPythonModule(file=module, runtime=self.id.value)
+            store,
+            base,
+            MaterializerPythonModule(
+                file=module,
+                deps=deps,
+                runtime=self.id.value,
+            ),
         )
 
         if isinstance(mat_id, Err):

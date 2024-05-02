@@ -1,27 +1,69 @@
 import TGExample from "@site/src/components/TGExample";
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
+import CodeBlock from "@theme-original/CodeBlock";
 
-We can make use of the [S3Runtime](/docs/reference/runtimes/s3) to interact with object storage APIs that implement the S3 api.
+The [S3Runtime](/docs/reference/runtimes/s3) can be used to interact with object storage APIs that are S3 compatible.
+Object storages like S3 are commonly used to cover app needs around large blob data like uploading and serving images.
+Most object storage services provide S3 compatible APIs including the open-source [MinIO](https://min.io/) engine which you can run locally for development.
 
-We'll need to add the following vars to our `metatype.yml` first.
+For the following example, you'll need to setup your S3 compatible store first.
+The following snippet can get you started using minio on docker compose:
+
+```yaml
+services:
+  minio:
+    image: bitnami/minio:2022
+    platform: linux/amd64
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_REGION_NAME: local
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: password
+      MINIO_DEFAULT_BUCKETS: "bucket:none"
+```
+
+We then provide the following secrets to our typegraph through `metatype.yml`.
 
 ```yml
 typegates:
   dev:
-    # ..
-    env:
-      # replace RETREND by the name of your typegraph
-      TG_RETREND_S3_HOST: http://localhost:9000
-      TG_RETREND_S3_REGION: local
-      TG_RETREND_S3_ACCESS_KEY: minio
-      TG_RETREND_S3_SECRET_KEY: password
-      TG_RETREND_S3_PATH_STYLE: true
+    secrets:
+      # ..
+      # replace "files-upload" by the name of your typegraph
+      files-upload:
+        S3_HOST: http://localhost:9000
+        S3_REGION: local
+        S3_ACCESS_KEY: minio
+        S3_SECRET_KEY: password
+        S3_PATH_STYLE: true
 ```
 
 Our typegraph will then look something like:
 
+<SDKTabs>
+    <TabItem value="typescript">
+
 <TGExample 
-  typegraph="retrend"
-  python={require("../../../examples/typegraphs/files-upload.py")} 
+  typegraph="files-upload"
   typescript={require("!!code-loader!../../../examples/typegraphs/files-upload.ts")}
-  query={require('./retrend.graphql')} 
+  query={require('./files.graphql')} 
   />
+
+    </TabItem>
+
+    <TabItem value="python">
+
+<TGExample 
+  typegraph="files-upload"
+  python={require("../../../examples/typegraphs/files-upload.py")} 
+  query={require('./files.graphql')} 
+  />
+
+    </TabItem>
+</SDKTabs>
+
+Peruse the [reference](/docs/reference/runtimes/s3) on the `S3Runtime` for more information.

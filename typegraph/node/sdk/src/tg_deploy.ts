@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
+import { ArtifactUploader } from "./tg_artifact_upload.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
+import * as fsp from "node:fs/promises";
+import { dirname, join } from "node:path";
 import * as fsp from "node:fs/promises";
 import { dirname, join } from "node:path";
 
@@ -16,6 +19,7 @@ export class BasicAuth {
 }
 
 export interface TypegraphDeployParams {
+  typegraphPath: string;
   typegraphPath: string;
   baseUrl: string;
   auth?: BasicAuth;
@@ -42,6 +46,11 @@ export interface ArtifactMeta {
   relativePath: string;
   hash: string;
   sizeInBytes: number;
+export interface ArtifactMeta {
+  typegraphName: string;
+  relativePath: string;
+  hash: string;
+  sizeInBytes: number;
 }
 
 export async function tgDeploy(
@@ -51,6 +60,7 @@ export async function tgDeploy(
   const { baseUrl, secrets, auth, artifactsConfig } = params;
   const serialized = typegraph.serialize(artifactsConfig);
   const tgJson = serialized.tgJson;
+  const refArtifacts = serialized.ref_artifacts;
   const refArtifacts = serialized.ref_artifacts;
 
   const headers = new Headers();
@@ -143,7 +153,7 @@ export async function tgDeploy(
   }
 
   // deploy the typegraph
-  const response = await fetch(new URL("/typegate", baseUrl), {
+  const response = await execRequest(new URL("/typegate", baseUrl), {
     method: "POST",
     headers,
     body: wit_utils.gqlDeployQuery({
@@ -154,7 +164,7 @@ export async function tgDeploy(
 
   return {
     serialized: tgJson,
-    typegate: await handleResponse(response),
+    typegate: response,
   };
 }
 
@@ -170,21 +180,27 @@ export async function tgRemove(
     headers.append("Authorization", auth.asHeaderValue());
   }
 
-  const response = await fetch(new URL("/typegate", baseUrl), {
+  const response = await execRequest(new URL("/typegate", baseUrl), {
     method: "POST",
     headers,
     body: wit_utils.gqlRemoveQuery([typegraph.name]),
   });
-  return {
-    typegate: await handleResponse(response),
-  };
+
+  return { typegate: response };
 }
 
-async function handleResponse(
-  response: Response,
-): Promise<Record<string, any> | string> {
-  if (response.headers.get("Content-Type") == "application/json") {
-    return await response.json();
+/**
+ * Simple fetch wrapper with more verbose errors
+ */
+async function execRequest(url: URL, reqInit: RequestInit) {
+  try {
+    const response = await fetch(url, reqInit);
+    if (response.headers.get("Content-Type") == "application/json") {
+      return await response.json();
+    }
+    throw Error(`Expected json object, got "${await response.text()}"`);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : err;
+    throw Error(`${message}: ${url.toString()}`);
   }
-  return await response.text();
 }

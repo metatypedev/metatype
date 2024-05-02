@@ -59,14 +59,14 @@ Meta.test({
       .on(e);
   });
 
-  await t.should("run a custom read query", async () => {
+  await t.should("run a custom create query", async () => {
     await gql`
-      query ExecuteRawPrismaRead(
+      mutation ExecuteRawPrismaCreate(
         $typegraph: String!,
         $runtime: String!,
         $query: String!
       ) {
-        execRawPrismaRead(
+        execRawPrismaCreate(
           typegraph: $typegraph,
           runtime: $runtime,
           query: $query
@@ -78,23 +78,179 @@ Meta.test({
         runtime: "prisma",
         query: {
           modelName: "users",
-          action: "findUnique",
-          query: {
-            selection: JSON.stringify({
+          action: "createOne",
+          query: JSON.stringify({
+            selection: {
               id: true,
               name: true,
-            }),
-            arguments: JSON.stringify({
-              where: {
-                id: 1,
+              email: true,
+            },
+            arguments: {
+              data: {
+                name: "John Doe",
+                email: "john.doe@example.com",
               },
-            }),
+            },
+          }),
+        },
+      })
+      .withHeaders(adminHeaders)
+      .expectData({
+        execRawPrismaCreate: JSON.stringify({
+          id: 1,
+          name: "John Doe",
+          email: "john.doe@example.com",
+        }),
+      })
+      .on(e);
+  });
+
+  await t.should("run multiple queries in a transaction", async () => {
+    await gql`
+      mutation ExecuteRawPrismaCreate(
+        $typegraph: String!,
+        $runtime: String!,
+        $query: String!
+      ) {
+        execRawPrismaCreate(
+          typegraph: $typegraph,
+          runtime: $runtime,
+          query: $query
+        )
+      }
+    `
+      .withVars({
+        typegraph: "prisma",
+        runtime: "prisma",
+        query: {
+          batch: [
+            {
+              modelName: "users",
+              action: "createOne",
+              query: JSON.stringify({
+                selection: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+                arguments: {
+                  data: {
+                    name: "John Doe",
+                    email: "john.doe@example.com",
+                  },
+                },
+              }),
+            },
+            {
+              modelName: "users",
+              action: "deleteOne",
+              query: JSON.stringify({
+                selection: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+                arguments: {
+                  where: {
+                    id: 2,
+                  },
+                },
+              }),
+            },
+          ],
+          transaction: {
+            isolationLevel: "serializable",
           },
         },
       })
       .withHeaders(adminHeaders)
       .expectData({
-        execRawPrismaRead: "null",
+        execRawPrismaCreate: JSON.stringify([
+          {
+            id: 2,
+            name: "John Doe",
+            email: "john.doe@example.com",
+          },
+          {
+            id: 2,
+            name: "John Doe",
+            email: "john.doe@example.com",
+          },
+        ]),
+      })
+      .on(e);
+  });
+
+  await t.should("query prisma model", async () => {
+    await gql`
+      query QueryPrismaModel($typegraph: String!, $runtime: String!, $model: String!) {
+        queryPrismaModel(
+          typegraph: $typegraph,
+          runtime: $runtime,
+          model: $model,
+          offset: 0,
+          limit: 50,
+        ) {
+          fields {
+            name
+            type {
+              as_id
+            }
+          }
+          rowCount
+          data
+        }
+      }
+    `
+      .withVars({
+        typegraph: "prisma",
+        runtime: "prisma",
+        model: "users",
+      })
+      .withHeaders(adminHeaders)
+      .expectData({
+        queryPrismaModel: {
+          fields: [
+            {
+              name: "id",
+              type: {
+                as_id: true,
+              },
+            },
+            {
+              name: "identities",
+              type: {
+                as_id: false,
+              },
+            },
+            {
+              name: "email",
+              type: {
+                as_id: false,
+              },
+            },
+            {
+              name: "name",
+              type: {
+                as_id: false,
+              },
+            },
+            {
+              name: "messages",
+              type: {
+                as_id: false,
+              },
+            },
+          ],
+          rowCount: 1,
+          data: [
+            JSON.stringify({
+              id: 1,
+              email: "john.doe@example.com",
+              name: "John Doe",
+            }),
+          ],
+        },
       })
       .on(e);
   });

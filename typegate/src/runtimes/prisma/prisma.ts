@@ -51,13 +51,13 @@ interface FieldQuery {
   arguments?: Record<string, unknown>;
 }
 
-interface SingleQuery {
+export interface SingleQuery {
   modelName?: string;
   action: string;
   query: FieldQuery;
 }
 
-interface BatchQuery {
+export interface BatchQuery {
   batch: SingleQuery[];
   // transaction
 }
@@ -108,6 +108,7 @@ export class PrismaRuntime extends Runtime {
   }
 
   async query(query: SingleQuery | BatchQuery) {
+    const isBatchQuery = "batch" in query;
     const { res } = nativeResult(
       await native.prisma_query({
         engine_name: this.id,
@@ -116,11 +117,24 @@ export class PrismaRuntime extends Runtime {
       }),
     );
     const result = JSON.parse(res);
+
     if ("errors" in result) {
       console.error("remote prisma errors", result.errors);
       throw new ResolverError(result.errors[0].user_facing_error.message);
     }
-    return result.data;
+
+    // TODO refactor when we support partial results in GraphQL
+    const results = isBatchQuery ? result.batchResult : [result];
+    const ret = [];
+    for (const r of results) {
+      if ("errors" in r) {
+        // TODO support for partial failures??
+        console.error("remote prisma errors", r.errors);
+        throw new ResolverError(r.errors[0].user_facing_error.message);
+      }
+      ret.push(r.data);
+    }
+    return isBatchQuery ? ret : ret[0];
   }
 
   execute(
@@ -133,10 +147,6 @@ export class PrismaRuntime extends Runtime {
 
       const startTime = performance.now();
       const generatedQuery = q({ variables, context, effect, parent });
-      console.log(
-        "remote prisma query",
-        JSON.stringify(generatedQuery, null, 2),
-      );
       const res = await this.query(generatedQuery);
       const endTime = performance.now();
       logger.debug(`queried prisma in ${(endTime - startTime).toFixed(2)}ms`);
