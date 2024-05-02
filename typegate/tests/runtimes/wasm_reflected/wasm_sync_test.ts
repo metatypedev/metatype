@@ -42,7 +42,7 @@ const syncConfig = {
     },
     forcePathStyle: true,
   },
-  s3Bucket: "metatype-sync-test",
+  s3Bucket: "metatype-reflected-sync-test",
 };
 
 const cwd = path.join(testDir, "runtimes/wasm_reflected");

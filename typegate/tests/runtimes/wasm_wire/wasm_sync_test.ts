@@ -42,7 +42,7 @@ const syncConfig = {
     },
     forcePathStyle: true,
   },
-  s3Bucket: "metatype-sync-test",
+  s3Bucket: "metatype-wasm-wire-sync-test",
 };
 
 const cwd = path.join(testDir, "runtimes/wasm_wire");
