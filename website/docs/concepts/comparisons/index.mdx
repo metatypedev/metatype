@@ -58,50 +58,58 @@ These great tools leverage GraphQL to build internal APIs using pre-determined q
 - Airtable
 - Windmill
 
-Great tools when it comes at scheduling long-running jobs. However, they are not designed to answer instantaneous API calls and are not optimized for data entities fetching. They are nonetheless the perfect companion to Metatype and some [integrations](/docs/reference/runtimes/temporal) already exists.
+Low Code platforms are a game changer when it comes to faster development cycle, great collaboration options and the gentle learning curve. However, this comes at the cost of losing degree of flexibility and cusomizability. They are also hard to apply different scalability and come with limited performance optimization. 
 
 **When to choose Metatype**
 
-1. When you want to implement modular APIs and backends with instantaneous responses
-2. When you want to interact with workflow engines and control over the operations they perform, including pooling and retries
-3. When you look for a serverless deployment solution and want to focus on your business logic
+1. When you want more control over your application instances running on the cloud.
+2. When you want to build more complex APIs.
+3. When you want to have the freedom to make detailed changes to your application to gain that extra peformance.
 
 
-
-
-
-|  | Metatype | Development Platforms | Headless CMS | Low code platform |
-|------------------------------------|------------------------|-------------|------------------|------------------------------------|
-| Interoperability and Integrability | Moderate | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
-| Custom Code Support | Moderate | Moderate | :x: | :heavy_check_mark: |
-| External Module Integration through Function Calls | :heavy_check_mark: | :x: | :x: | :x: |
-| Scalability | High | High | Moderate | High |
-| Building Complex APIs | :heavy_check_mark: | :x: | :x: | :heavy_check_mark: |
-| Long Running Workflows | Moderate | Moderate | High | High |
-| Collaboration Tools | Moderate | Moderate | High | Moderate |
-| Monitoring and Analytics | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :x: |
-| Graphical User Interface | Low | High | High | Very High |
-| Development Time | Very Fast | Fast | Fast | Fast |
-| Development SDK | :heavy_check_mark: | :x: | :x: | :heavy_check_mark: |
-| Deployment Time | Very Fast | Fast | Fast | Fast |
-| Ease of Deployment | Easy | Easy | Easy | Very Easy |
-| Versioning | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :x: |
-| Open Source | :heavy_check_mark: | :x: | :x: | :heavy_check_mark: |
-
+Feature/Capability Key:
+- :white_check_mark: 1st class, with no extra dependencies. 
+- :white_circle: supported, but with extra 3rd party dependencies
+- :large_orange_diamond: supported, but with extra 3rd party dependencies and user code.
+- :red_circle: not officially supported or documented. 
 
 |  | Metatype | Development Platforms | Headless CMS | Low code platform |
 |------------------------------------|------------------------|-------------|------------------|------------------------------------|
-| REST/HTTP | Moderate | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
-| GraphQL | Moderate | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
-| GRPC | Moderate | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
-| GUI for non programmers | Moderate | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
-
+| Licensing | [MPL-2.0](https://github.com/metatypedev/metatype/blob/main/dev/LICENSE-MPL-2.0.md) |  |  |  |
+| Platform's Requirements |  |  |  |  |
+| Architecture Model |  |  |  |  |
+| REST/HTTP |  |  |  |  |
+| GraphQL |  |  |  |  |
+| GRPC |  |  |  |  |
+| GUI for non programmers |  |  |  |  |
+| Development SDKs |  |  |  |  |
+| Development Approach |  |  |  |  |
+| CLI |  |  |  |  |
+| Dev Tools |  |  |  |  |
+| LSP and Extensions |  |  |  |  |
+| Authentication |  |  |  |  |
+| Authorization |  |  |  |  |
+| Access Control |  |  |  |  |
+| Type System |  |  |  |  |
+| Database Toolkit/ORM |  |  |  |  |
+| Query Planning Model |  |  |  |  |
+| Query Computing Model |  |  |  |  |
+| Custom Code Support |  |  |  |  |
+| Version Control |  |  |  |  |
+| GitOPs Friendly |  |  |  |  |
+| Vertical Scalability |  |  |  |  |
+| Service Decomposition |  |  |  |  |
+| Deployment Options |  |  |  |  |
+| Monitoring and Tracking |  |  |  |  |
+| Logging |  |  |  |  |
+| Query Plan Time |  |  |  |  |
+| Query Compute Time |  |  |  |  |
 
 
 ### Table Parameters Legend
 
 #### Solution's Meta
-**Open Source**
+**Licensing**
 **Platform's Requirements**
 **Architecture Model**
 
@@ -111,13 +119,13 @@ Great tools when it comes at scheduling long-running jobs. However, they are not
 **GraphQL**
 **GRPC**
 
-#### system interactability
+#### Ecosystem
 **GUI for non programmers**
 **Development SDKs**
 **Development Approach**
 **CLI**
-**Dev tools**
-**LSP and extensions**
+**Dev Tools**
+**LSP and Extensions**
 
 #### Security
 **Authentication**
@@ -126,7 +134,7 @@ Great tools when it comes at scheduling long-running jobs. However, they are not
 
 #### Database Interaction
 **Type System**
-**Database Toolkit ORM**
+**Database Toolkit/ORM**
 
 #### Query Processing
 **Query Planning Model**
