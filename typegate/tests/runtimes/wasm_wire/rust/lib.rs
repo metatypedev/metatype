@@ -3,6 +3,7 @@
 
 mod mdk;
 use mdk::*;
+use serde_json::json;
 
 init_mat! {
     hook: || {
@@ -13,6 +14,7 @@ init_mat! {
             .register_handler(stubs::Add::erased(MyMat))
             .register_handler(stubs::Range::erased(MyMat))
             .register_handler(stubs::RecordCreation::erased(MyMat))
+            .register_handler(stubs::HundredRandom::erased(MyMat))
     }
 }
 
@@ -73,5 +75,36 @@ impl stubs::RecordCreation for MyMat {
                 },
             },
         ])
+    }
+}
+
+impl stubs::HundredRandom for MyMat {
+    fn handle(&self, _input: types::Object35, cx: Ctx) -> anyhow::Result<types::Entity45> {
+        let mut out = vec![];
+        for _ in 0..100 {
+            let res: serde_json::Value = cx.gql(
+                r#"
+query randomEntity {
+    random {
+        name
+        age
+        profile {
+            level
+            attributes
+            category {
+                tag
+                value
+            }
+            metadatas
+        }
+    }
+}
+        "#,
+                json!({}),
+            )?;
+            let random = res["data"]["random"].clone();
+            out.push(serde_json::from_value(random)?)
+        }
+        Ok(out)
     }
 }

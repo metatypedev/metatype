@@ -12,7 +12,7 @@ pub mod wit {
         inline: "package metatype:wit-wire;
 
 interface typegate-wire {
-  hostcall: func(req: tuple<string, string>) -> result<string, string>;
+  hostcall: func(op-name: string, json: string) -> result<string, string>;
 }
 
 interface mat-wire {
@@ -57,7 +57,9 @@ interface mat-wire {
 }
 
 world wit-wire {
+  // include wasi:cli/imports@0.2.0;
   import typegate-wire;
+
   export mat-wire;
 }
 "
@@ -67,9 +69,8 @@ world wit-wire {
 use std::cell::RefCell;
 use std::collections::HashMap;
 
-use anyhow::Context;
-
 use wit::exports::metatype::wit_wire::mat_wire::*;
+use wit::metatype::wit_wire::typegate_wire::hostcall;
 
 pub type HandlerFn = Box<dyn Fn(&str, Ctx) -> Result<String, HandleErr>>;
 
@@ -127,9 +128,7 @@ impl Router {
         let Some(handler) = self.handlers.get(mat_trait) else {
             return Err(HandleErr::NoHandler);
         };
-        let cx = Ctx {
-            gql: GraphqlClient {},
-        };
+        let cx = Ctx {};
         (handler.handler_fn)(&req.in_json, cx)
     }
 }
@@ -140,11 +139,57 @@ thread_local! {
     pub static MAT_STATE: RefCell<Router> = panic!("MDK_STATE has not been initialized");
 }
 
-pub struct Ctx {
-    gql: GraphqlClient,
+pub struct Ctx {}
+
+impl Ctx {
+    pub fn gql<O>(
+        &self,
+        query: &str,
+        variables: impl Into<serde_json::Value>,
+    ) -> Result<O, GraphqlRunError>
+    where
+        O: serde::de::DeserializeOwned,
+    {
+        match hostcall(
+            "gql",
+            &serde_json::to_string(&serde_json::json!({
+                "query": query,
+                "variables": variables.into(),
+            }))?,
+        ) {
+            Ok(json) => Ok(serde_json::from_str(&json[..])?),
+            Err(json) => Err(GraphqlRunError::HostError(serde_json::from_str(&json)?)),
+        }
+    }
 }
 
-pub struct GraphqlClient {}
+#[derive(Debug)]
+pub enum GraphqlRunError {
+    JsonError(serde_json::Error),
+    HostError(serde_json::Value),
+}
+
+impl std::error::Error for GraphqlRunError {}
+
+impl From<serde_json::Error> for GraphqlRunError {
+    fn from(value: serde_json::Error) -> Self {
+        Self::JsonError(value)
+    }
+}
+
+impl std::fmt::Display for GraphqlRunError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GraphqlRunError::JsonError(msg) => write!(f, "json error: {msg}"),
+            GraphqlRunError::HostError(serde_json::Value::Object(map))
+                if map.contains_key("message") =>
+            {
+                write!(f, "host error: {}", map["message"])
+            }
+            GraphqlRunError::HostError(val) => write!(f, "host error: {val:?}"),
+        }
+    }
+}
 
 #[macro_export]
 macro_rules! init_mat {
@@ -214,6 +259,7 @@ pub mod types {
         pub profile: Profile,
     }
     pub type Entity36 = Vec<Entity>;
+    pub type Entity45 = Vec<Entity>;
 }
 use stubs::*;
 pub mod stubs {
@@ -298,12 +344,33 @@ pub mod stubs {
 
         fn handle(&self, input: Entity, cx: Ctx) -> anyhow::Result<Entity>;
     }
+    pub trait HundredRandom: Sized + 'static {
+        fn erased(self) -> ErasedHandler {
+            ErasedHandler {
+                mat_id: "hundred-random".into(),
+                mat_title: "hundred-random".into(),
+                mat_trait: "HundredRandom".into(),
+                handler_fn: Box::new(move |req, cx| {
+                    let req = serde_json::from_str(req)
+                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
+                    let res = self
+                        .handle(req, cx)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
+                    serde_json::to_string(&res)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
+                }),
+            }
+        }
+
+        fn handle(&self, input: Object35, cx: Ctx) -> anyhow::Result<Entity45>;
+    }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
             "add" => "Add",
             "identity" => "Identity",
             "range" => "Range",
             "record-creation" => "RecordCreation",
+            "hundred-random" => "HundredRandom",
             _ => panic!("unrecognized op_name: {op_name}"),
         }
     }

@@ -2,6 +2,7 @@ export { ghjk } from "https://raw.github.com/metatypedev/ghjk/2725af8/mod.ts";
 import * as ghjk from "https://raw.github.com/metatypedev/ghjk/2725af8/mod.ts";
 import { thinInstallConfig } from "https://raw.github.com/metatypedev/ghjk/2725af8/utils/mod.ts";
 import * as ports from "https://raw.github.com/metatypedev/ghjk/2725af8/ports/mod.ts";
+import { std_url } from "https://raw.github.com/metatypedev/ghjk/423d38e/deps/common.ts";
 import { dirname, resolve } from "https://deno.land/std/path/mod.ts";
 
 const PROTOC_VERSION = "v24.1";
@@ -43,6 +44,8 @@ const allowedPortDeps = [
     defaultInst: thinInstallConfig(fat),
   })),
 ];
+
+export const secureConfig = ghjk.secureConfig({ allowedPortDeps });
 
 const inCi = () => !!Deno.env.get("CI");
 const inOci = () => !!Deno.env.get("OCI");
@@ -114,6 +117,7 @@ if (inDev()) {
   ghjk.install(
     ports.act({}),
     ports.cargobi({ crateName: "whiz", locked: true }),
+    ports.cargobi({ crateName: "wit-deps-cli", locked: true }),
     installs.comp_py[0],
   );
 }
@@ -182,12 +186,17 @@ ghjk.task("test", {
   },
 });
 
-export const secureConfig = ghjk.secureConfig({
-  allowedPortDeps: [
-    ...ghjk.stdDeps(),
-    ...[installs.python_latest, installs.node].map((fat) => ({
-      manifest: fat.port,
-      defaultInst: thinInstallConfig(fat),
-    })),
-  ],
+ghjk.task("install-wasi-adapter", {
+  async fn({ $ }) {
+    await Promise.all([
+      `https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.command.wasm`,
+      `https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.reactor.wasm`,
+      `https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.proxy.wasm`,
+    ].map((url) =>
+      $.request(url).showProgress()
+        .pipeToPath($.path("tmp").join(std_url.basename(url)), {
+          create: true,
+        })
+    ));
+  },
 });
