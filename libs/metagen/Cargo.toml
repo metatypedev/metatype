@@ -17,6 +17,7 @@ heck = "0.5.0-rc.1"
 regex.workspace = true
 once_cell.workspace = true
 # indoc.workspace = true
+tera = { version = "1", default-features = false }
 
 [dev-dependencies]
 tokio = { workspace = true, features =["full"]}

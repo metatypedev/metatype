@@ -61,6 +61,23 @@ trait Plugin: Send + Sync {
     ) -> anyhow::Result<GeneratorOutput>;
 }
 
+type PluginResultOutput = Result<Box<dyn Plugin>, anyhow::Error>;
+
+struct GeneratorHandler {
+    pub name: String,
+    f: Box<fn(serde_json::Value) -> PluginResultOutput>,
+}
+
+impl GeneratorHandler {
+    pub fn new(name: String, f: Box<fn(serde_json::Value) -> PluginResultOutput>) -> Self {
+        Self { name, f }
+    }
+
+    pub fn handle(&self, value: serde_json::Value) -> PluginResultOutput {
+        (*self.f)(value)
+    }
+}
+
 /// This function makes use of a JoinSet to process
 /// items in parallel. This makes using actix workers in InputResolver
 /// is a no no.
@@ -71,19 +88,22 @@ pub async fn generate_target(
 ) -> anyhow::Result<HashMap<PathBuf, String>> {
     let generators = [
         // builtin generators
-        (
+        GeneratorHandler::new(
             "mdk_rust".to_string(),
-            // initialize the impl
-            &|val| {
+            Box::new(|val| {
+                // initialize the impl
                 let config: mdk_rust::MdkRustGenConfig = serde_json::from_value(val)?;
                 let generator = mdk_rust::Generator::new(config)?;
                 Ok::<_, anyhow::Error>(Box::new(generator) as Box<dyn Plugin>)
-            },
-            &|val| {
+            }),
+        ),
+        GeneratorHandler::new(
+            "mdk_python".to_string(),
+            Box::new(|val| {
                 let config: mdk_python::MdkPythonGenConfig = serde_json::from_value(val)?;
                 let generator = mdk_python::PythonGenerator::new(config)?;
                 Ok::<_, anyhow::Error>(Box::new(generator) as Box<dyn Plugin>)
-            },
+            }),
         ),
     ];
 
@@ -98,10 +118,10 @@ pub async fn generate_target(
 
         let get_gen_fn = generators
             .iter()
-            .find(|item| item.0.eq(gen_name))
+            .find(|g| g.name.eq(gen_name))
             .with_context(|| format!("generator \"{gen_name}\" not found in config"))?;
 
-        let gen_impl = get_gen_fn.1(config)?;
+        let gen_impl = get_gen_fn.handle(config)?;
         let bill = gen_impl.bill_of_inputs();
 
         let mut resolve_set = tokio::task::JoinSet::new();

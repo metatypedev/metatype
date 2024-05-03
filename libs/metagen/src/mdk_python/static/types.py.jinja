@@ -1,0 +1,25 @@
+import json
+from typing import List, Dict, Optional
+from dataclasses import dataclass, asdict, fields
+
+class Struct:
+    def instantiate(dt_class, val: any):
+        try:
+            ftypes = {f.name: f.type for f in fields(dt_class)}
+            attrs = {}
+            for f in val:
+                fval = val[f]
+                if type(fval) is list:
+                    print(f"hint {ftypes[f].__args__[0]}")
+                    attrs[f] = [Struct.instantiate(ftypes[f].__args__[0], v) for v in fval]
+                else:
+                    attrs[f] = Struct.instantiate(ftypes[f], val[f])
+            return dt_class(**attrs)
+        except:
+            return val
+    def repr(self):
+        return asdict(self)
+
+{% for type in types %}
+{{ type }}
+{% endfor %}
