@@ -1,12 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-#[cfg(feature = "codegen")]
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MigrationOptions {
     pub migration_files: Option<String>,
@@ -17,7 +14,6 @@ pub struct MigrationOptions {
     pub reset: bool,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum Cardinality {
@@ -26,7 +22,6 @@ pub enum Cardinality {
     Many,     // 0..*
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RelationshipModel {
     pub type_idx: u32,
@@ -36,7 +31,6 @@ pub struct RelationshipModel {
     pub cardinality: Cardinality,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Relationship {
     pub name: String,
@@ -44,21 +38,18 @@ pub struct Relationship {
     pub right: RelationshipModel,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum Injection {
     DateNow,
     // TODO other dynamic injection?
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ManagedInjection {
     pub create: Option<Injection>,
     pub update: Option<Injection>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum StringType {
     Plain,
@@ -66,7 +57,6 @@ pub enum StringType {
     DateTime,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type")]
 pub enum ScalarType {
@@ -79,7 +69,6 @@ pub enum ScalarType {
     },
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ScalarProperty {
@@ -93,7 +82,6 @@ pub struct ScalarProperty {
     pub default_value: Option<serde_json::Value>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum Side {
@@ -101,7 +89,6 @@ pub enum Side {
     Right,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationshipProperty {
@@ -114,7 +101,6 @@ pub struct RelationshipProperty {
     pub relationship_side: Side,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum Property {
@@ -122,7 +108,6 @@ pub enum Property {
     Relationship(RelationshipProperty),
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Model {
@@ -133,7 +118,6 @@ pub struct Model {
     pub unique_constraints: Vec<Vec<String>>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
@@ -147,7 +131,6 @@ pub struct PrismaRuntimeData {
     pub migration_options: Option<MigrationOptions>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PrismaOperationMatData {
     pub table: String,
