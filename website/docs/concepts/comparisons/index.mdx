@@ -39,19 +39,6 @@ Headless Content Management Systems (CMS) are great tools to manage content and 
 3. You are more than one on the project and want to manage your data models using preferred programming language
 
 
-## GraphQL-based backends
-
-- WunderGraph
-- Grafbase
-
-These great tools leverage GraphQL to build internal APIs using pre-determined queries. They are less API consumer oriented and that disables powerful capabilities like querying between multiple instances owned by different users.
-
-**When to choose Metatype**
-
-1. You want to build internal and external APIs, and go beyond what can be described in a GraphQL schema
-2. You want to optimize your API queries on the fly and let the engine resolve your data in the most efficient way
-3. You expect a fine-grained permission model and control the data you expose at the level of each model field
-
 ## Low Code Platforms
 
 - Retool
@@ -74,34 +61,32 @@ Feature/Capability Key:
 - :red_circle: not officially supported or documented. 
 
 |  | Metatype | Development Platforms | Headless CMS | Low code platform |
-|------------------------------------|------------------------|-------------|------------------|------------------------------------|
-| Licensing | [MPL-2.0](https://github.com/metatypedev/metatype/blob/main/dev/LICENSE-MPL-2.0.md) |  |  |  |
-| Platform's Requirements |  |  |  |  |
-| Architecture Model |  |  |  |  |
-| REST/HTTP |  |  |  |  |
-| GraphQL |  |  |  |  |
-| GRPC |  |  |  |  |
-| GUI for non programmers |  |  |  |  |
-| Development SDKs |  |  |  |  |
-| Development Approach |  |  |  |  |
-| CLI |  |  |  |  |
-| Dev Tools |  |  |  |  |
-| LSP and Extensions |  |  |  |  |
-| Authentication |  |  |  |  |
-| Authorization |  |  |  |  |
-| Access Control |  |  |  |  |
-| Type System |  |  |  |  |
-| Database Toolkit/ORM |  |  |  |  |
-| Query Planning Model |  |  |  |  |
-| Query Computing Model |  |  |  |  |
-| Custom Code Support |  |  |  |  |
-| Version Control |  |  |  |  |
-| GitOPs Friendly |  |  |  |  |
-| Vertical Scalability |  |  |  |  |
-| Service Decomposition |  |  |  |  |
-| Deployment Options |  |  |  |  |
-| Monitoring and Tracking |  |  |  |  |
-| Logging |  |  |  |  |
+|------------------------|----------------------|-------------|----------------|---------------------------|
+| Licensing | [Open Source](https://github.com/metatypedev/metatype/blob/main/dev/LICENSE-MPL-2.0.md) | Open Source <br/> Proprietary | Open Source | Proprietary |
+| Platform's Requirements | Cloud-based: None <br/> Locally: Deno/NodeJS/Python Runtime <br/> Redis <br/> Docker | Cloud-based: None <br/> Running Locally: Docker  DBMS | NodeJS runtime <br/> DBMS | Cloud-based: None |
+| Architecture Model | Declarative <br/> Less Code <br/> Serverless | Serverless, API over Database |  | Visual drag and drop |
+| REST/HTTP | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| GraphQL | :white_check_mark: | :white_circle: | :white_check_mark: | :large_orange_diamond: |
+| gRPC |  | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: |
+| GUI for non programmers | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Development SDKs | :white_check_mark: | :white_check_mark: | :red_circle: | :red_circle: (Most)  :white_check_mark: (few) |
+| CLI | :white_check_mark: | :white_check_mark: (some)  :red_circle: (some) | :white_check_mark: | :red_circle: |
+| Dev Tools | :white_check_mark: | :white_check_mark: | :white_check_mark: | :red_circle: |
+| LSP and Extensions | :white_check_mark:* | :white_circle: | :white_circle: | :red_circle: |
+| Authentication | Basic Auth  JWT  OAuth | Basic Auth  JWT  OAuth  JWT | email/phone/password  JWT  OAuth  JWT | email/phone/password  JWT  OAuth  JWT |
+| Authorization | policy-based access control (PBAC) | policy-based access control (PBAC)  role-based access control (RBAC) | role-based access control (RBAC) | Custom Authorization logic from the User |
+| Type System | [Custom Types](/docs/reference/types) | JS objects  GraphQL Schemas  Database Types | JS objects | Custom Types |
+| Database Toolkit/ORM | Prisma | PostgreSQL  Custom ORMs | Waterline  Custom ORMs | N/A |
+| Query Planning Model |  | proprietary query planner <br/> PostgreSQL's query planner | DBMS's query planner | proprietary query planner |
+| Query Computing Model |  | distributed computing model <br/> PostgreSQL's query execution model | DBMS's query execution engines | proprietary query computing model |
+| Custom Code Support | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Version Control | Git <br/> BitBucket | Git <br/> BitBucket | Git <br/> BitBucket | Git <br/> BitBucket |
+| GitOPs Friendly | :white_check_mark: | :white_check_mark: | :white_circle: | :white_circle: |
+| Vertical Scalability | Flexibile | Limited | Flexibile | Limited |
+| Service Decomposition | :white_check_mark: | :white_check_mark: | :white_check_mark: | :red_circle: |
+| Deployment Options | On premise <br/> cloud-based platforms | On premise <br/> cloud-based platforms | On premise <br/> cloud-based platforms | On premise <br/> cloud-based platforms |
+| Monitoring and Tracking | :white_check_mark:* | :white_check_mark: | :white_check_mark: | :large_orange_diamond: |
+| Logging | :white_check_mark:* | :white_check_mark: | :white_check_mark: | :large_orange_diamond: |
 | Query Plan Time |  |  |  |  |
 | Query Compute Time |  |  |  |  |
 
@@ -109,58 +94,73 @@ Feature/Capability Key:
 ### Table Parameters Legend
 
 #### Solution's Meta
-**Licensing**
-**Platform's Requirements**
-**Architecture Model**
+**Licensing**: The type of licensing model the software solution adopts, such as open-source, proprietary, freemium, etc.
+
+**Platform's Requirements**: The prerequisites and dependencies required for the software to run efficiently, including hardware, operating system, runtime environment, etc.
+
+**Architecture Model**: The underlying design principles and patterns governing the structure of the software solution.
 
 #### Network comms
 
-**REST/HTTP**
-**GraphQL**
-**GRPC**
+**REST/HTTP**: Support for Representational State Transfer (REST) or Hypertext Transfer Protocol (HTTP) communication protocol used for network communication.
+
+**GraphQL**: Support for GraphQL.
+
+**gRPC**: Support for gRPC.
 
 #### Ecosystem
-**GUI for non programmers**
-**Development SDKs**
-**Development Approach**
-**CLI**
-**Dev Tools**
-**LSP and Extensions**
+**GUI for non programmers**: Graphical User Interface (GUI) tools designed to facilitate interaction with the software by individuals with limited programming knowledge or expertise.  {/* some have and some don't from the mentioned examples */}
+
+**Development SDKs**: Software Development Kits (SDKs) provided by the solution to aid developers in building applications using the platform.
+
+**CLI**: Command-Line Interface tools provided for developers or administrators to interact with the software from the terminal or command prompt.
+
+**Dev Tools**: Tools and utilities provided to aid developers in coding, debugging, testing, and profiling applications.
+
+**LSP and Extensions**: Language Server Protocol (LSP) and Extensions support for enhanced development experience, including features like syntax highlighting, auto-completion, and error checking.
 
 #### Security
-**Authentication**
-**Authorization**
-**Access Control**
+**Authentication**: Mechanisms for verifying the identity of users or entities accessing the software solution.
+
+**Authorization**: The process of determining whether an authenticated user or system entity is allowed to perform a specific action or access a particular resource.
 
 #### Database Interaction
-**Type System**
-**Database Toolkit/ORM**
+**Type System**: The system governing the data types and structures used by which the application entities and models are constructed.
+
+**Database Toolkit/ORM**: Tools or Object-Relational Mapping (ORM) frameworks used internally.
 
 #### Query Processing
-**Query Planning Model**
-**Query Computing Model**
+**Query Planning Model**: The approach used for optimizing and planning the execution of incoming requests to improve performance and efficiency.
+
+**Query Computing Model**: The model used for executing network queries and processing data.
 
 #### System Flexibility
-**Custom Code support**
+**Custom Code support**: The ability of the software solution to accommodate custom code or extensions developed by users or third-party developers.
+
+**Customizability**: 
 
 #### Versioning and CI/CD
-**Version Control**
-**GitOPs Friendly**
+**Version Control**: The support for versioning and revision control of software artifacts, typically using systems like Git, SVN, etc.
+
+**GitOPs Friendly**: Compatibility or support for the GitOps methodology, where infrastructure and application deployments are managed through Git workflows.
 
 #### Scalability
 {/* how to express scalability using facts */}
-**vertical scalability**
-**service decomposition** {/* from micro service aspect */}
+**Vertical Scalability**: The ability of the software solution to handle increased workload or demand by adding more resources to a single node or instance.
+
+**Service Decomposition**: The architectural principle of breaking down the software into smaller, independent services (microservices) to improve scalability, maintainability, and flexibility.
 
 #### Deployment
-**Deployment Options**
+**Deployment Options**: The available methods and strategies for deploying the software solution, including on-premises, cloud-based, containerized, etc.
 
 #### Monitoring, Logging and maintenance
-**Monitoring and Tracking**
-**Logging**
+**Monitoring and Tracking**: Tools and mechanisms provided for monitoring the health, performance, and usage of the software solution, as well as tracking user activities and behaviors.
+
+**Logging**: Facilities for recording and storing system events, errors, and other relevant information for troubleshooting, analysis, and auditing purposes.
 
 #### Safety and Fault tolerance
 
 #### Basic Benchmarks
-**Query Plan Time**
-**Query Compute Time**
+**Query Plan Time**: The time taken by the system to plan and optimize the execution of a request.
+
+**Query Compute Time**: The time taken by the system to process and compute the results of a request.
