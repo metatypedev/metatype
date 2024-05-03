@@ -131,6 +131,13 @@ ghjk.task("dev", {
   },
 });
 
+ghjk.task("test", {
+  async fn({ $, argv }) {
+    const script = $.path(projectDir).join("dev/test.ts");
+    await $`deno run --allow-all ${script} ${argv}`;
+  },
+});
+
 export const secureConfig = ghjk.secureConfig({
   allowedPortDeps: [
     ...ghjk.stdDeps(),
