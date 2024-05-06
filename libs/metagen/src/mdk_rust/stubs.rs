@@ -44,7 +44,6 @@ mod test {
     fn stub_test() -> anyhow::Result<()> {
         let tg_name = "my_tg".to_string();
         let tg = Typegraph {
-            id: "https://metatype.dev/specs/0.0.3.json".into(),
             path: None,
             policies: vec![],
             deps: vec![],

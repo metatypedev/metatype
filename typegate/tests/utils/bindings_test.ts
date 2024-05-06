@@ -55,7 +55,6 @@ Deno.test("validatePrismaRuntimeData", () => {
 
 Deno.test("typegraphValidate", () => {
   const json = {
-    "$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",
