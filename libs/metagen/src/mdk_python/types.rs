@@ -4,81 +4,107 @@ use heck::ToPascalCase;
 
 use crate::interlude::*;
 
+use super::utils::{Memo, TypeGenerated};
+
 /// Collect relevant definitions in `memo` if object, return the type in Python
 pub fn visit_type(
     tera: &tera::Tera,
-    memo: &mut IndexMap<String, String>,
+    memo: &mut Memo,
     tpe: &TypeNode,
     tg: &Typegraph,
-) -> anyhow::Result<String> {
-    let ret = match tpe {
+) -> anyhow::Result<TypeGenerated> {
+    memo.incr_weight();
+
+    let hint = match tpe {
         TypeNode::Boolean { .. } => "bool".to_string(),
         TypeNode::Float { .. } => "float".to_string(),
         TypeNode::Integer { .. } => "int".to_string(),
         TypeNode::String { .. } => "str".to_string(),
-        TypeNode::Object { .. } => visit_object(tera, memo, tpe, tg)?,
+        TypeNode::Object { .. } => {
+            println!("GOT OBJECT {:?}", tpe.base().title.clone());
+            visit_object(tera, memo, tpe, tg)?.hint
+        }
         TypeNode::Optional { data, .. } => {
             let item = &tg.types[data.item.clone() as usize];
-            let item = visit_type(tera, memo, item, tg)?;
-            format!("Optional[{item}]")
+            let hint = visit_type(tera, memo, item, tg)?.hint;
+            format!("Optional[{hint}]")
         }
         TypeNode::List { data, .. } => {
             let item = &tg.types[data.items.clone() as usize];
-            let item = visit_type(tera, memo, item, tg)?;
-            format!("List[{item}]")
+            let hint = visit_type(tera, memo, item, tg)?.hint;
+            format!("List[{hint}]").into()
         }
         TypeNode::Function { .. } => "".to_string(),
         TypeNode::Union { .. } | TypeNode::Either { .. } => {
-            visit_union_or_either(tera, memo, tpe, tg)?
+            visit_union_or_either(tera, memo, tpe, tg)?.hint
         }
         _ => bail!("Unsupported type {:?}", tpe.type_name()),
     };
-    Ok(ret)
+    Ok(hint.into())
 }
 
 /// Collect relevant definitions in `memo`, return the type in Python
-pub fn visit_object(
+fn visit_object(
     tera: &tera::Tera,
-    memo: &mut IndexMap<String, String>,
+    memo: &mut Memo,
     tpe: &TypeNode,
     tg: &Typegraph,
-) -> anyhow::Result<String> {
+) -> anyhow::Result<TypeGenerated> {
     if let TypeNode::Object { base, data } = tpe {
         let mut fields_repr = vec![];
+        let hint = base.title.clone().to_pascal_case();
+
+        memo.allocate(hint.clone());
+        memo.incr_weight();
+
         for (field, idx) in data.properties.iter() {
             let field_tpe = &tg.types[idx.clone() as usize];
-            let type_repr = visit_type(tera, memo, field_tpe, tg)?;
-            fields_repr.push(format!("{field}: {type_repr}"));
+            if !memo.is_allocated(&field_tpe.base().title.to_pascal_case()) {
+                let type_repr = visit_type(tera, memo, field_tpe, tg)?.hint;
+                fields_repr.push(format!("{field}: {type_repr}"));
+            }
         }
+
+        memo.decr_weight();
 
         let mut context = tera::Context::new();
         context.insert("class_name", &base.title.to_pascal_case());
         context.insert("fields", &fields_repr);
 
         let code = tera.render("struct_template", &context)?;
-        memo.insert(base.title.clone(), code.clone());
-        Ok(base.title.clone().to_pascal_case())
+        let generated = TypeGenerated {
+            hint: hint.clone(),
+            def: Some(code),
+        };
+
+        memo.insert(hint, generated.clone());
+
+        Ok(generated)
     } else {
         panic!("object node was expected, got {:?}", tpe.type_name())
     }
 }
 
 /// Collect relevant definitions in `memo`, return the type in Python
-pub fn visit_union_or_either(
+fn visit_union_or_either(
     tera: &tera::Tera,
-    memo: &mut IndexMap<String, String>,
+    memo: &mut Memo,
     tpe: &TypeNode,
     tg: &Typegraph,
-) -> anyhow::Result<String> {
+) -> anyhow::Result<TypeGenerated> {
     if let TypeNode::Union { data, .. } = tpe {
         let mut variants_repr = HashSet::new();
         for idx in data.any_of.iter() {
             let field_tpe = &tg.types[idx.clone() as usize];
-            let type_repr = visit_type(tera, memo, field_tpe, tg)?;
+            let type_repr = visit_type(tera, memo, field_tpe, tg)?.hint;
             variants_repr.insert(format!("{type_repr}"));
         }
-        let variant_repr = variants_repr.join_compact(", ").to_string();
-        Ok(format!("Union[{variant_repr}]"))
+        let variant_hints = variants_repr.join_compact(", ").to_string();
+        let hint = match variants_repr.len() == 1 {
+            true => variant_hints,
+            false => format!("Union[{variant_hints}]"),
+        };
+        Ok(hint.into())
     } else {
         panic!("union/either node was expected, got {:?}", tpe.type_name())
     }

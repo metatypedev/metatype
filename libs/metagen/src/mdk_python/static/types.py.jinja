@@ -20,6 +20,6 @@ class Struct:
     def repr(self):
         return asdict(self)
 
-{% for type in types %}
+{%- for type in types -%}
 {{ type }}
-{% endfor %}
+{%- endfor -%}

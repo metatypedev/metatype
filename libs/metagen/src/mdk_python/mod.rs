@@ -8,7 +8,10 @@ use crate::interlude::*;
 use crate::mdk::*;
 use crate::*;
 
+use self::utils::Memo;
+
 mod types;
+mod utils;
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
 pub struct MdkPythonGenConfig {
@@ -129,7 +132,7 @@ fn get_module_infos(fun: &StubbedFunction, tg: &Typegraph) -> anyhow::Result<(St
 struct RequiredObjects {
     pub input_key: String,
     pub output_key: String,
-    pub types: IndexMap<String, String>,
+    pub memo: Memo,
 }
 
 fn render_main(
@@ -149,9 +152,10 @@ fn render_main(
 fn render_types(tera: &tera::Tera, required: &RequiredObjects) -> anyhow::Result<String> {
     let mut context = tera::Context::new();
     let types = required
-        .types
+        .memo
+        .types_in_order()
         .iter()
-        .map(|(_, repr)| repr.to_owned())
+        .map(|repr| repr.def.to_owned())
         .collect::<Vec<_>>();
     context.insert("types", &types);
     tera.render("types_template", &context)
@@ -164,7 +168,7 @@ fn gen_required_objects(
     tg: &Typegraph,
 ) -> anyhow::Result<RequiredObjects> {
     if let TypeNode::Function { data, .. } = fun.node.clone() {
-        let mut memo = IndexMap::new();
+        let mut memo = Memo::new();
         let input = tg.types[data.input as usize].clone();
         let output = tg.types[data.output as usize].clone();
         types::visit_type(tera, &mut memo, &input, tg)?;
@@ -172,7 +176,7 @@ fn gen_required_objects(
         Ok(RequiredObjects {
             input_key: input.base().title.to_pascal_case(),
             output_key: output.base().title.to_pascal_case(),
-            types: memo,
+            memo,
         })
     } else {
         bail!("function node was expected")
