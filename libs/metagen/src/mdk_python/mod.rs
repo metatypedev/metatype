@@ -8,6 +8,8 @@ use crate::interlude::*;
 use crate::mdk::*;
 use crate::*;
 
+mod types;
+
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
 pub struct MdkPythonGenConfig {
     #[serde(flatten)]
@@ -165,8 +167,8 @@ fn gen_required_objects(
         let mut memo = IndexMap::new();
         let input = tg.types[data.input as usize].clone();
         let output = tg.types[data.output as usize].clone();
-        visit_type(tera, &mut memo, &input, tg)?;
-        visit_type(tera, &mut memo, &output, tg)?;
+        types::visit_type(tera, &mut memo, &input, tg)?;
+        types::visit_type(tera, &mut memo, &output, tg)?;
         Ok(RequiredObjects {
             input_key: input.base().title.to_pascal_case(),
             output_key: output.base().title.to_pascal_case(),
@@ -174,63 +176,5 @@ fn gen_required_objects(
         })
     } else {
         bail!("function node was expected")
-    }
-}
-
-/// Collect definition in `memo` if object and return the type in Python
-fn visit_type(
-    tera: &tera::Tera,
-    memo: &mut IndexMap<String, String>,
-    tpe: &TypeNode,
-    tg: &Typegraph,
-) -> anyhow::Result<String> {
-    let ret = match tpe {
-        TypeNode::Boolean { .. } => "bool".to_string(),
-        TypeNode::Float { .. } => "float".to_string(),
-        TypeNode::Integer { .. } => "int".to_string(),
-        TypeNode::String { .. } => "str".to_string(),
-        TypeNode::Object { .. } => visit_object(tera, memo, tpe, tg)?,
-        TypeNode::Optional { data, .. } => {
-            let item = &tg.types[data.item.clone() as usize];
-            let item = visit_type(tera, memo, item, tg)?;
-            format!("Optional[{item}]")
-        }
-        TypeNode::List { data, .. } => {
-            let item = &tg.types[data.items.clone() as usize];
-            let item = visit_type(tera, memo, item, tg)?;
-            format!("List[{item}]")
-        }
-        TypeNode::Function { .. } => "".to_string(),
-        TypeNode::Union { .. } => todo!(),
-        TypeNode::Either { .. } => todo!(),
-        _ => bail!("Unsupported type {:?}", tpe.type_name()),
-    };
-    Ok(ret)
-}
-
-/// Collect definition in `memo` and return the type in Python
-fn visit_object(
-    tera: &tera::Tera,
-    memo: &mut IndexMap<String, String>,
-    tpe: &TypeNode,
-    tg: &Typegraph,
-) -> anyhow::Result<String> {
-    if let TypeNode::Object { base, data } = tpe {
-        let mut fields_repr = vec![];
-        for (field, idx) in data.properties.iter() {
-            let field_tpe = &tg.types[idx.clone() as usize];
-            let type_repr = visit_type(tera, memo, field_tpe, tg)?;
-            fields_repr.push(format!("{field}: {type_repr}"));
-        }
-
-        let mut context = tera::Context::new();
-        context.insert("class_name", &base.title.to_pascal_case());
-        context.insert("fields", &fields_repr);
-
-        let code = tera.render("struct_template", &context)?;
-        memo.insert(base.title.clone(), code.clone());
-        Ok(base.title.clone().to_pascal_case())
-    } else {
-        bail!("object node was expected, got {:?}", tpe.type_name())
     }
 }
