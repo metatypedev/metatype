@@ -196,7 +196,6 @@ pub fn finalize(
     let auths = finalize_auths(&mut ctx)?;
 
     let mut tg = Typegraph {
-        id: format!("https://metatype.dev/specs/{TYPEGRAPH_VERSION}.json"),
         types: ctx
             .types
             .into_iter()
