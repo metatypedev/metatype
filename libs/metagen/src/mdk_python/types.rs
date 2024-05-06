@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use anyhow::bail;
 use garde::external::compact_str::CompactStringExt;
 use heck::ToPascalCase;
@@ -21,18 +24,22 @@ pub fn visit_type(
         TypeNode::Integer { .. } => "int".to_string(),
         TypeNode::String { .. } => "str".to_string(),
         TypeNode::Object { .. } => {
-            println!("GOT OBJECT {:?}", tpe.base().title.clone());
-            visit_object(tera, memo, tpe, tg)?.hint
+            let class_hint = tpe.base().title.to_pascal_case();
+            let hint = match memo.is_allocated(&class_hint) {
+                true => class_hint,
+                false => visit_object(tera, memo, tpe, tg)?.hint,
+            };
+            format!("'{hint}'")
         }
         TypeNode::Optional { data, .. } => {
-            let item = &tg.types[data.item.clone() as usize];
-            let hint = visit_type(tera, memo, item, tg)?.hint;
-            format!("Optional[{hint}]")
+            let item = &tg.types[data.item as usize];
+            let item_hint = visit_type(tera, memo, item, tg)?.hint;
+            format!("Optional[{item_hint}]")
         }
         TypeNode::List { data, .. } => {
-            let item = &tg.types[data.items.clone() as usize];
-            let hint = visit_type(tera, memo, item, tg)?.hint;
-            format!("List[{hint}]").into()
+            let item = &tg.types[data.items as usize];
+            let item_hint = visit_type(tera, memo, item, tg)?.hint;
+            format!("List[{item_hint}]")
         }
         TypeNode::Function { .. } => "".to_string(),
         TypeNode::Union { .. } | TypeNode::Either { .. } => {
@@ -40,6 +47,8 @@ pub fn visit_type(
         }
         _ => bail!("Unsupported type {:?}", tpe.type_name()),
     };
+
+    memo.decr_weight();
     Ok(hint.into())
 }
 
@@ -55,17 +64,14 @@ fn visit_object(
         let hint = base.title.clone().to_pascal_case();
 
         memo.allocate(hint.clone());
-        memo.incr_weight();
 
         for (field, idx) in data.properties.iter() {
-            let field_tpe = &tg.types[idx.clone() as usize];
+            let field_tpe = &tg.types[*idx as usize];
             if !memo.is_allocated(&field_tpe.base().title.to_pascal_case()) {
                 let type_repr = visit_type(tera, memo, field_tpe, tg)?.hint;
                 fields_repr.push(format!("{field}: {type_repr}"));
             }
         }
-
-        memo.decr_weight();
 
         let mut context = tera::Context::new();
         context.insert("class_name", &base.title.to_pascal_case());
@@ -95,9 +101,9 @@ fn visit_union_or_either(
     if let TypeNode::Union { data, .. } = tpe {
         let mut variants_repr = HashSet::new();
         for idx in data.any_of.iter() {
-            let field_tpe = &tg.types[idx.clone() as usize];
+            let field_tpe = &tg.types[*idx as usize];
             let type_repr = visit_type(tera, memo, field_tpe, tg)?.hint;
-            variants_repr.insert(format!("{type_repr}"));
+            variants_repr.insert(type_repr);
         }
         let variant_hints = variants_repr.join_compact(", ").to_string();
         let hint = match variants_repr.len() == 1 {

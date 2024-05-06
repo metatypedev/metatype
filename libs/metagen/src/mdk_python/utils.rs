@@ -1,4 +1,6 @@
-use anyhow::bail;
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use indexmap::IndexMap;
 
 #[derive(Debug, Clone)]
@@ -37,14 +39,14 @@ impl Memo {
         }
     }
 
-    /// Insert `v` at `k`, if already present, this will also increase the priority by 1
+    /// Insert `v` at `k`, if already present, this will also increase the priority by the current weight
     pub fn insert(&mut self, k: String, v: TypeGenerated) {
         if self.is_allocated(&k) {
             let old = self.map.get(&k).unwrap();
             self.map.insert(
                 k,
                 Class {
-                    priority: old.priority + 1 * self.priority_weight,
+                    priority: old.priority + self.priority_weight,
                     type_generated: Some(v),
                 },
             );
@@ -78,21 +80,9 @@ impl Memo {
         // if typing dataclass A depends on dataclass B, then B must be generated first
         values.sort_by(|a, b| b.priority.cmp(&a.priority));
 
-        println!("=========");
-        for v in values.iter() {
-            println!(
-                "Priority {} => {}",
-                v.priority,
-                v.type_generated.clone().unwrap().hint.clone()
-            );
-        }
-
         values
             .iter()
-            .filter_map(|c| match &c.type_generated {
-                Some(gen) => Some(gen.clone()),
-                None => None,
-            })
+            .filter_map(|c| c.type_generated.as_ref().cloned())
             .collect()
     }
 
@@ -104,7 +94,6 @@ impl Memo {
         if let Some(value) = self.priority_weight.checked_sub(1) {
             self.priority_weight = value;
         } else {
-            // only happens if incr_weight was not called prior
             panic!("invalid state: priority weight overflowed")
         }
     }

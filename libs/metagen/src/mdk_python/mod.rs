@@ -75,7 +75,7 @@ impl crate::Plugin for PythonGenerator {
 
         let stubbed_funs = filter_stubbed_funcs(tg, &["python_wasi".to_string()])?;
         for fun in &stubbed_funs {
-            let (mod_name, script_path) = get_module_infos(fun, &tg)?;
+            let (mod_name, script_path) = get_module_infos(fun, tg)?;
             if let Some(file_stem) = script_path.file_stem().map(|v| v.to_str()).unwrap() {
                 let parent = script_path
                     .parent()
@@ -93,7 +93,7 @@ impl crate::Plugin for PythonGenerator {
                 );
                 out.insert(
                     base.join(format!("{file_stem}.py")),
-                    render_main(&tera, &required, &mod_name, &file_stem)?,
+                    render_main(&tera, &required, &mod_name, file_stem)?,
                 );
             } else {
                 bail!("{} is not a valid file path", script_path.display())
