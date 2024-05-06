@@ -23,7 +23,6 @@ pub async fn test_typegraph_1() -> anyhow::Result<Typegraph> {
 #[allow(unused)]
 pub fn test_typegraph_2() -> Typegraph {
     Typegraph {
-        id: "https://metatype.dev/specs/0.0.3.json".into(),
         path: None,
         policies: vec![],
         deps: vec![],

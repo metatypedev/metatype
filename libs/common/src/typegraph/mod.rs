@@ -17,8 +17,6 @@ use std::sync::Arc;
 
 use anyhow::{bail, Result};
 use indexmap::IndexMap;
-#[cfg(feature = "codegen")]
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_with::skip_serializing_none;
@@ -26,11 +24,8 @@ use serde_with::skip_serializing_none;
 use self::runtimes::Artifact;
 use self::runtimes::TGRuntime;
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Typegraph {
-    #[serde(rename = "$id")]
-    pub id: String,
     pub types: Vec<TypeNode>,
     pub materializers: Vec<Materializer>,
     pub runtimes: Vec<TGRuntime>,
@@ -44,7 +39,6 @@ pub struct Typegraph {
     pub deps: Vec<PathBuf>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Cors {
     pub allow_origin: Vec<String>,
@@ -56,7 +50,6 @@ pub struct Cors {
     pub max_age_sec: Option<u32>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum AuthProtocol {
@@ -65,7 +58,6 @@ pub enum AuthProtocol {
     Basic,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Auth {
     pub name: String,
@@ -73,7 +65,6 @@ pub struct Auth {
     pub auth_data: IndexMap<String, Value>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Rate {
     pub window_limit: u32,
@@ -84,14 +75,12 @@ pub struct Rate {
 }
 
 // TODO: remove default, as they should all be explicity set in the core SDK
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Queries {
     pub dynamic: bool,
     pub endpoints: Vec<String>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct TypeMeta {
@@ -106,7 +95,6 @@ pub struct TypeMeta {
     pub artifacts: HashMap<PathBuf, Artifact>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[serde(rename_all = "lowercase")]
 pub enum EffectType {
@@ -116,14 +104,12 @@ pub enum EffectType {
     Read,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Effect {
     pub effect: Option<EffectType>,
     pub idempotent: bool,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Materializer {
     pub name: String,
@@ -132,14 +118,12 @@ pub struct Materializer {
     pub data: IndexMap<String, Value>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Policy {
     pub name: String,
     pub materializer: u32,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PolicyIndicesByEffect {
@@ -149,7 +133,6 @@ pub struct PolicyIndicesByEffect {
     pub update: Option<u32>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(untagged)]
