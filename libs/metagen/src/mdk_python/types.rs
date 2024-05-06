@@ -67,10 +67,8 @@ fn visit_object(
 
         for (field, idx) in data.properties.iter() {
             let field_tpe = &tg.types[*idx as usize];
-            if !memo.is_allocated(&field_tpe.base().title.to_pascal_case()) {
-                let type_repr = visit_type(tera, memo, field_tpe, tg)?.hint;
-                fields_repr.push(format!("{field}: {type_repr}"));
-            }
+            let type_repr = visit_type(tera, memo, field_tpe, tg)?.hint;
+            fields_repr.push(format!("{field}: {type_repr}"));
         }
 
         let mut context = tera::Context::new();
@@ -98,9 +96,9 @@ fn visit_union_or_either(
     tpe: &TypeNode,
     tg: &Typegraph,
 ) -> anyhow::Result<TypeGenerated> {
-    if let TypeNode::Union { data, .. } = tpe {
+    let mut visit_variants = |variants: &[u32]| -> anyhow::Result<TypeGenerated> {
         let mut variants_repr = HashSet::new();
-        for idx in data.any_of.iter() {
+        for idx in variants.iter() {
             let field_tpe = &tg.types[*idx as usize];
             let type_repr = visit_type(tera, memo, field_tpe, tg)?.hint;
             variants_repr.insert(type_repr);
@@ -111,6 +109,12 @@ fn visit_union_or_either(
             false => format!("Union[{variant_hints}]"),
         };
         Ok(hint.into())
+    };
+
+    if let TypeNode::Union { data, .. } = tpe {
+        visit_variants(&data.any_of)
+    } else if let TypeNode::Either { data, .. } = tpe {
+        visit_variants(&data.one_of)
     } else {
         panic!("union/either node was expected, got {:?}", tpe.type_name())
     }
