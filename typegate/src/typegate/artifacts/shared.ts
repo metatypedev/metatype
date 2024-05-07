@@ -221,6 +221,7 @@ export class SharedArtifactRefCounter implements RefCounter {
   }
 
   async decrement(key: string) {
+    // TODO what for negative values?
     await this.#redisClient.zincrby(REDIS_REF_COUNTER, -1, key);
   }
 

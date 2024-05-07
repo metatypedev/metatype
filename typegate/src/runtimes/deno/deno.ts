@@ -66,8 +66,8 @@ export class DenoRuntime extends Runtime {
     //    (user) tg_root/*
     // => (gate) tmp/scripts/{tgname}/deno/*
     const basePath = path.join(
-      config.tmp_dir,
-      "artifacts", // TODO: improve sanitization
+      typegate.tmpDir,
+      "artifacts",
     );
 
     let registryCount = 0;

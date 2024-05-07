@@ -5,7 +5,7 @@
 Artifacts are uploaded according to the upload protocol.
 
 [TODO: update diagram]
-![](./workflows/upload_protocol.svg "Artifact upload protocol")
+![Artifact upload protocol](./workflows/upload_protocol.svg "Artifact upload protocol")
 
 ## Reference count
 

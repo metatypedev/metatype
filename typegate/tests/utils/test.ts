@@ -96,19 +96,14 @@ export class MetaTest {
     t: Deno.TestContext,
     typegates: TypegateManager,
     introspection: boolean,
-    port = false,
     tempDir: string,
   ): Promise<MetaTest> {
     await using stack = new AsyncDisposableStack();
     stack.use(typegates);
 
-    let portNumber: number | null = null;
-
-    if (port) {
-      const server = await serve(typegates);
-      portNumber = server.port;
-      stack.use(server);
-    }
+    const server = await serve(typegates);
+    const portNumber = server.port;
+    stack.use(server);
 
     const mt = new MetaTest(
       t,
@@ -126,7 +121,7 @@ export class MetaTest {
     public t: Deno.TestContext,
     public typegates: TypegateManager,
     private introspection: boolean,
-    public port: number | null,
+    public port: number,
     public tempDir: string,
     public disposables: AsyncDisposableStack,
   ) {
@@ -192,11 +187,6 @@ export class MetaTest {
   async engine(path: string, opts: ParseOptions = {}): Promise<QueryEngine> {
     const oldTypegraphList = await this.typegates.next().register.list();
 
-    if (this.port == null) {
-      throw new Error(
-        "Error: port option in MetaTest config should be set to 'true'",
-      );
-    }
     const cmd = ["deploy", "-f", path, "--target", "dev", "--allow-dirty"];
 
     cmd.push("--gate", `http://localhost:${this.port}`);
@@ -295,12 +285,6 @@ export class MetaTest {
     cwd: string,
   ): Promise<string> {
     // run self deployed typegraph
-
-    if (!this.port) {
-      throw new Error(
-        "Error: port option in MetaTest config should be set to 'true'",
-      );
-    }
 
     const { stderr, stdout } = await this.shell([
       lang.toString(),
@@ -416,10 +400,7 @@ interface TempGitRepo {
 }
 
 interface TestConfig {
-  systemTypegraphs?: boolean;
   introspection?: boolean;
-  // port on which the typegate instance will be exposed on expose the typegate instance
-  port?: boolean;
   // number of typegate instances to create
   replicas?: number;
   // create a temporary clean git repo for the tests
@@ -478,21 +459,17 @@ export const test = ((o, fn): void => {
       );
 
       const {
-        systemTypegraphs = false,
         gitRepo = null,
         introspection = false,
       } = opts;
-      if (systemTypegraphs) {
-        await Promise.all(
-          typegates.map((typegate) => SystemTypegraph.loadAll(typegate)),
-        );
-      }
+      await Promise.all(
+        typegates.map((typegate) => SystemTypegraph.loadAll(typegate)),
+      );
 
       await using mt = await MetaTest.init(
         t,
         new TypegateManager(typegates),
         introspection,
-        opts.port != null,
         tempDir,
       );
 

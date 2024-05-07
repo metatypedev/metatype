@@ -72,7 +72,6 @@ export interface DeinitOptions {
   engines?: boolean;
 }
 
-// TODO make tempDir configurable
 export class Typegate implements AsyncDisposable {
   #onPushHooks: PushHandler[] = [];
   #artifactService: ArtifactService;
