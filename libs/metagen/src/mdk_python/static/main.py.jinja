@@ -10,5 +10,5 @@ def handle(inp: {{ t_input }}) -> {{ t_output }}:
 
 # Do not edit this function
 def {{ fn_name }}(raw_inp):
-    inp: {{ t_input }} = Struct.instantiate({{ t_input }}, raw_inp)
+    inp: {{ t_input }} = Struct.new({{ t_input }}, raw_inp)
     return handle(inp).repr()

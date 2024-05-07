@@ -3,7 +3,7 @@ from typing import List, Dict, Optional, Union
 from dataclasses import dataclass, asdict, fields
 
 class Struct:
-    def instantiate(dt_class, val: any):
+    def new(dt_class, val: any):
         try:
             ftypes = {f.name: f.type for f in fields(dt_class)}
             attrs = {}
@@ -11,9 +11,9 @@ class Struct:
                 fval = val[f]
                 if type(fval) is list:
                     print(f"hint {ftypes[f].__args__[0]}")
-                    attrs[f] = [Struct.instantiate(ftypes[f].__args__[0], v) for v in fval]
+                    attrs[f] = [Struct.new(ftypes[f].__args__[0], v) for v in fval]
                 else:
-                    attrs[f] = Struct.instantiate(ftypes[f], val[f])
+                    attrs[f] = Struct.new(ftypes[f], val[f])
             return dt_class(**attrs)
         except:
             return val
