@@ -59,3 +59,37 @@ members = ["mdk/"]
     0,
   );
 });
+
+Meta.test("metagen python runs on cyclic types", async (t) => {
+  const tmpDir = await newTempDir();
+  t.addCleanup(() => Deno.remove(tmpDir, { recursive: true }));
+
+  const typegraphPath = join(
+    import.meta.dirname!,
+    "typegraphs/python.py",
+  );
+  const basePath = join(tmpDir, "mdk");
+
+  Deno.writeTextFile(
+    join(tmpDir, "metatype.yml"),
+    `
+typegates:
+  dev:
+    url: "http://localhost:7890"
+    username: admin1
+    password: password2
+
+metagen:
+  targets:
+    my_target:
+      mdk_python:
+        path: ${basePath} 
+        typegraph_path: ${typegraphPath}
+`,
+  );
+
+  assertEquals(
+    (await Meta.cli({}, ...`-C ${tmpDir} gen mdk my_target`.split(" "))).code,
+    0,
+  );
+});
