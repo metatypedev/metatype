@@ -42,25 +42,23 @@ class Struct:
         return [Struct.new(klass, v) for v in items]
 
     def try_union(variants: List[any], val: any):
-        done = False
         errors = []
         for variant in variants:
-            if not done:
-                try:
-                    if variant is NoneType:
-                        if val is None:
-                            return None
-                        else:
-                            continue
-                    if get_origin(variant) is list:
-                        if type(val) is list:
-                            return Struct.try_typed_list(variant, val)
-                        else:
-                            continue
-                    klass = FORWARD_REFS[variant.__forward_arg__]
-                    return Struct.try_new(klass, val)
-                except Exception as e:
-                    errors.append(str(e))
+            try:
+                if variant is NoneType:
+                    if val is None:
+                        return None
+                    else:
+                        continue
+                if get_origin(variant) is list:
+                    if type(val) is list:
+                        return Struct.try_typed_list(variant, val)
+                    else:
+                        continue
+                klass = FORWARD_REFS[variant.__forward_arg__]
+                return Struct.try_new(klass, val)
+            except Exception as e:
+                errors.append(str(e))
         raise Exception("\n".join(errors))
 
 

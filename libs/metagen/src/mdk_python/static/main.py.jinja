@@ -1,10 +1,8 @@
-import json
-{% if t_input != t_output %}
+{% if t_input != t_output -%}
 from .{{ type_mod_name }}_types import Struct, {{ t_input }}, {{ t_output }}
-{% else %}
+{% else -%}
 from .{{ type_mod_name }}_types import Struct, {{ t_input }}
-{% endif %}
-
+{%- endif %}
 
 
 def handle(inp: {{ t_input }}) -> {{ t_output }}:
@@ -12,13 +10,11 @@ def handle(inp: {{ t_input }}) -> {{ t_output }}:
     raise Exception("not implemented")
 
 
-
 # Do not edit
 def __repr(value: any):
     if isinstance(value, Struct):
         return value.repr()
     return value
-
 def {{ fn_name }}(raw_inp):
     inp: {{ t_input }} = Struct.new({{ t_input }}, raw_inp)
     out: {{ t_output }} = handle(inp)
