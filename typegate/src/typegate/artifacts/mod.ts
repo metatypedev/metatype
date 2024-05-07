@@ -4,17 +4,17 @@
 import { signJWT, verifyJWT } from "../../crypto.ts";
 import * as jwt from "jwt";
 import { z } from "zod";
-import config from "../../config.ts";
 import { dirname } from "std/path/dirname.ts";
 import { resolve } from "std/path/resolve.ts";
 import { exists } from "std/fs/exists.ts";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
 
-// The directory where artifacts are stored -- by hash
-export const STORE_DIR = `${config.tmp_dir}/artifacts-cache`;
-export const STORE_TEMP_DIR = `${config.tmp_dir}/artifacts-cache/tmp`;
-const ARTIFACTS_DIR = `${config.tmp_dir}/artifacts`;
+export interface Dirs {
+  cache: string;
+  temp: string;
+  artifacts: string;
+}
 
 function getUploadPath(tgName: string) {
   return `/${tgName}/artifacts`;
@@ -23,10 +23,11 @@ function getUploadPath(tgName: string) {
 export async function getLocalPath(
   meta: ArtifactMeta,
   mainModuleMeta: ArtifactMeta,
+  dirs: Dirs,
 ) {
-  const cachedPath = resolve(STORE_DIR, meta.hash);
+  const cachedPath = resolve(dirs.cache, meta.hash);
   const localPath = resolve(
-    ARTIFACTS_DIR,
+    dirs.artifacts,
     mainModuleMeta.hash,
     meta.typegraphName,
     meta.relativePath,
@@ -55,6 +56,7 @@ export const artifactMetaSchema = z.object({
 export type ArtifactMeta = z.infer<typeof artifactMetaSchema>;
 
 export interface ArtifactPersistence extends AsyncDisposable {
+  dirs: Dirs;
   save(stream: ReadableStream): Promise<string>;
   delete(hash: string): Promise<void>;
   has(hash: string): Promise<boolean>;
@@ -145,11 +147,11 @@ export class ArtifactStore implements AsyncDisposable {
   ): Promise<string> {
     for (const dep of deps) {
       await this.persistence.fetch(dep.hash);
-      await getLocalPath(dep, meta);
+      await getLocalPath(dep, meta, this.persistence.dirs);
     }
 
     await this.persistence.fetch(meta.hash);
-    return getLocalPath(meta, meta);
+    return getLocalPath(meta, meta, this.persistence.dirs);
   }
 
   prepareUpload(meta: ArtifactMeta, origin: URL) {

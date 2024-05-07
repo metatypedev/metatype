@@ -53,6 +53,10 @@ class SharedArtifactPersistence implements ArtifactPersistence {
     private s3Bucket: string,
   ) {}
 
+  get dirs() {
+    return this.localShadow.dirs;
+  }
+
   async [Symbol.asyncDispose]() {
     await this.localShadow[Symbol.asyncDispose]();
     this.s3.destroy();

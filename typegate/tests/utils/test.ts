@@ -14,6 +14,7 @@ import { TypeGraph } from "../../src/typegraph/mod.ts";
 import { SyncConfig } from "../../src/sync/config.ts";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
+import config from "../../src/config.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
@@ -96,6 +97,7 @@ export class MetaTest {
     typegates: TypegateManager,
     introspection: boolean,
     port = false,
+    tempDir: string,
   ): Promise<MetaTest> {
     await using stack = new AsyncDisposableStack();
     stack.use(typegates);
@@ -113,6 +115,7 @@ export class MetaTest {
       typegates,
       introspection,
       portNumber,
+      tempDir,
       stack.move(),
     );
 
@@ -124,6 +127,7 @@ export class MetaTest {
     public typegates: TypegateManager,
     private introspection: boolean,
     public port: number | null,
+    public tempDir: string,
     public disposables: AsyncDisposableStack,
   ) {
   }
@@ -182,26 +186,74 @@ export class MetaTest {
   }
 
   async undeploy(tgName: string) {
-    await this.typegates.next().register.remove(tgName);
+    await this.typegates.next().removeTypegraph(tgName);
   }
 
   async engine(path: string, opts: ParseOptions = {}): Promise<QueryEngine> {
-    const tgString = await this.serialize(path, opts);
-    const tgJson = await TypeGraph.parseJson(tgString);
+    const oldTypegraphList = await this.typegates.next().register.list();
 
-    // for convience, automatically prefix secrets
-    const secrets = opts.secrets ?? {};
-    const { engine, response } = await this.typegates.next().pushTypegraph(
-      tgJson,
-      secrets,
-      this.introspection,
-    );
+    if (this.port == null) {
+      throw new Error(
+        "Error: port option in MetaTest config should be set to 'true'",
+      );
+    }
+    const cmd = ["deploy", "-f", path, "--target", "dev", "--allow-dirty"];
 
-    if (engine == null) {
-      throw response.failure!;
+    cmd.push("--gate", `http://localhost:${this.port}`);
+
+    if (opts.prefix != null) {
+      cmd.push("--prefix", opts.prefix);
     }
 
-    return engine;
+    if (opts.typegraph != null) {
+      cmd.push("--typegraph", opts.typegraph);
+    }
+
+    for (const [key, value] of Object.entries(opts.secrets ?? {})) {
+      cmd.push("--secret", `${key}=${value}`);
+    }
+
+    const { stdout, stderr } = await this.meta(cmd);
+
+    console.log("STDOUT>");
+    console.log(stdout);
+    console.log("STDERR>");
+    console.log(stderr);
+
+    const newTypegraphList = await this.typegates.next().register.list();
+
+    const newTypegraph = newTypegraphList.find((e) =>
+      !oldTypegraphList.includes(e)
+    );
+    // what for redeploy?
+    if (newTypegraph == null) {
+      throw new Error("No new typegraph");
+    }
+
+    if (opts.typegraph != null && opts.typegraph != newTypegraph.name) {
+      throw new Error(
+        `Expected typegraph ${opts.typegraph}, got ${newTypegraph.name}`,
+      );
+    }
+
+    return newTypegraph;
+
+    // const tgString = await this.serialize(path, opts);
+    // const tgJson = await TypeGraph.parseJson(tgString);
+    //
+    // // for convience, automatically prefix secrets
+    // const secrets = opts.secrets ?? {};
+    // const { engine, response } = await this.typegates.next().pushTypegraph(
+    //   tgJson,
+    //   secrets,
+    //   this.introspection,
+    // );
+    //
+    // if (engine == null) {
+    //   throw response.failure!;
+    // }
+    //
+    // return engine;
   }
 
   async engineFromDeployed(tgString: string): Promise<QueryEngine> {
@@ -414,9 +466,14 @@ export const test = ((o, fn): void => {
         );
       }
 
+      const tempDir = await Deno.makeTempDir({
+        prefix: "typegate-test-",
+        dir: config.tmp_dir,
+      });
+
       const typegates = await Promise.all(
         Array.from({ length: replicas }).map((_) =>
-          Typegate.init(opts.syncConfig ?? null)
+          Typegate.init(opts.syncConfig ?? null, null, tempDir)
         ),
       );
 
@@ -436,7 +493,12 @@ export const test = ((o, fn): void => {
         new TypegateManager(typegates),
         introspection,
         opts.port != null,
+        tempDir,
       );
+
+      mt.disposables.defer(async () => {
+        await Deno.remove(tempDir, { recursive: true });
+      });
 
       if (opts.teardown != null) {
         mt.disposables.defer(opts.teardown);

@@ -32,7 +32,10 @@ Meta.test(
     systemTypegraphs: true,
   },
   async (t) => {
-    const e = await t.engineFromTgDeployPython("runtimes/deno/deno.py", cwd);
+    const e = await t.engineFromTgDeployPython(
+      "runtimes/deno/deploy_deno.py",
+      cwd,
+    );
 
     await t.should("work on the default worker", async () => {
       await gql`
@@ -117,7 +120,10 @@ Meta.test(
     systemTypegraphs: true,
   },
   async (t) => {
-    const e = await t.engineFromTgDeployPython("runtimes/deno/deno.py", cwd);
+    const e = await t.engineFromTgDeployPython(
+      "runtimes/deno/deploy_deno.py",
+      cwd,
+    );
 
     await t.should("success for allowed network access", async () => {
       await gql`

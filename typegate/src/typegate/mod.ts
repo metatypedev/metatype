@@ -38,6 +38,7 @@ import introspectionJson from "../typegraphs/introspection.json" with {
 import { ArtifactService } from "../services/artifact_service.ts";
 import { ArtifactStore } from "./artifacts/mod.ts";
 import { SyncConfig } from "../sync/config.ts";
+// TODO move from tests
 import { MemoryRegister } from "test-utils/memory_register.ts";
 import { NoLimiter } from "test-utils/no_limiter.ts";
 import { TypegraphStore } from "../sync/typegraph.ts";
@@ -80,6 +81,7 @@ export class Typegate implements AsyncDisposable {
   static async init(
     syncConfig: SyncConfig | null = null,
     customRegister: Register | null = null,
+    tmpDir = config.tmp_dir,
   ): Promise<Typegate> {
     if (syncConfig == null) {
       logger.warn("Entering no-sync mode...");
@@ -90,7 +92,7 @@ export class Typegate implements AsyncDisposable {
       await using stack = new AsyncDisposableStack();
 
       const register = customRegister ?? new MemoryRegister();
-      const artifactStore = await createLocalArtifactStore(config.tmp_dir);
+      const artifactStore = await createLocalArtifactStore(tmpDir);
 
       stack.use(register);
       stack.use(artifactStore);
@@ -100,6 +102,7 @@ export class Typegate implements AsyncDisposable {
         new NoLimiter(),
         artifactStore,
         null,
+        tmpDir,
         stack.move(),
       );
     } else {
@@ -115,7 +118,7 @@ export class Typegate implements AsyncDisposable {
       stack.use(limiter);
 
       const artifactStore = await createSharedArtifactStore(
-        config.tmp_dir,
+        tmpDir,
         syncConfig,
       );
       stack.use(artifactStore);
@@ -125,6 +128,7 @@ export class Typegate implements AsyncDisposable {
         limiter,
         artifactStore,
         syncConfig,
+        tmpDir,
         stack.move(),
       );
 
@@ -154,6 +158,7 @@ export class Typegate implements AsyncDisposable {
     private limiter: RateLimiter,
     public artifactStore: ArtifactStore,
     public syncConfig: SyncConfig | null = null,
+    public tmpDir: string,
     private disposables: AsyncDisposableStack,
   ) {
     this.#onPush((tg) => Promise.resolve(upgradeTypegraph(tg)));
@@ -341,14 +346,45 @@ export class Typegate implements AsyncDisposable {
       enableIntrospection,
     );
 
+    const oldArtifacts = new Set(
+      Object.values(this.register.get(name)?.tg.tg.meta.artifacts ?? {})
+        .map((m) => m.hash),
+    );
+
     logger.info(`Registering engine '${name}'`);
     await this.register.add(engine);
+
+    const newArtifacts = new Set(
+      Object.values(engine.tg.tg.meta.artifacts)
+        .map((m) => m.hash),
+    );
+
+    await this.artifactStore.updateRefCounts(
+      newArtifacts,
+      oldArtifacts,
+    );
 
     return {
       name,
       engine,
       response: pushResponse,
     };
+  }
+
+  async removeTypegraph(name: string) {
+    const engine = this.register.get(name);
+    if (!engine) {
+      throw new Error(`Engine '${name}' not found`);
+    }
+
+    await this.register.remove(name);
+
+    const artifacts = new Set(
+      Object.values(engine.tg.tg.meta.artifacts)
+        .map((m) => m.hash),
+    );
+    await this.artifactStore.updateRefCounts(new Set(), artifacts);
+    await this.artifactStore.runArtifactGC();
   }
 
   async initQueryEngine(

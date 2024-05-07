@@ -209,7 +209,7 @@ export class TypeGateRuntime extends Runtime {
       if (SystemTypegraph.check(name)) {
         throw new Error(`Typegraph ${name} cannot be removed`);
       }
-      await this.typegate.register.remove(name);
+      await this.typegate.removeTypegraph(name);
     }
     return true;
   };

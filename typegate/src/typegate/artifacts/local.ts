@@ -7,6 +7,7 @@ import {
   ArtifactMeta,
   ArtifactPersistence,
   ArtifactStore,
+  Dirs,
   RefCounter,
   UploadEndpointManager,
 } from "./mod.ts";
@@ -19,12 +20,6 @@ export interface UploadUrlStore {
   mapToMeta: Map<string, ArtifactMeta>;
   expirationQueue: [string, number][];
   expirationTimerId: number;
-}
-
-interface Dirs {
-  cache: string;
-  temp: string;
-  artifacts: string;
 }
 
 export class LocalArtifactPersistence implements ArtifactPersistence {
@@ -41,7 +36,7 @@ export class LocalArtifactPersistence implements ArtifactPersistence {
     });
   }
 
-  constructor(private dirs: Dirs) {}
+  constructor(public dirs: Dirs) {}
 
   async [Symbol.asyncDispose]() {
     await Deno.remove(this.dirs.cache, { recursive: true });
@@ -58,6 +53,7 @@ export class LocalArtifactPersistence implements ArtifactPersistence {
 
     const hash = hasher.digest("hex");
     const targetFile = resolve(this.dirs.cache, hash);
+    // TODO use logger
     console.log(`Persisting artifact to ${targetFile}`);
     await Deno.rename(tmpFile, targetFile);
 
@@ -188,7 +184,7 @@ class InMemoryRefCounter implements RefCounter {
     if (oldCount === newCount) return;
 
     this.#refCounts.set(key, newCount);
-    if (!this.#byRefCounts.get(oldCount)?.delete(key)) {
+    if (oldCount > 0 && !this.#byRefCounts.get(oldCount)?.delete(key)) {
       throw new Error("RefCountStore: inconsistent state");
     }
 
