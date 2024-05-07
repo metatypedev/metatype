@@ -9,8 +9,7 @@ Artifacts are uploaded according to the upload protocol.
 
 ## Reference count
 
-Artifacts are tracked using reference counts. After a successful upload, to each
-artifact is assigned a zero reference count.
+Artifacts are tracked using reference counts. After a successful upload, each artifact is assigned a zero reference count.
 
 When a typegraph is deployed for the first time, the reference counts associated
 to each of its artifacts are incremented.
