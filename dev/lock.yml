@@ -81,7 +81,7 @@ dev:
       '(\s*"@typegraph\/sdk"\s*:\s*"npm:@typegraph\/sdk@).+(",?)': METATYPE_VERSION
       '(\s*"@typegraph\/sdk\/"\s*:\s*"npm:/@typegraph\/sdk@).+(\/",?)': METATYPE_VERSION
   lock:
-    GHJK_VERSION: 423d38e
+    GHJK_VERSION: 2725af8
     GHJK_ACTION_VERSION: 2e8bbf084060a18828338a7cdd43fde6feb2a3cc
     PYTHON_VERSION: 3.8.18
     POETRY_VERSION: 1.7.0

@@ -9,7 +9,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "423d38e"
+  GHJK_VERSION: "2725af8"
   DENO_VERSION: "1.41.0"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
@@ -223,7 +223,7 @@ jobs:
         if: "! steps.check.outputs.has-permission"
         with:
           file: dev/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ matrix.platform }}
           push: false
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
           target: check

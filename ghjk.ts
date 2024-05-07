@@ -1,7 +1,7 @@
-export { ghjk } from "https://raw.github.com/metatypedev/ghjk/423d38e/mod.ts";
-import * as ghjk from "https://raw.github.com/metatypedev/ghjk/423d38e/mod.ts";
-import { thinInstallConfig } from "https://raw.github.com/metatypedev/ghjk/423d38e/utils/mod.ts";
-import * as ports from "https://raw.github.com/metatypedev/ghjk/423d38e/ports/mod.ts";
+export { ghjk } from "https://raw.github.com/metatypedev/ghjk/2725af8/mod.ts";
+import * as ghjk from "https://raw.github.com/metatypedev/ghjk/2725af8/mod.ts";
+import { thinInstallConfig } from "https://raw.github.com/metatypedev/ghjk/2725af8/utils/mod.ts";
+import * as ports from "https://raw.github.com/metatypedev/ghjk/2725af8/ports/mod.ts";
 import { dirname, resolve } from "https://deno.land/std/path/mod.ts";
 
 const PROTOC_VERSION = "v24.1";
