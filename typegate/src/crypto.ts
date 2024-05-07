@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { crypto } from "std/crypto/mod.ts";
-import { encodeBase64Url } from "std/encoding/base64url.ts";
+import { decodeBase64Url, encodeBase64Url } from "std/encoding/base64url.ts";
 import config from "./config.ts";
 import * as jwt from "jwt";
-import { decodeBase64 } from "std/encoding/base64.ts";
 
 export const sha1 = (text: string | Uint8Array): Promise<string> => {
   return crypto.subtle
@@ -61,7 +60,7 @@ export async function encrypt(message: string): Promise<string> {
 }
 
 export async function decrypt(payload: string): Promise<string> {
-  const buffer = decodeBase64(payload);
+  const buffer = decodeBase64Url(payload);
   const iv = buffer.slice(0, ivLength);
   const cipher = buffer.slice(ivLength);
   const data = await crypto.subtle.decrypt(
