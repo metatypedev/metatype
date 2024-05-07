@@ -9,6 +9,7 @@ use crate::mdk::*;
 use crate::*;
 
 use self::utils::Memo;
+use self::utils::TypeGenerated;
 
 mod types;
 mod utils;
@@ -136,8 +137,9 @@ fn get_module_infos(fun: &StubbedFunction, tg: &Typegraph) -> anyhow::Result<(St
 }
 
 struct RequiredObjects {
-    pub input_key: String,
-    pub output_key: String,
+    pub input_name: String,
+    pub output_name: String,
+    pub top_level_types: Vec<TypeGenerated>,
     pub memo: Memo,
 }
 
@@ -148,8 +150,8 @@ fn render_main(
     file_stem: &str,
 ) -> anyhow::Result<String> {
     let mut context = tera::Context::new();
-    context.insert("t_input", &required.input_key);
-    context.insert("t_output", &required.output_key);
+    context.insert("t_input", &required.input_name);
+    context.insert("t_output", &required.output_name);
     context.insert("fn_name", mod_name);
     context.insert("type_mod_name", file_stem);
     tera.render("main_template", &context).map_err(|e| e.into())
@@ -157,7 +159,7 @@ fn render_main(
 
 fn render_types(tera: &tera::Tera, required: &RequiredObjects) -> anyhow::Result<String> {
     let mut context = tera::Context::new();
-    let types = required
+    let classes = required
         .memo
         .types_in_order()
         .iter()
@@ -169,7 +171,15 @@ fn render_types(tera: &tera::Tera, required: &RequiredObjects) -> anyhow::Result
             }
         })
         .collect::<Vec<_>>();
+    let types = required
+        .top_level_types
+        .iter()
+        .filter_map(|gen| gen.def.clone())
+        .collect::<Vec<_>>();
+
+    context.insert("classes", &classes);
     context.insert("types", &types);
+
     tera.render("types_template", &context)
         .map_err(|e| e.into())
 }
@@ -183,13 +193,40 @@ fn gen_required_objects(
         let mut memo = Memo::new();
         let input = tg.types[data.input as usize].clone();
         let output = tg.types[data.output as usize].clone();
-        types::visit_type(tera, &mut memo, &input, tg)?;
-        types::visit_type(tera, &mut memo, &output, tg)?;
-        Ok(RequiredObjects {
-            input_key: input.base().title.to_pascal_case(),
-            output_key: output.base().title.to_pascal_case(),
-            memo,
-        })
+
+        let input_name = input.base().title.to_pascal_case();
+        let output_name = output.base().title.to_pascal_case();
+        println!("input {input_name} output {output_name}");
+
+        let _input_hint = types::visit_type(tera, &mut memo, &input, tg)?.hint;
+        let output_hint = types::visit_type(tera, &mut memo, &output, tg)?.hint;
+
+        match output {
+            TypeNode::Object { .. } => {
+                // output is a top level dataclass
+                Ok(RequiredObjects {
+                    input_name,
+                    output_name,
+                    top_level_types: vec![],
+                    memo,
+                })
+            }
+            _ => {
+                // output is a top level inline def
+                let output_name = format!("Type{output_name}");
+                let def = format!("{} = {}", output_name.clone(), output_hint);
+                let top_level_types = vec![TypeGenerated {
+                    hint: output_hint,
+                    def: Some(def),
+                }];
+                Ok(RequiredObjects {
+                    input_name,
+                    output_name,
+                    top_level_types,
+                    memo,
+                })
+            }
+        }
     } else {
         bail!("function node was expected")
     }

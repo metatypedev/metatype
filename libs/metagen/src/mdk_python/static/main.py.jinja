@@ -1,14 +1,27 @@
+import json
 {% if t_input != t_output %}
 from .{{ type_mod_name }}_types import Struct, {{ t_input }}, {{ t_output }}
 {% else %}
 from .{{ type_mod_name }}_types import Struct, {{ t_input }}
 {% endif %}
 
+
+
 def handle(inp: {{ t_input }}) -> {{ t_output }}:
     # Write your logic here
     raise Exception("not implemented")
 
-# Do not edit this function
+
+
+# Do not edit
+def __repr(value: any):
+    if isinstance(value, Struct):
+        return value.repr()
+    return value
+
 def {{ fn_name }}(raw_inp):
     inp: {{ t_input }} = Struct.new({{ t_input }}, raw_inp)
-    return handle(inp).repr()
+    out: {{ t_output }} = handle(inp)
+    if type(out) is list:
+        return [__repr(v) for v in out]
+    return __repr(out)

@@ -1,3 +1,4 @@
+from types import NoneType
 from typing import List, Union, get_origin, ForwardRef
 from dataclasses import dataclass, asdict, fields
 
@@ -5,27 +6,28 @@ FORWARD_REFS = {}
 
 class Struct:
     def try_new(dt_class, val: any):
+        # Object
         ftypes = {f.name: f.type for f in fields(dt_class)}
         attrs = {}
         for f in val:
-            serialized = False
             fval = val[f]
             ftype = ftypes[f]
-            if get_origin(ftype) == list:
-                hint = ftype.__args__[0]
-                klass = FORWARD_REFS[hint.__forward_arg__] if type(hint) is ForwardRef else hint
-                attrs[f] = [Struct.new(klass, v) for v in fval]
-                serialized = True
-            elif get_origin(ftype) is Union:
-                for variant in ftype.__args__:
-                    if not serialized:
-                        try:
-                            klass = FORWARD_REFS[variant.__forward_arg__]
-                            attrs[f] = Struct.try_new(klass, fval)
-                            serialized = True
-                        except:
-                            pass
-
+            serialized = False
+            # Union
+            if get_origin(ftype) is Union:
+                try:
+                    attrs[f] = Struct.try_union(ftype.__args__, fval)
+                    serialized = True
+                except Exception as _e:
+                    pass
+            # List
+            elif get_origin(ftype) is list:
+                try:
+                    attrs[f] = Struct.try_typed_list(ftype.__args__, fval)
+                    serialized = True
+                except Exception as _e:
+                    pass
+            # Any
             if not serialized:
                 if type(ftype) is str and ftype in FORWARD_REFS:
                     klass = FORWARD_REFS[ftype]
@@ -33,18 +35,52 @@ class Struct:
                 else:
                     attrs[f] = Struct.new(ftype, fval)
         return dt_class(**attrs)
+
+    def try_typed_list(tpe: any, items: any):
+        hint = tpe.__args__[0]
+        klass = FORWARD_REFS[hint.__forward_arg__] if type(hint) is ForwardRef else hint
+        return [Struct.new(klass, v) for v in items]
+
+    def try_union(variants: List[any], val: any):
+        done = False
+        errors = []
+        for variant in variants:
+            if not done:
+                try:
+                    if variant is NoneType:
+                        if val is None:
+                            return None
+                        else:
+                            continue
+                    if get_origin(variant) is list:
+                        if type(val) is list:
+                            return Struct.try_typed_list(variant, val)
+                        else:
+                            continue
+                    klass = FORWARD_REFS[variant.__forward_arg__]
+                    return Struct.try_new(klass, val)
+                except Exception as e:
+                    errors.append(str(e))
+        raise Exception("\n".join(errors))
+
+
     def new(dt_class: any, val: any):
         try:
             return Struct.try_new(dt_class, val)
         except:
             return val
+
     def repr(self):
         return asdict(self)
 
+{% for class in classes -%}
 
-{% for type in types -%}
+{{ class.def }}
+FORWARD_REFS['{{ class.hint }}'] = {{ class.hint }}
 
-{{ type.def }}
-FORWARD_REFS['{{ type.hint }}'] = {{ type.hint }}
+{% endfor -%}
 
+
+{% for def in types -%}
+{{ def }}
 {% endfor -%}
