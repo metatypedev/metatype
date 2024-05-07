@@ -35,7 +35,7 @@ typegraph update/undeployment?
 
 ### GC: Garbage collection
 
-Artifacts that has a zero reference count are removed.
+Artifacts that have a zero reference count are removed.
 
 **Triggers:** The GC is triggerred at the end of each typegraph
 deployment/undeployment process.
