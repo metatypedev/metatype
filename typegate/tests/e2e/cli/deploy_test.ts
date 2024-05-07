@@ -245,7 +245,7 @@ Meta.test({
   ]);
 
   await t.should(
-    "succeed have replaced and terminated the previous engine",
+    "have replaced and terminated the previous engine",
     async () => {
       await gql`
         query {

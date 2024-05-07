@@ -25,6 +25,7 @@
     "ajv": "https://esm.sh/ajv@8.12.0?pin=v131",
     "@typegraph/sdk": "npm:@typegraph/sdk@0.3.7-0",
     "@typegraph/sdk/": "npm:/@typegraph/sdk@0.3.7-0/",
+    "@typegate/": "./src/",
     "test-utils/": "./tests/utils/",
     "dax": "https://deno.land/x/dax@0.39.2/mod.ts",
     "dispose": "https://deno.land/x/dispose@1.1.0/mod.ts"
