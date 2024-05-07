@@ -9,8 +9,7 @@ Artifacts are uploaded according to the upload protocol.
 
 ## Reference count
 
-Artifacts are tracked using reference counts. After a successful upload, to each
-artifact is assigned a zero reference count.
+Artifacts are tracked using reference counts. After a successful upload, each artifact is assigned a zero reference count.
 
 When a typegraph is deployed for the first time, the reference counts associated
 to each of its artifacts are incremented.
@@ -36,7 +35,7 @@ typegraph update/undeployment?
 
 ### GC: Garbage collection
 
-Artifacts that has a zero reference count are removed.
+Artifacts that have a zero reference count are removed.
 
 **Triggers:** The GC is triggerred at the end of each typegraph
 deployment/undeployment process.
