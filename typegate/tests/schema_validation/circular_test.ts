@@ -10,8 +10,6 @@ const cwd = path.join(testDir, "schema_validation");
 Meta.test(
   {
     name: "circular test",
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
     const tgPath = "schema_validation/circular.py";

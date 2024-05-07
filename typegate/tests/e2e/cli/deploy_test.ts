@@ -77,8 +77,6 @@ async function deploy(
 
 Meta.test({
   name: "meta deploy: fails migration for new columns without default value",
-  port: true,
-  systemTypegraphs: true,
 }, async (t) => {
   const schema = randomSchema();
   const secrets = {
@@ -137,8 +135,6 @@ Meta.test({
 
 Meta.test({
   name: "meta deploy: succeeds migration for new columns with default value",
-  port: true,
-  systemTypegraphs: true,
 }, async (t) => {
   const port = t.port!;
   const schema = randomSchema();
@@ -186,8 +182,6 @@ Meta.test({
 
 Meta.test({
   name: "cli:deploy - automatic migrations",
-  systemTypegraphs: true,
-  port: true,
 
   gitRepo: {
     content: {
@@ -285,8 +279,6 @@ Meta.test({
 
 Meta.test({
   name: "cli:deploy - with prefix",
-  systemTypegraphs: true,
-  port: true,
 
   gitRepo: {
     content: {

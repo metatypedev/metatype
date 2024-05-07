@@ -8,8 +8,6 @@ import { assert, assertFalse } from "std/assert/mod.ts";
 
 Meta.test({
   name: "Upload protocol",
-  port: true,
-  systemTypegraphs: true,
 }, async (t) => {
   const e = await t.engine("runtimes/deno/deno.py");
   const artifacts = e.tg.tg.meta.artifacts;
