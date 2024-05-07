@@ -20,11 +20,11 @@ pub struct MdkPythonGenConfig {
     pub base: crate::config::MdkGeneratorConfigBase,
 }
 
-pub struct PythonGenerator {
+pub struct Generator {
     config: MdkPythonGenConfig,
 }
 
-impl PythonGenerator {
+impl Generator {
     pub const INPUT_TG: &'static str = "tg_name";
     pub fn new(config: MdkPythonGenConfig) -> Result<Self, garde::Report> {
         use garde::Validate;
@@ -33,7 +33,7 @@ impl PythonGenerator {
     }
 }
 
-impl crate::Plugin for PythonGenerator {
+impl crate::Plugin for Generator {
     fn bill_of_inputs(&self) -> HashMap<String, GeneratorInputOrder> {
         [(
             Self::INPUT_TG.to_string(),
@@ -73,7 +73,7 @@ impl crate::Plugin for PythonGenerator {
         tera.add_raw_template("types_template", include_str!("static/types.py.jinja"))?;
         tera.add_raw_template("struct_template", include_str!("static/struct.py.jinja"))?;
 
-        let stubbed_funs = filter_stubbed_funcs(tg, &["python_wasi".to_string()])?;
+        let stubbed_funs = filter_stubbed_funcs(tg, &["python".to_string()])?;
         for fun in &stubbed_funs {
             let (mod_name, script_path) = get_module_infos(fun, tg)?;
             if let Some(file_stem) = script_path.file_stem().map(|v| v.to_str()).unwrap() {
