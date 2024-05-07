@@ -63,8 +63,7 @@ export async function handleGraphQL(
     const verbose = !isIntrospection;
 
     if (verbose) {
-      logger.info("———");
-      logger.info("op:", operationName);
+      logger.info("op: {}", operationName);
     }
 
     const startTime = performance.now();
@@ -114,8 +113,12 @@ export async function handleGraphQL(
         Object.keys(context).length === 0 ? 401 : 403,
       );
     } else {
-      console.error(e);
-      logger.error(`request err: ${e}`);
+      logger.error(`request err: ${Deno.inspect(e)}`);
+      if (e.cause) {
+        logger.error(
+          Deno.inspect(e.cause, { strAbbreviateSize: 1024, depth: 10 }),
+        );
+      }
       return jsonError(e.message, headers, 400);
     }
   }

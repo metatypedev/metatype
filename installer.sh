@@ -123,22 +123,3 @@ Or moving the executable to another directory in your PATH:
 $ sudo mv $EXE /usr/local/bin
 EOF
 fi
-
-WASMEDGE_VERSION="0.13.5"
-
-cat <<EOF
-
-NOTE!: libwasmedge.so is required to work with the meta program.
-If not installed, consider using the following command to install it...
-
-  \$WASMEDGE_VERSION=$WASMEDGE_VERSION
-  curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v \$WASMEDGE_VERSION
-
-...and make sure the dynamic linker can find the library. 
-For example, if you installed in in the default location of "~/.wasmedge/lib", add that to \$LD_LIBRARY_PATH.
-
-More details on how to install wasmedge can be found at https://wasmedge.org/docs/start/install/ 
-
-Alternative builds of the meta cli that don't require libwasmedge are also availaible. 
-Consult https://metatype.dev/docs/reference/meta-cli for more details.
-EOF

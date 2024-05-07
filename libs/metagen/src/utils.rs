@@ -5,18 +5,14 @@ use crate::interlude::*;
 
 trait GenDest {}
 
+/// A generation destination analogous to a single file.
 pub struct GenDestBuf {
     pub buf: String,
 }
 impl GenDest for GenDestBuf {}
 
+/// A generation destination analogous to a directory.
 pub struct GenDestFs {
     pub files: HashMap<String, GenDestBuf>,
 }
 impl GenDest for GenDestFs {}
-
-trait Generate {
-    type Dest: GenDest;
-
-    fn generate(&self, dest: &mut Self::Dest) -> anyhow::Result<()>;
-}

@@ -35,6 +35,7 @@ pub fn op_wasmtime_wit(#[serde] input: WasmInput) -> Result<String> {
         .map(|v| serde_json::from_str::<serde_json::Value>(v).unwrap())
         .collect();
 
+    // TODO: share with wit_wire
     let engine = wasmtime::Engine::default();
     let mut store = wasmtime::Store::new(&engine, ());
 

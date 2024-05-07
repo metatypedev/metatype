@@ -33,7 +33,6 @@ async function readOutput(p: Deno.ChildProcess): Promise<ShellOutput> {
     })(),
   ]);
   const status = await p.status;
-  console.log(status);
   return { stdout, stderr, code: status.code };
 }
 

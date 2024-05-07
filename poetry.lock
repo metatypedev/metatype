@@ -50,13 +50,13 @@ files = [
 
 [[package]]
 name = "exceptiongroup"
-version = "1.2.0"
+version = "1.2.1"
 description = "Backport of PEP 654 (exception groups)"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "exceptiongroup-1.2.0-py3-none-any.whl", hash = "sha256:4bfd3996ac73b41e9b9628b04e079f193850720ea5945fc96a08633c66912f14"},
-    {file = "exceptiongroup-1.2.0.tar.gz", hash = "sha256:91f5c769735f051a4290d52edd0858999b57e5876e9f85937691bd4c9fa3ed68"},
+    {file = "exceptiongroup-1.2.1-py3-none-any.whl", hash = "sha256:5258b9ed329c5bbdd31a309f53cbfb0b155341807f6ff7606a1e801a891b29ad"},
+    {file = "exceptiongroup-1.2.1.tar.gz", hash = "sha256:a4785e48b045528f5bfe627b6ad554ff32def154f42372786903b7abcfe1aa16"},
 ]
 
 [package.extras]
@@ -128,6 +128,24 @@ files = [
     {file = "idna-3.7-py3-none-any.whl", hash = "sha256:82fee1fc78add43492d3a1898bfa6d8a904cc97d8427f683ed8e798d07761aa0"},
     {file = "idna-3.7.tar.gz", hash = "sha256:028ff3aadf0609c1fd278d8ea3089299412a7a8b9bd005dd08b9f8285bcb5cfc"},
 ]
+
+[[package]]
+name = "importlib-resources"
+version = "6.4.0"
+description = "Read resources from Python packages"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "importlib_resources-6.4.0-py3-none-any.whl", hash = "sha256:50d10f043df931902d4194ea07ec57960f66a80449ff867bfe782b4c486ba78c"},
+    {file = "importlib_resources-6.4.0.tar.gz", hash = "sha256:cdb2b453b8046ca4e3798eb1d84f3cce1446a0e8e7b5ef4efb600f19fc398145"},
+]
+
+[package.dependencies]
+zipp = {version = ">=3.1.0", markers = "python_version < \"3.10\""}
+
+[package.extras]
+docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (<7.2.5)", "sphinx (>=3.5)", "sphinx-lint"]
+testing = ["jaraco.test (>=5.4)", "pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy", "pytest-ruff (>=0.2.1)", "zipp (>=3.17)"]
 
 [[package]]
 name = "python-box"
@@ -285,7 +303,7 @@ files = [
 [[package]]
 name = "typegraph"
 version = "0.3.7-0"
-description = "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are."
+description = "Declarative API development platform. Build backend components with WASM/Typescript/Python, no matter where and how your (legacy) systems are."
 optional = false
 python-versions = ">=3.8,<4.0"
 files = []
@@ -295,7 +313,7 @@ develop = true
 astunparse = "^1.6.3"
 python-box = "^7.1.1"
 typing-extensions = "^4.8.0"
-wasmtime = "^18.0.2"
+wasmtime = "^20.0.0"
 
 [package.source]
 type = "directory"
@@ -314,18 +332,21 @@ files = [
 
 [[package]]
 name = "wasmtime"
-version = "18.0.2"
+version = "20.0.0"
 description = "A WebAssembly runtime powered by Wasmtime"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "wasmtime-18.0.2-py3-none-any.whl", hash = "sha256:49625d389ddd766f5416a1723a76a25473df1dbe6ad706902b7bdbfa549ec3df"},
-    {file = "wasmtime-18.0.2-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:190f182e51f7f0e5340a7ffeb01519eb759748872a2bb227c6b1c055cbee61ce"},
-    {file = "wasmtime-18.0.2-py3-none-macosx_11_0_arm64.whl", hash = "sha256:817c780eb506deaabe31cf23c5e9fe9ab9a1815bc0b805d292ec7502c495e10a"},
-    {file = "wasmtime-18.0.2-py3-none-manylinux1_x86_64.whl", hash = "sha256:30adbf2fb380aae2d7cfd18c6f14d7633d62a8204caf185b7557b2364533268d"},
-    {file = "wasmtime-18.0.2-py3-none-manylinux2014_aarch64.whl", hash = "sha256:c43d281df87af4139735aa62950d855499f58f72778b0e7a79488b3b8807d108"},
-    {file = "wasmtime-18.0.2-py3-none-win_amd64.whl", hash = "sha256:7ccc88a9ee2bb601dbd1dc065a22af7b2f1a85c39b1aa8ebfb8ea57f78157d35"},
+    {file = "wasmtime-20.0.0-py3-none-any.whl", hash = "sha256:6d9806e34c7cebe3d2ff4ba58a0c7db3648d4d952a0b6821aed4c4d966a4b312"},
+    {file = "wasmtime-20.0.0-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:2ae53f5d84f071f42bf7c05da3bfe4a18e0b5ad801931188bff2e5092137213e"},
+    {file = "wasmtime-20.0.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:3f9ea16cf19039c5dc11d1f9a8f024ebb0d4c6cd1cbb2d0889797326f8ba5c06"},
+    {file = "wasmtime-20.0.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:137c92cfde23b9ed18a85d5d1a1bfa844f1322c3bd80bc36c3b5adc3322f4a6e"},
+    {file = "wasmtime-20.0.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:69505f8c1f42815c3784f77df5b3be9f4742ede56299a0f2d7d71083893e855d"},
+    {file = "wasmtime-20.0.0-py3-none-win_amd64.whl", hash = "sha256:8ddb958a1b6eed88e56ec4aaae9478c273bed2e4fcd3331f29fda8d9d12def3d"},
 ]
+
+[package.dependencies]
+importlib-resources = ">=5.10"
 
 [package.extras]
 testing = ["coverage", "pycparser", "pytest", "pytest-mypy"]
@@ -343,6 +364,21 @@ files = [
 
 [package.extras]
 test = ["pytest (>=6.0.0)", "setuptools (>=65)"]
+
+[[package]]
+name = "zipp"
+version = "3.18.1"
+description = "Backport of pathlib-compatible object wrapper for zip files"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "zipp-3.18.1-py3-none-any.whl", hash = "sha256:206f5a15f2af3dbaee80769fb7dc6f249695e940acca08dfb2a4769fe61e538b"},
+    {file = "zipp-3.18.1.tar.gz", hash = "sha256:2884ed22e7d8961de1c9a05142eb69a247f120291bc0206a00a7642f09b5b715"},
+]
+
+[package.extras]
+docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
+testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy", "pytest-ruff (>=0.2.1)"]
 
 [metadata]
 lock-version = "2.0"

@@ -368,13 +368,24 @@ interface runtimes {
     create-random-mat: func(base: base-materializer, data: materializer-random) -> result<materializer-id, error>;
 
     // wasm
-    record materializer-wasm {
-        func-name: string,
+
+    record wasm-runtime-data {
         wasm-artifact: string,
     }
 
-    register-wasm-runtime: func() -> result<runtime-id, error>;
-    from-wasm-module: func(base: base-materializer, data: materializer-wasm) -> result<materializer-id, error>;
+    record materializer-wasm-reflected-func {
+        func-name: string,
+    }
+
+    register-wasm-reflected-runtime: func(data: wasm-runtime-data) -> result<runtime-id, error>;
+    from-wasm-reflected-func: func(base: base-materializer, data: materializer-wasm-reflected-func) -> result<materializer-id, error>;
+
+    record materializer-wasm-wire-handler {
+        func-name: string,
+    }
+
+    register-wasm-wire-runtime: func(data: wasm-runtime-data) -> result<runtime-id, error>;
+    from-wasm-wire-handler: func(base: base-materializer, data: materializer-wasm-wire-handler) -> result<materializer-id, error>;
 
     // prisma
     record prisma-runtime-data {

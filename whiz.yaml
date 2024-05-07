@@ -3,6 +3,7 @@ env:
   CLICOLOR_FORCE: "1"
   RUST_LOG: "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off,error"
   NPM_CONFIG_REGISTRY: http://localhost:4873
+  WASMTIME_BACKTRACE_DETAILS: "1"
 
 gate1: &tp
   watch:
@@ -104,13 +105,13 @@ setup:
     - typegraph/python/pyproject.toml
     - website/package.json
   env:
-    GHJK_VERSION: "423d38e"
+    GHJK_VERSION: "2725af8"
   command: |
     set -e
     curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh |  bash
     . $(ghjk print share-dir-path)/env.sh
     ghjk p sync
-    echo "exec ./. to refresh env vars"
-    [ -d .venv ] || python3 -m venv .venv
+    echo "cd ./. to refresh env vars"
+    [ -d .venv ] || python3 -m venv .venv && echo "virtual env created"
     poetry install --sync --no-root
     yes | pnpm install --recursive --filter ./website/... --filter ./typegraph/node/...

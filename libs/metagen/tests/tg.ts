@@ -3,7 +3,7 @@ import {
   t,
   typegraph,
 } from "../../../typegraph/node/sdk/dist/index.js";
-import { RandomRuntime } from "../../../typegraph/node/sdk/dist/runtimes/random.js";
+import { WasmRuntime } from "../../../typegraph/node/sdk/dist/runtimes/wasm.js";
 
 typegraph(
   {
@@ -12,6 +12,8 @@ typegraph(
       const obj = t.struct({
         str: t.string(),
         int: t.integer(),
+        float: t.float(),
+        boolean: t.boolean(),
         file: t.file(),
         opt: t.optional(t.string()),
         either: t.either([
@@ -23,12 +25,16 @@ typegraph(
           t.struct({ b: t.string() }),
         ]),
         list: t.list(t.string()),
-      });
+      }).rename("MyObj");
 
-      const rand_rt = new RandomRuntime({});
+      const wasm = WasmRuntime.wire("placeholder");
       g.expose(
         {
-          random: rand_rt.gen(obj),
+          my_faas: wasm.handler(
+            obj,
+            obj,
+            { func: "my_faas" },
+          ).rename("my_faas"),
         },
         Policy.public(),
       );
