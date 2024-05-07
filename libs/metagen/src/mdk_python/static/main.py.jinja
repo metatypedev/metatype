@@ -1,7 +1,7 @@
 {% if t_input != t_output %}
-from {{ type_mod_name }}_types import Struct, {{ t_input }}, {{ t_output }}
+from .{{ type_mod_name }}_types import Struct, {{ t_input }}, {{ t_output }}
 {% else %}
-from {{ type_mod_name }}_types import Struct, {{ t_input }}
+from .{{ type_mod_name }}_types import Struct, {{ t_input }}
 {% endif %}
 
 def handle(inp: {{ t_input }}) -> {{ t_output }}:

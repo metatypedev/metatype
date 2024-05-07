@@ -1,25 +1,50 @@
-import json
-from typing import List, Dict, Optional, Union
+from typing import List, Union, get_origin, ForwardRef
 from dataclasses import dataclass, asdict, fields
 
+FORWARD_REFS = {}
+
 class Struct:
-    def new(dt_class, val: any):
-        try:
-            ftypes = {f.name: f.type for f in fields(dt_class)}
-            attrs = {}
-            for f in val:
-                fval = val[f]
-                if type(fval) is list:
-                    print(f"hint {ftypes[f].__args__[0]}")
-                    attrs[f] = [Struct.new(ftypes[f].__args__[0], v) for v in fval]
+    def try_new(dt_class, val: any):
+        ftypes = {f.name: f.type for f in fields(dt_class)}
+        attrs = {}
+        for f in val:
+            serialized = False
+            fval = val[f]
+            ftype = ftypes[f]
+            if get_origin(ftype) == list:
+                hint = ftype.__args__[0]
+                klass = FORWARD_REFS[hint.__forward_arg__] if type(hint) is ForwardRef else hint
+                attrs[f] = [Struct.new(klass, v) for v in fval]
+                serialized = True
+            elif get_origin(ftype) is Union:
+                for variant in ftype.__args__:
+                    if not serialized:
+                        try:
+                            klass = FORWARD_REFS[variant.__forward_arg__]
+                            attrs[f] = Struct.try_new(klass, fval)
+                            serialized = True
+                        except:
+                            pass
+
+            if not serialized:
+                if type(ftype) is str and ftype in FORWARD_REFS:
+                    klass = FORWARD_REFS[ftype]
+                    attrs[f] = Struct.new(klass, fval)
                 else:
-                    attrs[f] = Struct.new(ftypes[f], val[f])
-            return dt_class(**attrs)
+                    attrs[f] = Struct.new(ftype, fval)
+        return dt_class(**attrs)
+    def new(dt_class: any, val: any):
+        try:
+            return Struct.try_new(dt_class, val)
         except:
             return val
     def repr(self):
         return asdict(self)
 
+
 {% for type in types -%}
-{{ type }}
-{%- endfor -%}
+
+{{ type.def }}
+FORWARD_REFS['{{ type.hint }}'] = {{ type.hint }}
+
+{% endfor -%}

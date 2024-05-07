@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use indexmap::IndexMap;
+use serde::Serialize;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct TypeGenerated {
     /// Type representation: int, str, class name, ..
     pub hint: String,

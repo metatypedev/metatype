@@ -161,7 +161,13 @@ fn render_types(tera: &tera::Tera, required: &RequiredObjects) -> anyhow::Result
         .memo
         .types_in_order()
         .iter()
-        .map(|repr| repr.def.to_owned())
+        .filter_map(|gen| {
+            if gen.def.is_some() {
+                Some(serde_json::to_value(gen.to_owned()).unwrap())
+            } else {
+                None
+            }
+        })
         .collect::<Vec<_>>();
     context.insert("types", &types);
     tera.render("types_template", &context)

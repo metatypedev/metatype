@@ -34,7 +34,7 @@ pub fn visit_type(
         TypeNode::Optional { data, .. } => {
             let item = &tg.types[data.item as usize];
             let item_hint = visit_type(tera, memo, item, tg)?.hint;
-            format!("Optional[{item_hint}]")
+            format!("Union[{item_hint}, None]")
         }
         TypeNode::List { data, .. } => {
             let item = &tg.types[data.items as usize];
