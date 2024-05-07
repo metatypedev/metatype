@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //!  Sample yaml:
+//!  ```yaml
 //!  generators: # this section only required when we support external generators
 //!     - mdk_rust
 //!     - mdk_ts
@@ -14,6 +15,7 @@
 //!             typegraph: console
 //!             path: ./mats/gen
 //!             annotate_debug: true
+//! ```
 use crate::interlude::*;
 
 #[derive(Deserialize, Debug, Clone)]

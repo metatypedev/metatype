@@ -28,7 +28,7 @@ use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreType
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
     MaterializerHttpRequest, PrismaLinkData, PrismaMigrationOperation, PrismaRuntimeData,
-    RandomRuntimeData, TemporalOperationData, TemporalRuntimeData,
+    RandomRuntimeData, TemporalOperationData, TemporalRuntimeData, WasmRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
@@ -57,7 +57,8 @@ pub enum Runtime {
     Http(Rc<HttpRuntimeData>),
     Python,
     Random(Rc<RandomRuntimeData>),
-    Wasm,
+    WasmWire(Rc<WasmRuntimeData>),
+    WasmReflected(Rc<WasmRuntimeData>),
     Prisma(Rc<PrismaRuntimeData>, Rc<RefCell<PrismaContext>>),
     PrismaMigration,
     Temporal(Rc<TemporalRuntimeData>),
@@ -175,7 +176,7 @@ pub enum MaterializerData {
     Http(Rc<MaterializerHttpRequest>),
     Python(Rc<PythonMaterializer>),
     Random(Rc<RandomMaterializer>),
-    WasmEdge(Rc<WasmMaterializer>),
+    Wasm(Rc<WasmMaterializer>),
     Prisma(Rc<PrismaMaterializer>),
     PrismaMigration(PrismaMigrationOperation),
     Temporal(Rc<TemporalMaterializer>),
@@ -355,15 +356,39 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         Ok(Store::register_materializer(mat))
     }
 
-    fn register_wasm_runtime() -> Result<wit::RuntimeId, wit::Error> {
-        Ok(Store::register_runtime(Runtime::Wasm))
+    fn register_wasm_reflected_runtime(
+        data: wit::WasmRuntimeData,
+    ) -> Result<wit::RuntimeId, wit::Error> {
+        Ok(Store::register_runtime(Runtime::WasmReflected(data.into())))
     }
 
-    fn from_wasm_module(
+    fn register_wasm_wire_runtime(
+        data: wit::WasmRuntimeData,
+    ) -> Result<wit::RuntimeId, wit::Error> {
+        Ok(Store::register_runtime(Runtime::WasmWire(data.into())))
+    }
+
+    fn from_wasm_reflected_func(
         base: wit::BaseMaterializer,
-        data: wit::MaterializerWasm,
+        data: wit::MaterializerWasmReflectedFunc,
     ) -> Result<wit::MaterializerId, wit::Error> {
-        let mat = Materializer::wasm(base.runtime, WasmMaterializer::Module(data), base.effect);
+        let mat = Materializer::wasm(
+            base.runtime,
+            WasmMaterializer::ReflectedFunc(data),
+            base.effect,
+        );
+        Ok(Store::register_materializer(mat))
+    }
+
+    fn from_wasm_wire_handler(
+        base: wit::BaseMaterializer,
+        data: wit::MaterializerWasmWireHandler,
+    ) -> Result<wit::MaterializerId, wit::Error> {
+        let mat = Materializer::wasm(
+            base.runtime,
+            WasmMaterializer::WireHandler(data),
+            base.effect,
+        );
         Ok(Store::register_materializer(mat))
     }
 
@@ -390,12 +415,12 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         prisma_op!(runtime, model, Aggregate, "aggregate")
     }
 
-    fn prisma_group_by(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
-        prisma_op!(runtime, model, GroupBy, "groupBy")
-    }
-
     fn prisma_count(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(runtime, model, Count, "count")
+    }
+
+    fn prisma_group_by(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
+        prisma_op!(runtime, model, GroupBy, "groupBy")
     }
 
     fn prisma_create_one(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {

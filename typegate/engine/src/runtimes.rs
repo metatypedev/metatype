@@ -3,6 +3,6 @@
 
 pub mod deno_rt;
 pub mod prisma;
-pub mod python;
 pub mod temporal;
 pub mod wasm;
+pub mod wit_wire;

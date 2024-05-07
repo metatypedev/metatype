@@ -11,10 +11,13 @@ import {
   RefCounter,
   UploadEndpointManager,
 } from "./mod.ts";
+import { getLogger } from "../../log.ts";
 import { createHash } from "node:crypto";
 import * as jwt from "jwt";
 import { join } from "std/path/join.ts";
 import { exists } from "std/fs/exists.ts";
+
+const logger = getLogger(import.meta);
 
 export interface UploadUrlStore {
   mapToMeta: Map<string, ArtifactMeta>;
@@ -53,8 +56,7 @@ export class LocalArtifactPersistence implements ArtifactPersistence {
 
     const hash = hasher.digest("hex");
     const targetFile = resolve(this.dirs.cache, hash);
-    // TODO use logger
-    console.log(`Persisting artifact to ${targetFile}`);
+    logger.info(`persisting artifact to ${targetFile}`);
     await Deno.rename(tmpFile, targetFile);
 
     return hash;

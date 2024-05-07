@@ -1646,7 +1646,7 @@
             "name": {
               "type": "string",
               "enum": [
-                "python_wasi"
+                "python"
               ]
             },
             "data": {
@@ -1754,7 +1754,25 @@
             "name": {
               "type": "string",
               "enum": [
-                "wasm"
+                "wasm_reflected"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/WasmRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "wasm_wire"
               ]
             },
             "data": {
@@ -2293,12 +2311,12 @@
     },
     "WasmRuntimeData": {
       "type": "object",
+      "required": [
+        "wasm_artifact"
+      ],
       "properties": {
-        "config": {
-          "type": [
-            "string",
-            "null"
-          ]
+        "wasm_artifact": {
+          "type": "string"
         }
       }
     },
@@ -2784,10 +2802,10 @@
       "title": "WasmMatData",
       "type": "object",
       "required": [
-        "wasmArtifact"
+        "opName"
       ],
       "properties": {
-        "wasmArtifact": {
+        "opName": {
           "type": "string"
         }
       }
