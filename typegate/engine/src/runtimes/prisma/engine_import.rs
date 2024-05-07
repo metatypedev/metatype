@@ -1,4 +1,4 @@
-// no-auto-license-header
+// no-auto-license-header | @generated (pre-commit doesn't support two headers)
 
 // Copyright 2019 Prisma Data, Inc.
 // Modifications copyright Metatype OÜ

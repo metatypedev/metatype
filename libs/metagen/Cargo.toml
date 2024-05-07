@@ -16,6 +16,7 @@ garde = { version = "0.18", features = ["derive"] }
 heck = "0.5.0-rc.1"
 regex.workspace = true
 once_cell.workspace = true
+pretty_assertions = "1.4.0"
 # indoc.workspace = true
 tera = { version = "1", default-features = false }
 

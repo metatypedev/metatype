@@ -3,7 +3,7 @@
 
 use crate::interlude::*;
 use crate::{
-    runtimes::{deno_rt, prisma, python::python_bindings, temporal, wasm},
+    runtimes::{deno_rt, prisma, temporal, wasm, wit_wire},
     typegraph, typescript,
 };
 
@@ -30,16 +30,6 @@ deno_core::extension!(
         temporal::op_temporal_workflow_query,
         temporal::op_temporal_workflow_signal,
         temporal::op_temporal_workflow_describe,
-        python_bindings::op_register_virtual_machine,
-        python_bindings::op_unregister_virtual_machine,
-        python_bindings::op_register_lambda,
-        python_bindings::op_unregister_lambda,
-        python_bindings::op_apply_lambda,
-        python_bindings::op_register_def,
-        python_bindings::op_unregister_def,
-        python_bindings::op_apply_def,
-        python_bindings::op_register_module,
-        python_bindings::op_unregister_module,
         prisma::op_prisma_register_engine,
         prisma::op_prisma_unregister_engine,
         prisma::op_prisma_query,
@@ -50,7 +40,10 @@ deno_core::extension!(
         prisma::op_prisma_reset,
         prisma::op_unpack,
         prisma::op_archive,
-        deno_rt::op_deno_transform_typescript
+        deno_rt::op_deno_transform_typescript,
+        wit_wire::op_wit_wire_init,
+        wit_wire::op_wit_wire_handle,
+        wit_wire::op_wit_wire_destroy,
     ],
     // esm_entry_point = "ext:tg_metatype_ext/00_runtime.js",
     // esm = ["00_runtime.js"],

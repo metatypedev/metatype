@@ -34,10 +34,10 @@ try {
     debug: true,
   });
 
-  addEventListener("unhandledrejection", (e) => {
-    Sentry.captureException(e);
-    logger.error(e);
-    e.preventDefault();
+  addEventListener("unhandledrejection", (err) => {
+    Sentry.captureException(err);
+    logger.error(Deno.inspect(err));
+    err.preventDefault();
   });
 
   // init rust native libs
@@ -60,6 +60,6 @@ try {
 
   await server.finished;
 } catch (err) {
-  logger.error(err);
+  logger.error(Deno.inspect(err));
   throw err;
 }

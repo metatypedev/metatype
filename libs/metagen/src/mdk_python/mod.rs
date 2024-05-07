@@ -89,11 +89,17 @@ impl crate::Plugin for PythonGenerator {
                 let required = gen_required_objects(&tera, fun, tg)?;
                 out.insert(
                     base.join(format!("{file_stem}_types.py")),
-                    render_types(&tera, &required)?,
+                    GeneratedFile {
+                        contents: render_types(&tera, &required)?,
+                        overwrite: true,
+                    },
                 );
                 out.insert(
                     base.join(format!("{file_stem}.py")),
-                    render_main(&tera, &required, &mod_name, file_stem)?,
+                    GeneratedFile {
+                        contents: render_main(&tera, &required, &mod_name, file_stem)?,
+                        overwrite: false,
+                    },
                 );
             } else {
                 bail!("{} is not a valid file path", script_path.display())

@@ -15,7 +15,12 @@ repos:
       - id: check-merge-conflict
       - id: end-of-file-fixer
         # exclude all generated files
-        exclude: (.ghjk/.*|typegate/deno.lock|.*\.snap$|typegate/src/typegraphs/.*\.json|website/docs/reference/)
+        exclude: (?x)(
+          .ghjk/.*
+          |.*deno.lock
+          |.*\.snap$|typegate/src/typegraphs/.*\.json
+          |website/docs/reference/
+          |libs/pyrt_wit_wire/pyrt)
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.27.2
     hooks:
@@ -113,6 +118,7 @@ repos:
           - --license-filepath=dev/license-header-Elastic-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
+          - "--skip-license-insertion-comment=@generated"
         types_or:
           - rust
         files: ^(typegate|libs!(/metagen/.*))/

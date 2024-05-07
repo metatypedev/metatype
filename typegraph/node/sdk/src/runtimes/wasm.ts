@@ -7,36 +7,51 @@ import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import { Materializer, Runtime } from "./mod.js";
 import { fx } from "../index.js";
 
-interface WasmMat extends Materializer {
-  module: string;
-  funcMame: string;
+export class WasmRuntime extends Runtime {
+  static reflected(modulePath: string) {
+    return new WasmRuntimeReflected(modulePath);
+  }
+  static wire(modulePath: string) {
+    return new WasmRuntimeWire(modulePath);
+  }
+}
+
+interface ReflectedFuncWasmMat extends Materializer {
+  funcName: string;
   effect: Effect;
 }
 
-export class WasmRuntime extends Runtime {
-  constructor() {
-    super(runtimes.registerWasmRuntime());
+interface WireHandlerWasmMat extends Materializer {
+  funcName: string;
+  effect: Effect;
+}
+
+class WasmRuntimeWire extends WasmRuntime {
+  constructor(artifactPath: string) {
+    super(
+      runtimes.registerWasmWireRuntime({
+        wasmArtifact: artifactPath,
+      }),
+    );
   }
 
-  fromWasm<
+  handler<
     I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
-    { func, wasm, effect = fx.read() }: {
+    { func, effect = fx.read() }: {
       func: string;
-      wasm: string;
       effect?: Effect;
     },
-  ): t.Func<I, O, WasmMat> {
-    const matId = runtimes.fromWasmModule(
+  ): t.Func<I, O, WireHandlerWasmMat> {
+    const matId = runtimes.fromWasmWireHandler(
       {
         runtime: this._id,
         effect,
       },
       {
-        wasmArtifact: wasm,
         funcName: func,
       },
     );
@@ -44,8 +59,45 @@ export class WasmRuntime extends Runtime {
     return t.func(inp, out, {
       _id: matId,
       effect,
-      module: wasm,
-      funcMame: func,
+      funcName: func,
+    });
+  }
+}
+
+class WasmRuntimeReflected extends WasmRuntime {
+  constructor(artifactPath: string) {
+    super(
+      runtimes.registerWasmReflectedRuntime({
+        wasmArtifact: artifactPath,
+      }),
+    );
+  }
+
+  fromExport<
+    I extends t.Typedef = t.Typedef,
+    O extends t.Typedef = t.Typedef,
+  >(
+    inp: I,
+    out: O,
+    { func, effect = fx.read() }: {
+      func: string;
+      effect?: Effect;
+    },
+  ): t.Func<I, O, ReflectedFuncWasmMat> {
+    const matId = runtimes.fromWasmReflectedFunc(
+      {
+        runtime: this._id,
+        effect,
+      },
+      {
+        funcName: func,
+      },
+    );
+
+    return t.func(inp, out, {
+      _id: matId,
+      effect,
+      funcName: func,
     });
   }
 }

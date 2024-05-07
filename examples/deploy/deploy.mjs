@@ -22,7 +22,7 @@ const tg = await typegraph({
 }, (g) => {
   const deno = new DenoRuntime();
   const python = new PythonRuntime();
-  const wasm = new WasmRuntime();
+  const wasm = WasmRuntime.reflected("wasi/rust.wasm");
   const prisma = new PrismaRuntime("prisma", "POSTGRES");
   const pub = Policy.public();
   const student = t.struct(
@@ -58,14 +58,14 @@ const tg = await typegraph({
       {
         module: "scripts/python/say_hello.py",
         name: "sayHello",
-        deps: ["scripts/python/import_.py"]
+        deps: ["scripts/python/import_.py"],
       },
     ),
     // Wasm
     testWasmAdd: wasm.fromWasm(
       t.struct({ a: t.float(), b: t.float() }),
       t.integer(),
-      { wasm: "wasm/rust.wasm", func: "add" }
+      { wasm: "wasm/rust.wasm", func: "add" },
     ),
     // Prisma
     createStudent: prisma.create(student),
@@ -95,7 +95,7 @@ tgDeploy(tg, {
     ...artifactsConfig,
     // dir: "."
   },
-  typegraphPath: "./deploy.mjs"
+  typegraphPath: "./deploy.mjs",
 }).then(({ typegate }) => {
   // console.info(typegate);
   const selection = typegate?.data?.addTypegraph;

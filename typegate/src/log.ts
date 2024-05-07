@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { handlers, LevelName, Logger } from "std/log/mod.ts";
-import { basename } from "std/url/mod.ts";
+import { basename, dirname } from "std/url/mod.ts";
 import { extname } from "std/path/mod.ts";
 import { z } from "zod";
 import { deepMerge } from "std/collections/deep_merge.ts";
@@ -104,9 +104,7 @@ const consoleHandler = new handlers.ConsoleHandler(
           typeof arg === "string" ? arg : JSON.stringify(arg),
         );
       }
-      return `${log.datetime.toISOString()} ${log.levelName.padEnd(5)} ${
-        log.loggerName.padEnd(16)
-      } ${msg}`;
+      return `${log.datetime.toISOString()} [${log.levelName} ${log.loggerName}] ${msg}`;
     },
   },
 );
@@ -124,8 +122,9 @@ export function getLogger(
     return defaultLogger;
   }
   if (typeof name === "object") {
-    name = basename(name.url);
-    name = name.replace(extname(name), "");
+    const bname = basename(name.url);
+    const dname = basename(dirname(name.url));
+    name = `${dname}/${bname.replace(extname(bname), "")}`;
   }
   let logger = loggers.get(name);
   if (!logger) {
