@@ -177,6 +177,7 @@ class InMemoryRefCounter implements RefCounter {
     for (const key of garbage) {
       this.#refCounts.delete(key);
     }
+    this.#byRefCounts.delete(0);
     return Promise.resolve(garbage);
   }
 

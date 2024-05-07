@@ -137,8 +137,15 @@ export class ArtifactStore implements AsyncDisposable {
     }
     const garbage = await this.refCounter.takeGarbage();
 
-    // TODO error handling?
-    await Promise.all(garbage.map((hash) => this.persistence.delete(hash)));
+    const res = await Promise.allSettled(
+      garbage.map((hash) => this.persistence.delete(hash)),
+    );
+
+    res.forEach((r, i) => {
+      if (r.status === "rejected") {
+        console.error("Error when deleting artifact", garbage[i], r.reason);
+      }
+    });
   }
 
   async getLocalPath(
