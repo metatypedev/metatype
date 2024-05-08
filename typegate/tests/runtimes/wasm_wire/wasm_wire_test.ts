@@ -59,7 +59,7 @@ Meta.test(
         secrets: {},
       });
 
-      const engine = await metaTest.engineFromDeployed(serialized);
+      await using engine = await metaTest.engineFromDeployed(serialized);
 
       await t.step("wit bindings", async () => {
         await gql`
@@ -178,8 +178,6 @@ Meta.test(
           })
           .on(engine);
       });
-
-      await engine.terminate();
     });
   },
 );
