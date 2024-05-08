@@ -27,14 +27,12 @@ async function getLocalParentDir(
   entrypoint: ArtifactMeta,
   deps: ArtifactMeta[],
 ) {
-  let uniqueStr = `${entrypoint.relativePath}.${entrypoint.hash}`;
-  for (
-    const dep of deps.sort((a, b) =>
-      a.relativePath.localeCompare(b.relativePath)
-    )
-  ) {
-    uniqueStr += `;${dep.relativePath}.${dep.hash}`;
-  }
+  const uniqueStr = deps
+    .sort((a, b) => a.relativePath.localeCompare(b.relativePath))
+    .reduce(
+      (acc, dep) => `${acc};${dep.relativePath}.${dep.hash}`,
+      `${entrypoint.relativePath}.${entrypoint.hash}`,
+    );
 
   return await sha256(uniqueStr);
 }
