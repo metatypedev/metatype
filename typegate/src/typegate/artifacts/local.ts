@@ -203,6 +203,7 @@ class InMemoryRefCounter implements RefCounter {
 
   inspect(label: string) {
     console.log("refCounts (local)", label, this.#refCounts);
+    return Promise.resolve(void null);
   }
 }
 
