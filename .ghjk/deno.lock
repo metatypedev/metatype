@@ -2,6 +2,7 @@
   "version": "3",
   "redirects": {
     "https://deno.land/std/path/mod.ts": "https://deno.land/std@0.224.0/path/mod.ts",
+    "https://raw.github.com/metatypedev/ghjk/2725af8/deps/common.ts": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/deps/common.ts",
     "https://raw.github.com/metatypedev/ghjk/2725af8/mod.ts": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/mod.ts",
     "https://raw.github.com/metatypedev/ghjk/2725af8/ports/mod.ts": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/mod.ts",
     "https://raw.github.com/metatypedev/ghjk/2725af8/utils/mod.ts": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/utils/mod.ts",

@@ -5,11 +5,9 @@ import * as zod from "zod";
 import type { WitWireMatInfo } from "../../../engine/runtime.js";
 import { ResolverArgs } from "../../types.ts";
 import { Typegate } from "../../typegate/mod.ts";
+import { getLogger } from "../../log.ts";
 
-function dbg<T>(val: T, ...ctx: unknown[]) {
-  console.log("DBG: ", val, ...ctx);
-  return val;
-}
+const logger = getLogger(import.meta);
 
 const METATYPE_VERSION = "0.3.7-0";
 
@@ -23,17 +21,15 @@ export class WitWireMessenger {
     cx: HostCallCtx,
   ) {
     try {
-      const _res = await Meta.wit_wire.init(componentPath, instanceId, {
-        expected_ops: ops,
-        metatype_version: METATYPE_VERSION,
-      }, async (op: string, json: string) => {
-        try {
-          return dbg(await hostcall(cx, op, json), "success");
-        } catch (err) {
-          dbg(err);
-          throw err;
-        }
-      });
+      const _res = await Meta.wit_wire.init(
+        componentPath,
+        instanceId,
+        {
+          expected_ops: ops,
+          metatype_version: METATYPE_VERSION,
+        }, // this callback will be used from the native end
+        async (op: string, json: string) => await hostcall(cx, op, json),
+      );
       return new WitWireMessenger(instanceId, componentPath, ops);
     } catch (err) {
       throw new Error(
@@ -153,7 +149,8 @@ async function hostcall(cx: HostCallCtx, op_name: string, json: string) {
         });
     }
   } catch (err) {
-    if (dbg(err, "error") instanceof Error) {
+    logger.error("error on wit_wire hostcall {}", err);
+    if (err instanceof Error) {
       throw {
         message: err.message,
         cause: err.cause,
@@ -215,6 +212,5 @@ async function gql(cx: HostCallCtx, args: object) {
       },
     });
   }
-  // the response will be a json so no need to parse
-  return await res.text();
+  return await res.json();
 }

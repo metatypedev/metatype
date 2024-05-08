@@ -200,9 +200,9 @@ Meta.test(
             }
           `
             .expectBody((body) => {
-              assert(body.data);
-              assert(Array.isArray(body.data));
-              assertEquals(body.data.length, 100);
+              assert(body.data.hundred);
+              assert(Array.isArray(body.data.hundred));
+              assertEquals(body.data.hundred.length, 100);
             })
             .on(engine);
         },

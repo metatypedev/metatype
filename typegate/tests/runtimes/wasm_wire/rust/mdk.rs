@@ -57,7 +57,6 @@ interface mat-wire {
 }
 
 world wit-wire {
-  // include wasi:cli/imports@0.2.0;
   import typegate-wire;
 
   export mat-wire;
@@ -366,11 +365,11 @@ pub mod stubs {
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
+            "hundred-random" => "HundredRandom",
+            "record-creation" => "RecordCreation",
+            "range" => "Range",
             "add" => "Add",
             "identity" => "Identity",
-            "range" => "Range",
-            "record-creation" => "RecordCreation",
-            "hundred-random" => "HundredRandom",
             _ => panic!("unrecognized op_name: {op_name}"),
         }
     }

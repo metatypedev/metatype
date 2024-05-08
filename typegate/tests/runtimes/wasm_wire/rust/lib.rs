@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 mod mdk;
+use anyhow::Context;
 use mdk::*;
 use serde_json::json;
 
@@ -103,7 +104,10 @@ query randomEntity {
                 json!({}),
             )?;
             let random = res["data"]["random"].clone();
-            out.push(serde_json::from_value(random)?)
+            out.push(
+                serde_json::from_value(random.clone())
+                    .with_context(|| format!("error serializing Entity from json: {res:?}"))?,
+            )
         }
         Ok(out)
     }

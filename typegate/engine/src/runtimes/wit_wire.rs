@@ -40,6 +40,10 @@ impl Ctx {
             linker: {
                 let mut linker = Linker::<InstanceState>::new(&engine);
 
+                // add all worlds from crate to linker
+                // TODO(@yohe): determine and add only select linkers
+                // componentize-py adds all the command worlds
+                // so we'll have to fix that there first
                 wasmtime_wasi::add_to_linker_async(&mut linker)?;
                 wit::WitWire::add_to_linker(&mut linker, |state| &mut state.tg_host)?;
 
@@ -52,7 +56,10 @@ impl Ctx {
     async fn get_component(&self, wasm_relative_path: String) -> Result<Component, String> {
         let engine = self.engine.clone();
         let comp = if wasm_relative_path == "inline://pyrt_wit_wire.cwasm" {
+            // for most components, we'll rely on wasmtime's cache which takes into account
+            // hashes
             // we only manually cache inline components since they'll never change
+            // and we want to avoid the decompression cost
             if let Some(comp) = self.cached_components.get(&wasm_relative_path) {
                 return Ok(comp.clone());
             }
@@ -167,16 +174,19 @@ impl Host for TypegateHost {
         json: String,
     ) -> wasmtime::Result<Result<String, String>> {
         if op_name.len() > v8::String::max_length() {
-            return Ok(Err(format!("invalid op_name: too long")));
+            return Ok(Err("invalid op_name: too long".to_string()));
         }
         if json.len() > v8::String::max_length() {
-            return Ok(Err(format!("invalid json: too long")));
+            return Ok(Err("invalid json: too long".to_string()));
         }
-        let js_fn = SendPtr(self.js_fn.0.clone());
+        let js_fn = SendPtr(self.js_fn.0);
         let spawner = self.async_work_sender.clone();
 
-        let (tx, rx) = tokio::sync::mpsc::channel(1);
-        tokio::task::spawn_blocking(move || {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        let join_handle = tokio::task::spawn_blocking(move || {
+            // NOTE: the whole affair is single threaded so
+            // there's no need for a semaphore when accessing
+            // the hostcall
             spawner.spawn_blocking(move |scope| {
                 let params: [v8::Local<v8::Value>; 2] = [
                     v8::String::new(scope, &op_name).unwrap().into(),
@@ -185,6 +195,10 @@ impl Host for TypegateHost {
                 let recv = v8::undefined(scope);
                 let promise = {
                     let tc_scope = &mut v8::TryCatch::new(scope);
+                    // FIXME(@yohe): the original pointer was made from a global
+                    // and yet we're transmuting it to a Local here.
+                    // This is observed from the deno codebase
+                    // and I can't explain it
                     let func = unsafe { std::mem::transmute::<_, v8::Local<v8::Function>>(js_fn) };
                     let res = func
                         .call(tc_scope, recv.into(), &params)
@@ -203,47 +217,59 @@ impl Host for TypegateHost {
                     res
                 };
                 let promise = v8::Local::<v8::Promise>::try_from(promise)
-                    .map_err(|_err| format!("unexpected value from hostcall"))?;
-                let full_tx = tx.clone();
-                let rej_tx = tx.clone();
-                promise.then2(
-                    scope,
-                    v8::Function::builder(
-                        |scope: &mut v8::HandleScope<'_>,
-                         args: v8::FunctionCallbackArguments<'_>,
-                         _rv: v8::ReturnValue<'_>| {
-                            let data = args.data();
-                            let Some(json) = v8::json::stringify(scope, data) else {
-                                tx.send(Err(format!("error jsonifying result"))).unwrap();
-                                return;
-                            };
-                            full_tx.send(Ok(json.to_rust_string_lossy(scope))).unwrap();
-                        },
-                    )
-                    .build(scope)
-                    .unwrap(),
-                    v8::Function::builder(
-                        move |scope: &mut v8::HandleScope<'_>,
-                              args: v8::FunctionCallbackArguments<'_>,
-                              _rv: v8::ReturnValue<'_>| {
-                            let data = args.data();
-                            let Some(json) = v8::json::stringify(scope, data) else {
-                                tx.send(Err(format!("error jsonifying result"))).unwrap();
-                                return;
-                            };
-                            rej_tx.send(Err(json.to_rust_string_lossy(scope))).unwrap();
-                        },
-                    )
-                    .build(scope)
-                    .unwrap(),
-                );
+                    .map_err(|_err| "unexpected value from hostcall".to_string())?;
+
+                // we use raw pointers here when passing data into v8 functions
+                let external = v8::External::new(scope, Box::into_raw(Box::new(tx)) as _);
+                fn get_sender(
+                    data: v8::Local<v8::Value>,
+                ) -> tokio::sync::oneshot::Sender<Result<String, String>> {
+                    let sender = v8::Local::<v8::External>::try_from(data).unwrap();
+                    *unsafe { Box::from_raw(sender.value() as _) }
+                }
+
+                let on_fullfilled = v8::Function::builder(
+                    // this is not closure but a static fn
+                    // so we can't close over anything
+                    // but instead use data to pass values
+                    |scope: &mut v8::HandleScope<'_>,
+                     args: v8::FunctionCallbackArguments<'_>,
+                     _rv: v8::ReturnValue<'_>| {
+                        let tx = get_sender(args.data());
+                        let Some(json) = v8::json::stringify(scope, args.get(0)) else {
+                            tx.send(Err("error jsonifying result".to_string())).unwrap();
+                            return;
+                        };
+                        tx.send(Ok(json.to_rust_string_lossy(scope))).unwrap();
+                    },
+                )
+                // channel is oneshot but we can be sure
+                // either only on_fullfilled or on_rejected will run
+                .data(external.into())
+                .build(scope);
+                let on_rejected = v8::Function::builder(
+                    move |scope: &mut v8::HandleScope<'_>,
+                          args: v8::FunctionCallbackArguments<'_>,
+                          _rv: v8::ReturnValue<'_>| {
+                        let tx = get_sender(args.data());
+                        let Some(json) = v8::json::stringify(scope, args.get(0)) else {
+                            tx.send(Err("error jsonifying result".to_string())).unwrap();
+                            return;
+                        };
+                        tx.send(Err(json.to_rust_string_lossy(scope))).unwrap();
+                    },
+                )
+                .data(external.into())
+                .build(scope);
+                promise.then2(scope, on_fullfilled.unwrap(), on_rejected.unwrap());
                 Ok(())
             })
-        })
-        .await
-        .expect("tokio spawn_blocking error");
+        });
+        if let Err(msg) = join_handle.await.expect("tokio spawn_blocking error") {
+            return Ok(Err(msg));
+        }
         let res = rx.await.expect("oneshot recieve error");
-        Ok(dbg!(res))
+        Ok(res)
     }
 }
 
@@ -374,12 +400,12 @@ pub async fn op_wit_wire_init<'scope>(
 }
 
 #[deno_core::op2]
-pub fn op_wit_wire_destroy<'scope>(
+pub fn op_wit_wire_destroy(
     state: Rc<RefCell<OpState>>,
-    scope: &mut v8::HandleScope<'scope>,
+    scope: &mut v8::HandleScope<'_>,
     #[string] instance_id: String,
 ) {
-    println!("destroying {instance_id}");
+    debug!("destroying wit_wire instnace {instance_id}");
     let ctx = {
         let state = state.borrow();
         let ctx = state.borrow::<Ctx>();
@@ -389,20 +415,16 @@ pub fn op_wit_wire_destroy<'scope>(
     let Some((_id, instance)) = ctx.instances.remove(&instance_id) else {
         return;
     };
-    println!("got this far {instance_id}");
     let tg_host = instance.store.into_data().tg_host;
-    println!("got this far 2 {instance_id}");
     tg_host.drop(scope);
-    println!("got this far 3 {instance_id}");
-    _ = tokio::task::spawn(async move {
+    std::mem::drop(tokio::task::spawn(async move {
         if let Err(err) = tokio::fs::remove_dir_all(&instance.preopen_dir).await {
             error!(
                 "error removing preopend dir for instance {_id} at {:?}: {err}",
                 instance.preopen_dir
             )
         }
-    });
-    println!("destroyed {instance_id}");
+    }));
 }
 
 #[derive(Deserialize)]
