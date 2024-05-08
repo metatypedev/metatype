@@ -63,8 +63,6 @@ export class DenoRuntime extends Runtime {
     const ops = new Map<number, Task>();
 
     const uuid = crypto.randomUUID();
-    //    (user) tg_root/*
-    // => (gate) tmp/scripts/{tgname}/deno/*
     const basePath = path.join(
       typegate.tmpDir,
       "artifacts",

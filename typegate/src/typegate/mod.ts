@@ -38,7 +38,7 @@ import introspectionJson from "../typegraphs/introspection.json" with {
 import { ArtifactService } from "../services/artifact_service.ts";
 import { ArtifactStore } from "./artifacts/mod.ts";
 import { SyncConfig } from "../sync/config.ts";
-// TODO move from tests
+// TODO move from tests (MET-497)
 import { MemoryRegister } from "test-utils/memory_register.ts";
 import { NoLimiter } from "test-utils/no_limiter.ts";
 import { TypegraphStore } from "../sync/typegraph.ts";

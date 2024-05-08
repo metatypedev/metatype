@@ -75,7 +75,6 @@ for (const { nameSuffix, ...options } of variants) {
     name: "Upload protocol" + nameSuffix,
     ...options,
   }, async (t) => {
-    console.log("start");
     const e = await t.engine("runtimes/deno/deno.py");
     const artifacts = e.tg.tg.meta.artifacts;
 
@@ -92,8 +91,6 @@ for (const { nameSuffix, ...options } of variants) {
         assertFalse(await hasArtifact(t, meta.hash, "syncConfig" in options));
       }
     });
-
-    console.log("end");
   });
 
   Meta.test({

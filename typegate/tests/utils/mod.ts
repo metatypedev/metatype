@@ -42,7 +42,6 @@ export const Meta = {
   cli: metaCli,
 };
 
-// TODO
 export async function execute(
   engine: QueryEngine | null,
   request: Request,
