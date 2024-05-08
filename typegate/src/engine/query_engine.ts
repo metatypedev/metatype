@@ -104,17 +104,17 @@ class QueryCache {
 }
 
 const effectToMethod = {
-  "read": "GET",
-  "create": "POST",
-  "update": "PUT",
-  "delete": "DELETE",
+  read: "GET",
+  create: "POST",
+  update: "PUT",
+  delete: "DELETE",
 };
 
 export interface EndpointToSchemaMap {
   [index: string]: { fnName: string; outputSchema: unknown };
 }
 
-export class QueryEngine {
+export class QueryEngine implements AsyncDisposable {
   name: string;
   queryCache: QueryCache;
   logger: log.Logger;
@@ -136,19 +136,20 @@ export class QueryEngine {
     return this.tg.rawName;
   }
 
-  public constructor(
-    public tg: TypeGraph,
-  ) {
+  public constructor(public tg: TypeGraph) {
     this.tg = tg;
     this.name = tg.name;
     this.queryCache = new QueryCache();
     this.logger = log.getLogger("engine");
     this.rest = {
-      "GET": {},
-      "POST": {},
-      "PUT": {},
-      "DELETE": {},
+      GET: {},
+      POST: {},
+      PUT: {},
+      DELETE: {},
     };
+  }
+  async [Symbol.asyncDispose]() {
+    await this.tg[Symbol.asyncDispose]();
   }
 
   async registerEndpoints() {
@@ -169,11 +170,13 @@ export class QueryEngine {
         false,
       );
 
-      const effects = Array.from(new Set(
-        plan.stages.filter((s) => s.props.parent == null).map((s) =>
-          s.props.effect
-        ),
-      ).values());
+      const effects = Array.from(
+        new Set(
+          plan.stages
+            .filter((s) => s.props.parent == null)
+            .map((s) => s.props.effect),
+        ).values(),
+      );
 
       if (effects.length !== 1) {
         throw new Error("root fields in query must be of the same effect");
@@ -200,11 +203,13 @@ export class QueryEngine {
         if (fnName) {
           // Note: (query | mutation) <endpointName> { <fnName1>, <fnName2>, .. }
           const match = this.tg.tg.types
-            .filter((tpe) =>
-              tpe.type == "object" &&
-              (tpe.title == "Query" || tpe.title == "Mutation") &&
-              tpe.properties[fnName] != undefined
-            ).shift() as ObjectNode;
+            .filter(
+              (tpe) =>
+                tpe.type == "object" &&
+                (tpe.title == "Query" || tpe.title == "Mutation") &&
+                tpe.properties[fnName] != undefined,
+            )
+            .shift() as ObjectNode;
 
           if (!match) {
             throw new Error(
@@ -253,13 +258,15 @@ export class QueryEngine {
           return { type: "array", items: toJSONSchema(v.type) };
         }
         const name = v.name.value;
-        const schema = ({
-          "Integer": { type: "number" },
-          "Float": { type: "number" },
-          "Boolean": { type: "boolean" },
-          "String": { type: "string" },
-          "ID": { type: "string" },
-        } as any)?.[name];
+        const schema = (
+          {
+            Integer: { type: "number" },
+            Float: { type: "number" },
+            Boolean: { type: "boolean" },
+            String: { type: "string" },
+            ID: { type: "string" },
+          } as any
+        )?.[name];
         if (schema) {
           return schema;
         }
@@ -283,10 +290,6 @@ export class QueryEngine {
     }
   }
 
-  async terminate() {
-    return await this.tg.deinit();
-  }
-
   async materialize(
     stages: ComputeStage[],
     verbose: boolean,
@@ -297,7 +300,7 @@ export class QueryEngine {
     while (waitlist.length > 0) {
       const stage = waitlist.shift()!;
       stagesMat.push(
-        ...await stage.props.runtime.materialize(stage, waitlist, verbose),
+        ...(await stage.props.runtime.materialize(stage, waitlist, verbose)),
       );
     }
 

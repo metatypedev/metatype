@@ -32,7 +32,7 @@ export function resolveIdentifier(
       if (typeof contextId === "string") {
         return contextId;
       }
-      logger.warning(
+      logger.warn(
         `invalid context identifier type at ${engine.tg.tg.meta.rate?.context_identifier}, only string is supported, got: ${contextId}`,
       );
     }

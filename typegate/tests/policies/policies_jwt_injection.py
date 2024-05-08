@@ -18,6 +18,6 @@ def policies_jwt_injection(g: Graph):
 
     g.expose(
         sayHelloWorld=deno.func(
-            t.struct({}), t.string(), code="""() => "Hello World!"""
+            t.struct({}), t.string(), code="""() => 'Hello World!'"""
         ).with_policy(some_policy),
     )

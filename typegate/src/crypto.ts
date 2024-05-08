@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { crypto } from "std/crypto/mod.ts";
-import * as base64 from "std/encoding/base64url.ts";
+import { decodeBase64Url, encodeBase64Url } from "std/encoding/base64url.ts";
 import config from "./config.ts";
 import * as jwt from "jwt";
 
@@ -12,7 +12,7 @@ export const sha1 = (text: string | Uint8Array): Promise<string> => {
       "SHA-1",
       typeof text === "string" ? new TextEncoder().encode(text) : text,
     )
-    .then(base64.encode);
+    .then(encodeBase64Url);
 };
 
 export const sha256 = (text: string | Uint8Array): Promise<string> => {
@@ -21,7 +21,7 @@ export const sha256 = (text: string | Uint8Array): Promise<string> => {
       "SHA-256",
       typeof text === "string" ? new TextEncoder().encode(text) : text,
     )
-    .then(base64.encode);
+    .then(encodeBase64Url);
 };
 
 export const signKey = await crypto.subtle.importKey(
@@ -56,11 +56,11 @@ export async function encrypt(message: string): Promise<string> {
   const buffer = new Uint8Array(ivLength + cipher.byteLength);
   buffer.set(iv, 0);
   buffer.set(new Uint8Array(cipher), ivLength);
-  return base64.encode(buffer.buffer);
+  return encodeBase64Url(buffer.buffer);
 }
 
 export async function decrypt(payload: string): Promise<string> {
-  const buffer = base64.decode(payload);
+  const buffer = decodeBase64Url(payload);
   const iv = buffer.slice(0, ivLength);
   const cipher = buffer.slice(ivLength);
   const data = await crypto.subtle.decrypt(

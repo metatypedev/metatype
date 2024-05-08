@@ -11,8 +11,6 @@ import * as path from "std/path/mod.ts";
 
 Meta.test({
   name: "deploy and undeploy typegraph without meta-cli",
-  port: true,
-  systemTypegraphs: true,
 }, async (t) => {
   const gate = `http://localhost:${t.port}`;
   const auth = new BasicAuth("admin", "password");

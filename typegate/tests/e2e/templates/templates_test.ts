@@ -70,8 +70,6 @@ const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
 for (const template of ["python", "deno", "node"]) {
   Meta.test({
     name: `${template} template`,
-    port: true,
-    systemTypegraphs: true,
   }, async (t) => {
     const dir = await newTempDir();
 

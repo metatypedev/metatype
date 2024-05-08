@@ -5,6 +5,7 @@ import {
   CreateBucketCommand,
   DeleteBucketCommand,
   DeleteObjectCommand,
+  HeadObjectCommand,
   ListObjectsV2Command,
   S3Client,
 } from "aws-sdk/client-s3";
@@ -48,4 +49,17 @@ export async function listObjects(client: S3Client, bucket: string) {
 export async function createBucket(client: S3Client, bucket: string) {
   const createCommand = new CreateBucketCommand({ Bucket: bucket });
   await client.send(createCommand);
+}
+
+export async function hasObject(client: S3Client, bucket: string, key: string) {
+  try {
+    const headCommand = new HeadObjectCommand({ Bucket: bucket, Key: key });
+    await client.send(headCommand);
+    return true;
+  } catch (e) {
+    if (e.name === "NotFound") {
+      return false;
+    }
+    throw e;
+  }
 }

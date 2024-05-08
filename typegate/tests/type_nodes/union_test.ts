@@ -12,8 +12,6 @@ Meta.test(
   {
     name: "Union type",
     introspection: true,
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
     const e = await t.engineFromTgDeployPython("type_nodes/union_node.py", cwd);
@@ -251,8 +249,6 @@ Meta.test(
 Meta.test(
   {
     name: "nested unions",
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
     const e = await t.engineFromTgDeployPython("type_nodes/union_node.py", cwd);
@@ -305,8 +301,6 @@ Meta.test(
 Meta.test(
   {
     name: "multilevel unions",
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
     const e = await t.engineFromTgDeployPython("type_nodes/union_node.py", cwd);
@@ -359,8 +353,6 @@ Meta.test(
 Meta.test(
   {
     name: "scalar unions",
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
     const e = await t.engineFromTgDeployPython("type_nodes/union_node.py", cwd);
