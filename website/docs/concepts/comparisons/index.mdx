@@ -21,8 +21,8 @@ These are great platforms to quickly start a new project. However, they hardly s
 **When to choose Metatype**
 
 1. You want to build modular APIs by composing pre-defined blocks and import the ones you need from existing systems.
-2. You want to take advantage of developers tooling you are familiar with like version controls or multiple environments.
-3. You favor interoperability and extensibility over vendor lock-in and follow your future needs with ease.
+2. You want to take advantage of developers tooling you are familiar with, like version controls or multiple environments.
+3. You favor interoperability and extensibility over vendor lock-in, and follow your future needs with ease.
 4. You want to decouple your database from your API and change where the data is stored as the project evolves.
 
 ## Headless CMS
@@ -49,6 +49,117 @@ Low Code platforms are a game changer when it comes to faster development cycle,
 
 **When to choose Metatype**
 
-1. When you want to implement modular APIs and backends with instantaneous responses
-2. When you want to interact with workflow engines and control over the operations they perform, including pooling and retries
-3. When you look for a serverless deployment solution and want to focus on your business logic
+1. When you want more control over your application instances running on the cloud.
+2. When you want to build more complex APIs.
+3. When you want to have the freedom to make detailed changes to your application to gain that extra peformance.
+
+
+<br/>
+Feature/Capability Key:
+- :white_check_mark: 1st class, with no extra dependencies. 
+- :white_circle: supported, but with extra 3rd party dependencies
+- :large_orange_diamond: supported, but with extra 3rd party dependencies and user code.
+- :red_circle: not officially supported or documented. 
+
+|  | Metatype | Development Platforms | Headless CMS | Low code platform |
+|------------------------|----------------------|-------------|----------------|---------------------------|
+| Licensing | [Open Source](https://github.com/metatypedev/metatype/blob/main/dev/LICENSE-MPL-2.0.md) | Open Source <br/> Proprietary | Open Source | Proprietary |
+| Platform's Requirements | - Cloud-based: None <br/> - Locally: Deno/Node.js/Python Runtime, Redis, Docker | - Cloud-based: None <br/> - Running Locally: Docker, DBMS | - NodeJS runtime <br/> - DBMS | Cloud-based: None |
+| Architecture Model | - Declarative <br/> - Less Code <br/> - Serverless | - API over Database <br/> - Serverless | - Headless Architecture <br/> - Serverless | - Visual drag and drop <br/> - Serverless |
+| REST/HTTP | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| GraphQL | :white_check_mark: | :white_circle: | :white_check_mark: | :large_orange_diamond: |
+| gRPC | :large_orange_diamond:* | :large_orange_diamond: | :large_orange_diamond: | :large_orange_diamond: |
+| GUI for non programmers | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Development SDKs | :white_check_mark: | :white_check_mark: | :red_circle: | :red_circle: (Most) <br/> :white_check_mark: (few) |
+| CLI | :white_check_mark: | :white_check_mark: (some) <br/> :red_circle: (some) | :white_check_mark: | :red_circle: |
+| Dev Tools | :white_check_mark: | :white_check_mark: | :white_check_mark: | :red_circle: |
+| LSP and Extensions | :white_check_mark:* | :white_circle: | :white_circle: | :red_circle: |
+| Authentication | - Basic Auth <br/> - JWT <br/> - OAuth | - Basic Auth <br/> - JWT <br/> - OAuth <br/> - JWT | - email/phone/password <br/> - JWT  - OAuth | - email/phone/password <br/> - JWT <br/> - OAuth <br/> - JWT |
+| Authorization | - policy-based access control (PBAC) | - policy-based access control (PBAC) <br/> - role-based access control (RBAC) | - role-based access control (RBAC) | - Custom Authorization logic from the User |
+| Type System | [Custom Types](/docs/reference/types) | - JS objects <br/> - GraphQL Schemas <br/> - Database Types | JS objects | Custom Types |
+| Custom Code Support | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Version Control Friendly | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| GitOPs Friendly | :white_check_mark: | :white_check_mark: | :white_circle: | :white_circle: |
+| Vertical Scalability | Flexibile | Limited | Flexibile | Limited |
+| Service Decomposition | :white_check_mark: | :white_check_mark: | :white_check_mark: | :red_circle: |
+| Deployment Options | - On premise <br/> - Cloud-based platforms | - On premise <br/> - Cloud-based platforms | - On premise <br/> - Cloud-based platforms | - On premise <br/> - Cloud-based platforms |
+| Monitoring and Tracking | :white_check_mark:* | :white_check_mark: | :white_check_mark: | :large_orange_diamond: |
+| Logging | :white_check_mark:* | :white_check_mark: | :white_check_mark: | :large_orange_diamond: |
+{/* | Query Plan Time |  |  |  |  |
+| Query Compute Time |  |  |  |  | */}
+
+
+### Table Parameters Legend
+
+#### Solution's Meta
+**Licensing**: The type of licensing model the software solution adopts, such as open-source, proprietary, freemium, etc.
+
+**Platform's Requirements**: The prerequisites and dependencies required for the software to run efficiently, including hardware, operating system, runtime environment, etc.
+
+**Architecture Model**: The underlying design principles and patterns governing the behavior/structure of the software solution.
+
+#### Network comms
+
+**REST/HTTP**: Support for Representational State Transfer (REST) or Hypertext Transfer Protocol (HTTP) communication protocol used for network communication.
+
+**GraphQL**: Support for GraphQL.
+
+**gRPC**: Support for gRPC.
+
+#### Ecosystem
+**GUI for non programmers**: Graphical User Interface (GUI) tools designed to facilitate interaction with the software by individuals with limited programming knowledge or expertise.  {/* some have and some don't from the mentioned examples */}
+
+**Development SDKs**: Software Development Kits (SDKs) provided by the solution to aid developers in building applications using the platform.
+
+**CLI**: Command-Line Interface tools provided for developers or administrators to interact with the software from the terminal or command prompt.
+
+**Dev Tools**: Tools and utilities provided to aid developers in coding, debugging, testing, and profiling applications.
+
+**LSP and Extensions**: Language Server Protocol (LSP) and Extensions support for enhanced development experience, including features like syntax highlighting, auto-completion, and error checking.
+
+#### Security
+**Authentication**: Mechanisms for verifying the identity of users or entities accessing the software solution.
+
+**Authorization**: The process of determining whether an authenticated user or system entity is allowed to perform a specific action or access a particular resource.
+
+#### Database Interaction
+**Type System**: The system governing the data types and structures used by which the application entities and models are constructed.
+
+{/* **Database Toolkit/ORM**: Tools or Object-Relational Mapping (ORM) frameworks used internally. */}
+
+{/* #### Query Processing
+**Query Planning Model**: The approach used for optimizing and planning the execution of incoming requests to improve performance and efficiency.
+
+**Query Computing Model**: The model used for executing network queries and processing data. */}
+
+#### System Flexibility
+**Custom Code support**: The ability of the software solution to accommodate custom code or extensions developed by users or third-party developers.
+
+{/* **Customizability**:  */}
+
+#### Versioning and CI/CD
+**Version Control**: The support for versioning and revision control of software artifacts, typically using systems like Git, SVN, etc.
+
+**GitOPs Friendly**: Compatibility or support for the GitOps methodology, where infrastructure and application deployments are managed through Git workflows.
+
+#### Scalability
+{/* how to express scalability using facts */}
+**Vertical Scalability**: The ability of the software solution to handle increased workload or demand by adding more resources to a single node or instance.
+
+**Service Decomposition**: The architectural principle of breaking down the software into smaller, independent services (microservices) to improve scalability, maintainability, and flexibility.
+
+#### Deployment
+**Deployment Options**: The available methods and strategies for deploying the software solution, including on-premises, cloud-based, containerized, etc.
+
+#### Monitoring, Logging and maintenance
+**Monitoring and Tracking**: Tools and mechanisms provided for monitoring the health, performance, and usage of the software solution, as well as tracking user activities and behaviors.
+
+**Logging**: Facilities for recording and storing system events, errors, and other relevant information for troubleshooting, analysis, and auditing purposes.
+
+
+{/* #### Safety and Fault tolerance (TODO) */}
+
+{/* #### Basic Benchmarks (TODO)
+**Query Plan Time**: The time taken by the system to plan and optimize the execution of a request.
+
+**Query Compute Time**: The time taken by the system to process and compute the results of a request. */}
