@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { connect, Redis, RedisConnectOptions } from "redis";
+import { getLogger } from "@typegate/log.ts";
 import { createHash } from "node:crypto";
 import { S3 } from "aws-sdk/client-s3";
 import {
@@ -14,6 +15,8 @@ import { HashTransformStream } from "../../utils/hash.ts";
 import { SyncConfig } from "../../sync/config.ts";
 import { LocalArtifactPersistence } from "./local.ts";
 import { exists } from "std/fs/exists.ts";
+
+const logger = getLogger(import.meta);
 
 export interface RemoteUploadUrlStore {
   redisClient: Redis;
@@ -31,7 +34,7 @@ function deserializeToCustom<T>(value: string): T {
   return JSON.parse(value) as T;
 }
 
-function resolveS3Key(hash: string) {
+export function resolveS3Key(hash: string) {
   return `${REMOTE_ARTIFACT_DIR}/${hash}`;
 }
 
@@ -64,28 +67,47 @@ class SharedArtifactPersistence implements ArtifactPersistence {
 
   async save(stream: ReadableStream<any>): Promise<string> {
     const hasher = createHash("sha256");
-    const stream2 = stream.pipeThrough(new HashTransformStream(hasher));
 
-    const tempKey = resolveS3Key(
-      `tmp/${Math.random().toString(36).substring(2)}`,
+    // TODO compatibility with Node.js streams?
+    // const stream2 = stream.pipeThrough(new HashTransformStream(hasher));
+    //
+    // const tempKey = resolveS3Key(
+    //   `tmp/${Math.random().toString(36).substring(2)}`,
+    // );
+    //
+    // const _ = await this.s3.putObject({
+    //   Bucket: this.s3Bucket,
+    //   Body: stream2,
+    //   Key: tempKey,
+    // });
+    // const hash = hasher.digest("hex");
+    //
+    // await this.s3.copyObject({
+    //   Bucket: this.s3Bucket,
+    //   CopySource: tempKey,
+    //   Key: resolveS3Key(hash),
+    // });
+    //
+    // await this.s3.deleteObject({
+    //   Bucket: this.s3Bucket,
+    //   Key: tempKey,
+    // });
+    //
+    // return hash;
+
+    const tmpFile = await Deno.makeTempFile({ dir: this.dirs.temp });
+    const file = await Deno.open(tmpFile, { write: true, truncate: true });
+    await stream.pipeThrough(new HashTransformStream(hasher)).pipeTo(
+      file.writable,
     );
 
+    const hash = hasher.digest("hex");
+    const body = await Deno.readFile(tmpFile);
+    logger.info(`persisting artifact to S3: ${hash}`);
     const _ = await this.s3.putObject({
       Bucket: this.s3Bucket,
-      Body: stream2,
-      Key: tempKey,
-    });
-    const hash = hasher.digest("hex");
-
-    await this.s3.copyObject({
-      Bucket: this.s3Bucket,
-      CopySource: tempKey,
+      Body: body,
       Key: resolveS3Key(hash),
-    });
-
-    await this.s3.deleteObject({
-      Bucket: this.s3Bucket,
-      Key: tempKey,
     });
 
     return hash;

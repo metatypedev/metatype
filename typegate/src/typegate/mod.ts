@@ -136,7 +136,7 @@ export class Typegate implements AsyncDisposable {
         syncConfig.redis,
         TypegraphStore.init(syncConfig),
       );
-      stack.use(register);
+      typegate.disposables.use(register);
 
       (typegate as { register: Register }).register = register;
 

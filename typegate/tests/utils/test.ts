@@ -452,11 +452,18 @@ export const test = ((o, fn): void => {
         dir: config.tmp_dir,
       });
 
-      const typegates = await Promise.all(
+      const result = await Promise.allSettled(
         Array.from({ length: replicas }).map((_) =>
           Typegate.init(opts.syncConfig ?? null, null, tempDir)
         ),
       );
+      const typegates = result.map((r) => {
+        if (r.status === "fulfilled") {
+          return r.value;
+        } else {
+          throw r.reason;
+        }
+      });
 
       const {
         gitRepo = null,
@@ -491,7 +498,6 @@ export const test = ((o, fn): void => {
             await Deno.mkdir(dirname(destPath), { recursive: true });
             await Deno.copyFile(join(testDir, srcPath), destPath);
           }
-          console.log(dir);
 
           const sh = (args: string[], options?: ShellOptions) => {
             return shell(args, { currentDir: dir!, ...options });
