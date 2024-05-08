@@ -3,7 +3,6 @@ export const snapshot = {};
 snapshot[`typegraphs creation 1`] = `
 '[
   {
-    "\$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",
@@ -321,7 +320,6 @@ snapshot[`typegraphs creation 1`] = `
 snapshot[`typegraphs creation 2`] = `
 \`[
   {
-    "\$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",
@@ -437,7 +435,7 @@ snapshot[`typegraphs creation 2`] = `
         }
       },
       {
-        "name": "python_wasi",
+        "name": "python",
         "data": {
           "config": null
         }
@@ -477,7 +475,6 @@ snapshot[`typegraphs creation 2`] = `
 snapshot[`typegraphs creation 3`] = `
 \`[
   {
-    "\$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",
@@ -765,7 +762,6 @@ snapshot[`typegraphs creation 3`] = `
 snapshot[`typegraphs creation 4`] = `
 '[
   {
-    "\$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",
@@ -1083,7 +1079,6 @@ snapshot[`typegraphs creation 4`] = `
 snapshot[`typegraphs creation 5`] = `
 \`[
   {
-    "\$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",
@@ -1199,7 +1194,7 @@ snapshot[`typegraphs creation 5`] = `
         }
       },
       {
-        "name": "python_wasi",
+        "name": "python",
         "data": {
           "config": null
         }
@@ -1239,7 +1234,6 @@ snapshot[`typegraphs creation 5`] = `
 snapshot[`typegraphs creation 6`] = `
 \`[
   {
-    "\$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",

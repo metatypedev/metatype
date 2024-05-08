@@ -12,6 +12,7 @@ import * as native from "native";
 import { nativeResult, pluralSuffix } from "../../../utils.ts";
 import { MigrationOptions } from "../../../typegraph/types.ts";
 import { SecretManager } from "../../../typegraph/mod.ts";
+import type { ParsedDiff } from "../../../../engine/runtime.js";
 
 export class MigrationFailure extends Error {
   errors: PushFailure[] = [];

@@ -3,7 +3,6 @@ source: typegraph/core/src/lib.rs
 expression: typegraph.0
 ---
 {
-  "$id": "https://metatype.dev/specs/0.0.3.json",
   "types": [
     {
       "type": "object",

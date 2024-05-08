@@ -10,8 +10,11 @@ import {
   STORE_DIR,
   STORE_TEMP_DIR,
 } from "./mod.ts";
+import { getLogger } from "../../log.ts";
 import { createHash } from "node:crypto";
 import * as jwt from "jwt";
+
+const logger = getLogger(import.meta);
 
 export interface UploadUrlStore {
   mapToMeta: Map<string, ArtifactMeta>;
@@ -72,13 +75,14 @@ export class LocalArtifactStore extends ArtifactStore {
 
     const hash = hasher.digest("hex");
     const targetFile = resolve(STORE_DIR, hash);
-    console.log(`Persisting artifact to ${targetFile}`);
+    logger.debug(`persisting artifact {}`, { hash });
     await Deno.rename(tmpFile, targetFile);
 
     return hash;
   }
 
   override async delete(hash: string) {
+    logger.debug(`deleting artifact {}`, { hash });
     await Deno.remove(resolve(STORE_DIR, hash));
   }
 
@@ -104,6 +108,10 @@ export class LocalArtifactStore extends ArtifactStore {
   override async prepareUpload(meta: ArtifactMeta, origin: URL) {
     // should not be uploaded again
     if (await this.has(ArtifactStore.getArtifactKey(meta))) {
+      logger.debug(
+        "artifact already exists, skipping upload preparation {}",
+        { meta },
+      );
       return null;
     }
 

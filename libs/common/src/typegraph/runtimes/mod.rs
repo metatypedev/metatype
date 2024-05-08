@@ -4,8 +4,6 @@
 use std::path::PathBuf;
 
 use indexmap::IndexMap;
-#[cfg(feature = "codegen")]
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use self::deno::DenoRuntimeData;
@@ -28,19 +26,15 @@ pub mod s3;
 pub mod temporal;
 pub mod wasm;
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TypegateRuntimeData {}
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TypegraphRuntimeData {}
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PrismaMigrationRuntimeData {}
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "name", content = "data", rename_all = "snake_case")]
 pub enum KnownRuntime {
@@ -49,26 +43,24 @@ pub enum KnownRuntime {
     GraphQL(GraphQLRuntimeData),
     #[serde(rename = "http")]
     HTTP(HTTPRuntimeData),
-    #[serde(rename = "python_wasi")]
-    PythonWasi(PythonRuntimeData),
+    Python(PythonRuntimeData),
     Random(RandomRuntimeData),
     Prisma(PrismaRuntimeData),
     PrismaMigration(PrismaMigrationRuntimeData),
     S3(S3RuntimeData),
     Temporal(TemporalRuntimeData),
-    Wasm(WasmRuntimeData),
+    WasmReflected(WasmRuntimeData),
+    WasmWire(WasmRuntimeData),
     Typegate(TypegateRuntimeData),
     Typegraph(TypegraphRuntimeData),
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct UnknownRuntime {
     pub name: String,
     pub data: IndexMap<String, serde_json::Value>,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(untagged)]
 pub enum TGRuntime {
@@ -83,13 +75,14 @@ impl TGRuntime {
                 KnownRuntime::Deno(_) => "deno",
                 KnownRuntime::GraphQL(_) => "graphql",
                 KnownRuntime::HTTP(_) => "http",
-                KnownRuntime::PythonWasi(_) => "python_wasi",
+                KnownRuntime::Python(_) => "python",
                 KnownRuntime::Random(_) => "random",
                 KnownRuntime::Prisma(_) => "prisma",
                 KnownRuntime::PrismaMigration(_) => "prisma_migration",
                 KnownRuntime::S3(_) => "s3",
                 KnownRuntime::Temporal(_) => "temporal",
-                KnownRuntime::Wasm(_) => "wasm",
+                KnownRuntime::WasmWire(_) => "wasm_wire",
+                KnownRuntime::WasmReflected(_) => "wasm_reflected",
                 KnownRuntime::Typegate(_) => "typegate",
                 KnownRuntime::Typegraph(_) => "typegraph",
             },
@@ -98,7 +91,6 @@ impl TGRuntime {
     }
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Artifact {
     pub path: PathBuf,

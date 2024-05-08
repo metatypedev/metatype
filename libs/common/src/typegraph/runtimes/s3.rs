@@ -1,12 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-#[cfg(feature = "codegen")]
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct S3RuntimeData {
@@ -17,7 +14,6 @@ pub struct S3RuntimeData {
     pub path_style_secret: String,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "name", content = "data", rename_all = "snake_case")]
 pub enum S3Materializer {

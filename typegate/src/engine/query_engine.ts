@@ -287,17 +287,17 @@ export class QueryEngine {
     return await this.tg.deinit();
   }
 
-  materialize(
+  async materialize(
     stages: ComputeStage[],
     verbose: boolean,
-  ): ComputeStage[] {
+  ): Promise<ComputeStage[]> {
     const stagesMat: ComputeStage[] = [];
     const waitlist = [...stages];
 
     while (waitlist.length > 0) {
       const stage = waitlist.shift()!;
       stagesMat.push(
-        ...stage.props.runtime.materialize(stage, waitlist, verbose),
+        ...await stage.props.runtime.materialize(stage, waitlist, verbose),
       );
     }
 
@@ -336,7 +336,7 @@ export class QueryEngine {
     */
 
     // how
-    const stagesMat = this.materialize(stages, verbose);
+    const stagesMat = await this.materialize(stages, verbose);
 
     // when
     const optimizedStages = this.optimize(stagesMat, verbose);

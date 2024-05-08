@@ -134,15 +134,17 @@ export class Planner {
 
       this.verbose &&
         logger.debug(
-          this.tg.root.title,
-          name,
-          args.map((n) => n.name?.value),
-          selection.map((n) => n.name?.value),
-          typ.type,
-          Object.entries(props).reduce(
-            (agg, [k, v]) => ({ ...agg, [k]: this.tg.type(v).type }),
-            {},
-          ),
+          `${this.tg.root.title} {}`,
+          {
+            name,
+            args: args.map((n) => n.name?.value),
+            selection: selection.map((n) => n.name?.value),
+            type: typ.type,
+            props: Object.entries(props).reduce(
+              (agg, [k, v]) => ({ ...agg, [k]: this.tg.type(v).type }),
+              {},
+            ),
+          },
         );
 
       stages.push(
