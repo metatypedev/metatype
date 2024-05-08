@@ -21,6 +21,19 @@ pub struct MdkPythonGenConfig {
     pub base: crate::config::MdkGeneratorConfigBase,
 }
 
+impl MdkPythonGenConfig {
+    pub fn from_json(json: serde_json::Value, workspace_path: &Path) -> anyhow::Result<Self> {
+        let mut config: mdk_python::MdkPythonGenConfig = serde_json::from_value(json)?;
+        config.base.path = workspace_path.join(config.base.path);
+        config.base.typegraph_path = config
+            .base
+            .typegraph_path
+            .as_ref()
+            .map(|path| workspace_path.join(path));
+        Ok(config)
+    }
+}
+
 pub struct Generator {
     config: MdkPythonGenConfig,
 }
@@ -82,8 +95,15 @@ impl crate::Plugin for Generator {
                     .parent()
                     .context("extract file parent folder")
                     .unwrap();
-                let base = match script_path.is_relative() {
-                    true => self.config.base.path.join(parent),
+                let base = match script_path.is_relative() || script_path.as_os_str().eq("") {
+                    true => self
+                        .config
+                        .base
+                        .typegraph_path
+                        .clone()
+                        .map(|p| p.parent().unwrap().to_owned()) // try relto typegraph path first
+                        .unwrap_or(self.config.base.path.clone()) // or pick 'path' in config
+                        .join(parent),
                     false => parent.to_path_buf(),
                 };
 
@@ -179,6 +199,8 @@ fn render_types(tera: &tera::Tera, required: &RequiredObjects) -> anyhow::Result
 
     context.insert("classes", &classes);
     context.insert("types", &types);
+    context.insert("t_input", &required.input_name);
+    context.insert("t_output", &required.output_name);
 
     tera.render("types_template", &context)
         .map_err(|e| e.into())
@@ -196,7 +218,6 @@ fn gen_required_objects(
 
         let input_name = input.base().title.to_pascal_case();
         let output_name = output.base().title.to_pascal_case();
-        println!("input {input_name} output {output_name}");
 
         let _input_hint = types::visit_type(tera, &mut memo, &input, tg)?.hint;
         let output_hint = types::visit_type(tera, &mut memo, &output, tg)?.hint;

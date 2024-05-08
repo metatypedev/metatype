@@ -120,8 +120,8 @@ pub async fn generate_target(
         (
             "mdk_python".to_string(),
             GeneratorRunner {
-                op: |_: &Path, val| {
-                    let config: mdk_python::MdkPythonGenConfig = serde_json::from_value(val)?;
+                op: |workspace_path: &Path, val| {
+                    let config = mdk_python::MdkPythonGenConfig::from_json(val, workspace_path)?;
                     let generator = mdk_python::Generator::new(config)?;
                     Ok(Box::new(generator))
                 },
