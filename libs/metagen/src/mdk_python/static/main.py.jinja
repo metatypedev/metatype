@@ -1,10 +1,8 @@
-{% if t_input != t_output -%}
-from .{{ type_mod_name }}_types import use_types, {{ t_input }}, {{ t_output }}
-{% else -%}
-from .{{ type_mod_name }}_types import use_types, {{ t_input }}
-{%- endif %}
+from .{{ mod_name }}_types import {{ imports }}
 
-@use_types
-def {{ fn_name }}(inp: {{ t_input }}) -> {{ t_output }}:
+{% for func in funcs %}
+@typed_{{ func.name }}
+def {{ func.name }}(inp: {{ func.input_name }}) -> {{ func.output_name }}:
     # TODO: write your logic here
     raise Exception("TODO: not implemented")
+{% endfor %}

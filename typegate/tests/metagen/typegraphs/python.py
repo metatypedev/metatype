@@ -29,7 +29,19 @@ def example(g: Graph):
         duplicate=python.import_(
             example,
             t.list(example).rename("Duplicates"),
-            name="identity",
+            name="duplicate_one",
             module="scripts/example.py",
+        ),
+        duplicate_hit_same_file=python.import_(
+            example,
+            t.list(example).rename("DuplicatesTwo"),
+            name="duplicate_two",
+            module="scripts/example.py",
+        ),
+        another=python.import_(
+            example,
+            t.integer(),
+            name="another",
+            module="scripts/another.py",
         ),
     )

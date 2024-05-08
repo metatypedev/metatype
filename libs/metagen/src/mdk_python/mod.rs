@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use anyhow::bail;
+use garde::external::compact_str::CompactStringExt;
 use heck::ToPascalCase;
 
 use crate::interlude::*;
@@ -80,7 +80,7 @@ impl crate::Plugin for Generator {
             GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
             GeneratorInputResolved::TypegraphFromPath { raw } => raw,
         };
-        let mut out = HashMap::new();
+        let mut mergeable_output: IndexMap<PathBuf, Vec<RequiredObjects>> = IndexMap::new();
 
         let mut tera = tera::Tera::default();
         tera.add_raw_template("main_template", include_str!("static/main.py.jinja"))?;
@@ -89,42 +89,62 @@ impl crate::Plugin for Generator {
 
         let stubbed_funs = filter_stubbed_funcs(tg, &["python".to_string()])?;
         for fun in &stubbed_funs {
-            let (mod_name, script_path) = get_module_infos(fun, tg)?;
-            if let Some(file_stem) = script_path.file_stem().map(|v| v.to_str()).unwrap() {
-                let parent = script_path
-                    .parent()
-                    .context("extract file parent folder")
-                    .unwrap();
-                let base = match script_path.is_relative() || script_path.as_os_str().eq("") {
-                    true => self
-                        .config
-                        .base
-                        .typegraph_path
-                        .clone()
-                        .map(|p| p.parent().unwrap().to_owned()) // try relto typegraph path first
-                        .unwrap_or(self.config.base.path.clone()) // or pick 'path' in config
-                        .join(parent),
-                    false => parent.to_path_buf(),
-                };
-
-                let required = gen_required_objects(&tera, fun, tg)?;
-                out.insert(
-                    base.join(format!("{file_stem}_types.py")),
-                    GeneratedFile {
-                        contents: render_types(&tera, &required)?,
-                        overwrite: true,
-                    },
-                );
-                out.insert(
-                    base.join(format!("{file_stem}.py")),
-                    GeneratedFile {
-                        contents: render_main(&tera, &required, &mod_name, file_stem)?,
-                        overwrite: false,
-                    },
-                );
-            } else {
-                bail!("{} is not a valid file path", script_path.display())
+            if fun.mat.data.get("mod").is_none() {
+                continue;
             }
+            let (_, script_path) = get_module_infos(fun, tg)?;
+            let entry_point_path = match script_path.is_relative() || script_path.as_os_str().eq("")
+            {
+                true => self
+                    .config
+                    .base
+                    .typegraph_path
+                    .clone()
+                    .map(|p| p.parent().unwrap().to_owned()) // try relto typegraph path first
+                    .unwrap_or(self.config.base.path.clone()) // or pick 'path' in config
+                    .join(script_path),
+                false => script_path.to_path_buf(),
+            };
+
+            let required = gen_required_objects(&tera, fun, tg)?;
+            mergeable_output
+                .entry(entry_point_path.clone())
+                .or_default()
+                .push(required);
+        }
+
+        let merged_list = merge_requirements(mergeable_output);
+        let mut out = HashMap::new();
+        for merged_req in merged_list {
+            let entry_point_path = merged_req.entry_point_path.clone();
+            let file_stem = merged_req
+                .entry_point_path
+                .file_stem()
+                .map(|v| v.to_str().to_owned())
+                .unwrap()
+                .with_context(|| "Get file stem")
+                .unwrap();
+            let types_path = merged_req
+                .entry_point_path
+                .parent()
+                .with_context(|| "Get parent path")
+                .unwrap()
+                .join(PathBuf::from(format!("{file_stem}_types.py")));
+
+            out.insert(
+                entry_point_path,
+                GeneratedFile {
+                    contents: render_main(&tera, &merged_req, file_stem)?,
+                    overwrite: false,
+                },
+            );
+            out.insert(
+                types_path,
+                GeneratedFile {
+                    contents: render_types(&tera, &merged_req)?,
+                    overwrite: true,
+                },
+            );
         }
 
         Ok(GeneratorOutput(out))
@@ -136,7 +156,7 @@ fn get_module_infos(fun: &StubbedFunction, tg: &Typegraph) -> anyhow::Result<(St
         fun.mat
             .data
             .get("mod")
-            .context("python mod index")
+            .with_context(|| "python mod index")
             .unwrap()
             .clone(),
     )?;
@@ -144,7 +164,7 @@ fn get_module_infos(fun: &StubbedFunction, tg: &Typegraph) -> anyhow::Result<(St
         fun.mat
             .data
             .get("name")
-            .context("python mod name")
+            .with_context(|| "python mod name")
             .unwrap()
             .clone(),
     )?;
@@ -156,28 +176,50 @@ fn get_module_infos(fun: &StubbedFunction, tg: &Typegraph) -> anyhow::Result<(St
     Ok((mod_name, script_path))
 }
 
-struct RequiredObjects {
+#[derive(Serialize, Eq, PartialEq, Hash)]
+struct FuncDetails {
     pub input_name: String,
     pub output_name: String,
+    pub name: String,
+}
+
+/// Objects required per function
+struct RequiredObjects {
+    pub func_details: FuncDetails,
     pub top_level_types: Vec<TypeGenerated>,
     pub memo: Memo,
 }
 
-fn render_main(
-    tera: &tera::Tera,
-    required: &RequiredObjects,
-    mod_name: &str,
-    file_stem: &str,
-) -> anyhow::Result<String> {
-    let mut context = tera::Context::new();
-    context.insert("t_input", &required.input_name);
-    context.insert("t_output", &required.output_name);
-    context.insert("fn_name", mod_name);
-    context.insert("type_mod_name", file_stem);
-    tera.render("main_template", &context).map_err(|e| e.into())
+/// Objects required per function that refers to the same python module
+struct MergedRequiredObjects {
+    pub funcs: Vec<FuncDetails>,
+    pub top_level_types: Vec<TypeGenerated>,
+    pub memo: Memo,
+    pub entry_point_path: PathBuf,
 }
 
-fn render_types(tera: &tera::Tera, required: &RequiredObjects) -> anyhow::Result<String> {
+fn render_main(
+    tera: &tera::Tera,
+    required: &MergedRequiredObjects,
+    file_stem: &str,
+) -> anyhow::Result<String> {
+    let mut exports = HashSet::new();
+    for func in required.funcs.iter() {
+        exports.insert(format!("typed_{}", func.name));
+        exports.insert(func.input_name.clone());
+        exports.insert(func.output_name.clone());
+    }
+
+    let mut context = tera::Context::new();
+    context.insert("funcs", &required.funcs);
+    context.insert("mod_name", file_stem);
+    context.insert("imports", &exports.join_compact(", ").to_string());
+
+    tera.render("main_template", &context)
+        .map_err(|e| anyhow::Error::new(e).context("Failed to render main template"))
+}
+
+fn render_types(tera: &tera::Tera, required: &MergedRequiredObjects) -> anyhow::Result<String> {
     let mut context = tera::Context::new();
     let classes = required
         .memo
@@ -199,11 +241,10 @@ fn render_types(tera: &tera::Tera, required: &RequiredObjects) -> anyhow::Result
 
     context.insert("classes", &classes);
     context.insert("types", &types);
-    context.insert("t_input", &required.input_name);
-    context.insert("t_output", &required.output_name);
+    context.insert("funcs", &required.funcs);
 
     tera.render("types_template", &context)
-        .map_err(|e| e.into())
+        .map_err(|e| anyhow::Error::new(e).context("Failed to render types template"))
 }
 
 fn gen_required_objects(
@@ -222,12 +263,16 @@ fn gen_required_objects(
         let _input_hint = types::visit_type(tera, &mut memo, &input, tg)?.hint;
         let output_hint = types::visit_type(tera, &mut memo, &output, tg)?.hint;
 
+        let (fn_name, _) = get_module_infos(fun, tg)?;
         match output {
             TypeNode::Object { .. } => {
                 // output is a top level dataclass
                 Ok(RequiredObjects {
-                    input_name,
-                    output_name,
+                    func_details: FuncDetails {
+                        input_name,
+                        output_name,
+                        name: fn_name,
+                    },
                     top_level_types: vec![],
                     memo,
                 })
@@ -241,14 +286,51 @@ fn gen_required_objects(
                     def: Some(def),
                 }];
                 Ok(RequiredObjects {
-                    input_name,
-                    output_name,
+                    func_details: FuncDetails {
+                        input_name,
+                        output_name,
+                        name: fn_name,
+                    },
                     top_level_types,
                     memo,
                 })
             }
         }
     } else {
-        bail!("function node was expected")
+        panic!("function node was expected")
     }
+}
+
+fn merge_requirements(
+    mergeable: IndexMap<PathBuf, Vec<RequiredObjects>>,
+) -> Vec<MergedRequiredObjects> {
+    // merge types and defs that refers the same file
+    let mut gen_inputs = vec![];
+    for (entry_point_path, requirements) in mergeable {
+        let mut ongoing_merge = MergedRequiredObjects {
+            entry_point_path,
+            funcs: vec![],
+            memo: Memo::new(),
+            top_level_types: vec![],
+        };
+        let mut types = HashSet::new();
+        let mut funcs = HashSet::new();
+
+        for req in requirements {
+            // merge classes
+            ongoing_merge.memo.merge_with(req.memo.clone());
+            // merge types
+            for tpe in req.top_level_types {
+                types.insert(tpe);
+            }
+            // merge funcs
+            funcs.insert(req.func_details);
+        }
+
+        ongoing_merge.top_level_types = Vec::from_iter(types.into_iter());
+        ongoing_merge.funcs = Vec::from_iter(funcs.into_iter());
+        gen_inputs.push(ongoing_merge);
+    }
+
+    gen_inputs
 }

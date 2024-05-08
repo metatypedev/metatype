@@ -4,7 +4,7 @@
 use indexmap::IndexMap;
 use serde::Serialize;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Eq, Hash, PartialEq, Clone, Serialize)]
 pub struct TypeGenerated {
     /// Type representation: int, str, class name, ..
     pub hint: String,
@@ -27,6 +27,7 @@ struct Class {
     type_generated: Option<TypeGenerated>,
 }
 
+#[derive(Clone)]
 pub struct Memo {
     map: IndexMap<String, Class>,
     priority_weight: u32,
@@ -42,16 +43,17 @@ impl Memo {
 
     /// Insert `v` at `k`, if already present, this will also increase the priority by the current weight
     pub fn insert(&mut self, k: String, v: TypeGenerated) {
-        if self.is_allocated(&k) {
-            let old = self.map.get(&k).unwrap();
-            self.map.insert(
-                k,
-                Class {
-                    priority: old.priority + self.priority_weight,
-                    type_generated: Some(v),
-                },
-            );
+        if !self.is_allocated(&k) {
+            self.allocate(k.clone());
         }
+        let old = self.map.get(&k).unwrap();
+        self.map.insert(
+            k,
+            Class {
+                priority: old.priority + self.priority_weight,
+                type_generated: Some(v),
+            },
+        );
     }
 
     /// Allocate for `k` and set priority to 0, if a place is already allocated this will do nothing
@@ -96,6 +98,14 @@ impl Memo {
             self.priority_weight = value;
         } else {
             panic!("invalid state: priority weight overflowed")
+        }
+    }
+
+    pub fn merge_with(&mut self, other: Memo) {
+        for (k, v) in other.map.into_iter() {
+            if let Some(gen) = v.type_generated {
+                self.insert(k, gen);
+            }
         }
     }
 }
