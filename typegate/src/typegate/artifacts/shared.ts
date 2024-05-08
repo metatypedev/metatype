@@ -15,6 +15,8 @@ import { HashTransformStream } from "../../utils/hash.ts";
 import { SyncConfig } from "../../sync/config.ts";
 import { LocalArtifactPersistence } from "./local.ts";
 import { exists } from "std/fs/exists.ts";
+import { dirname } from "std/path/mod.ts";
+import { chunk } from "std/collections/chunk.ts";
 
 const logger = getLogger(import.meta);
 
@@ -149,6 +151,7 @@ class SharedArtifactPersistence implements ArtifactPersistence {
     }
 
     if (response.Body) {
+      await Deno.mkdir(dirname(targetFile), { recursive: true });
       const file = (await Deno.open(targetFile, { write: true, create: true }))
         .writable;
       await response.Body.transformToWebStream().pipeTo(file);
@@ -219,7 +222,7 @@ class SharedUploadEndpointManager implements UploadEndpointManager {
   }
 }
 
-const REDIS_REF_COUNTER = "typegate:artifacts:refcounts";
+export const REDIS_REF_COUNTER = "typegate:artifacts:refcounts";
 
 export class SharedArtifactRefCounter implements RefCounter {
   static async init(
@@ -264,6 +267,21 @@ export class SharedArtifactRefCounter implements RefCounter {
     );
 
     return keys as string[];
+  }
+
+  // for debugging purpose
+  async inspect(label = "") {
+    const data = await this.#redisClient.zrange(REDIS_REF_COUNTER, 0, -1, {
+      withScore: true,
+    });
+    console.log(
+      "refCounts",
+      label,
+      chunk(data, 2).reduce(
+        (acc, [key, value]) => ({ ...acc, [key]: value }),
+        {},
+      ),
+    );
   }
 }
 

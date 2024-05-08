@@ -10,10 +10,11 @@ import { assert, assertFalse } from "std/assert/mod.ts";
 import { connect } from "redis";
 import { S3Client } from "aws-sdk/client-s3";
 import { createBucket, hasObject, tryDeleteBucket } from "test-utils/s3.ts";
-import { resolveS3Key } from "@typegate/typegate/artifacts/shared.ts";
+import {
+  REDIS_REF_COUNTER,
+  resolveS3Key,
+} from "@typegate/typegate/artifacts/shared.ts";
 
-const redisKey = "typegraph";
-const redisEventKey = "typegraph_event";
 const syncConfig = {
   redis: {
     hostname: "localhost",
@@ -35,8 +36,7 @@ const syncConfig = {
 
 async function cleanUp() {
   using redis = await connect(syncConfig.redis);
-  await redis.del(redisKey);
-  await redis.del(redisEventKey);
+  await redis.del(REDIS_REF_COUNTER);
 
   const s3 = new S3Client(syncConfig.s3);
   await tryDeleteBucket(s3, syncConfig.s3Bucket);

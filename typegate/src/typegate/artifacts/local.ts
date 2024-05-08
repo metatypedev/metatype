@@ -55,7 +55,7 @@ export class LocalArtifactPersistence implements ArtifactPersistence {
       .pipeTo(file.writable);
 
     const hash = hasher.digest("hex");
-    const targetFile = resolve(this.dirs.cache, hash);
+    const targetFile = this.resolveCache(hash);
     logger.info(`persisting artifact to ${targetFile}`);
     await Deno.rename(tmpFile, targetFile);
 
@@ -63,6 +63,8 @@ export class LocalArtifactPersistence implements ArtifactPersistence {
   }
 
   async delete(hash: string) {
+    // TODO track and remove localPaths??
+    logger.info(`deleting artifact ${hash}`);
     await Deno.remove(this.resolveCache(hash));
   }
 
@@ -75,7 +77,7 @@ export class LocalArtifactPersistence implements ArtifactPersistence {
     if (await exists(cache)) {
       return cache;
     } else {
-      throw new Error(`Artifact '${hash}' not found`);
+      throw new Error(`Artifact '${hash}' not found at ${cache}`);
     }
   }
 
@@ -197,6 +199,10 @@ class InMemoryRefCounter implements RefCounter {
       this.#byRefCounts.set(newCount, set);
     }
     set.add(key);
+  }
+
+  inspect(label: string) {
+    console.log("refCounts (local)", label, this.#refCounts);
   }
 }
 

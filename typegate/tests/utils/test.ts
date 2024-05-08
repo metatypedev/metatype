@@ -195,9 +195,9 @@ export class MetaTest {
       cmd.push("--prefix", opts.prefix);
     }
 
-    if (opts.typegraph != null) {
-      cmd.push("--typegraph", opts.typegraph);
-    }
+    // if (opts.typegraph != null) {
+    //   cmd.push("--typegraph", opts.typegraph);
+    // }
 
     for (const [key, value] of Object.entries(opts.secrets ?? {})) {
       cmd.push("--secret", `${key}=${value}`);
@@ -228,6 +228,7 @@ export class MetaTest {
 
     return newTypegraph;
 
+    // TODO: MET-500
     // const tgString = await this.serialize(path, opts);
     // const tgJson = await TypeGraph.parseJson(tgString);
     //
@@ -452,6 +453,7 @@ export const test = ((o, fn): void => {
         dir: config.tmp_dir,
       });
 
+      // TODO different tempDir for each typegate instance
       const result = await Promise.allSettled(
         Array.from({ length: replicas }).map((_) =>
           Typegate.init(opts.syncConfig ?? null, null, tempDir)

@@ -2,11 +2,15 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { connect, Redis, RedisConnectOptions } from "redis";
+import {
+  Deferred,
+  deferred,
+} from "https://deno.land/std@0.208.0/async/deferred.ts";
 import { QueryEngine } from "../engine/query_engine.ts";
 
 // keys: tokens, latest
 // args: n
-export const decrPosCmd = /* lua */ `
+export const decrPosCmd = `
 local e = redis.call('EXISTS', KEYS[1])
 if e == 0 then
   return {-1, -1}
@@ -22,7 +26,7 @@ return {c, l}
 
 // keys: tokens, latest
 // args: now, delta, window budget, window sec
-export const getUpdateBudgetCmd = /* lua */ `
+export const getUpdateBudgetCmd = `
 local c = redis.call('DECR', KEYS[1])
 local l = tonumber(redis.call('GET', KEYS[2]))
 if c == -1 then
@@ -43,8 +47,6 @@ if c == -1 then
 end
 return {c, l}
 `.trim();
-
-type PromiseWithResolvers<T> = ReturnType<typeof Promise.withResolvers<T>>;
 
 export abstract class RateLimiter {
   abstract decr(
@@ -100,10 +102,10 @@ export abstract class RateLimiter {
   }
 }
 
-export class RedisRateLimiter extends RateLimiter implements AsyncDisposable {
+export class RedisRateLimiter extends RateLimiter {
   localHit: TTLMap;
   local: TTLMap;
-  backgroundWork: Map<number, PromiseWithResolvers<void>>;
+  backgroundWork: Map<number, Deferred<void>>;
 
   private constructor(
     private redis: Redis,
@@ -121,7 +123,7 @@ export class RedisRateLimiter extends RateLimiter implements AsyncDisposable {
     return new RedisRateLimiter(redis);
   }
 
-  async [Symbol.asyncDispose]() {
+  async terminate() {
     await this.awaitBackground();
     this.redis.close();
     this.local.terminate();
@@ -204,7 +206,7 @@ export class RedisRateLimiter extends RateLimiter implements AsyncDisposable {
     const tokensKey = `${id}:tokens`;
     const lastKey = `${id}:last`;
 
-    const def = Promise.withResolvers<void>();
+    const def = deferred<void>();
     this.backgroundWork.set(backgroundId, def);
 
     const tx = await this.redis.eval(

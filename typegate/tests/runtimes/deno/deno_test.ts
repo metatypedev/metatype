@@ -349,7 +349,10 @@ Meta.test(
     sanitizeOps: false,
   },
   async (t) => {
-    const e = await t.engineFromTgDeployPython("runtimes/deno/deno.py", cwd);
+    const e = await t.engineFromTgDeployPython(
+      "runtimes/deno/deploy_deno.py",
+      cwd,
+    );
 
     await t.should("safely fail upon stack overflow", async () => {
       await gql`

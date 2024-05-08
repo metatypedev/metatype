@@ -114,7 +114,10 @@ export class Typegate implements AsyncDisposable {
       await using stack = new AsyncDisposableStack();
 
       const limiter = await RedisRateLimiter.init(syncConfig.redis);
-      stack.use(limiter);
+      // stack.use(limiter);
+      stack.defer(async () => {
+        await limiter.terminate();
+      });
 
       const artifactStore = await createSharedArtifactStore(
         tmpDir,

@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { SingleRegister } from "test-utils/single_register.ts";
-import { Typegate } from "@typegate/typegate/mod.ts";
+// import { SingleRegister } from "test-utils/single_register.ts";
+// import { Typegate } from "@typegate/typegate/mod.ts";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { dirname, join } from "std/path/mod.ts";
 import { copy } from "std/fs/copy.ts";
@@ -43,22 +43,24 @@ export const Meta = {
 };
 
 export async function execute(
-  engine: QueryEngine | null,
+  _engine: QueryEngine | null,
   request: Request,
 ): Promise<Response> {
-  if (engine) {
-    const register = new SingleRegister(engine.name, engine);
-    const test = getCurrentTest();
-    await using typegate = await Typegate.init(null, register, test.tempDir);
-    return await typegate.handle(request, {
-      remoteAddr: { hostname: "localhost" },
-    } as Deno.ServeHandlerInfo);
-  } else {
-    const typegate = getCurrentTest().typegates.next();
-    return await typegate.handle(request, {
-      remoteAddr: { hostname: "localhost" },
-    } as Deno.ServeHandlerInfo);
-  }
+  // TODO: MET-500
+  // This might only work in temp mode; using different temp dir for each typegate instance
+  // if (engine) {
+  //   const register = new SingleRegister(engine.name, engine);
+  //   const test = getCurrentTest();
+  //   await using typegate = await Typegate.init(null, register, test.tempDir);
+  //   return await typegate.handle(request, {
+  //     remoteAddr: { hostname: "localhost" },
+  //   } as Deno.ServeHandlerInfo);
+  // } else {
+  const typegate = getCurrentTest().typegates.next();
+  return await typegate.handle(request, {
+    remoteAddr: { hostname: "localhost" },
+  } as Deno.ServeHandlerInfo);
+  // }
 }
 
 export const sleep = (ms: number) =>

@@ -1,7 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { signJWT, verifyJWT } from "../../crypto.ts";
+import { sha256, signJWT, verifyJWT } from "@typegate/crypto.ts";
+import { getLogger } from "@typegate/log.ts";
 import * as jwt from "jwt";
 import { z } from "zod";
 import { dirname } from "std/path/dirname.ts";
@@ -9,6 +10,8 @@ import { resolve } from "std/path/resolve.ts";
 import { exists } from "std/fs/exists.ts";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
+
+const logger = getLogger(import.meta);
 
 export interface Dirs {
   cache: string;
@@ -20,15 +23,31 @@ function getUploadPath(tgName: string) {
   return `/${tgName}/artifacts`;
 }
 
+async function getLocalParentDir(
+  entrypoint: ArtifactMeta,
+  deps: ArtifactMeta[],
+) {
+  let uniqueStr = `${entrypoint.relativePath}.${entrypoint.hash}`;
+  for (
+    const dep of deps.sort((a, b) =>
+      a.relativePath.localeCompare(b.relativePath)
+    )
+  ) {
+    uniqueStr += `;${dep.relativePath}.${dep.hash}`;
+  }
+
+  return await sha256(uniqueStr);
+}
+
 export async function getLocalPath(
   meta: ArtifactMeta,
-  mainModuleMeta: ArtifactMeta,
+  parentDirName: string,
   dirs: Dirs,
 ) {
   const cachedPath = resolve(dirs.cache, meta.hash);
   const localPath = resolve(
     dirs.artifacts,
-    mainModuleMeta.hash,
+    parentDirName,
     meta.typegraphName,
     meta.relativePath,
   );
@@ -132,10 +151,12 @@ export class ArtifactStore implements AsyncDisposable {
   }
 
   async runArtifactGC(full = false) {
+    logger.info("Running artifact GC");
     if (full) {
       throw new Error("Not implemented");
     }
     const garbage = await this.refCounter.takeGarbage();
+    logger.info(`Found ${garbage.length} garbage artifacts: ${garbage}`);
 
     const res = await Promise.allSettled(
       garbage.map((hash) => this.persistence.delete(hash)),
@@ -143,7 +164,7 @@ export class ArtifactStore implements AsyncDisposable {
 
     res.forEach((r, i) => {
       if (r.status === "rejected") {
-        console.error("Error when deleting artifact", garbage[i], r.reason);
+        logger.error("Error when deleting artifact", garbage[i], r.reason);
       }
     });
   }
@@ -152,13 +173,14 @@ export class ArtifactStore implements AsyncDisposable {
     meta: ArtifactMeta,
     deps: ArtifactMeta[] = [],
   ): Promise<string> {
+    const parentDirName = await getLocalParentDir(meta, deps);
     for (const dep of deps) {
       await this.persistence.fetch(dep.hash);
-      await getLocalPath(dep, meta, this.persistence.dirs);
+      await getLocalPath(dep, parentDirName, this.persistence.dirs);
     }
 
     await this.persistence.fetch(meta.hash);
-    return getLocalPath(meta, meta, this.persistence.dirs);
+    return getLocalPath(meta, parentDirName, this.persistence.dirs);
   }
 
   prepareUpload(meta: ArtifactMeta, origin: URL) {
@@ -212,4 +234,7 @@ export interface RefCounter extends AsyncDisposable {
   decrement(key: string): Promise<void>;
   resetAll(): Promise<void>;
   takeGarbage(): Promise<Array<string>>;
+
+  // for debugging purpose; output the current state of the ref counter
+  inspect(label: string): Promise<void>;
 }
