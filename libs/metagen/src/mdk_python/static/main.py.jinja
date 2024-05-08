@@ -4,5 +4,5 @@ from .{{ mod_name }}_types import {{ imports }}
 @typed_{{ func.name }}
 def {{ func.name }}(inp: {{ func.input_name }}) -> {{ func.output_name }}:
     # TODO: write your logic here
-    raise Exception("TODO: not implemented")
+    raise Exception("{{ func.name }} not implemented")
 {% endfor %}

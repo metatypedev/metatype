@@ -93,17 +93,19 @@ impl crate::Plugin for Generator {
                 continue;
             }
             let (_, script_path) = get_module_infos(fun, tg)?;
-            let entry_point_path = match script_path.is_relative() || script_path.as_os_str().eq("")
-            {
-                true => self
-                    .config
+            let base_path = self.config.base.path.clone();
+            let entry_point_path = if base_path.as_os_str().to_string_lossy().trim() == "" {
+                self.config
                     .base
                     .typegraph_path
                     .clone()
                     .map(|p| p.parent().unwrap().to_owned()) // try relto typegraph path first
-                    .unwrap_or(self.config.base.path.clone()) // or pick 'path' in config
-                    .join(script_path),
-                false => script_path.to_path_buf(),
+                    .unwrap()
+                    .join(script_path)
+            } else if script_path.is_absolute() {
+                script_path
+            } else {
+                base_path.join(&script_path)
             };
 
             let required = gen_required_objects(&tera, fun, tg)?;
