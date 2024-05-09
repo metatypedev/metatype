@@ -20,6 +20,6 @@ Having a good title and description is important for the users to get readable c
 
 ...
 
-- [ ] The change come with new or modified tests
+- [ ] The change comes with new or modified tests
 - [ ] Hard-to-understand functions have explanatory comments
 - [ ] End-user documentation is updated to reflect the change
