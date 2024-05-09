@@ -562,6 +562,15 @@
                 "env": {},
                 "allowedPortDeps": []
               }
+            },
+            "test": {
+              "name": "test",
+              "dependsOn": [],
+              "env": {
+                "installs": [],
+                "env": {},
+                "allowedPortDeps": []
+              }
             }
           }
         }

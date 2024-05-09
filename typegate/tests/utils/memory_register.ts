@@ -11,11 +11,21 @@ export class MemoryRegister extends Register {
     super();
   }
 
+  [Symbol.asyncDispose](): Promise<void> {
+    return Promise.all(
+      Array.from(this.map.values()).map((engine) =>
+        engine[Symbol.asyncDispose]()
+      ),
+    ).then(() => {
+      this.map.clear();
+    });
+  }
+
   async add(engine: QueryEngine): Promise<void> {
     const old = this.map.get(engine.name);
     this.map.set(engine.name, engine);
     if (old) {
-      await old.terminate();
+      await old[Symbol.asyncDispose]();
     }
   }
 
@@ -23,7 +33,7 @@ export class MemoryRegister extends Register {
     const old = this.map.get(name);
     if (old) {
       this.map.delete(name);
-      await old.terminate();
+      await old[Symbol.asyncDispose]();
     }
   }
 

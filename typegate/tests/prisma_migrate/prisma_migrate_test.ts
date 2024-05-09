@@ -16,7 +16,6 @@ import { testDir } from "../utils/dir.ts";
 
 Meta.test({
   name: "prisma migrations",
-  systemTypegraphs: true,
 }, async (t) => {
   const tgPath = "runtimes/prisma/prisma.py";
   const migrations = t.getTypegraphEngine("typegate/prisma_migration")!;

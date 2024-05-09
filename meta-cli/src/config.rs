@@ -80,6 +80,9 @@ impl NodeConfig {
         if let Some(gate) = &args.gate {
             res.url = gate.clone();
         }
+        if let Some(prefix) = &args.prefix {
+            res.prefix = Some(prefix.clone());
+        }
         res.username = args.username.clone().or(res.username);
         res.password = args.password.clone().or(res.password);
         res

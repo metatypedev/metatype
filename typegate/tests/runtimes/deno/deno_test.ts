@@ -28,11 +28,12 @@ const reusableTgOutput = {
 Meta.test(
   {
     name: "Deno runtime",
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
-    const e = await t.engineFromTgDeployPython("runtimes/deno/deno.py", cwd);
+    const e = await t.engineFromTgDeployPython(
+      "runtimes/deno/deploy_deno.py",
+      cwd,
+    );
 
     await t.should("work on the default worker", async () => {
       await gql`
@@ -113,11 +114,12 @@ Meta.test(
 Meta.test(
   {
     name: "Deno runtime: file name reloading",
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
-    const e = await t.engineFromTgDeployPython("runtimes/deno/deno.py", cwd);
+    const e = await t.engineFromTgDeployPython(
+      "runtimes/deno/deploy_deno.py",
+      cwd,
+    );
 
     await t.should("success for allowed network access", async () => {
       await gql`
@@ -148,8 +150,6 @@ Meta.test(
 Meta.test(
   {
     name: "Deno runtime: use local imports",
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
     const e = await t.engineFromTgDeployPython(
@@ -206,8 +206,6 @@ Meta.test("Deno runtime with typescript", async (t) => {
 Meta.test(
   {
     name: "DenoRuntime using TS SDK: artifacts and deps",
-    port: true,
-    systemTypegraphs: true,
   },
   async (metaTest) => {
     const port = metaTest.port;
@@ -257,8 +255,6 @@ Meta.test(
 Meta.test(
   {
     name: "Deno runtime: file name reloading",
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
     const load = async (value: number) => {
@@ -304,8 +300,6 @@ Meta.test(
 Meta.test(
   {
     name: "Deno runtime: script reloading",
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
     const denoScript = path.join(
@@ -353,11 +347,12 @@ Meta.test(
   {
     name: "Deno runtime: infinite loop or similar",
     sanitizeOps: false,
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
-    const e = await t.engineFromTgDeployPython("runtimes/deno/deno.py", cwd);
+    const e = await t.engineFromTgDeployPython(
+      "runtimes/deno/deploy_deno.py",
+      cwd,
+    );
 
     await t.should("safely fail upon stack overflow", async () => {
       await gql`

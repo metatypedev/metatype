@@ -107,8 +107,6 @@ Meta.test("Python VM performance", async (t) => {
 Meta.test(
   {
     name: "Python runtime",
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
     const e = await t.engineFromTgDeployPython(
@@ -202,8 +200,6 @@ Meta.test(
 Meta.test(
   {
     name: "Deno: def, lambda",
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
     const port = t.port;
@@ -273,8 +269,6 @@ Meta.test(
 Meta.test(
   {
     name: "Python: upload artifacts with deps",
-    port: true,
-    systemTypegraphs: true,
   },
   async (metaTest) => {
     const port = metaTest.port;
@@ -326,8 +320,6 @@ Meta.test(
   {
     name: "Python: infinite loop or similar",
     sanitizeOps: false,
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
     const e = await t.engineFromTgDeployPython(
@@ -367,8 +359,6 @@ Meta.test(
 Meta.test(
   {
     name: "Python: typegate reloading",
-    port: true,
-    systemTypegraphs: true,
   },
   async (metaTest) => {
     const port = metaTest.port;

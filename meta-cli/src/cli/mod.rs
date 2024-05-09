@@ -96,6 +96,9 @@ pub struct NodeArgs {
     #[clap(short, long, value_parser = UrlValueParser::new().http())]
     pub gate: Option<Url>,
 
+    #[clap(short, long)]
+    pub prefix: Option<String>,
+
     /// Username to use to connect to the typegate (basic auth).
     #[clap(long)]
     pub username: Option<String>,

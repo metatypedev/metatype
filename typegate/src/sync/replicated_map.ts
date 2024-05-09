@@ -38,7 +38,7 @@ type RedisReplicatedMapOptions<T> = {
   terminate: TerminateHook<T>;
 };
 
-export class RedisReplicatedMap<T> {
+export class RedisReplicatedMap<T> implements AsyncDisposable {
   private instance: string;
 
   public memory: Map<string, T>;
@@ -46,21 +46,6 @@ export class RedisReplicatedMap<T> {
   private ekey: string;
 
   sync: SyncContext | null;
-
-  private constructor(
-    name: string,
-    private redis: Redis,
-    private redisObs: Redis,
-    private serializer: Serializer<T>,
-    private deserializer: Deserializer<T>,
-    private terminateHook: TerminateHook<T>,
-  ) {
-    this.instance = crypto.randomUUID();
-    this.memory = new Map();
-    this.key = name;
-    this.ekey = `${name}_event`;
-    this.sync = null;
-  }
 
   static async init<T>(
     name: string,
@@ -81,6 +66,31 @@ export class RedisReplicatedMap<T> {
       deserialize,
       terminate,
     );
+  }
+
+  private constructor(
+    name: string,
+    private redis: Redis,
+    private redisObs: Redis,
+    private serializer: Serializer<T>,
+    private deserializer: Deserializer<T>,
+    private terminateHook: TerminateHook<T>,
+  ) {
+    this.instance = crypto.randomUUID();
+    this.memory = new Map();
+    this.key = name;
+    this.ekey = `${name}_event`;
+    this.sync = null;
+  }
+
+  async [Symbol.asyncDispose]() {
+    if (this.sync) {
+      await this.sync.cancel();
+      this.sync = null;
+    }
+
+    this.redis.close();
+    this.redisObs.close();
   }
 
   async historySync(): Promise<XIdInput> {
@@ -150,16 +160,6 @@ export class RedisReplicatedMap<T> {
         throw Error(`unexpected message ${name} with ${event}`);
       }
     }
-  }
-
-  async stopSync() {
-    if (this.sync) {
-      await this.sync.cancel();
-      this.sync = null;
-    }
-
-    this.redis.close();
-    this.redisObs.close();
   }
 
   private subscribe(): SyncContext {

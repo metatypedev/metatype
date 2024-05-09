@@ -3,9 +3,11 @@
 
 import json
 import os
+import sys
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 from urllib import request
+from urllib.error import HTTPError
 
 from typegraph.gen.exports.core import Artifact
 from typegraph.gen.types import Err, Ok, Result
@@ -90,7 +92,15 @@ class ArtifactUploader:
             data=content,
             headers=upload_headers,
         )
-        response = request.urlopen(upload_req)
+        try:
+            response = request.urlopen(upload_req)
+        except HTTPError as e:
+            errmsg = json.load(e.fp).get("error", None)
+
+            print(f"Failed to upload artifact {path}: {e}", file=sys.stderr)
+            print(f"  - {errmsg}", file=sys.stderr)
+            print(f"  - url={url}", file=sys.stderr)
+            raise e
         if response.status != 201:
             raise Exception(f"Failed to upload artifact {path} {response.status}")
 

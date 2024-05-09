@@ -20,7 +20,7 @@ async function genSecretKey(): Promise<Record<string, string>> {
 Meta.test("Policies", async (t) => {
   const e = await t.engine("policies/policies.py", {
     secrets: await genSecretKey(),
-    typegraph: "policies",
+    // typegraph: "policies",
   });
 
   await t.should("have public access", async () => {

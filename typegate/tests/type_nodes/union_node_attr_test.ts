@@ -10,8 +10,6 @@ const cwd = path.join(testDir, "type_nodes");
 Meta.test({
   name: "Union type",
   introspection: true,
-  port: true,
-  systemTypegraphs: true,
 }, async (t) => {
   const e = await t.engineFromTgDeployPython(
     "type_nodes/union_node_attr.py",

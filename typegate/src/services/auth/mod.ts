@@ -84,7 +84,7 @@ export async function ensureJWT(
         auth = engine.tg.auths.get(provider as string) ?? null;
       }
     } catch (e) {
-      logger.warning(`malformed jwt: ${e}`);
+      logger.warn(`malformed jwt: ${e}`);
     }
   }
 

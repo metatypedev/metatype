@@ -277,8 +277,6 @@ async function undeployTypegraph(port: number) {
 
 Meta.test({
   name: "apollo client",
-  port: true,
-  systemTypegraphs: true,
   introspection: true,
 }, async (t) => {
   await initBucket();
