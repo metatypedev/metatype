@@ -68,11 +68,11 @@ dev:
       '(    GHJK_VERSION: ").+(")': GHJK_VERSION
     website/docusaurus.config.js:
       '(  tagline: ").+(",)': TAGLINE
-    examples/**/compose.yml:
-      '(    image: ghcr.io/metatypedev/typegate:v).+()': METATYPE_VERSION
     '**/pyproject.toml':
       (version = ").+("): METATYPE_VERSION
       (wasmtime = "\^).+("): WASMTIME_VERSION
+    examples/**/compose.yml:
+      '(    image: ghcr.io/metatypedev/typegate:v).+()': PUBLISHED_VERSION
     examples/**/pyproject.toml:
       (typegraph = ").+("): METATYPE_VERSION
     examples/**/package.json:
@@ -99,7 +99,7 @@ dev:
     TYPEGRAPH_VERSION: 0.0.3
     PRISMA_VERSION: 5.5.2
     METATYPE_VERSION: 0.4.1-0
-    PUBLISHED_VERSION: 0.3.6
+    PUBLISHED_VERSION: 0.4.0
     WASM_OPT_VERSION: 0.116.0
     MOLD_VERSION: v2.4.0
     CMAKE_VERSION: 3.28.0-rc6
