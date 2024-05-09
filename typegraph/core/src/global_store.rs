@@ -106,7 +106,7 @@ const PREDEFINED_DENO_FUNCTIONS: &[&str] = &["identity", "true"];
 
 thread_local! {
     pub static STORE: RefCell<Store> = RefCell::new(Store::new());
-    pub static SDK_VERSION: String = "0.3.7-0".to_owned();
+    pub static SDK_VERSION: String = "0.4.0".to_owned();
 }
 
 fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
@@ -450,7 +450,7 @@ impl Store {
         }
     }
 
-    pub fn get_deno_module(file: String) -> MaterializerId {
+    pub fn get_deno_module(file: String, deps: Vec<String>) -> MaterializerId {
         if let Some(mat) = with_store(|s| s.deno_modules.get(&file).cloned()) {
             mat
         } else {
@@ -460,6 +460,7 @@ impl Store {
                 effect: Effect::Read, // N/A
                 data: Rc::new(DenoMaterializer::Module(MaterializerDenoModule {
                     file: file.clone(),
+                    deps: deps.clone(),
                 }))
                 .into(),
             });

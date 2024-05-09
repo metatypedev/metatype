@@ -9,7 +9,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "423d38e"
+  GHJK_VERSION: "2725af8"
   DENO_VERSION: "1.41.0"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
@@ -188,8 +188,10 @@ jobs:
             runner: ubuntu-latest
           # FIXME: try macos-14 runner once all actions support it
           # docker buildx action broken as of 2024-02-09
+          - platform: linux/arm64
+            runner: custom-macos
           # - platform: linux/arm64
-          #   runner: custom-macos
+          #   runner: macos-14
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -221,7 +223,7 @@ jobs:
         if: "! steps.check.outputs.has-permission"
         with:
           file: dev/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ matrix.platform }}
           push: false
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
           target: check
@@ -299,6 +301,8 @@ jobs:
           npm publish --registry $NPM_CONFIG_REGISTRY
           cd ../../../..
 
+          ghjk x clean-deno-lock
+
           # install packages inside metatype examples
           pnpm install -C examples/typegraphs
 
@@ -322,8 +326,9 @@ jobs:
           deno cache --import-map typegate/import_map.json \
             typegate/src/main.ts \
             typegate/tests/utils/*.ts \
-            typegate/tests/runtimes/wasm/*.ts \
-            typegate/tests/runtimes/python_wasi/*.ts \
+            typegate/tests/runtimes/wasm_wire/*.ts \
+            typegate/tests/runtimes/wasm_reflected/*.ts \
+            typegate/tests/runtimes/python/*.ts \
             dev/deps.ts \
             dev/utils.ts
           deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov

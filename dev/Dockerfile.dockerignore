@@ -4,6 +4,7 @@
 !dev/update.ts
 !dev/LICENSE-Elastic-2.0.md
 !libs/
+!wit/
 !meta-cli/Cargo.toml
 !typegraph/core/
 !typegate/engine

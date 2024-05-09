@@ -1,13 +1,20 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { testDir } from "test-utils/dir.ts";
 import { gql, Meta } from "../utils/mod.ts";
+import * as path from "std/path/mod.ts";
+
+const cwd = path.join(testDir, "type_nodes");
 
 Meta.test({
   name: "Union type",
   introspection: true,
 }, async (t) => {
-  const e = await t.engine("type_nodes/union_node_attr.py");
+  const e = await t.engineFromTgDeployPython(
+    "type_nodes/union_node_attr.py",
+    cwd,
+  );
 
   await t.should("be normalized and represented as rgb color", async () => {
     await gql`

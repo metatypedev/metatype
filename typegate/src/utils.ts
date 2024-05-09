@@ -3,7 +3,7 @@
 
 import type { ComputeStage } from "./engine/query_engine.ts";
 import * as ast from "graphql/ast";
-import * as base64 from "std/encoding/base64.ts";
+import { decodeBase64, encodeBase64 } from "std/encoding/base64.ts";
 import levenshtein from "levenshtein";
 import { None, Option, Some } from "monads";
 
@@ -12,7 +12,8 @@ import type { TypeGraph } from "./typegraph/mod.ts";
 
 import { ensureDir, ensureFile } from "std/fs/mod.ts";
 import { Untar } from "std/archive/untar.ts";
-import * as streams from "std/streams/mod.ts";
+import { readerFromStreamReader } from "std/io/reader_from_stream_reader.ts";
+import { toReadableStream } from "std/io/to_readable_stream.ts";
 import { path } from "compress/deps.ts";
 import { sha1 } from "./crypto.ts";
 import { BRANCH_NAME_SEPARATOR } from "./engine/computation_engine.ts";
@@ -134,11 +135,11 @@ export function iterParentStages(
 }
 
 export const b64decode = (v: string): string => {
-  return new TextDecoder().decode(base64.decode(v));
+  return new TextDecoder().decode(decodeBase64(v));
 };
 
 export const b64encode = (v: string): string => {
-  return base64.encode(v);
+  return encodeBase64(v);
 };
 
 export function nativeResult<R>(
@@ -223,12 +224,12 @@ export async function uncompress(
   dir: string,
   tarb64: string,
 ): Promise<string[]> {
-  const buffer = base64.decode(tarb64);
+  const buffer = decodeBase64(tarb64);
   const streamReader = new Blob([buffer])
     .stream()
     .pipeThrough(new DecompressionStream("gzip"))
     .getReader();
-  const denoReader = streams.readerFromStreamReader(streamReader);
+  const denoReader = readerFromStreamReader(streamReader);
 
   const untar = new Untar(denoReader);
   const entries = [];
@@ -248,7 +249,7 @@ export async function uncompress(
       await ensureFile(resFilePath);
 
       file = await Deno.open(resFilePath, { write: true });
-      await streams.copy(entry, file);
+      await toReadableStream(entry).pipeTo(file.writable);
     } catch (e) {
       throw e;
     } finally {

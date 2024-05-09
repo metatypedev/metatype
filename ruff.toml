@@ -1,1 +1,4 @@
 ignore = ["E501"]
+exclude = [
+  "libs/pyrt_wit_wire/pyrt"
+]

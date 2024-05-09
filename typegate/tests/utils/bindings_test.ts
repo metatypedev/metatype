@@ -8,6 +8,7 @@ import {
   validate_prisma_runtime_data,
   wasmtime_wit,
 } from "native";
+import type { WasmInput } from "../../engine/runtime.js";
 
 function assert<T>(val: T) {
   if (!val) throw Error("assertion failed");
@@ -55,7 +56,6 @@ Deno.test("validatePrismaRuntimeData", () => {
 
 Deno.test("typegraphValidate", () => {
   const json = {
-    "$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",
@@ -150,7 +150,7 @@ Deno.test("typegraphValidate", () => {
 
 Deno.test("Wasm Wit", async () => {
   const input: WasmInput = {
-    wasm: "typegate/tests/runtimes/wasm/rust.wasm",
+    wasm: "typegate/tests/runtimes/wasm_reflected/rust.wasm",
     func: "add",
     args: [JSON.stringify(1), JSON.stringify(2)],
   };

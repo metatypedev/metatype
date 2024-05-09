@@ -1,40 +1,66 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { signJWT, verifyJWT } from "../../crypto.ts";
+import { sha256, signJWT, verifyJWT } from "@typegate/crypto.ts";
+import { getLogger } from "@typegate/log.ts";
 import * as jwt from "jwt";
 import { z } from "zod";
-import config from "../../config.ts";
 import { dirname } from "std/path/dirname.ts";
 import { resolve } from "std/path/resolve.ts";
+import { exists } from "std/fs/exists.ts";
+// until deno supports it...
+import { AsyncDisposableStack } from "dispose";
 
-// The directory where artifacts are stored -- by hash
-export const STORE_DIR = `${config.tmp_dir}/artifacts-cache`;
-export const STORE_TEMP_DIR = `${config.tmp_dir}/artifacts-cache/tmp`;
-const ARTIFACTS_DIR = `${config.tmp_dir}/artifacts`;
+const logger = getLogger(import.meta);
+
+export interface Dirs {
+  cache: string;
+  temp: string;
+  artifacts: string;
+}
 
 function getUploadPath(tgName: string) {
   return `/${tgName}/artifacts`;
 }
 
-export async function getLocalPath(meta: ArtifactMeta) {
-  const cachedPath = resolve(STORE_DIR, meta.hash);
+async function getLocalParentDir(
+  entrypoint: ArtifactMeta,
+  deps: ArtifactMeta[],
+) {
+  const uniqueStr = deps
+    .sort((a, b) => a.relativePath.localeCompare(b.relativePath))
+    .reduce(
+      (acc, dep) => `${acc};${dep.relativePath}.${dep.hash}`,
+      `${entrypoint.relativePath}.${entrypoint.hash}`,
+    );
+
+  return await sha256(uniqueStr);
+}
+
+export async function getLocalPath(
+  meta: ArtifactMeta,
+  parentDirName: string,
+  dirs: Dirs,
+) {
+  const cachedPath = resolve(dirs.cache, meta.hash);
   const localPath = resolve(
-    ARTIFACTS_DIR,
+    dirs.artifacts,
+    parentDirName,
     meta.typegraphName,
     meta.relativePath,
   );
 
-  // TODO: what happens when symlink already exists? or when same local path artifacts with different cachedPath
-  try {
-    await Deno.lstat(localPath);
-    return localPath;
-  } catch {
-    await Deno.mkdir(dirname(localPath), { recursive: true });
-    await Deno.link(cachedPath, localPath);
-
+  if (await exists(localPath)) {
+    // always assume same versions of the arifacts - no need to check hash.
     return localPath;
   }
+
+  await Deno.mkdir(dirname(localPath), { recursive: true });
+  // the old artifacts are always removed on typegraph update.
+  await Deno.remove(localPath, { recursive: true }).catch(() => {});
+  await Deno.link(cachedPath, localPath);
+
+  return localPath;
 }
 
 export const artifactMetaSchema = z.object({
@@ -46,60 +72,122 @@ export const artifactMetaSchema = z.object({
 
 export type ArtifactMeta = z.infer<typeof artifactMetaSchema>;
 
-export abstract class ArtifactStore {
-  /**
-   * Persist an artifact to the store.
-   * @param stream The artifact content.
-   * @returns The hash of the artifact.
-   */
-  abstract persist(stream: ReadableStream): Promise<string>;
+export interface ArtifactPersistence extends AsyncDisposable {
+  dirs: Dirs;
+  save(stream: ReadableStream): Promise<string>;
+  delete(hash: string): Promise<void>;
+  has(hash: string): Promise<boolean>;
+  /** Fetch the artifact to local file system and returns the path */
+  fetch(hash: string): Promise<string>;
+}
 
-  /**
-   * Delete an artifact from the store.
-   * @param hash The hash of the artifact.
-   * @throws If the artifact does not exist.
-   */
-  abstract delete(hash: string): Promise<void>;
-
-  /**
-   * Check if the artifact is available in the store.
-   * @param hash The hash of the artifact.
-   * @returns Whether the artifact is available.
-   */
-  abstract has(hash: string): Promise<boolean>;
-
-  /**
-   * Ensure that the artifact is available locally (in the file system).
-   * @param meta The artifact metadata.
-   * @param deps The dependencies of the artifact.
-   * @returns The local path to the artifact.
-   * @throws If the artifact is not available (not persisted on the store).
-   */
-  abstract getLocalPath(
-    meta: ArtifactMeta,
-    deps?: ArtifactMeta[],
-  ): Promise<string>;
-
-  /**
-   * Create a new upload URL for the given artifact.
-   * @param meta The artifact metadata.
-   * @param origin The origin of the request.
-   * @returns The URL to upload the artifact to, or null if the artifact is already uploaded.
-   */
-  abstract prepareUpload(
+export interface UploadEndpointManager extends AsyncDisposable {
+  prepareUpload(
     meta: ArtifactMeta,
     origin: URL,
+    persistence: ArtifactPersistence,
   ): Promise<string | null>;
+  takeUploadUrl(url: URL): Promise<ArtifactMeta>;
+}
 
-  /**
-   * Remove the given upload URL from the store.
-   * @param url The URL to remove.
-   * @returns The artifact metadata.
-   * @throws If the URL is invalid or expired.
-   */
-  abstract takeUploadUrl(url: URL): Promise<ArtifactMeta>;
+export class ArtifactStore implements AsyncDisposable {
+  #disposed = false;
 
-  abstract close(): Promise<void>;
+  static async init(
+    persistence: ArtifactPersistence,
+    uploadEndpoints: UploadEndpointManager,
+    refCounter: RefCounter,
+  ) {
+    await using stack = new AsyncDisposableStack();
+    stack.use(persistence);
+    stack.use(uploadEndpoints);
+    stack.use(refCounter);
+    return await Promise.resolve(
+      new ArtifactStore(
+        persistence,
+        uploadEndpoints,
+        refCounter,
+        stack.move(),
+      ),
+    );
+  }
+
+  constructor(
+    public persistence: ArtifactPersistence,
+    private uploadEndpoints: UploadEndpointManager,
+    private refCounter: RefCounter,
+    private disposables: AsyncDisposableStack,
+  ) {
+  }
+
+  async [Symbol.asyncDispose]() {
+    if (this.#disposed) return;
+    this.#disposed = true;
+    await this.disposables[Symbol.asyncDispose]();
+  }
+
+  async updateRefCounts(
+    added: Set<string>,
+    removed: Set<string>,
+  ): Promise<void> {
+    const increments: string[] = [];
+    const decrements: string[] = [];
+
+    for (const hash of added) {
+      if (!removed.has(hash)) {
+        increments.push(hash);
+      } else {
+        removed.delete(hash);
+      }
+    }
+    decrements.push(...removed);
+
+    await Promise.all([
+      ...increments.map((hash) => this.refCounter.increment(hash)),
+      ...decrements.map((hash) => this.refCounter.decrement(hash)),
+    ]);
+  }
+
+  async runArtifactGC(full = false) {
+    logger.info("Running artifact GC");
+    if (full) {
+      throw new Error("Not implemented");
+    }
+    const garbage = await this.refCounter.takeGarbage();
+    logger.info(`Found ${garbage.length} garbage artifacts: ${garbage}`);
+
+    const res = await Promise.allSettled(
+      garbage.map((hash) => this.persistence.delete(hash)),
+    );
+
+    res.forEach((r, i) => {
+      if (r.status === "rejected") {
+        logger.error("Error when deleting artifact", garbage[i], r.reason);
+      }
+    });
+  }
+
+  async getLocalPath(
+    meta: ArtifactMeta,
+    deps: ArtifactMeta[] = [],
+  ): Promise<string> {
+    const parentDirName = await getLocalParentDir(meta, deps);
+    for (const dep of deps) {
+      await this.persistence.fetch(dep.hash);
+      await getLocalPath(dep, parentDirName, this.persistence.dirs);
+    }
+
+    await this.persistence.fetch(meta.hash);
+    return getLocalPath(meta, parentDirName, this.persistence.dirs);
+  }
+
+  prepareUpload(meta: ArtifactMeta, origin: URL) {
+    return this.uploadEndpoints.prepareUpload(meta, origin, this.persistence);
+  }
+
+  takeUploadUrl(url: URL) {
+    return this.uploadEndpoints.takeUploadUrl(url);
+  }
 
   /** unique identifier for an artifact (file content) */
   static getArtifactKey(meta: ArtifactMeta) {
@@ -115,16 +203,13 @@ export abstract class ArtifactStore {
   static async createUploadUrl(
     origin: URL,
     tgName: string,
-  ): Promise<[string, number]> {
-    const expiresIn = 5 * 60;
+    expireSec: number,
+  ): Promise<URL> {
     const uuid = crypto.randomUUID();
-    const token = await signJWT({ uuid }, expiresIn);
-    const url = new URL(
-      `${getUploadPath(tgName)}`,
-      origin,
-    );
+    const token = await signJWT({ uuid, expiresIn: expireSec }, expireSec);
+    const url = new URL(getUploadPath(tgName), origin);
     url.searchParams.set("token", token);
-    return [url.toString(), jwt.getNumericDate(expiresIn)];
+    return url;
   }
 
   static async validateUploadUrl(url: URL) {
@@ -134,8 +219,20 @@ export abstract class ArtifactStore {
     }
 
     const context = await verifyJWT(token);
-    if (context.exp as number < jwt.getNumericDate(new Date())) {
+    if ((context.exp as number) < jwt.getNumericDate(new Date())) {
       throw new Error("Expired upload URL");
     }
+
+    return token;
   }
+}
+
+export interface RefCounter extends AsyncDisposable {
+  increment(key: string): Promise<void>;
+  decrement(key: string): Promise<void>;
+  resetAll(): Promise<void>;
+  takeGarbage(): Promise<Array<string>>;
+
+  // for debugging purpose; output the current state of the ref counter
+  inspect(label: string): Promise<void>;
 }

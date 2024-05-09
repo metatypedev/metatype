@@ -1,14 +1,22 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { testDir } from "test-utils/dir.ts";
 import { gql, Meta } from "../utils/mod.ts";
+import * as path from "std/path/mod.ts";
 
-Meta.test("circular test", async (t) => {
-  const tgPath = "schema_validation/circular.py";
-  const e = await t.engine(tgPath);
+const cwd = path.join(testDir, "schema_validation");
 
-  await t.should("validate self-refering type", async () => {
-    await gql`
+Meta.test(
+  {
+    name: "circular test",
+  },
+  async (t) => {
+    const tgPath = "schema_validation/circular.py";
+    const e = await t.engineFromTgDeployPython(tgPath, cwd);
+
+    await t.should("validate self-refering type", async () => {
+      await gql`
         query {
           registerUser(
             user: {
@@ -42,19 +50,19 @@ Meta.test("circular test", async (t) => {
           }
         }
       `
-      .expectData({
-        registerUser: {
-          message: "John registered",
-          user: {
-            name: "John",
+        .expectData({
+          registerUser: {
+            message: "John registered",
+            user: {
+              name: "John",
+            },
           },
-        },
-      })
-      .on(e);
-  });
+        })
+        .on(e);
+    });
 
-  await t.should("not validate missing field", async () => {
-    await gql`
+    await t.should("not validate missing field", async () => {
+      await gql`
         query {
           registerUser(
             user: {
@@ -72,7 +80,8 @@ Meta.test("circular test", async (t) => {
           }
         }
       `
-      .expectErrorContains("mandatory argument 'user.friends.parents'")
-      .on(e);
-  });
-});
+        .expectErrorContains("mandatory argument 'user.friends.parents'")
+        .on(e);
+    });
+  },
+);

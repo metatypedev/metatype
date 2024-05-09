@@ -3,6 +3,7 @@ env:
   CLICOLOR_FORCE: "1"
   RUST_LOG: "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off,error"
   NPM_CONFIG_REGISTRY: http://localhost:4873
+  WASMTIME_BACKTRACE_DETAILS: "1"
 
 gate1: &tp
   watch:
@@ -13,7 +14,6 @@ gate1: &tp
     TG_PORT: "7891"
     PACKAGED: "false"
     LOG_LEVEL: "DEBUG"
-    RUST_LOG: "xtask=info,error"
     DEBUG: "true"
     REDIS_URL: "redis://:password@localhost:6379/0"
     TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
@@ -65,6 +65,7 @@ typegraph:
     cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
     cd ./sdk/dist
     npm config set "//localhost:4873/:_authToken" fooBar
+    ln -s ../../../../README.md ./
     npm unpublish @typegraph/sdk --force --registry http://localhost:4873
     npm publish --no-git-checks --force --registry http://localhost:4873
     cd ../../../..
@@ -92,19 +93,6 @@ libs:
     - typescript/**/*.rs
   command: "cargo build -p common -p typescript"
 
-codegen:
-  workdir: .
-  watch:
-    - "libs/xtask/src/**/*.rs"
-  env:
-    DYLD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$DYLD_LIBRARY_PATH" # macOS
-    LD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$LD_LIBRARY_PATH" # linux
-    TG_JSONSCHEMA_OUT: website/static/specs/$TYPEGRAPH_VERSION.json
-    TG_TYPESCRIPT_OUT: typegate/src/typegraph/types.ts
-  command: "cargo x codegen"
-  depends_on:
-    - libs
-
 website:
   workdir: website
   command: "pnpm start --no-open"
@@ -117,13 +105,13 @@ setup:
     - typegraph/python/pyproject.toml
     - website/package.json
   env:
-    GHJK_VERSION: "423d38e"
+    GHJK_VERSION: "2725af8"
   command: |
     set -e
     curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh |  bash
     . $(ghjk print share-dir-path)/env.sh
     ghjk p sync
-    echo "exec ./. to refresh env vars"
-    [ -d .venv ] || python3 -m venv .venv
+    echo "cd ./. to refresh env vars"
+    [ -d .venv ] || python3 -m venv .venv && echo "virtual env created"
     poetry install --sync --no-root
     yes | pnpm install --recursive --filter ./website/... --filter ./typegraph/node/...

@@ -78,7 +78,7 @@ class AuthProfiler {
     validatorInputWeak(input);
 
     // Note: this assumes func is a simple t.func(inp, out, mat)
-    const stages = runtime.materialize(
+    const stages = await runtime.materialize(
       this.getComputeStage(),
       [],
       true,
@@ -178,7 +178,7 @@ export class OAuth2Auth extends Protocol {
           headers,
         });
       } catch (e) {
-        logger.warning(e);
+        logger.warn(e);
         const headers = clearCookie(
           url.hostname,
           this.typegraphName,

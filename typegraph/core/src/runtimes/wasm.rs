@@ -5,5 +5,6 @@ use crate::wit::runtimes as wit;
 
 #[derive(Debug)]
 pub enum WasmMaterializer {
-    Module(wit::MaterializerWasm),
+    ReflectedFunc(wit::MaterializerWasmReflectedFunc),
+    WireHandler(wit::MaterializerWasmWireHandler),
 }

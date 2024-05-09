@@ -3,7 +3,7 @@
 
 import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
-import { Resolver } from "../types.ts";
+import { Resolver, ResolverArgs } from "../types.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { getLogger } from "../log.ts";
 import config from "../config.ts";
@@ -16,6 +16,7 @@ import { StringFormat } from "../typegraph/types.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { applyPostProcessors } from "../postprocess.ts";
 import { PrismaRT, PrismaRuntime } from "./prisma/mod.ts";
+import { SingleQuery } from "./prisma/prisma.ts";
 
 const logger = getLogger(import.meta);
 
@@ -42,6 +43,32 @@ interface ObjectNodeResult {
   subPath: Array<string>;
   termNode: TypeInfo;
 }
+
+// https://github.com/prisma/prisma-engines/blob/93f79ec1ca7867558f10130d8db84fb7bf150357/query-engine/request-handlers/src/protocols/json/body.rs#L50
+interface PrismaSingleQuery {
+  modelName?: string;
+  action: string;
+  query: string; // JSON stringified - until we have a proper type for the typegraph
+}
+
+interface PrismaBatchQuery {
+  batch: PrismaSingleQuery[];
+  transaction?: {
+    isolationLevel?: string;
+  };
+}
+
+type PrismaQuery = PrismaSingleQuery | PrismaBatchQuery;
+
+const getQueryObject = (
+  { modelName, action, query }: PrismaSingleQuery,
+): SingleQuery => {
+  return {
+    modelName,
+    action,
+    query: JSON.parse(query),
+  };
+};
 
 export class TypeGateRuntime extends Runtime {
   static singleton: TypeGateRuntime | null = null;
@@ -150,7 +177,10 @@ export class TypeGateRuntime extends Runtime {
   addTypegraph: Resolver = async ({ fromString, secrets, targetVersion }) => {
     logger.info("Adding typegraph");
     if (
-      !semver.gte(semver.parse(targetVersion), semver.parse(config.version))
+      !semver.greaterOrEqual(
+        semver.parse(targetVersion),
+        semver.parse(config.version),
+      )
     ) {
       throw new Error(
         `Typegraph SDK version ${targetVersion} must be greater than typegate version ${config.version} (until the releases are stable)`,
@@ -179,7 +209,7 @@ export class TypeGateRuntime extends Runtime {
       if (SystemTypegraph.check(name)) {
         throw new Error(`Typegraph ${name} cannot be removed`);
       }
-      await this.typegate.register.remove(name);
+      await this.typegate.removeTypegraph(name);
     }
     return true;
   };
@@ -280,7 +310,10 @@ export class TypeGateRuntime extends Runtime {
     }).flat();
   };
 
-  execRawPrismaQuery: Resolver = async ({ typegraph, runtime, query }) => {
+  execRawPrismaQuery: Resolver = async (args) => {
+    const { typegraph, runtime, query } = args as ResolverArgs<
+      { typegraph: string; runtime: string; query: PrismaQuery }
+    >;
     const engine = this.typegate.register.get(typegraph);
     if (!engine) {
       throw new Error("typegate engine not found");
@@ -292,16 +325,25 @@ export class TypeGateRuntime extends Runtime {
       throw new Error(`prisma runtime '${runtime}' not found`);
     }
     const rt = engine.tg.runtimeReferences[runtimeIdx] as PrismaRuntime;
-    const fieldQuery = query.query;
-    const selection = JSON.parse(fieldQuery.selection);
-    const queryArgs = fieldQuery.arguments &&
-      JSON.parse(fieldQuery.arguments);
-    return JSON.stringify(
-      (await rt.query({
-        ...query,
-        query: { selection, arguments: queryArgs },
-      }))[query.action + query.modelName ?? ""],
-    );
+
+    const isBatch = "batch" in query;
+
+    const queryObj = isBatch
+      ? { ...query, batch: query.batch.map(getQueryObject) }
+      : getQueryObject(query);
+
+    const result = await rt.query(queryObj);
+
+    const queries = isBatch ? query.batch : [query];
+    const resultValues =
+      ((isBatch ? result : [result]) as Array<Record<string, unknown>>)
+        .map((r, i) => {
+          const q = queries[i];
+          const key = q.action + q.modelName ?? "";
+          return r[key];
+        });
+
+    return JSON.stringify(isBatch ? resultValues : resultValues[0]);
   };
 
   queryPrismaModel: Resolver = async (
