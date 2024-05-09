@@ -57,6 +57,8 @@ dev:
       (ARG DENO_VERSION=).*(): DENO_VERSION
       (ARG RUST_VERSION=).*(): RUST_VERSION
       (ARG GHJK_VERSION=).*(): GHJK_VERSION
+    typegate/src/runtimes/wit_wire/mod.ts:
+      (const METATYPE_VERSION = ").*(";): METATYPE_VERSION
     typegate/src/typegraph/versions.ts:
       (const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
     typegraph/core/src/typegraph.rs:
@@ -96,7 +98,7 @@ dev:
     WASMTIME_VERSION: 20.0.0
     TYPEGRAPH_VERSION: 0.0.3
     PRISMA_VERSION: 5.5.2
-    METATYPE_VERSION: 0.3.7-0
+    METATYPE_VERSION: 0.4.0
     PUBLISHED_VERSION: 0.3.6
     WASM_OPT_VERSION: 0.116.0
     MOLD_VERSION: v2.4.0
