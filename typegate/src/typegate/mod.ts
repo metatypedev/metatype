@@ -105,6 +105,7 @@ export class Typegate implements AsyncDisposable {
         stack.move(),
       );
     } else {
+      logger.info("Entering sync mode...");
       if (customRegister) {
         throw new Error(
           "Custom register is not supported in sync mode",
