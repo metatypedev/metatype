@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { handlers, LevelName, Logger } from "std/log/mod.ts";
+import { ConsoleHandler, LevelName, Logger } from "std/log/mod.ts";
 import { basename, dirname } from "std/url/mod.ts";
 import { extname } from "std/path/mod.ts";
 import { z } from "zod";
@@ -11,9 +11,9 @@ export const configOrExit = async <T extends z.ZodRawShape>(
   sources: Record<string, unknown>[],
   schema: T,
 ) => {
-  const parsing = await z.object(schema).safeParse(
-    sources.reduce((a, b) => deepMerge(a, b), {}),
-  );
+  const parsing = await z
+    .object(schema)
+    .safeParse(sources.reduce((a, b) => deepMerge(a, b), {}));
 
   if (!parsing.success) {
     console.error(parsing.error);
@@ -37,35 +37,33 @@ export const zBooleanString = z.preprocess(
 // Those envs are split from the config as only a subset of them are shared with the workers
 const schema = {
   debug: zBooleanString,
-  log_level: z.enum([
-    "NOTSET",
-    "DEBUG",
-    "INFO",
-    "WARNING",
-    "ERROR",
-    "CRITICAL",
-  ]).optional(),
+  log_level: z
+    .enum(["NOTSET", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
+    .optional(),
   rust_log: z.string().optional(),
   version: z.string(),
   deno_testing: zBooleanString,
 };
 
-export const envSharedWithWorkers = Object.keys(schema).map((
-  k,
-) => k.toUpperCase());
+export const envSharedWithWorkers = Object.keys(schema).map((k) =>
+  k.toUpperCase()
+);
 
-const config = await configOrExit([
-  {
-    sentry_sample_rate: 1,
-    sentry_traces_sample_rate: 1,
-    log_level: "INFO",
-  },
-  Object.fromEntries(
-    envSharedWithWorkers
-      .map((k) => [k.toLocaleLowerCase(), Deno.env.get(k)])
-      .filter(([_, v]) => v !== undefined),
-  ),
-], schema);
+const config = await configOrExit(
+  [
+    {
+      sentry_sample_rate: 1,
+      sentry_traces_sample_rate: 1,
+      log_level: "INFO",
+    },
+    Object.fromEntries(
+      envSharedWithWorkers
+        .map((k) => [k.toLocaleLowerCase(), Deno.env.get(k)])
+        .filter(([_, v]) => v !== undefined),
+    ),
+  ],
+  schema,
+);
 
 // set rust log level is not explicit set
 if (!config.rust_log) {
@@ -93,21 +91,18 @@ if (!config.rust_log) {
   }
 }
 
-const consoleHandler = new handlers.ConsoleHandler(
-  config.log_level as LevelName,
-  {
-    formatter: (log) => {
-      let msg = log.msg;
-      for (const arg of log.args) {
-        msg = msg.replace(
-          "{}",
-          typeof arg === "string" ? arg : JSON.stringify(arg),
-        );
-      }
-      return `${log.datetime.toISOString()} [${log.levelName} ${log.loggerName}] ${msg}`;
-    },
+const consoleHandler = new ConsoleHandler(config.log_level as LevelName, {
+  formatter: (log) => {
+    let msg = log.msg;
+    for (const arg of log.args) {
+      msg = msg.replace(
+        "{}",
+        typeof arg === "string" ? arg : JSON.stringify(arg),
+      );
+    }
+    return `${log.datetime.toISOString()} [${log.levelName} ${log.loggerName}] ${msg}`;
   },
-);
+});
 
 const loggers = new Map<string, Logger>();
 const defaultLogger = new Logger("default", "NOTSET", {

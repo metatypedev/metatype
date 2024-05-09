@@ -178,7 +178,7 @@ export class OAuth2Auth extends Protocol {
           headers,
         });
       } catch (e) {
-        logger.warning(e);
+        logger.warn(e);
         const headers = clearCookie(
           url.hostname,
           this.typegraphName,

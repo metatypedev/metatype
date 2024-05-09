@@ -18,7 +18,7 @@ typegates:
     secrets:
       prisma:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e"
-      migration_failure_test:
+      migration-failure-test:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e2"
 
 typegraphs:

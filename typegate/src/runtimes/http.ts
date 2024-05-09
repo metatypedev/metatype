@@ -6,7 +6,7 @@ import { Runtime } from "./Runtime.ts";
 import { createUrl } from "../utils.ts";
 import { MatOptions, replaceDynamicPathParams } from "./utils/http.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
-import * as base64 from "std/encoding/base64.ts";
+import { encodeBase64 } from "std/encoding/base64.ts";
 import { getLogger } from "../log.ts";
 import { Logger } from "std/log/logger.ts";
 import { HTTPRuntimeData } from "../typegraph/types.ts";
@@ -68,7 +68,7 @@ export class HTTPRuntime extends Runtime {
       headers.set(
         "authorization",
         `basic ${
-          base64.encode(
+          encodeBase64(
             secretManager.secretOrFail(args.basic_auth_secret as string),
           )
         }`,
@@ -165,7 +165,7 @@ export class HTTPRuntime extends Runtime {
       );
 
       if (res.status >= 400) {
-        this.logger.warning(
+        this.logger.warn(
           `${pathname} - ${searchParams} - ${body} => ${res.status} : ${
             Deno.inspect({ res, options, args, bodyFields, hasBody, method })
           }`,

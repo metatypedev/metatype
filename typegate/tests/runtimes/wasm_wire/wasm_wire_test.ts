@@ -12,8 +12,6 @@ const auth = new BasicAuth("admin", "password");
 Meta.test(
   {
     name: "Wasm runtime: wire",
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
     const e = await t.engineFromTgDeployPython(
@@ -38,8 +36,6 @@ Meta.test(
 Meta.test(
   {
     name: "Wasm Runtime typescript sdk: wire",
-    port: true,
-    systemTypegraphs: true,
   },
   async (metaTest) => {
     const port = metaTest.port;
@@ -63,7 +59,7 @@ Meta.test(
         secrets: {},
       });
 
-      const engine = await metaTest.engineFromDeployed(serialized);
+      await using engine = await metaTest.engineFromDeployed(serialized);
 
       await t.step("wit bindings", async () => {
         await gql`
@@ -182,8 +178,6 @@ Meta.test(
           })
           .on(engine);
       });
-
-      await engine.terminate();
     });
   },
 );

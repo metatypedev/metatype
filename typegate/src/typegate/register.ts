@@ -22,7 +22,7 @@ export interface Migrations {
   migrations: string;
 }
 
-export abstract class Register {
+export abstract class Register implements AsyncDisposable {
   abstract add(engine: QueryEngine): Promise<void>;
 
   abstract remove(name: string): Promise<void>;
@@ -32,6 +32,8 @@ export abstract class Register {
   abstract get(name: string): QueryEngine | undefined;
 
   abstract has(name: string): boolean;
+
+  abstract [Symbol.asyncDispose](): Promise<void>;
 }
 
 export class ReplicatedRegister extends Register {
@@ -76,7 +78,7 @@ export class ReplicatedRegister extends Register {
           return engine;
         },
         async terminate(engine: QueryEngine) {
-          await engine.terminate();
+          await engine[Symbol.asyncDispose]();
         },
       },
     );
@@ -86,6 +88,11 @@ export class ReplicatedRegister extends Register {
 
   constructor(private replicatedMap: RedisReplicatedMap<QueryEngine>) {
     super();
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.replicatedMap[Symbol.asyncDispose]();
+    await Promise.all(this.list().map((e) => e[Symbol.asyncDispose]()));
   }
 
   async add(engine: QueryEngine): Promise<void> {
@@ -103,7 +110,7 @@ export class ReplicatedRegister extends Register {
       const old = this.replicatedMap.memory.get(name);
       if (old) {
         this.replicatedMap.memory.delete(name);
-        await old.terminate();
+        await old[Symbol.asyncDispose]();
       }
     } else {
       await this.replicatedMap.delete(name);
@@ -128,9 +135,5 @@ export class ReplicatedRegister extends Register {
 
   startSync(xid: XIdInput): void {
     void this.replicatedMap.startSync(xid);
-  }
-
-  async stopSync() {
-    await this.replicatedMap.stopSync();
   }
 }

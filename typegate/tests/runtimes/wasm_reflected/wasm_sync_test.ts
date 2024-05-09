@@ -51,8 +51,6 @@ const auth = new BasicAuth("admin", "password");
 Meta.test(
   {
     name: "Wasm Runtime typescript SDK: Sync Config",
-    port: true,
-    systemTypegraphs: true,
     syncConfig,
     async setup() {
       await cleanUp();

@@ -64,7 +64,7 @@ export class JWTAuth extends Protocol {
       if (e.message.includes("jwt is used too early")) {
         throw new Error("jwt used too early");
       }
-      logger.warning(`jwt auth failed: ${e}`);
+      logger.warn(`jwt auth failed: ${e}`);
       throw new Error("jwt is invalid");
     }
   }

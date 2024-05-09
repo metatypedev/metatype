@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { deferred } from "std/async/deferred.ts";
 import { getLogger } from "../../../log.ts";
 import { Answer, Message, TaskData } from "./types.ts";
 import { maxi32 } from "../../../utils.ts";
@@ -101,13 +100,13 @@ export class AsyncMessenger<Broker, M, A> {
     pulseCount = 0,
   ): Promise<unknown> {
     const id = this.nextId();
-    const promise = deferred<unknown>();
+    const promise = Promise.withResolvers<unknown>();
     this.#tasks.set(id, { promise, hooks });
 
     const message = { id, op, data, remainingPulseCount: pulseCount };
     this.#operationQueues[this.#queueIndex].push(message);
     void this.#send(this.broker, message);
-    return promise;
+    return promise.promise;
   }
 
   async receive(answer: Answer<A>): Promise<void> {
