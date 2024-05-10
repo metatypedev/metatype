@@ -24,6 +24,7 @@ type AssertSnapshotParams = typeof assertSnapshot extends (
 
 export interface ParseOptions {
   deploy?: boolean;
+  cwd?: string;
   typegraph?: string;
   secrets?: Record<string, string>;
   autoSecretName?: boolean;
@@ -185,69 +186,78 @@ export class MetaTest {
   }
 
   async engine(path: string, opts: ParseOptions = {}): Promise<QueryEngine> {
-    const oldTypegraphList = await this.typegates.next().register.list();
-
-    const cmd = ["deploy", "-f", path, "--target", "dev", "--allow-dirty"];
-
-    cmd.push("--gate", `http://localhost:${this.port}`);
-
-    if (opts.prefix != null) {
-      cmd.push("--prefix", opts.prefix);
+    if (opts.deploy) {
+      if (!opts.cwd) {
+        throw new Error(
+          "Cwd not specified while deploying typegraph during test",
+        );
+      }
+      return this.engineWithDeploy(path, opts.cwd);
     }
 
-    // if (opts.typegraph != null) {
-    //   cmd.push("--typegraph", opts.typegraph);
+    // const oldTypegraphList = await this.typegates.next().register.list();
+
+    // const cmd = ["deploy", "-f", path, "--target", "dev", "--allow-dirty"];
+
+    // cmd.push("--gate", `http://localhost:${this.port}`);
+
+    // if (opts.prefix != null) {
+    //   cmd.push("--prefix", opts.prefix);
     // }
 
-    for (const [key, value] of Object.entries(opts.secrets ?? {})) {
-      cmd.push("--secret", `${key}=${value}`);
-    }
+    // // if (opts.typegraph != null) {
+    // //   cmd.push("--typegraph", opts.typegraph);
+    // // }
 
-    const { stdout, stderr } = await this.meta(cmd);
+    // for (const [key, value] of Object.entries(opts.secrets ?? {})) {
+    //   cmd.push("--secret", `${key}=${value}`);
+    // }
 
-    console.log("STDOUT>");
-    console.log(stdout);
-    console.log("STDERR>");
-    console.log(stderr);
+    // const { stdout, stderr } = await this.meta(cmd);
 
-    const newTypegraphList = await this.typegates.next().register.list();
+    // console.log("STDOUT>");
+    // console.log(stdout);
+    // console.log("STDERR>");
+    // console.log(stderr);
 
-    const newTypegraph = newTypegraphList.find((e) =>
-      !oldTypegraphList.includes(e)
-    );
-    // what for redeploy?
-    if (newTypegraph == null) {
-      throw new Error("No new typegraph");
-    }
+    // const newTypegraphList = await this.typegates.next().register.list();
 
-    if (opts.typegraph != null && opts.typegraph != newTypegraph.name) {
-      throw new Error(
-        `Expected typegraph ${opts.typegraph}, got ${newTypegraph.name}`,
-      );
-    }
+    // const newTypegraph = newTypegraphList.find((e) =>
+    //   !oldTypegraphList.includes(e)
+    // );
+    // // what for redeploy?
+    // if (newTypegraph == null) {
+    //   throw new Error("No new typegraph");
+    // }
 
-    return newTypegraph;
+    // if (opts.typegraph != null && opts.typegraph != newTypegraph.name) {
+    //   throw new Error(
+    //     `Expected typegraph ${opts.typegraph}, got ${newTypegraph.name}`,
+    //   );
+    // }
+
+    // return newTypegraph;
 
     // TODO: MET-500
-    // const tgString = await this.serialize(path, opts);
-    // const tgJson = await TypeGraph.parseJson(tgString);
-    //
-    // // for convience, automatically prefix secrets
-    // const secrets = opts.secrets ?? {};
-    // const { engine, response } = await this.typegates.next().pushTypegraph(
-    //   tgJson,
-    //   secrets,
-    //   this.introspection,
-    // );
-    //
-    // if (engine == null) {
-    //   throw response.failure!;
-    // }
-    //
-    // return engine;
+    const tgString = await this.serialize(path, opts);
+    const tgJson = await TypeGraph.parseJson(tgString);
+
+    // for convience, automatically prefix secrets
+    const secrets = opts.secrets ?? {};
+    const { engine, response } = await this.typegates.next().pushTypegraph(
+      tgJson,
+      secrets,
+      this.introspection,
+    );
+
+    if (engine == null) {
+      throw response.failure!;
+    }
+
+    return engine;
   }
 
-  async engineFromDeployed(tgString: string): Promise<QueryEngine> {
+  async #engineFromDeployed(tgString: string): Promise<QueryEngine> {
     const tg = await TypeGraph.parseJson(tgString);
     const { engine, response } = await this.typegates
       .next()
@@ -260,12 +270,17 @@ export class MetaTest {
     return engine;
   }
 
-  async engineFromTgDeployPython(path: string, cwd: string) {
+  async engineWithDeploy(path: string, cwd: string) {
     const extension = extname(path);
     let sdkLang: SDKLangugage;
     switch (extension) {
       case ".py":
         sdkLang = SDKLangugage.Python;
+        break;
+      case ".ts":
+      case ".js":
+      case ".mjs":
+        sdkLang = SDKLangugage.TypeScript;
         break;
       default:
         throw new Error(`Unsupported file type ${extension}`);
@@ -277,7 +292,7 @@ export class MetaTest {
       cwd,
     );
 
-    return await this.engineFromDeployed(serialized);
+    return await this.#engineFromDeployed(serialized);
   }
 
   async #serializeTypegraphFromShell(
@@ -285,14 +300,27 @@ export class MetaTest {
     lang: SDKLangugage,
     cwd: string,
   ): Promise<string> {
-    // run self deployed typegraph
+    let output;
 
-    const { stderr, stdout } = await this.shell([
-      lang.toString(),
-      path,
-      cwd,
-      this.port.toString(),
-    ]);
+    if (lang === SDKLangugage.TypeScript) {
+      output = await this.shell([
+        lang.toString(),
+        "run",
+        "-A",
+        path,
+        cwd,
+        this.port.toString(),
+      ]);
+    } else {
+      output = await this.shell([
+        lang.toString(),
+        path,
+        cwd,
+        this.port.toString(),
+      ]);
+    }
+
+    const { stderr, stdout } = output;
 
     if (stderr.length > 0) {
       throw new Error(`${stderr}`);
