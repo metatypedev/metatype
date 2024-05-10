@@ -109,6 +109,9 @@ export class PrismaRuntime extends Runtime {
 
   async query(query: SingleQuery | BatchQuery) {
     const isBatchQuery = "batch" in query;
+    logger.info(
+      `prisma query on runtime '${this.name}': ${JSON.stringify(query)}`,
+    );
     const { res } = nativeResult(
       await native.prisma_query({
         engine_name: this.id,
@@ -119,8 +122,11 @@ export class PrismaRuntime extends Runtime {
     const result = JSON.parse(res);
 
     if ("errors" in result) {
-      console.error("remote prisma errors", result.errors);
+      logger.error("remote prisma errors", result.errors);
       throw new ResolverError(result.errors[0].user_facing_error.message);
+    } else {
+      logger.info(`prisma query successful on runtime '${this.name}'`);
+      logger.debug(`prisma query result: ${JSON.stringify(result)}`);
     }
 
     // TODO refactor when we support partial results in GraphQL
@@ -129,7 +135,7 @@ export class PrismaRuntime extends Runtime {
     for (const r of results) {
       if ("errors" in r) {
         // TODO support for partial failures??
-        console.error("remote prisma errors", r.errors);
+        logger.error(`(rt:'${this.name}') remote prisma errors: ${r.errors}`);
         throw new ResolverError(r.errors[0].user_facing_error.message);
       }
       ret.push(r.data);
