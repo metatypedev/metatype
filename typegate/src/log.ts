@@ -128,3 +128,5 @@ export function getLogger(
   }
   return logger;
 }
+
+export { Logger };
