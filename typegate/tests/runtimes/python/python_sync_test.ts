@@ -262,6 +262,46 @@ Meta.test(
 
 Meta.test(
   {
+    name: "Python runtime: multiple typegate instances sync mode",
+    replicas: 3,
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
+  },
+  async (t: any) => {
+    const testMultipleReplica = async (instanceNumber: number) => {
+      const e = await t.engineFromTgDeployPython(
+        "runtimes/python/python.py",
+        cwd,
+      );
+
+      await t.should(
+        `work on the typgate instance #${instanceNumber}`,
+        async () => {
+          await gql`
+          query {
+            testMod(name: "Loyd")
+          }
+        `
+            .expectData({
+              testMod: `Hello Loyd`,
+            })
+            .on(e);
+        },
+      );
+    };
+
+    await testMultipleReplica(1);
+    await testMultipleReplica(2);
+  },
+);
+
+Meta.test(
+  {
     name: "Deno: def, lambda in sync mode",
     syncConfig,
     async setup() {
