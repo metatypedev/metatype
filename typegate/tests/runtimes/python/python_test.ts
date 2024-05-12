@@ -541,25 +541,13 @@ Meta.test(
       async () => {
         await gql`
         query {
-          testMod(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
-          },
-          testModDuplicate(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
-          }
+          testMod(name: "Loyd")
+          testModDuplicate(name: "Barney")
         }
       `
           .expectData({
-            testMod: {
-              a: "hello",
-              b: [1, 2, "three"],
-            },
-            testModDuplicate: {
-              a: "hello",
-              b: [1, 2, "three"],
-            },
+            testMod: "Hello Loyd",
+            testModDuplicate: "Hello Barney",
           })
           .on(e);
       },

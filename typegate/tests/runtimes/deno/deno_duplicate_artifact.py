@@ -34,7 +34,7 @@ def deno_duplicate_artifact(g: Graph):
             t.float(),
             module="ts/dep/main.ts",
             deps=["ts/dep/nested/dep.ts"],
-            name="doAdditionDuplicate",
+            name="doAddition",
         ),
     )
 

@@ -25,7 +25,7 @@ export const denoDuplicateArtifact = await typegraph({
       t.float(),
       {
         module: "ts/dep/main.ts",
-        name: "doAdditionDuplicate",
+        name: "doAddition",
         deps: ["ts/dep/nested/dep.ts"],
       },
     ).withPolicy(pub),

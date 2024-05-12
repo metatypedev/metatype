@@ -379,3 +379,99 @@ Meta.test(
     await sleep(cooldownTime * 1000);
   },
 );
+
+// Meta.test(
+//   {
+//     name: "Deno runtime - TS SDK: with no artifacts in sync mode",
+//   },
+//   async (t) => {
+//     const e = await t.engine("runtimes/deno/deno_typescript.ts");
+
+//     await t.should("work with no artifacts in typegrpah", async () => {
+//       await gql`
+//         query {
+//           hello(name: "World")
+//           helloFn(name: "wOrLd")
+//         }
+//       `
+//         .expectData({
+//           hello: "Hello World",
+//           helloFn: "Hello world",
+//         })
+//         .on(e);
+//     });
+//   }
+// );
+
+Meta.test(
+  {
+    name: "Deno runtime - Python SDK: with no artifacts in sync mode",
+  },
+  async (t) => {
+    const e = await t.engineFromTgDeployPython(
+      "runtimes/deno/deno_no_artifact.py",
+      cwd,
+    );
+
+    await t.should("work with no artifacts in typegrpah", async () => {
+      await gql`
+        query {
+          simple(a: 1, b: 20)
+        }
+      `
+        .expectData({
+          simple: 21,
+        })
+        .on(e);
+    });
+  },
+);
+
+// Meta.test(
+//   {
+//     name: "Deno runtime - TS SDK: with duplicate artifacts in sync mode",
+//   },
+//   async (t) => {
+//     const e = await t.engine("runtimes/deno/deno_duplicate_typescript.ts");
+
+//     await t.should("work with duplicate artifacts in typegrpah", async () => {
+//       await gql`
+//         query {
+//           doAddition(a: 1, b: 2)
+//           doAdditionDuplicate(a: 12, b: 2)
+//         }
+//       `
+//         .expectData({
+//           doAddition: 3,
+//           doAdditionDuplicate: 14,
+//         })
+//         .on(e);
+//     });
+//   }
+// );
+
+Meta.test(
+  {
+    name: "Deno runtime - Python SDK: with duplicate artifacts in sync mode",
+  },
+  async (t) => {
+    const e = await t.engineFromTgDeployPython(
+      "runtimes/deno/deno_duplicate_artifact.py",
+      cwd,
+    );
+
+    await t.should("work with duplicate artifacts in typegrpah", async () => {
+      await gql`
+        query {
+          doAddition(a: 1, b: 2)
+          doAdditionDuplicate(a: 12, b: 2)
+        }
+      `
+        .expectData({
+          doAddition: 3,
+          doAdditionDuplicate: 14,
+        })
+        .on(e);
+    });
+  },
+);
