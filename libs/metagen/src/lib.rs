@@ -22,6 +22,7 @@ mod interlude {
 
 mod config;
 mod mdk;
+mod mdk_python;
 mod mdk_rust;
 #[cfg(test)]
 mod tests;
@@ -83,6 +84,18 @@ trait Plugin: Send + Sync {
     ) -> anyhow::Result<GeneratorOutput>;
 }
 
+type PluginOutputResult = Result<Box<dyn Plugin>, anyhow::Error>;
+
+struct GeneratorRunner {
+    pub op: fn(&Path, serde_json::Value) -> PluginOutputResult,
+}
+
+impl GeneratorRunner {
+    pub fn exec(&self, workspace_path: &Path, value: serde_json::Value) -> PluginOutputResult {
+        (self.op)(workspace_path, value)
+    }
+}
+
 /// This function makes use of a JoinSet to process
 /// items in parallel. This makes using actix workers in InputResolver
 /// is a no no.
@@ -96,11 +109,22 @@ pub async fn generate_target(
         // builtin generators
         (
             "mdk_rust".to_string(),
-            // initialize the impl
-            &|workspace_path: &Path, val| {
-                let config = mdk_rust::MdkRustGenConfig::from_json(val, workspace_path)?;
-                let generator = mdk_rust::Generator::new(config)?;
-                Ok::<_, anyhow::Error>(Box::new(generator) as Box<dyn Plugin>)
+            GeneratorRunner {
+                op: |workspace_path: &Path, val| {
+                    let config = mdk_rust::MdkRustGenConfig::from_json(val, workspace_path)?;
+                    let generator = mdk_rust::Generator::new(config)?;
+                    Ok(Box::new(generator))
+                },
+            },
+        ),
+        (
+            "mdk_python".to_string(),
+            GeneratorRunner {
+                op: |workspace_path: &Path, val| {
+                    let config = mdk_python::MdkPythonGenConfig::from_json(val, workspace_path)?;
+                    let generator = mdk_python::Generator::new(config)?;
+                    Ok(Box::new(generator))
+                },
             },
         ),
     ]
@@ -116,11 +140,11 @@ pub async fn generate_target(
     for (gen_name, config) in &target_conf.0 {
         let config = config.to_owned();
 
-        let get_gen_fn = generators
-            .get(&gen_name[..])
+        let get_gen_op = generators
+            .get(gen_name)
             .with_context(|| format!("generator \"{gen_name}\" not found in config"))?;
 
-        let gen_impl = get_gen_fn(&workspace_path, config)?;
+        let gen_impl = get_gen_op.exec(&workspace_path, config)?;
         let bill = gen_impl.bill_of_inputs();
 
         let mut resolve_set = tokio::task::JoinSet::new();

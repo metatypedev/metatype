@@ -18,6 +18,7 @@ regex.workspace = true
 once_cell.workspace = true
 pretty_assertions = "1.4.0"
 # indoc.workspace = true
+tera = { version = "1", default-features = false }
 
 [dev-dependencies]
 tokio = { workspace = true, features =["full"]}
