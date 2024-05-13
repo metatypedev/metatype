@@ -12,6 +12,8 @@ import { Logger } from "std/log/logger.ts";
 import { HTTPRuntimeData } from "../typegraph/types.ts";
 import { registerRuntime } from "./mod.ts";
 
+const logger = getLogger(import.meta);
+
 const encodeRequestBody = (
   body: Record<string, any>,
   contentType: string,
@@ -32,6 +34,7 @@ const encodeRequestBody = (
       return mapToFormData(body);
     // -- form handler --
     default:
+      logger.error(`Content-Type ${contentType} not supported`);
       throw new Error(`Content-Type ${contentType} not supported`);
   }
 };
@@ -189,6 +192,7 @@ export class HTTPRuntime extends Runtime {
         return null;
       }
 
+      this.logger.error(`Unsupported content type "${contentType}"`);
       throw new Error(`Unsupported content type "${contentType}"`);
     };
   }

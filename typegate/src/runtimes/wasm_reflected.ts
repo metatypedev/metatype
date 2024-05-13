@@ -10,18 +10,25 @@ import { ComputeStage } from "../engine/query_engine.ts";
 import * as ast from "graphql/ast";
 import { Materializer, WasmRuntimeData } from "../typegraph/types.ts";
 import { Typegate } from "../typegate/mod.ts";
+import { getLogger, Logger } from "../log.ts";
+
+const logger = getLogger(import.meta);
 
 @registerRuntime("wasm_reflected")
 export class WasmRuntimeReflected extends Runtime {
+  private logger: Logger;
+
   private constructor(
     public artifactKey: string,
     typegraphName: string,
     private typegate: Typegate,
   ) {
     super(typegraphName);
+    this.logger = getLogger(`wasm_reflected:'${typegraphName}'`);
   }
 
   static init(params: RuntimeInitParams<WasmRuntimeData>): Runtime {
+    logger.info("initializing WasmRuntimeReflected");
     const { typegraphName, typegate, args: { wasm_artifact } } = params;
     return new WasmRuntimeReflected(wasm_artifact, typegraphName, typegate);
   }
@@ -46,6 +53,9 @@ export class WasmRuntimeReflected extends Runtime {
             case ast.OperationTypeNode.MUTATION:
               return "Mutation";
             default:
+              logger.error(
+                `Unsupported operation type '${stage.props.operationType}'`,
+              );
               throw new Error(
                 `Unsupported operation type '${stage.props.operationType}'`,
               );
@@ -96,6 +106,7 @@ export class WasmRuntimeReflected extends Runtime {
     };
 
     return async (args) => {
+      this.logger.info(`wit call '${op_name}'`);
       const transfert = order.map((k) => JSON.stringify(args[k]));
       const { res } = nativeResult(
         await native.wasmtime_wit({
@@ -104,7 +115,8 @@ export class WasmRuntimeReflected extends Runtime {
           args: transfert,
         }),
       );
-      console.log("OUTPUT", res);
+      this.logger.info(`wit call '${op_name}' successful`);
+      this.logger.debug(`wit call result '${op_name}': ${res}`);
       return JSON.parse(res);
     };
   }
