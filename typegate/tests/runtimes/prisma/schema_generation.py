@@ -5,7 +5,7 @@ from typegraph.effects import CREATE, UPDATE
 
 
 @typegraph()
-def simple_model(g: Graph):
+def schema_generation(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     user = t.struct(

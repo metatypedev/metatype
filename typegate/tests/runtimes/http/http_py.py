@@ -3,7 +3,7 @@ from typegraph.runtimes.http import HttpRuntime
 
 
 @typegraph()
-def blog(g: Graph):
+def http_py(g: Graph):
     remote = HttpRuntime("http://localhost/api")
 
     public = Policy.public()

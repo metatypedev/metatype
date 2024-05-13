@@ -257,11 +257,14 @@ export class MetaTest {
   //   return engine;
   // }
 
-  async #engineFromDeployed(tgString: string): Promise<QueryEngine> {
+  async #engineFromDeployed(
+    tgString: string,
+    secrets: Record<string, string>,
+  ): Promise<QueryEngine> {
     const tg = await TypeGraph.parseJson(tgString);
     const { engine, response } = await this.typegates
       .next()
-      .pushTypegraph(tg, {}, this.introspection);
+      .pushTypegraph(tg, secrets, this.introspection);
 
     if (engine == null) {
       throw response.failure!;
@@ -270,7 +273,7 @@ export class MetaTest {
     return engine;
   }
 
-  async engine(path: string, cwd: string, _opts: ParseOptions = {}) {
+  async engine(path: string, opts: ParseOptions = {}) {
     const extension = extname(path);
     let sdkLang: SDKLangugage;
     switch (extension) {
@@ -286,21 +289,28 @@ export class MetaTest {
         throw new Error(`Unsupported file type ${extension}`);
     }
 
+    const testDirName = dirname(path);
+    const cwd = join(testDir, testDirName);
+
     const serialized = await this.#serializeTypegraphFromShell(
       path,
       sdkLang,
       cwd,
+      opts,
     );
 
-    return await this.#engineFromDeployed(serialized);
+    return await this.#engineFromDeployed(serialized, opts.secrets ?? {});
   }
 
   async #serializeTypegraphFromShell(
     path: string,
     lang: SDKLangugage,
     cwd: string,
+    opts: ParseOptions,
   ): Promise<string> {
     let output;
+    const secrets = opts.secrets ?? {};
+    const secretsStr = JSON.stringify(secrets);
 
     if (lang === SDKLangugage.TypeScript) {
       output = await this.shell([
@@ -311,6 +321,7 @@ export class MetaTest {
         cwd,
         this.port.toString(),
         path,
+        secretsStr,
       ]);
     } else {
       output = await this.shell([
@@ -319,6 +330,7 @@ export class MetaTest {
         cwd,
         this.port.toString(),
         path,
+        secretsStr,
       ]);
     }
 

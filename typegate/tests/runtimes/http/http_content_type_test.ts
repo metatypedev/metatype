@@ -3,6 +3,10 @@
 
 import { gql, Meta } from "../../utils/mod.ts";
 import * as mf from "test/mock_fetch";
+import * as path from "std/path/mod.ts";
+import { testDir } from "test-utils/dir.ts";
+
+const cwd = path.join(testDir, "runtimes/deno");
 
 mf.install();
 
@@ -53,9 +57,9 @@ function parseBool(str: string | undefined | null) {
 }
 
 Meta.test("http custom content-type queries", async (t) => {
-  const e = await t.engine("runtimes/http/http_content_type.py");
+  const e = await t.engine("runtimes/http/http_content_type.py", cwd);
 
-  mf.mock("POST@/api/sum_range", async (req) => {
+  mf.mock("POST@/api/sum_range", async (req: any) => {
     const formData: FormData = await req.formData();
     // the boundary is expected to be randomized
     const start = Number(formData.get("start") ?? 0);
@@ -72,7 +76,7 @@ Meta.test("http custom content-type queries", async (t) => {
     });
   });
 
-  mf.mock("POST@/api/celcius_to_farenheit", async (req) => {
+  mf.mock("POST@/api/celcius_to_farenheit", async (req: any) => {
     const formData: FormData = await req.formData();
     const url = new URL(req.url);
     console.info("> query params:", url.search);

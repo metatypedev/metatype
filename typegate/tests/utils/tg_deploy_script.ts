@@ -7,6 +7,7 @@ import * as path from "std/path/mod.ts";
 const cwd = Deno.args[0];
 const PORT = Deno.args[1];
 const modulePathStr = Deno.args[2];
+const secretsStr = Deno.args[3];
 
 const gate = `http://localhost:${PORT}`;
 const auth = new BasicAuth("admin", "password");
@@ -19,6 +20,8 @@ const module = await import(tgPath);
 if (!module.tg) {
   throw new Error(`No typegraph found`);
 }
+
+const secrets = JSON.parse(secretsStr);
 
 const tg = module.tg;
 const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
@@ -35,7 +38,7 @@ const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
     dir: cwd,
   },
   typegraphPath: tgPath,
-  secrets: {},
+  secrets: secrets,
 });
 
 console.log(serialized);

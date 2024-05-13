@@ -6,12 +6,8 @@ import { gql, Meta } from "test-utils/mod.ts";
 import { WitWireMessenger } from "../../../src/runtimes/wit_wire/mod.ts";
 import { QueryEngine } from "../../../src/engine/query_engine.ts";
 import type { ResolverArgs } from "../../../src/types.ts";
-import { testDir } from "test-utils/dir.ts";
-import * as path from "std/path/mod.ts";
 
-const cwd = path.join(testDir, "runtimes/python");
-
-Meta.test("Python VM performance", async (t) => {
+Meta.test("Python VM performance", async (t: any) => {
   await t.should("work with low latency for lambdas", async () => {
     await using wire = await WitWireMessenger.init(
       "inline://pyrt_wit_wire.cwasm",
@@ -93,7 +89,6 @@ Meta.test(
   async (t: any) => {
     const e = await t.engine(
       "runtimes/python/python.py",
-      cwd,
     );
 
     await t.should("work once (lambda)", async () => {
@@ -184,7 +179,7 @@ Meta.test(
     name: "Deno: def, lambda",
   },
   async (t: any) => {
-    const e = await t.engine("runtimes/python/python.ts", cwd);
+    const e = await t.engine("runtimes/python/python.ts");
 
     await t.should("work with def", async () => {
       await gql`
@@ -231,7 +226,7 @@ Meta.test(
   },
   async (metaTest: any) => {
     await metaTest.should("upload artifacts along with deps", async () => {
-      const engine = await metaTest.engine("runtimes/python/python.ts", cwd);
+      const engine = await metaTest.engine("runtimes/python/python.ts");
 
       await gql`
         query {
@@ -260,7 +255,6 @@ Meta.test(
   async (t: any) => {
     const e = await t.engine(
       "runtimes/python/python.py",
-      cwd,
     );
 
     await t.should("safely fail upon stackoverflow", async () => {
@@ -330,7 +324,7 @@ Meta.test(
         })
         .on(currentEngine);
     };
-    const engine = await metaTest.engine("runtimes/python/python.ts", cwd);
+    const engine = await metaTest.engine("runtimes/python/python.ts");
     await metaTest.should("work before typegate is reloaded", async () => {
       await runPythonOnPython(engine);
     });
@@ -338,7 +332,6 @@ Meta.test(
     // reload
     const reloadedEngine = await metaTest.engine(
       "runtimes/python/python.ts",
-      cwd,
     );
 
     await metaTest.should("work after typegate is reloaded", async () => {

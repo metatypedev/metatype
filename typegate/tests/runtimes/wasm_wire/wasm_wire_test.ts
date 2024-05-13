@@ -1,22 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
-import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 import { gql, Meta } from "test-utils/mod.ts";
-import { testDir } from "test-utils/dir.ts";
-import { tg } from "./wasm_wire.ts";
-import * as path from "std/path/mod.ts";
-
-const cwd = path.join(testDir, "runtimes/wasm_wire");
-const auth = new BasicAuth("admin", "password");
 
 Meta.test(
   {
     name: "Wasm runtime: wire",
   },
-  async (t) => {
-    const e = await t.engineFromTgDeployPython(
-      path.join(cwd, "wasm_wire.py"),
-      cwd,
+  async (t: any) => {
+    const e = await t.engine(
+      "runtimes/wasm_wire/wasm_wire.py",
     );
 
     await t.should("works", async () => {
@@ -37,29 +29,11 @@ Meta.test(
   {
     name: "Wasm Runtime typescript sdk: wire",
   },
-  async (metaTest) => {
-    const port = metaTest.port;
-    const gate = `http://localhost:${port}`;
-
-    await metaTest.should("work after deploying artifact", async (t) => {
-      const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
-        baseUrl: gate,
-        auth,
-        artifactsConfig: {
-          prismaMigration: {
-            globalAction: {
-              create: true,
-              reset: false,
-            },
-            migrationDir: "prisma-migrations",
-          },
-          dir: cwd,
-        },
-        typegraphPath: path.join(cwd, "wasm_wire.ts"),
-        secrets: {},
-      });
-
-      await using engine = await metaTest.engineFromDeployed(serialized);
+  async (metaTest: any) => {
+    await metaTest.should("work after deploying artifact", async (t: any) => {
+      const engine = await metaTest.engine(
+        "runtimes/wasm_wire/wasm_wire.ts",
+      );
 
       await t.step("wit bindings", async () => {
         await gql`

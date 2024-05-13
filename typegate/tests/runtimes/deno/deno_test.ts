@@ -3,16 +3,13 @@
 
 import { gql, Meta, sleep } from "../../utils/mod.ts";
 import * as path from "std/path/mod.ts";
-import { testDir } from "test-utils/dir.ts";
-
-const cwd = path.join(testDir, "runtimes/deno");
 
 Meta.test(
   {
     name: "Deno runtime",
   },
   async (t) => {
-    const e = await t.engine("runtimes/deno/deno.py", cwd);
+    const e = await t.engine("runtimes/deno/deno.py");
 
     await t.should("work on the default worker", async () => {
       await gql`
@@ -95,7 +92,7 @@ Meta.test(
     name: "Deno runtime: file name reloading",
   },
   async (t) => {
-    const e = await t.engine("runtimes/deno/deno.py", cwd);
+    const e = await t.engine("runtimes/deno/deno.py");
 
     await t.should("success for allowed network access", async () => {
       await gql`
@@ -128,7 +125,7 @@ Meta.test(
     name: "Deno runtime: use local imports",
   },
   async (t) => {
-    const e = await t.engine("runtimes/deno/deno_dep.py", cwd);
+    const e = await t.engine("runtimes/deno/deno_dep.py");
     await t.should("work for local imports", async () => {
       await gql`
         query {
@@ -144,7 +141,7 @@ Meta.test(
 );
 
 Meta.test("Deno runtime with typescript", async (t) => {
-  const e = await t.engine("runtimes/deno/deno_typescript.ts", cwd);
+  const e = await t.engine("runtimes/deno/deno_typescript.ts");
   await t.should("work with static values", async () => {
     await gql`
       query {
@@ -181,7 +178,7 @@ Meta.test(
     name: "DenoRuntime using TS SDK: artifacts and deps",
   },
   async (metaTest) => {
-    const engine = await metaTest.engine("runtimes/deno/deno_dep.ts", cwd);
+    const engine = await metaTest.engine("runtimes/deno/deno_dep.ts");
 
     await metaTest.should("work on imported TS modules", async () => {
       await gql`
@@ -204,7 +201,7 @@ Meta.test(
   async (t) => {
     const load = async (value: number) => {
       Deno.env.set("DYNAMIC", path.join("dynamic", `${value}.ts`));
-      const e = await t.engine("runtimes/deno/deno_reload.py", cwd);
+      const e = await t.engine("runtimes/deno/deno_reload.py");
       Deno.env.delete("DYNAMIC");
       return e;
     };
@@ -257,7 +254,7 @@ Meta.test(
           denoScript,
           originalContent.replace('"REWRITE_ME"', `${value}`),
         );
-        const e = await t.engine("runtimes/deno/deno_reload.py", cwd);
+        const e = await t.engine("runtimes/deno/deno_reload.py");
         await t.should(`reload with new value ${value}`, async () => {
           await gql`
             query {
@@ -288,7 +285,7 @@ Meta.test(
     sanitizeOps: false,
   },
   async (t) => {
-    const e = await t.engine("runtimes/deno/deno.py", cwd);
+    const e = await t.engine("runtimes/deno/deno.py");
 
     await t.should("safely fail upon stack overflow", async () => {
       await gql`

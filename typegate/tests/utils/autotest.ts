@@ -75,7 +75,7 @@ export async function autoTest(rootDir: string, target = "dev") {
     test(
       { name: `Auto-tests for ${name}`, introspection: true },
       async (t) => {
-        const e = await t.engine(pythonFile.path, rootDir, {
+        const e = await t.engine(pythonFile.path, {
           secrets,
           autoSecretName: false,
         });
