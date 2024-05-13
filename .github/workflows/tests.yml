@@ -123,7 +123,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
+          - os: macos-13
             activate: "source .venv/bin/activate"
           - os: macos-14
             activate: "source .venv/bin/activate"
