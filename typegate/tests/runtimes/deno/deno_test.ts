@@ -4,36 +4,15 @@
 import { gql, Meta, sleep } from "../../utils/mod.ts";
 import * as path from "std/path/mod.ts";
 import { testDir } from "test-utils/dir.ts";
-import { denoDepTg } from "./deno_dep.mjs";
-import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
 
 const cwd = path.join(testDir, "runtimes/deno");
-const auth = new BasicAuth("admin", "password");
-
-const localSerializedMemo = denoDepTg.serialize({
-  prismaMigration: {
-    globalAction: {
-      create: true,
-      reset: false,
-    },
-    migrationDir: "prisma-migrations",
-  },
-  dir: cwd,
-});
-const reusableTgOutput = {
-  ...denoDepTg,
-  serialize: (_: any) => localSerializedMemo,
-};
 
 Meta.test(
   {
     name: "Deno runtime",
   },
   async (t) => {
-    const e = await t.engineFromTgDeployPython(
-      "runtimes/deno/deploy_deno.py",
-      cwd,
-    );
+    const e = await t.engine("runtimes/deno/deno.py", cwd);
 
     await t.should("work on the default worker", async () => {
       await gql`
@@ -116,10 +95,7 @@ Meta.test(
     name: "Deno runtime: file name reloading",
   },
   async (t) => {
-    const e = await t.engineFromTgDeployPython(
-      "runtimes/deno/deploy_deno.py",
-      cwd,
-    );
+    const e = await t.engine("runtimes/deno/deno.py", cwd);
 
     await t.should("success for allowed network access", async () => {
       await gql`
@@ -152,10 +128,7 @@ Meta.test(
     name: "Deno runtime: use local imports",
   },
   async (t) => {
-    const e = await t.engineFromTgDeployPython(
-      "runtimes/deno/deno_dep.py",
-      cwd,
-    );
+    const e = await t.engine("runtimes/deno/deno_dep.py", cwd);
     await t.should("work for local imports", async () => {
       await gql`
         query {
@@ -171,7 +144,7 @@ Meta.test(
 );
 
 Meta.test("Deno runtime with typescript", async (t) => {
-  const e = await t.engine("runtimes/deno/deno_typescript.ts");
+  const e = await t.engine("runtimes/deno/deno_typescript.ts", cwd);
   await t.should("work with static values", async () => {
     await gql`
       query {
@@ -208,30 +181,7 @@ Meta.test(
     name: "DenoRuntime using TS SDK: artifacts and deps",
   },
   async (metaTest) => {
-    const port = metaTest.port;
-    const gate = `http://localhost:${port}`;
-
-    const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
-      reusableTgOutput,
-      {
-        baseUrl: gate,
-        auth,
-        artifactsConfig: {
-          prismaMigration: {
-            globalAction: {
-              create: true,
-              reset: false,
-            },
-            migrationDir: "prisma-migrations",
-          },
-          dir: cwd,
-        },
-        typegraphPath: path.join(cwd, "deno_dep.ts"),
-        secrets: {},
-      },
-    );
-
-    const engine = await metaTest.engineFromDeployed(serialized);
+    const engine = await metaTest.engine("runtimes/deno/deno_dep.ts", cwd);
 
     await metaTest.should("work on imported TS modules", async () => {
       await gql`
@@ -244,11 +194,6 @@ Meta.test(
         })
         .on(engine);
     });
-
-    const { typegate: _gateResponseRem } = await tgRemove(reusableTgOutput, {
-      baseUrl: gate,
-      auth,
-    });
   },
 );
 
@@ -259,10 +204,7 @@ Meta.test(
   async (t) => {
     const load = async (value: number) => {
       Deno.env.set("DYNAMIC", path.join("dynamic", `${value}.ts`));
-      const e = await t.engineFromTgDeployPython(
-        "runtimes/deno/deno_reload.py",
-        cwd,
-      );
+      const e = await t.engine("runtimes/deno/deno_reload.py", cwd);
       Deno.env.delete("DYNAMIC");
       return e;
     };
@@ -315,10 +257,7 @@ Meta.test(
           denoScript,
           originalContent.replace('"REWRITE_ME"', `${value}`),
         );
-        const e = await t.engineFromTgDeployPython(
-          "runtimes/deno/deno_reload.py",
-          cwd,
-        );
+        const e = await t.engine("runtimes/deno/deno_reload.py", cwd);
         await t.should(`reload with new value ${value}`, async () => {
           await gql`
             query {
@@ -349,10 +288,7 @@ Meta.test(
     sanitizeOps: false,
   },
   async (t) => {
-    const e = await t.engineFromTgDeployPython(
-      "runtimes/deno/deploy_deno.py",
-      cwd,
-    );
+    const e = await t.engine("runtimes/deno/deno.py", cwd);
 
     await t.should("safely fail upon stack overflow", async () => {
       await gql`
