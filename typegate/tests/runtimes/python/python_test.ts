@@ -201,7 +201,7 @@ Meta.test(
   {
     name: "Deno: def, lambda",
   },
-  async (t) => {
+  async (t: any) => {
     const e = await t.engine("runtimes/python/python.ts", cwd);
 
     await t.should("work with def", async () => {
@@ -243,55 +243,32 @@ Meta.test(
   },
 );
 
-// Meta.test(
-//   {
-//     name: "Python: upload artifacts with deps",
-//   },
-//   async (metaTest) => {
-//     const port = metaTest.port;
-//     const gate = `http://localhost:${port}`;
+Meta.test(
+  {
+    name: "Python: upload artifacts with deps",
+  },
+  async (metaTest: any) => {
+    await metaTest.should("upload artifacts along with deps", async () => {
+      const engine = await metaTest.engine("runtimes/python/python.ts", cwd);
 
-//     await metaTest.should("upload artifacts along with deps", async () => {
-//       const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
-//         reusableTgOutput,
-//         {
-//           baseUrl: gate,
-//           auth,
-//           artifactsConfig: {
-//             prismaMigration: {
-//               globalAction: {
-//                 create: true,
-//                 reset: false,
-//               },
-//               migrationDir: "prisma-migrations",
-//             },
-//             dir: cwd,
-//           },
-//           typegraphPath: path.join(cwd, "pyton.ts"),
-//           secrets: {},
-//         },
-//       );
-
-//       const engine = await metaTest.engineFromDeployed(serialized);
-
-//       await gql`
-//         query {
-//           identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
-//             a
-//             b
-//           }
-//         }
-//       `
-//         .expectData({
-//           identityMod: {
-//             a: "hello",
-//             b: [1, 2, "three"],
-//           },
-//         })
-//         .on(engine);
-//     });
-//   },
-// );
+      await gql`
+        query {
+          identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
+        }
+      `
+        .expectData({
+          identityMod: {
+            a: "hello",
+            b: [1, 2, "three"],
+          },
+        })
+        .on(engine);
+    });
+  },
+);
 
 // Meta.test(
 //   {

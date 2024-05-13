@@ -4,29 +4,20 @@
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 import * as path from "std/path/mod.ts";
 
-function snakeToCamel(snakeCaseString: string) {
-  return snakeCaseString.replace(
-    /_([a-z])/g,
-    (_, letter) => letter.toUpperCase(),
-  );
-}
-
-const cwd = Deno.args[1];
-const PORT = Deno.args[2];
-const modulePathStr = Deno.args[3];
+const cwd = Deno.args[0];
+const PORT = Deno.args[1];
+const modulePathStr = Deno.args[2];
 
 const gate = `http://localhost:${PORT}`;
 const auth = new BasicAuth("admin", "password");
 
 // resolve the module
-const moduleUrl = new URL(modulePathStr, import.meta.url);
-const tgName = snakeToCamel(path.basename(path.fromFileUrl(moduleUrl)));
+const moduleName = path.basename(modulePathStr);
+const tgPath = path.join(cwd, moduleName);
 
-const module = await import(modulePathStr);
+const module = await import(tgPath);
 if (!module.tg) {
-  throw new Error(
-    `No typegraph found`,
-  );
+  throw new Error(`No typegraph found`);
 }
 
 const tg = module.tg;
@@ -43,7 +34,7 @@ const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
     },
     dir: cwd,
   },
-  typegraphPath: path.join(cwd, tgName),
+  typegraphPath: tgPath,
   secrets: {},
 });
 

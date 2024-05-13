@@ -56,6 +56,7 @@ impl Test {
                     "target/debug/meta",
                     "git",
                     "python3",
+                    "deno",
                     "rm",
                     "mkdir",
                     "bash",
