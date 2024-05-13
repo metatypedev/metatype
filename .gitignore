@@ -26,6 +26,7 @@ typegate/codegen
 typegate/tests/prisma-migrations
 typegate/tests/e2e/cli/prisma-migrations
 typegate/tests/importers/copy/
+typegate/tests/**/*.wasm
 .env
 typegate/native/bindings.json
 bindings
