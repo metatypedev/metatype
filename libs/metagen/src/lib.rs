@@ -54,11 +54,17 @@ pub enum GeneratorInputResolved {
 
 /// This type plays the "dispatcher" role to the command object
 /// API implemented by [GeneratorInputOrder] and [GeneratorInputResolved].
+#[cfg(feature = "multithreaded")]
 pub trait InputResolver {
     fn resolve(
         &self,
         order: GeneratorInputOrder,
     ) -> impl std::future::Future<Output = anyhow::Result<GeneratorInputResolved>> + Send;
+}
+
+/// This type plays the "dispatcher" role to the command object
+pub trait InputResolverSync {
+    fn resolve(&self, order: GeneratorInputOrder) -> anyhow::Result<GeneratorInputResolved>;
 }
 
 #[derive(Debug)]
@@ -99,6 +105,7 @@ impl GeneratorRunner {
 /// This function makes use of a JoinSet to process
 /// items in parallel. This makes using actix workers in InputResolver
 /// is a no no.
+#[cfg(feature = "multithreaded")]
 pub async fn generate_target(
     config: &config::Config,
     target_name: &str,
@@ -169,6 +176,88 @@ pub async fn generate_target(
     let mut out = HashMap::new();
     while let Some(res) = generate_set.join_next().await {
         let (gen_name, files) = res??;
+        for (path, buf) in files.0 {
+            if let Some((src, _)) = out.get(&path) {
+                anyhow::bail!("generators \"{src}\" and \"{gen_name}\" clashed at \"{path:?}\"");
+            }
+            out.insert(path, (gen_name.clone(), buf));
+        }
+    }
+    let out: HashMap<PathBuf, GeneratedFile> = out
+        .into_iter()
+        .map(|(path, (_, buf))| (path, buf))
+        .collect();
+    Ok(GeneratorOutput(out))
+}
+
+pub fn generate_target_sync(
+    config: &config::Config,
+    target_name: &str,
+    workspace_path: PathBuf,
+    resolver: impl InputResolverSync + Send + Sync + Clone + 'static,
+) -> anyhow::Result<GeneratorOutput> {
+    let generators = [
+        // builtin generators
+        (
+            "mdk_rust".to_string(),
+            GeneratorRunner {
+                op: |workspace_path: &Path, val| {
+                    let config = mdk_rust::MdkRustGenConfig::from_json(val, workspace_path)?;
+                    let generator = mdk_rust::Generator::new(config)?;
+                    Ok(Box::new(generator))
+                },
+            },
+        ),
+        (
+            "mdk_python".to_string(),
+            GeneratorRunner {
+                op: |workspace_path: &Path, val| {
+                    let config = mdk_python::MdkPythonGenConfig::from_json(val, workspace_path)?;
+                    let generator = mdk_python::Generator::new(config)?;
+                    Ok(Box::new(generator))
+                },
+            },
+        ),
+    ]
+    .into_iter()
+    .collect::<HashMap<String, _>>();
+
+    let target_conf = config
+        .targets
+        .get(target_name)
+        .with_context(|| format!("target \"{target_name}\" not found in config"))?;
+
+    let mut generate_set = vec![];
+    for (gen_name, config) in &target_conf.0 {
+        let config = config.to_owned();
+
+        let get_gen_op = generators
+            .get(gen_name)
+            .with_context(|| format!("generator \"{gen_name}\" not found in config"))?;
+
+        let gen_impl = get_gen_op.exec(&workspace_path, config)?;
+        let bill = gen_impl.bill_of_inputs();
+
+        let resolve_set = bill.into_iter().map(|(name, order)| {
+            let resolver = resolver.clone();
+            Ok::<_, anyhow::Error>((name, resolver.resolve(order)))
+        });
+
+        let gen_name: Arc<str> = gen_name[..].into();
+        generate_set.push(move || {
+            let mut inputs = HashMap::new();
+            for res in resolve_set {
+                let (name, input) = res?;
+                inputs.insert(name, input?);
+            }
+            let out = gen_impl.generate(inputs)?;
+            Ok::<_, anyhow::Error>((gen_name, out))
+        });
+    }
+
+    let mut out = HashMap::new();
+    for res in generate_set {
+        let (gen_name, files) = res()?;
         for (path, buf) in files.0 {
             if let Some((src, _)) = out.get(&path) {
                 anyhow::bail!("generators \"{src}\" and \"{gen_name}\" clashed at \"{path:?}\"");

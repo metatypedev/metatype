@@ -60,7 +60,7 @@ tar = "0.4.40"
 base64 = "0.21.5"
 common.workspace = true
 typescript.workspace = true
-metagen.workspace = true
+metagen = { workspace = true, features = ["multithreaded"] }
 serde_yaml = "0.9.27"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.59", features = ["vendored"] }

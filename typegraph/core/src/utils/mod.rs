@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 use common::typegraph::{Auth, AuthProtocol};
 use indexmap::IndexMap;
+use metagen::{generate_target_sync, Config, InputResolverSync};
 use serde_json::json;
 
 use crate::errors::Result;
@@ -12,7 +14,7 @@ use crate::global_store::{get_sdk_version, NameRegistration, Store};
 use crate::types::subgraph::Subgraph;
 use crate::types::{TypeDefExt, TypeId};
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
-use crate::wit::utils::{Auth as WitAuth, QueryDeployParams};
+use crate::wit::utils::{Auth as WitAuth, MdkConfig, MdkOutput, QueryDeployParams};
 use crate::Lib;
 
 use self::oauth2::std::{named_provider, Oauth2Builder};
@@ -266,6 +268,28 @@ impl crate::wit::utils::Guest for crate::Lib {
             Ok(path) => Ok(path.display().to_string()),
             Err(e) => Err(e),
         }
+    }
+
+    fn metagen_exec(config: MdkConfig) -> Result<MdkOutput, String> {
+        let config: Config = serde_json::from_str(&config.json).map_err(|e| e.to_string())?;
+        let resolver = RawTgResolver;
+
+        generate_target_sync(&config, "foo", PathBuf::from("bar"), resolver).unwrap();
+
+        todo!(
+            "TODO: simply return a hashmap like repr and maybe explore using fs ops directly here"
+        )
+    }
+}
+
+#[derive(Clone)]
+struct RawTgResolver;
+impl InputResolverSync for RawTgResolver {
+    fn resolve(
+        &self,
+        _order: metagen::GeneratorInputOrder,
+    ) -> anyhow::Result<metagen::GeneratorInputResolved> {
+        todo!("resolve from raw typegraph string")
     }
 }
 

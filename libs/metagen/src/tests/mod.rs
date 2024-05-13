@@ -38,6 +38,7 @@ pub struct E2eTestCase {
     pub build_fn: fn(BuildArgs) -> BoxFuture<anyhow::Result<()>>,
 }
 
+#[cfg(feature = "multithreaded")]
 pub async fn e2e_test(cases: Vec<E2eTestCase>) -> anyhow::Result<()> {
     // spin_up_typegate
     for case in cases {

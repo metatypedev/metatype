@@ -579,6 +579,25 @@ interface utils {
     remove-injections: func(type-id: type-id) -> result<type-id, error>;
 
     get-cwd: func() -> result<string, string>;
+
+
+    enum mdk-generator {
+        python,
+        rust,
+        deno
+    }
+
+    record mdk-config {
+        gen: mdk-generator, 
+        json: string,
+    }
+
+    record mdk-output {
+        path: string,
+        content: string
+    }
+
+    metagen-exec: func(config: mdk-config) -> result<mdk-output, string>;
 }
 
 interface host {
