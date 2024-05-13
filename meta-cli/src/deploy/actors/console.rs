@@ -3,8 +3,9 @@
 
 pub mod input;
 
+use crate::interlude::*;
+
 use std::io::BufRead;
-use std::sync::Arc;
 
 use actix::prelude::*;
 use tokio::sync::oneshot;
@@ -69,14 +70,6 @@ impl ConsoleActor {
 
 impl Actor for ConsoleActor {
     type Context = Context<Self>;
-
-    fn started(&mut self, _ctx: &mut Context<Self>) {
-        log::trace!("ConsoleActor started.");
-    }
-
-    fn stopped(&mut self, _ctx: &mut Context<Self>) {
-        log::trace!("ConsoleActor stopped.");
-    }
 }
 
 #[derive(Message)]

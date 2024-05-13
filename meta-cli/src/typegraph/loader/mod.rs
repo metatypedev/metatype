@@ -1,9 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
+use eyre::Error;
 
 pub mod discovery;
 
 pub use discovery::Discovery;
+use owo_colors::OwoColorize;
 use tokio::{
     io::AsyncReadExt,
     process::Command,
@@ -11,16 +14,7 @@ use tokio::{
     time::{timeout, Duration},
 };
 
-use std::{
-    borrow::BorrowMut,
-    collections::HashMap,
-    env,
-    path::{Path, PathBuf},
-    sync::Arc,
-};
-
-use anyhow::{anyhow, bail, Context, Error, Result};
-use colored::Colorize;
+use std::env;
 
 use crate::{
     com::{responses::SDKResponse, server::get_instance_port, store::ServerStore},
@@ -78,6 +72,7 @@ impl LoaderPool {
 }
 
 impl<'a> Loader<'a> {
+    #[tracing::instrument(skip(self))]
     pub async fn load_module(&self, path: Arc<PathBuf>) -> LoaderResult {
         match tokio::fs::try_exists(path.as_ref()).await {
             Ok(exists) => {
@@ -85,10 +80,10 @@ impl<'a> Loader<'a> {
                     return Err(LoaderError::ModuleFileNotFound { path });
                 }
             }
-            Err(e) => {
+            Err(err) => {
                 return Err(LoaderError::Unknown {
                     path,
-                    error: anyhow!("failed to check if file exists: {}", e.to_string()),
+                    error: ferr!("failed to check if file exists: {err:#}",),
                 });
             }
         }
@@ -98,15 +93,24 @@ impl<'a> Loader<'a> {
             &self.base_dir,
         )
         .await?;
+        debug!(?path, "loading module");
         self.load_command(command, &path).await
     }
 
+    #[tracing::instrument(skip(self))]
     async fn load_command(&self, mut command: Command, path: &Path) -> LoaderResult {
         let path: Arc<PathBuf> = path.to_path_buf().into();
-        let mut child: tokio::process::Child = command
-            .borrow_mut()
+
+        command
             .env("META_CLI_TG_PATH", path.display().to_string())
-            .env("META_CLI_SERVER_PORT", get_instance_port().to_string())
+            .env("META_CLI_SERVER_PORT", get_instance_port().to_string());
+
+        use process_wrap::tokio::*;
+        let mut child = TokioCommandWrap::from(command)
+            .wrap(KillOnDrop)
+            // we use sessions so that kill on drop
+            // signals will get all grand-children
+            .wrap(ProcessSession)
             .spawn()
             .map_err(|e| LoaderError::LoaderProcess {
                 path: path.clone(),
@@ -115,9 +119,9 @@ impl<'a> Loader<'a> {
 
         let duration =
             get_loader_timeout_duration().map_err(|e| LoaderError::Other { error: e })?;
-        match timeout(duration, child.wait()).await {
+        match timeout(duration, Box::into_pin(child.wait())).await {
             Err(_) => {
-                child.kill().await.unwrap();
+                Box::into_pin(child.kill()).await.unwrap_or_log();
                 Err(LoaderError::LoaderTimeout { path: path.clone() })
             }
             Ok(exit) => {
@@ -128,7 +132,7 @@ impl<'a> Loader<'a> {
                 if exit.success() {
                     #[cfg(debug_assertions)]
                     {
-                        if let Some(stderr) = child.stderr.take().as_mut() {
+                        if let Some(stderr) = child.stderr().take().as_mut() {
                             // TODO console actor
                             let mut buff = String::new();
                             stderr.read_to_string(&mut buff).await.map_err(|e| {
@@ -145,7 +149,7 @@ impl<'a> Loader<'a> {
                         base_path: self.base_dir.clone(),
                     })
                 } else {
-                    let stderr = match child.stderr.take().as_mut() {
+                    let stderr = match child.stderr().take().as_mut() {
                         Some(value) => {
                             let mut buff = String::new();
                             value.read_to_string(&mut buff).await.map_err(|e| {
@@ -159,7 +163,7 @@ impl<'a> Loader<'a> {
                         None => "".to_string(),
                     };
 
-                    let stdout = match child.stdout.take().as_mut() {
+                    let stdout = match child.stdout().take().as_mut() {
                         Some(value) => {
                             let mut buff = String::new();
                             value.read_to_string(&mut buff).await.map_err(|e| {
@@ -173,15 +177,19 @@ impl<'a> Loader<'a> {
                         None => "".to_string(),
                     };
 
+                    use color_eyre::SectionExt;
                     Err(LoaderError::LoaderProcess {
                         path: path.clone(),
-                        error: anyhow::anyhow!("{}\n{}", stderr, stdout),
+                        error: ferr!("loader process err")
+                            .with_section(move || stdout.trim().to_string().header("Stdout:"))
+                            .with_section(move || stderr.trim().to_string().header("Stderr:")),
                     })
                 }
             }
         }
     }
 
+    #[tracing::instrument(err)]
     async fn get_load_command(
         module_type: ModuleType,
         path: &Path,
@@ -281,7 +289,6 @@ async fn detect_deno_loader_cmd(tg_path: &Path) -> Result<TsLoaderRt> {
             .output()
             .await
             .map(|out| out.status.success())
-            .map_err(|err| anyhow!(err))
     };
     let test_node_exec = || async {
         Command::new("node")
@@ -289,7 +296,6 @@ async fn detect_deno_loader_cmd(tg_path: &Path) -> Result<TsLoaderRt> {
             .output()
             .await
             .map(|out| out.status.success())
-            .map_err(|err| anyhow!(err))
     };
     let test_bun_exec = || async {
         Command::new("deno")
@@ -297,7 +303,6 @@ async fn detect_deno_loader_cmd(tg_path: &Path) -> Result<TsLoaderRt> {
             .output()
             .await
             .map(|out| out.status.success())
-            .map_err(|err| anyhow!(err))
     };
     let mut maybe_parent_dir = tg_path.parent();
     // try to detect runtime in use by checking for package.json/deno.json
@@ -338,9 +343,7 @@ async fn detect_deno_loader_cmd(tg_path: &Path) -> Result<TsLoaderRt> {
     if test_bun_exec().await? {
         return Ok(Bun);
     }
-    Err(anyhow::format_err!(
-        "unable to find deno, node or bun runtimes"
-    ))
+    Err(ferr!("unable to find deno, node or bun runtimes"))
 }
 
 #[allow(unused)]
@@ -379,15 +382,16 @@ pub enum LoaderError {
     },
 }
 
-impl ToString for LoaderError {
-    fn to_string(&self) -> String {
+impl core::fmt::Display for LoaderError {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::PostProcessingError {
                 path,
                 typegraph_name,
                 error,
             } => {
-                format!(
+                write!(
+                    fmt,
                     "error while post processing typegraph {name} from {path:?}: {error:?}",
                     name = typegraph_name.blue()
                 )
@@ -397,25 +401,39 @@ impl ToString for LoaderError {
                 content,
                 error,
             } => {
-                format!("error while parsing raw typegraph JSON from {path:?}: {error:?} in \"{content}\"")
+                write!(
+                    fmt,
+                "error while parsing raw typegraph JSON from {path:?}: {error:?} in {content:?}")
             }
             Self::LoaderProcess { path, error } => {
-                format!("loader process error while loading typegraph(s) from {path:?}: {error:?}")
+                write!(
+                    fmt,
+                    "loader process error while loading typegraph(s) from {path:?}: {error:?}"
+                )
             }
             Self::LoaderTimeout { path } => {
-                format!("loader process timed out while loading typegraph(s) from {path:?}")
+                write!(
+                    fmt,
+                    "loader process timed out while loading typegraph(s) from {path:?}"
+                )
             }
             Self::Other { error } => {
-                format!("{error}")
+                write!(fmt, "unknown error: {error}")
             }
             Self::Unknown { path, error } => {
-                format!("unknown error while loading typegraph(s) from {path:?}: {error:?}")
+                write!(
+                    fmt,
+                    "unknown error while loading typegraph(s) from {path:?}: {error:?}"
+                )
             }
             Self::ModuleFileNotFound { path } => {
-                format!("module file not found: {path:?}")
+                write!(fmt, "module file not found: {path:?}")
             }
             Self::PythonVenvNotFound { path, error } => {
-                format!("python venv (.venv) not found in parent directories of {path:?}: {error}",)
+                write!(
+                    fmt,
+                    "python venv (.venv) not found in parent directories of {path:?}: {error}",
+                )
             }
         }
     }

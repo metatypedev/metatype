@@ -1593,6 +1593,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "color-eyre"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "55146f5e46f237f7423d74111267d4597b59b0dad0ffaf7303bce9945d843ad5"
+dependencies = [
+ "backtrace",
+ "color-spantrace",
+ "eyre",
+ "indenter",
+ "once_cell",
+ "owo-colors",
+ "tracing-error",
+]
+
+[[package]]
 name = "color-print"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1611,6 +1626,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.63",
+]
+
+[[package]]
+name = "color-spantrace"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd6be1b2a7e382e2b98b43b2adcca6bb0e465af0bdd38123873ae61eb17a72c2"
+dependencies = [
+ "once_cell",
+ "owo-colors",
+ "tracing-core",
+ "tracing-error",
 ]
 
 [[package]]
@@ -4158,6 +4185,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "eyre"
+version = "0.6.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7cd915d99f24784cdc19fd37ef22b97e3ff0ae756c7e492e9fbfe897d61e2aec"
+dependencies = [
+ "indenter",
+ "once_cell",
+]
+
+[[package]]
 name = "failure"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4860,7 +4897,7 @@ dependencies = [
  "presser",
  "thiserror",
  "winapi",
- "windows",
+ "windows 0.51.1",
 ]
 
 [[package]]
@@ -5536,6 +5573,12 @@ dependencies = [
  "proc-macro2",
  "quote",
 ]
+
+[[package]]
+name = "indenter"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce23b50ad8242c51a442f3ff322d56b02f08852c77e4c0b4d3fd684abc89c683"
 
 [[package]]
 name = "indexmap"
@@ -6468,7 +6511,6 @@ version = "0.4.1-0"
 dependencies = [
  "actix",
  "actix-web",
- "anyhow",
  "assert_cmd",
  "async-recursion",
  "async-trait",
@@ -6477,7 +6519,7 @@ dependencies = [
  "clap",
  "clap-verbosity-flag",
  "clap_complete",
- "colored",
+ "color-eyre",
  "common",
  "crossbeam-channel",
  "ctrlc",
@@ -6485,7 +6527,6 @@ dependencies = [
  "dialoguer",
  "directories 5.0.1",
  "enum_dispatch",
- "env_logger",
  "filetime",
  "flate2",
  "futures",
@@ -6500,14 +6541,14 @@ dependencies = [
  "itertools 0.11.0",
  "lade-sdk",
  "lazy_static 1.4.0",
- "log",
  "metagen",
  "normpath",
  "notify-debouncer-mini",
  "num_cpus",
- "openssl",
+ "once_cell",
  "pathdiff",
  "prisma-models",
+ "process-wrap",
  "project-root",
  "question",
  "reqwest",
@@ -6522,6 +6563,11 @@ dependencies = [
  "textwrap",
  "tiny_http",
  "tokio",
+ "tracing",
+ "tracing-appender",
+ "tracing-error",
+ "tracing-subscriber",
+ "tracing-unwrap",
  "typegate_engine",
  "typescript",
 ]
@@ -6530,7 +6576,7 @@ dependencies = [
 name = "metagen"
 version = "0.4.1-0"
 dependencies = [
- "anyhow",
+ "color-eyre",
  "common",
  "garde",
  "heck 0.5.0",
@@ -7588,6 +7634,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b15813163c1d831bf4a13c3610c05c0d03b39feb07f7e09fa234dac9b15aaf39"
 
 [[package]]
+name = "owo-colors"
+version = "3.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1b04fb49957986fdce4d6ee7a65027d55d4b6d2265e5848bbb507b58ccfdb6f"
+
+[[package]]
 name = "p224"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8318,6 +8370,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ad3d49ab951a01fbaafe34f2ec74122942fe18a3f9814c3268f1bb72042131b"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "process-wrap"
+version = "8.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df785e1a8a4f462ab97abb49e1718d8ee173f4fc37c29dde7d0487b6538c3a82"
+dependencies = [
+ "futures",
+ "indexmap 2.2.6",
+ "nix 0.28.0",
+ "tokio",
+ "tracing",
+ "windows 0.56.0",
 ]
 
 [[package]]
@@ -11818,6 +11884,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracing-appender"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3566e8ce28cc0a3fe42519fc80e6b4c943cc4c8cef275620eb8dac2d3d4e06cf"
+dependencies = [
+ "crossbeam-channel",
+ "thiserror",
+ "time",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "tracing-attributes"
 version = "0.1.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11903,6 +11981,7 @@ dependencies = [
  "matchers",
  "nu-ansi-term",
  "once_cell",
+ "parking_lot 0.12.2",
  "regex",
  "sharded-slab",
  "smallvec",
@@ -11910,6 +11989,15 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.2.0",
+]
+
+[[package]]
+name = "tracing-unwrap"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c4e33415be97f5ae70322d6fefc696bbc08887d8835400d6c77f059469b30354"
+dependencies = [
+ "tracing",
 ]
 
 [[package]]
@@ -13379,6 +13467,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "windows"
+version = "0.56.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1de69df01bdf1ead2f4ac895dc77c9351aefff65b2f3db429a343f9cbf05e132"
+dependencies = [
+ "windows-core 0.56.0",
+ "windows-targets 0.52.5",
+]
+
+[[package]]
 name = "windows-core"
 version = "0.51.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13392,6 +13490,49 @@ name = "windows-core"
 version = "0.52.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33ab640c8d7e35bf8ba19b884ba838ceb4fba93a4e8c65a9059d08afcfc683d9"
+dependencies = [
+ "windows-targets 0.52.5",
+]
+
+[[package]]
+name = "windows-core"
+version = "0.56.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4698e52ed2d08f8658ab0c39512a7c00ee5fe2688c65f8c0a4f06750d729f2a6"
+dependencies = [
+ "windows-implement",
+ "windows-interface",
+ "windows-result",
+ "windows-targets 0.52.5",
+]
+
+[[package]]
+name = "windows-implement"
+version = "0.56.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6fc35f58ecd95a9b71c4f2329b911016e6bec66b3f2e6a4aad86bd2e99e2f9b"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.61",
+]
+
+[[package]]
+name = "windows-interface"
+version = "0.56.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08990546bf4edef8f431fa6326e032865f27138718c587dc21bc0265bbcb57cc"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.61",
+]
+
+[[package]]
+name = "windows-result"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "749f0da9cc72d82e600d8d2e44cadd0b9eedb9038f71a1c58556ac1c5791813b"
 dependencies = [
  "windows-targets 0.52.5",
 ]

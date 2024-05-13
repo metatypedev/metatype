@@ -1,41 +1,33 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use colored::Colorize;
-use log::Level;
-use std::io::Write;
+use crate::interlude::*;
 
-pub fn init() {
+pub fn init() -> Result<()> {
+    color_eyre::install()?;
     if std::env::var("RUST_LOG").is_err() {
-        #[cfg(debug_assertions)]
-        std::env::set_var("RUST_LOG", "info,meta=trace");
-        #[cfg(not(debug_assertions))]
         std::env::set_var("RUST_LOG", "info");
     }
-    let mut builder = env_logger::Builder::from_default_env();
-    builder
-        .format(|buf, rec| {
-            let level = rec.level();
-            let module_path = rec.module_path().unwrap_or("");
-            let level = match level {
-                Level::Error => format!("[{level}]").red(),
-                Level::Warn => format!("[{level}]").yellow(),
-                Level::Info => format!("[{level}]").blue(),
-                Level::Debug => format!("[{level} {module_path}]").dimmed(),
-                Level::Trace => format!("[{level} {module_path}]").dimmed(),
-            };
+    #[cfg(not(debug_assertions))]
+    if std::env::var("RUST_SPANTRACE").is_err() {
+        std::env::set_var("RUST_SPANTRACE", "0");
+    }
 
-            let text = format!("{}", rec.args());
-            let mut lines = text.lines();
-            if let Some(first_line) = lines.next() {
-                writeln!(buf, "{level} {first_line}")?;
-            }
-            for line in lines {
-                if !line.is_empty() {
-                    writeln!(buf, "{level}> {line}")?;
-                }
-            }
-            Ok(())
-        })
-        .init();
+    use tracing_subscriber::prelude::*;
+    tracing_subscriber::registry()
+        // filter on values from RUST_LOG
+        .with(tracing_subscriber::EnvFilter::from_default_env())
+        // subscriber that emits to stderr
+        .with(
+            tracing_subscriber::fmt::layer()
+                .without_time()
+                // .pretty()
+                // .with_file(true)
+                // .with_line_number(true)
+                .with_target(false),
+        )
+        // instrument errors with SpanTraces, used by color-eyre
+        .with(tracing_error::ErrorLayer::default())
+        .try_init()?;
+    Ok(())
 }

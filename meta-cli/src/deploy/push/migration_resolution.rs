@@ -1,11 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
-
-use std::path::{Path, PathBuf};
+use crate::interlude::*;
 
 use actix::prelude::*;
-use anyhow::Result;
-use colored::Colorize;
+use owo_colors::OwoColorize;
 
 use crate::{
     com::store::{MigrationAction, RuntimeMigrationAction, ServerStore},
@@ -105,7 +103,7 @@ impl SelectOption for RemoveLatestMigration {
         let typegraph_path = self.typegraph_path.clone();
 
         Arbiter::current().spawn(async move {
-            if let Err(e) = Self::apply(
+            if let Err(err) = Self::apply(
                 &migration_path,
                 &typegraph_path,
                 runtime_name,
@@ -115,8 +113,8 @@ impl SelectOption for RemoveLatestMigration {
             .await
             {
                 console.warning(format!("Migration Path {}", migration_path.display()));
-                console.error(e.to_string());
-                panic!("{}", e.to_string()); // could occur if the latest migration does not match
+                console.error(err.to_string());
+                panic!("{err:?}"); // could occur if the latest migration does not match
             }
         });
     }

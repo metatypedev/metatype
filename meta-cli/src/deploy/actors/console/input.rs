@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
 
 use std::borrow::Cow;
 
 use actix::Addr;
-use anyhow::{bail, Result};
-use colored::Colorize;
+use owo_colors::OwoColorize;
 
 use crate::deploy::actors::console::{Console, ConsoleActor};
 
@@ -86,13 +86,13 @@ impl Select {
                     return Ok(i - 1);
                 }
                 _ => {
-                    log::error!("Invalid option, please try again.");
+                    log::error!("invalid option, please try again");
                 }
             }
 
             retry_left -= 1;
             if retry_left == 0 {
-                bail!("Max retry count exceeded");
+                bail!("max retry count exceeded");
             }
         }
     }
@@ -140,13 +140,13 @@ impl Confirm {
                     return Ok(false);
                 }
                 _ => {
-                    log::error!("Invalid option, please try again.");
+                    log::error!("invalid option, please try again.");
                 }
             }
 
             retry_left -= 1;
             if retry_left < 0 {
-                bail!("Max retry count exceeded");
+                bail!("max retry count exceeded");
             }
         }
     }

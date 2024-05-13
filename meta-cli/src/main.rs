@@ -1,6 +1,34 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+#[allow(unused)]
+mod interlude {
+    pub use std::{
+        collections::HashMap,
+        path::{Path, PathBuf},
+        sync::{Arc, Mutex},
+    };
+
+    pub use color_eyre::{
+        eyre::{
+            self as eyre, self as anyhow, bail, ensure, format_err, format_err as ferr,
+            ContextCompat, OptionExt, Result, WrapErr,
+        },
+        owo_colors::{self, colored},
+        Section, SectionExt,
+    };
+    pub use serde::{Deserialize, Serialize};
+    pub use tracing::instrument::Instrument;
+    pub use tracing::{debug, error, info, trace, warn};
+    pub use tracing_unwrap::*;
+    pub mod log {
+        pub use tracing::{debug, error, info, trace, warn};
+    }
+    pub use async_trait::async_trait;
+
+    pub use crate::{anyhow_to_eyre, map_ferr};
+}
+
 mod cli;
 mod codegen;
 mod com;
@@ -9,6 +37,7 @@ pub mod deploy;
 mod fs;
 mod global_config;
 mod logger;
+mod macros;
 mod secrets;
 
 #[cfg(test)]
@@ -16,7 +45,7 @@ mod tests;
 mod typegraph;
 mod utils;
 
-use anyhow::Result;
+use crate::interlude::*;
 use clap::CommandFactory;
 
 use clap::Parser;
@@ -26,20 +55,29 @@ use cli::Args;
 use com::server::init_server;
 use futures::try_join;
 use futures::FutureExt;
-use log::{error, warn};
 use shadow_rs::shadow;
 
 shadow!(build);
 
+#[tracing::instrument]
 fn main() -> Result<()> {
     setup_panic_hook();
-    logger::init();
+
+    let args = match Args::try_parse() {
+        Ok(cli) => cli,
+        Err(err) => err.exit(),
+    };
+
+    if args.verbose.is_present() {
+        std::env::set_var("RUST_LOG", args.verbose.log_level_filter().to_string());
+    }
+    logger::init().context("error setting up logger")?;
 
     let _ = actix::System::with_tokio_rt(|| {
         tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()
-            .unwrap()
+            .unwrap_or_log()
     });
 
     actix::run(async {
@@ -47,15 +85,6 @@ fn main() -> Result<()> {
             .await
             .unwrap_or_else(|e| warn!("cannot check for update: {}", e));
     })?;
-
-    let args = match Args::try_parse() {
-        Ok(cli) => cli,
-        Err(e) => e.exit(),
-    };
-
-    if args.verbose.is_present() {
-        log::set_max_level(args.verbose.log_level_filter());
-    }
 
     if args.version {
         println!("meta {}", build::PKG_VERSION);
@@ -71,15 +100,15 @@ fn main() -> Result<()> {
             tokio::runtime::Builder::new_multi_thread()
                 .enable_all()
                 .build()?
-                .block_on(async {
-                    let server = init_server().unwrap();
-                    let command = gen_args.run(args.config, Some(server.handle()));
+                .block_on(
+                    async {
+                        let server = init_server().unwrap();
+                        let command = gen_args.run(args.config, Some(server.handle()));
 
-                    try_join!(command, server.map(|_| Ok(()))).unwrap_or_else(|e| {
-                        error!("{}", e.to_string());
-                        std::process::exit(1);
-                    });
-                });
+                        try_join!(command, server.map(|_| Ok(())))
+                    }
+                    .in_current_span(),
+                )?;
         }
         Some(command) => actix::run(async move {
             match command {
@@ -87,14 +116,14 @@ fn main() -> Result<()> {
                     let server = init_server().unwrap();
                     let command = command.run(args.config, Some(server.handle()));
 
-                    try_join!(command, server.map(|_| Ok(()))).unwrap_or_else(|e| {
-                        error!("{}", e.to_string());
+                    try_join!(command, server.map(|_| Ok(()))).unwrap_or_else(|err| {
+                        error!("{err:?}");
                         std::process::exit(1);
                     });
                 }
                 _ => {
-                    command.run(args.config, None).await.unwrap_or_else(|e| {
-                        error!("{}", e.to_string());
+                    command.run(args.config, None).await.unwrap_or_else(|err| {
+                        error!("{err:?}");
                         std::process::exit(1);
                     });
                 }

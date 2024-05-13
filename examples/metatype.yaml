@@ -4,9 +4,9 @@ typegates:
     username: admin
     password: password
     secrets:
-      basic-authentification:
-        BASIC_ADMIN: "password"
-      jwt-authentification:
+      basic-authentication:
+        BASIC_admin: "password"
+      jwt-authentication:
         CUSTOM_JWT: "wOoyc8ijEHP99oASvJ0IXmHDOMYQH6"
       oauth2-authentication:
         GITHUB_CLIENT_ID: fake
@@ -35,7 +35,7 @@ typegates:
       fcm:
         POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=fcm"
       business-logic:
-        BASIC_ADMIN: "password"
+        BASIC_andim: "password"
         BASIC_USER: "user"
         POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=business_logic"
       iam-provider:
@@ -48,24 +48,24 @@ typegates:
         S3_SECRET_KEY: password
       roadmap-prisma:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_prisma"
-        BASIC_ADMIN: hunter2
+        BASIC_andim: hunter2
       roadmap-policies:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_policies"
-        BASIC_ADMIN: hunter2
+        BASIC_andim: hunter2
       roadmap-reduce:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_reduce"
-        BASIC_ADMIN: hunter2
+        BASIC_andim: hunter2
       roadmap-execute:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_execute"
-        BASIC_ADMIN: hunter2
+        BASIC_andim: hunter2
       roadmap-rest:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_rest"
-        BASIC_ADMIN: hunter2
+        BASIC_andim: hunter2
       roadmap-func:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_func"
-        BASIC_ADMIN: hunter2
+        BASIC_andim: hunter2
       roadmap:
-        BASIC_ADMIN: hunter2
+        BASIC_andim: hunter2
       func-gql:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=func_ctx"
 
@@ -74,9 +74,9 @@ typegates:
     username: admin
     password: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ADMIN_PASSWORD
     secrets:
-      basic-authentification:
-        BASIC_ADMIN: "password"
-      jwt-authentification:
+      basic-authentication:
+        BASIC_admin: "password"
+      jwt-authentication:
         CUSTOM_JWT: "wOoyc8ijEHP99oASvJ0IXmHDOMYQH6"
       oauth2-authentication:
         GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
@@ -105,7 +105,7 @@ typegates:
       fcm:
         POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_FCM_POSTGRES_CONN
       business-logic:
-        BASIC_ADMIN: "password"
+        BASIC_andim: "password"
         BASIC_USER: "user"
         POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_BUSINESS_LOGIC_POSTGRES_CONN
       iam-provider:
@@ -118,24 +118,24 @@ typegates:
         S3_SECRET_KEY: password
       roadmap-prisma:
         POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_PRISMA_POSTGRES
-        BASIC_ADMIN: hunter2
+        BASIC_andim: hunter2
       roadmap-policies:
         POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_POLICIES_POSTGRES
-        BASIC_ADMIN: hunter2
+        BASIC_andim: hunter2
       roadmap-reduce:
         POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_REDUCE_POSTGRES
-        BASIC_ADMIN: hunter2
+        BASIC_andim: hunter2
       roadmap-execute:
         POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_EXECUTE_POSTGRES
-        BASIC_ADMIN: hunter2
+        BASIC_andim: hunter2
       roadmap-rest:
         POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_REST_POSTGRES
-        BASIC_ADMIN: hunter2
+        BASIC_andim: hunter2
       roadmap-func:
         POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_FUNC_POSTGRES
-        BASIC_ADMIN: hunter2
+        BASIC_andim: hunter2
       roadmap:
-        BASIC_ADMIN: hunter2
+        BASIC_andim: hunter2
 
 typegraphs:
   materializers:
