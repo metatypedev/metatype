@@ -7,24 +7,29 @@ import { Resolver, RuntimeInitParams } from "../types.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
 import * as ast from "graphql/ast";
 import { Materializer, WasmRuntimeData } from "../typegraph/types.ts";
-import { getLogger } from "../log.ts";
+import { getLogger, Logger } from "../log.ts";
 import { WitWireMessenger } from "./wit_wire/mod.ts";
 
 const logger = getLogger(import.meta);
 
 @registerRuntime("wasm_wire")
 export class WasmRuntimeWire extends Runtime {
+  private logger: Logger;
+
   private constructor(
     typegraphName: string,
     uuid: string,
     private wire: WitWireMessenger,
   ) {
     super(typegraphName, uuid);
+    this.logger = getLogger(`wasm_wire:'${typegraphName}'`);
   }
 
   static async init(
     params: RuntimeInitParams<WasmRuntimeData>,
   ): Promise<Runtime> {
+    logger.info("initializing WasmRuntimeWire");
+
     const {
       typegraph,
       typegraphName,
@@ -46,6 +51,8 @@ export class WasmRuntimeWire extends Runtime {
       instanceId: uuid,
       module: artifactMeta,
     });
+
+    logger.info("initializing wit wire messenger");
     const wire = await WitWireMessenger.init(
       await typegate.artifactStore.getLocalPath(artifactMeta),
       uuid,
@@ -57,11 +64,13 @@ export class WasmRuntimeWire extends Runtime {
         mat_data_json: JSON.stringify({}),
       })),
     );
+    logger.info("wit wire messenger initialized");
 
     return new WasmRuntimeWire(typegraphName, uuid, wire);
   }
 
   async deinit(): Promise<void> {
+    this.logger.info("deinitializing WasmRuntimeWire");
     await using _drop = this.wire;
   }
 
@@ -111,6 +120,16 @@ export class WasmRuntimeWire extends Runtime {
 
   delegate(mat: Materializer): Resolver {
     const { op_name } = mat.data;
-    return (args) => this.wire.handle(op_name as string, args);
+    return (args) => {
+      this.logger.info(`running '${op_name}'`);
+      this.logger.debug(`running '${op_name}' with args: {}`, args);
+
+      const res = this.wire.handle(op_name as string, args);
+
+      this.logger.info(`'${opname}' successful`);
+      this.logger.debug(`'${opname}' returned: ${JSON.stringify(res)}`);
+
+      return res;
+    };
   }
 }

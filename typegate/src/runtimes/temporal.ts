@@ -9,27 +9,33 @@ import { ComputeStage } from "../engine/query_engine.ts";
 import { TypeGraph } from "../typegraph/mod.ts";
 import { TemporalRuntimeData } from "../typegraph/types.ts";
 import { registerRuntime } from "./mod.ts";
-import { getLogger } from "../log.ts";
+import { getLogger, Logger } from "../log.ts";
 
 const logger = getLogger(import.meta);
 
 @registerRuntime("temporal")
 export class TemporalRuntime extends Runtime {
+  private logger: Logger;
+
   private constructor(
     typegraphName: string,
   ) {
     super(typegraphName);
+    this.logger = getLogger(`temporal:'${typegraphName}'`);
   }
 
   static async init(
     params: RuntimeInitParams,
   ): Promise<Runtime> {
+    logger.info("initializing TemporalRuntime");
+    logger.debug(`init params: ${JSON.stringify(params)}`);
     const { typegraph, args, secretManager } = params as RuntimeInitParams<
       TemporalRuntimeData
     >;
     const typegraphName = TypeGraph.formatName(typegraph);
 
     const instance = new TemporalRuntime(typegraphName);
+    instance.logger.info("registering TemporalRuntime");
     nativeVoid(
       await native.temporal_register({
         url: secretManager.secretOrFail(
@@ -42,15 +48,19 @@ export class TemporalRuntime extends Runtime {
         client_id: instance.id,
       }),
     );
+    insance.logger.info("registered TemporalRuntime");
+
     return instance;
   }
 
   async deinit(): Promise<void> {
+    logger.info("deinitializing TemporalRuntime");
     nativeVoid(
       await native.temporal_unregister({
         client_id: this.id,
       }),
     );
+    logger.info("unregistered TemporalRuntime");
   }
 
   materialize(
@@ -65,6 +75,7 @@ export class TemporalRuntime extends Runtime {
       if (name === "start_workflow") {
         const { workflow_type } = stage.props.materializer?.data ?? {};
         return async ({ workflow_id, args, task_queue }) => {
+          this.logger.info("workflow: start");
           const { run_id } = nativeResult(
             await native.temporal_workflow_start({
               client_id,
@@ -75,6 +86,7 @@ export class TemporalRuntime extends Runtime {
               request_id: null,
             }),
           );
+          this.logger.info(`workflow started: ${run_id}`);
 
           return run_id;
         };
@@ -83,6 +95,8 @@ export class TemporalRuntime extends Runtime {
       if (name === "signal_workflow") {
         const { signal_name } = stage.props.materializer?.data ?? {};
         return async ({ workflow_id, run_id, args }) => {
+          this.logger.info("workflow signal");
+          this.logger.debug(`workflow signal: ${JSON.stringify(args)}`);
           nativeVoid(
             await native.temporal_workflow_signal({
               client_id,
@@ -93,6 +107,7 @@ export class TemporalRuntime extends Runtime {
               request_id: null,
             }),
           );
+          this.logger.info("workflow signal: success");
           return true;
         };
       }
@@ -101,6 +116,8 @@ export class TemporalRuntime extends Runtime {
         const { query_type } = stage.props.materializer?.data ?? {};
 
         return async ({ workflow_id, run_id, args }) => {
+          this.logger.info("workflow query");
+          this.logger.debug(`workflow query: ${JSON.stringify(args)}`);
           const { data } = nativeResult(
             await native.temporal_workflow_query({
               client_id,
@@ -111,6 +128,9 @@ export class TemporalRuntime extends Runtime {
             }),
           );
 
+          this.logger.info("workflow query: success");
+          this.logger.debug(`workflow query: result: ${JSON.stringify(data)}`);
+
           logger.debug(Deno.inspect({ data, args }));
           const out = JSON.parse(data[0]);
           return out;
@@ -119,6 +139,10 @@ export class TemporalRuntime extends Runtime {
 
       if (name === "describe_workflow") {
         return async ({ workflow_id, run_id }) => {
+          this.logger.info("workflow describe");
+          this.logger.debug(
+            `workflow describe: workflow=${workflow_id}, run=${run_id}`,
+          );
           const res = nativeResult(
             await native.temporal_workflow_describe({
               client_id,
@@ -126,6 +150,8 @@ export class TemporalRuntime extends Runtime {
               run_id: run_id as string,
             }),
           );
+          this.logger.info("workflow describe: success");
+          this.logger.info(`workflow describe: ${JSON.stringify(res)}`);
 
           return res;
         };
