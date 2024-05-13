@@ -4,6 +4,8 @@
 import type { WitWireMatInfo } from "../../../engine/runtime.js";
 import { ResolverArgs } from "../../types.ts";
 
+const METATYPE_VERSION = "0.4.0";
+
 export class WitWireMessenger {
   static async init(
     componentPath: string,
@@ -13,8 +15,7 @@ export class WitWireMessenger {
     try {
       const _res = await Meta.wit_wire.init(componentPath, instanceId, {
         expected_ops: ops,
-        // FIXME: source actual version
-        metatype_version: "0.3.7-0",
+        metatype_version: METATYPE_VERSION,
       });
       return new WitWireMessenger(instanceId, componentPath, ops);
     } catch (err) {

@@ -301,6 +301,8 @@ jobs:
           npm publish --registry $NPM_CONFIG_REGISTRY
           cd ../../../..
 
+          ghjk x clean-deno-lock
+
           # install packages inside metatype examples
           pnpm install -C examples/typegraphs
 
