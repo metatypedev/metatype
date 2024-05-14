@@ -60,6 +60,10 @@ Meta.test(
     },
   },
   async (metaTest) => {
+    await metaTest.shell(["bash", "build.sh"], {
+      currentDir: `${import.meta.dirname!}/rust`,
+    });
+
     const port = metaTest.port;
     const gate = `http://localhost:${port}`;
 
