@@ -5,13 +5,13 @@ import { connect, Redis, RedisConnectOptions, XIdInput } from "redis";
 import * as Sentry from "sentry";
 import { getLogger } from "../log.ts";
 import { ensure } from "../utils.ts";
-import { BaseError, ErrorSource } from "../errors.ts";
+import { BaseError, ErrorKind } from "../errors.ts";
 
 const logger = getLogger(import.meta);
 
 class ReplicatedMapError extends BaseError {
   constructor(message: string) {
-    super(import.meta, ErrorSource.Typegate, message, 500);
+    super(import.meta, ErrorKind.Typegate, message, 500);
   }
 }
 

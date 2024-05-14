@@ -17,7 +17,7 @@ import { createHash } from "node:crypto";
 import * as jwt from "jwt";
 import { join } from "std/path/join.ts";
 import { exists } from "std/fs/exists.ts";
-import { ArtifactError, BaseError, ErrorKind } from "../errors.ts";
+import { ArtifactError, BaseError, ErrorKind } from "@typegate/errors.ts";
 
 const logger = getLogger(import.meta);
 

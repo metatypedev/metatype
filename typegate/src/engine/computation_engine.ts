@@ -7,17 +7,17 @@ import { OperationPolicies } from "./planner/policies.ts";
 import { RateLimit } from "../typegate/rate_limiter.ts";
 import { Context, Info, Parents } from "../types.ts";
 import { JSONValue } from "../utils.ts";
-import { BaseError, ErrorSource } from "../errors.ts";
+import { BaseError, ErrorKind } from "../errors.ts";
 
 class InvalidPlan extends BaseError {
   constructor(message: string) {
-    super(import.meta, ErrorSource.Typegate, message);
+    super(import.meta, ErrorKind.Typegate, message);
   }
 }
 
 class InvalidResult extends BaseError {
   constructor(message: string) {
-    super(import.meta, ErrorSource.Typegate, message);
+    super(import.meta, ErrorKind.Typegate, message);
   }
 }
 

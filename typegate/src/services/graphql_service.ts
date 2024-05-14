@@ -15,13 +15,13 @@ import { QueryEngine } from "../engine/query_engine.ts";
 import * as ast from "graphql/ast";
 import { BadContext, ResolverError } from "../errors.ts";
 import { badRequest, jsonError, jsonOk } from "./responses.ts";
-import { BaseError, ErrorSource } from "../errors.ts";
+import { BaseError, ErrorKind } from "../errors.ts";
 
 const logger = getLogger(import.meta);
 
 class InvalidQuery extends BaseError {
   constructor(message: string) {
-    super(import.meta, ErrorSource.User, message);
+    super(import.meta, ErrorKind.User, message);
   }
 }
 
