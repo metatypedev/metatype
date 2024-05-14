@@ -8,6 +8,7 @@ import { RateLimit } from "../typegate/rate_limiter.ts";
 import { Context, Info } from "../types.ts";
 import { handlePlaygroundRestAPI } from "./playground_service.ts";
 import config from "../config.ts";
+import { BaseError, ErrorKind } from "../errors.ts";
 
 const logger = getLogger("rest");
 
@@ -58,7 +59,13 @@ export async function handleRest(
 
     const { plan, checkVariables } = queries[name] ?? [];
     if (!plan) {
-      return new Response(`query not found: ${name}`, { status: 404 });
+      return new BaseError(
+        import.meta,
+        ErrorKind.User,
+        `query not found: ${name}`,
+        404,
+      ).withType("NotFound")
+        .toResponse(false);
     }
 
     const variables = req.method === "GET"
@@ -84,6 +91,9 @@ export async function handleRest(
     });
   } catch (e) {
     headers.set("Content-Type", "application/json");
+    if (e instanceof BaseError) {
+      return e.toResponse(false);
+    }
     if (e instanceof ResolverError) {
       logger.error(`field err: ${e.message}`);
       return new Response(

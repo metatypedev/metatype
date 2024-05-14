@@ -17,6 +17,7 @@ import { LocalArtifactPersistence } from "./local.ts";
 import { exists } from "std/fs/exists.ts";
 import { dirname } from "std/path/mod.ts";
 import { chunk } from "std/collections/chunk.ts";
+import { ArtifactError } from "./mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -147,7 +148,10 @@ class SharedArtifactPersistence implements ArtifactPersistence {
     });
 
     if (response.$metadata.httpStatusCode === 404) {
-      throw new Error(`Artifact '${hash}' not found`);
+      throw new ArtifactError(
+        `Artifact '${hash}' not found in S3`,
+        import.meta,
+      );
     }
 
     if (response.Body) {
@@ -156,7 +160,10 @@ class SharedArtifactPersistence implements ArtifactPersistence {
         .writable;
       await response.Body.transformToWebStream().pipeTo(file);
     } else {
-      throw new Error(`Failed to download artifact with hash ${hash} from s3`);
+      throw new ArtifactError(
+        `Failed to download artifact with hash ${hash}`,
+        import.meta,
+      );
     }
 
     return this.localShadow.fetch(hash);
@@ -190,10 +197,7 @@ class SharedUploadEndpointManager implements UploadEndpointManager {
       meta.typegraphName,
       this.expireSec,
     );
-    const token = url.searchParams.get("token");
-    if (!token) {
-      throw new Error("Invalid upload URL generated");
-    }
+    const token = url.searchParams.get("token")!;
     const _ = await this.redis.eval(
       /* lua */ `
         redis.call('SET', KEYS[1], ARGV[1])

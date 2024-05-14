@@ -10,6 +10,24 @@ import { resolve } from "std/path/resolve.ts";
 import { exists } from "std/fs/exists.ts";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
+import { BaseError, ErrorSource, NotImplemented } from "../errors.ts";
+
+class InvalidUploadUrl extends BaseError {
+  constructor(url: URL, kind: "unknown" | "expired" = "unknown") {
+    super(
+      import.meta,
+      ErrorSource.User,
+      `${kind} upload URL: ${url.toString()}`,
+      403,
+    );
+  }
+}
+
+export class ArtifactError extends BaseError {
+  constructor(message: string, module: ImportMeta | string) {
+    super(module, ErrorKind.System, message);
+  }
+}
 
 const logger = getLogger(import.meta);
 
@@ -151,7 +169,7 @@ export class ArtifactStore implements AsyncDisposable {
   async runArtifactGC(full = false) {
     logger.info("Running artifact GC");
     if (full) {
-      throw new Error("Not implemented");
+      throw new NotImplemented(import.meta, "full GC");
     }
     const garbage = await this.refCounter.takeGarbage();
     logger.info(`Found ${garbage.length} garbage artifacts: ${garbage}`);
@@ -215,12 +233,12 @@ export class ArtifactStore implements AsyncDisposable {
   static async validateUploadUrl(url: URL) {
     const token = url.searchParams.get("token");
     if (/^\/([^\/])\/artifacts/.test(url.pathname) || !token) {
-      throw new Error("Invalid upload URL");
+      throw new InvalidUploadUrl(url);
     }
 
     const context = await verifyJWT(token);
     if ((context.exp as number) < jwt.getNumericDate(new Date())) {
-      throw new Error("Expired upload URL");
+      throw new InvalidUploadUrl(url, "expired");
     }
 
     return token;
