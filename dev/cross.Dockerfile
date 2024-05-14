@@ -30,6 +30,7 @@ RUN set -eux \
    git \
    curl \
    # asdf deps \
+   zstd \
    xz-utils \
    unzip
 

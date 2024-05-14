@@ -123,7 +123,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
+          - os: macos-13
             activate: "source .venv/bin/activate"
           - os: macos-14
             activate: "source .venv/bin/activate"
@@ -234,7 +234,7 @@ jobs:
     runs-on:
       - self-hosted # https://check-jsonschema.readthedocs.io/en/latest/faq.html#using-self-hosted-runners
       - custom-ubuntu-large
-    timeout-minutes: 60
+    timeout-minutes: 80
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
@@ -321,6 +321,8 @@ jobs:
           deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
           cargo build -p meta-cli
           cargo build -p xtask # xtask and meta-cli are used by the test suite
+
+          ghjk x clean-deno-lock
           deno run -A dev/test.ts --threads 1 -- --coverage=coverage
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
           deno cache --import-map typegate/import_map.json \
