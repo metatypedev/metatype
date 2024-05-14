@@ -109,7 +109,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.4.0";
+        static MT_VERSION: &str = "0.4.1-0";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -300,9 +300,9 @@ pub mod stubs {
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
+            "add" => "Add",
             "identity" => "Identity",
             "range" => "Range",
-            "add" => "Add",
             "record-creation" => "RecordCreation",
             _ => panic!("unrecognized op_name: {op_name}"),
         }
