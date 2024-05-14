@@ -3,7 +3,6 @@
 
 import { Meta } from "test-utils/mod.ts";
 import { MetaTest } from "test-utils/test.ts";
-import { testDir } from "test-utils/dir.ts";
 import { join } from "std/path/join.ts";
 import { exists } from "std/fs/exists.ts";
 import { assert, assertFalse } from "std/assert/mod.ts";
@@ -74,13 +73,14 @@ for (const { nameSuffix, ...options } of variants) {
   Meta.test({
     name: "Upload protocol" + nameSuffix,
     ...options,
-  }, async (t) => {
+  }, async (t: any) => {
     const e = await t.engine("runtimes/deno/deno.py");
     const artifacts = e.tg.tg.meta.artifacts;
 
     await t.should("have uploaded artifacts on deploy", async () => {
       for (const [_, meta] of Object.entries(artifacts)) {
-        assert(await hasArtifact(t, meta.hash, "syncConfig" in options));
+        const typedMeta = meta as { hash: string };
+        assert(await hasArtifact(t, typedMeta.hash, "syncConfig" in options));
       }
     });
 
@@ -88,7 +88,10 @@ for (const { nameSuffix, ...options } of variants) {
 
     await t.should("have removed artifacts on undeploy", async () => {
       for (const [_, meta] of Object.entries(artifacts)) {
-        assertFalse(await hasArtifact(t, meta.hash, "syncConfig" in options));
+        const typedMeta = meta as { hash: string };
+        assertFalse(
+          await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
+        );
       }
     });
   });
@@ -96,23 +99,23 @@ for (const { nameSuffix, ...options } of variants) {
   Meta.test({
     name: "Upload protocol: tg_deploy (NodeJs SDK)" + nameSuffix,
     ...options,
-  }, async (_t) => {
+  }, async (_t: any) => {
     // TODO
   });
 
   Meta.test({
     name: "Upload protocol: tg_deploy (Python SDK)" + nameSuffix,
     ...options,
-  }, async (t) => {
-    const e = await t.engineFromTgDeployPython(
-      "runtimes/deno/deploy_deno.py",
-      join(testDir, "runtimes/deno"),
+  }, async (t: any) => {
+    const e = await t.engine(
+      "runtimes/deno/deno.py",
     );
     const artifacts = e.tg.tg.meta.artifacts;
 
     await t.should("have uploaded artifacts on deploy", async () => {
       for (const [_, meta] of Object.entries(artifacts)) {
-        assert(await hasArtifact(t, meta.hash, "syncConfig" in options));
+        const typedMeta = meta as { hash: string };
+        assert(await hasArtifact(t, typedMeta.hash, "syncConfig" in options));
       }
     });
 
@@ -120,7 +123,10 @@ for (const { nameSuffix, ...options } of variants) {
 
     await t.should("have removed artifacts on undeploy", async () => {
       for (const [_, meta] of Object.entries(artifacts)) {
-        assertFalse(await hasArtifact(t, meta.hash, "syncConfig" in options));
+        const typedMeta = meta as { hash: string };
+        assertFalse(
+          await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
+        );
       }
     });
   });
@@ -128,7 +134,7 @@ for (const { nameSuffix, ...options } of variants) {
   Meta.test({
     name: "Artifact GC: shared artifacts" + nameSuffix,
     ...options,
-  }, async (t) => {
+  }, async (t: any) => {
     const engine = await t.engine("runtimes/deno/deno.py");
     const artifacts = engine.tg.tg.meta.artifacts;
 
@@ -140,10 +146,13 @@ for (const { nameSuffix, ...options } of variants) {
 
     await t.should("have removed shared artifacts", async () => {
       for (const [art, meta] of Object.entries(artifacts)) {
+        const typedMeta = meta as { hash: string };
         if (sharedArtifacts.includes(art)) {
-          assert(await hasArtifact(t, meta.hash, "syncConfig" in options));
+          assert(await hasArtifact(t, typedMeta.hash, "syncConfig" in options));
         } else {
-          assertFalse(await hasArtifact(t, meta.hash, "syncConfig" in options));
+          assertFalse(
+            await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
+          );
         }
       }
     });
@@ -152,8 +161,9 @@ for (const { nameSuffix, ...options } of variants) {
 
     await t.should("have removed all artifacts", async () => {
       for (const [_, meta] of Object.entries(artifacts)) {
+        const typedMeta = meta as { hash: string };
         assertFalse(
-          await hasArtifact(t, meta.hash, "syncConfig" in options),
+          await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
         );
       }
     });

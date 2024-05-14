@@ -192,7 +192,7 @@ Meta.test({
 }, async (t) => {
   const port = t.port!;
   const schema = randomSchema();
-  const e = await t.engine("prisma.py", {
+  const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       POSTGRES:
         `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
@@ -290,7 +290,7 @@ Meta.test({
   },
 }, async (t) => {
   const schema = randomSchema();
-  const e = await t.engine("prisma.py", {
+  const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       POSTGRES:
         `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
