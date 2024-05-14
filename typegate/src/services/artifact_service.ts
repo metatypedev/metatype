@@ -6,6 +6,10 @@ import {
   ArtifactStore,
 } from "../typegate/artifacts/mod.ts";
 import { z } from "zod";
+import { getLogger } from "../log.ts";
+import { UnknownError } from "../errors.ts";
+
+const logger = getLogger(import.meta);
 
 const getUploadUrlBodySchema = z.array(artifactMetaSchema);
 
@@ -19,6 +23,7 @@ export class ArtifactService {
 
     if (operation === "upload-urls") {
       if (request.method !== "POST") {
+        logger.warn("Method not allowed: {}", request.method);
         return new Response(JSON.stringify({ error: "method not allowed" }), {
           status: 405,
           headers: { "Content-Type": "application/json" },
@@ -29,7 +34,7 @@ export class ArtifactService {
       try {
         metaList = getUploadUrlBodySchema.parse(await request.json());
       } catch (error) {
-        console.error("Failed to parse data:", error);
+        logger.error("Failed to parse data: {}", error);
         return new Response(
           JSON.stringify({ error: `Invalid Request Body: ${error.message}` }),
           {
@@ -49,17 +54,15 @@ export class ArtifactService {
           headers: { "Content-Type": "application/json" },
         });
       } catch (e) {
-        return new Response(
-          JSON.stringify({ error: `forbidden: ${e.message}` }),
-          {
-            status: 403,
-            headers: { "Content-Type": "application/json" },
-          },
-        );
+        if (e instanceof BaseError) {
+          return e.toResponse();
+        }
+        return new UnknownError(e).toResponse();
       }
     }
 
     if (operation) {
+      logger.warn("not found: {} {}", request.method, url.toString());
       return new Response(JSON.stringify({ message: "not found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" },
@@ -67,6 +70,7 @@ export class ArtifactService {
     }
 
     if (request.method !== "POST") {
+      logger.warn("Method not allowed: {}", request.method);
       return new Response(JSON.stringify({ error: "method not allowed" }), {
         status: 405,
         headers: { "Content-Type": "application/json" },
@@ -98,8 +102,11 @@ export class ArtifactService {
     try {
       meta = await this.store.takeUploadUrl(url);
     } catch (e) {
+      if (e instanceof BaseError) {
+        return e.toResponse();
+      }
       return new Response(JSON.stringify({ error: e.message }), {
-        status: 403,
+        status: 500,
         headers: { "Content-Type": "application/json" },
       });
     }

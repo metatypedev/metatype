@@ -30,10 +30,20 @@ function parsePath(path: string): PathSegment[] {
   return res;
 }
 
+class ParseError extends Error {
+  constructor(msg: string, pos: number, source: string) {
+    super(`Parse error: ${msg} in '${source}' at position ${pos}`);
+  }
+}
+
 class PathParser {
   #currentIndex = 0;
   #segments: PathSegment[] = [];
   #path: string;
+
+  #fail(msg: string, index: number | null = null) {
+    throw new ParseError(msg, index ?? this.#currentIndex, this.#path);
+  }
 
   private static getEffectivePath(path: string) {
     if (path[0] === "$") {
@@ -69,7 +79,7 @@ class PathParser {
       return this.#parseIndex();
     }
 
-    throw new Error(`Unexpected character: ${firstChar}`);
+    this.#fail(`Unexpected character: ${firstChar}`);
   }
 
   #parseKey(): boolean {
@@ -105,7 +115,7 @@ class PathParser {
       if (this.#path[end] === quote && this.#path[end - 1] !== "\\") {
         const key = JSON.parse(this.#path.slice(this.#currentIndex, end + 1));
         if (typeof key !== "string") {
-          throw new Error(`Unexpected: Invalid string index`);
+          this.#fail(`Unexpected: Invalid string index`);
         }
         this.#currentIndex = end;
         return this.#append({ type: "object", key }, 2); // closing quote and bracket
@@ -114,9 +124,7 @@ class PathParser {
 
     const unterminated = this.#path.slice(this.#currentIndex);
     const position = this.#currentIndex;
-    throw new Error(
-      `Unterminated string index: '${unterminated}' at ${position}`,
-    );
+    this.#fail(`Unterminated string index: '${unterminated}' at ${position}`);
   }
 
   #parseNumberIndex(): boolean {
@@ -125,7 +133,7 @@ class PathParser {
       if (this.#path[end] === "]") {
         const index = Number(this.#path.slice(this.#currentIndex, end));
         if (Number.isNaN(index)) {
-          throw new Error(
+          this.#fail(
             `Invalid number index: ${
               this.#path.slice(this.#currentIndex, end)
             }`,
@@ -138,7 +146,7 @@ class PathParser {
 
     const unterminated = this.#path.slice(this.#currentIndex);
     const position = this.#currentIndex;
-    throw new Error(
+    this.#fail(
       `Unterminated number index: '${unterminated}' at ${position}`,
     );
   }
@@ -167,24 +175,40 @@ export type JsonPathQueryOptions = {
   rootPath?: string;
 };
 
+class JsonPathQueryError extends Error {
+  constructor(msg: string, value: unknown, path: string) {
+    super(
+      `Error while querying '${path}' from ${JSON.stringify(value)}: ${msg}`,
+    );
+  }
+}
+
 export class QueryFunction {
   private constructor(private code: string) {}
 
+  // TODO cache: https://linear.app/metatypedev/issue/MET-537/cache-jsonpath-queryfunction
   static create(path: string, options: JsonPathQueryOptions) {
     const compiler = new QueryFnCompiler(path, options);
     const body = compiler.compile();
     return new QueryFunction(body);
   }
 
-  asFunction() {
-    return new Function("initialValue", this.code) as QueryFn;
+  asFunction(): QueryFn {
+    const inner = new Function("initialValue", this.code) as QueryFn;
+    return (val: unknown) => {
+      try {
+        return inner(val);
+      } catch (e) {
+        throw new JsonPathQueryError(e.message, val, this.code);
+      }
+    };
   }
 
   asFunctionDef(name: string) {
     if (/^[A-Za-z_]\w*$/.test(name)) {
       return `function ${name}(initialValue) {\n${this.code}\n}`;
     } else {
-      throw new Error(`Invalid function name: ${name}`);
+      throw new Error(`Invalid function name '${name}' for jsonPath query`);
     }
   }
 }

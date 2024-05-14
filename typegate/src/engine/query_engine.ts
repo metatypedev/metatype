@@ -25,6 +25,32 @@ import { ComputationEngine } from "./computation_engine.ts";
 import { isIntrospectionQuery } from "../services/graphql_service.ts";
 import { ObjectNode } from "../typegraph/type_node.ts";
 import { RestSchemaGenerator } from "../transports/rest/rest_schema_generator.ts";
+import { BaseError, ErrorConstructor, ErrorSource } from "../errors.ts";
+
+class GraphQLVariableNotFound extends BaseError {
+  constructor(variable: string) {
+    super(import.meta, ErrorSource.User, `variable not found: ${variable}`);
+  }
+}
+
+class TypegraphError extends BaseError {
+  constructor(message: string) {
+    super(import.meta, ErrorSource.Typegraph, message);
+  }
+}
+
+class EndpointQueryError extends TypegraphError {
+  constructor(message: string, endpoint: string | null) {
+    const endpointStr = endpoint == null ? "" : ` '${endpoint}'`;
+    super(`invalid query for endpoint${endpointStr}: ${message}`);
+  }
+}
+
+class EndpointGraphQLVariableNotFound extends EndpointQueryError {
+  constructor(varName: string) {
+    super(`variable not found: $${varName}`);
+  }
+}
 
 /**
  * Processed graphql node to be evaluated against a Runtime
@@ -51,7 +77,7 @@ export class ComputeStage {
   varType(varName: string): string {
     const typ = this.varTypes[varName];
     if (typ == null) {
-      throw new Error(`variable not found: $${varName}`);
+      throw new GraphQLVariableNotFound(varName);
     }
     return typ;
   }
@@ -160,7 +186,7 @@ export class QueryEngine implements AsyncDisposable {
       const unwrappedOperation = operation.unwrap();
       const name = unwrappedOperation.name?.value;
       if (!name) {
-        throw new Error("query name is required");
+        throw new EndpointQueryError("query name is required");
       }
 
       const [plan] = await this.getPlan(
@@ -179,7 +205,9 @@ export class QueryEngine implements AsyncDisposable {
       );
 
       if (effects.length !== 1) {
-        throw new Error("root fields in query must be of the same effect");
+        throw new EndpointQueryError(
+          "root fields in query must be of the same effect",
+        );
       }
       const [effect] = effects;
 
@@ -212,7 +240,7 @@ export class QueryEngine implements AsyncDisposable {
             .shift() as ObjectNode;
 
           if (!match) {
-            throw new Error(
+            throw new EndpointQueryError(
               `invalid state: "${name}" in query definition not found in type list`,
             );
           }
@@ -220,7 +248,7 @@ export class QueryEngine implements AsyncDisposable {
           const typeIdx = match.properties?.[fnName];
           const endpointFunc = this.tg.type(typeIdx);
           if (endpointFunc.type != "function") {
-            throw new Error(
+            throw new EndpointQueryError(
               `invalid state: function expected, got "${endpointFunc.type}"`,
             );
           }
@@ -246,6 +274,7 @@ export class QueryEngine implements AsyncDisposable {
         this.checkVariablesPresence(
           unwrappedOperation.variableDefinitions ?? [],
           variables,
+          EndpointGraphQLVariableNotFound,
         );
         return variables;
       };
@@ -394,12 +423,13 @@ export class QueryEngine implements AsyncDisposable {
   checkVariablesPresence(
     defs: Readonly<Array<ast.VariableDefinitionNode>>,
     variables: Record<string, unknown>,
+    errCtor: ErrorConstructor,
   ) {
     for (const varDef of defs) {
       const varName = varDef.variable.name.value;
       const value = variables[varName];
       if (value === undefined) {
-        throw Error(`missing variable "${varName}" value`);
+        throw errCtor(varName);
       }
       // variable values are validated with the argument validator
     }

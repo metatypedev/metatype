@@ -7,6 +7,19 @@ import { OperationPolicies } from "./planner/policies.ts";
 import { RateLimit } from "../typegate/rate_limiter.ts";
 import { Context, Info, Parents } from "../types.ts";
 import { JSONValue } from "../utils.ts";
+import { BaseError, ErrorSource } from "../errors.ts";
+
+class InvalidPlan extends BaseError {
+  constructor(message: string) {
+    super(import.meta, ErrorSource.Typegate, message);
+  }
+}
+
+class InvalidResult extends BaseError {
+  constructor(message: string) {
+    super(import.meta, ErrorSource.Typegate, message);
+  }
+}
 
 // character marking the starting of the branch name in the path segment
 export const BRANCH_NAME_SEPARATOR = "$";
@@ -29,12 +42,12 @@ function getParentId(stageId: string): string | null {
 function getBranchNameFromParentId(parentId: string) {
   const separatorIndex = parentId.lastIndexOf(BRANCH_NAME_SEPARATOR);
   if (separatorIndex < 0) {
-    throw new Error("expected parentId to end with a branch name");
+    throw new InvalidPlan("expected parentId to end with a branch name");
   }
   const branch = parentId.slice(separatorIndex);
   if (branch.indexOf(".") >= 0) {
     // branch name is not on the last path segment
-    throw new Error("expected parentId to end with a branch name");
+    throw new InvalidPlan("expected parentId to end with a branch name");
   }
   return branch;
 }
@@ -156,7 +169,7 @@ export class ComputationEngine {
     if (lens.length !== res.length) {
       const lengths = `${lens.length} != ${res.length}`;
       const details = `${JSON.stringify(lens)}, ${JSON.stringify(res)}`;
-      throw new Error(
+      throw new InvalidResult(
         `at stage ${stageId}: cannot align array results ${lengths}: ${details}`,
       );
     }
@@ -226,14 +239,13 @@ export class ComputationEngine {
     if (
       this.topSelection != null && this.topSelection.level + 1 === currentLevel
     ) {
-      // nested union/either should have been flattened
-      throw new Error();
+      throw new InvalidPlan("nested union/either should have been flattened");
     }
 
     const branches = this.cache[stageId].map((res) => {
       const branch = childSelection(res);
       if (branch == null) {
-        throw new Error(
+        throw new InvalidPlan(
           `at stage ${stageId}: No matching branch for the result`,
         );
       }
