@@ -27,7 +27,7 @@ const user = t.struct({
   hostname: t.string({ format: "hostname" }).fromRandom(),
 });
 
-typegraph("random_injection", (g: any) => {
+export const tg = await typegraph("random_injection", (g: any) => {
   const pub = Policy.public();
   const deno = new DenoRuntime();
 

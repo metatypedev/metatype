@@ -3,7 +3,7 @@ from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph()
-def test_vars(g: Graph):
+def vars(g: Graph):
     deno = DenoRuntime()
 
     g.expose(

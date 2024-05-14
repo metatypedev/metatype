@@ -4,7 +4,7 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
-typegraph("random", (g: any) => {
+export const tg = await typegraph("random", (g: any) => {
   const random = new RandomRuntime({ seed: 1, reset: "" });
   const pub = Policy.public();
 

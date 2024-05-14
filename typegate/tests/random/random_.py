@@ -36,7 +36,7 @@ list = t.struct(
 
 
 @typegraph()
-def test_random(g: Graph):
+def random_(g: Graph):
     runtime_1 = RandomRuntime(seed=1)
     runtime_2 = RandomRuntime(seed=1)
 

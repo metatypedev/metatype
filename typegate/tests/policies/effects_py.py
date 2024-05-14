@@ -4,7 +4,7 @@ from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph(name="effects")
-def tg_effects(g: Graph):
+def effects_py(g: Graph):
     deno = DenoRuntime()
     public = Policy.public()
     admin_only = Policy.context("role", "admin")
