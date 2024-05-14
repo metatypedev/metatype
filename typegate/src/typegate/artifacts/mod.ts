@@ -10,13 +10,13 @@ import { resolve } from "std/path/resolve.ts";
 import { exists } from "std/fs/exists.ts";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
-import { BaseError, ErrorSource, NotImplemented } from "../errors.ts";
+import { BaseError, ErrorKind, NotImplemented } from "@typegate/errors.ts";
 
 class InvalidUploadUrl extends BaseError {
   constructor(url: URL, kind: "unknown" | "expired" = "unknown") {
     super(
       import.meta,
-      ErrorSource.User,
+      ErrorKind.User,
       `${kind} upload URL: ${url.toString()}`,
       403,
     );

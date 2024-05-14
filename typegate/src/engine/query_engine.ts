@@ -25,17 +25,17 @@ import { ComputationEngine } from "./computation_engine.ts";
 import { isIntrospectionQuery } from "../services/graphql_service.ts";
 import { ObjectNode } from "../typegraph/type_node.ts";
 import { RestSchemaGenerator } from "../transports/rest/rest_schema_generator.ts";
-import { BaseError, ErrorConstructor, ErrorSource } from "../errors.ts";
+import { BaseError, ErrorConstructor, ErrorKind } from "../errors.ts";
 
 class GraphQLVariableNotFound extends BaseError {
   constructor(variable: string) {
-    super(import.meta, ErrorSource.User, `variable not found: ${variable}`);
+    super(import.meta, ErrorKind.User, `variable not found: ${variable}`);
   }
 }
 
 class TypegraphError extends BaseError {
   constructor(message: string) {
-    super(import.meta, ErrorSource.Typegraph, message);
+    super(import.meta, ErrorKind.Typegraph, message);
   }
 }
 
