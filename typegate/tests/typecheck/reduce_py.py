@@ -3,7 +3,7 @@ from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph()
-def test_reduce_python(g: Graph):
+def reduce_py(g: Graph):
     deno = DenoRuntime()
     public = Policy.public()
 

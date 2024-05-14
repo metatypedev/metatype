@@ -3,10 +3,6 @@
 
 import { gql, Meta } from "../../utils/mod.ts";
 import * as mf from "test/mock_fetch";
-import * as path from "std/path/mod.ts";
-import { testDir } from "test-utils/dir.ts";
-
-const cwd = path.join(testDir, "runtimes/deno");
 
 mf.install();
 
@@ -35,7 +31,7 @@ const getComments = (postId: number) =>
 const NEW_COMMENT_ID = 123;
 
 Meta.test("Rest queries", async (t) => {
-  const e = await t.engine("runtimes/http/http_py.py", cwd);
+  const e = await t.engine("runtimes/http/http_py.py");
 
   mf.mock("GET@/api/posts", (req: any) => {
     const tags = new URL(req.url).searchParams.getAll("tags");
