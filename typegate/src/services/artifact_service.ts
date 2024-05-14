@@ -7,7 +7,7 @@ import {
 } from "../typegate/artifacts/mod.ts";
 import { z } from "zod";
 import { getLogger } from "../log.ts";
-import { UnknownError } from "../errors.ts";
+import { BaseError, UnknownError } from "../errors.ts";
 
 const logger = getLogger(import.meta);
 

@@ -17,7 +17,7 @@ export enum ErrorKind {
 
 export class BaseError extends Error {
   public module: string | null;
-  public code: number | null;
+  public code: number;
   #type: string | null = null;
 
   constructor(
@@ -28,7 +28,7 @@ export class BaseError extends Error {
   ) {
     super(message);
 
-    if (typeof module === "object") {
+    if (module != null && typeof module === "object") {
       const bname = basename(module.url);
       const dname = basename(dirname(module.url));
       this.module = `${dname}/${bname.replace(extname(bname), "")}`;
@@ -44,6 +44,8 @@ export class BaseError extends Error {
         default:
           this.code = 500;
       }
+    } else {
+      this.code = code;
     }
   }
 
@@ -129,7 +131,7 @@ export class TypegraphError extends BaseError {
 }
 
 export class NotImplemented extends BaseError {
-  constructor(module: importMeta | string, message: string) {
+  constructor(module: ImportMeta | string, message: string) {
     super(module, ErrorKind.Typegate, `Not implemented: ${message}`, 501);
   }
 }

@@ -48,7 +48,7 @@ class EndpointQueryError extends TypegraphError {
 
 class EndpointGraphQLVariableNotFound extends EndpointQueryError {
   constructor(varName: string) {
-    super(`variable not found: $${varName}`);
+    super(`variable not found: $${varName}`, null);
   }
 }
 
@@ -186,7 +186,7 @@ export class QueryEngine implements AsyncDisposable {
       const unwrappedOperation = operation.unwrap();
       const name = unwrappedOperation.name?.value;
       if (!name) {
-        throw new EndpointQueryError("query name is required");
+        throw new EndpointQueryError("query name is required", null);
       }
 
       const [plan] = await this.getPlan(
@@ -207,6 +207,7 @@ export class QueryEngine implements AsyncDisposable {
       if (effects.length !== 1) {
         throw new EndpointQueryError(
           "root fields in query must be of the same effect",
+          name,
         );
       }
       const [effect] = effects;
@@ -242,6 +243,7 @@ export class QueryEngine implements AsyncDisposable {
           if (!match) {
             throw new EndpointQueryError(
               `invalid state: "${name}" in query definition not found in type list`,
+              name,
             );
           }
 
@@ -250,6 +252,7 @@ export class QueryEngine implements AsyncDisposable {
           if (endpointFunc.type != "function") {
             throw new EndpointQueryError(
               `invalid state: function expected, got "${endpointFunc.type}"`,
+              name,
             );
           }
 
@@ -429,7 +432,7 @@ export class QueryEngine implements AsyncDisposable {
       const varName = varDef.variable.name.value;
       const value = variables[varName];
       if (value === undefined) {
-        throw errCtor(varName);
+        throw new errCtor(varName);
       }
       // variable values are validated with the argument validator
     }

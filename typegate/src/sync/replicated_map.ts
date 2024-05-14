@@ -156,7 +156,7 @@ export class RedisReplicatedMap<T> implements AsyncDisposable {
       if (event === ADD) {
         const payload = await redis.hget(key, name);
         if (!payload) {
-          throw ReplicatedMapError(`added message without payload ${name}`);
+          throw new ReplicatedMapError(`added message without payload ${name}`);
         }
         logger.info(`received addition: ${name}`);
         await this.memorySet(name, await deserializer(payload, false));
@@ -164,7 +164,9 @@ export class RedisReplicatedMap<T> implements AsyncDisposable {
         logger.info(`received removal: ${name}`);
         await this.memorySet(name, null);
       } else {
-        throw ReplicatedMapError(`unexpected message ${name} with ${event}`);
+        throw new ReplicatedMapError(
+          `unexpected message ${name} with ${event}`,
+        );
       }
     }
   }

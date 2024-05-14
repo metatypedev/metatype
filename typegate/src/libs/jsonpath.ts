@@ -41,8 +41,8 @@ class PathParser {
   #segments: PathSegment[] = [];
   #path: string;
 
-  #fail(msg: string, index: number | null = null) {
-    throw new ParseError(msg, index ?? this.#currentIndex, this.#path);
+  #error(msg: string, index: number | null = null) {
+    return new ParseError(msg, index ?? this.#currentIndex, this.#path);
   }
 
   private static getEffectivePath(path: string) {
@@ -79,7 +79,7 @@ class PathParser {
       return this.#parseIndex();
     }
 
-    this.#fail(`Unexpected character: ${firstChar}`);
+    throw this.#error(`Unexpected character: ${firstChar}`);
   }
 
   #parseKey(): boolean {
@@ -115,7 +115,7 @@ class PathParser {
       if (this.#path[end] === quote && this.#path[end - 1] !== "\\") {
         const key = JSON.parse(this.#path.slice(this.#currentIndex, end + 1));
         if (typeof key !== "string") {
-          this.#fail(`Unexpected: Invalid string index`);
+          throw this.#error(`Unexpected: Invalid string index`);
         }
         this.#currentIndex = end;
         return this.#append({ type: "object", key }, 2); // closing quote and bracket
@@ -124,7 +124,9 @@ class PathParser {
 
     const unterminated = this.#path.slice(this.#currentIndex);
     const position = this.#currentIndex;
-    this.#fail(`Unterminated string index: '${unterminated}' at ${position}`);
+    throw this.#error(
+      `Unterminated string index: '${unterminated}' at ${position}`,
+    );
   }
 
   #parseNumberIndex(): boolean {
@@ -133,7 +135,7 @@ class PathParser {
       if (this.#path[end] === "]") {
         const index = Number(this.#path.slice(this.#currentIndex, end));
         if (Number.isNaN(index)) {
-          this.#fail(
+          throw this.#error(
             `Invalid number index: ${
               this.#path.slice(this.#currentIndex, end)
             }`,
@@ -146,7 +148,7 @@ class PathParser {
 
     const unterminated = this.#path.slice(this.#currentIndex);
     const position = this.#currentIndex;
-    this.#fail(
+    throw this.#error(
       `Unterminated number index: '${unterminated}' at ${position}`,
     );
   }
