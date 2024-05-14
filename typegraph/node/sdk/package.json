@@ -1,7 +1,7 @@
 {
   "name": "@typegraph/sdk",
   "version": "0.4.1-0",
-  "description": "Declarative API development platform. Build backend components with WASM/Typescript/Python, no matter where and how your (legacy) systems are.",
+  "description": "Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.",
   "type": "module",
   "main": "index.js",
   "scripts": {
