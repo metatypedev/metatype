@@ -580,24 +580,20 @@ interface utils {
 
     get-cwd: func() -> result<string, string>;
 
-
-    enum mdk-generator {
-        python,
-        rust,
-        deno
-    }
-
     record mdk-config {
-        gen: mdk-generator, 
-        json: string,
+        workspace-path: string,
+        target-name: string,
+        config-json: string, 
+        tg-json: string,
     }
 
     record mdk-output {
         path: string,
-        content: string
+        content: string,
+        overwrite: bool,
     }
 
-    metagen-exec: func(config: mdk-config) -> result<mdk-output, string>;
+    metagen-exec: func(config: mdk-config) -> result<list<mdk-output>, string>;
 }
 
 interface host {

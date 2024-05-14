@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
-import { BasicAuth, tgDeploy, tgRemove } from "./tg_deploy.js";
-import { TgFinalizationResult, TypegraphOutput } from "./typegraph.js";
+import { BasicAuth, tgDeploy } from "./tg_deploy.js";
+import { TypegraphOutput } from "./typegraph.js";
 import { getEnvVariable } from "./utils/func_utils.js";
-import { dirname } from "node:path";
+import { freezeTgOutput } from "./utils/func_utils.js";
 
 const PORT = "META_CLI_SERVER_PORT"; // meta-cli instance that executes the current file
 const SELF_PATH = "META_CLI_TG_PATH"; // path to the current file to uniquely identify the run results
@@ -136,20 +136,17 @@ export class Manager {
         };
 
         // hack for allowing tg.serialize(config) to be called more than once
-        let localMemo = this.#typegraph.serialize(config);
-        const reusableTgOutput = {
-          ...this.#typegraph,
-          serialize: (_: ArtifactResolutionConfig) => localMemo,
-        } as TypegraphOutput;
+        const frozenOut = freezeTgOutput(config, this.#typegraph);
+        const frozenSerialized = frozenOut.serialize(config);
 
         if (artifactsConfig.codegen) {
           await this.#relayResultToCLI(
             "codegen",
-            async () => JSON.parse(localMemo.tgJson),
+            async () => JSON.parse(frozenSerialized.tgJson),
           );
         }
 
-        const { typegate } = await tgDeploy(reusableTgOutput, {
+        const { typegate } = await tgDeploy(frozenOut, {
           baseUrl: endpoint,
           artifactsConfig: config,
           secrets,

@@ -72,6 +72,7 @@ impl SDKResponse {
         ret
     }
 
+    // TODO: rm once MET-492 lands
     pub fn codegen(&self) -> Result<()> {
         let tg = self.as_typegraph()?;
         let path = self.typegraph_path.clone();

@@ -4,9 +4,9 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use crate::utils::metagen_utils::RawTgResolver;
 use common::typegraph::{Auth, AuthProtocol};
 use indexmap::IndexMap;
-use metagen::{generate_target_sync, Config, InputResolverSync};
 use serde_json::json;
 
 use crate::errors::Result;
@@ -20,6 +20,7 @@ use crate::Lib;
 use self::oauth2::std::{named_provider, Oauth2Builder};
 
 pub mod fs_host;
+pub mod metagen_utils;
 mod oauth2;
 pub mod postprocess;
 pub mod reduce;
@@ -270,26 +271,30 @@ impl crate::wit::utils::Guest for crate::Lib {
         }
     }
 
-    fn metagen_exec(config: MdkConfig) -> Result<MdkOutput, String> {
-        let config: Config = serde_json::from_str(&config.json).map_err(|e| e.to_string())?;
-        let resolver = RawTgResolver;
+    fn metagen_exec(config: MdkConfig) -> Result<Vec<MdkOutput>, String> {
+        let gen_config: metagen::Config = serde_json::from_str(&config.config_json)
+            .map_err(|e| format!("Load metagen config: {}", e))?;
 
-        generate_target_sync(&config, "foo", PathBuf::from("bar"), resolver).unwrap();
+        let tg = serde_json::from_str(&config.tg_json).map_err(|e| e.to_string())?;
+        let resolver = RawTgResolver { tg };
 
-        todo!(
-            "TODO: simply return a hashmap like repr and maybe explore using fs ops directly here"
+        metagen::generate_target_sync(
+            &gen_config,
+            &config.target_name,
+            PathBuf::from(config.workspace_path),
+            resolver,
         )
-    }
-}
-
-#[derive(Clone)]
-struct RawTgResolver;
-impl InputResolverSync for RawTgResolver {
-    fn resolve(
-        &self,
-        _order: metagen::GeneratorInputOrder,
-    ) -> anyhow::Result<metagen::GeneratorInputResolved> {
-        todo!("resolve from raw typegraph string")
+        .map(|map| {
+            map.0
+                .iter()
+                .map(|(k, v)| MdkOutput {
+                    path: k.to_string_lossy().to_string(),
+                    content: v.contents.clone(),
+                    overwrite: v.overwrite,
+                })
+                .collect::<Vec<_>>()
+        })
+        .map_err(|e| format!("Generate target: {}", e))
     }
 }
 

@@ -15,6 +15,7 @@ from typegraph.gen.exports.core import (
 )
 from typegraph.graph.shared_types import BasicAuth, TypegraphOutput
 from typegraph.graph.tg_deploy import TypegraphDeployParams, tg_deploy
+from typegraph.utils import freeze_tg_output
 
 PORT = "META_CLI_SERVER_PORT"  # meta-cli instance that executes the current file
 SELF_PATH = (
@@ -104,16 +105,16 @@ class Manager:
                 typegraph_path=self.typegraph_path,
             )
 
-            local_memo = self.typegraph.serialize(artifacts_config)
-            reusable_tg_output = TypegraphOutput(
-                name=self.typegraph.name, serialize=lambda _: local_memo
-            )
+            # hack for allowing tg.serialize(config) to be called more than once
+            frozen_out = freeze_tg_output(artifacts_config, self.typegraph)
+            frozen_serialized = frozen_out.serialize(artifacts_config)
             if artifacts_config.codegen:
                 self.relay_result_to_cli(
-                    initiator=Command.CODEGEN, fn=lambda: json.loads(local_memo.tgJson)
+                    initiator=Command.CODEGEN,
+                    fn=lambda: json.loads(frozen_serialized.tgJson),
                 )
 
-            ret = tg_deploy(reusable_tg_output, params)
+            ret = tg_deploy(frozen_out, params)
             return ret.typegate
 
         return self.relay_result_to_cli(initiator=Command.DEPLOY, fn=fn)

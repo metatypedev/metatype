@@ -54,7 +54,6 @@ pub enum GeneratorInputResolved {
 
 /// This type plays the "dispatcher" role to the command object
 /// API implemented by [GeneratorInputOrder] and [GeneratorInputResolved].
-#[cfg(feature = "multithreaded")]
 pub trait InputResolver {
     fn resolve(
         &self,
@@ -92,6 +91,7 @@ trait Plugin: Send + Sync {
 
 type PluginOutputResult = Result<Box<dyn Plugin>, anyhow::Error>;
 
+#[derive(Clone)]
 struct GeneratorRunner {
     pub op: fn(&Path, serde_json::Value) -> PluginOutputResult,
 }
@@ -102,17 +102,8 @@ impl GeneratorRunner {
     }
 }
 
-/// This function makes use of a JoinSet to process
-/// items in parallel. This makes using actix workers in InputResolver
-/// is a no no.
-#[cfg(feature = "multithreaded")]
-pub async fn generate_target(
-    config: &config::Config,
-    target_name: &str,
-    workspace_path: PathBuf,
-    resolver: impl InputResolver + Send + Sync + Clone + 'static,
-) -> anyhow::Result<GeneratorOutput> {
-    let generators = [
+thread_local! {
+    static GENERATORS: HashMap<String, GeneratorRunner> = HashMap::from([
         // builtin generators
         (
             "mdk_rust".to_string(),
@@ -134,10 +125,25 @@ pub async fn generate_target(
                 },
             },
         ),
-    ]
-    .into_iter()
-    .collect::<HashMap<String, _>>();
+    ]);
+}
 
+impl GeneratorRunner {
+    pub fn get(name: &str) -> Option<GeneratorRunner> {
+        GENERATORS.with(|m| m.get(name).cloned())
+    }
+}
+
+/// This function makes use of a JoinSet to process
+/// items in parallel. This makes using actix workers in InputResolver
+/// is a no no.
+#[cfg(feature = "multithreaded")]
+pub async fn generate_target(
+    config: &config::Config,
+    target_name: &str,
+    workspace_path: PathBuf,
+    resolver: impl InputResolver + Send + Sync + Clone + 'static,
+) -> anyhow::Result<GeneratorOutput> {
     let target_conf = config
         .targets
         .get(target_name)
@@ -147,8 +153,7 @@ pub async fn generate_target(
     for (gen_name, config) in &target_conf.0 {
         let config = config.to_owned();
 
-        let get_gen_op = generators
-            .get(gen_name)
+        let get_gen_op = GeneratorRunner::get(gen_name)
             .with_context(|| format!("generator \"{gen_name}\" not found in config"))?;
 
         let gen_impl = get_gen_op.exec(&workspace_path, config)?;
@@ -196,32 +201,6 @@ pub fn generate_target_sync(
     workspace_path: PathBuf,
     resolver: impl InputResolverSync + Send + Sync + Clone + 'static,
 ) -> anyhow::Result<GeneratorOutput> {
-    let generators = [
-        // builtin generators
-        (
-            "mdk_rust".to_string(),
-            GeneratorRunner {
-                op: |workspace_path: &Path, val| {
-                    let config = mdk_rust::MdkRustGenConfig::from_json(val, workspace_path)?;
-                    let generator = mdk_rust::Generator::new(config)?;
-                    Ok(Box::new(generator))
-                },
-            },
-        ),
-        (
-            "mdk_python".to_string(),
-            GeneratorRunner {
-                op: |workspace_path: &Path, val| {
-                    let config = mdk_python::MdkPythonGenConfig::from_json(val, workspace_path)?;
-                    let generator = mdk_python::Generator::new(config)?;
-                    Ok(Box::new(generator))
-                },
-            },
-        ),
-    ]
-    .into_iter()
-    .collect::<HashMap<String, _>>();
-
     let target_conf = config
         .targets
         .get(target_name)
@@ -231,8 +210,7 @@ pub fn generate_target_sync(
     for (gen_name, config) in &target_conf.0 {
         let config = config.to_owned();
 
-        let get_gen_op = generators
-            .get(gen_name)
+        let get_gen_op = GeneratorRunner::get(gen_name)
             .with_context(|| format!("generator \"{gen_name}\" not found in config"))?;
 
         let gen_impl = get_gen_op.exec(&workspace_path, config)?;

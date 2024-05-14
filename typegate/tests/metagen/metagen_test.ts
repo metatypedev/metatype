@@ -26,7 +26,7 @@ typegates:
     password: password
 
 metagen:
-  targets: 
+  targets:
     main:
       mdk_rust:
         path: ${genCratePath}
@@ -83,7 +83,7 @@ metagen:
   targets:
     my_target:
       mdk_python:
-        path: ${basePath} 
+        path: ${basePath}
         typegraph_path: ${typegraphPath}
 `,
   );
@@ -92,4 +92,30 @@ metagen:
     (await Meta.cli({}, ...`-C ${tmpDir} gen mdk my_target`.split(" "))).code,
     0,
   );
+});
+
+Meta.test("Metagen within sdk", async (t) => {
+  await t.should("Run metagen within typescript", async () => {
+    const { tg } = await import("./typegraphs/metagen.mjs");
+    const { Metagen } = await import("@typegraph/sdk/metagen.js");
+    const metagen = new Metagen(
+      "./workspace",
+      {
+        targets: {
+          my_target: {
+            mdk_rust: {
+              typegraph: tg.name,
+              path: "some/base/path/rust",
+            },
+            mdk_python: {
+              typegraph: tg.name,
+              path: "some/base/path/python",
+            },
+          },
+        },
+      },
+    );
+    const generated = metagen.run(tg, "my_target");
+    await t.assertSnapshot(generated);
+  });
 });
