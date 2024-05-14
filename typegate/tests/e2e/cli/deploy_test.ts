@@ -182,13 +182,6 @@ Meta.test({
 
 Meta.test({
   name: "cli:deploy - automatic migrations",
-
-  gitRepo: {
-    content: {
-      "prisma.py": "runtimes/prisma/prisma.py",
-      "metatype.yml": "metatype.yml",
-    },
-  },
 }, async (t) => {
   const port = t.port!;
   const schema = randomSchema();
