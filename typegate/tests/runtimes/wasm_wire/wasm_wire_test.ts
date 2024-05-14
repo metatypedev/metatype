@@ -13,31 +13,30 @@ Meta.test(
   {
     name: "Wasm runtime: wire",
   },
-  async (t) => {
-    const e = await t.engineFromTgDeployPython(
-      path.join(cwd, "wasm_wire.py"),
-      cwd,
-    );
+  async (metaTest) => {
+    await metaTest.shell(["bash", "build.sh"], {
+      currentDir: `${import.meta.dirname!}/rust`,
+    });
 
-    await t.should("works", async () => {
-      await gql`
+    {
+      await using e = await metaTest.engineFromTgDeployPython(
+        path.join(cwd, "wasm_wire.py"),
+        cwd,
+      );
+
+      await metaTest.should("works", async () => {
+        await gql`
         query {
           test(a: 1, b: 2)
         }
       `
-        .expectData({
-          test: 3,
-        })
-        .on(e);
-    });
-  },
-);
+          .expectData({
+            test: 3,
+          })
+          .on(e);
+      });
+    }
 
-Meta.test(
-  {
-    name: "Wasm Runtime typescript sdk: wire",
-  },
-  async (metaTest) => {
     const port = metaTest.port;
     const gate = `http://localhost:${port}`;
 

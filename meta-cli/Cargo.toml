@@ -1,6 +1,6 @@
 [package]
 name = "meta-cli"
-version = "0.4.0"
+version = "0.4.1-0"
 edition = "2021"
 
 description = "Declarative API development platform. Build backend components with WASM/Typescript/Python, no matter where and how your (legacy) systems are."
