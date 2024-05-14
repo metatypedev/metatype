@@ -6,34 +6,31 @@ Meta.test(
   {
     name: "Wasm runtime: wire",
   },
-  async (t: any) => {
-    const e = await t.engine(
-      "runtimes/wasm_wire/wasm_wire.py",
-    );
+  async (metaTest: any) => {
+    await metaTest.shell(["bash", "build.sh"], {
+      currentDir: `${import.meta.dirname!}/rust`,
+    });
 
-    await t.should("works", async () => {
-      await gql`
+    {
+      const e = await metaTest.engine(
+        "runtimes/wasm_wire/wasm_wire.py",
+      );
+
+      await metaTest.should("works", async () => {
+        await gql`
         query {
           test(a: 1, b: 2)
         }
       `
-        .expectData({
-          test: 3,
-        })
-        .on(e);
-    });
-  },
-);
+          .expectData({
+            test: 3,
+          })
+          .on(e);
+      });
+    }
 
-Meta.test(
-  {
-    name: "Wasm Runtime typescript sdk: wire",
-  },
-  async (metaTest: any) => {
     await metaTest.should("work after deploying artifact", async (t: any) => {
-      const engine = await metaTest.engine(
-        "runtimes/wasm_wire/wasm_wire.ts",
-      );
+      const engine = await metaTest.engine("runtimes/wasm_wire/wasm_wire.ts");
 
       await t.step("wit bindings", async () => {
         await gql`

@@ -45,6 +45,7 @@ Meta.test(
   {
     name: "Wasm Runtime typescript SDK: Sync Config",
     syncConfig,
+    replicas: 3,
     async setup() {
       await cleanUp();
     },
@@ -53,6 +54,10 @@ Meta.test(
     },
   },
   async (metaTest: any) => {
+    await metaTest.shell(["bash", "build.sh"], {
+      currentDir: `${import.meta.dirname!}/rust`,
+    });
+
     await metaTest.should("work after deploying artifact to S3", async () => {
       const engine = await metaTest.engine(
         "runtimes/wasm_reflected/wasm_reflected.ts",

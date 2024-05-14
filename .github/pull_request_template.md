@@ -1,31 +1,25 @@
 <!--
-Pull requests are squash merged using:
+Pull requests are squashed and merged using:
 - their title as the commit message
 - their description as the commit body
 
 Having a good title and description is important for the users to get readable changelog.
 -->
 
-<!-- 1. Explain below WHAT the change is -->
+<!-- 1. Explain WHAT the change is about -->
 
-...
+-
 
-<!-- 2. Explain below WHY the change cannot be made simpler -->
+<!-- 2. Explain WHY the change cannot be made simpler -->
 
-...
+-
 
-<!-- 3. Explain below WHY the was made or link an issue number -->
-
-...
-
-<!-- 4. Explain HOW users should update their code or remove that section -->
+<!-- 3. Explain HOW users should update their code -->
 
 #### Migration notes
 
 ...
 
-<!-- 5. Readiness checklist
-- [ ] The change come with new or modified tests
+- [ ] The change comes with new or modified tests
 - [ ] Hard-to-understand functions have explanatory comments
 - [ ] End-user documentation is updated to reflect the change
--->

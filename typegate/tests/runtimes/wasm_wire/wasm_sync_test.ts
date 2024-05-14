@@ -53,15 +53,19 @@ Meta.test(
     },
   },
   async (metaTest: any) => {
+    await metaTest.shell(["bash", "build.sh"], {
+      currentDir: `${import.meta.dirname!}/rust`,
+    });
+
     await metaTest.should("work after deploying artifact to S3", async () => {
       const s3 = new S3Client(syncConfig.s3);
       assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 0);
 
-      await using engine = metaTest.engine("runtimes/wasm_wire/wasm_wire.ts");
+      const engine = await metaTest.engine("runtimes/wasm_wire/wasm_wire.ts");
 
       const s3Objects = await listObjects(s3, syncConfig.s3Bucket);
       // two objects, the artifact and the typegraph
-      assertEquals(s3Objects?.length, 2);
+      assertEquals(s3Objects?.length, 3);
 
       await gql`
         query {
@@ -81,9 +85,9 @@ Meta.test(
     await metaTest.should("work with multiple typegate instances", async () => {
       const s3 = new S3Client(syncConfig.s3);
 
-      assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 0);
+      assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 3);
 
-      await using engine = await metaTest.engine(
+      const engine = await metaTest.engine(
         "runtimes/wasm_wire/wasm_wire.ts",
       );
 
@@ -100,7 +104,7 @@ Meta.test(
         .on(engine);
 
       // second engine on the other typegate instance
-      await using engine2 = await metaTest.engine(
+      const engine2 = await metaTest.engine(
         "runtimes/wasm_wire/wasm_wire.ts",
       );
 

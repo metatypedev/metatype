@@ -7,32 +7,31 @@ Meta.test(
   {
     name: "Wasm runtime: reflected",
   },
-  async (t: any) => {
-    const e = await t.engine(
-      "runtimes/wasm_reflected/wasm_reflected.py",
-    );
+  async (metaTest: any) => {
+    await metaTest.shell(["bash", "build.sh"], {
+      currentDir: `${import.meta.dirname!}/rust`,
+    });
 
-    await t.should("works", async () => {
-      await gql`
+    {
+      await using e = await metaTest.engine(
+        "runtimes/wasm_reflected/wasm_reflected.py",
+      );
+
+      await metaTest.should("works", async () => {
+        await gql`
         query {
           test(a: 1, b: 2)
         }
       `
-        .expectData({
-          test: 3,
-        })
-        .on(e);
-    });
-  },
-);
+          .expectData({
+            test: 3,
+          })
+          .on(e);
+      });
+    }
 
-Meta.test(
-  {
-    name: "Wasm Runtime typescript sdk: reflected",
-  },
-  async (metaTest: any) => {
     await metaTest.should("work after deploying artifact", async (t: any) => {
-      const engine = await metaTest.engine(
+      await using engine = await metaTest.engine(
         "runtimes/wasm_reflected/wasm_reflected.ts",
       );
 
