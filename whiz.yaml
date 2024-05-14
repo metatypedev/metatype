@@ -74,7 +74,7 @@ typegraph:
 
     rm -rf typegraph/python/typegraph/gen
     poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
-    poetry run ruff typegraph/python/typegraph
+    poetry run ruff check typegraph/python/typegraph
   depends_on:
     - libs
 
