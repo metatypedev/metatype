@@ -126,8 +126,8 @@ export class WasmRuntimeWire extends Runtime {
 
       const res = this.wire.handle(op_name as string, args);
 
-      this.logger.info(`'${opname}' successful`);
-      this.logger.debug(`'${opname}' returned: ${JSON.stringify(res)}`);
+      this.logger.info(`'${op_name}' successful`);
+      this.logger.debug(`'${op_name}' returned: ${JSON.stringify(res)}`);
 
       return res;
     };

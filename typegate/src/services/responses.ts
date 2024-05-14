@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { JSONValue } from "../utils.ts";
+import { BaseError } from "../errors.ts";
 
 export const jsonOk = (data: JSONValue, headers: Headers) => {
   headers.set("content-type", "application/json");

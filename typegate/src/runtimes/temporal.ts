@@ -48,7 +48,7 @@ export class TemporalRuntime extends Runtime {
         client_id: instance.id,
       }),
     );
-    insance.logger.info("registered TemporalRuntime");
+    instance.logger.info("registered TemporalRuntime");
 
     return instance;
   }
