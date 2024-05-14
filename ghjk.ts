@@ -17,7 +17,7 @@ const CMAKE_VERSION = "3.28.0-rc6";
 const CARGO_INSTA_VERSION = "1.33.0";
 const NODE_VERSION = "20.8.0";
 const TEMPORAL_VERSION = "0.10.7";
-const METATYPE_VERSION = "0.4.1-0";
+const METATYPE_VERSION = "0.4.0";
 
 const installs = {
   python: ports.cpy_bs({ version: PYTHON_VERSION, releaseTag: "20240224" }),

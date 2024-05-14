@@ -4,7 +4,7 @@
 import type { WitWireMatInfo } from "../../../engine/runtime.js";
 import { ResolverArgs } from "../../types.ts";
 
-const METATYPE_VERSION = "0.4.1-0";
+const METATYPE_VERSION = "0.4.0";
 
 export class WitWireMessenger {
   static async init(
