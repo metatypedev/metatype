@@ -64,7 +64,9 @@ pub fn gen_op_to_mat_map(
         r#"pub fn op_to_trait_name(op_name: &str) -> &'static str {{
     match op_name {{"#
     )?;
-    for (op_name, trait_name) in op_to_trait_map {
+    let mut traits = op_to_trait_map.iter().collect::<Vec<(&String, &String)>>();
+    traits.sort_by_key(|(key, _)| *key);
+    for (op_name, trait_name) in traits {
         writeln!(&mut dest.buf, r#"        "{op_name}" => "{trait_name}","#,)?;
     }
     writeln!(

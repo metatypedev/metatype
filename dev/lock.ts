@@ -19,7 +19,8 @@ const args = parseFlags(Deno.args, {
 const ignores = Deno.readTextFileSync(resolve(projectDir, ".gitignore"))
   .split("\n")
   .map((l) => l.trim())
-  .filter((line) => line.length > 0);
+  .filter((line) => line.length > 0)
+  .map((l) => `${l}${l.endsWith("*") ? "" : "*"}`);
 
 const lockfile = await getLockfile();
 

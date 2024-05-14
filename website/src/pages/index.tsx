@@ -31,8 +31,8 @@ function Header() {
           platform
         </Heading>
         <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[850px]">
-          Build backend <strong>components</strong> with{" "}
-          <strong>zero-trust</strong> and <strong>less code</strong>, no matter
+          Build <strong>backend components</strong> with <strong>WASM</strong>,{" "}
+          <strong>Typescript</strong> and <strong>Python</strong>, no matter
           where and how your (legacy) systems are.
         </p>
         <div className="md:flex md:px-32 justify-center">
