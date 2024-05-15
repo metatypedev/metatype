@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::wit::metatype::typegraph::host::print;
+use crate::wit::metatype::typegraph::host::eprint;
 use std::path::{Path, PathBuf};
 
 use crate::{
@@ -113,7 +113,11 @@ pub fn expand_path(path: &Path, exclude_glob: &[String]) -> Result<Vec<PathBuf>,
         .iter()
         .map(PathBuf::from)
         .collect();
-
+    eprint(&format!(
+        "***************** {:?} {:?}",
+        &path.display(),
+        ret
+    ));
     Ok(ret)
 }
 
@@ -262,11 +266,8 @@ pub fn resolve_globs_dirs(deps: Vec<String>) -> Result<Vec<PathBuf>, String> {
                 .into_iter()
                 .map(|file| resolved_deps.push(file));
         } else {
-            print(&format!(
-                "***************** {:?}",
-                make_absolute(&PathBuf::from(dep.clone()))?
-            ));
             let all_files = expand_path(&make_absolute(&PathBuf::from(dep))?, &[])?;
+            // eprint(&format!("***************** {:?}", all_files));
             for file in all_files {
                 let rel_path = make_relative(&file)?;
                 resolved_deps.push(rel_path);
