@@ -3,13 +3,81 @@
 
 import { gql, Meta, sleep } from "../../utils/mod.ts";
 import * as path from "std/path/mod.ts";
+import { testDir } from "test-utils/dir.ts";
+import { denoDepTg } from "./deno_dep.mjs";
+import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
+import { connect } from "redis";
+import { S3Client } from "aws-sdk/client-s3";
+import { createBucket, tryDeleteBucket } from "test-utils/s3.ts";
+
+const redisKey = "typegraph";
+const redisEventKey = "typegraph_event";
+
+async function cleanUp() {
+  using redis = await connect(syncConfig.redis);
+  await redis.del(redisKey);
+  await redis.del(redisEventKey);
+
+  const s3 = new S3Client(syncConfig.s3);
+  await tryDeleteBucket(s3, syncConfig.s3Bucket);
+  await createBucket(s3, syncConfig.s3Bucket);
+  s3.destroy();
+  await redis.quit();
+}
+
+const syncConfig = {
+  redis: {
+    hostname: "localhost",
+    port: 6379,
+    password: "password",
+    db: 1,
+  },
+  s3: {
+    endpoint: "http://localhost:9000",
+    region: "local",
+    credentials: {
+      accessKeyId: "minio",
+      secretAccessKey: "password",
+    },
+    forcePathStyle: true,
+  },
+  s3Bucket: "metatype-deno-runtime-sync-test",
+};
+
+const cwd = path.join(testDir, "runtimes/deno");
+const auth = new BasicAuth("admin", "password");
+
+const localSerializedMemo = denoDepTg.serialize({
+  prismaMigration: {
+    globalAction: {
+      create: true,
+      reset: false,
+    },
+    migrationDir: "prisma-migrations",
+  },
+  dir: cwd,
+});
+const reusableTgOutput = {
+  ...denoDepTg,
+  serialize: (_: any) => localSerializedMemo,
+};
 
 Meta.test(
   {
-    name: "Deno runtime",
+    name: "Deno runtime - Python SDK: in sync mode",
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
   },
   async (t) => {
-    const e = await t.engine("runtimes/deno/deno.py");
+    const e = await t.engineFromTgDeployPython(
+      "runtimes/deno/deploy_deno.py",
+      cwd,
+    );
 
     await t.should("work on the default worker", async () => {
       await gql`
@@ -89,10 +157,20 @@ Meta.test(
 
 Meta.test(
   {
-    name: "Deno runtime: file name reloading",
+    name: "Deno runtime - Python SDK: file name reloading in sync mode",
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
   },
   async (t) => {
-    const e = await t.engine("runtimes/deno/deno.py");
+    const e = await t.engineFromTgDeployPython(
+      "runtimes/deno/deploy_deno.py",
+      cwd,
+    );
 
     await t.should("success for allowed network access", async () => {
       await gql`
@@ -122,10 +200,20 @@ Meta.test(
 
 Meta.test(
   {
-    name: "Deno runtime: use local imports",
+    name: "Deno runtime - Python SDK: use local imports in sync mode",
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
   },
   async (t) => {
-    const e = await t.engine("runtimes/deno/deno_dep.py");
+    const e = await t.engineFromTgDeployPython(
+      "runtimes/deno/deno_dep.py",
+      cwd,
+    );
     await t.should("work for local imports", async () => {
       await gql`
         query {
@@ -140,47 +228,44 @@ Meta.test(
   },
 );
 
-Meta.test("Deno runtime with typescript", async (t) => {
-  const e = await t.engine("runtimes/deno/deno_typescript.ts");
-  await t.should("work with static values", async () => {
-    await gql`
-      query {
-        static {
-          a
-        }
-      }
-    `
-      .expectData({
-        static: {
-          a: "Hello World",
-        },
-      })
-      .on(e);
-  });
-
-  await t.should("work with native tyepscript code", async () => {
-    await gql`
-      query {
-        hello(name: "World")
-        helloFn(name: "wOrLd")
-      }
-    `
-      .expectData({
-        hello: "Hello World",
-        helloFn: "Hello world",
-      })
-      .on(e);
-  });
-});
-
 Meta.test(
   {
-    name: "DenoRuntime using TS SDK: artifacts and deps",
+    name: "DenoRuntime - TS SDK: artifacts and deps in sync mode",
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
   },
   async (metaTest) => {
-    const engine = await metaTest.engine("runtimes/deno/deno_dep.ts");
+    const port = metaTest.port;
+    const gate = `http://localhost:${port}`;
 
-    await metaTest.should("work on imported TS modules", async () => {
+    const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
+      reusableTgOutput,
+      {
+        baseUrl: gate,
+        auth,
+        artifactsConfig: {
+          prismaMigration: {
+            globalAction: {
+              create: true,
+              reset: false,
+            },
+            migrationDir: "prisma-migrations",
+          },
+          dir: cwd,
+        },
+        typegraphPath: path.join(cwd, "deno_dep.ts"),
+        secrets: {},
+      },
+    );
+
+    const engine = await metaTest.engineFromDeployed(serialized);
+
+    await metaTest.should("work after artifact upload", async () => {
       await gql`
         query {
           doAddition(a: 1, b: 2)
@@ -191,17 +276,69 @@ Meta.test(
         })
         .on(engine);
     });
+
+    const { typegate: _gateResponseRem } = await tgRemove(reusableTgOutput, {
+      baseUrl: gate,
+      auth,
+    });
   },
 );
 
+// Meta.test(
+//   {
+//     name: "DenoRuntime - Python SDK: multiple typegate instances in sync mode",
+//     replicas: 3,
+//     syncConfig,
+//     async setup() {
+//       await cleanUp();
+//     },
+//     async teardown() {
+//       await cleanUp();
+//     },
+//   },
+//   async (metaTest) => {
+//     const testMultipleReplica = async (instanceNumber: number) => {
+//       const e = await metaTest.engineFromTgDeployPython(
+//         "runtimes/deno/deno_dep.py",
+//         cwd,
+//       );
+
+//       await metaTest.should(`work on the typgate instance #${instanceNumber}`, async () => {
+//         await gql`
+//         query {
+//           doAddition(a: 1, b: 2)
+//         }
+//       `
+//         .expectData({
+//           doAddition: 3,
+//         })
+//         .on(e);
+//       });
+//     }
+
+//     await testMultipleReplica(1);
+//     await testMultipleReplica(2);
+//   },
+// );
+
 Meta.test(
   {
-    name: "Deno runtime: file name reloading",
+    name: "Deno runtime - TS SDK: file name reloading in sync mode",
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
   },
   async (t) => {
     const load = async (value: number) => {
       Deno.env.set("DYNAMIC", path.join("dynamic", `${value}.ts`));
-      const e = await t.engine("runtimes/deno/deno_reload.py");
+      const e = await t.engineFromTgDeployPython(
+        "runtimes/deno/deno_reload.py",
+        cwd,
+      );
       Deno.env.delete("DYNAMIC");
       return e;
     };
@@ -238,7 +375,14 @@ Meta.test(
 
 Meta.test(
   {
-    name: "Deno runtime: script reloading",
+    name: "Deno runtime - TS SDK: script reloading in sync mode",
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
   },
   async (t) => {
     const denoScript = path.join(
@@ -254,7 +398,10 @@ Meta.test(
           denoScript,
           originalContent.replace('"REWRITE_ME"', `${value}`),
         );
-        const e = await t.engine("runtimes/deno/deno_reload.py");
+        const e = await t.engineFromTgDeployPython(
+          "runtimes/deno/deno_reload.py",
+          cwd,
+        );
         await t.should(`reload with new value ${value}`, async () => {
           await gql`
             query {
@@ -281,11 +428,21 @@ Meta.test(
 
 Meta.test(
   {
-    name: "Deno runtime: infinite loop or similar",
+    name: "Deno runtime - Python SDK: infinite loop or similar in sync mode",
     sanitizeOps: false,
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
   },
   async (t) => {
-    const e = await t.engine("runtimes/deno/deno.py");
+    const e = await t.engineFromTgDeployPython(
+      "runtimes/deno/deploy_deno.py",
+      cwd,
+    );
 
     await t.should("safely fail upon stack overflow", async () => {
       await gql`
@@ -316,6 +473,13 @@ Meta.test(
 // Meta.test(
 //   {
 //     name: "Deno runtime - TS SDK: with no artifacts in sync mode",
+//     syncConfig,
+//     async setup() {
+//       await cleanUp();
+//     },
+//     async teardown() {
+//       await cleanUp();
+//     },
 //   },
 //   async (t) => {
 //     const e = await t.engine("runtimes/deno/deno_typescript.ts");
@@ -339,6 +503,13 @@ Meta.test(
 Meta.test(
   {
     name: "Deno runtime - Python SDK: with no artifacts in sync mode",
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
   },
   async (t) => {
     const e = await t.engineFromTgDeployPython(
@@ -363,6 +534,13 @@ Meta.test(
 // Meta.test(
 //   {
 //     name: "Deno runtime - TS SDK: with duplicate artifacts in sync mode",
+//     syncConfig,
+//     async setup() {
+//       await cleanUp();
+//     },
+//     async teardown() {
+//       await cleanUp();
+//     },
 //   },
 //   async (t) => {
 //     const e = await t.engine("runtimes/deno/deno_duplicate_typescript.ts");
@@ -386,6 +564,13 @@ Meta.test(
 Meta.test(
   {
     name: "Deno runtime - Python SDK: with duplicate artifacts in sync mode",
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
   },
   async (t) => {
     const e = await t.engineFromTgDeployPython(
