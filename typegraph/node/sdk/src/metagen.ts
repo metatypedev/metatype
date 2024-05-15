@@ -2,9 +2,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
-import { TgFinalizationResult, TypegraphOutput } from "./typegraph.js";
+import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
 import { freezeTgOutput } from "./utils/func_utils.js";
+import {
+  MdkConfig,
+  MdkOutput,
+} from "./gen/interfaces/metatype-typegraph-utils.js";
 
 const codegenArtefactConfig = {
   prismaMigration: {
@@ -14,22 +18,37 @@ const codegenArtefactConfig = {
     },
     migrationDir: ".",
   },
-  // disableArtifactResolution: true,
+  disableArtifactResolution: true,
   codegen: true,
 } as ArtifactResolutionConfig;
 
 export class Metagen {
   constructor(private workspacePath: string, private genConfig: unknown) {}
-  run(tgOutput: TypegraphOutput, targetName: string, overwrite?: false) {
+
+  private getMdkConfig(
+    tgOutput: TypegraphOutput,
+    targetName: string,
+  ) {
     const frozenOut = freezeTgOutput(codegenArtefactConfig, tgOutput);
-    return wit_utils.metagenExec({
+    return {
       configJson: JSON.stringify(this.genConfig),
       tgJson: frozenOut.serialize(codegenArtefactConfig).tgJson,
       targetName,
       workspacePath: this.workspacePath,
-    }).map((value) => ({
-      ...value,
-      overwrite: overwrite ?? value.overwrite,
-    }));
+    } as MdkConfig;
+  }
+
+  dryRun(tgOutput: TypegraphOutput, targetName: string, overwrite?: false) {
+    const mdkConfig = this.getMdkConfig(tgOutput, targetName);
+    return wit_utils.metagenExec(mdkConfig)
+      .map((value) => ({
+        ...value,
+        overwrite: overwrite ?? value.overwrite,
+      })) as Array<MdkOutput>;
+  }
+
+  run(tgOutput: TypegraphOutput, targetName: string, overwrite?: false) {
+    const items = this.dryRun(tgOutput, targetName);
+    wit_utils.metagenWriteFiles(items);
   }
 }

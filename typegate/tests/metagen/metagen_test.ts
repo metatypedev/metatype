@@ -115,7 +115,7 @@ Meta.test("Metagen within sdk", async (t) => {
         },
       },
     );
-    const generated = metagen.run(tg, "my_target");
+    const generated = metagen.dryRun(tg, "my_target");
     await t.assertSnapshot(generated);
   });
 });

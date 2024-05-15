@@ -9,6 +9,7 @@ use common::typegraph::{Auth, AuthProtocol};
 use indexmap::IndexMap;
 use serde_json::json;
 
+use self::oauth2::std::{named_provider, Oauth2Builder};
 use crate::errors::Result;
 use crate::global_store::{get_sdk_version, NameRegistration, Store};
 use crate::types::subgraph::Subgraph;
@@ -16,8 +17,7 @@ use crate::types::{TypeDefExt, TypeId};
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
 use crate::wit::utils::{Auth as WitAuth, MdkConfig, MdkOutput, QueryDeployParams};
 use crate::Lib;
-
-use self::oauth2::std::{named_provider, Oauth2Builder};
+use std::path::Path;
 
 pub mod fs_host;
 pub mod metagen_utils;
@@ -295,6 +295,17 @@ impl crate::wit::utils::Guest for crate::Lib {
                 .collect::<Vec<_>>()
         })
         .map_err(|e| format!("Generate target: {}", e))
+    }
+
+    fn metagen_write_files(items: Vec<MdkOutput>) -> Result<(), String> {
+        for item in items {
+            let path = fs_host::make_absolute(Path::new(&item.path))?;
+            if fs_host::path_exists(&path)? && !item.overwrite {
+                continue;
+            }
+            fs_host::write_text_file(&path, item.content)?;
+        }
+        Ok(())
     }
 }
 
