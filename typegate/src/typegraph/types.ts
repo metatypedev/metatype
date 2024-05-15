@@ -283,7 +283,7 @@ export type KnownRuntime = {
   name: "http";
   data: HTTPRuntimeData;
 } | {
-  name: "python_wasi";
+  name: "python";
   data: PythonRuntimeData;
 } | {
   name: "random";
@@ -301,7 +301,10 @@ export type KnownRuntime = {
   name: "temporal";
   data: TemporalRuntimeData;
 } | {
-  name: "wasm";
+  name: "wasm_wire";
+  data: WasmRuntimeData;
+} | {
+  name: "wasm_reflected";
   data: WasmRuntimeData;
 } | {
   name: "typegate";
@@ -483,7 +486,7 @@ export interface TemporalRuntimeData {
   namespace_secret?: string;
 }
 export interface WasmRuntimeData {
-  config?: string | null;
+  wasm_artifact: string;
 }
 export interface TypegateRuntimeData {
 }

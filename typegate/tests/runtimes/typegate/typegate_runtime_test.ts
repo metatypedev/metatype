@@ -6,7 +6,6 @@ import { gql, Meta } from "../../utils/mod.ts";
 
 Meta.test({
   name: "typegate: find available operations",
-  systemTypegraphs: true,
 }, async (t) => {
   const prismaEngine = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {

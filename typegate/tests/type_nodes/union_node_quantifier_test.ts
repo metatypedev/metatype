@@ -11,8 +11,6 @@ Meta.test(
   {
     name: "Union type",
     introspection: true,
-    port: true,
-    systemTypegraphs: true,
   },
   async (t) => {
     const e = await t.engineFromTgDeployPython(

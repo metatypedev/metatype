@@ -9,8 +9,6 @@ const cwd = path.join(testDir, "internal");
 
 Meta.test({
   name: "Internal test",
-  port: true,
-  systemTypegraphs: true,
 }, async (t) => {
   const e = await t.engineFromTgDeployPython("internal/internal.py", cwd);
 

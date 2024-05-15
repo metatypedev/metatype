@@ -12,6 +12,9 @@ import { Typegate } from "../../src/typegate/mod.ts";
 import { createMetaCli } from "./meta.ts";
 import { TypeGraph } from "../../src/typegraph/mod.ts";
 import { SyncConfig } from "../../src/sync/config.ts";
+// until deno supports it...
+import { AsyncDisposableStack } from "dispose";
+import config from "../../src/config.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
@@ -34,7 +37,7 @@ export enum SDKLangugage {
 }
 
 // with a round-robin load balancer emulation
-class TypegateManager {
+class TypegateManager implements AsyncDisposable {
   private index = 0;
 
   constructor(private typegates: Typegate[]) {}
@@ -49,36 +52,32 @@ class TypegateManager {
     return typegate;
   }
 
-  async terminate() {
-    await Promise.all(this.typegates.map((tg) => tg.deinit()));
+  async [Symbol.asyncDispose]() {
+    await Promise.all(this.typegates.map((tg) => tg[Symbol.asyncDispose]()));
   }
 }
 
-interface ServeResult {
+interface ServeResult extends AsyncDisposable {
   port: number;
-  cleanup: () => Promise<void>;
 }
 
 function serve(typegates: TypegateManager): Promise<ServeResult> {
   return new Promise((resolve) => {
-    const server = Deno.serve(
-      {
-        port: 0,
-        onListen: ({ port }) => {
-          resolve({
-            port,
-            cleanup: async () => {
-              await server.shutdown();
-            },
-          });
-        },
+    const server = Deno.serve({
+      port: 0,
+      onListen: ({ port }) => {
+        resolve({
+          port,
+          async [Symbol.asyncDispose]() {
+            await server.shutdown();
+          },
+        });
       },
-      (req) => {
-        return typegates.next().handle(req, {
-          remoteAddr: { hostname: "localhost" },
-        } as Deno.ServeHandlerInfo);
-      },
-    );
+    }, (req) => {
+      return typegates.next().handle(req, {
+        remoteAddr: { hostname: "localhost" },
+      } as Deno.ServeHandlerInfo);
+    });
   });
 }
 
@@ -87,25 +86,33 @@ type MetaTestCleanupFn = () => void | Promise<void>;
 const defaultCli = await createMetaCli(shell);
 
 export class MetaTest {
-  private cleanups: MetaTestCleanupFn[] = [];
   shell = shell;
   meta = defaultCli;
   workingDir = testDir;
-  port: number | null = null;
   currentTypegateIndex = 0;
+  #disposed = false;
 
   static async init(
     t: Deno.TestContext,
     typegates: TypegateManager,
     introspection: boolean,
-    port = false,
+    tempDir: string,
   ): Promise<MetaTest> {
-    const mt = new MetaTest(t, typegates, introspection);
-    if (port) {
-      const { port: p, cleanup } = await serve(typegates);
-      mt.port = p;
-      mt.addCleanup(cleanup);
-    }
+    await using stack = new AsyncDisposableStack();
+    stack.use(typegates);
+
+    const server = await serve(typegates);
+    const portNumber = server.port;
+    stack.use(server);
+
+    const mt = new MetaTest(
+      t,
+      typegates,
+      introspection,
+      portNumber,
+      tempDir,
+      stack.move(),
+    );
 
     return mt;
   }
@@ -114,10 +121,20 @@ export class MetaTest {
     public t: Deno.TestContext,
     public typegates: TypegateManager,
     private introspection: boolean,
-  ) {}
+    public port: number,
+    public tempDir: string,
+    public disposables: AsyncDisposableStack,
+  ) {
+  }
+
+  async [Symbol.asyncDispose]() {
+    if (this.#disposed) return;
+    this.#disposed = true;
+    await this.disposables[Symbol.asyncDispose]();
+  }
 
   addCleanup(fn: MetaTestCleanupFn) {
-    this.cleanups.push(fn);
+    this.disposables.defer(fn);
   }
 
   get typegate() {
@@ -164,26 +181,70 @@ export class MetaTest {
   }
 
   async undeploy(tgName: string) {
-    await this.typegates.next().register.remove(tgName);
+    await this.typegates.next().removeTypegraph(tgName);
   }
 
   async engine(path: string, opts: ParseOptions = {}): Promise<QueryEngine> {
-    const tgString = await this.serialize(path, opts);
-    const tgJson = await TypeGraph.parseJson(tgString);
+    const oldTypegraphList = await this.typegates.next().register.list();
 
-    // for convience, automatically prefix secrets
-    const secrets = opts.secrets ?? {};
-    const { engine, response } = await this.typegate.pushTypegraph(
-      tgJson,
-      secrets,
-      this.introspection,
-    );
+    const cmd = ["deploy", "-f", path, "--target", "dev", "--allow-dirty"];
 
-    if (engine == null) {
-      throw response.failure!;
+    cmd.push("--gate", `http://localhost:${this.port}`);
+
+    if (opts.prefix != null) {
+      cmd.push("--prefix", opts.prefix);
     }
 
-    return engine;
+    // if (opts.typegraph != null) {
+    //   cmd.push("--typegraph", opts.typegraph);
+    // }
+
+    for (const [key, value] of Object.entries(opts.secrets ?? {})) {
+      cmd.push("--secret", `${key}=${value}`);
+    }
+
+    const { stdout, stderr } = await this.meta(cmd);
+
+    console.log("STDOUT>");
+    console.log(stdout);
+    console.log("STDERR>");
+    console.log(stderr);
+
+    const newTypegraphList = await this.typegates.next().register.list();
+
+    const newTypegraph = newTypegraphList.find((e) =>
+      !oldTypegraphList.includes(e)
+    );
+    // what for redeploy?
+    if (newTypegraph == null) {
+      throw new Error("No new typegraph");
+    }
+
+    if (opts.typegraph != null && opts.typegraph != newTypegraph.name) {
+      throw new Error(
+        `Expected typegraph ${opts.typegraph}, got ${newTypegraph.name}`,
+      );
+    }
+
+    return newTypegraph;
+
+    // TODO: MET-500
+    // const tgString = await this.serialize(path, opts);
+    // const tgJson = await TypeGraph.parseJson(tgString);
+    //
+    // // for convience, automatically prefix secrets
+    // const secrets = opts.secrets ?? {};
+    // const { engine, response } = await this.typegates.next().pushTypegraph(
+    //   tgJson,
+    //   secrets,
+    //   this.introspection,
+    // );
+    //
+    // if (engine == null) {
+    //   throw response.failure!;
+    // }
+    //
+    // return engine;
   }
 
   async engineFromDeployed(tgString: string): Promise<QueryEngine> {
@@ -228,12 +289,6 @@ export class MetaTest {
   ): Promise<string> {
     // run self deployed typegraph
 
-    if (!this.port) {
-      throw new Error(
-        "Error: port option in MetaTest config should be set to 'true'",
-      );
-    }
-
     const { stderr, stdout } = await this.shell([
       lang.toString(),
       path,
@@ -265,14 +320,9 @@ export class MetaTest {
         .filter((e) => e == engine)
         .map((e) => {
           typegate.register.remove(e.name);
-          return e.terminate();
+          return e[Symbol.asyncDispose]();
         }),
     );
-  }
-
-  async terminate() {
-    await Promise.all(this.cleanups.map((c) => c()));
-    await this.typegates.terminate();
   }
 
   async should(
@@ -353,10 +403,7 @@ interface TempGitRepo {
 }
 
 interface TestConfig {
-  systemTypegraphs?: boolean;
   introspection?: boolean;
-  // port on which the typegate instance will be exposed on expose the typegate instance
-  port?: boolean;
   // number of typegate instances to create
   replicas?: number;
   // create a temporary clean git repo for the tests
@@ -378,6 +425,14 @@ interface TestExt extends Test {
   ignore: Test;
 }
 
+let currentTest: MetaTest | null = null;
+export function getCurrentTest(): MetaTest {
+  if (currentTest == null) {
+    throw new Error("No current test");
+  }
+  return currentTest;
+}
+
 export const test = ((o, fn): void => {
   const opts = typeof o === "string" ? { name: o } : o;
   return Deno.test({
@@ -395,29 +450,47 @@ export const test = ((o, fn): void => {
         );
       }
 
-      const typegates = await Promise.all(
+      const tempDir = await Deno.makeTempDir({
+        prefix: "typegate-test-",
+        dir: config.tmp_dir,
+      });
+
+      // TODO different tempDir for each typegate instance
+      const result = await Promise.allSettled(
         Array.from({ length: replicas }).map((_) =>
-          Typegate.init(opts.syncConfig ?? null)
+          Typegate.init(opts.syncConfig ?? null, null, tempDir)
         ),
       );
+      const typegates = result.map((r) => {
+        if (r.status === "fulfilled") {
+          return r.value;
+        } else {
+          throw r.reason;
+        }
+      });
 
       const {
-        systemTypegraphs = false,
         gitRepo = null,
         introspection = false,
       } = opts;
-      if (systemTypegraphs) {
-        await Promise.all(
-          typegates.map((typegate) => SystemTypegraph.loadAll(typegate)),
-        );
-      }
+      await Promise.all(
+        typegates.map((typegate) => SystemTypegraph.loadAll(typegate)),
+      );
 
-      const mt = await MetaTest.init(
+      await using mt = await MetaTest.init(
         t,
         new TypegateManager(typegates),
         introspection,
-        opts.port != null,
+        tempDir,
       );
+
+      mt.disposables.defer(async () => {
+        await Deno.remove(tempDir, { recursive: true });
+      });
+
+      if (opts.teardown != null) {
+        mt.disposables.defer(opts.teardown);
+      }
 
       try {
         if (gitRepo != null) {
@@ -429,7 +502,6 @@ export const test = ((o, fn): void => {
             await Deno.mkdir(dirname(destPath), { recursive: true });
             await Deno.copyFile(join(testDir, srcPath), destPath);
           }
-          console.log(dir);
 
           const sh = (args: string[], options?: ShellOptions) => {
             return shell(args, { currentDir: dir!, ...options });
@@ -444,16 +516,11 @@ export const test = ((o, fn): void => {
           await sh(["git", "commit", "-m", "Initial commit"]);
         }
 
+        currentTest = mt;
         await fn(mt);
+        currentTest = null;
       } catch (error) {
-        console.error(error);
         throw error;
-      } finally {
-        await mt.terminate();
-      }
-
-      if (opts.teardown != null) {
-        await opts.teardown();
       }
     },
     ...opts,

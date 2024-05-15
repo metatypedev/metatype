@@ -11,10 +11,10 @@ pub struct GenStubOptions {}
 
 pub fn gen_stub(
     fun: &StubbedFunction,
-    dest: &mut GenDestBuf,
+    mod_stub_traits: &mut GenDestBuf,
     type_names: &HashMap<u32, Arc<str>>,
     _opts: &GenStubOptions,
-) -> anyhow::Result<Arc<str>> {
+) -> anyhow::Result<String> {
     let TypeNode::Function { base, data } = &fun.node else {
         unreachable!()
     };
@@ -24,14 +24,58 @@ pub fn gen_stub(
     let out_ty = type_names
         .get(&data.output)
         .context("output type for function not found")?;
-    let trait_name: Arc<str> = normalize_type_title(&base.title).into();
+    let trait_name: String = normalize_type_title(&base.title);
+    let title = &base.title;
+    // FIXME: use hash or other stable id
+    let id = title;
     writeln!(
-        &mut dest.buf,
-        r#"pub trait {trait_name} {{
-    fn handle(input: {inp_ty}, cx: Ctx) -> anyhow::Result<{out_ty}>;
+        &mut mod_stub_traits.buf,
+        r#"pub trait {trait_name}: Sized + 'static {{
+    fn erased(self) -> ErasedHandler {{
+        ErasedHandler {{
+            mat_id: "{id}".into(),
+            mat_title: "{title}".into(),
+            mat_trait: "{trait_name}".into(),
+            handler_fn: Box::new(move |req, cx| {{
+                let req = serde_json::from_str(req)
+                    .map_err(|err| HandleErr::InJsonErr(format!("{{err}}")))?;
+                let res = self
+                    .handle(req, cx)
+                    .map_err(|err| HandleErr::HandlerErr(format!("{{err}}")))?;
+                serde_json::to_string(&res)
+                    .map_err(|err| HandleErr::HandlerErr(format!("{{err}}")))
+            }}),
+        }}
+    }}
+
+    fn handle(&self, input: {inp_ty}, cx: Ctx) -> anyhow::Result<{out_ty}>;
 }}"#
     )?;
     Ok(trait_name)
+}
+
+pub fn gen_op_to_mat_map(
+    op_to_trait_map: &HashMap<String, String>,
+    dest: &mut GenDestBuf,
+    _opts: &GenStubOptions,
+) -> anyhow::Result<()> {
+    writeln!(
+        &mut dest.buf,
+        r#"pub fn op_to_trait_name(op_name: &str) -> &'static str {{
+    match op_name {{"#
+    )?;
+    let mut traits = op_to_trait_map.iter().collect::<Vec<(&String, &String)>>();
+    traits.sort_by_key(|(key, _)| *key);
+    for (op_name, trait_name) in traits {
+        writeln!(&mut dest.buf, r#"        "{op_name}" => "{trait_name}","#,)?;
+    }
+    writeln!(
+        &mut dest.buf,
+        r#"        _ => panic!("unrecognized op_name: {{op_name}}"),
+    }}
+}}"#
+    )?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -59,7 +103,7 @@ mod test {
             materializers: vec![Materializer {
                 name: "function".into(),
                 runtime: 0,
-                data: Default::default(),
+                data: serde_json::from_value(serde_json::json!({ "op_name": "my_op" })).unwrap(),
                 effect: Effect {
                     effect: None,
                     idempotent: false,
@@ -106,12 +150,14 @@ mod test {
         };
         let generator = Generator::new(MdkRustGenConfig {
             base: crate::config::MdkGeneratorConfigBase {
-                path: "/tmp".into(),
+                path: "/".into(),
                 typegraph_name: Some(tg_name.clone()),
                 typegraph_path: None,
             },
             stubbed_runtimes: Some(vec!["wasm".into()]),
-            no_crate_manifest: None,
+            crate_name: None,
+            skip_lib_rs: None,
+            skip_cargo_toml: None,
         })?;
         let out = generator.generate(
             [(
@@ -124,32 +170,48 @@ mod test {
         let (_, buf) = out
             .0
             .iter()
-            .find(|(path, _)| path.file_name().unwrap() == "mod.rs")
+            .find(|(path, _)| path.file_name().unwrap() == "mdk.rs")
             .unwrap();
-        assert_eq!(
+        pretty_assertions::assert_eq!(
             r#"// gen-static-end
-pub type MyInt = i64;
-pub trait MyFunc {
-    fn handle(input: MyInt, cx: Ctx) -> anyhow::Result<MyInt>;
+use types::*;
+pub mod types {
+    use super::*;
+    pub type MyInt = i64;
+}
+use stubs::*;
+pub mod stubs {
+    use super::*;
+    pub trait MyFunc: Sized + 'static {
+        fn erased(self) -> ErasedHandler {
+            ErasedHandler {
+                mat_id: "my_func".into(),
+                mat_title: "my_func".into(),
+                mat_trait: "MyFunc".into(),
+                handler_fn: Box::new(move |req, cx| {
+                    let req = serde_json::from_str(req)
+                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
+                    let res = self
+                        .handle(req, cx)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
+                    serde_json::to_string(&res)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
+                }),
+            }
+        }
+
+        fn handle(&self, input: MyInt, cx: Ctx) -> anyhow::Result<MyInt>;
+    }
+    pub fn op_to_trait_name(op_name: &str) -> &'static str {
+        match op_name {
+            "my_op" => "MyFunc",
+            _ => panic!("unrecognized op_name: {op_name}"),
+        }
+    }
 }
 "#,
-            &buf[buf.find("// gen-static-end").unwrap()..]
+            &buf.contents[buf.contents.find("// gen-static-end").unwrap()..]
         );
         Ok(())
     }
-}
-
-trait MyT {
-    fn hey() {}
-}
-trait MyT2 {
-    fn you() {}
-}
-
-struct T {}
-impl MyT for T {
-    fn hey() {}
-}
-impl MyT2 for T {
-    fn you() {}
 }

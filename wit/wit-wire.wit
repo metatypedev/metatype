@@ -1,0 +1,51 @@
+package metatype:wit-wire;
+
+interface typegate-wire {
+  hostcall: func(req: tuple<string, string>) -> result<string, string>;
+}
+
+interface mat-wire {
+  type json-str = string;
+
+  record mat-info {
+    op-name: string,
+    mat-title: string,
+    mat-hash: string,
+    mat-data-json: string,
+  }
+
+  record init-args {
+    metatype-version: string,
+    expected-ops: list<mat-info>
+  }
+
+  record init-response {
+    ok: bool
+  }
+
+  variant init-error {
+    version-mismatch(string),
+    unexpected-mat(mat-info),
+    other(string)
+  }
+
+  init: func(args: init-args) -> result<init-response, init-error>;
+
+  record handle-req {
+    op-name: string,
+    in-json: json-str,
+  }
+
+  variant handle-err {
+    no-handler,
+    in-json-err(string),
+    handler-err(string),
+  }
+
+  handle: func(req: handle-req) -> result<json-str, handle-err>;
+}
+
+world wit-wire {
+  import typegate-wire;
+  export mat-wire;
+}

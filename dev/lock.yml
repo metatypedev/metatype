@@ -5,8 +5,6 @@ dev:
       - typegraph/node/LICENSE.md
       - typegraph/node/sdk/LICENSE.md
   lines:
-    installer.sh:
-      (WASMEDGE_VERSION=").+("): WASMEDGE_VERSION
     rust-toolchain.toml:
       (channel = ").+("): RUST_VERSION
     ghjk.ts:
@@ -17,12 +15,12 @@ dev:
       (const\s+PNPM_VERSION\s*=\s*").*(";): PNPM_VERSION
       (const\s+WASM_TOOLS_VERSION = ").*(";): WASM_TOOLS_VERSION
       (const\s+JCO_VERSION =\s*").*(";): JCO_VERSION
-      (const\s+WASMEDGE_VERSION\s*=\s*").*(";): WASMEDGE_VERSION
       (const\s+WASM_OPT_VERSION\s*=\s*").*(";): WASM_OPT_VERSION
       (const\s+MOLD_VERSION\s*=\s*").*(";): MOLD_VERSION
       (const\s+CMAKE_VERSION\s*=\s*").*(";): CMAKE_VERSION
       (const\s+CARGO_INSTA_VERSION\s*=\s*").*(";): CARGO_INSTA_VERSION
       (const\s+TEMPORAL_VERSION\s*=\s*").*(";): TEMPORAL_VERSION
+      (const\s+WASMTIME_VERSION\s*=\s*").*(";): WASMTIME_VERSION
       (const\s+METATYPE_VERSION\s*=\s*").*(";): METATYPE_VERSION
     .github/*/*.yml:
       '(  GHJK_VERSION: ").+(")': GHJK_VERSION
@@ -51,14 +49,16 @@ dev:
       (description = ").+("): TAGLINE
       '([\w-]+\s*=\s*\{\s*git\s*=\s*"https:\/\/github\.com\/prisma\/prisma-engines"\s*,\s*tag\s*=\s*").+("\s*\})': PRISMA_VERSION
       '(deno\s*=\s*\{\s*git\s*=\s*"https:\/\/github\.com\/metatypedev\/deno"\s*,\s*branch\s*=\s*"v).+(-embeddable"\s*\})': DENO_VERSION
+      (wasmtime = ").+("): WASMTIME_VERSION
+      (wasmtime-wasi = ").+("): WASMTIME_VERSION
     dev/cross.Dockerfile:
       (ARG GHJK_VERSION=).*(): GHJK_VERSION
     dev/Dockerfile:
       (ARG DENO_VERSION=).*(): DENO_VERSION
       (ARG RUST_VERSION=).*(): RUST_VERSION
       (ARG GHJK_VERSION=).*(): GHJK_VERSION
-      (ARG WASM_OPT_VERSION=).*(): WASM_OPT_VERSION
-      (ARG WASM_TOOLS_VERSION=).*(): WASM_TOOLS_VERSION
+    typegate/src/runtimes/wit_wire/mod.ts:
+      (const METATYPE_VERSION = ").*(";): METATYPE_VERSION
     typegate/src/typegraph/versions.ts:
       (const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
     typegraph/core/src/typegraph.rs:
@@ -68,11 +68,11 @@ dev:
       '(    GHJK_VERSION: ").+(")': GHJK_VERSION
     website/docusaurus.config.js:
       '(  tagline: ").+(",)': TAGLINE
-    examples/**/compose.yml:
-      '(    image: ghcr.io/metatypedev/typegate:v).+()': METATYPE_VERSION
     '**/pyproject.toml':
       (version = ").+("): METATYPE_VERSION
       (wasmtime = "\^).+("): WASMTIME_VERSION
+    examples/**/compose.yml:
+      '(    image: ghcr.io/metatypedev/typegate:v).+()': PUBLISHED_VERSION
     examples/**/pyproject.toml:
       (typegraph = ").+("): METATYPE_VERSION
     examples/**/package.json:
@@ -83,7 +83,7 @@ dev:
       '(\s*"@typegraph\/sdk"\s*:\s*"npm:@typegraph\/sdk@).+(",?)': METATYPE_VERSION
       '(\s*"@typegraph\/sdk\/"\s*:\s*"npm:/@typegraph\/sdk@).+(\/",?)': METATYPE_VERSION
   lock:
-    GHJK_VERSION: 423d38e
+    GHJK_VERSION: 2725af8
     GHJK_ACTION_VERSION: 2e8bbf084060a18828338a7cdd43fde6feb2a3cc
     PYTHON_VERSION: 3.8.18
     POETRY_VERSION: 1.7.0
@@ -95,16 +95,15 @@ dev:
     CARGO_INSTA_VERSION: 1.33.0
     WASM_TOOLS_VERSION: 1.0.53
     JCO_VERSION: 1.0.0
-    WASMTIME_VERSION: 18.0.2
-    WASMEDGE_VERSION: 0.13.5
+    WASMTIME_VERSION: 20.0.0
     TYPEGRAPH_VERSION: 0.0.3
     PRISMA_VERSION: 5.5.2
-    METATYPE_VERSION: 0.3.7-0
-    PUBLISHED_VERSION: 0.3.6
+    METATYPE_VERSION: 0.4.1-0
+    PUBLISHED_VERSION: 0.4.0
     WASM_OPT_VERSION: 0.116.0
     MOLD_VERSION: v2.4.0
     CMAKE_VERSION: 3.28.0-rc6
     TEMPORAL_VERSION: 0.10.7
     TAGLINE: >-
-      Declarative API development platform. Build backend components with
-      WASM/Typescript/Python, no matter where and how your (legacy) systems are.
+      Declarative API development platform. Build backend components with WASM,
+      Typescript and Python, no matter where and how your (legacy) systems are.

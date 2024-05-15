@@ -9,6 +9,11 @@ export class SingleRegister extends Register {
     super();
   }
 
+  [Symbol.asyncDispose](): Promise<void> {
+    // not disposing engine because it's shared
+    return Promise.resolve();
+  }
+
   add(_engine: QueryEngine): Promise<void> {
     return Promise.resolve();
   }

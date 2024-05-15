@@ -42,7 +42,10 @@ const typegraphChangelog: Record<
 
 export function isTypegraphUpToDate(typegraph: TypeGraphDS): boolean {
   const { meta } = typegraph;
-  return semver.eq(semver.parse(typegraphVersion), semver.parse(meta.version));
+  return semver.equals(
+    semver.parse(typegraphVersion),
+    semver.parse(meta.version),
+  );
 }
 
 export function upgradeTypegraph(typegraph: TypeGraphDS): TypeGraphDS {
@@ -51,7 +54,10 @@ export function upgradeTypegraph(typegraph: TypeGraphDS): TypeGraphDS {
 
   let currentVersion = meta.version;
   while (
-    semver.neq(semver.parse(typegraphVersion), semver.parse(currentVersion))
+    semver.notEquals(
+      semver.parse(typegraphVersion),
+      semver.parse(currentVersion),
+    )
   ) {
     const migration = typegraphChangelog[currentVersion];
     if (!migration) {

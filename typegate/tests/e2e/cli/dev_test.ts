@@ -33,8 +33,6 @@ async function writeTypegraph(version: number | null, target = "migration.py") {
 
 Meta.test({
   name: "meta dev: choose to reset the database",
-  port: true,
-  systemTypegraphs: true,
 
   gitRepo: {
     content: {
@@ -139,8 +137,6 @@ async function listSubdirs(path: string): Promise<string[]> {
 
 Meta.test({
   name: "meta dev: remove latest migration",
-  port: true,
-  systemTypegraphs: true,
 
   gitRepo: {
     content: {

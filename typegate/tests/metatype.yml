@@ -18,10 +18,18 @@ typegates:
     secrets:
       prisma:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e"
-      migration_failure_test:
+      migration-failure-test:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e2"
 
 typegraphs:
   materializers:
     prisma:
       migrations_path: "prisma-migrations"
+
+metagen:
+  targets:
+    wasm_wire:
+      mdk_rust:
+        path: ./runtimes/wasm_wire/rust/
+        typegraph_path: ./runtimes/wasm_wire/wasm_wire.ts
+        stubbed_runtimes: ["wasm_wire"]

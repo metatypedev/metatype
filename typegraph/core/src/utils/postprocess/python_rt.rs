@@ -7,7 +7,7 @@ use common::typegraph::{
     utils::{map_from_object, object_from_map},
     Typegraph,
 };
-use std::path::PathBuf;
+use std::{collections::hash_map::Entry, path::PathBuf};
 
 use crate::utils::postprocess::PostProcessor;
 
@@ -22,23 +22,20 @@ impl PostProcessor for PythonProcessor {
                 let path = mat_data.python_artifact.get("path").unwrap();
                 let path: PathBuf = path.as_str().unwrap().into();
 
-                if tg.meta.artifacts.contains_key(&path) {
-                    continue;
-                }
+                if let Entry::Vacant(entry) = tg.meta.artifacts.entry(path.clone()) {
+                    let python_module_path = fs_host::make_absolute(&path)?;
 
-                let python_module_path = fs_host::make_absolute(&path)?;
+                    let (module_hash, size) = fs_host::hash_file(&python_module_path)?;
 
-                let (module_hash, size) = fs_host::hash_file(&python_module_path.clone())?;
-
-                tg.deps.push(python_module_path);
-                tg.meta.artifacts.insert(
-                    path.clone(),
-                    Artifact {
+                    tg.deps.push(python_module_path);
+                    entry.insert(Artifact {
                         hash: module_hash.clone(),
                         size,
                         path: path.clone(),
-                    },
-                );
+                    });
+                }
+
+                let main_module = tg.meta.artifacts.get(&path).unwrap().clone();
 
                 let deps = mat_data.deps.clone();
                 let mut dep_artifacts = vec![];
@@ -47,20 +44,22 @@ impl PostProcessor for PythonProcessor {
                 for dep_rel_path in resolved_deps {
                     let dep_abs_path = fs_host::make_absolute(&dep_rel_path)?;
 
-                    let (dep_hash, dep_size) = fs_host::hash_file(&dep_abs_path)?;
-                    let dep_artifact = Artifact {
-                        path: dep_rel_path.clone(),
-                        hash: dep_hash,
-                        size: dep_size,
-                    };
-                    tg.meta.artifacts.insert(dep_rel_path, dep_artifact.clone());
-                    dep_artifacts.push(dep_artifact);
-                    tg.deps.push(dep_abs_path);
+                    if let Entry::Vacant(entry) = tg.meta.artifacts.entry(dep_rel_path.clone()) {
+                        let (dep_hash, dep_size) = fs_host::hash_file(&dep_abs_path)?;
+                        let dep_artifact = Artifact {
+                            path: dep_rel_path,
+                            hash: dep_hash,
+                            size: dep_size,
+                        };
+                        entry.insert(dep_artifact.clone());
+                        dep_artifacts.push(dep_artifact);
+                        tg.deps.push(dep_abs_path);
+                    }
                 }
 
                 mat_data.python_artifact = map_from_object(Artifact {
-                    hash: module_hash.clone(),
-                    size,
+                    hash: main_module.hash.clone(),
+                    size: main_module.size,
                     path,
                 })
                 .map_err(|e| e.to_string())?;
