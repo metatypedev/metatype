@@ -347,9 +347,8 @@ Meta.test(
     sanitizeOps: false,
   },
   async (t: any) => {
-    const e = await t.engineFromTgDeployPython(
+    const e = await t.engine(
       "runtimes/python/python_no_artifact.py",
-      cwd,
     );
 
     await t.should(
@@ -369,64 +368,44 @@ Meta.test(
   },
 );
 
-// Meta.test(
-//   {
-//     name: "Python Runtime TS SDK: typegraph with no artifacts",
-//     sanitizeOps: false,
-//   },
-//   async (t: any) => {
-//     const port = t.port;
-//     const gate = `http://localhost:${port}`;
+Meta.test(
+  {
+    name: "Python Runtime TS SDK: typegraph with no artifacts",
+    sanitizeOps: false,
+  },
+  async (t: any) => {
+    const e = await t.engine("runtimes/python/python_no_artifact.ts");
 
-//     const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
-//       tgNoArtifact,
-//       {
-//         baseUrl: gate,
-//         auth,
-//         artifactsConfig: {
-//           prismaMigration: {
-//             globalAction: {
-//               create: true,
-//               reset: false,
-//             },
-//             migrationDir: "prisma-migrations",
-//           },
-//           dir: cwd,
-//         },
-//         typegraphPath: path.join(cwd, "python_no_artifact.ts"),
-//         secrets: {},
-//       },
-//     );
-
-//     const e = await t.engineFromDeployed(serialized);
-
-//     await t.should("work when there are no artifacts in the typegraph: TS SDK", async () => {
-//       await gql`
-//         query {
-//           identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
-//             a
-//             b
-//           }
-//           identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
-//             a
-//             b
-//           }
-//         }
-//       `
-//         .expect({
-//           identityDef: {
-//             a: "hello",
-//             b: [1, 2, "three"],
-//           },
-//           identityLambda: {
-//             a: "hello",
-//             b: [1, 2, "three"],
-//           },
-//         })
-//         .on(e);
-//     });
-//   },
-// );
+    await t.should(
+      "work when there are no artifacts in the typegraph: TS SDK",
+      async () => {
+        await gql`
+        query {
+          identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
+          identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
+        }
+      `
+          .expectData({
+            identityDef: {
+              a: "hello",
+              b: [1, 2, "three"],
+            },
+            identityLambda: {
+              a: "hello",
+              b: [1, 2, "three"],
+            },
+          })
+          .on(e);
+      },
+    );
+  },
+);
 
 Meta.test(
   {
@@ -435,9 +414,8 @@ Meta.test(
     sanitizeOps: false,
   },
   async (t: any) => {
-    const e = await t.engineFromTgDeployPython(
+    const e = await t.engine(
       "runtimes/python/python_duplicate_artifact.py",
-      cwd,
     );
 
     await t.should(
@@ -459,61 +437,41 @@ Meta.test(
   },
 );
 
-// Meta.test(
-//   {
-//     name: "Python Runtime - TS SDK: typegraph with duplicate artifact uploads",
-//     sanitizeOps: false,
-//   },
-//   async (t: any) => {
-//     const port = t.port;
-//     const gate = `http://localhost:${port}`;
+Meta.test(
+  {
+    name: "Python Runtime - TS SDK: typegraph with duplicate artifact uploads",
+    sanitizeOps: false,
+  },
+  async (t: any) => {
+    const e = await t.engine("runtimes/python/python_duplicate_artifact.ts");
 
-//     const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
-//       tgDuplicateArtifact,
-//       {
-//         baseUrl: gate,
-//         auth,
-//         artifactsConfig: {
-//           prismaMigration: {
-//             globalAction: {
-//               create: true,
-//               reset: false,
-//             },
-//             migrationDir: "prisma-migrations",
-//           },
-//           dir: cwd,
-//         },
-//         typegraphPath: path.join(cwd, "python_duplicate_artifact.ts"),
-//         secrets: {},
-//       },
-//     );
-
-//     const e = await t.engineFromDeployed(serialized);
-
-//     await t.should("work when there is duplicate artifacts uploads: TS SDK", async () => {
-//       await gql`
-//         query {
-//           identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
-//             a
-//             b
-//           },
-//           identityModDuplicate(input: { a: "hello", b: [1, 2, "three"] }) {
-//             a
-//             b
-//           }
-//         }
-//       `
-//         .expectData({
-//           identityMod: {
-//             a: "hello",
-//             b: [1, 2, "three"],
-//           },
-//           identityModDuplicate: {
-//             a: "hello",
-//             b: [1, 2, "three"],
-//           },
-//         })
-//         .on(e);
-//     });
-//   },
-// );
+    await t.should(
+      "work when there is duplicate artifacts uploads: TS SDK",
+      async () => {
+        await gql`
+        query {
+          identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          },
+          identityModDuplicate(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
+        }
+      `
+          .expectData({
+            identityMod: {
+              a: "hello",
+              b: [1, 2, "three"],
+            },
+            identityModDuplicate: {
+              a: "hello",
+              b: [1, 2, "three"],
+            },
+          })
+          .on(e);
+      },
+    );
+  },
+);
