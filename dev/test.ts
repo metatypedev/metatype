@@ -180,9 +180,29 @@ function createRun(testFile: string): Run {
   };
 }
 
+async function buildXtask() {
+  console.log(`${prefix} Building xtask...`);
+  const child = new Deno.Command("cargo", {
+    args: [
+      "build",
+      "--package",
+      "xtask",
+    ],
+    cwd: projectDir,
+    stdout: "inherit",
+    stderr: "inherit",
+  }).spawn();
+  const status = await child.status;
+  if (!status.success) {
+    throw new Error("Failed to build xtask");
+  }
+}
+
 const queues = [...filteredTestFiles];
 const runs: Record<string, Run> = {};
 const globalStart = Date.now();
+
+await buildXtask();
 
 void (async () => {
   while (queues.length > 0) {
