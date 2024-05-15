@@ -2,9 +2,8 @@
 sidebar_position: 50
 ---
 
-import SDKTabs from "@site/src/components/SDKTabs";
-import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme-original/CodeBlock";
+import TGExample from "@site/src/components/TGExample";
 
 # Write REST endpoints
 
@@ -12,19 +11,11 @@ The root materializers, the ones we expose from our typegraphs, are served throu
 In addition, we can also expose [REST](https://en.wikipedia.org/wiki/REST) APIs using the `rest` method. 
 The method takes GraphQl queries and provides RESTly endpoints for them. 
 
-<SDKTabs>
-    <TabItem value="typescript">
-
-<CodeBlock language="typescript">{require("!!code-loader!../../../../examples/typegraphs/example_rest.ts").content}</CodeBlock>
-
-    </TabItem>
-
-    <TabItem value="python">
-
-<CodeBlock language="python">{require("../../../../examples/typegraphs/example_rest.py").content}</CodeBlock>
-
-    </TabItem>
-</SDKTabs>
+<TGExample
+  python={require("!!code-loader!../../../../examples/typegraphs/example_rest.py")}
+  typescript={require("!!code-loader!../../../../examples/typegraphs/example_rest.ts")}
+  disablePlayground
+/>
 
 The effect of the root materializer accessed in the query determines the HTTP verb used and the mapping can be found [here](/docs/reference/types/functions#effects). 
 

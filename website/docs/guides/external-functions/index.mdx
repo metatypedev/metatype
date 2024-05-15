@@ -2,8 +2,6 @@
 sidebar_position: 50
 ---
 
-import SDKTabs from "@site/src/components/SDKTabs";
-import TabItem from "@theme/TabItem";
 import TGExample from "@site/src/components/TGExample"; 
 import CodeBlock from "@theme-original/CodeBlock";
 
@@ -21,27 +19,12 @@ Custom functions are commonly used for:
 
 The following example uses the `DenoRuntime` to respond to requests and define a policy.
 
-<SDKTabs>
-    <TabItem value="typescript">
-
 <TGExample 
   typegraph="math"
-  python={require("!!code-loader!../../../../examples/typegraphs/math.ts")}
-  query={require('./math.graphql')}
-  />
-
-    </TabItem>
-
-    <TabItem value="python">
-  
-<TGExample 
-  typegraph="math"
+  typescript={require("!!code-loader!../../../../examples/typegraphs/math.ts")}
   python={require("../../../../examples/typegraphs/math.py")}
   query={require('./math.graphql')}
   />
-
-    </TabItem>
-</SDKTabs>
 
 Note that for the `fib` root materializer, we're using a typescript module in an external file.
 Here's what `scripts/fib.ts` looks like:
@@ -66,26 +49,12 @@ On some runtimes, custom functions are passed the context object along with the 
 This object provides access to all kind of information about the context in which the function is running.
 The following example illustrates availaible fields:
 
-<SDKTabs>
-    <TabItem value="typescript">
-
 <TGExample 
   typegraph="func-ctx"
   typescript={require("!!code-loader!../../../../examples/typegraphs/func-ctx.ts")}
+  python={require("!!code-loader!../../../../examples/typegraphs/func-ctx.py")}
   query={require('./ctx.graphql')}
   />
-    </TabItem>
-
-    <TabItem value="python">
-  
-<TGExample 
-  typegraph="func-ctx"
-  typescript={require("!!code-loader!../../../../examples/typegraphs/func-ctx.py")}
-  query={require('./ctx.graphql')}
-  />
-
-    </TabItem>
-</SDKTabs>
 
 Note, the typescript version of the sample uses a closure instead of a string snippet to define the function.
 This is a simple syntax sugar availaible when using `DenoRuntime` through the typescript sdk or the `PythonRuntime` the python one.
@@ -102,26 +71,13 @@ The primary way of doing this is by sending GraphqQl queries from within your fu
 On the `DenoRuntime`, to make this easier, there's a `gql` object passed to all functions.
 The following exapmle illustrates how it functions:
 
-<SDKTabs>
-    <TabItem value="typescript">
-
 <TGExample 
   typegraph="func-gql"
   typescript={require("!!code-loader!../../../../examples/typegraphs/func-gql.ts")}
-  query={require('./gql.graphql')}
-  />
-    </TabItem>
-
-    <TabItem value="python">
-  
-<TGExample 
-  typegraph="func-gql"
-  typescript={require("!!code-loader!../../../../examples/typegraphs/func-gql.py")}
+  python={require("!!code-loader!../../../../examples/typegraphs/func-gql.py")}
   query={require('./gql.graphql')}
   />
 
-    </TabItem>
-</SDKTabs>
 
 And `scripts/createVote.ts` looks like:
 

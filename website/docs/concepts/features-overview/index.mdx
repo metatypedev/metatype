@@ -2,7 +2,50 @@
 sidebar_position: 1
 ---
 
+import Features from "../../../src/pages/features";
+import TGExample from "@site/src/components/TGExample"; 
+
+
 # Features overview
+
+<Features
+  rows={[
+  [
+    {
+      title: "Single-node",
+      status: "complete",
+      body: (
+        <>
+          The typegate can be run as a single node mode for simple deployments and
+          using the filesystem as it's artifact store. Useful for local
+          development and testing.
+        </>
+      ),
+    }, 
+    {
+      title: "Multi-node",
+      status: "beta",
+      body: (
+        <>
+          Deploy multiple instances of the typegate to distribute loads across
+          machines and scale horizontally. A Redis compatible KV deployment is
+          needed for the message queue to coordiante the instances. An S3
+          compatible object store is used for the artifacts. This mode is
+          recommended for production deployments even if only a single node is
+          used.
+        </>
+      ),
+    }
+  ],
+  [
+    <TGExample
+      python={require("!!code-loader!../../../../examples/typegraphs/basic.py")}
+      typescript={require("!!code-loader!../../../../examples/typegraphs/basic.ts")}
+      disablePlayground
+    />,
+  ],
+]}
+/>
 
 - Metatype offers multiple runtimes with pre-defined operations (e.g. Prisma) and can replace the needs for an ad-hoc backend.
 

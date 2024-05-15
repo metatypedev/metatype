@@ -2,9 +2,7 @@
 sidebar_position: 50
 ---
 
-import TGExample from "@site/src/components/TGExample";  
 import Cors from "@site/shared/cors/index.mdx";
-import SDKTabs from "@site/src/components/SDKTabs";
 import TabItem from "@theme/TabItem";
 
 # Secure your requests
@@ -28,35 +26,16 @@ Basic authentication relies on a username and password pair.
 We specify the password through typegraph secrets with the format `BASIC_{username}`.
 In this case, the secret `BASIC_andim=password` is set.
 
-<SDKTabs>
-    <TabItem value="typescript">
-
-    <TGExample
-      typegraph="authentication"
-      typescript={require("!!code-loader!../../../../examples/typegraphs/authentication.ts")}
-      query={require("./authentication.graphql")}
-      headers={{
-          Authorization: "Basic YW5kaW06cGFzc3dvcmQ=",
-      }}
-      tab="headers"
-      />
-
-    </TabItem>
-
-    <TabItem value="python">
-  
     <TGExample
       typegraph="authentication"
       python={require("../../../../examples/typegraphs/authentication.py")}
+      typescript={require("!!code-loader!../../../../examples/typegraphs/authentication.ts")}
       query={require("./authentication.graphql")}
       headers={{
             Authorization: "Basic YW5kaW06cGFzc3dvcmQ=",
           }}
       tab="headers"
       />
-
-    </TabItem>
-</SDKTabs>
 
 Note, the token is encoded in base64. 
 Decoded, it'd read `andim:password`.
@@ -95,25 +74,9 @@ typegates:
         BASIC_user: "user_pass"
 ```
  
-<SDKTabs>
-    <TabItem value="typescript">
-
 <TGExample 
   typegraph="policies"
-  python={require("!!code-loader!../../../../examples/typegraphs/policies.ts")}
-  query={require('./policies.graphql')}
-  headers={{
-        Authorization: "Basic YWRtaW46YWRtaW5fcGFzcw==",
-      }}
-  tab="headers"
-  />
-
-    </TabItem>
-
-    <TabItem value="python">
-  
-<TGExample 
-  typegraph="policies"
+  typescript={require("!!code-loader!../../../../examples/typegraphs/policies.ts")}
   python={require("../../../../examples/typegraphs/policies.py")}
   query={require('./policies.graphql')}
   headers={{
@@ -121,9 +84,6 @@ typegates:
       }}
   tab="headers"
   />
-
-    </TabItem>
-</SDKTabs>
 
 More than one policies can be attached to a single materalizer and combining policies allow for compositionaly defining our access control rules.
 If a materalizer has more one policies, they are evaluated in turn and:
