@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::wit::metatype::typegraph::host::print;
 use crate::{
     global_store::Store,
     utils::fs_host::{self, resolve_globs_dirs},
@@ -114,6 +115,7 @@ impl DenoProcessor {
                         .collect::<Result<Vec<_>, _>>()?,
                 );
                 tg_artifacts.push(deno_artifact);
+                print(&format!("&&&&&&&&&&&&&&&&&&&&&&&& {:?}", mat_data));
             }
             false => {
                 if !Store::get_codegen_flag() {

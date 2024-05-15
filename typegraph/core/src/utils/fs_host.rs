@@ -274,6 +274,5 @@ pub fn resolve_globs_dirs(deps: Vec<String>) -> Result<Vec<PathBuf>, String> {
         }
     }
 
-    print(&format!("---------------------- {:?}", resolved_deps));
     Ok(resolved_deps)
 }
