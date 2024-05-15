@@ -48,7 +48,7 @@ export class Metagen {
   }
 
   run(tgOutput: TypegraphOutput, targetName: string, overwrite?: false) {
-    const items = this.dryRun(tgOutput, targetName);
+    const items = this.dryRun(tgOutput, targetName, overwrite);
     wit_utils.metagenWriteFiles(items);
   }
 }

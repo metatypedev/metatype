@@ -35,7 +35,7 @@ class Metagen:
         self.gen_config = gen_config
         self.workspace_path = workspace_path
 
-    def _get_config(
+    def _get_mdk_config(
         self,
         tg_output: TypegraphOutput,
         target_name: str,
@@ -54,7 +54,7 @@ class Metagen:
         target_name: str,
         overwrite: Union[bool, None] = None,
     ) -> List[MdkOutput]:
-        mdk_config = self._get_config(tg_output, target_name)
+        mdk_config = self._get_mdk_config(tg_output, target_name)
         res = wit_utils.metagen_exec(store, mdk_config)
         if isinstance(res, Err):
             raise Exception(res.value)
