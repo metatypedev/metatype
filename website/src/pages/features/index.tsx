@@ -20,19 +20,23 @@ export default function FeaturesRoadmap(
   return (
     <div>
       {props.rows.map((row) => (
-        <div className="gap-2 flex">
+        <div className="gap-2 flex max-w-full my-10">
           {row.map(
             (item) => {
               if ("title" in item) {
-                return <Feature {...item} />;
+                return (
+                  <div className="flex-1">
+                    <Feature {...item} />
+                  </div>
+                );
               }
               if ("content" in item) {
                 const split = item.path.split(".");
                 const lang = split[split.length - 1];
                 return (
-                  <div>
+                  <div className="flex-1">
                     <Link
-                      href={`https://github.com/metatypedev/metatype/blob/main/${item.path}`}
+                      to={`https://github.com/metatypedev/metatype/blob/main/${item.path}`}
                       className={"absolute top-0 right-0 m-2 p-1"}
                     >
                       {item.path.split("/").pop()} ↗
@@ -40,7 +44,6 @@ export default function FeaturesRoadmap(
                     <CodeBlock
                       language={lang}
                       wrap
-                      className="flex-1"
                     >
                       {item.content}
                     </CodeBlock>
@@ -57,9 +60,10 @@ export default function FeaturesRoadmap(
 }
 
 type FeatureDeets = {
-  title: string;
+  title: React.JSX.Element | string;
   status: "complete" | "beta" | "future";
   body: React.JSX.Element;
+  link: string;
 };
 function Feature(props: FeatureDeets) {
   const statusColor = {
@@ -68,16 +72,26 @@ function Feature(props: FeatureDeets) {
     future: "text-pink-500",
   };
   return (
-    <div className="flex-1 flex flex-col gap-1">
-      <div className="flex gap-2">
-        <Heading as="h3">{props.title}</Heading>
-        <span
-          className={`${statusColor[props.status]}`}
-        >
-          {props.status.toUpperCase()}
-        </span>
+    <Link
+      to={props.link}
+      style={{
+        textDecoration: "none",
+        color: "inherit",
+      }}
+    >
+      <div className="flex flex-col gap-1">
+        <div className="flex gap-2">
+          <Heading as="h3">{props.title}</Heading>
+          <span
+            className={`${statusColor[props.status]}`}
+          >
+            {props.status.toUpperCase()}
+          </span>
+        </div>
+        <div>
+          {props.body}
+        </div>
       </div>
-      {props.body}
-    </div>
+    </Link>
   );
 }

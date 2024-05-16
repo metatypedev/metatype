@@ -15,7 +15,7 @@ Update `typegraph.py` with the highlighted lines below:
   query={require("./graphql.graphql")}
 />
 
-Again, a few interesting happened here:
+Again, a few interesting things happened here:
 
 1. No migration has been run. The field `user` comes from another runtime and doesn't exist in the database. The typegate will orchestrate the query execution in all runtimes and minimize the work done.
 2. The `from_parent` rule automatically fills the input type with the parent field named `uid`. The `g(·)` rule allows making named reference to another type and avoid circular reference.
