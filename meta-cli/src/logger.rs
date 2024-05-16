@@ -21,6 +21,7 @@ pub fn init() -> Result<()> {
         .with(
             tracing_subscriber::fmt::layer()
                 .without_time()
+                .with_writer(std::io::stderr)
                 // .pretty()
                 // .with_file(true)
                 // .with_line_number(true)

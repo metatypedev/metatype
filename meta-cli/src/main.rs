@@ -148,8 +148,11 @@ fn setup_panic_hook() {
         eprintln!("at https://github.com/metatypedev/metatype/issues/new.");
         eprintln!("If you can reliably reproduce this panic, try to include the");
         eprintln!("reproduction steps, output of meta-cli doctor and");
-        eprintln!("a panic backtrace in your report. (re-run with the RUST_BACKTRACE=1");
-        eprintln!("env var to enable backtraces)");
+        eprintln!("a panic backtrace in your report. Set the environment variables");
+        eprintln!("- RUST_BACKTRACE");
+        eprintln!("- RUST_SPANTRACE");
+        eprintln!("- RUST_LIB_SPANTRACE");
+        eprintln!("to the value of one to enable backtraces)");
         eprintln!();
         eprintln!(
             "Platform: {} {}",
