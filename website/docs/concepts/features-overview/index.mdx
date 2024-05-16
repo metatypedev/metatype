@@ -40,7 +40,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
           <>
            You can expose select root materializers through a simple REST API.
            This is handy to serve endpoints for clients that are not GraphQl capable, even though it hampers access to some typegraph features.
-           Inputs will be sourced from either http bodies or search paremters according to HTTP verb.
+           Inputs will be sourced from either HTTP bodies or search parameters according to HTTP verb.
           </>
         ),
       }, 
@@ -88,7 +88,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         body: (
           <>
             Specify cross-origin request rules to control which domains can access your API from within a browser. 
-            Prevents abuse from websites trying to use your API without permisison.
+            Prevents abuse from websites trying to use your API without permission.
           </>
         ),
       }, 
@@ -151,7 +151,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         body: (
           <>
             Declare types in your graph that are subset of primitives like string and integers by using regular expressions or min/max limits.
-            Useful to validate incoming data even more and distrubute invariants through your app.
+            Useful to validate incoming data even more and distribute invariants through your app.
           </>
         ),
       }, 
@@ -266,7 +266,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         link: "/docs/reference/runtimes/deno",
         body: (
           <>
-            Write materializers that execute pieces of typescript code on a Deno worker.
+            Write materializers that execute pieces of TypeScript code on a Deno worker.
             Includes easy access to ESM and libraries through standard Deno features.
           </>
         ),
@@ -341,7 +341,7 @@ def example_python(g: Graph):
         body: (
           <>
             Kick off and query Temporal workflows from a typegraph. 
-            Temporal is durable execution engine that can be used to implement long-running, failure-resistant business processes.
+            Temporal is a durable execution engine that can be used to implement long-running, failure-resistant business processes.
           </>
         ),
       }, 
@@ -377,7 +377,7 @@ def example_python(g: Graph):
         body: (
           <>
             Include external Http APIs as part of your typegraph. 
-            Source the data for your graph using external http requests.
+            Source the data for your graph using external HTTP requests.
           </>
         ),
       }, 
@@ -429,7 +429,7 @@ Access a myriad of databases directly from your typegraph. Run queries, mange it
         body: (
           <>
             Use the types in your graph to declare and manage relational schemas to be used on your databse.
-            This means support forrimary keys, unique constraints, one-to-one, one-to-many, many-to-many relationships...etc.
+            This means support for primary keys, unique constraints, one-to-one, one-to-many, many-to-many relationships...etc.
           </>
         ),
       }, 
@@ -451,7 +451,7 @@ Access a myriad of databases directly from your typegraph. Run queries, mange it
         body: (
           <>
             Drop down to raw SQL queries for cases not covered by the CRUD generators.
-            Useful to access unique features native to your database or craft extra efficent queries.
+            Useful to access unique features native to your database or craft extra efficient queries.
           </>
         ),
       }, 
@@ -468,7 +468,7 @@ Access a myriad of databases directly from your typegraph. Run queries, mange it
         ),
       }, 
       {
-        title: "Beta datbases",
+        title: "Beta databases",
         status: "beta",
         link: "https://github.com/metatypedev/metatype/issues/724",
         body: (
@@ -492,7 +492,7 @@ Access a myriad of databases directly from your typegraph. Run queries, mange it
         link: "/docs/reference/policies",
         body: (
           <>
-            Policies are simple functions that take the request as input and return values to signal whether or not it's allowed/denied access.
+            Policies are simple functions that take the request as input and return values to signal whether it's allowed/denied access.
             They can be attached to any materializer in the graph and are evaluated right before the request triggers one.
             They compose well and are the primary authorization primitive available to typegraphs.
           </>
@@ -513,7 +513,7 @@ Access a myriad of databases directly from your typegraph. Run queries, mange it
         link: "/docs/reference/typegate/authentication#basic-authentication",
         body: (
           <>
-            Requests can authenticate themselves using Basic http headers.
+            Requests can authenticate themselves using Basic HTTP headers.
             Simple but useful for getting started or protecting admin only requests.
           </>
         ),
@@ -652,7 +652,7 @@ Options:
         ),
       }, 
       {
-        title: "Helm chars",
+        title: "Helm charts",
         status: "complete",
         link: "/docs/guides/self-hosting",
         body: (
@@ -696,7 +696,7 @@ Options:
         link: "http://localhost:3000/docs/reference/typegate#environment-variables",
         body: (
           <>
-          Use python to author typegraphs and access other SDK tooling.
+          Use Python to author typegraphs and access other SDK tooling.
           </>
         ),
       }, 
@@ -708,7 +708,7 @@ Options:
         link: "/docs/reference/programmatic-deployment",
         body: (
           <>
-            Programmaticaly upload your typegraphs to the typegate from within the SDK.
+            Programmatically upload your typegraphs to the typegate from within the SDK.
             Useful for writing tests or building on top of the Metatype platform.
           </>
         ),
@@ -732,7 +732,7 @@ Options:
         link: "/docs/reference/programmatic-deployment",
         body: (
           <>
-            Access metagen through the SDK directly to generate type declaration and other helpful code.
+            Access metagen through the SDK directly to generate type declarations and other helpful code.
             Useful for testing and to build custom workflows/tooling.
           </>
         ),

@@ -86,8 +86,8 @@ typegates:
   tab="headers"
   />
 
-More than one policy can be attached to a single materalizer and combining policies allow for compositionaly defining our access control rules.
-If a materalizer has more one policies, they are evaluated in turn and:
+More than one policy can be attached to a single materalizer, and combining policies allow for compositionally defining our access control rules.
+If a materalizer has more than one policy, they are evaluated in turn and:
 
 - If any one of attached policy returns `true`, the request immediately gains access.
 - If a policy returns `false`, the request is immediately denied access.
