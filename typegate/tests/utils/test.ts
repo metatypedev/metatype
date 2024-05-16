@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { SystemTypegraph } from "../../src/system_typegraphs.ts";
+import { crypto } from "std/crypto/mod.ts";
 import { dirname, extname, join } from "std/path/mod.ts";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
@@ -97,7 +98,6 @@ export class MetaTest {
     t: Deno.TestContext,
     typegates: TypegateManager,
     introspection: boolean,
-    tempDir: string,
   ): Promise<MetaTest> {
     await using stack = new AsyncDisposableStack();
     stack.use(typegates);
@@ -111,7 +111,6 @@ export class MetaTest {
       typegates,
       introspection,
       portNumber,
-      tempDir,
       stack.move(),
     );
 
@@ -123,7 +122,6 @@ export class MetaTest {
     public typegates: TypegateManager,
     private introspection: boolean,
     public port: number,
-    public tempDir: string,
     public disposables: AsyncDisposableStack,
   ) {
   }
@@ -220,7 +218,7 @@ export class MetaTest {
     const testDirName = dirname(path);
     const cwd = join(testDir, testDirName);
 
-    const serialized = await this.#serializeTypegraphFromShell(
+    const serialized = await this.#deployTypegraphFromShell(
       path,
       sdkLang,
       cwd,
@@ -230,7 +228,7 @@ export class MetaTest {
     return await this.#engineFromDeployed(serialized, opts.secrets ?? {});
   }
 
-  async #serializeTypegraphFromShell(
+  async #deployTypegraphFromShell(
     path: string,
     lang: SDKLangugage,
     cwd: string,
@@ -418,15 +416,22 @@ export const test = ((o, fn): void => {
         );
       }
 
-      const tempDir = await Deno.makeTempDir({
-        prefix: "typegate-test-",
-        dir: config.tmp_dir,
-      });
+      const tempDirs = await Promise.all(
+        Array.from({ length: replicas }).map(
+          async (_) => {
+            const uuid = crypto.randomUUID();
+            return await Deno.makeTempDir({
+              prefix: `typegate-test-${uuid}`,
+              dir: config.tmp_dir,
+            });
+          },
+        ),
+      );
 
       // TODO different tempDir for each typegate instance
       const result = await Promise.allSettled(
-        Array.from({ length: replicas }).map((_) =>
-          Typegate.init(opts.syncConfig ?? null, null, tempDir)
+        Array.from({ length: replicas }).map((_, index) =>
+          Typegate.init(opts.syncConfig ?? null, null, tempDirs[index])
         ),
       );
       const typegates = result.map((r) => {
@@ -449,11 +454,14 @@ export const test = ((o, fn): void => {
         t,
         new TypegateManager(typegates),
         introspection,
-        tempDir,
       );
 
       mt.disposables.defer(async () => {
-        await Deno.remove(tempDir, { recursive: true });
+        await Promise.all(tempDirs.map(
+          async (tempDir, _) => {
+            await Deno.remove(tempDir, { recursive: true });
+          },
+        ));
       });
 
       if (opts.teardown != null) {

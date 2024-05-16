@@ -58,7 +58,9 @@ export async function getLocalPath(
   await Deno.mkdir(dirname(localPath), { recursive: true });
   // the old artifacts are always removed on typegraph update.
   await Deno.remove(localPath, { recursive: true }).catch(() => {});
-  await Deno.link(cachedPath, localPath);
+  await Deno.link(cachedPath, localPath).catch((msg) => {
+    logger.warn(msg);
+  });
 
   return localPath;
 }

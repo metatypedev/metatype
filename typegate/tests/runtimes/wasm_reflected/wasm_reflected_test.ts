@@ -30,6 +30,29 @@ Meta.test(
       });
     }
 
+    {
+      await using e = await metaTest.engine(
+        "runtimes/wasm_reflected/wasm_duplicate.py",
+      );
+
+      await metaTest.should(
+        "work after referencing the wasm artifact twice",
+        async () => {
+          await gql`
+        query {
+          test1(a: 1, b: 2)
+          test2(a: 5, b: 2)
+        }
+      `
+            .expectData({
+              test1: 3,
+              test2: 7,
+            })
+            .on(e);
+        },
+      );
+    }
+
     await metaTest.should("work after deploying artifact", async (t: any) => {
       await using engine = await metaTest.engine(
         "runtimes/wasm_reflected/wasm_reflected.ts",
