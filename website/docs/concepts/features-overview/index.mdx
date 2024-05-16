@@ -21,17 +21,29 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
   rows={[
     [
       {
-        title: "GraphQl API",
+        title: "GraphQL API",
         status: "complete",
         link: "/docs/reference/typegate",
         body: (
           <>
-            Expose select materializers in your graph through a GraphqQl API.
+            Expose select materializers in your graph through a GraphQL API.
             These root-materializers will serve as the entry point to your graph for any incoming request.
-            The typegraph model is a great fit for GraphqQl semantics and this is the best supported way to consume typegraphs.
+            The typegraph model is a great fit for GraphQL semantics and this is the best supported way to consume typegraphs.
           </>
         ),
       }, 
+      {
+        title: "GraphQL Subscriptions",
+        status: "future",
+        link: "https://github.com/metatypedev/metatype/issues/726",
+        body: (
+          <>
+            Get real-time data to clients.
+          </>
+        ),
+      }, 
+    ],
+    [
       {
         title: "REST API",
         status: "complete",
@@ -44,8 +56,6 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
           </>
         ),
       }, 
-    ],
-    [
       {
         title: "gRPC API",
         status: "future",
@@ -56,6 +66,8 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
           </>
         ),
       }, 
+    ],
+    [
       {
         title: "Cron triggers",
         status: "future",
@@ -67,6 +79,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
           </>
         ),
       }, 
+      <div></div>
     ],
     [
       {
@@ -112,7 +125,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         body: (
           <>
             Deploy multiple instances of the typegate to distribute loads across machines and scale horizontally. 
-            A Redis compatible key-value cache, an S3 compatible object store and your favorite load-balancer in front of the instances and it's all ready to go.
+            You'll only need a Redis compatible key-value cache, an S3 compatible object store, and your favorite load-balancer in front of the instances to get it going.
             This mode is recommended for production deployments even if only a single node is used.
           </>
         ),
@@ -198,7 +211,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         body: (
           <>
             Compose materializers together by feeding the output of one as the input of another.
-            Encourages code reuse by allowing one to extract common middleware logic from each materializer all within the typegraph layer.
+            Encourages code reuse by allowing one to extract common middleware logic from each materializer, all within the typegraph layer.
           </>
         ),
       }, 
@@ -212,7 +225,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
           <>
             <code>reduce</code> is useful to transform materializer input types so that only certain struct fields are used, discarding the others.
             Required fields can be hidden from the user and can instead be injected from the request's context or a static default.
-            This comes in handy to remix generated or core domain types to more targeted forms appropriate for a materializer.
+            This is useful for remixing generated or core domain types to more targeted forms appropriate for a materializer.
           </>
         ),
       }, 
@@ -235,7 +248,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         link: "https://github.com/metatypedev/metatype/issues/722",
         body: (
           <>
-            Imports will allow graphs to include nodes from other API descriptions like GraphqQl, OpenAPI, gRPC and database schemas.
+            Imports will allow graphs to include nodes from other API descriptions like GraphQL, OpenAPI, gRPC and database schemas.
             These APIs can then be consumed in a typesafe manner through the <code>GraphQL</code> and <code>Http</code> runtimes.
           </>
         ),
@@ -330,7 +343,7 @@ def example_python(g: Graph):
         body: (
           <>
             Store large blobs in S3 compatible object stores. 
-            This includes support for <Link to="/docs/guides/files-upload">GraphQl file uploads</Link> and presigned URLs making working with images and large uploads a breeze.
+            This includes support for <Link to="/docs/guides/files-upload">GraphQL file uploads</Link> and presigned URLs making working with images and large uploads a breeze.
           </>
         ),
       }, 
@@ -360,13 +373,13 @@ def example_python(g: Graph):
     ],
     [
       {
-        title: "GraphQl runtime",
+        title: "GraphQL runtime",
         status: "complete",
         link: "/docs/reference/runtimes/graphql",
         body: (
           <>
-            Include external GraphQl APIs as part of your typegraph. 
-            This runtime provides materializers that resolve the data by querying an external GraphQl API.
+            Include external GraphQL APIs as part of your typegraph. 
+            This runtime provides materializers that resolve the data by querying an external GraphQL API.
           </>
         ),
       }, 
@@ -532,7 +545,7 @@ Access a myriad of databases directly from your typegraph. Run queries, mange it
         body: (
           <>
             Json Web Tokens can be used to attach more authentication and context information to requests.
-            The data in the tokens can then be used by poliies to make authorization decisions.
+            The data in the tokens can then be used by policies to make authorization decisions.
           </>
         ),
       }, 
@@ -622,7 +635,7 @@ Options:
           <>
             Code generation suite that supports Rust, Python and Typescript.
             Generate types from your graph and other helper functions for authoring custom functions for the Wasm, Python and Deno runtimes respectively.
-            Can be accessd through the CLI under the <code>gen</code> subcommand or through the different SDKs.
+            Can be accessed through the CLI under the <code>gen</code> subcommand or through the different SDKs.
           </>
         ),
       }, 
@@ -746,7 +759,7 @@ Options:
 
 # Features overview
 
-- Quickly put together modern APIs that are throrougly typed, access controlled, and unconstrained. All backed by your preferred database.
+- Quickly put together modern APIs that are thoroughly typed, access controlled, and unconstrained. All backed by your preferred database.
 
 - When the project grows, you can easily introduce new APIs or break existing ones in smaller parts while keeping the same interface.
 
@@ -762,9 +775,9 @@ Options:
 
 - App frontends today are built on composable ecosystem components. Metatype envisions and is designed around a similar future for backend development.
 
-## GraphqQl APIs
+## GraphQL APIs
 
-- Easily expose business logic endpoints through generated [GraphQl APIs](/docs/reference/runtimes/graphql).
+- Easily expose business logic endpoints through generated [GraphQL APIs](/docs/reference/runtimes/graphql).
 - Helpers to auto-generate and expose CRUD operations from your types on [myriad of databases](/docs/reference/runtimes/prisma).
 - All built upon the typegraphs primitives, they compose well with every other feature and allow [granular control](/docs/reference/types/parameter-transformations) when required.
 - That ideal API your frontend engineers keep asking for is never out of reach. {/*TODO: error model docs */}
@@ -791,7 +804,7 @@ Options:
 ## Bring your own storage
 
 - Easy going with object file storage using the [S3Runtime](/docs/reference/runtimes/s3) 
-- Includes support for [GraphQl file uploads](/docs/guides/files-upload) and presigned URLs.
+- Includes support for [GraphQL file uploads](/docs/guides/files-upload) and presigned URLs.
 
 ## Function runner
 

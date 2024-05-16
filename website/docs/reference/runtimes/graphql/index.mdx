@@ -20,7 +20,7 @@ Again, a few interesting things happened here:
 1. No migration has been run. The field `user` comes from another runtime and doesn't exist in the database. The typegate will orchestrate the query execution in all runtimes and minimize the work done.
 2. The `from_parent` rule automatically fills the input type with the parent field named `uid`. The `g(·)` rule allows making named references to another type and avoids circular references.
 
-Other type enforcement rules also exists:
+Other type enforcement rules also exist:
 
 - `from_secret(key)` to fill the input type with the secret in the `TG_[typegraph name]_[key]` format
 - `from_context(·)` to fill the input type with content from the request context, such as JSON Web Token (JWT), etc.
