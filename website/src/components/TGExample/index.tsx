@@ -13,7 +13,7 @@ interface TGExampleProps extends MiniQLProps {
 }
 
 export default function TGExample(
-  { python, typescript, code: rawCode, ...props }: TGExampleProps,
+  { python, typescript, ...props }: TGExampleProps,
 ) {
   const code = [
     python && {
@@ -25,10 +25,6 @@ export default function TGExample(
       content: typescript.content,
       codeLanguage: "typescript",
       codeFileUrl: typescript.path,
-    },
-    rawCode && {
-      content: rawCode,
-      codeLanguage: props.codeLang,
     },
   ].filter((v) => !!v);
 

@@ -19,7 +19,7 @@ export default function FeaturesRoadmap(
 ): JSX.Element {
   return (
     <div>
-      {props.rows.map((row) => (
+      {props?.rows?.map((row) => (
         <div className="gap-2 flex max-w-full my-10">
           {row.map(
             (item) => {
