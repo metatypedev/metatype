@@ -85,14 +85,16 @@ const fuse = new Fuse(testFiles.map((f) => f.slice(prefixLength)), {
   threshold: 0.4,
 });
 const filtered = filter ? fuse.search(filter) : null;
-const filteredTestFiles = filter
-  ? filtered.map((res) => testFiles[res.refIndex])
-  : testFiles;
+const filteredTestFiles = filtered?.map((res) => testFiles[res.refIndex]) ??
+  testFiles;
 
 const cwd = resolve(projectDir, "typegate");
 const tmpDir = join(projectDir, "tmp");
 const env: Record<string, string> = {
   "RUST_LOG": "off,xtask=debug,meta=debug",
+  "RUST_BACKTRACE": "1",
+  "RUST_SPANTRACE": "1",
+  "RUST_LIB_SPANTRACE": "1",
   "LOG_LEVEL": "DEBUG",
   // "NO_COLOR": "1",
   "DEBUG": "true",
@@ -232,6 +234,14 @@ console.log(
     Math.floor(globalDuration / 1_000) % 60
   }s:`,
 );
+
+for (const run of finished.sort((a, b) => a.duration - b.duration)) {
+  console.log(
+    `- ${run.testFile} -- ${Math.floor(run.duration / 60_000)}m${
+      Math.floor(run.duration / 1_000) % 60
+    }s`,
+  );
+}
 
 console.log(
   `  successes: ${successes.length}/${filteredTestFiles.length}`,

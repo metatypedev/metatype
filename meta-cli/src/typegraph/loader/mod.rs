@@ -14,8 +14,6 @@ use tokio::{
     time::{timeout, Duration},
 };
 
-use std::env;
-
 use crate::{
     com::{responses::SDKResponse, server::get_instance_port, store::ServerStore},
     config::ModuleType,
@@ -195,16 +193,13 @@ impl<'a> Loader<'a> {
         path: &Path,
         base_dir: &Path,
     ) -> Result<Command, LoaderError> {
-        let vars: HashMap<_, _> = env::vars().collect();
-
         if let Ok(argv_str) = std::env::var("MCLI_LOADER_CMD") {
             let argv = argv_str.split(' ').collect::<Vec<_>>();
             let mut command = Command::new(argv[0]);
             command
                 .args(&argv[1..])
                 .arg(path.to_str().unwrap())
-                .arg(base_dir)
-                .envs(vars);
+                .arg(base_dir);
             return Ok(command);
         }
 
@@ -214,13 +209,10 @@ impl<'a> Loader<'a> {
                     path: path.to_owned().into(),
                     error: e,
                 })?;
-                let vars: HashMap<_, _> = env::vars().collect();
-                // TODO cache result?
                 let mut command = Command::new("python3");
                 command
                     .arg(path.to_str().unwrap())
                     .current_dir(base_dir)
-                    .envs(vars)
                     .env("PYTHONUNBUFFERED", "1")
                     .env("PYTHONDONTWRITEBYTECODE", "1")
                     .env("PY_TG_COMPATIBILITY", "1");
@@ -243,8 +235,7 @@ impl<'a> Loader<'a> {
                             .arg("--allow-all")
                             .arg("--check")
                             .arg(path.to_str().unwrap())
-                            .current_dir(base_dir)
-                            .envs(vars);
+                            .current_dir(base_dir);
                         Ok(command)
                     }
                     TsLoaderRt::Node => {
@@ -255,8 +246,7 @@ impl<'a> Loader<'a> {
                             .arg("--yes")
                             .arg("tsx")
                             .current_dir(path.parent().unwrap())
-                            .arg(path.to_str().unwrap())
-                            .envs(vars);
+                            .arg(path.to_str().unwrap());
                         Ok(command)
                     }
                     TsLoaderRt::Bun => {
@@ -266,8 +256,7 @@ impl<'a> Loader<'a> {
                             .arg("x")
                             .arg("tsx")
                             .arg(path.to_str().unwrap())
-                            .current_dir(path.parent().unwrap())
-                            .envs(vars);
+                            .current_dir(path.parent().unwrap());
                         Ok(command)
                     }
                 }

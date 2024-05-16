@@ -62,6 +62,8 @@ export class PythonRuntime extends Runtime {
                 const { pythonArtifact, depsMeta: depArtifacts } =
                   pyModMat.data;
 
+                console.log({ pyModMat, mat });
+
                 const deps = depArtifacts as Artifact[];
                 const artifact = pythonArtifact as Artifact;
 
