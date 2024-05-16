@@ -35,6 +35,18 @@ tg_func = getattr(module, tg_name)
 secrets = json.loads(secrets_str)
 
 
+disable_art_resol = os.environ.get("DISABLE_ART_RES")
+codegen = os.environ.get("CODEGEN")
+migration_dir = os.environ.get("MIGRATION_DIR") or "prisma-migrations"
+global_action_reset = os.environ.get("GLOBAL_ACTION_RESET") or False
+if global_action_reset is not False:
+    global_action_reset = True if global_action_reset == "true" else False
+
+global_action_create = os.environ.get("GLOBAL_ACTION_CREATE") or True
+if global_action_reset is not True:
+    global_action_create = True if global_action_create == "true" else False
+
+
 tg = tg_func()
 deploy_result = tg_deploy(
     tg,
@@ -46,11 +58,13 @@ deploy_result = tg_deploy(
         artifacts_config=ArtifactResolutionConfig(
             dir=cwd,
             prefix=None,
-            disable_artifact_resolution=None,
-            codegen=None,
+            disable_artifact_resolution=disable_art_resol,
+            codegen=codegen,
             prisma_migration=MigrationConfig(
-                migration_dir="prisma-migrations",
-                global_action=MigrationAction(reset=False, create=True),
+                migration_dir=migration_dir,
+                global_action=MigrationAction(
+                    reset=global_action_reset, create=global_action_create
+                ),
                 runtime_actions=None,
             ),
         ),

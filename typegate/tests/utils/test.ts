@@ -140,6 +140,10 @@ export class MetaTest {
     return this.typegates.next();
   }
 
+  get tempDir() {
+    return this.typegate.tmpDir;
+  }
+
   getTypegraphEngine(name: string): QueryEngine | undefined {
     return this.typegates.next().register.get(name);
   }
