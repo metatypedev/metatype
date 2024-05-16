@@ -237,9 +237,9 @@ console.log(
 
 for (const run of finished.sort((a, b) => a.duration - b.duration)) {
   console.log(
-    `- ${run.testFile} -- ${Math.floor(run.duration / 60_000)}m${
-      Math.floor(run.duration / 1_000) % 60
-    }s`,
+    `-${run.successes ? "" : "FAILED"} ${run.testFile} -- ${
+      Math.floor(run.duration / 60_000)
+    }m${Math.floor(run.duration / 1_000) % 60}s`,
   );
 }
 
