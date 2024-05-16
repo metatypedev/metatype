@@ -95,27 +95,68 @@ metagen:
 });
 
 Meta.test("Metagen within sdk", async (t) => {
+  const workspace = "./workspace";
+  const targetName = "my_target";
+  const genConfig = {
+    targets: {
+      my_target: {
+        mdk_rust: {
+          typegraph: "example-metagen",
+          path: "some/base/path/rust",
+        },
+        mdk_python: {
+          typegraph: "example-metagen",
+          path: "some/base/path/python",
+        },
+      },
+    },
+  };
+
+  const sdkResults = [] as Array<string>;
+
   await t.should("Run metagen within typescript", async () => {
     const { tg } = await import("./typegraphs/metagen.mjs");
     const { Metagen } = await import("@typegraph/sdk/metagen.js");
-    const metagen = new Metagen(
-      "./workspace",
-      {
-        targets: {
-          my_target: {
-            mdk_rust: {
-              typegraph: tg.name,
-              path: "some/base/path/rust",
-            },
-            mdk_python: {
-              typegraph: tg.name,
-              path: "some/base/path/python",
-            },
-          },
-        },
-      },
-    );
-    const generated = metagen.dryRun(tg, "my_target");
+    const metagen = new Metagen(workspace, genConfig);
+    const generated = metagen.dryRun(tg, targetName);
     await t.assertSnapshot(generated);
+
+    sdkResults.push(JSON.stringify(generated, null, 2));
   });
+
+  await t.should("Run metagen within python", async () => {
+    const typegraphPath = join(
+      import.meta.dirname!,
+      "./typegraphs/metagen.py",
+    );
+    const command = new Deno.Command("python3", {
+      args: [typegraphPath],
+      env: {
+        workspace_path: workspace,
+        gen_config: JSON.stringify(genConfig),
+        target_name: targetName,
+      },
+      stderr: "piped",
+      stdout: "piped",
+    });
+
+    const child = command.spawn();
+    const output = await child.output();
+    if (output.success) {
+      const generated = JSON.parse(new TextDecoder().decode(output.stdout));
+      await t.assertSnapshot(generated);
+
+      sdkResults.push(JSON.stringify(generated, null, 2));
+    } else {
+      const err = new TextDecoder().decode(output.stderr);
+      throw new Error(`metagen python: ${err}`);
+    }
+  });
+
+  if (sdkResults.length > 0) {
+    await t.should("SDKs should produce same metagen output", () => {
+      const [fromTs, fromPy] = sdkResults;
+      assertEquals(fromTs, fromPy);
+    });
+  }
 });

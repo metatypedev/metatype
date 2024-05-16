@@ -2,7 +2,7 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
 
 export const tg = await typegraph({
-  name: "deploy-example-node",
+  name: "example-metagen",
 }, (g) => {
   const python = new PythonRuntime();
   const pub = Policy.public();
