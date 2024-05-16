@@ -28,7 +28,7 @@ spec.loader.exec_module(module)
 
 tg_name = module_name.split(".")[0]
 if not hasattr(module, tg_name):
-    raise Exception("Script name doesn't match the typegraph name")
+    raise Exception(f"Script name {module_name} doesn't match the typegraph name")
 
 tg_func = getattr(module, tg_name)
 
@@ -40,11 +40,11 @@ codegen = os.environ.get("CODEGEN")
 migration_dir = os.environ.get("MIGRATION_DIR") or "prisma-migrations"
 global_action_reset = os.environ.get("GLOBAL_ACTION_RESET") or False
 if global_action_reset is not False:
-    global_action_reset = True if global_action_reset == "true" else False
+    global_action_reset = global_action_reset == "true"
 
 global_action_create = os.environ.get("GLOBAL_ACTION_CREATE") or True
 if global_action_reset is not True:
-    global_action_create = True if global_action_create == "true" else False
+    global_action_create = global_action_create == "true"
 
 
 tg = tg_func()

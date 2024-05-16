@@ -18,21 +18,21 @@ const tgPath = path.join(cwd, moduleName);
 
 const module = await import(tgPath);
 if (!module.tg) {
-  throw new Error(`No typegraph found`);
+  throw new Error(`No typegraph found in module ${moduleName}`);
 }
 
 const secrets = JSON.parse(secretsStr);
 
 const disableArtRes = Deno.env.get("DISABLE_ART_RES");
 const codegen = Deno.env.get("CODEGEN");
-const migrationDir = Deno.env.get("MIGRATION_DIR") ?? "prisma-migraions";
+const migrationDir = Deno.env.get("MIGRATION_DIR") ?? "prisma-migrations";
 let globalActionReset = Deno.env.get("GLOBAL_ACTION_RESET") ?? false;
 if (globalActionReset !== false) {
-  globalActionReset = globalActionReset === "true" ? true : false;
+  globalActionReset = globalActionReset === "true";
 }
 let globalActionCreate = Deno.env.get("GLOBAL_ACTION_CREATE") ?? true;
 if (globalActionCreate !== true) {
-  globalActionCreate = globalActionCreate === "true" ? true : false;
+  globalActionCreate = globalActionCreate === "true";
 }
 
 const tg = module.tg;
