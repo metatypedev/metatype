@@ -143,8 +143,8 @@ Meta.test("Rest queries in Deno", async (t) => {
         .withVars({ badField: {} })
         .expectBody((res) => {
           assertStringIncludes(
-            res["message"],
-            'missing variable "obj" value',
+            res["error"],
+            "variable not found: $obj",
           );
         })
         .on(e);
