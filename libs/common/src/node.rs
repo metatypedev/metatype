@@ -40,7 +40,7 @@ impl Node {
         auth: Option<BasicAuth>,
     ) -> Result<Self> {
         Ok(Self {
-            base_url: url.into_url()?,
+            base_url: url.into_url().context("error parsing url")?,
             prefix,
             auth,
         })

@@ -4,6 +4,7 @@
 import { testDir } from "test-utils/dir.ts";
 import { getMetaCliExe } from "test-utils/meta.ts";
 import { TextLineStream } from "../../../dev/deps.ts";
+import { deadline } from "std/async/mod.ts";
 
 export type MetaDevOptions = {
   args?: string[];
@@ -29,7 +30,7 @@ export class MetaDev {
   ) {
     this.#process = new Deno.Command(metaBin, {
       cwd: options.cwd ?? testDir,
-      args: ["-vvvv", ...(options.args ?? [])],
+      args: [...(options.args ?? [])],
       env: options.env ?? {},
       stdout: "piped",
       stderr: "piped",
@@ -55,15 +56,13 @@ export class MetaDev {
   async #fetchOutputLines(
     reader: ReadableStreamDefaultReader<string>,
     param: FetchOutputLineParam,
-    timeoutMs?: number,
+    timeoutMs: number = 5_000,
   ) {
     const next = timeoutMs == null ? () => reader.read() : () =>
-      Promise.race([
+      deadline(
         reader.read(),
-        new Promise((_, reject) =>
-          setTimeout(reject, timeoutMs, new Error("timeout"))
-        ),
-      ]) as Promise<ReadableStreamDefaultReadResult<string>>;
+        timeoutMs,
+      );
     let shouldContinue = true;
     while (shouldContinue) {
       const { value: line, done } = await next();

@@ -1,13 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
 
 use super::store::Command;
 use crate::{codegen::deno::Codegen, deploy::push::pusher::PushResultRaw};
-use anyhow::{bail, Result};
 use common::typegraph::Typegraph;
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::path::PathBuf;
 
 // CLI => SDK
 
@@ -40,14 +38,14 @@ impl SDKResponse {
             // This should never happen
             // maybe use panic instead?
             bail!(
-                "Typegraph {:?} provided an invalid response, data and error fields are both undefined",
+                "typegraph {:?} provided an invalid response, data and error fields are both undefined",
                 self.typegraph_name
             );
         }
 
         if let Some(error) = self.error.clone() {
             let err: String = serde_json::from_value(error)?;
-            bail!(err);
+            bail!("SDK error: {err}");
         }
 
         Ok(())
@@ -63,7 +61,7 @@ impl SDKResponse {
         self.validate()?;
         let response: common::graphql::Response =
             serde_json::from_value(self.data.clone().unwrap())?;
-        response.data("addTypegraph")
+        response.data("addTypegraph").map_err(anyhow_to_eyre!())
     }
 
     pub fn typegraph_dir(&self) -> PathBuf {

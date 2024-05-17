@@ -1,10 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
 
 use actix::prelude::*;
 use pathdiff::diff_paths;
-use std::path::Path;
-use std::sync::Arc;
 
 use crate::{config::Config, typegraph::loader::Discovery};
 
@@ -41,6 +40,7 @@ struct Stop;
 impl Actor for DiscoveryActor {
     type Context = Context<Self>;
 
+    #[tracing::instrument(skip(self))]
     fn started(&mut self, ctx: &mut Self::Context) {
         log::trace!("DiscoveryActor started");
 
@@ -49,7 +49,7 @@ impl Actor for DiscoveryActor {
         let loader = self.loader.clone();
         let console = self.console.clone();
         let discovery = ctx.address();
-        Arbiter::current().spawn(async move {
+        let fut = async move {
             match Discovery::new(config, dir.to_path_buf())
                 .start(|path| match path {
                     Ok(path) => {
@@ -69,7 +69,9 @@ impl Actor for DiscoveryActor {
             }
 
             discovery.do_send(Stop);
-        });
+        }
+        .in_current_span();
+        Arbiter::current().spawn(fut);
     }
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {

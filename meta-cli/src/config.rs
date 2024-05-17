@@ -1,15 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use anyhow::{anyhow, bail, Context, Result};
+use crate::interlude::*;
+
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use lazy_static::lazy_static;
 use reqwest::Url;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io;
-use std::path::{Path, PathBuf};
 use std::slice;
 use std::str::FromStr;
 
@@ -91,20 +89,28 @@ impl NodeConfig {
     async fn basic_auth<P: AsRef<Path>>(&self, dir: P) -> Result<BasicAuth> {
         match (&self.username, &self.password) {
             (Some(username), Some(password)) => Ok(BasicAuth::new(
-                lade_sdk::hydrate_one(username.clone(), dir.as_ref()).await?,
-                lade_sdk::hydrate_one(password.clone(), dir.as_ref()).await?,
+                lade_sdk::hydrate_one(username.clone(), dir.as_ref())
+                    .await
+                    .map_err(anyhow_to_eyre!())
+                    .context("error hydrating typegate username")?,
+                lade_sdk::hydrate_one(password.clone(), dir.as_ref())
+                    .await
+                    .map_err(anyhow_to_eyre!())
+                    .context("error hydrating typegate password")?,
             )),
             (Some(username), None) => BasicAuth::prompt_as_user(username.clone()),
             (None, _) => BasicAuth::prompt(),
         }
     }
 
-    pub async fn build<P: AsRef<Path>>(&self, dir: P) -> Result<Node> {
+    #[tracing::instrument]
+    pub async fn build<P: AsRef<Path> + core::fmt::Debug>(&self, dir: P) -> Result<Node> {
         Node::new(
             self.url.clone(),
             self.prefix.clone(),
-            Some(self.basic_auth(dir).await.context("basic auth")?.into()),
+            Some(self.basic_auth(dir).await?.into()),
         )
+        .map_err(anyhow_to_eyre!())
     }
 }
 
@@ -195,9 +201,9 @@ impl Config {
         let path = fs::canonicalize(path)?;
         let file = File::open(&path).map_err(|err| match err.kind() {
             io::ErrorKind::NotFound => {
-                anyhow!("file {} not found", path.to_str().unwrap())
+                ferr!("file {} not found", path.to_str().unwrap())
             }
-            _ => anyhow!(err.to_string()),
+            _ => ferr!("file open error: {err}"),
         })?;
         let mut config: serde_yaml::Value = serde_yaml::from_reader(file)?;
         config.apply_merge()?;
@@ -230,7 +236,7 @@ impl Config {
             Config::from_file(&path).with_context(|| format!("config file not found at {path:?}"))
         } else {
             Ok(Config::find(search_start_dir)?
-                .ok_or_else(|| anyhow!("could not find config file"))?)
+                .ok_or_else(|| ferr!("could not find config file"))?)
         }
     }
 
