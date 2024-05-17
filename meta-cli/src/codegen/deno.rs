@@ -499,7 +499,7 @@ mod tests {
 
     #[actix::test(flavor = "multi_thread")]
     async fn codegen() -> Result<()> {
-        crate::logger::init()?;
+        crate::logger::init();
         ensure_venv()?;
         let test_folder = Path::new("./src/tests/typegraphs").normalize()?;
         std::env::set_current_dir(&test_folder)?;

@@ -61,8 +61,21 @@ shadow!(build);
 
 #[tracing::instrument]
 fn main() -> Result<()> {
-    setup_panic_hook();
-
+    /* FIXME: handle broken pipe on all `println!` calls
+     * setting default SIG_PIPE behaviour would be one
+     * solution but since we also have a web server in this
+     * program, we don't want it terminating when the client
+     * hangs up for reason.
+     *
+     * I've gone with the hack solution for now but it won't
+     * do for long.
+     */
+    #[cfg(unix)]
+    unsafe {
+        use nix::sys::signal::*;
+        signal(Signal::SIGPIPE, SigHandler::SigDfl)
+    }
+    .unwrap();
     let args = match Args::try_parse() {
         Ok(cli) => cli,
         Err(err) => err.exit(),
@@ -71,7 +84,7 @@ fn main() -> Result<()> {
     if args.verbose.is_present() {
         std::env::set_var("RUST_LOG", args.verbose.log_level_filter().to_string());
     }
-    logger::init().context("error setting up logger")?;
+    logger::init();
 
     let _ = actix::System::with_tokio_rt(|| {
         tokio::runtime::Builder::new_multi_thread()
@@ -133,38 +146,6 @@ fn main() -> Result<()> {
     }
 
     Ok(())
-}
-
-fn setup_panic_hook() {
-    // This function does two things inside of the panic hook:
-    // - Tokio does not exit the process when a task panics, so we define a custom
-    //   panic hook to implement this behaviour.
-    // - We print a message to stderr to indicate that this is a bug in Deno, and
-    //   should be reported to us.
-    let orig_hook = std::panic::take_hook();
-    std::panic::set_hook(Box::new(move |panic_info| {
-        eprintln!("\n============================================================");
-        eprintln!("Metatype has panicked. This is a bug, please report this");
-        eprintln!("at https://github.com/metatypedev/metatype/issues/new.");
-        eprintln!("If you can reliably reproduce this panic, try to include the");
-        eprintln!("reproduction steps, output of meta-cli doctor and");
-        eprintln!("a panic backtrace in your report. Set the environment variables");
-        eprintln!("- RUST_BACKTRACE");
-        eprintln!("- RUST_SPANTRACE");
-        eprintln!("- RUST_LIB_SPANTRACE");
-        eprintln!("to the value of one to enable backtraces)");
-        eprintln!();
-        eprintln!(
-            "Platform: {} {}",
-            std::env::consts::OS,
-            std::env::consts::ARCH
-        );
-        eprintln!("Version: {}", build::VERSION);
-        eprintln!("Args: {:?}", std::env::args().collect::<Vec<_>>());
-        eprintln!();
-        orig_hook(panic_info);
-        std::process::exit(1);
-    }));
 }
 
 #[test]

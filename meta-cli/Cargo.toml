@@ -109,7 +109,7 @@ color-eyre.workspace = true
 
 # misc
 prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-# openssl = { version = "0.10.59", features = ["vendored"] }
+nix = { version = "0.28", features = ["signal"] }
 lade-sdk = "0.9.1"
 git2 = { version = "0.18.1", features = [
   "vendored-libgit2",
