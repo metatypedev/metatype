@@ -6,6 +6,7 @@ import * as path from "std/path/mod.ts";
 import { testDir } from "test-utils/dir.ts";
 // import { denoDepTg } from "./deno_dep.mjs";
 // import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
+import { MetaTest } from "../../utils/test.ts";
 
 const cwd = path.join(testDir, "runtimes/deno");
 // const auth = new BasicAuth("admin", "password");
@@ -211,29 +212,29 @@ const cwd = path.join(testDir, "runtimes/deno");
 //     const port = metaTest.port;
 //     const gate = `http://localhost:${port}`;
 
-//     const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
-//       reusableTgOutput,
-//       {
-//         baseUrl: gate,
-//         auth,
-//         artifactsConfig: {
-//           prismaMigration: {
-//             globalAction: {
-//               create: true,
-//               reset: false,
-//             },
-//             migrationDir: "prisma-migrations",
-//           },
-//           dir: cwd,
-//         },
-//         typegraphPath: path.join(cwd, "deno_dep.ts"),
-//         secrets: {},
-//       }
-//     );
-
-//     const engine = await metaTest.engineFromDeployed(serialized);
-
 //     await metaTest.should("work on imported TS modules", async () => {
+//       const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
+//         reusableTgOutput,
+//         {
+//           baseUrl: gate,
+//           auth,
+//           artifactsConfig: {
+//             prismaMigration: {
+//               globalAction: {
+//                 create: true,
+//                 reset: false,
+//               },
+//               migrationDir: "prisma-migrations",
+//             },
+//             dir: cwd,
+//           },
+//           typegraphPath: path.join(cwd, "deno_dep.ts"),
+//           secrets: {},
+//         }
+//       );
+
+//       const engine = await metaTest.engineFromDeployed(serialized);
+
 //       await gql`
 //         query {
 //           doAddition(a: 1, b: 2)
@@ -243,11 +244,6 @@ const cwd = path.join(testDir, "runtimes/deno");
 //           doAddition: 3,
 //         })
 //         .on(engine);
-//     });
-
-//     const { typegate: _gateResponseRem } = await tgRemove(reusableTgOutput, {
-//       baseUrl: gate,
-//       auth,
 //     });
 //   }
 // );
@@ -450,28 +446,71 @@ const cwd = path.join(testDir, "runtimes/deno");
 // //   }
 // // );
 
+// Meta.test(
+//   {
+//     name: "Deno runtime - Python SDK: with duplicate artifacts in sync mode",
+//   },
+//   async (t) => {
+//     const e = await t.engineFromTgDeployPython(
+//       "runtimes/deno/deno_duplicate_artifact.py",
+//       cwd
+//     );
+
+//     await t.should("work with duplicate artifacts in typegraph", async () => {
+//       await gql`
+//         query {
+//           doAddition(a: 1, b: 2)
+//           doAdditionDuplicate(a: 12, b: 2)
+//         }
+//       `
+//         .expectData({
+//           doAddition: 3,
+//           doAdditionDuplicate: 14,
+//         })
+//         .on(e);
+//     });
+//   }
+// );
+
 Meta.test(
   {
-    name: "Deno runtime - Python SDK: with duplicate artifacts in sync mode",
+    name: "DenoRuntime - single replica: support for globs and dirs",
   },
-  async (t) => {
-    const e = await t.engineFromTgDeployPython(
-      "runtimes/deno/deno_duplicate_artifact.py",
-      cwd,
+  async (t: MetaTest) => {
+    await t.should(
+      "work for deps specified with glob on Python SDK",
+      async () => {
+        const engine = await t.engineFromTgDeployPython(
+          "runtimes/deno/deno_globs.py",
+          cwd,
+        );
+
+        await gql`
+          query {
+            test_glob(a: 10, b: 5)
+            test_dir(a: 4, b: 3)
+          }
+        `
+          .expectData({
+            test_glob: 15,
+            test_dir: 7,
+          })
+          .on(engine);
+      },
     );
 
-    await t.should("work with duplicate artifacts in typegraph", async () => {
-      await gql`
-        query {
-          doAddition(a: 1, b: 2)
-          doAdditionDuplicate(a: 12, b: 2)
-        }
-      `
-        .expectData({
-          doAddition: 3,
-          doAdditionDuplicate: 14,
-        })
-        .on(e);
-    });
+    // await t.should("work for deps specified with glob on typescript SDK", async() => {
+    //   const engine = await t.engine("runtimes/deno/deno_globs.ts");
+
+    //   await gql`
+    //     query  {
+    //       test_glob(a: 10, b: 5),
+    //       test_dir(a: 4, b: 3)
+    //     }
+    //   `.expectData({
+    //     test_glob: 15,
+    //     test_dir: 7
+    //   }).on(engine);
+    // });
   },
 );

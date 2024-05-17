@@ -10,32 +10,31 @@ from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_deploy import TypegraphDeployParams, tg_deploy
 from typegraph.graph.typegraph import Graph
 from typegraph.policy import Policy
-from typegraph.runtimes.deno import DenoRuntime
+from typegraph.runtimes.python import PythonRuntime
 
 from typegraph import t, typegraph
 
 
 @typegraph()
-def deno_globs(g: Graph):
-    deno = DenoRuntime()
+def python_globs(g: Graph):
     public = Policy.public()
+    python = PythonRuntime()
 
     g.expose(
-        public,
-        test_glob=deno.import_(
-            t.struct({"a": t.float(), "b": t.float()}),
-            t.float(),
-            module="ts/dep/main.ts",
-            deps=["ts/*.ts"],
-            name="doAddition",
-        ),
-        test_dir=deno.import_(
-            t.struct({"a": t.float(), "b": t.float()}),
-            t.float(),
-            module="ts/dep/main.ts",
-            deps=["ts/dep"],
-            name="doAddition",
-        ),
+        testDir=python.import_(
+            t.struct({"name": t.string()}),
+            t.string(),
+            module="py/hello.py",
+            deps=["py/nested"],
+            name="sayHello",
+        ).with_policy(public),
+        testGlob=python.import_(
+            t.struct({"name": t.string()}),
+            t.string(),
+            module="py/hello.py",
+            deps=["py/nested/*.py"],
+            name="sayHello",
+        ).with_policy(public),
     )
 
 
@@ -44,13 +43,13 @@ PORT = sys.argv[2]
 gate = f"http://localhost:{PORT}"
 auth = BasicAuth("admin", "password")
 
-deno_tg = deno_globs()
+pytho_tg = python_globs()
 deploy_result = tg_deploy(
-    deno_tg,
+    pytho_tg,
     TypegraphDeployParams(
         base_url=gate,
         auth=auth,
-        typegraph_path=os.path.join(cwd, "deno_globs.py"),
+        typegraph_path=os.path.join(cwd, "python_duplicate_artifact.py"),
         artifacts_config=ArtifactResolutionConfig(
             dir=cwd,
             prefix=None,
