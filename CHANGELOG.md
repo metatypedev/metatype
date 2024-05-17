@@ -2,6 +2,1196 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### Bug Fixes
+
+<details >
+<summary>
+Running lock while compiling
+</summary>
+
+
+
+</details>
+
+
+## [v0.4.0](https://github.com/metatypedev/metatype/releases/tag/v0.4.0) - 2024-05-09
+
+### Bug Fixes
+
+<details >
+<summary>
+(ci) Fix broken nighly jobs (<a href="https://github.com/metatypedev/metatype/pull/659">#659</a>)
+</summary>
+
+Fixes the broken nightly builds. Look at solved results
+[here](https://github.com/metatypedev/metatype/actions/runs/8533669013).
+
+#### Motivation and context
+
+Nightly builds were broken due to oversight during the #571 fixes.
+
+#### Migration notes
+
+__No changes required__
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+(gh-tests) Fix local npm registry config (<a href="https://github.com/metatypedev/metatype/pull/692">#692</a>)
+</summary>
+
+<!--
+Pull requests are squash merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog.
+-->
+
+<!-- 1. Explain below WHAT the change is -->
+
+Fix the NPM registry config in the Github tests.
+
+<!-- 2. Explain below WHY the change cannot be made simpler -->
+
+<!-- 3. Explain below WHY the was made or link an issue number -->
+
+<!-- 4. Explain HOW users should update their code or remove that
+section -->
+
+#### Migration notes
+
+_N/A_
+
+<!-- 5. Readiness checklist
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+-->
+
+</details>
+<details >
+<summary>
+Set max log level based on verbose flag (<a href="https://github.com/metatypedev/metatype/pull/664">#664</a>)
+</summary>
+
+Set max log level based on verbose flag
+
+#### Motivation and context
+
+
+[MET-445](https://linear.app/metatypedev/issue/MET-445/cli-no-verboselogging-how-to-debug-this)
+
+#### Migration notes
+
+_n/a_
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Fix secret passing (<a href="https://github.com/metatypedev/metatype/pull/675">#675</a>)
+</summary>
+
+Fix secret passing in examples and documentation.
+
+#### Motivation and context
+
+Followup to #666.
+
+#### Migration notes
+
+_N/A_
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [x] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Website and headline (<a href="https://github.com/metatypedev/metatype/pull/691">#691</a>)
+</summary>
+
+<!--
+Pull requests are squash merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog and understand when they need to update his code and
+how.
+-->
+
+<!-- Explain WHAT the change is -->
+
+#### Motivation and context
+
+Fix the CSS issue introduced by docusaurus 3.2.0
+(https://github.com/facebook/docusaurus/issues/10005). 3.2.1 should fix
+it but the affected version maybe loaded by dependencies, so we will
+have to wait a bit more.
+
+<!-- Explain WHY the was made or link an issue number -->
+
+
+<!-- Explain HOW users should update their code when required -->
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [x] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+Do not override log level when no verbosity flag is present (<a href="https://github.com/metatypedev/metatype/pull/694">#694</a>)
+</summary>
+
+<!--
+Pull requests are squash merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog.
+-->
+
+<!-- 1. Explain below WHAT the change is -->
+
+Remove log level override by the verbosity flag when no flag is present.
+It will default to the configured env_logger default level (or env
+variable).
+
+<!-- 2. Explain below WHY the change cannot be made simpler -->
+
+...
+
+<!-- 3. Explain below WHY the was made or link an issue number -->
+
+The default log level became "error" after #664, and `RUST_LOG`
+environment variable where ignored.
+
+<!-- 4. Explain HOW users should update their code or remove that
+section -->
+
+#### Migration notes
+
+_N/A_
+
+<!-- 5. Readiness checklist
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+-->
+
+</details>
+
+
+### Documentation
+
+<details >
+<summary>
+Start rebranding (<a href="https://github.com/metatypedev/metatype/pull/641">#641</a>)
+</summary>
+
+<!--
+Pull requests are squash merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog and understand when they need to update his code and
+how.
+-->
+
+<!-- Explain WHAT the change is -->
+
+#### Motivation and context
+
+Changing the intro.
+
+<!-- Explain WHY the was made or link an issue number -->
+
+#### Migration notes
+
+None.
+
+<!-- Explain HOW users should update their code when required -->
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+Add `reference/programmatic-deployment/` (<a href="https://github.com/metatypedev/metatype/pull/686">#686</a>)
+</summary>
+
+#### Motivation and context
+
+Add missing docs for `tgDeploy`, `tgRemove`
+
+#### Migration notes
+
+None
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Add  examples for each command (<a href="https://github.com/metatypedev/metatype/pull/684">#684</a>)
+</summary>
+
+#### Motivation and context
+
+Getting started with `meta` cli should be easy
+
+#### Migration notes
+
+None
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Improve `/tutorials/quick-start` section. (<a href="https://github.com/metatypedev/metatype/pull/681">#681</a>)
+</summary>
+
+- [x] Improve Layout
+- [x] Include a simple project.
+- [x] Add the result/outputs to running CLI commands.
+- [x] Remove Metatype cloud registration form.
+- [x] Separate the CLI commands to separate code blocks
+- [x] Add links to references and concepts.
+- [x] Add playground.
+
+#### Motivation and context
+
+[Docs
+Meta-task](https://linear.app/metatypedev/issue/MET-440/docs-meta-task)
+
+#### Migration notes
+
+_No Migration Needed_
+
+### Checklist
+
+- [x] Test the commands and the examples.
+- [ ] The change come with new or modified tests
+
+</details>
+<details >
+<summary>
+Improve `/docs/tutorials/metatype-basics` (<a href="https://github.com/metatypedev/metatype/pull/688">#688</a>)
+</summary>
+
+Improve `/docs/tutorials/metatype-basics`
+
+#### Motivation and context
+
+[Docs
+Meta-task](https://linear.app/metatypedev/issue/MET-440/docs-meta-task)
+
+#### Migration notes
+
+_No Migrations Needed_
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+
+</details>
+<details >
+<summary>
+Improve `/reference/runtimes/` (<a href="https://github.com/metatypedev/metatype/pull/676">#676</a>)
+</summary>
+
+#### Motivation and context
+
+Better documentation
+
+#### Migration notes
+
+N/A
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [x] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Improve `/guides/external-functions` (<a href="https://github.com/metatypedev/metatype/pull/677">#677</a>)
+</summary>
+
+- Improvements to the `/guides/external-functions` page.
+- Adds a configuration file for git-town
+
+#### Motivation and context
+
+_N/A_
+
+#### Migration notes
+
+_N/A_
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+Improve `docs/reference/types` (<a href="https://github.com/metatypedev/metatype/pull/685">#685</a>)
+</summary>
+
+Improves `docs/reference/types`
+
+#### Motivation and context
+
+_N/A_
+
+#### Migration notes
+
+_N/A_
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [x] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+Simply pr template
+</summary>
+
+
+
+</details>
+<details >
+<summary>
+Add a comparison b/n metatype and other similar solutions/products. (<a href="https://github.com/metatypedev/metatype/pull/697">#697</a>)
+</summary>
+
+<!--
+Pull requests are squash merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog.
+-->
+
+<!-- 1. Explain below WHAT the change is -->
+- Adds a comparison table between metatype and other similar services.
+- Add artifact upload protocol to `Architecture` section in docs.
+
+<!-- 2. Explain below WHY the change cannot be made simpler -->
+
+
+<!-- 3. Explain below WHY the was made or link an issue number -->
+
+[MET-443](https://linear.app/metatypedev/issue/MET-443/include-comparisons-with-other-products-similar-to-metatype)
+
+<!-- 4. Explain HOW users should update their code or remove that
+section -->
+
+#### Migration notes
+_No Migration Needed_
+
+<!-- 5. Readiness checklist
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+-->
+
+</details>
+
+
+### Features
+
+<details >
+<summary>
+(cli) Long running discovery (<a href="https://github.com/metatypedev/metatype/pull/599">#599</a>)
+</summary>
+
+Delegate serialize, deploy, undeploy, unpack work to SDK.
+
+#### Motivation and context
+
+Remove duplicate logic, thinking of cli as a convenience on top of the
+SDK.
+
+#### Migration notes
+
+When meta cli is used, Migration files are unpacked/resolved relative to
+the typegraph's path, not the process's `workdir`.
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [x] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+(cli) `meta gen` (<a href="https://github.com/metatypedev/metatype/pull/636">#636</a>)
+</summary>
+
+Adds a command to `meta-cli` to invoke metagen.
+
+#### Motivation and context
+
+MET-424
+
+#### Migration notes
+
+__No changes required__
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+(cli) Timeout loader process (<a href="https://github.com/metatypedev/metatype/pull/693">#693</a>)
+</summary>
+
+
+
+</details>
+<details >
+<summary>
+(cli,sdk) Codegen command (<a href="https://github.com/metatypedev/metatype/pull/661">#661</a>)
+</summary>
+
+#### Motivation and context
+
+Enable back `codegen` on current cli implementation.
+
+#### Migration notes
+
+None
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+(cli,sdk) Better error messages (<a href="https://github.com/metatypedev/metatype/pull/689">#689</a>)
+</summary>
+
+#### Motivation and context
+
+Make it more clear where failures happen
+
+#### Migration notes
+
+None
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details open>
+<summary>
+(gate) Wasmtime support (<a href="https://github.com/metatypedev/metatype/pull/669">#669</a>)
+  - BREAKING: wasmtime support (<a href="https://github.com/metatypedev/metatype/pull/669">#669</a>)
+</summary>
+
+#### Motivation and context
+
+Enable support for
+[wit](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md)
+and facilitate readiness for the upcoming specs.
+
+#### Migration notes
+`#[wasmedge_bindgen]` are replaced by wit bindings.
+
+In the old version we were restricted to`#[wasmedge_bindgen]`, which was
+only available in Rust and unique to WasmEdge.
+```rust
+#[wasmedge_bindgen]
+fn add(a: u32, b: u32) -> u32 {
+   a + b
+}
+```
+
+In the new implementation, wasm modules written in any language that
+uses the `wit` interface are now natively supported within `typegate`.
+```wit
+// wit/example.wit
+package example:host;
+world host {
+  export add: func(a: u32, b: u32) -> u32;
+}
+```
+An implementation (eg. in Rust) may look like this..
+```rust
+// src/lib.rs
+wit_bindgen::generate!({ world: "host" });
+struct MyLib;
+impl Guest for MyLib {
+    fn add(a: u32, b: u32) -> u32 {
+        a + b
+    }
+}
+export!(MyLib);
+```
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [x] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+(gate,cli) `$DENO_V8_FLAGS` (<a href="https://github.com/metatypedev/metatype/pull/647">#647</a>)
+</summary>
+
+Enables the `DENO_V8_FLAGS` env var for tuning v8.
+
+#### Motivation and context
+
+MET-435 or #621 
+
+#### Migration notes
+
+- This just exposes the deno paramter directly. Refer to deno or v8 docs
+for more details.
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [x] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+(metagen) Metagen mdk rust (<a href="https://github.com/metatypedev/metatype/pull/624">#624</a>)
+</summary>
+
+Implements the general framework for metagen including a generator for
+rust based wasm mat functions modules.
+
+#### Motivation and context
+
+MET-420
+
+#### Migration notes
+
+__No breaking changes__
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+(sdk) .tgignore file support (<a href="https://github.com/metatypedev/metatype/pull/633">#633</a>)
+</summary>
+
+#### Motivation and context
+
+Set what files/folders should be ignored when using the custom
+`expand_path` function in an external `.tgignore` file.
+`.tgignore` will behave similarly to most .ignore files with basic glob
+syntax support.
+
+#### Migration notes
+
+`expand_glob` has been renamed to `expand_path`
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+(sdk) Introduce flag for disabling hashing artifacts + move hash to rust (<a href="https://github.com/metatypedev/metatype/pull/645">#645</a>)
+</summary>
+
+#### Motivation and context
+
+The mdk codegen and typegraph mutually depends on each other (typegraph
+needs a concrete mdk.wasm for hashing, and for the mdk.wasm to be built,
+it needs type generation based on the typegraph)
+Add a flag to enable processing a partial typegraph when using `meta
+gen` (partial == no artifact resolution).
+
+#### Migration notes
+
+`get_file_hash` has been moved to core sdk (under the name `hash_file`)
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+(sdk, gate, cli) Upload protocol poc  uploading wasm file for `WasmEdge Runtime` for single replica mode (<a href="https://github.com/metatypedev/metatype/pull/631">#631</a>)
+</summary>
+
+Upload protocol for wasm files and atrifacts for `WasmEdge Runtime` for
+single replica mode
+
+#### Motivation and context
+
+- Upload WasmEdge Runtime artifacts during typegraph deploy
+- Access and load WasmEdge Runtime artifacts from the local file system
+from typegate
+
+#### Migration notes
+
+*No Migrations Needed*
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+Raw prisma query through the typegate runtime (<a href="https://github.com/metatypedev/metatype/pull/634">#634</a>)
+</summary>
+
+- Enable prisma query execution through the typegate runtime
+
+#### Motivation and context
+
+Console.
+
+#### Migration notes
+
+_N/A_
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details open>
+<summary>
+Store the typegraph on s3 (<a href="https://github.com/metatypedev/metatype/pull/620">#620</a>)
+  - BREAKING: Store the typegraph on s3 (<a href="https://github.com/metatypedev/metatype/pull/620">#620</a>)
+</summary>
+
+Store the typegraph on s3 for multiple instance support mode.
+
+#### Motivation and context
+
+Reduce Redis data.
+
+#### Migration notes
+
+Environment variables:
+- `REDIS_URL` has been removed
+- For multiple instance support, the following variables are required:
+`SYNC_REDIS_URL`, `SYNC_S3_HOST`, `SYNC_S3_REGION`, `SYNC_S3_BUCKET`,
+`SYNC_S3_ACCESS_KEY`, `SYNC_S3_SECRET_KEY`; and the following variables
+are optional: `SYNC_REDIS_PASSWORD`, `SYNC_S3_PATH_STYLE`. Otherwise,
+none of them can be set.
+
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [x] End-user documentation is updated to reflect the change
+
+</details>
+<details open>
+<summary>
+Remove secret definitions through env vars (<a href="https://github.com/metatypedev/metatype/pull/666">#666</a>)
+  - BREAKING: Remove secret definitions through env vars (<a href="https://github.com/metatypedev/metatype/pull/666">#666</a>)
+</summary>
+
+Remove the ability to define secrets  in the env vars of the typegate.
+
+Secrets can now only be defined in the metatype config file and the
+`--secret` CLI option.
+
+#### Motivation and context
+
+-
+[MET-370](https://linear.app/metatypedev/issue/MET-370/easier-way-to-pass-secrets-in-metatypeyaml-config-file)
+- Security
+- Better DX
+
+#### Migration notes
+
+1. **Metatype config file**: On the node configuration, secrets are
+defined at `secrets.<tg_name>.key`:
+
+```yaml
+# before
+typegates:
+  dev:
+    env:
+      TG_CONSOLE_POSTGRES_CONN: postgresql://postgres:password@localhost:5432/db?schema=console
+      TG_CONSOLE_BASIC_ADMIN: password
+
+#after
+typegates:
+  dev:
+    secrets:
+      console:
+        POSTGRES_CONN: postgresql://postgres:password@localhost:5432/db?schema=console
+        BASIC_ADMIN: password    
+```
+
+2. **Secret override option on meta/cli**
+
+```sh
+# before
+meta deploy -f my-tg.py --secret TG_CONSOLE_POSTGRES_CONN=postgresql://postgres:password@localhost:5432/db?schema=console
+
+# after
+meta deploy -f my-tg.py --secret POSTGRES_CONN=postgresql://postgres:password@localhost:5432/db?schema=console
+# or - with the typegraph name
+meta deploy -f my-tg.py --secret console:POSTGRES_CONN=postgresql://postgres:password@localhost:5432/db?schema=console
+
+```
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [x] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Add queryPrismaModel in the typegate runtime (<a href="https://github.com/metatypedev/metatype/pull/635">#635</a>)
+</summary>
+
+The `queryPrismaModel` function on the typegate typegraph queries rows
+from a prisma model.
+
+#### Motivation and context
+
+Console.
+
+#### Migration notes
+
+_N/A_
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Upload artifacts to s3 (<a href="https://github.com/metatypedev/metatype/pull/638">#638</a>)
+</summary>
+
+Upload artifacts to S3 when sync-mode is enabled
+
+#### Motivation and context
+
+Sharing artifacts between replicas without including it in the typegraph
+(and sync through redis)
+
+#### Migration notes
+
+No changes needed.
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [x] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+Upload `PythonRuntime` artifacts and deps (<a href="https://github.com/metatypedev/metatype/pull/672">#672</a>)
+</summary>
+
+#### Motivation and context
+
+Track artifact/module dependencis for `PythonRuntime`
+
+
+#### Migration notes
+
+`python.import(...)` and `python.import_(...)` accept an optional parameter `deps` that accepts list of dependencies for the python module.
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+Change headline
+</summary>
+
+
+
+</details>
+<details >
+<summary>
+Upload `DenoRuntime` artifacts and deps (<a href="https://github.com/metatypedev/metatype/pull/674">#674</a>)
+</summary>
+
+- [x] Track deno runtime artifacts(also dependencies)
+- [x] Upload artifacts during deploy to either local(single replica) or
+shared(s3)
+- [x] resolve artifacts(module and deps) upon typegate runtime.
+
+#### Motivation and context
+
+Persisting deno runtime artifacts to a local/shared storage.
+
+#### Migration notes
+
+`deno.import(...)` and `deno.import_(...)` accept an optional parameter
+that accepts list of dependencies for the deno/ts module.
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+Enable batch prisma queries in the typegate runtime (<a href="https://github.com/metatypedev/metatype/pull/682">#682</a>)
+</summary>
+
+Enable batch prisma queries (and transaction) in the typegate runtime
+
+#### Motivation and context
+
+Console
+
+[MET-381](https://linear.app/metatypedev/issue/MET-381/console-collections)
+
+#### Migration notes
+
+<!-- Explain HOW users should update their code when required -->
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+Artifact removal (<a href="https://github.com/metatypedev/metatype/pull/668">#668</a>)
+</summary>
+
+- Add GC: remove artifacts when unreferenced by any deployed typegraph
+- Improve resource management: use `AsyncDisposable` and
+`AsyncDisposableStack`
+- Improve testability (for parallel testing): always read the tmpDir
+config from the `Typegate` object
+
+#### Motivation and context
+
+[MET-433](https://linear.app/metatypedev/issue/MET-433/file-removal)
+
+#### Migration notes
+
+_N/A_
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [x] Hard-to-understand functions have explanatory comments
+- [x] End-user documentation is updated to reflect the change
+
+
+<!-- This is an auto-generated comment: release notes by coderabbit.ai
+-->
+## Summary by CodeRabbit
+
+- **New Features**
+  - Enhanced search functionality with the addition of a new search bar.
+  - Introduced new test configurations to improve script execution.
+- Updated artifact storage documentation to clarify management
+processes.
+  - Added new extensions to support improved code commenting.
+
+- **Bug Fixes**
+- Removed outdated Deno import mapping settings to streamline
+development environment setup.
+
+- **Documentation**
+- Expanded documentation on artifact tracking and management, including
+reference counting and garbage collection mechanisms.
+
+- **Refactor**
+- Implemented interface changes in `QueryEngine` for better async
+disposal management.
+- Code restructuring in artifact management for enhanced performance and
+maintainability.
+
+- **Chores**
+- Adjusted settings and configurations in the development environment to
+align with current best practices.
+
+- **Tests**
+- Introduced new test cases for artifact upload and management
+functionalities.
+<!-- end of auto-generated comment: release notes by coderabbit.ai -->
+
+---------
+
+</details>
+
+
+### Miscellaneous Tasks
+
+<details >
+<summary>
+(release) Prepare 0.4.0 (<a href="https://github.com/metatypedev/metatype/pull/710">#710</a>)
+</summary>
+
+Bumps version to release 0.4.0.
+
+<!-- This is an auto-generated comment: release notes by coderabbit.ai
+-->
+## Summary by CodeRabbit
+
+
+- **New Features**
+- Updated the software across various components to version 0.4.0,
+enhancing functionality and potentially introducing new features or
+fixes.
+- **Documentation**
+- Updated version documentation in multiple configuration files to
+reflect new version 0.4.0.
+- **Bug Fixes**
+- Adjusted version constants and dependencies to ensure compatibility
+and stability with the new software version 0.4.0.
+
+<!-- end of auto-generated comment: release notes by coderabbit.ai -->
+
+---------
+
+</details>
+<details >
+<summary>
+(sdk,gate) Bump wasmtime to 20.0.0 and wit-bindgen to 0.24.0 (<a href="https://github.com/metatypedev/metatype/pull/695">#695</a>)
+</summary>
+
+
+
+</details>
+
+
+### Refactor
+
+<details >
+<summary>
+(gate) Wasi 0.2 pyrt (<a href="https://github.com/metatypedev/metatype/pull/687">#687</a>)
+</summary>
+
+- Rewrites the PythonRuntime host using a `componentize-py` based
+component.
+- Leaf through this
+[memo](https://hackmd.io/@SC-qT-WXTROceKYdNA-Lpg/ryyAXiQlC/edit) for a
+mental model.
+
+</details>
+<details >
+<summary>
+(libs/xtask,gate) Remove xtask/codegen (<a href="https://github.com/metatypedev/metatype/pull/700">#700</a>)
+</summary>
+
+Faster build time
+
+#### Migration notes
+
+Make sure to sync `typegate/src/types.ts` when an update is made on the
+typegraph schema.
+
+</details>
+<details open>
+<summary>
+(sdk,gate) Improve temporal rt (<a href="https://github.com/metatypedev/metatype/pull/642">#642</a>)
+  - BREAKING: improve temporal rt (<a href="https://github.com/metatypedev/metatype/pull/642">#642</a>)
+</summary>
+
+Improve the temporal runtime exposing more parameters and adding more
+tests.
+
+#### Motivation and context
+
+MET-397. The old implementation was bug-ridden and did not expose
+necessary params.
+
+#### Migration notes
+
+API changes to `TemporalRuntime` ctor, methods and generated
+materializers.
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [x] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Pass test options in the first parameter (<a href="https://github.com/metatypedev/metatype/pull/667">#667</a>)
+</summary>
+
+Pass the test options in the first parameter along with the test
+name/description.
+
+#### Motivation and context
+
+Avoid scrolling to the end of the test function to see/update the test
+options.
+
+#### Migration notes
+
+_N/A_
+
+### Checklist
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
+### Testing
+
+<details >
+<summary>
+Use local npm registry for tests (<a href="https://github.com/metatypedev/metatype/pull/646">#646</a>)
+</summary>
+
+Use verdaccio local npm registry for tests:
+- The `@typegraph/sdk` package is published to the local npm registry,
+and can now be consumed like any npm package from Nodejs or Deno.
+
+#### Motivation and context
+
+...
+
+#### Migration notes
+
+_N/A_
+
+### Checklist
+
+- [x] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+
+![tg-sdk-verdaccio](https://github.com/metatypedev/metatype/assets/43663718/d22d8d8b-175a-4858-9238-da0ab5ac79a2)
+
+</details>
+
+
 ## [v0.3.6](https://github.com/metatypedev/metatype/releases/tag/v0.3.6) - 2024-03-14
 
 ### Bug Fixes
@@ -11,11 +1201,11 @@ All notable changes to this project will be documented in this file.
 (gate) `RandomRuntime` does not consider `enum`, `either`, `union` variants (<a href="https://github.com/metatypedev/metatype/pull/619">#619</a>)
 </summary>
 
-add either, enum, struct and union type support in Random Runtime.
+add either, enum, struct and union type support in Random Runtime. 
 
 #### Motivation and context
 
-generating random values for enums, either and union types was failing.
+generating random values for enums, either and union types was failing. 
 
 #### Migration notes
 
@@ -77,9 +1267,10 @@ _N/A_
 Optimize typegraph size (<a href="https://github.com/metatypedev/metatype/pull/618">#618</a>)
 </summary>
 
-- Hash all type data to compare them on the conversion phase in typegraph/core:
-  remove duplicate types from type final typegraph (duplicate: same value for
-  all the fields except for the "random" name/title).
+- Hash all type data to compare them on the conversion phase in
+typegraph/core: remove duplicate types from type final typegraph
+(duplicate: same value for all the fields except for the "random"
+name/title).
 - Skip unreferenced types in `.apply`
 
 #### Motivation and context
@@ -97,6 +1288,7 @@ Typegraph is too big sometimes.
 - [ ] End-user documentation is updated to reflect the change
 
 </details>
+
 
 ### Miscellaneous Tasks
 
@@ -123,6 +1315,7 @@ _N/A_
 
 </details>
 
+
 ## [v0.3.5](https://github.com/metatypedev/metatype/releases/tag/v0.3.5) - 2024-03-05
 
 ### Bug Fixes
@@ -132,7 +1325,8 @@ _N/A_
 (cli) Fix for `meta-cli deploy` exit with code `0` on failure (<a href="https://github.com/metatypedev/metatype/pull/600">#600</a>)
 </summary>
 
-fix the issue where `meta-cli deploy` command exits with code 0 on failure.
+fix the issue where `meta-cli deploy` command exits with code 0 on
+failure.
 
 #### Motivation and context
 
@@ -176,13 +1370,13 @@ _No changes required_
 Show error message for unregistered type name (<a href="https://github.com/metatypedev/metatype/pull/594">#594</a>)
 </summary>
 
-Check and throw the error for the `expose` function when called from the Python
-SDK.
+Check and throw the error for the `expose` function when called from the
+Python SDK.
 
 #### Motivation and context
 
-We got a finalization failure when there are some unregistered type referenced
-with `g.ref`.
+We got a finalization failure when there are some unregistered type
+referenced with `g.ref`.
 
 #### Migration notes
 
@@ -204,7 +1398,8 @@ Remove injections from generated output types for prisma operations.
 
 #### Motivation and context
 
-Generated types fail validations (_injection not allowed in output types_).
+Generated types fail validations (_injection not allowed in output
+types_).
 
 #### Migration notes
 
@@ -241,7 +1436,7 @@ Job was disabled earlier to mysterious breakages.
 
 #### Migration notes
 
-**No changes required**
+__No changes required__
 
 ### Checklist
 
@@ -251,6 +1446,7 @@ Job was disabled earlier to mysterious breakages.
 
 </details>
 
+
 ### Features
 
 <details >
@@ -258,13 +1454,13 @@ Job was disabled earlier to mysterious breakages.
 (deno/sdk) Native function embedding in typescript (<a href="https://github.com/metatypedev/metatype/pull/598">#598</a>)
 </summary>
 
-Add support for function or lambda definition typescript sdk for `deno.func`
-similarly to how `python.from_def` in python sdk works.
+Add support for function or lambda definition typescript sdk for
+`deno.func` similarly to how `python.from_def` in python sdk works.
 
 #### Motivation and context
 
-Providing a string is a bit impractical and counter-intuitive espcially when the
-sdk language matches with runtime's language.
+Providing a string is a bit impractical and counter-intuitive espcially
+when the sdk language matches with runtime's language.
 
 #### Migration notes
 
@@ -276,7 +1472,7 @@ No changes needed.
 - [ ] Hard-to-understand functions have explanatory comments
 - [ ] End-user documentation is updated to reflect the change
 
----
+---------
 
 </details>
 <details >
@@ -298,7 +1494,7 @@ N/A
 - [ ] Hard-to-understand functions have explanatory comments
 - [ ] End-user documentation is updated to reflect the change
 
----
+---------
 
 </details>
 <details >
@@ -317,20 +1513,18 @@ how.
 -->
 
 <!-- Explain WHAT the change is -->
-
-This change includes changes in StringFormats(added some string formats), logic
-to provide random values for type nodes and tests to validate the changes. The
-changes are mostly in the typegraph sdk.
+This change includes changes in StringFormats(added some string
+formats), logic to provide random values for type nodes and tests to
+validate the changes.
+The changes are mostly in the typegraph sdk. 
 
 #### Motivation and context
 
 <!-- Explain WHY the was made or link an issue number -->
-
-This feature enables the user to inject random values for a field(**Type Node**)
-when defining a **Typegraph**.
+This feature enables the user to inject random values for a field(**Type
+Node**) when defining a **Typegraph**.
 
 #### Migration notes
-
 _No changes needed_.
 
 <!-- Explain HOW users should update their code when required -->
@@ -349,8 +1543,8 @@ Remove obsolete restrictions on prisma (<a href="https://github.com/metatypedev/
 
 #### Motivation and context
 
-Since v5, where on unique queries exposes all the fields, not just unique
-fields.
+Since v5, where on unique queries exposes all the fields, not just
+unique fields.
 
 </details>
 <details >
@@ -358,13 +1552,15 @@ fields.
 Parameter transformation (<a href="https://github.com/metatypedev/metatype/pull/587">#587</a>)
 </summary>
 
-Enable parameter transformation with the `.apply()` method. It has more or less
-the same logic as `.reduce()` with the ability to flatten the input type.
+Enable parameter transformation with the `.apply()` method.
+It has more or less the same logic as `.reduce()` with the ability to
+flatten the input type.
+
 
 #### Motivation and context
 
-This feature enables simpler APIs (input types) on top of runtimes (e.g.:
-prisma).
+This feature enables simpler APIs (input types) on top of runtimes
+(e.g.: prisma).
 
 #### Migration notes
 
@@ -384,14 +1580,15 @@ Nested context query (<a href="https://github.com/metatypedev/metatype/pull/595"
 </summary>
 
 - Revert context flattening
-- Enable jsonpath-like key to access nested object fields or array items on the
-  context.
+- Enable jsonpath-like key to access nested object fields or array items
+on the context.
 
 #### Migration notes
 
-If you access the context directly in your application (through the token),
-access to nested fields shall be updated. E.g. the expression
-`context["profile.id"]` have to turned to `context.profile.id`.
+If you access the context directly in your application (through the
+token), access to nested fields shall be updated.
+E.g. the expression `context["profile.id"]` have to turned to
+`context.profile.id`.
 
 ### Checklist
 
@@ -400,6 +1597,7 @@ access to nested fields shall be updated. E.g. the expression
 - [ ] End-user documentation is updated to reflect the change
 
 </details>
+
 
 ### Miscellaneous Tasks
 
@@ -426,6 +1624,7 @@ _No changes required__.
 
 </details>
 
+
 ### Refactor
 
 <details >
@@ -435,8 +1634,8 @@ _No changes required__.
 
 #### Motivation and context
 
-Depends on #579 Compiled `wasm` bin size is too large, goal is to reduce it to
-~3MB.
+Depends on #579 
+Compiled `wasm` bin  size is too large, goal is to reduce it to ~3MB.
 
 #### Migration notes
 
@@ -448,7 +1647,7 @@ N/A
 - [ ] Hard-to-understand functions have explanatory comments
 - [ ] End-user documentation is updated to reflect the change
 
----
+---------
 
 </details>
 <details open>
@@ -457,12 +1656,13 @@ Make fat `meta-cli` the default (<a href="https://github.com/metatypedev/metatyp
   - BREAKING: make fat `meta-cli` the default (<a href="https://github.com/metatypedev/metatype/pull/607">#607</a>)
 </summary>
 
-Switch the default `meta-cli` release to the fat version (the one that includes
-the `typegate` subcommand).
+Switch the default `meta-cli` release to the fat version (the one that
+includes the `typegate` subcommand).
 
 #### Motivation and context
 
 </details>
+
 
 ## [v0.3.4](https://github.com/metatypedev/metatype/releases/tag/v0.3.4) - 2024-02-10
 
@@ -473,12 +1673,14 @@ the `typegate` subcommand).
 (ci) `upload-artifact@v4` migration, `cross` compilation for meta + typegate (<a href="https://github.com/metatypedev/metatype/pull/571">#571</a>)
 </summary>
 
-The recent update to `upload-artifact@v4` has some breaking changes as described
+The recent update to `upload-artifact@v4` has some breaking changes as
+described
 [here](https://github.com/actions/upload-artifact/blob/main/docs/MIGRATION.md).
-This PR addresses them. It also fixes the cross-compilation issues with the
-`meta-cli` job in the release workflow.
+This PR addresses them. It also fixes the cross-compilation issues with
+the `meta-cli` job in the release workflow.
 
 #### Motivation and context
+
 
 [Issue](https://github.com/metatypedev/metatype/actions/runs/7719983991/job/21044171984)
 in release workflow.
@@ -503,7 +1705,8 @@ Small typo blocking the job that pushes the images to ghcr.io.
 
 #### Motivation and context
 
-[Broken run.](https://github.com/metatypedev/metatype/actions/runs/7748712325/job/21132659221)
+[Broken
+run.](https://github.com/metatypedev/metatype/actions/runs/7748712325/job/21132659221)
 
 #### Migration notes
 
@@ -545,17 +1748,19 @@ _No changes required_
 </summary>
 
 - Fixes an issue with the prisma migration code being unable to properly
-  `mktmpd` when running in the `typegate` images.
-- Removes `cross` usage for all but the `aarch64-unknown-linux-gnu` target in
-  the `meta-cli` release jobs. Deno doesn't like being cross compiled, doesn't
-  like being built by the cross toolchain in general (even for the native
-  target). The consequence of all this is that the `aarch64-unknown-linux-gnu`
-  target will temporarily lack the `full` version builds.
+`mktmpd` when running in the `typegate` images.
+- Removes `cross` usage for all but the `aarch64-unknown-linux-gnu`
+target in the `meta-cli` release jobs. Deno doesn't like being cross
+compiled, doesn't like being built by the cross toolchain in general
+(even for the native target). The consequence of all this is that the
+`aarch64-unknown-linux-gnu` target will temporarily lack the `full`
+version builds.
 - This also bumps the version of the 0.3.4 to get the fix out.
 
 #### Motivation and context
 
-The main `TMP_DIR` was not created properly in the `typegate` `Dockerfile`.
+The main `TMP_DIR` was not created properly in the `typegate`
+`Dockerfile`.
 
 #### Migration notes
 
@@ -595,11 +1800,12 @@ _N/A_
 Hotfix typo in `release.yml` (<a href="https://github.com/metatypedev/metatype/pull/580">#580</a>)
 </summary>
 
-Yes, another one lol. This removes the `target` param from the release builder
-which will default to the last stage of the Dockerfile, the `epoint` stage. I
-elected to remove the parameter rather than replacing the value in order to
-remove one more place future changes will have to consider. (convention better
-than configuration the saying goes (i think)).
+Yes, another one lol. This removes the `target` param from the release
+builder which will default to the last stage of the Dockerfile, the
+`epoint` stage. I elected to remove the parameter rather than replacing
+the value in order to remove one more place future changes will have to
+consider. (convention better than configuration the saying goes (i
+think)).
 
 #### Motivation and context
 
@@ -617,6 +1823,7 @@ _No changes required_
 - [ ] End-user documentation is updated to reflect the change
 
 </details>
+
 
 ### Documentation
 
@@ -637,15 +1844,14 @@ how.
 
 ### Describe your change
 
-This mainly shuffles around the existing docs for better structure. Still a lot
-to be done. The following pages are also empty as I lack the info regarding
-their topics:
-
+This mainly shuffles around the existing docs for better structure.
+Still a lot to be done. The following pages are also empty as I lack the
+info regarding their topics:
 - Architecture
 - Query engine
 
-Super open to feedback. Bring up any points that you think should be mentioned
-on each page and I'll add them.
+Super open to feedback. Bring up any points that you think should be
+mentioned on each page and I'll add them.
 
 </details>
 <details >
@@ -669,6 +1875,7 @@ _No changes needed._
 
 </details>
 
+
 ### Features
 
 <details >
@@ -678,8 +1885,8 @@ _No changes needed._
 
 #### Motivation and context
 
-Enable deploying directly from the typegraph instead of always relying on
-meta-cli.
+Enable deploying directly from the typegraph instead of always relying
+on meta-cli.
 
 #### Migration notes
 
@@ -692,6 +1899,7 @@ N/A
 - [ ] End-user documentation is updated to reflect the change
 
 </details>
+
 
 ## [v0.3.3](https://github.com/metatypedev/metatype/releases/tag/v0.3.3) - 2024-01-31
 
@@ -722,8 +1930,8 @@ N/A
 (ci) Typo in release.yml (<a href="https://github.com/metatypedev/metatype/pull/548">#548</a>)
 </summary>
 
-Fix small typo. Surprised `act` didn't catch this, it must evaluate expressions
-lazily.
+Fix small typo. Surprised `act` didn't catch this, it must evaluate
+expressions lazily.
 
 </details>
 <details >
@@ -731,7 +1939,8 @@ lazily.
 (ci) Force/skip push to registries on manual release (<a href="https://github.com/metatypedev/metatype/pull/549">#549</a>)
 </summary>
 
-What it says on the tin can. Also fixes a typo in the `vscode-extension` job.
+What it says on the tin can. Also fixes a typo in the `vscode-extension`
+job.
 
 #### Motivation and context
 
@@ -744,8 +1953,8 @@ Manual re-release breaks otherwise as seen
 (ci) Typos in release.yml (<a href="https://github.com/metatypedev/metatype/pull/550">#550</a>)
 </summary>
 
-Oof, I can't believe I missed these. The publish steps are hard to test locally
-with `act` so ig they require extra scrutiny.
+Oof, I can't believe I missed these. The publish steps are hard to test
+locally with `act` so ig they require extra scrutiny.
 
 #### Motivation and context
 
@@ -770,18 +1979,19 @@ Failure in release run
 (ci,release) Hack for broken arm64 builds, bump deno to 1.40.1, bump to 0.3.3 (<a href="https://github.com/metatypedev/metatype/pull/565">#565</a>)
 </summary>
 
-This provides a temporary fix for the broken build on arm64. The issue's related
-to `wasm-opt` builds not being availaible for install by ghjk/cargo-binstall.
-This PR uses `cargo install` directly instead when in the dockerfile.
+This provides a temporary fix for the broken build on arm64. The issue's
+related to `wasm-opt` builds not being availaible for install by
+ghjk/cargo-binstall. This PR uses `cargo install` directly instead when
+in the dockerfile.
 
 It also:
-
 - bumps metatype version to 0.3.3 to ready the next release
 - bumps the deno version to 1.40.1 (which comes with some changes)
 
 #### Motivation and context
 
-[Failure in CI run.](https://github.com/metatypedev/metatype/actions/runs/7532055112/job/20501926599).
+[Failure in CI
+run.](https://github.com/metatypedev/metatype/actions/runs/7532055112/job/20501926599).
 
 #### Migration notes
 
@@ -801,8 +2011,8 @@ _No changes required_
 </summary>
 
 - Fix bug in js typegraph loader detection.
-- FIx bug where the cwd for loader was overridden in `loader_cmd` despite being
-  set in `get_loader_cmd`.
+- FIx bug where the cwd for loader was overridden in `loader_cmd`
+despite being set in `get_loader_cmd`.
 - Update to latest ghjk
 - Refresh `setup` task in `whiz.yaml`
 
@@ -812,9 +2022,9 @@ The old conditionals were faulty.
 
 #### Migration notes
 
-- `node` and `bun` loaders are now run with the `cwd` set to the directory of
-  the typegraph as opposed to the `metatype.yml` file. This should resolve
-  settings to the nearest `package.json` despite location.
+- `node` and `bun` loaders are now run with the `cwd` set to the
+directory of the typegraph as opposed to the `metatype.yml` file. This
+should resolve settings to the nearest `package.json` despite location.
 
 ### Checklist
 
@@ -828,19 +2038,19 @@ The old conditionals were faulty.
 (cli, typegate) Explicitly import DenoRuntime.import modules from path (<a href="https://github.com/metatypedev/metatype/pull/564">#564</a>)
 </summary>
 
-When using the dynamic `import` function, if you provide it a raw path like
-`/foo/bar/baz` and deno detects the current module's loaded from a remote host,
-it'll convert it to a http url. Reasonable behavior but it turned out to be the
-cause of #560.
+When using the dynamic `import` function, if you provide it a raw path
+like `/foo/bar/baz` and deno detects the current module's loaded from a
+remote host, it'll convert it to a http url. Reasonable behavior but it
+turned out to be the cause of #560.
 
 This pr fixes this issue along with:
-
-- Puts contents of `main.ts` in a try/catch block for better error logging.
+- Puts contents of `main.ts` in a try/catch block for better error
+logging.
 - Fixes minor permission bugs with the bundled runtime.
 
 #### Motivation and context
 
-#560
+#560 
 
 #### Migration notes
 
@@ -862,8 +2072,8 @@ Pass the appropriate request URL and headers to the profiler resolver.
 
 #### Motivation and context
 
-It used the provider url instead of the (typegate) request URL, causing internal
-queries to fail.
+It used the provider url instead of the (typegate) request URL, causing
+internal queries to fail.
 
 #### Migration notes
 
@@ -883,8 +2093,8 @@ _N/A_
 
 #### Motivation and context
 
-Sync template examples with latest 0.3.2. Added missing `deno.static` and
-`func.rate(...)` on node.
+Sync template examples with latest 0.3.2.
+Added missing `deno.static` and `func.rate(...)` on node.
 
 #### Migration notes
 
@@ -912,18 +2122,16 @@ readable changelog and understand when they need to update his code and
 how.
 -->
 
-- Change the publisher name to **metatypedev** to match the account name on
-  Azure Devops.
+- Change the publisher name to **metatypedev** to match the account name
+on Azure Devops.
 - Add dev-tools projects to `dev/lock.yml` for automatic versioning.
 
 #### Motivation and context
 
--
-
+*
 [Failure](https://github.com/metatypedev/metatype/actions/runs/7522189733/job/20473888302)
 to publish the extension.
-
-- Non-matching version.
+* Non-matching version.
 
 #### Migration notes
 
@@ -931,11 +2139,12 @@ _Blank_
 
 ### Checklist
 
-- [ ] ~~The change come with new or modified tests~~ _(N/A)_
-- [ ] ~~Hard-to-understand functions have explanatory comments~~ _(N/A)_
-- [ ] ~~End-user documentation is updated to reflect the change~~ _(N/A)_
+- [ ] ~The change come with new or modified tests~ _(N/A)_
+- [ ] ~Hard-to-understand functions have explanatory comments~ _(N/A)_
+- [ ] ~End-user documentation is updated to reflect the change~ _(N/A)_
 
 </details>
+
 
 ### Documentation
 
@@ -959,6 +2168,7 @@ N/A
 - [x] End-user documentation is updated to reflect the change
 
 </details>
+
 
 ### Features
 
@@ -988,7 +2198,6 @@ N/A
 </summary>
 
 Adds support for more advanced id fields and unique constraints:
-
 - Multi-field id
 - Id on struct (foreign key)
 - Multi-field unique constraints
@@ -1018,6 +2227,7 @@ project = t.struct(
 ).rename("Project")
 ```
 
+
 #### Migration notes
 
 _No migration needed._
@@ -1035,6 +2245,7 @@ _No migration needed._
 </summary>
 
 Create an oauth2 token validation endpoint: `/:tgName/auth/validate`.
+
 
 #### Motivation and context
 
@@ -1057,8 +2268,8 @@ Create an oauth2 token validation endpoint: `/:tgName/auth/validate`.
 </summary>
 
 Extend the typegate runtime with the following queries:
-
-- `findListQueries`: find all the queries that returns a list of `t.struct`.
+- `findListQueries`: find all the queries that returns a list of
+`t.struct`.
 
 #### Motivation and context
 
@@ -1092,7 +2303,6 @@ Flattened context (<a href="https://github.com/metatypedev/metatype/pull/555">#5
 Flatten profile fields in the context.
 
 So instead of
-
 ```js
 {
     provider: 'github',
@@ -1106,7 +2316,6 @@ So instead of
 ```
 
 we would have:
-
 ```js
 {
     provider: 'github',
@@ -1121,8 +2330,8 @@ we would have:
 
 #### Motivation and context
 
-It was impossible to get the nested id into a `from_context` injection. Now we
-can inject `.from_context("profile.id")`.
+It was impossible to get the nested id into a `from_context` injection.
+Now we can inject `.from_context("profile.id")`.
 
 #### Migration notes
 
@@ -1135,6 +2344,7 @@ can inject `.from_context("profile.id")`.
 - [ ] End-user documentation is updated to reflect the change
 
 </details>
+
 
 ### Refactor
 
@@ -1162,6 +2372,7 @@ Doesn't affect end users.
 
 </details>
 
+
 ## [v0.3.2](https://github.com/metatypedev/metatype/releases/tag/v0.3.2) - 2024-01-12
 
 ### Bug Fixes
@@ -1178,9 +2389,9 @@ workflow to clone the full git history.
 
 #### Motivation and context
 
-The updates to the release workflow that introduce
-[git cliff](https://git-cliff.org/) based changelogs (back in #487) don't appear
-to be in effect.
+The updates to the release workflow that introduce [git
+cliff](https://git-cliff.org/) based changelogs (back in #487) don't
+appear to be in effect.
 
 #### Migration notes
 
@@ -1235,16 +2446,15 @@ how.
 
 ### Describe your change
 
-- Fix the `iterChildStages` function. It does not yield accurate values in some
-  edge cases.
-- Update the testing framework to enable planning without executing on the
-  `GraphQLQuery` object.
+- Fix the `iterChildStages` function. It does not yield accurate values
+in some edge cases.
+- Update the testing framework to enable planning without executing on
+the `GraphQLQuery` object.
 
 ### Motivation and context
 
-Sibling stages can be falsely registered as children, for example with the
-following stages:
-
+Sibling stages can be falsely registered as children, for example with
+the following stages:
 ```
 getUser.id
 getUser.identity
@@ -1261,9 +2471,10 @@ _No migration needed._
 - [x] Hard-to-understand functions have explanatory comments (_N/A_)
 - [x] End-user documentation is updated to reflect the change (_N/A_)
 
----
+---------
 
 </details>
+
 
 ### Features
 
@@ -1284,8 +2495,8 @@ how.
 
 ### Describe your change
 
-Make the CLI interactive for migration options to development and production
-databases.
+Make the CLI interactive for migration options to development and
+production databases.
 
 ### Motivation and context
 
@@ -1293,7 +2504,8 @@ databases.
 
 ### Migration notes
 
-This creates some breaking changes if you use the CLI in a non-interactive way.
+This creates some breaking changes if you use the CLI in a
+non-interactive way.
 
 ### Checklist
 
@@ -1301,7 +2513,7 @@ This creates some breaking changes if you use the CLI in a non-interactive way.
 - [x] Hard-to-understand functions have explanatory comments
 - [ ] End-user documentation is updated to reflect the change
 
----
+---------
 
 </details>
 <details >
@@ -1311,8 +2523,8 @@ This creates some breaking changes if you use the CLI in a non-interactive way.
 
 ### Describe your change
 
-Fallback to `MemoryRegister` and `NoLimiter` if typegate is unable to connect to
-Redis.
+Fallback to `MemoryRegister` and `NoLimiter` if typegate is unable to
+connect to Redis.
 
 ### Motivation and context
 
@@ -1362,69 +2574,7 @@ Better DX, catch potential errors while editing the typegraph module.
 - [x] Hard-to-understand functions have explanatory comments
 - [ ] End-user documentation is updated to reflect the change
 
----
-
-</details>
-<details >
-<summary>
-(prisma) Connect/create many relation (<a href="https://github.com/metatypedev/metatype/pull/522">#522</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-### Describe your change
-
-- Add missing `create: [ ... ]` and `connect: [ ... ]`
-
-### Motivation and context
-
-Solves
-[MET-304](https://metatype.atlassian.net/jira/software/c/projects/MET/boards/2?selectedIssue=MET-304)
-
-### Checklist
-
-- [x] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
-</details>
-<details >
-<summary>
-(python_wasi) Vm docking (<a href="https://github.com/metatypedev/metatype/pull/520">#520</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-### Describe your change
-
-- Bump all WasmEdge dependencies to latest version
-- Replace `wasmedge_sdk_bindgen` with `VmDock`
-
-### Motivation and context
-
-`wasmedge_sdk_bindgen` is deprecated, `VmDock` replaces it entirely.
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [x] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
+---------
 
 </details>
 <details >
@@ -1479,7 +2629,6 @@ how.
 ### Describe your change
 
 Enable custom profiler for the std (predefined) Oauth2 providers:
-
 - Default profiler
 - No profiler
 - Extended default profiler
@@ -1487,8 +2636,8 @@ Enable custom profiler for the std (predefined) Oauth2 providers:
 
 ### Motivation and context
 
-We may want for example to add the Github login in the profile in addition to
-the id.
+We may want for example to add the Github login in the profile in
+addition to the id.
 
 ### Migration notes
 
@@ -1518,13 +2667,14 @@ how.
 
 ### Describe your change
 
-Limit the number of parallel loads. The default max is the number of CPU cores,
-but it can be set with the option `--max-parallel-loads=N`.
+Limit the number of parallel loads.
+The default max is the number of CPU cores, but it can be set with the
+option `--max-parallel-loads=N`.
 
 ### Motivation and context
 
-When we have a high number of typegraphs, the loader processes exhaust the CPU
-load.
+When we have a high number of typegraphs, the loader processes exhaust
+the CPU load.
 
 ### Migration notes
 
@@ -1536,9 +2686,10 @@ _No migration needed._
 - [ ] Hard-to-understand functions have explanatory comments
 - [ ] End-user documentation is updated to reflect the change
 
----
+---------
 
 </details>
+
 
 ### Miscellaneous Tasks
 
@@ -1565,6 +2716,7 @@ Change their manifests to point at the new version.
 
 </details>
 
+
 ### Refactor
 
 <details >
@@ -1574,8 +2726,9 @@ Change their manifests to point at the new version.
 
 ### Describe your change
 
-This PR merges most of the CI test runs into one and make use of the `ghjk` tool
-to install most of the dependencies.
+
+This PR merges most of the CI test runs into one and make use of the
+`ghjk` tool to install most of the dependencies.
 
 ### Motivation and context
 
@@ -1589,33 +2742,10 @@ Improve tool dependency management.
 - [ ] Hard-to-understand functions have explanatory comments
 - [ ] End-user documentation is updated to reflect the change
 
----
+---------
 
 </details>
-<details >
-<summary>
-Use shadow_rs for versions (<a href="https://github.com/metatypedev/metatype/pull/523">#523</a>)
-</summary>
 
-### Describe your change
-
-Replaces the `common::get_version` util function with the `PKG_VERSION`
-variables extracted from `shadow_rs`.
-
-If you know of any other opportunities where we can replace things from
-`shadow_rs`, we can add them in this PR as wel..
-
-### Motivation and context
-
-`shadow_rs` makes the old function redundant
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
-</details>
 
 ### Testing
 
@@ -1651,661 +2781,5 @@ Ensure common uses of upload feature to work.
 - [x] The change come with new or modified tests
 - [ ] Hard-to-understand functions have explanatory comments
 - [ ] End-user documentation is updated to reflect the change
-
-</details>
-
-## [v0.3.1](https://github.com/metatypedev/metatype/releases/tag/v0.3.1) - 2023-12-08
-
-### Bug Fixes
-
-<details >
-<summary>
-(ci) Release workflow bugs (<a href="https://github.com/metatypedev/metatype/pull/518">#518</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-### Describe your change
-
-<!-- Explain WHAT the change is -->
-
-Fix the release workflow according to the CI updates from #487.
-
-### Motivation and context
-
-Bug.
-
-<!-- Explain WHY the was made or link an issue number -->
-
-### Migration notes
-
-<!-- Explain HOW users should update their code when required -->
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
----
-
-</details>
-<details >
-<summary>
-Git cliff
-</summary>
-
-</details>
-
-## [v0.3.0](https://github.com/metatypedev/metatype/releases/tag/v0.3.0) - 2023-12-08
-
-### Bug Fixes
-
-<details >
-<summary>
-(gate) Pushing a typegraph must not timeout (<a href="https://github.com/metatypedev/metatype/pull/511">#511</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-### Describe your change
-
-Retry policy eval one more time if too long
-
-### Motivation and context
-
-[MET-296](https://metatype.atlassian.net/jira/software/c/projects/MET/boards/2?selectedIssue=MET-296)
-
-</details>
-<details >
-<summary>
-(tests) Use  temporary directories for test git repositories (<a href="https://github.com/metatypedev/metatype/pull/485">#485</a>)
-</summary>
-
-</details>
-<details >
-<summary>
-(xtask) Add support for end of flags and typechecking (<a href="https://github.com/metatypedev/metatype/pull/493">#493</a>)
-</summary>
-
-### Describe your change
-
-Adds support for end of flags arguments to the `cargo x deno test/bench`
-commands.
-
-### Motivation and context
-
-Fix an issue that preventing a updating snapshots as implemented in the
-`dev/test.ts` script.
-
-</details>
-<details >
-<summary>
-Small fixes (<a href="https://github.com/metatypedev/metatype/pull/486">#486</a>)
-</summary>
-
-</details>
-<details >
-<summary>
-Remove `meta prisma` subcommand (<a href="https://github.com/metatypedev/metatype/pull/490">#490</a>)
-</summary>
-
-Solve [MET-292](https://metatype.atlassian.net/browse/MET-292)
-
-</details>
-<details >
-<summary>
-Typed result and similar (<a href="https://github.com/metatypedev/metatype/pull/509">#509</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-### Describe your change
-
-Fixes datetime return type by returning the `value` field instead of the whole
-object.
-
-### Motivation and context
-
-Prisma has a `$type` tag for formatted string such as `DateTime`, this PR aims
-to add support for that.
-
-### Migration notes
-
-<!-- Explain HOW users should update their code when required -->
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [x] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
-</details>
-<details >
-<summary>
-Fix default argument computation for objects (<a href="https://github.com/metatypedev/metatype/pull/510">#510</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-### Describe your change
-
-Fix the default argument computation. Make non-optional objects optional if all
-of its fields are optional.
-
-### Motivation and context
-
-[MET-295](https://metatype.atlassian.net/browse/MET-295)
-
-### Migration notes
-
-_N/A_
-
-### Checklist
-
-- [x] The change come with new or modified tests
-- [x] Hard-to-understand functions have explanatory comments
-- [x] ~~End-user documentation is updated to reflect the change~~: _N/A_
-
-</details>
-<details >
-<summary>
-Revert deno to 1.38.1 (<a href="https://github.com/metatypedev/metatype/pull/516">#516</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-### Describe your change
-
-Revert the embedded deno to 1.38.1.
-
-### Motivation and context
-
-Deno 1.38.2 does not work well with the FFI bindings.
-
-</details>
-
-### Features
-
-<details >
-<summary>
-(cli) Actor model (<a href="https://github.com/metatypedev/metatype/pull/471">#471</a>)
-</summary>
-
-</details>
-<details >
-<summary>
-(cli) Nodejs loader (<a href="https://github.com/metatypedev/metatype/pull/515">#515</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-### Describe your change
-
-Add support for using nodejs runtime to execute and serialize typescript based
-typegraphs. This also adds support for `MCLI_LOADER_CMD` that can be used to
-override the command to exec the typegraphs.
-
-### Motivation and context
-
-Previously, `meta-cli` either used the and `python` & `deno` runtimes to
-serialize the typegraphs. Now that `@typegraph/sdk` also supports Node.js, users
-might be developing in environments wher `deno` runtime is not availaible but
-`node` is. This PR provides a way fwd in those cases.
-
-### Migration notes
-
-<!-- Explain HOW users should update their code when required -->
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [x] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
-</details>
-<details >
-<summary>
-(cli) Meta undeploy subcommand (<a href="https://github.com/metatypedev/metatype/pull/508">#508</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-### Describe your change
-
-Add `undeploy` subcommand to the meta CLI.
-
-### Motivation and context
-
-- Allow user to undeploy a typegraph.
-- We always had resource leak error when deploying a typegraph from a test step.
-  This subcommand would allow us to undeploy the typegraph at the end of the
-  test step.
-
-### Checklist
-
-- [x] The change come with new or modified tests
-- [x] Hard-to-understand functions have explanatory comments
-- [ ] ~~End-user documentation is updated to reflect the change~~: _N/A_
-
-</details>
-<details >
-<summary>
-(prisma/migrations) Default value on new column (<a href="https://github.com/metatypedev/metatype/pull/465">#465</a>)
-</summary>
-
-- [x] Display a more concise error message for new column that failed the NON
-      NULL constraint during the migration.
-- [x] Enable user to set default value on new NON NULL column.
-
----
-
-</details>
-<details >
-<summary>
-(sdk,gate) Node information by path (<a href="https://github.com/metatypedev/metatype/pull/498">#498</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-### Describe your change
-
-- Fixes renamed function in sdk
-- Adds `argInfoByPath` utility function in `typegate.py`
-
-### Motivation and context
-
-Make the task of fetching type information from the graphql function args easier
-
-### Migration notes
-
-<!-- Explain HOW users should update their code when required -->
-
-### Checklist
-
-- [x] The change come with new or modified tests
-- [x] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
----
-
-</details>
-<details >
-<summary>
-`mt_deno` (<a href="https://github.com/metatypedev/metatype/pull/466">#466</a>)
-</summary>
-
-Todo in this PR:
-
-- [x] Expose `bench` and `test` sub commands from deno
-
-This approach gives us a binary size of 101 MiB stripped and 143 MiB prior.
-
-</details>
-<details >
-<summary>
-Docs update + project structure (<a href="https://github.com/metatypedev/metatype/pull/487">#487</a>)
-</summary>
-
-</details>
-
-### Refactor
-
-<details >
-<summary>
-(typegraph/core) Remove wrapper types (<a href="https://github.com/metatypedev/metatype/pull/489">#489</a>)
-</summary>
-
-Solve [MET-260](https://metatype.atlassian.net/browse/MET-260). Wrapper types
-will be implemented like `.rename(...)`.
-
-- [x] Remove `WithInjection` type
-- [x] Remove `WithPolicy` type
-- [x] Remove `WrapperType<T>`
-
----
-
-</details>
-<details >
-<summary>
-Sdk dx (<a href="https://github.com/metatypedev/metatype/pull/470">#470</a>)
-</summary>
-
-- [x] rename apply to reduce
-- [x] move t.ref to g.ref and remove t.proxy
-- [x] rename t.array to t.list
-- [x] standard policies should defined in core
-- [x] remove python* section in metatype.yml
-
-</details>
-<details >
-<summary>
-Replace `deno_bindgen` ffi with v8 `Extension` ffi (<a href="https://github.com/metatypedev/metatype/pull/481">#481</a>)
-</summary>
-
-What's pending:
-
-- [x] Replace usage and make sure tests run successfully
-- [x] Remove old binding code
-
-</details>
-<details >
-<summary>
-Three binaries (<a href="https://github.com/metatypedev/metatype/pull/483">#483</a>)
-</summary>
-
-TL;DR
-
-- `meta typegate` that uses the ecma sources hosted on GitHub
-  - This is configurable using flags
-- `cargo x typegate` that uses the local sources from `./typegate/src`
-- `typegate_prod` that also uses sources from `./typegate/src` as might be found
-  in it's container
-  - This behavior is configurable using environment variables
-
-</details>
-
-### Testing
-
-<details >
-<summary>
-Move cli e2e test to typegate/tests/e2e (<a href="https://github.com/metatypedev/metatype/pull/492">#492</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-### Describe your change
-
-Move CLI e2e tests to typegate/tests/e2e
-
-### Motivation and context
-
-[MET-208](https://metatype.atlassian.net/browse/MET-208)
-
-### Checklist
-
-- [x] The change come with new or modified tests
-- [x] Hard-to-understand functions have explanatory comments
-- [x] End-user documentation is updated to reflect the change
-
----
-
-</details>
-<details >
-<summary>
-Fix tests (<a href="https://github.com/metatypedev/metatype/pull/507">#507</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-### Describe your change
-
-Attempt to fix all the failing tests in the main branch.
-
-- Test parallelization requires tests to use different:
-  - temporary git repositories (previously solved);
-  - different port for virtual typegate instances;
-  - different database namespace (postgres schema). This applies to
-    `e2e/cli/deploy_test.ts` and `e2e/typegraph/templates_test.ts`.
-- A regression was introduced by a previous by a previous PR on the typegraph
-  serialization, that disabled injection for union/either types.
-- Most of the snapshots were outdated.
-
----
-
-</details>
-
-## [v0.2.4](https://github.com/metatypedev/metatype/releases/tag/v0.2.4) - 2023-10-25
-
-### Bug Fixes
-
-<details >
-<summary>
-(sdk) Reduce union/either variant if required in apply syntax (<a href="https://github.com/metatypedev/metatype/pull/463">#463</a>)
-</summary>
-
-</details>
-<details >
-<summary>
-Fix lock.yml (<a href="https://github.com/metatypedev/metatype/pull/459">#459</a>)
-</summary>
-
-Fix lock.yml to set WASM_OPT_VERSION in whiz.yaml
-
-</details>
-<details >
-<summary>
-Fix doc typegraphs deployment (<a href="https://github.com/metatypedev/metatype/pull/462">#462</a>)
-</summary>
-
-</details>
-<details >
-<summary>
-Set metatype version to v0.2.4 (<a href="https://github.com/metatypedev/metatype/pull/467">#467</a>)
-</summary>
-
-</details>
-
-### Features
-
-<details >
-<summary>
-Pre-registered public policy (<a href="https://github.com/metatypedev/metatype/pull/461">#461</a>)
-</summary>
-
-The PolicyId for the public policy was cached in a class variable in `Policy`.
-The cache was not valid in a second typegraph defined in the same module.
-
-</details>
-
-## [v0.2.3](https://github.com/metatypedev/metatype/releases/tag/v0.2.3) - 2023-10-19
-
-### Bug Fixes
-
-<details >
-<summary>
-(gate) Explicit null on query arg (<a href="https://github.com/metatypedev/metatype/pull/453">#453</a>)
-</summary>
-
-Solves MET-268 + fixes an edgecase for "weak validation"
-
-</details>
-
-### Features
-
-<details >
-<summary>
-(gate,sdk) Update auth interface, better oauth2 (<a href="https://github.com/metatypedev/metatype/pull/447">#447</a>)
-</summary>
-
-</details>
-<details >
-<summary>
-Remove injected fields from generated types for prisma operations (<a href="https://github.com/metatypedev/metatype/pull/448">#448</a>)
-</summary>
-
-Injected fields are skipped when generating types for prisma.
-
-Additional changes:
-
-- Enable recursive relationships in where filters.
-- Add `disconnect`, `update`, `upsert`, `delete`, `updateMany`, `deleteMany` on
-  nested reletionships for create/update operations.
-- Fix optional union arg validation.
-
-</details>
-
-### Miscellaneous Tasks
-
-<details >
-<summary>
-Upgrade wasm-opt (<a href="https://github.com/metatypedev/metatype/pull/456">#456</a>)
-</summary>
-
-</details>
-
-## [v0.2.2](https://github.com/metatypedev/metatype/releases/tag/v0.2.2) - 2023-10-11
-
-### Bug Fixes
-
-<details >
-<summary>
-(gate) Script reload while gate is running (<a href="https://github.com/metatypedev/metatype/pull/441">#441</a>)
-</summary>
-
-</details>
-
-### Features
-
-<details >
-<summary>
-(sdk) Change rest queries interface (<a href="https://github.com/metatypedev/metatype/pull/444">#444</a>)
-</summary>
-
-</details>
-<details >
-<summary>
-Stability fixes (<a href="https://github.com/metatypedev/metatype/pull/442">#442</a>)
-</summary>
-
-</details>
-<details >
-<summary>
-Wasm + change effect none to read (<a href="https://github.com/metatypedev/metatype/pull/443">#443</a>)
-</summary>
-
-</details>
-
-## [v0.2.1](https://github.com/metatypedev/metatype/releases/tag/v0.2.1) - 2023-10-05
-
-### Bug Fixes
-
-<details >
-<summary>
-Update rename logic (<a href="https://github.com/metatypedev/metatype/pull/439">#439</a>)
-</summary>
-
-Duplicate the store entry instead of referencing.
-
-</details>
-
-### Refactor
-
-<details >
-<summary>
-(typegraph_core) Simplify private rust SDK (<a href="https://github.com/metatypedev/metatype/pull/432">#432</a>)
-</summary>
-
-</details>
-
-## [v0.2.0](https://github.com/metatypedev/metatype/releases/tag/v0.2.0) - 2023-10-04
-
-### Features
-
-<details >
-<summary>
-Release 0.2.0 (<a href="https://github.com/metatypedev/metatype/pull/434">#434</a>)
-</summary>
-
-</details>
-
-### Miscellaneous Tasks
-
-<details >
-<summary>
-Check that all interfaces are implemented in both sdk (<a href="https://github.com/metatypedev/metatype/pull/435">#435</a>)
-</summary>
-
-</details>
-<details >
-<summary>
-Hotfix release flow
-</summary>
-
-</details>
-<details >
-<summary>
-Hotfix release
-</summary>
 
 </details>
