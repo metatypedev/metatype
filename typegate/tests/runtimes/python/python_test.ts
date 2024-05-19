@@ -7,7 +7,7 @@ import { WitWireMessenger } from "../../../src/runtimes/wit_wire/mod.ts";
 import { QueryEngine } from "../../../src/engine/query_engine.ts";
 import type { ResolverArgs } from "../../../src/types.ts";
 
-Meta.test("Python VM performance", async (t: any) => {
+Meta.test("Python VM performance", async (t) => {
   await t.should("work with low latency for lambdas", async () => {
     await using wire = await WitWireMessenger.init(
       "inline://pyrt_wit_wire.cwasm",
@@ -86,7 +86,7 @@ Meta.test(
   {
     name: "Python runtime - Python SDK",
   },
-  async (t: any) => {
+  async (t) => {
     const e = await t.engine(
       "runtimes/python/python.py",
     );
@@ -178,7 +178,7 @@ Meta.test(
   {
     name: "Deno: def, lambda",
   },
-  async (t: any) => {
+  async (t) => {
     const e = await t.engine("runtimes/python/python.ts");
 
     await t.should("work with def", async () => {
@@ -224,7 +224,7 @@ Meta.test(
   {
     name: "Python: upload artifacts with deps",
   },
-  async (metaTest: any) => {
+  async (metaTest) => {
     await metaTest.should("upload artifacts along with deps", async () => {
       const engine = await metaTest.engine("runtimes/python/python.ts");
 
@@ -252,7 +252,7 @@ Meta.test(
     name: "Python: infinite loop or similar",
     sanitizeOps: false,
   },
-  async (t: any) => {
+  async (t) => {
     const e = await t.engine(
       "runtimes/python/python.py",
     );
@@ -290,7 +290,7 @@ Meta.test(
   {
     name: "Python: typegate reloading",
   },
-  async (metaTest: any) => {
+  async (metaTest) => {
     const runPythonOnPython = async (currentEngine: QueryEngine) => {
       await gql`
         query {
@@ -346,7 +346,7 @@ Meta.test(
       "PythonRuntime - Python SDK: typegraph with no artifacts in sync mode",
     sanitizeOps: false,
   },
-  async (t: any) => {
+  async (t) => {
     const e = await t.engine(
       "runtimes/python/python_no_artifact.py",
     );
@@ -373,7 +373,7 @@ Meta.test(
     name: "Python Runtime TS SDK: typegraph with no artifacts",
     sanitizeOps: false,
   },
-  async (t: any) => {
+  async (t) => {
     const e = await t.engine("runtimes/python/python_no_artifact.ts");
 
     await t.should(
@@ -413,7 +413,7 @@ Meta.test(
       "Python Runtime - Python SDK: typegraph with duplicate artifact uploads",
     sanitizeOps: false,
   },
-  async (t: any) => {
+  async (t) => {
     const e = await t.engine(
       "runtimes/python/python_duplicate_artifact.py",
     );
@@ -442,7 +442,7 @@ Meta.test(
     name: "Python Runtime - TS SDK: typegraph with duplicate artifact uploads",
     sanitizeOps: false,
   },
-  async (t: any) => {
+  async (t) => {
     const e = await t.engine("runtimes/python/python_duplicate_artifact.ts");
 
     await t.should(

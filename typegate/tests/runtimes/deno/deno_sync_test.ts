@@ -232,41 +232,44 @@ Meta.test(
   },
 );
 
-// Meta.test(
-//   {
-//     name: "DenoRuntime - Python SDK: multiple typegate instances in sync mode",
-//     replicas: 3,
-//     syncConfig,
-//     async setup() {
-//       await cleanUp();
-//     },
-//     async teardown() {
-//       await cleanUp();
-//     },
-//   },
-//   async (metaTest) => {
-//     const testMultipleReplica = async (instanceNumber: number) => {
-//       const e = await metaTest.engine(
-//         "runtimes/deno/deno_dep.py"
-//       );
+Meta.test(
+  {
+    name: "DenoRuntime - Python SDK: multiple typegate instances in sync mode",
+    replicas: 1,
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
+  },
+  async (metaTest) => {
+    const testMultipleReplica = async (instanceNumber: number) => {
+      const e = await metaTest.engine(
+        "runtimes/deno/deno_dep.py",
+      );
 
-//       await metaTest.should(`work on the typgate instance #${instanceNumber}`, async () => {
-//         await gql`
-//         query {
-//           doAddition(a: 1, b: 2)
-//         }
-//       `
-//         .expectData({
-//           doAddition: 3,
-//         })
-//         .on(e);
-//       });
-//     }
+      await metaTest.should(
+        `work on the typgate instance #${instanceNumber}`,
+        async () => {
+          await gql`
+        query {
+          doAddition(a: 1, b: 2)
+        }
+      `
+            .expectData({
+              doAddition: 3,
+            })
+            .on(e);
+        },
+      );
+    };
 
-//     await testMultipleReplica(1);
-//     await testMultipleReplica(2);
-//   },
-// );
+    await testMultipleReplica(1);
+    await testMultipleReplica(2);
+  },
+);
 
 Meta.test(
   {

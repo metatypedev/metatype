@@ -53,7 +53,7 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (metaTest: any) => {
+  async (metaTest) => {
     await metaTest.shell(["bash", "build.sh"], {
       currentDir: `${import.meta.dirname!}/rust`,
     });

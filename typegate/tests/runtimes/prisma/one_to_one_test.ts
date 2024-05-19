@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { QueryEngine } from "../../../src/engine/query_engine.ts";
-import { randomSchema } from "../../utils/database.ts";
+import { randomPGConnStr } from "../../utils/database.ts";
 import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
-import { MetaTest } from "../../utils/test.ts";
 
-async function runCommonTestSteps(t: MetaTest, e: QueryEngine) {
+async function runCommonTestSteps(t, e: QueryEngine) {
   await t.should("create a record with a nested object", async () => {
     await gql`
       mutation {
@@ -52,11 +51,10 @@ Meta.test("required 1-1 relationships", async (t) => {
   ];
 
   for (const tg of typegraphs) {
-    const schema = randomSchema();
+    const { connStr, schema: _ } = randomPGConnStr();
     const e = await t.engine(tg.file, {
       secrets: {
-        POSTGRES:
-          `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+        POSTGRES: connStr,
       },
     });
     await dropSchemas(e);

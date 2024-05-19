@@ -33,7 +33,7 @@ const NEW_COMMENT_ID = 123;
 Meta.test("Rest queries", async (t) => {
   const e = await t.engine("runtimes/http/http_py.py");
 
-  mf.mock("GET@/api/posts", (req: any) => {
+  mf.mock("GET@/api/posts", (req) => {
     const tags = new URL(req.url).searchParams.getAll("tags");
     const posts = tags.reduce((list, tag) => {
       switch (tag) {
@@ -109,7 +109,7 @@ Meta.test("Rest queries", async (t) => {
       .on(e);
   });
 
-  mf.mock("GET@/api/posts/:id", (_req: any, params: any) => {
+  mf.mock("GET@/api/posts/:id", (_req, params) => {
     const postId = Number(params.id);
     if (postId > 1000) {
       return new Response(null, {
@@ -159,7 +159,7 @@ Meta.test("Rest queries", async (t) => {
   });
 
   const AUTH_TOKEN = "abcdefghijklmnopqrstuvwxyz0123456789";
-  mf.mock("PUT@/api/posts/:id/approved", (req: any, params: any) => {
+  mf.mock("PUT@/api/posts/:id/approved", (req, params) => {
     const postId = Number(params.id);
     if (Number.isNaN(postId)) {
       return new Response(null, { status: 404 });
@@ -194,7 +194,7 @@ Meta.test("Rest queries", async (t) => {
       .on(e);
   });
 
-  mf.mock("PATCH@/api/posts/:id", async (req: any, params: any) => {
+  mf.mock("PATCH@/api/posts/:id", async (req, params) => {
     const postId = Number(params.id);
     if (Number.isNaN(postId)) {
       return new Response(null, { status: 404 });
@@ -229,7 +229,7 @@ Meta.test("Rest queries", async (t) => {
       .on(e);
   });
 
-  mf.mock("GET@/api/comments", (req: any) => {
+  mf.mock("GET@/api/comments", (req) => {
     const params = new URL(req.url).searchParams;
     const postId = Number(params.get("postId") ?? NaN);
     if (Number.isNaN(postId)) {
@@ -259,7 +259,7 @@ Meta.test("Rest queries", async (t) => {
       .on(e);
   });
 
-  mf.mock("POST@/api/comments", async (req: any) => {
+  mf.mock("POST@/api/comments", async (req) => {
     const params = new URL(req.url).searchParams;
     const postId = Number(params.get("postId") ?? NaN);
     if (Number.isNaN(postId)) {
@@ -304,7 +304,7 @@ Meta.test("Rest queries", async (t) => {
       .on(e);
   });
 
-  mf.mock("PUT@/api/comments/:id", async (req: any, params: any) => {
+  mf.mock("PUT@/api/comments/:id", async (req, params) => {
     const id = Number(params.id);
     if (Number.isNaN(id)) {
       return new Response(JSON.stringify({ error: "bad request" }), {
@@ -346,7 +346,7 @@ Meta.test("Rest queries", async (t) => {
       .on(e);
   });
 
-  mf.mock("DELETE@/api/comments/:id", (_req: any, params: any) => {
+  mf.mock("DELETE@/api/comments/:id", (_req, params) => {
     const postId = Number(params.id);
     if (Number.isNaN(postId)) {
       return new Response(JSON.stringify({ error: "bad request" }), {

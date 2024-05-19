@@ -192,8 +192,7 @@ export class MetaTest {
     secrets: Record<string, string>,
   ): Promise<QueryEngine> {
     const tg = await TypeGraph.parseJson(tgString);
-    const { engine, response } = await this.typegates
-      .next()
+    const { engine, response } = await this.typegate
       .pushTypegraph(tg, secrets, this.introspection);
 
     if (engine == null) {
@@ -434,8 +433,8 @@ export const test = ((o, fn): void => {
 
       // TODO different tempDir for each typegate instance
       const result = await Promise.allSettled(
-        Array.from({ length: replicas }).map((_, index) =>
-          Typegate.init(opts.syncConfig ?? null, null, tempDirs[index])
+        Array.from({ length: replicas }).map(async (_, index) =>
+          await Typegate.init(opts.syncConfig ?? null, null, tempDirs[index])
         ),
       );
       const typegates = result.map((r) => {

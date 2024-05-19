@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Meta } from "test-utils/mod.ts";
-import { MetaTest } from "test-utils/test.ts";
 import { join } from "std/path/join.ts";
 import { exists } from "std/fs/exists.ts";
 import { assert, assertFalse } from "std/assert/mod.ts";
@@ -58,7 +57,7 @@ const variants = [
   },
 ] as const;
 
-async function hasArtifact(t: MetaTest, hash: string, sync: boolean) {
+async function hasArtifact(t, hash: string, sync: boolean) {
   if (sync) {
     const s3 = new S3Client(syncConfig.s3);
     const res = await hasObject(s3, syncConfig.s3Bucket, resolveS3Key(hash));
@@ -73,7 +72,7 @@ for (const { nameSuffix, ...options } of variants) {
   Meta.test({
     name: "Upload protocol" + nameSuffix,
     ...options,
-  }, async (t: any) => {
+  }, async (t) => {
     const e = await t.engine("runtimes/deno/deno.py");
     const artifacts = e.tg.tg.meta.artifacts;
 
@@ -99,14 +98,14 @@ for (const { nameSuffix, ...options } of variants) {
   Meta.test({
     name: "Upload protocol: tg_deploy (NodeJs SDK)" + nameSuffix,
     ...options,
-  }, async (_t: any) => {
+  }, async (_t) => {
     // TODO
   });
 
   Meta.test({
     name: "Upload protocol: tg_deploy (Python SDK)" + nameSuffix,
     ...options,
-  }, async (t: any) => {
+  }, async (t) => {
     const e = await t.engine(
       "runtimes/deno/deno.py",
     );
@@ -134,7 +133,7 @@ for (const { nameSuffix, ...options } of variants) {
   Meta.test({
     name: "Artifact GC: shared artifacts" + nameSuffix,
     ...options,
-  }, async (t: any) => {
+  }, async (t) => {
     const engine = await t.engine("runtimes/deno/deno.py");
     const artifacts = engine.tg.tg.meta.artifacts;
 

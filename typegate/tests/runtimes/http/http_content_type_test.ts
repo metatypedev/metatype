@@ -55,7 +55,7 @@ function parseBool(str: string | undefined | null) {
 Meta.test("http custom content-type queries", async (t) => {
   const e = await t.engine("runtimes/http/http_content_type.py");
 
-  mf.mock("POST@/api/sum_range", async (req: any) => {
+  mf.mock("POST@/api/sum_range", async (req) => {
     const formData: FormData = await req.formData();
     // the boundary is expected to be randomized
     const start = Number(formData.get("start") ?? 0);
@@ -72,7 +72,7 @@ Meta.test("http custom content-type queries", async (t) => {
     });
   });
 
-  mf.mock("POST@/api/celcius_to_farenheit", async (req: any) => {
+  mf.mock("POST@/api/celcius_to_farenheit", async (req) => {
     const formData: FormData = await req.formData();
     const url = new URL(req.url);
     console.info("> query params:", url.search);

@@ -5,7 +5,7 @@ import { gql, Meta } from "test-utils/mod.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { dropSchemas, removeMigrations } from "test-utils/migrations.ts";
 import { assertRejects, assertStringIncludes } from "std/assert/mod.ts";
-import { randomSchema, reset } from "test-utils/database.ts";
+import { randomPGConnStr, reset } from "test-utils/database.ts";
 
 const m = new TestModule(import.meta);
 
@@ -81,11 +81,10 @@ Meta.test(
   {
     name: "meta deploy: fails migration for new columns without default value",
   },
-  async (t: any) => {
-    const schema = randomSchema();
+  async (t) => {
+    const { connStr, schema } = randomPGConnStr();
     const secrets = {
-      POSTGRES:
-        `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+      POSTGRES: connStr,
     };
     await t.should("load first version of the typegraph", async () => {
       await reset(tgName, schema);
@@ -142,12 +141,11 @@ Meta.test(
   {
     name: "meta deploy: succeeds migration for new columns with default value",
   },
-  async (t: any) => {
+  async (t) => {
     const port = t.port!;
-    const schema = randomSchema();
+    const { connStr, schema } = randomPGConnStr();
     const secrets = {
-      POSTGRES:
-        `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+      POSTGRES: connStr,
     };
     await t.should("load first version of the typegraph", async () => {
       await reset(tgName, schema);
@@ -200,13 +198,12 @@ Meta.test(
       },
     },
   },
-  async (t: any) => {
+  async (t) => {
     const port = t.port!;
-    const schema = randomSchema();
+    const { connStr, schema } = randomPGConnStr();
     const e = await t.engine("prisma.py", {
       secrets: {
-        POSTGRES:
-          `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+        POSTGRES: connStr,
       },
     });
 
@@ -303,12 +300,11 @@ Meta.test(
       },
     },
   },
-  async (t: any) => {
-    const schema = randomSchema();
+  async (t) => {
+    const { connStr, schema } = randomPGConnStr();
     const e = await t.engine("prisma.py", {
       secrets: {
-        POSTGRES:
-          `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+        POSTGRES: connStr,
       },
       prefix: "pref-",
     });

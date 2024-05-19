@@ -7,7 +7,7 @@ Meta.test(
   {
     name: "Wasm runtime: reflected",
   },
-  async (metaTest: any) => {
+  async (metaTest) => {
     await metaTest.shell(["bash", "build.sh"], {
       currentDir: `${import.meta.dirname!}/rust`,
     });
@@ -53,7 +53,7 @@ Meta.test(
       );
     }
 
-    await metaTest.should("work after deploying artifact", async (t: any) => {
+    await metaTest.should("work after deploying artifact", async (t) => {
       await using engine = await metaTest.engine(
         "runtimes/wasm_reflected/wasm_reflected.ts",
       );

@@ -53,7 +53,7 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (metaTest: any) => {
+  async (metaTest) => {
     await metaTest.should(
       "work after deploying python artifacts to S3",
       async () => {
@@ -114,7 +114,7 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (t: any) => {
+  async (t) => {
     const e = await t.engine(
       "runtimes/python/python.py",
     );
@@ -214,7 +214,7 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (t: any) => {
+  async (t) => {
     const testMultipleReplica = async (instanceNumber: number) => {
       const e = await t.engine(
         "runtimes/python/python.py",
@@ -252,7 +252,7 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (t: any) => {
+  async (t) => {
     const e = await t.engine("runtimes/python/python.ts");
 
     await t.should("work with def", async () => {
@@ -305,7 +305,7 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (t: any) => {
+  async (t) => {
     const e = await t.engine(
       "runtimes/python/python.py",
     );
@@ -333,7 +333,7 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (metaTest: any) => {
+  async (metaTest) => {
     const load = async () => {
       return await metaTest.engine("runtimes/python/python.ts");
     };
@@ -398,7 +398,7 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (t: any) => {
+  async (t) => {
     const e = await t.engine(
       "runtimes/python/python_no_artifact.py",
     );
@@ -432,7 +432,7 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (t: any) => {
+  async (t) => {
     const e = await t.engine("runtimes/python/python_no_artifact.ts");
 
     await t.should(
@@ -479,7 +479,7 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (t: any) => {
+  async (t) => {
     const e = await t.engine(
       "runtimes/python/python_duplicate_artifact.py",
     );
@@ -516,7 +516,7 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (t: any) => {
+  async (t) => {
     const e = await t.engine("runtimes/python/python_duplicate_artifact.ts");
 
     await t.should(
