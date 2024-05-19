@@ -38,7 +38,6 @@ impl PostProcessor for DenoProcessor {
                                 .artifacts
                                 .insert(artifact.path.clone(), artifact.clone());
                         }
-                        // print(&format!("@@@@@@@@@@@@@@ {:?}", tg.meta.artifacts));
                     }
                     None => continue,
                 }
