@@ -10,24 +10,25 @@ from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_deploy import TypegraphDeployParams, tg_deploy
 from typegraph.graph.typegraph import Graph
 from typegraph.policy import Policy
-from typegraph.runtimes.python import PythonRuntime
+from typegraph.runtimes.deno import DenoRuntime
 
 from typegraph import t, typegraph
 
 
 @typegraph()
-def python_globs(g: Graph):
+def deno_dir(g: Graph):
+    deno = DenoRuntime()
     public = Policy.public()
-    python = PythonRuntime()
 
     g.expose(
-        test_glob=python.import_(
-            t.struct({"name": t.string()}),
-            t.string(),
-            module="py/hello.py",
-            deps=["py/nested/*.py"],
-            name="sayHello",
-        ).with_policy(public),
+        public,
+        test_dir=deno.import_(
+            t.struct({"a": t.float(), "b": t.float()}),
+            t.float(),
+            module="ts/dep/main.ts",
+            deps=["ts/dep"],
+            name="doAddition",
+        ),
     )
 
 
@@ -36,13 +37,13 @@ PORT = sys.argv[2]
 gate = f"http://localhost:{PORT}"
 auth = BasicAuth("admin", "password")
 
-pytho_tg = python_globs()
+deno_tg = deno_dir()
 deploy_result = tg_deploy(
-    pytho_tg,
+    deno_tg,
     TypegraphDeployParams(
         base_url=gate,
         auth=auth,
-        typegraph_path=os.path.join(cwd, "python_globs.py"),
+        typegraph_path=os.path.join(cwd, "deno_dir.py"),
         artifacts_config=ArtifactResolutionConfig(
             dir=cwd,
             prefix=None,

@@ -277,8 +277,6 @@ export class MetaTest {
       cwd,
     );
 
-    console.log(serialized);
-
     return await this.engineFromDeployed(serialized);
   }
 

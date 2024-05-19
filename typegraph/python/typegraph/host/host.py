@@ -5,6 +5,7 @@ import os
 import re
 import sys
 from typing import List
+import glob
 
 from typegraph.gen import imports
 from typegraph.gen.types import Err, Ok, Result
@@ -27,7 +28,9 @@ class HostImpl(imports.HostHost):
 
     def expand_path(self, root: str, exclude: List[str]) -> Result[List[str], str]:
         try:
-            result = [root]
+            result = []
+            if os.path.isfile(root):
+                result.append(root)
             for path, _, files in os.walk(root):
                 for name in files:
                     file_path = os.path.join(path, name)
@@ -64,5 +67,12 @@ class HostImpl(imports.HostHost):
     def get_cwd(self) -> Result[str, str]:
         try:
             return Ok(os.getcwd())
+        except Exception as e:
+            return Err(str(e))
+
+    def expand_glob(self, pattern: str) -> List[str]:
+        try:
+            matching_files = glob.glob(pattern, recursive=True)
+            return Ok(matching_files)
         except Exception as e:
             return Err(str(e))

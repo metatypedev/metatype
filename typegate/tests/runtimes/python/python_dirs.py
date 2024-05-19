@@ -16,16 +16,16 @@ from typegraph import t, typegraph
 
 
 @typegraph()
-def python_globs(g: Graph):
+def python_dirs(g: Graph):
     public = Policy.public()
     python = PythonRuntime()
 
     g.expose(
-        test_glob=python.import_(
+        test_dir=python.import_(
             t.struct({"name": t.string()}),
             t.string(),
             module="py/hello.py",
-            deps=["py/nested/*.py"],
+            deps=["py/nested"],
             name="sayHello",
         ).with_policy(public),
     )
@@ -36,13 +36,13 @@ PORT = sys.argv[2]
 gate = f"http://localhost:{PORT}"
 auth = BasicAuth("admin", "password")
 
-pytho_tg = python_globs()
+pytho_tg = python_dirs()
 deploy_result = tg_deploy(
     pytho_tg,
     TypegraphDeployParams(
         base_url=gate,
         auth=auth,
-        typegraph_path=os.path.join(cwd, "python_globs.py"),
+        typegraph_path=os.path.join(cwd, "python_dirs.py"),
         artifacts_config=ArtifactResolutionConfig(
             dir=cwd,
             prefix=None,

@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-// use crate::wit::metatype::typegraph::host::eprint;
 use crate::{
     global_store::Store,
     utils::fs_host::{self, resolve_globs_dirs},
@@ -70,7 +69,6 @@ impl DenoProcessor {
 
         let mut tg_deps_paths = vec![];
         let mut tg_artifacts = vec![];
-        // eprint(&format!("&&&&&&&&&&&&&&&&&&&&&&&& {:?}", main_path));
         match fs_host::path_exists(&main_path)? {
             true => {
                 let (module_hash, size) = fs_host::hash_file(&main_path.clone())?;
@@ -115,7 +113,6 @@ impl DenoProcessor {
                         .collect::<Result<Vec<_>, _>>()?,
                 );
                 tg_artifacts.push(deno_artifact);
-                // eprint(&format!("&&&&&&&&&&&&&&&&&&&&&&&& {:?}", tg_artifacts));
             }
             false => {
                 if !Store::get_codegen_flag() {
@@ -128,7 +125,6 @@ impl DenoProcessor {
         }
 
         mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
-        // eprint(&format!("&&&&&&&&&&&&&&&&&&&&&&&& {:?}", mat.data));
 
         Ok(Some(ResolveModuleOuput {
             tg_artifacts,

@@ -9,16 +9,16 @@ const tpe = t.struct({
   b: t.list(t.either([t.integer(), t.string()])),
 });
 
-export const pythonGlobs = await typegraph("python_globs", (g: any) => {
+export const pythonDirs = await typegraph("python_dirs", (g: any) => {
   const python = new PythonRuntime();
   const pub = Policy.public();
 
   g.expose({
-    testGlob: python
+    testDir: python
       .import(t.struct({ input: tpe }), tpe, {
         name: "identity",
         module: "py/hello.py",
-        deps: ["py/**/*.py"],
+        deps: ["py"],
       })
       .withPolicy(pub),
   });

@@ -26,14 +26,7 @@ def deno_globs(g: Graph):
             t.struct({"a": t.float(), "b": t.float()}),
             t.float(),
             module="ts/dep/main.ts",
-            deps=["ts/*.ts"],
-            name="doAddition",
-        ),
-        test_dir=deno.import_(
-            t.struct({"a": t.float(), "b": t.float()}),
-            t.float(),
-            module="ts/dep/main.ts",
-            deps=["ts/dep"],
+            deps=["ts/**/*.ts"],
             name="doAddition",
         ),
     )

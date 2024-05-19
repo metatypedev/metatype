@@ -1,19 +1,21 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::path::{Path, PathBuf};
+use std::{
+    collections::HashSet,
+    path::{Path, PathBuf},
+};
 
 use crate::{
     global_store::Store,
     wit::metatype::typegraph::host::{
-        expand_path as expand_path_host, get_cwd, path_exists as path_exists_host, read_file,
-        write_file,
+        expand_glob, expand_path as expand_path_host, get_cwd, path_exists as path_exists_host,
+        read_file, write_file,
     },
 };
 use common::archive::{
     archive_entries_from_bytes, encode_bytes_to_base_64, tarb64_unpack_entries_as_map,
 };
-use glob::Pattern as GlobPattern;
 use indexmap::IndexMap;
 use sha2::{Digest, Sha256};
 
@@ -227,44 +229,26 @@ pub fn is_glob(path: &str) -> bool {
     false
 }
 
-pub fn get_dir(path: &str) -> PathBuf {
-    let directory = PathBuf::from(path);
-
-    PathBuf::from(directory.parent().unwrap())
-}
-
-pub fn get_matching_files(glob_pattern: &str) -> Result<Vec<PathBuf>, String> {
-    let mut matching_files = vec![];
-    let glob_dir = get_dir(glob_pattern);
-
-    let glob_abs_path = make_absolute(&glob_dir)?;
-    let all_files = expand_path(&glob_abs_path, &[])?;
-    let glob_pattern = GlobPattern::new(glob_pattern).unwrap();
-    for file in all_files {
-        if glob_pattern.matches(file.to_str().unwrap()) {
-            matching_files.push(make_relative(&file)?);
-        }
-    }
-
-    Ok(matching_files)
-}
-
 pub fn resolve_globs_dirs(deps: Vec<String>) -> Result<Vec<PathBuf>, String> {
-    let mut resolved_deps = vec![];
+    let mut resolved_deps = HashSet::new();
     for dep in deps {
         if is_glob(&dep) {
-            let _ = get_matching_files(&dep)
-                .unwrap()
-                .into_iter()
-                .map(|file| resolved_deps.push(file));
+            let abs_path = make_absolute(&PathBuf::from(dep))?
+                .to_string_lossy()
+                .to_string();
+            let matching_files = expand_glob(&abs_path)?;
+            for file in matching_files {
+                let rel_path = make_relative(&PathBuf::from(file))?;
+                resolved_deps.insert(rel_path);
+            }
         } else {
             let all_files = expand_path(&make_absolute(&PathBuf::from(dep))?, &[])?;
             for file in all_files {
                 let rel_path = make_relative(&file)?;
-                resolved_deps.push(rel_path);
+                resolved_deps.insert(rel_path);
             }
         }
     }
 
-    Ok(resolved_deps)
+    Ok(resolved_deps.into_iter().collect())
 }

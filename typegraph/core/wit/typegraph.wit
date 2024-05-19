@@ -589,6 +589,7 @@ interface host {
     read-file: func(path: string) -> result<list<u8>, string>;
     write-file: func(path: string, data: list<u8>) -> result<_, string>;
     get-cwd: func() -> result<string, string>;
+    expand-glob: func(pattern: string) -> result<list<string>, string>;
 }
 
 
