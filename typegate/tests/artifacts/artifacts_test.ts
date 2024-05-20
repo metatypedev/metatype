@@ -12,6 +12,7 @@ import {
   REDIS_REF_COUNTER,
   resolveS3Key,
 } from "@typegate/typegate/artifacts/shared.ts";
+import { MetaTest } from "../utils/test.ts";
 
 const syncConfig = {
   redis: {
@@ -57,7 +58,7 @@ const variants = [
   },
 ] as const;
 
-async function hasArtifact(t, hash: string, sync: boolean) {
+async function hasArtifact(t: MetaTest, hash: string, sync: boolean) {
   if (sync) {
     const s3 = new S3Client(syncConfig.s3);
     const res = await hasObject(s3, syncConfig.s3Bucket, resolveS3Key(hash));

@@ -5,8 +5,9 @@ import { QueryEngine } from "../../../src/engine/query_engine.ts";
 import { randomPGConnStr } from "../../utils/database.ts";
 import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
+import { MetaTest } from "../../utils/test.ts";
 
-async function runCommonTestSteps(t, e: QueryEngine) {
+async function runCommonTestSteps(t: MetaTest, e: QueryEngine) {
   await t.should("create a record with a nested object", async () => {
     await gql`
       mutation {
