@@ -69,6 +69,7 @@ fn main() -> Result<()> {
      *
      * I've gone with the hack solution for now but it won't
      * do for long.
+     * https://github.com/metatypedev/metatype/issues/728
      */
     #[cfg(unix)]
     unsafe {

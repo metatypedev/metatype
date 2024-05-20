@@ -37,4 +37,4 @@ services:
       MINIO_REGION_NAME: local
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: password
-      MINIO_DEFAULT_BUCKETS: "gate2,artifacts-cache"
+      MINIO_DEFAULT_BUCKETS: "gate2"

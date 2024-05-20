@@ -140,7 +140,7 @@ for (const [channel, { files, lines, lock }] of Object.entries(lockfile)) {
 }
 
 if (dirty) {
-  await runOrExit(["cargo", "generate-lockfile", "--locked"]);
+  await runOrExit(["cargo", "generate-lockfile", "--offline"]);
 }
 
 if (args.check) {
