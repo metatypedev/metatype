@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import config from "../config.ts";
 import { Register, ReplicatedRegister } from "./register.ts";
 import * as Sentry from "sentry";
 import { RateLimiter, RedisRateLimiter } from "./rate_limiter.ts";
@@ -37,7 +36,6 @@ import introspectionJson from "../typegraphs/introspection.json" with {
 };
 import { ArtifactService } from "../services/artifact_service.ts";
 import { ArtifactStore } from "./artifacts/mod.ts";
-import { SyncConfig } from "../sync/config.ts";
 // TODO move from tests (MET-497)
 import { MemoryRegister } from "test-utils/memory_register.ts";
 import { NoLimiter } from "test-utils/no_limiter.ts";
@@ -45,6 +43,7 @@ import { TypegraphStore } from "../sync/typegraph.ts";
 import { createLocalArtifactStore } from "./artifacts/local.ts";
 import { createSharedArtifactStore } from "./artifacts/shared.ts";
 import { AsyncDisposableStack } from "dispose";
+import { globalConfig, TypegateConfig } from "../config.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -78,10 +77,10 @@ export class Typegate implements AsyncDisposable {
   #disposed = false;
 
   static async init(
-    syncConfig: SyncConfig | null = null,
+    config: TypegateConfig,
     customRegister: Register | null = null,
-    tmpDir = config.tmp_dir,
   ): Promise<Typegate> {
+    const { sync: syncConfig } = config;
     if (syncConfig == null) {
       logger.warn("Entering no-sync mode...");
       logger.warn(
@@ -130,8 +129,7 @@ export class Typegate implements AsyncDisposable {
         null!,
         limiter,
         artifactStore,
-        syncConfig,
-        tmpDir,
+        config,
         stack.move(),
       );
 
@@ -160,8 +158,7 @@ export class Typegate implements AsyncDisposable {
     public readonly register: Register,
     private limiter: RateLimiter,
     public artifactStore: ArtifactStore,
-    public syncConfig: SyncConfig | null = null,
-    public tmpDir: string,
+    public readonly config: TypegateConfig, // TODO deep readonly??
     private disposables: AsyncDisposableStack,
   ) {
     this.#onPush((tg) => Promise.resolve(upgradeTypegraph(tg)));
@@ -271,7 +268,7 @@ export class Typegate implements AsyncDisposable {
       }
       // default to graphql service
 
-      if (request.method === "GET" && config.debug) {
+      if (request.method === "GET" && globalConfig.debug) {
         return handlePlaygroundGraphQL(request, engine);
       }
 

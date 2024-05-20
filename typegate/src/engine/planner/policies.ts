@@ -18,7 +18,6 @@ import { getLogger } from "../../log.ts";
 import { Type } from "../../typegraph/type_node.ts";
 import { ArgPolicies } from "./args.ts";
 import { BadContext } from "../../errors.ts";
-import config from "../../config.ts";
 
 export interface FunctionSubtreeData {
   typeIdx: TypeIdx;
@@ -36,6 +35,10 @@ type CheckResult = { authorized: true } | {
   policyIdx: PolicyIdx | null;
 };
 
+export type OperationPoliciesConfig = {
+  timer_policy_eval_retries: number;
+};
+
 export class OperationPolicies {
   // should be private -- but would not be testable
   functions: Map<StageId, SubtreeData>;
@@ -45,6 +48,7 @@ export class OperationPolicies {
   constructor(
     private tg: TypeGraph,
     builder: OperationPoliciesBuilder,
+    config: OperationPoliciesConfig,
   ) {
     this.functions = builder.subtrees;
 
@@ -285,7 +289,7 @@ export class OperationPoliciesBuilder {
   subtrees: Map<StageId, SubtreeData> = new Map();
   current: SubtreeData | null = null;
 
-  constructor(private tg: TypeGraph) {}
+  constructor(private tg: TypeGraph, private config: OperationPoliciesConfig) {}
 
   // set current function stage
   push(
@@ -329,7 +333,7 @@ export class OperationPoliciesBuilder {
   }
 
   build(): OperationPolicies {
-    return new OperationPolicies(this.tg, this);
+    return new OperationPolicies(this.tg, this, this.config);
   }
 }
 

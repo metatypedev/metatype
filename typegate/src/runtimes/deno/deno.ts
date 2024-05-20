@@ -11,7 +11,7 @@ import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
 import { Task } from "./shared_types.ts";
 import { path } from "compress/deps.ts";
-import config from "../../config.ts";
+import { globalConfig as config } from "../../config.ts";
 import { getLogger } from "../../log.ts";
 
 const logger = getLogger(import.meta);
@@ -64,7 +64,7 @@ export class DenoRuntime extends Runtime {
 
     const uuid = crypto.randomUUID();
     const basePath = path.join(
-      typegate.tmpDir,
+      typegate.config.base.tmp_dir,
       "artifacts",
     );
 
@@ -135,6 +135,7 @@ export class DenoRuntime extends Runtime {
       } as Deno.PermissionOptionsObject,
       false,
       ops,
+      typegate.config.base,
     );
 
     if (Deno.env.get("DENO_TESTING") === "true") {

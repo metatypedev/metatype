@@ -5,10 +5,13 @@ import { getLogger } from "../../../log.ts";
 import { maxi32 } from "../../../utils.ts";
 import {
   AsyncMessenger,
+  AsyncMessengerConfig,
   MessengerSend,
   MessengerStart,
   MessengerStop,
 } from "./async_messenger.ts";
+
+export type { AsyncMessengerConfig };
 
 const logger = getLogger(import.meta);
 
@@ -29,6 +32,7 @@ export class LazyAsyncMessenger<Broker, M, A>
     ops: Map<number, M>,
     send: MessengerSend<Broker, M>,
     stop: MessengerStop<Broker>,
+    config: AsyncMessengerConfig,
   ) {
     const lazySend: MessengerSend<Broker | null, M> = async (
       _,
@@ -66,7 +70,7 @@ export class LazyAsyncMessenger<Broker, M, A>
       }
     };
 
-    super(() => null, lazySend, lazyStop);
+    super(() => null, lazySend, lazyStop, config);
     this.#start = start;
     this.#ops = ops;
   }

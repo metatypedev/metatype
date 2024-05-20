@@ -104,6 +104,7 @@ export class TypeGraph implements AsyncDisposable {
   name: string;
 
   private constructor(
+    public typegate: Typegate,
     public tg: TypeGraphDS,
     public secretManager: SecretManager,
     public denoRuntimeIdx: number,
@@ -237,6 +238,7 @@ export class TypeGraph implements AsyncDisposable {
 
     const auths = new Map<string, Protocol>();
     const tg = new TypeGraph(
+      typegate,
       typegraph,
       secretManager,
       denoRuntimeIdx,
