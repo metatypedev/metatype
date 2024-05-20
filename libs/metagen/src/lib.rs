@@ -11,7 +11,9 @@ mod interlude {
     pub use std::path::{Path, PathBuf};
     pub use std::sync::Arc;
 
-    pub use anyhow::Context;
+    pub use color_eyre::eyre::{
+        self as anyhow, bail, ensure, format_err, ContextCompat, OptionExt, Result, WrapErr,
+    };
     pub use indexmap::IndexMap;
     pub use log::{debug, error, info, trace, warn};
     pub use pretty_assertions::assert_str_eq;
@@ -110,7 +112,7 @@ pub async fn generate_target(
     let target_conf = config
         .targets
         .get(target_name)
-        .with_context(|| format!("target \"{target_name}\" not found in config"))?;
+        .with_context(|| format!("target {target_name:?} not found in config"))?;
 
     let mut generate_set = tokio::task::JoinSet::new();
     for (gen_name, config) in &target_conf.0 {
@@ -118,7 +120,7 @@ pub async fn generate_target(
 
         let get_gen_fn = generators
             .get(&gen_name[..])
-            .with_context(|| format!("generator \"{gen_name}\" not found in config"))?;
+            .with_context(|| format!("generator {gen_name:?} not found in config"))?;
 
         let gen_impl = get_gen_fn(&workspace_path, config)?;
         let bill = gen_impl.bill_of_inputs();

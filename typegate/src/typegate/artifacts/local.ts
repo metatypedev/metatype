@@ -4,6 +4,7 @@
 import { resolve } from "std/path/resolve.ts";
 import { HashTransformStream } from "../../utils/hash.ts";
 import {
+  ArtifactError,
   ArtifactMeta,
   ArtifactPersistence,
   ArtifactStore,
@@ -16,8 +17,15 @@ import { createHash } from "node:crypto";
 import * as jwt from "jwt";
 import { join } from "std/path/join.ts";
 import { exists } from "std/fs/exists.ts";
+import { BaseError, ErrorKind } from "@typegate/errors.ts";
 
 const logger = getLogger(import.meta);
+
+class UnknownUploadUrl extends BaseError {
+  constructor(url: URL) {
+    super(import.meta, ErrorKind.User, `Unknown upload URL: ${url.toString()}`);
+  }
+}
 
 export interface UploadUrlStore {
   mapToMeta: Map<string, ArtifactMeta>;
@@ -77,7 +85,11 @@ export class LocalArtifactPersistence implements ArtifactPersistence {
     if (await exists(cache)) {
       return cache;
     } else {
-      throw new Error(`Artifact '${hash}' not found at ${cache}`);
+      // was not uploaded?
+      throw new ArtifactError(
+        `Artifact '${hash}' not found at ${cache}`,
+        import.meta,
+      );
     }
   }
 
@@ -127,10 +139,7 @@ class LocalUploadEndpointManager implements UploadEndpointManager {
       meta.typegraphName,
       this.expireSec,
     );
-    const token = url.searchParams.get("token");
-    if (!token) {
-      throw new Error("Invalid upload URL generated");
-    }
+    const token = url.searchParams.get("token")!;
     this.#mapToMeta.set(token, meta);
     this.#expirationQueue.push([token, jwt.getNumericDate(this.expireSec)]);
 
@@ -142,7 +151,7 @@ class LocalUploadEndpointManager implements UploadEndpointManager {
 
     const meta = this.#mapToMeta.get(token);
     if (!meta) {
-      throw new Error("Invalid upload URL");
+      throw new UnknownUploadUrl(url);
     }
 
     this.#mapToMeta.delete(token);
@@ -190,7 +199,11 @@ class InMemoryRefCounter implements RefCounter {
 
     this.#refCounts.set(key, newCount);
     if (oldCount > 0 && !this.#byRefCounts.get(oldCount)?.delete(key)) {
-      throw new Error("RefCountStore: inconsistent state");
+      throw new BaseError(
+        import.meta,
+        ErrorKind.Typegate,
+        "RefCountStore: inconsistent state",
+      ).withType("RefCountError");
     }
 
     let set = this.#byRefCounts.get(newCount);

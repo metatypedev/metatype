@@ -1,21 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
 
 use crate::{
     config::{Config, ModuleType, TypegraphLoaderConfig},
     fs::is_hidden,
 };
-use anyhow::Result;
 use globset::GlobSet;
 use grep::searcher::sinks::UTF8;
 use grep::searcher::{BinaryDetection, SearcherBuilder};
 use grep::{regex::RegexMatcher, searcher::Searcher};
 use ignore::{gitignore::Gitignore, Match, WalkBuilder};
-use log::{debug, info};
 use pathdiff::diff_paths;
 use std::collections::HashSet;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 pub struct Discovery {
     dir: PathBuf,
@@ -68,7 +65,7 @@ impl Discovery {
             Ok(path) => {
                 let rel_path = diff_paths(path.as_path(), &dir).unwrap();
                 if !silent && res.insert(path) {
-                    info!(
+                    debug!(
                         "Found typegraph definition module at {}",
                         rel_path.display()
                     );
@@ -83,13 +80,15 @@ impl Discovery {
 }
 
 impl TryFrom<&Path> for ModuleType {
-    type Error = ();
+    type Error = eyre::Error;
 
     fn try_from(path: &Path) -> std::result::Result<Self, Self::Error> {
         match path.extension() {
             Some(ext) if ext == "ts" => Ok(ModuleType::Deno),
             Some(ext) if ext == "py" => Ok(ModuleType::Python),
-            _ => Err(()),
+            _ => Err(ferr!(
+                "unable to determine module type from path extension: {path:?}"
+            )),
         }
     }
 }

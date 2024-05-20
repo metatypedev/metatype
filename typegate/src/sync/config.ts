@@ -7,6 +7,9 @@ import { RedisConnectOptions } from "redis";
 import { S3ClientConfig } from "aws-sdk/client-s3";
 import { mapKeys } from "std/collections/map_keys.ts";
 import { parse } from "std/flags/mod.ts";
+import { getLogger } from "../log.ts";
+
+const logger = getLogger(import.meta);
 
 export const syncConfigSchemaNaked = {
   sync_redis_url: z.string().optional().transform((s) => {
@@ -62,6 +65,7 @@ export function validateSyncConfig(
     const msg = `Environment variables required for sync: ${missingVarsStr}.`;
     const suggestion =
       "Make sure to set these variables or set SYNC_ENABLED=false.";
+    logger.error(`${msg}\n${suggestion}`);
     throw new Error(`${msg}\n${suggestion}`);
   }
 
@@ -83,6 +87,7 @@ export function syncConfigFromRaw(
   const redisDbStr = config.sync_redis_url.pathname.substring(1);
   const redisDb = parseInt(redisDbStr, 10);
   if (isNaN(redisDb)) {
+    logger.error(`Invalid redis db number: '${redisDbStr}'`);
     throw new Error(`Invalid redis db number: '${redisDbStr}'`);
   }
 

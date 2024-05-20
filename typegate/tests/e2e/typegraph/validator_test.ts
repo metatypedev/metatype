@@ -17,6 +17,9 @@ Meta.test("typegraph validation", async (t) => {
             env: {
               "RUST_LOG": "error",
               "RUST_BACKTRACE": "0",
+              "RUST_SPANTRACE": "0",
+              "RUST_LIB_BACKTRACE": "0",
+              "RUST_ERR_LOCATION": "0",
             },
           },
           "serialize",

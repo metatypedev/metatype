@@ -11,4 +11,4 @@ wasm-tools component new ./target/wasm32-unknown-unknown/debug/rust.wasm -o ./ta
 # debug
 wasm-tools component wit target/rust-component.wasm
 
-mv target/rust-component.wasm ../rust.wasm
+cp target/rust-component.wasm ../rust.wasm

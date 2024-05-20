@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::interlude::*;
+
 use crate::config::NodeConfig;
-use anyhow::{anyhow, Result};
-use std::{collections::HashMap, path::Path, sync::Arc};
 
 #[derive(Debug, Clone)]
 pub struct Raw;
@@ -33,7 +33,7 @@ impl<'a> SecretOverride<'a> {
         let value = parts.next();
 
         let value = value
-            .ok_or_else(|| anyhow!("Invalid secret override (missing value): {}", override_str))?;
+            .ok_or_else(|| ferr!("invalid secret override (missing value): {override_str}"))?;
 
         Ok(Self {
             tg_name,
@@ -87,12 +87,16 @@ impl Secrets<Raw> {
         Ok(())
     }
 
+    #[tracing::instrument(err)]
     pub async fn hydrate(self, dir: Arc<Path>) -> Result<Secrets<Hydrated>> {
         let by_typegraph: HashMap<String, _> =
             futures::future::join_all(self.by_typegraph.into_iter().map(|(tg_name, secrets)| {
                 let dir = dir.clone();
                 async move {
-                    let secrets = lade_sdk::hydrate(secrets, dir.clone().to_path_buf()).await?;
+                    let secrets = lade_sdk::hydrate(secrets, dir.clone().to_path_buf())
+                        .await
+                        .map_err(anyhow_to_eyre!())
+                        .with_context(|| format!("error hydrating secrets for {tg_name}"))?;
                     Ok((tg_name, secrets))
                 }
             }))
@@ -100,7 +104,9 @@ impl Secrets<Raw> {
             .into_iter()
             .collect::<Result<_>>()?;
 
-        let overrides = lade_sdk::hydrate(self.overrides, dir.to_path_buf()).await?;
+        let overrides = lade_sdk::hydrate(self.overrides, dir.to_path_buf())
+            .await
+            .map_err(|err| ferr!("error hydrating secrets overrides: {err}"))?;
 
         Ok(Secrets {
             by_typegraph,

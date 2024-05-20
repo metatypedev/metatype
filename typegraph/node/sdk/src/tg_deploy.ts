@@ -60,16 +60,18 @@ export async function tgDeploy(
     headers.append("Authorization", auth.asHeaderValue());
   }
 
-  // upload the artifacts
-  const artifactUploader = new ArtifactUploader(
-    baseUrl,
-    refArtifacts,
-    typegraph.name,
-    auth,
-    headers,
-    params.typegraphPath,
-  );
-  await artifactUploader.uploadArtifacts();
+  if (refArtifacts.length > 0) {
+    // upload the artifacts
+    const artifactUploader = new ArtifactUploader(
+      baseUrl,
+      refArtifacts,
+      typegraph.name,
+      auth,
+      headers,
+      params.typegraphPath,
+    );
+    await artifactUploader.uploadArtifacts();
+  }
 
   // deploy the typegraph
   const response = await execRequest(new URL("/typegate", baseUrl), {
@@ -117,9 +119,9 @@ async function execRequest(url: URL, reqInit: RequestInit) {
     if (response.headers.get("Content-Type") == "application/json") {
       return await response.json();
     }
-    throw Error(`Expected json object, got "${await response.text()}"`);
+    throw Error(`expected json object, got "${await response.text()}"`);
   } catch (err) {
     const message = err instanceof Error ? err.message : err;
-    throw Error(`${message}: ${url.toString()}`);
+    throw Error(`error executing request to ${url.toString()}: ${message}`);
   }
 }
