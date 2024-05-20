@@ -44,6 +44,11 @@ repos:
       - id: cargo-check
         args:
           - "--locked"
+      - id: cargo-check
+        args:
+          - "--locked"
+          - "--package=meta-cli"
+          - "--features=typegate"
       - id: clippy
         args:
           - "--locked"
