@@ -176,6 +176,9 @@ jobs:
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
 
+          # check the fat CLI build
+          cargo run --locked --package meta-cli --features typegate -- --help
+
   test-docker:
     needs: changes
     if: ${{ needs.changes.outputs.typegate == 'true' }}
@@ -310,6 +313,9 @@ jobs:
           # test in native rust, not in wasm for a future rust SDK
           # without --tests, the --doc is causing a link error "syntax error in VERSION script"
           cargo test --locked --package typegraph_core --tests
+
+          # check the fat CLI build
+          cargo run --locked --package meta-cli --features typegate -- --help
 
           # from old test-meta-cli
           cargo run --locked --package meta-cli -- --help
