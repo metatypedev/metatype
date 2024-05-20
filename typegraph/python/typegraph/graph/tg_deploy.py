@@ -58,16 +58,17 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     tg_json = serialized.tgJson
     ref_artifacts = serialized.ref_artifacts
 
-    # upload the referred artifacts
-    artifact_uploader = ArtifactUploader(
-        params.base_url,
-        ref_artifacts,
-        tg.name,
-        params.auth,
-        headers,
-        params.typegraph_path,
-    )
-    artifact_uploader.upload_artifacts()
+    if len(ref_artifacts) > 0:
+        # upload the referred artifacts
+        artifact_uploader = ArtifactUploader(
+            params.base_url,
+            ref_artifacts,
+            tg.name,
+            params.auth,
+            headers,
+            params.typegraph_path,
+        )
+        artifact_uploader.upload_artifacts()
 
     # deploy the typegraph
     res = wit_utils.gql_deploy_query(

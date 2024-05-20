@@ -107,7 +107,9 @@ impl PushResult {
         loader: Addr<LoaderActor>,
         sdk_response: SDKResponse,
     ) -> Result<Self> {
-        let raw = sdk_response.as_push_result()?;
+        let raw = sdk_response
+            .as_push_result()
+            .wrap_err("SDK error pushing to typegate")?;
 
         let failure = match raw.failure {
             Some(failure) => Some(serde_json::from_str(&failure)?),
@@ -154,7 +156,7 @@ impl PushResult {
             let dest = migdir.join(&migrations.runtime);
             if let Err(err) = common::archive::unpack(&dest, Some(migrations.migrations.clone())) {
                 self.console.error(format!(
-                    "Error while unpacking migrations into {:?}",
+                    "error while unpacking migrations into {:?}",
                     migdir
                 ));
                 self.console.error(format!("{err:?}"));

@@ -274,7 +274,7 @@ mod default_mode {
                 Ok(StopBehavior::Restart) => unreachable!("LoaderActor should not restart"),
                 Ok(StopBehavior::ExitSuccess) => Ok(()),
                 Ok(StopBehavior::ExitFailure(msg)) => bail!("LoaderActor exit failure: {msg}"),
-                Err(e) => panic!("Loader actor stopped unexpectedly: {e:?}"),
+                Err(err) => panic!("Loader actor stopped unexpectedly: {err:?}"),
             }
         }
 
@@ -288,9 +288,18 @@ mod default_mode {
                 while let Some(event) = event_rx.recv().await {
                     match event {
                         LoaderEvent::Typegraph(tg_infos) => {
-                            for (name, res) in
-                                tg_infos.get_responses_or_fail().unwrap_or_log().iter()
-                            {
+                            let responses = match tg_infos.get_responses_or_fail() {
+                                Ok(val) => val,
+                                Err(err) => {
+                                    console.error(format!(
+                                        "failed pushing typegraph at {:?}: {err:#}",
+                                        tg_infos.path.display().cyan(),
+                                    ));
+                                    errors.push((tg_infos.path.clone(), err));
+                                    continue;
+                                }
+                            };
+                            for (name, res) in responses.iter() {
                                 match PushResult::new(
                                     self.console.clone(),
                                     self.loader.clone(),
@@ -299,8 +308,9 @@ mod default_mode {
                                     Ok(push) => push.finalize().await.unwrap(),
                                     Err(err) => {
                                         console.error(format!(
-                                            "failed pushing typegraph {name:?} at {:?}:\n{err:?}",
-                                            tg_infos.path.display(),
+                                            "failed pushing typegraph {:?} at {:?}: {err:#}",
+                                            name.yellow(),
+                                            tg_infos.path.display().cyan(),
                                         ));
                                         errors.push((tg_infos.path.clone(), err));
                                     }
@@ -309,7 +319,7 @@ mod default_mode {
                         }
                         LoaderEvent::Stopped(b) => {
                             if let StopBehavior::ExitFailure(msg) = b {
-                                error!(msg, "LoaderActor exit failure");
+                                error!("LoaderActor exit failure: {}", msg.red());
                             }
                         }
                     }
@@ -456,7 +466,7 @@ mod watch_mode {
                                     Err(err) => {
                                         let tg_path = tg_infos.path.clone();
                                         console.error(format!(
-                                            "failed pushing typegraph {name:?} at {tg_path:?}:\n{err:#}",
+                                            "failed pushing typegraph {name:?} at {tg_path:?}: {err:#}",
                                         ));
                                         if let Some(delay) = RetryManager::next_delay(&tg_path) {
                                             console.info(format!(

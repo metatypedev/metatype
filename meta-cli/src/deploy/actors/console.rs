@@ -74,6 +74,10 @@ impl Actor for ConsoleActor {
 
 #[derive(Message)]
 #[rtype(result = "()")]
+struct Debug(pub String);
+
+#[derive(Message)]
+#[rtype(result = "()")]
 struct Info(pub String);
 
 #[derive(Message)]
@@ -86,6 +90,12 @@ struct Error(pub String);
 
 trait OutputMessage {
     fn send(&self);
+}
+
+impl OutputMessage for Debug {
+    fn send(&self) {
+        log::debug!("{}", self.0);
+    }
 }
 
 impl OutputMessage for Info {
@@ -106,26 +116,13 @@ impl OutputMessage for Error {
     }
 }
 
-impl Handler<Info> for ConsoleActor {
+impl<T> Handler<T> for ConsoleActor
+where
+    T: OutputMessage + Sized + actix::Message<Result = ()> + 'static,
+{
     type Result = ();
 
-    fn handle(&mut self, msg: Info, _ctx: &mut Context<Self>) -> Self::Result {
-        self.handle_output(msg);
-    }
-}
-
-impl Handler<Warning> for ConsoleActor {
-    type Result = ();
-
-    fn handle(&mut self, msg: Warning, _ctx: &mut Context<Self>) -> Self::Result {
-        self.handle_output(msg);
-    }
-}
-
-impl Handler<Error> for ConsoleActor {
-    type Result = ();
-
-    fn handle(&mut self, msg: Error, _ctx: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, msg: T, _ctx: &mut Context<Self>) -> Self::Result {
         self.handle_output(msg);
     }
 }
@@ -170,6 +167,7 @@ impl Handler<EndInput> for ConsoleActor {
 
 #[async_trait::async_trait]
 pub trait Console {
+    fn debug(&self, msg: String);
     fn info(&self, msg: String);
     fn warning(&self, msg: String);
     fn error(&self, msg: String);
@@ -178,6 +176,10 @@ pub trait Console {
 
 #[async_trait::async_trait]
 impl Console for Addr<ConsoleActor> {
+    fn debug(&self, msg: String) {
+        self.do_send(Debug(msg));
+    }
+
     fn info(&self, msg: String) {
         self.do_send(Info(msg));
     }

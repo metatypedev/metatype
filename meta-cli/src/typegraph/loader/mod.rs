@@ -81,12 +81,12 @@ impl<'a> Loader<'a> {
             Err(err) => {
                 return Err(LoaderError::Unknown {
                     path,
-                    error: ferr!("failed to check if file exists: {err:#}",),
+                    error: ferr!("failed to check if file exists").error(err),
                 });
             }
         }
         let command = Self::get_load_command(
-            ModuleType::try_from(path.as_path()).unwrap(),
+            ModuleType::try_from(path.as_path()).unwrap_or_log(),
             &path,
             &self.base_dir,
         )
@@ -101,7 +101,9 @@ impl<'a> Loader<'a> {
 
         command
             .env("META_CLI_TG_PATH", path.display().to_string())
-            .env("META_CLI_SERVER_PORT", get_instance_port().to_string());
+            .env("META_CLI_SERVER_PORT", get_instance_port().to_string())
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped());
 
         use process_wrap::tokio::*;
         let mut child = TokioCommandWrap::from(command)
@@ -110,13 +112,13 @@ impl<'a> Loader<'a> {
             // signals will get all grand-children
             .wrap(ProcessSession)
             .spawn()
-            .map_err(|e| LoaderError::LoaderProcess {
+            .map_err(|err| LoaderError::LoaderProcess {
                 path: path.clone(),
-                error: e.into(),
+                error: err.into(),
             })?;
 
         let duration =
-            get_loader_timeout_duration().map_err(|e| LoaderError::Other { error: e })?;
+            get_loader_timeout_duration().map_err(|err| LoaderError::Other { error: err })?;
         match timeout(duration, Box::into_pin(child.wait())).await {
             Err(_) => {
                 Box::into_pin(child.kill()).await.unwrap_or_log();
@@ -139,7 +141,9 @@ impl<'a> Loader<'a> {
                                     error: e.into(),
                                 }
                             })?;
-                            eprintln!("{buff}");
+                            if !buff.is_empty() {
+                                info!("loader stderr: {buff}");
+                            }
                         }
                     }
                     Ok(TypegraphInfos {
@@ -179,8 +183,9 @@ impl<'a> Loader<'a> {
                     Err(LoaderError::LoaderProcess {
                         path: path.clone(),
                         error: ferr!("loader process err")
-                            .with_section(move || stdout.trim().to_string().header("Stdout:"))
-                            .with_section(move || stderr.trim().to_string().header("Stderr:")),
+                            .section(stdout.trim().to_string().header("Stdout:"))
+                            .section(stderr.trim().to_string().header("Stderr:"))
+                            .suppress_backtrace(true),
                     })
                 }
             }
@@ -209,8 +214,12 @@ impl<'a> Loader<'a> {
                     path: path.to_owned().into(),
                     error: e,
                 })?;
-                let mut command = Command::new("python3");
+                let loader_py =
+                    std::env::var("MCLI_LOADER_PY").unwrap_or_else(|_| "python3".to_string());
+                let mut loader_py = loader_py.split_whitespace();
+                let mut command = Command::new(loader_py.next().unwrap());
                 command
+                    .args(loader_py)
                     .arg(path.to_str().unwrap())
                     .current_dir(base_dir)
                     .env("PYTHONUNBUFFERED", "1")
@@ -407,7 +416,7 @@ impl core::fmt::Display for LoaderError {
                 )
             }
             Self::Other { error } => {
-                write!(fmt, "unknown error: {error}")
+                write!(fmt, "unknown error: {error:?}")
             }
             Self::Unknown { path, error } => {
                 write!(
@@ -421,7 +430,7 @@ impl core::fmt::Display for LoaderError {
             Self::PythonVenvNotFound { path, error } => {
                 write!(
                     fmt,
-                    "python venv (.venv) not found in parent directories of {path:?}: {error}",
+                    "python venv (.venv) not found in parent directories of {path:?}: {error:?}",
                 )
             }
         }

@@ -41,7 +41,9 @@ export class ArtifactUploader {
 
     if (!response.ok) {
       const err = await response.text();
-      throw new Error(`Failed to get upload URLs for all artifacts: ${err}`);
+      throw new Error(
+        `Failed requesting artifact upload URLs: ${response.status} - ${err}`,
+      );
     }
 
     const uploadUrls: Array<string | null> = await response.json();
@@ -67,7 +69,7 @@ export class ArtifactUploader {
     }
 
     if (url == null) {
-      console.log(`Skipping upload for artifact: ${meta.relativePath}`);
+      // console.error(`Skipping upload for artifact: ${meta.relativePath}`);
       return;
     }
 
@@ -116,7 +118,7 @@ export class ArtifactUploader {
         );
         errors++;
       } else {
-        console.log(`Successfully uploaded artifact '${meta.relativePath}'`);
+        // console.error(`Successfully uploaded artifact '${meta.relativePath}'`);
       }
     }
 

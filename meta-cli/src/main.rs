@@ -86,18 +86,16 @@ fn main() -> Result<()> {
     }
     logger::init();
 
-    let _ = actix::System::with_tokio_rt(|| {
+    let runner = actix::System::with_tokio_rt(|| {
         tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()
             .unwrap_or_log()
     });
 
-    actix::run(async {
-        upgrade_check()
-            .await
-            .unwrap_or_else(|e| warn!("cannot check for update: {}", e));
-    })?;
+    if let Err(err) = runner.block_on(upgrade_check()) {
+        warn!("cannot check for update: {err}");
+    }
 
     if args.version {
         println!("meta {}", build::PKG_VERSION);
@@ -123,23 +121,15 @@ fn main() -> Result<()> {
                     .in_current_span(),
                 )?;
         }
-        Some(command) => actix::run(async move {
+        Some(command) => runner.block_on(async move {
             match command {
                 cli::Commands::Serialize(_) | cli::Commands::Dev(_) | cli::Commands::Deploy(_) => {
                     let server = init_server().unwrap();
                     let command = command.run(args.config, Some(server.handle()));
 
-                    try_join!(command, server.map(|_| Ok(()))).unwrap_or_else(|err| {
-                        error!("{err:?}");
-                        std::process::exit(1);
-                    });
+                    try_join!(command, server.map(|_| Ok(()))).map(|_| ())
                 }
-                _ => {
-                    command.run(args.config, None).await.unwrap_or_else(|err| {
-                        error!("{err:?}");
-                        std::process::exit(1);
-                    });
-                }
+                _ => command.run(args.config, None).await.map(|_| ()),
             }
         })?,
         None => Args::command().print_help()?,

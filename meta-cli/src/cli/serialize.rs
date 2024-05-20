@@ -88,7 +88,12 @@ impl Action for Serialize {
         }
 
         for path in self.files.iter() {
-            loader.do_send(LoadModule(dir.join(path).into()));
+            use normpath::PathExt;
+            let path = dir.join(path).normalize()?.into_path_buf();
+            if let Err(err) = crate::config::ModuleType::try_from(path.as_path()) {
+                bail!("file is not a valid module type: {err:#}")
+            }
+            loader.do_send(LoadModule(path.into()));
         }
 
         let mut loaded: Vec<Typegraph> = vec![];

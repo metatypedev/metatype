@@ -65,7 +65,7 @@ impl Discovery {
             Ok(path) => {
                 let rel_path = diff_paths(path.as_path(), &dir).unwrap();
                 if !silent && res.insert(path) {
-                    info!(
+                    debug!(
                         "Found typegraph definition module at {}",
                         rel_path.display()
                     );

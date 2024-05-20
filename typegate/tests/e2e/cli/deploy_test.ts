@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, Meta } from "test-utils/mod.ts";
-import { TestModule } from "test-utils/test_module.ts";
+import { gql, Meta } from "../../utils/mod.ts";
+import { TestModule } from "../../utils/test_module.ts";
 import { dropSchemas, removeMigrations } from "test-utils/migrations.ts";
 import { assertRejects, assertStringIncludes } from "std/assert/mod.ts";
 import { randomSchema, reset } from "test-utils/database.ts";

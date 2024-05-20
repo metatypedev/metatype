@@ -25,6 +25,11 @@ Args: {args:?}
                 version = crate::build::PKG_VERSION,
                 args = std::env::args().collect::<Vec<_>>()
             ))
+            .display_location_section(
+                std::env::var("RUST_ERR_LOCATION")
+                    .map(|var| var != "0")
+                    .unwrap_or(true),
+            )
             .try_into_hooks()
             .unwrap();
         let eyre_panic_hook = eyre_panic_hook.into_panic_hook();
@@ -41,7 +46,7 @@ Args: {args:?}
         _eyre_hook.install().unwrap();
 
         if std::env::var("RUST_LOG").is_err() {
-            std::env::set_var("RUST_LOG", "info");
+            std::env::set_var("RUST_LOG", "info,actix_server=warn");
         }
         #[cfg(not(debug_assertions))]
         if std::env::var("RUST_SPANTRACE").is_err() {
@@ -61,9 +66,14 @@ Args: {args:?}
         #[cfg(test)]
         let fmt = fmt.with_test_writer();
 
+        #[cfg(debug_assertions)]
+        let fmt = fmt.with_target(true);
+
+        let filter = tracing_subscriber::EnvFilter::from_default_env();
+
         tracing_subscriber::registry()
             // filter on values from RUST_LOG
-            .with(tracing_subscriber::EnvFilter::from_default_env())
+            .with(filter)
             // subscriber that emits to stderr
             .with(fmt)
             // instrument errors with SpanTraces, used by color-eyre

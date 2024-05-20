@@ -224,12 +224,12 @@ impl Handler<LoadedModule> for LoaderActor {
             }
         }
 
-        self.console.info(format!("Loaded 1 file from {path:?}"));
+        self.console.debug(format!("Loaded 1 file from {path:?}"));
         if let Some(counter) = self.counter.as_ref() {
             let count = counter.fetch_sub(1, Ordering::SeqCst);
             if count == 1 {
                 self.console
-                    .info("All modules have been loaded. Stopping the loader.".to_string());
+                    .debug("All modules have been loaded. Stopping the loader.".to_string());
                 ctx.notify(TryStop(StopBehavior::ExitSuccess));
             }
         }

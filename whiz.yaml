@@ -27,6 +27,14 @@ gate2:
   <<: *tp
   env:
     <<: *tpenv
+    SYNC_ENABLED: "true"
+    SYNC_REDIS_URL: redis://localhost:6379/0
+    SYNC_REDIS_PASSWORD: password
+    SYNC_S3_HOST: http://localhost:9000
+    SYNC_S3_REGION: local
+    SYNC_S3_ACCESS_KEY: minio
+    SYNC_S3_SECRET_KEY: password
+    SYNC_S3_BUCKET: gate2
     TG_PORT: "7892"
 
 http:

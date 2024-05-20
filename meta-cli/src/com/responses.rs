@@ -32,6 +32,15 @@ pub struct SDKResponse {
     pub error: Option<serde_json::Value>,
 }
 
+#[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SDKError {
+    code: String,
+    msg: String,
+    #[allow(unused)]
+    value: serde_json::Value,
+}
+
 impl SDKResponse {
     pub fn validate(&self) -> Result<()> {
         if self.data.is_none() && self.error.is_none() {
@@ -44,8 +53,12 @@ impl SDKResponse {
         }
 
         if let Some(error) = self.error.clone() {
-            let err: String = serde_json::from_value(error)?;
-            bail!("SDK error: {err}");
+            let err: SDKError = serde_json::from_value(error)?;
+            bail!(
+                "SDK {} error: {}",
+                err.code.strip_suffix("_err").unwrap_or(&err.code),
+                err.msg
+            );
         }
 
         Ok(())
@@ -61,7 +74,29 @@ impl SDKResponse {
         self.validate()?;
         let response: common::graphql::Response =
             serde_json::from_value(self.data.clone().unwrap())?;
-        response.data("addTypegraph").map_err(anyhow_to_eyre!())
+        if let Some(errors) = response.errors {
+            if errors.len() == 1 {
+                bail!(
+                    "error response when pushing to typegate: {}",
+                    errors[0].message
+                )
+            } else {
+                let mut err = ferr!("error responses when pushing to typegate");
+                for error in errors {
+                    err = err.section(error.message);
+                }
+                return Err(err);
+            }
+        }
+        let field = "addTypegraph";
+        let Some(data) = &response.data else {
+            bail!("unexpected response when pushing to typegate: has no field 'data'")
+        };
+        let value = &data[field];
+        if value.is_null() {
+            bail!("unexpected response when pushing to typegate: has no field 'data.{field}'")
+        }
+        Ok(serde_json::from_value(value.clone())?)
     }
 
     pub fn typegraph_dir(&self) -> PathBuf {

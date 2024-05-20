@@ -37,8 +37,8 @@ function deserializeToCustom<T>(value: string): T {
   return JSON.parse(value) as T;
 }
 
-export function resolveS3Key(hash: string) {
-  return `${REMOTE_ARTIFACT_DIR}/${hash}`;
+export function resolveS3Key(bucket: string, hash: string) {
+  return `${bucket}/${REMOTE_ARTIFACT_DIR}/${hash}`;
 }
 
 const REMOTE_ARTIFACT_DIR = "artifacts-cache";
@@ -110,7 +110,7 @@ class SharedArtifactPersistence implements ArtifactPersistence {
     const _ = await this.s3.putObject({
       Bucket: this.s3Bucket,
       Body: body,
-      Key: resolveS3Key(hash),
+      Key: resolveS3Key(this.s3Bucket, hash),
     });
 
     return hash;
@@ -119,7 +119,7 @@ class SharedArtifactPersistence implements ArtifactPersistence {
   async delete(hash: string): Promise<void> {
     await this.s3.deleteObject({
       Bucket: this.s3Bucket,
-      Key: resolveS3Key(hash),
+      Key: resolveS3Key(this.s3Bucket, hash),
     });
   }
 
@@ -127,7 +127,7 @@ class SharedArtifactPersistence implements ArtifactPersistence {
     try {
       const _ = await this.s3.headObject({
         Bucket: this.s3Bucket,
-        Key: resolveS3Key(hash),
+        Key: resolveS3Key(this.s3Bucket, hash),
       });
       return true;
     } catch {
@@ -144,7 +144,7 @@ class SharedArtifactPersistence implements ArtifactPersistence {
 
     const response = await this.s3.getObject({
       Bucket: this.s3Bucket,
-      Key: resolveS3Key(hash),
+      Key: resolveS3Key(this.s3Bucket, hash),
     });
 
     if (response.$metadata.httpStatusCode === 404) {

@@ -106,15 +106,25 @@ export class Manager {
   }
 
   async #serialize(config: CLIConfigRequest): Promise<void> {
+    let finalizationResult: TgFinalizationResult;
+    try {
+      finalizationResult = this.#typegraph.serialize({
+        ...config.artifactsConfig,
+        prefix: config.prefix,
+      });
+    } catch (err: any) {
+      return await this.#relayErrorToCLI(
+        "serialize",
+        "serialization_err",
+        err?.message ?? "error serializing typegraph",
+        {
+          err,
+        },
+      );
+    }
     await this.#relayResultToCLI(
       "serialize",
-      async () => {
-        const finalizationResult = this.#typegraph.serialize({
-          ...config.artifactsConfig,
-          prefix: config.prefix,
-        });
-        return JSON.parse(finalizationResult.tgJson);
-      },
+      JSON.parse(finalizationResult.tgJson),
     );
   }
 
@@ -127,56 +137,95 @@ export class Manager {
         `"${this.#typegraph.name}" received null or undefined "auth" field on the configuration`,
       );
     }
+    const config = {
+      ...artifactsConfig,
+      prefix,
+    };
+    // hack for allowing tg.serialize(config) to be called more than once
+    let localMemo: TgFinalizationResult;
+    try {
+      localMemo = this.#typegraph.serialize(config);
+    } catch (err: any) {
+      return await this.#relayErrorToCLI(
+        "deploy",
+        "serialization_err",
+        err?.message ?? "error serializing typegraph",
+        {
+          err,
+        },
+      );
+    }
+    const reusableTgOutput = {
+      ...this.#typegraph,
+      serialize: (_: ArtifactResolutionConfig) => localMemo,
+    } as TypegraphOutput;
+
+    if (artifactsConfig.codegen) {
+      await this.#relayResultToCLI(
+        "codegen",
+        JSON.parse(localMemo.tgJson),
+      );
+    }
+
+    let deployRes: any;
+    try {
+      const { typegate } = await tgDeploy(reusableTgOutput, {
+        baseUrl: endpoint,
+        artifactsConfig: config,
+        secrets,
+        auth: new BasicAuth(auth.username, auth.password),
+        typegraphPath: this.#typegraphPath,
+      });
+      deployRes = typegate;
+    } catch (err: any) {
+      return await this.#relayErrorToCLI(
+        "deploy",
+        "deploy_err",
+        err?.message ?? "error deploying typegraph to typegate",
+        {
+          err,
+          ...(err.cause ? { cause: err.cause } : {}),
+        },
+      );
+    }
     await this.#relayResultToCLI(
       "deploy",
-      async () => {
-        const config = {
-          ...artifactsConfig,
-          prefix,
-        };
-
-        // hack for allowing tg.serialize(config) to be called more than once
-        let localMemo = this.#typegraph.serialize(config);
-        const reusableTgOutput = {
-          ...this.#typegraph,
-          serialize: (_: ArtifactResolutionConfig) => localMemo,
-        } as TypegraphOutput;
-
-        if (artifactsConfig.codegen) {
-          await this.#relayResultToCLI(
-            "codegen",
-            async () => JSON.parse(localMemo.tgJson),
-          );
-        }
-
-        const { typegate } = await tgDeploy(reusableTgOutput, {
-          baseUrl: endpoint,
-          artifactsConfig: config,
-          secrets,
-          auth: new BasicAuth(auth.username, auth.password),
-          typegraphPath: this.#typegraphPath,
-        });
-        return typegate;
-      },
+      deployRes,
     );
   }
 
-  async #relayResultToCLI<T>(initiator: Command, fn: () => Promise<T>) {
+  async #relayResultToCLI<T>(initiator: Command, data: T) {
     const typegraphName = this.#typegraph.name;
-    let response: SDKResponse<any>;
-    const common = {
+    const response: SDKResponse<T> = {
       command: initiator,
       typegraphName,
       typegraphPath: this.#typegraphPath,
+      data,
     };
-    try {
-      const data = await fn();
-      response = { ...common, data };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : err;
-      response = { ...common, error: msg };
-    }
+    await fetch(new URL("response", this.#endpoint), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(response),
+    });
+  }
 
+  async #relayErrorToCLI(
+    initiator: Command,
+    code: string,
+    msg: string,
+    value: string | any,
+  ) {
+    const typegraphName = this.#typegraph.name;
+    const response: SDKResponse<any> = {
+      command: initiator,
+      typegraphName,
+      typegraphPath: this.#typegraphPath,
+      error: {
+        code,
+        msg,
+        value,
+      },
+    };
     await fetch(new URL("response", this.#endpoint), {
       method: "POST",
       headers: { "Content-Type": "application/json" },

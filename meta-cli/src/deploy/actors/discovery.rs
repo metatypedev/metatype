@@ -54,7 +54,7 @@ impl Actor for DiscoveryActor {
                 .start(|path| match path {
                     Ok(path) => {
                         let rel_path = diff_paths(&path, &dir).unwrap();
-                        console.info(format!(
+                        console.debug(format!(
                             "Found typegraph definition module at {}",
                             rel_path.display()
                         ));

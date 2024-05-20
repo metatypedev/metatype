@@ -92,9 +92,9 @@ const cwd = resolve(projectDir, "typegate");
 const tmpDir = join(projectDir, "tmp");
 const env: Record<string, string> = {
   "RUST_LOG": "off,xtask=debug,meta=debug",
-  "RUST_BACKTRACE": "1",
+  "RUST_BACKTRACE": "0",
   "RUST_SPANTRACE": "1",
-  "RUST_LIB_SPANTRACE": "1",
+  "RUST_LIB_BACKTRACE": "1",
   "LOG_LEVEL": "DEBUG",
   // "NO_COLOR": "1",
   "DEBUG": "true",
@@ -237,9 +237,9 @@ console.log(
 
 for (const run of finished.sort((a, b) => a.duration - b.duration)) {
   console.log(
-    `-${run.successes ? "" : "FAILED"} ${run.testFile} -- ${
-      Math.floor(run.duration / 60_000)
-    }m${Math.floor(run.duration / 1_000) % 60}s`,
+    ` - ${Math.floor(run.duration / 60_000)}m${
+      Math.floor(run.duration / 1_000) % 60
+    }s -- ${run.success ? "" : "FAILED -"}${run.testFile}`,
   );
 }
 
