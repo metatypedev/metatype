@@ -26,7 +26,7 @@ def deno_globs(g: Graph):
             t.struct({"a": t.float(), "b": t.float()}),
             t.float(),
             module="ts/dep/main.ts",
-            deps=["ts/**/*.ts"],
+            deps=["ts/**/nested/*.ts"],
             name="doAddition",
         ),
     )

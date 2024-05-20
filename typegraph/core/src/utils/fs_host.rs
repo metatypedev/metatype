@@ -6,11 +6,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use glob::Pattern as GlobPattern;
+
 use crate::{
     global_store::Store,
     wit::metatype::typegraph::host::{
-        expand_glob, expand_path as expand_path_host, get_cwd, path_exists as path_exists_host,
-        read_file, write_file,
+        expand_path as expand_path_host, get_cwd, path_exists as path_exists_host, read_file,
+        write_file,
     },
 };
 use common::archive::{
@@ -229,6 +231,43 @@ pub fn is_glob(path: &str) -> bool {
     false
 }
 
+pub fn extract_glob_dirname(path: &str) -> PathBuf {
+    let path = PathBuf::from(path);
+    let dirs: Vec<_> = path.components().map(|comp| comp.as_os_str()).collect();
+    let mut parent_dir = PathBuf::new();
+    let special_chars = &['*', '?', '[', ']'];
+
+    for dir in dirs {
+        let dir = dir.to_str().unwrap();
+        if dir.find(special_chars).is_some() {
+            break;
+        }
+        parent_dir = parent_dir.join(dir);
+    }
+
+    parent_dir
+}
+
+pub fn expand_glob(path: &str) -> Result<Vec<PathBuf>, String> {
+    let abs_path = make_absolute(&PathBuf::from(path))?
+        .to_string_lossy()
+        .to_string();
+
+    let parent_dir = extract_glob_dirname(&abs_path);
+    let all_files = expand_path(&parent_dir, &[])?;
+
+    let glob_pattern = GlobPattern::new(&abs_path).unwrap();
+
+    let mut matching_files = vec![];
+    for file in all_files {
+        if glob_pattern.matches(file.to_str().unwrap()) {
+            matching_files.push(file);
+        }
+    }
+
+    Ok(matching_files)
+}
+
 pub fn resolve_globs_dirs(deps: Vec<String>) -> Result<Vec<PathBuf>, String> {
     let mut resolved_deps = HashSet::new();
     for dep in deps {
@@ -236,9 +275,10 @@ pub fn resolve_globs_dirs(deps: Vec<String>) -> Result<Vec<PathBuf>, String> {
             let abs_path = make_absolute(&PathBuf::from(dep))?
                 .to_string_lossy()
                 .to_string();
+
             let matching_files = expand_glob(&abs_path)?;
             for file in matching_files {
-                let rel_path = make_relative(&PathBuf::from(file))?;
+                let rel_path = make_relative(&file)?;
                 resolved_deps.insert(rel_path);
             }
         } else {

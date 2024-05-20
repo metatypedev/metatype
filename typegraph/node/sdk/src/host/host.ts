@@ -3,7 +3,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as process from "node:process";
-import * as glob from "glob";
 
 function listAllFilesHelper(
   root: string,
@@ -80,15 +79,6 @@ export function writeFile(filePath: string, data: Uint8Array): void {
       fs.mkdirSync(dir, { recursive: true });
     }
     void fs.writeFileSync(filePath, data, { flag: "w" });
-  } catch (err) {
-    throw (err instanceof Error ? err.message : err);
-  }
-}
-
-export function expandGlob(pattern: string): string[] {
-  try {
-    const matchingFiles = glob.sync(pattern, { nodir: true });
-    return matchingFiles;
   } catch (err) {
     throw (err instanceof Error ? err.message : err);
   }
