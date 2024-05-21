@@ -85,7 +85,7 @@ jobs:
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
           pre-commit run --show-diff-on-failure --color=always --all-files
 
-  clippy-compat:
+  lint-compat:
     needs: changes
     if: ${{ needs.changes.outputs.full == 'true' }}
     runs-on: "${{ matrix.os }}"
@@ -116,13 +116,13 @@ jobs:
           # arguments for our custom cross.Dockerfile
           CROSS_BUILD_OPTS: "--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
         run: |
-          cross clippy --locked --all-features --all-targets
+          cross check --locked --all-features --all-targets
       - if: ${{ matrix.cross != true }}
         shell: bash
         env:
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
-          cargo clippy --locked --all-features --all-targets
+          cargo check --locked --all-features --all-targets
 
   test-website:
     needs: changes
