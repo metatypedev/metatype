@@ -271,10 +271,10 @@ export class MetaTest {
       output = await this.shell(cmd);
     }
 
-    const { stderr, stdout } = output;
+    const { stderr, stdout, code } = output;
 
-    if (stderr.length > 0) {
-      throw new Error(`${stderr}`);
+    if (code !== 0) {
+      throw new Error(`Failed with exit code ${code}: ${stderr}`);
     }
 
     if (stdout.length === 0) {
