@@ -88,7 +88,7 @@ jobs:
   clippy-compat:
     needs: changes
     if: ${{ needs.changes.outputs.full == 'true' }}
-    runs-on: ${{ fromJSON(matrix.os) }}
+    runs-on: "${{ fromJSON(matrix.os) }}"
     strategy:
       matrix:
         include:
