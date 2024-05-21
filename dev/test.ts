@@ -183,11 +183,7 @@ function createRun(testFile: string): Run {
 async function buildXtask() {
   console.log(`${prefix} Building xtask...`);
   const child = new Deno.Command("cargo", {
-    args: [
-      "build",
-      "--package",
-      "xtask",
-    ],
+    args: ["build", "--package", "xtask"],
     cwd: projectDir,
     stdout: "inherit",
     stderr: "inherit",
@@ -198,11 +194,26 @@ async function buildXtask() {
   }
 }
 
+async function buildMetaCli() {
+  console.log(`${prefix} Building meta-cli...`);
+  const child = new Deno.Command("cargo", {
+    args: ["build", "--package", "meta-cli"],
+    cwd: projectDir,
+    stdout: "inherit",
+    stderr: "inherit",
+  }).spawn();
+  const status = await child.status;
+  if (!status.success) {
+    throw new Error("Failed to build meta-cli");
+  }
+}
+
 const queues = [...filteredTestFiles];
 const runs: Record<string, Run> = {};
 const globalStart = Date.now();
 
 await buildXtask();
+await buildMetaCli();
 
 void (async () => {
   while (queues.length > 0) {

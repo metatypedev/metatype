@@ -5,7 +5,7 @@ import { testDir } from "test-utils/dir.ts";
 import { shell, ShellOptions, ShellOutput } from "test-utils/shell.ts";
 import { resolve } from "std/path/mod.ts";
 
-let compiled = false;
+const metaCliExe = resolve(testDir, "../../target/debug/meta");
 
 export async function metaCli(...args: string[]): Promise<ShellOutput>;
 export async function metaCli(
@@ -16,8 +16,6 @@ export async function metaCli(
   first: string | ShellOptions,
   ...input: string[]
 ): Promise<ShellOutput> {
-  const metaCliExe = await getMetaCliExe();
-
   const res =
     await (typeof first === "string"
       ? shell([metaCliExe, first, ...input])
@@ -28,19 +26,9 @@ export async function metaCli(
 
 type MetaCli = (args: string[], options?: ShellOptions) => Promise<ShellOutput>;
 
-export async function getMetaCliExe(): Promise<string> {
-  if (!compiled) {
-    await shell(["cargo", "build", "--package", "meta-cli"]);
-    compiled = true;
-  }
-  const metaCliExe = resolve(testDir, "../../target/debug/meta");
-  return metaCliExe;
-}
-
-export async function createMetaCli(
+export function createMetaCli(
   shell: (args: string[], options?: ShellOptions) => Promise<ShellOutput>,
 ): Promise<MetaCli> {
-  const metaCliExe = await getMetaCliExe();
   return (args, options) => {
     return shell([metaCliExe, ...args], options);
   };
@@ -55,7 +43,7 @@ export async function serialize(
   tg: string,
   options: SerializeOptions = {},
 ): Promise<string> {
-  const cmd = ["cargo", "run", "-p", "meta-cli", "--", "serialize", "-f", tg];
+  const cmd = [metaCliExe, "serialize", "-f", tg];
   if (options.unique) {
     cmd.push("-1");
   }
