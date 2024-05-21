@@ -94,11 +94,11 @@ jobs:
         include:
           - os: "['self-hosted', 'custom-ubuntu-large']"
             target: x86_64-apple-darwin
-            cross: true
-          - os: custom-macos
+            cross: false
+          - os: "['custom-macos']"
             target: aarch64-apple-darwin
             cross: false
-          - os: custom-ubuntu-large
+          - os: "['custom-macos']"
             target: aarch64-unknown-linux-gnu
             cross: true
           #- os: windows-latest
