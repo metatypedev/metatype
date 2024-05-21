@@ -62,7 +62,7 @@ ghjk.install(
     crateName: "wasm-tools",
     version: WASM_TOOLS_VERSION,
     locked: true,
-  })
+  }),
 );
 
 if (!inOci()) {
@@ -80,7 +80,11 @@ if (!inOci()) {
       packageName: "@bytecodealliance/jco",
       version: JCO_VERSION,
     })[0],
-    ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0]
+    ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0],
+    ports.cargobi({
+      crateName: "cross",
+      locked: true,
+    }),
   );
 }
 
@@ -89,7 +93,7 @@ if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
     ports.mold({
       version: MOLD_VERSION,
       replaceLd: Deno.env.has("CI") || Deno.env.has("OCI"),
-    })
+    }),
   );
 }
 
@@ -99,7 +103,7 @@ if (!Deno.env.has("NO_PYTHON")) {
     ports.pipi({
       packageName: "poetry",
       version: POETRY_VERSION,
-    })[0]
+    })[0],
   );
   if (!inOci()) {
     ghjk.install(ports.pipi({ packageName: "pre-commit" })[0]);
@@ -110,7 +114,7 @@ if (inDev()) {
   ghjk.install(
     ports.act({}),
     ports.cargobi({ crateName: "whiz", locked: true }),
-    installs.comp_py[0]
+    installs.comp_py[0],
   );
 }
 
@@ -119,12 +123,13 @@ ghjk.task("clean-deno-lock", {
     // jq
   ],
   async fn({ $ }) {
-    const jqOp1 = `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
+    const jqOp1 =
+      `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
     const jqOp2 = `del(.packages.npm["@typegraph/sdk@${METATYPE_VERSION}"])`;
     const jqOp = `${jqOp1} | ${jqOp2}`;
     await Deno.writeTextFile(
       "typegate/deno.lock",
-      await $`jq ${jqOp} typegate/deno.lock`.text()
+      await $`jq ${jqOp} typegate/deno.lock`.text(),
     );
   },
 });
@@ -135,7 +140,7 @@ ghjk.task("gen-pyrt-bind", {
   async fn({ $ }) {
     await $.removeIfExists("./libs/pyrt_wit_wire/wit_wire");
     await $`componentize-py -d ../../wit/wit-wire.wit bindings .`.cwd(
-      "./libs/pyrt_wit_wire"
+      "./libs/pyrt_wit_wire",
     );
   },
 });

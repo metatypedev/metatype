@@ -431,6 +431,37 @@
             }
           },
           "portRef": "cpy_bs_ghrel@0.1.0"
+        },
+        "1a32ccb180571a9900a107e159612ebceee73dde599642b53e5ad5d0a7754a4a": {
+          "version": "0.2.5",
+          "depConfigs": {
+            "cargo_binstall_ghrel": {
+              "version": "v1.6.4",
+              "depConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0"
+            },
+            "rust_rustup": {
+              "version": "1.77.2",
+              "depConfigs": {
+                "rustup_rustlang": {
+                  "version": "1.27.0",
+                  "depConfigs": {
+                    "git_aa": {
+                      "version": "2.40.1",
+                      "depConfigs": {},
+                      "portRef": "git_aa@0.1.0"
+                    }
+                  },
+                  "portRef": "rustup_rustlang@0.1.0"
+                }
+              },
+              "portRef": "rust_rustup@0.1.0",
+              "profile": "minimal"
+            }
+          },
+          "portRef": "cargobi_cratesio@0.1.0",
+          "crateName": "cross",
+          "locked": true
         }
       }
     },
@@ -455,6 +486,7 @@
             "9e72a9f857bd9b14b47702b5b8ee660833828d4b",
             "cfe6640502ddf9772073889af75888d361b1f2b9",
             "8e5e02544073c4733d8f2156c404a0dd524cdaaf",
+            "54eba38cb79f88fca14cd3185e5bec0c3dd02682",
             "e05f859f4a734a85fd3439f9b0fc0de1e733bdac",
             "38285a3b335e394ccce5ac5d59e15f660bfa4cc9",
             "7bbf00da8e265c56c2bff5bb7d89ba806e2590d2",
@@ -920,6 +952,50 @@
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/npmi.ts"
           },
           "packageName": "node-gyp"
+        },
+        "54eba38cb79f88fca14cd3185e5bec0c3dd02682": {
+          "depConfigs": {
+            "rust_rustup": {
+              "portRef": "rust_rustup@0.1.0",
+              "profile": "minimal"
+            }
+          },
+          "port": {
+            "ty": "denoWorker@v1",
+            "name": "cargobi_cratesio",
+            "platforms": [
+              "x86_64-linux",
+              "aarch64-linux",
+              "x86_64-darwin",
+              "aarch64-darwin",
+              "x86_64-windows",
+              "aarch64-windows",
+              "x86_64-freebsd",
+              "aarch64-freebsd",
+              "x86_64-netbsd",
+              "aarch64-netbsd",
+              "x86_64-aix",
+              "aarch64-aix",
+              "x86_64-solaris",
+              "aarch64-solaris",
+              "x86_64-illumos",
+              "aarch64-illumos",
+              "x86_64-android",
+              "aarch64-android"
+            ],
+            "version": "0.1.0",
+            "deps": [
+              {
+                "name": "cargo_binstall_ghrel"
+              },
+              {
+                "name": "rust_rustup"
+              }
+            ],
+            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cargobi.ts"
+          },
+          "crateName": "cross",
+          "locked": true
         },
         "e05f859f4a734a85fd3439f9b0fc0de1e733bdac": {
           "version": "v2.4.0",
