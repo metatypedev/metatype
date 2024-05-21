@@ -39,9 +39,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .env("PYRT_TARGET", &wasm_path)
             .current_dir(cwd.join("../../"))
             .spawn()
-            .unwrap()
+            .expect("error spawning ghjk")
             .wait()
-            .unwrap()
+            .expect("error building pyrt")
             .success(),
         "error building pyrt"
     );

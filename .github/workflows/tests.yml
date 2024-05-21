@@ -98,9 +98,12 @@ jobs:
           - os: macos-14
             target: aarch64-apple-darwin
             cross: false
-          - os: custom-macos
-            target: aarch64-unknown-linux-gnu
-            cross: true
+          # FIXME: linux/arm64 needs arm runners
+          # this target doesn't have a meta-cli build anyways
+          # the typegate is covered by the docker build down below
+          # - os: custom-macos
+          #   target: aarch64-unknown-linux-gnu
+          #   cross: true
           #- os: windows-latest
           #  activate: '.venv\Scripts\activate.bat'
     steps:
@@ -116,13 +119,13 @@ jobs:
           # arguments for our custom cross.Dockerfile
           CROSS_BUILD_OPTS: "--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
         run: |
-          cross check --locked --all-features --all-targets
+          cross check --locked --all-features --all-targets --target ${{ matrix.target }}
       - if: ${{ matrix.cross != true }}
         shell: bash
         env:
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
-          cargo check --locked --all-features --all-targets
+          cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
 
   test-website:
     needs: changes
