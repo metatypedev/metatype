@@ -252,14 +252,6 @@ jobs:
           source .venv/bin/activate
           poetry install --no-root
 
-          # from old test-libs
-          cargo test --locked --exclude meta-cli --exclude typegate --exclude typegate_engine --exclude typegraph_core --exclude metagen_mdk_rust_static  --workspace
-
-          # from old test-typegraph-core
-          # test in native rust, not in wasm for a future rust SDK
-          # without --tests, the --doc is causing a link error "syntax error in VERSION script"
-          cargo test --locked --package typegraph_core --tests
-
           # build typegraph_core wasm
           cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
           mkdir -p $(dirname $WASM_FILE)
@@ -293,15 +285,24 @@ jobs:
           # install packages inside metatype examples
           pnpm install -C examples/typegraphs
 
-          # from old test-meta-cli
-          cargo run --locked --package meta-cli -- --help
-          cargo test --locked --package meta-cli
 
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
 
-          deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
-          cargo build -p meta-cli
+          deno run -A dev/update.ts --cache-only
+
           cargo build -p xtask # xtask and meta-cli are used by the test suite
+          cargo build -p meta-cli 
+
+          # from old test-meta-cli
+          cargo test --locked --package meta-cli
+
+          # from old test-libs
+          cargo test --locked --exclude meta-cli --exclude typegate --exclude typegate_engine --exclude typegraph_core --exclude metagen_mdk_rust_static  --workspace
+
+          # from old test-typegraph-core
+          # test in native rust, not in wasm for a future rust SDK
+          # without --tests, the --doc is causing a link error "syntax error in VERSION script"
+          cargo test --locked --package typegraph_core --tests
 
           ghjk x clean-deno-lock
           deno run -A dev/test.ts --threads 1 -- --coverage=coverage

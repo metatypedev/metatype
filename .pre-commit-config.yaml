@@ -41,11 +41,6 @@ repos:
     rev: v1.0
     hooks:
       - id: fmt
-      - id: cargo-check
-        args:
-          - "--locked"
-          - "--all-features"
-          - "--all-targets"
       - id: clippy
         args:
           - "--locked"
