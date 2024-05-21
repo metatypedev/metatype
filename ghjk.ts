@@ -10,14 +10,14 @@ const PYTHON_VERSION = "3.8.18";
 const PNPM_VERSION = "v9.0.5";
 const WASM_TOOLS_VERSION = "1.0.53";
 const JCO_VERSION = "1.0.0";
-const WASMTIME_VERSION = "20.0.0";
+const WASMTIME_VERSION = "21.0.0";
 const WASM_OPT_VERSION = "0.116.0";
 const MOLD_VERSION = "v2.4.0";
 const CMAKE_VERSION = "3.28.0-rc6";
 const CARGO_INSTA_VERSION = "1.33.0";
 const NODE_VERSION = "20.8.0";
 const TEMPORAL_VERSION = "0.10.7";
-const METATYPE_VERSION = "0.4.1";
+const METATYPE_VERSION = "0.4.2";
 
 const installs = {
   python: ports.cpy_bs({ version: PYTHON_VERSION, releaseTag: "20240224" }),

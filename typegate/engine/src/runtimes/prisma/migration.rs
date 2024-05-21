@@ -448,8 +448,8 @@ impl AsRef<Path> for MigrationsFolder {
     }
 }
 
-impl ToString for MigrationsFolder {
-    fn to_string(&self) -> String {
-        self.as_ref().to_str().unwrap().to_owned()
+impl core::fmt::Display for MigrationsFolder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.dir.as_ref().display())
     }
 }

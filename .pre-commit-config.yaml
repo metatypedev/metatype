@@ -44,9 +44,13 @@ repos:
       - id: cargo-check
         args:
           - "--locked"
+          - "--all-features"
+          - "--all-targets"
       - id: clippy
         args:
           - "--locked"
+          - "--all-features"
+          - "--all-targets"
           - "--"
           - "--deny"
           - "warnings"

@@ -59,7 +59,7 @@ pub struct TypegraphContext {
 }
 
 thread_local! {
-    static TG: RefCell<Option<TypegraphContext>> = RefCell::new(None);
+    static TG: RefCell<Option<TypegraphContext>> = const { RefCell::new(None) };
 }
 
 static TYPEGRAPH_VERSION: &str = "0.0.3";
@@ -222,7 +222,7 @@ pub fn finalize(
     };
 
     let config = res_config.map(|config| {
-        tg.meta.prefix = config.prefix.clone();
+        tg.meta.prefix.clone_from(&config.prefix);
         config
     });
     TypegraphPostProcessor::new(config).postprocess(&mut tg)?;

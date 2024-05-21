@@ -32,6 +32,7 @@ impl TypeBuilder for TypeId {
     }
 }
 
+#[allow(unused)]
 pub trait ConcreteTypeBuilder: TypeBuilder {
     fn base_mut(&mut self) -> &mut TypeBase;
     fn xbase_mut(&mut self) -> &mut ExtendedTypeBase;
