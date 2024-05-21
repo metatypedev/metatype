@@ -88,16 +88,19 @@ jobs:
   clippy-compat:
     needs: changes
     if: ${{ needs.changes.outputs.full == 'true' }}
-    runs-on: "${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - os: macos-13
+          - os: [self-hosted, custom-ubuntu-large]
             target: x86_64-apple-darwin
-          - os: macos-14
+            cross: true
+          - os: custom-macos
             target: aarch64-apple-darwin
-          - os: ubuntu-latest
+            cross: false
+          - os: custom-ubuntu-large
             target: aarch64-unknown-linux-gnu
+            cross: true
           #- os: windows-latest
           #  activate: '.venv\Scripts\activate.bat'
     steps:
@@ -110,14 +113,14 @@ jobs:
         with:
           # temporary fix
           cache-key-prefix: ${{ matrix.os }}
-      - if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
+      - if: ${{ matrix.cross }}
         shell: bash
         env:
           # arguments for our custom cross.Dockerfile
           CROSS_BUILD_OPTS: "--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
         run: |
           cross clippy --locked --all-features --all-targets
-      - if: ${{ matrix.target != 'aarch64-unknown-linux-gnu' }}
+      - if: ${{ matrix.cross != true }}
         shell: bash
         env:
           WASM_FILE: target/debug/typegraph_core.wasm
