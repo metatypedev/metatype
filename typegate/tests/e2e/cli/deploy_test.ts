@@ -252,22 +252,22 @@ Meta.test(
       "--create-migration",
     ]);
 
-    // TODO: MET-500
-    // Does not work with the new version of t.e engine
-    // await t.should(
-    //   "have replaced and terminated the previous engine",
-    //   async () => {
-    //     await gql`
-    //       query {
-    //         findManyRecords {
-    //           id
-    //         }
-    //       }
-    //     `
-    //       .expectErrorContains("Could not find engine")
-    //       .on(e);
-    //   },
-    // );
+    await t.should(
+      "have replaced and terminated the previous engine",
+      async () => {
+        await gql`
+          query {
+            findManyRecords {
+              id
+            }
+          }
+        `
+          .expectData({
+            findManyRecords: [],
+          })
+          .on(e);
+      },
+    );
 
     const e2 = t.getTypegraphEngine("prisma")!;
 
@@ -343,22 +343,22 @@ Meta.test(
       "--allow-dirty",
     ]);
 
-    // TODO: MET-500
-    // Does not work with the new version of t.e engine
-    // await t.should(
-    //   "succeed have replaced and terminated the previous engine",
-    //   async () => {
-    //     await gql`
-    //       query {
-    //         findManyRecords {
-    //           id
-    //         }
-    //       }
-    //     `
-    //       .expectErrorContains("Could not find engine")
-    //       .on(e);
-    //   },
-    // );
+    await t.should(
+      "succeed have replaced and terminated the previous engine",
+      async () => {
+        await gql`
+          query {
+            findManyRecords {
+              id
+            }
+          }
+        `
+          .expectData({
+            findManyRecords: [],
+          })
+          .on(e);
+      },
+    );
 
     const e2 = t.getTypegraphEngine("pref-prisma")!;
 

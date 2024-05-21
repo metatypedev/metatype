@@ -8,6 +8,12 @@ const cwd = Deno.args[0];
 const PORT = Deno.args[1];
 const modulePathStr = Deno.args[2];
 const secretsStr = Deno.args[3];
+let tgName: string | undefined;
+
+// if the typegraph name is provided given there could be multiple typegraph definitions in the same file
+if (Deno.args.length === 5) {
+  tgName = Deno.args[4];
+}
 
 const gate = `http://localhost:${PORT}`;
 const auth = new BasicAuth("admin", "password");
@@ -17,8 +23,15 @@ const moduleName = path.basename(modulePathStr);
 const tgPath = path.join(cwd, moduleName);
 
 const module = await import(tgPath);
-if (!module.tg) {
+let tg;
+try {
+  tg = tgName !== undefined ? module[tgName] : module.tg;
+} catch (_) {
   throw new Error(`No typegraph found in module ${moduleName}`);
+}
+
+if (typeof tg === "function") {
+  tg = await tg();
 }
 
 const secrets = JSON.parse(secretsStr);
@@ -35,7 +48,6 @@ if (globalActionCreate !== true) {
   globalActionCreate = globalActionCreate === "true";
 }
 
-const tg = module.tg;
 const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
   baseUrl: gate,
   auth,

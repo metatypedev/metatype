@@ -1,7 +1,7 @@
 import importlib.util as import_util
+import json
 import os
 import sys
-import json
 
 from typegraph.gen.exports.core import (
     ArtifactResolutionConfig,
@@ -17,6 +17,11 @@ PORT = sys.argv[2]
 module_path = sys.argv[3]
 secrets_str = sys.argv[4]
 
+tg_name = None
+# if the typegraph func name is provided,
+if len(sys.argv) == 6:
+    tg_name = sys.argv[5]
+
 gate = f"http://localhost:{PORT}"
 auth = BasicAuth("admin", "password")
 
@@ -26,9 +31,13 @@ spec = import_util.spec_from_file_location(module_name, module_path)
 module = import_util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
-tg_name = module_name.split(".")[0]
+if tg_name is None:
+    tg_name = module_name.split(".")[0]
 if not hasattr(module, tg_name):
-    raise Exception(f"Script name {module_name} doesn't match the typegraph name")
+    raise Exception(
+        f"Script name {module_name} doesn't have the typegraph name: {tg_name}"
+    )
+
 
 tg_func = getattr(module, tg_name)
 

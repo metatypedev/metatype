@@ -242,7 +242,7 @@ export class MetaTest {
     const secretsStr = JSON.stringify(secrets);
 
     if (lang === SDKLangugage.TypeScript) {
-      output = await this.shell([
+      const cmd = [
         lang.toString(),
         "run",
         "--allow-all",
@@ -251,16 +251,24 @@ export class MetaTest {
         this.port.toString(),
         path,
         secretsStr,
-      ]);
+      ];
+      if (opts.typegraph) {
+        cmd.push(opts.typegraph);
+      }
+      output = await this.shell(cmd);
     } else {
-      output = await this.shell([
+      const cmd = [
         lang.toString(),
         "utils/tg_deploy_script.py",
         cwd,
         this.port.toString(),
         path,
         secretsStr,
-      ]);
+      ];
+      if (opts.typegraph) {
+        cmd.push(opts.typegraph);
+      }
+      output = await this.shell(cmd);
     }
 
     const { stderr, stdout } = output;
