@@ -244,7 +244,7 @@ jobs:
       - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
       - shell: bash
         env:
-          WASM_FILE: target/debug/typegraph_core.wasm
+          WASM_FILE: target/release/typegraph_core.wasm
         run: |
           echo pwd in $(pwd)
 
@@ -256,9 +256,9 @@ jobs:
           poetry install --no-root
 
           # build typegraph_core wasm
-          cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
+          cargo build -p typegraph_core --target wasm32-unknown-unknown --release --target-dir target/wasm
           mkdir -p $(dirname $WASM_FILE)
-          wasm-opt -Oz target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE.opt
+          wasm-opt -Oz target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE.opt
           wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
 
           # build python sdk package
