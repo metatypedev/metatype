@@ -1,5 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
 
 use super::{Action, ConfigArgs};
 use crate::com::store::{Command, ServerStore};
@@ -8,14 +9,10 @@ use crate::deploy::actors::console::ConsoleActor;
 use crate::deploy::actors::loader::{LoadModule, LoaderActor, LoaderEvent, StopBehavior};
 use actix::prelude::*;
 use actix_web::dev::ServerHandle;
-use anyhow::{bail, Context, Result};
-use async_trait::async_trait;
 use clap::Parser;
 use common::typegraph::Typegraph;
 use core::fmt::Debug;
 use std::io::{self, Write};
-use std::path::PathBuf;
-use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 use tokio::sync::mpsc;
 
@@ -54,16 +51,17 @@ pub struct Serialize {
 
 #[async_trait]
 impl Action for Serialize {
+    #[tracing::instrument]
     async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
-        let dir = &args.dir()?;
+        let dir = args.dir();
         let config_path = args.config;
 
         // config file is not used when `TypeGraph` files
         // are provided in the CLI by flags
         let config = if !self.files.is_empty() {
-            Config::default_in(dir)
+            Config::default_in(&dir)
         } else {
-            Config::load_or_find(config_path, dir)?
+            Config::load_or_find(config_path, &dir)?
         };
 
         // Minimum setup
@@ -86,11 +84,16 @@ impl Action for Serialize {
         .start();
 
         if self.files.is_empty() {
-            bail!("No file provided");
+            bail!("no file provided");
         }
 
         for path in self.files.iter() {
-            loader.do_send(LoadModule(dir.join(path).into()));
+            use normpath::PathExt;
+            let path = dir.join(path).normalize()?.into_path_buf();
+            if let Err(err) = crate::config::ModuleType::try_from(path.as_path()) {
+                bail!("file is not a valid module type: {err:#}")
+            }
+            loader.do_send(LoadModule(path.into()));
         }
 
         let mut loaded: Vec<Typegraph> = vec![];
@@ -103,10 +106,9 @@ impl Action for Serialize {
                         loaded.push(tg.as_typegraph()?);
                     }
                 }
-                LoaderEvent::Stopped(b) => {
-                    log::debug!("event: {b:?}");
-                    if let StopBehavior::ExitFailure(e) = b {
-                        bail!(e);
+                LoaderEvent::Stopped(res) => {
+                    if let StopBehavior::ExitFailure(err) = res {
+                        bail!("LoaderActor exit failure {err}");
                     }
                 }
             }
@@ -122,10 +124,7 @@ impl Action for Serialize {
                     .map(|tg| tg.name().unwrap())
                     .collect::<Vec<_>>()
                     .join(", ");
-                bail!(
-                    "typegraph \"{}\" not found; available typegraphs are: {suggestions}",
-                    tg_name
-                );
+                bail!("typegraph {tg_name:?} not found; available typegraphs are: {suggestions}",);
             }
         } else if self.unique {
             if tgs.len() == 1 {
@@ -152,7 +151,7 @@ impl Serialize {
                 .write(true)
                 .open(path)
                 .await
-                .context("Could not open file")?
+                .context("could not open file")?
                 .write_all(contents.as_bytes())
                 .await?;
         } else {

@@ -1,8 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::HashMap;
-use std::{path::PathBuf, sync::Arc};
+use crate::interlude::*;
 
 use crate::cli::{Action, ConfigArgs, NodeArgs};
 use crate::{
@@ -12,8 +11,6 @@ use crate::{
 };
 use actix::Actor;
 use actix_web::dev::ServerHandle;
-use anyhow::{bail, Context, Result};
-use async_trait::async_trait;
 use clap::{Parser, ValueEnum};
 use common::typegraph::Typegraph;
 use metagen::*;
@@ -60,8 +57,9 @@ pub struct Gen {
 
 #[async_trait]
 impl Action for Gen {
+    #[tracing::instrument]
     async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
-        let dir = args.dir()?;
+        let dir = args.dir();
         let mut config = Config::load_or_find(args.config, &dir)?;
 
         if let Some(file) = &self.file {
@@ -70,7 +68,7 @@ impl Action for Gen {
 
         let config = Arc::new(config);
         let Some(mgen_conf) = &config.metagen else {
-            anyhow::bail!(
+            bail!(
                 "no metagen section defined in config found at {:?}",
                 config.path
             );
@@ -137,7 +135,7 @@ impl Action for Gen {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct MetagenCtx {
     config: Arc<Config>,
     typegate: Arc<common::node::Node>,
@@ -145,7 +143,8 @@ struct MetagenCtx {
 }
 
 impl InputResolver for MetagenCtx {
-    async fn resolve(&self, order: GeneratorInputOrder) -> anyhow::Result<GeneratorInputResolved> {
+    #[tracing::instrument]
+    async fn resolve(&self, order: GeneratorInputOrder) -> Result<GeneratorInputResolved> {
         Ok(match order {
             GeneratorInputOrder::TypegraphFromTypegate { name } => {
                 GeneratorInputResolved::TypegraphFromTypegate {
@@ -153,7 +152,7 @@ impl InputResolver for MetagenCtx {
                         .typegate
                         .typegraph(&name)
                         .await?
-                        .with_context(|| format!("no typegraph found under \"{name}\""))?,
+                        .with_context(|| format!("no typegraph found under {name:?}"))?,
                 }
             }
             GeneratorInputOrder::TypegraphFromPath { path, name } => {
@@ -174,6 +173,7 @@ impl InputResolver for MetagenCtx {
     }
 }
 
+#[tracing::instrument]
 async fn load_tg_at(
     config: Arc<Config>,
     path: PathBuf,
@@ -207,10 +207,9 @@ async fn load_tg_at(
                     tgs.push(tg.as_typegraph()?);
                 }
             }
-            LoaderEvent::Stopped(b) => {
-                log::debug!("event: {b:?}");
-                if let StopBehavior::ExitFailure(e) = b {
-                    bail!(e);
+            LoaderEvent::Stopped(res) => {
+                if let StopBehavior::ExitFailure(err) = res {
+                    bail!("LoaderActor exit failure: {err}");
                 }
             }
         }
@@ -227,7 +226,7 @@ async fn load_tg_at(
                 .map(|tg| tg.name().unwrap())
                 .collect::<Vec<_>>()
                 .join(", ");
-            bail!("typegraph \"{tg_name}\" not found; available typegraphs are: {suggestions}",);
+            bail!("typegraph {tg_name:?} not found; available typegraphs are: {suggestions}",);
         }
     } else {
         tgs.swap_remove(0)

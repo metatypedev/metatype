@@ -3,13 +3,11 @@
 
 pub mod clap;
 
-use anyhow::{bail, Result};
+use crate::interlude::*;
+
 use dialoguer::{Input, Password};
-use log::trace;
-use std::collections::HashMap;
 use std::env::{set_var, var};
 use std::hash::Hash;
-use std::path::Path;
 
 use crate::config::VENV_FOLDERS;
 use crate::fs::find_in_parents;
@@ -21,9 +19,8 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
         trace!("Detected active venv at {active_venv:?}.");
         if active_venv.is_dir() {
             return Ok(());
-        } else {
-            bail!("Active venv at {active_venv:?} not found.");
         }
+        bail!("Active venv at {active_venv:?} not found.");
     }
 
     if let Some(venv_dir) = find_in_parents(dir, VENV_FOLDERS)? {

@@ -1,17 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
 
 use crate::{config::Config, secrets::Secrets};
-use anyhow::{bail, Result};
 use common::node::BasicAuth;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
-use std::{
-    borrow::{Borrow, BorrowMut},
-    collections::HashMap,
-    path::PathBuf,
-    sync::{Arc, Mutex},
-};
+use std::borrow::{Borrow, BorrowMut};
 
 use super::responses::SDKResponse;
 
@@ -132,7 +127,7 @@ impl ServerStore {
     pub fn get_responses_or_fail(tg_path: &PathBuf) -> Result<Arc<HashMap<String, SDKResponse>>> {
         match Self::get_responses(tg_path) {
             Some(res) => Ok(res.to_owned()),
-            None => bail!("Invalid state, no response was sent by {:?}, this could be the result of an outdated sdk", &tg_path),
+            None => bail!("invalid state, no response was sent by {tg_path:?}, this could be the result of an outdated sdk"),
         }
     }
 
@@ -163,7 +158,7 @@ impl ServerStore {
         with_store(|s| {
             if let Some(mig_action) = s.migration_action.get(tg_path) {
                 println!(
-                    "Specific migration action was defined for {}",
+                    "specific migration action was defined for {}",
                     tg_path.display()
                 );
                 return Some(mig_action.as_ref().to_owned());

@@ -5,8 +5,15 @@ import { connect, Redis, RedisConnectOptions, XIdInput } from "redis";
 import * as Sentry from "sentry";
 import { getLogger } from "../log.ts";
 import { ensure } from "../utils.ts";
+import { BaseError, ErrorKind } from "../errors.ts";
 
 const logger = getLogger(import.meta);
+
+class ReplicatedMapError extends BaseError {
+  constructor(message: string) {
+    super(import.meta, ErrorKind.Typegate, message, 500);
+  }
+}
 
 type SyncContext = {
   start: (cursor: XIdInput) => AsyncIterableIterator<Record<string, string>>;
@@ -149,7 +156,7 @@ export class RedisReplicatedMap<T> implements AsyncDisposable {
       if (event === ADD) {
         const payload = await redis.hget(key, name);
         if (!payload) {
-          throw Error(`added message without payload ${name}`);
+          throw new ReplicatedMapError(`added message without payload ${name}`);
         }
         logger.info(`received addition: ${name}`);
         await this.memorySet(name, await deserializer(payload, false));
@@ -157,7 +164,9 @@ export class RedisReplicatedMap<T> implements AsyncDisposable {
         logger.info(`received removal: ${name}`);
         await this.memorySet(name, null);
       } else {
-        throw Error(`unexpected message ${name} with ${event}`);
+        throw new ReplicatedMapError(
+          `unexpected message ${name} with ${event}`,
+        );
       }
     }
   }

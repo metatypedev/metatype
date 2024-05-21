@@ -56,13 +56,14 @@ export class GraphQLRuntime extends Runtime {
       const vars = { ...variables, ...args };
       const q = query(vars);
       // TODO: filter variables - only include forwarded variables
-      logger.debug(`remote graphql: ${q}`);
+      logger.info(`remote graphql: ${q}`);
       logger.debug(` -- with variables: ${JSON.stringify(vars)}`);
       const ret = await gq(this.endpoint, q, vars);
       if (ret.errors) {
         logger.error(ret.errors);
         throw new Error(`From remote graphql: ${ret.errors[0].message}`);
       }
+      logger.info("remote graphql: successful");
       return path.reduce((r, field) => r[field], ret.data);
     };
   }

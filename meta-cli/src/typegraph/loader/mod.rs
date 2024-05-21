@@ -1,26 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
+use eyre::Error;
 
 pub mod discovery;
 
 pub use discovery::Discovery;
+use owo_colors::OwoColorize;
 use tokio::{
     io::AsyncReadExt,
     process::Command,
     sync::{Semaphore, SemaphorePermit},
     time::{timeout, Duration},
 };
-
-use std::{
-    borrow::BorrowMut,
-    collections::HashMap,
-    env,
-    path::{Path, PathBuf},
-    sync::Arc,
-};
-
-use anyhow::{anyhow, bail, Context, Error, Result};
-use colored::Colorize;
 
 use crate::{
     com::{responses::SDKResponse, server::get_instance_port, store::ServerStore},
@@ -78,6 +70,7 @@ impl LoaderPool {
 }
 
 impl<'a> Loader<'a> {
+    #[tracing::instrument(skip(self))]
     pub async fn load_module(&self, path: Arc<PathBuf>) -> LoaderResult {
         match tokio::fs::try_exists(path.as_ref()).await {
             Ok(exists) => {
@@ -85,39 +78,50 @@ impl<'a> Loader<'a> {
                     return Err(LoaderError::ModuleFileNotFound { path });
                 }
             }
-            Err(e) => {
+            Err(err) => {
                 return Err(LoaderError::Unknown {
                     path,
-                    error: anyhow!("failed to check if file exists: {}", e.to_string()),
+                    error: ferr!("failed to check if file exists").error(err),
                 });
             }
         }
         let command = Self::get_load_command(
-            ModuleType::try_from(path.as_path()).unwrap(),
+            ModuleType::try_from(path.as_path()).unwrap_or_log(),
             &path,
             &self.base_dir,
         )
         .await?;
+        debug!(?path, "loading module");
         self.load_command(command, &path).await
     }
 
+    #[tracing::instrument(skip(self))]
     async fn load_command(&self, mut command: Command, path: &Path) -> LoaderResult {
         let path: Arc<PathBuf> = path.to_path_buf().into();
-        let mut child: tokio::process::Child = command
-            .borrow_mut()
+
+        command
             .env("META_CLI_TG_PATH", path.display().to_string())
             .env("META_CLI_SERVER_PORT", get_instance_port().to_string())
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped());
+
+        use process_wrap::tokio::*;
+        let mut child = TokioCommandWrap::from(command)
+            .wrap(KillOnDrop)
+            // we use sessions so that kill on drop
+            // signals will get all grand-children
+            .wrap(ProcessSession)
             .spawn()
-            .map_err(|e| LoaderError::LoaderProcess {
+            .map_err(|err| LoaderError::LoaderProcess {
                 path: path.clone(),
-                error: e.into(),
+                error: err.into(),
             })?;
 
         let duration =
-            get_loader_timeout_duration().map_err(|e| LoaderError::Other { error: e })?;
-        match timeout(duration, child.wait()).await {
+            get_loader_timeout_duration().map_err(|err| LoaderError::Other { error: err })?;
+        match timeout(duration, Box::into_pin(child.wait())).await {
             Err(_) => {
-                child.kill().await.unwrap();
+                Box::into_pin(child.kill()).await.unwrap_or_log();
                 Err(LoaderError::LoaderTimeout { path: path.clone() })
             }
             Ok(exit) => {
@@ -128,7 +132,7 @@ impl<'a> Loader<'a> {
                 if exit.success() {
                     #[cfg(debug_assertions)]
                     {
-                        if let Some(stderr) = child.stderr.take().as_mut() {
+                        if let Some(stderr) = child.stderr().take().as_mut() {
                             // TODO console actor
                             let mut buff = String::new();
                             stderr.read_to_string(&mut buff).await.map_err(|e| {
@@ -137,7 +141,9 @@ impl<'a> Loader<'a> {
                                     error: e.into(),
                                 }
                             })?;
-                            eprintln!("{buff}");
+                            if !buff.is_empty() {
+                                info!("loader stderr: {buff}");
+                            }
                         }
                     }
                     Ok(TypegraphInfos {
@@ -145,7 +151,7 @@ impl<'a> Loader<'a> {
                         base_path: self.base_dir.clone(),
                     })
                 } else {
-                    let stderr = match child.stderr.take().as_mut() {
+                    let stderr = match child.stderr().take().as_mut() {
                         Some(value) => {
                             let mut buff = String::new();
                             value.read_to_string(&mut buff).await.map_err(|e| {
@@ -159,7 +165,7 @@ impl<'a> Loader<'a> {
                         None => "".to_string(),
                     };
 
-                    let stdout = match child.stdout.take().as_mut() {
+                    let stdout = match child.stdout().take().as_mut() {
                         Some(value) => {
                             let mut buff = String::new();
                             value.read_to_string(&mut buff).await.map_err(|e| {
@@ -173,30 +179,32 @@ impl<'a> Loader<'a> {
                         None => "".to_string(),
                     };
 
+                    use color_eyre::SectionExt;
                     Err(LoaderError::LoaderProcess {
                         path: path.clone(),
-                        error: anyhow::anyhow!("{}\n{}", stderr, stdout),
+                        error: ferr!("loader process err")
+                            .section(stdout.trim().to_string().header("Stdout:"))
+                            .section(stderr.trim().to_string().header("Stderr:"))
+                            .suppress_backtrace(true),
                     })
                 }
             }
         }
     }
 
+    #[tracing::instrument(err)]
     async fn get_load_command(
         module_type: ModuleType,
         path: &Path,
         base_dir: &Path,
     ) -> Result<Command, LoaderError> {
-        let vars: HashMap<_, _> = env::vars().collect();
-
         if let Ok(argv_str) = std::env::var("MCLI_LOADER_CMD") {
             let argv = argv_str.split(' ').collect::<Vec<_>>();
             let mut command = Command::new(argv[0]);
             command
                 .args(&argv[1..])
                 .arg(path.to_str().unwrap())
-                .arg(base_dir)
-                .envs(vars);
+                .arg(base_dir);
             return Ok(command);
         }
 
@@ -206,13 +214,14 @@ impl<'a> Loader<'a> {
                     path: path.to_owned().into(),
                     error: e,
                 })?;
-                let vars: HashMap<_, _> = env::vars().collect();
-                // TODO cache result?
-                let mut command = Command::new("python3");
+                let loader_py =
+                    std::env::var("MCLI_LOADER_PY").unwrap_or_else(|_| "python3".to_string());
+                let mut loader_py = loader_py.split_whitespace();
+                let mut command = Command::new(loader_py.next().unwrap());
                 command
+                    .args(loader_py)
                     .arg(path.to_str().unwrap())
                     .current_dir(base_dir)
-                    .envs(vars)
                     .env("PYTHONUNBUFFERED", "1")
                     .env("PYTHONDONTWRITEBYTECODE", "1")
                     .env("PY_TG_COMPATIBILITY", "1");
@@ -235,8 +244,7 @@ impl<'a> Loader<'a> {
                             .arg("--allow-all")
                             .arg("--check")
                             .arg(path.to_str().unwrap())
-                            .current_dir(base_dir)
-                            .envs(vars);
+                            .current_dir(base_dir);
                         Ok(command)
                     }
                     TsLoaderRt::Node => {
@@ -247,8 +255,7 @@ impl<'a> Loader<'a> {
                             .arg("--yes")
                             .arg("tsx")
                             .current_dir(path.parent().unwrap())
-                            .arg(path.to_str().unwrap())
-                            .envs(vars);
+                            .arg(path.to_str().unwrap());
                         Ok(command)
                     }
                     TsLoaderRt::Bun => {
@@ -258,8 +265,7 @@ impl<'a> Loader<'a> {
                             .arg("x")
                             .arg("tsx")
                             .arg(path.to_str().unwrap())
-                            .current_dir(path.parent().unwrap())
-                            .envs(vars);
+                            .current_dir(path.parent().unwrap());
                         Ok(command)
                     }
                 }
@@ -281,7 +287,6 @@ async fn detect_deno_loader_cmd(tg_path: &Path) -> Result<TsLoaderRt> {
             .output()
             .await
             .map(|out| out.status.success())
-            .map_err(|err| anyhow!(err))
     };
     let test_node_exec = || async {
         Command::new("node")
@@ -289,7 +294,6 @@ async fn detect_deno_loader_cmd(tg_path: &Path) -> Result<TsLoaderRt> {
             .output()
             .await
             .map(|out| out.status.success())
-            .map_err(|err| anyhow!(err))
     };
     let test_bun_exec = || async {
         Command::new("deno")
@@ -297,7 +301,6 @@ async fn detect_deno_loader_cmd(tg_path: &Path) -> Result<TsLoaderRt> {
             .output()
             .await
             .map(|out| out.status.success())
-            .map_err(|err| anyhow!(err))
     };
     let mut maybe_parent_dir = tg_path.parent();
     // try to detect runtime in use by checking for package.json/deno.json
@@ -338,9 +341,7 @@ async fn detect_deno_loader_cmd(tg_path: &Path) -> Result<TsLoaderRt> {
     if test_bun_exec().await? {
         return Ok(Bun);
     }
-    Err(anyhow::format_err!(
-        "unable to find deno, node or bun runtimes"
-    ))
+    Err(ferr!("unable to find deno, node or bun runtimes"))
 }
 
 #[allow(unused)]
@@ -379,15 +380,16 @@ pub enum LoaderError {
     },
 }
 
-impl ToString for LoaderError {
-    fn to_string(&self) -> String {
+impl core::fmt::Display for LoaderError {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::PostProcessingError {
                 path,
                 typegraph_name,
                 error,
             } => {
-                format!(
+                write!(
+                    fmt,
                     "error while post processing typegraph {name} from {path:?}: {error:?}",
                     name = typegraph_name.blue()
                 )
@@ -397,25 +399,39 @@ impl ToString for LoaderError {
                 content,
                 error,
             } => {
-                format!("error while parsing raw typegraph JSON from {path:?}: {error:?} in \"{content}\"")
+                write!(
+                    fmt,
+                "error while parsing raw typegraph JSON from {path:?}: {error:?} in {content:?}")
             }
             Self::LoaderProcess { path, error } => {
-                format!("loader process error while loading typegraph(s) from {path:?}: {error:?}")
+                write!(
+                    fmt,
+                    "loader process error while loading typegraph(s) from {path:?}: {error:?}"
+                )
             }
             Self::LoaderTimeout { path } => {
-                format!("loader process timed out while loading typegraph(s) from {path:?}")
+                write!(
+                    fmt,
+                    "loader process timed out while loading typegraph(s) from {path:?}"
+                )
             }
             Self::Other { error } => {
-                format!("{error}")
+                write!(fmt, "unknown error: {error:?}")
             }
             Self::Unknown { path, error } => {
-                format!("unknown error while loading typegraph(s) from {path:?}: {error:?}")
+                write!(
+                    fmt,
+                    "unknown error while loading typegraph(s) from {path:?}: {error:?}"
+                )
             }
             Self::ModuleFileNotFound { path } => {
-                format!("module file not found: {path:?}")
+                write!(fmt, "module file not found: {path:?}")
             }
             Self::PythonVenvNotFound { path, error } => {
-                format!("python venv (.venv) not found in parent directories of {path:?}: {error}",)
+                write!(
+                    fmt,
+                    "python venv (.venv) not found in parent directories of {path:?}: {error:?}",
+                )
             }
         }
     }

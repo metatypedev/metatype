@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
 
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 
 use crate::config::Config;
 
-use anyhow::Result;
 use common::typegraph::Typegraph;
 
 pub trait PostProcessor {

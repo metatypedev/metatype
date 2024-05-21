@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { registerRuntime } from "./mod.ts";
-import { getLogger } from "../log.ts";
+import { getLogger, Logger } from "../log.ts";
 import { Runtime } from "./Runtime.ts";
 import type { Resolver, RuntimeInitParams } from "../types.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
@@ -12,19 +12,24 @@ import { WitWireMessenger } from "./wit_wire/mod.ts";
 import { WitWireMatInfo } from "../../engine/runtime.js";
 import { sha256 } from "../crypto.ts";
 
-const _logger = getLogger(import.meta);
+const logger = getLogger(import.meta);
 
 @registerRuntime("python")
 export class PythonRuntime extends Runtime {
+  private logger: Logger;
+
   private constructor(
     typegraphName: string,
     uuid: string,
     private wire: WitWireMessenger,
   ) {
     super(typegraphName, uuid);
+    this.logger = getLogger(`python:'${typegraphName}'`);
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
+    logger.info("initializing PythonRuntime");
+    logger.debug("init params: " + JSON.stringify(params));
     const { materializers, typegraphName, typegraph, typegate } = params;
 
     const wireMatInfos = await Promise.all(
@@ -122,16 +127,21 @@ export class PythonRuntime extends Runtime {
 
     // add default vm for lambda/def
     const uuid = crypto.randomUUID();
+    logger.info(
+      `initializing WitWireMessenger for PythonRuntime ${uuid} on typegraph ${typegraphName}`,
+    );
     const wire = await WitWireMessenger.init(
       "inline://pyrt_wit_wire.cwasm",
       uuid,
       wireMatInfos,
     );
+    logger.info("WitWireMessenger initialized");
 
     return new PythonRuntime(typegraphName, uuid, wire);
   }
 
   async deinit(): Promise<void> {
+    this.logger.info("deinitializing PythonRuntime");
     await using _drop = this.wire;
   }
 
@@ -184,6 +194,15 @@ export class PythonRuntime extends Runtime {
     const { name } = mat.data;
     const dataHash = await sha256(JSON.stringify(mat.data));
     const op_name = `${name as string}_${dataHash.slice(0, 12)}`;
-    return (args) => this.wire.handle(op_name, args);
+    return async (args) => {
+      this.logger.info(`running '${op_name}'`);
+      this.logger.debug(
+        `running '${op_name}' with args: ${JSON.stringify(args)}`,
+      );
+      const res = await this.wire.handle(op_name, args);
+      this.logger.info(`'${op_name}' successful`);
+      this.logger.debug(`'${op_name}' returned: ${JSON.stringify(res)}`);
+      return res;
+    };
   }
 }

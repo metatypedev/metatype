@@ -7,6 +7,7 @@ import { join, resolve } from "std/path/mod.ts";
 import { assert, assertRejects } from "std/assert/mod.ts";
 import { randomSchema, reset } from "test-utils/database.ts";
 import { TestModule } from "test-utils/test_module.ts";
+import { $ } from "dax";
 
 const m = new TestModule(import.meta);
 
@@ -61,7 +62,7 @@ Meta.test({
 
   await metadev.fetchStderrLines((line) => {
     console.log("line:", line);
-    return !line.includes(
+    return !$.stripAnsi(line).includes(
       "Successfully pushed typegraph migration-failure-test",
     );
   });
@@ -98,7 +99,7 @@ Meta.test({
 
   await metadev.fetchStderrLines((line) => {
     console.log("line:", line);
-    return !line.includes(
+    return !$.stripAnsi(line).includes(
       "Successfully pushed typegraph migration-failure-test",
     );
   });
@@ -170,7 +171,7 @@ Meta.test({
 
   await metadev.fetchStderrLines((line) => {
     console.log("line:", line);
-    return !line.includes(
+    return !$.stripAnsi(line).includes(
       "Successfully pushed typegraph migration-failure-test",
     );
   });

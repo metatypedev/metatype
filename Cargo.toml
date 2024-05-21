@@ -15,7 +15,7 @@ exclude = [
   "libs/pyrt_wit_wire",
 ]
 [workspace.package] 
-version = "0.4.1-0"
+version = "0.4.1"
 edition = "2021"
 
 [workspace.dependencies]
@@ -51,7 +51,7 @@ serde = { version = "1.0.192", features = ["derive"] }
 serde_json = "1.0.108"
 anyhow = "1.0.75"
 log = "0.4.20"
-tokio = { version = "1.34.0" }
+tokio = { version = "1.34.0", features = ["parking_lot"] }
 thiserror = "1.0.50"
 indoc = "2.0.4"
 indexmap = { version = "2.1.0", features = ["serde"] }
@@ -61,3 +61,15 @@ once_cell = "1.18.0"
 
 wasmtime = "20.0.0"
 wasmtime-wasi = "20.0.0"
+
+tracing = "0.1"
+# tracing core helper
+tracing-subscriber = { version = "0.3", features = ["env-filter", "parking_lot", "tracing-log"] }
+# backtrace for async frames
+tracing-error = "0.2"
+# `unwrap` that also logs
+tracing-unwrap = { version = "1.0", features = ["log-location"] }
+# collect traces to file
+tracing-appender = "0.2"
+
+color-eyre = "0.6"
