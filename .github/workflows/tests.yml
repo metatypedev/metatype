@@ -95,7 +95,7 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-apple-darwin
             cross: false
-          - os: custom-macos
+          - os: macos-14
             target: aarch64-apple-darwin
             cross: false
           - os: custom-macos
@@ -106,9 +106,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
       - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
         with:
           # temporary fix
