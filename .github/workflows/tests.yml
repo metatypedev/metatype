@@ -88,11 +88,11 @@ jobs:
   clippy-compat:
     needs: changes
     if: ${{ needs.changes.outputs.full == 'true' }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ fromJSON(matrix.os) }}
     strategy:
       matrix:
         include:
-          - os: [self-hosted, custom-ubuntu-large]
+          - os: "['self-hosted', 'custom-ubuntu-large']"
             target: x86_64-apple-darwin
             cross: true
           - os: custom-macos
