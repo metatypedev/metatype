@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as t from "../types.js";
-import { runtimes, wit_utils } from "../wit.js";
+import { runtimes } from "../wit.js";
 import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
 import Policy from "../policy.js";
 import { Materializer, Runtime } from "./mod.js";
@@ -26,7 +26,7 @@ interface PredefinedFuncMat extends Materializer {
 }
 
 export interface DenoFunc {
-  code: string | Function;
+  code: string | ((...any: []) => any);
   secrets?: Array<string>;
   effect?: Effect;
 }
@@ -39,7 +39,7 @@ export interface DenoImport {
   effect?: Effect;
 }
 
-function stringifyFn(code: string | Function) {
+function stringifyFn(code: string | ((...any: []) => any)) {
   if (typeof code == "function") {
     const source = code.toString();
     const namedFnMatch = source.match(/function\s*(\*?\s*[a-zA-Z0-9_]+)/);

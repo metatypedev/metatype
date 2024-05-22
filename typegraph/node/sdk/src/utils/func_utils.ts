@@ -96,6 +96,6 @@ export function freezeTgOutput(
     tgOutput.serialize(config);
   return {
     ...tgOutput,
-    serialize: (_: ArtifactResolutionConfig) => frozenMemo[tgOutput.name],
+    serialize: () => frozenMemo[tgOutput.name],
   };
 }

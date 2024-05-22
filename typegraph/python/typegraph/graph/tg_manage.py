@@ -107,23 +107,21 @@ class Manager:
             typegraph_path=self.typegraph_path,
         )
 
+        # hack for allowing tg.serialize(config) to be called more than once
+        frozen_out = freeze_tg_output(artifacts_config, self.typegraph)
         try:
-            local_memo = self.typegraph.serialize(artifacts_config)
+            frozen_serialized = frozen_out.serialize(artifacts_config)
         except Exception as err:
             return self.relay_error_to_cli(
                 Command.DEPLOY, code="serialization_err", msg=str(err), value={}
             )
-
-        reusable_tg_output = TypegraphOutput(
-            name=self.typegraph.name, serialize=lambda _: local_memo
-        )
         if artifacts_config.codegen:
             self.relay_data_to_cli(
-                initiator=Command.CODEGEN, data=json.loads(local_memo.tgJson)
+                initiator=Command.CODEGEN, data=json.loads(frozen_serialized.tgJson)
             )
 
         try:
-            ret = tg_deploy(reusable_tg_output, params)
+            ret = tg_deploy(frozen_out, params)
         except Exception as err:
             return self.relay_error_to_cli(
                 Command.DEPLOY, code="deploy_err", msg=str(err), value={}

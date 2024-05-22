@@ -42,7 +42,17 @@ repos:
           - ts
         files: ^(typegate|dev)/
       - id: es-lint
-        name: Eslint
+        name: Eslint typegraph
+        language: system
+        entry: bash -c 'cd typegraph/node/sdk && [ -f node_modules/.bin/eslint ] && pnpm eslint'
+        pass_filenames: false
+        types_or:
+          - ts
+          - tsx
+        files: ^typegraph/node/sdk
+        exclude: node_modules
+      - id: es-lint
+        name: Eslint website
         language: system
         entry: bash -c 'cd website && [ -f node_modules/.bin/eslint ] && pnpm lint'
         pass_filenames: false
