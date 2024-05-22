@@ -26,7 +26,7 @@ interface PredefinedFuncMat extends Materializer {
 }
 
 export interface DenoFunc {
-  code: string | ((...any: []) => any);
+  code: string | ((...args: any[]) => any);
   secrets?: Array<string>;
   effect?: Effect;
 }
