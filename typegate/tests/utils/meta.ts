@@ -1,11 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { testDir } from "test-utils/dir.ts";
 import { shell, ShellOptions, ShellOutput } from "test-utils/shell.ts";
-import { resolve } from "std/path/mod.ts";
 
-const metaCliExe = resolve(testDir, "../../target/debug/meta");
+// added to path in dev/test.ts
+const metaCliExe = "meta";
 
 export async function metaCli(...args: string[]): Promise<ShellOutput>;
 export async function metaCli(
@@ -28,7 +27,7 @@ type MetaCli = (args: string[], options?: ShellOptions) => Promise<ShellOutput>;
 
 export function createMetaCli(
   shell: (args: string[], options?: ShellOptions) => Promise<ShellOutput>,
-): Promise<MetaCli> {
+): MetaCli {
   return (args, options) => {
     return shell([metaCliExe, ...args], options);
   };
