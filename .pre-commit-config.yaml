@@ -1,6 +1,18 @@
 repos:
   - repo: local
     hooks:
+      - id: poetry-lock
+        name: "Check poetry lock"
+        always_run: true
+        language: system
+        entry: bash -c 'poetry lock --no-update'
+        pass_filenames: false
+      - id: poetry-lock-typegraph
+        name: "Check typegraph poetry lock"
+        always_run: true
+        language: system
+        entry: bash -c 'poetry -C ./typegraph/python lock --no-update'
+        pass_filenames: false
       - id: version
         name: "Lock versions"
         always_run: true
