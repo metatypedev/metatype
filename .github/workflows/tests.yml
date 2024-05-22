@@ -92,7 +92,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: macos-13
             target: x86_64-apple-darwin
             cross: false
           - os: macos-14
