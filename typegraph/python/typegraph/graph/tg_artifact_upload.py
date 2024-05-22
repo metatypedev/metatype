@@ -61,7 +61,15 @@ class ArtifactUploader:
             data=artifacts_json,
         )
 
-        response = handle_response(request.urlopen(req).read().decode())
+        try:
+            response = request.urlopen(req)
+        except HTTPError as e:
+            raise Exception(f"Failed requesting artifact upload URLs: {e}")
+
+        if response.status != 200:
+            raise Exception(f"Failed requesting artifact upload URLs: {response}")
+
+        response = handle_response(response.read().decode())
         return response
 
     def __upload(
@@ -75,7 +83,7 @@ class ArtifactUploader:
             upload_headers["Authorization"] = self.auth.as_header_value()
 
         if url is None:
-            print(f"Skipping upload for artifact: {meta.relativePath}")
+            # print(f"Skipping upload for artifact: {meta.relativePath}", file=sys.stderr)
             return Ok(None)
 
         if self.tg_path is None:
@@ -125,10 +133,13 @@ class ArtifactUploader:
         errors = 0
         for result, meta in zip(results, artifact_metas):
             if isinstance(result, Err):
-                print(f"Failed to upload artifact {meta.relativePath}: {result.value}")
+                print(
+                    f"Failed to upload artifact {meta.relativePath}: {result.value}",
+                    file=sys.stderr,
+                )
                 errors += 1
-            else:
-                print(f"Successfuly uploaded artifact {meta.relativePath}")
+            # else:
+            #     print(f"Successfuly uploaded artifact {meta.relativePath}", file=sys.stderr)
 
         if errors > 0:
             raise Exception(f"Failed to upload {errors} artifacts")

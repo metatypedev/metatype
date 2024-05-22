@@ -62,7 +62,11 @@ const variants = [
 async function hasArtifact(t: MetaTest, hash: string, sync: boolean) {
   if (sync) {
     const s3 = new S3Client(syncConfig.s3);
-    const res = await hasObject(s3, syncConfig.s3Bucket, resolveS3Key(hash));
+    const res = await hasObject(
+      s3,
+      syncConfig.s3Bucket,
+      resolveS3Key(syncConfig.s3Bucket, hash),
+    );
     s3.destroy();
     return res;
   } else {

@@ -1,15 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
 
-use std::collections::HashMap;
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use colored::Colorize;
-
 use actix::prelude::*;
-use anyhow::Result;
+use owo_colors::OwoColorize;
 use serde::Deserialize;
 
 use crate::com::{responses::SDKResponse, store::ServerStore};
@@ -111,7 +107,9 @@ impl PushResult {
         loader: Addr<LoaderActor>,
         sdk_response: SDKResponse,
     ) -> Result<Self> {
-        let raw = sdk_response.as_push_result()?;
+        let raw = sdk_response
+            .as_push_result()
+            .wrap_err("SDK error pushing to typegate")?;
 
         let failure = match raw.failure {
             Some(failure) => Some(serde_json::from_str(&failure)?),
@@ -130,6 +128,7 @@ impl PushResult {
         })
     }
 
+    #[tracing::instrument]
     pub async fn finalize(&self) -> Result<()> {
         let name = self.name.clone();
         let print_failure = || {
@@ -155,12 +154,12 @@ impl PushResult {
 
         for migrations in self.migrations.iter() {
             let dest = migdir.join(&migrations.runtime);
-            if let Err(e) = common::archive::unpack(&dest, Some(migrations.migrations.clone())) {
+            if let Err(err) = common::archive::unpack(&dest, Some(migrations.migrations.clone())) {
                 self.console.error(format!(
-                    "Error while unpacking migrations into {:?}",
+                    "error while unpacking migrations into {:?}",
                     migdir
                 ));
-                self.console.error(format!("{e:?}"));
+                self.console.error(format!("{err:?}"));
             } else {
                 self.console.info(format!(
                     "Successfully unpacked migrations for {name}/{} at {:?}",
@@ -172,12 +171,12 @@ impl PushResult {
         if let Some(failure) = self.failure.clone() {
             print_failure();
             match failure {
-                PushFailure::Unknown(f) => {
+                PushFailure::Unknown(fail) => {
                     self.console.error(format!(
-                        "Unknown error while pushing typegraph {tg_name}",
+                        "Unknown error while pushing typegraph {tg_name}\n{msg}",
                         tg_name = name.cyan(),
+                        msg = fail.message
                     ));
-                    self.console.error(f.message);
                 }
                 PushFailure::DatabaseResetRequired(failure) => {
                     handle_database_reset(
@@ -208,6 +207,7 @@ impl PushResult {
 
 // DatabaseReset Handler + interactivity
 
+#[tracing::instrument]
 async fn handle_database_reset(
     console: Addr<ConsoleActor>,
     loader: Addr<LoaderActor>,
@@ -244,6 +244,7 @@ async fn handle_database_reset(
 
 // NullConstraintViolation Handler + interactivity
 
+#[tracing::instrument]
 pub async fn handle_null_constraint_violation(
     console: Addr<ConsoleActor>,
     loader: Addr<LoaderActor>,

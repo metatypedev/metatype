@@ -5,7 +5,7 @@ import json
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Union
+from typing import Dict, Union, Any
 from urllib import parse, request
 
 from typegraph.gen.exports.core import (
@@ -77,14 +77,17 @@ class Manager:
             raise Exception(f"command {sdk.command.value} not supported")
 
     def serialize(self, config: CLIConfigRequest):
-        def fn():
+        try:
             artifact_cfg = config.artifacts_config
             artifact_cfg.prefix = (
                 config.prefix
             )  # prefix from cli overrides the current value
-            return self.typegraph.serialize(artifact_cfg).tgJson
-
-        return self.relay_result_to_cli(initiator=Command.SERIALIZE, fn=fn)
+            res = self.typegraph.serialize(artifact_cfg)
+        except Exception as err:
+            return self.relay_error_to_cli(
+                Command.SERIALIZE, code="serialization_err", msg=str(err), value={}
+            )
+        return self.relay_data_to_cli(Command.SERIALIZE, data=json.loads(res.tgJson))
 
     def deploy(self, config: CLIConfigRequest):
         typegate = config.typegate
@@ -93,30 +96,39 @@ class Manager:
                 f'{self.typegraph.name}" received null or undefined "auth" field on the configuration'
             )
 
-        def fn():
-            artifacts_config = config.artifacts_config
-            artifacts_config.prefix = config.prefix  # priority
-            params = TypegraphDeployParams(
-                base_url=typegate.endpoint,
-                auth=typegate.auth,
-                artifacts_config=artifacts_config,
-                secrets=config.secrets,
-                typegraph_path=self.typegraph_path,
-            )
+        artifacts_config = config.artifacts_config
+        artifacts_config.prefix = config.prefix  # priority
+        params = TypegraphDeployParams(
+            base_url=typegate.endpoint,
+            auth=typegate.auth,
+            artifacts_config=artifacts_config,
+            secrets=config.secrets,
+            typegraph_path=self.typegraph_path,
+        )
 
+        try:
             local_memo = self.typegraph.serialize(artifacts_config)
-            reusable_tg_output = TypegraphOutput(
-                name=self.typegraph.name, serialize=lambda _: local_memo
+        except Exception as err:
+            return self.relay_error_to_cli(
+                Command.DEPLOY, code="serialization_err", msg=str(err), value={}
             )
-            if artifacts_config.codegen:
-                self.relay_result_to_cli(
-                    initiator=Command.CODEGEN, fn=lambda: json.loads(local_memo.tgJson)
-                )
 
+        reusable_tg_output = TypegraphOutput(
+            name=self.typegraph.name, serialize=lambda _: local_memo
+        )
+        if artifacts_config.codegen:
+            self.relay_data_to_cli(
+                initiator=Command.CODEGEN, data=json.loads(local_memo.tgJson)
+            )
+
+        try:
             ret = tg_deploy(reusable_tg_output, params)
-            return ret.typegate
+        except Exception as err:
+            return self.relay_error_to_cli(
+                Command.DEPLOY, code="deploy_err", msg=str(err), value={}
+            )
 
-        return self.relay_result_to_cli(initiator=Command.DEPLOY, fn=fn)
+        return self.relay_data_to_cli(Command.DEPLOY, data=ret.typegate)
 
     def request_command(self) -> CLIServerResponse:
         config = self.request_config()
@@ -172,24 +184,34 @@ class Manager:
             ),
         )
 
-    def relay_result_to_cli(self, initiator: Command, fn: callable):
+    def relay_data_to_cli(self, initiator: Command, data: Any):
         response = {
             "command": initiator.value,
             "typegraphName": self.typegraph.name,
             "typegraphPath": self.typegraph_path,
+            "data": data,
         }
-        try:
-            res = fn()
-            response["data"] = json.loads(res) if isinstance(res, str) else res
-        except Exception as e:
-            response["error"] = str(e)
         req = request.Request(
             url=f"{self.endpoint}/response",
             method="POST",
             headers={"Content-Type": "application/json"},
             data=json.dumps(response).encode("utf-8"),
         )
+        request.urlopen(req)
 
+    def relay_error_to_cli(self, initiator: Command, code: str, msg: str, value: Any):
+        response = {
+            "command": initiator.value,
+            "typegraphName": self.typegraph.name,
+            "typegraphPath": self.typegraph_path,
+            "error": {"code": code, "msg": msg, "value": value},
+        }
+        req = request.Request(
+            url=f"{self.endpoint}/response",
+            method="POST",
+            headers={"Content-Type": "application/json"},
+            data=json.dumps(response).encode("utf-8"),
+        )
         request.urlopen(req)
 
 

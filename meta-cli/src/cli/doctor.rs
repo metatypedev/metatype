@@ -1,8 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{path::PathBuf, sync::Arc};
+use crate::interlude::*;
 
+use super::{Action, ConfigArgs};
 use crate::{
     cli::ui,
     config::{Config, PIPFILE_FILES, PYPROJECT_FILES, REQUIREMENTS_FILES, VENV_FOLDERS},
@@ -11,12 +12,10 @@ use crate::{
     typegraph::loader::Discovery,
 };
 
-use super::{Action, ConfigArgs};
 use actix_web::dev::ServerHandle;
-use anyhow::Result;
-use async_trait::async_trait;
 use clap::Parser;
-use colored::Colorize;
+use owo_colors::OwoColorize;
+
 use std::process::Command;
 
 #[derive(Parser, Debug)]
@@ -38,8 +37,9 @@ fn shell(cmds: Vec<&str>) -> Result<String> {
 
 #[async_trait]
 impl Action for Doctor {
+    #[tracing::instrument]
     async fn run(&self, args: ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
-        let dir = &args.dir()?;
+        let dir = &args.dir();
 
         let w = 60;
         let c = 20;

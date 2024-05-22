@@ -295,7 +295,7 @@ export class MetaTest {
     ]);
 
     if (stderr.length > 0) {
-      throw new Error(`${stderr}`);
+      throw new Error(`Error serializing typegraph: ${stderr}`);
     }
 
     if (stdout.length === 0) {

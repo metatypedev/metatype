@@ -11,8 +11,8 @@ use serde_json;
 
 #[derive(Debug, Deserialize)]
 pub struct Response {
-    data: Option<serde_json::Value>,
-    errors: Option<Vec<GraphqlError>>,
+    pub data: Option<serde_json::Value>,
+    pub errors: Option<Vec<GraphqlError>>,
 }
 
 impl Response {

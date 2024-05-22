@@ -8,16 +8,16 @@ const PROTOC_VERSION = "v24.1";
 const POETRY_VERSION = "1.7.0";
 const PYTHON_VERSION = "3.8.18";
 const PNPM_VERSION = "v9.0.5";
-const WASM_TOOLS_VERSION = "1.0.53";
-const JCO_VERSION = "1.0.0";
-const WASMTIME_VERSION = "20.0.0";
-const WASM_OPT_VERSION = "0.116.0";
+const WASM_TOOLS_VERSION = "1.208.1";
+const JCO_VERSION = "1.2.4";
+const WASMTIME_VERSION = "21.0.0";
+const WASM_OPT_VERSION = "0.116.1";
 const MOLD_VERSION = "v2.4.0";
 const CMAKE_VERSION = "3.28.0-rc6";
 const CARGO_INSTA_VERSION = "1.33.0";
 const NODE_VERSION = "20.8.0";
 const TEMPORAL_VERSION = "0.10.7";
-const METATYPE_VERSION = "0.4.1-0";
+const METATYPE_VERSION = "0.4.2";
 
 const installs = {
   python: ports.cpy_bs({ version: PYTHON_VERSION, releaseTag: "20240224" }),
@@ -62,7 +62,7 @@ ghjk.install(
     crateName: "wasm-tools",
     version: WASM_TOOLS_VERSION,
     locked: true,
-  })
+  }),
 );
 
 if (!inOci()) {
@@ -80,7 +80,11 @@ if (!inOci()) {
       packageName: "@bytecodealliance/jco",
       version: JCO_VERSION,
     })[0],
-    ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0]
+    ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0],
+    ports.cargobi({
+      crateName: "cross",
+      locked: true,
+    }),
   );
 }
 
@@ -89,7 +93,7 @@ if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
     ports.mold({
       version: MOLD_VERSION,
       replaceLd: Deno.env.has("CI") || Deno.env.has("OCI"),
-    })
+    }),
   );
 }
 
@@ -99,7 +103,7 @@ if (!Deno.env.has("NO_PYTHON")) {
     ports.pipi({
       packageName: "poetry",
       version: POETRY_VERSION,
-    })[0]
+    })[0],
   );
   if (!inOci()) {
     ghjk.install(ports.pipi({ packageName: "pre-commit" })[0]);
@@ -110,7 +114,7 @@ if (inDev()) {
   ghjk.install(
     ports.act({}),
     ports.cargobi({ crateName: "whiz", locked: true }),
-    installs.comp_py[0]
+    installs.comp_py[0],
   );
 }
 
@@ -119,12 +123,13 @@ ghjk.task("clean-deno-lock", {
     // jq
   ],
   async fn({ $ }) {
-    const jqOp1 = `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
+    const jqOp1 =
+      `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
     const jqOp2 = `del(.packages.npm["@typegraph/sdk@${METATYPE_VERSION}"])`;
     const jqOp = `${jqOp1} | ${jqOp2}`;
     await Deno.writeTextFile(
       "typegate/deno.lock",
-      await $`jq ${jqOp} typegate/deno.lock`.text()
+      await $`jq ${jqOp} typegate/deno.lock`.text(),
     );
   },
 });
@@ -135,7 +140,7 @@ ghjk.task("gen-pyrt-bind", {
   async fn({ $ }) {
     await $.removeIfExists("./libs/pyrt_wit_wire/wit_wire");
     await $`componentize-py -d ../../wit/wit-wire.wit bindings .`.cwd(
-      "./libs/pyrt_wit_wire"
+      "./libs/pyrt_wit_wire",
     );
   },
 });

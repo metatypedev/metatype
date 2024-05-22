@@ -1,6 +1,4 @@
 import TGExample from "@site/src/components/TGExample";
-import SDKTabs from "@site/src/components/SDKTabs";
-import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme-original/CodeBlock";
 
 The [S3Runtime](/docs/reference/runtimes/s3) can be used to interact with object storage APIs that are S3 compatible.
@@ -44,26 +42,11 @@ typegates:
 
 Our typegraph will then look something like:
 
-<SDKTabs>
-    <TabItem value="typescript">
-
 <TGExample 
   typegraph="files-upload"
   typescript={require("!!code-loader!../../../examples/typegraphs/files-upload.ts")}
-  query={require('./files.graphql')} 
-  />
-
-    </TabItem>
-
-    <TabItem value="python">
-
-<TGExample 
-  typegraph="files-upload"
   python={require("../../../examples/typegraphs/files-upload.py")} 
   query={require('./files.graphql')} 
   />
-
-    </TabItem>
-</SDKTabs>
 
 Peruse the [reference](/docs/reference/runtimes/s3) on the `S3Runtime` for more information.

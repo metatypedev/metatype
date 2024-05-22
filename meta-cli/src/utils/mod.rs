@@ -3,13 +3,10 @@
 
 pub mod clap;
 
-use anyhow::{bail, Result};
+use crate::interlude::*;
+
 use dialoguer::{Input, Password};
-use log::trace;
-use std::collections::HashMap;
 use std::env::{set_var, var};
-use std::hash::Hash;
-use std::path::Path;
 
 use crate::config::VENV_FOLDERS;
 use crate::fs::find_in_parents;
@@ -21,9 +18,8 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
         trace!("Detected active venv at {active_venv:?}.");
         if active_venv.is_dir() {
             return Ok(());
-        } else {
-            bail!("Active venv at {active_venv:?} not found.");
         }
+        bail!("Active venv at {active_venv:?} not found.");
     }
 
     if let Some(venv_dir) = find_in_parents(dir, VENV_FOLDERS)? {
@@ -80,27 +76,5 @@ impl From<BasicAuth> for BasicAuthCommon {
             username: val.username,
             password: val.password,
         }
-    }
-}
-
-pub trait MapValues<K, V, W, O>: IntoIterator<Item = (K, V)>
-where
-    // K: Eq,
-    O: FromIterator<(K, W)>,
-{
-    fn map_values<M>(self, f: M) -> O
-    where
-        M: Fn(V) -> W;
-}
-
-impl<K, V, W> MapValues<K, V, W, HashMap<K, W>> for HashMap<K, V>
-where
-    K: Eq + Hash,
-{
-    fn map_values<M>(self, f: M) -> HashMap<K, W>
-    where
-        M: Fn(V) -> W,
-    {
-        self.into_iter().map(|(k, v)| (k, f(v))).collect()
     }
 }

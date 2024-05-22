@@ -9,6 +9,9 @@ import * as native from "native";
 import { nativeResult } from "../../utils.ts";
 import { makeDatasource } from "./prisma.ts";
 import type { PrismaRT } from "./mod.ts";
+import { getLogger } from "@typegate/log.ts";
+
+const logger = getLogger(import.meta);
 
 type PrismaRuntimeDS = PrismaRT.DS<PrismaRT.DataWithDatamodel>;
 
@@ -60,6 +63,7 @@ export class PrismaMigrate {
 
   apply: Resolver<{ resetDatabase: boolean }> = async ({ resetDatabase }) => {
     const { datamodel } = this.runtime.data;
+    logger.info("prisma apply");
     const res = await native.prisma_apply({
       datasource: this.datasource,
       datamodel,
@@ -68,14 +72,20 @@ export class PrismaMigrate {
     });
 
     if ("Err" in res) {
+      logger.error(`prisma apply error: ${res.Err.message}`);
       throw new Error(res.Err.message);
     }
 
     if ("ResetRequired" in res) {
+      logger.error(
+        `database reset required: ${res.ResetRequired.reset_reason}`,
+      );
       throw new Error(
         `database reset required: ${res.ResetRequired.reset_reason}`,
       );
     }
+
+    logger.info("prisma apply: successful");
 
     const { reset_reason, applied_migrations } = res.Ok;
 
@@ -108,11 +118,14 @@ export class PrismaMigrate {
   };
 
   reset: Resolver<boolean> = async () => {
+    logger.info("prisma reset");
     nativeResult(
       await native.prisma_reset({
         datasource: this.datasource,
       }),
     );
+    logger.info("prisma reset: successful");
+
     return true;
   };
 }
@@ -193,9 +206,17 @@ export class PrismaMigrationRuntime extends Runtime {
             ),
           );
 
+          logger.info("prisma diff");
+          const diff = await native.prisma_diff({
+            datasource,
+            datamodel,
+            script,
+          });
+          logger.info("prisma diff: successful");
+
           return {
             runtimeName: name,
-            diff: await native.prisma_diff({ datasource, datamodel, script }),
+            diff,
           };
         }) as Resolver;
         break;
@@ -215,6 +236,7 @@ export class PrismaMigrationRuntime extends Runtime {
             ),
           );
 
+          logger.info("prisma deploy");
           const res = nativeResult(
             await native.prisma_deploy({
               datasource,
@@ -222,6 +244,7 @@ export class PrismaMigrationRuntime extends Runtime {
               migrations,
             }),
           );
+          logger.info("prisma deploy: successful");
 
           return {
             migrationCount: res.migration_count,

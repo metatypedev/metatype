@@ -1,9 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
 
-use std::path::PathBuf;
 use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::Arc;
 
 use actix::prelude::Context;
 use actix::prelude::*;
@@ -95,27 +94,29 @@ impl LoaderActor {
         LoaderPool::new(config.base_dir.clone(), max_parallel_loads)
     }
 
+    #[tracing::instrument(skip(self))]
     fn load_module(&self, self_addr: Addr<Self>, path: Arc<PathBuf>) {
         let loader_pool = self.loader_pool.clone();
         let console = self.console.clone();
         let counter = self.counter.clone();
-        Arbiter::current().spawn(async move {
+        let fut = async move {
             // TODO error handling?
-            let loader = loader_pool.get_loader().await.unwrap();
+            let loader = loader_pool.get_loader().await.unwrap_or_log();
             match loader.load_module(path.clone()).await {
                 Ok(tgs_infos) => {
                     self_addr.do_send(LoadedModule(path.as_ref().to_owned().into(), tgs_infos))
                 }
-                Err(e) => {
+                Err(err) => {
                     if counter.is_some() {
                         // auto stop
-                        self_addr.do_send(TryStop(StopBehavior::ExitFailure(e.to_string())));
+                        self_addr.do_send(TryStop(StopBehavior::ExitFailure(err.to_string())));
                     } else {
-                        console.error(e.to_string());
+                        console.error(format!("Loader error: {err:#}"));
                     }
                 }
             }
-        });
+        };
+        Arbiter::current().spawn(fut.in_current_span());
     }
 }
 
@@ -155,17 +156,17 @@ impl Actor for LoaderActor {
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
         if let Some(tx) = self.stopped_tx.take() {
-            if let Err(e) = tx.send(self.stop_behavior.clone()) {
+            if let Err(err) = tx.send(self.stop_behavior.clone()) {
                 self.console
-                    .warning(format!("failed to send stop signal: {:?}", e));
+                    .warning(format!("failed to send stop signal: {err:?}"));
             }
         }
-        if let Err(e) = self
+        if let Err(err) = self
             .event_tx
             .send(LoaderEvent::Stopped(self.stop_behavior.clone()))
         {
             self.console
-                .warning(format!("failed to send stop event: {:?}", e));
+                .warning(format!("failed to send stop event: {err}"));
         }
         log::trace!("LoaderActor stopped");
     }
@@ -176,6 +177,10 @@ impl Handler<LoadModule> for LoaderActor {
 
     fn handle(&mut self, msg: LoadModule, ctx: &mut Context<Self>) -> Self::Result {
         self.console.info(format!("Loading module {:?}", msg.0));
+
+        if let Some(counter) = self.counter.as_ref() {
+            counter.fetch_add(1, Ordering::SeqCst);
+        }
 
         self.load_module(ctx.address(), msg.0);
     }
@@ -192,6 +197,9 @@ impl Handler<ReloadModule> for LoaderActor {
         };
         self.console
             .info(format!("Reloading module {:?}: {reason}", msg.0));
+        if let Some(counter) = self.counter.as_ref() {
+            counter.fetch_add(1, Ordering::SeqCst);
+        }
 
         self.load_module(ctx.address(), msg.0);
     }
@@ -216,12 +224,12 @@ impl Handler<LoadedModule> for LoaderActor {
             }
         }
 
-        self.console.info(format!("Loaded 1 file from {path:?}"));
+        self.console.debug(format!("Loaded 1 file from {path:?}"));
         if let Some(counter) = self.counter.as_ref() {
             let count = counter.fetch_sub(1, Ordering::SeqCst);
-            if count == 0 {
+            if count == 1 {
                 self.console
-                    .info("All modules have been loaded. Stopping the loader.".to_string());
+                    .debug("All modules have been loaded. Stopping the loader.".to_string());
                 ctx.notify(TryStop(StopBehavior::ExitSuccess));
             }
         }

@@ -1,21 +1,20 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
 
-use anyhow::{bail, Context, Result};
-use colored::Colorize;
 use common::typegraph::runtimes::{KnownRuntime, TGRuntime};
 use common::typegraph::{TypeNode, Typegraph};
+use typescript as ts;
+
 use indexmap::IndexMap;
-use log::info;
-use serde::{Deserialize, Serialize};
+use owo_colors::OwoColorize;
 use serde_json::Value;
+
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
 use std::fs::{self, File};
 use std::io::Write;
-use std::path::{Path, PathBuf};
-use typescript as ts;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ImportFuncMatData {
@@ -204,7 +203,8 @@ impl<'a> Codegen<'a> {
             .map(|(name, code)| -> Result<ModuleCode> {
                 let path = self.ts_modules.remove(&name).unwrap().path;
                 let code = ts::format_text(&path, &code)
-                    .context(format!("could not format code: {code:#?}"))?;
+                    .map_err(anyhow_to_eyre!())
+                    .wrap_err_with(|| format!("could not format code: {code:#?}"))?;
                 Ok(ModuleCode { path, code })
             })
             .collect::<Result<Vec<_>>>()
@@ -289,7 +289,7 @@ impl<'a> Codegen<'a> {
     }
 
     fn gen_obj_type(&self, tpe: &TypeNode) -> Result<String> {
-        let fields = tpe.get_struct_fields()?;
+        let fields = tpe.get_struct_fields().map_err(anyhow_to_eyre!())?;
         let fields = fields
             .iter()
             .map(|(k, v)| (k.clone(), self.get_typespec(*v).unwrap()))
@@ -308,7 +308,7 @@ impl<'a> Codegen<'a> {
 
     fn destructure_object(&self, idx: u32) -> Result<String> {
         let tpe = &self.tg.types[idx as usize];
-        let fields = tpe.get_struct_fields()?;
+        let fields = tpe.get_struct_fields().map_err(anyhow_to_eyre!())?;
         #[cfg(test)]
         let fields = fields
             .into_iter()
@@ -455,24 +455,6 @@ impl<'a> Codegen<'a> {
             TypeNode::Either { data, .. } => self.gen_union_type_definition(&data.one_of),
             _ => bail!("unsupported type to generate type specification: {tpe:#?}"),
         }
-    }
-}
-
-/**
- * utils
- **/
-
-trait IntoJson {
-    fn into_json(self) -> Value;
-}
-
-impl IntoJson for HashMap<String, Value> {
-    fn into_json(self) -> Value {
-        let mut map = serde_json::Map::with_capacity(self.len());
-        for (k, v) in self {
-            map.insert(k, v);
-        }
-        Value::Object(map)
     }
 }
 
