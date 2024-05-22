@@ -166,7 +166,7 @@ jobs:
       matrix:
         include:
           - platform: linux/amd64
-            runner: ubuntu-latest
+            runner: custom-ubuntu-large
           - platform: linux/arm64
             # FIXME: official darwin images don't have docker
             # and nested virtualizaiton
