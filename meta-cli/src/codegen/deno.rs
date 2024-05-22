@@ -458,24 +458,6 @@ impl<'a> Codegen<'a> {
     }
 }
 
-/**
- * utils
- **/
-
-trait IntoJson {
-    fn into_json(self) -> Value;
-}
-
-impl IntoJson for HashMap<String, Value> {
-    fn into_json(self) -> Value {
-        let mut map = serde_json::Map::with_capacity(self.len());
-        for (k, v) in self {
-            map.insert(k, v);
-        }
-        Value::Object(map)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;

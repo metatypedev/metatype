@@ -41,14 +41,16 @@ pub fn command(_cmd: Typegate, _gen_args: ConfigArgs) -> Result<()> {
             BASE_URL.to_owned() + crate::build::COMMIT_HASH + "/typegate/import_map.json"
         });
 
-        runtime.block_on(typegate_engine::launch_typegate_deno(
-            // typegate_core::resolve_url_or_path(
-            //     "",
-            //     &std::env::current_dir()?.join("./typegate/src/main.ts"),
-            // )?,
-            typegate_engine::resolve_url(&main_url)?,
-            Some(import_map_url),
-        ))?;
+        runtime
+            .block_on(typegate_engine::launch_typegate_deno(
+                // typegate_core::resolve_url_or_path(
+                //     "",
+                //     &std::env::current_dir()?.join("./typegate/src/main.ts"),
+                // )?,
+                typegate_engine::resolve_url(&main_url)?,
+                Some(import_map_url),
+            ))
+            .map_err(anyhow_to_eyre!())?;
         Ok(())
     }
 }
