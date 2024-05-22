@@ -9,7 +9,7 @@ import {
   PutObjectCommandInput,
   S3Client,
 } from "aws-sdk/client-s3";
-import { SyncConfig } from "./config.ts";
+import { SyncConfig } from "../config.ts";
 
 import { encodeHex } from "std/encoding/hex.ts";
 import { z } from "zod";

@@ -3,6 +3,8 @@
 
 import { z } from "zod";
 import { decodeBase64 } from "std/encoding/base64.ts";
+import { RedisConnectOptions } from "redis";
+import { S3ClientConfig } from "aws-sdk/client-s3";
 
 const zBooleanString = z.preprocess(
   (a: unknown) => z.coerce.string().parse(a) === "true",
@@ -57,18 +59,8 @@ export type TypegateConfigBase = z.infer<typeof typegateConfigBaseSchema>;
 // These config entries are only accessible on a Typegate instance.
 // They are not read from a global variable to enable test isolation and configurability.
 export const syncConfigSchema = z.object({
-  redis_url: z.string().transform((s) => {
-    if (s == undefined) return undefined;
-    const url = new URL(s);
-    // if (url.password === "") {
-    //   url.password = Deno.env.get("SYNC_REDIS_PASSWORD") ?? "";
-    // }
-    return url;
-  }),
-  s3_host: z.string().transform((s) => {
-    if (s == undefined) return undefined;
-    return new URL(s);
-  }),
+  redis_url: z.string().transform((s) => new URL(s)),
+  s3_host: z.string().transform((s) => new URL(s)),
   s3_region: z.string(),
   s3_bucket: z.string(),
   s3_access_key: z.string(),
@@ -76,10 +68,15 @@ export const syncConfigSchema = z.object({
   s3_path_style: zBooleanString.default(true),
 });
 export type SyncConfig = z.infer<typeof syncConfigSchema>;
+export type SyncConfigX = {
+  redis: RedisConnectOptions;
+  s3: S3ClientConfig;
+  s3Bucket: string;
+};
 
 export type TypegateConfig = {
   base: TypegateConfigBase;
-  sync: SyncConfig | null;
+  sync: SyncConfigX | null;
 };
 
 // Those envs are split from the config as only a subset of them are shared with the workers

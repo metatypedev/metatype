@@ -81,6 +81,7 @@ export class Typegate implements AsyncDisposable {
     customRegister: Register | null = null,
   ): Promise<Typegate> {
     const { sync: syncConfig } = config;
+    const tmpDir = config.base.tmp_dir;
     if (syncConfig == null) {
       logger.warn("Entering no-sync mode...");
       logger.warn(
@@ -99,8 +100,7 @@ export class Typegate implements AsyncDisposable {
         register,
         new NoLimiter(),
         artifactStore,
-        null,
-        tmpDir,
+        config,
         stack.move(),
       );
     } else {

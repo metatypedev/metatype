@@ -9,11 +9,14 @@ import { filterKeys } from "std/collections/filter_keys.ts";
 import { configOrExit } from "./config/loader.ts";
 import {
   globalConfigSchema,
+  SyncConfig,
   syncConfigSchema,
+  SyncConfigX,
   typegateConfigBaseSchema,
 } from "./config/types.ts";
 import type { TypegateConfig } from "./config/types.ts";
 export type { TypegateConfig };
+export type { SyncConfigX as SyncConfig };
 
 async function getHostname() {
   try {
@@ -66,6 +69,37 @@ function argsAsConfig() {
   );
 }
 
+function transformSyncConfig(raw: SyncConfig): SyncConfigX {
+  const { hostname, port, password, pathname } = raw.redis_url;
+  const redisDb = parseInt(pathname.slice(1));
+  if (isNaN(redisDb)) {
+    console.error(`Invalid redis db: ${pathname}`);
+    throw new Error(`Invalid redis db: ${pathname}`);
+  }
+  const redis = {
+    hostname,
+    port,
+    ...password.length > 0 ? { password } : {},
+    db: redisDb,
+  };
+
+  const s3 = {
+    endpoint: raw.s3_host.href,
+    region: raw.s3_region,
+    credentials: {
+      accessKeyId: raw.s3_access_key,
+      secretAccessKey: raw.s3_secret_key,
+    },
+    forcePathStyle: raw.s3_path_style,
+  };
+
+  return {
+    redis,
+    s3,
+    s3Bucket: raw.s3_bucket,
+  };
+}
+
 export function getTypegateConfig(
   defaults: {
     base?: Partial<z.input<typeof typegateConfigBaseSchema>>;
@@ -92,7 +126,7 @@ export function getTypegateConfig(
       argsAsConfig(),
     ].map(filterMapSyncKeys),
   );
-  return { base, sync };
+  return { base, sync: sync && transformSyncConfig(sync) };
 }
 
 // const config = await configOrExit([

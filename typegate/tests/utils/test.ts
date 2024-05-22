@@ -11,10 +11,9 @@ import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 import { createMetaCli } from "./meta.ts";
 import { TypeGraph } from "../../src/typegraph/mod.ts";
-import { SyncConfig } from "../../src/sync/config.ts";
+import { getTypegateConfig, SyncConfig } from "../../src/config.ts";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
-import config from "../../src/config.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
@@ -40,7 +39,24 @@ export enum SDKLangugage {
 class TypegateManager implements AsyncDisposable {
   private index = 0;
 
-  constructor(private typegates: Typegate[]) {}
+  constructor(public typegates: Typegate[]) {}
+
+  static async init(replicas: number) {
+    const typegates = await Promise.all(
+      Array.from({ length: replicas }).map(async () =>
+        Typegate.init(
+          getTypegateConfig({
+            base: {
+              tmp_dir: await newTempDir({ prefix: "typegate-test-" }),
+            },
+          }),
+          null,
+        )
+      ),
+    );
+
+    return new TypegateManager(typegates);
+  }
 
   get replicas() {
     return this.typegates.length;
@@ -53,7 +69,10 @@ class TypegateManager implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose]() {
-    await Promise.all(this.typegates.map((tg) => tg[Symbol.asyncDispose]()));
+    await Promise.all(this.typegates.map(async (tg) => {
+      await Deno.remove(tg.config.base.tmp_dir, { recursive: true });
+      await tg[Symbol.asyncDispose]();
+    }));
   }
 }
 
@@ -96,7 +115,6 @@ export class MetaTest {
     t: Deno.TestContext,
     typegates: TypegateManager,
     introspection: boolean,
-    tempDir: string,
   ): Promise<MetaTest> {
     await using stack = new AsyncDisposableStack();
     stack.use(typegates);
@@ -110,7 +128,6 @@ export class MetaTest {
       typegates,
       introspection,
       portNumber,
-      tempDir,
       stack.move(),
     );
 
@@ -122,7 +139,6 @@ export class MetaTest {
     public typegates: TypegateManager,
     private introspection: boolean,
     public port: number,
-    public tempDir: string,
     public disposables: AsyncDisposableStack,
   ) {
   }
@@ -448,43 +464,23 @@ export const test = ((o, fn): void => {
         );
       }
 
-      const tempDir = await Deno.makeTempDir({
-        prefix: "typegate-test-",
-        dir: config.tmp_dir,
-      });
-
-      // TODO different tempDir for each typegate instance
-      const result = await Promise.allSettled(
-        Array.from({ length: replicas }).map((_) =>
-          Typegate.init(opts.syncConfig ?? null, null, tempDir)
-        ),
-      );
-      const typegates = result.map((r) => {
-        if (r.status === "fulfilled") {
-          return r.value;
-        } else {
-          throw r.reason;
-        }
-      });
+      const typegateManager = await TypegateManager.init(replicas);
 
       const {
         gitRepo = null,
         introspection = false,
       } = opts;
       await Promise.all(
-        typegates.map((typegate) => SystemTypegraph.loadAll(typegate)),
+        typegateManager.typegates.map((typegate) =>
+          SystemTypegraph.loadAll(typegate)
+        ),
       );
 
       await using mt = await MetaTest.init(
         t,
-        new TypegateManager(typegates),
+        typegateManager,
         introspection,
-        tempDir,
       );
-
-      mt.disposables.defer(async () => {
-        await Deno.remove(tempDir, { recursive: true });
-      });
 
       if (opts.teardown != null) {
         mt.disposables.defer(opts.teardown);

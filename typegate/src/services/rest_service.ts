@@ -7,7 +7,7 @@ import { getLogger } from "../log.ts";
 import { RateLimit } from "../typegate/rate_limiter.ts";
 import { Context, Info } from "../types.ts";
 import { handlePlaygroundRestAPI } from "./playground_service.ts";
-import config from "../config.ts";
+import { globalConfig } from "../config.ts";
 import { BaseError, ErrorKind } from "../errors.ts";
 
 const logger = getLogger("rest");
@@ -34,7 +34,7 @@ export async function handleRest(
     const [, typegraphName, _rest, ...remainder] = url.pathname.split("/");
     const name = remainder.join("/");
 
-    if (req.method === "GET" && config.debug) {
+    if (req.method === "GET" && globalConfig.debug) {
       if (name === "/" || !name) {
         return handlePlaygroundRestAPI(
           `Redoc ${typegraphName}`,

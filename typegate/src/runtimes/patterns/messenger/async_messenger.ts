@@ -4,7 +4,7 @@
 import { getLogger } from "../../../log.ts";
 import { Answer, Message, TaskData } from "./types.ts";
 import { maxi32 } from "../../../utils.ts";
-import { TypegateBaseConfig } from "../../../config/types.ts";
+import { TypegateConfigBase } from "../../../config/types.ts";
 
 const logger = getLogger(import.meta);
 
@@ -21,7 +21,7 @@ export type MessengerStop<Broker> = (broker: Broker) => Promise<void> | void;
 
 export type AsyncMessengerConfig = Readonly<
   Pick<
-    TypegateBaseConfig,
+    TypegateConfigBase,
     | "timer_max_timeout_ms"
     | "timer_destroy_resources"
   >
@@ -54,7 +54,7 @@ export class AsyncMessenger<Broker, M, A> {
     this.#start = start;
     this.#send = send;
     this.#stop = stop;
-    this.#timeoutSecs = config.timer_max_timout_ms / 1000;
+    this.#timeoutSecs = config.timer_max_timeout_ms / 1000;
     // init broker
     this.broker = start(this.receive.bind(this));
     this.initTimer();

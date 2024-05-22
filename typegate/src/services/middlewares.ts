@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import config from "../config.ts";
+import { globalConfig } from "../config.ts";
 import { QueryEngine } from "../engine/query_engine.ts";
 import { getLogger } from "../log.ts";
 
@@ -38,8 +38,8 @@ export function resolveIdentifier(
     }
   }
 
-  if (config.trust_proxy) {
-    const headerIp = request.headers.get(config.trust_header_ip);
+  if (globalConfig.trust_proxy) {
+    const headerIp = request.headers.get(globalConfig.trust_header_ip);
     if (headerIp) {
       return headerIp;
     }

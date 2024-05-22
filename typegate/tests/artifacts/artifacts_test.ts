@@ -70,7 +70,8 @@ async function hasArtifact(t: MetaTest, hash: string, sync: boolean) {
     s3.destroy();
     return res;
   } else {
-    return await exists(join(t.tempDir, "artifacts-cache", hash));
+    const tempDir = t.typegate.config.base.tmp_dir;
+    return await exists(join(tempDir, "artifacts-cache", hash));
   }
 }
 

@@ -12,7 +12,7 @@ import {
 } from "./mod.ts";
 import { ArtifactMeta, ArtifactStore } from "./mod.ts";
 import { HashTransformStream } from "../../utils/hash.ts";
-import { SyncConfig } from "../../sync/config.ts";
+import { SyncConfig } from "../../config.ts";
 import { LocalArtifactPersistence } from "./local.ts";
 import { exists } from "std/fs/exists.ts";
 import { dirname } from "std/path/mod.ts";
