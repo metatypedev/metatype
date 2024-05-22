@@ -17,6 +17,7 @@ RUN set -eux \
    && apt-get update \
    && apt install --fix-broken --assume-yes --no-install-recommends \
    make \
+   clang \
    # libffi-sys cate build dep\
    automake \
    # protoc\

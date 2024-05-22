@@ -106,6 +106,7 @@ const env: Record<string, string> = {
   "TMP_DIR": tmpDir,
   "TIMER_MAX_TIMEOUT_MS": "30000",
   "NPM_CONFIG_REGISTRY": "http://localhost:4873",
+  "PATH": `${Deno.env.get("PATH")}:${join(projectDir, "target/debug")}`,
 };
 
 await Deno.mkdir(tmpDir, { recursive: true });
@@ -145,12 +146,16 @@ interface Run {
   streamed: boolean;
 }
 
+const xtask = join(projectDir, "target/debug/xtask");
+const denoConfig = join(projectDir, "typegate/deno.jsonc");
+
 function createRun(testFile: string): Run {
   const start = Date.now();
-  const child = new Deno.Command("deno", {
+  const child = new Deno.Command(xtask, {
     args: [
-      "task",
+      "deno",
       "test",
+      `--config=${denoConfig}`,
       testFile,
       ...flags["--"],
     ],
@@ -180,9 +185,40 @@ function createRun(testFile: string): Run {
   };
 }
 
+async function buildXtask() {
+  console.log(`${prefix} Building xtask...`);
+  const child = new Deno.Command("cargo", {
+    args: ["build", "--package", "xtask"],
+    cwd: projectDir,
+    stdout: "inherit",
+    stderr: "inherit",
+  }).spawn();
+  const status = await child.status;
+  if (!status.success) {
+    throw new Error("Failed to build xtask");
+  }
+}
+
+async function buildMetaCli() {
+  console.log(`${prefix} Building meta-cli...`);
+  const child = new Deno.Command("cargo", {
+    args: ["build", "--package", "meta-cli"],
+    cwd: projectDir,
+    stdout: "inherit",
+    stderr: "inherit",
+  }).spawn();
+  const status = await child.status;
+  if (!status.success) {
+    throw new Error("Failed to build meta-cli");
+  }
+}
+
 const queues = [...filteredTestFiles];
 const runs: Record<string, Run> = {};
 const globalStart = Date.now();
+
+await buildXtask();
+await buildMetaCli();
 
 void (async () => {
   while (queues.length > 0) {

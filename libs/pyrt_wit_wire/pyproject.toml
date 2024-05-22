@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyrt_wit_wire"
-version = "0.4.1"
+version = "0.4.2"
 description = "Wasm component implementing the PythonRuntime host using wit_wire protocol."
 license = "Elastic-2.0"
 readme = "README.md"
