@@ -13,7 +13,7 @@ impl InputResolverSync for RawTgResolver {
     fn resolve(
         &self,
         order: metagen::GeneratorInputOrder,
-    ) -> anyhow::Result<GeneratorInputResolved> {
+    ) -> color_eyre::Result<GeneratorInputResolved> {
         match order {
             GeneratorInputOrder::TypegraphFromTypegate { .. } => {
                 Ok(GeneratorInputResolved::TypegraphFromTypegate {

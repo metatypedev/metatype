@@ -12232,6 +12232,7 @@ name = "typegraph_core"
 version = "0.4.2"
 dependencies = [
  "anyhow",
+ "color-eyre",
  "common",
  "enum_dispatch",
  "graphql-parser 0.4.0",
