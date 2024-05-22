@@ -5,13 +5,13 @@ repos:
         name: "Check poetry lock"
         always_run: true
         language: system
-        entry: bash -c 'poetry lock --no-update'
+        entry: bash -c 'poetry check --lock'
         pass_filenames: false
       - id: poetry-lock-typegraph
         name: "Check typegraph poetry lock"
         always_run: true
         language: system
-        entry: bash -c 'poetry -C ./typegraph/python lock --no-update'
+        entry: bash -c 'poetry -C ./typegraph/python check --lock'
         pass_filenames: false
       - id: version
         name: "Lock versions"
