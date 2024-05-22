@@ -1,5 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
 
 use crate::com::{
     responses::{CLIResponseError, CLIResponseSuccess, SDKResponse},
@@ -18,8 +19,6 @@ use serde_json::json;
 use std::{
     io::{Error, ErrorKind},
     net::{Ipv4Addr, SocketAddrV4, TcpListener},
-    path::PathBuf,
-    sync::Arc,
 };
 
 pub struct PortManager {
@@ -50,8 +49,9 @@ struct QueryConfigParams {
 }
 
 #[get("/config")]
+#[tracing::instrument(level = "debug", ret)]
 async fn config(req: HttpRequest) -> impl Responder {
-    let parsed = Query::<QueryConfigParams>::from_query(req.query_string()).unwrap();
+    let parsed = Query::<QueryConfigParams>::from_query(req.query_string()).unwrap_or_log();
 
     let mut artefact_base_dir = parsed.typegraph_path.clone();
     artefact_base_dir.pop(); // pop file.ext
@@ -116,6 +116,7 @@ async fn config(req: HttpRequest) -> impl Responder {
 }
 
 #[get("/command")]
+#[tracing::instrument(level = "debug", ret)]
 async fn command() -> impl Responder {
     match ServerStore::get_command() {
         Some(command) => HttpResponse::Ok()
@@ -132,6 +133,7 @@ async fn command() -> impl Responder {
 }
 
 #[post("/response")]
+#[tracing::instrument(level = "debug", ret)]
 async fn response(req_body: String) -> impl Responder {
     let sdk_response: SDKResponse = serde_json::from_str(&req_body).unwrap();
 
@@ -166,16 +168,17 @@ pub fn init_server() -> std::io::Result<Server> {
         .try_clone()
         .map_err(|e| Error::new(ErrorKind::AddrNotAvailable, e.to_string()))?;
 
-    log::trace!("Server is listening at http://localhost:{:?}", port);
+    log::trace!("CLI server is listening at http://localhost:{port}");
 
     let server = HttpServer::new(|| {
         App::new()
             .service(config)
             .service(command)
             .service(response)
-            .app_data(PayloadConfig::new(1000000 * 100)) // mb
+            .app_data(PayloadConfig::new(1_000_000 * 100)) // mb
     })
     .listen(tcp_listener)?
+    .workers(1)
     .run();
 
     Ok(server)

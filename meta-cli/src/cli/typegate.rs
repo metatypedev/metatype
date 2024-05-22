@@ -1,9 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
 
 use actix_web::dev::ServerHandle;
-use anyhow::Result;
-use async_trait::async_trait;
 use clap::Parser;
 
 use crate::cli::{Action, ConfigArgs};

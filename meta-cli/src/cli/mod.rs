@@ -1,17 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::interlude::*;
+
 use crate::utils::clap::UrlValueParser;
 use actix_web::dev::ServerHandle;
-use anyhow::Result;
-use async_trait::async_trait;
 use clap::Parser;
 use clap::Subcommand;
 use clap_verbosity_flag::Verbosity;
 use enum_dispatch::enum_dispatch;
 use normpath::PathExt;
 use reqwest::Url;
-use std::path::PathBuf;
 
 mod ui;
 
@@ -54,8 +53,8 @@ pub struct ConfigArgs {
 }
 
 impl ConfigArgs {
-    pub fn dir(&self) -> Result<PathBuf> {
-        Ok(PathBuf::from(&self.dir).normalize()?.into_path_buf())
+    pub fn dir(&self) -> PathBuf {
+        self.dir.normalize().unwrap_or_log().into_path_buf()
     }
 }
 

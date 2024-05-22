@@ -1,12 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
 
 use clap::{
     builder::TypedValueParser,
     error::{ContextKind, ContextValue, ErrorKind},
     Error,
 };
-use colored::Colorize;
+use owo_colors::OwoColorize;
 use reqwest::Url;
 
 #[derive(Clone)]

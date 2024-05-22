@@ -114,6 +114,7 @@ async fn spin_up_typegate() -> anyhow::Result<(tokio::process::Child, common::no
             username: "admin".into(),
             password: tg_admin_password.into(),
         }),
-    )?;
+    )
+    .map_err(|err| format_err!(Box::new(err)))?;
     Ok((typegate, node))
 }

@@ -15,8 +15,21 @@ import { QueryEngine } from "../engine/query_engine.ts";
 import * as ast from "graphql/ast";
 import { BadContext, ResolverError } from "../errors.ts";
 import { badRequest, jsonError, jsonOk } from "./responses.ts";
+import { BaseError, ErrorKind } from "../errors.ts";
 
 const logger = getLogger(import.meta);
+
+class InvalidQuery extends BaseError {
+  constructor(message: string) {
+    super(import.meta, ErrorKind.User, message);
+  }
+}
+
+class GraphQLVariableNotFound extends InvalidQuery {
+  constructor(variable: string) {
+    super(`variable not found: ${variable}`);
+  }
+}
 
 export function isIntrospectionQuery(
   operation: ast.OperationDefinitionNode,
@@ -37,6 +50,9 @@ export async function handleGraphQL(
   try {
     content = await parseRequest(request);
   } catch (e) {
+    if (e instanceof BaseError) {
+      return e.toResponse();
+    }
     return badRequest(e.message);
   }
   const { query, operationName: operationNameRaw, variables } = content;
@@ -54,6 +70,7 @@ export async function handleGraphQL(
     engine.checkVariablesPresence(
       unwrappedOperation.variableDefinitions ?? [],
       variables,
+      GraphQLVariableNotFound,
     );
 
     const isIntrospection = isIntrospectionQuery(
@@ -102,6 +119,9 @@ export async function handleGraphQL(
     return jsonOk(res, headers);
   } catch (e) {
     // throw e;
+    if (e instanceof BaseError) {
+      return e.toResponse();
+    }
     if (e instanceof ResolverError) {
       logger.error(`field err: ${e.message}`);
       return jsonError(e.message, headers, 502);

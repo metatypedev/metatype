@@ -1,7 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use colored::Colorize;
+use crate::interlude::*;
+
+use owo_colors::OwoColorize;
 
 pub fn print_box(content: &str, width: usize) {
     let wrap_width = width - 4;

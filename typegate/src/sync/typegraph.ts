@@ -55,7 +55,7 @@ export class TypegraphStore {
 
     await this.#uploadData(
       this.bucket,
-      TypegraphStore.#getKey(id),
+      TypegraphStore.#getKey(this.bucket, id),
       data,
     );
 
@@ -65,7 +65,7 @@ export class TypegraphStore {
   public async download(
     id: TypegraphId,
   ): Promise<[TypeGraphDS, SecretManager]> {
-    const key = TypegraphStore.#getKey(id);
+    const key = TypegraphStore.#getKey(this.bucket, id);
     const data = await this.#downloadData(this.bucket, key);
     const [typegraph, encryptedSecrets] = JSON.parse(data) as [
       TypeGraphDS,
@@ -77,10 +77,10 @@ export class TypegraphStore {
     return [typegraph, secretManager];
   }
 
-  static #getKey(typegraphId: TypegraphId) {
+  static #getKey(bucket: string, typegraphId: TypegraphId) {
     const { name, hash, uploadedAt } = typegraphId;
     const uploadDate = uploadedAt.toISOString();
-    return `/typegraphs/${name}/typegraph.json.${uploadDate}.${hash}`;
+    return `${bucket}/typegraphs/${name}/typegraph.json.${uploadDate}.${hash}`;
   }
 
   async #uploadData(bucket: string, key: string, data: string) {

@@ -1,11 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::path::PathBuf;
+use crate::interlude::*;
 
 use super::{Action, ConfigArgs};
 use actix_web::dev::ServerHandle;
-use anyhow::{bail, Ok, Result};
 use async_trait::async_trait;
 use clap::{Parser, ValueEnum};
 use include_dir::{include_dir, Dir};
@@ -44,20 +43,21 @@ pub struct New {
 
 #[async_trait]
 impl Action for New {
+    #[tracing::instrument]
     async fn run(&self, args: ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
         let dir = PathBuf::from(&self.dir);
         let target_dir = if dir.is_absolute() {
             dir
         } else {
-            args.dir()?.join(&dir)
+            args.dir().join(&dir)
         };
-        println!("Target directory {}", target_dir.display());
+        println!("target directory {}", target_dir.display());
 
         let template_name = self.template.name();
         match TEMPLATES.get_dir(template_name) {
             Some(template) => {
                 if !target_dir.exists() {
-                    println!("Creating directory: {}", target_dir.display());
+                    println!("creating directory: {}", target_dir.display());
                     std::fs::create_dir(&target_dir)?;
                 } else if target_dir.is_file() {
                     bail!("target directory is a file: {}", target_dir.display());
@@ -85,7 +85,7 @@ fn unpack_template(
             bail!("{} already exists", rel_path.display());
         }
         if !dry_mode {
-            println!("Unpacked {}", path.display());
+            println!("unpacked {}", path.display());
             std::fs::write(path, file.contents())?;
         }
     }
