@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
-import { BasicAuth, tgDeploy, tgRemove } from "./tg_deploy.js";
+import { BasicAuth, tgDeploy } from "./tg_deploy.js";
 import { TgFinalizationResult, TypegraphOutput } from "./typegraph.js";
 import { getEnvVariable } from "./utils/func_utils.js";
-import { dirname } from "node:path";
+import { freezeTgOutput } from "./utils/func_utils.js";
 
 const PORT = "META_CLI_SERVER_PORT"; // meta-cli instance that executes the current file
 const SELF_PATH = "META_CLI_TG_PATH"; // path to the current file to uniquely identify the run results
@@ -72,7 +72,7 @@ export class Manager {
   }
 
   async run() {
-    let { config, command } = await this.#requestCommands();
+    const { config, command } = await this.#requestCommands();
     switch (command) {
       case "serialize":
         await this.#serialize(config);
@@ -141,10 +141,14 @@ export class Manager {
       ...artifactsConfig,
       prefix,
     };
+
     // hack for allowing tg.serialize(config) to be called more than once
-    let localMemo: TgFinalizationResult;
+    const frozenOut = freezeTgOutput(config, this.#typegraph);
+
+    // hack for allowing tg.serialize(config) to be called more than once
+    let frozenSerialized: TgFinalizationResult;
     try {
-      localMemo = this.#typegraph.serialize(config);
+      frozenSerialized = frozenOut.serialize(config);
     } catch (err: any) {
       return await this.#relayErrorToCLI(
         "deploy",
@@ -157,13 +161,13 @@ export class Manager {
     }
     const reusableTgOutput = {
       ...this.#typegraph,
-      serialize: (_: ArtifactResolutionConfig) => localMemo,
+      serialize: () => frozenSerialized,
     } as TypegraphOutput;
 
     if (artifactsConfig.codegen) {
       await this.#relayResultToCLI(
         "codegen",
-        JSON.parse(localMemo.tgJson),
+        JSON.parse(frozenSerialized.tgJson),
       );
     }
 

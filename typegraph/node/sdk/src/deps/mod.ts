@@ -3,8 +3,8 @@
 export { caller } from "./_import.js";
 
 export function mapValues(
-  object: Object,
-  fn: (value: any, key: string, object: Object) => any,
+  object: object,
+  fn: (value: any, key: string, object: object) => any,
 ) {
   const newEntries = Object
     .entries(object)
@@ -23,6 +23,6 @@ import { fromFileUrlPosix, fromFileUrlWin32 } from "./_import.js";
 export function fromFileUrl(path: string) {
   // Note: Do not refactor with runtime dependent OS check
   // Examples: file://C:, file://D:
-  const isWin32 = /^file:\/\/\w\:/.test(path);
+  const isWin32 = /^file:\/\/\w:/.test(path);
   return isWin32 ? fromFileUrlWin32(path) : fromFileUrlPosix(path);
 }
