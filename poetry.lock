@@ -302,7 +302,7 @@ files = [
 
 [[package]]
 name = "typegraph"
-version = "0.4.1-0"
+version = "0.4.2"
 description = "Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are."
 optional = false
 python-versions = ">=3.8,<4.0"

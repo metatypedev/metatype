@@ -34,11 +34,10 @@ jobs:
               - 'libs/**'
               - 'meta-cli/**'
               - 'Cargo.lock'
-            typegate:
+            typegate: # for the standalone/image (not typegate tests which rely on everything)
               - '.github/workflows/tests.yml'
               - 'libs/**'
-              - 'typegate/**'
-              - 'meta-cli/**'
+              - 'typegate/**' # consider moving tests to other dir to improve test detection
               - 'Cargo.lock'
             full:
               - '.github/workflows/tests.yml'
@@ -59,7 +58,7 @@ jobs:
       full: ${{ steps.filter.outputs.full }}
       rust: ${{ steps.filter.outputs.rust }}
 
-  test-pre-commit:
+  pre-commit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -85,6 +84,48 @@ jobs:
           cd ..
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
           pre-commit run --show-diff-on-failure --color=always --all-files
+
+  lint-compat:
+    needs: changes
+    if: ${{ needs.changes.outputs.full == 'true' }}
+    runs-on: "${{ matrix.os }}"
+    strategy:
+      matrix:
+        include:
+          - os: macos-13
+            target: x86_64-apple-darwin
+            cross: false
+          - os: macos-14
+            target: aarch64-apple-darwin
+            cross: false
+          # FIXME: linux/arm64 needs arm runners
+          # this target doesn't have a meta-cli build anyways
+          # the typegate is covered by the docker build down below
+          # - os: custom-macos
+          #   target: aarch64-unknown-linux-gnu
+          #   cross: true
+          #- os: windows-latest
+          #  activate: '.venv\Scripts\activate.bat'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dsherret/rust-toolchain-file@v1
+      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+        with:
+          # temporary fix
+          cache-key-prefix: ${{ matrix.os }}
+      - if: ${{ matrix.cross }}
+        shell: bash
+        env:
+          # arguments for our custom cross.Dockerfile
+          CROSS_BUILD_OPTS: "--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
+        run: |
+          cross check --locked --all-features --all-targets --target ${{ matrix.target }}
+      - if: ${{ matrix.cross != true }}
+        shell: bash
+        env:
+          WASM_FILE: target/debug/typegraph_core.wasm
+        run: |
+          cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
 
   test-website:
     needs: changes
@@ -116,67 +157,7 @@ jobs:
           pnpm lint
           pnpm build
 
-  test-meta-cli-compat:
-    needs: changes
-    if: ${{ needs.changes.outputs.meta-cli == 'true' }}
-    runs-on: "${{ matrix.os }}"
-    strategy:
-      matrix:
-        include:
-          - os: macos-13
-            activate: "source .venv/bin/activate"
-          - os: macos-14
-            activate: "source .venv/bin/activate"
-          #- os: windows-latest
-          #  activate: '.venv\Scripts\activate.bat'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: ${{ env.DENO_VERSION }}
-      - name: Cache deno dir
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.DENO_DIR }}
-          key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      - uses: dsherret/rust-toolchain-file@v1
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-      - name: Cache .venv dir
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: ${{ matrix.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
-        with:
-          # temporary fix
-          cache-key-prefix: ${{ matrix.os }}
-      - shell: bash
-        env:
-          WASM_FILE: target/debug/typegraph_core.wasm
-        run: |
-          python3 -m venv .venv
-          ${{ matrix.activate }}
-
-          cd typegraph/python
-          poetry install --no-root
-          cd ../..
-          poetry install --no-root
-
-          deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
-
-          cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
-          mkdir -p $(dirname $WASM_FILE)
-          wasm-opt -Oz target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE.opt
-          wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
-          rm -rf typegraph/python/typegraph/gen
-          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
-
-          cargo run --locked --package meta-cli -- --help
-          cargo test --locked --package meta-cli
-
-  test-docker:
+  bulid-docker:
     needs: changes
     if: ${{ needs.changes.outputs.typegate == 'true' }}
     runs-on: ${{ matrix.runner }}
@@ -186,12 +167,10 @@ jobs:
         include:
           - platform: linux/amd64
             runner: ubuntu-latest
-          # FIXME: try macos-14 runner once all actions support it
-          # docker buildx action broken as of 2024-02-09
           - platform: linux/arm64
+            # FIXME: official darwin images don't have docker
+            # and nested virtualizaiton
             runner: custom-macos
-          # - platform: linux/arm64
-          #   runner: macos-14
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -218,6 +197,7 @@ jobs:
           cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
           # check target runs extra validation steps in the Dockerfile
           target: check
+          build-args: 'CARGO_PROFILE=dev'
       - name: Build without cache (external)
         uses: docker/build-push-action@v5
         if: "! steps.check.outputs.has-permission"
@@ -226,6 +206,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: false
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
+          build-args: 'CARGO_PROFILE=dev'
           target: check
 
   test-full:
@@ -263,7 +244,7 @@ jobs:
       - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
       - shell: bash
         env:
-          WASM_FILE: target/debug/typegraph_core.wasm
+          WASM_FILE: target/release/typegraph_core.wasm
         run: |
           echo pwd in $(pwd)
 
@@ -274,24 +255,25 @@ jobs:
           source .venv/bin/activate
           poetry install --no-root
 
-          deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
-
-          cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
+          # build typegraph_core wasm
+          cargo build -p typegraph_core --target wasm32-unknown-unknown --release --target-dir target/wasm
           mkdir -p $(dirname $WASM_FILE)
-          wasm-opt -Oz target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE.opt
+          wasm-opt -Oz target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE.opt
           wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
 
+          # build python sdk package
+          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
+
+          # build node typegrap/sdk package
           jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen --map metatype:typegraph/host=../host/host.js
           cd typegraph/node
           pnpm install
           pnpm run sdk-build
           cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
-          cd ../..
-
-          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
+          cd -
 
           # start the docker containers
-          deno run -A dev/env.ts base prisma
+          ghjk x dev env base prisma
 
           export NPM_CONFIG_REGISTRY=http://localhost:4873
 
@@ -299,28 +281,31 @@ jobs:
           cd typegraph/node/sdk/dist
           npm config set "//localhost:4873/:_authToken" fooBar
           npm publish --registry $NPM_CONFIG_REGISTRY
-          cd ../../../..
+          cd -
 
           ghjk x clean-deno-lock
 
           # install packages inside metatype examples
           pnpm install -C examples/typegraphs
 
-          # from old test-typegraph-core
-          # test in native rust, not in wasm for a future rust SDK
-          # without --tests, the --doc is causing a link error "syntax error in VERSION script"
-          cargo test --locked --package typegraph_core --tests
+
+          deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
+
+          deno run -A dev/update.ts --cache-only
+
+          cargo build -p xtask # xtask and meta-cli are used by the test suite
+          cargo build -p meta-cli 
 
           # from old test-meta-cli
-          cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
 
           # from old test-libs
           cargo test --locked --exclude meta-cli --exclude typegate --exclude typegate_engine --exclude typegraph_core --exclude metagen_mdk_rust_static  --workspace
 
-          deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
-          cargo build -p meta-cli
-          cargo build -p xtask # xtask and meta-cli are used by the test suite
+          # from old test-typegraph-core
+          # test in native rust, not in wasm for a future rust SDK
+          # without --tests, the --doc is causing a link error "syntax error in VERSION script"
+          cargo test --locked --package typegraph_core --tests
 
           ghjk x clean-deno-lock
           deno run -A dev/test.ts --threads 1 -- --coverage=coverage

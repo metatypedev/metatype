@@ -141,10 +141,7 @@ struct TypegateHost {}
 
 #[wasmtime_wasi::async_trait]
 impl Host for TypegateHost {
-    async fn hostcall(
-        &mut self,
-        _req: (String, String),
-    ) -> wasmtime::Result<Result<String, String>> {
+    async fn hostcall(&mut self, _req: (String, String)) -> std::result::Result<String, String> {
         todo!()
     }
 }

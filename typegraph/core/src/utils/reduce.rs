@@ -76,41 +76,40 @@ impl PathTree {
         self.entries.push(entry);
     }
 
-    fn print_helper(lines: &mut String, node: &PathTree, depth: u32) {
+    fn print_helper(
+        lines: &mut impl core::fmt::Write,
+        node: &PathTree,
+        depth: u32,
+    ) -> Result<(), core::fmt::Error> {
         if depth >= 1 {
-            let name = node.name.clone();
-            let payload = node
-                .path_infos
-                .value
-                .payload
-                .clone()
-                .unwrap_or("--".to_string());
+            let payload = node.path_infos.value.payload.as_deref().unwrap_or("--");
             let spaces = 4;
             let symbol = if node.entries.len() == 1 || depth != 0 {
                 "└─"
             } else {
                 "├─"
             };
-            lines.push_str(&format!(
+            write!(
+                lines,
                 "{:indent$}{symbol} [{name} ({payload})]",
                 "",
+                name = node.name,
                 indent = ((depth as usize) - 1) * spaces
-            ));
+            )?;
         } else {
-            lines.push_str(&node.name);
+            write!(lines, "{}", node.name)?;
         }
 
         for entry in node.entries.iter() {
-            PathTree::print_helper(lines, entry, depth + 1);
+            PathTree::print_helper(lines, entry, depth + 1)?;
         }
+        Ok(())
     }
 }
 
-impl ToString for PathTree {
-    fn to_string(&self) -> String {
-        let mut lines = String::new();
-        PathTree::print_helper(&mut lines, self, 0);
-        lines
+impl core::fmt::Display for PathTree {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        PathTree::print_helper(fmt, self, 0)
     }
 }
 

@@ -1,5 +1,5 @@
 # disable SHELL cmd down below if switching to non-debug
-ARG RUST_VERSION=1.78.0
+ARG RUST_VERSION=1.77.1
 ARG DENO_VERSION=1.41.0
 ARG DISTROLESS_TAG=debug-nonroot
 
@@ -9,7 +9,7 @@ FROM rust:${RUST_VERSION}-slim-bullseye AS base
 
 WORKDIR /app
 
-RUN cargo install cargo-chef --locked
+RUN cargo install cargo-chef --locked --debug
 
 FROM base as plan
 
@@ -62,14 +62,21 @@ ENV GHJK_ENV=/root/.local/share/ghjk/env.sh
 
 COPY --from=plan /app/recipe.json recipe.json
 
+ARG CARGO_PROFILE=release
+
 RUN . $GHJK_ENV \
-    && cargo chef cook --recipe-path recipe.json --release --package typegate \
+    && cargo chef cook --recipe-path recipe.json --profile $CARGO_PROFILE --package typegate \
     && rm recipe.json
 
 COPY . .
 
 RUN . $GHJK_ENV \
-    && cargo build --release --package typegate
+    && cargo build --profile $CARGO_PROFILE --package typegate \
+    && ( \
+        [ $CARGO_PROFILE = 'release' ]  \
+            && cp target/release/typegate typegate-bin \
+            || cp target/debug/typegate typegate-bin \
+    )
 
 RUN . $GHJK_ENV \
     && deno run -A dev/update.ts --cache-only --src-only \
@@ -113,7 +120,7 @@ COPY --from=runtime-bin /tini /tini
 COPY --from=runtime-bin /lib/sym /lib/sym
 COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 
-COPY --from=builder /app/target/release/typegate /bin/typegate
+COPY --from=builder /app/typegate-bin /bin/typegate
 # the typegate ecma sources
 COPY --from=builder /app/typegate/deno.jsonc /app/typegate/import_map.json ./typegate/
 COPY --from=builder /app/typegate/engine/*.js /app/typegate/engine/*.ts ./typegate/engine/
