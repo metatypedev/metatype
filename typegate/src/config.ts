@@ -12,11 +12,11 @@ import {
   SyncConfig,
   syncConfigSchema,
   SyncConfigX,
+  TypegateConfigBase,
   typegateConfigBaseSchema,
 } from "./config/types.ts";
 import type { TypegateConfig } from "./config/types.ts";
-export type { TypegateConfig };
-export type { SyncConfigX as SyncConfig };
+export type { SyncConfigX as SyncConfig, TypegateConfig, TypegateConfigBase };
 
 async function getHostname() {
   try {
@@ -39,6 +39,7 @@ export const globalConfig = await configOrExit(
     debug: "false",
     packaged: "true",
     hostname: await getHostname(),
+    tg_port: 7890,
     trust_proxy: false,
     trust_header_ip: "X-Forwarded-For",
     sentry_sample_rate: 1,
@@ -49,6 +50,15 @@ export const globalConfig = await configOrExit(
     parse(Deno.args) as Record<string, unknown>,
   ],
 );
+
+export const defaultTypegateConfigBase = {
+  timer_max_timeout_ms: 3000,
+  timer_destroy_resources: true,
+  timer_policy_eval_retries: 1,
+  jwt_max_duration_sec: 3600 * 24 * 30,
+  jwt_refresh_duration_sec: 60 * 5,
+  redis_url_queue_expire_sec: 60 * 5, // 5 minutes
+};
 
 const SYNC_PREFIX = "sync_";
 function filterMapSyncKeys(obj: Record<string, unknown>) {

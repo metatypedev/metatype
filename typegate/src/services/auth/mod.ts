@@ -42,7 +42,10 @@ export function initAuth(
         authParameters,
       );
     case "basic":
-      return BasicAuth.init(typegraphName, auth, secretManager, denoRuntime);
+      return BasicAuth.init(typegraphName, auth, secretManager, denoRuntime, {
+        tg_admin_password:
+          authParameters.tg.typegate.config.base.tg_admin_password,
+      });
     case "jwt":
       return JWTAuth.init(typegraphName, auth, secretManager, denoRuntime);
     default:

@@ -3,6 +3,7 @@
 
 import { ComputeStage } from "../../engine/query_engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../../typegraph/mod.ts";
+import { Typegate } from "../../typegate/mod.ts";
 import { Runtime } from "../Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { Artifact, DenoRuntimeData } from "../../typegraph/types.ts";
@@ -27,6 +28,7 @@ export class DenoRuntime extends Runtime {
     typegraphName: string,
     uuid: string,
     private tg: TypeGraphDS,
+    private typegate: Typegate,
     private w: DenoMessenger,
     private registry: Map<string, number>,
     private secrets: Record<string, string>,
@@ -142,7 +144,15 @@ export class DenoRuntime extends Runtime {
       await w.disableLazyness();
     }
 
-    const rt = new DenoRuntime(typegraphName, uuid, tg, w, registry, secrets);
+    const rt = new DenoRuntime(
+      typegraphName,
+      uuid,
+      tg,
+      typegate,
+      w,
+      registry,
+      secrets,
+    );
 
     return rt;
   }
@@ -234,7 +244,7 @@ export class DenoRuntime extends Runtime {
         },
         ...args
       }) => {
-        const token = await InternalAuth.emit();
+        const token = await InternalAuth.emit(this.typegate.cryptoKeys);
 
         return await this.w.execute(
           op,
@@ -271,7 +281,7 @@ export class DenoRuntime extends Runtime {
         },
         ...args
       }) => {
-        const token = await InternalAuth.emit();
+        const token = await InternalAuth.emit(this.typegate.cryptoKeys);
 
         return await this.w.execute(
           op,

@@ -4,7 +4,6 @@
 import { ConsoleHandler, LevelName, Logger } from "std/log/mod.ts";
 import { basename, dirname } from "std/url/mod.ts";
 import { extname } from "std/path/mod.ts";
-import { z } from "zod";
 import { sharedConfig } from "./config/shared.ts";
 
 // set rust log level is not explicit set

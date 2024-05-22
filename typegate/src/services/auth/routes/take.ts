@@ -16,6 +16,7 @@ export async function take(params: RouteParams) {
     const { token, redirectUri } = await getEncryptedCookie(
       request.headers,
       engine.name,
+      engine.tg.typegate.cryptoKeys,
     );
 
     if (!redirectUri.startsWith(origin)) {

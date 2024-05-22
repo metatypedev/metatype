@@ -265,7 +265,10 @@ export class TypeGraph implements AsyncDisposable {
     }
 
     // override "internal" to enforce internal auth
-    auths.set(internalAuthName, await InternalAuth.init(typegraphName));
+    auths.set(
+      internalAuthName,
+      await InternalAuth.init(typegraphName, typegate.cryptoKeys),
+    );
 
     return tg;
   }

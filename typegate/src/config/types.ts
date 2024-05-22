@@ -16,8 +16,9 @@ export const globalConfigSchema = z.object({
   // To be set to false when running from source.
   // If false, auto reload system typegraphs on change. Default: to true.
   packaged: zBooleanString,
-  hostname: z.string(),
   version: z.string(),
+  hostname: z.string(),
+  tg_port: z.coerce.number().positive().max(65535),
   trust_proxy: zBooleanString,
   trust_header_ip: z.string(),
   request_log: z.string().optional(),
@@ -30,7 +31,6 @@ export type GlobalConfig = z.infer<typeof globalConfigSchema>;
 // These config entries are only accessible on a Typegate instance.
 // They are not read from a global variable to enable test isolation and configurability.
 export const typegateConfigBaseSchema = z.object({
-  tg_port: z.coerce.number().positive().max(65535),
   tg_secret: z.string().transform((s: string, ctx) => {
     const bytes = decodeBase64(s);
     if (bytes.length != 64) {

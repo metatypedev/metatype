@@ -44,6 +44,7 @@ import { createLocalArtifactStore } from "./artifacts/local.ts";
 import { createSharedArtifactStore } from "./artifacts/shared.ts";
 import { AsyncDisposableStack } from "dispose";
 import { globalConfig, TypegateConfig } from "../config.ts";
+import { TypegateCryptoKeys } from "../crypto.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -82,6 +83,8 @@ export class Typegate implements AsyncDisposable {
   ): Promise<Typegate> {
     const { sync: syncConfig } = config;
     const tmpDir = config.base.tmp_dir;
+
+    const cryptoKeys = await TypegateCryptoKeys.init(config.base.tg_secret);
     if (syncConfig == null) {
       logger.warn("Entering no-sync mode...");
       logger.warn(
@@ -91,7 +94,10 @@ export class Typegate implements AsyncDisposable {
       await using stack = new AsyncDisposableStack();
 
       const register = customRegister ?? new MemoryRegister();
-      const artifactStore = await createLocalArtifactStore(tmpDir);
+      const artifactStore = await createLocalArtifactStore(
+        tmpDir,
+        cryptoKeys,
+      );
 
       stack.use(register);
       stack.use(artifactStore);
@@ -101,6 +107,7 @@ export class Typegate implements AsyncDisposable {
         new NoLimiter(),
         artifactStore,
         config,
+        cryptoKeys,
         stack.move(),
       );
     } else {
@@ -122,6 +129,7 @@ export class Typegate implements AsyncDisposable {
       const artifactStore = await createSharedArtifactStore(
         tmpDir,
         syncConfig,
+        cryptoKeys,
       );
       stack.use(artifactStore);
 
@@ -130,13 +138,14 @@ export class Typegate implements AsyncDisposable {
         limiter,
         artifactStore,
         config,
+        cryptoKeys,
         stack.move(),
       );
 
       const register = await ReplicatedRegister.init(
         typegate,
         syncConfig.redis,
-        TypegraphStore.init(syncConfig),
+        TypegraphStore.init(syncConfig, cryptoKeys),
       );
       typegate.disposables.use(register);
 
@@ -159,6 +168,7 @@ export class Typegate implements AsyncDisposable {
     private limiter: RateLimiter,
     public artifactStore: ArtifactStore,
     public readonly config: TypegateConfig, // TODO deep readonly??
+    public cryptoKeys: TypegateCryptoKeys,
     private disposables: AsyncDisposableStack,
   ) {
     this.#onPush((tg) => Promise.resolve(upgradeTypegraph(tg)));

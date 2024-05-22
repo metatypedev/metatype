@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { decrypt, encrypt } from "../crypto.ts";
 import { SecretManager, TypeGraph, TypeGraphDS } from "../typegraph/mod.ts";
 import {
   GetObjectCommand,
@@ -10,6 +9,7 @@ import {
   S3Client,
 } from "aws-sdk/client-s3";
 import { SyncConfig } from "../config.ts";
+import { TypegateCryptoKeys } from "../crypto.ts";
 
 import { encodeHex } from "std/encoding/hex.ts";
 import { z } from "zod";
@@ -23,20 +23,24 @@ export const typegraphIdSchema = z.object({
 export type TypegraphId = z.infer<typeof typegraphIdSchema>;
 
 export class TypegraphStore {
-  static init(syncConfig: SyncConfig) {
+  static init(syncConfig: SyncConfig, cryptoKeys: TypegateCryptoKeys) {
     const clientInit = syncConfig.s3;
     const bucket = syncConfig.s3Bucket;
     const client = new S3Client(clientInit);
-    return new TypegraphStore(client, bucket);
+    return new TypegraphStore(client, bucket, cryptoKeys);
   }
 
-  private constructor(private s3client: S3Client, private bucket: string) {}
+  private constructor(
+    private s3client: S3Client,
+    private bucket: string,
+    private cryptoKeys: TypegateCryptoKeys,
+  ) {}
 
   public async upload(
     typegraph: TypeGraphDS,
     secretManager: SecretManager,
   ): Promise<TypegraphId> {
-    const encryptedSecrets = await encrypt(
+    const encryptedSecrets = await this.cryptoKeys.encrypt(
       JSON.stringify(secretManager.secrets),
     );
     const data = JSON.stringify([typegraph, encryptedSecrets]);
@@ -71,7 +75,7 @@ export class TypegraphStore {
       TypeGraphDS,
       string,
     ];
-    const secrets = JSON.parse(await decrypt(encryptedSecrets));
+    const secrets = JSON.parse(await this.cryptoKeys.decrypt(encryptedSecrets));
     const secretManager = new SecretManager(typegraph, secrets);
 
     return [typegraph, secretManager];

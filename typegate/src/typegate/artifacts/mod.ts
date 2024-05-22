@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { sha256, signJWT, verifyJWT } from "@typegate/crypto.ts";
+import { sha256, TypegateCryptoKeys } from "@typegate/crypto.ts";
 import { getLogger } from "@typegate/log.ts";
 import * as jwt from "jwt";
 import { z } from "zod";
@@ -222,21 +222,25 @@ export class ArtifactStore implements AsyncDisposable {
     origin: URL,
     tgName: string,
     expireSec: number,
+    cryptoKeys: TypegateCryptoKeys,
   ): Promise<URL> {
     const uuid = crypto.randomUUID();
-    const token = await signJWT({ uuid, expiresIn: expireSec }, expireSec);
+    const token = await cryptoKeys.signJWT(
+      { uuid, expiresIn: expireSec },
+      expireSec,
+    );
     const url = new URL(getUploadPath(tgName), origin);
     url.searchParams.set("token", token);
     return url;
   }
 
-  static async validateUploadUrl(url: URL) {
+  static async validateUploadUrl(url: URL, cryptoKeys: TypegateCryptoKeys) {
     const token = url.searchParams.get("token");
     if (/^\/([^\/])\/artifacts/.test(url.pathname) || !token) {
       throw new InvalidUploadUrl(url);
     }
 
-    const context = await verifyJWT(token);
+    const context = await cryptoKeys.verifyJWT(token);
     if ((context.exp as number) < jwt.getNumericDate(new Date())) {
       throw new InvalidUploadUrl(url, "expired");
     }

@@ -4,6 +4,7 @@
 import { connect, Redis, RedisConnectOptions } from "redis";
 import { getLogger } from "@typegate/log.ts";
 import { createHash } from "node:crypto";
+import { TypegateCryptoKeys } from "../../crypto.ts";
 import { S3 } from "aws-sdk/client-s3";
 import {
   ArtifactPersistence,
@@ -171,12 +172,20 @@ class SharedArtifactPersistence implements ArtifactPersistence {
 }
 
 class SharedUploadEndpointManager implements UploadEndpointManager {
-  static async init(syncConfig: SyncConfig, expireSec = 5 * 60) {
+  static async init(
+    syncConfig: SyncConfig,
+    cryptoKeys: TypegateCryptoKeys,
+    expireSec = 5 * 60,
+  ) {
     const redis = await connect(syncConfig.redis);
-    return new SharedUploadEndpointManager(redis, expireSec);
+    return new SharedUploadEndpointManager(redis, cryptoKeys, expireSec);
   }
 
-  private constructor(private redis: Redis, private expireSec: number) {}
+  private constructor(
+    private redis: Redis,
+    private cryptoKeys: TypegateCryptoKeys,
+    private expireSec: number,
+  ) {}
 
   async [Symbol.asyncDispose]() {
     await this.redis.quit();
@@ -196,6 +205,7 @@ class SharedUploadEndpointManager implements UploadEndpointManager {
       origin,
       meta.typegraphName,
       this.expireSec,
+      this.cryptoKeys,
     );
     const token = url.searchParams.get("token")!;
     const _ = await this.redis.eval(
@@ -211,7 +221,7 @@ class SharedUploadEndpointManager implements UploadEndpointManager {
   }
 
   async takeUploadUrl(url: URL): Promise<ArtifactMeta> {
-    const token = await ArtifactStore.validateUploadUrl(url);
+    const token = await ArtifactStore.validateUploadUrl(url, this.cryptoKeys);
 
     const meta = await this.redis.eval(
       /* lua */ `
@@ -292,9 +302,13 @@ export class SharedArtifactRefCounter implements RefCounter {
 export async function createSharedArtifactStore(
   baseDir: string,
   syncConfig: SyncConfig,
+  cryptoKeys: TypegateCryptoKeys,
 ): Promise<ArtifactStore> {
   const persistence = await SharedArtifactPersistence.init(baseDir, syncConfig);
-  const uploadEndpoints = await SharedUploadEndpointManager.init(syncConfig);
+  const uploadEndpoints = await SharedUploadEndpointManager.init(
+    syncConfig,
+    cryptoKeys,
+  );
   const refCounter = await SharedArtifactRefCounter.init(syncConfig.redis);
   return ArtifactStore.init(persistence, uploadEndpoints, refCounter);
 }

@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import config from "../../../config.ts";
+import { TypegateConfigBase } from "../../../config.ts";
 import { OAuth2Client, OAuth2ClientConfig, Tokens } from "oauth2_client";
-import { encrypt, randomUUID, signJWT, verifyJWT } from "../../../crypto.ts";
+import { randomUUID, TypegateCryptoKeys } from "../../../crypto.ts";
 import { AdditionalAuthParams, JWTClaims } from "../mod.ts";
 import { getLogger } from "../../../log.ts";
 import { SecretManager } from "../../../typegraph/mod.ts";
@@ -97,6 +97,11 @@ class AuthProfiler {
   }
 }
 
+export type Oauth2AuthConfig = Pick<
+  TypegateConfigBase,
+  "jwt_max_duration_sec" | "jwt_refresh_duration_sec"
+>;
+
 export class OAuth2Auth extends Protocol {
   static init(
     typegraphName: string,
@@ -120,6 +125,11 @@ export class OAuth2Auth extends Protocol {
         scope: scopes as string,
       },
     };
+
+    const { jwt_max_duration_sec, jwt_refresh_duration_sec } =
+      authParameters.tg.typegate.config.base;
+    const config = { jwt_max_duration_sec, jwt_refresh_duration_sec };
+
     return Promise.resolve(
       new OAuth2Auth(
         typegraphName,
@@ -132,6 +142,8 @@ export class OAuth2Auth extends Protocol {
             profiler as number,
           )
           : null,
+        authParameters.tg.typegate.cryptoKeys,
+        config,
       ),
     );
   }
@@ -142,6 +154,8 @@ export class OAuth2Auth extends Protocol {
     private clientData: Omit<OAuth2ClientConfig, "redirectUri">,
     private profileUrl: string | null,
     private authProfiler: AuthProfiler | null,
+    private cryptoKeys: TypegateCryptoKeys,
+    private config: Oauth2AuthConfig,
   ) {
     super(typegraphName);
   }
@@ -164,6 +178,7 @@ export class OAuth2Auth extends Protocol {
           await getEncryptedCookie(
             request.headers,
             this.typegraphName,
+            this.cryptoKeys,
           );
         const tokens = await client.code.getToken(url, { state, codeVerifier });
         const token = await this.createJWT(tokens, request);
@@ -171,6 +186,7 @@ export class OAuth2Auth extends Protocol {
           url.hostname,
           this.typegraphName,
           { token, redirectUri: userRedirectUri },
+          this.cryptoKeys,
         );
         headers.set("location", userRedirectUri as string);
         return new Response(null, {
@@ -208,6 +224,7 @@ export class OAuth2Auth extends Protocol {
         url.hostname,
         this.typegraphName,
         loginState,
+        this.cryptoKeys,
       );
       headers.set("location", uri.toString());
       return new Response(null, {
@@ -242,7 +259,7 @@ export class OAuth2Auth extends Protocol {
     }
     let jwt: JWTClaims;
     try {
-      jwt = (await verifyJWT(token)) as JWTClaims;
+      jwt = (await this.cryptoKeys.verifyJWT(token)) as JWTClaims;
     } catch (e) {
       return {
         claims: {},
@@ -316,15 +333,18 @@ export class OAuth2Auth extends Protocol {
     const payload: JWTClaims = {
       provider: this.authName,
       accessToken: token.accessToken,
-      refreshToken: await encrypt(token.refreshToken as string),
+      refreshToken: await this.cryptoKeys.encrypt(token.refreshToken as string),
       refreshAt: Math.floor(
         new Date().valueOf() / 1000 +
-          (token.expiresIn ?? config.jwt_refresh_duration_sec),
+          (token.expiresIn ?? this.config.jwt_refresh_duration_sec),
       ),
       scope: token.scope,
       profile,
     };
-    return await signJWT(payload, config.jwt_max_duration_sec);
+    return await this.cryptoKeys.signJWT(
+      payload,
+      this.config.jwt_max_duration_sec,
+    );
   }
 }
 

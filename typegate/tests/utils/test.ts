@@ -11,7 +11,11 @@ import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 import { createMetaCli } from "./meta.ts";
 import { TypeGraph } from "../../src/typegraph/mod.ts";
-import { getTypegateConfig, SyncConfig } from "../../src/config.ts";
+import {
+  defaultTypegateConfigBase,
+  getTypegateConfig,
+  SyncConfig,
+} from "../../src/config.ts";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
 
@@ -47,6 +51,7 @@ class TypegateManager implements AsyncDisposable {
         Typegate.init(
           getTypegateConfig({
             base: {
+              ...defaultTypegateConfigBase,
               tmp_dir: await newTempDir({ prefix: "typegate-test-" }),
             },
           }),
