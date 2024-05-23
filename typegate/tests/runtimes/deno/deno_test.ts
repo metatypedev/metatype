@@ -303,7 +303,7 @@ Meta.test(
   },
   async (t) => {
     const denoScript = path.join(
-      "typegate/tests/runtimes/deno",
+      import.meta.dirname!,
       "reload",
       "template.ts",
     );
