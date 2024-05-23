@@ -5,6 +5,7 @@ import { gql, Meta } from "test-utils/mod.ts";
 import { testDir } from "test-utils/dir.ts";
 import { tg } from "./wasm_wire.ts";
 import * as path from "std/path/mod.ts";
+import { assert, assertEquals } from "std/assert/mod.ts";
 
 const cwd = path.join(testDir, "runtimes/wasm_wire");
 const auth = new BasicAuth("admin", "password");
@@ -177,6 +178,35 @@ Meta.test(
           })
           .on(engine);
       });
+
+      await t.step(
+        "hostcall works",
+        async () => {
+          await gql`
+            query {
+              hundred {
+                name
+                age
+                profile {
+                  level
+                  attributes
+                  category {
+                    tag
+                    value
+                  }
+                  metadatas
+                }
+              }
+            }
+          `
+            .expectBody((body) => {
+              assert(body.data.hundred);
+              assert(Array.isArray(body.data.hundred));
+              assertEquals(body.data.hundred.length, 100);
+            })
+            .on(engine);
+        },
+      );
     });
   },
 );
