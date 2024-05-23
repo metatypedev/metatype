@@ -76,12 +76,9 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y --no-install-recommends libclang-dev clang
-          cd website
-          pnpm install --frozen-lockfile
-          cd ..
-          cd meta-lsp
-          pnpm install --frozen-lockfile --recursive
-          cd ..
+          pnpm -C website install --frozen-lockfile
+          pnpm -C meta-lsp install --frozen-lockfile --recursive
+          pnpm -C typegraph/node install --frozen-lockfile --recursive
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
           pre-commit run --show-diff-on-failure --color=always --all-files
 
@@ -166,7 +163,7 @@ jobs:
       matrix:
         include:
           - platform: linux/amd64
-            runner: ubuntu-latest
+            runner: custom-ubuntu-large
           - platform: linux/arm64
             # FIXME: official darwin images don't have docker
             # and nested virtualizaiton

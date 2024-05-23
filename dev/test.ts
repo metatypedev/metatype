@@ -88,7 +88,6 @@ const filtered = filter ? fuse.search(filter) : null;
 const filteredTestFiles = filtered?.map((res) => testFiles[res.refIndex]) ??
   testFiles;
 
-const cwd = resolve(projectDir, "typegate");
 const tmpDir = join(projectDir, "tmp");
 const env: Record<string, string> = {
   "RUST_LOG": "off,xtask=debug,meta=debug",
@@ -159,7 +158,7 @@ function createRun(testFile: string): Run {
       testFile,
       ...flags["--"],
     ],
-    cwd,
+    cwd: projectDir,
     stdout: "piped",
     stderr: "piped",
     env: { ...Deno.env.toObject(), ...env },

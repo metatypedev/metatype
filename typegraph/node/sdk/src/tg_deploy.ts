@@ -5,8 +5,6 @@ import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-co
 import { ArtifactUploader } from "./tg_artifact_upload.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
-import * as fsp from "node:fs/promises";
-import { dirname, join } from "node:path";
 
 export class BasicAuth {
   constructor(public username: string, public password: string) {

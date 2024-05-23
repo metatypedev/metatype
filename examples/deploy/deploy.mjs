@@ -62,7 +62,7 @@ const tg = await typegraph({
       },
     ),
     // Wasm
-    testWasmAdd: wasm.fromWasm(
+    testWasmAdd: wasm.fromExport(
       t.struct({ a: t.float(), b: t.float() }),
       t.integer(),
       { wasm: "wasm/rust.wasm", func: "add" },
