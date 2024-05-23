@@ -11,8 +11,8 @@ use glob::Pattern as GlobPattern;
 use crate::{
     global_store::Store,
     wit::metatype::typegraph::host::{
-        expand_path as expand_path_host, get_cwd, path_exists as path_exists_host, read_file,
-        write_file,
+        eprint, expand_path as expand_path_host, get_cwd, path_exists as path_exists_host,
+        read_file, write_file,
     },
 };
 use common::archive::{
@@ -219,15 +219,8 @@ pub fn path_exists(path: &Path) -> Result<bool, String> {
 }
 
 pub fn is_glob(path: &str) -> bool {
-    let path = PathBuf::from(path);
-    if let Some(base_name) = path.file_name() {
-        let base_name = base_name.to_str().unwrap();
-        if base_name.contains('*') || base_name.contains('?') {
-            return true;
-        }
-    }
-
-    false
+    // dir can also contain wild cards,
+    path.contains('*') || path.contains('?')
 }
 
 pub fn extract_glob_dirname(path: &str) -> PathBuf {
@@ -275,13 +268,23 @@ pub fn resolve_globs_dirs(deps: Vec<String>) -> Result<Vec<PathBuf>, String> {
                 .to_string_lossy()
                 .to_string();
 
-            let matching_files = expand_glob(&abs_path)?;
+            let matching_files = expand_glob(&abs_path).map_err(|err| {
+                eprint(&format!("Error resolving globs: {:?}", err));
+                err
+            })?;
             for file in matching_files {
                 let rel_path = make_relative(&file)?;
                 resolved_deps.insert(rel_path);
             }
         } else {
-            let all_files = expand_path(&make_absolute(&PathBuf::from(dep))?, &[])?;
+            let all_files =
+                expand_path(&make_absolute(&PathBuf::from(dep))?, &[]).map_err(|err| {
+                    eprint(&format!(
+                        "Error resolving dependencies and dependency directories: {:?}",
+                        err
+                    ));
+                    err
+                })?;
             for file in all_files {
                 let rel_path = make_relative(&file)?;
                 resolved_deps.insert(rel_path);
