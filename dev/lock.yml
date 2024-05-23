@@ -58,7 +58,7 @@ dev:
       (ARG RUST_VERSION=).*(): RUST_VERSION
       (ARG GHJK_VERSION=).*(): GHJK_VERSION
     typegate/src/runtimes/wit_wire/mod.ts:
-      (const METATYPE_VERSION = ").*(";): METATYPE_VERSION
+      (const\s+METATYPE_VERSION = ").*(";): METATYPE_VERSION
     typegate/src/typegraph/versions.ts:
       (const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
     typegraph/core/src/typegraph.rs:

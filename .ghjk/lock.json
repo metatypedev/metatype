@@ -69,7 +69,7 @@
           "pluginRepo": "https://github.com/asdf-community/asdf-cmake"
         },
         "402fae54fb94ffdba9cd2617602c7b33c55002275f3c3bb588615b01ff0c3c26": {
-          "version": "v1.6.4",
+          "version": "v1.6.5",
           "depConfigs": {},
           "portRef": "cargo_binstall_ghrel@0.1.0"
         },
@@ -82,15 +82,15 @@
           "version": "0.116.0",
           "depConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
+              "version": "v1.6.5",
               "depConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.2",
+              "version": "1.78.0",
               "depConfigs": {
                 "rustup_rustlang": {
-                  "version": "1.27.0",
+                  "version": "1.27.1",
                   "depConfigs": {
                     "git_aa": {
                       "version": "2.40.1",
@@ -110,10 +110,10 @@
           "locked": true
         },
         "4a077ef5a23a541cc6e372186951d640da541f7c4eba2613c2a1c427a5d95a5c": {
-          "version": "1.77.2",
+          "version": "1.78.0",
           "depConfigs": {
             "rustup_rustlang": {
-              "version": "1.27.0",
+              "version": "1.27.1",
               "depConfigs": {
                 "git_aa": {
                   "version": "2.40.1",
@@ -128,7 +128,7 @@
           "profile": "minimal"
         },
         "4b3f09c15ad572211f821a76c776adea93e3c4f686817fd64dad8a5c8356ddea": {
-          "version": "1.27.0",
+          "version": "1.27.1",
           "depConfigs": {
             "git_aa": {
               "version": "2.40.1",
@@ -142,15 +142,15 @@
           "version": "1.0.53",
           "depConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
+              "version": "v1.6.5",
               "depConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.2",
+              "version": "1.78.0",
               "depConfigs": {
                 "rustup_rustlang": {
-                  "version": "1.27.0",
+                  "version": "1.27.1",
                   "depConfigs": {
                     "git_aa": {
                       "version": "2.40.1",
@@ -173,15 +173,15 @@
           "version": "1.33.0",
           "depConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
+              "version": "v1.6.5",
               "depConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.2",
+              "version": "1.78.0",
               "depConfigs": {
                 "rustup_rustlang": {
-                  "version": "1.27.0",
+                  "version": "1.27.1",
                   "depConfigs": {
                     "git_aa": {
                       "version": "2.40.1",
@@ -357,7 +357,7 @@
           "packageName": "pre-commit"
         },
         "95dbc2b8c604a5996b88c5b1b4fb0c10b3e0d9cac68f57eb915b012c44288e93": {
-          "version": "v0.2.61",
+          "version": "v0.2.62",
           "depConfigs": {},
           "portRef": "act_ghrel@0.1.0"
         },
@@ -365,15 +365,15 @@
           "version": "0.5.0",
           "depConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
+              "version": "v1.6.5",
               "depConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0"
             },
             "rust_rustup": {
-              "version": "1.77.2",
+              "version": "1.78.0",
               "depConfigs": {
                 "rustup_rustlang": {
-                  "version": "1.27.0",
+                  "version": "1.27.1",
                   "depConfigs": {
                     "git_aa": {
                       "version": "2.40.1",
@@ -542,6 +542,37 @@
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "wasm-tools",
           "locked": true
+        },
+        "d79e5cb672349e9999f6bdef952ac7b2bf763e3f03762a6c81c40916d769abb1": {
+          "version": "0.3.4",
+          "depConfigs": {
+            "cargo_binstall_ghrel": {
+              "version": "v1.6.5",
+              "depConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0"
+            },
+            "rust_rustup": {
+              "version": "1.78.0",
+              "depConfigs": {
+                "rustup_rustlang": {
+                  "version": "1.27.1",
+                  "depConfigs": {
+                    "git_aa": {
+                      "version": "2.40.1",
+                      "depConfigs": {},
+                      "portRef": "git_aa@0.1.0"
+                    }
+                  },
+                  "portRef": "rustup_rustlang@0.1.0"
+                }
+              },
+              "portRef": "rust_rustup@0.1.0",
+              "profile": "minimal"
+            }
+          },
+          "portRef": "cargobi_cratesio@0.1.0",
+          "crateName": "wit-deps-cli",
+          "locked": true
         }
       }
     },
@@ -572,6 +603,7 @@
             "14fd3752a984c5d82e1451f7388c73a21fcce705",
             "f25385325ad568d22d9538724df856df62a7b06b",
             "3ed4089145ee327a97198237a8a2eb8a48212b6c",
+            "74216721eea8ccf7ba703176b4891ff6e5074e4c",
             "ea543033c55cfcaa9f7e253529d0efe3a9827c6d"
           ],
           "allowedDeps": {
@@ -677,6 +709,15 @@
             },
             "test": {
               "name": "test",
+              "dependsOn": [],
+              "env": {
+                "installs": [],
+                "env": {},
+                "allowedPortDeps": []
+              }
+            },
+            "install-wasi-adapter": {
+              "name": "install-wasi-adapter",
               "dependsOn": [],
               "env": {
                 "installs": [],
@@ -1229,6 +1270,50 @@
             "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cargobi.ts"
           },
           "crateName": "whiz",
+          "locked": true
+        },
+        "74216721eea8ccf7ba703176b4891ff6e5074e4c": {
+          "depConfigs": {
+            "rust_rustup": {
+              "portRef": "rust_rustup@0.1.0",
+              "profile": "minimal"
+            }
+          },
+          "port": {
+            "ty": "denoWorker@v1",
+            "name": "cargobi_cratesio",
+            "platforms": [
+              "x86_64-linux",
+              "aarch64-linux",
+              "x86_64-darwin",
+              "aarch64-darwin",
+              "x86_64-windows",
+              "aarch64-windows",
+              "x86_64-freebsd",
+              "aarch64-freebsd",
+              "x86_64-netbsd",
+              "aarch64-netbsd",
+              "x86_64-aix",
+              "aarch64-aix",
+              "x86_64-solaris",
+              "aarch64-solaris",
+              "x86_64-illumos",
+              "aarch64-illumos",
+              "x86_64-android",
+              "aarch64-android"
+            ],
+            "version": "0.1.0",
+            "deps": [
+              {
+                "name": "cargo_binstall_ghrel"
+              },
+              {
+                "name": "rust_rustup"
+              }
+            ],
+            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cargobi.ts"
+          },
+          "crateName": "wit-deps-cli",
           "locked": true
         },
         "ea543033c55cfcaa9f7e253529d0efe3a9827c6d": {

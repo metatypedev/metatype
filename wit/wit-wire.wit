@@ -1,7 +1,7 @@
 package metatype:wit-wire;
 
 interface typegate-wire {
-  hostcall: func(req: tuple<string, string>) -> result<string, string>;
+  hostcall: func(op-name: string, json: string) -> result<string, string>;
 }
 
 interface mat-wire {
@@ -47,5 +47,6 @@ interface mat-wire {
 
 world wit-wire {
   import typegate-wire;
+
   export mat-wire;
 }
