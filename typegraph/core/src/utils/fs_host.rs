@@ -21,16 +21,15 @@ use common::archive::{
 use indexmap::IndexMap;
 use sha2::{Digest, Sha256};
 
-pub fn read_text_file<P: Into<String>>(path: P) -> Result<String, String> {
-    read_file(&path.into()).and_then(|bytes| {
+pub fn read_text_file(path: &Path) -> Result<String, String> {
+    read_file(&path.display().to_string()).and_then(|bytes| {
         let s = std::str::from_utf8(&bytes).map_err(|e| e.to_string())?;
         Ok(s.to_owned())
     })
 }
 
-#[allow(unused)]
-pub fn write_text_file<P: Into<String>>(path: P, text: P) -> Result<(), String> {
-    write_file(&path.into(), text.into().as_bytes())
+pub fn write_text_file(path: &Path, text: String) -> Result<(), String> {
+    write_file(&path.display().to_string(), text.as_bytes())
 }
 
 pub fn common_prefix_paths(paths: &[PathBuf]) -> Option<PathBuf> {
@@ -166,7 +165,7 @@ pub fn load_tg_ignore_file() -> Result<Vec<String>, String> {
     let file = cwd()?.join(".tgignore");
 
     match path_exists(&file)? {
-        true => read_text_file(file.to_string_lossy()).map(|content| {
+        true => read_text_file(&file).map(|content| {
             content
                 .lines()
                 .filter_map(|line| {

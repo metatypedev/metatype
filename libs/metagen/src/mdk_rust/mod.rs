@@ -284,6 +284,7 @@ impl stubs::MyFunc for MyMat {
     .into()
 }
 
+#[cfg(feature = "multithreaded")]
 #[test]
 fn mdk_rs_e2e() -> anyhow::Result<()> {
     use crate::tests::*;

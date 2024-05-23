@@ -11,7 +11,6 @@ import {
   serializeStaticInjection,
 } from "./utils/injection_utils.js";
 import { Auth, Cors as CorsWit, Rate, wit_utils } from "./wit.js";
-import Policy from "./policy.js";
 import { getPolicyChain } from "./types.js";
 import {
   Artifact,

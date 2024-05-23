@@ -33,7 +33,7 @@ typegate = ["dep:typegate_engine"]
 typegate_engine = { workspace = true, optional = true }
 common.workspace = true
 typescript.workspace = true
-metagen.workspace = true
+metagen = { workspace = true, features = ["multithreaded"] }
 
 # data structures
 chrono = { version = "0.4.31", features = ["serde"] }
