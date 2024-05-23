@@ -1,6 +1,18 @@
 repos:
   - repo: local
     hooks:
+      - id: poetry-lock
+        name: "Check poetry lock"
+        always_run: true
+        language: system
+        entry: bash -c 'poetry check --lock'
+        pass_filenames: false
+      - id: poetry-lock-typegraph
+        name: "Check typegraph poetry lock"
+        always_run: true
+        language: system
+        entry: bash -c 'poetry -C ./typegraph/python check --lock'
+        pass_filenames: false
       - id: version
         name: "Lock versions"
         always_run: true
@@ -30,7 +42,17 @@ repos:
           - ts
         files: ^(typegate|dev)/
       - id: es-lint
-        name: Eslint
+        name: Eslint typegraph
+        language: system
+        entry: bash -c 'cd typegraph/node/sdk && [ -f node_modules/.bin/eslint ] && pnpm eslint'
+        pass_filenames: false
+        types_or:
+          - ts
+          - tsx
+        files: ^typegraph/node/sdk
+        exclude: node_modules
+      - id: es-lint
+        name: Eslint website
         language: system
         entry: bash -c 'cd website && [ -f node_modules/.bin/eslint ] && pnpm lint'
         pass_filenames: false

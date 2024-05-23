@@ -22,19 +22,19 @@ import { useSDK } from "../../states/sdk";
 import TabItem from "@theme/TabItem";
 
 export interface MiniQLProps {
-  typegraph: string;
-  query: ast.DocumentNode;
   code?: Array<{
     content: string;
     codeLanguage?: string;
     codeFileUrl?: string;
   }>;
+  typegraph?: string;
+  query?: ast.DocumentNode;
   headers?: Record<string, unknown>;
   variables?: Record<string, unknown>;
   panel?: Panel;
   noTool?: boolean;
   defaultMode?: keyof typeof modes | null;
-  disablePlayground: boolean
+  disablePlayground?: boolean;
 }
 
 function Loader() {
@@ -71,7 +71,7 @@ function MiniQLBrowser({
       createGraphiQLFetcher({
         url: `${tgUrl}/${typegraph}`,
       }),
-    []
+    [],
   );
 
   const [mode, setMode] = useState(defaultMode);
@@ -80,23 +80,15 @@ function MiniQLBrowser({
   // console.log(code);
   return (
     <div className="@container miniql mb-4">
-      {defaultMode ? (
-        <ChoicePicker choices={modes} choice={mode} onChange={setMode} />
-      ) : null}
-      <GraphiQLProvider
-        fetcher={fetcher}
-        defaultQuery={query.loc?.source.body.trim()}
-        defaultHeaders={JSON.stringify(headers)}
-        shouldPersistHeaders={true}
-        variables={JSON.stringify(variables)}
-        storage={storage}
-      >
-        <div
-          className={`${
-            defaultMode ? "" : "md:grid @2xl:grid-cols-2"
+      {(defaultMode && !disablePlayground)
+        ? <ChoicePicker choices={modes} choice={mode!} onChange={setMode} />
+        : null}
+      <div
+        className={`${(defaultMode || disablePlayground) ? "" : "md:grid @2xl:grid-cols-2"
           } gap-2 w-full order-first`}
-        >
-          {!defaultMode || mode === "typegraph" ? (
+      >
+        {disablePlayground || !defaultMode || mode === "typegraph"
+          ? (
             <div className=" bg-slate-100 rounded-lg flex flex-col mb-2 md:mb-0 relative">
               <ChoicePicker
                 choices={{
@@ -126,21 +118,32 @@ function MiniQLBrowser({
                 ))}
               </ChoicePicker>
             </div>
-          ) : null}
-          {!disablePlayground && (!defaultMode || mode === "playground") ? (
-            <div className="flex flex-col graphiql-container">
-              <div className="flex-1 graphiql-session">
-                <GraphiQLInterface defaultTab={panel} noTool={noTool} />
-              </div>
+          )
+          : null}
+        {!disablePlayground && (!defaultMode || mode === "playground")
+          ? (
+            <GraphiQLProvider
+              fetcher={fetcher}
+              defaultQuery={query!.loc?.source.body.trim()}
+              defaultHeaders={JSON.stringify(headers)}
+              shouldPersistHeaders={true}
+              variables={JSON.stringify(variables)}
+              storage={storage}
+            >
+              <div className="flex flex-col graphiql-container">
+                <div className="flex-1 graphiql-session">
+                  <GraphiQLInterface defaultTab={panel} noTool={noTool} />
+                </div>
 
-              <div className="flex-auto graphiql-response min-h-[200px] p-2 mt-2 bg-slate-100 rounded-lg">
-                <Loader />
-                <ResponseEditor />
+                <div className="flex-auto graphiql-response min-h-[200px] p-2 mt-2 bg-slate-100 rounded-lg">
+                  <Loader />
+                  <ResponseEditor />
+                </div>
               </div>
-            </div>
-          ) : null}
-        </div>
-      </GraphiQLProvider>
+            </GraphiQLProvider>
+          )
+          : null}
+      </div>
     </div>
   );
 }
