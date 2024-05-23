@@ -7,9 +7,9 @@
   "deno.enablePaths": [
     "typegate",
     "dev",
-    "examples/templates/deno"
+    "examples/templates/deno",
+    "typegraph/node/dev"
   ],
-  "deno.documentPreloadLimit": 10000,
   "deno.unstable": true,
   "typescript.suggest.completeFunctionCalls": true,
   "typescript.inlayHints.variableTypes.enabled": true,
@@ -61,9 +61,4 @@
     "typegraph/python"
   ],
   "prettier.proseWrap": "never",
-  "workbench.colorCustomizations": {
-    "activityBar.background": "#610602",
-    "titleBar.activeBackground": "#870803",
-    "titleBar.activeForeground": "#FFFBFB"
-  },
 }
