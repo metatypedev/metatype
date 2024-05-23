@@ -1,9 +1,12 @@
 export { ghjk } from "https://raw.github.com/metatypedev/ghjk/2725af8/mod.ts";
 import * as ghjk from "https://raw.github.com/metatypedev/ghjk/2725af8/mod.ts";
-import { thinInstallConfig } from "https://raw.github.com/metatypedev/ghjk/2725af8/utils/mod.ts";
+import { $ } from "https://raw.github.com/metatypedev/ghjk/2725af8/mod.ts";
+import {
+  exponentialBackoff,
+  thinInstallConfig,
+} from "https://raw.github.com/metatypedev/ghjk/2725af8/utils/mod.ts";
 import * as ports from "https://raw.github.com/metatypedev/ghjk/2725af8/ports/mod.ts";
 import { std_url } from "https://raw.github.com/metatypedev/ghjk/2725af8/deps/common.ts";
-import { dirname, resolve } from "https://deno.land/std/path/mod.ts";
 
 const PROTOC_VERSION = "v24.1";
 const POETRY_VERSION = "1.7.0";
@@ -163,7 +166,7 @@ ghjk.task("build-pyrt", {
   },
 });
 
-const projectDir = resolve(dirname(new URL(import.meta.url).pathname));
+const projectDir = $.path(import.meta.dirname!);
 
 // run: deno run --allow-all dev/<script-name>.ts [args...]
 ghjk.task("dev", {
@@ -173,7 +176,7 @@ ghjk.task("dev", {
       return;
     }
     const [cmd, ...args] = argv;
-    const script = $.path(projectDir).join(`dev/${cmd}.ts`);
+    const script = projectDir.join(`dev/${cmd}.ts`);
     console.log(`Running ${script}`, ...args.map(JSON.stringify));
     await $`deno run --allow-all ${script} ${args}`;
   },
@@ -181,22 +184,28 @@ ghjk.task("dev", {
 
 ghjk.task("test", {
   async fn({ $, argv }) {
-    const script = $.path(projectDir).join("dev/test.ts");
+    const script = projectDir.join("dev/test.ts");
     await $`deno run --allow-all ${script} ${argv}`;
   },
 });
 
+// this is used somewhere in a test build.sh file
 ghjk.task("install-wasi-adapter", {
   async fn({ $ }) {
-    await Promise.all([
-      `https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.command.wasm`,
-      `https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.reactor.wasm`,
-      `https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.proxy.wasm`,
-    ].map((url) =>
-      $.request(url).showProgress()
-        .pipeToPath($.path("tmp").join(std_url.basename(url)), {
-          create: true,
-        })
-    ));
+    await $.withRetries({
+      count: 10,
+      delay: exponentialBackoff(500),
+      action: async () =>
+        await Promise.all([
+          `https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.command.wasm`,
+          `https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.reactor.wasm`,
+          `https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.proxy.wasm`,
+        ].map((url) =>
+          $.request(url).showProgress()
+            .pipeToPath(projectDir.join("tmp").join(std_url.basename(url)), {
+              create: true,
+            })
+        )),
+    });
   },
 });

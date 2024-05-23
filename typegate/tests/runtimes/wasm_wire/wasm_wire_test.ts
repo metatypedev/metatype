@@ -207,8 +207,6 @@ Meta.test(
             .on(engine);
         },
       );
-
-      await engine.terminate();
     });
   },
 );

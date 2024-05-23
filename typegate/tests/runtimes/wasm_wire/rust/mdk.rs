@@ -365,11 +365,11 @@ pub mod stubs {
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
-            "hundred-random" => "HundredRandom",
-            "record-creation" => "RecordCreation",
-            "range" => "Range",
             "add" => "Add",
+            "hundred-random" => "HundredRandom",
             "identity" => "Identity",
+            "range" => "Range",
+            "record-creation" => "RecordCreation",
             _ => panic!("unrecognized op_name: {op_name}"),
         }
     }
