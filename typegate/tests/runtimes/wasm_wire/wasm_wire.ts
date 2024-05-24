@@ -3,6 +3,7 @@
 
 import { Policy, t, typegraph } from "@typegraph/sdk";
 import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.js";
+import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
 export const tg = await typegraph("wasm-wire-ts", (g: any) => {
   const entity = t.struct({
@@ -20,6 +21,7 @@ export const tg = await typegraph("wasm-wire-ts", (g: any) => {
   }).rename("entity");
 
   const wasm = WasmRuntime.wire("rust.wasm");
+  const random = new RandomRuntime({});
   g.expose({
     add: wasm.handler(
       t.struct({ "a": t.float(), "b": t.float() }).rename("add_args"),
@@ -43,5 +45,11 @@ export const tg = await typegraph("wasm-wire-ts", (g: any) => {
       entity,
       { func: "identity" },
     ).rename("identity"),
+    random: random.gen(entity).withPolicy(Policy.internal()),
+    hundred: wasm.handler(
+      t.struct({}),
+      t.list(entity),
+      { func: "hundred-random" },
+    ).rename("hundred-random"),
   }, Policy.public());
 });

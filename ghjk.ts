@@ -1,23 +1,27 @@
 export { ghjk } from "https://raw.github.com/metatypedev/ghjk/2725af8/mod.ts";
 import * as ghjk from "https://raw.github.com/metatypedev/ghjk/2725af8/mod.ts";
-import { thinInstallConfig } from "https://raw.github.com/metatypedev/ghjk/2725af8/utils/mod.ts";
+import { $ } from "https://raw.github.com/metatypedev/ghjk/2725af8/mod.ts";
+import {
+  exponentialBackoff,
+  thinInstallConfig,
+} from "https://raw.github.com/metatypedev/ghjk/2725af8/utils/mod.ts";
 import * as ports from "https://raw.github.com/metatypedev/ghjk/2725af8/ports/mod.ts";
-import { dirname, resolve } from "https://deno.land/std/path/mod.ts";
+import { std_url } from "https://raw.github.com/metatypedev/ghjk/2725af8/deps/common.ts";
 
 const PROTOC_VERSION = "v24.1";
 const POETRY_VERSION = "1.7.0";
 const PYTHON_VERSION = "3.8.18";
 const PNPM_VERSION = "v9.0.5";
-const WASM_TOOLS_VERSION = "1.0.53";
-const JCO_VERSION = "1.0.0";
-const WASMTIME_VERSION = "20.0.0";
-const WASM_OPT_VERSION = "0.116.0";
+const WASM_TOOLS_VERSION = "1.208.1";
+const JCO_VERSION = "1.2.4";
+const WASMTIME_VERSION = "21.0.0";
+const WASM_OPT_VERSION = "0.116.1";
 const MOLD_VERSION = "v2.4.0";
 const CMAKE_VERSION = "3.28.0-rc6";
 const CARGO_INSTA_VERSION = "1.33.0";
 const NODE_VERSION = "20.8.0";
 const TEMPORAL_VERSION = "0.10.7";
-const METATYPE_VERSION = "0.4.1";
+const METATYPE_VERSION = "0.4.2";
 
 const installs = {
   python: ports.cpy_bs({ version: PYTHON_VERSION, releaseTag: "20240224" }),
@@ -44,6 +48,8 @@ const allowedPortDeps = [
   })),
 ];
 
+export const secureConfig = ghjk.secureConfig({ allowedPortDeps });
+
 const inCi = () => !!Deno.env.get("CI");
 const inOci = () => !!Deno.env.get("OCI");
 const inDev = () => !inCi() && !inOci();
@@ -62,7 +68,7 @@ ghjk.install(
     crateName: "wasm-tools",
     version: WASM_TOOLS_VERSION,
     locked: true,
-  })
+  }),
 );
 
 if (!inOci()) {
@@ -80,7 +86,11 @@ if (!inOci()) {
       packageName: "@bytecodealliance/jco",
       version: JCO_VERSION,
     })[0],
-    ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0]
+    ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0],
+    ports.cargobi({
+      crateName: "cross",
+      locked: true,
+    }),
   );
 }
 
@@ -89,7 +99,7 @@ if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
     ports.mold({
       version: MOLD_VERSION,
       replaceLd: Deno.env.has("CI") || Deno.env.has("OCI"),
-    })
+    }),
   );
 }
 
@@ -99,7 +109,7 @@ if (!Deno.env.has("NO_PYTHON")) {
     ports.pipi({
       packageName: "poetry",
       version: POETRY_VERSION,
-    })[0]
+    })[0],
   );
   if (!inOci()) {
     ghjk.install(ports.pipi({ packageName: "pre-commit" })[0]);
@@ -110,7 +120,8 @@ if (inDev()) {
   ghjk.install(
     ports.act({}),
     ports.cargobi({ crateName: "whiz", locked: true }),
-    installs.comp_py[0]
+    ports.cargobi({ crateName: "wit-deps-cli", locked: true }),
+    installs.comp_py[0],
   );
 }
 
@@ -119,12 +130,13 @@ ghjk.task("clean-deno-lock", {
     // jq
   ],
   async fn({ $ }) {
-    const jqOp1 = `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
+    const jqOp1 =
+      `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
     const jqOp2 = `del(.packages.npm["@typegraph/sdk@${METATYPE_VERSION}"])`;
     const jqOp = `${jqOp1} | ${jqOp2}`;
     await Deno.writeTextFile(
       "typegate/deno.lock",
-      await $`jq ${jqOp} typegate/deno.lock`.text()
+      await $`jq ${jqOp} typegate/deno.lock`.text(),
     );
   },
 });
@@ -135,7 +147,7 @@ ghjk.task("gen-pyrt-bind", {
   async fn({ $ }) {
     await $.removeIfExists("./libs/pyrt_wit_wire/wit_wire");
     await $`componentize-py -d ../../wit/wit-wire.wit bindings .`.cwd(
-      "./libs/pyrt_wit_wire"
+      "./libs/pyrt_wit_wire",
     );
   },
 });
@@ -154,7 +166,7 @@ ghjk.task("build-pyrt", {
   },
 });
 
-const projectDir = resolve(dirname(new URL(import.meta.url).pathname));
+const projectDir = $.path(import.meta.dirname!);
 
 // run: deno run --allow-all dev/<script-name>.ts [args...]
 ghjk.task("dev", {
@@ -164,7 +176,7 @@ ghjk.task("dev", {
       return;
     }
     const [cmd, ...args] = argv;
-    const script = $.path(projectDir).join(`dev/${cmd}.ts`);
+    const script = projectDir.join(`dev/${cmd}.ts`);
     console.log(`Running ${script}`, ...args.map(JSON.stringify));
     await $`deno run --allow-all ${script} ${args}`;
   },
@@ -172,17 +184,28 @@ ghjk.task("dev", {
 
 ghjk.task("test", {
   async fn({ $, argv }) {
-    const script = $.path(projectDir).join("dev/test.ts");
+    const script = projectDir.join("dev/test.ts");
     await $`deno run --allow-all ${script} ${argv}`;
   },
 });
 
-export const secureConfig = ghjk.secureConfig({
-  allowedPortDeps: [
-    ...ghjk.stdDeps(),
-    ...[installs.python_latest, installs.node].map((fat) => ({
-      manifest: fat.port,
-      defaultInst: thinInstallConfig(fat),
-    })),
-  ],
+// this is used somewhere in a test build.sh file
+ghjk.task("install-wasi-adapter", {
+  async fn({ $ }) {
+    await $.withRetries({
+      count: 10,
+      delay: exponentialBackoff(500),
+      action: async () =>
+        await Promise.all([
+          `https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.command.wasm`,
+          `https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.reactor.wasm`,
+          `https://github.com/bytecodealliance/wasmtime/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.proxy.wasm`,
+        ].map((url) =>
+          $.request(url).showProgress()
+            .pipeToPath(projectDir.join("tmp").join(std_url.basename(url)), {
+              create: true,
+            })
+        )),
+    });
+  },
 });

@@ -1,22 +1,33 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import * as zod from "zod";
 import type { WitWireMatInfo } from "../../../engine/runtime.js";
 import { ResolverArgs } from "../../types.ts";
+import { Typegate } from "../../typegate/mod.ts";
+import { getLogger } from "../../log.ts";
 
-const METATYPE_VERSION = "0.4.1";
+const logger = getLogger(import.meta);
+
+const METATYPE_VERSION = "0.4.2";
 
 export class WitWireMessenger {
   static async init(
     componentPath: string,
     instanceId: string,
     ops: WitWireMatInfo[],
+    cx: HostCallCtx,
   ) {
     try {
-      const _res = await Meta.wit_wire.init(componentPath, instanceId, {
-        expected_ops: ops,
-        metatype_version: METATYPE_VERSION,
-      });
+      const _res = await Meta.wit_wire.init(
+        componentPath,
+        instanceId,
+        {
+          expected_ops: ops,
+          metatype_version: METATYPE_VERSION,
+        }, // this callback will be used from the native end
+        async (op: string, json: string) => await hostcall(cx, op, json),
+      );
       return new WitWireMessenger(instanceId, componentPath, ops);
     } catch (err) {
       throw new Error(
@@ -114,4 +125,90 @@ export class WitWireMessenger {
       );
     }
   }
+}
+
+export type HostCallCtx = {
+  typegate: Typegate;
+  authToken: string;
+  typegraphUrl: URL;
+};
+
+async function hostcall(cx: HostCallCtx, op_name: string, json: string) {
+  try {
+    const args = JSON.parse(json);
+    switch (op_name) {
+      case "gql":
+        return await gql(cx, args);
+      default:
+        throw new Error(`Unrecognized op_name ${op_name}`, {
+          cause: {
+            code: "op_404",
+          },
+        });
+    }
+  } catch (err) {
+    logger.error("error on wit_wire hostcall {}", err);
+    if (err instanceof Error) {
+      throw {
+        message: err.message,
+        cause: err.cause,
+        ...(typeof err.cause == "object" && err
+          ? {
+            // deno-lint-ignore no-explicit-any
+            code: (err.cause as any).code ?? "unexpected_err",
+          }
+          : {
+            code: "unexpected_err",
+          }),
+      };
+    } else {
+      throw {
+        code: "unexpected_err",
+        message: `Unpexpected error: ${Deno.inspect(err)}`,
+      };
+    }
+  }
+}
+
+async function gql(cx: HostCallCtx, args: object) {
+  const argsValidator = zod.object({
+    query: zod.string(),
+    variables: zod.record(zod.string(), zod.unknown()),
+  });
+  const parseRes = argsValidator.safeParse(args);
+  if (!parseRes.success) {
+    throw new Error("error validating gql args", {
+      cause: {
+        zodErr: parseRes.error,
+      },
+    });
+  }
+  const parsed = parseRes.data;
+  const request = new Request(cx.typegraphUrl, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+      authorization: `Bearer ${cx.authToken}`,
+    },
+    body: JSON.stringify({
+      query: parsed.query,
+      variables: parsed.variables,
+    }),
+  });
+  const res = await cx.typegate.handle(request, {
+    //TODO: make `handle` more friendly to internal requests
+    remoteAddr: { port: 0, hostname: "internal", transport: "tcp" },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`gql fetch on ${cx.typegraphUrl} failed: ${text}`, {
+      cause: {
+        response: text,
+        typegraphUrl: cx.typegraphUrl,
+        ...parsed,
+      },
+    });
+  }
+  return await res.json();
 }

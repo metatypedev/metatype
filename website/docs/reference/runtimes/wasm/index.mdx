@@ -32,14 +32,13 @@ from typegraph.runtimes.wasm import WasmRuntime
 @typegraph
 def example(g: Graph):
     pub = Policy.public()
-    wasm = WasmRuntime()
+    wasm = WasmRuntime.reflected("path/to/your-compiled-component.wasm");
 
     g.expose(
-        add=wasm.from_wasm(
+        add=wasm.from_export(
             t.struct({"a": t.integer(), "b": t.integer()}),
             t.integer(),
             func="add",  # exported function
-            wasm="path/to/your-compiled-component.wasm",
         )
     )
 
@@ -52,15 +51,14 @@ import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.js";
 
 typegraph("example", (g) => {
   const pub = Policy.public();
-  const wasm = new WasmRuntime();
+  const wasm = WasmRuntime.reflected("path/to/your-compiled-component.wasm");
 
   g.expose({
-    add: wasm.fromWasm(
+    add: wasm.fromExport(
         t.struct({ a: t.integer(), b: t.integer() }),
         t.integer(),
         { 
           func: "add", // exported function
-          wasm: "path/to/your-compiled-component.wasm"
         },
       ).withPolicy(pub),
   });

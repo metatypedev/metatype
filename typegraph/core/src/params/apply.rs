@@ -98,11 +98,11 @@ enum PathSeg {
     Index(usize),
 }
 
-impl ToString for PathSeg {
-    fn to_string(&self) -> String {
+impl core::fmt::Display for PathSeg {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PathSeg::Field(s) => s.clone(),
-            PathSeg::Index(i) => format!("[{i}]"),
+            PathSeg::Field(str) => write!(f, "{str}"),
+            PathSeg::Index(idx) => write!(f, "[{idx}]"),
         }
     }
 }

@@ -180,6 +180,8 @@ jobs:
           wasm-opt -Oz target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE.opt
           wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
 
+          python3 -m venv .venv
+          source .venv/bin/activate
           poetry install --no-root
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { BasicAuth } from "./tg_deploy.js";
-import { runtimes } from "./wit.js";
 import { Artifact } from "./gen/interfaces/metatype-typegraph-core.js";
 import { dirname, join } from "node:path";
 import * as fsp from "node:fs/promises";

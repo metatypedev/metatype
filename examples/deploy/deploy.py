@@ -59,7 +59,7 @@ def deploy_example_python(g: Graph):
             name="sayHello",
         ),
         # Wasm
-        testWasmAdd=wasm.from_wasm(
+        testWasmAdd=wasm.from_export(
             t.struct({"a": t.float(), "b": t.float()}),
             t.integer(),
             func="add",

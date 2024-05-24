@@ -579,6 +579,22 @@ interface utils {
     remove-injections: func(type-id: type-id) -> result<type-id, error>;
 
     get-cwd: func() -> result<string, string>;
+
+    record mdk-config {
+        workspace-path: string,
+        target-name: string,
+        config-json: string, 
+        tg-json: string,
+    }
+
+    record mdk-output {
+        path: string,
+        content: string,
+        overwrite: bool,
+    }
+
+    metagen-exec: func(config: mdk-config) -> result<list<mdk-output>, string>;
+    metagen-write-files: func(items: list<mdk-output>) -> result<_, string>;
 }
 
 interface host {

@@ -8,7 +8,7 @@ pub mod wit {
         // wit-start
         // this bit gets replaced by the inline wit string
         world: "wit-wire",
-        path: "../../../../../wit/wit-wire.wit"
+        path: "../../../../../wit",
         // wit-end
     });
 }
@@ -16,9 +16,8 @@ pub mod wit {
 use std::cell::RefCell;
 use std::collections::HashMap;
 
-use anyhow::Context;
-
 use wit::exports::metatype::wit_wire::mat_wire::*;
+use wit::metatype::wit_wire::typegate_wire::hostcall;
 
 pub type HandlerFn = Box<dyn Fn(&str, Ctx) -> Result<String, HandleErr>>;
 
@@ -76,9 +75,7 @@ impl Router {
         let Some(handler) = self.handlers.get(mat_trait) else {
             return Err(HandleErr::NoHandler);
         };
-        let cx = Ctx {
-            gql: GraphqlClient {},
-        };
+        let cx = Ctx {};
         (handler.handler_fn)(&req.in_json, cx)
     }
 }
@@ -89,11 +86,57 @@ thread_local! {
     pub static MAT_STATE: RefCell<Router> = panic!("MDK_STATE has not been initialized");
 }
 
-pub struct Ctx {
-    gql: GraphqlClient,
+pub struct Ctx {}
+
+impl Ctx {
+    pub fn gql<O>(
+        &self,
+        query: &str,
+        variables: impl Into<serde_json::Value>,
+    ) -> Result<O, GraphqlRunError>
+    where
+        O: serde::de::DeserializeOwned,
+    {
+        match hostcall(
+            "gql",
+            &serde_json::to_string(&serde_json::json!({
+                "query": query,
+                "variables": variables.into(),
+            }))?,
+        ) {
+            Ok(json) => Ok(serde_json::from_str(&json[..])?),
+            Err(json) => Err(GraphqlRunError::HostError(serde_json::from_str(&json)?)),
+        }
+    }
 }
 
-pub struct GraphqlClient {}
+#[derive(Debug)]
+pub enum GraphqlRunError {
+    JsonError(serde_json::Error),
+    HostError(serde_json::Value),
+}
+
+impl std::error::Error for GraphqlRunError {}
+
+impl From<serde_json::Error> for GraphqlRunError {
+    fn from(value: serde_json::Error) -> Self {
+        Self::JsonError(value)
+    }
+}
+
+impl std::fmt::Display for GraphqlRunError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GraphqlRunError::JsonError(msg) => write!(f, "json error: {msg}"),
+            GraphqlRunError::HostError(serde_json::Value::Object(map))
+                if map.contains_key("message") =>
+            {
+                write!(f, "host error: {}", map["message"])
+            }
+            GraphqlRunError::HostError(val) => write!(f, "host error: {val:?}"),
+        }
+    }
+}
 
 #[macro_export]
 macro_rules! init_mat {

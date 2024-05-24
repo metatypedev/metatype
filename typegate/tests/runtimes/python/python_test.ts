@@ -23,6 +23,7 @@ Meta.test("Python VM performance", async (t) => {
           }),
         },
       ],
+      {} as any,
     );
     const samples = await Promise.all(
       [...Array(100).keys()].map((_i) =>
@@ -61,6 +62,7 @@ Meta.test("Python VM performance", async (t) => {
           }),
         },
       ],
+      {} as any,
     );
     const samples = [...Array(100).keys()].map((_i) =>
       wire.handle(

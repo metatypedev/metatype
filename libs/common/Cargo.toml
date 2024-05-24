@@ -1,6 +1,6 @@
 [package]
 name = "common"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2021"
 
 [dependencies]
@@ -8,7 +8,6 @@ anyhow.workspace = true
 base64 = "0.21.5"
 flate2 = "1.0.28"
 indexmap.workspace = true
-schemars = { version = "0.8.16", features = ["derive", "preserve_order"], optional = true }
 serde.workspace = true
 serde_json = { workspace = true, features = ["preserve_order"] }
 serde_with = "3.4.0"
@@ -20,6 +19,3 @@ itertools = "0.11.0"
 colored = "2.0.4"
 indoc.workspace = true
 thiserror.workspace = true
-
-[features]
-codegen = ["dep:schemars"]

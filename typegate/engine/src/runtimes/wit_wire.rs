@@ -11,12 +11,14 @@ use wit::exports::metatype::wit_wire::mat_wire::{InitArgs, InitError, MatInfo};
 use wit::metatype::wit_wire::typegate_wire::Host;
 
 use self::wit::exports::metatype::wit_wire::mat_wire::{HandleErr, HandleReq};
+use std::ptr::NonNull;
 
 mod wit {
     wasmtime::component::bindgen!({
         world: "wit-wire",
         path: "../../wit/",
         async: true,
+        trappable_imports: true,
     });
 }
 
@@ -38,6 +40,10 @@ impl Ctx {
             linker: {
                 let mut linker = Linker::<InstanceState>::new(&engine);
 
+                // add all worlds from crate to linker
+                // TODO(@yohe): determine and add only select linkers
+                // componentize-py adds all the command worlds
+                // so we'll have to fix that there first
                 wasmtime_wasi::add_to_linker_async(&mut linker)?;
                 wit::WitWire::add_to_linker(&mut linker, |state| &mut state.tg_host)?;
 
@@ -50,7 +56,10 @@ impl Ctx {
     async fn get_component(&self, wasm_relative_path: String) -> Result<Component, String> {
         let engine = self.engine.clone();
         let comp = if wasm_relative_path == "inline://pyrt_wit_wire.cwasm" {
+            // for most components, we'll rely on wasmtime's cache which takes into account
+            // hashes
             // we only manually cache inline components since they'll never change
+            // and we want to avoid the decompression cost
             if let Some(comp) = self.cached_components.get(&wasm_relative_path) {
                 return Ok(comp.clone());
             }
@@ -114,7 +123,8 @@ impl InstanceState {
                 .with_context(|| format!("error preopening dir for instance at {preopen_dir:?}"))
                 .unwrap()
                 // TODO: stream stdio to debug log
-                .inherit_stdio()
+                .inherit_stdout()
+                .inherit_stderr()
                 .build(),
             table: Default::default(),
             tg_host,
@@ -137,15 +147,129 @@ pub struct WitWireInitArgs {
     metatype_version: String,
     expected_ops: Vec<WitWireMatInfo>,
 }
-struct TypegateHost {}
+
+struct TypegateHost {
+    js_fn: SendPtr<v8::Function>,
+    async_work_sender: deno_core::V8CrossThreadTaskSpawner,
+}
+
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+struct SendPtr<T>(NonNull<T>);
+unsafe impl<T> Send for SendPtr<T> {}
+
+impl TypegateHost {
+    fn drop(self, scope: &mut v8::HandleScope) {
+        unsafe {
+            _ = v8::Global::from_raw(scope, self.js_fn.0);
+        }
+    }
+}
 
 #[wasmtime_wasi::async_trait]
 impl Host for TypegateHost {
     async fn hostcall(
         &mut self,
-        _req: (String, String),
+        op_name: String,
+        json: String,
     ) -> wasmtime::Result<Result<String, String>> {
-        todo!()
+        if op_name.len() > v8::String::max_length() {
+            return Ok(Err("invalid op_name: too long".to_string()));
+        }
+        if json.len() > v8::String::max_length() {
+            return Ok(Err("invalid json: too long".to_string()));
+        }
+        let js_fn = SendPtr(self.js_fn.0);
+        let spawner = self.async_work_sender.clone();
+
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        let join_handle = tokio::task::spawn_blocking(move || {
+            // NOTE: the whole affair is single threaded so
+            // there's no need for a semaphore when accessing
+            // the hostcall
+            spawner.spawn_blocking(move |scope| {
+                let params: [v8::Local<v8::Value>; 2] = [
+                    v8::String::new(scope, &op_name).unwrap().into(),
+                    v8::String::new(scope, &json).unwrap().into(),
+                ];
+                let recv = v8::undefined(scope);
+                let promise = {
+                    let tc_scope = &mut v8::TryCatch::new(scope);
+                    // FIXME(@yohe): the original pointer was made from a global
+                    // and yet we're transmuting it to a Local here.
+                    // This is observed from the deno codebase
+                    // and I can't explain it
+                    let func = unsafe { std::mem::transmute::<_, v8::Local<v8::Function>>(js_fn) };
+                    let res = func
+                        .call(tc_scope, recv.into(), &params)
+                        .expect("got null from hostcall");
+                    if tc_scope.has_caught() {
+                        return Err(format!(
+                            "error: {}",
+                            tc_scope
+                                .exception()
+                                .unwrap()
+                                .to_string(tc_scope)
+                                .unwrap()
+                                .to_rust_string_lossy(tc_scope)
+                        ));
+                    }
+                    res
+                };
+                let promise = v8::Local::<v8::Promise>::try_from(promise)
+                    .map_err(|_err| "unexpected value from hostcall".to_string())?;
+
+                // we use raw pointers here when passing data into v8 functions
+                let external = v8::External::new(scope, Box::into_raw(Box::new(tx)) as _);
+                fn get_sender(
+                    data: v8::Local<v8::Value>,
+                ) -> tokio::sync::oneshot::Sender<Result<String, String>> {
+                    let sender = v8::Local::<v8::External>::try_from(data).unwrap();
+                    *unsafe { Box::from_raw(sender.value() as _) }
+                }
+
+                let on_fullfilled = v8::Function::builder(
+                    // this is not closure but a static fn
+                    // so we can't close over anything
+                    // but instead use data to pass values
+                    |scope: &mut v8::HandleScope<'_>,
+                     args: v8::FunctionCallbackArguments<'_>,
+                     _rv: v8::ReturnValue<'_>| {
+                        let tx = get_sender(args.data());
+                        let Some(json) = v8::json::stringify(scope, args.get(0)) else {
+                            tx.send(Err("error jsonifying result".to_string())).unwrap();
+                            return;
+                        };
+                        tx.send(Ok(json.to_rust_string_lossy(scope))).unwrap();
+                    },
+                )
+                // channel is oneshot but we can be sure
+                // either only on_fullfilled or on_rejected will run
+                .data(external.into())
+                .build(scope);
+                let on_rejected = v8::Function::builder(
+                    move |scope: &mut v8::HandleScope<'_>,
+                          args: v8::FunctionCallbackArguments<'_>,
+                          _rv: v8::ReturnValue<'_>| {
+                        let tx = get_sender(args.data());
+                        let Some(json) = v8::json::stringify(scope, args.get(0)) else {
+                            tx.send(Err("error jsonifying result".to_string())).unwrap();
+                            return;
+                        };
+                        tx.send(Err(json.to_rust_string_lossy(scope))).unwrap();
+                    },
+                )
+                .data(external.into())
+                .build(scope);
+                promise.then2(scope, on_fullfilled.unwrap(), on_rejected.unwrap());
+                Ok(())
+            })
+        });
+        if let Err(msg) = join_handle.await.expect("tokio spawn_blocking error") {
+            return Ok(Err(msg));
+        }
+        let res = rx.await.expect("oneshot recieve error");
+        Ok(res)
     }
 }
 
@@ -218,16 +342,19 @@ impl From<InitError> for WitWireInitError {
 
 #[deno_core::op2(async)]
 #[serde]
-pub async fn op_wit_wire_init(
+pub async fn op_wit_wire_init<'scope>(
     state: Rc<RefCell<OpState>>,
+    // scope: &mut v8::HandleScope<'scope>,
     #[string] component_path: String,
     #[string] instance_id: String,
     #[serde] input: WitWireInitArgs,
+    #[global] hostcall_cb: v8::Global<v8::Function>,
 ) -> Result<WitWireInitResponse, WitWireInitError> {
-    let ctx = {
+    let (ctx, spawner) = {
         let state = state.borrow();
         let ctx = state.borrow::<Ctx>();
-        ctx.clone()
+        let spawner = state.borrow::<deno_core::V8CrossThreadTaskSpawner>();
+        (ctx.clone(), spawner.clone())
     };
 
     let component = ctx
@@ -236,9 +363,19 @@ pub async fn op_wit_wire_init(
         .map_err(WitWireInitError::ModuleErr)?;
 
     let work_dir = ctx.instance_workdir.join(&instance_id);
-    tokio::fs::create_dir_all(&work_dir).await.unwrap();
-    let mut store =
-        wasmtime::Store::new(&ctx.engine, InstanceState::new(&work_dir, TypegateHost {}));
+    tokio::fs::create_dir_all(&work_dir)
+        .await
+        .expect("error creating instance workdir");
+    let mut store = wasmtime::Store::new(
+        &ctx.engine,
+        InstanceState::new(
+            &work_dir,
+            TypegateHost {
+                js_fn: SendPtr(hostcall_cb.into_raw()),
+                async_work_sender: spawner,
+            },
+        ),
+    );
     let (bindings, instance) = wit::WitWire::instantiate_async(&mut store, &component, &ctx.linker)
         .await
         .map_err(|err| {
@@ -262,8 +399,13 @@ pub async fn op_wit_wire_init(
     Ok(WitWireInitResponse {})
 }
 
-#[deno_core::op2(async)]
-pub async fn op_wit_wire_destroy(state: Rc<RefCell<OpState>>, #[string] instance_id: String) {
+#[deno_core::op2]
+pub fn op_wit_wire_destroy(
+    state: Rc<RefCell<OpState>>,
+    scope: &mut v8::HandleScope<'_>,
+    #[string] instance_id: String,
+) {
+    debug!("destroying wit_wire instnace {instance_id}");
     let ctx = {
         let state = state.borrow();
         let ctx = state.borrow::<Ctx>();
@@ -273,12 +415,16 @@ pub async fn op_wit_wire_destroy(state: Rc<RefCell<OpState>>, #[string] instance
     let Some((_id, instance)) = ctx.instances.remove(&instance_id) else {
         return;
     };
-    if let Err(err) = tokio::fs::remove_dir_all(&instance.preopen_dir).await {
-        error!(
-            "error removing preopend dir for instance {_id} at {:?}: {err}",
-            instance.preopen_dir
-        )
-    }
+    let tg_host = instance.store.into_data().tg_host;
+    tg_host.drop(scope);
+    std::mem::drop(tokio::task::spawn(async move {
+        if let Err(err) = tokio::fs::remove_dir_all(&instance.preopen_dir).await {
+            error!(
+                "error removing preopend dir for instance {_id} at {:?}: {err}",
+                instance.preopen_dir
+            )
+        }
+    }));
 }
 
 #[derive(Deserialize)]

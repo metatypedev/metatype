@@ -1,6 +1,6 @@
 [package]
 name = "meta-cli"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2021"
 
 description = "Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are."
@@ -33,7 +33,7 @@ typegate = ["dep:typegate_engine"]
 typegate_engine = { workspace = true, optional = true }
 common.workspace = true
 typescript.workspace = true
-metagen.workspace = true
+metagen = { workspace = true, features = ["multithreaded"] }
 
 # data structures
 chrono = { version = "0.4.31", features = ["serde"] }

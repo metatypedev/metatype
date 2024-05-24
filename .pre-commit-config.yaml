@@ -1,4 +1,74 @@
 repos:
+  - repo: local
+    hooks:
+      - id: poetry-lock
+        name: "Check poetry lock"
+        always_run: true
+        language: system
+        entry: bash -c 'poetry check --lock'
+        pass_filenames: false
+      - id: poetry-lock-typegraph
+        name: "Check typegraph poetry lock"
+        always_run: true
+        language: system
+        entry: bash -c 'poetry -C ./typegraph/python check --lock'
+        pass_filenames: false
+      - id: version
+        name: "Lock versions"
+        always_run: true
+        language: system
+        entry: bash -c 'deno run -A dev/lock.ts --check'
+        pass_filenames: false
+      - id: clean-deno-lock
+        name: "Clean deno.lock"
+        always_run: true
+        language: system
+        entry: ghjk x clean-deno-lock
+        pass_filenames: false
+      - id: deno-fmt
+        name: Deno format
+        language: system
+        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs && cd ../dev && deno fmt && cd ../typegraph/node && deno fmt --ignore=node_modules,dist'
+        pass_filenames: false
+        types:
+          - ts
+        files: ^(typegate|dev|typegraph/node)/
+      - id: deno-lint
+        name: Deno lint
+        language: system
+        entry: bash -c 'cd typegate && deno lint --rules-exclude=no-explicit-any --ignore=native,tmp,tests/e2e/nextjs && cd ../dev && deno lint'
+        pass_filenames: false
+        types:
+          - ts
+        files: ^(typegate|dev)/
+      - id: es-lint
+        name: Eslint typegraph
+        language: system
+        entry: bash -c 'cd typegraph/node/sdk && [ -f node_modules/.bin/eslint ] && pnpm eslint'
+        pass_filenames: false
+        types_or:
+          - ts
+          - tsx
+        files: ^typegraph/node/sdk
+        exclude: node_modules
+      - id: es-lint
+        name: Eslint website
+        language: system
+        entry: bash -c 'cd website && [ -f node_modules/.bin/eslint ] && pnpm lint'
+        pass_filenames: false
+        types_or:
+          - ts
+          - tsx
+        files: ^website/
+        exclude: ^website/typegraphs/
+      - id: devtools-lint
+        name: ESLint meta-lsp
+        language: system
+        entry: bash -c 'cd meta-lsp && pnpm lint --fix'
+        pass_filenames: false
+        types:
+          - ts
+        files: ^meta-lsp/
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
@@ -21,83 +91,6 @@ repos:
           |.*\.snap$|typegate/src/typegraphs/.*\.json
           |website/docs/reference/
           |libs/pyrt_wit_wire/pyrt)
-  - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.27.2
-    hooks:
-      - id: check-dependabot
-      - id: check-github-workflows
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.1.7"
-    hooks:
-      - id: ruff
-      - id: ruff-format
-  - repo: https://github.com/commitizen-tools/commitizen
-    rev: v3.13.0
-    hooks:
-      - id: commitizen
-        stages:
-          - commit-msg
-  - repo: https://github.com/doublify/pre-commit-rust
-    rev: v1.0
-    hooks:
-      - id: fmt
-      - id: cargo-check
-        args:
-          - "--locked"
-      - id: clippy
-        args:
-          - "--locked"
-          - "--"
-          - "--deny"
-          - "warnings"
-  - repo: local
-    hooks:
-      - id: deno-fmt
-        name: Deno format
-        language: system
-        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs && cd ../dev && deno fmt && cd ../typegraph/node && deno fmt --ignore=node_modules,dist'
-        pass_filenames: false
-        types:
-          - ts
-        files: ^(typegate|dev|typegraph/node)/
-      - id: deno-lint
-        name: Deno lint
-        language: system
-        entry: bash -c 'cd typegate && deno lint --rules-exclude=no-explicit-any --ignore=native,tmp,tests/e2e/nextjs && cd ../dev && deno lint'
-        pass_filenames: false
-        types:
-          - ts
-        files: ^(typegate|dev)/
-      - id: es-lint
-        name: Eslint
-        language: system
-        entry: bash -c 'cd website && [ -f node_modules/.bin/eslint ] && pnpm lint'
-        pass_filenames: false
-        types_or:
-          - ts
-          - tsx
-        files: ^website/
-        exclude: ^website/typegraphs/
-      - id: devtools-lint
-        name: ESLint meta-lsp
-        language: system
-        entry: bash -c 'cd meta-lsp && pnpm lint --fix'
-        pass_filenames: false
-        types:
-          - ts
-        files: ^meta-lsp/
-      - id: version
-        name: "Lock versions"
-        always_run: true
-        language: system
-        entry: bash -c 'deno run -A dev/lock.ts --check'
-        pass_filenames: false
-      - id: clean-deno-lock
-        name: "Clean deno.lock"
-        always_run: true
-        language: system
-        entry: ghjk x clean-deno-lock
-        pass_filenames: false
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.5.4
     hooks:
@@ -164,3 +157,31 @@ repos:
           - tsx
         files: ^website/
         exclude: website/typegraphs
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.27.2
+    hooks:
+      - id: check-dependabot
+      - id: check-github-workflows
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: "v0.1.7"
+    hooks:
+      - id: ruff
+      - id: ruff-format
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen
+        stages:
+          - commit-msg
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: fmt
+      - id: clippy
+        args:
+          - "--locked"
+          - "--all-features"
+          - "--all-targets"
+          - "--"
+          - "--deny"
+          - "warnings"

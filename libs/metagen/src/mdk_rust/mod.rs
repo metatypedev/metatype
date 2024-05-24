@@ -248,12 +248,20 @@ pub fn gen_static(dest: &mut GenDestBuf) -> anyhow::Result<Arc<str>> {
 
 pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
     let cargo_toml = include_str!("static/Cargo.toml");
-    if let Some(crate_name) = crate_name {
+    let mut cargo_toml = if let Some(crate_name) = crate_name {
         const DEF_CRATE_NAME: &str = "metagen_mdk_rust_static";
         cargo_toml.replace(DEF_CRATE_NAME, crate_name)
     } else {
         cargo_toml.to_string()
-    }
+    };
+    cargo_toml.push_str(
+        r#"
+
+[profile.release]
+strip = "symbols"
+opt-level = "z""#,
+    );
+    cargo_toml
 }
 
 pub fn gen_lib_rs() -> String {
@@ -284,6 +292,7 @@ impl stubs::MyFunc for MyMat {
     .into()
 }
 
+#[cfg(feature = "multithreaded")]
 #[test]
 fn mdk_rs_e2e() -> anyhow::Result<()> {
     use crate::tests::*;

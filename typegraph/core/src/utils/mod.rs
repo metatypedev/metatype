@@ -2,22 +2,25 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use std::collections::HashMap;
+use std::path::PathBuf;
 
+use crate::utils::metagen_utils::RawTgResolver;
 use common::typegraph::{Auth, AuthProtocol};
 use indexmap::IndexMap;
 use serde_json::json;
 
+use self::oauth2::std::{named_provider, Oauth2Builder};
 use crate::errors::Result;
 use crate::global_store::{get_sdk_version, NameRegistration, Store};
 use crate::types::subgraph::Subgraph;
 use crate::types::{TypeDefExt, TypeId};
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
-use crate::wit::utils::{Auth as WitAuth, QueryDeployParams};
+use crate::wit::utils::{Auth as WitAuth, MdkConfig, MdkOutput, QueryDeployParams};
 use crate::Lib;
-
-use self::oauth2::std::{named_provider, Oauth2Builder};
+use std::path::Path;
 
 pub mod fs_host;
+pub mod metagen_utils;
 mod oauth2;
 pub mod postprocess;
 pub mod reduce;
@@ -266,6 +269,43 @@ impl crate::wit::utils::Guest for crate::Lib {
             Ok(path) => Ok(path.display().to_string()),
             Err(e) => Err(e),
         }
+    }
+
+    fn metagen_exec(config: MdkConfig) -> Result<Vec<MdkOutput>, String> {
+        let gen_config: metagen::Config = serde_json::from_str(&config.config_json)
+            .map_err(|e| format!("Load metagen config: {}", e))?;
+
+        let tg = serde_json::from_str(&config.tg_json).map_err(|e| e.to_string())?;
+        let resolver = RawTgResolver { tg };
+
+        metagen::generate_target_sync(
+            &gen_config,
+            &config.target_name,
+            PathBuf::from(config.workspace_path),
+            resolver,
+        )
+        .map(|map| {
+            map.0
+                .iter()
+                .map(|(k, v)| MdkOutput {
+                    path: k.to_string_lossy().to_string(),
+                    content: v.contents.clone(),
+                    overwrite: v.overwrite,
+                })
+                .collect::<Vec<_>>()
+        })
+        .map_err(|e| format!("Generate target: {}", e))
+    }
+
+    fn metagen_write_files(items: Vec<MdkOutput>) -> Result<(), String> {
+        for item in items {
+            let path = fs_host::make_absolute(Path::new(&item.path))?;
+            if fs_host::path_exists(&path)? && !item.overwrite {
+                continue;
+            }
+            fs_host::write_text_file(&path, item.content)?;
+        }
+        Ok(())
     }
 }
 

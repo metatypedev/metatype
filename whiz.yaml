@@ -57,12 +57,12 @@ typegraph:
     - "typegraph/core/wit/*.wit"
     - "typegraph/node/sdk/src/**/*.ts"
   env:
-    WASM_FILE: target/debug/typegraph_core.wasm
+    WASM_FILE: target/wasm/release/typegraph_core.wasm
   command: |
     set -e
     set -x
-    cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm
-    wasm-tools component new target/wasm/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+    cargo build -p typegraph_core --target wasm32-unknown-unknown --release --target-dir target/wasm
+    wasm-tools component new target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE
 
     rm -rf typegraph/node/sdk/src/gen typegraph/node/sdk/dist
     jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen --map metatype:typegraph/host=../host/host.js
@@ -74,8 +74,8 @@ typegraph:
     cd ./sdk/dist
     npm config set "//localhost:4873/:_authToken" fooBar
     ln -s ../../../../README.md ./
-    npm unpublish @typegraph/sdk --force --registry http://localhost:4873
-    npm publish --no-git-checks --force --registry http://localhost:4873
+    npm unpublish @typegraph/sdk --force --registry http://localhost:4873 || true
+    npm publish --tag dev --no-git-checks --force --registry http://localhost:4873
     cd ../../../..
 
     ghjk x clean-deno-lock
@@ -83,8 +83,6 @@ typegraph:
     rm -rf typegraph/python/typegraph/gen
     poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
     poetry run ruff check typegraph/python/typegraph
-  depends_on:
-    - libs
 
 system_graphs:
   watch:
@@ -92,15 +90,7 @@ system_graphs:
     - typegraph/**/*.py
   command: "deno run -A dev/serialize.ts"
   depends_on:
-    - libs
     - typegraph
-
-libs:
-  workdir: libs
-  watch:
-    - common/**/*.rs
-    - typescript/**/*.rs
-  command: "cargo build -p common -p typescript"
 
 website:
   workdir: website
