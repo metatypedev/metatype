@@ -1,12 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 import { gql, Meta } from "test-utils/mod.ts";
+import { assert, assertEquals } from "std/assert/mod.ts";
+import { MetaTest } from "../../utils/test.ts";
 
 Meta.test(
   {
     name: "Wasm runtime: wire",
   },
-  async (metaTest) => {
+  async (metaTest: MetaTest) => {
     await metaTest.shell(["bash", "build.sh"], {
       currentDir: `${import.meta.dirname!}/rust`,
     });
@@ -184,7 +186,7 @@ Meta.test(
   {
     name: "Wasm runtime: wire duplicate artifact reference",
   },
-  async (metaTest) => {
+  async (metaTest: MetaTest) => {
     await metaTest.shell(["bash", "build.sh"], {
       currentDir: `${import.meta.dirname!}/rust`,
     });
