@@ -9,7 +9,7 @@ const tpe = t.struct({
   b: t.list(t.either([t.integer(), t.string()])),
 });
 
-export const pythonGlobs = await typegraph("python_globs", (g: any) => {
+export const tg = await typegraph("python_globs", (g: any) => {
   const python = new PythonRuntime();
   const pub = Policy.public();
 

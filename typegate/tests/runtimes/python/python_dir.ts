@@ -9,7 +9,7 @@ const tpe = t.struct({
   b: t.list(t.either([t.integer(), t.string()])),
 });
 
-export const pythonDirs = await typegraph("python_dirs", (g: any) => {
+export const tg = await typegraph("python_dirs", (g: any) => {
   const python = new PythonRuntime();
   const pub = Policy.public();
 

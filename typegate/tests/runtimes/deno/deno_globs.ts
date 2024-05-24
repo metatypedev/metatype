@@ -4,7 +4,7 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
-export const denoGlobs = await typegraph(
+export const tg = await typegraph(
   {
     name: "deno_globs",
   },

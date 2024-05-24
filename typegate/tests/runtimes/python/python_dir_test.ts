@@ -2,29 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta } from "../../utils/mod.ts";
-import * as path from "std/path/mod.ts";
-import { testDir } from "test-utils/dir.ts";
-import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 import { generateSyncConfig } from "../../utils/s3.ts";
-import { pythonDirs } from "./python_dirs.ts";
-
-const cwd = path.join(testDir, "runtimes/python");
-const auth = new BasicAuth("admin", "password");
-
-const localSerializedMemo = pythonDirs.serialize({
-  prismaMigration: {
-    globalAction: {
-      create: true,
-      reset: false,
-    },
-    migrationDir: "prisma-migrations",
-  },
-  dir: cwd,
-});
-const reusableTgOutput = {
-  ...pythonDirs,
-  serialize: (_: any) => localSerializedMemo,
-};
 
 const { syncConfig, cleanUp } = generateSyncConfig("python-dirs-sync-test");
 
@@ -36,9 +14,8 @@ Meta.test(
     await t.should(
       "work for deps specified with dir on Python SDK",
       async () => {
-        const engine = await t.engineFromTgDeployPython(
+        const engine = await t.engine(
           "runtimes/python/python_dirs.py",
-          cwd,
         );
 
         await gql`
@@ -53,32 +30,10 @@ Meta.test(
       },
     );
 
-    const port = t.port;
-    const gate = `http://localhost:${port}`;
     await t.should(
       "work for deps specified with dir on TypeScript SDK",
       async () => {
-        const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
-          reusableTgOutput,
-          {
-            baseUrl: gate,
-            auth,
-            artifactsConfig: {
-              prismaMigration: {
-                globalAction: {
-                  create: true,
-                  reset: false,
-                },
-                migrationDir: "prisma-migrations",
-              },
-              dir: cwd,
-            },
-            typegraphPath: path.join(cwd, "python_dirs.ts"),
-            secrets: {},
-          },
-        );
-
-        const engine = await t.engineFromDeployed(serialized);
+        const engine = await t.engine("runtimes/python/python_dirs.ts");
 
         await gql`
           query {
@@ -115,9 +70,8 @@ Meta.test(
     await t.should(
       "work for deps specified with dir on Python SDK",
       async () => {
-        const engine = await t.engineFromTgDeployPython(
+        const engine = await t.engine(
           "runtimes/python/python_dirs.py",
-          cwd,
         );
 
         await gql`
@@ -132,32 +86,10 @@ Meta.test(
       },
     );
 
-    const port = t.port;
-    const gate = `http://localhost:${port}`;
     await t.should(
       "work for deps specified with dir on TypeScript SDK",
       async () => {
-        const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
-          reusableTgOutput,
-          {
-            baseUrl: gate,
-            auth,
-            artifactsConfig: {
-              prismaMigration: {
-                globalAction: {
-                  create: true,
-                  reset: false,
-                },
-                migrationDir: "prisma-migrations",
-              },
-              dir: cwd,
-            },
-            typegraphPath: path.join(cwd, "python_dirs.ts"),
-            secrets: {},
-          },
-        );
-
-        const engine = await t.engineFromDeployed(serialized);
+        const engine = await t.engine("runtimes/python/python_dirs.ts");
 
         await gql`
           query {
