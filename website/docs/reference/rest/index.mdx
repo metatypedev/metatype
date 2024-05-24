@@ -6,16 +6,15 @@ import TabItem from "@theme/TabItem";
 
 # REST
 
-Metatype also enables you to consume your API the same way you would consume regular REST APIs.
-
-Setting up an http endpoint is as simple as calling a function: `g.rest(..)`.
+Metatype also allows you to consume your API in the same way you would consume regular REST APIs.
+Is is easy as calling a function: `g.rest(..)`.
 
 Here is a basic overview of how it looks like:
 
 <SDKTabs>
     <TabItem value="python">
 ```python
-@typegraph
+@typegraph()
 def example(g: Graph):
     # ..
     g.expose(
@@ -40,7 +39,7 @@ def example(g: Graph):
 typegraph("example", (g) => {
     // ..
     g.expose({
-        getUsers= ..,
+        getUsers: ..,
     }, pub);
 
     g.rest(`
