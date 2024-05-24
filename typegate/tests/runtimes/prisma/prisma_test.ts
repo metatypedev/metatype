@@ -5,12 +5,13 @@ import { v4 } from "std/uuid/mod.ts";
 import { assert } from "std/assert/mod.ts";
 import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
+import { randomPGConnStr } from "../../utils/database.ts";
 
 Meta.test("prisma", async (t) => {
+  const { connStr, schema: _ } = randomPGConnStr();
   const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
-      POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=prisma",
+      POSTGRES: connStr,
     },
   });
   await dropSchemas(e);

@@ -5,7 +5,7 @@ from typegraph.runtimes.random import RandomRuntime
 
 
 @typegraph()
-def typename_test(g: Graph):
+def typename(g: Graph):
     public = Policy.public()
     user = t.struct({"id": t.integer()}, name="user")
     prisma_user = t.struct({"id": t.integer(as_id=True)}, name="userprisma")

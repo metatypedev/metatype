@@ -3,7 +3,7 @@ from typegraph.providers.prisma import PrismaRuntime
 
 
 @typegraph()
-def prisma_normal(g: Graph):
+def normal_1_1(g: Graph):
     db = PrismaRuntime("prisma", "POSTGRES")
 
     public = Policy.public()
