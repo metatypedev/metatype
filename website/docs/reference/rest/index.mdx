@@ -1,0 +1,116 @@
+---
+sidebar_position: 5
+---
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
+
+# REST
+
+Metatype also enables you to consume your API the same way you would consume regular REST APIs.
+
+Setting up an http endpoint is as simple as calling a function: `g.rest(..)`.
+
+Here is a basic overview of how it looks like:
+
+<SDKTabs>
+    <TabItem value="python">
+```python
+@typegraph
+def example(g: Graph):
+    # ..
+    g.expose(
+        pub,
+        getUsers= ..,
+    )
+
+    g.rest(
+        """
+        query users($name: String, $rows: Integer) {
+            getUsers(name: $name, option: { maxRows: $rows } ) {
+                name
+            }
+        }
+        """
+    )
+    # ..
+```
+    </TabItem>
+    <TabItem value="typescript">
+```typescript
+typegraph("example", (g) => {
+    // ..
+    g.expose({
+        getUsers= ..,
+    }, pub);
+
+    g.rest(`
+        query users($name: String, $rows: Integer) {
+            getUsers(name: $name, option: { maxRows: $rows } ) {
+                name
+            }
+        }
+    `);
+    // ..
+});
+```
+    </TabItem>
+</SDKTabs>
+
+
+## General rule
+```graphql
+query_type endpoint_name($param1: T1, $param2: T2, ..) {
+    exposed(..) { 
+        f1
+        f2 ..
+    }
+}
+```
+
+There is no rule in what type of query you should do most of the time as everything is up to you, however the <b>type of query</b> you set <b>will define</b> how your endpoint should be used.
+
+In other words, depending on what `query_type` (query or mutation), `$param1, $param2, ..` will be defined from the request parameters (GET) or the request body (POST).
+
+* <b>query</b>: Perform a `GET` at `TYPEGATE_URL/TG_NAME/rest/endpoint_name?param1=..&param2=..`
+* <b>mutation</b>: Perform a `POST` at `TYPEGATE_URL/TG_NAME/rest/endpoint_name` with `Content-Type` set as `application/json` 
+```js
+{
+    "param1": ..,
+    "param2": ..,
+    ..
+}
+```
+
+In the example above, for a local instance, the endpoint might look like:
+`http://localhost:7890/example/rest/users?name=Bob&rows=10`
+
+
+## Dynamic queries
+
+This enables/disables all non-static queries, i.e. queries whose output or side effects depend on certain parameters.
+
+By default, `dynamic` is always on.
+<SDKTabs>
+    <TabItem value="python">
+```python
+@typegraph(dynamic=False)
+def my_typegraph(g: Graph):
+    # ..
+
+```
+    </TabItem>
+    <TabItem value="typescript">
+```typescript
+typegraph({ name: "my-typegraph", dynamic: false }, (g) => {
+    // ..
+});
+```
+    </TabItem>
+</SDKTabs>
+
+## Auto-generated docs
+In any case, you can always check the auto-generated documentation of the available endpoints, parameters, output shapes.
+
+You can browse it at `TYPEGATE_URL/TG_NAME/rest`.
+
+Or download the OpenAPI spec at  `TYPEGATE_URL/TG_NAME/rest/__schema`.
