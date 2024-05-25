@@ -4,7 +4,7 @@ from typegraph.providers.prisma import PrismaRuntime
 
 
 @typegraph()
-def prisma(g: Graph):
+def full_prisma_mapping(g: Graph):
     # schema ref:
     # https://www.prisma.io/docs/reference/api-reference/prisma-client-reference
 

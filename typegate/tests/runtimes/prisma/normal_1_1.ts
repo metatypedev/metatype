@@ -4,7 +4,7 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 
-typegraph("prisma_normal", (g: any) => {
+export const tg = await typegraph("prisma_normal", (g: any) => {
   const db = new PrismaRuntime("prisma", "POSTGRES");
   const pub = Policy.public();
 

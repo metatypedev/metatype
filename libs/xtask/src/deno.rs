@@ -52,7 +52,7 @@ impl Test {
             allow_run: Some(
                 [
                     "cargo", "hostname", "meta", "git", "python3", "rm", "mkdir", "bash", "npm",
-                    "pnpm", "setsid", "temporal",
+                    "pnpm", "setsid", "temporal", "deno",
                 ]
                 .into_iter()
                 .map(str::to_owned)

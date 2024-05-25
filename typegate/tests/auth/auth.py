@@ -8,7 +8,7 @@ from typegraph.runtimes.python import PythonRuntime
 @typegraph(
     name="test_auth",
 )
-def test_auth(g: Graph):
+def auth(g: Graph):
     deno = DenoRuntime()
     python = PythonRuntime()
     remote = HttpRuntime("https://api.github.com")

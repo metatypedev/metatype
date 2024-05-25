@@ -1,11 +1,29 @@
-from typegraph import typegraph, t, Graph
+from typegraph.effects import CREATE, UPDATE
 from typegraph.providers import PrismaRuntime
 from typegraph.runtimes import DenoRuntime
-from typegraph.effects import CREATE, UPDATE
+
+from typegraph import Graph, t, typegraph
 
 
 @typegraph()
 def simple_model(g: Graph):
+    db = PrismaRuntime("test", "POSTGRES")
+
+    user = t.struct(
+        {
+            "id": t.integer(as_id=True, config={"auto": True}),
+            "name": t.string(),
+        },
+        name="User",
+    )
+
+    g.expose(
+        createUser=db.create(user),
+    )
+
+
+@typegraph()
+def schema_generation(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     user = t.struct(

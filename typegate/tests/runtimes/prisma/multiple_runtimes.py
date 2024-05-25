@@ -3,7 +3,7 @@ from typegraph.providers.prisma import PrismaRuntime
 
 
 @typegraph()
-def prisma_multi_runtimes(g: Graph):
+def multiple_runtimes(g: Graph):
     db1 = PrismaRuntime("db1", "POSTGRES")
     db2 = PrismaRuntime("db2", "POSTGRES_2")
 

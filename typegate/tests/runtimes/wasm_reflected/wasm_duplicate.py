@@ -6,12 +6,18 @@ from typegraph import t, typegraph
 
 
 @typegraph()
-def wasm_reflected(g: Graph):
+def wasm_duplicate(g: Graph):
     pub = Policy.public()
-    wasm = WasmRuntime.reflected("rust.wasm")
+    wasm1 = WasmRuntime.reflected("rust.wasm")
+    wasm2 = WasmRuntime.reflected("rust.wasm")
 
     g.expose(
-        test=wasm.from_export(
+        test1=wasm1.from_export(
+            t.struct({"a": t.float(), "b": t.float()}),
+            t.integer(),
+            func="add",
+        ).with_policy(pub),
+        test2=wasm2.from_export(
             t.struct({"a": t.float(), "b": t.float()}),
             t.integer(),
             func="add",

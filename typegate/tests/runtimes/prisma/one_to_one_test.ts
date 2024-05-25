@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { QueryEngine } from "../../../src/engine/query_engine.ts";
+import { randomPGConnStr } from "../../utils/database.ts";
 import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 import { MetaTest } from "../../utils/test.ts";
@@ -51,10 +52,10 @@ Meta.test("required 1-1 relationships", async (t) => {
   ];
 
   for (const tg of typegraphs) {
+    const { connStr, schema: _ } = randomPGConnStr();
     const e = await t.engine(tg.file, {
       secrets: {
-        POSTGRES:
-          "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-1",
+        POSTGRES: connStr,
       },
     });
     await dropSchemas(e);
