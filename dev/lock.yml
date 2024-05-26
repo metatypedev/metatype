@@ -22,7 +22,7 @@ dev:
       (const\s+TEMPORAL_VERSION\s*=\s*").*(";): TEMPORAL_VERSION
       (const\s+WASMTIME_VERSION\s*=\s*").*(";): WASMTIME_VERSION
       (const\s+METATYPE_VERSION\s*=\s*").*(";): METATYPE_VERSION
-    .github/*/*.yml:
+    .github/**/*.yml:
       '(  GHJK_VERSION: ").+(")': GHJK_VERSION
       '(  DENO_VERSION: ").+(")': DENO_VERSION
       '([\s-]+uses:\s+metatypedev/setup-ghjk@).+()': GHJK_ACTION_VERSION
@@ -32,6 +32,8 @@ dev:
       '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
     meta-lsp/vscode-metatype-support/package.json:
       '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
+    typegate/tests/**/*.snap:
+      '(\s*static\s*MT_VERSION:\s*&str\s*=\s*").+(";)': METATYPE_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
     typegraph/node/sdk/package.json:
