@@ -15,7 +15,7 @@ Meta.test(
       "work for deps specified with dir on Python SDK",
       async () => {
         const engine = await t.engine(
-          "runtimes/python/python_dirs.py",
+          "runtimes/python/python_dir.py",
         );
 
         await gql`
@@ -33,7 +33,7 @@ Meta.test(
     await t.should(
       "work for deps specified with dir on TypeScript SDK",
       async () => {
-        const engine = await t.engine("runtimes/python/python_dirs.ts");
+        const engine = await t.engine("runtimes/python/python_dir.ts");
 
         await gql`
           query {
@@ -71,7 +71,7 @@ Meta.test(
       "work for deps specified with dir on Python SDK",
       async () => {
         const engine = await t.engine(
-          "runtimes/python/python_dirs.py",
+          "runtimes/python/python_dir.py",
         );
 
         await gql`
@@ -89,7 +89,7 @@ Meta.test(
     await t.should(
       "work for deps specified with dir on TypeScript SDK",
       async () => {
-        const engine = await t.engine("runtimes/python/python_dirs.ts");
+        const engine = await t.engine("runtimes/python/python_dir.ts");
 
         await gql`
           query {
