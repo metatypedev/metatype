@@ -3,29 +3,33 @@ sidebar_position: 7
 ---
 
 import InstallMetaCli from "../../../shared/install/meta-cli.mdx";
+import DocCardList from "@theme/DocCardList";
 
 # Meta CLI
 
 [![Meta-cli version](https://img.shields.io/github/v/release/metatypedev/metatype?include_prereleases&label=meta-cli)](https://github.com/metatypedev/metatype/releases)
 
-<InstallMetaCli />
-
 `meta` is a command line interface for interacting with the typegate and provide a simple, yet complete, developer experience. The `metatype.yml` file allows you to configure your environment and CLI settings, see [configuration file](../reference/meta-cli/configuration-file).
 
-## Development
+## Installation
 
-It watches for changes in your typegraphs and refresh your development typegate node on the fly.
-
-## Deployment
-
-It deploy your typegraph to the Metatype Cloud or your self-hosted typegate instances in a single command.
-
-## Development typegate
+<InstallMetaCli />
 
 For development purposes, the cli bundles the typegate itself and this can be accessed through the `meta typegate` subcommand.
 
-:::info
+<br />
 
-The `typegate` sub-command is not availaible on the thin version of the `meta` binary.
-
-:::
+<DocCardList
+  items={[
+    {
+      type: "link",
+      label: "Available commands",
+      href: "/docs/reference/meta-cli/available-commands",
+    },
+    {
+      type: "link",
+      label: "Configuration file",
+      href: "/docs/reference/meta-cli/configuration-file",
+    },
+  ]}
+/>
