@@ -77,8 +77,10 @@ function serve(typegates: TypegateManager): Promise<ServeResult> {
       },
     }, (req) => {
       return typegates.next().handle(req, {
-        remoteAddr: { hostname: "localhost" },
-      } as Deno.ServeHandlerInfo);
+        hostname: "localhost",
+        port: 0,
+        transport: "tcp",
+      });
     });
   });
 }

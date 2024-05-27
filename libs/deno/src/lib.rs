@@ -31,6 +31,12 @@ const DEFAULT_UNSTABLE_FLAGS: &[&str] = &["worker-options", "net"];
 /// the callchain (especially in debug mode when Rust doesn't have a chance to elide copies!).
 #[inline(always)]
 fn spawn_subcommand<F: Future<Output = ()> + 'static>(f: F) -> JoinHandle<()> {
+    // FIXME: find a better location for this as tihs won't work
+    // if a new thread has already launched by this point
+    // this is only relevant for WebWorkers
+    if std::env::var("RUST_MIN_STACK").is_err() {
+        std::env::set_var("RUST_MIN_STACK", "8388608");
+    }
     // the boxed_local() is important in order to get windows to not blow the stack in debug
     deno_core::unsync::spawn(f.boxed_local())
 }

@@ -58,8 +58,10 @@ export async function execute(
   // } else {
   const typegate = getCurrentTest().typegates.next();
   return await typegate.handle(request, {
-    remoteAddr: { hostname: "localhost" },
-  } as Deno.ServeHandlerInfo);
+    hostname: "localhost",
+    port: 0,
+    transport: "tcp",
+  });
   // }
 }
 

@@ -22,6 +22,7 @@ Meta.test("typecheck", async (t) => {
 
   const getValidationCode = (query: string) => {
     const [operation, fragments] = findOperation(parse(query), None);
+    console.log({ query, operation, fragments });
     if (operation.isNone()) {
       throw new Error("No operation found in the query");
     }
@@ -33,6 +34,7 @@ Meta.test("typecheck", async (t) => {
 
   const getValidator = (query: string) => {
     const [operation, fragments] = findOperation(parse(query), None);
+    console.log({ query, operation, fragments });
     if (operation.isNone()) {
       throw new Error("No operation found in the query");
     }

@@ -132,7 +132,13 @@ thread_local! {
 
 impl GeneratorRunner {
     pub fn get(name: &str) -> Option<GeneratorRunner> {
-        GENERATORS.with(|m| m.get(name).cloned())
+        GENERATORS.with(|m| {
+            let out = m.get(name).cloned();
+            if out.is_none() {
+                warn!("it really aint here boss: {name}");
+            }
+            out
+        })
     }
 }
 

@@ -91,9 +91,9 @@ const filteredTestFiles = filtered?.map((res) => testFiles[res.refIndex]) ??
 const tmpDir = join(projectDir, "tmp");
 const env: Record<string, string> = {
   "RUST_LOG": "off,xtask=debug,meta=debug",
-  "RUST_BACKTRACE": "0",
   "RUST_SPANTRACE": "1",
-  "RUST_LIB_BACKTRACE": "1",
+  // "RUST_BACKTRACE": "short",
+  "RUST_MIN_STACK": "8388608",
   "LOG_LEVEL": "DEBUG",
   // "NO_COLOR": "1",
   "DEBUG": "true",
