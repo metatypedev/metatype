@@ -1,11 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { testDir } from "test-utils/dir.ts";
 import { gql, Meta } from "../utils/mod.ts";
-import * as path from "std/path/mod.ts";
-
-const cwd = path.join(testDir, "type_nodes");
 
 Meta.test(
   {
@@ -13,9 +9,8 @@ Meta.test(
     introspection: true,
   },
   async (t) => {
-    const e = await t.engineFromTgDeployPython(
+    const e = await t.engine(
       "type_nodes/union_node_quantifier.py",
-      cwd,
     );
 
     await t.should("work with optionals and list arguments", async () => {

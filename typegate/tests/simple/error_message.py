@@ -3,7 +3,7 @@ from typegraph.runtimes import DenoRuntime
 
 
 @typegraph()
-def test_error(g: Graph):
+def error_message(g: Graph):
     deno = DenoRuntime()
     user = t.struct({"id": t.integer(), "name": t.string()})
     g.expose(

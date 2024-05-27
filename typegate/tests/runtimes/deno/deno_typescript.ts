@@ -9,7 +9,7 @@ function helloFn({ name }: any) {
   return `Hello ${(name as string).toLowerCase()}`;
 }
 
-await typegraph("test-deno-tyepscript", (g: any) => {
+export const tg = await typegraph("test-deno-tyepscript", (g: any) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
 

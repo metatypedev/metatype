@@ -4,7 +4,7 @@
 import { fx, Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
-typegraph("rest_schema", (g: any) => {
+export const tg = await typegraph("rest_schema", (g: any) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
 

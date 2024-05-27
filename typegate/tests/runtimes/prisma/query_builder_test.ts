@@ -4,12 +4,13 @@
 import { assertEquals } from "std/assert/mod.ts";
 import { PrismaRuntime } from "../../../src/runtimes/prisma/prisma.ts";
 import { gql, Meta } from "../../utils/mod.ts";
+import { randomPGConnStr } from "../../utils/database.ts";
 
 Meta.test("prisma query builder", async (t) => {
+  const { connStr, schema: _ } = randomPGConnStr();
   const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
-      POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=prisma",
+      POSTGRES: connStr,
     },
   });
   const plan = await gql`

@@ -5,7 +5,7 @@ from typegraph.runtimes.random import RandomRuntime
 
 
 @typegraph()
-def prisma(g: Graph):
+def mixed_runtime(g: Graph):
     db = PrismaRuntime("prisma", "POSTGRES")
     gql_1 = GraphQLRuntime("http://mocked/api")
     rand = RandomRuntime(seed=1)

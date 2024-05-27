@@ -3,7 +3,7 @@ from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph()
-def test(g: Graph):
+def planner(g: Graph):
     A = t.struct({"a": t.integer()}, name="A")
     B = t.struct(
         {

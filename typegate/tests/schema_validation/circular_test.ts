@@ -1,11 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { testDir } from "test-utils/dir.ts";
 import { gql, Meta } from "../utils/mod.ts";
-import * as path from "std/path/mod.ts";
-
-const cwd = path.join(testDir, "schema_validation");
 
 Meta.test(
   {
@@ -13,7 +9,7 @@ Meta.test(
   },
   async (t) => {
     const tgPath = "schema_validation/circular.py";
-    const e = await t.engineFromTgDeployPython(tgPath, cwd);
+    const e = await t.engine(tgPath);
 
     await t.should("validate self-refering type", async () => {
       await gql`

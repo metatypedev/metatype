@@ -1,36 +1,27 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
-import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 import { gql, Meta } from "test-utils/mod.ts";
-import { testDir } from "test-utils/dir.ts";
-import { tg } from "./wasm_wire.ts";
-import * as path from "std/path/mod.ts";
 import { assert, assertEquals } from "std/assert/mod.ts";
-
-const cwd = path.join(testDir, "runtimes/wasm_wire");
-const auth = new BasicAuth("admin", "password");
+import { MetaTest } from "../../utils/test.ts";
 
 Meta.test(
   {
     name: "Wasm runtime: wire",
   },
-  async (metaTest) => {
+  async (metaTest: MetaTest) => {
     await metaTest.shell(["bash", "build.sh"], {
       currentDir: `${import.meta.dirname!}/rust`,
     });
 
     {
-      await using e = await metaTest.engineFromTgDeployPython(
-        path.join(cwd, "wasm_wire.py"),
-        cwd,
-      );
+      const e = await metaTest.engine("runtimes/wasm_wire/wasm_wire.py");
 
       await metaTest.should("works", async () => {
         await gql`
-        query {
-          test(a: 1, b: 2)
-        }
-      `
+          query {
+            test(a: 1, b: 2)
+          }
+        `
           .expectData({
             test: 3,
           })
@@ -38,28 +29,8 @@ Meta.test(
       });
     }
 
-    const port = metaTest.port;
-    const gate = `http://localhost:${port}`;
-
     await metaTest.should("work after deploying artifact", async (t) => {
-      const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
-        baseUrl: gate,
-        auth,
-        artifactsConfig: {
-          prismaMigration: {
-            globalAction: {
-              create: true,
-              reset: false,
-            },
-            migrationDir: "prisma-migrations",
-          },
-          dir: cwd,
-        },
-        typegraphPath: path.join(cwd, "wasm_wire.ts"),
-        secrets: {},
-      });
-
-      await using engine = await metaTest.engineFromDeployed(serialized);
+      const engine = await metaTest.engine("runtimes/wasm_wire/wasm_wire.ts");
 
       await t.step("wit bindings", async () => {
         await gql`
@@ -208,5 +179,35 @@ Meta.test(
         },
       );
     });
+  },
+);
+
+Meta.test(
+  {
+    name: "Wasm runtime: wire duplicate artifact reference",
+  },
+  async (metaTest: MetaTest) => {
+    await metaTest.shell(["bash", "build.sh"], {
+      currentDir: `${import.meta.dirname!}/rust`,
+    });
+
+    const e = await metaTest.engine("runtimes/wasm_wire/wasm_duplicate.ts");
+
+    await metaTest.should(
+      "work after referencing wasm artifact twice",
+      async () => {
+        await gql`
+          query {
+            add1(a: 1, b: 2)
+            add2(a: 11, b: 2)
+          }
+        `
+          .expectData({
+            add1: 3,
+            add2: 13,
+          })
+          .on(e);
+      },
+    );
   },
 );
