@@ -6,7 +6,7 @@ We are happy to announce that we have redesigned our SDKs to support Node/Deno a
 
 In the realm of WebAssembly, the [wit-bindgen](https://github.com/bytecodealliance/wit-bindgen) project emerges as the most mature tool to create and maintain the language bindings for WebAssembly modules. This tool introduces WIT (WebAssembly Interface Types) as an Interface Definition Language (IDL) to describe the imports, exports, and capabilities of WebAssembly components seamlessly.
 
-For example, Metatype implements the reactor pattern to handle requests as they come and delegate part of their execution in correct WASM runtime. The wit-bindgen helps there to define the interfaces between the guest (the Metatype runtime) and the host (the typegate) to ensure the correct serialization of the payloads. The `wit` defintion could look like this:
+For example, Metatype implements the reactor pattern to handle requests as they come and delegate part of their execution in correct WASM runtime. The wit-bindgen helps there to define the interfaces between the guest (the Metatype runtime) and the host (the typegate) to ensure the correct serialization of the payloads. The `wit` definition could look like this:
 
 ```
 package metatype:wit-wire;
