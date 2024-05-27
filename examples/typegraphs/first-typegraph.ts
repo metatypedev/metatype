@@ -21,7 +21,7 @@ await typegraph({
 
   // expose them with policies
   g.expose({
-    // input → output via materializer
+    // input → output via runtime function
     get_message: random.gen(message),
   }, pub);
 });

@@ -32,7 +32,7 @@ await typegraph({
   );
 
   // Policy.internal means only custom functions
-  // can access these root materializers
+  // can access these root functions
   g.expose({
     i_get_idea: db.findUnique(idea),
     i_create_vote: db.create(vote),
