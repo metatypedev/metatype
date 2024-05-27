@@ -379,7 +379,6 @@ Meta.test(
     name: "Deno runtime - Python SDK: infinite loop or similar in sync mode",
     sanitizeOps: false,
     syncConfig,
-    replicas: 3,
     async setup() {
       await cleanUp();
     },
