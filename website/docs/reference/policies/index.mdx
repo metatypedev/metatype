@@ -16,9 +16,9 @@ sidebar_position: 3
 import CodeBlock from "@theme/CodeBlock";
 import TGExample from "@site/src/components/TGExample";
 
-# Policies and materializers
+# Policies and functions
 
-This section also makes use of toy typegraph for the sake of clarity. You will continue the chat-based app on the next one.
+This section also makes use of a toy typegraph for the sake of clarity. You will continue the chat-based app on the next one.
 
 
 ## Policy based access control (PBAC)
@@ -30,7 +30,7 @@ Metatype comes with some built-in policies, but you can use the Deno runtime to 
 - `policies.public()` is an alias for `Policy(PureFunMat("() => true"))` providing everyone open access.
 - `policies.ctx("role_value", "role_field")` is a companion policy for the authentication strategy you learned in the previous section. It will verify the context and give adequate access to the user.
 
-Policies are hierarchical in the sense that the request starts with a denial, and the root materializers must explicitly provide an access or not. Once access granted, any further types can either inherit or override the access. Policies evaluate in order in case multiple ones are defined.
+Policies are hierarchical in the sense that the request starts with a denial, and the root functions must explicitly provide an access or not. Once access granted, any further types can either inherit or override the access. Policies evaluate in order in case multiple ones are defined.
 
 <TGExample
   typegraph="policies"

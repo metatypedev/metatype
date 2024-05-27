@@ -482,22 +482,22 @@ The `t.either` type represents a value that must be of one and only one of the s
 ### `t.func()`
 
 The `t.func()` type represents an operation to be performed on the typegate
-with the specified materializer.
+with the specified configuration associated to it.
 
 Usually, the functions are not defined explicitly, but rather
 created with the [runtime](./runtimes) instance.
 
 ### Parameters
 
-|Parameter|Type|Description|
-|---------|----|-----------|
-|input type|`t.struct()`|The type of the input data.|
-|output type|any type|The type of the output data.|
-|materializer|[`Materializer`](/docs/concepts/mental-model#materializers)~|The materializer to use to perform the operation/computation.|
+|  Parameter  |                         Type                         |                         Description                          |
+| ----------- | ---------------------------------------------------- | ------------------------------------------------------------ |
+| input type  | `t.struct()`                                         | The type of the input data.                                  |
+| output type | any type                                             | The type of the output data.                                 |
+| function    | [`Function`](/docs/concepts/mental-model#functions)~ | The abstraction to use to perform the operation/computation. |
 
 #### Methods
-|Method|Purpose|Reference page|
-|---|---|---|
-|`rate`|Rate limiting|[Rate limiting](/docs/reference/typegate/rate-limiting)|
-|`reduce`|Parameter transformation|[`reduce`](/docs/reference/types/parameter-transformations#funcreducetree)|
-|`apply`|Parameter transformation|[`apply`](/docs/reference/types/parameter-transformations#funcapplytree)|
+|  Method  |         Purpose          |                               Reference page                               |
+| -------- | ------------------------ | -------------------------------------------------------------------------- |
+| `rate`   | Rate limiting            | [Rate limiting](/docs/reference/typegate/rate-limiting)                    |
+| `reduce` | Parameter transformation | [`reduce`](/docs/reference/types/parameter-transformations#funcreducetree) |
+| `apply`  | Parameter transformation | [`apply`](/docs/reference/types/parameter-transformations#funcapplytree)   |

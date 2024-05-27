@@ -29,13 +29,13 @@ Drawing inspiration from modern frontend development practices, Metatype adopts 
 
 When developing a feature, the classical approach is to define what data will be at play, how to transform them, where the execution shall take place and who should be authorized. Instead, Metatype define an abstraction for each of those steps and put the emphasis on composing pre-defined APIs or defining re-usable ones when there is no existing solution.
 
-|                       | Classical approach                  | Metatype's computing model                                                                 |
-| --------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------ |
-| What (data)           | fixed response defined by the logic | API clients selects what they need from [types](/docs/concepts/mental-model#types)            |
-| How (transformations) | ad-hoc code logic                   | composed data with interchangeable [materializers](/docs/concepts/mental-model#materializers) |
-| Where (execution)     | 1 code base + 1 database            | orchestrate the request across multiple [runtimes](/docs/concepts/mental-model#runtimes)      |
-| Who (authentication)  | hard-coded rules or system          | request context based and controlled by [policies](/docs/concepts/mental-model#policies)      |
-| When (event)          | request arrival                     | based on [triggers](/docs/concepts/mental-model#triggers)                                     |
+|                       |         Classical approach          |                                Metatype's computing model                                |
+| --------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| What (data)           | fixed response defined by the logic | API clients selects what they need from [types](/docs/concepts/mental-model#types)       |
+| How (transformations) | ad-hoc code logic                   | composed data with interchangeable [functions](/docs/concepts/mental-model#functions)    |
+| Where (execution)     | 1 code base + 1 database            | orchestrate the request across multiple [runtimes](/docs/concepts/mental-model#runtimes) |
+| Who (authentication)  | hard-coded rules or system          | request context based and controlled by [policies](/docs/concepts/mental-model#policies) |
+| When (event)          | request arrival                     | based on [triggers](/docs/concepts/mental-model#triggers)                                |
 
 This computing model brings numerous advantages:
 
@@ -82,19 +82,15 @@ In theory, all frameworks and languages can produce typegraphs respecting the sp
 
 **Analogy in SQL**: types are similar to the Data Definition Language (DDL) with the extended capacity of describing any type of data.
 
-## Materializers
+## Functions
 
-Types can also describe functions and **materializers** define how the input type gets transformed into the output type. The input and output types are similar to a function signature and a materializer to its implementation, except that it might not always know what the function body is. In such case, the materializer knows at least where and how to access it.
+Functions define how the input type gets transformed into the output type. The input and output types are similar to a function signature and the configuration + associated runtime to its implementation.
 
 <CodeBlock language="python">{require("../../../../examples/typegraphs/functions.py").content}</CodeBlock>
 
-**Analogy in SQL**: a materializer is similar to a join, a function, or an alias.
-
 ## Runtimes
 
-Every type and materializer have a runtime associated to it. This runtime describes where the types or materializers are physically located. It can be another API, a database, or any other services the typegate can connect to. The typegates uses that information to optimize the execution of the queries and minimize the amount of data moved.
-
-In practice, materializers are often not explicitly used and the usage of runtime sugar syntax is preferred.
+Every function have a runtime associated to it. This runtime describes where the input/output types are physically located. It can be another API, a database, or any other services the typegate can connect to. The typegates uses that information to optimize the execution of the queries and minimize the amount of data moved.
 
 <CodeBlock language="python">{require("../../../../examples/typegraphs/runtimes.py").content}</CodeBlock>
 
