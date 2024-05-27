@@ -18,8 +18,8 @@ deno_core::extension!(
     tg_metatype_ext,
     ops = [
         crate::op_get_version,
-        #[cfg(test)]
-        tests::op_obj_go_round,
+        // #[cfg(test)]
+        // tests::op_obj_go_round,
         typescript::op_typescript_format_code,
         typegraph::op_typegraph_validate,
         typegraph::op_validate_prisma_runtime_data,
@@ -57,7 +57,7 @@ deno_core::extension!(
         ext.esm_files.to_mut().push(
             deno_core::ExtensionFileSource::new(
                 "ext:tg_metatype_ext/00_runtime.js",
-                include_str!("../00_runtime.js")
+                deno_core::ascii_str_include!("../00_runtime.js")
             )
         );
         ext.esm_entry_point = Some("ext:tg_metatype_ext/00_runtime.js");
@@ -111,14 +111,17 @@ pub mod tests {
                 ..Default::default()
             },
             ..Default::default()
-        })
-        .await?
+        })?
         .with_custom_ext_cb(Arc::new(|| extensions(OpDepInjector::from_env())));
         let worker_factory = deno_factory.create_cli_main_worker_factory().await?;
         let main_module = "data:application/javascript;Meta.get_version()".parse()?;
         let permissions = PermissionsContainer::allow_all();
         let mut worker = worker_factory
-            .create_main_worker(main_module, permissions)
+            .create_main_worker(
+                deno_runtime::WorkerExecutionMode::Run,
+                main_module,
+                permissions,
+            )
             .await?;
         worker.execute_script_static(
             deno_core::located_script_name!(),

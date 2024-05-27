@@ -80,16 +80,18 @@ pub async fn run(
         ..Default::default()
     };
 
-    let cli_factory = factory::CliFactory::from_flags(flags)
-        .await?
-        .with_custom_ext_cb(custom_extensions);
+    let cli_factory = factory::CliFactory::from_flags(flags)?.with_custom_ext_cb(custom_extensions);
 
     let worker_factory = cli_factory.create_cli_main_worker_factory().await?;
     let permissions = deno_runtime::permissions::PermissionsContainer::new(
         deno_runtime::permissions::Permissions::from_options(&permissions)?,
     );
     let mut worker = worker_factory
-        .create_main_worker(main_module, permissions)
+        .create_main_worker(
+            deno_runtime::WorkerExecutionMode::Run,
+            main_module,
+            permissions,
+        )
         .await?;
     info!("running worker");
     let exit_code = worker.run().await?;
@@ -146,9 +148,10 @@ pub async fn test(
         Box::new(util::draw_thread::DrawThread::show),
     );
     let pattern_to_str = |pattern| match pattern {
-        deno_config::glob::PathOrPattern::Path(path) => path.to_string_lossy().into(),
-        deno_config::glob::PathOrPattern::Pattern(pattern) => pattern.as_str().to_owned(),
+        deno_config::glob::PathOrPattern::Path(path) => path.to_string_lossy().to_string(),
+        deno_config::glob::PathOrPattern::Pattern(pattern) => pattern.as_str().to_string(),
         deno_config::glob::PathOrPattern::RemoteUrl(url) => url.as_str().to_owned(),
+        deno_config::glob::PathOrPattern::NegatedPath(path) => path.to_string_lossy().to_string(),
     };
 
     let test_flags = args::TestFlags {
@@ -169,7 +172,7 @@ pub async fn test(
                 .collect(),
         },
         doc: false,
-        trace_ops: true,
+        trace_leaks: true,
         coverage_dir,
         ..Default::default()
     };
@@ -190,9 +193,7 @@ pub async fn test(
         ..Default::default()
     };
 
-    let cli_factory = factory::CliFactory::from_flags(flags)
-        .await?
-        .with_custom_ext_cb(custom_extensions);
+    let cli_factory = factory::CliFactory::from_flags(flags)?.with_custom_ext_cb(custom_extensions);
 
     let options = cli_factory.cli_options().clone();
 
@@ -201,25 +202,29 @@ pub async fn test(
         ..options.resolve_test_options(test_flags)?
     };
     let file_fetcher = cli_factory.file_fetcher()?;
-    let module_load_preparer = cli_factory.module_load_preparer().await?;
 
     // Various test files should not share the same permissions in terms of
     // `PermissionsContainer` - otherwise granting/revoking permissions in one
     // file would have impact on other files, which is undesirable.
     let permissions = deno_runtime::permissions::Permissions::from_options(&permissions)?;
 
-    let specifiers_with_mode =
-        fetch_specifiers_with_test_mode(file_fetcher, test_options.files, &test_options.doc)
-            .await?;
+    let specifiers_with_mode = fetch_specifiers_with_test_mode(
+        options.as_ref(),
+        file_fetcher,
+        test_options.files,
+        &test_options.doc,
+    )
+    .await?;
 
     if !test_options.allow_none && specifiers_with_mode.is_empty() {
         return Err(deno_core::error::generic_error("No test modules found"));
     }
 
+    let main_graph_container = cli_factory.main_module_graph_container().await?;
+
     check_specifiers(
-        options.as_ref(),
         file_fetcher,
-        module_load_preparer,
+        main_graph_container,
         specifiers_with_mode.clone(),
     )
     .await?;
@@ -242,6 +247,12 @@ pub async fn test(
             })
             .collect(),
         TestSpecifiersOptions {
+            cwd: deno_core::url::Url::from_directory_path(options.initial_cwd()).map_err(|_| {
+                anyhow::format_err!(
+                    "Unable to construct URL from the path of cwd: {}",
+                    options.initial_cwd().to_string_lossy(),
+                )
+            })?,
             concurrent_jobs: test_options.concurrent_jobs,
             fail_fast: test_options.fail_fast,
             log_level: options.log_level(),
@@ -251,7 +262,7 @@ pub async fn test(
             specifier: TestSpecifierOptions {
                 filter: TestFilter::from_flag(&test_options.filter),
                 shuffle: test_options.shuffle,
-                trace_ops: test_options.trace_ops,
+                trace_leaks: test_options.trace_leaks,
             },
         },
     )
@@ -334,9 +345,7 @@ pub async fn bench(
             &std::env::current_dir()?,
         )?
     };
-    let cli_factory = factory::CliFactory::from_flags(flags)
-        .await?
-        .with_custom_ext_cb(custom_extensions);
+    let cli_factory = factory::CliFactory::from_flags(flags)?.with_custom_ext_cb(custom_extensions);
 
     let options = cli_factory.cli_options();
 
@@ -345,18 +354,18 @@ pub async fn bench(
     // file would have impact on other files, which is undesirable.
     let permissions = deno_runtime::permissions::Permissions::from_options(&permissions)?;
 
-    let specifiers = util::fs::collect_specifiers(bench_options.files, is_supported_bench_path)?;
+    let specifiers = util::fs::collect_specifiers(
+        bench_options.files,
+        options.vendor_dir_path().map(ToOwned::to_owned),
+        is_supported_bench_path,
+    )?;
 
     if specifiers.is_empty() {
         return Err(deno_core::error::generic_error("No bench modules found"));
     }
 
-    check_specifiers(
-        options,
-        cli_factory.module_load_preparer().await?,
-        specifiers.clone(),
-    )
-    .await?;
+    let main_graph_container = cli_factory.main_module_graph_container().await?;
+    main_graph_container.check_specifiers(&specifiers).await?;
 
     if bench_options.no_run {
         return Ok(());
