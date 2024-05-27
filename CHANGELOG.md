@@ -8,10 +8,486 @@ All notable changes to this project will be documented in this file.
 
 <details >
 <summary>
-Running lock while compiling
+(ci) Poetry lockfile (<a href="https://github.com/metatypedev/metatype/pull/732">#732</a>)
 </summary>
 
+- Fixes poetry lockfile and adds pre-commit hook to prevent issue from
+happening
 
+</details>
+<details >
+<summary>
+Only build xtask once for the tests (<a href="https://github.com/metatypedev/metatype/pull/720">#720</a>)
+</summary>
+
+Use the xtask binary to run the tests.
+
+- [ ] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+
+<!-- This is an auto-generated comment: release notes by coderabbit.ai
+-->
+
+## Summary by CodeRabbit
+
+- **New Features**
+  - Updated platform compatibility to `x86_64-linux`.
+- Added new configuration entry for enhanced versioning and platform
+support.
+
+- **Improvements**
+- Modified test script to use a custom build script for better test
+management.
+
+These changes improve platform compatibility and streamline the testing
+process.
+
+<!-- end of auto-generated comment: release notes by coderabbit.ai -->
+
+---------
+
+</details>
+
+
+### Documentation
+
+<details >
+<summary>
+`/docs/concepts/features-overview/` (<a href="https://github.com/metatypedev/metatype/pull/725">#725</a>)
+</summary>
+
+- Re-does the feature overview page of the documentation.
+
+<!-- This is an auto-generated comment: release notes by coderabbit.ai
+-->
+## Summary by CodeRabbit
+
+- **New Features**
+- Added a "Features Roadmap" component to the website, displaying a list
+of features with details and links.
+
+- **Documentation**
+- Updated various guides and reference documents to improve clarity and
+presentation of code examples.
+- Added new sections for various features such as Typegate, Typegraph,
+Runtimes, Prisma, Auth, Tooling, and SDK.
+
+- **Bug Fixes**
+  - Corrected a typo in the GraphQL runtimes reference documentation.
+
+- **Refactor**
+- Replaced `SDKTabs` and `TabItem` components with `TGExample` for
+better code example presentation.
+- Adjusted the `MiniQL` component to handle optional properties and
+default settings.
+<!-- end of auto-generated comment: release notes by coderabbit.ai -->
+
+---------
+
+</details>
+
+
+### Features
+
+<details >
+<summary>
+(mdk) Mdk python (<a href="https://github.com/metatypedev/metatype/pull/707">#707</a>)
+</summary>
+
+Mdk for python runtime
+
+#### Migration notes
+
+None
+
+<!-- This is an auto-generated comment: release notes by coderabbit.ai
+-->
+## Summary by CodeRabbit
+
+- **New Features**
+- Introduced new functionalities for generating Python code based on
+configurations, including handling of templates and required objects.
+- Added Python script templates for defining typed functions and
+structured objects with comprehensive data type handling.
+	- Enhanced type management and priority handling in utility functions.
+
+- **Documentation**
+- Provided detailed summaries and documentation for new functionalities
+and templates.
+
+- **Refactor**
+- Implemented new structures and methods for efficient code generation
+and type handling.
+
+- **Tests**
+	- Added tests for defining typegraph structures and policies in Python.
+
+- **Chores**
+- Updated URLs in the `.ghjk/deno.lock` file to reflect new changes in
+the codebase.
+<!-- end of auto-generated comment: release notes by coderabbit.ai -->
+
+---------
+
+</details>
+<details >
+<summary>
+(mdk,gate) Hostcall (<a href="https://github.com/metatypedev/metatype/pull/706">#706</a>)
+</summary>
+
+Introduces a mechanism for wasm materializers to access hostgate
+functions.
+
+This implements a pretty basic JSON wire interface, a singular
+`hostcall` function that's exposed to materializers. The only
+implemented function on this interface are `gql` queries.
+
+This is a stacked PR on top of #687.
+
+MET-473.
+
+- [x] The change come with new or modified tests
+
+<!-- 5. Readiness checklist
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+-->
+
+
+<!-- This is an auto-generated comment: release notes by coderabbit.ai
+-->
+## Summary by CodeRabbit
+
+- **New Features**
+- Added an import statement for `std_url` and a new task for installing
+WASI adapter related files.
+- Introduced new functionalities in the application's runtime to support
+additional parameters and error handling.
+
+- **Enhancements**
+- Improved the application's handling of GraphQL queries with new error
+types and display methods.
+- Enhanced the WASM runtime build process to target a more appropriate
+architecture.
+
+- **Bug Fixes**
+- Fixed issues in Python and WASM runtime tests to ensure reliability
+and performance.
+
+- **Documentation**
+- Updated internal documentation to reflect new command interfaces and
+environmental interactions in the application's CLI tools.
+
+- **Refactor**
+- Refactored various internal APIs to improve code maintainability and
+efficiency.
+<!-- end of auto-generated comment: release notes by coderabbit.ai -->
+
+---------
+
+</details>
+<details >
+<summary>
+(meta-test) Update `t.engine()` impl (<a href="https://github.com/metatypedev/metatype/pull/716">#716</a>)
+</summary>
+
+Update the implementation of `t.engine()`
+
+<!-- 1. Explain below WHAT the change is -->
+
+The change comes with removing the different spin-offs of `t.engine`
+which arose from the previous impl of t.engine incompatibility with
+artifact upload protocol. The change will make `t.engine` deploy the
+artifacts in Artifact Resolution mode by running a shell command to
+deploy the typegraph.
+
+<!-- 2. Explain below WHY the change cannot be made simpler -->
+
+...
+
+<!-- 3. Explain below WHY the was made or link an issue number -->
+
+
+[MET-500](https://linear.app/metatypedev/issue/MET-500/test-update-the-implementation-of-tengine)
+
+<!-- 4. Explain HOW users should update their code or remove that
+section -->
+
+- [x] remove different versions of `t.engine`
+- [x] add tg_deploy caller script which imports typegraphs dynamically
+and deploys them.
+- [x] make changes to make `t.engine` run in artifact resolution mode 
+- [x] update existing tests to adhere to the current change
+- [x] pass unique different `tempDir`s to all the typegate instances
+created during test.
+- [x] add support for authoring multiple typegraphs in a single file in
+`meta-test` and add multi typegraph tests.
+
+#### Migration notes
+
+python SDK test typegraphs' function names should be the same with the
+filename of the typegraph file, for dynamic import compatibility
+reasons.
+
+<!-- 5. Readiness checklist
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+-->
+
+
+<!-- This is an auto-generated comment: release notes by coderabbit.ai
+-->
+## Summary by CodeRabbit
+
+- **New Features**
+- Introduced a new function `wasm_duplicate` to handle WebAssembly
+runtimes with specific policies.
+
+- **Refactor**
+- Renamed and refactored functions and test setups to align with updated
+test frameworks and improve code clarity.
+
+- **Bug Fixes**
+- Added error handling in the `getLocalPath` function to log warnings if
+linking errors occur.
+
+- **Tests**
+- Updated test scripts to reflect changes in function calls, imports,
+and engine instantiation for better test accuracy and reliability.
+<!-- end of auto-generated comment: release notes by coderabbit.ai -->
+
+</details>
+
+
+## [v0.4.2](https://github.com/metatypedev/metatype/releases/tag/v0.4.2) - 2024-05-22
+
+### Bug Fixes
+
+<details >
+<summary>
+(release) Fix fat CLI compilation (<a href="https://github.com/metatypedev/metatype/pull/730">#730</a>)
+</summary>
+
+- Fix fat CLI compilation
+- Bump to 0.4.2
+- Bump wasmtime to 21
+- Bump rust to 1.78.0
+
+
+
+- [x] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+
+
+## [v0.4.1](https://github.com/metatypedev/metatype/releases/tag/v0.4.1) - 2024-05-20
+
+### Bug Fixes
+
+<details >
+<summary>
+(SDK) Artifact upload fails when same file referred multiple times (<a href="https://github.com/metatypedev/metatype/pull/715">#715</a>)
+</summary>
+
+- [x] fix the bug where duplicate artifact references causing failure
+during artifact resolution(typegate) during runtime.
+- [x] add sync mode tests for Python and Deno runtime.
+- [x] add other edge test cases to artifact upload.
+    - [x] test for no artifact in typegraph
+    - [x] test for duplicate artifact reference in the same typegraph
+
+</details>
+<details >
+<summary>
+(gate) Improve logging and responses, prepare 0.4.1 (<a href="https://github.com/metatypedev/metatype/pull/714">#714</a>)
+</summary>
+
+- Logging before and after each faillible operation
+  -  Runtimes: foreign resolvers
+- Always log before reporting error: HTTP response
+- Fix error code in artifact_service
+- Add `BaseError` class for structured messages in responses
+
+<!-- 5. Readiness checklist
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+-->
+
+
+<!-- This is an auto-generated comment: release notes by coderabbit.ai
+-->
+## Summary by CodeRabbit
+
+- **New Features**
+- Updated Docker image versions and dependency versions to ensure
+compatibility and stability.
+  - Added a search functionality to the app.
+
+- **Bug Fixes**
+- Enhanced error handling with specific error classes for more detailed
+error messages.
+
+- **Refactor**
+- Replaced generic `Error` instances with specific error classes for
+better error categorization.
+- Refactored error handling in HTTP response functions to use a
+`BaseError` class.
+
+- **Chores**
+- Updated version numbers across multiple configuration files to
+`0.4.1-0`.
+<!-- end of auto-generated comment: release notes by coderabbit.ai -->
+
+---------
+
+</details>
+
+
+### Features
+
+<details >
+<summary>
+Polish documentation and project (<a href="https://github.com/metatypedev/metatype/pull/696">#696</a>)
+</summary>
+
+<!--
+Pull requests are squash merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog.
+-->
+
+<!-- 1. Explain below WHAT the change is -->
+
+- update the headline, the overviews and many other documentation areas
+- upgrades the dependencies.
+
+<!-- 2. Explain below WHY the change cannot be made simpler -->
+
+
+<!-- 4. Explain HOW users should update their code or remove that
+section -->
+
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [x] End-user documentation is updated to reflect the change
+
+
+<!-- This is an auto-generated comment: release notes by coderabbit.ai
+-->
+## Summary by CodeRabbit
+
+
+- **Bug Fixes**
+- Updated Docker image version for the `typegate` service to ensure
+stability and compatibility.
+
+- **Documentation**
+- Revised `TAGLINE` for better clarity on supported languages: WASM,
+Typescript, and Python.
+- Updated version declarations for improved consistency and
+functionality across multiple files.
+
+<!-- end of auto-generated comment: release notes by coderabbit.ai -->
+
+---------
+
+</details>
+
+
+### Miscellaneous Tasks
+
+<details >
+<summary>
+(docs) Final polish to comparison table. (<a href="https://github.com/metatypedev/metatype/pull/709">#709</a>)
+</summary>
+
+some changes to comparison table(docs)
+
+#### Migration notes
+
+_No Migrations Needed_
+
+<!-- 5. Readiness checklist
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+-->
+
+
+<!-- This is an auto-generated comment: release notes by coderabbit.ai
+-->
+## Summary by CodeRabbit
+
+
+- **Documentation**
+- Introduced a new section on Artifact Tracking Protocol in the
+architecture documentation, explaining artifact classification and
+tracking modes in Metatype.
+- Updated comparisons documentation with additional platforms, criteria
+for choosing Metatype, and detailed feature comparison tables.
+- Renamed project directory for clarity and consistency in project setup
+documentation.
+- **Bug Fixes**
+  - Removed outdated `TODO` comment in installation documentation.
+
+<!-- end of auto-generated comment: release notes by coderabbit.ai -->
+
+</details>
+<details >
+<summary>
+Bump to version 0.4.1-0 (<a href="https://github.com/metatypedev/metatype/pull/713">#713</a>)
+</summary>
+
+- Bumps version to 0.4.1-0.
+- Fixes broken release CI.
+- #719
+- Adds 20 minutes to test-full timeout.
+
+<!-- 5. Readiness checklist
+- [ ] The change come with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+-->
+
+
+<!-- This is an auto-generated comment: release notes by coderabbit.ai
+-->
+## Summary by CodeRabbit
+
+## Summary by CodeRabbit
+
+- **New Features**
+- Updated platform support for better compatibility with "x86_64-linux".
+
+- **Bug Fixes**
+- Minor version updates across multiple configurations to enhance
+stability.
+
+- **Chores**
+- Updated version numbers from "0.4.0" to "0.4.1-0" across various files
+and configurations.
+
+- **Refactor**
+- Adjusted build and test scripts for improved efficiency and
+compatibility.
+
+- **Documentation**
+- Enhanced internal documentation to reflect version and platform
+changes.
+<!-- end of auto-generated comment: release notes by coderabbit.ai -->
+
+---------
 
 </details>
 
@@ -403,14 +879,6 @@ _N/A_
 - [x] End-user documentation is updated to reflect the change
 
 ---------
-
-</details>
-<details >
-<summary>
-Simply pr template
-</summary>
-
-
 
 </details>
 <details >
@@ -913,14 +1381,6 @@ Track artifact/module dependencis for `PythonRuntime`
 - [ ] End-user documentation is updated to reflect the change
 
 ---------
-
-</details>
-<details >
-<summary>
-Change headline
-</summary>
-
-
 
 </details>
 <details >
@@ -2406,31 +2866,6 @@ No end user changes required.
 </details>
 <details >
 <summary>
-(website) Fix docusaurus warnings (<a href="https://github.com/metatypedev/metatype/pull/526">#526</a>)
-</summary>
-
-### Describe your change
-
-Fix docusaurus warnings on the website
-
-### Motivation and context
-
-Solves
-[MET-307](https://metatype.atlassian.net/jira/software/c/projects/MET/boards/2?selectedIssue=MET-307)
-
-### Migration notes
-
-<!-- Explain HOW users should update their code when required -->
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [x] End-user documentation is updated to reflect the change
-
-</details>
-<details >
-<summary>
 Fix stage iteration (<a href="https://github.com/metatypedev/metatype/pull/540">#540</a>)
 </summary>
 
@@ -2478,69 +2913,6 @@ _No migration needed._
 
 ### Features
 
-<details >
-<summary>
-(cli) Interactive deployment for prisma (<a href="https://github.com/metatypedev/metatype/pull/527">#527</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-### Describe your change
-
-Make the CLI interactive for migration options to development and
-production databases.
-
-### Motivation and context
-
-[MET-257](https://metatype.atlassian.net/browse/MET-257)
-
-### Migration notes
-
-This creates some breaking changes if you use the CLI in a
-non-interactive way.
-
-### Checklist
-
-- [x] The change come with new or modified tests
-- [x] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
----------
-
-</details>
-<details >
-<summary>
-(gate) Redis-less mode (<a href="https://github.com/metatypedev/metatype/pull/528">#528</a>)
-</summary>
-
-### Describe your change
-
-Fallback to `MemoryRegister` and `NoLimiter` if typegate is unable to
-connect to Redis.
-
-### Motivation and context
-
-Enable Redis-Less mode.
-
-### Migration notes
-
-<!-- Explain HOW users should update their code when required -->
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
-</details>
 <details >
 <summary>
 (lsp) Simple diagnostics (<a href="https://github.com/metatypedev/metatype/pull/496">#496</a>)
@@ -2711,74 +3083,6 @@ Change their manifests to point at the new version.
 ### Checklist
 
 - [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
-</details>
-
-
-### Refactor
-
-<details >
-<summary>
-(ci) Use `ghjk` for deps (<a href="https://github.com/metatypedev/metatype/pull/495">#495</a>)
-</summary>
-
-### Describe your change
-
-
-This PR merges most of the CI test runs into one and make use of the
-`ghjk` tool to install most of the dependencies.
-
-### Motivation and context
-
-Improve tool dependency management.
-
-### Migration notes
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
----------
-
-</details>
-
-
-### Testing
-
-<details >
-<summary>
-(gate) Add tests with file upload and apollo client (<a href="https://github.com/metatypedev/metatype/pull/529">#529</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-### Describe your change
-
-Add file upload test using raw fetch and apollo client.
-
-### Motivation and context
-
-Ensure common uses of upload feature to work.
-
-### Migration notes
-
-<!-- Explain HOW users should update their code when required -->
-
-### Checklist
-
-- [x] The change come with new or modified tests
 - [ ] Hard-to-understand functions have explanatory comments
 - [ ] End-user documentation is updated to reflect the change
 
