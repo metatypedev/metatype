@@ -18,8 +18,6 @@ deno_core::extension!(
     tg_metatype_ext,
     ops = [
         crate::op_get_version,
-        // #[cfg(test)]
-        // tests::op_obj_go_round,
         typescript::op_typescript_format_code,
         typegraph::op_typegraph_validate,
         typegraph::op_validate_prisma_runtime_data,
@@ -44,6 +42,9 @@ deno_core::extension!(
         wit_wire::op_wit_wire_init,
         wit_wire::op_wit_wire_handle,
         wit_wire::op_wit_wire_destroy,
+        // FIXME(yohe): this test broke and has proven difficult to fix
+        // #[cfg(test)]
+        // tests::op_obj_go_round,
     ],
     // esm_entry_point = "ext:tg_metatype_ext/00_runtime.js",
     // esm = ["00_runtime.js"],
@@ -92,6 +93,7 @@ pub mod tests {
         b: String,
     }
 
+    // FIXME: this is also broken for some reason
     #[deno_core::op2]
     #[serde]
     pub fn op_obj_go_round(#[state] ctx: &TestCtx, #[serde] incoming: In) -> Result<Out> {

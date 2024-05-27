@@ -102,6 +102,13 @@ impl GeneratorRunner {
     pub fn exec(&self, workspace_path: &Path, value: serde_json::Value) -> PluginOutputResult {
         (self.op)(workspace_path, value)
     }
+
+    pub fn get(name: &str) -> Option<GeneratorRunner> {
+        GENERATORS.with(|m| {
+            let out = m.get(name).cloned();
+            out
+        })
+    }
 }
 
 thread_local! {
@@ -128,18 +135,6 @@ thread_local! {
             },
         ),
     ]);
-}
-
-impl GeneratorRunner {
-    pub fn get(name: &str) -> Option<GeneratorRunner> {
-        GENERATORS.with(|m| {
-            let out = m.get(name).cloned();
-            if out.is_none() {
-                warn!("it really aint here boss: {name}");
-            }
-            out
-        })
-    }
 }
 
 /// This function makes use of a JoinSet to process

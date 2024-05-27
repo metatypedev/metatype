@@ -90,6 +90,7 @@ const filteredTestFiles = filtered?.map((res) => testFiles[res.refIndex]) ??
 
 const tmpDir = join(projectDir, "tmp");
 const env: Record<string, string> = {
+  "CLICOLOR_FORCE": "1",
   "RUST_LOG": "off,xtask=debug,meta=debug",
   "RUST_SPANTRACE": "1",
   // "RUST_BACKTRACE": "short",
@@ -105,7 +106,7 @@ const env: Record<string, string> = {
   "TMP_DIR": tmpDir,
   "TIMER_MAX_TIMEOUT_MS": "30000",
   "NPM_CONFIG_REGISTRY": "http://localhost:4873",
-  "PATH": `${Deno.env.get("PATH")}:${join(projectDir, "target/debug")}`,
+  "PATH": `${join(projectDir, "target/debug")}:${Deno.env.get("PATH")}`,
 };
 
 await Deno.mkdir(tmpDir, { recursive: true });

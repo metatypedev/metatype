@@ -25,18 +25,18 @@ use deno_runtime::deno_core as deno_core; // necessary for re-exported macros to
 use std::path::PathBuf;
 
 const DEFAULT_UNSTABLE_FLAGS: &[&str] = &["worker-options", "net"];
+const CACHE_BLOCKLIST: &[&str] = &[
+    "npm:/@typegraph/sdk",
+    "npm:/@typegraph/sdk/",
+    "npm:@typegraph/sdk",
+    "npm:@typegraph/sdk/",
+];
 
 /// Ensure that the subcommand runs in a task, rather than being directly executed. Since some of these
 /// futures are very large, this prevents the stack from getting blown out from passing them by value up
 /// the callchain (especially in debug mode when Rust doesn't have a chance to elide copies!).
 #[inline(always)]
 fn spawn_subcommand<F: Future<Output = ()> + 'static>(f: F) -> JoinHandle<()> {
-    // FIXME: find a better location for this as tihs won't work
-    // if a new thread has already launched by this point
-    // this is only relevant for WebWorkers
-    if std::env::var("RUST_MIN_STACK").is_err() {
-        std::env::set_var("RUST_MIN_STACK", "8388608");
-    }
     // the boxed_local() is important in order to get windows to not blow the stack in debug
     deno_core::unsync::spawn(f.boxed_local())
 }
@@ -83,6 +83,12 @@ pub async fn run(
                 .collect(),
             ..Default::default()
         },
+        #[cfg(debug_assertions)]
+        cache_blocklist: CACHE_BLOCKLIST
+            .iter()
+            .cloned()
+            .map(str::to_string)
+            .collect(),
         ..Default::default()
     };
 
@@ -195,7 +201,11 @@ pub async fn test(
         config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
         argv,
         subcommand: args::DenoSubcommand::Test(test_flags.clone()),
-        cache_blocklist: vec!["npm:@typegraph/sdk".to_string()],
+        cache_blocklist: CACHE_BLOCKLIST
+            .iter()
+            .cloned()
+            .map(str::to_string)
+            .collect(),
         ..Default::default()
     };
 
@@ -280,6 +290,12 @@ pub async fn test(
 fn new_thread_builder() -> std::thread::Builder {
     let builder = std::thread::Builder::new();
     let builder = if cfg!(debug_assertions) {
+        // this is only relevant for WebWorkers
+        // FIXME: find a better location for this as tihs won't work
+        // if a new thread has already launched by this point
+        if std::env::var("RUST_MIN_STACK").is_err() {
+            std::env::set_var("RUST_MIN_STACK", "8388608");
+        }
         // deno & swc need 8 MiB with dev profile (release is ok)
         // https://github.com/swc-project/swc/blob/main/CONTRIBUTING.md
         builder.stack_size(8 * 1024 * 1024)
