@@ -589,11 +589,12 @@ dependencies = [
 
 [[package]]
 name = "async-channel"
-version = "2.3.1"
+version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89b47800b0be77592da0afd425cc03468052844aff33b84e33cc696f64e77b6a"
+checksum = "9f2776ead772134d55b62dd45e59a79e21612d85d0af729b8b7d3967d601a62a"
 dependencies = [
  "concurrent-queue",
+ "event-listener 5.3.0",
  "event-listener-strategy 0.5.2",
  "futures-core",
  "pin-project-lite",
@@ -1685,7 +1686,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.4.2"
+version = "0.4.3-0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6202,7 +6203,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c2a198fb6b0eada2a8df47933734e6d35d350665a33a3593d7164fa52c75c19"
 dependencies = [
  "cfg-if",
- "windows-targets 0.48.5",
+ "windows-targets 0.52.5",
 ]
 
 [[package]]
@@ -6259,9 +6260,9 @@ checksum = "ef53942eb7bf7ff43a617b3e2c1c4a5ecf5944a7c1bc12d7ee39bbb15e5c1519"
 
 [[package]]
 name = "linux-raw-sys"
-version = "0.4.14"
+version = "0.4.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
+checksum = "01cda141df6706de531b6c46c3a33ecca755538219bd484262fa09410c13539c"
 
 [[package]]
 name = "local-channel"
@@ -6532,7 +6533,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.4.2"
+version = "0.4.3-0"
 dependencies = [
  "actix",
  "actix-web",
@@ -6600,7 +6601,7 @@ dependencies = [
 
 [[package]]
 name = "metagen"
-version = "0.4.2"
+version = "0.4.3-0"
 dependencies = [
  "color-eyre",
  "common",
@@ -6926,7 +6927,7 @@ dependencies = [
 
 [[package]]
 name = "mt_deno"
-version = "0.4.2"
+version = "0.4.3-0"
 dependencies = [
  "anyhow",
  "deno",
@@ -9387,7 +9388,7 @@ dependencies = [
  "errno 0.3.9",
  "itoa",
  "libc",
- "linux-raw-sys 0.4.14",
+ "linux-raw-sys 0.4.13",
  "once_cell",
  "windows-sys 0.52.0",
 ]
@@ -12171,7 +12172,7 @@ dependencies = [
 
 [[package]]
 name = "typegate"
-version = "0.4.2"
+version = "0.4.3-0"
 dependencies = [
  "colored",
  "env_logger",
@@ -12184,7 +12185,7 @@ dependencies = [
 
 [[package]]
 name = "typegate_engine"
-version = "0.4.2"
+version = "0.4.3-0"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
@@ -12226,7 +12227,7 @@ dependencies = [
 
 [[package]]
 name = "typegraph_core"
-version = "0.4.2"
+version = "0.4.3-0"
 dependencies = [
  "anyhow",
  "color-eyre",
@@ -12265,7 +12266,7 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 
 [[package]]
 name = "typescript"
-version = "0.4.2"
+version = "0.4.3-0"
 dependencies = [
  "anyhow",
  "dprint-plugin-typescript",
@@ -14043,7 +14044,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8da84f1a25939b27f6820d92aed108f83ff920fdf11a7b19366c27c4cda81d4f"
 dependencies = [
  "libc",
- "linux-raw-sys 0.4.14",
+ "linux-raw-sys 0.4.13",
  "rustix 0.38.34",
 ]
 
@@ -14055,7 +14056,7 @@ checksum = "791978798f0597cfc70478424c2b4fdc2b7a8024aaff78497ef00f24ef674193"
 
 [[package]]
 name = "xtask"
-version = "0.4.2"
+version = "0.4.3-0"
 dependencies = [
  "anyhow",
  "clap",
