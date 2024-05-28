@@ -54,7 +54,7 @@ hello = python.from_lambda(
 g.expose(public, hello=hello)
 ```
 
-The `hello` endpoint is mapped with a `custom function` which accepts a `string` and returns **hello** concatinated with the `string`. The processing of data is done using the `PythonRuntime`. When we are defining the custom function, we pass the input type, output type and then a [materializer](/docs/concepts/mental-model#materializers).
+The `hello` endpoint is mapped with a `custom function` which accepts a `string` and returns **hello** concatinated with the `string`. The processing of data is done using the `PythonRuntime`. When we are defining the custom function, we pass the input type, output type and then a [function](/docs/concepts/mental-model#functions).
 
 That's it! We have created your first `Metatype` app. It's as easy as this. Before we go ahead and test our app, let's add two more endpoints which peform basic `Create` and `Read` database operation.
 

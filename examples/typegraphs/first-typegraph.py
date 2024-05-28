@@ -24,6 +24,6 @@ def first_typegraph(g: Graph):
     # expose them with policies
     g.expose(
         public,
-        # input → output via materializer
+        # input → output via runtime function
         get_message=random.gen(message),
     )

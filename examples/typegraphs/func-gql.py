@@ -34,7 +34,7 @@ def func_gql(g: Graph):
         name="vote",
     )
     # Policy.internal means only custom functions
-    # can access these root materializers
+    # can access these root functions
     g.expose(
         Policy.internal(),
         i_get_idea=db.find_unique(idea),

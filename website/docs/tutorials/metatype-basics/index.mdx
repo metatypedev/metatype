@@ -245,8 +245,8 @@ The types here are very simple and we haven't yet added any thing that models th
 
 ## Exposing our application
 
-Typegraphs expose an API to the external world using Materializer objects.
-Materializers describe functions that transform some input type into an output type and we define them in scope of different Runtimes, where the actual logic runs. 
+Typegraphs expose an API to the external world using Function objects.
+Functions describe the operation that transform some input type into an output type and we define them in scope of different Runtimes, where the actual logic runs. 
 At this early stage, we can make use of the Random runtime which allows us to generate random test data for our types to get a feel of our API. 
 
 
@@ -261,7 +261,7 @@ import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
 
 typegraph("roadmap", (g) => {
   // ...
-  // every exposed materializer requires access control policies
+  // every exposed function requires access control policies
   // for now, just use the public policy, anyone can access it 
   const pub = Policy.public(); 
   const random = new RandomRuntime({});
@@ -284,7 +284,7 @@ from typegraph import Policy
 
 @typegraph()
 def roadmap(g: Graph):
-    # every exposed materializer requires access control policies
+    # every exposed function requires access control policies
     # for now, just use the public policy, anyone can access it
     pub = Policy.public() 
     random = RandomRuntime()
@@ -518,7 +518,7 @@ docker compose up --detach
 meta dev
 ```
 
-At this point, we're ready to add materializers to expose database queries to create or read data.
+At this point, we're ready to add functions to expose database queries to create or read data.
 The Prisma runtime allows us to run raw queries directly on the database but it also provides handy functions we can use for basic CRUD operations.
 We'll make use of those.
 
@@ -541,7 +541,7 @@ typegraph("roadmap", (g) => {
       "create_bucket": db.create(bucket),
       "get_idea": db.findFirst(idea),
       "create_ideas": db.create(idea),
-    }, pub // make all materializers public by default
+    }, pub // make all functions public by default
   );
 });
 ```
@@ -560,7 +560,7 @@ def roadmap(g: Graph):
     db = PrismaRuntime("db", "POSTGRES")
     # ..
     g.expose(
-        pub, # make all materializers public by default
+        pub, # make all functions public by default
         get_buckets=db.find_many(bucket),
         create_bucket=db.create(bucket),
         get_idea=db.find_many(bucket),
@@ -703,7 +703,7 @@ If you are using the GraphiQl interface from earlier, there should be a panel in
 **Reference**: [Parameter transformations](/docs/reference/types/parameter-transformations)
 
 By default, Prisma generates types that supports the whole suite of usecases one might have on a CRUD operation such as allowing creation of objects of related types in a single operation.
-We don't always want this and in our case, we want to prevent users from being able to create buckets, which are protected, through the `create_idea` materializer which's public.
+We don't always want this and in our case, we want to prevent users from being able to create buckets, which are protected, through the `create_idea` function which's public.
 We can use the `reduce` method to modify the input types of functions.
 
 
@@ -840,7 +840,7 @@ mutation {
 You'll notice that we had set the `importance` field on votes as optional.
 This is to allow users to just up-vote an idea from the main list without opening a form.
 If they want to add importance or a description to their vote at a later point, we want to update their already existing vote.
-It should be easy to expose a materializer for this using Prisma's `db.update` helper and `reduce` to restrict changes to only those field.
+It should be easy to expose a function for this using Prisma's `db.update` helper and `reduce` to restrict changes to only those field.
 But we'll take this opportunity to explore the feature of the Prisma runtime to execute raw queries.
 
 
@@ -909,7 +909,7 @@ def roadmap(g: Graph):
       </TabItem>
                 </SDKTabs>
 
-Our query is exposed like any other materializer in the GraphQl api.
+Our query is exposed like any other function in the GraphQl api.
 
     <TGExample
       typegraph="roadmap-execute"
