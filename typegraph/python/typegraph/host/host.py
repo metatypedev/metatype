@@ -1,12 +1,13 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import List
-from typegraph.gen import imports
-from typegraph.gen.types import Err, Ok, Result
 import os
 import re
 import sys
+from typing import List
+
+from typegraph.gen import imports
+from typegraph.gen.types import Err, Ok, Result
 
 
 def has_match(text: str, items: List[str]) -> bool:
@@ -27,11 +28,14 @@ class HostImpl(imports.HostHost):
     def expand_path(self, root: str, exclude: List[str]) -> Result[List[str], str]:
         try:
             result = []
+            if os.path.isfile(root):
+                result.append(root)
             for path, _, files in os.walk(root):
                 for name in files:
                     file_path = os.path.join(path, name)
                     if not has_match(file_path, exclude):
                         result.append(file_path)
+
             return Ok(result)
         except Exception as e:
             return Err(str(e))

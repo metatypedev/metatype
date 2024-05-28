@@ -12233,6 +12233,7 @@ dependencies = [
  "color-eyre",
  "common",
  "enum_dispatch",
+ "glob",
  "graphql-parser 0.4.0",
  "indexmap 2.2.6",
  "indoc",

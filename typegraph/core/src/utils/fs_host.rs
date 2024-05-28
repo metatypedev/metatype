@@ -1,13 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::path::{Path, PathBuf};
+use std::{
+    collections::HashSet,
+    path::{Path, PathBuf},
+};
+
+use glob::Pattern as GlobPattern;
 
 use crate::{
     global_store::Store,
     wit::metatype::typegraph::host::{
-        expand_path as expand_path_host, get_cwd, path_exists as path_exists_host, read_file,
-        write_file,
+        eprint, expand_path as expand_path_host, get_cwd, path_exists as path_exists_host,
+        read_file, write_file,
     },
 };
 use common::archive::{
@@ -110,7 +115,6 @@ pub fn expand_path(path: &Path, exclude_glob: &[String]) -> Result<Vec<PathBuf>,
         .iter()
         .map(PathBuf::from)
         .collect();
-
     Ok(ret)
 }
 
@@ -212,4 +216,81 @@ pub fn hash_file(path: &Path) -> Result<(String, u32), String> {
 
 pub fn path_exists(path: &Path) -> Result<bool, String> {
     path_exists_host(&path.to_string_lossy())
+}
+
+pub fn is_glob(path: &str) -> bool {
+    // dir can also contain wild cards,
+    path.contains('*') || path.contains('?')
+}
+
+pub fn extract_glob_dirname(path: &str) -> PathBuf {
+    let path = PathBuf::from(path);
+    let dirs: Vec<_> = path.components().map(|comp| comp.as_os_str()).collect();
+    let mut parent_dir = PathBuf::new();
+    let special_chars = &['*', '?', '[', ']'];
+
+    for dir in dirs {
+        let dir = dir.to_str().unwrap();
+        if dir.find(special_chars).is_some() {
+            break;
+        }
+        parent_dir = parent_dir.join(dir);
+    }
+
+    parent_dir
+}
+
+pub fn expand_glob(path: &str) -> Result<Vec<PathBuf>, String> {
+    let abs_path = make_absolute(&PathBuf::from(path))?
+        .to_string_lossy()
+        .to_string();
+
+    let parent_dir = extract_glob_dirname(&abs_path);
+    let all_files = expand_path(&parent_dir, &[])?;
+
+    let glob_pattern = GlobPattern::new(&abs_path).unwrap();
+
+    let mut matching_files = vec![];
+    for file in all_files {
+        if glob_pattern.matches(file.to_str().unwrap()) {
+            matching_files.push(file);
+        }
+    }
+
+    Ok(matching_files)
+}
+
+pub fn resolve_globs_dirs(deps: Vec<String>) -> Result<Vec<PathBuf>, String> {
+    let mut resolved_deps = HashSet::new();
+    for dep in deps {
+        if is_glob(&dep) {
+            let abs_path = make_absolute(&PathBuf::from(dep))?
+                .to_string_lossy()
+                .to_string();
+
+            let matching_files = expand_glob(&abs_path).map_err(|err| {
+                eprint(&format!("Error resolving globs: {:?}", err));
+                err
+            })?;
+            for file in matching_files {
+                let rel_path = make_relative(&file)?;
+                resolved_deps.insert(rel_path);
+            }
+        } else {
+            let all_files =
+                expand_path(&make_absolute(&PathBuf::from(dep))?, &[]).map_err(|err| {
+                    eprint(&format!(
+                        "Error resolving dependencies and dependency directories: {:?}",
+                        err
+                    ));
+                    err
+                })?;
+            for file in all_files {
+                let rel_path = make_relative(&file)?;
+                resolved_deps.insert(rel_path);
+            }
+        }
+    }
+
+    Ok(resolved_deps.into_iter().collect())
 }

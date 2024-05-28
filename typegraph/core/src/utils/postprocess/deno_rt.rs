@@ -1,7 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{global_store::Store, utils::fs_host};
+use crate::{
+    global_store::Store,
+    utils::fs_host::{self, resolve_globs_dirs},
+};
 use common::typegraph::{
     runtimes::{deno::ModuleMatData, Artifact},
     utils::{map_from_object, object_from_map},
@@ -65,7 +68,6 @@ impl DenoProcessor {
 
         let mut tg_deps_paths = vec![];
         let mut tg_artifacts = vec![];
-
         match fs_host::path_exists(&main_path)? {
             true => {
                 let (module_hash, size) = fs_host::hash_file(&main_path.clone())?;
@@ -78,8 +80,11 @@ impl DenoProcessor {
                 tg_deps_paths.push(main_path);
 
                 let deps = mat_data.deps.clone();
-                for dep in deps {
-                    let dep_rel_path = PathBuf::from(dep);
+
+                // resolve globs and dirs
+                let resolved_deps = resolve_globs_dirs(deps)?;
+
+                for dep_rel_path in resolved_deps {
                     let dep_abs_path = fs_host::make_absolute(&dep_rel_path)?;
 
                     let (dep_hash, dep_size) = fs_host::hash_file(&dep_abs_path)?;
