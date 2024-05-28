@@ -30,7 +30,7 @@ function Header() {
           </span>{" "}
           platform
         </Heading>
-        <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[850px]">
+        <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[880px]">
           Build <strong>backend components</strong> with <strong>WASM</strong>,{" "}
           <strong>Typescript</strong> and <strong>Python</strong>, no matter
           where and how your (legacy) systems are.
@@ -232,6 +232,7 @@ const featureList = [
   },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Features(): JSX.Element {
   return (
     <section className="grid-3 text-center">
@@ -367,6 +368,7 @@ function Runtimes(): JSX.Element {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function DemoVideo(): JSX.Element {
   return (
     <section>
@@ -420,7 +422,7 @@ function Landscape(): JSX.Element {
 const profiles = {
   leader: "I'm an engineering leader",
   developer: "I'm a developer",
-  business: "I'm not familiar with APIs",
+  //business: "I'm not familiar with APIs",
 };
 
 type Profile = keyof typeof profiles;
@@ -428,28 +430,29 @@ type Profile = keyof typeof profiles;
 const order: Record<Profile, JSX.Element> = {
   leader: (
     <>
-      <Landscape />
-      <DemoVideo />
+      <Stability />
+      <Modularity />
+      <Reusability />
       <TryIt />
-      <Features />
+      <Landscape />
+      <Runtimes />
     </>
   ),
   developer: (
     <>
-      <TryIt />
-      <DemoVideo />
       <Landscape />
+      <TryIt />
       <Runtimes />
     </>
   ),
-  business: (
+  /*business: (
     <>
       <Features />
       <Landscape />
       <DemoVideo />
       <Runtimes />
     </>
-  ),
+  ),*/
 };
 
 export default function Home(): JSX.Element {
@@ -463,9 +466,7 @@ export default function Home(): JSX.Element {
       <Header />
       <main id="homepage" className="container">
         <Intro profile={profile} setProfile={setProfile} />
-        <Stability />
-        <Modularity />
-        <Reusability />
+
         {order[profile]}
       </main>
     </Layout>

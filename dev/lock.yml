@@ -22,7 +22,7 @@ dev:
       (const\s+TEMPORAL_VERSION\s*=\s*").*(";): TEMPORAL_VERSION
       (const\s+WASMTIME_VERSION\s*=\s*").*(";): WASMTIME_VERSION
       (const\s+METATYPE_VERSION\s*=\s*").*(";): METATYPE_VERSION
-    .github/*/*.yml:
+    .github/**/*.yml:
       '(  GHJK_VERSION: ").+(")': GHJK_VERSION
       '(  DENO_VERSION: ").+(")': DENO_VERSION
       '([\s-]+uses:\s+metatypedev/setup-ghjk@).+()': GHJK_ACTION_VERSION
@@ -32,6 +32,8 @@ dev:
       '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
     meta-lsp/vscode-metatype-support/package.json:
       '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
+    typegate/tests/**/*.snap:
+      '(\s*static\s*MT_VERSION:\s*&str\s*=\s*").+(";)': METATYPE_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
     typegraph/node/sdk/package.json:
@@ -99,8 +101,8 @@ dev:
     WASMTIME_PY_VERSION: 21.0.0
     TYPEGRAPH_VERSION: 0.0.3
     PRISMA_VERSION: 5.5.2
-    METATYPE_VERSION: 0.4.2
-    PUBLISHED_VERSION: 0.4.1
+    METATYPE_VERSION: 0.4.3-0
+    PUBLISHED_VERSION: 0.4.2
     WASM_OPT_VERSION: 0.116.1
     MOLD_VERSION: v2.4.0
     CMAKE_VERSION: 3.28.0-rc6

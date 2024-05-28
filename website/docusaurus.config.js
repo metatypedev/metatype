@@ -103,6 +103,11 @@ const config = {
         },
         items: [
           {
+            to: "/docs/concepts/features-overview",
+            position: "left",
+            label: "Features",
+          },
+          {
             type: "docSidebar",
             docsPluginId: "use-cases",
             sidebarId: "useCases",
@@ -123,8 +128,13 @@ const config = {
           },
           {
             href: "https://github.com/metatypedev/metatype",
-            label: "GitHub",
             position: "right",
+            className: "header-github-link",
+          },
+          {
+            href: "https://communityinviter.com/apps/metatypedev/invite",
+            position: "right",
+            className: "header-slack-link",
           },
         ],
       },
@@ -137,6 +147,10 @@ const config = {
               {
                 label: "Getting started",
                 to: "/docs/tutorials/metatype-basics",
+              },
+              {
+                label: "Features overview",
+                to: "/docs/concepts/features-overview",
               },
               {
                 label: "Concepts",
@@ -156,9 +170,13 @@ const config = {
                 href: "https://github.com/metatypedev/metatype/discussions",
               },
               {
+                label: "Slack",
+                href: "https://communityinviter.com/apps/metatypedev/invite",
+              },
+              /*{
                 label: "Stack Overflow",
                 href: "https://stackoverflow.com/questions/tagged/metatype",
-              },
+              },*/
               {
                 label: "Twitter",
                 href: "https://twitter.com/metatypedev",

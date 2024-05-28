@@ -538,3 +538,101 @@ Meta.test(
     });
   },
 );
+
+Meta.test(
+  {
+    name: "DenoRuntime - Sync mode: support for dirs when adding deps",
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
+  },
+  async (t) => {
+    await t.should(
+      "work for deps specified with dir on Python SDK",
+      async () => {
+        const engine = await t.engine(
+          "runtimes/deno/deno_dir.py",
+        );
+
+        await gql`
+          query {
+            test_dir(a: 4, b: 3)
+          }
+        `
+          .expectData({
+            test_dir: 7,
+          })
+          .on(engine);
+      },
+    );
+
+    await t.should(
+      "work for deps specified with dir on TypeScript SDK",
+      async () => {
+        const engine = await t.engine("runtimes/deno/deno_dir.ts");
+
+        await gql`
+          query {
+            testDir(a: 20, b: 5)
+          }
+        `
+          .expectData({
+            testDir: 25,
+          })
+          .on(engine);
+      },
+    );
+  },
+);
+
+Meta.test(
+  {
+    name: "DenoRuntime - Sync mode: support for globs when adding deps",
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
+  },
+  async (t) => {
+    await t.should(
+      "work for deps specified with glob on Python SDK",
+      async () => {
+        const engine = await t.engine("runtimes/deno/deno_globs.py");
+
+        await gql`
+          query {
+            test_glob(a: 10, b: 53)
+          }
+        `
+          .expectData({
+            test_glob: 63,
+          })
+          .on(engine);
+      },
+    );
+
+    await t.should(
+      "work for deps specified with glob on TypeScript SDK",
+      async () => {
+        const engine = await t.engine("runtimes/deno/deno_globs.ts");
+
+        await gql`
+          query {
+            testGlob(a: 10, b: 5)
+          }
+        `
+          .expectData({
+            testGlob: 15,
+          })
+          .on(engine);
+      },
+    );
+  },
+);

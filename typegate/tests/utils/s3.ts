@@ -9,6 +9,7 @@ import {
   ListObjectsV2Command,
   S3Client,
 } from "aws-sdk/client-s3";
+import { connect } from "redis";
 
 export async function tryDeleteBucket(client: S3Client, bucket: string) {
   while (true) {
@@ -62,4 +63,41 @@ export async function hasObject(client: S3Client, bucket: string, key: string) {
     }
     throw e;
   }
+}
+
+export function generateSyncConfig(bucketName: string) {
+  const syncConfig = {
+    redis: {
+      hostname: "localhost",
+      port: 6379,
+      password: "password",
+      db: 1,
+    },
+    s3: {
+      endpoint: "http://localhost:9000",
+      region: "local",
+      credentials: {
+        accessKeyId: "minio",
+        secretAccessKey: "password",
+      },
+      forcePathStyle: true,
+    },
+    s3Bucket: bucketName,
+  };
+
+  const redisKey = "typegraph";
+  const redisEventKey = "typegraph_event";
+  const cleanUp = async () => {
+    using redis = await connect(syncConfig.redis);
+    await redis.del(redisKey);
+    await redis.del(redisEventKey);
+
+    const s3 = new S3Client(syncConfig.s3);
+    await tryDeleteBucket(s3, syncConfig.s3Bucket);
+    await createBucket(s3, syncConfig.s3Bucket);
+    s3.destroy();
+    await redis.quit();
+  };
+
+  return { syncConfig, cleanUp };
 }

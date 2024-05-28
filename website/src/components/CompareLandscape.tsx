@@ -30,9 +30,7 @@ export function CompareLandscape() {
             <td className="bg-slate-100">
               <strong>Metatype</strong>
               <br />
-              <small>
-                composition engine for data entities in evolving systems
-              </small>
+              <small>composition engine for entities in evolving systems</small>
             </td>
             <td>
               Trino
