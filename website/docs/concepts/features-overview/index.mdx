@@ -28,8 +28,8 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         link: "/docs/reference/typegate",
         body: (
           <>
-            Expose select materializers in your graph through a GraphQL API.
-            These root-materializers will serve as the entry point to your graph
+            Expose select functions in your graph through a GraphQL API.
+            These root-functions will serve as the entry point to your graph
             for any incoming request. The typegraph model is a great fit for
             GraphQL semantics and this is the best supported way to consume
             typegraphs.
@@ -50,7 +50,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         link: "/docs/guides/rest",
         body: (
           <>
-            You can expose select root materializers through a simple REST API.
+            You can expose select root functions through a simple REST API.
             This is handy to serve endpoints for clients that are not GraphQl
             capable, even though it hampers access to some typegraph features.
             Inputs will be sourced from either HTTP bodies or search parameters
@@ -72,7 +72,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         link: "/docs/reference/typegate",
         body: (
           <>
-            Execute materializers at certain time intervals. Useful for cleanup
+            Execute functions at certain time intervals. Useful for cleanup
             jobs.
           </>
         ),
@@ -87,7 +87,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         body: (
           <>
             Rate-limit parts of your graph to minimize abuse. The limits can be
-            configured granularly for each materializer and for custom time
+            configured granularly for each function and for custom time
             windows. Use custom request identifiers, in addition to ip
             addresses, to track limits counters.
           </>
@@ -199,7 +199,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         body: (
           <>
             Injections resolve part of your graph inline instead of from
-            materializers or provide defaults for incoming request data. This
+            functions or provide defaults for incoming request data. This
             can be used to set static values or source them from the context,
             other parts of the graph...etc.
           </>
@@ -208,7 +208,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
     ],
     [
       {
-        title: "Materializers (Functions)",
+        title: "Functions",
         status: "complete",
         link: "/docs/reference/types/functions",
         body: (
@@ -219,14 +219,14 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         ),
       },
       {
-        title: "Materializer chaining",
+        title: "Function chaining",
         status: "future",
         link: "https://github.com/metatypedev/metatype/issues/721",
         body: (
           <>
-            Compose materializers together by feeding the output of one as the
+            Compose functions together by feeding the output of one as the
             input of another. Encourages code reuse by allowing one to extract
-            common middleware logic from each materializer, all within the
+            common middleware logic from each function, all within the
             typegraph layer.
           </>
         ),
@@ -239,12 +239,12 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         link: "/docs/reference/types/parameter-transformations#funcreducetree",
         body: (
           <>
-            <code>reduce</code> is useful to transform materializer input types
+            <code>reduce</code> is useful to transform function input types
             so that only certain struct fields are used, discarding the others.
             Required fields can be hidden from the user and can instead be
             injected from the request's context or a static default. This is
             useful for remixing generated or core domain types to more targeted
-            forms appropriate for a materializer.
+            forms appropriate for a function.
           </>
         ),
       },
@@ -254,8 +254,8 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         link: "/docs/reference/types/parameter-transformations#funcapplytree",
         body: (
           <>
-            <code>apply</code> allows the flattening of deeply nested types
-            materializer input types to something friendlier. Injection can also
+            <code>apply</code> allows the flattening of deeply nested
+            function input types to something friendlier. Injection can also
             be used to substitute required fields in the original type from
             another source.
           </>
@@ -305,7 +305,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         link: "/docs/reference/runtimes/deno",
         body: (
           <>
-            Write materializers that execute pieces of TypeScript code on a Deno worker.
+            Write functions that execute pieces of TypeScript code on a Deno worker.
             Includes easy access to ESM and libraries through standard Deno features.
           </>
         ),
@@ -325,7 +325,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         link: "/docs/reference/runtimes/python",
         body: (
           <>
-            Implement materializers that execute python functions in code snippets or on disk modules.
+            Implement functions that execute python functions in code snippets or on disk modules.
           </>
         ),
       }, 
@@ -356,7 +356,7 @@ from typegraph.runtimes.deno import PythonRuntime
         ),
     )
 
-}`} </CodeBlock> ], [ { title: "S3 runtime", status: "complete", link: "/docs/reference/runtimes/s3", body: ( <> Store large blobs in S3 compatible object stores. This includes support for <Link to="/docs/guides/files-upload">GraphQL file uploads</Link> and presigned URLs making working with images and large uploads a breeze. </> ), }, { title: "Temporal runtime", status: "complete", link: "/docs/reference/runtimes/temporal", body: ( <> Kick off and query Temporal workflows from a typegraph. Temporal is a durable execution engine that can be used to implement long-running, failure-resistant business processes. </> ), }, { title: "Wasm runtime", status: "beta", link: "/docs/reference/runtimes/wasm", body: ( <> Make materializers that use WASM components to implement their logic. Write core-wasm or wasi 0.2 based wasm components in languages like Rust, Python and Javascript to power all your custom functions. </> ), }, ], [ { title: "GraphQL runtime", status: "complete", link: "/docs/reference/runtimes/graphql", body: ( <> Include external GraphQL APIs as part of your typegraph. This runtime provides materializers that resolve the data by querying an external GraphQL API. </> ), }, { title: "Http runtime", status: "complete", link: "/docs/reference/runtimes/http", body: ( <> Include external Http APIs as part of your typegraph. Source the data for your graph using external HTTP requests. </> ), }, ], [ { title: "Random runtime", status: "complete", link: "/docs/reference/runtimes/random", body: ( <> Materializers to generate random data based on your types. Useful for quickly throwing together an API and testing. </> ), }, { title: "gRPC runtime", status: "future", link: "https://github.com/metatypedev/metatype/issues/723", body: ( <> Include external gRPC APIs as part of your typegraph. </> ), }, ], ]} />
+}`} </CodeBlock> ], [ { title: "S3 runtime", status: "complete", link: "/docs/reference/runtimes/s3", body: ( <> Store large blobs in S3 compatible object stores. This includes support for <Link to="/docs/guides/files-upload">GraphQL file uploads</Link> and presigned URLs making working with images and large uploads a breeze. </> ), }, { title: "Temporal runtime", status: "complete", link: "/docs/reference/runtimes/temporal", body: ( <> Kick off and query Temporal workflows from a typegraph. Temporal is a durable execution engine that can be used to implement long-running, failure-resistant business processes. </> ), }, { title: "Wasm runtime", status: "beta", link: "/docs/reference/runtimes/wasm", body: ( <> Make functions that use WASM components to implement their logic. Write core-wasm or wasi 0.2 based wasm components in languages like Rust, Python and Javascript to power all your custom functions. </> ), }, ], [ { title: "GraphQL runtime", status: "complete", link: "/docs/reference/runtimes/graphql", body: ( <> Include external GraphQL APIs as part of your typegraph. This runtime provides functions that resolve the data by querying an external GraphQL API. </> ), }, { title: "Http runtime", status: "complete", link: "/docs/reference/runtimes/http", body: ( <> Include external Http APIs as part of your typegraph. Source the data for your graph using external HTTP requests. </> ), }, ], [ { title: "Random runtime", status: "complete", link: "/docs/reference/runtimes/random", body: ( <> Functions to generate random data based on your types. Useful for quickly throwing together an API and testing. </> ), }, { title: "gRPC runtime", status: "future", link: "https://github.com/metatypedev/metatype/issues/723", body: ( <> Include external gRPC APIs as part of your typegraph. </> ), }, ], ]} />
 
 ### Prisma
 
@@ -391,7 +391,7 @@ Access a myriad of databases directly from your typegraph. Run queries, mange it
         link: "/docs/reference/runtimes/prisma#generators",
         body: (
           <>
-            Generate easy materializers for common create, update, read and
+            Easily generate functions for common create, update, read and
             delete queries. Includes nested filtering and aggregration paramters
             for efficent and targeted requests.
           </>
@@ -447,7 +447,7 @@ Access a myriad of databases directly from your typegraph. Run queries, mange it
           <>
             Policies are simple functions that take the request as input and
             return values to signal whether it's allowed/denied access. They can
-            be attached to any materializer in the graph and are evaluated right
+            be attached to any function in the graph and are evaluated right
             before the request triggers one. They compose well and are the
             primary authorization primitive available to typegraphs.
           </>
