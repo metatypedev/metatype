@@ -1,3 +1,4 @@
+use crate::deploy::push::pusher::RetryManager;
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 use crate::interlude::*;
@@ -13,10 +14,34 @@ use std::{sync::Arc, time::Duration};
 use tokio::sync::mpsc;
 
 use super::console::Console;
+use super::task::action::DeployAction;
+use super::task_manager::{self, TaskManager, TaskReason};
 use crate::config::Config;
 use crate::deploy::actors::console::ConsoleActor;
 use crate::typegraph::dependency_graph::DependencyGraph;
 use crate::typegraph::loader::discovery::FileFilter;
+
+pub mod message {
+    use super::*;
+
+    #[derive(Message)]
+    #[rtype(result = "()")]
+    pub struct Stop;
+
+    #[derive(Message)]
+    #[rtype(result = "()")]
+    pub(super) struct File(pub PathBuf);
+
+    #[derive(Message)]
+    #[rtype(result = "()")]
+    pub struct UpdateDependencies(pub Arc<Typegraph>);
+
+    #[derive(Message)]
+    #[rtype(result = "()")]
+    pub struct RemoveTypegraph(pub PathBuf);
+}
+
+use message::*;
 
 #[derive(Debug)]
 pub enum Event {
@@ -34,30 +59,15 @@ pub enum Event {
 }
 
 pub struct WatcherActor {
+    // TODO config path only
     config: Arc<Config>,
     directory: Arc<Path>,
-    event_tx: mpsc::UnboundedSender<Event>,
+    task_manager: Addr<TaskManager<DeployAction>>,
     console: Addr<ConsoleActor>,
     debouncer: Option<Debouncer<RecommendedWatcher>>,
     dependency_graph: DependencyGraph,
     file_filter: FileFilter,
 }
-
-#[derive(Message)]
-#[rtype(result = "()")]
-pub struct Stop;
-
-#[derive(Message)]
-#[rtype(result = "()")]
-struct File(PathBuf);
-
-#[derive(Message)]
-#[rtype(result = "()")]
-pub struct UpdateDependencies(pub Arc<Typegraph>);
-
-#[derive(Message)]
-#[rtype(result = "()")]
-pub struct RemoveTypegraph(pub PathBuf);
 
 impl Actor for WatcherActor {
     type Context = Context<Self>;
@@ -81,14 +91,14 @@ impl WatcherActor {
     pub fn new(
         config: Arc<Config>,
         directory: Arc<Path>,
-        event_tx: mpsc::UnboundedSender<Event>,
+        task_manager: Addr<TaskManager<DeployAction>>,
         console: Addr<ConsoleActor>,
     ) -> Result<Self> {
         let file_filter = FileFilter::new(&config)?;
         Ok(Self {
             config,
             directory,
-            event_tx,
+            task_manager,
             console,
             debouncer: None,
             dependency_graph: DependencyGraph::default(),
@@ -135,10 +145,15 @@ impl Handler<Stop> for WatcherActor {
 impl Handler<File> for WatcherActor {
     type Result = ();
 
-    fn handle(&mut self, msg: File, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: File, ctx: &mut Self::Context) -> Self::Result {
         let path = msg.0;
         if &path == self.config.path.as_ref().unwrap() {
-            self.event_tx.send(Event::ConfigChanged).unwrap();
+            self.console
+                .warning("metatype configuration filie changed".to_owned());
+            self.console
+                .warning("reloading all the typegraphs".to_owned());
+            self.task_manager.do_send(task_manager::message::Restart);
+            ctx.stop();
         } else {
             let reverse_deps = self.dependency_graph.get_rdeps(&path);
             if !reverse_deps.is_empty() {
@@ -151,13 +166,11 @@ impl Handler<File> for WatcherActor {
                     self.console
                         .info(format!("  -> {rel_path}", rel_path = rel_path.display()));
 
-                    if let Err(e) = self.event_tx.send(Event::DependencyChanged {
-                        typegraph_module: path,
-                        dependency_path,
-                    }) {
-                        self.console.error(format!("Failed to send event: {}", e));
-                        // panic??
-                    }
+                    RetryManager::clear_counter(&path);
+                    self.task_manager.do_send(task_manager::message::AddTask {
+                        path: path.into(),
+                        reason: TaskReason::DependencyChanged(dependency_path),
+                    });
                 }
             } else if path.try_exists().unwrap() {
                 let mut searcher = SearcherBuilder::new()
@@ -167,18 +180,20 @@ impl Handler<File> for WatcherActor {
                 if !self.file_filter.is_excluded(&path, &mut searcher) {
                     let rel_path = diff_paths(&path, &self.directory).unwrap();
                     self.console.info(format!("File modified: {rel_path:?}"));
-                    if let Err(e) = self.event_tx.send(Event::TypegraphModuleChanged {
-                        typegraph_module: path,
-                    }) {
-                        self.console.error(format!("Failed to send event: {}", e));
-                        // panic??
-                    }
+
+                    RetryManager::clear_counter(&path);
+                    self.task_manager.do_send(task_manager::message::AddTask {
+                        path: path.into(),
+                        reason: TaskReason::FileChanged,
+                    });
                 }
-            } else if let Err(e) = self.event_tx.send(Event::TypegraphModuleDeleted {
-                typegraph_module: path,
-            }) {
-                self.console.error(format!("Failed to send event: {}", e));
-                // panic??
+            } else {
+                RetryManager::clear_counter(&path);
+                // TODO method call
+                ctx.address().do_send(RemoveTypegraph(path.clone()));
+
+                // TODO delete typegraph in typegate
+                // TODO cancel any eventual active deployment task
             }
         }
     }

@@ -4,4 +4,6 @@
 pub mod console;
 pub mod discovery;
 pub mod loader;
+pub mod task;
+pub mod task_manager;
 pub mod watcher;

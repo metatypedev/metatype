@@ -6,7 +6,7 @@ mod interlude {
     pub use std::{
         collections::HashMap,
         path::{Path, PathBuf},
-        sync::{Arc, Mutex},
+        sync::Arc,
     };
 
     pub use color_eyre::{
@@ -27,6 +27,7 @@ mod interlude {
     pub use async_trait::async_trait;
 
     pub use crate::{anyhow_to_eyre, map_ferr};
+    pub use actix::prelude::*;
 }
 
 mod cli;
@@ -83,7 +84,8 @@ fn main() -> Result<()> {
     };
 
     if args.verbose.is_present() {
-        std::env::set_var("RUST_LOG", args.verbose.log_level_filter().to_string());
+        let filter = args.verbose.log_level_filter().to_string();
+        std::env::set_var("RUST_LOG", format!("warn,meta={filter}"));
     }
     logger::init();
 

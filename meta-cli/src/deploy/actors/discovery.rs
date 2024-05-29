@@ -1,32 +1,33 @@
+use crate::deploy::actors::task_manager::{self, TaskReason};
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 use crate::interlude::*;
 
-use actix::prelude::*;
 use pathdiff::diff_paths;
 
 use crate::{config::Config, typegraph::loader::Discovery};
 
 use super::console::{Console, ConsoleActor};
-use super::loader::{LoadModule, LoaderActor};
+use super::task::action::TaskAction;
+use super::task_manager::TaskManager;
 
-pub struct DiscoveryActor {
+pub struct DiscoveryActor<A: TaskAction + 'static> {
     config: Arc<Config>,
-    loader: Addr<LoaderActor>,
+    task_manager: Addr<TaskManager<A>>,
     console: Addr<ConsoleActor>,
     directory: Arc<Path>,
 }
 
-impl DiscoveryActor {
+impl<A: TaskAction + 'static> DiscoveryActor<A> {
     pub fn new(
         config: Arc<Config>,
-        loader: Addr<LoaderActor>,
+        task_manager: Addr<TaskManager<A>>,
         console: Addr<ConsoleActor>,
         directory: Arc<Path>,
     ) -> Self {
         Self {
             config,
-            loader,
+            task_manager,
             console,
             directory,
         }
@@ -37,7 +38,7 @@ impl DiscoveryActor {
 #[rtype(result = "()")]
 struct Stop;
 
-impl Actor for DiscoveryActor {
+impl<A: TaskAction + 'static> Actor for DiscoveryActor<A> {
     type Context = Context<Self>;
 
     #[tracing::instrument(skip(self))]
@@ -46,7 +47,7 @@ impl Actor for DiscoveryActor {
 
         let config = Arc::clone(&self.config);
         let dir = self.directory.clone();
-        let loader = self.loader.clone();
+        let task_manager = self.task_manager.clone();
         let console = self.console.clone();
         let discovery = ctx.address();
         let fut = async move {
@@ -58,7 +59,10 @@ impl Actor for DiscoveryActor {
                             "Found typegraph definition module at {}",
                             rel_path.display()
                         ));
-                        loader.do_send(LoadModule(path.into()));
+                        task_manager.do_send(task_manager::message::AddTask {
+                            path: path.into(),
+                            reason: TaskReason::Discovery,
+                        });
                     }
                     Err(err) => console.error(format!("Error while discovering modules: {}", err)),
                 })
@@ -71,7 +75,7 @@ impl Actor for DiscoveryActor {
             discovery.do_send(Stop);
         }
         .in_current_span();
-        Arbiter::current().spawn(fut);
+        ctx.spawn(fut.into_actor(self));
     }
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
@@ -79,7 +83,7 @@ impl Actor for DiscoveryActor {
     }
 }
 
-impl Handler<Stop> for DiscoveryActor {
+impl<A: TaskAction + 'static> Handler<Stop> for DiscoveryActor<A> {
     type Result = ();
 
     fn handle(&mut self, msg: Stop, ctx: &mut Self::Context) -> Self::Result {

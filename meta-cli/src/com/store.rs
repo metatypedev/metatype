@@ -7,6 +7,7 @@ use common::node::BasicAuth;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::borrow::{Borrow, BorrowMut};
+use std::sync::Mutex;
 
 use super::responses::SDKResponse;
 

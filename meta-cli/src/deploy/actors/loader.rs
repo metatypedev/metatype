@@ -253,8 +253,8 @@ impl Handler<SetStoppedTx> for LoaderActor {
     }
 }
 
-pub fn stopped(addr: Addr<LoaderActor>) -> oneshot::Receiver<StopBehavior> {
-    let (tx, rx) = oneshot::channel();
-    addr.do_send(SetStoppedTx(tx));
-    rx
-}
+// pub fn stopped(addr: Addr<LoaderActor>) -> oneshot::Receiver<StopBehavior> {
+//     let (tx, rx) = oneshot::channel();
+//     addr.do_send(SetStoppedTx(tx));
+//     rx
+// }

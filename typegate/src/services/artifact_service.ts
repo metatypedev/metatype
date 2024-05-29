@@ -119,6 +119,7 @@ export class ArtifactService {
     const hash = await this.store.persistence.save(stream);
     if (hash !== meta.hash) {
       await this.store.persistence.delete(hash);
+      logger.warn("hash mismatch: {} {}", hash, meta.hash);
       return new Response(JSON.stringify({ error: "hash mismatch" }), {
         status: 403,
         headers: { "Content-Type": "application/json" },

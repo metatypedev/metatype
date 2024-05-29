@@ -1,23 +1,26 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::interlude::*;
-
+use self::actors::task::action::DeployAction;
+use self::actors::task::action::DeployActionGenerator;
+use self::actors::task::TaskConfig;
+use self::actors::task_manager::{self, StopReason, TaskReason};
 use super::{Action, ConfigArgs, NodeArgs};
 use crate::com::store::{Command, Endpoint, MigrationAction, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors;
 use crate::deploy::actors::console::{Console, ConsoleActor};
 use crate::deploy::actors::discovery::DiscoveryActor;
-use crate::deploy::actors::loader::{
-    self, LoaderActor, LoaderEvent, ReloadModule, ReloadReason, StopBehavior,
-};
-use crate::deploy::actors::watcher::WatcherActor;
+use crate::deploy::actors::loader::{self, LoaderEvent, ReloadModule, ReloadReason, StopBehavior};
+use crate::deploy::actors::task::action::TaskAction;
+use crate::deploy::actors::task_manager::TaskManager;
+use crate::deploy::actors::watcher::{self, WatcherActor};
 use crate::deploy::push::pusher::PushResult;
+use crate::interlude::*;
 use crate::secrets::{RawSecrets, Secrets};
-use actix::prelude::*;
 use actix_web::dev::ServerHandle;
 use clap::Parser;
+use futures::channel::oneshot;
 use normpath::PathExt;
 use owo_colors::OwoColorize;
 use tokio::sync::mpsc;
@@ -103,7 +106,7 @@ pub struct Deploy {
 }
 
 impl Deploy {
-    #[tracing::instrument]
+    #[tracing::instrument(level = "debug")]
     pub async fn new(deploy: &DeploySubcommand, args: &ConfigArgs) -> Result<Self> {
         let dir = args.dir();
 
@@ -114,6 +117,10 @@ impl Deploy {
 
         let node_config = config.node(&deploy.node, &deploy.target);
         let secrets = Secrets::load_from_node_config(&node_config);
+        debug!(
+            "validating configuration for target {:?}",
+            deploy.target.yellow()
+        );
         let node = node_config
             .build(&dir)
             .await
@@ -155,12 +162,12 @@ impl Deploy {
 
 struct CtrlCHandlerData {
     watcher: Addr<WatcherActor>,
-    loader: Addr<LoaderActor>,
+    task_manager: Addr<TaskManager<DeployAction>>,
 }
 
 #[async_trait]
 impl Action for DeploySubcommand {
-    #[tracing::instrument]
+    #[tracing::instrument(level = "debug")]
     async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
         let deploy = Deploy::new(self, &args).await?;
 
@@ -182,12 +189,14 @@ impl Action for DeploySubcommand {
         }
 
         if deploy.options.watch {
+            info!("running in watch mode");
             // watch the content of a folder
             if self.file.is_some() {
                 bail!("Cannot use --file in watch mode");
             }
             watch_mode::enter_watch_mode(deploy).await?;
         } else {
+            trace!("running in default mode");
             // deploy a single file
             let deploy = default_mode::DefaultMode::init(deploy).await?;
             deploy.run().await?;
@@ -201,16 +210,15 @@ impl Action for DeploySubcommand {
 
 mod default_mode {
     //! non-watch mode
-    use default_mode::actors::loader::LoadModule;
-    use futures::channel::oneshot;
 
     use super::*;
 
     pub struct DefaultMode {
         deploy: Deploy,
         console: Addr<ConsoleActor>,
-        loader: Addr<LoaderActor>,
-        loader_event_rx: mpsc::UnboundedReceiver<LoaderEvent>,
+        task_manager: Addr<TaskManager<DeployAction>>,
+        report_rx: oneshot::Receiver<task_manager::Report<DeployAction>>,
+        // loader_event_rx: mpsc::UnboundedReceiver<LoaderEvent>,
     }
 
     impl DefaultMode {
@@ -222,13 +230,18 @@ mod default_mode {
 
             ServerStore::set_secrets(secrets.hydrate(deploy.base_dir.clone()).await?);
 
-            let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
+            // let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
 
-            let loader = LoaderActor::new(
-                Arc::clone(&deploy.config),
-                console.clone(),
-                loader_event_tx,
+            let (report_tx, report_rx) = oneshot::channel();
+
+            let task_config = TaskConfig::init(deploy.base_dir.clone());
+            let action_generator = DeployActionGenerator::new(task_config);
+
+            let task_manager = TaskManager::new(
+                action_generator,
                 deploy.max_parallel_loads.unwrap_or_else(num_cpus::get),
+                report_tx,
+                console.clone(),
             )
             .auto_stop()
             .start();
@@ -236,8 +249,8 @@ mod default_mode {
             Ok(Self {
                 deploy,
                 console,
-                loader,
-                loader_event_rx,
+                task_manager,
+                report_rx,
             })
         }
 
@@ -245,20 +258,26 @@ mod default_mode {
             debug!(file = ?self.deploy.file);
 
             {
-                let loader = self.loader.clone();
+                let task_manager = self.task_manager.clone();
                 ctrlc::set_handler(move || {
-                    loader.do_send(loader::TryStop(StopBehavior::ExitSuccess));
+                    debug!("CTRL-C handler");
+                    task_manager.do_send(task_manager::message::Stop);
+                    // loader.do_send(loader::TryStop(StopBehavior::ExitSuccess));
                 })
             }
             .context("setting Ctrl-C handler")?;
-            let _discovery = if let Some(file) = self.deploy.file.clone() {
-                self.loader.do_send(LoadModule(file.to_path_buf().into()));
+            let _discovery = if let Some(path) = self.deploy.file.clone() {
+                self.task_manager.do_send(task_manager::message::AddTask {
+                    path,
+                    reason: TaskReason::Discovery,
+                });
+                // self.loader.do_send(LoadModule(file.to_path_buf().into()));
                 None
             } else {
                 Some(
                     DiscoveryActor::new(
                         Arc::clone(&self.deploy.config),
-                        self.loader.clone(),
+                        self.task_manager.clone(),
                         self.console.clone(),
                         Arc::clone(&self.deploy.base_dir),
                     )
@@ -266,110 +285,120 @@ mod default_mode {
                 )
             };
 
-            let loader = self.loader.clone();
-            let stopped = loader::stopped(loader);
-            self.handle_loaded_typegraphs().await??;
+            // let stopped = loader::stopped(loader);
+            // self.handle_loaded_typegraphs().await??;
+            let report = self.report_rx.await?;
 
-            match stopped.await {
-                Ok(StopBehavior::Restart) => unreachable!("LoaderActor should not restart"),
-                Ok(StopBehavior::ExitSuccess) => Ok(()),
-                Ok(StopBehavior::ExitFailure(msg)) => bail!("LoaderActor exit failure: {msg}"),
-                Err(err) => panic!("Loader actor stopped unexpectedly: {err:?}"),
+            // TODO display report entries
+
+            match report.stop_reason {
+                StopReason::Natural => Ok(()),
+                StopReason::Restart => {
+                    unreachable!("TaskManager should not restart on the default mode")
+                }
+                StopReason::Manual => Err(eyre::eyre!("tasks manually stopped")),
+                StopReason::ManualForced => Err(eyre::eyre!("tasks manually stopped (forced)")),
+                StopReason::Error => {
+                    // error should have already been reported
+                    Err(eyre::eyre!("failed"))
+                }
             }
         }
 
-        #[tracing::instrument(skip(self))]
-        fn handle_loaded_typegraphs(self) -> oneshot::Receiver<Result<()>> {
-            let mut event_rx = self.loader_event_rx;
-            let console = self.console.clone();
-            let (tx, rx) = oneshot::channel();
-            let fut = async move {
-                let mut errors = vec![];
-                while let Some(event) = event_rx.recv().await {
-                    match event {
-                        LoaderEvent::Typegraph(tg_infos) => {
-                            let responses = match tg_infos.get_responses_or_fail() {
-                                Ok(val) => val,
-                                Err(err) => {
-                                    console.error(format!(
-                                        "failed pushing typegraph at {:?}: {err:#}",
-                                        tg_infos.path.display().cyan(),
-                                    ));
-                                    errors.push((tg_infos.path.clone(), err));
-                                    continue;
-                                }
-                            };
-                            for (name, res) in responses.iter() {
-                                match PushResult::new(
-                                    self.console.clone(),
-                                    self.loader.clone(),
-                                    res.clone(),
-                                ) {
-                                    Ok(push) => push.finalize().await.unwrap(),
-                                    Err(err) => {
-                                        console.error(format!(
-                                            "failed pushing typegraph {:?} at {:?}: {err:#}",
-                                            name.yellow(),
-                                            tg_infos.path.display().cyan(),
-                                        ));
-                                        errors.push((tg_infos.path.clone(), err));
-                                    }
-                                }
-                            }
-                        }
-                        LoaderEvent::Stopped(b) => {
-                            if let StopBehavior::ExitFailure(msg) = b {
-                                error!("LoaderActor exit failure: {}", msg.red());
-                            }
-                        }
-                    }
-                }
-                trace!("typegraph channel closed.");
-                if errors.is_empty() {
-                    tx.send(Ok(())).unwrap_or_log();
-                } else {
-                    tx.send(Err(errors.into_iter().fold(
-                        ferr!("loader encountered errors").suppress_backtrace(true),
-                        |report, (path, err)| {
-                            report.section(
-                                format!("{}", format!("{err:#}").red())
-                                    .header(format!("{}:", path.display().purple())),
-                            )
-                        },
-                    )))
-                    .unwrap_or_log();
-                }
-                // pusher address will be dropped when both loops are done
-            };
-            Arbiter::current().spawn(fut.in_current_span());
-            rx
-        }
+        // #[tracing::instrument(skip(self))]
+        // fn handle_loaded_typegraphs(self) -> oneshot::Receiver<Result<()>> {
+        //     let mut event_rx = self.loader_event_rx;
+        //     let console = self.console.clone();
+        //     let (tx, rx) = oneshot::channel();
+        //     let fut = async move {
+        //         let mut errors = vec![];
+        //         while let Some(event) = event_rx.recv().await {
+        //             match event {
+        //                 LoaderEvent::Typegraph(tg_infos) => {
+        //                     let responses = match tg_infos.get_responses_or_fail() {
+        //                         Ok(val) => val,
+        //                         Err(err) => {
+        //                             console.error(format!(
+        //                                 "failed pushing typegraph at {:?}: {err:#}",
+        //                                 tg_infos.path.display().cyan(),
+        //                             ));
+        //                             errors.push((tg_infos.path.clone(), err));
+        //                             continue;
+        //                         }
+        //                     };
+        //                     for (name, res) in responses.iter() {
+        //                         match PushResult::new(
+        //                             self.console.clone(),
+        //                             self.loader.clone(),
+        //                             res.clone(),
+        //                         ) {
+        //                             Ok(push) => push.finalize().await.unwrap(),
+        //                             Err(err) => {
+        //                                 console.error(format!(
+        //                                     "failed pushing typegraph {:?} at {:?}: {err:#}",
+        //                                     name.yellow(),
+        //                                     tg_infos.path.display().cyan(),
+        //                                 ));
+        //                                 errors.push((tg_infos.path.clone(), err));
+        //                             }
+        //                         }
+        //                     }
+        //                 }
+        //                 LoaderEvent::Stopped(b) => {
+        //                     if let StopBehavior::ExitFailure(msg) = b {
+        //                         error!("LoaderActor exit failure: {}", msg.red());
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //         trace!("typegraph channel closed.");
+        //         if errors.is_empty() {
+        //             tx.send(Ok(())).unwrap_or_log();
+        //         } else {
+        //             tx.send(Err(errors.into_iter().fold(
+        //                 ferr!("loader encountered errors").suppress_backtrace(true),
+        //                 |report, (path, err)| {
+        //                     report.section(
+        //                         format!("{}", format!("{err:#}").red())
+        //                             .header(format!("{}:", path.display().purple())),
+        //                     )
+        //                 },
+        //             )))
+        //             .unwrap_or_log();
+        //         }
+        //         // pusher address will be dropped when both loops are done
+        //     };
+        //     Arbiter::current().spawn(fut.in_current_span());
+        //     rx
+        // }
     }
 }
 
 mod watch_mode {
-
-    use watch_mode::actors::loader::LoadModule;
-
-    use crate::deploy::push::pusher::RetryManager;
-
     use super::*;
 
     #[tracing::instrument]
     pub async fn enter_watch_mode(deploy: Deploy) -> Result<()> {
         let console = ConsoleActor::new(Arc::clone(&deploy.config)).start();
 
-        let ctrlc_handler_data = Arc::new(Mutex::new(None));
+        let ctrlc_handler_data = Arc::new(std::sync::Mutex::new(None));
 
         let data = ctrlc_handler_data.clone();
         ctrlc::set_handler(move || {
             let mut data = data.lock().unwrap();
-            if let Some(CtrlCHandlerData { watcher, loader }) = data.take() {
-                watcher.do_send(actors::watcher::Stop);
-                loader.do_send(loader::TryStop(StopBehavior::ExitSuccess));
+            if let Some(CtrlCHandlerData {
+                watcher,
+                task_manager,
+            }) = data.take()
+            {
+                watcher.do_send(watcher::message::Stop);
+                task_manager.do_send(task_manager::message::Stop);
             }
         })
         .context("setting Ctrl-C handler")?;
+
+        let task_config = TaskConfig::init(deploy.base_dir.clone());
+        let action_generator = DeployActionGenerator::new(task_config);
 
         loop {
             let mut secrets = deploy.secrets.clone();
@@ -377,30 +406,30 @@ mod watch_mode {
 
             ServerStore::set_secrets(secrets.hydrate(deploy.base_dir.clone()).await?);
 
-            let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
+            // let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
 
-            let loader = LoaderActor::new(
-                Arc::clone(&deploy.config),
-                console.clone(),
-                loader_event_tx,
+            let (report_tx, report_rx) = oneshot::channel();
+
+            let task_manager = TaskManager::new(
+                action_generator.clone(),
                 deploy.max_parallel_loads.unwrap_or_else(num_cpus::get),
+                report_tx,
+                console.clone(),
             )
             .start();
 
             let _discovery = DiscoveryActor::new(
                 Arc::clone(&deploy.config),
-                loader.clone(),
+                task_manager.clone(),
                 console.clone(),
                 Arc::clone(&deploy.base_dir),
             )
             .start();
 
-            let (watch_event_tx, watch_event_rx) = mpsc::unbounded_channel();
-
             let watcher = WatcherActor::new(
                 Arc::clone(&deploy.config),
                 deploy.base_dir.clone(),
-                watch_event_tx,
+                task_manager.clone(),
                 console.clone(),
             )?
             .start();
@@ -408,154 +437,154 @@ mod watch_mode {
             let actor_system = ActorSystem {
                 console: console.clone(),
                 watcher,
-                loader: loader.clone(),
+                task_manager: task_manager.clone(),
             };
 
-            actor_system.handle_loaded_typegraphs(loader_event_rx);
-            actor_system.handle_watch_events(watch_event_rx);
+            // actor_system.handle_loaded_typegraphs(loader_event_rx);
+            // actor_system.handle_watch_events(watch_event_rx);
             actor_system.update_ctrlc_handler(ctrlc_handler_data.clone());
 
-            // TODO wait for push lifecycle
-            match loader::stopped(loader).await {
-                Ok(StopBehavior::ExitSuccess) => {
-                    break;
+            let report = report_rx.await?;
+
+            match report.stop_reason {
+                StopReason::Natural => {
+                    unreachable!("TaskManager should not stop naturally on watch mode")
                 }
-                Ok(StopBehavior::Restart) => {
+                StopReason::Restart => {
                     continue;
                 }
-                Ok(StopBehavior::ExitFailure(_)) => {
-                    break;
+                StopReason::Manual => {
+                    return Err(eyre::eyre!("tasks manually stopped"));
                 }
-                Err(e) => {
-                    panic!("Loader actor stopped unexpectedly: {e:?}");
+                StopReason::ManualForced => {
+                    return Err(eyre::eyre!("tasks manually stopped (forced)"));
                 }
+                StopReason::Error => return Err(eyre::eyre!("failed")),
             }
         }
-
-        Ok(())
     }
 
     struct ActorSystem {
         console: Addr<ConsoleActor>,
         watcher: Addr<WatcherActor>,
-        loader: Addr<LoaderActor>,
+        task_manager: Addr<TaskManager<DeployAction>>,
     }
 
     impl ActorSystem {
-        #[tracing::instrument(skip(self))]
-        fn handle_loaded_typegraphs(&self, event_rx: mpsc::UnboundedReceiver<LoaderEvent>) {
-            let console = self.console.clone();
-            let loader = self.loader.clone();
-            let fut = async move {
-                let mut event_rx = event_rx;
-                while let Some(event) = event_rx.recv().await {
-                    match event {
-                        LoaderEvent::Typegraph(tg_infos) => {
-                            let responses = ServerStore::get_responses_or_fail(&tg_infos.path)
-                                .unwrap_or_log()
-                                .as_ref()
-                                .to_owned();
-                            for (name, response) in responses.into_iter() {
-                                match PushResult::new(console.clone(), loader.clone(), response) {
-                                    Ok(push) => {
-                                        if let Err(err) = push.finalize().await {
-                                            panic!("{err:#}");
-                                        }
-                                        RetryManager::clear_counter(&tg_infos.path);
-                                    }
-                                    Err(err) => {
-                                        let tg_path = tg_infos.path.clone();
-                                        console.error(format!(
-                                            "failed pushing typegraph {name:?} at {tg_path:?}: {err:#}",
-                                        ));
-                                        if let Some(delay) = RetryManager::next_delay(&tg_path) {
-                                            console.info(format!(
-                                                "retry {}/{}, retrying after {}s of {:?}",
-                                                delay.retry,
-                                                delay.max,
-                                                delay.duration.as_secs(),
-                                                tg_path.display(),
-                                            ));
-                                            tokio::time::sleep(delay.duration).await;
-                                            loader.do_send(LoadModule(Arc::new(tg_path)));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        LoaderEvent::Stopped(b) => {
-                            if let StopBehavior::ExitFailure(msg) = b {
-                                panic!("{msg}");
-                            }
-                        }
-                    }
-                }
-                trace!("Typegraph channel closed.");
-                // pusher address will be dropped when both loops are done
-            };
-            Arbiter::current().spawn(fut.in_current_span());
-        }
+        // #[tracing::instrument(skip(self))]
+        // fn handle_loaded_typegraphs(&self, event_rx: mpsc::UnboundedReceiver<LoaderEvent>) {
+        //     let console = self.console.clone();
+        //     let loader = self.loader.clone();
+        //     let fut = async move {
+        //         let mut event_rx = event_rx;
+        //         while let Some(event) = event_rx.recv().await {
+        //             match event {
+        //                 LoaderEvent::Typegraph(tg_infos) => {
+        //                     let responses = ServerStore::get_responses_or_fail(&tg_infos.path)
+        //                         .unwrap_or_log()
+        //                         .as_ref()
+        //                         .to_owned();
+        //                     for (name, response) in responses.into_iter() {
+        //                         match PushResult::new(console.clone(), loader.clone(), response) {
+        //                             Ok(push) => {
+        //                                 if let Err(err) = push.finalize().await {
+        //                                     panic!("{err:#}");
+        //                                 }
+        //                                 RetryManager::clear_counter(&tg_infos.path);
+        //                             }
+        //                             Err(err) => {
+        //                                 let tg_path = tg_infos.path.clone();
+        //                                 console.error(format!(
+        //                                     "failed pushing typegraph {name:?} at {tg_path:?}: {err:#}",
+        //                                 ));
+        //                                 if let Some(delay) = RetryManager::next_delay(&tg_path) {
+        //                                     console.info(format!(
+        //                                         "retry {}/{}, retrying after {}s of {:?}",
+        //                                         delay.retry,
+        //                                         delay.max,
+        //                                         delay.duration.as_secs(),
+        //                                         tg_path.display(),
+        //                                     ));
+        //                                     tokio::time::sleep(delay.duration).await;
+        //                                     loader.do_send(LoadModule(Arc::new(tg_path)));
+        //                                 }
+        //                             }
+        //                         }
+        //                     }
+        //                 }
+        //                 LoaderEvent::Stopped(b) => {
+        //                     if let StopBehavior::ExitFailure(msg) = b {
+        //                         panic!("{msg}");
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //         trace!("Typegraph channel closed.");
+        //         // pusher address will be dropped when both loops are done
+        //     };
+        //     Arbiter::current().spawn(fut.in_current_span());
+        // }
 
-        #[tracing::instrument(skip(self))]
-        fn handle_watch_events(
-            &self,
-            watch_event_rx: mpsc::UnboundedReceiver<actors::watcher::Event>,
-        ) {
-            let console = self.console.clone();
-            let watcher = self.watcher.clone();
-            let loader = self.loader.clone();
-            let fut = async move {
-                let mut watch_event_rx = watch_event_rx;
-                while let Some(event) = watch_event_rx.recv().await {
-                    use actors::watcher::Event as E;
-                    match event {
-                        E::ConfigChanged => {
-                            RetryManager::reset();
+        // #[tracing::instrument(skip(self))]
+        // fn handle_watch_events(
+        //     &self,
+        //     watch_event_rx: mpsc::UnboundedReceiver<actors::watcher::Event>,
+        // ) {
+        //     let console = self.console.clone();
+        //     let watcher = self.watcher.clone();
+        //     let loader = self.loader.clone();
+        //     let fut = async move {
+        //         let mut watch_event_rx = watch_event_rx;
+        //         while let Some(event) = watch_event_rx.recv().await {
+        //             use actors::watcher::Event as E;
+        //             match event {
+        //                 E::ConfigChanged => {
+        //                     RetryManager::reset();
+        //
+        //                     console.warning("metatype configuration file changed".to_string());
+        //                     console.warning("reloading everything".to_string());
+        //
+        //                     loader.do_send(loader::TryStop(StopBehavior::Restart));
+        //                     watcher.do_send(actors::watcher::Stop);
+        //                 }
+        //                 E::TypegraphModuleChanged { typegraph_module } => {
+        //                     RetryManager::clear_counter(&typegraph_module);
+        //                     loader.do_send(ReloadModule(
+        //                         typegraph_module.into(),
+        //                         ReloadReason::FileChanged,
+        //                     ));
+        //                 }
+        //                 E::TypegraphModuleDeleted { typegraph_module } => {
+        //                     RetryManager::clear_counter(&typegraph_module);
+        //
+        //                     // TODO internally by the watcher??
+        //                     watcher.do_send(actors::watcher::RemoveTypegraph(
+        //                         typegraph_module.clone(),
+        //                     ));
+        //                     // TODO delete typegraph in typegate??
+        //                 }
+        //                 E::DependencyChanged {
+        //                     typegraph_module,
+        //                     dependency_path,
+        //                 } => {
+        //                     RetryManager::clear_counter(&typegraph_module);
+        //
+        //                     loader.do_send(ReloadModule(
+        //                         typegraph_module.into(),
+        //                         ReloadReason::DependencyChanged(dependency_path),
+        //                     ));
+        //                 }
+        //             }
+        //         }
+        //         trace!("watcher event channel closed");
+        //     };
+        //     Arbiter::current().spawn(fut.in_current_span());
+        // }
 
-                            console.warning("metatype configuration file changed".to_string());
-                            console.warning("reloading everything".to_string());
-
-                            loader.do_send(loader::TryStop(StopBehavior::Restart));
-                            watcher.do_send(actors::watcher::Stop);
-                        }
-                        E::TypegraphModuleChanged { typegraph_module } => {
-                            RetryManager::clear_counter(&typegraph_module);
-                            loader.do_send(ReloadModule(
-                                typegraph_module.into(),
-                                ReloadReason::FileChanged,
-                            ));
-                        }
-                        E::TypegraphModuleDeleted { typegraph_module } => {
-                            RetryManager::clear_counter(&typegraph_module);
-
-                            // TODO internally by the watcher??
-                            watcher.do_send(actors::watcher::RemoveTypegraph(
-                                typegraph_module.clone(),
-                            ));
-                            // TODO delete typegraph in typegate??
-                        }
-                        E::DependencyChanged {
-                            typegraph_module,
-                            dependency_path,
-                        } => {
-                            RetryManager::clear_counter(&typegraph_module);
-
-                            loader.do_send(ReloadModule(
-                                typegraph_module.into(),
-                                ReloadReason::DependencyChanged(dependency_path),
-                            ));
-                        }
-                    }
-                }
-                trace!("watcher event channel closed");
-            };
-            Arbiter::current().spawn(fut.in_current_span());
-        }
-
-        fn update_ctrlc_handler(&self, data: Arc<Mutex<Option<CtrlCHandlerData>>>) {
+        fn update_ctrlc_handler(&self, data: Arc<std::sync::Mutex<Option<CtrlCHandlerData>>>) {
             *data.lock().unwrap() = Some(CtrlCHandlerData {
                 watcher: self.watcher.clone(),
-                loader: self.loader.clone(),
+                task_manager: self.task_manager.clone(),
             });
         }
     }

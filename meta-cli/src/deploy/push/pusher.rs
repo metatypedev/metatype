@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 use crate::interlude::*;
 
+use std::sync::Mutex;
 use std::time::Duration;
 
 use actix::prelude::*;

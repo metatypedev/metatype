@@ -1,7 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 use crate::interlude::*;
-use eyre::Error;
+use actix::Arbiter;
+use eyre::{eyre, Error};
 
 pub mod discovery;
 
@@ -117,6 +118,14 @@ impl<'a> Loader<'a> {
                 error: err.into(),
             })?;
 
+        // let stderr = child.stderr().ok_or_else(|| LoaderError::LoaderProcess {
+        //     path: path.clone(),
+        //     error: eyre!("could not get stderr from loader process"),
+        // })?;
+        // Arbiter::current().spawn(async move {
+        //     //
+        // });
+
         let duration =
             get_loader_timeout_duration().map_err(|err| LoaderError::Other { error: err })?;
         match timeout(duration, Box::into_pin(child.wait())).await {
@@ -130,41 +139,11 @@ impl<'a> Loader<'a> {
                     error: e.into(), // generic
                 })?;
                 if exit.success() {
-                    #[cfg(debug_assertions)]
-                    {
-                        if let Some(stderr) = child.stderr().take().as_mut() {
-                            // TODO console actor
-                            let mut buff = String::new();
-                            stderr.read_to_string(&mut buff).await.map_err(|e| {
-                                LoaderError::LoaderProcess {
-                                    path: path.clone(),
-                                    error: e.into(),
-                                }
-                            })?;
-                            if !buff.is_empty() {
-                                info!("loader stderr: {buff}");
-                            }
-                        }
-                    }
                     Ok(TypegraphInfos {
                         path: path.as_ref().to_owned(),
                         base_path: self.base_dir.clone(),
                     })
                 } else {
-                    let stderr = match child.stderr().take().as_mut() {
-                        Some(value) => {
-                            let mut buff = String::new();
-                            value.read_to_string(&mut buff).await.map_err(|e| {
-                                LoaderError::LoaderProcess {
-                                    path: path.clone(),
-                                    error: e.into(),
-                                }
-                            })?;
-                            buff.to_owned()
-                        }
-                        None => "".to_string(),
-                    };
-
                     let stdout = match child.stdout().take().as_mut() {
                         Some(value) => {
                             let mut buff = String::new();
@@ -184,7 +163,6 @@ impl<'a> Loader<'a> {
                         path: path.clone(),
                         error: ferr!("loader process err")
                             .section(stdout.trim().to_string().header("Stdout:"))
-                            .section(stderr.trim().to_string().header("Stderr:"))
                             .suppress_backtrace(true),
                     })
                 }
@@ -268,6 +246,87 @@ impl<'a> Loader<'a> {
                             .current_dir(path.parent().unwrap());
                         Ok(command)
                     }
+                }
+            }
+        }
+    }
+}
+
+#[tracing::instrument(err)]
+pub async fn get_task_command(
+    module_type: ModuleType,
+    path: &Path,
+    base_dir: &Path,
+) -> Result<Command, LoaderError> {
+    if let Ok(argv_str) = std::env::var("MCLI_LOADER_CMD") {
+        let argv = argv_str.split(' ').collect::<Vec<_>>();
+        let mut command = Command::new(argv[0]);
+        command
+            .args(&argv[1..])
+            .arg(path.to_str().unwrap())
+            .arg(base_dir);
+        return Ok(command);
+    }
+
+    match module_type {
+        ModuleType::Python => {
+            ensure_venv(path).map_err(|e| LoaderError::PythonVenvNotFound {
+                path: path.to_owned().into(),
+                error: e,
+            })?;
+            let loader_py =
+                std::env::var("MCLI_LOADER_PY").unwrap_or_else(|_| "python3".to_string());
+            let mut loader_py = loader_py.split_whitespace();
+            let mut command = Command::new(loader_py.next().unwrap());
+            command
+                .args(loader_py)
+                .arg(path.to_str().unwrap())
+                .current_dir(base_dir)
+                .env("PYTHONUNBUFFERED", "1")
+                .env("PYTHONDONTWRITEBYTECODE", "1")
+                .env("PY_TG_COMPATIBILITY", "1");
+            Ok(command)
+        }
+        ModuleType::Deno => {
+            // TODO cache result?
+            match detect_deno_loader_cmd(path)
+                .await
+                .map_err(|error| LoaderError::Unknown {
+                    path: path.to_path_buf().into(),
+                    error,
+                })? {
+                TsLoaderRt::Deno => {
+                    log::debug!("loading typegraph using deno");
+                    let mut command = Command::new("deno");
+                    command
+                        .arg("run")
+                        // .arg("--unstable")
+                        .arg("--allow-all")
+                        .arg("--check")
+                        .arg(path.to_str().unwrap())
+                        .current_dir(base_dir);
+                    Ok(command)
+                }
+                TsLoaderRt::Node => {
+                    log::debug!("loading typegraph using npm x tsx, make sure npm packages have been installed");
+                    let mut command = Command::new("npm");
+                    command
+                        .arg("x")
+                        .arg("--yes")
+                        .arg("tsx")
+                        .current_dir(path.parent().unwrap())
+                        .arg(path.to_str().unwrap());
+                    Ok(command)
+                }
+                TsLoaderRt::Bun => {
+                    log::debug!("loading typegraph using bun x tsx, make sure npm packages have been installed");
+                    let mut command = Command::new("bun");
+                    command
+                        .arg("x")
+                        .arg("tsx")
+                        .arg(path.to_str().unwrap())
+                        .current_dir(path.parent().unwrap());
+                    Ok(command)
                 }
             }
         }
