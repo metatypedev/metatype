@@ -60,7 +60,6 @@ async fn config(req: HttpRequest) -> impl Responder {
     let secrets = ServerStore::get_secrets(&parsed.typegraph);
     let migration_action_glob = ServerStore::get_migration_action_glob();
     let disable_artifact_resolution = !ServerStore::get_artifact_resolution_flag();
-    let codegen = ServerStore::get_codegen_flag();
 
     let mut migration_action_per_rt = vec![];
     if let Some(per_rt_actions) =
@@ -99,7 +98,6 @@ async fn config(req: HttpRequest) -> impl Responder {
                         "runtimeAction": migration_action_per_rt
                     },
                     "disableArtifactResolution": disable_artifact_resolution,
-                    "codegen": codegen
                 },
             });
 
@@ -137,21 +135,7 @@ async fn command() -> impl Responder {
 async fn response(req_body: String) -> impl Responder {
     let sdk_response: SDKResponse = serde_json::from_str(&req_body).unwrap();
 
-    match &sdk_response.command {
-        super::store::Command::Codegen => {
-            if let Err(e) = sdk_response.codegen() {
-                return HttpResponse::Ok()
-                    .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .json(CLIResponseError {
-                        error: e.to_string(),
-                    });
-            }
-        }
-        _ => {
-            // to be used later
-            ServerStore::add_response(sdk_response.clone());
-        }
-    };
+    ServerStore::add_response(sdk_response.clone());
 
     HttpResponse::Ok()
         .status(StatusCode::OK)

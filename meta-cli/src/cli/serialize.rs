@@ -53,7 +53,7 @@ pub struct Serialize {
 impl Action for Serialize {
     #[tracing::instrument]
     async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
-        let dir = args.dir();
+        let dir = args.dir()?;
         let config_path = args.config;
 
         // config file is not used when `TypeGraph` files

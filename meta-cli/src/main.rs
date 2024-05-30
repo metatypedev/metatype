@@ -30,7 +30,6 @@ mod interlude {
 }
 
 mod cli;
-mod codegen;
 mod com;
 mod config;
 pub mod deploy;

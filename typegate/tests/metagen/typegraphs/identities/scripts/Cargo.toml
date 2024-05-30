@@ -1,0 +1,6 @@
+
+# enclose the generated create in a lone workspace
+# to avoid Cargo from noticing the `metatype/Cargo.toml` worksapce
+[workspace]
+resolver = "2"
+members = ["mdk/"]

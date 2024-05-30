@@ -9,6 +9,7 @@ mod interlude {
     pub use std::collections::{HashMap, HashSet};
     pub use std::ops::Deref;
     pub use std::path::{Path, PathBuf};
+    pub use std::rc::Rc;
     pub use std::sync::Arc;
 
     pub use color_eyre::eyre::{
@@ -26,6 +27,7 @@ mod config;
 mod mdk;
 mod mdk_python;
 mod mdk_rust;
+mod mdk_typescript;
 #[cfg(test)]
 mod tests;
 mod utils;
@@ -134,6 +136,16 @@ thread_local! {
                 },
             },
         ),
+        (
+            "mdk_typescript".to_string(),
+            GeneratorRunner {
+                op: |workspace_path: &Path, val| {
+                    let config = mdk_typescript::MdkTypescriptGenConfig::from_json(val, workspace_path)?;
+                    let generator = mdk_typescript::Generator::new(config)?;
+                    Ok(Box::new(generator))
+                },
+            },
+        ),
     ]);
 }
 
@@ -153,9 +165,9 @@ pub async fn generate_target(
         .with_context(|| format!("target {target_name:?} not found in config"))?;
 
     let mut generate_set = tokio::task::JoinSet::new();
-    for (gen_name, config) in &target_conf.0 {
-        let config = config.to_owned();
-
+    for config in &target_conf.0 {
+        let gen_name = &config.generator_name;
+        let config = config.other.to_owned();
         let get_gen_op = GeneratorRunner::get(gen_name)
             .with_context(|| format!("generator \"{gen_name}\" not found in config"))?;
 
@@ -210,8 +222,9 @@ pub fn generate_target_sync(
         .with_context(|| format!("target \"{target_name}\" not found in config"))?;
 
     let mut generate_set = vec![];
-    for (gen_name, config) in &target_conf.0 {
-        let config = config.to_owned();
+    for config in &target_conf.0 {
+        let gen_name = &config.generator_name;
+        let config = config.other.clone();
 
         let get_gen_op = GeneratorRunner::get(gen_name)
             .with_context(|| format!("generator \"{gen_name}\" not found in config"))?;

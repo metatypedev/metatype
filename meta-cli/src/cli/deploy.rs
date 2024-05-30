@@ -62,10 +62,6 @@ impl DeploySubcommand {
 
 #[derive(Parser, Default, Debug, Clone)]
 pub struct DeployOptions {
-    /// Generate type/function definitions for external modules (Deno)
-    #[clap(long, default_value_t = false)]
-    pub codegen: bool,
-
     // TODO incompatible with create_migration, allow_dirty and allow_destructive
     /// Do not apply prisma migrations
     #[clap(long, default_value_t = false)]
@@ -105,7 +101,7 @@ pub struct Deploy {
 impl Deploy {
     #[tracing::instrument]
     pub async fn new(deploy: &DeploySubcommand, args: &ConfigArgs) -> Result<Self> {
-        let dir = args.dir();
+        let dir = args.dir()?;
 
         let config_path = args.config.clone();
         let config = Arc::new(Config::load_or_find(config_path, &dir)?);
@@ -129,7 +125,6 @@ impl Deploy {
             auth: node.auth.clone(),
         });
         ServerStore::set_prefix(node_config.prefix);
-        ServerStore::set_codegen_flag(deploy.options.codegen);
 
         let file = deploy
             .file

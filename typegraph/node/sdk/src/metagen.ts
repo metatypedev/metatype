@@ -19,7 +19,6 @@ const codegenArtefactConfig = {
     migrationDir: ".",
   },
   disableArtifactResolution: true,
-  codegen: true,
 } as ArtifactResolutionConfig;
 
 export class Metagen {

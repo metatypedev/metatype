@@ -12,7 +12,7 @@ pub struct GenStubOptions {}
 pub fn gen_stub(
     fun: &StubbedFunction,
     mod_stub_traits: &mut GenDestBuf,
-    type_names: &HashMap<u32, Arc<str>>,
+    type_names: &HashMap<u32, Rc<str>>,
     _opts: &GenStubOptions,
 ) -> anyhow::Result<String> {
     let TypeNode::Function { base, data } = &fun.node else {

@@ -12,8 +12,6 @@ futures = "0.3"
 once_cell.workspace = true
 base64 = "0.21.5"
 dashmap = "5.5.3"
-num-traits = "0.2.17"
-num-derive = "0.4.1"
 temporal-client = { git = "https://github.com/temporalio/sdk-core", rev = "7f9755b" }
 temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core", rev = "7f9755b" }
 query-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }

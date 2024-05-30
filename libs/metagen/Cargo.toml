@@ -8,16 +8,14 @@ common.workspace = true
 log.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-tokio = { workspace = true, features =["rt-multi-thread"], optional = true }
+tokio = { workspace = true, features = ["rt-multi-thread"], optional = true }
 indexmap.workspace = true
-reqwest = { workspace = true, features = ["json"] }
 garde = { version = "0.18", features = ["derive"] }
 heck = "0.5.0-rc.1"
 regex.workspace = true
 once_cell.workspace = true
 pretty_assertions = "1.4.0"
 color-eyre.workspace = true
-# indoc.workspace = true
 tera = { version = "1", default-features = false }
 
 [dev-dependencies]
@@ -25,4 +23,5 @@ tokio = { workspace = true, features =["full"] }
 tempfile.workspace = true
 
 [features]
+default = ["multithreaded"]
 multithreaded = ["dep:tokio"]

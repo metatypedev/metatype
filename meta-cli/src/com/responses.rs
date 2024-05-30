@@ -3,7 +3,7 @@
 use crate::interlude::*;
 
 use super::store::Command;
-use crate::{codegen::deno::Codegen, deploy::push::pusher::PushResultRaw};
+use crate::deploy::push::pusher::PushResultRaw;
 use common::typegraph::Typegraph;
 use serde_json::Value;
 
@@ -103,12 +103,5 @@ impl SDKResponse {
         let mut ret = self.typegraph_path.clone();
         ret.pop(); // pop file.ext
         ret
-    }
-
-    // TODO: rm once MET-492 lands
-    pub fn codegen(&self) -> Result<()> {
-        let tg = self.as_typegraph()?;
-        let path = self.typegraph_path.clone();
-        Codegen::new(&tg, &path).apply_codegen()
     }
 }

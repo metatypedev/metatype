@@ -27,7 +27,7 @@ deno_core = { version = "=0.280.0" }
 mt_deno = { path = "libs/deno/" }
 common = { path = "libs/common/" }
 typescript = { path = "libs/typescript/" }
-metagen = { path = "libs/metagen/" }
+metagen = { path = "libs/metagen/", default-features = false }
 typegate_engine = { path = "typegate/engine" }
 
 # pinned to match version brought in

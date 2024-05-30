@@ -68,59 +68,50 @@ impl DenoProcessor {
 
         let mut tg_deps_paths = vec![];
         let mut tg_artifacts = vec![];
-        match fs_host::path_exists(&main_path)? {
-            true => {
-                let (module_hash, size) = fs_host::hash_file(&main_path.clone())?;
 
-                let deno_artifact = Artifact {
-                    hash: module_hash.clone(),
-                    size,
-                    path: path.clone(),
+        if fs_host::path_exists(&main_path)? {
+            let (module_hash, size) = fs_host::hash_file(&main_path.clone())?;
+
+            let deno_artifact = Artifact {
+                hash: module_hash.clone(),
+                size,
+                path: path.clone(),
+            };
+            tg_deps_paths.push(main_path);
+
+            let deps = mat_data.deps.clone();
+
+            // resolve globs and dirs
+            let resolved_deps = resolve_globs_dirs(deps)?;
+
+            for dep_rel_path in resolved_deps {
+                let dep_abs_path = fs_host::make_absolute(&dep_rel_path)?;
+
+                let (dep_hash, dep_size) = fs_host::hash_file(&dep_abs_path)?;
+                let dep_artifact = Artifact {
+                    path: dep_rel_path.clone(),
+                    hash: dep_hash,
+                    size: dep_size,
                 };
-                tg_deps_paths.push(main_path);
-
-                let deps = mat_data.deps.clone();
-
-                // resolve globs and dirs
-                let resolved_deps = resolve_globs_dirs(deps)?;
-
-                for dep_rel_path in resolved_deps {
-                    let dep_abs_path = fs_host::make_absolute(&dep_rel_path)?;
-
-                    let (dep_hash, dep_size) = fs_host::hash_file(&dep_abs_path)?;
-                    let dep_artifact = Artifact {
-                        path: dep_rel_path.clone(),
-                        hash: dep_hash,
-                        size: dep_size,
-                    };
-                    tg_artifacts.push(dep_artifact);
-                    tg_deps_paths.push(dep_abs_path);
-                }
-
-                // update post process results
-                mat_data.deno_artifact = map_from_object(Artifact {
-                    hash: module_hash.clone(),
-                    size,
-                    path,
-                })
-                .map_err(|e| e.to_string())?;
-
-                mat_data.deps_meta = Some(
-                    tg_artifacts
-                        .iter()
-                        .map(|dep| map_from_object(dep).map_err(|e| e.to_string()))
-                        .collect::<Result<Vec<_>, _>>()?,
-                );
-                tg_artifacts.push(deno_artifact);
+                tg_artifacts.push(dep_artifact);
+                tg_deps_paths.push(dep_abs_path);
             }
-            false => {
-                if !Store::get_codegen_flag() {
-                    return Err(format!(
-                        "could not resolve module {:?}",
-                        main_path.display()
-                    ));
-                } // else cli codegen
-            }
+
+            // update post process results
+            mat_data.deno_artifact = map_from_object(Artifact {
+                hash: module_hash.clone(),
+                size,
+                path,
+            })
+            .map_err(|e| e.to_string())?;
+
+            mat_data.deps_meta = Some(
+                tg_artifacts
+                    .iter()
+                    .map(|dep| map_from_object(dep).map_err(|e| e.to_string()))
+                    .collect::<Result<Vec<_>, _>>()?,
+            );
+            tg_artifacts.push(deno_artifact);
         }
 
         mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;

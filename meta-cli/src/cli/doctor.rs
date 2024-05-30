@@ -39,7 +39,7 @@ fn shell(cmds: Vec<&str>) -> Result<String> {
 impl Action for Doctor {
     #[tracing::instrument]
     async fn run(&self, args: ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
-        let dir = &args.dir();
+        let dir = &args.dir()?;
 
         let w = 60;
         let c = 20;

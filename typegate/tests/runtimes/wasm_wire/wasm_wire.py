@@ -14,6 +14,6 @@ def wasm_wire(g: Graph):
         test=wasm.handler(
             t.struct({"a": t.float(), "b": t.float()}).rename("add_args"),
             t.integer(),
-            func="add",
+            name="add",
         ).rename("add"),
     )
