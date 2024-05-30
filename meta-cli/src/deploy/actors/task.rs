@@ -18,7 +18,7 @@
 pub mod action;
 mod command;
 
-use self::action::TaskAction;
+use self::action::{ActionResult, TaskAction};
 use super::console::{Console, ConsoleActor};
 use super::task_manager::{self, TaskManager};
 use crate::{com::server::get_instance_port, interlude::*};
@@ -49,7 +49,7 @@ pub mod message {
 
     #[derive(Message)]
     #[rtype(result = "()")]
-    pub(super) struct CollectOutput<A: TaskAction>(pub A::Output);
+    pub(super) struct CollectOutput<A: TaskAction>(pub ActionResult<A>);
 
     #[derive(Message)]
     #[rtype(result = "()")]
@@ -90,17 +90,17 @@ impl TaskConfig {
 
 #[derive(Debug)]
 pub enum TaskFinishStatus<A: TaskAction> {
-    Success(Vec<A::Output>),
-    Failure,
     Cancelled,
+    Error,
+    Finished(Vec<ActionResult<A>>),
 }
 
-pub struct TaskActor<Action: TaskAction + 'static> {
-    action: Action,
+pub struct TaskActor<A: TaskAction + 'static> {
+    action: A,
     process: Option<Box<dyn TokioChildWrapper>>,
-    task_manager: Addr<TaskManager<Action>>,
+    task_manager: Addr<TaskManager<A>>,
     console: Addr<ConsoleActor>,
-    collected_output: Vec<Action::Output>,
+    collected_output: Vec<Result<A::SuccessData, A::FailureData>>,
     timeout_duration: Duration,
 }
 
@@ -155,7 +155,7 @@ impl<A: TaskAction + 'static> Actor for TaskActor<A> {
                 }
                 Err(e) => {
                     console.error(e.to_string());
-                    addr.do_send(Exit(TaskFinishStatus::<A>::Failure));
+                    addr.do_send(Exit(TaskFinishStatus::<A>::Error));
                 }
             }
         };
@@ -187,9 +187,9 @@ impl<A: TaskAction + 'static> Handler<StartProcess> for TaskActor<A> {
                 let Some(stdout) = stdout else {
                     self.console.error(
                         self.action
-                            .get_failure_message("could not read output from process"),
+                            .get_error_message("could not read output from process"),
                     );
-                    ctx.address().do_send(Exit(TaskFinishStatus::<A>::Failure));
+                    ctx.address().do_send(Exit(TaskFinishStatus::<A>::Error));
                     return;
                 };
 
@@ -213,7 +213,7 @@ impl<A: TaskAction + 'static> Handler<StartProcess> for TaskActor<A> {
                     "failed to start task process for {:?}: {err:#}",
                     self.get_path()
                 ));
-                ctx.address().do_send(Exit(TaskFinishStatus::<A>::Failure));
+                ctx.address().do_send(Exit(TaskFinishStatus::<A>::Error));
             }
         }
     }
@@ -238,7 +238,7 @@ impl<A: TaskAction + 'static> Handler<ProcessOutput> for TaskActor<A> {
                     "failed to read process output on {:?}: {e:#}",
                     path
                 ));
-                addr.do_send(Exit(TaskFinishStatus::<A>::Failure))
+                addr.do_send(Exit(TaskFinishStatus::<A>::Error))
             } else {
                 // end of stdout
                 addr.do_send(CheckProcessStatus);
@@ -255,7 +255,7 @@ impl<A: TaskAction + 'static> Handler<CheckProcessStatus> for TaskActor<A> {
         let Some(process) = self.process.take() else {
             self.console
                 .error(format!("task process not found for {:?}", self.get_path()));
-            ctx.address().do_send(Exit(TaskFinishStatus::<A>::Failure));
+            ctx.address().do_send(Exit(TaskFinishStatus::<A>::Error));
             return ();
         };
 
@@ -269,9 +269,9 @@ impl<A: TaskAction + 'static> Handler<CheckProcessStatus> for TaskActor<A> {
                 Ok(output) => {
                     if output.status.success() {
                         // logging in Exit handler
-                        addr.do_send(Exit(TaskFinishStatus::<A>::Success(Default::default())));
+                        addr.do_send(Exit(TaskFinishStatus::<A>::Finished(Default::default())));
                     } else {
-                        console.error(action.get_failure_message(&format!(
+                        console.error(action.get_error_message(&format!(
                             "process failed with code {:?}",
                             output.status.code()
                         )));
@@ -281,15 +281,14 @@ impl<A: TaskAction + 'static> Handler<CheckProcessStatus> for TaskActor<A> {
                                 .context("invalid utf8 in task output (stderr)")
                                 .unwrap_or_log()
                         ));
-                        addr.do_send(Exit(TaskFinishStatus::<A>::Failure));
+                        addr.do_send(Exit(TaskFinishStatus::<A>::Error));
                     }
                 }
                 Err(e) => {
                     console.error(
-                        action
-                            .get_failure_message(&format!("could not read process status: {e:#}")),
+                        action.get_error_message(&format!("could not read process status: {e:#}")),
                     );
-                    addr.do_send(Exit(TaskFinishStatus::<A>::Failure));
+                    addr.do_send(Exit(TaskFinishStatus::<A>::Error));
                 }
             }
         };
@@ -332,15 +331,21 @@ impl<A: TaskAction + 'static> TaskActor<A> {
                 continue;
             }
 
-            if let Some(error) = line.strip_prefix("error:") {
+            if let Some(error) = line.strip_prefix("error: ") {
                 console.error(error.to_string());
                 latest_level = OutputLevel::Error;
                 continue;
             }
 
-            if let Some(data) = line.strip_prefix("output: ") {
-                let output: A::Output = serde_json::from_str(data)?;
-                addr.do_send(CollectOutput(output));
+            if let Some(data_json) = line.strip_prefix("success: ") {
+                let data: A::SuccessData = serde_json::from_str(data_json)?;
+                addr.do_send(CollectOutput(Ok(data)));
+                continue;
+            }
+
+            if let Some(data_json) = line.strip_prefix("failure: ") {
+                let data: A::FailureData = serde_json::from_str(data_json)?;
+                addr.do_send(CollectOutput(Err(data)));
                 continue;
             }
 
@@ -367,6 +372,14 @@ impl<A: TaskAction + 'static> Handler<CollectOutput<A>> for TaskActor<A> {
     type Result = ();
 
     fn handle(&mut self, message: CollectOutput<A>, ctx: &mut Context<Self>) -> Self::Result {
+        match &message.0 {
+            Ok(data) => {
+                self.console.info(self.action.get_success_message(&data));
+            }
+            Err(data) => {
+                self.console.error(self.action.get_failure_message(&data));
+            }
+        }
         self.collected_output.push(message.0);
     }
 }
@@ -375,8 +388,7 @@ impl<A: TaskAction + 'static> Handler<Exit<A>> for TaskActor<A> {
     type Result = ();
 
     fn handle(&mut self, mut message: Exit<A>, ctx: &mut Context<Self>) -> Self::Result {
-        if let TaskFinishStatus::<A>::Success(res) = &mut message.0 {
-            self.console.info(self.action.get_success_message(res));
+        if let TaskFinishStatus::<A>::Finished(res) = &mut message.0 {
             std::mem::swap(res, &mut self.collected_output);
         }
         self.task_manager

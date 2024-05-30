@@ -5,6 +5,8 @@ import { BasicAuth } from "./tg_deploy.js";
 import { Artifact } from "./gen/interfaces/metatype-typegraph-core.js";
 import { dirname, join } from "node:path";
 import * as fsp from "node:fs/promises";
+import { log } from "./log.js";
+import { execRequest } from "./utils/func_utils.js";
 
 interface UploadArtifactMeta {
   typegraphName: string;
@@ -32,11 +34,12 @@ export class ArtifactUploader {
     artifactMetas: UploadArtifactMeta[],
   ): Promise<Array<string | null>> {
     const artifactsJson = JSON.stringify(artifactMetas);
-    const response = await fetch(this.getUploadUrl, {
+    const response = await execRequest(this.getUploadUrl, {
       method: "POST",
       headers: this.headers,
       body: artifactsJson,
-    });
+    }, `tgDeploy failed to get upload urls`);
+    log.debug("response");
 
     if (!response.ok) {
       const err = await response.text();
@@ -72,21 +75,32 @@ export class ArtifactUploader {
       return;
     }
 
+    const urlObj = new URL(this.getUploadUrl);
+    const altUrlObj = new URL(url);
+    urlObj.pathname = altUrlObj.pathname;
+    urlObj.search = altUrlObj.search;
+
     const path = join(dirname(this.tgPath), meta.relativePath);
     // TODO: stream
     const content = await fsp.readFile(path);
-    const res = await fetch(url, {
+    log.info("uploading artifact", meta.relativePath, urlObj.href);
+    const res = await execRequest(urlObj, {
       method: "POST",
       headers: uploadHeaders,
       body: new Uint8Array(content),
-    } as RequestInit);
+    } as RequestInit, `failed to upload artifact ${meta.relativePath}`);
     if (!res.ok) {
-      const err = await res.text();
+      const err = await res.json();
+      // To be read by the CLI?
+      log.error("Failed to upload artifact", meta.relativePath, err);
+      console.log(err);
       throw new Error(
-        `Failed to upload artifact '${path}' (${res.status}): ${err}`,
+        `Failed to upload artifact '${path}' (${res.status}): ${err.error}`,
       );
     }
-    return res.json();
+    const ret = res.json();
+    log.info(`Successfully uploaded artifact`, meta.relativePath);
+    return ret;
   }
 
   private getMetas(artifacts: Artifact[]): UploadArtifactMeta[] {
@@ -130,6 +144,7 @@ export class ArtifactUploader {
     const artifactMetas = this.getMetas(this.refArtifacts);
 
     const uploadUrls = await this.fetchUploadUrls(artifactMetas);
+    log.debug("upload urls:", uploadUrls);
     const results = await Promise.allSettled(
       uploadUrls.map(
         async (url, i) => {

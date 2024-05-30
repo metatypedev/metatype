@@ -5,6 +5,7 @@ import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-co
 import { ArtifactUploader } from "./tg_artifact_upload.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
+import { execRequest } from "./utils/func_utils.js";
 
 export class BasicAuth {
   constructor(public username: string, public password: string) {
@@ -79,7 +80,7 @@ export async function tgDeploy(
       tg: tgJson,
       secrets: Object.entries(secrets ?? {}),
     }),
-  });
+  }, `tgDeploy failed to deploy typegraph ${typegraph.name}`);
 
   return {
     serialized: tgJson,
@@ -103,23 +104,7 @@ export async function tgRemove(
     method: "POST",
     headers,
     body: wit_utils.gqlRemoveQuery([typegraph.name]),
-  });
+  }, `tgRemove failed to remove typegraph ${typegraph.name}`);
 
   return { typegate: response };
-}
-
-/**
- * Simple fetch wrapper with more verbose errors
- */
-async function execRequest(url: URL, reqInit: RequestInit) {
-  try {
-    const response = await fetch(url, reqInit);
-    if (response.headers.get("Content-Type") == "application/json") {
-      return await response.json();
-    }
-    throw Error(`expected json object, got "${await response.text()}"`);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : err;
-    throw Error(`error executing request to ${url.toString()}: ${message}`);
-  }
 }

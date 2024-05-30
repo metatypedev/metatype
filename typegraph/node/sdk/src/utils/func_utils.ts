@@ -9,6 +9,7 @@ import {
 import { ReducePath } from "../gen/interfaces/metatype-typegraph-utils.js";
 import { serializeStaticInjection } from "./injection_utils.js";
 import { ArtifactResolutionConfig } from "../gen/interfaces/metatype-typegraph-core.js";
+import { log } from "../log.js";
 
 export function stringifySymbol(symbol: symbol) {
   const name = symbol.toString().match(/\((.+)\)/)?.[1];
@@ -98,4 +99,27 @@ export function freezeTgOutput(
     ...tgOutput,
     serialize: () => frozenMemo[tgOutput.name],
   };
+}
+
+/**
+ * Simple fetch wrapper with more verbose errors
+ */
+export async function execRequest(
+  url: URL,
+  reqInit: RequestInit,
+  errMsg: string,
+) {
+  try {
+    const response = await fetch(url, reqInit);
+    if (response.headers.get("Content-Type") == "application/json") {
+      return await response.json();
+    }
+    throw Error(
+      `${errMsg}: expected json object, got "${await response.text()}"`,
+    );
+  } catch (err) {
+    log.debug("fetch error", { url, requestInit: reqInit, error: err });
+    const message = err instanceof Error ? err.message : err;
+    throw Error(`${errMsg}: ${message}`);
+  }
 }

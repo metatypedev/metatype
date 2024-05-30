@@ -6,9 +6,10 @@ import { BasicAuth, tgDeploy } from "./tg_deploy.js";
 import { TgFinalizationResult, TypegraphOutput } from "./typegraph.js";
 import { getEnvVariable } from "./utils/func_utils.js";
 import { freezeTgOutput } from "./utils/func_utils.js";
+import { log } from "./log.js";
 
-const PORT = "META_CLI_SERVER_PORT"; // meta-cli instance that executes the current file
-const SELF_PATH = "META_CLI_TG_PATH"; // path to the current file to uniquely identify the run results
+const PORT = "MCLI_SERVER_PORT"; // meta-cli instance that executes the current file
+const SELF_PATH = "MCLI_TG_PATH"; // path to the current file to uniquely identify the run results
 
 type Command = "serialize" | "deploy" | "codegen";
 
@@ -113,14 +114,19 @@ export class Manager {
         prefix: config.prefix,
       });
     } catch (err: any) {
-      return await this.#relayErrorToCLI(
-        "serialize",
-        "serialization_err",
-        err?.message ?? "error serializing typegraph",
-        {
-          err,
-        },
-      );
+      log.failure({
+        typegraph: this.#typegraph.name,
+        error: err?.message ?? "failed to serialize typegraph",
+      });
+      return;
+      // return await this.#relayErrorToCLI(
+      //   "serialize",
+      //   "serialization_err",
+      //   err?.message ?? "error serializing typegraph",
+      //   {
+      //     err,
+      //   },
+      // );
     }
     await this.#relayResultToCLI(
       "serialize",
@@ -150,14 +156,19 @@ export class Manager {
     try {
       frozenSerialized = frozenOut.serialize(config);
     } catch (err: any) {
-      return await this.#relayErrorToCLI(
-        "deploy",
-        "serialization_err",
-        err?.message ?? "error serializing typegraph",
-        {
-          err,
-        },
-      );
+      log.failure({
+        typegraph: this.#typegraph.name,
+        error: err?.message ?? "failed to serialize typegraph",
+      });
+      return;
+      // return await this.#relayErrorToCLI(
+      //   "deploy",
+      //   "serialization_err",
+      //   err?.message ?? "error serializing typegraph",
+      //   {
+      //     err,
+      //   },
+      // );
     }
     const reusableTgOutput = {
       ...this.#typegraph,
@@ -182,20 +193,23 @@ export class Manager {
       });
       deployRes = typegate;
     } catch (err: any) {
-      return await this.#relayErrorToCLI(
-        "deploy",
-        "deploy_err",
-        err?.message ?? "error deploying typegraph to typegate",
-        {
-          err,
-          ...(err.cause ? { cause: err.cause } : {}),
-        },
-      );
+      log.failure({
+        typegraph: this.#typegraph.name,
+        error: err?.message ?? "failed to deploy typegraph",
+      });
+      return;
+      // return await this.#relayErrorToCLI(
+      //   "deploy",
+      //   "deploy_err",
+      //   err?.message ?? "error deploying typegraph to typegate",
+      //   {
+      //     err,
+      //     ...(err.cause ? { cause: err.cause } : {}),
+      //   },
+      // );
     }
-    await this.#relayResultToCLI(
-      "deploy",
-      deployRes,
-    );
+    log.debug("deploy result", { deployRes });
+    log.success({ typegraph: this.#typegraph.name });
   }
 
   async #relayResultToCLI<T>(initiator: Command, data: T) {

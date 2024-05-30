@@ -18,6 +18,9 @@ use super::{
     },
 };
 
+pub mod report;
+pub use report::Report;
+
 pub mod message {
     use super::*;
 
@@ -82,18 +85,6 @@ pub enum StopReason {
     Manual,
     ManualForced,
     Error,
-}
-
-#[derive(Debug)]
-pub struct ReportEntry<A: TaskAction> {
-    pub path: Arc<Path>,
-    pub status: TaskFinishStatus<A>,
-}
-
-#[derive(Debug)]
-pub struct Report<A: TaskAction> {
-    pub stop_reason: StopReason,
-    pub entries: Vec<ReportEntry<A>>,
 }
 
 pub struct TaskManager<A: TaskAction + 'static> {
@@ -161,7 +152,7 @@ impl<A: TaskAction + 'static> Actor for TaskManager<A> {
                 .unwrap_or_log(),
             entries: std::mem::take(&mut self.reports)
                 .into_iter()
-                .map(|(path, status)| ReportEntry { path, status })
+                .map(|(path, status)| report::ReportEntry { path, status })
                 .collect(),
         };
 
@@ -242,21 +233,20 @@ impl<A: TaskAction + 'static> Handler<UpdateTaskStatus<A>> for TaskManager<A> {
 
     fn handle(&mut self, message: UpdateTaskStatus<A>, ctx: &mut Context<Self>) -> Self::Result {
         match message {
-            UpdateTaskStatus::Started {
-                path: typegraph_path,
-                addr,
-            } => {
-                // TODO remove
+            UpdateTaskStatus::Started { .. } => {
+                // TODO remove - unused
             }
             UpdateTaskStatus::Finished {
                 path: typegraph_path,
-                status: _, // for report
+                status,
             } => {
                 self.active_tasks.remove(&typegraph_path);
+                self.reports.insert(typegraph_path.clone(), status);
                 if self.active_tasks.is_empty() {
                     match self.stop_reason {
                         Some(StopReason::Natural | StopReason::Manual) => {
-                            self.console.info("all tasks finished".to_string());
+                            self.console.debug("all tasks finished".to_string());
+
                             ctx.stop();
                         }
                         _ => {}

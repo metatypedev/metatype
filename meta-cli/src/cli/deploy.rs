@@ -188,28 +188,42 @@ impl Action for DeploySubcommand {
             }
         }
 
-        if deploy.options.watch {
+        let status = if deploy.options.watch {
             info!("running in watch mode");
             // watch the content of a folder
             if self.file.is_some() {
                 bail!("Cannot use --file in watch mode");
             }
             watch_mode::enter_watch_mode(deploy).await?;
+
+            ExitStatus::Failure
         } else {
             trace!("running in default mode");
             // deploy a single file
             let deploy = default_mode::DefaultMode::init(deploy).await?;
-            deploy.run().await?;
+            let status = deploy.run().await?;
 
             server_handle.unwrap().stop(true).await;
-        }
 
-        Ok(())
+            status
+        };
+
+        match status {
+            ExitStatus::Success => Ok(()),
+            ExitStatus::Failure => Err(eyre::eyre!("failed")),
+        }
     }
+}
+
+enum ExitStatus {
+    Success,
+    Failure,
 }
 
 mod default_mode {
     //! non-watch mode
+
+    use crate::cli::deploy::default_mode::actors::task::TaskFinishStatus;
 
     use super::*;
 
@@ -254,7 +268,7 @@ mod default_mode {
             })
         }
 
-        pub async fn run(self) -> Result<()> {
+        pub async fn run(self) -> Result<ExitStatus> {
             debug!(file = ?self.deploy.file);
 
             {
@@ -288,19 +302,31 @@ mod default_mode {
             // let stopped = loader::stopped(loader);
             // self.handle_loaded_typegraphs().await??;
             let report = self.report_rx.await?;
-
-            // TODO display report entries
+            let summary = report.summary();
+            self.console.info(format!("Result:\n{}", summary.text));
 
             match report.stop_reason {
-                StopReason::Natural => Ok(()),
+                StopReason::Natural => {
+                    if summary.success {
+                        Ok(ExitStatus::Success)
+                    } else {
+                        Ok(ExitStatus::Failure)
+                    }
+                }
                 StopReason::Restart => {
                     unreachable!("TaskManager should not restart on the default mode")
                 }
-                StopReason::Manual => Err(eyre::eyre!("tasks manually stopped")),
-                StopReason::ManualForced => Err(eyre::eyre!("tasks manually stopped (forced)")),
+                StopReason::Manual => {
+                    if summary.success {
+                        Ok(ExitStatus::Success)
+                    } else {
+                        Ok(ExitStatus::Failure)
+                    }
+                } // TODO read report
+                StopReason::ManualForced => Ok(ExitStatus::Failure),
                 StopReason::Error => {
                     // error should have already been reported
-                    Err(eyre::eyre!("failed"))
+                    Ok(ExitStatus::Failure)
                 }
             }
         }

@@ -17,6 +17,7 @@ import {
   ArtifactResolutionConfig,
 } from "./gen/interfaces/metatype-typegraph-core.js";
 import { Manager } from "./tg_manage.js";
+import { log } from "./log.js";
 
 type Exports = Record<string, t.Func>;
 
@@ -219,7 +220,9 @@ export async function typegraph(
     ...InjectionSource,
   };
 
+  log.debug("builder");
   builder(g);
+  log.debug("builder: ok");
 
   const ret = {
     serialize(config: ArtifactResolutionConfig) {
