@@ -17,7 +17,6 @@ import {
   ArtifactResolutionConfig,
 } from "./gen/interfaces/metatype-typegraph-core.js";
 import { Manager } from "./tg_manage.js";
-import { log } from "./log.js";
 
 type Exports = Record<string, t.Func>;
 
@@ -35,23 +34,23 @@ interface TypegraphArgs {
 }
 
 export class ApplyFromArg {
-  constructor(public name: string | null, public type: number | null) {}
+  constructor(public name: string | null, public type: number | null) { }
 }
 
 export class ApplyFromStatic {
-  constructor(public value: any) {}
+  constructor(public value: any) { }
 }
 
 export class ApplyFromSecret {
-  constructor(public key: string) {}
+  constructor(public key: string) { }
 }
 
 export class ApplyFromContext {
-  constructor(public key: string | null, public type: number | null) {}
+  constructor(public key: string | null, public type: number | null) { }
 }
 
 export class ApplyFromParent {
-  constructor(public typeName: string) {}
+  constructor(public typeName: string) { }
 }
 
 const InjectionSource = {
@@ -114,7 +113,7 @@ export class InheritDef {
 export type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
 
 export class RawAuth {
-  constructor(readonly jsonStr: string) {}
+  constructor(readonly jsonStr: string) { }
 }
 
 export interface TypegraphOutput {
@@ -220,9 +219,7 @@ export async function typegraph(
     ...InjectionSource,
   };
 
-  log.debug("builder");
   builder(g);
-  log.debug("builder: ok");
 
   const ret = {
     serialize(config: ArtifactResolutionConfig) {

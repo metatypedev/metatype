@@ -3,6 +3,7 @@
 
 import json
 import os
+import traceback
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Union, Any
@@ -16,10 +17,11 @@ from typegraph.gen.exports.core import (
 from typegraph.graph.shared_types import BasicAuth, TypegraphOutput
 from typegraph.graph.tg_deploy import TypegraphDeployParams, tg_deploy
 from typegraph.utils import freeze_tg_output
+from typegraph import log
 
-PORT = "META_CLI_SERVER_PORT"  # meta-cli instance that executes the current file
+PORT = "MCLI_SERVER_PORT"  # meta-cli instance that executes the current file
 SELF_PATH = (
-    "META_CLI_TG_PATH"  # path to the current file to uniquely identify the run results
+    "MCLI_TG_PATH"  # path to the current file to uniquely identify the run results
 )
 
 
@@ -85,9 +87,10 @@ class Manager:
             )  # prefix from cli overrides the current value
             res = self.typegraph.serialize(artifact_cfg)
         except Exception as err:
-            return self.relay_error_to_cli(
-                Command.SERIALIZE, code="serialization_err", msg=str(err), value={}
-            )
+            log.debug(traceback.format_exc())
+            log.failure({"typegraph": self.typegraph.name, "error": str(err)})
+            return
+
         return self.relay_data_to_cli(Command.SERIALIZE, data=json.loads(res.tgJson))
 
     def deploy(self, config: CLIConfigRequest):
@@ -112,9 +115,10 @@ class Manager:
         try:
             frozen_serialized = frozen_out.serialize(artifacts_config)
         except Exception as err:
-            return self.relay_error_to_cli(
-                Command.DEPLOY, code="serialization_err", msg=str(err), value={}
-            )
+            log.debug(traceback.format_exc())
+            log.failure({"typegraph": self.typegraph.name, "error": str(err)})
+            return
+
         if artifacts_config.codegen:
             self.relay_data_to_cli(
                 initiator=Command.CODEGEN, data=json.loads(frozen_serialized.tgJson)
@@ -123,11 +127,12 @@ class Manager:
         try:
             ret = tg_deploy(frozen_out, params)
         except Exception as err:
-            return self.relay_error_to_cli(
-                Command.DEPLOY, code="deploy_err", msg=str(err), value={}
-            )
+            log.debug(traceback.format_exc())
+            log.failure({"typegraph": self.typegraph.name, "error": str(err)})
+            return
 
-        return self.relay_data_to_cli(Command.DEPLOY, data=ret.typegate)
+        log.debug("deploy result", {"deployResult": ret.typegate})
+        log.success({"typegraph": self.typegraph.name})
 
     def request_command(self) -> CLIServerResponse:
         config = self.request_config()

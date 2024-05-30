@@ -6,12 +6,13 @@ import os
 import sys
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
-from urllib import request
+from urllib import request, parse as Url
 from urllib.error import HTTPError
 
 from typegraph.gen.exports.core import Artifact
 from typegraph.gen.types import Err, Ok, Result
 from typegraph.graph.shared_types import BasicAuth
+from typegraph import log
 
 
 @dataclass
@@ -40,6 +41,7 @@ class ArtifactUploader:
         headers: Dict[str, str],
         tg_path: str,
     ) -> None:
+        self.base_url = base_url
         self.artifacts = artifacts
         self.tg_name = tg_name
         sep = "/" if not base_url.endswith("/") else ""
@@ -64,10 +66,10 @@ class ArtifactUploader:
         try:
             response = request.urlopen(req)
         except HTTPError as e:
-            raise Exception(f"Failed requesting artifact upload URLs: {e}")
+            raise Exception(f"failed to get upload URLs: {e}")
 
         if response.status != 200:
-            raise Exception(f"Failed requesting artifact upload URLs: {response}")
+            raise Exception(f"failed to get upload URLs: {response}")
 
         response = handle_response(response.read().decode())
         return response
@@ -83,7 +85,7 @@ class ArtifactUploader:
             upload_headers["Authorization"] = self.auth.as_header_value()
 
         if url is None:
-            # print(f"Skipping upload for artifact: {meta.relativePath}", file=sys.stderr)
+            log.info("skipping artifact upload:", meta.relativePath)
             return Ok(None)
 
         if self.tg_path is None:
@@ -94,8 +96,18 @@ class ArtifactUploader:
         with open(path, "rb") as file:
             content = file.read()
 
+        # TODO temporary
+        parsed_upload_url = Url.urlparse(url)
+        parsed_url = Url.urlparse(self.base_url)
+        parsed_url = parsed_url._replace(
+            path=parsed_upload_url.path, query=parsed_upload_url.query
+        )
+
+        rebased_url = Url.urlunparse(parsed_url)
+
+        log.info("uploading artifact", meta.relativePath, rebased_url)
         upload_req = request.Request(
-            url=url,
+            url=rebased_url,
             method="POST",
             data=content,
             headers=upload_headers,
@@ -103,15 +115,13 @@ class ArtifactUploader:
         try:
             response = request.urlopen(upload_req)
         except HTTPError as e:
+            log.debug(e)
             errmsg = json.load(e.fp).get("error", None)
-
-            print(f"Failed to upload artifact {path}: {e}", file=sys.stderr)
-            print(f"  - {errmsg}", file=sys.stderr)
-            print(f"  - url={url}", file=sys.stderr)
-            raise e
+            raise Exception(errmsg)
         if response.status != 201:
-            raise Exception(f"Failed to upload artifact {path} {response.status}")
+            raise Exception(f"failed to upload artifact {path} {response.status}")
 
+        # TODO why??
         return handle_response(response.read().decode())
 
     def get_metas(self, artifacts: List[Artifact]) -> List[UploadArtifactMeta]:
@@ -150,6 +160,7 @@ class ArtifactUploader:
         artifact_metas = self.get_metas(self.artifacts)
 
         upload_urls = self.__fetch_upload_urls(artifact_metas)
+        log.debug("upload urls", upload_urls)
 
         results = []
         for i in range(len(artifact_metas)):
