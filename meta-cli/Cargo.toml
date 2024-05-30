@@ -33,7 +33,7 @@ typegate = ["dep:typegate_engine"]
 typegate_engine = { workspace = true, optional = true }
 common.workspace = true
 typescript.workspace = true
-metagen = { workspace = true, features = ["multithreaded"] }
+metagen.workspace = true
 
 # data structures
 chrono = { version = "0.4.31", features = ["serde"] }
@@ -44,15 +44,16 @@ indexmap.workspace = true
 once_cell.workspace = true
 lazy_static = "1.4.0"
 crossbeam-channel = "0.5.8"
-itertools = "0.11.0"
+itertools.workspace = true
 enum_dispatch = "0.3.12"
 derive_more = "0.99.17"
 indoc.workspace = true
 
 # concurrency
 tokio = { workspace = true, features = ["full"] }
-futures = "0.3.29"
-async-trait = "0.1.74"
+futures.workspace = true
+futures-concurrency.workspace = true
+async-trait.workspace = true
 num_cpus = "1.16.0"
 
 # cli
@@ -73,9 +74,9 @@ self_update = { version = "0.38.0", features = [
 # codecs
 serde.workspace = true
 serde_json = { workspace = true, features = ["preserve_order"] }
-flate2 = "1.0.28"
-tar = "0.4.40"
-base64 = "0.21.5"
+flate2.workspace = true
+tar.workspace = true
+base64.workspace = true
 # FIXME: deprecated, be on the lookout for alternatives
 serde_yaml = "0.9.27"
 
@@ -93,8 +94,8 @@ textwrap = "0.16.0"
 
 # http
 reqwest = { workspace = true, features = ["json"] }
-actix = "0.13.1"
-actix-web = "4"
+actix = "0.13"
+actix-web = "4.6"
 
 # logging
 tracing.workspace = true

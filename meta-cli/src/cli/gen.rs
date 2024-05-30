@@ -67,19 +67,19 @@ impl Action for Gen {
             resolver,
         )
         .await?;
-        let mut set = tokio::task::JoinSet::new();
-        for (path, file) in files.0 {
-            set.spawn(async move {
+        files
+            .0
+            .into_iter()
+            .map(|(path, file)| async move {
                 tokio::fs::create_dir_all(path.parent().unwrap()).await?;
                 if file.overwrite || !tokio::fs::try_exists(&path).await? {
                     tokio::fs::write(path, file.contents).await?;
                 }
                 Ok::<_, tokio::io::Error>(())
-            });
-        }
-        while let Some(res) = set.join_next().await {
-            res??;
-        }
+            })
+            .collect::<Vec<_>>()
+            .try_join()
+            .await?;
 
         server_handle.unwrap().stop(true).await;
 
@@ -108,17 +108,9 @@ impl InputResolver for MetagenCtx {
                 }
             }
             GeneratorInputOrder::TypegraphFromPath { path, name } => {
-                let (tx, rx) = tokio::sync::oneshot::channel();
                 let config = self.config.clone();
                 let dir = self.dir.join(path);
-                tokio::task::spawn_blocking(move || {
-                    actix::run(async move {
-                        let res = load_tg_at(config, dir, name.as_deref()).await;
-                        tx.send(res).unwrap();
-                    })
-                })
-                .await??;
-                let raw = rx.await??;
+                let raw = load_tg_at(config, dir, name.as_deref()).await?;
                 GeneratorInputResolved::TypegraphFromTypegate { raw }
             }
         })

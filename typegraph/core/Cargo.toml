@@ -15,7 +15,7 @@ wit-bindgen = "0.24.0"
 regex.workspace = true
 indexmap.workspace = true
 common.workspace = true 
-metagen = { workspace = true, default-features = false }
+metagen.workspace = true
 indoc.workspace = true
 color-eyre.workspace = true
 anyhow.workspace = true

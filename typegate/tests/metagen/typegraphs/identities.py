@@ -51,15 +51,18 @@ def metagen_identities(g: Graph):
     cycles1 = t.struct(
         {"to2": g.ref("cycles2"), "list3": t.list(g.ref("cycles3"))}
     ).rename("cycles1")
-    _ = t.either(
+
+    t.either(
         [
             g.ref("cycles3"),
             g.ref("cycles1").optional(),
         ]
     ).rename("cycles2")
-    _ = t.union(
+
+    t.union(
         [t.struct({"to1": g.ref("cycles1")}), t.struct({"to2": g.ref("cycles2")})]
     ).rename("cycles3")
+
     python = PythonRuntime()
     wasm = WasmRuntime.wire("rust.wasm")
     deno = DenoRuntime()

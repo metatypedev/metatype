@@ -1666,13 +1666,13 @@ version = "0.4.3-0"
 dependencies = [
  "anyhow",
  "async-trait",
- "base64 0.21.7",
+ "base64 0.22.1",
  "colored",
  "flate2",
  "ignore",
  "indexmap 2.2.6",
  "indoc",
- "itertools 0.11.0",
+ "itertools 0.13.0",
  "reqwest",
  "serde 1.0.203",
  "serde_json",
@@ -4608,6 +4608,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures-concurrency"
+version = "7.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "51ee14e256b9143bfafbf2fddeede6f396650bacf95d06fc1b3f2b503df129a0"
+dependencies = [
+ "bitvec",
+ "futures-core",
+ "futures-lite 1.13.0",
+ "pin-project",
+ "slab",
+ "smallvec",
+]
+
+[[package]]
 name = "futures-core"
 version = "0.3.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4651,7 +4665,10 @@ version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52527eb5074e35e9339c6b4e8d12600c7128b68fb25dcb9fa9dec18f7c25f3a5"
 dependencies = [
+ "fastrand 2.1.0",
  "futures-core",
+ "futures-io",
+ "parking",
  "pin-project-lite",
 ]
 
@@ -5833,6 +5850,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6551,7 +6577,7 @@ dependencies = [
  "actix-web",
  "assert_cmd",
  "async-trait",
- "base64 0.21.7",
+ "base64 0.22.1",
  "chrono",
  "clap",
  "clap-verbosity-flag",
@@ -6567,6 +6593,7 @@ dependencies = [
  "filetime",
  "flate2",
  "futures",
+ "futures-concurrency",
  "git2",
  "globset",
  "grep",
@@ -6574,7 +6601,7 @@ dependencies = [
  "include_dir",
  "indexmap 2.2.6",
  "indoc",
- "itertools 0.11.0",
+ "itertools 0.13.0",
  "lade-sdk",
  "lazy_static 1.4.0",
  "metagen",
@@ -6612,6 +6639,8 @@ version = "0.4.3-0"
 dependencies = [
  "color-eyre",
  "common",
+ "futures-concurrency",
+ "futures-lite 2.3.0",
  "garde",
  "heck 0.5.0",
  "indexmap 2.2.6",
@@ -12053,7 +12082,7 @@ name = "typegate_engine"
 version = "0.4.3-0"
 dependencies = [
  "anyhow",
- "base64 0.21.7",
+ "base64 0.22.1",
  "common",
  "connection-string",
  "convert_case 0.6.0",

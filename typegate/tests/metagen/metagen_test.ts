@@ -166,42 +166,18 @@ Meta.test("Metagen within sdk", async (t) => {
 }); */
 
 Meta.test("metagen table suite", async (t) => {
-  const typegraphPath = join(
-    import.meta.dirname!,
-    "typegraphs/identities.ts",
-  );
+  // const typegraphPath = join(
+  //   import.meta.dirname!,
+  //   "typegraphs/identities.ts",
+  // );
 
   const scriptsPath = join(
     import.meta.dirname!,
     "typegraphs/identities",
   );
-  const genCratePath = join(scriptsPath, "rs");
-  const genPyPath = join(scriptsPath, "py");
-  const genTsPath = join(scriptsPath, "ts");
-
-  await Deno.writeTextFile(
-    join(t.tempDir, "metatype.yml"),
-    `
-typegates:
-  dev:
-    url: "http://localhost:7890"
-    username: admin
-    password: password
-
-metagen:
-  targets:
-    main:
-      - generator: mdk_rust
-        path: ${genCratePath}
-        typegraph_path: ${typegraphPath}
-      - generator: mdk_python
-        path: ${genPyPath}
-        typegraph_path: ${typegraphPath}
-      - generator: mdk_typescript
-        path: ${genTsPath}
-        typegraph_path: ${typegraphPath}
-  `,
-  );
+  // const genCratePath = join(scriptsPath, "rs");
+  // const genPyPath = join(scriptsPath, "py");
+  // const genTsPath = join(scriptsPath, "ts");
 
   assertEquals(
     (await Meta.cli({
@@ -220,6 +196,6 @@ metagen:
       })).code,
       0,
     );
-    // await using engine = await t.engine("metagen/typegraphs/identities.ts");
+    // await using engine = await t.engine(typegraphPath);
   });
 });

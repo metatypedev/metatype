@@ -207,7 +207,8 @@ impl Config {
         })?;
         let mut config: serde_yaml::Value = serde_yaml::from_reader(file)?;
         config.apply_merge()?;
-        let mut config: Self = serde_yaml::from_value(config)?;
+        let mut config: Self = serde_yaml::from_value(config)
+            .wrap_err_with(|| format!("error serializing metatype config found at {path:?}"))?;
         config.path = Some(path.clone());
         config.base_dir = {
             let mut path = path;

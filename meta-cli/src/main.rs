@@ -25,6 +25,8 @@ mod interlude {
         pub use tracing::{debug, error, info, trace, warn};
     }
     pub use async_trait::async_trait;
+    pub use futures::prelude::*;
+    pub use futures_concurrency::prelude::*;
 
     pub use crate::{anyhow_to_eyre, map_ferr};
 }

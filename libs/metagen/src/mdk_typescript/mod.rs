@@ -157,7 +157,6 @@ fn render_types(dest: &mut GenDestBuf, tg: &Typegraph) -> anyhow::Result<NameMem
     Ok(name_memo)
 }
 
-#[cfg(feature = "multithreaded")]
 #[test]
 fn mdk_rs_e2e() -> anyhow::Result<()> {
     use crate::tests::*;

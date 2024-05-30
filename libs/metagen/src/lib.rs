@@ -15,6 +15,7 @@ mod interlude {
     pub use color_eyre::eyre::{
         self as anyhow, bail, ensure, format_err, ContextCompat, OptionExt, Result, WrapErr,
     };
+    pub use futures_concurrency::prelude::*;
     pub use indexmap::IndexMap;
     pub use log::{debug, error, info, trace, warn};
     pub use pretty_assertions::assert_str_eq;
@@ -35,6 +36,7 @@ mod utils;
 use crate::interlude::*;
 
 pub use config::*;
+use futures_concurrency::future::FutureGroup;
 
 /// This implements a command object pattern API for generator
 /// implemntations to access the external world. See [InputResolver].
@@ -149,22 +151,26 @@ thread_local! {
     ]);
 }
 
-/// This function makes use of a JoinSet to process
-/// items in parallel. This makes using actix workers in InputResolver
-/// is a no no.
-#[cfg(feature = "multithreaded")]
+impl GeneratorRunner {
+    pub fn get(name: &str) -> Option<GeneratorRunner> {
+        GENERATORS.with(|m| m.get(name).cloned())
+    }
+}
+
 pub async fn generate_target(
     config: &config::Config,
     target_name: &str,
     workspace_path: PathBuf,
     resolver: impl InputResolver + Send + Sync + Clone + 'static,
 ) -> anyhow::Result<GeneratorOutput> {
+    use futures_lite::StreamExt;
+
     let target_conf = config
         .targets
         .get(target_name)
         .with_context(|| format!("target {target_name:?} not found in config"))?;
 
-    let mut generate_set = tokio::task::JoinSet::new();
+    let mut group = FutureGroup::new();
     for config in &target_conf.0 {
         let gen_name = &config.generator_name;
         let config = config.other.to_owned();
@@ -174,28 +180,28 @@ pub async fn generate_target(
         let gen_impl = get_gen_op.exec(&workspace_path, config)?;
         let bill = gen_impl.bill_of_inputs();
 
-        let mut resolve_set = tokio::task::JoinSet::new();
+        let mut resolve_group = FutureGroup::new();
         for (name, order) in bill.into_iter() {
             let resolver = resolver.clone();
-            _ = resolve_set.spawn(async move {
-                Ok::<_, anyhow::Error>((name, resolver.resolve(order).await?))
-            });
+            resolve_group.insert(Box::pin(async move {
+                anyhow::Ok((name, resolver.resolve(order).await?))
+            }));
         }
 
         let gen_name: Arc<str> = gen_name[..].into();
-        _ = generate_set.spawn(async move {
+        group.insert(Box::pin(async move {
             let mut inputs = HashMap::new();
-            while let Some(res) = resolve_set.join_next().await {
-                let (name, input) = res??;
+            while let Some(res) = resolve_group.next().await {
+                let (name, input) = res?;
                 inputs.insert(name, input);
             }
             let out = gen_impl.generate(inputs)?;
-            Ok::<_, anyhow::Error>((gen_name, out))
-        });
+            anyhow::Ok((gen_name, out))
+        }));
     }
     let mut out = HashMap::new();
-    while let Some(res) = generate_set.join_next().await {
-        let (gen_name, files) = res??;
+    while let Some(res) = group.next().await {
+        let (gen_name, files) = res?;
         for (path, buf) in files.0 {
             if let Some((src, _)) = out.get(&path) {
                 anyhow::bail!("generators \"{src}\" and \"{gen_name}\" clashed at \"{path:?}\"");
@@ -263,5 +269,6 @@ pub fn generate_target_sync(
         .into_iter()
         .map(|(path, (_, buf))| (path, buf))
         .collect();
+
     Ok(GeneratorOutput(out))
 }
