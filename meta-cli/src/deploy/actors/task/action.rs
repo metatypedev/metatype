@@ -110,7 +110,7 @@ mod serialize {
 
         async fn get_command(&self) -> Result<Command> {
             CommandBuilder {
-                path: self.path.clone(),
+                path: self.task_config.base_dir.to_path_buf().join(&self.path),
                 task_config: self.task_config.clone(),
                 action_env: "serialize",
             }
@@ -230,7 +230,7 @@ mod deploy {
 
         async fn get_command(&self) -> Result<Command> {
             CommandBuilder {
-                path: self.path.clone(),
+                path: self.task_config.base_dir.to_path_buf().join(&self.path),
                 task_config: self.task_config.clone(),
                 action_env: "deploy",
             }

@@ -56,12 +56,8 @@ impl<A: TaskAction + 'static> Actor for DiscoveryActor<A> {
                 .start(|path| match path {
                     Ok(path) => {
                         let rel_path = diff_paths(&path, &dir).unwrap();
-                        console.debug(format!(
-                            "Found typegraph definition module at {}",
-                            rel_path.display()
-                        ));
                         task_manager.do_send(task_manager::message::AddTask {
-                            path: path.into(),
+                            path: rel_path.into(),
                             reason: TaskReason::Discovery,
                         });
                     }

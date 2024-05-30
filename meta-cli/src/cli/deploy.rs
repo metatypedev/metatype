@@ -108,7 +108,7 @@ pub struct Deploy {
 impl Deploy {
     #[tracing::instrument(level = "debug")]
     pub async fn new(deploy: &DeploySubcommand, args: &ConfigArgs) -> Result<Self> {
-        let dir = args.dir();
+        let dir: Arc<Path> = args.dir().into();
 
         let config_path = args.config.clone();
         let config = Arc::new(Config::load_or_find(config_path, &dir)?);
@@ -138,12 +138,13 @@ impl Deploy {
         ServerStore::set_prefix(node_config.prefix);
         ServerStore::set_codegen_flag(deploy.options.codegen);
 
-        let file = deploy
-            .file
-            .as_ref()
-            .map(|f| f.normalize())
-            .transpose()?
-            .map(|f| f.into_path_buf());
+        let file = deploy.file.clone();
+        // let file = deploy
+        //     .file
+        //     .as_ref()
+        //     .map(|f| f.normalize())
+        //     .transpose()?
+        //     .map(|f| f.into_path_buf());
         if let Some(file) = &file {
             if let Err(err) = crate::config::ModuleType::try_from(file.as_path()) {
                 bail!("file is not a valid module type: {err:#}")
@@ -151,7 +152,7 @@ impl Deploy {
         }
         Ok(Self {
             config,
-            base_dir: dir.into(),
+            base_dir: dir.clone(),
             options,
             secrets,
             file: file.map(|path| path.into()),

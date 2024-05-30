@@ -9,7 +9,7 @@ use std::{path::Path, sync::Arc};
 use tokio::process::Command;
 
 pub(super) struct CommandBuilder {
-    pub path: Arc<Path>,
+    pub path: PathBuf,
     pub task_config: Arc<TaskConfig>,
     pub action_env: &'static str,
 }

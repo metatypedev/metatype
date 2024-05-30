@@ -270,7 +270,12 @@ impl<A: TaskAction + 'static> Handler<Stop> for TaskManager<A> {
                     self.stop_reason = Some(StopReason::ManualForced);
                     ctx.address().do_send(ForceStop);
                 }
-                StopReason::ManualForced | StopReason::Error => {}
+                StopReason::ManualForced => {
+                    self.console
+                        .warning("stopping the task manager".to_string());
+                    ctx.stop();
+                }
+                StopReason::Error => {}
             },
             None => {
                 self.stop_reason = Some(StopReason::Manual);
