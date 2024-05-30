@@ -299,11 +299,9 @@ mod default_mode {
                 )
             };
 
-            // let stopped = loader::stopped(loader);
-            // self.handle_loaded_typegraphs().await??;
             let report = self.report_rx.await?;
             let summary = report.summary();
-            self.console.info(format!("Result:\n{}", summary.text));
+            println!("Result:\n{}", summary.text);
 
             match report.stop_reason {
                 StopReason::Natural => {

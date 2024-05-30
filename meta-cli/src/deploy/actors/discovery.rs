@@ -1,6 +1,7 @@
-use crate::deploy::actors::task_manager::{self, TaskReason};
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+
+use crate::deploy::actors::task_manager::{self, TaskReason};
 use crate::interlude::*;
 
 use pathdiff::diff_paths;

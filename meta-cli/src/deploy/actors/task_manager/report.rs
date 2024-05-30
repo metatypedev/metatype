@@ -18,7 +18,7 @@ pub struct Report<A: TaskAction> {
     pub entries: Vec<ReportEntry<A>>,
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct ReportSummary {
     pub text: String,
     pub success: bool,
@@ -26,30 +26,34 @@ pub struct ReportSummary {
 
 impl<A: TaskAction> Report<A> {
     pub fn summary(&self) -> ReportSummary {
-        self.entries
-            .iter()
-            .fold(Default::default(), |mut summary, entry| {
+        self.entries.iter().fold(
+            ReportSummary {
+                text: String::new(),
+                success: true,
+            },
+            |mut summary, entry| {
                 let (text, success) = match &entry.status {
                     TaskFinishStatus::<A>::Finished(results) => {
                         let success_count = results.iter().filter(|res| res.is_ok()).count();
                         (
-                            format!(
-                                " - {}: {}/{} success\n",
-                                entry.path.display().to_string().yellow(),
-                                success_count,
-                                results.len()
-                            ),
+                            format!("{}/{} success", success_count, results.len()),
                             success_count == results.len(),
                         )
                     }
-                    TaskFinishStatus::<A>::Error => (" - failed\n".to_string(), false),
-                    TaskFinishStatus::<A>::Cancelled => (" - cancelled\n".to_string(), true),
+                    TaskFinishStatus::<A>::Error => ("failed".to_string(), false),
+                    TaskFinishStatus::<A>::Cancelled => ("cancelled".to_string(), true),
                 };
-                summary.text.push_str(&text);
-                ReportSummary {
-                    text: summary.text,
-                    success: summary.success && success,
-                }
-            })
+                summary.text.push_str(
+                    format!(
+                        "  - {}: {}\n",
+                        entry.path.display().to_string().yellow(),
+                        text
+                    )
+                    .as_str(),
+                );
+                summary.success = summary.success && success;
+                summary
+            },
+        )
     }
 }

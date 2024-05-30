@@ -34,21 +34,21 @@ export class ArtifactUploader {
     artifactMetas: UploadArtifactMeta[],
   ): Promise<Array<string | null>> {
     const artifactsJson = JSON.stringify(artifactMetas);
-    const response = await execRequest(this.getUploadUrl, {
+    const uploadUrls: Array<string | null> = await execRequest(this.getUploadUrl, {
       method: "POST",
       headers: this.headers,
       body: artifactsJson,
     }, `tgDeploy failed to get upload urls`);
-    log.debug("response");
 
-    if (!response.ok) {
-      const err = await response.text();
-      throw new Error(
-        `Failed requesting artifact upload URLs: ${response.status} - ${err}`,
-      );
-    }
+    // if (!response.ok) {
+    //   log.debug("response", response);
+    //   const err = await response.text();
+    //   throw new Error(
+    //     `Failed requesting artifact upload URLs: ${response.status} - ${err}`,
+    //   );
+    // }
 
-    const uploadUrls: Array<string | null> = await response.json();
+    // const uploadUrls: Array<string | null> = await response.json();
     if (uploadUrls.length !== artifactMetas.length) {
       const diff =
         `array length mismatch: ${uploadUrls.length} !== ${artifactMetas.length}`;
@@ -71,7 +71,7 @@ export class ArtifactUploader {
     }
 
     if (url == null) {
-      // console.error(`Skipping upload for artifact: ${meta.relativePath}`);
+      log.info("skipping artifact upload:", meta.relativePath);
       return;
     }
 
@@ -144,7 +144,7 @@ export class ArtifactUploader {
     const artifactMetas = this.getMetas(this.refArtifacts);
 
     const uploadUrls = await this.fetchUploadUrls(artifactMetas);
-    log.debug("upload urls:", uploadUrls);
+    log.debug("upload urls", uploadUrls);
     const results = await Promise.allSettled(
       uploadUrls.map(
         async (url, i) => {
