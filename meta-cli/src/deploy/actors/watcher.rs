@@ -1,9 +1,15 @@
-use crate::deploy::push::pusher::RetryManager;
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
-use crate::interlude::*;
 
-use actix::prelude::*;
+use super::console::Console;
+use super::task::deploy::DeployAction;
+use super::task_manager::{self, TaskManager, TaskReason};
+use crate::config::Config;
+use crate::deploy::actors::console::ConsoleActor;
+use crate::deploy::push::pusher::RetryManager;
+use crate::interlude::*;
+use crate::typegraph::dependency_graph::DependencyGraph;
+use crate::typegraph::loader::discovery::FileFilter;
 use common::typegraph::Typegraph;
 use grep::searcher::{BinaryDetection, SearcherBuilder};
 use notify_debouncer_mini::notify::{RecommendedWatcher, RecursiveMode};
@@ -11,15 +17,6 @@ use notify_debouncer_mini::{new_debouncer, notify, DebounceEventResult, Debounce
 use pathdiff::diff_paths;
 use std::path::{Path, PathBuf};
 use std::{sync::Arc, time::Duration};
-use tokio::sync::mpsc;
-
-use super::console::Console;
-use super::task::action::DeployAction;
-use super::task_manager::{self, TaskManager, TaskReason};
-use crate::config::Config;
-use crate::deploy::actors::console::ConsoleActor;
-use crate::typegraph::dependency_graph::DependencyGraph;
-use crate::typegraph::loader::discovery::FileFilter;
 
 pub mod message {
     use super::*;

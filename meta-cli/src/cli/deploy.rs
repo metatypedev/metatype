@@ -1,29 +1,23 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use self::actors::task::action::DeployAction;
-use self::actors::task::action::DeployActionGenerator;
+use self::actors::task::deploy::{DeployAction, DeployActionGenerator};
 use self::actors::task::TaskConfig;
 use self::actors::task_manager::{self, StopReason, TaskReason};
 use super::{Action, ConfigArgs, NodeArgs};
 use crate::com::store::{Command, Endpoint, MigrationAction, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors;
-use crate::deploy::actors::console::{Console, ConsoleActor};
+use crate::deploy::actors::console::ConsoleActor;
 use crate::deploy::actors::discovery::DiscoveryActor;
-use crate::deploy::actors::loader::{self, LoaderEvent, ReloadModule, ReloadReason, StopBehavior};
-use crate::deploy::actors::task::action::TaskAction;
 use crate::deploy::actors::task_manager::TaskManager;
 use crate::deploy::actors::watcher::{self, WatcherActor};
-use crate::deploy::push::pusher::PushResult;
 use crate::interlude::*;
 use crate::secrets::{RawSecrets, Secrets};
 use actix_web::dev::ServerHandle;
 use clap::Parser;
 use futures::channel::oneshot;
-use normpath::PathExt;
 use owo_colors::OwoColorize;
-use tokio::sync::mpsc;
 
 #[derive(Parser, Debug)]
 pub struct DeploySubcommand {
@@ -253,6 +247,7 @@ mod default_mode {
             let action_generator = DeployActionGenerator::new(task_config);
 
             let task_manager = TaskManager::new(
+                deploy.config.clone(),
                 action_generator,
                 deploy.max_parallel_loads.unwrap_or_else(num_cpus::get),
                 report_tx,
@@ -436,6 +431,7 @@ mod watch_mode {
             let (report_tx, report_rx) = oneshot::channel();
 
             let task_manager = TaskManager::new(
+                deploy.config.clone(),
                 action_generator.clone(),
                 deploy.max_parallel_loads.unwrap_or_else(num_cpus::get),
                 report_tx,

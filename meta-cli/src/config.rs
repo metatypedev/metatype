@@ -269,13 +269,10 @@ impl Config {
     }
 
     /// canonical path to the migration given the typegraph path
-    pub fn prisma_migration_dir_abs(&self, tg_path: &Path, tg_name: &str) -> Result<PathBuf> {
-        if tg_path.is_dir() {
-            bail!("Given typegraph path {} is not a file", tg_path.display());
-        }
-        let mut base = tg_path.to_path_buf().clone();
-        base.pop(); // remove file
-        Ok(base.join(self.prisma_migrations_dir_rel(tg_name)))
+    pub fn prisma_migration_dir_abs(&self, tg_name: &str) -> PathBuf {
+        let mut path = self.base_dir.clone();
+        path.push(self.prisma_migrations_dir_rel(tg_name));
+        path
     }
 }
 

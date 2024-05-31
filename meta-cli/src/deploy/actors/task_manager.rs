@@ -7,7 +7,7 @@ use futures::channel::oneshot;
 use indexmap::IndexMap;
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 
-use crate::interlude::*;
+use crate::{config::Config, interlude::*};
 
 use super::{
     console::{Console, ConsoleActor},
@@ -88,6 +88,7 @@ pub enum StopReason {
 }
 
 pub struct TaskManager<A: TaskAction + 'static> {
+    config: Arc<Config>,
     action_generator: A::Generator,
     active_tasks: HashMap<Arc<Path>, Addr<TaskActor<A>>>,
     pending_tasks: HashSet<Arc<Path>>,
@@ -100,12 +101,14 @@ pub struct TaskManager<A: TaskAction + 'static> {
 
 impl<A: TaskAction> TaskManager<A> {
     pub fn new(
+        config: Arc<Config>,
         action_generator: A::Generator,
         max_parallel_tasks: usize,
         report_tx: oneshot::Sender<Report<A>>,
         console: Addr<ConsoleActor>,
     ) -> Self {
         Self {
+            config,
             action_generator,
             active_tasks: Default::default(),
             pending_tasks: Default::default(),
@@ -222,7 +225,13 @@ impl<A: TaskAction + 'static> Handler<StartTask> for TaskManager<A> {
             .action_generator
             .generate(message.path.clone(), message.permit);
         let path = action.get_path_owned();
-        let task_addr = TaskActor::new(action, ctx.address(), self.console.clone()).start();
+        let task_addr = TaskActor::new(
+            self.config.clone(),
+            action,
+            ctx.address(),
+            self.console.clone(),
+        )
+        .start();
         self.pending_tasks.remove(&path);
         self.active_tasks.insert(path.clone(), task_addr);
     }

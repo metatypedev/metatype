@@ -182,34 +182,23 @@ export class Manager {
       );
     }
 
-    let deployRes: any;
     try {
-      const { typegate } = await tgDeploy(reusableTgOutput, {
+      const { response } = await tgDeploy(reusableTgOutput, {
         baseUrl: endpoint,
         artifactsConfig: config,
         secrets,
         auth: new BasicAuth(auth.username, auth.password),
         typegraphPath: this.#typegraphPath,
       });
-      deployRes = typegate;
+
+      log.success({ typegraph: this.#typegraph.name, ...response });
     } catch (err: any) {
       log.failure({
         typegraph: this.#typegraph.name,
         error: err?.message ?? "failed to deploy typegraph",
       });
       return;
-      // return await this.#relayErrorToCLI(
-      //   "deploy",
-      //   "deploy_err",
-      //   err?.message ?? "error deploying typegraph to typegate",
-      //   {
-      //     err,
-      //     ...(err.cause ? { cause: err.cause } : {}),
-      //   },
-      // );
     }
-    log.debug("deploy result", { deployRes });
-    log.success({ typegraph: this.#typegraph.name });
   }
 
   async #relayResultToCLI<T>(initiator: Command, data: T) {

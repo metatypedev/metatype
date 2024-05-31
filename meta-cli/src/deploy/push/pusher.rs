@@ -151,7 +151,7 @@ impl PushResult {
         // tg workdir + prisma_migration_rel
         let migdir = ServerStore::get_config()
             .unwrap()
-            .prisma_migration_dir_abs(&self.sdk_response.typegraph_path, &self.original_name)?;
+            .prisma_migration_dir_abs(&self.original_name);
 
         for migrations in self.migrations.iter() {
             let dest = migdir.join(&migrations.runtime);

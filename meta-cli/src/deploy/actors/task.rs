@@ -17,12 +17,16 @@
 
 pub mod action;
 mod command;
+pub mod deploy;
+pub mod serialize;
 
-use self::action::{ActionResult, TaskAction};
+use self::action::{ActionFinalizeContext, ActionResult, TaskAction};
 use super::console::{Console, ConsoleActor};
 use super::task_manager::{self, TaskManager};
-use crate::{com::server::get_instance_port, interlude::*};
-use actix::prelude::*;
+use crate::com::server::get_instance_port;
+use crate::config::Config;
+use crate::interlude::*;
+use color_eyre::owo_colors::OwoColorize;
 use common::typegraph::Typegraph;
 use process_wrap::tokio::TokioChildWrapper;
 use std::time::Duration;
@@ -96,6 +100,7 @@ pub enum TaskFinishStatus<A: TaskAction> {
 }
 
 pub struct TaskActor<A: TaskAction + 'static> {
+    config: Arc<Config>,
     action: A,
     process: Option<Box<dyn TokioChildWrapper>>,
     task_manager: Addr<TaskManager<A>>,
@@ -108,8 +113,14 @@ impl<A> TaskActor<A>
 where
     A: TaskAction,
 {
-    pub fn new(action: A, task_manager: Addr<TaskManager<A>>, console: Addr<ConsoleActor>) -> Self {
+    pub fn new(
+        config: Arc<Config>,
+        action: A,
+        task_manager: Addr<TaskManager<A>>,
+        console: Addr<ConsoleActor>,
+    ) -> Self {
         Self {
+            config,
             process: None,
             task_manager,
             console,
@@ -233,7 +244,9 @@ impl<A: TaskAction + 'static> Handler<ProcessOutput> for TaskActor<A> {
 
         let fut = async move {
             let reader = BufReader::new(stdout).lines();
-            if let Err(e) = Self::loop_output_lines(reader, addr.clone(), console.clone()).await {
+            if let Err(e) =
+                Self::loop_output_lines(reader, addr.clone(), console.clone(), path.clone()).await
+            {
                 console.error(format!(
                     "failed to read process output on {:?}: {e:#}",
                     path
@@ -310,29 +323,34 @@ impl<A: TaskAction + 'static> TaskActor<A> {
         mut reader: Lines<BufReader<ChildStdout>>,
         addr: Addr<TaskActor<A>>,
         console: Addr<ConsoleActor>,
+        path: Arc<Path>,
     ) -> tokio::io::Result<()> {
         let mut latest_level = OutputLevel::Info;
+
+        let scope = format!("[{path}]", path = path.display());
+        let scope = scope.yellow();
+
         while let Some(line) = reader.next_line().await? {
             if let Some(debug) = line.strip_prefix("debug: ") {
-                console.debug(debug.to_string());
+                console.debug(format!("{scope} {debug}"));
                 latest_level = OutputLevel::Debug;
                 continue;
             }
 
             if let Some(info) = line.strip_prefix("info: ") {
-                console.info(info.to_string());
+                console.info(format!("{scope} {info}"));
                 latest_level = OutputLevel::Info;
                 continue;
             }
 
             if let Some(warn) = line.strip_prefix("warning: ") {
-                console.warning(warn.to_string());
+                console.warning(format!("{scope} {warn}"));
                 latest_level = OutputLevel::Warning;
                 continue;
             }
 
             if let Some(error) = line.strip_prefix("error: ") {
-                console.error(error.to_string());
+                console.error(format!("{scope} {error}"));
                 latest_level = OutputLevel::Error;
                 continue;
             }
@@ -351,16 +369,16 @@ impl<A: TaskAction + 'static> TaskActor<A> {
 
             match latest_level {
                 OutputLevel::Debug => {
-                    console.debug(format!("> {}", line));
+                    console.debug(format!("{scope}>{line}"));
                 }
                 OutputLevel::Info => {
-                    console.info(format!("> {}", line));
+                    console.info(format!("{scope}>{line}"));
                 }
                 OutputLevel::Warning => {
-                    console.warning(format!("> {}", line));
+                    console.warning(format!("{scope}>{line}"));
                 }
                 OutputLevel::Error => {
-                    console.error(format!("> {}", line));
+                    console.error(format!("{scope}>{line}"));
                 }
             }
         }
@@ -372,14 +390,15 @@ impl<A: TaskAction + 'static> Handler<CollectOutput<A>> for TaskActor<A> {
     type Result = ();
 
     fn handle(&mut self, message: CollectOutput<A>, ctx: &mut Context<Self>) -> Self::Result {
-        match &message.0 {
-            Ok(data) => {
-                self.console.info(self.action.get_success_message(&data));
-            }
-            Err(data) => {
-                self.console.error(self.action.get_failure_message(&data));
-            }
-        }
+        self.action.finalize(
+            &message.0,
+            ActionFinalizeContext {
+                config: self.config.clone(),
+                task_manager: self.task_manager.clone(),
+                task: ctx.address(),
+                console: self.console.clone(),
+            },
+        );
         self.collected_output.push(message.0);
     }
 }

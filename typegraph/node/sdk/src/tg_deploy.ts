@@ -30,7 +30,7 @@ export interface TypegraphRemoveParams {
 
 export interface DeployResult {
   serialized: string;
-  typegate: Record<string, any> | string;
+  response: Record<string, any>;
 }
 
 export interface RemoveResult {
@@ -82,9 +82,16 @@ export async function tgDeploy(
     }),
   }, `tgDeploy failed to deploy typegraph ${typegraph.name}`);
 
+  if (response.errors) {
+    for (const err of response.errors) {
+      console.error(err.message);
+    }
+    throw new Error(`failed to deploy typegraph ${typegraph.name}`);
+  }
+
   return {
     serialized: tgJson,
-    typegate: response,
+    response: response.data.addTypegraph,
   };
 }
 
