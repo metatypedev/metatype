@@ -14,7 +14,7 @@ import CodeBlock from "@theme-original/CodeBlock";
 :::note You will learn
 
 - How to setup your development for metatype projects.
-- How to run the typegate on the docker runtime.
+- How to run the typegate onf the docker runtime.
 - How to create/read/update/delete data.
 - How to write custom business logic.
 - How to authenticate requests.
@@ -322,7 +322,7 @@ Or, you can mess around on the playground below.
 
     <TGExample
       typegraph="first-typegraph"
-      python={require("../../../../examples/typegraphs/first-typegraph.py")}
+      python={require("!!code-loader!../../../../examples/typegraphs/first-typegraph.py")}
       typescript={require("!!code-loader!../../../../examples/typegraphs/first-typegraph.ts")}
       query={require("./query.graphql")}
     />
@@ -576,7 +576,7 @@ We should be able to add a few buckets and ideas now.
 
     <TGExample
       typegraph="roadmap-prisma"
-      python={require("../../../../examples/typegraphs/prisma.py")}
+      python={require("!!code-loader!../../../../examples/typegraphs/prisma.py")}
       typescript={require("!!code-loader!../../../../examples/typegraphs/prisma.ts")}
       query={require("./prisma.graphql")}
     />
@@ -691,8 +691,8 @@ If you are using the GraphiQl interface from earlier, there should be a panel in
 
     <TGExample
       typegraph="roadmap-policies"
-      python={require("../../../../examples/typegraphs/policies.py")}
-      typescript={require("!!code-loader!../../../../examples/typegraphs/policies.ts")}
+      python={require("../../../../examples/typegraphs/roadmap-policies.py")}
+      typescript={require("!!code-loader!../../../../examples/typegraphs/roadmap-policies.ts")}
       query={require("./policies.graphql")}
     />
 
@@ -830,7 +830,7 @@ mutation {
 
     <TGExample
       typegraph="roadmap-reduce"
-      python={require("../../../../examples/typegraphs/reduce.py")}
+      python={require("!!code-loader!../../../../examples/typegraphs/reduce.py")}
       typescript={require("!!code-loader!../../../../examples/typegraphs/reduce.ts")}
       query={require("./reduce.graphql")}
     />
@@ -913,7 +913,7 @@ Our query is exposed like any other function in the GraphQl api.
 
     <TGExample
       typegraph="roadmap-execute"
-      python={require("../../../../examples/typegraphs/execute.py")}
+      python={require("!!code-loader!../../../../examples/typegraphs/execute.py")}
       typescript={require("!!code-loader!../../../../examples/typegraphs/execute.ts")}
       query={require("./execute.graphql")}
     />
