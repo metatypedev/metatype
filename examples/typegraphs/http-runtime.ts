@@ -8,7 +8,7 @@ import { HttpRuntime } from "@typegraph/sdk/runtimes/http.js";
 
 await typegraph(
   {
-    name: "http-runtime-ts",
+    name: "http-example",
     // skip:next-line
     cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
   },
