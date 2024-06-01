@@ -102,3 +102,40 @@ function validate_4(value, path, errors, context) {
 return validate_54_1;
 "
 `;
+
+snapshot[`typecheck 2`] = `
+"Validation errors:
+  - at <value>.posts[0].author: expected an object, got undefined
+"
+`;
+
+snapshot[`typecheck 3`] = `
+"Validation errors:
+  - at <value>.posts[0].author.username: expected a string, got undefined
+"
+`;
+
+snapshot[`typecheck 4`] = `
+"Validation errors:
+  - at <value>.posts[1].author.username: expected a string, got undefined
+"
+`;
+
+snapshot[`typecheck 5`] = `
+"Validation errors:
+  - at <value>.posts[0].author.id: string does not statisfy the required format 'uuid'
+  - at <value>.posts[0].author.email: string does not statisfy the required format 'email'
+"
+`;
+
+snapshot[`typecheck 6`] = `
+"Validation errors:
+  - at <value>.posts[0].author.email: string does not statisfy the required format 'email'
+"
+`;
+
+snapshot[`typecheck 7`] = `
+"Validation errors:
+  - at <value>.posts[0].author.website: string does not statisfy the required format 'uri'
+"
+`;
