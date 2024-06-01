@@ -37,7 +37,7 @@ await typegraph(
         ),
         facts_as_text: facts.get(
           t.struct({
-            header_accept: t.string().set("text/explain"),
+            header_accept: t.string().set("text/plain"),
             language: t.enum_(["en", "de"]),
           }),
           t.string(),
