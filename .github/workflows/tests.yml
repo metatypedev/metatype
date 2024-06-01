@@ -68,6 +68,7 @@ jobs:
           # use custom shared key to share cache across jobs
           # default prefix includes job-id otherwise
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+          cache-provider: buildjet
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
@@ -194,7 +195,7 @@ jobs:
           cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
           # check target runs extra validation steps in the Dockerfile
           target: check
-          build-args: 'CARGO_PROFILE=dev'
+          build-args: "CARGO_PROFILE=dev"
       - name: Build without cache (external)
         uses: docker/build-push-action@v5
         if: "! steps.check.outputs.has-permission"
@@ -203,7 +204,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: false
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
-          build-args: 'CARGO_PROFILE=dev'
+          build-args: "CARGO_PROFILE=dev"
           target: check
 
   test-full:
@@ -219,6 +220,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+          cache-provider: buildjet
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
