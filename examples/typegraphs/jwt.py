@@ -7,8 +7,9 @@ from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph(
-    # skip:next-line
+    # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
 )
 def jwt_authentication(g: Graph):
     deno = DenoRuntime()

@@ -5,8 +5,9 @@ import os
 
 
 @typegraph(
-    # skip:next-line
+    # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
 )
 def temporal(g: Graph):
     public = Policy.public()

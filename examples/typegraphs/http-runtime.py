@@ -1,10 +1,12 @@
 # skip:start
 from typegraph import typegraph, Policy, t, Graph
 from typegraph.graph.params import Cors
+
+# skip:end
+# highlight-next-line
 from typegraph.runtimes import HttpRuntime
 
 
-# skip:end
 @typegraph(
     # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
@@ -13,6 +15,7 @@ from typegraph.runtimes import HttpRuntime
 def http_example(g: Graph):
     pub = Policy.public()
 
+    # highlight-next-line
     facts = HttpRuntime("https://uselessfacts.jsph.pl/api/v2/facts")
 
     g.expose(

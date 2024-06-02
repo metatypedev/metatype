@@ -6,8 +6,9 @@ from typegraph.runtimes.http import HttpRuntime
 
 # skip:end
 @typegraph(
-    # skip:next-line
+    # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
 )
 def triggers(g: Graph):
     # skip:start

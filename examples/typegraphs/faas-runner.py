@@ -6,8 +6,9 @@ from typegraph.runtimes import DenoRuntime, PythonRuntime
 
 # skip:end
 @typegraph(
-    # skip:next-line
+    # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
 )
 def faas_runner(g: Graph):
     public = Policy.public()

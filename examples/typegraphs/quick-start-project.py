@@ -6,8 +6,9 @@ from typegraph import Graph, Policy, t, typegraph
 
 
 @typegraph(
-    # skip:next-line
+    # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
 )
 def example(g: Graph):
     # access control
