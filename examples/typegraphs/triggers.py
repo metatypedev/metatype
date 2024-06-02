@@ -1,10 +1,14 @@
 # skip:start
 from typegraph import typegraph, Policy, t, Graph
+from typegraph.graph.params import Cors
 from typegraph.runtimes.http import HttpRuntime
 
 
 # skip:end
-@typegraph()
+@typegraph(
+    # skip:next-line
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+)
 def triggers(g: Graph):
     # skip:start
     public = Policy.public()

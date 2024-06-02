@@ -1,8 +1,12 @@
 from typegraph import Policy, typegraph, t, Graph
+from typegraph.graph.params import Cors
 from typegraph.runtimes.deno import DenoRuntime
 
 
-@typegraph()
+@typegraph(
+    # skip:next-line
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+)
 def injection_example(g: Graph):
     deno = DenoRuntime()
     pub = Policy.public()

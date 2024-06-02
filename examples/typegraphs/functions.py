@@ -1,9 +1,12 @@
 # skip:start
 from typegraph import typegraph, t, Graph
+from typegraph.graph.params import Cors
 from typegraph.runtimes import DenoRuntime, HttpRuntime
 
 
-@typegraph()
+@typegraph(
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+)
 def functions(g: Graph):
     # skip:end
     deno = DenoRuntime()

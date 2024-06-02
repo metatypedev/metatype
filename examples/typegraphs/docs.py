@@ -4,7 +4,8 @@ from typegraph.runtimes import HttpRuntime
 
 
 @typegraph(
-    cors=Cors(allow_origin=["http://localhost:3000", "https://cloud.metatype.dev"]),
+    # skip:next-line
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 )
 def docs(g):
     sendinblue = HttpRuntime("https://api.sendinblue.com")

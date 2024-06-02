@@ -97,8 +97,11 @@ With these simple steps, we were able to build a basic backend with database cap
   {require("../../../examples/typegraphs/quick-start-project.py").content}
 </CodeBlock>
 
-We are almost there to test your first `Metatype` application. We now need to spin a [Tyepgate](/docs/reference/typegate) and deploy our typegraph to the instance. To start the typegate instance, run the following command.
+We are almost there to test your first `Metatype` application. We now need to spin a [Tyepgate](/docs/reference/typegate) and deploy our typegraph to the instance. We have two options to start a typegate instance. The first and the recommended one is to use the [embedded typgate](/docs/reference/meta-cli/embedded-typegate) that comes with the _non-thin_ version of _Meta_CLI_. The second option is to run a docker container from our `compose.yml` file.
 
+To run the embedded typegate, you can follow this [reference](/docs/reference/meta-cli/embedded-typegate). You this option is preferrable as it spins a simple typegate for development.
+
+To run the typegate container, run the following command.
 ```bash
 docker compose up --detach
 ```
@@ -113,7 +116,7 @@ After running the above command, 4 containers should start and you will have thi
 ✔ Container first-project-typegate-1  Started                        0.3s
 ```
 
-If you open [localhost:7890](http://localhost:7890) on your browser, you will get a webpage similar to this one.
+Once you started your typegate instance using one of the available choice, if you open [localhost:7890](http://localhost:7890) on your browser, you will get a webpage similar to this one.
 
 <img src="/images/tutorial/running-typegate.png" alt="running typegate" />{" "}
 
