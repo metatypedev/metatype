@@ -19,11 +19,10 @@ Meta.test("planner", async (t) => {
         }
       }
     }
-  `
-    .planOn(e);
+  `.planOn(e);
 
-  await t.should("generate the right stages", () => {
-    t.assertSnapshot(
+  await t.should("generate the right stages", async () => {
+    await t.assertSnapshot(
       plan.stages.map((s) => ({
         id: s.id(),
         path: s.props.path,
@@ -36,21 +35,23 @@ Meta.test("planner", async (t) => {
     );
   });
 
-  await t.should("generate the right policy tree", () => {
+  await t.should("generate the right policy tree", async () => {
     const fns = Object.fromEntries(plan.policies.functions);
-    t.assertSnapshot(mapValues(fns, (subtree) => {
-      const funcType = e.tg.type(subtree.funcTypeIdx);
-      return {
-        funcType,
-        referencedTypes: mapValues(
-          Object.fromEntries(subtree.referencedTypes),
-          (types) =>
-            types.map((idx) =>
-              filterKeys(e.tg.type(idx), (k) => ["type", "title"].includes(k))
-            ),
-        ),
-      };
-    }));
+    await t.assertSnapshot(
+      mapValues(fns, (subtree) => {
+        const funcType = e.tg.type(subtree.funcTypeIdx);
+        return {
+          funcType,
+          referencedTypes: mapValues(
+            Object.fromEntries(subtree.referencedTypes),
+            (types) =>
+              types.map((idx) =>
+                filterKeys(e.tg.type(idx), (k) => ["type", "title"].includes(k))
+              ),
+          ),
+        };
+      }),
+    );
   });
 
   await t.should("fail when required selections are missing", async () => {
@@ -77,7 +78,9 @@ Meta.test("planner", async (t) => {
     await gql`
       query {
         one {
-          id { id }
+          id {
+            id
+          }
         }
       }
     `
@@ -91,18 +94,23 @@ Meta.test("planner", async (t) => {
         one {
           union1
           union2 {
-            ...on A { a }
-            ...on B {
+            ... on A {
+              a
+            }
+            ... on B {
               b {
-                ...on C1 { c }
-                ...on C2 { c }
+                ... on C1 {
+                  c
+                }
+                ... on C2 {
+                  c
+                }
               }
             }
           }
         }
       }
-    `
-      .assertPlanSnapshot(t, e);
+    `.assertPlanSnapshot(t, e);
   });
 
   await t.should("work with union dependency", async () => {
@@ -113,8 +121,7 @@ Meta.test("planner", async (t) => {
           from_union1
         }
       }
-    `
-      .assertPlanSnapshot(t, e);
+    `.assertPlanSnapshot(t, e);
   });
 });
 
@@ -129,8 +136,7 @@ Meta.test("planner: dependencies", async (t) => {
           email
         }
       }
-    `
-      .assertPlanSnapshot(t, e);
+    `.assertPlanSnapshot(t, e);
 
     await gql`
       query {
@@ -138,54 +144,58 @@ Meta.test("planner: dependencies", async (t) => {
           id
           email
           profile {
-            firstName lastName profilePic
+            firstName
+            lastName
+            profilePic
           }
         }
       }
-    `
-      .assertPlanSnapshot(t, e);
+    `.assertPlanSnapshot(t, e);
 
     await gql`
       query {
         two {
           id
           profile {
-            firstName lastName profilePic
+            firstName
+            lastName
+            profilePic
           }
           email
         }
       }
-    `
-      .assertPlanSnapshot(t, e);
+    `.assertPlanSnapshot(t, e);
 
     await gql`
       query {
         two {
           profile {
-            firstName lastName profilePic
+            firstName
+            lastName
+            profilePic
           }
           id
         }
       }
-    `
-      .assertPlanSnapshot(t, e);
+    `.assertPlanSnapshot(t, e);
 
     await gql`
       query {
         two {
-        taggedPic
+          taggedPic
           profile {
-            firstName lastName profilePic
+            firstName
+            lastName
+            profilePic
           }
         }
       }
-    `
-      .assertPlanSnapshot(t, e);
+    `.assertPlanSnapshot(t, e);
 
     await gql`
       query {
         two {
-        id
+          id
           taggedPic
         }
       }
@@ -202,41 +212,41 @@ Meta.test("planner: dependencies in union/either", async (t) => {
         three {
           id
           user {
-            ...on RegisteredUser {
+            ... on RegisteredUser {
               id
               email
               profile {
-                email displayName profilePic
+                email
+                displayName
+                profilePic
               }
             }
-            ...on GuestUser {
+            ... on GuestUser {
               id
             }
           }
         }
       }
-    `
-      .assertPlanSnapshot(t, e);
+    `.assertPlanSnapshot(t, e);
 
     await gql`
       query {
         three {
           id
           user {
-            ...on RegisteredUser {
+            ... on RegisteredUser {
               id
               profile {
                 email
                 displayName
               }
             }
-            ...on GuestUser {
+            ... on GuestUser {
               id
             }
           }
         }
       }
-    `
-      .assertPlanSnapshot(t, e);
+    `.assertPlanSnapshot(t, e);
   });
 });

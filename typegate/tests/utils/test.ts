@@ -17,7 +17,6 @@ import { SyncConfig } from "../../src/sync/config.ts";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
 import config from "../../src/config.ts";
-import { sleep } from "./mod.ts";
 
 export interface ParseOptions {
   deploy?: boolean;
@@ -507,13 +506,6 @@ export const test = ((o, fn): void => {
         currentTest = null;
       } catch (error) {
         throw error;
-      } finally {
-        if (Deno.args.includes("--update") || Deno.args.includes("-u")) {
-          console.warn(
-            "Waiting 1s to update the snapshots, see https://github.com/denoland/deno/issues/24072...",
-          );
-          await sleep(1000);
-        }
       }
     },
     ...opts,

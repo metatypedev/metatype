@@ -83,7 +83,7 @@ Meta.test("typecheck", async (t) => {
     }
   `;
 
-  await t.should("generate validation code for valid queries", () => {
+  await t.should("generate validation code for valid queries", async () => {
     const code = getValidationCode(queryGetPosts);
 
     const formattedCode = nativeResult(
@@ -93,7 +93,7 @@ Meta.test("typecheck", async (t) => {
     )!.formatted_code;
 
     console.log("asserting snapshot", { formattedCode });
-    t.assertSnapshot(formattedCode);
+    await t.assertSnapshot(formattedCode);
   });
 
   const post1 = {
