@@ -8,12 +8,12 @@ anyhow.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true, features = ["full"] }
 log.workspace = true
-futures = "0.3"
+futures = "0.3.30"
 once_cell.workspace = true
-base64 = "0.21.5"
+base64 = "0.22.1"
 dashmap = "5.5.3"
-num-traits = "0.2.17"
-num-derive = "0.4.1"
+num-traits = "0.2.19"
+num-derive = "0.4.2"
 temporal-client = { git = "https://github.com/temporalio/sdk-core", rev = "7f9755b" }
 temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core", rev = "7f9755b" }
 query-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
@@ -39,8 +39,8 @@ wasmtime-wasi.workspace = true
 
 shadow-rs.workspace = true
 serde.workspace = true
-regex = "1.10.2"
-zstd = "0.13"
+regex = "1.10.4"
+zstd = "0.13.1"
 
 [dev-dependencies]
 env_logger.workspace = true
@@ -48,4 +48,4 @@ env_logger.workspace = true
 [build-dependencies]
 shadow-rs.workspace = true
 wasmtime = { workspace = true,  features = ["component-model"] }
-zstd = "0.13"
+zstd = "0.13.1"

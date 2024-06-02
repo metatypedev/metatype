@@ -18,7 +18,7 @@ once_cell.workspace = true
 pretty_assertions = "1.4.0"
 color-eyre.workspace = true
 # indoc.workspace = true
-tera = { version = "1", default-features = false }
+tera = { version = "1.20", default-features = false }
 
 [dev-dependencies]
 tokio = { workspace = true, features =["full"] }
