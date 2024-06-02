@@ -1,0 +1,15 @@
+# Embedded Typegate
+
+If you have installed the _non-thin_ version of _Meta CLI_, it comes with an embedded typegate packaged inside it. The [typegate](docs/reference/typegate) is where we deploy our [typegraphs](docs/reference/typegraph) where any logic written in them is exposed via an HTTP or GraphQL endpoints. You can run an embedded typegate node from the terminal, but you first need to set a couple of environment variables which are needed to instantiate the typegate node. 
+
+Set the `tg_admin_password` and `tg_secret` environment variables. You can use the following command to configure a sample value for the variables and test the embedded typegate.
+```shell
+export tg_secret=a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw== | export tg_admin_password=password
+```
+
+If you have not installed _Meta_CLI_ or you have downloaded the _thin_ version, you can check [this](docs/reference/meta-cli##Installation) installation guide of the _CLI_.
+
+Everything is setup to run the embedded typegate. Just run the following command below.
+```shell
+meta typegate
+```
