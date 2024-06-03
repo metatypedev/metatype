@@ -25,7 +25,11 @@ opt-level = "z"',
     path: "./workspace/some/base/path/rust/Cargo.toml",
   },
   {
-    content: 'from .other_types import Student, Object7, typed_three
+    content: '# - NOTE: only modules that are imported relatively
+#   are supported. I.e. prefixed by \`.\` or \`..\`
+# - Make sure to include any module imports in the \`deps\`
+#   array when using external modules with PythonRuntime 
+from .other_types import Student, Object7, typed_three
 
 
 @typed_three
@@ -36,6 +40,157 @@ def three(inp: Object7) -> Student:
 ',
     overwrite: false,
     path: "./workspace/some/base/path/python/other.py",
+  },
+  {
+    content: '# - NOTE: only modules that are imported relatively
+#   are supported. I.e. prefixed by \`.\` or \`..\`
+# - Make sure to include any module imports in the \`deps\`
+#   array when using external modules with PythonRuntime 
+from .same_hit_types import typed_fnTwo, Type8Student, TwoInput, typed_fnOne, TypeString6, Object7
+
+
+@typed_fnTwo
+def fnTwo(inp: TwoInput) -> TypeString6:
+    # TODO: write your logic here
+    raise Exception("fnTwo not implemented")
+
+@typed_fnOne
+def fnOne(inp: Object7) -> Type8Student:
+    # TODO: write your logic here
+    raise Exception("fnOne not implemented")
+
+',
+    overwrite: false,
+    path: "./workspace/some/base/path/python/same_hit.py",
+  },
+  {
+    content: 'from types import NoneType
+from typing import Callable, List, Union, get_origin, ForwardRef
+from dataclasses import dataclass, asdict, fields
+
+FORWARD_REFS = {}
+
+class Struct:
+    def try_new(dt_class, val: any):
+        # Object
+        ftypes = {f.name: f.type for f in fields(dt_class)}
+        attrs = {}
+        for f in val:
+            fval = val[f]
+            ftype = ftypes[f]
+            serialized = False
+            # Union
+            if get_origin(ftype) is Union:
+                try:
+                    attrs[f] = Struct.try_union(ftype.__args__, fval)
+                    serialized = True
+                except Exception as _e:
+                    pass
+            # List
+            elif get_origin(ftype) is list:
+                try:
+                    attrs[f] = Struct.try_typed_list(ftype.__args__, fval)
+                    serialized = True
+                except Exception as _e:
+                    pass
+            # Any
+            if not serialized:
+                if isinstance(ftype, str) and ftype in FORWARD_REFS:
+                    klass = FORWARD_REFS[ftype]
+                    attrs[f] = Struct.new(klass, fval)
+                else:
+                    attrs[f] = Struct.new(ftype, fval)
+        return dt_class(**attrs)
+
+    def try_typed_list(tpe: any, items: any):
+        hint = tpe.__args__[0]
+        klass = (
+            FORWARD_REFS[hint.__forward_arg__] if isinstance(hint, ForwardRef) else hint
+        )
+        return [Struct.new(klass, v) for v in items]
+
+    def try_union(variants: List[any], val: any):
+        errors = []
+        for variant in variants:
+            try:
+                if variant is NoneType:
+                    if val is None:
+                        return None
+                    else:
+                        continue
+                if get_origin(variant) is list:
+                    if isinstance(val, list):
+                        return Struct.try_typed_list(variant, val)
+                    else:
+                        continue
+                klass = FORWARD_REFS[variant.__forward_arg__]
+                return Struct.try_new(klass, val)
+            except Exception as e:
+                errors.append(str(e))
+        raise Exception("\\\\n".join(errors))
+
+    def new(dt_class: any, val: any):
+        try:
+            return Struct.try_new(dt_class, val)
+        except Exception as _err:
+            return val
+
+    def repr(self):
+        return asdict(self)
+
+@dataclass
+class Object7(Struct):
+name: str
+
+
+FORWARD_REFS["Object7"] = Object7
+@dataclass
+class Student(Struct):
+id: int
+name: str
+peers: Union[List["Student"], None]
+
+
+FORWARD_REFS["Student"] = Student
+@dataclass
+class TwoInput(Struct):
+name: str
+
+
+FORWARD_REFS["TwoInput"] = TwoInput
+TypeString6 = str
+Type8Student = List["Student"]
+
+
+def __repr(value: any):
+    if isinstance(value, Struct):
+        return value.repr()
+    return value
+
+
+def typed_fnTwo(user_fn: Callable[[TwoInput], TypeString6]):
+    def exported_wrapper(raw_inp):
+        inp: TwoInput = Struct.new(TwoInput, raw_inp)
+        out: TypeString6 = user_fn(inp)
+        if isinstance(out, list):
+            return [__repr(v) for v in out]
+        return __repr(out)
+    return exported_wrapper
+
+
+def typed_fnOne(user_fn: Callable[[Object7], Type8Student]):
+    def exported_wrapper(raw_inp):
+        inp: Object7 = Struct.new(Object7, raw_inp)
+        out: Type8Student = user_fn(inp)
+        if isinstance(out, list):
+            return [__repr(v) for v in out]
+        return __repr(out)
+    return exported_wrapper
+
+
+',
+    overwrite: true,
+    path: "./workspace/some/base/path/python/same_hit_types.py",
   },
   {
     content: "
@@ -203,7 +358,7 @@ impl Router {
 pub type InitCallback = fn() -> anyhow::Result<MatBuilder>;
 
 thread_local! {
-    pub static MAT_STATE: RefCell<Router> = panic!("MDK_STATE has not been initialized");
+    pub static MAT_STATE: RefCell<Router> = panic!("MAT_STATE has not been initialized");
 }
 
 pub struct Ctx {}
@@ -309,6 +464,66 @@ pub mod types {
 use stubs::*;
 pub mod stubs {
     use super::*;
+    pub trait Func18: Sized + 'static {
+        fn erased(self) -> ErasedHandler {
+            ErasedHandler {
+                mat_id: "func_18".into(),
+                mat_title: "func_18".into(),
+                mat_trait: "Func18".into(),
+                handler_fn: Box::new(move |req, cx| {
+                    let req = serde_json::from_str(req)
+                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
+                    let res = self
+                        .handle(req, cx)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
+                    serde_json::to_string(&res)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
+                }),
+            }
+        }
+
+        fn handle(&self, input: Object7, cx: Ctx) -> anyhow::Result<Student8>;
+    }
+    pub trait Func19: Sized + 'static {
+        fn erased(self) -> ErasedHandler {
+            ErasedHandler {
+                mat_id: "func_19".into(),
+                mat_title: "func_19".into(),
+                mat_trait: "Func19".into(),
+                handler_fn: Box::new(move |req, cx| {
+                    let req = serde_json::from_str(req)
+                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
+                    let res = self
+                        .handle(req, cx)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
+                    serde_json::to_string(&res)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
+                }),
+            }
+        }
+
+        fn handle(&self, input: TwoInput, cx: Ctx) -> anyhow::Result<String>;
+    }
+    pub trait Func20: Sized + 'static {
+        fn erased(self) -> ErasedHandler {
+            ErasedHandler {
+                mat_id: "func_20".into(),
+                mat_title: "func_20".into(),
+                mat_trait: "Func20".into(),
+                handler_fn: Box::new(move |req, cx| {
+                    let req = serde_json::from_str(req)
+                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
+                    let res = self
+                        .handle(req, cx)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
+                    serde_json::to_string(&res)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
+                }),
+            }
+        }
+
+        fn handle(&self, input: Object7, cx: Ctx) -> anyhow::Result<Student>;
+    }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
             _ => panic!("unrecognized op_name: {op_name}"),
@@ -318,136 +533,6 @@ pub mod stubs {
 \`,
     overwrite: true,
     path: "./workspace/some/base/path/rust/mdk.rs",
-  },
-  {
-    content: \`from types import NoneType
-from typing import Callable, List, Union, get_origin, ForwardRef
-from dataclasses import dataclass, asdict, fields
-
-FORWARD_REFS = {}
-
-class Struct:
-    def try_new(dt_class, val: any):
-        # Object
-        ftypes = {f.name: f.type for f in fields(dt_class)}
-        attrs = {}
-        for f in val:
-            fval = val[f]
-            ftype = ftypes[f]
-            serialized = False
-            # Union
-            if get_origin(ftype) is Union:
-                try:
-                    attrs[f] = Struct.try_union(ftype.__args__, fval)
-                    serialized = True
-                except Exception as _e:
-                    pass
-            # List
-            elif get_origin(ftype) is list:
-                try:
-                    attrs[f] = Struct.try_typed_list(ftype.__args__, fval)
-                    serialized = True
-                except Exception as _e:
-                    pass
-            # Any
-            if not serialized:
-                if type(ftype) is str and ftype in FORWARD_REFS:
-                    klass = FORWARD_REFS[ftype]
-                    attrs[f] = Struct.new(klass, fval)
-                else:
-                    attrs[f] = Struct.new(ftype, fval)
-        return dt_class(**attrs)
-
-    def try_typed_list(tpe: any, items: any):
-        hint = tpe.__args__[0]
-        klass = FORWARD_REFS[hint.__forward_arg__] if type(hint) is ForwardRef else hint
-        return [Struct.new(klass, v) for v in items]
-
-    def try_union(variants: List[any], val: any):
-        errors = []
-        for variant in variants:
-            try:
-                if variant is NoneType:
-                    if val is None:
-                        return None
-                    else:
-                        continue
-                if get_origin(variant) is list:
-                    if type(val) is list:
-                        return Struct.try_typed_list(variant, val)
-                    else:
-                        continue
-                klass = FORWARD_REFS[variant.__forward_arg__]
-                return Struct.try_new(klass, val)
-            except Exception as e:
-                errors.append(str(e))
-        raise Exception("\\\\n".join(errors))
-
-
-    def new(dt_class: any, val: any):
-        try:
-            return Struct.try_new(dt_class, val)
-        except:
-            return val
-
-    def repr(self):
-        return asdict(self)
-
-
-@dataclass
-class Object7(Struct):
-    name: str
-    
-
-FORWARD_REFS['Object7'] = Object7
-
-@dataclass
-class Student(Struct):
-    id: int
-    name: str
-    peers: Union[List['Student'], None]
-    
-
-FORWARD_REFS['Student'] = Student
-
-@dataclass
-class TwoInput(Struct):
-    name: str
-    
-
-FORWARD_REFS['TwoInput'] = TwoInput
-
-TypeString6 = str
-Type8Student = List['Student']
-
-
-def __repr(value: any):
-        if isinstance(value, Struct):
-            return value.repr()
-        return value
-
-
-def typed_fnTwo(user_fn: Callable[[TwoInput], TypeString6]):
-    def exported_wrapper(raw_inp):
-        inp: TwoInput = Struct.new(TwoInput, raw_inp)
-        out: TypeString6 = user_fn(inp)
-        if type(out) is list:
-            return [__repr(v) for v in out]
-        return __repr(out)
-    return exported_wrapper
-
-def typed_fnOne(user_fn: Callable[[Object7], Type8Student]):
-    def exported_wrapper(raw_inp):
-        inp: Object7 = Struct.new(Object7, raw_inp)
-        out: Type8Student = user_fn(inp)
-        if type(out) is list:
-            return [__repr(v) for v in out]
-        return __repr(out)
-    return exported_wrapper
-
-\`,
-    overwrite: true,
-    path: "./workspace/some/base/path/python/./scripts/same_hit_types.py",
   },
   {
     content: '// This file was @generated by metagen and is intended
@@ -479,48 +564,37 @@ export type Deployment = {
   };
 };
 
-export type Handler<In, Out> = (input: In, ctx: Ctx, tg: Deployment) => Out;
+export type Handler<In, Out> = (
+  input: In, 
+  ctx: Ctx, 
+  tg: Deployment,
+) => Out | Promise<Out>;
 
 export type Object7 = {
-  name: string,
+  name: string;
 };
 export type Student3 = Array<Student>;
 export type Student43 = Student3 | null | undefined;
 export type Student = {
-  id: number,
-  name: string,
-  peers: Student43,
+  id: number;
+  name: string;
+  peers: Student43;
 };
 export type Student8 = Array<Student>;
 export type TwoInput = {
-  name: string,
+  name: string;
 };
 
 
+export type Func18Handler = Handler<Object7, Student8>;
+export type Func19Handler = Handler<TwoInput, string>;
+export type Func20Handler = Handler<Object7, Student>;
 ',
     overwrite: true,
     path: "./workspace/some/base/path/ts/mdk.ts",
   },
   {
-    content: 'from .same_hit_types import typed_fnTwo, Type8Student, TwoInput, typed_fnOne, TypeString6, Object7
-
-
-@typed_fnTwo
-def fnTwo(inp: TwoInput) -> TypeString6:
-    # TODO: write your logic here
-    raise Exception("fnTwo not implemented")
-
-@typed_fnOne
-def fnOne(inp: Object7) -> Type8Student:
-    # TODO: write your logic here
-    raise Exception("fnOne not implemented")
-
-',
-    overwrite: false,
-    path: "./workspace/some/base/path/python/./scripts/same_hit.py",
-  },
-  {
-    content: \`from types import NoneType
+    content: 'from types import NoneType
 from typing import Callable, List, Union, get_origin, ForwardRef
 from dataclasses import dataclass, asdict, fields
 
@@ -551,7 +625,7 @@ class Struct:
                     pass
             # Any
             if not serialized:
-                if type(ftype) is str and ftype in FORWARD_REFS:
+                if isinstance(ftype, str) and ftype in FORWARD_REFS:
                     klass = FORWARD_REFS[ftype]
                     attrs[f] = Struct.new(klass, fval)
                 else:
@@ -560,7 +634,9 @@ class Struct:
 
     def try_typed_list(tpe: any, items: any):
         hint = tpe.__args__[0]
-        klass = FORWARD_REFS[hint.__forward_arg__] if type(hint) is ForwardRef else hint
+        klass = (
+            FORWARD_REFS[hint.__forward_arg__] if isinstance(hint, ForwardRef) else hint
+        )
         return [Struct.new(klass, v) for v in items]
 
     def try_union(variants: List[any], val: any):
@@ -573,7 +649,7 @@ class Struct:
                     else:
                         continue
                 if get_origin(variant) is list:
-                    if type(val) is list:
+                    if isinstance(val, list):
                         return Struct.try_typed_list(variant, val)
                     else:
                         continue
@@ -583,51 +659,48 @@ class Struct:
                 errors.append(str(e))
         raise Exception("\\\\n".join(errors))
 
-
     def new(dt_class: any, val: any):
         try:
             return Struct.try_new(dt_class, val)
-        except:
+        except Exception as _err:
             return val
 
     def repr(self):
         return asdict(self)
 
-
 @dataclass
 class Object7(Struct):
-    name: str
-    
+name: str
 
-FORWARD_REFS['Object7'] = Object7
 
+FORWARD_REFS["Object7"] = Object7
 @dataclass
 class Student(Struct):
-    id: int
-    name: str
-    peers: Union[List['Student'], None]
-    
+id: int
+name: str
+peers: Union[List["Student"], None]
 
-FORWARD_REFS['Student'] = Student
 
+FORWARD_REFS["Student"] = Student
 
 
 def __repr(value: any):
-        if isinstance(value, Struct):
-            return value.repr()
-        return value
+    if isinstance(value, Struct):
+        return value.repr()
+    return value
 
 
 def typed_three(user_fn: Callable[[Object7], Student]):
     def exported_wrapper(raw_inp):
         inp: Object7 = Struct.new(Object7, raw_inp)
         out: Student = user_fn(inp)
-        if type(out) is list:
+        if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
     return exported_wrapper
 
-\`,
+
+',
     overwrite: true,
     path: "./workspace/some/base/path/python/other_types.py",
   },
@@ -659,7 +732,11 @@ opt-level = "z"',
     path: "./workspace/some/base/path/rust/Cargo.toml",
   },
   {
-    content: 'from .other_types import Student, Object7, typed_three
+    content: '# - NOTE: only modules that are imported relatively
+#   are supported. I.e. prefixed by \`.\` or \`..\`
+# - Make sure to include any module imports in the \`deps\`
+#   array when using external modules with PythonRuntime 
+from .other_types import Student, Object7, typed_three
 
 
 @typed_three
@@ -670,6 +747,157 @@ def three(inp: Object7) -> Student:
 ',
     overwrite: false,
     path: "./workspace/some/base/path/python/other.py",
+  },
+  {
+    content: '# - NOTE: only modules that are imported relatively
+#   are supported. I.e. prefixed by \`.\` or \`..\`
+# - Make sure to include any module imports in the \`deps\`
+#   array when using external modules with PythonRuntime 
+from .same_hit_types import typed_fnTwo, Type8Student, TwoInput, typed_fnOne, TypeString6, Object7
+
+
+@typed_fnTwo
+def fnTwo(inp: TwoInput) -> TypeString6:
+    # TODO: write your logic here
+    raise Exception("fnTwo not implemented")
+
+@typed_fnOne
+def fnOne(inp: Object7) -> Type8Student:
+    # TODO: write your logic here
+    raise Exception("fnOne not implemented")
+
+',
+    overwrite: false,
+    path: "./workspace/some/base/path/python/same_hit.py",
+  },
+  {
+    content: 'from types import NoneType
+from typing import Callable, List, Union, get_origin, ForwardRef
+from dataclasses import dataclass, asdict, fields
+
+FORWARD_REFS = {}
+
+class Struct:
+    def try_new(dt_class, val: any):
+        # Object
+        ftypes = {f.name: f.type for f in fields(dt_class)}
+        attrs = {}
+        for f in val:
+            fval = val[f]
+            ftype = ftypes[f]
+            serialized = False
+            # Union
+            if get_origin(ftype) is Union:
+                try:
+                    attrs[f] = Struct.try_union(ftype.__args__, fval)
+                    serialized = True
+                except Exception as _e:
+                    pass
+            # List
+            elif get_origin(ftype) is list:
+                try:
+                    attrs[f] = Struct.try_typed_list(ftype.__args__, fval)
+                    serialized = True
+                except Exception as _e:
+                    pass
+            # Any
+            if not serialized:
+                if isinstance(ftype, str) and ftype in FORWARD_REFS:
+                    klass = FORWARD_REFS[ftype]
+                    attrs[f] = Struct.new(klass, fval)
+                else:
+                    attrs[f] = Struct.new(ftype, fval)
+        return dt_class(**attrs)
+
+    def try_typed_list(tpe: any, items: any):
+        hint = tpe.__args__[0]
+        klass = (
+            FORWARD_REFS[hint.__forward_arg__] if isinstance(hint, ForwardRef) else hint
+        )
+        return [Struct.new(klass, v) for v in items]
+
+    def try_union(variants: List[any], val: any):
+        errors = []
+        for variant in variants:
+            try:
+                if variant is NoneType:
+                    if val is None:
+                        return None
+                    else:
+                        continue
+                if get_origin(variant) is list:
+                    if isinstance(val, list):
+                        return Struct.try_typed_list(variant, val)
+                    else:
+                        continue
+                klass = FORWARD_REFS[variant.__forward_arg__]
+                return Struct.try_new(klass, val)
+            except Exception as e:
+                errors.append(str(e))
+        raise Exception("\\\\n".join(errors))
+
+    def new(dt_class: any, val: any):
+        try:
+            return Struct.try_new(dt_class, val)
+        except Exception as _err:
+            return val
+
+    def repr(self):
+        return asdict(self)
+
+@dataclass
+class Object7(Struct):
+name: str
+
+
+FORWARD_REFS["Object7"] = Object7
+@dataclass
+class Student(Struct):
+id: int
+name: str
+peers: Union[List["Student"], None]
+
+
+FORWARD_REFS["Student"] = Student
+@dataclass
+class TwoInput(Struct):
+name: str
+
+
+FORWARD_REFS["TwoInput"] = TwoInput
+TypeString6 = str
+Type8Student = List["Student"]
+
+
+def __repr(value: any):
+    if isinstance(value, Struct):
+        return value.repr()
+    return value
+
+
+def typed_fnTwo(user_fn: Callable[[TwoInput], TypeString6]):
+    def exported_wrapper(raw_inp):
+        inp: TwoInput = Struct.new(TwoInput, raw_inp)
+        out: TypeString6 = user_fn(inp)
+        if isinstance(out, list):
+            return [__repr(v) for v in out]
+        return __repr(out)
+    return exported_wrapper
+
+
+def typed_fnOne(user_fn: Callable[[Object7], Type8Student]):
+    def exported_wrapper(raw_inp):
+        inp: Object7 = Struct.new(Object7, raw_inp)
+        out: Type8Student = user_fn(inp)
+        if isinstance(out, list):
+            return [__repr(v) for v in out]
+        return __repr(out)
+    return exported_wrapper
+
+
+',
+    overwrite: true,
+    path: "./workspace/some/base/path/python/same_hit_types.py",
   },
   {
     content: "
@@ -837,7 +1065,7 @@ impl Router {
 pub type InitCallback = fn() -> anyhow::Result<MatBuilder>;
 
 thread_local! {
-    pub static MAT_STATE: RefCell<Router> = panic!("MDK_STATE has not been initialized");
+    pub static MAT_STATE: RefCell<Router> = panic!("MAT_STATE has not been initialized");
 }
 
 pub struct Ctx {}
@@ -943,6 +1171,66 @@ pub mod types {
 use stubs::*;
 pub mod stubs {
     use super::*;
+    pub trait Func18: Sized + 'static {
+        fn erased(self) -> ErasedHandler {
+            ErasedHandler {
+                mat_id: "func_18".into(),
+                mat_title: "func_18".into(),
+                mat_trait: "Func18".into(),
+                handler_fn: Box::new(move |req, cx| {
+                    let req = serde_json::from_str(req)
+                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
+                    let res = self
+                        .handle(req, cx)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
+                    serde_json::to_string(&res)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
+                }),
+            }
+        }
+
+        fn handle(&self, input: Object7, cx: Ctx) -> anyhow::Result<Student8>;
+    }
+    pub trait Func19: Sized + 'static {
+        fn erased(self) -> ErasedHandler {
+            ErasedHandler {
+                mat_id: "func_19".into(),
+                mat_title: "func_19".into(),
+                mat_trait: "Func19".into(),
+                handler_fn: Box::new(move |req, cx| {
+                    let req = serde_json::from_str(req)
+                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
+                    let res = self
+                        .handle(req, cx)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
+                    serde_json::to_string(&res)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
+                }),
+            }
+        }
+
+        fn handle(&self, input: TwoInput, cx: Ctx) -> anyhow::Result<String>;
+    }
+    pub trait Func20: Sized + 'static {
+        fn erased(self) -> ErasedHandler {
+            ErasedHandler {
+                mat_id: "func_20".into(),
+                mat_title: "func_20".into(),
+                mat_trait: "Func20".into(),
+                handler_fn: Box::new(move |req, cx| {
+                    let req = serde_json::from_str(req)
+                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
+                    let res = self
+                        .handle(req, cx)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
+                    serde_json::to_string(&res)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
+                }),
+            }
+        }
+
+        fn handle(&self, input: Object7, cx: Ctx) -> anyhow::Result<Student>;
+    }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
             _ => panic!("unrecognized op_name: {op_name}"),
@@ -952,136 +1240,6 @@ pub mod stubs {
 \`,
     overwrite: true,
     path: "./workspace/some/base/path/rust/mdk.rs",
-  },
-  {
-    content: \`from types import NoneType
-from typing import Callable, List, Union, get_origin, ForwardRef
-from dataclasses import dataclass, asdict, fields
-
-FORWARD_REFS = {}
-
-class Struct:
-    def try_new(dt_class, val: any):
-        # Object
-        ftypes = {f.name: f.type for f in fields(dt_class)}
-        attrs = {}
-        for f in val:
-            fval = val[f]
-            ftype = ftypes[f]
-            serialized = False
-            # Union
-            if get_origin(ftype) is Union:
-                try:
-                    attrs[f] = Struct.try_union(ftype.__args__, fval)
-                    serialized = True
-                except Exception as _e:
-                    pass
-            # List
-            elif get_origin(ftype) is list:
-                try:
-                    attrs[f] = Struct.try_typed_list(ftype.__args__, fval)
-                    serialized = True
-                except Exception as _e:
-                    pass
-            # Any
-            if not serialized:
-                if type(ftype) is str and ftype in FORWARD_REFS:
-                    klass = FORWARD_REFS[ftype]
-                    attrs[f] = Struct.new(klass, fval)
-                else:
-                    attrs[f] = Struct.new(ftype, fval)
-        return dt_class(**attrs)
-
-    def try_typed_list(tpe: any, items: any):
-        hint = tpe.__args__[0]
-        klass = FORWARD_REFS[hint.__forward_arg__] if type(hint) is ForwardRef else hint
-        return [Struct.new(klass, v) for v in items]
-
-    def try_union(variants: List[any], val: any):
-        errors = []
-        for variant in variants:
-            try:
-                if variant is NoneType:
-                    if val is None:
-                        return None
-                    else:
-                        continue
-                if get_origin(variant) is list:
-                    if type(val) is list:
-                        return Struct.try_typed_list(variant, val)
-                    else:
-                        continue
-                klass = FORWARD_REFS[variant.__forward_arg__]
-                return Struct.try_new(klass, val)
-            except Exception as e:
-                errors.append(str(e))
-        raise Exception("\\\\n".join(errors))
-
-
-    def new(dt_class: any, val: any):
-        try:
-            return Struct.try_new(dt_class, val)
-        except:
-            return val
-
-    def repr(self):
-        return asdict(self)
-
-
-@dataclass
-class Object7(Struct):
-    name: str
-    
-
-FORWARD_REFS['Object7'] = Object7
-
-@dataclass
-class Student(Struct):
-    id: int
-    name: str
-    peers: Union[List['Student'], None]
-    
-
-FORWARD_REFS['Student'] = Student
-
-@dataclass
-class TwoInput(Struct):
-    name: str
-    
-
-FORWARD_REFS['TwoInput'] = TwoInput
-
-TypeString6 = str
-Type8Student = List['Student']
-
-
-def __repr(value: any):
-        if isinstance(value, Struct):
-            return value.repr()
-        return value
-
-
-def typed_fnTwo(user_fn: Callable[[TwoInput], TypeString6]):
-    def exported_wrapper(raw_inp):
-        inp: TwoInput = Struct.new(TwoInput, raw_inp)
-        out: TypeString6 = user_fn(inp)
-        if type(out) is list:
-            return [__repr(v) for v in out]
-        return __repr(out)
-    return exported_wrapper
-
-def typed_fnOne(user_fn: Callable[[Object7], Type8Student]):
-    def exported_wrapper(raw_inp):
-        inp: Object7 = Struct.new(Object7, raw_inp)
-        out: Type8Student = user_fn(inp)
-        if type(out) is list:
-            return [__repr(v) for v in out]
-        return __repr(out)
-    return exported_wrapper
-
-\`,
-    overwrite: true,
-    path: "./workspace/some/base/path/python/./scripts/same_hit_types.py",
   },
   {
     content: '// This file was @generated by metagen and is intended
@@ -1113,48 +1271,37 @@ export type Deployment = {
   };
 };
 
-export type Handler<In, Out> = (input: In, ctx: Ctx, tg: Deployment) => Out;
+export type Handler<In, Out> = (
+  input: In, 
+  ctx: Ctx, 
+  tg: Deployment,
+) => Out | Promise<Out>;
 
 export type Object7 = {
-  name: string,
+  name: string;
 };
 export type Student3 = Array<Student>;
 export type Student43 = Student3 | null | undefined;
 export type Student = {
-  id: number,
-  name: string,
-  peers: Student43,
+  id: number;
+  name: string;
+  peers: Student43;
 };
 export type Student8 = Array<Student>;
 export type TwoInput = {
-  name: string,
+  name: string;
 };
 
 
+export type Func18Handler = Handler<Object7, Student8>;
+export type Func19Handler = Handler<TwoInput, string>;
+export type Func20Handler = Handler<Object7, Student>;
 ',
     overwrite: true,
     path: "./workspace/some/base/path/ts/mdk.ts",
   },
   {
-    content: 'from .same_hit_types import typed_fnTwo, Type8Student, TwoInput, typed_fnOne, TypeString6, Object7
-
-
-@typed_fnTwo
-def fnTwo(inp: TwoInput) -> TypeString6:
-    # TODO: write your logic here
-    raise Exception("fnTwo not implemented")
-
-@typed_fnOne
-def fnOne(inp: Object7) -> Type8Student:
-    # TODO: write your logic here
-    raise Exception("fnOne not implemented")
-
-',
-    overwrite: false,
-    path: "./workspace/some/base/path/python/./scripts/same_hit.py",
-  },
-  {
-    content: \`from types import NoneType
+    content: 'from types import NoneType
 from typing import Callable, List, Union, get_origin, ForwardRef
 from dataclasses import dataclass, asdict, fields
 
@@ -1185,7 +1332,7 @@ class Struct:
                     pass
             # Any
             if not serialized:
-                if type(ftype) is str and ftype in FORWARD_REFS:
+                if isinstance(ftype, str) and ftype in FORWARD_REFS:
                     klass = FORWARD_REFS[ftype]
                     attrs[f] = Struct.new(klass, fval)
                 else:
@@ -1194,7 +1341,9 @@ class Struct:
 
     def try_typed_list(tpe: any, items: any):
         hint = tpe.__args__[0]
-        klass = FORWARD_REFS[hint.__forward_arg__] if type(hint) is ForwardRef else hint
+        klass = (
+            FORWARD_REFS[hint.__forward_arg__] if isinstance(hint, ForwardRef) else hint
+        )
         return [Struct.new(klass, v) for v in items]
 
     def try_union(variants: List[any], val: any):
@@ -1207,7 +1356,7 @@ class Struct:
                     else:
                         continue
                 if get_origin(variant) is list:
-                    if type(val) is list:
+                    if isinstance(val, list):
                         return Struct.try_typed_list(variant, val)
                     else:
                         continue
@@ -1217,51 +1366,48 @@ class Struct:
                 errors.append(str(e))
         raise Exception("\\\\n".join(errors))
 
-
     def new(dt_class: any, val: any):
         try:
             return Struct.try_new(dt_class, val)
-        except:
+        except Exception as _err:
             return val
 
     def repr(self):
         return asdict(self)
 
-
 @dataclass
 class Object7(Struct):
-    name: str
-    
+name: str
 
-FORWARD_REFS['Object7'] = Object7
 
+FORWARD_REFS["Object7"] = Object7
 @dataclass
 class Student(Struct):
-    id: int
-    name: str
-    peers: Union[List['Student'], None]
-    
+id: int
+name: str
+peers: Union[List["Student"], None]
 
-FORWARD_REFS['Student'] = Student
 
+FORWARD_REFS["Student"] = Student
 
 
 def __repr(value: any):
-        if isinstance(value, Struct):
-            return value.repr()
-        return value
+    if isinstance(value, Struct):
+        return value.repr()
+    return value
 
 
 def typed_three(user_fn: Callable[[Object7], Student]):
     def exported_wrapper(raw_inp):
         inp: Object7 = Struct.new(Object7, raw_inp)
         out: Student = user_fn(inp)
-        if type(out) is list:
+        if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
     return exported_wrapper
 
-\`,
+
+',
     overwrite: true,
     path: "./workspace/some/base/path/python/other_types.py",
   },

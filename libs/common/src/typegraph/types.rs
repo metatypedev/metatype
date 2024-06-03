@@ -111,6 +111,23 @@ pub enum StringFormat {
     Phone,
 }
 
+impl core::fmt::Display for StringFormat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use StringFormat::*;
+        match self {
+            Uuid => write!(f, "uuid"),
+            Email => write!(f, "email"),
+            Uri => write!(f, "uri"),
+            Json => write!(f, "json"),
+            Hostname => write!(f, "hostname"),
+            Ean => write!(f, "ean"),
+            Date => write!(f, "date"),
+            DateTime => write!(f, "date_time"),
+            Phone => write!(f, "phone"),
+        }
+    }
+}
+
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]

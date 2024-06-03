@@ -28,7 +28,7 @@ pub fn filter_stubbed_funcs(
                 .iter()
                 .position(|rt| rt_name == rt.name())
                 .map(|idx| (idx as u32, Rc::new(tg.runtimes[idx].clone())))
-                .with_context(|| format!("runtime {rt_name} not found"))
+                .with_context(|| format!("runtime {rt_name} not found in typegraph"))
         })
         .collect::<Result<HashMap<_, _>, _>>()?;
     let stubbed_materializers = tg

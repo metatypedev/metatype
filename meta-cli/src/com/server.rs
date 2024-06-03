@@ -60,6 +60,7 @@ async fn config(req: HttpRequest) -> impl Responder {
     let secrets = ServerStore::get_secrets(&parsed.typegraph);
     let migration_action_glob = ServerStore::get_migration_action_glob();
     let disable_artifact_resolution = !ServerStore::get_artifact_resolution_flag();
+    let codegen = ServerStore::get_codegen_flag();
 
     let mut migration_action_per_rt = vec![];
     if let Some(per_rt_actions) =
@@ -98,6 +99,7 @@ async fn config(req: HttpRequest) -> impl Responder {
                         "runtimeAction": migration_action_per_rt
                     },
                     "disableArtifactResolution": disable_artifact_resolution,
+                    "codegen": codegen
                 },
             });
 

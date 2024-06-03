@@ -174,6 +174,7 @@ class Manager:
                 disable_artifact_resolution=artifact_config_raw[
                     "disableArtifactResolution"
                 ],
+                codegen=artifact_config_raw["codegen"],
             ),
         )
 

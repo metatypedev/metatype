@@ -4,13 +4,15 @@
 import { Meta } from "../utils/mod.ts";
 import { join } from "std/path/join.ts";
 import { assertEquals } from "std/assert/mod.ts";
+import { GraphQLQuery } from "../utils/query/graphql_query.ts";
+import { JSONValue } from "../../src/utils.ts";
 
-/* Meta.test("metagen rust builds", async (t) => {
+Meta.test("metagen rust builds", async (t) => {
   const tmpDir = t.tempDir;
 
   const typegraphPath = join(
     import.meta.dirname!,
-    "../../../examples/typegraphs/basic.ts",
+    "./typegraphs/metagen.mjs",
   );
   const genCratePath = join(tmpDir, "mdk");
 
@@ -29,6 +31,7 @@ metagen:
       - generator: mdk_rust
         path: ${genCratePath}
         typegraph_path: ${typegraphPath}
+        stubbed_runtimes: ["python"]
 `,
   );
 
@@ -85,7 +88,7 @@ metagen:
   );
 
   assertEquals(
-    (await Meta.cli({}, ...`-C ${t.tempDir} gen mdk my_target`.split(" ")))
+    (await Meta.cli({}, ...`-C ${t.tempDir} gen my_target`.split(" ")))
       .code,
     0,
   );
@@ -101,6 +104,7 @@ Meta.test("Metagen within sdk", async (t) => {
           generator: "mdk_rust",
           typegraph: "example-metagen",
           path: "some/base/path/rust",
+          stubbed_runtimes: ["python"],
         },
         {
           generator: "mdk_python",
@@ -111,6 +115,7 @@ Meta.test("Metagen within sdk", async (t) => {
           generator: "mdk_typescript",
           typegraph: "example-metagen",
           path: "some/base/path/ts",
+          stubbed_runtimes: ["python"],
         },
       ],
     },
@@ -163,39 +168,228 @@ Meta.test("Metagen within sdk", async (t) => {
       assertEquals(fromTs, fromPy);
     });
   }
-}); */
+});
 
-Meta.test("metagen table suite", async (t) => {
-  // const typegraphPath = join(
-  //   import.meta.dirname!,
-  //   "typegraphs/identities.ts",
-  // );
-
+Meta.test("metagen table suite", async (metaTest) => {
   const scriptsPath = join(
     import.meta.dirname!,
     "typegraphs/identities",
   );
-  // const genCratePath = join(scriptsPath, "rs");
+  const genCratePath = join(scriptsPath, "rs");
   // const genPyPath = join(scriptsPath, "py");
   // const genTsPath = join(scriptsPath, "ts");
 
   assertEquals(
     (await Meta.cli({
       env: {
-        MCLI_LOADER_CMD: "deno run -A --config ../deno.jsonc",
-        RUST_BACKTRACE: "1",
+        // RUST_BACKTRACE: "1",
       },
     }, ...`-C ${scriptsPath} gen`.split(" "))).code,
     0,
   );
+  const compositesQuery = `query ($data: composites) {
+        data: prefix_composites(
+          data: $data
+        ) {
+          opt
+          either  {
+            ... on branch2 {
+              branch2
+            }
+            ... on primitives{ 
+              str
+              enum
+              uuid
+              email
+              ean
+              json
+              uri
+              date
+              datetime
+              int
+              float
+              boolean
+            }
+          }
+          union
+          list
+        }
+      }`;
+  const cases = [
+    {
+      name: "cycles",
+      query: `query ($data: cycles1) {
+        data: prefix_cycles(
+          data: $data
+        ) { # cycles1
+          to2 { # cycles2
+            ... on branch33B { # cycles3
+              to2 { # cycles2
+                ...on cycles1 { # cycles1
+                  phantom1
+                }
+                ...on branch33A { #cycles3
+                  phantom3a
+                }
+                ...on branch33B { #cycles3
+                  phantom3b
+                }
+              }
+            }
+            ... on branch33A { #cycles3
+              to1 { # cycles1
+                list3 { #cycles3
+                  ... on branch33A {
+                    phantom3a
+                  }
+                  ... on branch33B {
+                    to2 { #cycles2
+                      ... on cycles1 { #cycles 1
+                        phantom1
+                      }
+                      ... on branch33A { #cycles3
+                        phantom3a
+                      }
+                      ... on branch33B { #cycles3
+                        phantom3b
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            ... on cycles1 { #cycles1
+              phantom1
+            }
+          }
+        }
+      }`,
+      vars: {
+        data: { // cycles 1
+          to2: { //cycles 2
+            phantom3a: "phantom",
+            to1: { // cycles2/variant cycle3
+              // cycles1
+              list3: [{ //cycles3
+                to2: { // cycles2
+                  // cycles2/variant cycles1
+                  to2: null,
+                  phantom1: "phantom",
+                },
+              }],
+            },
+          },
+        } as Record<string, JSONValue>,
+      },
+    },
+    {
+      name: "primtives",
+      query: `query ($data: primitives) {
+        data: prefix_primitives(
+          data: $data
+        ) {
+          str
+          enum
+          uuid
+          email
+          ean
+          json
+          uri
+          date
+          datetime
+          int
+          float
+          boolean
+        }
+      }`,
+      vars: {
+        data: {
+          str: "bytes",
+          enum: "tree",
+          uuid: "a963f88a-52f2-46b0-9279-ed2910ac2ca5",
+          email: "contact@example.com",
+          ean: "0799439112766",
+          json: JSON.stringify({ foo: "bar" }),
+          uri: "https://metatype.dev",
+          date: "2024-12-24",
+          datetime: new Date().toISOString(),
+          int: 1,
+          float: 1.0,
+          boolean: true,
+        },
+      } as Record<string, JSONValue>,
+    },
+    {
+      name: "composites 1",
+      query: compositesQuery,
+      vars: {
+        data: {
+          opt: "optional",
+          either: {
+            str: "bytes",
+            enum: "tree",
+            uuid: "a963f88a-52f2-46b0-9279-ed2910ac2ca5",
+            email: "contact@example.com",
+            ean: "0799439112766",
+            json: JSON.stringify({ foo: "bar" }),
+            uri: "https://metatype.dev",
+            date: "2024-12-24",
+            datetime: new Date().toISOString(),
+            int: 1,
+            float: 1.0,
+            boolean: true,
+          },
+          union: ["grey", "beige"],
+          list: ["open", "ware"],
+        },
+      },
+    },
+    {
+      name: "composites 2",
+      query: compositesQuery,
+      vars: {
+        data: {
+          either: {
+            branch2: "openware",
+          },
+          union: "open@wa.re",
+          list: ["open", "ware"],
+          opt: null,
+        } as Record<string, JSONValue>,
+      },
+    },
+  ];
 
-  await t.should("rust tests", async () => {
+  await metaTest.should("rust tests", async () => {
     assertEquals(
-      (await t.shell("bash build.sh".split(" "), {
+      (await metaTest.shell("bash build.sh".split(" "), {
         currentDir: genCratePath,
       })).code,
       0,
     );
-    // await using engine = await t.engine(typegraphPath);
   });
+  await using engine = await metaTest.engine(
+    "metagen/typegraphs/identities.py",
+  );
+  for (
+    const prefix of ["rs", "ts", "py"]
+  ) {
+    await metaTest.should(`mdk data go round ${prefix}`, async (t) => {
+      for (const { name, vars, query } of cases) {
+        await t.step(name, async () => {
+          await new GraphQLQuery(
+            query.replaceAll("prefix", prefix),
+            {},
+            {},
+            {},
+            [],
+          )
+            .withVars(vars)
+            .expectData(
+              vars,
+            ).on(engine);
+        });
+      }
+    });
+  }
 });

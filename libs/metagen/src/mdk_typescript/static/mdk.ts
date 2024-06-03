@@ -24,4 +24,8 @@ export type Deployment = {
   };
 };
 
-export type Handler<In, Out> = (input: In, ctx: Ctx, tg: Deployment) => Out;
+export type Handler<In, Out> = (
+  input: In,
+  ctx: Ctx,
+  tg: Deployment,
+) => Out | Promise<Out>;

@@ -196,6 +196,7 @@ export class MetaTest {
       throw response.failure!;
     }
 
+    this.addCleanup(() => engine[Symbol.asyncDispose]());
     return engine;
   }
 
@@ -215,6 +216,7 @@ export class MetaTest {
         throw new Error(`Unsupported file type ${extension}`);
     }
 
+    // FIXME: this breaks if an absolute path is passed
     const testDirName = dirname(path);
     const cwd = join(testDir, testDirName);
 

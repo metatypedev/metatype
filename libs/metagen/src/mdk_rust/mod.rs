@@ -183,8 +183,13 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
             buf: Default::default(),
         };
         let gen_stub_opts = stubs::GenStubOptions {};
-        let stubbed_rts = config.stubbed_runtimes.clone().unwrap_or_default();
-        let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts)?;
+        let stubbed_rts = config
+            .stubbed_runtimes
+            .clone()
+            .unwrap_or_else(|| vec!["wasm_wire".to_string()]);
+        let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts).wrap_err_with(|| {
+            format!("error collecting materializers for runtimes {stubbed_rts:?}")
+        })?;
         let mut op_to_mat_map = HashMap::new();
         for fun in &stubbed_funs {
             let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &ty_name_memo, &gen_stub_opts)?;

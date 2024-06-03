@@ -64,6 +64,7 @@ pub struct Store {
     random_seed: Option<u32>,
 
     latest_alias_no: u32,
+    codegen_flag: Option<bool>,
 }
 
 impl Store {
@@ -508,6 +509,16 @@ impl Store {
 
     pub fn get_auths() -> Vec<common::typegraph::Auth> {
         with_store(|s| s.auths.clone())
+    }
+
+    pub fn set_codegen_flag(status: Option<bool>) {
+        with_store_mut(|s| {
+            s.codegen_flag = status;
+        })
+    }
+
+    pub fn get_codegen_flag() -> bool {
+        with_store(|s| s.codegen_flag.unwrap_or(false))
     }
 }
 

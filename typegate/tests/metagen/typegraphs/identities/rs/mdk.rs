@@ -109,7 +109,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.4.3-0";
+        static MT_VERSION: &str = "0.4.2";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -220,58 +220,113 @@ macro_rules! init_mat {
 use types::*;
 pub mod types {
     use super::*;
+    pub type String1 = String;
+    pub type StringUuid = String;
+    pub type StringEmail = String;
+    pub type StringEan = String;
+    pub type StringJson = String;
+    pub type StringUri = String;
+    pub type StringDate = String;
+    pub type StringDateTime = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct AddArgs {
-        pub a: f64,
-        pub b: f64,
+    pub struct Primitives {
+        pub str: String,
+        #[serde(rename = "enum")]
+        pub r#enum: String1,
+        pub uuid: StringUuid,
+        pub email: StringEmail,
+        pub ean: StringEan,
+        pub json: StringJson,
+        pub uri: StringUri,
+        pub date: StringDate,
+        pub datetime: StringDateTime,
+        pub int: i64,
+        pub float: f64,
+        pub boolean: bool,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RangeArgs {
-        pub a: Option<i64>,
-        pub b: i64,
+    pub struct PrimitivesArgs {
+        pub data: Primitives,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Object35 {
-    }
-    pub type String3 = String;
-    pub type String4 = String;
-    pub type String6 = String;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Object9 {
-        pub tag: String6,
-        pub value: Option<String>,
+    pub struct Branch2 {
+        pub branch2: String,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
-    pub enum Either12 {
+    pub enum Either19 {
+        Primitives(Primitives),
+        Branch2(Branch2),
+    }
+    pub type String20 = String;
+    pub type Branch4 = Vec<String20>;
+    pub type Branch4again = String;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(untagged)]
+    pub enum Union27 {
+        Branch4(Branch4),
+        I64(i64),
         String(String),
-        F64(f64),
+        Branch4again(Branch4again),
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Profile {
-        pub level: String3,
-        pub attributes: Vec<String4>,
-        pub category: Object9,
-        pub metadatas: Vec<Vec<Either12>>,
+    pub struct Composites {
+        pub opt: Option<String>,
+        pub either: Either19,
+        pub union: Union27,
+        pub list: Vec<String>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Entity {
-        pub name: String,
-        pub age: Option<i64>,
-        pub profile: Profile,
+    pub struct CompositesArgs {
+        pub data: Composites,
     }
-    pub type Entity36 = Vec<Entity>;
-    pub type Entity45 = Vec<Entity>;
+    pub type Cycles148 = Option<Cycles1>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Branch33A {
+        pub phantom3a: Option<String>,
+        pub to1: Cycles148,
+    }
+    pub type Cycles254 = Option<Cycles2>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Branch33B {
+        pub phantom3b: Option<String>,
+        pub to2: Cycles254,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(untagged)]
+    pub enum Cycles3 {
+        Branch33A(Branch33A),
+        Branch33B(Branch33B),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(untagged)]
+    pub enum Cycles2 {
+        Cycles3(Box<Cycles3>),
+        Cycles1(Cycles1),
+    }
+    pub type Cycles235 = Option<Cycles2>;
+    pub type Cycles337 = Vec<Cycles3>;
+    pub type Cycles33837 = Option<Cycles337>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Cycles1 {
+        pub phantom1: Option<String>,
+        pub to2: Box<Cycles235>,
+        pub list3: Cycles33837,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Cycles1Args {
+        pub data: Cycles1,
+    }
 }
 use stubs::*;
 pub mod stubs {
     use super::*;
-    pub trait Add: Sized + 'static {
+    pub trait RsPrimitives: Sized + 'static {
         fn erased(self) -> ErasedHandler {
             ErasedHandler {
-                mat_id: "add".into(),
-                mat_title: "add".into(),
-                mat_trait: "Add".into(),
+                mat_id: "rs_primitives".into(),
+                mat_title: "rs_primitives".into(),
+                mat_trait: "RsPrimitives".into(),
                 handler_fn: Box::new(move |req, cx| {
                     let req = serde_json::from_str(req)
                         .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
@@ -284,14 +339,14 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: AddArgs, cx: Ctx) -> anyhow::Result<i64>;
+        fn handle(&self, input: PrimitivesArgs, cx: Ctx) -> anyhow::Result<Primitives>;
     }
-    pub trait Range: Sized + 'static {
+    pub trait RsComposites: Sized + 'static {
         fn erased(self) -> ErasedHandler {
             ErasedHandler {
-                mat_id: "range".into(),
-                mat_title: "range".into(),
-                mat_trait: "Range".into(),
+                mat_id: "rs_composites".into(),
+                mat_title: "rs_composites".into(),
+                mat_trait: "RsComposites".into(),
                 handler_fn: Box::new(move |req, cx| {
                     let req = serde_json::from_str(req)
                         .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
@@ -304,14 +359,14 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RangeArgs, cx: Ctx) -> anyhow::Result<Vec<i64>>;
+        fn handle(&self, input: CompositesArgs, cx: Ctx) -> anyhow::Result<Composites>;
     }
-    pub trait RecordCreation: Sized + 'static {
+    pub trait RsCycles: Sized + 'static {
         fn erased(self) -> ErasedHandler {
             ErasedHandler {
-                mat_id: "record-creation".into(),
-                mat_title: "record-creation".into(),
-                mat_trait: "RecordCreation".into(),
+                mat_id: "rs_cycles".into(),
+                mat_title: "rs_cycles".into(),
+                mat_trait: "RsCycles".into(),
                 handler_fn: Box::new(move |req, cx| {
                     let req = serde_json::from_str(req)
                         .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
@@ -324,55 +379,13 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: Object35, cx: Ctx) -> anyhow::Result<Entity36>;
-    }
-    pub trait Identity: Sized + 'static {
-        fn erased(self) -> ErasedHandler {
-            ErasedHandler {
-                mat_id: "identity".into(),
-                mat_title: "identity".into(),
-                mat_trait: "Identity".into(),
-                handler_fn: Box::new(move |req, cx| {
-                    let req = serde_json::from_str(req)
-                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
-                    let res = self
-                        .handle(req, cx)
-                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
-                    serde_json::to_string(&res)
-                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
-                }),
-            }
-        }
-
-        fn handle(&self, input: Entity, cx: Ctx) -> anyhow::Result<Entity>;
-    }
-    pub trait HundredRandom: Sized + 'static {
-        fn erased(self) -> ErasedHandler {
-            ErasedHandler {
-                mat_id: "hundred-random".into(),
-                mat_title: "hundred-random".into(),
-                mat_trait: "HundredRandom".into(),
-                handler_fn: Box::new(move |req, cx| {
-                    let req = serde_json::from_str(req)
-                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
-                    let res = self
-                        .handle(req, cx)
-                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
-                    serde_json::to_string(&res)
-                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
-                }),
-            }
-        }
-
-        fn handle(&self, input: Object35, cx: Ctx) -> anyhow::Result<Entity45>;
+        fn handle(&self, input: Cycles1Args, cx: Ctx) -> anyhow::Result<Cycles1>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
-            "add" => "Add",
-            "hundred-random" => "HundredRandom",
-            "identity" => "Identity",
-            "range" => "Range",
-            "record-creation" => "RecordCreation",
+            "composites" => "RsComposites",
+            "cycles" => "RsCycles",
+            "primitives" => "RsPrimitives",
             _ => panic!("unrecognized op_name: {op_name}"),
         }
     }

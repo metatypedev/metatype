@@ -112,7 +112,13 @@ impl DenoProcessor {
                     .collect::<Result<Vec<_>, _>>()?,
             );
             tg_artifacts.push(deno_artifact);
+        } else if !Store::get_codegen_flag() {
+            return Err(format!(
+                "could not resolve module {:?}",
+                main_path.display(),
+            ));
         }
+        // else cli codegen
 
         mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
 

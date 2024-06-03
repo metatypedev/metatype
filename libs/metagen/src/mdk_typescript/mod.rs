@@ -117,7 +117,9 @@ fn render_mdk_ts(config: &MdkTypescriptGenConfig, tg: &Typegraph) -> anyhow::Res
             .stubbed_runtimes
             .clone()
             .unwrap_or_else(|| vec!["deno".to_string()]);
-        let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts)?;
+        let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts).wrap_err_with(|| {
+            format!("error collecting materializers for runtimes {stubbed_rts:?}")
+        })?;
         for fun in &stubbed_funs {
             let TypeNode::Function { base, data } = &fun.node else {
                 unreachable!()

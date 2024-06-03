@@ -30,6 +30,7 @@ type CLIConfigRequest = {
   secrets: Record<string, string>;
   artifactsConfig: ArtifactResolutionConfig;
   disableArtifactResolution: boolean;
+  codegen: boolean;
 };
 
 type CLISuccess<T> = {

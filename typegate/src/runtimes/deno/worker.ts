@@ -75,6 +75,7 @@ async function import_func(op: number, task: ImportFuncTask) {
   if (name in mod && typeof mod[name] === "function") {
     return await mod[name](args, internals, make_internal(internals));
   }
+  console.log({ registry, op, task });
   throw new Error(`"${name}" is not a valid method`);
 }
 

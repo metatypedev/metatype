@@ -37,6 +37,7 @@ if (typeof tg === "function") {
 const secrets = JSON.parse(secretsStr);
 
 const disableArtRes = Deno.env.get("DISABLE_ART_RES");
+const codegen = Deno.env.get("CODEGEN");
 const migrationDir = Deno.env.get("MIGRATION_DIR") ?? "prisma-migrations";
 let globalActionReset = Deno.env.get("GLOBAL_ACTION_RESET") ?? false;
 if (globalActionReset !== false) {
@@ -52,6 +53,7 @@ const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
   auth,
   artifactsConfig: {
     disableArtifactResolution: disableArtRes,
+    codegen,
     prismaMigration: {
       globalAction: {
         create: globalActionCreate,

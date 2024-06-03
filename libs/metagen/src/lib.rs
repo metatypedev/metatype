@@ -106,53 +106,46 @@ impl GeneratorRunner {
     pub fn exec(&self, workspace_path: &Path, value: serde_json::Value) -> PluginOutputResult {
         (self.op)(workspace_path, value)
     }
-
-    pub fn get(name: &str) -> Option<GeneratorRunner> {
-        GENERATORS.with(|m| {
-            let out = m.get(name).cloned();
-            out
-        })
-    }
-}
-
-thread_local! {
-    static GENERATORS: HashMap<String, GeneratorRunner> = HashMap::from([
-        // builtin generators
-        (
-            "mdk_rust".to_string(),
-            GeneratorRunner {
-                op: |workspace_path: &Path, val| {
-                    let config = mdk_rust::MdkRustGenConfig::from_json(val, workspace_path)?;
-                    let generator = mdk_rust::Generator::new(config)?;
-                    Ok(Box::new(generator))
-                },
-            },
-        ),
-        (
-            "mdk_python".to_string(),
-            GeneratorRunner {
-                op: |workspace_path: &Path, val| {
-                    let config = mdk_python::MdkPythonGenConfig::from_json(val, workspace_path)?;
-                    let generator = mdk_python::Generator::new(config)?;
-                    Ok(Box::new(generator))
-                },
-            },
-        ),
-        (
-            "mdk_typescript".to_string(),
-            GeneratorRunner {
-                op: |workspace_path: &Path, val| {
-                    let config = mdk_typescript::MdkTypescriptGenConfig::from_json(val, workspace_path)?;
-                    let generator = mdk_typescript::Generator::new(config)?;
-                    Ok(Box::new(generator))
-                },
-            },
-        ),
-    ]);
 }
 
 impl GeneratorRunner {
     pub fn get(name: &str) -> Option<GeneratorRunner> {
+        thread_local! {
+            static GENERATORS: HashMap<String, GeneratorRunner> = HashMap::from([
+                // builtin generators
+                (
+                    "mdk_rust".to_string(),
+                    GeneratorRunner {
+                        op: |workspace_path: &Path, val| {
+                            let config = mdk_rust::MdkRustGenConfig::from_json(val, workspace_path)?;
+                            let generator = mdk_rust::Generator::new(config)?;
+                            Ok(Box::new(generator))
+                        },
+                    },
+                ),
+                (
+                    "mdk_python".to_string(),
+                    GeneratorRunner {
+                        op: |workspace_path: &Path, val| {
+                            let config = mdk_python::MdkPythonGenConfig::from_json(val, workspace_path)?;
+                            let generator = mdk_python::Generator::new(config)?;
+                            Ok(Box::new(generator))
+                        },
+                    },
+                ),
+                (
+                    "mdk_typescript".to_string(),
+                    GeneratorRunner {
+                        op: |workspace_path: &Path, val| {
+                            let config = mdk_typescript::MdkTypescriptGenConfig::from_json(val, workspace_path)?;
+                            let generator = mdk_typescript::Generator::new(config)?;
+                            Ok(Box::new(generator))
+                        },
+                    },
+                ),
+            ]);
+        }
+
         GENERATORS.with(|m| m.get(name).cloned())
     }
 }

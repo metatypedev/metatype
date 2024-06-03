@@ -96,6 +96,23 @@ impl RenderType for RustTypeRenderer {
             TypeNode::Integer { .. } if !body_required => Name("i64".to_string()),
             TypeNode::Float { .. } if !body_required => Name("f64".to_string()),
             TypeNode::String { .. } if !body_required => Name("String".to_string()),
+            TypeNode::String {
+                data:
+                    StringTypeData {
+                        format: Some(format),
+                        pattern: None,
+                        min_length: None,
+                        max_length: None,
+                    },
+                base:
+                    TypeNodeBase {
+                        title,
+                        enumeration: None,
+                        ..
+                    },
+            } if title.starts_with("string_") => {
+                Name(normalize_type_title(&format!("string_{format}")))
+            }
             TypeNode::File { .. } if !body_required => Name("Vec<u8>".to_string()),
             TypeNode::Optional {
                 // NOTE: keep this condition

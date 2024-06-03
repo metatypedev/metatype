@@ -192,6 +192,7 @@ impl TypeRenderer {
     ) {
         let old_name = self.name_memo.insert(id, replacement.clone()).unwrap();
         replacement_records.insert(0, (old_name.to_string(), replacement.to_string()));
+        // dbg!((&id, &replacement_records));
         self.replacement_records.push((id, replacement_records));
     }
 
@@ -271,7 +272,8 @@ impl TypeRenderer {
 
     pub fn finalize(self) -> (String, NameMemo) {
         let mut out = self.dest.buf;
-        for (_id, records) in self.replacement_records {
+        for (_id, records) in self.replacement_records.into_iter().rev() {
+            // dbg!((&_id, &records));
             for (from, to) in records {
                 out = out.replace(&from, &to);
             }

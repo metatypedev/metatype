@@ -109,8 +109,12 @@ impl InputResolver for MetagenCtx {
             }
             GeneratorInputOrder::TypegraphFromPath { path, name } => {
                 let config = self.config.clone();
-                let dir = self.dir.join(path);
-                let raw = load_tg_at(config, dir, name.as_deref()).await?;
+                let path = self
+                    .dir
+                    .join(path)
+                    .canonicalize()
+                    .wrap_err("unable to canonicalize typegraph path, make sure it exists")?;
+                let raw = load_tg_at(config, path, name.as_deref()).await?;
                 GeneratorInputResolved::TypegraphFromTypegate { raw }
             }
         })

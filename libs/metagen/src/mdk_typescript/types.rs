@@ -28,7 +28,7 @@ impl TypescriptTypeRenderer {
     ) -> std::fmt::Result {
         writeln!(dest, "export type {ty_name} = {{")?;
         for (name, ty_name) in props.into_iter() {
-            writeln!(dest, "  {name}: {ty_name},")?;
+            writeln!(dest, "  {name}: {ty_name};")?;
         }
         writeln!(dest, "}};")?;
         Ok(())
@@ -40,7 +40,7 @@ impl TypescriptTypeRenderer {
         ty_name: &str,
         variants: Vec<Rc<str>>,
     ) -> std::fmt::Result {
-        write!(dest, "export type {ty_name} = ")?;
+        write!(dest, "export type {ty_name} =")?;
         for ty_name in variants.into_iter() {
             write!(dest, "\n  | ({ty_name})")?;
         }
@@ -64,6 +64,23 @@ impl RenderType for TypescriptTypeRenderer {
             TypeNode::Integer { .. } if !body_required => Name("number".to_string()),
             TypeNode::Float { .. } if !body_required => Name("number".to_string()),
             TypeNode::String { .. } if !body_required => Name("string".to_string()),
+            TypeNode::String {
+                data:
+                    StringTypeData {
+                        format: Some(format),
+                        pattern: None,
+                        min_length: None,
+                        max_length: None,
+                    },
+                base:
+                    TypeNodeBase {
+                        title,
+                        enumeration: None,
+                        ..
+                    },
+            } if title.starts_with("string_") => {
+                Name(normalize_type_title(&format!("string_{format}")))
+            }
             TypeNode::File { .. } if !body_required => Name("File".to_string()),
             TypeNode::Optional {
                 // NOTE: keep this condition

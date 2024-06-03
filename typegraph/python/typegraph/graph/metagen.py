@@ -23,6 +23,7 @@ codegen_artefact_config = ArtifactResolutionConfig(
     dir=None,
     prefix=None,
     disable_artifact_resolution=True,
+    codegen=True,
 )
 
 

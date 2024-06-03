@@ -4,20 +4,95 @@
 use heck::*;
 use once_cell::sync::Lazy;
 
+// sourced from
+// https://github.com/microsoft/TypeScript/blob/ef514af2675389d38c793d6cc1945486c367e6fa/src/compiler/types.ts#L140
 static KEYWORDS: Lazy<std::collections::HashSet<&'static str>> = Lazy::new(|| {
     [
-        // strict keywords
-        "as", "break", "const", "continue", "crate", "else", "enum", "extern", "false", "fn", "for",
-        "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return",
-        "self", "Self", "static", "struct", "super", "trait", "true", "type", "unsafe", "use",
-        "where", "while", //
-        // 2018+ keywords
-        "async", "await", "dyn", //
-        // reserved keywords
-        "abstract", "become", "box", "do", "final", "macro", "override", "priv", "typeof",
-        "unsized", "virtual", "yield", //
-        // 2018+ reserved keywords
+        "break",
+        "case",
+        "catch",
+        "class",
+        "const",
+        "continue",
+        "debugger",
+        "default",
+        "delete",
+        "do",
+        "else",
+        "enum",
+        "export",
+        "extends",
+        "false",
+        "finally",
+        "for",
+        "function",
+        "if",
+        "import",
+        "in",
+        "instanceof",
+        "new",
+        "null",
+        "return",
+        "super",
+        "switch",
+        "this",
+        "throw",
+        "true",
         "try",
+        "typeof",
+        "var",
+        "void",
+        "while",
+        "with",
+        // strict mode reserved words
+        "implements",
+        "interface",
+        "let",
+        "package",
+        "private",
+        "protected",
+        "public",
+        "static",
+        "yield",
+        // contextual keywords
+        "abstract",
+        "accessor",
+        "as",
+        "asserts",
+        "assert",
+        "any",
+        "async",
+        "await",
+        "boolean",
+        "constructor",
+        "declare",
+        "get",
+        "infer",
+        "intrinsic",
+        "is",
+        "keyof",
+        "module",
+        "namespace",
+        "never",
+        "out",
+        "readonly",
+        "require",
+        "number",
+        "object",
+        "satisfies",
+        "set",
+        "string",
+        "symbol",
+        "type",
+        "undefined",
+        "unique",
+        "unknown",
+        "using",
+        "from",
+        "global",
+        "bigint",
+        "override",
+        "of",
     ]
     .into_iter()
     .collect()
@@ -27,7 +102,6 @@ pub fn normalize_type_title(title: &str) -> String {
     static RE: Lazy<regex::Regex> =
         Lazy::new(|| regex::Regex::new(r"^(?<startd>\d+)(?<rest>.*)").unwrap());
 
-    // TODO: clean out rust keywords
     // TODO: clean up non valid chars
 
     // clean out underscores at start/end

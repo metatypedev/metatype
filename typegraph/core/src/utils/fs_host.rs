@@ -185,7 +185,7 @@ pub fn load_tg_ignore_file() -> Result<Vec<String>, String> {
 pub fn cwd() -> Result<PathBuf, String> {
     match Store::get_deploy_cwd() {
         Some(path) => Ok(path),
-        None => Ok(PathBuf::from(get_cwd()?.to_owned())),
+        None => Ok(PathBuf::from(get_cwd()?)),
     }
 }
 

@@ -4,7 +4,8 @@ from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
 
-class Struct():
+
+class Struct:
     def repr(self):
         return asdict(self)
 
@@ -76,29 +77,131 @@ class Struct():
         except Exception:
             return val
 
-{% for class in classes -%}
-{{ class.def }}
 
-FORWARD_REFS["{{ class.hint }}"] = {{ class.hint }}
-{% endfor -%}
+@dataclass
+class Primitives(Struct):
+    str: str
+    enum: str
+    uuid: str
+    email: str
+    ean: str
+    json: str
+    uri: str
+    date: str
+    datetime: str
+    int: int
+    float: float
+    boolean: bool
 
-{% for def in types -%}
-{{ def }}
-{% endfor %}
+
+FORWARD_REFS["Primitives"] = Primitives
+
+
+@dataclass
+class PrimitivesArgs(Struct):
+    data: "Primitives"
+
+
+FORWARD_REFS["PrimitivesArgs"] = PrimitivesArgs
+
+
+@dataclass
+class CompositesArgs(Struct):
+    data: "Composites"
+
+
+FORWARD_REFS["CompositesArgs"] = CompositesArgs
+
+
+@dataclass
+class Composites(Struct):
+    opt: Union[str, None]
+    either: Union["Branch2", "Primitives"]
+    union: Union[str, int, List[str]]
+    list: List[str]
+
+
+FORWARD_REFS["Composites"] = Composites
+
+
+@dataclass
+class Branch2(Struct):
+    branch2: str
+
+
+FORWARD_REFS["Branch2"] = Branch2
+
+
+@dataclass
+class Cycles1Args(Struct):
+    data: "Cycles1"
+
+
+FORWARD_REFS["Cycles1Args"] = Cycles1Args
+
+
+@dataclass
+class Cycles1(Struct):
+    phantom1: Union[str, None]
+    to2: Union[Union["Cycles1", Union["Branch33B", "Branch33A"]], None]
+    list3: Union[List[Union["Branch33B", "Branch33A"]], None]
+
+
+FORWARD_REFS["Cycles1"] = Cycles1
+
+
+@dataclass
+class Branch33A(Struct):
+    phantom3a: Union[str, None]
+    to1: Union["Cycles1", None]
+
+
+FORWARD_REFS["Branch33A"] = Branch33A
+
+
+@dataclass
+class Branch33B(Struct):
+    phantom3b: Union[str, None]
+    to2: Union[Union["Cycles1", Union["Branch33A", "Branch33B"]], None]
+
+
+FORWARD_REFS["Branch33B"] = Branch33B
+
 
 def __repr(value: Any):
     if isinstance(value, Struct):
         return value.repr()
     return value
 
-{%for func in funcs %}
-def typed_{{ func.name }}(user_fn: Callable[[{{ func.input_name }}], {{ func.output_name }}]):
+
+def typed_cycles(user_fn: Callable[[Cycles1Args], Cycles1]):
     def exported_wrapper(raw_inp):
-        inp: {{ func.input_name }} = Struct.new({{ func.input_name }}, raw_inp)
-        out: {{ func.output_name }} = user_fn(inp)
+        inp: Cycles1Args = Struct.new(Cycles1Args, raw_inp)
+        out: Cycles1 = user_fn(inp)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
+
     return exported_wrapper
 
-{% endfor %}
+
+def typed_composites(user_fn: Callable[[CompositesArgs], Composites]):
+    def exported_wrapper(raw_inp):
+        inp: CompositesArgs = Struct.new(CompositesArgs, raw_inp)
+        out: Composites = user_fn(inp)
+        if isinstance(out, list):
+            return [__repr(v) for v in out]
+        return __repr(out)
+
+    return exported_wrapper
+
+
+def typed_primitives(user_fn: Callable[[PrimitivesArgs], Primitives]):
+    def exported_wrapper(raw_inp):
+        inp: PrimitivesArgs = Struct.new(PrimitivesArgs, raw_inp)
+        out: Primitives = user_fn(inp)
+        if isinstance(out, list):
+            return [__repr(v) for v in out]
+        return __repr(out)
+
+    return exported_wrapper

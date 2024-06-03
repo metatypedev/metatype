@@ -5,7 +5,7 @@ from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph()
-def metagen_identities(g: Graph):
+def identities(g: Graph):
     # TODO: injections
     # TODO: materializers (HttpRuntime.rest)
 
@@ -19,10 +19,12 @@ def metagen_identities(g: Graph):
             "json": t.json(),
             "uri": t.uri(),
             "date": t.date(),
+            "datetime": t.datetime(),
             "int": t.integer(),
             "float": t.float(),
             "boolean": t.boolean(),
-            "file": t.file(),
+            # TODO: file upload support for MDK?
+            # "file": t.file(),
         }
     ).rename("primitives")
     composites = t.struct(
@@ -31,93 +33,125 @@ def metagen_identities(g: Graph):
             "either": t.either(
                 [
                     primitives,
-                    t.struct({"branch2": t.string()}),
-                    t.string(),
-                    t.file().rename("branch4"),
+                    t.struct({"branch2": t.string()}).rename("branch2"),
                 ]
             ),
             "union": t.union(
                 [
-                    primitives,
-                    t.struct({"branch2": t.string()}),
+                    t.list(t.enum(["grey", "beige"])).rename("branch4"),
+                    t.integer(),
                     t.string(),
-                    t.file().rename("branch4"),
+                    t.email().rename("branch4again"),
                 ]
             ),
             "list": t.list(t.string()),
-            "type": t.string(),
         }
     ).rename("composites")
     cycles1 = t.struct(
-        {"to2": g.ref("cycles2"), "list3": t.list(g.ref("cycles3"))}
+        {
+            # phantom field allows us to get past gql empty object query issues
+            # numbering the phantom fields prevents type ambigiuty during union validation
+            "phantom1": t.string().optional(),
+            "to2": g.ref("cycles2").optional(),
+            "list3": t.list(g.ref("cycles3")).optional(),
+        }
     ).rename("cycles1")
 
     t.either(
         [
             g.ref("cycles3"),
-            g.ref("cycles1").optional(),
+            g.ref("cycles1"),
         ]
     ).rename("cycles2")
 
     t.union(
-        [t.struct({"to1": g.ref("cycles1")}), t.struct({"to2": g.ref("cycles2")})]
+        [
+            t.struct(
+                {
+                    "phantom3a": t.string().optional(),
+                    "to1": g.ref("cycles1").optional(),
+                }
+            ).rename("branch33A"),
+            t.struct(
+                {
+                    "phantom3b": t.string().optional(),
+                    "to2": g.ref("cycles2").optional(),
+                }
+            ).rename("branch33B"),
+        ]
     ).rename("cycles3")
 
     python = PythonRuntime()
-    wasm = WasmRuntime.wire("rust.wasm")
+    wasm = WasmRuntime.wire("./identities/rust.wasm")
     deno = DenoRuntime()
 
+    # we wrap the types in a struct to make the
+    # graphql queries easier
+    # we also name them to make them stable across changes
+    # to the graph
+    def argify(ty):
+        return t.struct({"data": ty}).rename(f"{ty.name}_args")
+
+    primitives_args = argify(primitives)
+    composites_args = argify(composites)
+    cycles1_args = argify(cycles1)
     g.expose(
         Policy.public(),
         py_primitives=python.import_(
+            primitives_args,
             primitives,
-            primitives,
-            module="./scripts/py/handlers.py",
-            name="primtives",
+            module="./identities/py/handlers.py",
+            deps=["./identities/py/handlers_types.py"],
+            name="primitives",
         ).rename("py_primitives"),
         py_composites=python.import_(
+            composites_args,
             composites,
-            composites,
-            module="./scripts/py/handlers.py",
+            module="./identities/py/handlers.py",
+            deps=["./identities/py/handlers_types.py"],
             name="composites",
         ).rename("py_composites"),
         py_cycles=python.import_(
+            cycles1_args,
             cycles1,
-            cycles1,
-            module="./scripts/py/handlers.py",
+            module="./identities/py/handlers.py",
+            deps=["./identities/py/handlers_types.py"],
             name="cycles",
         ).rename("py_cycles"),
         ts_primitives=deno.import_(
+            primitives_args,
             primitives,
-            primitives,
-            module="./scripts/ts/handlers.ts",
-            name="primtives",
+            module="./identities/ts/handlers.ts",
+            deps=["./identities/ts/mdk.ts"],
+            name="primitives",
         ).rename("ts_primitives"),
         ts_composites=deno.import_(
+            composites_args,
             composites,
-            composites,
-            module="./scripts/ts/handlers.ts",
+            module="./identities/ts/handlers.ts",
+            deps=["./identities/ts/mdk.ts"],
             name="composites",
         ).rename("ts_composites"),
         ts_cycles=deno.import_(
+            cycles1_args,
             cycles1,
-            cycles1,
-            module="./scripts/ts/handlers.ts",
+            module="./identities/ts/handlers.ts",
+            deps=["./identities/ts/mdk.ts"],
             name="cycles",
         ).rename("ts_cycles"),
         rs_primitives=wasm.handler(
+            primitives_args,
             primitives,
-            primitives,
-            name="primtives",
-        ).rename("ts_primitives"),
+            name="primitives",
+        ).rename("rs_primitives"),
         rs_composites=wasm.handler(
-            composites,
+            composites_args,
             composites,
             name="composites",
-        ).rename("ts_composites"),
+        ).rename("rs_composites"),
         rs_cycles=wasm.handler(
-            cycles1,
+            cycles1_args,
             cycles1,
             name="cycles",
-        ).rename("ts_cycles"),
+        ).rename("rs_cycles"),
     )

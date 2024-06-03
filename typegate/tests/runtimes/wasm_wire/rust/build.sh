@@ -3,7 +3,7 @@
 set -e
 
 cd ..
-cargo run -p meta-cli -- gen mdk wasm_wire
+cargo run -p meta-cli -- gen wasm_wire
 cd -
 
 ADAPTOR="../../../../../tmp/wasi_snapshot_preview1.reactor.wasm"

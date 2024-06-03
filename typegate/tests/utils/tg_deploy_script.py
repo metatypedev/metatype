@@ -45,6 +45,7 @@ secrets = json.loads(secrets_str)
 
 
 disable_art_resol = os.environ.get("DISABLE_ART_RES")
+codegen = os.environ.get("CODEGEN")
 migration_dir = os.environ.get("MIGRATION_DIR") or "prisma-migrations"
 global_action_reset = os.environ.get("GLOBAL_ACTION_RESET") or False
 if global_action_reset is not False:
@@ -67,6 +68,7 @@ deploy_result = tg_deploy(
             dir=cwd,
             prefix=None,
             disable_artifact_resolution=disable_art_resol,
+            codegen=codegen,
             prisma_migration=MigrationConfig(
                 migration_dir=migration_dir,
                 global_action=MigrationAction(
