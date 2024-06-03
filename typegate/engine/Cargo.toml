@@ -31,6 +31,7 @@ tap = "1.0.1"
 convert_case = "0.6.0"
 connection-string = "0.2.0"
 mt_deno.workspace = true
+deno_core.workspace = true
 common.workspace = true
 typescript.workspace = true
 

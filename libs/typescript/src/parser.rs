@@ -45,6 +45,7 @@ fn named_import(local_name: String, import_name: String) -> ImportNamedSpecifier
 /// import with named specifier and its source code.
 fn import(specifier: ImportNamedSpecifier, source: &str) -> ImportDecl {
     ImportDecl {
+        phase: swc_ecma_ast::ImportPhase::Source,
         span: DUMMY_SP,
         specifiers: vec![ImportSpecifier::Named(specifier)],
         src: Box::new(Str {

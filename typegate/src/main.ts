@@ -53,7 +53,7 @@ try {
 
   const server = Deno.serve(
     { port: config.tg_port },
-    (req, connInfo) => typegate.handle(req, connInfo),
+    (req, connInfo) => typegate.handle(req, connInfo.remoteAddr),
   );
 
   getLogger().info(`typegate ready on ${config.tg_port}`);
