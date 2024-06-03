@@ -231,19 +231,26 @@ function validate_15(value, path, errors, context) {
 }
 function validate_17(value, path, errors, context) {
   let matchCount = 0;
+  const failed = [];
   let errs;
   errs = [];
   validate_18(value, path, errs, context);
   if (errs.length === 0) matchCount += 1;
+  else failed.push(errs);
   errs = [];
   validate_21(value, path, errs, context);
   if (errs.length === 0) matchCount += 1;
+  else failed.push(errs);
   if (matchCount === 0) {
+    const failedErrors = failed.map((errs, i) => \`\\\\n  #\${i} \${errs.join(\\", \\")}\`)
+      .join(\\"\\");
     errors.push([path,
-      \\"Value does not match to any variant of the either type\\"]);
+      \`Value does not match to any variant of the either type \${failedErrors}\`]);
   } else if (matchCount > 1) {
+    const failedErrors = failed.map((errs, i) => \`\\\\n  #\${i} \${errs.join(\\", \\")}\`)
+      .join(\\"\\");
     errors.push([path,
-      \\"Value match to more than one variant of the either type\\"]);
+      \`Value match to more than one variant of the either type \${failedErrors}\`]);
   }
 }
 function validate_12(value, path, errors, context) {
@@ -293,36 +300,50 @@ function validate_21(value, path, errors, context) {
 }
 function validate_19(value, path, errors, context) {
   let matchCount = 0;
+  const failed = [];
   let errs;
   errs = [];
   validate_20(value, path, errs, context);
   if (errs.length === 0) matchCount += 1;
+  else failed.push(errs);
   errs = [];
   validate_12(value, path, errs, context);
   if (errs.length === 0) matchCount += 1;
+  else failed.push(errs);
   if (matchCount === 0) {
+    const failedErrors = failed.map((errs, i) => \`\\\\n  #\${i} \${errs.join(\\", \\")}\`)
+      .join(\\"\\");
     errors.push([path,
-      \\"Value does not match to any variant of the either type\\"]);
+      \`Value does not match to any variant of the either type \${failedErrors}\`]);
   } else if (matchCount > 1) {
+    const failedErrors = failed.map((errs, i) => \`\\\\n  #\${i} \${errs.join(\\", \\")}\`)
+      .join(\\"\\");
     errors.push([path,
-      \\"Value match to more than one variant of the either type\\"]);
+      \`Value match to more than one variant of the either type \${failedErrors}\`]);
   }
 }
 function validate_22(value, path, errors, context) {
   let matchCount = 0;
+  const failed = [];
   let errs;
   errs = [];
   validate_20(value, path, errs, context);
   if (errs.length === 0) matchCount += 1;
+  else failed.push(errs);
   errs = [];
   validate_23(value, path, errs, context);
   if (errs.length === 0) matchCount += 1;
+  else failed.push(errs);
   if (matchCount === 0) {
+    const failedErrors = failed.map((errs, i) => \`\\\\n  #\${i} \${errs.join(\\", \\")}\`)
+      .join(\\"\\");
     errors.push([path,
-      \\"Value does not match to any variant of the either type\\"]);
+      \`Value does not match to any variant of the either type \${failedErrors}\`]);
   } else if (matchCount > 1) {
+    const failedErrors = failed.map((errs, i) => \`\\\\n  #\${i} \${errs.join(\\", \\")}\`)
+      .join(\\"\\");
     errors.push([path,
-      \\"Value match to more than one variant of the either type\\"]);
+      \`Value match to more than one variant of the either type \${failedErrors}\`]);
   }
 }
 function validate_20(value, path, errors, context) {
@@ -369,12 +390,22 @@ snapshot[`input validator compiler 9`] = `
 
 snapshot[`input validator compiler 10`] = `
 "Validation errors:
-  - at <value>.search: Value does not match to any variant of the either type
+  - at <value>.search: Value does not match to any variant of the either type 
+  #0 <value>.search.title,Value match to more than one variant of the either type 
+  #1 <value>.search.content,Value does not match to any variant of the either type 
+  #0 <value>.search.content,expected a string, got undefined
+  #1 <value>.search.content,expected an array, got undefined, <value>.search,unexpected fields: title
 "
 `;
 
 snapshot[`input validator compiler 11`] = `
 "Validation errors:
-  - at <value>.search: Value does not match to any variant of the either type
+  - at <value>.search: Value does not match to any variant of the either type 
+  #0 <value>.search.title,Value does not match to any variant of the either type 
+  #0 <value>.search.title,expected a string, got undefined
+  #1 <value>.search.title,expected a string, got undefined, <value>.search,unexpected fields: content
+  #1 <value>.search.content,Value does not match to any variant of the either type 
+  #0 <value>.search.content,expected a string, got object
+  #1 <value>.search.content,expected maximum items: 3, got 4
 "
 `;
