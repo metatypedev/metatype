@@ -106,6 +106,8 @@ const env: Record<string, string> = {
   "TMP_DIR": tmpDir,
   "TIMER_MAX_TIMEOUT_MS": "30000",
   "NPM_CONFIG_REGISTRY": "http://localhost:4873",
+  // NOTE: ordering of the variables is important as we want the
+  // `meta` build to be resolved before any system meta builds
   "PATH": `${join(projectDir, "target/debug")}:${Deno.env.get("PATH")}`,
 };
 

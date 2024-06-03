@@ -55,7 +55,7 @@ async function getLocalParentDir(
   return await sha256(uniqueStr);
 }
 
-export async function getLocalPath(
+async function readyLocalPath(
   meta: ArtifactMeta,
   parentDirName: string,
   dirs: Dirs,
@@ -74,11 +74,7 @@ export async function getLocalPath(
   }
 
   await Deno.mkdir(dirname(localPath), { recursive: true });
-  // the old artifacts are always removed on typegraph update.
-  await Deno.remove(localPath, { recursive: true }).catch(() => {});
-  await Deno.link(cachedPath, localPath).catch((msg) => {
-    logger.warn(msg);
-  });
+  await Deno.link(cachedPath, localPath);
 
   return localPath;
 }
@@ -112,6 +108,7 @@ export interface UploadEndpointManager extends AsyncDisposable {
 
 export class ArtifactStore implements AsyncDisposable {
   #disposed = false;
+  #localPathMemo = new Map<string, Promise<string>>();
 
   static async init(
     persistence: ArtifactPersistence,
@@ -187,6 +184,15 @@ export class ArtifactStore implements AsyncDisposable {
     });
   }
 
+  #resolveLocalPath(dep: ArtifactMeta, parentDirName: string) {
+    let promise = this.#localPathMemo.get(dep.hash);
+    if (!promise) {
+      promise = readyLocalPath(dep, parentDirName, this.persistence.dirs);
+      this.#localPathMemo.set(dep.hash, promise);
+    }
+    return promise;
+  }
+
   async getLocalPath(
     meta: ArtifactMeta,
     deps: ArtifactMeta[] = [],
@@ -194,11 +200,11 @@ export class ArtifactStore implements AsyncDisposable {
     const parentDirName = await getLocalParentDir(meta, deps);
     for (const dep of deps) {
       await this.persistence.fetch(dep.hash);
-      await getLocalPath(dep, parentDirName, this.persistence.dirs);
+      await this.#resolveLocalPath(dep, parentDirName);
     }
 
     await this.persistence.fetch(meta.hash);
-    return getLocalPath(meta, parentDirName, this.persistence.dirs);
+    return this.#resolveLocalPath(meta, parentDirName);
   }
 
   prepareUpload(meta: ArtifactMeta, origin: URL) {
