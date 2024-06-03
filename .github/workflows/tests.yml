@@ -285,7 +285,6 @@ jobs:
           # install packages inside metatype examples
           pnpm install -C examples/typegraphs
 
-
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
 
           deno run -A dev/update.ts --cache-only
