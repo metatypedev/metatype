@@ -5,17 +5,6 @@ use crate::interlude::*;
 use common::typegraph::*;
 
 pub async fn test_typegraph_1() -> anyhow::Result<Typegraph> {
-    assert!(
-        tokio::process::Command::new("pnpm")
-            .args("-C tests install".split(' ').collect::<Vec<_>>())
-            .kill_on_drop(true)
-            .output()
-            .await?
-            .status
-            .success(),
-        "error installing pnpm packages for metagen test typegraph"
-    );
-
     let out = tokio::process::Command::new("cargo")
         .args(
             "run -p meta-cli -- serialize -f tests/tg.ts"
