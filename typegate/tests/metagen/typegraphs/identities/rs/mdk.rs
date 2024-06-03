@@ -109,7 +109,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.4.2";
+        static MT_VERSION: &str = "0.4.3-0";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -317,6 +317,28 @@ pub mod types {
     pub struct Cycles1Args {
         pub data: Cycles1,
     }
+    pub type SimpleCycles174 = Option<SimpleCycles1>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles3 {
+        pub phantom3: Option<String>,
+        pub to1: SimpleCycles174,
+    }
+    pub type SimpleCycles368 = Option<SimpleCycles3>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles2 {
+        pub phantom2: Option<String>,
+        pub to3: SimpleCycles368,
+    }
+    pub type SimpleCycles262 = Option<SimpleCycles2>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles1 {
+        pub phantom1: Option<String>,
+        pub to2: Box<SimpleCycles262>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles1Args {
+        pub data: SimpleCycles1,
+    }
 }
 use stubs::*;
 pub mod stubs {
@@ -381,11 +403,32 @@ pub mod stubs {
 
         fn handle(&self, input: Cycles1Args, cx: Ctx) -> anyhow::Result<Cycles1>;
     }
+    pub trait RsSimpleCycles: Sized + 'static {
+        fn erased(self) -> ErasedHandler {
+            ErasedHandler {
+                mat_id: "rs_simple_cycles".into(),
+                mat_title: "rs_simple_cycles".into(),
+                mat_trait: "RsSimpleCycles".into(),
+                handler_fn: Box::new(move |req, cx| {
+                    let req = serde_json::from_str(req)
+                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
+                    let res = self
+                        .handle(req, cx)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
+                    serde_json::to_string(&res)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
+                }),
+            }
+        }
+
+        fn handle(&self, input: SimpleCycles1Args, cx: Ctx) -> anyhow::Result<SimpleCycles1>;
+    }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
             "composites" => "RsComposites",
             "cycles" => "RsCycles",
             "primitives" => "RsPrimitives",
+            "simple_cycles" => "RsSimpleCycles",
             _ => panic!("unrecognized op_name: {op_name}"),
         }
     }

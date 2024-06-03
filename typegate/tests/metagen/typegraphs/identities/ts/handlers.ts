@@ -5,9 +5,11 @@ import type {
   Composites,
   Cycles1,
   Primitives,
+  SimpleCycles1,
   TsCompositesHandler,
   TsCyclesHandler,
   TsPrimitivesHandler,
+  TsSimpleCyclesHandler,
 } from "./mdk.ts";
 
 export const primitives: TsPrimitivesHandler = (inp, _ctx, _tg) => {
@@ -26,6 +28,13 @@ export const cycles: TsCyclesHandler = (inp, _ctx, _tg) => {
 
 export const composites: TsCompositesHandler = (inp, _ctx, _tg) => {
   const out: Composites = {
+    ...inp.data,
+  };
+  return out;
+};
+
+export const simple_cycles: TsSimpleCyclesHandler = (inp, _ctx, _tg) => {
+  const out: SimpleCycles1 = {
     ...inp.data,
   };
   return out;

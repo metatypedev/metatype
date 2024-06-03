@@ -108,7 +108,26 @@ export type Cycles1 = {
 export type Cycles1Args = {
   data: Cycles1;
 };
+export type SimpleCycles174 = SimpleCycles1 | null | undefined;
+export type SimpleCycles3 = {
+  phantom3: (string) | null | undefined;
+  to1: SimpleCycles174;
+};
+export type SimpleCycles368 = SimpleCycles3 | null | undefined;
+export type SimpleCycles2 = {
+  phantom2: (string) | null | undefined;
+  to3: SimpleCycles368;
+};
+export type SimpleCycles262 = SimpleCycles2 | null | undefined;
+export type SimpleCycles1 = {
+  phantom1: (string) | null | undefined;
+  to2: SimpleCycles262;
+};
+export type SimpleCycles1Args = {
+  data: SimpleCycles1;
+};
 
 export type TsPrimitivesHandler = Handler<PrimitivesArgs, Primitives>;
 export type TsCompositesHandler = Handler<CompositesArgs, Composites>;
 export type TsCyclesHandler = Handler<Cycles1Args, Cycles1>;
+export type TsSimpleCyclesHandler = Handler<SimpleCycles1Args, SimpleCycles1>;

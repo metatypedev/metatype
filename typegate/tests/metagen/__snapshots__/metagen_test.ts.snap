@@ -65,13 +65,17 @@ def fnOne(inp: Object7) -> Type8Student:
   },
   {
     content: 'from types import NoneType
-from typing import Callable, List, Union, get_origin, ForwardRef
+from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
 
-class Struct:
-    def try_new(dt_class, val: any):
+class Struct():
+    def repr(self):
+        return asdict(self)
+
+    @staticmethod
+    def try_new(dt_class, val: Any):
         # Object
         ftypes = {f.name: f.type for f in fields(dt_class)}
         attrs = {}
@@ -84,14 +88,14 @@ class Struct:
                 try:
                     attrs[f] = Struct.try_union(ftype.__args__, fval)
                     serialized = True
-                except Exception as _e:
+                except Exception:
                     pass
             # List
             elif get_origin(ftype) is list:
                 try:
                     attrs[f] = Struct.try_typed_list(ftype.__args__, fval)
                     serialized = True
-                except Exception as _e:
+                except Exception:
                     pass
             # Any
             if not serialized:
@@ -102,14 +106,16 @@ class Struct:
                     attrs[f] = Struct.new(ftype, fval)
         return dt_class(**attrs)
 
-    def try_typed_list(tpe: any, items: any):
+    @staticmethod
+    def try_typed_list(tpe: Any, items: Any):
         hint = tpe.__args__[0]
         klass = (
             FORWARD_REFS[hint.__forward_arg__] if isinstance(hint, ForwardRef) else hint
         )
         return [Struct.new(klass, v) for v in items]
 
-    def try_union(variants: List[any], val: any):
+    @staticmethod
+    def try_union(variants: List[Any], val: Any):
         errors = []
         for variant in variants:
             try:
@@ -129,32 +135,33 @@ class Struct:
                 errors.append(str(e))
         raise Exception("\\\\n".join(errors))
 
-    def new(dt_class: any, val: any):
+    @staticmethod
+    def new(dt_class: Any, val: Any):
         try:
             return Struct.try_new(dt_class, val)
-        except Exception as _err:
+        except Exception:
             return val
-
-    def repr(self):
-        return asdict(self)
 
 @dataclass
 class Object7(Struct):
-name: str
+    name: str
+
 
 
 FORWARD_REFS["Object7"] = Object7
 @dataclass
 class Student(Struct):
-id: int
-name: str
-peers: Union[List["Student"], None]
+    id: int
+    name: str
+    peers: Union[List["Student"], None]
+
 
 
 FORWARD_REFS["Student"] = Student
 @dataclass
 class TwoInput(Struct):
-name: str
+    name: str
+
 
 
 FORWARD_REFS["TwoInput"] = TwoInput
@@ -162,7 +169,7 @@ TypeString6 = str
 Type8Student = List["Student"]
 
 
-def __repr(value: any):
+def __repr(value: Any):
     if isinstance(value, Struct):
         return value.repr()
     return value
@@ -565,8 +572,8 @@ export type Deployment = {
 };
 
 export type Handler<In, Out> = (
-  input: In, 
-  ctx: Ctx, 
+  input: In,
+  ctx: Ctx,
   tg: Deployment,
 ) => Out | Promise<Out>;
 
@@ -595,13 +602,17 @@ export type Func20Handler = Handler<Object7, Student>;
   },
   {
     content: 'from types import NoneType
-from typing import Callable, List, Union, get_origin, ForwardRef
+from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
 
-class Struct:
-    def try_new(dt_class, val: any):
+class Struct():
+    def repr(self):
+        return asdict(self)
+
+    @staticmethod
+    def try_new(dt_class, val: Any):
         # Object
         ftypes = {f.name: f.type for f in fields(dt_class)}
         attrs = {}
@@ -614,14 +625,14 @@ class Struct:
                 try:
                     attrs[f] = Struct.try_union(ftype.__args__, fval)
                     serialized = True
-                except Exception as _e:
+                except Exception:
                     pass
             # List
             elif get_origin(ftype) is list:
                 try:
                     attrs[f] = Struct.try_typed_list(ftype.__args__, fval)
                     serialized = True
-                except Exception as _e:
+                except Exception:
                     pass
             # Any
             if not serialized:
@@ -632,14 +643,16 @@ class Struct:
                     attrs[f] = Struct.new(ftype, fval)
         return dt_class(**attrs)
 
-    def try_typed_list(tpe: any, items: any):
+    @staticmethod
+    def try_typed_list(tpe: Any, items: Any):
         hint = tpe.__args__[0]
         klass = (
             FORWARD_REFS[hint.__forward_arg__] if isinstance(hint, ForwardRef) else hint
         )
         return [Struct.new(klass, v) for v in items]
 
-    def try_union(variants: List[any], val: any):
+    @staticmethod
+    def try_union(variants: List[Any], val: Any):
         errors = []
         for variant in variants:
             try:
@@ -659,32 +672,32 @@ class Struct:
                 errors.append(str(e))
         raise Exception("\\\\n".join(errors))
 
-    def new(dt_class: any, val: any):
+    @staticmethod
+    def new(dt_class: Any, val: Any):
         try:
             return Struct.try_new(dt_class, val)
-        except Exception as _err:
+        except Exception:
             return val
-
-    def repr(self):
-        return asdict(self)
 
 @dataclass
 class Object7(Struct):
-name: str
+    name: str
+
 
 
 FORWARD_REFS["Object7"] = Object7
 @dataclass
 class Student(Struct):
-id: int
-name: str
-peers: Union[List["Student"], None]
+    id: int
+    name: str
+    peers: Union[List["Student"], None]
+
 
 
 FORWARD_REFS["Student"] = Student
 
 
-def __repr(value: any):
+def __repr(value: Any):
     if isinstance(value, Struct):
         return value.repr()
     return value
@@ -772,13 +785,17 @@ def fnOne(inp: Object7) -> Type8Student:
   },
   {
     content: 'from types import NoneType
-from typing import Callable, List, Union, get_origin, ForwardRef
+from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
 
-class Struct:
-    def try_new(dt_class, val: any):
+class Struct():
+    def repr(self):
+        return asdict(self)
+
+    @staticmethod
+    def try_new(dt_class, val: Any):
         # Object
         ftypes = {f.name: f.type for f in fields(dt_class)}
         attrs = {}
@@ -791,14 +808,14 @@ class Struct:
                 try:
                     attrs[f] = Struct.try_union(ftype.__args__, fval)
                     serialized = True
-                except Exception as _e:
+                except Exception:
                     pass
             # List
             elif get_origin(ftype) is list:
                 try:
                     attrs[f] = Struct.try_typed_list(ftype.__args__, fval)
                     serialized = True
-                except Exception as _e:
+                except Exception:
                     pass
             # Any
             if not serialized:
@@ -809,14 +826,16 @@ class Struct:
                     attrs[f] = Struct.new(ftype, fval)
         return dt_class(**attrs)
 
-    def try_typed_list(tpe: any, items: any):
+    @staticmethod
+    def try_typed_list(tpe: Any, items: Any):
         hint = tpe.__args__[0]
         klass = (
             FORWARD_REFS[hint.__forward_arg__] if isinstance(hint, ForwardRef) else hint
         )
         return [Struct.new(klass, v) for v in items]
 
-    def try_union(variants: List[any], val: any):
+    @staticmethod
+    def try_union(variants: List[Any], val: Any):
         errors = []
         for variant in variants:
             try:
@@ -836,32 +855,33 @@ class Struct:
                 errors.append(str(e))
         raise Exception("\\\\n".join(errors))
 
-    def new(dt_class: any, val: any):
+    @staticmethod
+    def new(dt_class: Any, val: Any):
         try:
             return Struct.try_new(dt_class, val)
-        except Exception as _err:
+        except Exception:
             return val
-
-    def repr(self):
-        return asdict(self)
 
 @dataclass
 class Object7(Struct):
-name: str
+    name: str
+
 
 
 FORWARD_REFS["Object7"] = Object7
 @dataclass
 class Student(Struct):
-id: int
-name: str
-peers: Union[List["Student"], None]
+    id: int
+    name: str
+    peers: Union[List["Student"], None]
+
 
 
 FORWARD_REFS["Student"] = Student
 @dataclass
 class TwoInput(Struct):
-name: str
+    name: str
+
 
 
 FORWARD_REFS["TwoInput"] = TwoInput
@@ -869,7 +889,7 @@ TypeString6 = str
 Type8Student = List["Student"]
 
 
-def __repr(value: any):
+def __repr(value: Any):
     if isinstance(value, Struct):
         return value.repr()
     return value
@@ -1272,8 +1292,8 @@ export type Deployment = {
 };
 
 export type Handler<In, Out> = (
-  input: In, 
-  ctx: Ctx, 
+  input: In,
+  ctx: Ctx,
   tg: Deployment,
 ) => Out | Promise<Out>;
 
@@ -1302,13 +1322,17 @@ export type Func20Handler = Handler<Object7, Student>;
   },
   {
     content: 'from types import NoneType
-from typing import Callable, List, Union, get_origin, ForwardRef
+from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
 
-class Struct:
-    def try_new(dt_class, val: any):
+class Struct():
+    def repr(self):
+        return asdict(self)
+
+    @staticmethod
+    def try_new(dt_class, val: Any):
         # Object
         ftypes = {f.name: f.type for f in fields(dt_class)}
         attrs = {}
@@ -1321,14 +1345,14 @@ class Struct:
                 try:
                     attrs[f] = Struct.try_union(ftype.__args__, fval)
                     serialized = True
-                except Exception as _e:
+                except Exception:
                     pass
             # List
             elif get_origin(ftype) is list:
                 try:
                     attrs[f] = Struct.try_typed_list(ftype.__args__, fval)
                     serialized = True
-                except Exception as _e:
+                except Exception:
                     pass
             # Any
             if not serialized:
@@ -1339,14 +1363,16 @@ class Struct:
                     attrs[f] = Struct.new(ftype, fval)
         return dt_class(**attrs)
 
-    def try_typed_list(tpe: any, items: any):
+    @staticmethod
+    def try_typed_list(tpe: Any, items: Any):
         hint = tpe.__args__[0]
         klass = (
             FORWARD_REFS[hint.__forward_arg__] if isinstance(hint, ForwardRef) else hint
         )
         return [Struct.new(klass, v) for v in items]
 
-    def try_union(variants: List[any], val: any):
+    @staticmethod
+    def try_union(variants: List[Any], val: Any):
         errors = []
         for variant in variants:
             try:
@@ -1366,32 +1392,32 @@ class Struct:
                 errors.append(str(e))
         raise Exception("\\\\n".join(errors))
 
-    def new(dt_class: any, val: any):
+    @staticmethod
+    def new(dt_class: Any, val: Any):
         try:
             return Struct.try_new(dt_class, val)
-        except Exception as _err:
+        except Exception:
             return val
-
-    def repr(self):
-        return asdict(self)
 
 @dataclass
 class Object7(Struct):
-name: str
+    name: str
+
 
 
 FORWARD_REFS["Object7"] = Object7
 @dataclass
 class Student(Struct):
-id: int
-name: str
-peers: Union[List["Student"], None]
+    id: int
+    name: str
+    peers: Union[List["Student"], None]
+
 
 
 FORWARD_REFS["Student"] = Student
 
 
-def __repr(value: any):
+def __repr(value: Any):
     if isinstance(value, Struct):
         return value.repr()
     return value

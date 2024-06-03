@@ -116,8 +116,8 @@ FORWARD_REFS["CompositesArgs"] = CompositesArgs
 @dataclass
 class Composites(Struct):
     opt: Union[str, None]
-    either: Union["Branch2", "Primitives"]
-    union: Union[str, int, List[str]]
+    either: Union["Primitives", "Branch2"]
+    union: Union[int, str, List[str]]
     list: List[str]
 
 
@@ -143,7 +143,7 @@ FORWARD_REFS["Cycles1Args"] = Cycles1Args
 @dataclass
 class Cycles1(Struct):
     phantom1: Union[str, None]
-    to2: Union[Union["Cycles1", Union["Branch33B", "Branch33A"]], None]
+    to2: Union[Union["Cycles1", Union["Branch33A", "Branch33B"]], None]
     list3: Union[List[Union["Branch33B", "Branch33A"]], None]
 
 
@@ -168,6 +168,41 @@ class Branch33B(Struct):
 FORWARD_REFS["Branch33B"] = Branch33B
 
 
+@dataclass
+class SimpleCycles1Args(Struct):
+    data: "SimpleCycles1"
+
+
+FORWARD_REFS["SimpleCycles1Args"] = SimpleCycles1Args
+
+
+@dataclass
+class SimpleCycles1(Struct):
+    phantom1: Union[str, None]
+    to2: Union["SimpleCycles2", None]
+
+
+FORWARD_REFS["SimpleCycles1"] = SimpleCycles1
+
+
+@dataclass
+class SimpleCycles2(Struct):
+    phantom2: Union[str, None]
+    to3: Union["SimpleCycles3", None]
+
+
+FORWARD_REFS["SimpleCycles2"] = SimpleCycles2
+
+
+@dataclass
+class SimpleCycles3(Struct):
+    phantom3: Union[str, None]
+    to1: Union["SimpleCycles1", None]
+
+
+FORWARD_REFS["SimpleCycles3"] = SimpleCycles3
+
+
 def __repr(value: Any):
     if isinstance(value, Struct):
         return value.repr()
@@ -178,6 +213,17 @@ def typed_cycles(user_fn: Callable[[Cycles1Args], Cycles1]):
     def exported_wrapper(raw_inp):
         inp: Cycles1Args = Struct.new(Cycles1Args, raw_inp)
         out: Cycles1 = user_fn(inp)
+        if isinstance(out, list):
+            return [__repr(v) for v in out]
+        return __repr(out)
+
+    return exported_wrapper
+
+
+def typed_primitives(user_fn: Callable[[PrimitivesArgs], Primitives]):
+    def exported_wrapper(raw_inp):
+        inp: PrimitivesArgs = Struct.new(PrimitivesArgs, raw_inp)
+        out: Primitives = user_fn(inp)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -196,10 +242,10 @@ def typed_composites(user_fn: Callable[[CompositesArgs], Composites]):
     return exported_wrapper
 
 
-def typed_primitives(user_fn: Callable[[PrimitivesArgs], Primitives]):
+def typed_simple_cycles(user_fn: Callable[[SimpleCycles1Args], SimpleCycles1]):
     def exported_wrapper(raw_inp):
-        inp: PrimitivesArgs = Struct.new(PrimitivesArgs, raw_inp)
-        out: Primitives = user_fn(inp)
+        inp: SimpleCycles1Args = Struct.new(SimpleCycles1Args, raw_inp)
+        out: SimpleCycles1 = user_fn(inp)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)

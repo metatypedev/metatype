@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eux
 
 ADAPTOR="../../../../../../tmp/wasi_snapshot_preview1.reactor.wasm"
 [ -f "$ADAPTOR" ] || ghjk x install-wasi-adapter

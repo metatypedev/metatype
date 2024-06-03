@@ -5,6 +5,8 @@ from .handlers_types import (
     typed_composites,
     Cycles1,
     typed_primitives,
+    SimpleCycles1,
+    typed_simple_cycles,
 )
 from . import handlers_types as types
 
@@ -21,4 +23,9 @@ def composites(inp: types.CompositesArgs) -> Composites:
 
 @typed_cycles
 def cycles(inp: types.Cycles1Args) -> Cycles1:
+    return inp.data
+
+
+@typed_simple_cycles
+def simple_cycles(inp: types.SimpleCycles1Args) -> SimpleCycles1:
     return inp.data

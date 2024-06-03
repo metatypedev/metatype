@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eux
 
 cd ..
 cargo run -p meta-cli -- gen wasm_wire

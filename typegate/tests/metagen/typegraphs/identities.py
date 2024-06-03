@@ -81,6 +81,27 @@ def identities(g: Graph):
         ]
     ).rename("cycles3")
 
+    simple_cycles_1 = t.struct(
+        {
+            "phantom1": t.string().optional(),
+            "to2": g.ref("simple_cycles_2").optional(),
+        }
+    ).rename("simple_cycles_1")
+
+    t.struct(
+        {
+            "phantom2": t.string().optional(),
+            "to3": g.ref("simple_cycles_3").optional(),
+        }
+    ).rename("simple_cycles_2")
+
+    t.struct(
+        {
+            "phantom3": t.string().optional(),
+            "to1": g.ref("simple_cycles_1").optional(),
+        }
+    ).rename("simple_cycles_3")
+
     python = PythonRuntime()
     wasm = WasmRuntime.wire("./identities/rust.wasm")
     deno = DenoRuntime()
@@ -95,6 +116,7 @@ def identities(g: Graph):
     primitives_args = argify(primitives)
     composites_args = argify(composites)
     cycles1_args = argify(cycles1)
+    simple_cycles_1_args = argify(simple_cycles_1)
     g.expose(
         Policy.public(),
         py_primitives=python.import_(
@@ -118,6 +140,13 @@ def identities(g: Graph):
             deps=["./identities/py/handlers_types.py"],
             name="cycles",
         ).rename("py_cycles"),
+        py_simple_cycles=python.import_(
+            simple_cycles_1_args,
+            simple_cycles_1,
+            module="./identities/py/handlers.py",
+            deps=["./identities/py/handlers_types.py"],
+            name="simple_cycles",
+        ).rename("py_simple_cycles"),
         ts_primitives=deno.import_(
             primitives_args,
             primitives,
@@ -139,6 +168,13 @@ def identities(g: Graph):
             deps=["./identities/ts/mdk.ts"],
             name="cycles",
         ).rename("ts_cycles"),
+        ts_simple_cycles=deno.import_(
+            simple_cycles_1_args,
+            simple_cycles_1,
+            module="./identities/ts/handlers.ts",
+            deps=["./identities/ts/mdk.ts"],
+            name="simple_cycles",
+        ).rename("ts_simple_cycles"),
         rs_primitives=wasm.handler(
             primitives_args,
             primitives,
@@ -154,4 +190,9 @@ def identities(g: Graph):
             cycles1,
             name="cycles",
         ).rename("rs_cycles"),
+        rs_simple_cycles=wasm.handler(
+            simple_cycles_1_args,
+            simple_cycles_1,
+            name="simple_cycles",
+        ).rename("rs_simple_cycles"),
     )

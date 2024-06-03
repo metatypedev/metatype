@@ -12,6 +12,7 @@ init_mat! {
             .register_handler(stubs::RsPrimitives::erased(MyMat))
             .register_handler(stubs::RsComposites::erased(MyMat))
             .register_handler(stubs::RsCycles::erased(MyMat))
+            .register_handler(stubs::RsSimpleCycles::erased(MyMat))
     }
 }
 
@@ -31,6 +32,16 @@ impl stubs::RsComposites for MyMat {
 
 impl stubs::RsCycles for MyMat {
     fn handle(&self, input: types::Cycles1Args, _cx: Ctx) -> anyhow::Result<types::Cycles1> {
+        Ok(input.data)
+    }
+}
+
+impl stubs::RsSimpleCycles for MyMat {
+    fn handle(
+        &self,
+        input: types::SimpleCycles1Args,
+        _cx: Ctx,
+    ) -> anyhow::Result<types::SimpleCycles1> {
         Ok(input.data)
     }
 }
