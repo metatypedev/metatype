@@ -1,9 +1,14 @@
 from typegraph import t, typegraph, Policy, Graph
+from typegraph.graph.params import Cors
 from typegraph.providers.temporal import TemporalRuntime
 import os
 
 
-@typegraph()
+@typegraph(
+    # skip:start
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
+)
 def temporal(g: Graph):
     public = Policy.public()
     temporal = TemporalRuntime(

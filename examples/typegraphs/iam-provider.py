@@ -9,8 +9,9 @@ from typegraph.runtimes import DenoRuntime
 
 # skip:end
 @typegraph(
-    # skip:next-line
+    # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
 )
 def iam_provider(g: Graph):
     g.auth(Auth.oauth2_github("openid profile email"))
