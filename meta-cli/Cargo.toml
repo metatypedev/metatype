@@ -32,7 +32,6 @@ typegate = ["dep:typegate_engine"]
 # internal
 typegate_engine = { workspace = true, optional = true }
 common.workspace = true
-typescript.workspace = true
 metagen.workspace = true
 
 # data structures

@@ -939,7 +939,7 @@
             },
             "check-udeps": {
               "name": "check-udeps",
-              "desc": "Access cargo-udeps tool through a nightly compiler",
+              "desc": "Check for unused cargo depenencies by running cargo-udeps tool through a **nightly** compiler",
               "dependsOn": [],
               "env": {
                 "installs": [

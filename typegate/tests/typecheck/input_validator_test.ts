@@ -5,8 +5,6 @@ import { gql, Meta } from "../utils/mod.ts";
 
 import { Type } from "../../src/typegraph/type_node.ts";
 import { InputValidationCompiler } from "../../src/engine/typecheck/input.ts";
-import { nativeResult } from "../../src/utils.ts";
-import * as native from "native";
 import { assert, assertEquals } from "std/assert/mod.ts";
 
 function getFunctionName(idx: number): string {
@@ -30,13 +28,8 @@ Meta.test("input validator compiler", async (t) => {
       tg,
       getFunctionName,
     ).generate(createPost.input);
-    const code = nativeResult(
-      native.typescript_format_code({
-        source: generatedCode,
-      }),
-    )!.formatted_code;
 
-    await t.assertSnapshot(code);
+    await t.assertSnapshot(generatedCode);
   });
 
   await t.should("fail for invalid inputs", async () => {
@@ -104,13 +97,8 @@ Meta.test("input validator compiler", async (t) => {
       tg,
       getFunctionName,
     ).generate(enums.input);
-    const code = nativeResult(
-      native.typescript_format_code({
-        source: generatedCode,
-      }),
-    )!.formatted_code;
 
-    await t.assertSnapshot(code);
+    await t.assertSnapshot(generatedCode);
   });
 
   await t.should("fail for invalid inputs: enums", async () => {
@@ -165,13 +153,8 @@ Meta.test("input validator compiler", async (t) => {
         tg,
         getFunctionName,
       ).generate(posts.input);
-      const code = nativeResult(
-        native.typescript_format_code({
-          source: generatedCode,
-        }),
-      )!.formatted_code;
 
-      await t.assertSnapshot(code);
+      await t.assertSnapshot(generatedCode);
     },
   );
 

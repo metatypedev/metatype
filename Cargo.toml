@@ -26,7 +26,6 @@ deno_core = { version = "=0.280.0" }
 # internal crates
 mt_deno = { path = "libs/deno/" }
 common = { path = "libs/common/" }
-typescript = { path = "libs/typescript/" }
 metagen = { path = "libs/metagen/" }
 typegate_engine = { path = "typegate/engine" }
 
@@ -36,15 +35,6 @@ clap_complete = "=4.4.7"
 
 # http
 reqwest = "0.11"
-
-# update from https://github.com/denoland/deno_ast/blob/main/Cargo.toml
-swc_atoms = "=0.6.7"
-swc_common = "=0.33.26"
-swc_ecma_ast = "=0.113.4"
-swc_ecma_codegen = "=0.149.1"
-swc_ecma_parser = "=0.144.1"
-swc_ecma_transforms_typescript = "=0.189.1"
-swc_ecma_visit = "=0.99.1"
 
 shadow-rs = "0.24"
 

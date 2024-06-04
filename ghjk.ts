@@ -211,7 +211,7 @@ ghjk.task("install-wasi-adapter", {
 });
 
 ghjk.task("check-udeps", {
-  desc: "Access cargo-udeps tool through a nightly compiler",
+  desc: "Check for unused cargo depenencies by running cargo-udeps tool through a **nightly** compiler",
   installs: [
     // udeps needs nightly support
     ports.rust({ version: "nightly-2024-05-26" }),

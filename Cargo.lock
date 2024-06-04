@@ -6630,7 +6630,6 @@ dependencies = [
  "tracing-subscriber",
  "tracing-unwrap",
  "typegate_engine",
- "typescript",
 ]
 
 [[package]]
@@ -10746,7 +10745,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2f9706038906e66f3919028f9f7a37f3ed552f1b85578e93f4468742e2da438"
 dependencies = [
  "ast_node",
- "atty",
  "better_scoped_tls",
  "cfg-if",
  "either",
@@ -10761,7 +10759,6 @@ dependencies = [
  "swc_atoms",
  "swc_eq_ignore_macros",
  "swc_visit",
- "termcolor",
  "tracing",
  "unicode-width",
  "url",
@@ -12111,7 +12108,6 @@ dependencies = [
  "temporal-sdk-core-protos",
  "thiserror",
  "tokio",
- "typescript",
  "user-facing-errors",
  "wasmtime",
  "wasmtime-wasi",
@@ -12155,22 +12151,6 @@ name = "typenum"
 version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
-
-[[package]]
-name = "typescript"
-version = "0.4.3-0"
-dependencies = [
- "anyhow",
- "dprint-plugin-typescript",
- "lazy_static 1.4.0",
- "swc_atoms",
- "swc_common",
- "swc_ecma_ast",
- "swc_ecma_codegen",
- "swc_ecma_parser",
- "swc_ecma_transforms_typescript",
- "swc_ecma_visit",
-]
 
 [[package]]
 name = "typetag"
