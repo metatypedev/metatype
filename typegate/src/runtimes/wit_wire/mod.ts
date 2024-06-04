@@ -196,9 +196,11 @@ async function gql(cx: HostCallCtx, args: object) {
       variables: parsed.variables,
     }),
   });
+  //TODO: make `handle` more friendly to internal requests
   const res = await cx.typegate.handle(request, {
-    //TODO: make `handle` more friendly to internal requests
-    remoteAddr: { port: 0, hostname: "internal", transport: "tcp" },
+    port: 0,
+    hostname: "internal",
+    transport: "tcp",
   });
   if (!res.ok) {
     const text = await res.text();

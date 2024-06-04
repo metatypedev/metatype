@@ -7,6 +7,7 @@ import { dirname, extname, join } from "std/path/mod.ts";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
+import { type SnapshotOptions } from "std/testing/snapshot.ts";
 import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
@@ -16,12 +17,6 @@ import { SyncConfig } from "../../src/sync/config.ts";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
 import config from "../../src/config.ts";
-
-type AssertSnapshotParams = typeof assertSnapshot extends (
-  ctx: Deno.TestContext,
-  ...rest: infer R
-) => Promise<void> ? R
-  : never;
 
 export interface ParseOptions {
   deploy?: boolean;
@@ -77,8 +72,10 @@ function serve(typegates: TypegateManager): Promise<ServeResult> {
       },
     }, (req) => {
       return typegates.next().handle(req, {
-        remoteAddr: { hostname: "localhost" },
-      } as Deno.ServeHandlerInfo);
+        hostname: "localhost",
+        port: 0,
+        transport: "tcp",
+      });
     });
   });
 }
@@ -324,22 +321,23 @@ export class MetaTest {
     return true;
   }
 
-  async assertSnapshot(...params: AssertSnapshotParams): Promise<void> {
-    await assertSnapshot(this.t, ...params);
+  async assertSnapshot(
+    value: unknown,
+    options: SnapshotOptions = {},
+  ): Promise<void> {
+    await assertSnapshot(this.t, value, options);
   }
 
-  async assertThrowsSnapshot(fn: () => void): Promise<void> {
-    let err: Error | null = null;
+  async assertThrowsSnapshot(
+    fn: () => void,
+    options: SnapshotOptions = {},
+  ): Promise<void> {
     try {
       fn();
     } catch (e) {
-      err = e;
+      return await this.assertSnapshot(e.message, options);
     }
-
-    if (err == null) {
-      throw new Error("Assertion failure: function did not throw");
-    }
-    await this.assertSnapshot(err.message);
+    throw new Error("Assertion failure: function did not throw");
   }
 
   async assertSameTypegraphs(...paths: string[]) {

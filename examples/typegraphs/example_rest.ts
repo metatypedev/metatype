@@ -5,6 +5,7 @@ import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 await typegraph({
   name: "example-rest",
   dynamic: false,
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
