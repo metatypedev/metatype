@@ -48,4 +48,5 @@ typegraph/python/typegraph/gen
 *.egg-info/
 
 examples/typegraphs/migrations
+examples/typegraphs/**/*.wasm
 libs/pyrt_wit_wire/wit_wire

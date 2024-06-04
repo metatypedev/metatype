@@ -225,11 +225,19 @@ export class Typegate implements AsyncDisposable {
       }
 
       if (!engineName || ignoreList.has(engineName)) {
+        logger.info("engine not found on request url", {
+          engineName,
+          url: request.url,
+        });
         return notFound();
       }
 
       const engine = this.register.get(engineName);
       if (!engine) {
+        logger.info("engine not found for request", {
+          engineName,
+          url: request.url,
+        });
         return notFound();
       }
 

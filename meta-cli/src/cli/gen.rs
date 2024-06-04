@@ -60,6 +60,20 @@ impl Action for Gen {
             typegate: Arc::new(node),
         };
 
+        if !mgen_conf.targets.contains_key(&self.gen_target) {
+            error!("no metagen target found under key {:?}", self.gen_target);
+            info!(
+                "availaible keys are:\n - {:?}",
+                mgen_conf
+                    .targets
+                    .keys()
+                    .map(|str| &str[..])
+                    .collect::<Vec<_>>()
+                    .join("\n - ")
+            );
+            bail!("no metagen target found under key {:?}", self.gen_target);
+        }
+
         let files = metagen::generate_target(
             mgen_conf,
             &self.gen_target,

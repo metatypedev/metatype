@@ -1,0 +1,219 @@
+---
+sidebar_position: 50
+---
+
+import TGExample from "@site/src/components/TGExample";
+import CodeBlock from "@theme-original/CodeBlock";
+
+# Metagen
+
+:::warning Beta
+The following feature is not yet stable.
+:::
+
+Metagen is a code-generator suite that contains implementations that help with development on the Metatype platform.
+Today, this means a set of generators to help with [custom functions](/docs/guides/custom-functions) by generating types, serializers and bindings.
+It's availaible bundled within the [meta CLI](/docs/reference/meta-cli) and the [typegraph SDKs](/docs/reference/typegraph#sdks).
+
+## Access through CLI
+
+The meta-cli has a dedicated `gen` command for interacting with metagen. We configure the generators through the [standard configuration file](/docs/reference/meta-cli/configuration-file) under the metagen key.
+
+```yaml
+typegates:
+  # bla bla
+
+typegraphs:
+  # bla bla
+
+metagen: 
+  targets:
+    main:
+        # generator to use
+      - generator: mdk_rust
+        # path to generate to
+        path: ./bff/
+        # typegraph path to use
+        typegraph_path: ./typegraphs/svc-bff.ts
+        # we can have multiple generators per target
+      - generator: mdk_rust
+        path: ./telemetry/
+        typegraph_path: ./typegraphs/svc-telemetry.ts
+        # generators might have custom keys
+        stubbed_runtimes: ["wasm_wire", "deno"]
+    # more than one targets avail if you need them
+    iter:
+      - generator: mdk_typescript
+        path: ./ts/
+        # name of typegraph to read from typegate
+        typegraph: svc_products
+```
+
+This allows us to invoke the targets from the CLI.
+
+```sh
+meta cli gen main
+```
+
+This will resolve the requisite typegraphs, serialize as needed and put the resulting files at the appropriate locations.
+If no target name is provied, the CLI will look for a target under the key `main` and invoke it instead.
+
+## Access through SDK
+
+Metagen is availaible through the SDK for programmatic access needs and can be helpful when writing tests or when relying on the CLI is not an option.
+
+<TGExample
+  python={require("!!code-loader!../../../../examples/typegraphs/metagen-sdk.py")}
+  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen-sdk.ts")}
+  disablePlayground
+/>
+
+## Generators
+
+:::info Chicken or egg?
+As most of the generators are intended for types to be used by custom functions, they'll require that you declare the custom functions in your typegraph first. 
+This begs the question, how does one declare custom functions that depend on artifacts that are yet to be generated? 
+Typegraphs error out when referenced artifacts aren't found, how does it work in this scenario?
+
+To resolve this concern, the SDKs support a serialization mode that skips resolution of artifacts.
+This mode is flipped on when serialization is done for codegen purposes.
+What this means is that, **you can declare non-existent files in your typegraph and codegen should work**.
+Some generators are even smart enough to work around your expected files.
+Of course, if the files aren't present when you're trying to deply to the typegate, it'll raise an error.
+:::
+
+### `mdk_typescript`
+
+This generator supports:
+- Typescript types that map to typegraph types
+- Stub function types for custom functions implementors that adhere to typegraph functions.
+  - By default, all function types from the `DenoRuntime` get stub types.
+  - Use `stubbed_runtimes` to select which runtimes get stubs.
+- Types for interacting with the typegate from within custom functions.
+
+The following example showcases the generator.
+
+Typegraph:
+
+<TGExample
+  python={require("!!code-loader!../../../../examples/typegraphs/metagen-deno.py")}
+  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen-deno.py")}
+  disablePlayground
+/>
+
+Custom function:
+
+<TGExample
+  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen/ts/remix.ts")}
+  disablePlayground
+/>
+
+<details>
+  <summary>
+  Code generation sample.
+  </summary>
+
+  <TGExample
+    typescript={require("!!code-loader!../../../../examples/typegraphs/metagen/ts/mdk.ts")}
+    disablePlayground
+  />
+</details>
+
+It supports the following extra configuration keys.
+
+| Key                | Type       | Default    | Description                                |
+| ------------------ | ---------- | ---------- | ------------------------------------------ |
+| `stubbed_runtimes` | `string[]` | `["deno"]` | Runtimes for which to generate stub types. |
+
+### `mdk_python`
+
+This generator supports:
+- Python classes that map to typegraph types
+- Decorators for custom functions implementors that require adherance to typegraph function types.
+  - By default, all functions from the `PythonRuntime` get stub types.
+  - TODO: `stubbed_runtimes` for `mdk_python`
+- TODO: types for interacting with the typegate from within custom functions.
+
+If the referenced module for the custom function is not found, the generator will also output stub implementation (in addition to the types) at the given type.
+It will not replace our code on a second run.
+
+The following example showcases the generator.
+
+Typegraph:
+
+<TGExample
+  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen-py.ts")}
+  disablePlayground
+/>
+
+Custom function:
+
+<TGExample
+  python={require("!!code-loader!../../../../examples/typegraphs/metagen/py/remix.py")}
+  disablePlayground
+/>
+
+<details>
+  <summary>
+  Code generation sample.
+  </summary>
+
+  <TGExample
+    python={require("!!code-loader!../../../../examples/typegraphs/metagen/py/remix_types.py")}
+    disablePlayground
+  />
+</details>
+
+### `mdk_rust`
+
+This generator generates types, serializers and bindings needed to implement custom functions in Rust. 
+Rust implementations will need to be compiled to wasm components to be executed on the metatype platform and the generator assumes such usage.
+
+To be more specific, it supports:
+- Rust types that map to typegraph defined types
+  - Serialization is handled out of sight through [`serde_json`](https://lib.rs/serde_json)
+- Stub traits for custom functions implementors that adhere to typegraph functions.
+  - By default, all functions from the `WasmRuntime` get stub types.
+  - The generator assumes the `wire` based wasm interface is being targetted.
+  - `stubbed_runtimes` key can be used to configure stub generation from additional runtimes.
+- Types for interacting with the typegate from within custom functions.
+- Glue code for setting up the wasm component to be run within the `WasmRuntime`.
+
+By default the generator will also output a library crate entrypoint and a functional Cargo.toml with all the required dependencies.
+These additional files wlil not be overwritten on a second run.
+The generator can also be configured to avoid generating them even if not present.
+
+The following example showcases the generator.
+
+Typegraph:
+
+<TGExample
+  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen-rs.ts")}
+  disablePlayground
+/>
+
+Custom function:
+
+<CodeBlock language="rust">
+  {require("!!code-loader!../../../../examples/typegraphs/metagen/rs/lib.rs").content}
+</CodeBlock>
+
+<details>
+  <summary>
+  Code generation sample.
+  </summary>
+  <CodeBlock language="rust">
+    {require("!!code-loader!../../../../examples/typegraphs/metagen/rs/mdk.rs").content}
+  </CodeBlock>
+</details>
+
+It supports the following extra configuration keys.
+
+| Key                | Type       | Default                | Description                                           |
+| ------------------ | ---------- | ---------------------- | ----------------------------------------------------- |
+| `stubbed_runtimes` | `string[]` | `["wasm_wire"]`        | Runtimes for which to generate stub types.            |
+| `crate_name`       | `string`   | `${typegraphName}_mdk` | Name to assign to crate when generating `Cargo.toml`. |
+| `skip_cargo_toml`  | `boolean`  | `false`                | Do not generate `Cargo.toml`.                         |
+| `skip_lib_rs`      | `boolean`  | `false`                | Do not generate `lib.rs`, the sample entrypoint.      |
+
+
