@@ -170,9 +170,7 @@ jobs:
           - platform: linux/amd64
             runner: custom-ubuntu-large
           - platform: linux/arm64
-            # FIXME: official darwin images don't have docker
-            # and nested virtualizaiton
-            runner: custom-macos
+            runner: custom-arm
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
