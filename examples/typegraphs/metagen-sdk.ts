@@ -32,22 +32,24 @@ const tg = await typegraph({
   }, Policy.public());
 });
 
-const myPath = import.meta.url.replace("file://", "");
-const metagen = new Metagen(
-  // the workspace root that our config is relative to
-  myPath + "/..",
-  // this rest of the config is similmilar to the CLI config
-  {
-    "targets": {
-      "main": [
-        {
-          "generator": "mdk_typescript",
-          "typegraph_path": myPath,
-          "path": "funcs/",
-        },
-      ],
-    },
-  }
-);
-// dry_run doesn't write to disk
-metagen.dryRun(tg, "main")
+if (false) {
+  const myPath = import.meta.url.replace("file://", "");
+  const metagen = new Metagen(
+    // the workspace root that our config is relative to
+    myPath + "/..",
+    // this rest of the config is similmilar to the CLI config
+    {
+      "targets": {
+        "main": [
+          {
+            "generator": "mdk_typescript",
+            "typegraph_path": myPath,
+            "path": "funcs/",
+          },
+        ],
+      },
+    }
+  );
+  // dry_run doesn't write to disk
+  metagen.dryRun(tg, "main")
+}

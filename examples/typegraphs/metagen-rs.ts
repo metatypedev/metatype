@@ -16,6 +16,8 @@ await typegraph({
     // explicit type names help when generating code
   }).rename("idv3");
 
+  // the wire flavour is availible through a static
+  // constructor
   const wasm = WasmRuntime.wire("metagen/rust.wasm");
 
   g.expose({

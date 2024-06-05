@@ -2,17 +2,22 @@ package.name = "metagen_rs_mdk"
 package.edition = "2021"
 package.version = "0.0.1"
 
+# we need to use a specific library crate type to build
+# wasm components in rust
 [lib]
 path = "lib.rs"
 crate-type = ["cdylib", "rlib"]
 
+# the following dependencies are used by the generated code
 [dependencies]
-anyhow = "1"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-wit-bindgen = "0.22.0"
+anyhow = "1" # error handling
+serde = { version = "1", features = ["derive"] } # serialization
+serde_json = "1" #json serialization
+wit-bindgen = "0.22.0" # wasm component biding
 
-
+# we set the following flags to minimize code size 
+# when buliding in the release mode
+# this keeps our wasm files small
 [profile.release]
 strip = "symbols"
 opt-level = "z"

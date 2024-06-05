@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use std::{
-    collections::HashSet,
+    collections::BTreeSet,
     path::{Path, PathBuf},
 };
 
@@ -261,7 +261,7 @@ pub fn expand_glob(path: &str) -> Result<Vec<PathBuf>, String> {
 }
 
 pub fn resolve_globs_dirs(deps: Vec<String>) -> Result<Vec<PathBuf>, String> {
-    let mut resolved_deps = HashSet::new();
+    let mut resolved_deps = BTreeSet::new();
     for dep in deps {
         if is_glob(&dep) {
             let abs_path = make_absolute(&PathBuf::from(dep))?

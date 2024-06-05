@@ -1,0 +1,146 @@
+---
+sidebar_position: 50
+---
+
+import TGExample from "@site/src/components/TGExample";
+import CodeBlock from "@theme-original/CodeBlock";
+
+# Wasm functions
+
+:::warning Beta
+The following feature is not yet stable.
+:::
+
+The [`WasmRuntime`](/docs/reference/runtimes/wasm) enables one to use any langauge/ecosystem with a toolchain capable of producing wasm artifacts to author [custom functions](/docs/guides/external-functions).
+[Rust](https://rust-lang.org) is one such a language and has shaped up to be the hotspot of development in the wasm ecosystem (The Metatype itself platform has many rusty parts).
+In this guide, we'll see how to set up a workflow for using Rust for our custom functions.
+
+## Tooling
+
+We'll first need to install a bunch of programs in order to be able to produce modern the requisite components. The following checklist contains links to get you started:
+
+1. Rust compiler toolchain: this guide assumes moderate familiartiy of development with rust and won't spend much words on how to get it functional. In any case, you can get started with rust [here](https://www.rust-lang.org/learn/get-started).
+2. `wasm32-unknown-unknown` target for rustc: This is the backend for rustc uses to produce wasi compatible wasm components. If you&apos;re using `rustup` to manage your toolchain, Cargo will automatically install the target when you&apos;re building.
+3. `wasm-tools`: this is the swiss army knife for working with wasm artifacts, courtesy of the [Bytecode Alliance](https://bytecodealliance.org/). Installation instructions can be found [here](https://github.com/bytecodealliance/wasm-tools/).
+
+## Typegraph
+
+The `WasmRuntime` currently comes in two flavours that are both based on the wasm component spec. 
+This guide focues on the `wire` flavour, where your component is expected to implement a standard WIT interface that's designed around a simple Json based RPC wire format.
+Thankfully, all of that boilerplate is easy to automate away and that&apos;s exactly what we'll do using [metagen](/docs/reference/metagen) to generate the binding code.
+
+Before anything though, we need to author the typegraph:
+
+<TGExample
+  python={require("!!code-loader!../../../../examples/typegraphs/metagen-rs.py")}
+  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen-rs.ts")}
+  disablePlayground
+/>
+
+Note that the `WasmRuntime` constructor mentions a non-existent wasm file on disk.
+This won't be a problem for the metagen generators but we&apos;ll need to produce the artifact before we deploy the typegraph.
+We'll see what buliding the artifact entails in just a minute.
+
+## Metagen
+
+We can now tackle the boilerplate. 
+Metagen bundles the [`mdk_rust`](/docs/reference/metagen#mdk_rust) generator which can generate all the glue code along with Rust types that correspond to our typegraph types.
+Let's configure a metagen target in our configuration file to get just that done.
+
+```yaml
+metagen:
+  targets:
+    metagen_rs:
+        # this is the generator we're interested in
+      - generator: mdk_rust
+        # the location where to put the generated files
+        path: ./metagen/rs/
+        # the path to our typegraph
+        typegraph_path: ./metagen-rs.ts
+```
+
+The configuration file is read by the [meta CLI](/docs/reference/meta-cli) which also bundles the metagen suite.
+This means we can invoke the target from the command line like so:
+
+```bash
+meta gen metagen_rs
+```
+
+This should give us the following files:
+
+```shell
+❯ lsd --tree metagen/rs/
+ rs
+├──  Cargo.toml
+├──  lib.rs
+└──  mdk.rs
+```
+
+By default, the `mdk_rust` generator outputs all the necessary files required to build our wasm file.
+This includes the `Cargo.toml` manifest for our Rust crate.
+
+<CodeBlock language="toml">
+  {require("!!code-loader!../../../../examples/typegraphs/metagen/rs/Cargo.toml").content}
+</CodeBlock>
+
+`mdk_rust` will not overwrite a `Cargo.toml` file discovored at generation path so you can add other dependencies if need be.
+
+The `mdk.rs` file contains all the glue code including the typegraph types.
+
+<details>
+  <summary>
+  Code generation sample. 
+  It&apos;s collapsed here as it's for the most part an uninteresting implementation detail.
+  </summary>
+  <CodeBlock language="rust">
+    {require("!!code-loader!../../../../examples/typegraphs/metagen/rs/mdk.rs").content}
+  </CodeBlock>
+</details>
+
+When working on the typegraph, we can run metagen again to regenerate this file and get the latest types. 
+
+The generator also includes a sample `lib.rs` entrypoint file for our crate. 
+We&apos;ll modify it now to implement our custom function.
+
+<CodeBlock language="rust">
+  {require("!!code-loader!../../../../examples/typegraphs/metagen/rs/lib.rs").content}
+</CodeBlock>
+
+## Building
+
+We'll now use the rust toolchain and wasm-tools to build the wasm component.
+This require multiple commands so it's presented below as a shell script that you can modify from.
+
+```bash
+# flags to make script execution visible
+set -eux 
+
+# regenerate code before building
+meta gen metagen_rs
+
+# variablize common names
+TARGET=wasm32-wasi
+CRATE_NAME=metagen_rs_mdk
+
+# build in release mode for smallest sizes
+cargo build -p $CRATE_NAME --target $TARGET --release
+# use wasm-tools to change wasm file into wasm component
+wasm-tools component new \
+  # rust builds the wasm file under the name of the crate
+  ./target/$TARGET/debug/$CRATE_NAME.wasm \
+  -o ./target/rust-component.wasm \
+
+# copy the component to a location that we specified
+# in our typegraph
+cp ./target/rust-component.wasm ./rust.wasm
+```
+
+Put the shell script into a file like `build.sh` and execute it with a posix compatible shell like `bash`. 
+You should now have all the files to deploy your typegraph.
+
+<TGExample 
+  typegraph="metagen-rs"
+  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen-rs.ts")}
+  python={require("!!code-loader!../../../../examples/typegraphs/metagen-rs.py")}
+  query={require('./metagen.graphql')}
+  />

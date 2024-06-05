@@ -1,13 +1,18 @@
 # skip:start
 from typegraph import typegraph, Policy, t, Graph
 from typegraph.runtimes.deno import DenoRuntime
+from typegraph.graph.params import Cors
 
 # skip:end
 import os
 from typegraph.graph.metagen import Metagen
 
 
-@typegraph()
+@typegraph(
+    # skip:start
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
+)
 def metagen_sdk(g: Graph):
     idv3 = t.struct(
         {
@@ -31,7 +36,7 @@ def metagen_sdk(g: Graph):
     )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__" and False:
     metagen = Metagen(
         # the workspace root that our config is relative to
         os.path.dirname(os.path.abspath(__file__)),
