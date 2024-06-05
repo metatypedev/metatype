@@ -42,26 +42,38 @@ interface core {
 
     init-typegraph: func(params: typegraph-init-params) -> result<_, error>;
 
+    // record migration-action {
+    //     create: bool,
+    //     reset: bool
+    // }
+
+    // record migration-config {
+    //     migration-dir: string,
+    //     global-action: migration-action, // global config (all runtimes)
+    //     runtime-actions: option<list<tuple<string, migration-action>>> // config per runtime name (override global-action)
+    // }
+
     record migration-action {
+        apply: bool,
         create: bool,
-        reset: bool
+        reset: bool,
     }
 
-    record migration-config {
-        migration-dir: string,
-        global-action: migration-action, // global config (all runtimes)
-        runtime-actions: option<list<tuple<string, migration-action>>> // config per runtime name (override global-action)
+    record prisma-migration-config {
+        migrations-dir: string,
+        migration-actions: list<tuple<string, migration-action>>,
+        default-migration-action: migration-action,
     }
 
-    record artifact-resolution-config {
-        dir: option<string>, // cwd() if none
-        prefix: option<string>, // overrides tg.meta.prefix field if defined
-        disable-artifact-resolution: option<bool>, // any postprocess using fs ops should be disabled when set to true
-        prisma-migration: migration-config,
-        codegen: option<bool> // if set, sdk should not throw errors when the script does not exist
+    record finalize-params {
+        typegraph-path: string,
+        prefix: option<string>,
+        artifact-resolution: bool,
+        codegen: bool,
+        prisma-migration: prisma-migration-config,
     }
 
-    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<tuple<string, list<artifact>>, error>;
+    finalize-typegraph: func(params: finalize-params) -> result<tuple<string, list<artifact>>, error>;
 
     type type-id = u32;
     record type-base {

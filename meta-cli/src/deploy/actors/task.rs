@@ -8,8 +8,8 @@
 //! Note: On the task process
 //! - stdout is used for logging and task output; each line is prefix by
 //! either one of  "debug: ", "info: ", "warn: ", "error: " for logging,
-//! or "output: " for JSON-serialized outputs like serialized typegraph
-//! or deployment report.
+//! or "success: "/"failure: " for reporting operation result (serialization, or
+//! deployment) for each typegraph with for JSON-serialized data.
 //! - stderr is used for fatal errors that causes the program to exit; mainly
 //! unhandled exception in JavaScript or Python
 //!
@@ -28,10 +28,12 @@ use crate::config::Config;
 use crate::interlude::*;
 use color_eyre::owo_colors::OwoColorize;
 use common::typegraph::Typegraph;
+use futures::lock::Mutex;
 use process_wrap::tokio::TokioChildWrapper;
+use serde::Deserialize;
 use std::time::Duration;
-use tokio::io::{AsyncBufReadExt, BufReader, Lines};
-use tokio::process::{ChildStdout, Command};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Lines};
+use tokio::process::{ChildStdin, ChildStdout, Command};
 
 pub mod message {
     use super::*;
@@ -62,6 +64,14 @@ pub mod message {
     #[derive(Message)]
     #[rtype(result = "()")]
     pub struct Stop;
+
+    #[derive(Message)]
+    #[rtype(result = "()")]
+    pub(super) struct Rpc(pub RpcRequest);
+
+    #[derive(Message)]
+    #[rtype(result = "()")]
+    pub(super) struct SendRpcResponse(pub RpcResponse);
 }
 
 use message::*;
@@ -103,10 +113,13 @@ pub struct TaskActor<A: TaskAction + 'static> {
     config: Arc<Config>,
     action: A,
     process: Option<Box<dyn TokioChildWrapper>>,
+    // TODO separate i/o actor, and write queue instead of mutex
+    process_stdin: Option<Arc<Mutex<ChildStdin>>>,
     task_manager: Addr<TaskManager<A>>,
     console: Addr<ConsoleActor>,
     collected_output: Vec<Result<A::SuccessData, A::FailureData>>,
     timeout_duration: Duration,
+    followup_task: A::Followup,
 }
 
 impl<A> TaskActor<A>
@@ -122,6 +135,7 @@ where
         Self {
             config,
             process: None,
+            process_stdin: None,
             task_manager,
             console,
             action,
@@ -139,6 +153,7 @@ where
                     })
                     .unwrap_or(DEFAULT_TIMEOUT),
             ),
+            followup_task: Default::default(),
         }
     }
 
@@ -206,6 +221,7 @@ impl<A: TaskAction + 'static> Handler<StartProcess> for TaskActor<A> {
 
                 ctx.address().do_send(ProcessOutput { stdout });
 
+                self.process_stdin = Some(Arc::new(Mutex::new(child.stdin().take().unwrap())));
                 self.process = Some(child);
 
                 let addr = ctx.address();
@@ -318,6 +334,45 @@ enum OutputLevel {
     Error,
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(tag = "method", content = "params")]
+#[serde(rename_all = "camelCase")]
+enum RpcCall {
+    QueryGlobalConfig,
+    QueryTypegraphConfig { typegraph: String },
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+enum JsonRpcVersion {
+    #[serde(rename = "2.0")]
+    V2,
+}
+
+#[derive(Deserialize, Debug)]
+struct RpcRequest {
+    jsonrpc: JsonRpcVersion,
+    id: u32,
+    #[serde(flatten)]
+    call: RpcCall,
+}
+
+impl RpcRequest {
+    fn response(&self, result: serde_json::Value) -> RpcResponse {
+        RpcResponse {
+            jsonrpc: JsonRpcVersion::V2,
+            id: self.id,
+            result,
+        }
+    }
+}
+
+#[derive(Serialize, Debug)]
+struct RpcResponse {
+    jsonrpc: JsonRpcVersion,
+    id: u32,
+    result: serde_json::Value,
+}
+
 impl<A: TaskAction + 'static> TaskActor<A> {
     async fn loop_output_lines(
         mut reader: Lines<BufReader<ChildStdout>>,
@@ -364,6 +419,12 @@ impl<A: TaskAction + 'static> TaskActor<A> {
             if let Some(data_json) = line.strip_prefix("failure: ") {
                 let data: A::FailureData = serde_json::from_str(data_json)?;
                 addr.do_send(CollectOutput(Err(data)));
+                continue;
+            }
+
+            if let Some(req) = line.strip_prefix("jsonrpc: ") {
+                let req: RpcRequest = serde_json::from_str(req)?;
+                addr.do_send(message::Rpc(req));
                 continue;
             }
 
@@ -430,3 +491,91 @@ impl<A: TaskAction + 'static> Handler<Stop> for TaskActor<A> {
         }
     }
 }
+
+impl<A: TaskAction + 'static> Handler<Rpc> for TaskActor<A> {
+    type Result = ();
+
+    fn handle(&mut self, Rpc(req): Rpc, ctx: &mut Context<Self>) -> Self::Result {
+        let addr = ctx.address();
+        match &req.call {
+            RpcCall::QueryGlobalConfig => {
+                let config = self.action.get_global_config();
+                let response = req.response(config);
+                self.send_rpc_response(response, ctx);
+                // addr.do_send(SendRpcResponse(response));
+            }
+            RpcCall::QueryTypegraphConfig { typegraph } => {
+                let config = self.action.get_typegraph_config(typegraph);
+                let response = req.response(config);
+                self.send_rpc_response(response, ctx);
+                // addr.do_send(SendRpcResponse(response));
+            }
+        }
+    }
+}
+
+impl<A: TaskAction> TaskActor<A> {
+    fn send_rpc_response(&mut self, response: RpcResponse, ctx: &mut Context<Self>) {
+        let response_id = response.id;
+        match serde_json::to_string(&response) {
+            Ok(response) => {
+                let stdin = self.process_stdin.clone().unwrap();
+                let console = self.console.clone();
+                let fut = async move {
+                    let mut stdin = stdin.lock().await;
+                    console.debug(format!("sending rpc response #{response_id}"));
+                    stdin
+                        .write_all(response.as_bytes())
+                        .await
+                        .expect("could not write rpc response to process stdin");
+                    stdin
+                        .write_all(b"\n")
+                        .await
+                        .expect("could not write newline to process stdin");
+                };
+
+                ctx.spawn(fut.in_current_span().into_actor(self));
+            }
+            Err(e) => {
+                self.console
+                    .error(format!("could not serialize rpc response {e}"));
+            }
+        }
+    }
+}
+
+// impl<A: TaskAction + 'static> Handler<message::SendRpcResponse> for TaskActor<A> {
+//     type Result = ();
+//
+//     fn handle(
+//         &mut self,
+//         SendRpcResponse(response): SendRpcResponse,
+//         _ctx: &mut Context<Self>,
+//     ) -> Self::Result {
+//         {
+//             let response_id = response.id;
+//             match serde_json::to_string(&response) {
+//                 Ok(response) => {
+//                     let stdin = self.process_stdin.clone().unwrap_or_log();
+//                     let console = self.console.clone();
+//                     let fut = async move {
+//                         let stdin = stdin.lock().await;
+//                         console.debug(format!("sending rpc response #{response_id}"));
+//                         stdin
+//                             .write_all(response.as_bytes())
+//                             .await
+//                             .expect("could not write rpc response to process stdin");
+//                         stdin
+//                             .write_all(b"\n")
+//                             .await
+//                             .expect("could not write newline to process stdin");
+//                     };
+//                 }
+//                 Err(e) => {
+//                     self.console
+//                         .error(format!("could not serialize rpc response {e}"));
+//                 }
+//             }
+//         };
+//     }
+// }

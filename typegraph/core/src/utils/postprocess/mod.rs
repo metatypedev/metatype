@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{global_store::Store, utils::fs_host, wit::core::ArtifactResolutionConfig};
+use crate::{global_store::Store, utils::fs_host, wit::core::FinalizeParams};
 use common::typegraph::Typegraph;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub mod deno_rt;
 pub mod prisma_rt;
@@ -24,31 +24,34 @@ pub trait PostProcessor {
 
 /// Compose all postprocessors
 pub struct TypegraphPostProcessor {
-    config: Option<ArtifactResolutionConfig>,
+    config: FinalizeParams,
 }
 
 impl TypegraphPostProcessor {
-    pub fn new(config: Option<ArtifactResolutionConfig>) -> Self {
+    pub fn new(config: FinalizeParams) -> Self {
         Self { config }
     }
 }
 
 impl PostProcessor for TypegraphPostProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), TgError> {
-        if let Some(config) = self.config {
-            Store::set_deploy_cwd(config.dir); // fs_host::cwd() will now use this value
-            Store::set_codegen_flag(config.codegen);
+        let config = self.config;
+        let typegraph_dir = PathBuf::from(config.typegraph_path)
+            .parent()
+            .unwrap()
+            .to_owned();
+        Store::set_deploy_cwd(typegraph_dir); // fs_host::cwd() will now use this value
+        Store::set_codegen_flag(Some(config.codegen));
 
-            PrismaProcessor::new(config.prisma_migration).postprocess(tg)?;
+        PrismaProcessor::new(config.prisma_migration).postprocess(tg)?;
 
-            // Artifact resolution depends on the default cwd() (parent process)
-            // unless overwritten by `dir` through Store::set_deploy_cwd(..) (cli or custom dir with tgDeploy)
-            let allow_fs_read_artifacts = !config.disable_artifact_resolution.unwrap_or(false);
-            if allow_fs_read_artifacts {
-                DenoProcessor.postprocess(tg)?;
-                PythonProcessor.postprocess(tg)?;
-                WasmProcessor.postprocess(tg)?;
-            }
+        // Artifact resolution depends on the default cwd() (parent process)
+        // unless overwritten by `dir` through Store::set_deploy_cwd(..) (cli or custom dir with tgDeploy)
+        let allow_fs_read_artifacts = config.artifact_resolution;
+        if allow_fs_read_artifacts {
+            DenoProcessor.postprocess(tg)?;
+            PythonProcessor.postprocess(tg)?;
+            WasmProcessor.postprocess(tg)?;
         }
 
         ValidationProcessor.postprocess(tg)?;

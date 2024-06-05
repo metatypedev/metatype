@@ -5,7 +5,7 @@ from typegraph import Graph, Policy, t, typegraph
 
 
 @typegraph()
-def example(g: Graph):
+def quick_start_project(g: Graph):
     # access control
     public = Policy.public()
 

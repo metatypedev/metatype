@@ -31,9 +31,9 @@ use types::{
 
 use utils::clear_name;
 use wit::core::{
-    Artifact, ArtifactResolutionConfig, ContextCheck, Policy, PolicyId, PolicySpec, TransformData,
-    TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger,
-    TypeList, TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
+    Artifact, ContextCheck, FinalizeParams, Policy, PolicyId, PolicySpec, TransformData, TypeBase,
+    TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList,
+    TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
 };
 use wit::runtimes::{Guest, MaterializerDenoFunc};
 
@@ -53,9 +53,7 @@ impl wit::core::Guest for Lib {
         typegraph::init(params)
     }
 
-    fn finalize_typegraph(
-        res_config: Option<ArtifactResolutionConfig>,
-    ) -> Result<(String, Vec<Artifact>)> {
+    fn finalize_typegraph(res_config: FinalizeParams) -> Result<(String, Vec<Artifact>)> {
         typegraph::finalize(res_config)
     }
 

@@ -8,8 +8,8 @@ import {
 } from "../typegraph.js";
 import { ReducePath } from "../gen/interfaces/metatype-typegraph-utils.js";
 import { serializeStaticInjection } from "./injection_utils.js";
-import { ArtifactResolutionConfig } from "../gen/interfaces/metatype-typegraph-core.js";
-import { log } from "../log.js";
+import { FinalizeParams } from "../gen/interfaces/metatype-typegraph-core.js";
+import { log } from "../io.js";
 
 export function stringifySymbol(symbol: symbol) {
   const name = symbol.toString().match(/\((.+)\)/)?.[1];
@@ -31,9 +31,7 @@ export function buildReduceData(
   currPath: string[] = [],
 ): ReducePath[] {
   if (node === null || node === undefined) {
-    throw new Error(
-      `unsupported value "${node}" at ${currPath.join(".")}`,
-    );
+    throw new Error(`unsupported value "${node}" at ${currPath.join(".")}`);
   }
   if (node instanceof InheritDef) {
     paths.push({
@@ -65,9 +63,7 @@ export function buildReduceData(
     });
     return paths;
   }
-  throw new Error(
-    `unsupported type "${typeof node}" at ${currPath.join(".")}`,
-  );
+  throw new Error(`unsupported type "${typeof node}" at ${currPath.join(".")}`);
 }
 
 export function getEnvVariable(
@@ -90,11 +86,11 @@ const frozenMemo: Record<string, TgFinalizationResult> = {};
 
 /** Create a reusable version of a `TypegraphOutput` */
 export function freezeTgOutput(
-  config: ArtifactResolutionConfig,
+  config: FinalizeParams,
   tgOutput: TypegraphOutput,
 ): TypegraphOutput {
-  frozenMemo[tgOutput.name] = frozenMemo[tgOutput.name] ??
-    tgOutput.serialize(config);
+  frozenMemo[tgOutput.name] =
+    frozenMemo[tgOutput.name] ?? tgOutput.serialize(config);
   return {
     ...tgOutput,
     serialize: () => frozenMemo[tgOutput.name],
@@ -113,7 +109,9 @@ export async function execRequest(
     const response = await fetch(url, reqInit);
     if (!response.ok) {
       log.debug("error", response.json());
-      throw Error(`${errMsg}: request failed with status ${response.status} (${response.statusText})`)
+      throw Error(
+        `${errMsg}: request failed with status ${response.status} (${response.statusText})`,
+      );
     }
 
     if (response.headers.get("Content-Type") == "application/json") {

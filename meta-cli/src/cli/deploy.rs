@@ -5,7 +5,7 @@ use self::actors::task::deploy::{DeployAction, DeployActionGenerator};
 use self::actors::task::TaskConfig;
 use self::actors::task_manager::{self, StopReason, TaskReason};
 use super::{Action, ConfigArgs, NodeArgs};
-use crate::com::store::{Command, Endpoint, MigrationAction, ServerStore};
+use crate::com::store::{Command, Endpoint, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors;
 use crate::deploy::actors::console::ConsoleActor;
@@ -16,6 +16,7 @@ use crate::interlude::*;
 use crate::secrets::{RawSecrets, Secrets};
 use actix_web::dev::ServerHandle;
 use clap::Parser;
+use common::node::Node;
 use futures::channel::oneshot;
 use owo_colors::OwoColorize;
 
@@ -92,6 +93,7 @@ pub struct DeployOptions {
 #[derive(Debug)]
 pub struct Deploy {
     config: Arc<Config>,
+    node: Node,
     base_dir: Arc<Path>,
     options: DeployOptions,
     secrets: RawSecrets,
@@ -121,10 +123,10 @@ impl Deploy {
             .context("error while building node from config")?;
 
         ServerStore::with(Some(Command::Deploy), Some(config.as_ref().to_owned()));
-        ServerStore::set_migration_action_glob(MigrationAction {
-            create: deploy.options.create_migration,
-            reset: deploy.options.allow_destructive, // reset on drift
-        });
+        // ServerStore::set_migration_action_glob(MigrationAction {
+        //     create: deploy.options.create_migration,
+        //     reset: deploy.options.allow_destructive, // reset on drift
+        // });
         ServerStore::set_endpoint(Endpoint {
             typegate: node.base_url.clone().into(),
             auth: node.auth.clone(),
@@ -146,6 +148,7 @@ impl Deploy {
         }
         Ok(Self {
             config,
+            node,
             base_dir: dir.clone(),
             options,
             secrets,
@@ -218,7 +221,9 @@ enum ExitStatus {
 mod default_mode {
     //! non-watch mode
 
-    use crate::cli::deploy::default_mode::actors::task::TaskFinishStatus;
+    use crate::{cli::deploy::default_mode::actors::task::TaskFinishStatus, config::PathOption};
+
+    use self::actors::task::deploy::MigrationAction;
 
     use super::*;
 
@@ -237,14 +242,27 @@ mod default_mode {
             let mut secrets = deploy.secrets.clone();
             secrets.apply_overrides(&deploy.options.secrets)?;
 
-            ServerStore::set_secrets(secrets.hydrate(deploy.base_dir.clone()).await?);
+            // ServerStore::set_secrets(secrets.hydrate(deploy.base_dir.clone()).await?);
 
             // let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
 
             let (report_tx, report_rx) = oneshot::channel();
 
             let task_config = TaskConfig::init(deploy.base_dir.clone());
-            let action_generator = DeployActionGenerator::new(task_config);
+            let action_generator = DeployActionGenerator {
+                task_config: task_config.into(),
+                node: deploy.node.clone().into(),
+                secrets: secrets.hydrate(deploy.base_dir.clone()).await?.into(),
+                migrations_dir: deploy
+                    .config
+                    .prisma_migrations_base_dir(PathOption::Absolute)
+                    .into(),
+                default_migration_action: MigrationAction {
+                    apply: true,
+                    create: deploy.options.create_migration,
+                    reset: deploy.options.allow_destructive,
+                },
+            };
 
             let task_manager = TaskManager::new(
                 deploy.config.clone(),
@@ -395,6 +413,10 @@ mod default_mode {
 }
 
 mod watch_mode {
+    use crate::config::PathOption;
+
+    use self::actors::task::deploy::MigrationAction;
+
     use super::*;
 
     #[tracing::instrument]
@@ -418,13 +440,26 @@ mod watch_mode {
         .context("setting Ctrl-C handler")?;
 
         let task_config = TaskConfig::init(deploy.base_dir.clone());
-        let action_generator = DeployActionGenerator::new(task_config);
+        let mut secrets = deploy.secrets.clone();
+        secrets.apply_overrides(&deploy.options.secrets)?;
+
+        let action_generator = DeployActionGenerator {
+            task_config: task_config.into(),
+            node: deploy.node.into(),
+            secrets: secrets.hydrate(deploy.base_dir.clone()).await?.into(),
+            migrations_dir: deploy
+                .config
+                .prisma_migrations_base_dir(PathOption::Absolute)
+                .into(),
+            default_migration_action: MigrationAction {
+                apply: true,
+                create: deploy.options.create_migration,
+                reset: deploy.options.allow_destructive,
+            },
+        };
 
         loop {
-            let mut secrets = deploy.secrets.clone();
-            secrets.apply_overrides(&deploy.options.secrets)?;
-
-            ServerStore::set_secrets(secrets.hydrate(deploy.base_dir.clone()).await?);
+            // ServerStore::set_secrets(secrets.hydrate(deploy.base_dir.clone()).await?);
 
             // let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
 

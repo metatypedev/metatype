@@ -32,9 +32,8 @@ import { resolveIdentifier } from "../services/middlewares.ts";
 import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
 import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
-import introspectionJson from "../typegraphs/introspection.json" with {
-  type: "json",
-};
+import introspectionJson from "../typegraphs/introspection.json" with { type:
+  "json" };
 import { ArtifactService } from "../services/artifact_service.ts";
 import { ArtifactStore } from "./artifacts/mod.ts";
 import { SyncConfig } from "../sync/config.ts";
@@ -107,9 +106,7 @@ export class Typegate implements AsyncDisposable {
     } else {
       logger.info("Entering sync mode...");
       if (customRegister) {
-        throw new Error(
-          "Custom register is not supported in sync mode",
-        );
+        throw new Error("Custom register is not supported in sync mode");
       }
 
       await using stack = new AsyncDisposableStack();
@@ -120,10 +117,7 @@ export class Typegate implements AsyncDisposable {
         await limiter.terminate();
       });
 
-      const artifactStore = await createSharedArtifactStore(
-        tmpDir,
-        syncConfig,
-      );
+      const artifactStore = await createSharedArtifactStore(tmpDir, syncConfig);
       stack.use(artifactStore);
 
       const typegate = new Typegate(
@@ -230,7 +224,7 @@ export class Typegate implements AsyncDisposable {
 
       const engine = this.register.get(engineName);
       if (!engine) {
-        return notFound();
+        return notFound(`engine not found for typegraph '${engineName}'`);
       }
 
       const cors = engine.tg.cors(request);
@@ -283,14 +277,7 @@ export class Typegate implements AsyncDisposable {
         return methodNotAllowed();
       }
 
-      return handleGraphQL(
-        request,
-        engine,
-        context,
-        info,
-        limit,
-        headers,
-      );
+      return handleGraphQL(request, engine, context, info, limit, headers);
     } catch (e) {
       Sentry.captureException(e);
       console.error(e);
@@ -320,10 +307,7 @@ export class Typegate implements AsyncDisposable {
       }
     }
 
-    const secretManager = new SecretManager(
-      tgJson,
-      secrets,
-    );
+    const secretManager = new SecretManager(tgJson, secrets);
 
     const pushResponse = new PushResponse();
     logger.info("Handling onPush hooks");
@@ -350,22 +334,19 @@ export class Typegate implements AsyncDisposable {
     );
 
     const oldArtifacts = new Set(
-      Object.values(this.register.get(name)?.tg.tg.meta.artifacts ?? {})
-        .map((m) => m.hash),
+      Object.values(this.register.get(name)?.tg.tg.meta.artifacts ?? {}).map(
+        (m) => m.hash,
+      ),
     );
 
     logger.info(`Registering engine '${name}'`);
     await this.register.add(engine);
 
     const newArtifacts = new Set(
-      Object.values(engine.tg.tg.meta.artifacts)
-        .map((m) => m.hash),
+      Object.values(engine.tg.tg.meta.artifacts).map((m) => m.hash),
     );
 
-    await this.artifactStore.updateRefCounts(
-      newArtifacts,
-      oldArtifacts,
-    );
+    await this.artifactStore.updateRefCounts(newArtifacts, oldArtifacts);
 
     return {
       name,
@@ -383,8 +364,7 @@ export class Typegate implements AsyncDisposable {
     await this.register.remove(name);
 
     const artifacts = new Set(
-      Object.values(engine.tg.tg.meta.artifacts)
-        .map((m) => m.hash),
+      Object.values(engine.tg.tg.meta.artifacts).map((m) => m.hash),
     );
     await this.artifactStore.updateRefCounts(new Set(), artifacts);
     await this.artifactStore.runArtifactGC();
@@ -402,18 +382,14 @@ export class Typegate implements AsyncDisposable {
 
     const introspection = enableIntrospection
       ? await TypeGraph.init(
-        this,
-        introspectionDef,
-        new SecretManager(introspectionDef, {}),
-        {
-          typegraph: TypeGraphRuntime.init(
-            tgDS,
-            [],
-            {},
-          ),
-        },
-        null,
-      )
+          this,
+          introspectionDef,
+          new SecretManager(introspectionDef, {}),
+          {
+            typegraph: TypeGraphRuntime.init(tgDS, [], {}),
+          },
+          null,
+        )
       : null;
 
     const tg = await TypeGraph.init(

@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
+import { FinalizeParams } from "./gen/interfaces/metatype-typegraph-core.js";
 import { BasicAuth, tgDeploy } from "./tg_deploy.js";
 import { TgFinalizationResult, TypegraphOutput } from "./typegraph.js";
 import { getEnvVariable } from "./utils/func_utils.js";
 import { freezeTgOutput } from "./utils/func_utils.js";
-import { log } from "./log.js";
+import { log, rpc, GlobalConfig, TypegraphConfig } from "./io.js";
 
 const PORT = "MCLI_SERVER_PORT"; // meta-cli instance that executes the current file
 const SELF_PATH = "MCLI_TG_PATH"; // path to the current file to uniquely identify the run results
@@ -22,14 +22,15 @@ type CLIServerResponse = {
 type CLIConfigRequest = {
   typegate: {
     endpoint: string;
-    auth?: { // field not required for serialize command
+    auth?: {
+      // field not required for serialize command
       username: string;
       password: string;
     };
   };
   prefix?: string;
   secrets: Record<string, string>;
-  artifactsConfig: ArtifactResolutionConfig;
+  artifactsConfig: FinalizeParams;
   disableArtifactResolution: boolean;
   codegen: boolean;
 };
@@ -46,73 +47,96 @@ type SDKResponse<T> = {
 } & ({ error: T } | { data: T });
 
 export class Manager {
-  #port: number;
   #typegraph: TypegraphOutput;
-  #endpoint: string;
   #typegraphPath: string;
+
+  static #globalConfig: GlobalConfig | null = null;
+  static async getGlobalConfig(): Promise<GlobalConfig> {
+    if (Manager.#globalConfig == null) {
+      Manager.#globalConfig = await rpc.getGlobalConfig();
+    }
+    return Manager.#globalConfig;
+  }
+
+  static #command: Command | null = null;
+  static getCommand(): Command {
+    if (Manager.#command == null) {
+      Manager.#command = getEnvVariable("MCLI_ACTION") as Command;
+    }
+    return Manager.#command;
+  }
 
   static isRunFromCLI(): boolean {
     return !!getEnvVariable(PORT);
   }
 
-  constructor(typegraph: TypegraphOutput, port?: number) {
+  public static async init(typegraph: TypegraphOutput) {
+    const globalConfig = await Manager.getGlobalConfig();
+    const typegraphConfig = await rpc.getTypegraphConfig(typegraph.name);
+    return new Manager(typegraph, globalConfig, typegraphConfig);
+  }
+
+  private constructor(
+    typegraph: TypegraphOutput,
+    private globalConfig: GlobalConfig,
+    private typegraphConfig: TypegraphConfig,
+  ) {
     this.#typegraph = typegraph;
     this.#typegraphPath = getEnvVariable(SELF_PATH)!;
-    if (port == undefined) {
-      const envPort = parseInt(getEnvVariable(PORT)!);
-      if (isNaN(envPort)) {
-        throw new Error(
-          `Environment variable ${PORT} is not a number or is undefined`,
-        );
-      }
-      this.#port = envPort;
-    } else {
-      this.#port = port;
-    }
-    this.#endpoint = `http://localhost:${this.#port}`;
   }
 
   async run() {
-    const { config, command } = await this.#requestCommands();
+    const command = Manager.getCommand();
+    log.debug("Manager: command is", command);
+
+    const finalizeParams = {
+      typegraphPath: this.#typegraphPath,
+      prefix: this.globalConfig.prefix ?? undefined,
+      artifactResolution: true,
+      codegen: false,
+      prismaMigration: {
+        migrationsDir: this.typegraphConfig.migrationsDir,
+        migrationActions: Object.entries(this.typegraphConfig.migrationActions),
+        defaultMigrationAction: this.typegraphConfig.defaultMigrationAction,
+      },
+    } as FinalizeParams;
+
     switch (command) {
       case "serialize":
-        await this.#serialize(config);
+        await this.#serialize(finalizeParams);
         break;
       case "deploy":
-        await this.#deploy(config);
+        await this.#deploy(finalizeParams);
         break;
       default:
         throw new Error(`command ${command} from meta-cli not supported`);
     }
   }
 
-  async #requestCommands(): Promise<CLIServerResponse> {
-    const { data: config } = await this.#requestConfig();
-    // console.error("SDK received config", config);
-    const { data: command } =
-      await (await fetch(new URL("command", this.#endpoint)))
-        .json() as CLISuccess<Command>;
-    // console.error("SDK received command", command);
+  // async #requestCommands(): Promise<CLIServerResponse> {
+  //   const { data: config } = await this.#requestConfig();
+  //   // console.error("SDK received config", config);
+  //   const { data: command } =
+  //     await (await fetch(new URL("command", this.#endpoint)))
+  //       .json() as CLISuccess<Command>;
+  //   // console.error("SDK received command", command);
+  //
+  //   return { command, config };
+  // }
+  //
+  // async #requestConfig(): Promise<CLISuccess<CLIConfigRequest>> {
+  //   const params = new URLSearchParams({
+  //     typegraph: this.#typegraph.name,
+  //     typegraph_path: this.#typegraphPath,
+  //   });
+  //   const response = await fetch(new URL("config?" + params, this.#endpoint));
+  //   return (await response.json()) as CLISuccess<CLIConfigRequest>;
+  // }
 
-    return { command, config };
-  }
-
-  async #requestConfig(): Promise<CLISuccess<CLIConfigRequest>> {
-    const params = new URLSearchParams({
-      typegraph: this.#typegraph.name,
-      typegraph_path: this.#typegraphPath,
-    });
-    const response = await fetch(new URL("config?" + params, this.#endpoint));
-    return (await response.json()) as CLISuccess<CLIConfigRequest>;
-  }
-
-  async #serialize(config: CLIConfigRequest): Promise<void> {
+  async #serialize(config: FinalizeParams): Promise<void> {
     let finalizationResult: TgFinalizationResult;
     try {
-      finalizationResult = this.#typegraph.serialize({
-        ...config.artifactsConfig,
-        prefix: config.prefix,
-      });
+      finalizationResult = this.#typegraph.serialize(config);
     } catch (err: any) {
       log.failure({
         typegraph: this.#typegraph.name,
@@ -128,33 +152,29 @@ export class Manager {
       //   },
       // );
     }
-    await this.#relayResultToCLI(
-      "serialize",
-      JSON.parse(finalizationResult.tgJson),
-    );
+
+    log.success(finalizationResult.tgJson, true);
+    // await this.#relayResultToCLI(
+    //   "serialize",
+    //   JSON.parse(finalizationResult.tgJson),
+    // );
   }
 
-  async #deploy(
-    { typegate, artifactsConfig, secrets, prefix }: CLIConfigRequest,
-  ): Promise<void> {
-    const { endpoint, auth } = typegate;
+  async #deploy(finalizeParams: FinalizeParams): Promise<void> {
+    const { endpoint, auth } = this.globalConfig.typegate!;
     if (!auth) {
       throw new Error(
         `"${this.#typegraph.name}" received null or undefined "auth" field on the configuration`,
       );
     }
-    const config = {
-      ...artifactsConfig,
-      prefix,
-    };
 
     // hack for allowing tg.serialize(config) to be called more than once
-    const frozenOut = freezeTgOutput(config, this.#typegraph);
+    const frozenOut = freezeTgOutput(finalizeParams, this.#typegraph);
 
     // hack for allowing tg.serialize(config) to be called more than once
     let frozenSerialized: TgFinalizationResult;
     try {
-      frozenSerialized = frozenOut.serialize(config);
+      frozenSerialized = frozenOut.serialize(finalizeParams);
     } catch (err: any) {
       log.failure({
         typegraph: this.#typegraph.name,
@@ -175,20 +195,27 @@ export class Manager {
       serialize: () => frozenSerialized,
     } as TypegraphOutput;
 
-    if (artifactsConfig.codegen) {
-      await this.#relayResultToCLI(
-        "codegen",
-        JSON.parse(frozenSerialized.tgJson),
-      );
+    if (finalizeParams.codegen) {
+      // TODO
+      throw new Error("not implemented");
+      // await this.#relayResultToCLI(
+      //   "codegen",
+      //   JSON.parse(frozenSerialized.tgJson),
+      // );
     }
 
     try {
       const { response } = await tgDeploy(reusableTgOutput, {
-        baseUrl: endpoint,
-        artifactsConfig: config,
-        secrets,
-        auth: new BasicAuth(auth.username, auth.password),
+        typegate: {
+          url: endpoint,
+          auth: new BasicAuth(auth.username, auth.password),
+        },
         typegraphPath: this.#typegraphPath,
+        prefix: finalizeParams.prefix,
+        secrets: this.typegraphConfig.secrets,
+        migrationsDir: this.typegraphConfig.migrationsDir,
+        migrationActions: this.typegraphConfig.migrationActions,
+        defaultMigrationAction: this.typegraphConfig.defaultMigrationAction,
       });
 
       log.success({ typegraph: this.#typegraph.name, ...response });
@@ -201,42 +228,42 @@ export class Manager {
     }
   }
 
-  async #relayResultToCLI<T>(initiator: Command, data: T) {
-    const typegraphName = this.#typegraph.name;
-    const response: SDKResponse<T> = {
-      command: initiator,
-      typegraphName,
-      typegraphPath: this.#typegraphPath,
-      data,
-    };
-    await fetch(new URL("response", this.#endpoint), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(response),
-    });
-  }
+  // async #relayResultToCLI<T>(initiator: Command, data: T) {
+  //   const typegraphName = this.#typegraph.name;
+  //   const response: SDKResponse<T> = {
+  //     command: initiator,
+  //     typegraphName,
+  //     typegraphPath: this.#typegraphPath,
+  //     data,
+  //   };
+  //   await fetch(new URL("response", this.#endpoint), {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify(response),
+  //   });
+  // }
 
-  async #relayErrorToCLI(
-    initiator: Command,
-    code: string,
-    msg: string,
-    value: string | any,
-  ) {
-    const typegraphName = this.#typegraph.name;
-    const response: SDKResponse<any> = {
-      command: initiator,
-      typegraphName,
-      typegraphPath: this.#typegraphPath,
-      error: {
-        code,
-        msg,
-        value,
-      },
-    };
-    await fetch(new URL("response", this.#endpoint), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(response),
-    });
-  }
+  // async #relayErrorToCLI(
+  //   initiator: Command,
+  //   code: string,
+  //   msg: string,
+  //   value: string | any,
+  // ) {
+  //   const typegraphName = this.#typegraph.name;
+  //   const response: SDKResponse<any> = {
+  //     command: initiator,
+  //     typegraphName,
+  //     typegraphPath: this.#typegraphPath,
+  //     error: {
+  //       code,
+  //       msg,
+  //       value,
+  //     },
+  //   };
+  //   await fetch(new URL("response", this.#endpoint), {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify(response),
+  //   });
+  // }
 }

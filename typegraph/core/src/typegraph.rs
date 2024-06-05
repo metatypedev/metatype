@@ -27,8 +27,8 @@ use std::hash::Hasher as _;
 use std::rc::Rc;
 
 use crate::wit::core::{
-    Artifact as WitArtifact, ArtifactResolutionConfig, Error as TgError, Guest, MaterializerId,
-    PolicyId, PolicySpec, RuntimeId, TypegraphInitParams,
+    Artifact as WitArtifact, Error as TgError, FinalizeParams, Guest, MaterializerId, PolicyId,
+    PolicySpec, RuntimeId, TypegraphInitParams,
 };
 
 #[derive(Default)]
@@ -181,9 +181,7 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
         .collect::<Result<Vec<_>>>()
 }
 
-pub fn finalize(
-    res_config: Option<ArtifactResolutionConfig>,
-) -> Result<(String, Vec<WitArtifact>)> {
+pub fn finalize(params: FinalizeParams) -> Result<(String, Vec<WitArtifact>)> {
     #[cfg(test)]
     eprintln!("Finalizing typegraph...");
 
@@ -221,11 +219,9 @@ pub fn finalize(
         deps: Default::default(),
     };
 
-    let config = res_config.map(|config| {
-        tg.meta.prefix.clone_from(&config.prefix);
-        config
-    });
-    TypegraphPostProcessor::new(config).postprocess(&mut tg)?;
+    tg.meta.prefix = params.prefix.clone();
+
+    TypegraphPostProcessor::new(params).postprocess(&mut tg)?;
 
     let artifacts = tg
         .meta
@@ -237,7 +233,7 @@ pub fn finalize(
 
     Store::restore(ctx.saved_store_state.unwrap());
 
-    let result = match serde_json::to_string_pretty(&tg).map_err(|e| e.to_string().into()) {
+    let result = match serde_json::to_string(&tg).map_err(|e| e.to_string().into()) {
         Ok(res) => res,
         Err(e) => return Err(e),
     };

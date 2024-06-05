@@ -8,15 +8,16 @@ use common::typegraph::Typegraph;
 
 use crate::utils::fs_host;
 use crate::utils::postprocess::PostProcessor;
-use crate::wit::core::{MigrationAction, MigrationConfig};
+use crate::wit::core::MigrationAction;
+use crate::wit::core::PrismaMigrationConfig;
 use crate::wit::metatype::typegraph::host::{eprint, path_exists};
 
 pub struct PrismaProcessor {
-    config: MigrationConfig,
+    config: PrismaMigrationConfig,
 }
 
 impl PrismaProcessor {
-    pub fn new(config: MigrationConfig) -> Self {
+    pub fn new(config: PrismaMigrationConfig) -> Self {
         Self { config }
     }
 }
@@ -30,7 +31,7 @@ impl PostProcessor for PrismaProcessor {
 
 impl PrismaProcessor {
     pub fn embed_prisma_migrations(&self, tg: &mut Typegraph) -> Result<(), String> {
-        let base_migration_path = self.prisma_migrations_dir()?;
+        let base_migration_path = PathBuf::from(&self.config.migrations_dir);
 
         for rt in tg.runtimes.iter_mut() {
             if let TGRuntime::Known(Prisma(rt_data)) = rt {
@@ -57,22 +58,20 @@ impl PrismaProcessor {
         Ok(())
     }
 
-    /// Simply concat `cwd` with `migration-path` (provided manually or set by the cli)
-    pub fn prisma_migrations_dir(&self) -> Result<PathBuf, String> {
-        let migration_dir = self.config.migration_dir.clone();
-        let path = fs_host::cwd()?.join(PathBuf::from(migration_dir));
-        Ok(path)
-    }
-
     /// Find the appropriate migration action (usually set from the cli)
     /// If nothing is found, use the global action config (set initially)
     pub fn get_action_by_rt_name(&self, name: &str) -> MigrationAction {
-        if let Some(actions) = self.config.runtime_actions.clone() {
-            if let Some(action) = actions.iter().find(|(rt, _)| rt.eq(name)) {
-                eprint(&format!("Specific migration action found for {name}"));
-                return action.1;
-            }
-        }
-        self.config.global_action
+        self.config
+            .migration_actions
+            .iter()
+            .filter_map(|(rt, action)| {
+                if rt == name {
+                    Some(action.clone())
+                } else {
+                    None
+                }
+            })
+            .last()
+            .unwrap_or(self.config.default_migration_action.clone())
     }
 }

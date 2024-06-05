@@ -11,7 +11,12 @@ use tokio::{process::Command, sync::OwnedSemaphorePermit};
 pub trait TaskActionGenerator: Clone {
     type Action: TaskAction;
 
-    fn generate(&self, path: Arc<Path>, permit: OwnedSemaphorePermit) -> Self::Action;
+    fn generate(
+        &self,
+        path: Arc<Path>,
+        followup: Option<<Self::Action as TaskAction>::Followup>,
+        permit: OwnedSemaphorePermit,
+    ) -> Self::Action;
 }
 
 pub struct ActionFinalizeContext<A: TaskAction + 'static> {
@@ -25,9 +30,14 @@ pub trait OutputData: serde::de::DeserializeOwned + std::fmt::Debug + Unpin + Se
     fn get_typegraph_name(&self) -> String;
 }
 
+pub trait FollowupTaskConfig<A: TaskAction> {
+    fn schedule(&self, task_manager: Addr<TaskManager<A>>);
+}
+
 pub trait TaskAction: std::fmt::Debug + Clone + Send + Unpin {
     type SuccessData: OutputData;
     type FailureData: OutputData;
+    type Followup: FollowupTaskConfig<Self> + Default + std::fmt::Debug + Unpin + Send;
     type Generator: TaskActionGenerator<Action = Self> + Unpin;
 
     async fn get_command(&self) -> Result<Command>;
@@ -36,6 +46,9 @@ pub trait TaskAction: std::fmt::Debug + Clone + Send + Unpin {
 
     fn get_start_message(&self) -> String;
     fn get_error_message(&self, err: &str) -> String;
+
+    fn get_global_config(&self) -> serde_json::Value;
+    fn get_typegraph_config(&self, typegraph: &str) -> serde_json::Value;
 
     fn finalize(&self, res: &ActionResult<Self>, ctx: ActionFinalizeContext<Self>);
 }

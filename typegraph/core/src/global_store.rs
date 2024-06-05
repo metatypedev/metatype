@@ -11,7 +11,6 @@ use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
 
 #[allow(unused)]
-use crate::wit::core::ArtifactResolutionConfig;
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
@@ -220,9 +219,9 @@ impl Store {
         })
     }
 
-    pub fn set_deploy_cwd(value: Option<String>) {
+    pub fn set_deploy_cwd(value: PathBuf) {
         with_store_mut(|s| {
-            s.deploy_cwd_dir = value.map(PathBuf::from);
+            s.deploy_cwd_dir = Some(value);
         })
     }
 

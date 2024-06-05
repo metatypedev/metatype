@@ -5,7 +5,7 @@ import { BasicAuth } from "./tg_deploy.js";
 import { Artifact } from "./gen/interfaces/metatype-typegraph-core.js";
 import { dirname, join } from "node:path";
 import * as fsp from "node:fs/promises";
-import { log } from "./log.js";
+import { log } from "./io.js";
 import { execRequest } from "./utils/func_utils.js";
 
 interface UploadArtifactMeta {
@@ -34,11 +34,15 @@ export class ArtifactUploader {
     artifactMetas: UploadArtifactMeta[],
   ): Promise<Array<string | null>> {
     const artifactsJson = JSON.stringify(artifactMetas);
-    const uploadUrls: Array<string | null> = await execRequest(this.getUploadUrl, {
-      method: "POST",
-      headers: this.headers,
-      body: artifactsJson,
-    }, `tgDeploy failed to get upload urls`);
+    const uploadUrls: Array<string | null> = await execRequest(
+      this.getUploadUrl,
+      {
+        method: "POST",
+        headers: this.headers,
+        body: artifactsJson,
+      },
+      `tgDeploy failed to get upload urls`,
+    );
 
     // if (!response.ok) {
     //   log.debug("response", response);
@@ -50,8 +54,7 @@ export class ArtifactUploader {
 
     // const uploadUrls: Array<string | null> = await response.json();
     if (uploadUrls.length !== artifactMetas.length) {
-      const diff =
-        `array length mismatch: ${uploadUrls.length} !== ${artifactMetas.length}`;
+      const diff = `array length mismatch: ${uploadUrls.length} !== ${artifactMetas.length}`;
       throw new Error(`Failed to get upload URLs for all artifacts: ${diff}`);
     }
 
@@ -84,11 +87,15 @@ export class ArtifactUploader {
     // TODO: stream
     const content = await fsp.readFile(path);
     log.info("uploading artifact", meta.relativePath, urlObj.href);
-    const res = await execRequest(urlObj, {
-      method: "POST",
-      headers: uploadHeaders,
-      body: new Uint8Array(content),
-    } as RequestInit, `failed to upload artifact ${meta.relativePath}`);
+    const res = await execRequest(
+      urlObj,
+      {
+        method: "POST",
+        headers: uploadHeaders,
+        body: new Uint8Array(content),
+      } as RequestInit,
+      `failed to upload artifact ${meta.relativePath}`,
+    );
     if (!res.ok) {
       const err = await res.json();
       // To be read by the CLI?
@@ -104,16 +111,14 @@ export class ArtifactUploader {
   }
 
   private getMetas(artifacts: Artifact[]): UploadArtifactMeta[] {
-    return artifacts.map(
-      (artifact) => {
-        return {
-          typegraphName: this.tgName,
-          hash: artifact.hash,
-          relativePath: artifact.path,
-          sizeInBytes: artifact.size,
-        };
-      },
-    );
+    return artifacts.map((artifact) => {
+      return {
+        typegraphName: this.tgName,
+        hash: artifact.hash,
+        relativePath: artifact.path,
+        sizeInBytes: artifact.size,
+      };
+    });
   }
 
   private handleUploadErrors(
@@ -146,11 +151,9 @@ export class ArtifactUploader {
     const uploadUrls = await this.fetchUploadUrls(artifactMetas);
     log.debug("upload urls", uploadUrls);
     const results = await Promise.allSettled(
-      uploadUrls.map(
-        async (url, i) => {
-          return await this.upload(url, artifactMetas[i]);
-        },
-      ),
+      uploadUrls.map(async (url, i) => {
+        return await this.upload(url, artifactMetas[i]);
+      }),
     );
 
     this.handleUploadErrors(results, artifactMetas);

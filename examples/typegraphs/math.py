@@ -27,7 +27,7 @@ def math(g: Graph):
     # the policy implementation is based on functions as well
     restrict_referer = deno.policy(
         "restrict_referer_policy",
-        '(_, context) => context.headers.referer && ["localhost", "metatype"].includes(new URL(context.headers.referer).hostname)',
+        '(_, context) => context.headers.referer && ["localhost", "metatype.dev"].includes(new URL(context.headers.referer).hostname)',
     )
 
     g.expose(

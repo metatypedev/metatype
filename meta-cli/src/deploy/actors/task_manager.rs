@@ -221,9 +221,11 @@ impl<A: TaskAction + 'static> Handler<StartTask> for TaskManager<A> {
                 }
             }
         }
-        let action = self
-            .action_generator
-            .generate(message.path.clone(), message.permit);
+        let action = self.action_generator.generate(
+            message.path.clone(),
+            Default::default(), // TODO
+            message.permit,
+        );
         let path = action.get_path_owned();
         let task_addr = TaskActor::new(
             self.config.clone(),

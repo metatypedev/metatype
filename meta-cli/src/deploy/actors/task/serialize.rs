@@ -1,9 +1,12 @@
 use super::action::{
-    ActionFinalizeContext, ActionResult, OutputData, TaskAction, TaskActionGenerator,
+    ActionFinalizeContext, ActionResult, FollowupTaskConfig, OutputData, TaskAction,
+    TaskActionGenerator,
 };
 use super::command::CommandBuilder;
 use super::TaskConfig;
+use crate::com::store::MigrationAction;
 use crate::deploy::actors::console::Console;
+use crate::deploy::actors::task_manager::TaskManager;
 use crate::interlude::*;
 use color_eyre::owo_colors::OwoColorize;
 use common::typegraph::Typegraph;
@@ -37,7 +40,12 @@ impl SerializeActionGenerator {
 impl TaskActionGenerator for SerializeActionGenerator {
     type Action = SerializeAction;
 
-    fn generate(&self, path: Arc<Path>, permit: OwnedSemaphorePermit) -> Self::Action {
+    fn generate(
+        &self,
+        path: Arc<Path>,
+        followup: Option<()>,
+        permit: OwnedSemaphorePermit,
+    ) -> Self::Action {
         SerializeActionInner {
             path,
             task_config: self.task_config.clone(),
@@ -49,11 +57,11 @@ impl TaskActionGenerator for SerializeActionGenerator {
 
 #[derive(Deserialize, Debug)]
 pub struct SerializeError {
-    typegraph: String,
-    error: String,
+    pub typegraph: String,
+    pub error: String,
 }
 
-impl OutputData for Typegraph {
+impl OutputData for Box<Typegraph> {
     fn get_typegraph_name(&self) -> String {
         self.name().unwrap()
     }
@@ -65,10 +73,15 @@ impl OutputData for SerializeError {
     }
 }
 
+impl FollowupTaskConfig<SerializeAction> for () {
+    fn schedule(&self, _task_manager: Addr<TaskManager<Arc<SerializeActionInner>>>) {}
+}
+
 impl TaskAction for SerializeAction {
-    type SuccessData = Typegraph;
+    type SuccessData = Box<Typegraph>;
     type FailureData = SerializeError;
     type Generator = SerializeActionGenerator;
+    type Followup = ();
 
     async fn get_command(&self) -> Result<Command> {
         CommandBuilder {
@@ -121,5 +134,21 @@ impl TaskAction for SerializeAction {
                 ));
             }
         }
+    }
+
+    fn get_global_config(&self) -> serde_json::Value {
+        serde_json::json!({
+            "typegate": None::<String>,
+            "prefix": None::<String>,
+        })
+    }
+    fn get_typegraph_config(&self, typegraph: &str) -> serde_json::Value {
+        serde_json::json!({
+            "secrets": {},
+            "artifactResolution": true, // TODO??
+            "migrationActions": {},
+            "defaultMigrationAction": MigrationAction::default(),
+            "migrationsDir": ".", // TODO
+        })
     }
 }

@@ -1,46 +1,100 @@
+mod migration_resolution;
+mod migrations;
+
 use super::action::{
-    ActionFinalizeContext, ActionResult, OutputData, TaskAction, TaskActionGenerator,
+    ActionFinalizeContext, ActionResult, FollowupTaskConfig, OutputData, TaskAction,
+    TaskActionGenerator,
 };
 use super::command::CommandBuilder;
 use super::TaskConfig;
 use crate::deploy::actors::console::Console;
-use crate::deploy::push::pusher::{MessageEntry, Migrations};
+use crate::deploy::actors::task_manager::TaskManager;
 use crate::interlude::*;
+use crate::secrets::Secrets;
 use color_eyre::owo_colors::OwoColorize;
+use common::node::Node;
 use serde::Deserialize;
 use std::{path::Path, sync::Arc};
 use tokio::{process::Command, sync::OwnedSemaphorePermit};
 
 pub type DeployAction = Arc<DeployActionInner>;
 
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct MigrationAction {
+    pub apply: bool,  // apply existing migrations
+    pub create: bool, // create new migrations
+    pub reset: bool,  // reset database if necessary
+}
+
+#[derive(Debug, PartialEq, Eq, Hash)]
+pub struct PrismaRuntimeId {
+    pub typegraph: String,
+    pub name: String,
+}
+
 #[derive(Debug)]
 pub struct DeployActionInner {
     path: Arc<Path>,
     task_config: Arc<TaskConfig>,
+    node: Arc<Node>,
+    secrets: Arc<Secrets>,
+    migrations_dir: Arc<Path>,
+    migration_actions: HashMap<PrismaRuntimeId, MigrationAction>,
+    default_migration_action: MigrationAction,
     #[allow(unused)]
     permit: OwnedSemaphorePermit,
 }
 
 #[derive(Clone)]
 pub struct DeployActionGenerator {
-    task_config: Arc<TaskConfig>,
-}
-
-impl DeployActionGenerator {
-    pub fn new(task_config: TaskConfig) -> Self {
-        Self {
-            task_config: Arc::new(task_config),
-        }
-    }
+    pub task_config: Arc<TaskConfig>,
+    pub node: Arc<Node>,
+    pub secrets: Arc<Secrets>,
+    pub migrations_dir: Arc<Path>,
+    pub default_migration_action: MigrationAction,
 }
 
 impl TaskActionGenerator for DeployActionGenerator {
     type Action = DeployAction;
 
-    fn generate(&self, path: Arc<Path>, permit: OwnedSemaphorePermit) -> Self::Action {
+    fn generate(
+        &self,
+        path: Arc<Path>,
+        followup: Option<FollowupDeployConfig>,
+        permit: OwnedSemaphorePermit,
+    ) -> Self::Action {
+        let (default_migration_action, migration_actions) = if let Some(followup) = followup {
+            (
+                Default::default(),
+                followup
+                    .migrations
+                    .into_iter()
+                    .map(|(runtime, action_override)| {
+                        (
+                            runtime,
+                            MigrationAction {
+                                reset: matches!(
+                                    action_override,
+                                    MigrationActionOverride::ResetDatabase
+                                ),
+                                ..Default::default()
+                            },
+                        )
+                    })
+                    .collect(),
+            )
+        } else {
+            (self.default_migration_action.clone(), HashMap::new())
+        };
+
         DeployActionInner {
             path,
             task_config: self.task_config.clone(),
+            node: self.node.clone(),
+            secrets: self.secrets.clone(),
+            migrations_dir: self.migrations_dir.clone(),
+            migration_actions,
+            default_migration_action,
             permit,
         }
         .into()
@@ -48,10 +102,25 @@ impl TaskActionGenerator for DeployActionGenerator {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case", tag = "type", content = "text")]
+pub enum MessageEntry {
+    Info(String),
+    Warning(String),
+    Error(String),
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Migration {
+    pub runtime: String,
+    #[serde(rename = "migrations")]
+    pub archive: String,
+}
+
+#[derive(Deserialize, Debug)]
 pub struct DeploySuccess {
     pub typegraph: String,
     pub messages: Vec<MessageEntry>,
-    pub migrations: Vec<Migrations>,
+    pub migrations: Vec<Migration>,
     pub failure: Option<String>,
 }
 
@@ -75,10 +144,21 @@ impl OutputData for DeployError {
     }
 }
 
+#[derive(Clone, Debug)]
+pub enum MigrationActionOverride {
+    ResetDatabase,
+}
+
+#[derive(Debug, Default)]
+pub struct FollowupDeployConfig {
+    pub migrations: Vec<(PrismaRuntimeId, MigrationActionOverride)>,
+}
+
 impl TaskAction for DeployAction {
     type SuccessData = DeploySuccess;
     type FailureData = DeployError;
     type Generator = DeployActionGenerator;
+    type Followup = FollowupDeployConfig;
 
     async fn get_command(&self) -> Result<Command> {
         CommandBuilder {
@@ -129,30 +209,18 @@ impl TaskAction for DeployAction {
 
                 let tg_name = data.get_typegraph_name();
 
-                let migdir = ctx.config.prisma_migration_dir_abs(&data.typegraph);
-                for migrations in data.migrations.iter() {
-                    let dest = migdir.join(&migrations.runtime);
-                    if let Err(err) =
-                        common::archive::unpack(&dest, Some(migrations.migrations.clone()))
-                    {
-                        ctx.console.error(format!(
-                            "error while unpacking migrations into {:?}",
-                            migdir
-                        ));
-                        ctx.console.error(format!("{err:?}"));
-                    } else {
-                        ctx.console.info(format!(
-                            "{scope} unpacked migrations for {}/{} at {}",
-                            tg_name.cyan(),
-                            migrations.runtime,
-                            dest.display().bold()
-                        ));
-                    }
-                }
+                self.unpack_migrations(&tg_name, &data.migrations, &ctx, &scope);
 
-                match data.failure {
-                    Some(_) => {
-                        todo!();
+                match &data.failure {
+                    Some(failure) => {
+                        ctx.console.error(format!(
+                            "{icon} error while deploying typegraph {name} from {path}",
+                            icon = "✗".red(),
+                            name = tg_name.cyan(),
+                            path = self.path.display().yellow(),
+                        ));
+
+                        self.handle_push_failure(&tg_name, failure, &ctx, &scope);
                     }
                     None => {
                         ctx.console.info(format!(
@@ -175,5 +243,44 @@ impl TaskAction for DeployAction {
                 ));
             }
         }
+    }
+
+    fn get_global_config(&self) -> serde_json::Value {
+        serde_json::json!({
+            "typegate": {
+                "endpoint": self.node.base_url,
+                "auth": self.node.auth,
+            },
+            "prefix": self.node.prefix,
+        })
+    }
+
+    fn get_typegraph_config(&self, typegraph: &str) -> serde_json::Value {
+        let migration_actions = self
+            .migration_actions
+            .iter()
+            .filter_map(|(runtime, action)| {
+                if runtime.typegraph == typegraph {
+                    Some((runtime.name.clone(), action.clone()))
+                } else {
+                    None
+                }
+            })
+            .collect::<HashMap<_, _>>();
+
+        serde_json::json!({
+            "secrets": self.secrets.get(typegraph),
+            "artifactResolution": true,
+            "migrationActions": migration_actions,
+            "defaultMigrationAction": self.default_migration_action,
+            "migrationsDir": self.migrations_dir.to_path_buf().join(typegraph),
+        })
+    }
+}
+
+impl FollowupTaskConfig<DeployAction> for FollowupDeployConfig {
+    fn schedule(&self, task_manager: Addr<TaskManager<DeployAction>>) {
+        todo!();
+        // task_manager.do_send(AddFollowupTask)
     }
 }

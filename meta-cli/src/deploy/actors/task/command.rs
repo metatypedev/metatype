@@ -41,7 +41,8 @@ impl CommandBuilder {
                 "MCLI_SERVER_PORT",
                 self.task_config.instance_port.to_string(),
             )
-            .env("MCLI_TASK_ACTION", self.action_env)
+            .env("MCLI_ACTION", self.action_env)
+            .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 

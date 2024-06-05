@@ -27,6 +27,13 @@ lazy_static! {
     static ref DEFAULT_LOADER_CONFIG: TypegraphLoaderConfig = Default::default();
 }
 
+const DEFAULT_PRISMA_MIGRATIONS_PATH: &str = "prisma-migrations";
+
+pub enum PathOption {
+    Absolute,
+    Relative,
+}
+
 #[derive(Deserialize, Debug, Clone, Default)]
 #[serde(untagged)]
 pub enum Lift<T> {
@@ -252,6 +259,21 @@ impl Config {
             .loaders
             .get(&module_type)
             .unwrap_or(&DEFAULT_LOADER_CONFIG)
+    }
+
+    pub fn prisma_migrations_base_dir(&self, opt: PathOption) -> PathBuf {
+        let path = self
+            .typegraphs
+            .materializers
+            .prisma
+            .migrations_path
+            .as_deref()
+            .unwrap_or_else(|| Path::new(DEFAULT_PRISMA_MIGRATIONS_PATH));
+
+        match opt {
+            PathOption::Absolute => self.base_dir.join(path),
+            PathOption::Relative => path.to_path_buf(),
+        }
     }
 
     /// `config migration dir` + `runtime` + `tg_name`   

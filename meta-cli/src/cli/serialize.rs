@@ -1,3 +1,9 @@
+use crate::deploy::actors::task::serialize::{
+    SerializeAction, SerializeActionGenerator, SerializeError,
+};
+use crate::deploy::actors::task::{TaskConfig, TaskFinishStatus};
+use crate::deploy::actors::task_manager::message::AddTask;
+use crate::deploy::actors::task_manager::{TaskManager, TaskReason};
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 use crate::interlude::*;
@@ -12,6 +18,7 @@ use actix_web::dev::ServerHandle;
 use clap::Parser;
 use common::typegraph::Typegraph;
 use core::fmt::Debug;
+use futures::channel::oneshot;
 use std::io::{self, Write};
 use tokio::io::AsyncWriteExt;
 use tokio::sync::mpsc;
@@ -54,7 +61,7 @@ impl Action for Serialize {
     #[tracing::instrument]
     async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
         let dir = args.dir();
-        let config_path = args.config;
+        let config_path = args.config.clone();
 
         // config file is not used when `TypeGraph` files
         // are provided in the CLI by flags
@@ -72,49 +79,55 @@ impl Action for Serialize {
 
         let console = ConsoleActor::new(Arc::clone(&config)).start();
 
-        let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
+        let (report_tx, report_rx) = oneshot::channel();
 
-        let loader = LoaderActor::new(
-            Arc::clone(&config),
-            console.clone(),
-            loader_event_tx,
-            self.max_parallel_loads.unwrap_or_else(num_cpus::get),
-        )
-        .auto_stop()
-        .start();
+        let action_generator = SerializeActionGenerator::new(TaskConfig::init(args.dir().into()));
+        // TODO fail_fast
+        let task_manager: Addr<TaskManager<SerializeAction>> =
+            TaskManager::new(config.clone(), action_generator, 1, report_tx, console)
+                .auto_stop()
+                .start();
 
         if self.files.is_empty() {
             bail!("no file provided");
         }
 
         for path in self.files.iter() {
-            use normpath::PathExt;
-            let path = dir.join(path).normalize()?.into_path_buf();
-            if let Err(err) = crate::config::ModuleType::try_from(path.as_path()) {
-                bail!("file is not a valid module type: {err:#}")
-            }
-            loader.do_send(LoadModule(path.into()));
+            task_manager.do_send(AddTask {
+                path: path.as_path().into(),
+                reason: TaskReason::Discovery,
+            });
         }
 
-        let mut loaded: Vec<Typegraph> = vec![];
-        let mut event_rx = loader_event_rx;
-        while let Some(event) = event_rx.recv().await {
-            match event {
-                LoaderEvent::Typegraph(tg_infos) => {
-                    let tgs = ServerStore::get_responses_or_fail(&tg_infos.path)?;
-                    for (_, tg) in tgs.iter() {
-                        loaded.push(tg.as_typegraph()?);
-                    }
+        let report = report_rx.await?;
+        // TODO no need to report errors
+        let tgs = report
+            .entries
+            .into_iter()
+            .map(|entry| match entry.status {
+                TaskFinishStatus::Finished(results) => results
+                    .into_iter()
+                    .collect::<Result<Vec<_>, SerializeError>>()
+                    .map_err(|e| {
+                        eyre::eyre!(
+                            "serialization failed for typegraph '{}' at {:?}: {}",
+                            e.typegraph,
+                            entry.path,
+                            e.error
+                        )
+                    }),
+                TaskFinishStatus::Cancelled => {
+                    Err(eyre::eyre!("serialization cancelled for {:?}", entry.path))
                 }
-                LoaderEvent::Stopped(res) => {
-                    if let StopBehavior::ExitFailure(err) = res {
-                        bail!("LoaderActor exit failure {err}");
-                    }
+                TaskFinishStatus::Error => {
+                    Err(eyre::eyre!("serialization failed for {:?}", entry.path))
                 }
-            }
-        }
+            })
+            .collect::<Result<Vec<_>>>()?
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>();
 
-        let tgs = loaded;
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.iter().find(|tg| &tg.name().unwrap() == tg_name) {
                 self.write(&self.to_string(&tg)?).await?;

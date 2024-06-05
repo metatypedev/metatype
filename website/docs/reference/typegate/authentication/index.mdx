@@ -15,9 +15,7 @@ Basic authentication is the simplest way to authenticate requests. It is done by
 | Secrets    | `BASIC_[username]=password`       |
 | Header     | `Authorization: Basic base64(username:password)` |
 | Context    | `{ username }`                                   |
-
-<TGExample
-  typegraph="basic_authentification"
+<TGExample typegraph="basic-authentication"
   python={require("../../../../../examples/typegraphs/basic.py")}
   typescript={require("!!code-loader!../../../../../examples/typegraphs/basic.ts")}
 
@@ -58,7 +56,7 @@ Even though, asymmetric encryption is recommended, HMAC-SHA256 is so commonly us
 | Context    | `{ your_own_content }`                       |
 
 <TGExample
-  typegraph="jwt_authentification"
+  typegraph="jwt-authentification"
   python={require("../../../../../examples/typegraphs/jwt.py")}
   typescript={require("!!code-loader!../../../../../examples/typegraphs/jwt.ts")}
   query={require("./jwt.graphql")}
@@ -101,7 +99,7 @@ const { token } = await take.json();
 
 3. The token can then be used as JWT in the `Authorization` header of your requests, and the response of the typegate will contain a header `Next-Authorization`. When this header is present, the value should be used in follow-up calls (value will be empty if the authentication has expired).
 
-<OAuth2 name="github" typegraph="oauth2_authentication" />
+<OAuth2 name="github" typegraph="oauth2-authentication" />
 
 <TGExample
   typegraph="oauth2_authentication"
