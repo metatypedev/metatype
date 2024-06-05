@@ -38,3 +38,37 @@ curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/installer
 ```
 
 Now, Everything is set to author a simple typegraph and deploy it to an embedded typegate instance.
+
+Create a new deno project using this command. 
+```shell
+meta new --template deno
+```
+
+The above command will create a sample typegraph which you can use to test the embedded typegate. 
+Before deploying the typegraph to the embedded typegate, Run the following commands below.
+
+Execute this command to set `tg_secret` and `tg_admin_password` environment variables, which are neccessary for the typegate to run. 
+```shell
+export tg_secret=a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw== tg_admin_password=password
+```
+
+Start the typegate instance.
+```shell
+meta typegate
+```
+
+Now that there is running instance of a typegate, you can deploy the example typegraph. From another terminal, run the command below.
+```shell
+meta deploy -f api/example.ts --allow-dirty --create-migration --target dev --gate http://localhost:7890
+```
+
+The typegate runs on port 7890 by default. If you access [http://localhost:7890/example](http://localhost:7890/example) on your browser, you can see an GraphQL interface to interact with the deployed typegraph. You can test the example typegraph using the following graphql query below.
+```graphql
+query {
+    multilpy (first: 3, second: 5)
+}
+```
+
+## Learn more about Metatype
+
+Wanna dive deep into the basics on _Metaype_? check our interactive [tutorial](/docs/tutorials/metatype-basics) revolving around the core features of the system.
