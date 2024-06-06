@@ -17,10 +17,11 @@ In this guide, we'll see how to set up a workflow for using Rust for our custom 
 
 ## Tooling
 
-We'll first need to install a bunch of programs in order to be able to produce modern the requisite components. The following checklist contains links to get you started:
+We need to install several programs to be able to produce the components. 
+The following checklist contains links to get you started:
 
-1. Rust compiler toolchain: this guide assumes moderate familiartiy of development with rust and won't spend much words on how to get it functional. In any case, you can get started with rust [here](https://www.rust-lang.org/learn/get-started).
-2. `wasm32-unknown-unknown` target for rustc: This is the backend for rustc uses to produce wasi compatible wasm components. If you&apos;re using `rustup` to manage your toolchain, Cargo will automatically install the target when you&apos;re building.
+1. Rust compiler toolchain: this guide assumes moderate familiartiy of development with rust and won't spend many words on how to get it functional. In any case, you can get started with rust [here](https://www.rust-lang.org/learn/get-started).
+2. `wasm32-unknown-unknown` target for rustc: This is the backend that rustc uses to produce wasi compatible wasm components. If you&apos;re using `rustup` to manage your toolchain, Cargo will automatically install the target when you&apos;re building.
 3. `wasm-tools`: this is the swiss army knife for working with wasm artifacts, courtesy of the [Bytecode Alliance](https://bytecodealliance.org/). Installation instructions can be found [here](https://github.com/bytecodealliance/wasm-tools/).
 
 ## Typegraph
@@ -109,7 +110,8 @@ We&apos;ll modify it now to implement our custom function.
 ## Building
 
 We'll now use the rust toolchain and wasm-tools to build the wasm component.
-This require multiple commands so it's presented below as a shell script that you can modify from.
+This requires multiple commands. 
+It's presented below as a shell script that you can modify from.
 
 ```bash
 # flags to make script execution visible

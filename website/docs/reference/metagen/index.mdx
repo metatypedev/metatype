@@ -70,13 +70,13 @@ Metagen is availaible through the SDK for programmatic access needs and can be h
 
 ## Generators
 
-:::info Chicken or egg?
+:::info Chicken or the egg?
 As most of the generators are intended for types to be used by custom functions, they'll require that you declare the custom functions in your typegraph first. 
 This begs the question, how does one declare custom functions that depend on artifacts that are yet to be generated? 
 Typegraphs error out when referenced artifacts aren't found, how does it work in this scenario?
 
 To resolve this concern, the SDKs support a serialization mode that skips resolution of artifacts.
-This mode is flipped on when serialization is done for codegen purposes.
+This mode is activated when serialization is done for codegen purposes.
 What this means is that, **you can declare non-existent files in your typegraph and codegen should work**.
 Some generators are even smart enough to work around your expected files.
 Of course, if the files aren't present when you're trying to deply to the typegate, it'll raise an error.
