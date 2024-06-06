@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::console::Console;
-use super::task::deploy::DeployAction;
-use super::task_manager::{self, TaskManager, TaskReason};
+use super::task::action::TaskAction;
+use super::task_manager::{self, TaskGenerator, TaskManager, TaskReason};
 use crate::config::Config;
 use crate::deploy::actors::console::ConsoleActor;
 use crate::deploy::push::pusher::RetryManager;
@@ -55,18 +55,19 @@ pub enum Event {
     ConfigChanged,
 }
 
-pub struct WatcherActor {
+pub struct WatcherActor<A: TaskAction + 'static> {
     // TODO config path only
     config: Arc<Config>,
     directory: Arc<Path>,
-    task_manager: Addr<TaskManager<DeployAction>>,
+    task_generator: TaskGenerator,
+    task_manager: Addr<TaskManager<A>>,
     console: Addr<ConsoleActor>,
     debouncer: Option<Debouncer<RecommendedWatcher>>,
     dependency_graph: DependencyGraph,
     file_filter: FileFilter,
 }
 
-impl Actor for WatcherActor {
+impl<A: TaskAction> Actor for WatcherActor<A> {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
@@ -84,17 +85,19 @@ impl Actor for WatcherActor {
     }
 }
 
-impl WatcherActor {
+impl<A: TaskAction> WatcherActor<A> {
     pub fn new(
         config: Arc<Config>,
         directory: Arc<Path>,
-        task_manager: Addr<TaskManager<DeployAction>>,
+        task_generator: TaskGenerator,
+        task_manager: Addr<TaskManager<A>>,
         console: Addr<ConsoleActor>,
     ) -> Result<Self> {
         let file_filter = FileFilter::new(&config)?;
         Ok(Self {
             config,
             directory,
+            task_generator,
             task_manager,
             console,
             debouncer: None,
@@ -103,7 +106,10 @@ impl WatcherActor {
         })
     }
 
-    fn start_watcher(&mut self, ctx: &mut <WatcherActor as actix::Actor>::Context) -> Result<()> {
+    fn start_watcher(
+        &mut self,
+        ctx: &mut <WatcherActor<A> as actix::Actor>::Context,
+    ) -> Result<()> {
         let self_addr = ctx.address();
         let mut debouncer =
             new_debouncer(Duration::from_secs(1), move |res: DebounceEventResult| {
@@ -131,7 +137,7 @@ impl WatcherActor {
     }
 }
 
-impl Handler<Stop> for WatcherActor {
+impl<A: TaskAction + 'static> Handler<Stop> for WatcherActor<A> {
     type Result = ();
 
     fn handle(&mut self, _msg: Stop, ctx: &mut Self::Context) -> Self::Result {
@@ -139,7 +145,7 @@ impl Handler<Stop> for WatcherActor {
     }
 }
 
-impl Handler<File> for WatcherActor {
+impl<A: TaskAction + 'static> Handler<File> for WatcherActor<A> {
     type Result = ();
 
     fn handle(&mut self, msg: File, ctx: &mut Self::Context) -> Self::Result {
@@ -165,7 +171,7 @@ impl Handler<File> for WatcherActor {
 
                     RetryManager::clear_counter(&path);
                     self.task_manager.do_send(task_manager::message::AddTask {
-                        path: path.into(),
+                        task_ref: self.task_generator.generate(path.into(), 0),
                         reason: TaskReason::DependencyChanged(dependency_path),
                     });
                 }
@@ -180,7 +186,7 @@ impl Handler<File> for WatcherActor {
 
                     RetryManager::clear_counter(&path);
                     self.task_manager.do_send(task_manager::message::AddTask {
-                        path: path.into(),
+                        task_ref: self.task_generator.generate(path.into(), 0),
                         reason: TaskReason::FileChanged,
                     });
                 }
@@ -196,7 +202,7 @@ impl Handler<File> for WatcherActor {
     }
 }
 
-impl Handler<UpdateDependencies> for WatcherActor {
+impl<A: TaskAction + 'static> Handler<UpdateDependencies> for WatcherActor<A> {
     type Result = ();
 
     fn handle(&mut self, msg: UpdateDependencies, _ctx: &mut Self::Context) -> Self::Result {
@@ -204,7 +210,7 @@ impl Handler<UpdateDependencies> for WatcherActor {
     }
 }
 
-impl Handler<RemoveTypegraph> for WatcherActor {
+impl<A: TaskAction + 'static> Handler<RemoveTypegraph> for WatcherActor<A> {
     type Result = ();
 
     fn handle(&mut self, msg: RemoveTypegraph, _ctx: &mut Self::Context) -> Self::Result {

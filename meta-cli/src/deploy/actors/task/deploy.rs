@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 mod migration_resolution;
 mod migrations;
 
@@ -8,14 +11,14 @@ use super::action::{
 use super::command::CommandBuilder;
 use super::TaskConfig;
 use crate::deploy::actors::console::Console;
-use crate::deploy::actors::task_manager::TaskManager;
+use crate::deploy::actors::task_manager::{TaskManager, TaskRef};
 use crate::interlude::*;
 use crate::secrets::Secrets;
 use color_eyre::owo_colors::OwoColorize;
 use common::node::Node;
 use serde::Deserialize;
 use std::{path::Path, sync::Arc};
-use tokio::{process::Command, sync::OwnedSemaphorePermit};
+use tokio::process::Command;
 
 pub type DeployAction = Arc<DeployActionInner>;
 
@@ -34,15 +37,13 @@ pub struct PrismaRuntimeId {
 
 #[derive(Debug)]
 pub struct DeployActionInner {
-    path: Arc<Path>,
+    task_ref: TaskRef,
     task_config: Arc<TaskConfig>,
     node: Arc<Node>,
     secrets: Arc<Secrets>,
     migrations_dir: Arc<Path>,
     migration_actions: HashMap<PrismaRuntimeId, MigrationAction>,
     default_migration_action: MigrationAction,
-    #[allow(unused)]
-    permit: OwnedSemaphorePermit,
 }
 
 #[derive(Clone)]
@@ -57,12 +58,7 @@ pub struct DeployActionGenerator {
 impl TaskActionGenerator for DeployActionGenerator {
     type Action = DeployAction;
 
-    fn generate(
-        &self,
-        path: Arc<Path>,
-        followup: Option<FollowupDeployConfig>,
-        permit: OwnedSemaphorePermit,
-    ) -> Self::Action {
+    fn generate(&self, task_ref: TaskRef, followup: Option<FollowupDeployConfig>) -> Self::Action {
         let (default_migration_action, migration_actions) = if let Some(followup) = followup {
             (
                 Default::default(),
@@ -88,14 +84,13 @@ impl TaskActionGenerator for DeployActionGenerator {
         };
 
         DeployActionInner {
-            path,
+            task_ref,
             task_config: self.task_config.clone(),
             node: self.node.clone(),
             secrets: self.secrets.clone(),
             migrations_dir: self.migrations_dir.clone(),
             migration_actions,
             default_migration_action,
-            permit,
         }
         .into()
     }
@@ -162,7 +157,11 @@ impl TaskAction for DeployAction {
 
     async fn get_command(&self) -> Result<Command> {
         CommandBuilder {
-            path: self.task_config.base_dir.to_path_buf().join(&self.path),
+            path: self
+                .task_config
+                .base_dir
+                .to_path_buf()
+                .join(&self.task_ref.path),
             task_config: self.task_config.clone(),
             action_env: "deploy",
         }
@@ -170,23 +169,18 @@ impl TaskAction for DeployAction {
         .await
     }
 
-    fn get_path(&self) -> &Path {
-        return &self.path;
-    }
-
-    fn get_path_owned(&self) -> Arc<Path> {
-        return self.path.clone();
-    }
-
     fn get_start_message(&self) -> String {
-        format!("starting deployment process for {:?}", self.path)
+        format!(
+            "starting deployment process for {:?}",
+            self.task_ref.path.display().yellow()
+        )
     }
 
     fn get_error_message(&self, err: &str) -> String {
         format!(
-            "{icon} failed to deploy typegraph(s) from {path:?}: {err}",
+            "{icon} failed to deploy typegraph(s) from {path}: {err}",
             icon = "✗".red(),
-            path = self.path,
+            path = self.task_ref.path.display().yellow(),
             err = err,
         )
     }
@@ -194,7 +188,7 @@ impl TaskAction for DeployAction {
     fn finalize(&self, res: &ActionResult<Self>, ctx: ActionFinalizeContext<Self>) {
         match res {
             Ok(data) => {
-                let scope = format!("({path})", path = self.path.display());
+                let scope = format!("({path})", path = self.task_ref.path.display());
                 let scope = scope.yellow();
 
                 for message in &data.messages {
@@ -217,7 +211,7 @@ impl TaskAction for DeployAction {
                             "{icon} error while deploying typegraph {name} from {path}",
                             icon = "✗".red(),
                             name = tg_name.cyan(),
-                            path = self.path.display().yellow(),
+                            path = self.task_ref.path.display().yellow(),
                         ));
 
                         self.handle_push_failure(&tg_name, failure, &ctx, &scope);
@@ -227,7 +221,7 @@ impl TaskAction for DeployAction {
                             "{icon} successfully deployed typegraph {name} from {path}",
                             icon = "✓".green(),
                             name = tg_name.cyan(),
-                            path = self.path.display().yellow(),
+                            path = self.task_ref.path.display().yellow(),
                         ));
                     }
                 }
@@ -235,10 +229,10 @@ impl TaskAction for DeployAction {
 
             Err(data) => {
                 ctx.console.error(format!(
-                    "{icon} failed to deploy typegraph {name} from {path:?}: {err}",
+                    "{icon} failed to deploy typegraph {name} from {path}: {err}",
                     icon = "✗".red(),
                     name = data.get_typegraph_name().cyan(),
-                    path = self.path,
+                    path = self.task_ref.path.display().yellow(),
                     err = data.error,
                 ));
             }
@@ -275,6 +269,10 @@ impl TaskAction for DeployAction {
             "defaultMigrationAction": self.default_migration_action,
             "migrationsDir": self.migrations_dir.to_path_buf().join(typegraph),
         })
+    }
+
+    fn get_task_ref(&self) -> &crate::deploy::actors::task_manager::TaskRef {
+        &self.task_ref
     }
 }
 

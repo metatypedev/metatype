@@ -6,7 +6,7 @@ import { BasicAuth, tgDeploy } from "./tg_deploy.js";
 import { TgFinalizationResult, TypegraphOutput } from "./typegraph.js";
 import { getEnvVariable } from "./utils/func_utils.js";
 import { freezeTgOutput } from "./utils/func_utils.js";
-import { log, rpc, GlobalConfig, TypegraphConfig } from "./io.js";
+import { GlobalConfig, log, rpc, TypegraphConfig } from "./io.js";
 
 const PORT = "MCLI_SERVER_PORT"; // meta-cli instance that executes the current file
 const SELF_PATH = "MCLI_TG_PATH"; // path to the current file to uniquely identify the run results
@@ -87,7 +87,6 @@ export class Manager {
 
   async run() {
     const command = Manager.getCommand();
-    log.debug("Manager: command is", command);
 
     const finalizeParams = {
       typegraphPath: this.#typegraphPath,

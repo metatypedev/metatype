@@ -2,20 +2,19 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::TaskActor;
-use crate::deploy::actors::task_manager::TaskManager;
+use crate::deploy::actors::task_manager::{TaskManager, TaskRef};
 use crate::interlude::*;
 use crate::{config::Config, deploy::actors::console::ConsoleActor};
 use std::{path::Path, sync::Arc};
-use tokio::{process::Command, sync::OwnedSemaphorePermit};
+use tokio::process::Command;
 
 pub trait TaskActionGenerator: Clone {
     type Action: TaskAction;
 
     fn generate(
         &self,
-        path: Arc<Path>,
+        task_ref: TaskRef,
         followup: Option<<Self::Action as TaskAction>::Followup>,
-        permit: OwnedSemaphorePermit,
     ) -> Self::Action;
 }
 
@@ -41,8 +40,7 @@ pub trait TaskAction: std::fmt::Debug + Clone + Send + Unpin {
     type Generator: TaskActionGenerator<Action = Self> + Unpin;
 
     async fn get_command(&self) -> Result<Command>;
-    fn get_path(&self) -> &Path;
-    fn get_path_owned(&self) -> Arc<Path>;
+    fn get_task_ref(&self) -> &TaskRef;
 
     fn get_start_message(&self) -> String;
     fn get_error_message(&self, err: &str) -> String;

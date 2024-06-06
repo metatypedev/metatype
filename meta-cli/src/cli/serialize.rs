@@ -1,27 +1,21 @@
-use crate::deploy::actors::task::serialize::{
-    SerializeAction, SerializeActionGenerator, SerializeError,
-};
-use crate::deploy::actors::task::{TaskConfig, TaskFinishStatus};
-use crate::deploy::actors::task_manager::message::AddTask;
-use crate::deploy::actors::task_manager::{TaskManager, TaskReason};
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
-use crate::interlude::*;
 
 use super::{Action, ConfigArgs};
 use crate::com::store::{Command, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors::console::ConsoleActor;
-use crate::deploy::actors::loader::{LoadModule, LoaderActor, LoaderEvent, StopBehavior};
-use actix::prelude::*;
+use crate::deploy::actors::task::serialize::{
+    SerializeAction, SerializeActionGenerator, SerializeError,
+};
+use crate::deploy::actors::task::{TaskConfig, TaskFinishStatus};
+use crate::deploy::actors::task_manager::{TaskManagerInit, TaskSource};
+use crate::interlude::*;
 use actix_web::dev::ServerHandle;
 use clap::Parser;
-use common::typegraph::Typegraph;
 use core::fmt::Debug;
-use futures::channel::oneshot;
 use std::io::{self, Write};
 use tokio::io::AsyncWriteExt;
-use tokio::sync::mpsc;
 
 #[derive(Parser, Debug)]
 pub struct Serialize {
@@ -79,27 +73,25 @@ impl Action for Serialize {
 
         let console = ConsoleActor::new(Arc::clone(&config)).start();
 
-        let (report_tx, report_rx) = oneshot::channel();
-
         let action_generator = SerializeActionGenerator::new(TaskConfig::init(args.dir().into()));
-        // TODO fail_fast
-        let task_manager: Addr<TaskManager<SerializeAction>> =
-            TaskManager::new(config.clone(), action_generator, 1, report_tx, console)
-                .auto_stop()
-                .start();
 
         if self.files.is_empty() {
             bail!("no file provided");
         }
 
-        for path in self.files.iter() {
-            task_manager.do_send(AddTask {
-                path: path.as_path().into(),
-                reason: TaskReason::Discovery,
-            });
+        // TODO fail_fast
+        let mut init = TaskManagerInit::<SerializeAction>::new(
+            config.clone(),
+            action_generator,
+            console,
+            TaskSource::Static(self.files.clone()),
+        );
+        if let Some(max_parallel_tasks) = self.max_parallel_loads {
+            init = init.max_parallel_tasks(max_parallel_tasks);
         }
 
-        let report = report_rx.await?;
+        let report = init.run().await;
+
         // TODO no need to report errors
         let tgs = report
             .entries

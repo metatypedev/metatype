@@ -54,7 +54,8 @@ export class ArtifactUploader {
 
     // const uploadUrls: Array<string | null> = await response.json();
     if (uploadUrls.length !== artifactMetas.length) {
-      const diff = `array length mismatch: ${uploadUrls.length} !== ${artifactMetas.length}`;
+      const diff =
+        `array length mismatch: ${uploadUrls.length} !== ${artifactMetas.length}`;
       throw new Error(`Failed to get upload URLs for all artifacts: ${diff}`);
     }
 
@@ -86,7 +87,7 @@ export class ArtifactUploader {
     const path = join(dirname(this.tgPath), meta.relativePath);
     // TODO: stream
     const content = await fsp.readFile(path);
-    log.info("uploading artifact", meta.relativePath, urlObj.href);
+    log.debug("uploading artifact", meta.relativePath, urlObj.href);
     const res = await execRequest(
       urlObj,
       {
@@ -96,6 +97,8 @@ export class ArtifactUploader {
       } as RequestInit,
       `failed to upload artifact ${meta.relativePath}`,
     );
+    log.info("✓ artifact uploaded:", meta.relativePath);
+
     if (!res.ok) {
       const err = await res.json();
       // To be read by the CLI?

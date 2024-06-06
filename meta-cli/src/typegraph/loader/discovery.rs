@@ -46,6 +46,8 @@ impl Discovery {
                     let path = entry.path();
                     if !self.filter.is_excluded(path, &mut searcher) {
                         handler(Ok(path.to_path_buf()));
+                    } else {
+                        trace!("excluded from discovery {path:?}");
                     }
                 }
                 Err(err) => {

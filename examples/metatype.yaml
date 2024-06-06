@@ -150,6 +150,10 @@ typegraphs:
   python:
     exclude:
       - "**/*"
+      - "typegraphs/temporal.py"
+  deno:
+    exclude:
+      - "typegraphs/temporal.ts"
 
 metagen:
   targets:

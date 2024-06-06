@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use super::action::{
     ActionFinalizeContext, ActionResult, FollowupTaskConfig, OutputData, TaskAction,
     TaskActionGenerator,
@@ -6,22 +9,20 @@ use super::command::CommandBuilder;
 use super::TaskConfig;
 use crate::com::store::MigrationAction;
 use crate::deploy::actors::console::Console;
-use crate::deploy::actors::task_manager::TaskManager;
+use crate::deploy::actors::task_manager::{TaskManager, TaskRef};
 use crate::interlude::*;
 use color_eyre::owo_colors::OwoColorize;
 use common::typegraph::Typegraph;
 use serde::Deserialize;
-use std::{path::Path, sync::Arc};
-use tokio::{process::Command, sync::OwnedSemaphorePermit};
+use std::sync::Arc;
+use tokio::process::Command;
 
 pub type SerializeAction = Arc<SerializeActionInner>;
 
 #[derive(Debug)]
 pub struct SerializeActionInner {
-    path: Arc<Path>,
+    task_ref: TaskRef,
     task_config: Arc<TaskConfig>,
-    #[allow(unused)]
-    permit: OwnedSemaphorePermit,
 }
 
 #[derive(Clone)]
@@ -40,16 +41,10 @@ impl SerializeActionGenerator {
 impl TaskActionGenerator for SerializeActionGenerator {
     type Action = SerializeAction;
 
-    fn generate(
-        &self,
-        path: Arc<Path>,
-        followup: Option<()>,
-        permit: OwnedSemaphorePermit,
-    ) -> Self::Action {
+    fn generate(&self, task_ref: TaskRef, followup: Option<()>) -> Self::Action {
         SerializeActionInner {
-            path,
+            task_ref,
             task_config: self.task_config.clone(),
-            permit,
         }
         .into()
     }
@@ -85,7 +80,11 @@ impl TaskAction for SerializeAction {
 
     async fn get_command(&self) -> Result<Command> {
         CommandBuilder {
-            path: self.task_config.base_dir.to_path_buf().join(&self.path),
+            path: self
+                .task_config
+                .base_dir
+                .to_path_buf()
+                .join(&self.task_ref.path),
             task_config: self.task_config.clone(),
             action_env: "serialize",
         }
@@ -93,23 +92,18 @@ impl TaskAction for SerializeAction {
         .await
     }
 
-    fn get_path(&self) -> &Path {
-        return &self.path;
-    }
-
-    fn get_path_owned(&self) -> Arc<Path> {
-        return self.path.clone();
-    }
-
     fn get_start_message(&self) -> String {
-        format!("starting serialization process for {:?}", self.path)
+        format!(
+            "starting serialization process for {:?}",
+            self.task_ref.path.display().yellow()
+        )
     }
 
     fn get_error_message(&self, err: &str) -> String {
         format!(
             "{icon} failed to serialize typegraph(s) from {path:?}: {err}",
             icon = "✗".red(),
-            path = self.path,
+            path = self.task_ref.path.display().yellow(),
             err = err,
         )
     }
@@ -118,18 +112,18 @@ impl TaskAction for SerializeAction {
         match res {
             Ok(data) => {
                 ctx.console.info(format!(
-                    "{icon} successfully serialized typegraph {name} from {path:?}",
+                    "{icon} successfully serialized typegraph {name} from {path}",
                     icon = "✓".green(),
                     name = data.get_typegraph_name().cyan(),
-                    path = self.path,
+                    path = self.task_ref.path.display().yellow(),
                 ));
             }
             Err(output) => {
                 ctx.console.error(format!(
-                    "{icon} failed to serialize typegraph {name} from {path:?}: {err}",
+                    "{icon} failed to serialize typegraph {name} from {path}: {err}",
                     icon = "✗".red(),
                     name = output.get_typegraph_name().cyan(),
-                    path = self.path,
+                    path = self.task_ref.path.display().yellow(),
                     err = output.error,
                 ));
             }
@@ -150,5 +144,9 @@ impl TaskAction for SerializeAction {
             "defaultMigrationAction": MigrationAction::default(),
             "migrationsDir": ".", // TODO
         })
+    }
+
+    fn get_task_ref(&self) -> &crate::deploy::actors::task_manager::TaskRef {
+        &self.task_ref
     }
 }

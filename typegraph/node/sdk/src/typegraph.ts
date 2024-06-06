@@ -149,12 +149,14 @@ export async function typegraph(
   maybeBuilder?: TypegraphBuilder,
 ): Promise<TypegraphOutput> {
   ++counter;
-  const args =
-    typeof nameOrArgs === "string" ? { name: nameOrArgs } : nameOrArgs;
+  const args = typeof nameOrArgs === "string"
+    ? { name: nameOrArgs }
+    : nameOrArgs;
 
   const { name, dynamic, cors, prefix, rate, secrets } = args;
-  const builder =
-    "builder" in args ? (args.builder as TypegraphBuilder) : maybeBuilder!;
+  const builder = "builder" in args
+    ? (args.builder as TypegraphBuilder)
+    : maybeBuilder!;
 
   const file = caller();
   if (!file) {
@@ -218,7 +220,6 @@ export async function typegraph(
 
   const ret = {
     serialize(config: FinalizeParams) {
-      log.debug("finalizeParams", config);
       try {
         const [tgJson, ref_artifacts] = core.finalizeTypegraph(config);
         const result: TgFinalizationResult = {
@@ -239,11 +240,8 @@ export async function typegraph(
   } as TypegraphOutput;
 
   if (Manager.isRunFromCLI()) {
-    log.debug("creating Manager");
     const manager = await Manager.init(ret);
-    log.debug("running Manager");
     await manager.run();
-    log.debug("done");
 
     // TODO solve hanging process (stdin??)
     setTimeout(() => {

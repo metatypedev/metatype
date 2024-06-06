@@ -158,11 +158,11 @@ where
     }
 
     fn get_path(&self) -> &Path {
-        self.action.get_path()
+        &self.action.get_task_ref().path
     }
 
     fn get_path_owned(&self) -> Arc<Path> {
-        self.action.get_path_owned()
+        self.action.get_task_ref().path.clone()
     }
 }
 
@@ -472,8 +472,8 @@ impl<A: TaskAction + 'static> Handler<Exit<A>> for TaskActor<A> {
             std::mem::swap(res, &mut self.collected_output);
         }
         self.task_manager
-            .do_send(task_manager::message::UpdateTaskStatus::Finished {
-                path: self.get_path_owned(),
+            .do_send(task_manager::message::TaskFinished {
+                task_ref: self.action.get_task_ref().clone(),
                 status: message.0,
             });
         ctx.stop();
@@ -516,14 +516,11 @@ impl<A: TaskAction + 'static> Handler<Rpc> for TaskActor<A> {
 
 impl<A: TaskAction> TaskActor<A> {
     fn send_rpc_response(&mut self, response: RpcResponse, ctx: &mut Context<Self>) {
-        let response_id = response.id;
         match serde_json::to_string(&response) {
             Ok(response) => {
                 let stdin = self.process_stdin.clone().unwrap();
-                let console = self.console.clone();
                 let fut = async move {
                     let mut stdin = stdin.lock().await;
-                    console.debug(format!("sending rpc response #{response_id}"));
                     stdin
                         .write_all(response.as_bytes())
                         .await

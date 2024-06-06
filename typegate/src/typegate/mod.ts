@@ -32,8 +32,9 @@ import { resolveIdentifier } from "../services/middlewares.ts";
 import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
 import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
-import introspectionJson from "../typegraphs/introspection.json" with { type:
-  "json" };
+import introspectionJson from "../typegraphs/introspection.json" with {
+  type: "json",
+};
 import { ArtifactService } from "../services/artifact_service.ts";
 import { ArtifactStore } from "./artifacts/mod.ts";
 import { SyncConfig } from "../sync/config.ts";
@@ -382,14 +383,14 @@ export class Typegate implements AsyncDisposable {
 
     const introspection = enableIntrospection
       ? await TypeGraph.init(
-          this,
-          introspectionDef,
-          new SecretManager(introspectionDef, {}),
-          {
-            typegraph: TypeGraphRuntime.init(tgDS, [], {}),
-          },
-          null,
-        )
+        this,
+        introspectionDef,
+        new SecretManager(introspectionDef, {}),
+        {
+          typegraph: TypeGraphRuntime.init(tgDS, [], {}),
+        },
+        null,
+      )
       : null;
 
     const tg = await TypeGraph.init(

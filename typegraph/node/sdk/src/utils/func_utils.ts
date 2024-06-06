@@ -89,8 +89,8 @@ export function freezeTgOutput(
   config: FinalizeParams,
   tgOutput: TypegraphOutput,
 ): TypegraphOutput {
-  frozenMemo[tgOutput.name] =
-    frozenMemo[tgOutput.name] ?? tgOutput.serialize(config);
+  frozenMemo[tgOutput.name] = frozenMemo[tgOutput.name] ??
+    tgOutput.serialize(config);
   return {
     ...tgOutput,
     serialize: () => frozenMemo[tgOutput.name],

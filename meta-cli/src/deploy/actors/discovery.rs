@@ -10,10 +10,11 @@ use crate::{config::Config, typegraph::loader::Discovery};
 
 use super::console::{Console, ConsoleActor};
 use super::task::action::TaskAction;
-use super::task_manager::TaskManager;
+use super::task_manager::{TaskGenerator, TaskManager};
 
 pub struct DiscoveryActor<A: TaskAction + 'static> {
     config: Arc<Config>,
+    task_generator: TaskGenerator,
     task_manager: Addr<TaskManager<A>>,
     console: Addr<ConsoleActor>,
     directory: Arc<Path>,
@@ -22,12 +23,14 @@ pub struct DiscoveryActor<A: TaskAction + 'static> {
 impl<A: TaskAction + 'static> DiscoveryActor<A> {
     pub fn new(
         config: Arc<Config>,
+        task_generator: TaskGenerator,
         task_manager: Addr<TaskManager<A>>,
         console: Addr<ConsoleActor>,
         directory: Arc<Path>,
     ) -> Self {
         Self {
             config,
+            task_generator,
             task_manager,
             console,
             directory,
@@ -44,20 +47,22 @@ impl<A: TaskAction + 'static> Actor for DiscoveryActor<A> {
 
     #[tracing::instrument(skip(self))]
     fn started(&mut self, ctx: &mut Self::Context) {
-        log::trace!("DiscoveryActor started");
+        log::trace!("DiscoveryActor started; directory={:?}", self.directory);
 
         let config = Arc::clone(&self.config);
         let dir = self.directory.clone();
         let task_manager = self.task_manager.clone();
         let console = self.console.clone();
         let discovery = ctx.address();
+        let task_generator = self.task_generator.clone();
+
         let fut = async move {
             match Discovery::new(config, dir.to_path_buf())
                 .start(|path| match path {
                     Ok(path) => {
                         let rel_path = diff_paths(&path, &dir).unwrap();
                         task_manager.do_send(task_manager::message::AddTask {
-                            path: rel_path.into(),
+                            task_ref: task_generator.generate(rel_path.into(), 0),
                             reason: TaskReason::Discovery,
                         });
                     }

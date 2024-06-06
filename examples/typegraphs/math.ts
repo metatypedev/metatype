@@ -3,8 +3,6 @@ import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 // skip:end
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 
-console.log("debug: debug test");
-
 await typegraph(
   {
     name: "math",
@@ -56,5 +54,3 @@ await typegraph(
     );
   },
 );
-
-console.log("debug: end of math.ts");

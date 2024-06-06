@@ -56,82 +56,8 @@ class RpcResponseReader {
   // private handler: (line: string) => void;
 
   constructor() {
-    log.debug("creating readline interface");
     process.stdin.setEncoding("utf-8");
-    // this.readline = createInterface({
-    //   input: process.stdin,
-    // });
-
-    // const handler = (line: string) => {
-    //   log.debug("got line", line);
-    //   const message = JSON.parse(line);
-    //   const resolver = this.resolvers.get(message.id);
-    //   if (resolver) {
-    //     log.debug("rpc response", message);
-    //     resolver(message.result);
-    //     this.resolvers.delete(message.id);
-
-    //     if (this.resolvers.size === 0) {
-    //       this.readline.pause();
-    //       log.debug("paused");
-    //     }
-    //   }
-    // };
-
-    // log.debug("adding line handler");
-    // this.readline.on("line", handler);
-
-    // log.debug("unref stdin");
-    // process.stdin.unref();
-    // log.debug("unreffed stdin");
   }
-
-  // async open() {
-  //   if (this.readline) { //     return;
-  //   }
-  //   this.readline = createInterface({
-  //     input: process.stdin,
-  //   });
-  //   log.debug("opened");
-
-  //   for await (const line of this.readline) {
-  //     const message = JSON.parse(line);
-  //     const resolver = this.resolvers.get(message.id);
-  //     if (resolver) {
-  //       log.debug("rpc response", message);
-  //       resolver(message.result);
-  //       this.resolvers.delete(message.id);
-  //       if (this.resolvers.size === 0) {
-  //         this.readline.close();
-  //         log.debug("closed");
-  //       }
-  //     }
-  //   }
-  // }
-
-  // TODO implement timeout
-  // async loop() {
-  //   log.debug("loop: on");
-  //   for await (const line of this.readline) {
-  //     log.debug("resolvers", this.resolvers.size, line);
-  //     try {
-  //       const message = JSON.parse(line);
-  //       const resolver = this.resolvers.get(message.id);
-  //       if (resolver) {
-  //         log.debug("rpc response", message);
-  //         resolver(message.result);
-  //         this.resolvers.delete(message.id);
-  //         if (this.resolvers.size === 0) {
-  //           break;
-  //         }
-  //       }
-  //     } catch (e) {
-  //       // pass
-  //     }
-  //   }
-  //   this.running = false;
-  //   log.debug("loop: off");
-  // }
 
   read(id: number) {
     return new Promise((resolve, reject) => {
@@ -164,39 +90,6 @@ class RpcResponseReader {
       };
       process.stdin.on("readable", handler);
     });
-
-    // if (!this.listening) {
-    //   this.readline.resume();
-    //   log.debug("listening: on");
-    //   this.listening = true;
-    //   this.readline.on("line", this.handler);
-    // }
-    // if (!this.running) {
-    //   this.running = true;
-    //   this.loop();
-    // }
-    // this.open(); // no await
-    // this.readline.resume();
-    // return new Promise((resolve) => {
-    //   this.resolvers.set(id, resolve);
-    // });
-
-    // return new Promise((resolve, reject) => {
-    //   this.readline.resume();
-    //   this.readline.once("line", (line) => {
-    //     try {
-    //       const message = JSON.parse(line);
-    //       if (message.id !== id) {
-    //         reject("required sequential read");
-    //       } else {
-    //         this.readline.pause();
-    //         resolve(message.result);
-    //       }
-    //     } catch (e) {
-    //       reject(e);
-    //     }
-    //   });
-    // });
   }
 }
 
