@@ -116,8 +116,8 @@ FORWARD_REFS["CompositesArgs"] = CompositesArgs
 @dataclass
 class Composites(Struct):
     opt: Union[str, None]
-    either: Union["Primitives", "Branch2"]
-    union: Union[int, str, List[str]]
+    either: Union["Branch2", "Primitives"]
+    union: Union[str, int, List[str]]
     list: List[str]
 
 
@@ -143,8 +143,8 @@ FORWARD_REFS["Cycles1Args"] = Cycles1Args
 @dataclass
 class Cycles1(Struct):
     phantom1: Union[str, None]
-    to2: Union[Union["Cycles1", Union["Branch33A", "Branch33B"]], None]
-    list3: Union[List[Union["Branch33B", "Branch33A"]], None]
+    to2: Union[Union[Union["Branch33A", "Branch33B"], "Cycles1"], None]
+    list3: Union[List[Union["Branch33A", "Branch33B"]], None]
 
 
 FORWARD_REFS["Cycles1"] = Cycles1
@@ -209,6 +209,17 @@ def __repr(value: Any):
     return value
 
 
+def typed_composites(user_fn: Callable[[CompositesArgs], Composites]):
+    def exported_wrapper(raw_inp):
+        inp: CompositesArgs = Struct.new(CompositesArgs, raw_inp)
+        out: Composites = user_fn(inp)
+        if isinstance(out, list):
+            return [__repr(v) for v in out]
+        return __repr(out)
+
+    return exported_wrapper
+
+
 def typed_cycles(user_fn: Callable[[Cycles1Args], Cycles1]):
     def exported_wrapper(raw_inp):
         inp: Cycles1Args = Struct.new(Cycles1Args, raw_inp)
@@ -224,17 +235,6 @@ def typed_primitives(user_fn: Callable[[PrimitivesArgs], Primitives]):
     def exported_wrapper(raw_inp):
         inp: PrimitivesArgs = Struct.new(PrimitivesArgs, raw_inp)
         out: Primitives = user_fn(inp)
-        if isinstance(out, list):
-            return [__repr(v) for v in out]
-        return __repr(out)
-
-    return exported_wrapper
-
-
-def typed_composites(user_fn: Callable[[CompositesArgs], Composites]):
-    def exported_wrapper(raw_inp):
-        inp: CompositesArgs = Struct.new(CompositesArgs, raw_inp)
-        out: Composites = user_fn(inp)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)

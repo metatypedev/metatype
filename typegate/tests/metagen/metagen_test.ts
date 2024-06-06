@@ -128,7 +128,11 @@ Meta.test("Metagen within sdk", async (t) => {
     const { Metagen } = await import("@typegraph/sdk/metagen.js");
     const metagen = new Metagen(workspace, genConfig);
     const generated = metagen.dryRun(tg, targetName);
-    await t.assertSnapshot(generated);
+    await t.assertSnapshot(
+      Object.entries(generated).sort(([keyA], [keyB]) =>
+        keyA.localeCompare(keyB)
+      ),
+    );
 
     sdkResults.push(JSON.stringify(generated, null, 2));
   });
@@ -153,7 +157,11 @@ Meta.test("Metagen within sdk", async (t) => {
     const output = await child.output();
     if (output.success) {
       const generated = JSON.parse(new TextDecoder().decode(output.stdout));
-      await t.assertSnapshot(generated);
+      await t.assertSnapshot(
+        Object.entries(generated).sort(([keyA], [keyB]) =>
+          keyA.localeCompare(keyB)
+        ),
+      );
 
       sdkResults.push(JSON.stringify(generated, null, 2));
     } else {
@@ -388,7 +396,7 @@ Meta.test("metagen table suite", async (metaTest) => {
     },
   ];
 
-  await metaTest.should("rust tests", async () => {
+  await metaTest.should("build rust crate", async () => {
     assertEquals(
       (await metaTest.shell("bash build.sh".split(" "), {
         currentDir: genCratePath,
