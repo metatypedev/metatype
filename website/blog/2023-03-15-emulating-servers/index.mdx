@@ -24,26 +24,25 @@ Ultimately, The _embedded typegate_ is designed to be a good dev environment fri
 
 ### Install the v0.3.x series
 
-Either of the two [Typegraph](/docs/reference/typegraph) SDKs are needed to author typegraphs.
+Either of the two [Typegraph](/docs/reference/typegraph) SDKs are needed to author typegraphs. For this example, the node SDK will be used.
 
-Install the **Node/Deno** SDK
-```shell
-npm install @typegraph/sdk
-```
-
-You also need to install the _Meta_CLI_.
+First, make sure the _Meta_CLI_ is installed.
 ```shell
 curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/installer.sh | bash
 ```
 
-Now, Everything is set to author a simple typegraph and deploy it to an embedded typegate instance.
-
-Create a new node project using this command. 
+Next, create a new node project using this command. 
 ```shell
 meta new --template node
 ```
 
 The above command will create a sample typegraph which you can use to test the embedded typegate. 
+
+Now, you need to install the typegraph SDK by running the command down below. The previous command generates a `package.json` with the SDK specified as a dependency.
+```shell
+npm install
+```
+
 Before deploying the typegraph to the embedded typegate, Run the following commands below.
 
 Execute this command to set `tg_secret` and `tg_admin_password` environment variables, which are neccessary for the typegate to run. 
