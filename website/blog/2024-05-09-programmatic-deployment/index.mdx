@@ -20,6 +20,34 @@ The missing piece was having an interface natively backed inside the SDK for doi
 
 ### Programmatic deployment
 
+
+### Initial setup
+
+Just like any other dependency in your favorite programming language, each SDKs can be installed with your favorite package manager.
+
+You can use one of the commands below to get started with the latest available version.
+
+
+<SDKTabs>
+    <TabItem value="python">
+```bash
+pip install typegraph
+```
+    </TabItem>
+    <TabItem value="typescript">
+```bash
+npm install @typegraph/sdk
+```
+```bash
+yarn add @typegraph/sdk
+```
+```typescript
+// Deno
+import { ... } from "npm:@typegraph/sdk" 
+```
+    </TabItem>
+</SDKTabs>
+
 #### Configuration
 This is analoguous to the yaml configuration file when you are using [meta cli](/docs/reference/meta-cli).
 
@@ -74,11 +102,15 @@ const config = {
     </TabItem>
 </SDKTabs>
 
-### Deploy/Remove
+### Deploy/remove
 
 Now, picture this, you have a lot of typegraphs and one or more typegate instance(s) running, you can easily make small scripts that does any specific job you want.
 
 ```typescript
+// ..
+import { tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy";
+// ..
+
 const BASIC_AUTH = loadMyAuthsFromSomeSource();
 const TYPEGATE_URL = "...";
 
@@ -120,7 +152,7 @@ export async function deployAll() {
   for (const { tg, location } of typegraphs) {
     try {
       const config = getConfig(tg.name, location);
-      // use tgDeploy to undeploy typegraphs and returns the the response from typegate
+      // use tgDeploy to deploy typegraphs, it will contain the response from typegate
       const { typegate } = await tgDeploy(tg, config);
       const selection = typegate?.data?.addTypegraph;
       if (selection) {
@@ -140,7 +172,7 @@ export async function undeployAll() {
   const typegraphs = await getTypegraphs();
   for (const { tg } of typegraphs) {
     try {
-      // use tgRemove to undeploy typegraphs
+      // use tgRemove to remove typegraphs
       const { typegate } = await tgRemove(tg, {
         baseUrl: TYPEGATE_URL,
         auth: BASIC_AUTH,
@@ -160,3 +192,8 @@ With these new additions, you can automate virtually anything programmatically o
 Starting from having highly dynamic APIs to providing ways to deploy and configure them, you can even build a custom framework around the ecosystem!
 
 Please tell us what you think and report any issues you found on [Github](https://github.com/metatypedev/metatype/issues).
+
+:::info Notes
+
+You can check the [Programmatic deployment](/docs/reference/programmatic-deployment) reference page for more information.
+:::
