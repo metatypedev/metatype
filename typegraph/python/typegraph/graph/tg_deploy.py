@@ -61,7 +61,7 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     sep = "/" if not typegate.url.endswith("/") else ""
     url = typegate.url + sep + "typegate"
 
-    headers = {"Content-Type": "application/json", "User-Agent": f"Mozilla/5.0 TypegraphSdk/{sdk_version} Python/{python_version()}"}
+    headers = {"Content-Type": "application/json", "User-Agent": f"TypegraphSdk/{sdk_version} Python/{python_version()}"}
     if typegate.auth is not None:
         headers["Authorization"] = typegate.auth.as_header_value()
 

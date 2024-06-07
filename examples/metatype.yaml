@@ -82,7 +82,7 @@ typegates:
         BASIC_admin: "password"
       jwt-authentication:
         CUSTOM_JWT: "wOoyc8ijEHP99oASvJ0IXmHDOMYQH6"
-      oauth2_authentication:
+      oauth2-authentication:
         GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
         GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
       authentication:
