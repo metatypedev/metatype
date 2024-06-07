@@ -23,7 +23,7 @@ The missing piece was having an interface natively backed inside the SDK for doi
 #### Configuration
 This is analoguous to the yaml configuration file when you are using [meta cli](/docs/reference/meta-cli).
 
-It's the place where you tell what typegate you want to deploy to, how you would want to the artifacts to be resolved and others.
+It's the place where you tell which typegate you want to deploy to, how you want the artifacts to be resolved, among other settings.
 
 <SDKTabs>
     <TabItem value="python">
@@ -66,7 +66,7 @@ const artifactsConfig = {
 
 const config = {
   baseUrl: "<TYPEGATE_URL>",
-  auth: new BasicAuth("<USERNAME>", "<PASSWORD>");,
+  auth: new BasicAuth("<USERNAME>", "<PASSWORD>"),
   secrets: { POSTGRES: "<DB_URL>" },
   artifactsConfig,
 };
@@ -154,9 +154,9 @@ export async function undeployAll() {
 }
 ```
 
-### Going beyond..
+### Going beyond
 
-With these new additions, you can automate pretty much anything programmatically.
+With these new additions, you can automate virtually anything programmatically on the typegraph side.
 Starting from having highly dynamic APIs to providing ways to deploy and configure them, you can even build a custom framework around the ecosystem!
 
 Please tell us what you think and report any issues you found on [Github](https://github.com/metatypedev/metatype/issues).
