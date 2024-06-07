@@ -20,9 +20,9 @@ const finalizeParams = {
     migrationsDir: "prisma-migrations",
     migrationActions: [],
     defaultMigrationAction: {
-      apply: true,
-      create: true,
-      reset: true,
+      apply: false,
+      create: false,
+      reset: false,
     },
   },
 } satisfies FinalizeParams;

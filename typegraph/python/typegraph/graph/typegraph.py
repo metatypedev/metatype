@@ -7,16 +7,17 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Union, Any
 
 from typegraph.gen.exports.core import (
-    ArtifactResolutionConfig,
+    FinalizeParams,
     Rate,
     TypegraphInitParams,
 )
 from typegraph.gen.exports.core import (
     Cors as CoreCors,
 )
+from typegraph.gen.exports.utils import Auth
 
 from typegraph.gen.types import Err
-from typegraph.graph.params import Auth, Cors, RawAuth
+from typegraph.graph.params import Cors, RawAuth
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph.wit import core, store, wit_utils
@@ -178,12 +179,13 @@ def typegraph(
     prefix: Optional[str] = None,
 ) -> Callable[[Callable[[Graph], None]], Callable[[], TypegraphOutput]]:
     def decorator(builder: Callable[[Graph], None]) -> TypegraphOutput:
-        actual_name = name
         if name is None:
             import re
 
             # To kebab case
             actual_name = re.sub("_", "-", builder.__name__)
+        else:
+            actual_name = name
 
         tg = Typegraph(
             name=actual_name,
@@ -195,6 +197,15 @@ def typegraph(
 
         Typegraph._context.append(tg)
 
+        default_cors = CoreCors(
+            allow_credentials=True,
+            allow_headers=[],
+            allow_methods=[],
+            allow_origin=[],
+            expose_headers=[],
+            max_age_sec=None,
+        )
+
         core.init_typegraph(
             store,
             TypegraphInitParams(
@@ -202,7 +213,7 @@ def typegraph(
                 dynamic=tg.dynamic,
                 path=tg.path,
                 rate=tg.rate,
-                cors=tg.cors,
+                cors=tg.cors or default_cors,
                 prefix=tg.prefix,
             ),
         )
@@ -214,7 +225,7 @@ def typegraph(
 
         # config is only known at deploy time
         def serialize_with_artifacts(
-            config: ArtifactResolutionConfig,
+            config: FinalizeParams,
         ):
             finalization_result = core.finalize_typegraph(store, config)
             if isinstance(finalization_result, Err):

@@ -13,39 +13,6 @@ const SELF_PATH = "MCLI_TG_PATH"; // path to the current file to uniquely identi
 
 type Command = "serialize" | "deploy" | "codegen";
 
-// Types for CLI => SDK
-type CLIServerResponse = {
-  command: Command;
-  config: CLIConfigRequest;
-};
-
-type CLIConfigRequest = {
-  typegate: {
-    endpoint: string;
-    auth?: {
-      // field not required for serialize command
-      username: string;
-      password: string;
-    };
-  };
-  prefix?: string;
-  secrets: Record<string, string>;
-  artifactsConfig: FinalizeParams;
-  disableArtifactResolution: boolean;
-  codegen: boolean;
-};
-
-type CLISuccess<T> = {
-  data: T;
-};
-
-// Types for SDK => CLI (typically forwarding the response from typegate)
-type SDKResponse<T> = {
-  command: Command;
-  typegraphName: string;
-  typegraphPath: string;
-} & ({ error: T } | { data: T });
-
 export class Manager {
   #typegraph: TypegraphOutput;
   #typegraphPath: string;
@@ -112,51 +79,17 @@ export class Manager {
     }
   }
 
-  // async #requestCommands(): Promise<CLIServerResponse> {
-  //   const { data: config } = await this.#requestConfig();
-  //   // console.error("SDK received config", config);
-  //   const { data: command } =
-  //     await (await fetch(new URL("command", this.#endpoint)))
-  //       .json() as CLISuccess<Command>;
-  //   // console.error("SDK received command", command);
-  //
-  //   return { command, config };
-  // }
-  //
-  // async #requestConfig(): Promise<CLISuccess<CLIConfigRequest>> {
-  //   const params = new URLSearchParams({
-  //     typegraph: this.#typegraph.name,
-  //     typegraph_path: this.#typegraphPath,
-  //   });
-  //   const response = await fetch(new URL("config?" + params, this.#endpoint));
-  //   return (await response.json()) as CLISuccess<CLIConfigRequest>;
-  // }
-
   async #serialize(config: FinalizeParams): Promise<void> {
     let finalizationResult: TgFinalizationResult;
     try {
       finalizationResult = this.#typegraph.serialize(config);
+      log.success(finalizationResult.tgJson, true);
     } catch (err: any) {
       log.failure({
         typegraph: this.#typegraph.name,
         error: err?.message ?? "failed to serialize typegraph",
       });
-      return;
-      // return await this.#relayErrorToCLI(
-      //   "serialize",
-      //   "serialization_err",
-      //   err?.message ?? "error serializing typegraph",
-      //   {
-      //     err,
-      //   },
-      // );
     }
-
-    log.success(finalizationResult.tgJson, true);
-    // await this.#relayResultToCLI(
-    //   "serialize",
-    //   JSON.parse(finalizationResult.tgJson),
-    // );
   }
 
   async #deploy(finalizeParams: FinalizeParams): Promise<void> {
@@ -180,14 +113,6 @@ export class Manager {
         error: err?.message ?? "failed to serialize typegraph",
       });
       return;
-      // return await this.#relayErrorToCLI(
-      //   "deploy",
-      //   "serialization_err",
-      //   err?.message ?? "error serializing typegraph",
-      //   {
-      //     err,
-      //   },
-      // );
     }
     const reusableTgOutput = {
       ...this.#typegraph,
@@ -197,10 +122,6 @@ export class Manager {
     if (finalizeParams.codegen) {
       // TODO
       throw new Error("not implemented");
-      // await this.#relayResultToCLI(
-      //   "codegen",
-      //   JSON.parse(frozenSerialized.tgJson),
-      // );
     }
 
     try {

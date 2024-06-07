@@ -54,8 +54,7 @@ export class ArtifactUploader {
 
     // const uploadUrls: Array<string | null> = await response.json();
     if (uploadUrls.length !== artifactMetas.length) {
-      const diff =
-        `array length mismatch: ${uploadUrls.length} !== ${artifactMetas.length}`;
+      const diff = `array length mismatch: ${uploadUrls.length} !== ${artifactMetas.length}`;
       throw new Error(`Failed to get upload URLs for all artifacts: ${diff}`);
     }
 
@@ -97,7 +96,6 @@ export class ArtifactUploader {
       } as RequestInit,
       `failed to upload artifact ${meta.relativePath}`,
     );
-    log.info("✓ artifact uploaded:", meta.relativePath);
 
     if (!res.ok) {
       const err = await res.json();
@@ -109,7 +107,7 @@ export class ArtifactUploader {
       );
     }
     const ret = res.json();
-    log.info(`Successfully uploaded artifact`, meta.relativePath);
+    log.info("✓ artifact uploaded:", meta.relativePath);
     return ret;
   }
 

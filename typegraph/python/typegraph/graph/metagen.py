@@ -4,26 +4,31 @@
 import json
 from typing import List, Union
 from typegraph.gen.exports.core import (
-    ArtifactResolutionConfig,
     MigrationAction,
-    MigrationConfig,
+    FinalizeParams,
+    PrismaMigrationConfig,
 )
 from typegraph.gen.exports.utils import MdkConfig, MdkOutput
 from typegraph.gen.types import Err
 from typegraph.graph.shared_types import TypegraphOutput
 from typegraph.utils import freeze_tg_output
 from typegraph.wit import store, wit_utils
+from os import environ as env
 
-codegen_artefact_config = ArtifactResolutionConfig(
-    prisma_migration=MigrationConfig(
-        global_action=MigrationAction(create=False, reset=False),
-        migration_dir=".",
-        runtime_actions=None,
-    ),
-    dir=None,
+_tg_path = env.get("MCLI_TG_PATH")
+if _tg_path is None:
+    raise Exception("MCLI_TG_PATH not set")
+
+finalize_params = FinalizeParams(
+    typegraph_path=_tg_path,
     prefix=None,
-    disable_artifact_resolution=True,
+    artifact_resolution=False,
     codegen=True,
+    prisma_migration=PrismaMigrationConfig(
+        migrations_dir="prisma-migrations",
+        migration_actions=[],
+        default_migration_action=MigrationAction(apply=False, create=False, reset=False),
+    )
 )
 
 
@@ -40,9 +45,9 @@ class Metagen:
         tg_output: TypegraphOutput,
         target_name: str,
     ) -> MdkConfig:
-        frozen_out = freeze_tg_output(codegen_artefact_config, tg_output)
+        frozen_out = freeze_tg_output(finalize_params, tg_output)
         return MdkConfig(
-            tg_json=frozen_out.serialize(codegen_artefact_config).tgJson,
+            tg_json=frozen_out.serialize(finalize_params).tgJson,
             config_json=json.dumps(self.gen_config),
             workspace_path=self.workspace_path,
             target_name=target_name,

@@ -12,7 +12,7 @@ from urllib.error import HTTPError
 from typegraph.gen.exports.core import Artifact
 from typegraph.gen.types import Err, Ok, Result
 from typegraph.graph.shared_types import BasicAuth
-from typegraph import log
+from typegraph.io import Log
 
 
 @dataclass
@@ -66,6 +66,7 @@ class ArtifactUploader:
         try:
             response = request.urlopen(req)
         except HTTPError as e:
+            Log.error("error message:", e.fp.read().decode())
             raise Exception(f"failed to get upload URLs: {e}")
 
         if response.status != 200:
@@ -83,9 +84,10 @@ class ArtifactUploader:
 
         if self.auth is not None:
             upload_headers["Authorization"] = self.auth.as_header_value()
+        Log.debug("upload headers", upload_headers)
 
         if url is None:
-            log.info("skipping artifact upload:", meta.relativePath)
+            Log.info("skipping artifact upload:", meta.relativePath)
             return Ok(None)
 
         if self.tg_path is None:
@@ -105,7 +107,7 @@ class ArtifactUploader:
 
         rebased_url = Url.urlunparse(parsed_url)
 
-        log.info("uploading artifact", meta.relativePath, rebased_url)
+        Log.debug("uploading artifact", meta.relativePath, rebased_url)
         upload_req = request.Request(
             url=rebased_url,
             method="POST",
@@ -113,13 +115,17 @@ class ArtifactUploader:
             headers=upload_headers,
         )
         try:
+            Log.debug("uploading artifact", meta.relativePath, str(rebased_url))
             response = request.urlopen(upload_req)
         except HTTPError as e:
-            log.debug(e)
+            Log.error("failed to upload artifact", meta.relativePath, e)
             errmsg = json.load(e.fp).get("error", None)
+            Log.error("error message:", errmsg)
             raise Exception(errmsg)
         if response.status != 201:
             raise Exception(f"failed to upload artifact {path} {response.status}")
+
+        Log.info("✓ artifact uploaded", meta.relativePath)
 
         # TODO why??
         return handle_response(response.read().decode())
@@ -144,7 +150,7 @@ class ArtifactUploader:
         for result, meta in zip(results, artifact_metas):
             if isinstance(result, Err):
                 print(
-                    f"Failed to upload artifact {meta.relativePath}: {result.value}",
+                    f"failed to upload artifact {meta.relativePath}: {result.value}",
                     file=sys.stderr,
                 )
                 errors += 1
@@ -152,7 +158,7 @@ class ArtifactUploader:
             #     print(f"Successfuly uploaded artifact {meta.relativePath}", file=sys.stderr)
 
         if errors > 0:
-            raise Exception(f"Failed to upload {errors} artifacts")
+            raise Exception(f"failed to upload {errors} artifacts")
 
     def upload_artifacts(
         self,
@@ -160,7 +166,7 @@ class ArtifactUploader:
         artifact_metas = self.get_metas(self.artifacts)
 
         upload_urls = self.__fetch_upload_urls(artifact_metas)
-        log.debug("upload urls", upload_urls)
+        Log.debug("upload urls", upload_urls)
 
         results = []
         for i in range(len(artifact_metas)):

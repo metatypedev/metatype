@@ -12,8 +12,8 @@ from typegraph.host.host import HostImpl
 
 # Make sure the imports are similar to the node implementation
 from typegraph.gen.exports.core import (
-    ArtifactResolutionConfig,  # noqa
-    MigrationConfig,  # noqa
+    FinalizeParams,  # noqa
+    PrismaMigrationConfig,  # noqa
     MigrationAction,  # noqa
 )
 

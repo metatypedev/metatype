@@ -49,11 +49,7 @@ export const log = {
 };
 
 class RpcResponseReader {
-  private resolvers: Map<number, (data: any) => void> = new Map();
-  // private readline: Interface;
   private buffer: string = "";
-  // private listening = false;
-  // private handler: (line: string) => void;
 
   constructor() {
     process.stdin.setEncoding("utf-8");

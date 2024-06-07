@@ -3,9 +3,9 @@
 
 from base64 import b64encode
 from dataclasses import dataclass
-from typing import Callable, List, Optional
+from typing import Callable, List
 from typegraph.gen.exports.core import Artifact
-from typegraph.wit import ArtifactResolutionConfig
+from typegraph.wit import FinalizeParams
 
 
 @dataclass
@@ -17,7 +17,7 @@ class FinalizationResult:
 @dataclass
 class TypegraphOutput:
     name: str
-    serialize: Callable[[Optional[ArtifactResolutionConfig]], FinalizationResult]
+    serialize: Callable[[FinalizeParams], FinalizationResult]
 
 
 @dataclass

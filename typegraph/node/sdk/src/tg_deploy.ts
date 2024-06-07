@@ -88,7 +88,7 @@ export async function tgDeploy(
   if (refArtifacts.length > 0) {
     // upload the artifacts
     const artifactUploader = new ArtifactUploader(
-      params.typegate.url,
+      typegate.url,
       refArtifacts,
       typegraph.name,
       typegate.auth,
