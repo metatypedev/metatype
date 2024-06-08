@@ -12,11 +12,11 @@ repository = "https://github.com/metatypedev/metatype"
 include = ["src"]
 keywords = ["api", "composition", "typesystem", "graphql", "ecosystem"]
 categories = [
-  "accessibility",
-  "api-bindings",
-  "data-structures",
-  "development-tools",
-  "wasm",
+    "accessibility",
+    "api-bindings",
+    "data-structures",
+    "development-tools",
+    "wasm",
 ]
 build = "build.rs"
 
@@ -48,6 +48,7 @@ itertools = "0.11.0"
 enum_dispatch = "0.3.12"
 derive_more = "0.99.17"
 indoc.workspace = true
+cached = { version = "0.51.3", features = ["proc_macro", "async"] }
 
 # concurrency
 tokio = { workspace = true, features = ["full"] }
@@ -65,11 +66,11 @@ ctrlc = "3.4.1"
 question = "0.2.2"
 dialoguer = "0.11.0"
 self_update = { version = "0.38.0", features = [
-  "archive-tar",
-  "archive-zip",
-  "compression-flate2",
-  "compression-zip-deflate",
-  "compression-zip-bzip2",
+    "archive-tar",
+    "archive-zip",
+    "compression-flate2",
+    "compression-zip-deflate",
+    "compression-zip-bzip2",
 ] }
 
 # codecs
@@ -85,7 +86,6 @@ serde_yaml = "0.9.27"
 normpath = "1.1.1"
 directories = "5.0.1"
 include_dir = "0.7.3"
-grep = "0.2.12"
 filetime = "0.2"
 notify-debouncer-mini = { version = "0.4.1", default-features = false }
 ignore = "0.4.20"
@@ -112,7 +112,7 @@ prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2
 nix = { version = "0.28", features = ["signal"] }
 lade-sdk = "0.9.1"
 git2 = { version = "0.18.1", features = [
-  "vendored-libgit2",
+    "vendored-libgit2",
 ], default-features = false }
 process-wrap = { version = "8.0", features = ["tokio1"] }
 

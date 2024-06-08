@@ -50,8 +50,8 @@ pub enum GeneratorInputOrder {
 /// by [GeneratorInputOrder].
 #[derive(Debug)]
 pub enum GeneratorInputResolved {
-    TypegraphFromTypegate { raw: Typegraph },
-    TypegraphFromPath { raw: Typegraph },
+    TypegraphFromTypegate { raw: Box<Typegraph> },
+    TypegraphFromPath { raw: Box<Typegraph> },
 }
 
 /// This type plays the "dispatcher" role to the command object

@@ -23,7 +23,6 @@ pub mod serialize;
 use self::action::{ActionFinalizeContext, ActionResult, TaskAction};
 use super::console::{Console, ConsoleActor};
 use super::task_manager::{self, TaskManager};
-use crate::com::server::get_instance_port;
 use crate::config::Config;
 use crate::interlude::*;
 use color_eyre::owo_colors::OwoColorize;
@@ -76,12 +75,6 @@ pub mod message {
 
 use message::*;
 
-#[derive(Debug)]
-pub struct TaskConfig {
-    base_dir: Arc<Path>,
-    instance_port: u16,
-}
-
 #[derive(Serialize, Deserialize)]
 #[serde(untagged)]
 enum TaskOutput {
@@ -92,15 +85,6 @@ enum TaskOutput {
 // TODO cli param
 const TIMEOUT_ENV_NAME: &str = "LOADER_TIMEOUT_SECS";
 const DEFAULT_TIMEOUT: u64 = 120;
-
-impl TaskConfig {
-    pub fn init(base_dir: Arc<Path>) -> Self {
-        Self {
-            base_dir,
-            instance_port: get_instance_port(),
-        }
-    }
-}
 
 #[derive(Debug)]
 pub enum TaskFinishStatus<A: TaskAction> {
@@ -119,7 +103,7 @@ pub struct TaskActor<A: TaskAction + 'static> {
     console: Addr<ConsoleActor>,
     collected_output: Vec<Result<A::SuccessData, A::FailureData>>,
     timeout_duration: Duration,
-    followup_task: A::Followup,
+    followup_task_options: Option<A::Options>,
 }
 
 impl<A> TaskActor<A>
@@ -153,7 +137,7 @@ where
                     })
                     .unwrap_or(DEFAULT_TIMEOUT),
             ),
-            followup_task: Default::default(),
+            followup_task_options: None,
         }
     }
 
@@ -177,6 +161,9 @@ impl<A: TaskAction + 'static> Actor for TaskActor<A> {
         let fut = async move {
             match action.get_command().await {
                 Ok(cmd) => {
+                    let std_cmd = cmd.as_std();
+                    debug!("std command: {std_cmd:?}");
+                    debug!("command: {cmd:?}");
                     addr.do_send(StartProcess(cmd));
                 }
                 Err(e) => {
@@ -290,7 +277,6 @@ impl<A: TaskAction + 'static> Handler<CheckProcessStatus> for TaskActor<A> {
 
         let addr = ctx.address();
         let console = self.console.clone();
-        let path = self.get_path_owned();
         let action = self.action.clone();
 
         let fut = async move {
@@ -334,14 +320,6 @@ enum OutputLevel {
     Error,
 }
 
-#[derive(Deserialize, Debug)]
-#[serde(tag = "method", content = "params")]
-#[serde(rename_all = "camelCase")]
-enum RpcCall {
-    QueryGlobalConfig,
-    QueryTypegraphConfig { typegraph: String },
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 enum JsonRpcVersion {
     #[serde(rename = "2.0")]
@@ -353,7 +331,7 @@ struct RpcRequest {
     jsonrpc: JsonRpcVersion,
     id: u32,
     #[serde(flatten)]
-    call: RpcCall,
+    call: serde_json::Value,
 }
 
 impl RpcRequest {
@@ -496,83 +474,69 @@ impl<A: TaskAction + 'static> Handler<Rpc> for TaskActor<A> {
     type Result = ();
 
     fn handle(&mut self, Rpc(req): Rpc, ctx: &mut Context<Self>) -> Self::Result {
+        let action = self.action.clone();
         let addr = ctx.address();
-        match &req.call {
-            RpcCall::QueryGlobalConfig => {
-                let config = self.action.get_global_config();
-                let response = req.response(config);
-                self.send_rpc_response(response, ctx);
-                // addr.do_send(SendRpcResponse(response));
-            }
-            RpcCall::QueryTypegraphConfig { typegraph } => {
-                let config = self.action.get_typegraph_config(typegraph);
-                let response = req.response(config);
-                self.send_rpc_response(response, ctx);
-                // addr.do_send(SendRpcResponse(response));
-            }
-        }
-    }
-}
 
-impl<A: TaskAction> TaskActor<A> {
-    fn send_rpc_response(&mut self, response: RpcResponse, ctx: &mut Context<Self>) {
-        match serde_json::to_string(&response) {
-            Ok(response) => {
-                let stdin = self.process_stdin.clone().unwrap();
-                let fut = async move {
-                    let mut stdin = stdin.lock().await;
-                    stdin
-                        .write_all(response.as_bytes())
-                        .await
-                        .expect("could not write rpc response to process stdin");
-                    stdin
-                        .write_all(b"\n")
-                        .await
-                        .expect("could not write newline to process stdin");
-                };
-
-                ctx.spawn(fut.in_current_span().into_actor(self));
-            }
-            Err(e) => {
+        let rpc_call: A::RpcCall = match serde_json::from_value(req.call.clone()) {
+            Ok(rpc_call) => rpc_call,
+            Err(err) => {
                 self.console
-                    .error(format!("could not serialize rpc response {e}"));
+                    .error(format!("invalid jsonrpc request {req:?}: {err:?}"));
+                addr.do_send(Exit(TaskFinishStatus::<A>::Error));
+                return;
             }
-        }
+        };
+
+        let console = self.console.clone();
+
+        let fut = async move {
+            let id = req.id;
+            match action.get_rpc_response(&rpc_call).await {
+                Ok(response) => {
+                    addr.do_send(message::SendRpcResponse(req.response(response)));
+                }
+                Err(err) => {
+                    console.error(format!("failed to handle jsonrpc call {req:?}: {err:?}"));
+                    addr.do_send(Exit(TaskFinishStatus::<A>::Error));
+                }
+            }
+        };
+
+        ctx.spawn(fut.in_current_span().into_actor(self));
     }
 }
 
-// impl<A: TaskAction + 'static> Handler<message::SendRpcResponse> for TaskActor<A> {
-//     type Result = ();
-//
-//     fn handle(
-//         &mut self,
-//         SendRpcResponse(response): SendRpcResponse,
-//         _ctx: &mut Context<Self>,
-//     ) -> Self::Result {
-//         {
-//             let response_id = response.id;
-//             match serde_json::to_string(&response) {
-//                 Ok(response) => {
-//                     let stdin = self.process_stdin.clone().unwrap_or_log();
-//                     let console = self.console.clone();
-//                     let fut = async move {
-//                         let stdin = stdin.lock().await;
-//                         console.debug(format!("sending rpc response #{response_id}"));
-//                         stdin
-//                             .write_all(response.as_bytes())
-//                             .await
-//                             .expect("could not write rpc response to process stdin");
-//                         stdin
-//                             .write_all(b"\n")
-//                             .await
-//                             .expect("could not write newline to process stdin");
-//                     };
-//                 }
-//                 Err(e) => {
-//                     self.console
-//                         .error(format!("could not serialize rpc response {e}"));
-//                 }
-//             }
-//         };
-//     }
-// }
+impl<A: TaskAction + 'static> Handler<message::SendRpcResponse> for TaskActor<A> {
+    type Result = ();
+
+    fn handle(
+        &mut self,
+        SendRpcResponse(response): SendRpcResponse,
+        ctx: &mut Context<Self>,
+    ) -> Self::Result {
+        {
+            let response_id = response.id;
+            match serde_json::to_string(&response) {
+                Ok(response) => {
+                    let stdin = self.process_stdin.clone().unwrap();
+                    let fut = async move {
+                        let mut stdin = stdin.lock().await;
+                        stdin
+                            .write_all(response.as_bytes())
+                            .await
+                            .expect("could not write rpc response to process stdin");
+                        stdin
+                            .write_all(b"\n")
+                            .await
+                            .expect("could not write newline to process stdin");
+                    };
+                    ctx.spawn(fut.in_current_span().into_actor(self));
+                }
+                Err(e) => {
+                    self.console
+                        .error(format!("could not serialize rpc response {e}"));
+                }
+            }
+        };
+    }
+}

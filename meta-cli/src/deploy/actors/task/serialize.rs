@@ -2,14 +2,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::action::{
-    ActionFinalizeContext, ActionResult, FollowupTaskConfig, OutputData, TaskAction,
-    TaskActionGenerator,
+    ActionFinalizeContext, ActionResult, OutputData, SharedActionConfig, TaskAction,
+    TaskActionGenerator, TaskFilter,
 };
-use super::command::CommandBuilder;
-use super::TaskConfig;
-use crate::com::store::MigrationAction;
+use super::command::build_task_command;
+use super::deploy::MigrationAction;
 use crate::deploy::actors::console::Console;
-use crate::deploy::actors::task_manager::{TaskManager, TaskRef};
+use crate::deploy::actors::task_manager::TaskRef;
 use crate::interlude::*;
 use color_eyre::owo_colors::OwoColorize;
 use common::typegraph::Typegraph;
@@ -22,18 +21,30 @@ pub type SerializeAction = Arc<SerializeActionInner>;
 #[derive(Debug)]
 pub struct SerializeActionInner {
     task_ref: TaskRef,
-    task_config: Arc<TaskConfig>,
+    task_options: SerializeOptions,
+    shared_config: Arc<SharedActionConfig>,
 }
 
 #[derive(Clone)]
 pub struct SerializeActionGenerator {
-    task_config: Arc<TaskConfig>,
+    shared_config: Arc<SharedActionConfig>,
 }
 
 impl SerializeActionGenerator {
-    pub fn new(task_config: TaskConfig) -> Self {
+    pub fn new(config_dir: Arc<Path>, working_dir: Arc<Path>, migrations_dir: Arc<Path>) -> Self {
         Self {
-            task_config: Arc::new(task_config),
+            shared_config: SharedActionConfig {
+                command: "serialize",
+                config_dir,
+                working_dir,
+                migrations_dir,
+                default_migration_action: MigrationAction {
+                    apply: true,
+                    create: false,
+                    reset: false,
+                },
+            }
+            .into(),
         }
     }
 }
@@ -41,12 +52,17 @@ impl SerializeActionGenerator {
 impl TaskActionGenerator for SerializeActionGenerator {
     type Action = SerializeAction;
 
-    fn generate(&self, task_ref: TaskRef, followup: Option<()>) -> Self::Action {
+    fn generate(&self, task_ref: TaskRef, task_options: SerializeOptions) -> Self::Action {
         SerializeActionInner {
             task_ref,
-            task_config: self.task_config.clone(),
+            task_options,
+            shared_config: self.shared_config.clone(),
         }
         .into()
+    }
+
+    fn get_shared_config(&self) -> Arc<SharedActionConfig> {
+        self.shared_config.clone()
     }
 }
 
@@ -62,34 +78,35 @@ impl OutputData for Box<Typegraph> {
     }
 }
 
+#[derive(Debug, Default)]
+pub struct SerializeOptions {
+    filter: TaskFilter,
+}
+
 impl OutputData for SerializeError {
     fn get_typegraph_name(&self) -> String {
         self.typegraph.clone()
     }
 }
 
-impl FollowupTaskConfig<SerializeAction> for () {
-    fn schedule(&self, _task_manager: Addr<TaskManager<Arc<SerializeActionInner>>>) {}
-}
-
 impl TaskAction for SerializeAction {
     type SuccessData = Box<Typegraph>;
     type FailureData = SerializeError;
+    type Options = SerializeOptions;
     type Generator = SerializeActionGenerator;
-    type Followup = ();
+    type RpcCall = serde_json::Value;
 
     async fn get_command(&self) -> Result<Command> {
-        CommandBuilder {
-            path: self
-                .task_config
-                .base_dir
-                .to_path_buf()
-                .join(&self.task_ref.path),
-            task_config: self.task_config.clone(),
-            action_env: "serialize",
-        }
-        .build()
+        build_task_command(
+            self.task_ref.path.clone(),
+            self.shared_config.clone(),
+            self.task_options.filter.clone(),
+        )
         .await
+    }
+
+    fn get_options(&self) -> &Self::Options {
+        &self.task_options
     }
 
     fn get_start_message(&self) -> String {
@@ -130,23 +147,11 @@ impl TaskAction for SerializeAction {
         }
     }
 
-    fn get_global_config(&self) -> serde_json::Value {
-        serde_json::json!({
-            "typegate": None::<String>,
-            "prefix": None::<String>,
-        })
-    }
-    fn get_typegraph_config(&self, typegraph: &str) -> serde_json::Value {
-        serde_json::json!({
-            "secrets": {},
-            "artifactResolution": true, // TODO??
-            "migrationActions": {},
-            "defaultMigrationAction": MigrationAction::default(),
-            "migrationsDir": ".", // TODO
-        })
-    }
-
     fn get_task_ref(&self) -> &crate::deploy::actors::task_manager::TaskRef {
         &self.task_ref
+    }
+
+    async fn get_rpc_response(&self, _call: &serde_json::Value) -> Result<serde_json::Value> {
+        Err(ferr!("rpc request not supported on serialize task"))
     }
 }

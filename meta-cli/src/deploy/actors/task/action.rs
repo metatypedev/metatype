@@ -1,12 +1,22 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use super::deploy::MigrationAction;
 use super::TaskActor;
 use crate::deploy::actors::task_manager::{TaskManager, TaskRef};
 use crate::interlude::*;
 use crate::{config::Config, deploy::actors::console::ConsoleActor};
-use std::{path::Path, sync::Arc};
+use std::sync::Arc;
 use tokio::process::Command;
+
+#[derive(Debug, Clone)]
+pub struct SharedActionConfig {
+    pub command: &'static str,
+    pub config_dir: Arc<Path>,
+    pub working_dir: Arc<Path>,
+    pub migrations_dir: Arc<Path>,
+    pub default_migration_action: MigrationAction,
+}
 
 pub trait TaskActionGenerator: Clone {
     type Action: TaskAction;
@@ -14,8 +24,10 @@ pub trait TaskActionGenerator: Clone {
     fn generate(
         &self,
         task_ref: TaskRef,
-        followup: Option<<Self::Action as TaskAction>::Followup>,
+        options: <Self::Action as TaskAction>::Options,
     ) -> Self::Action;
+
+    fn get_shared_config(&self) -> Arc<SharedActionConfig>;
 }
 
 pub struct ActionFinalizeContext<A: TaskAction + 'static> {
@@ -29,26 +41,40 @@ pub trait OutputData: serde::de::DeserializeOwned + std::fmt::Debug + Unpin + Se
     fn get_typegraph_name(&self) -> String;
 }
 
-pub trait FollowupTaskConfig<A: TaskAction> {
-    fn schedule(&self, task_manager: Addr<TaskManager<A>>);
+#[derive(Default, Debug, Clone)]
+pub enum TaskFilter {
+    #[default]
+    All,
+    Typegraphs(Vec<String>),
+}
+
+impl ToString for TaskFilter {
+    fn to_string(&self) -> String {
+        match self {
+            TaskFilter::All => "all".to_string(),
+            TaskFilter::Typegraphs(typegraphs) => format!("typegraphs={}", typegraphs.join(",")),
+        }
+    }
 }
 
 pub trait TaskAction: std::fmt::Debug + Clone + Send + Unpin {
     type SuccessData: OutputData;
     type FailureData: OutputData;
-    type Followup: FollowupTaskConfig<Self> + Default + std::fmt::Debug + Unpin + Send;
+    type Options: Default + std::fmt::Debug + Unpin + Send;
     type Generator: TaskActionGenerator<Action = Self> + Unpin;
+    type RpcCall: serde::de::DeserializeOwned + std::fmt::Debug + Unpin + Send;
 
     async fn get_command(&self) -> Result<Command>;
     fn get_task_ref(&self) -> &TaskRef;
 
+    fn get_options(&self) -> &Self::Options;
+
     fn get_start_message(&self) -> String;
     fn get_error_message(&self, err: &str) -> String;
 
-    fn get_global_config(&self) -> serde_json::Value;
-    fn get_typegraph_config(&self, typegraph: &str) -> serde_json::Value;
-
     fn finalize(&self, res: &ActionResult<Self>, ctx: ActionFinalizeContext<Self>);
+
+    async fn get_rpc_response(&self, call: &Self::RpcCall) -> Result<serde_json::Value>;
 }
 
 pub type ActionResult<A: TaskAction> = Result<A::SuccessData, A::FailureData>;

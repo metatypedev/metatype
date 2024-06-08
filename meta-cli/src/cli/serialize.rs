@@ -1,18 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
-
 use super::{Action, ConfigArgs};
 use crate::com::store::{Command, ServerStore};
-use crate::config::Config;
+use crate::config::{Config, PathOption};
 use crate::deploy::actors::console::ConsoleActor;
 use crate::deploy::actors::task::serialize::{
     SerializeAction, SerializeActionGenerator, SerializeError,
 };
-use crate::deploy::actors::task::{TaskConfig, TaskFinishStatus};
-use crate::deploy::actors::task_manager::{TaskManagerInit, TaskSource};
+use crate::deploy::actors::task::TaskFinishStatus;
+use crate::deploy::actors::task_manager::{Report, TaskManagerInit, TaskSource};
 use crate::interlude::*;
 use actix_web::dev::ServerHandle;
 use clap::Parser;
+use common::typegraph::Typegraph;
 use core::fmt::Debug;
 use std::io::{self, Write};
 use tokio::io::AsyncWriteExt;
@@ -57,13 +57,7 @@ impl Action for Serialize {
         let dir = args.dir();
         let config_path = args.config.clone();
 
-        // config file is not used when `TypeGraph` files
-        // are provided in the CLI by flags
-        let config = if !self.files.is_empty() {
-            Config::default_in(&dir)
-        } else {
-            Config::load_or_find(config_path, &dir)?
-        };
+        let config = Config::load_or_find(config_path, &dir)?;
 
         // Minimum setup
         ServerStore::with(Some(Command::Serialize), Some(config.to_owned()));
@@ -73,7 +67,13 @@ impl Action for Serialize {
 
         let console = ConsoleActor::new(Arc::clone(&config)).start();
 
-        let action_generator = SerializeActionGenerator::new(TaskConfig::init(args.dir().into()));
+        let action_generator = SerializeActionGenerator::new(
+            config.dir().unwrap_or_log().into(),
+            dir.into(),
+            config
+                .prisma_migrations_base_dir(PathOption::Absolute)
+                .into(),
+        );
 
         if self.files.is_empty() {
             bail!("no file provided");
@@ -93,32 +93,7 @@ impl Action for Serialize {
         let report = init.run().await;
 
         // TODO no need to report errors
-        let tgs = report
-            .entries
-            .into_iter()
-            .map(|entry| match entry.status {
-                TaskFinishStatus::Finished(results) => results
-                    .into_iter()
-                    .collect::<Result<Vec<_>, SerializeError>>()
-                    .map_err(|e| {
-                        eyre::eyre!(
-                            "serialization failed for typegraph '{}' at {:?}: {}",
-                            e.typegraph,
-                            entry.path,
-                            e.error
-                        )
-                    }),
-                TaskFinishStatus::Cancelled => {
-                    Err(eyre::eyre!("serialization cancelled for {:?}", entry.path))
-                }
-                TaskFinishStatus::Error => {
-                    Err(eyre::eyre!("serialization failed for {:?}", entry.path))
-                }
-            })
-            .collect::<Result<Vec<_>>>()?
-            .into_iter()
-            .flatten()
-            .collect::<Vec<_>>();
+        let tgs = report.into_typegraphs();
 
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.iter().find(|tg| &tg.name().unwrap() == tg_name) {
@@ -144,6 +119,41 @@ impl Action for Serialize {
         server_handle.unwrap().stop(true).await;
 
         Ok(())
+    }
+}
+
+pub trait SerializeReportExt {
+    fn into_typegraphs(self) -> Vec<Box<Typegraph>>;
+}
+
+impl SerializeReportExt for Report<SerializeAction> {
+    fn into_typegraphs(self) -> Vec<Box<Typegraph>> {
+        self.entries
+            .into_iter()
+            .map(|entry| match entry.status {
+                TaskFinishStatus::Finished(results) => results
+                    .into_iter()
+                    .collect::<Result<Vec<_>, SerializeError>>()
+                    .unwrap_or_else(|e| {
+                        tracing::error!(
+                            "serialization failed for typegraph '{}' at {:?}: {}",
+                            e.typegraph,
+                            entry.path,
+                            e.error
+                        );
+                        vec![]
+                    }),
+                TaskFinishStatus::Cancelled => {
+                    tracing::error!("serialization cancelled for {:?}", entry.path);
+                    vec![]
+                }
+                TaskFinishStatus::Error => {
+                    tracing::error!("serialization failed for {:?}", entry.path);
+                    vec![]
+                }
+            })
+            .flatten()
+            .collect()
     }
 }
 

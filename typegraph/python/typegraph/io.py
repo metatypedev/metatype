@@ -1,3 +1,6 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 from typing import Any, Optional, Dict
 from fileinput import FileInput
 from dataclasses import dataclass
@@ -10,7 +13,6 @@ _JSON_RPC_VERSION = "2.0"
 
 
 class Log:
-
     @staticmethod
     def __format(*largs: Any):
         return " ".join(map(str, largs))
@@ -47,7 +49,7 @@ class _RpcResponseReader:
     input: FileInput
 
     def __init__(self):
-        self.input = FileInput('-')
+        self.input = FileInput("-")
 
     def read(self, rpc_id: int):
         while True:
@@ -63,10 +65,13 @@ class _RpcResponseReader:
                 continue
 
             if parsed.get("id") != rpc_id:
-                Log.error(f"rpc response: expected sequential requestests, unexpected rpc id {parsed.get('id')}")
+                Log.error(
+                    f"rpc response: expected sequential requestests, unexpected rpc id {parsed.get('id')}"
+                )
                 continue
 
             return parsed.get("result")
+
 
 class _RpcCall:
     response_reader = _RpcResponseReader()
@@ -76,26 +81,30 @@ class _RpcCall:
     def call(cls, method: str, params: Any):
         cls.latest_rpc_id = cls.latest_rpc_id + 1
         rpc_id = cls.latest_rpc_id
-        rpc_message = json.dumps({
-            "jsonrpc": _JSON_RPC_VERSION,
-            "id": rpc_id,
-            "method": method,
-            "params": params
-        })
+        rpc_message = json.dumps(
+            {
+                "jsonrpc": _JSON_RPC_VERSION,
+                "id": rpc_id,
+                "method": method,
+                "params": params,
+            }
+        )
 
         print(f"jsonrpc: {rpc_message}")
         return cls.response_reader.read(rpc_id)
 
 
 @dataclass
-class TypegateConfig:
-    endpoint: str
+class DeployTarget:
+    base_url: str
     auth: BasicAuth
 
+
 @dataclass
-class GlobalConfig:
-    typegate: Optional[TypegateConfig]
-    prefix: Optional[str]
+class DeployData:
+    secrets: Dict[str, str]
+    default_migration_action: MigrationAction
+    migration_actions: Dict[str, MigrationAction]
 
 
 def migration_action_from_dict(raw: Dict[str, bool]) -> MigrationAction:
@@ -114,39 +123,41 @@ class TypegraphConfig:
     default_migration_action: MigrationAction
     migrations_dir: str
 
+
 class Rpc:
-    @staticmethod
-    def get_global_config() -> GlobalConfig:
-        # TODO validation??
-        res = _RpcCall.call("queryGlobalConfig", None)
-        raw_typegate = res.get("typegate")
-        typegate = None
-        if raw_typegate is not None:
-            raw_auth = raw_typegate.get("auth")
-            typegate = TypegateConfig(
-                endpoint=raw_typegate.get("endpoint"),
-                auth=BasicAuth(
-                    username=raw_auth.get("username"),
-                    password=raw_auth.get("password")
-                )
+    _deploy_target: Optional[DeployTarget] = None
+
+    # cached
+    @classmethod
+    def get_deploy_target(cls) -> DeployTarget:
+        if cls._deploy_target is None:
+            # TODO validation??
+            res = _RpcCall.call("GetDeployTarget", None)
+
+            raw_auth = res.get("auth")
+            if raw_auth is None:
+                raise Exception(f"invalid data from rpc call: {res}")
+
+            auth = BasicAuth(raw_auth.get("username"), raw_auth.get("password"))
+
+            cls._deploy_target = DeployTarget(
+                base_url=res["baseUrl"],
+                auth=auth,
             )
-        return GlobalConfig(
-            typegate=typegate,
-            prefix=res.get("prefix")
-        )
+
+        return cls._deploy_target
 
     @staticmethod
-    def get_typegraph_config(typegraph: str):
-        res = _RpcCall.call("queryTypegraphConfig", {
-            "typegraph": typegraph
-        })
+    def get_deploy_data(typegraph: str) -> DeployData:
+        res = _RpcCall.call("GetDeployData", {"typegraph": typegraph})
 
-        migration_actions = { k: migration_action_from_dict(v) for k, v in res.get("migrationActions").items() }
-
-        return TypegraphConfig(
-            secrets=res.get("secrets"),
-            artifact_resolution=res.get("artifactResolution"),
-            migration_actions=migration_actions,
-            default_migration_action=migration_action_from_dict(res.get("defaultMigrationAction")),
-            migrations_dir=res.get("migrationsDir")
+        return DeployData(
+            secrets=res["secrets"],
+            default_migration_action=migration_action_from_dict(
+                res["defaultMigrationAction"]
+            ),
+            migration_actions={
+                k: migration_action_from_dict(v)
+                for k, v in res["migrationActions"].items()
+            },
         )

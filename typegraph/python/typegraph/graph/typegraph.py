@@ -15,12 +15,13 @@ from typegraph.gen.exports.core import (
     Cors as CoreCors,
 )
 from typegraph.gen.exports.utils import Auth
-
 from typegraph.gen.types import Err
 from typegraph.graph.params import Cors, RawAuth
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
+from typegraph.envs.cli import CLI_ENV
 from typegraph.wit import core, store, wit_utils
+from typegraph.io import Log
 
 if TYPE_CHECKING:
     from typegraph import t
@@ -177,7 +178,7 @@ def typegraph(
     rate: Optional[Rate] = None,
     cors: Optional[Cors] = None,
     prefix: Optional[str] = None,
-) -> Callable[[Callable[[Graph], None]], Callable[[], TypegraphOutput]]:
+) -> Callable[[Callable[[Graph], None]], TypegraphOutput]:
     def decorator(builder: Callable[[Graph], None]) -> TypegraphOutput:
         if name is None:
             import re
@@ -186,6 +187,16 @@ def typegraph(
             actual_name = re.sub("_", "-", builder.__name__)
         else:
             actual_name = name
+
+        if CLI_ENV is not None:
+            filter = CLI_ENV.filter
+            if filter is not None and actual_name not in filter:
+                Log.debug("typegraph '{actual_name}' skipped")
+
+                def serialize(params: FinalizeParams):
+                    raise Exception("typegraph was filtered out")
+
+                return TypegraphOutput(name=actual_name, serialize=serialize)
 
         tg = Typegraph(
             name=actual_name,
@@ -238,11 +249,12 @@ def typegraph(
 
         from typegraph.graph.tg_manage import Manager
 
-        if Manager.is_run_from_cli():
+        # run from meta/cli
+        if CLI_ENV is not None:
             manager = Manager(tg_output)
             manager.run()
 
-        return lambda: tg_output
+        return tg_output
 
     return decorator
 

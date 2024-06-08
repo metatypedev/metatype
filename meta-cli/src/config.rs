@@ -3,6 +3,10 @@
 
 use crate::interlude::*;
 
+use crate::cli::NodeArgs;
+use crate::fs::find_in_parents;
+use crate::utils::BasicAuth;
+use common::node::Node;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use lazy_static::lazy_static;
 use reqwest::Url;
@@ -10,11 +14,6 @@ use std::fs::{self, File};
 use std::io;
 use std::slice;
 use std::str::FromStr;
-
-use crate::cli::NodeArgs;
-use crate::fs::find_in_parents;
-use crate::utils::BasicAuth;
-use common::node::Node;
 
 pub const METATYPE_FILES: &[&str] = &["metatype.yml", "metatype.yaml"];
 pub const VENV_FOLDERS: &[&str] = &[".venv"];
@@ -158,10 +157,11 @@ pub struct Materializers {
 }
 
 #[derive(Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "lowercase")]
 pub enum ModuleType {
     Python,
-    Deno,
+    TypeScript,
+    JavaScript,
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]
@@ -214,7 +214,8 @@ impl Config {
         })?;
         let mut config: serde_yaml::Value = serde_yaml::from_reader(file)?;
         config.apply_merge()?;
-        let mut config: Self = serde_yaml::from_value(config)?;
+        let mut config: Self =
+            serde_yaml::from_value(config).context("could not parse metatype config file")?;
         config.path = Some(path.clone());
         config.base_dir = {
             let mut path = path;
@@ -276,7 +277,7 @@ impl Config {
         }
     }
 
-    /// `config migration dir` + `runtime` + `tg_name`   
+    /// `config migration dir` + `runtime` + `tg_name`
     pub fn prisma_migrations_dir_rel(&self, tg_name: &str) -> PathBuf {
         let mut path = self
             .typegraphs
@@ -295,6 +296,14 @@ impl Config {
         let mut path = self.base_dir.clone();
         path.push(self.prisma_migrations_dir_rel(tg_name));
         path
+    }
+
+    pub fn dir(&self) -> Result<&Path> {
+        self.path
+            .as_deref()
+            .ok_or_else(|| ferr!("config path required"))?
+            .parent()
+            .ok_or_else(|| ferr!("config path has no parent"))
     }
 }
 

@@ -11,7 +11,6 @@ use crate::interlude::*;
 use crate::typegraph::dependency_graph::DependencyGraph;
 use crate::typegraph::loader::discovery::FileFilter;
 use common::typegraph::Typegraph;
-use grep::searcher::{BinaryDetection, SearcherBuilder};
 use notify_debouncer_mini::notify::{RecommendedWatcher, RecursiveMode};
 use notify_debouncer_mini::{new_debouncer, notify, DebounceEventResult, Debouncer};
 use pathdiff::diff_paths;
@@ -176,11 +175,7 @@ impl<A: TaskAction + 'static> Handler<File> for WatcherActor<A> {
                     });
                 }
             } else if path.try_exists().unwrap() {
-                let mut searcher = SearcherBuilder::new()
-                    .binary_detection(BinaryDetection::none())
-                    .build();
-
-                if !self.file_filter.is_excluded(&path, &mut searcher) {
+                if !self.file_filter.is_excluded(&path) {
                     let rel_path = diff_paths(&path, &self.directory).unwrap();
                     self.console.info(format!("File modified: {rel_path:?}"));
 

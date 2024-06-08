@@ -7,10 +7,8 @@ use std::time::Duration;
 
 use serde::Deserialize;
 
-use crate::com::{responses::SDKResponse, store::ServerStore};
-use crate::deploy::actors::console::input::{Confirm, Select};
-use crate::deploy::actors::console::{Console, ConsoleActor};
-use crate::deploy::actors::loader::LoaderActor;
+use crate::com::responses::SDKResponse;
+use crate::deploy::actors::console::ConsoleActor;
 
 use lazy_static::lazy_static;
 
@@ -82,19 +80,6 @@ struct ResolveNullConstraintViolation {
 #[serde(rename_all = "camelCase")]
 pub struct GenericPushFailure {
     message: String,
-}
-
-#[derive(Debug)]
-#[allow(unused)]
-pub struct PushResult {
-    name: String,
-    messages: Vec<MessageEntry>,
-    migrations: Vec<Migrations>,
-    failure: Option<PushFailure>,
-    original_name: String,
-    console: Addr<ConsoleActor>,
-    loader: Addr<LoaderActor>,
-    sdk_response: SDKResponse,
 }
 
 lazy_static! {

@@ -3,10 +3,13 @@
 
 use color_eyre::owo_colors::OwoColorize;
 
-use super::{DeployAction, DeployActionInner, Migration, MigrationActionOverride, PrismaRuntimeId};
+use super::{
+    DeployAction, DeployActionInner, DeployOptions, Migration, MigrationActionOverride,
+    PrismaRuntimeId,
+};
 use crate::deploy::actors::console::input::{Confirm, ConfirmHandler, Select};
 use crate::deploy::actors::console::Console;
-use crate::deploy::actors::task::action::ActionFinalizeContext;
+use crate::deploy::actors::task::action::{ActionFinalizeContext, TaskFilter};
 use crate::deploy::actors::task::TaskActor;
 use crate::interlude::*;
 
@@ -243,7 +246,25 @@ impl Handler<ResetDatabase> for TaskActor<DeployAction> {
     type Result = ();
 
     fn handle(&mut self, msg: ResetDatabase, _: &mut Self::Context) {
-        self.followup_task.migrations.push((
+        let options = if let Some(options) = self.followup_task_options.as_mut() {
+            options
+        } else {
+            self.followup_task_options = Some(DeployOptions {
+                filter: TaskFilter::Typegraphs(Default::default()),
+                migration_options: Default::default(),
+            });
+            self.followup_task_options.as_mut().unwrap()
+        };
+        {
+            let typegraphs = match options.filter {
+                TaskFilter::Typegraphs(ref mut typegraphs) => typegraphs,
+                _ => unreachable!(),
+            };
+            if !typegraphs.contains(&msg.typegraph) {
+                typegraphs.push(msg.typegraph.clone());
+            }
+        }
+        options.migration_options.push((
             PrismaRuntimeId {
                 typegraph: msg.typegraph.clone(),
                 name: msg.runtime.clone(),

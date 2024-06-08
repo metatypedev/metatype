@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::interlude::*;
+use crate::{interlude::*, typegraph::loader::discovery::Discovery};
 
 use super::{Action, ConfigArgs};
 use crate::{
@@ -9,7 +9,6 @@ use crate::{
     config::{Config, PIPFILE_FILES, PYPROJECT_FILES, REQUIREMENTS_FILES, VENV_FOLDERS},
     fs::{clean_path, find_in_parents},
     global_config::GlobalConfig,
-    typegraph::loader::Discovery,
 };
 
 use actix_web::dev::ServerHandle;

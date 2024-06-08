@@ -1,20 +1,20 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::interlude::*;
-
 use crate::cli::{Action, ConfigArgs, NodeArgs};
-use crate::{
-    com::store::ServerStore,
-    config::Config,
-    deploy::actors::{console::ConsoleActor, loader::*},
-};
+use crate::config::PathOption;
+use crate::deploy::actors::task::serialize::{SerializeAction, SerializeActionGenerator};
+use crate::deploy::actors::task_manager::{TaskManagerInit, TaskSource};
+use crate::interlude::*;
+use crate::{com::store::ServerStore, config::Config, deploy::actors::console::ConsoleActor};
 use actix::Actor;
 use actix_web::dev::ServerHandle;
 use clap::{Parser, ValueEnum};
 use common::typegraph::Typegraph;
 use metagen::*;
 use serde_json::json;
+
+use super::serialize::SerializeReportExt;
 
 #[derive(ValueEnum, Debug, Clone)]
 enum GeneratorOp {
@@ -178,7 +178,7 @@ async fn load_tg_at(
     config: Arc<Config>,
     path: PathBuf,
     name: Option<&str>,
-) -> anyhow::Result<Typegraph> {
+) -> anyhow::Result<Box<Typegraph>> {
     ServerStore::with(
         Some(crate::com::store::Command::Serialize),
         Some(config.as_ref().clone()),
@@ -188,32 +188,24 @@ async fn load_tg_at(
 
     let console = ConsoleActor::new(Arc::clone(&config)).start();
 
-    let (loader_event_tx, loader_event_rx) = tokio::sync::mpsc::unbounded_channel();
+    let config_dir: Arc<Path> = config.dir().unwrap_or_log().into();
+    let init = TaskManagerInit::<SerializeAction>::new(
+        config.clone(),
+        SerializeActionGenerator::new(
+            config_dir.clone(),
+            config_dir, // TODO cwd
+            config
+                .prisma_migrations_base_dir(PathOption::Absolute)
+                .into(),
+        ),
+        console,
+        TaskSource::Static(vec![path.clone()]),
+    )
+    .max_parallel_tasks(1);
 
-    let loader = LoaderActor::new(Arc::clone(&config), console.clone(), loader_event_tx, 1)
-        .auto_stop()
-        .start();
+    let report = init.run().await;
+    let mut tgs = report.into_typegraphs();
 
-    let path = Arc::new(path);
-
-    loader.do_send(LoadModule(path.clone()));
-    let mut tgs: Vec<Typegraph> = vec![];
-    let mut event_rx = loader_event_rx;
-    while let Some(event) = event_rx.recv().await {
-        match event {
-            LoaderEvent::Typegraph(tg_infos) => {
-                let responses = ServerStore::get_responses_or_fail(&tg_infos.path)?;
-                for (_, tg) in responses.iter() {
-                    tgs.push(tg.as_typegraph()?);
-                }
-            }
-            LoaderEvent::Stopped(res) => {
-                if let StopBehavior::ExitFailure(err) = res {
-                    bail!("LoaderActor exit failure: {err}");
-                }
-            }
-        }
-    }
     if tgs.is_empty() {
         bail!("not typegraphs loaded from path at {path:?}")
     }

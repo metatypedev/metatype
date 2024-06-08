@@ -6,7 +6,7 @@ use crate::interlude::*;
 
 use pathdiff::diff_paths;
 
-use crate::{config::Config, typegraph::loader::Discovery};
+use crate::{config::Config, typegraph::loader::discovery::Discovery};
 
 use super::console::{Console, ConsoleActor};
 use super::task::action::TaskAction;
@@ -48,13 +48,15 @@ impl<A: TaskAction + 'static> Actor for DiscoveryActor<A> {
     #[tracing::instrument(skip(self))]
     fn started(&mut self, ctx: &mut Self::Context) {
         log::trace!("DiscoveryActor started; directory={:?}", self.directory);
-
         let config = Arc::clone(&self.config);
         let dir = self.directory.clone();
         let task_manager = self.task_manager.clone();
         let console = self.console.clone();
         let discovery = ctx.address();
         let task_generator = self.task_generator.clone();
+
+        console.info("starting discovery".to_string());
+        console.warning("make sure to exclude all non-typegraph Python and TypeScript/JavaScript files in the metatype.yaml config file using the include/exclude patterns".to_string());
 
         let fut = async move {
             match Discovery::new(config, dir.to_path_buf())

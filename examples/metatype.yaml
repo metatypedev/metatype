@@ -151,7 +151,7 @@ typegraphs:
     exclude:
       - "**/*"
       - "typegraphs/temporal.py"
-  deno:
+  typescript:
     exclude:
       - "typegraphs/temporal.ts"
 

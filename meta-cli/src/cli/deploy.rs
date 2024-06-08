@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use self::actors::task::deploy::{DeployAction, DeployActionGenerator};
-use self::actors::task::TaskConfig;
 use self::actors::task_manager::{self, StopReason};
 use super::{Action, ConfigArgs, NodeArgs};
 use crate::com::store::{Command, Endpoint, ServerStore};
@@ -221,8 +220,6 @@ mod default_mode {
 
     use crate::config::PathOption;
 
-    use self::actors::task::deploy::MigrationAction;
-
     use super::*;
 
     pub async fn run(deploy: Deploy) -> Result<ExitStatus> {
@@ -231,21 +228,19 @@ mod default_mode {
         let mut secrets = deploy.secrets.clone();
         secrets.apply_overrides(&deploy.options.secrets)?;
 
-        let task_config = TaskConfig::init(deploy.base_dir.clone());
-        let action_generator = DeployActionGenerator {
-            task_config: task_config.into(),
-            node: deploy.node.clone().into(),
-            secrets: secrets.hydrate(deploy.base_dir.clone()).await?.into(),
-            migrations_dir: deploy
+        let action_generator = DeployActionGenerator::new(
+            deploy.node.into(),
+            // TODO no hydrate here
+            secrets.hydrate(deploy.base_dir.clone()).await?.into(),
+            deploy.config.dir().unwrap_or_log().into(),
+            deploy.base_dir.clone(),
+            deploy
                 .config
                 .prisma_migrations_base_dir(PathOption::Absolute)
                 .into(),
-            default_migration_action: MigrationAction {
-                apply: true,
-                create: deploy.options.create_migration,
-                reset: deploy.options.allow_destructive,
-            },
-        };
+            deploy.options.create_migration,
+            deploy.options.allow_destructive,
+        );
 
         let mut init = TaskManagerInit::<DeployAction>::new(
             deploy.config.clone(),
@@ -299,8 +294,6 @@ mod watch_mode {
 
     use crate::config::PathOption;
 
-    use self::actors::task::deploy::MigrationAction;
-
     use super::*;
 
     #[tracing::instrument]
@@ -311,40 +304,22 @@ mod watch_mode {
 
         let console = ConsoleActor::new(Arc::clone(&deploy.config)).start();
 
-        let ctrlc_handler_data = Arc::new(std::sync::Mutex::new(None));
-
-        let data = ctrlc_handler_data.clone();
-        ctrlc::set_handler(move || {
-            let mut data = data.lock().unwrap();
-            if let Some(CtrlCHandlerData {
-                watcher,
-                task_manager,
-            }) = data.take()
-            {
-                watcher.do_send(watcher::message::Stop);
-                task_manager.do_send(task_manager::message::Stop);
-            }
-        })
-        .context("setting Ctrl-C handler")?;
-
-        let task_config = TaskConfig::init(deploy.base_dir.clone());
         let mut secrets = deploy.secrets.clone();
         secrets.apply_overrides(&deploy.options.secrets)?;
 
-        let action_generator = DeployActionGenerator {
-            task_config: task_config.into(),
-            node: deploy.node.into(),
-            secrets: secrets.hydrate(deploy.base_dir.clone()).await?.into(),
-            migrations_dir: deploy
+        let action_generator = DeployActionGenerator::new(
+            deploy.node.into(),
+            // TODO no hydrate here
+            secrets.hydrate(deploy.base_dir.clone()).await?.into(),
+            deploy.config.dir().unwrap_or_log().into(),
+            deploy.base_dir.clone(),
+            deploy
                 .config
                 .prisma_migrations_base_dir(PathOption::Absolute)
                 .into(),
-            default_migration_action: MigrationAction {
-                apply: true,
-                create: deploy.options.create_migration,
-                reset: deploy.options.allow_destructive,
-            },
-        };
+            deploy.options.create_migration,
+            deploy.options.allow_destructive,
+        );
 
         // ServerStore::set_secrets(secrets.hydrate(deploy.base_dir.clone()).await?);
 
