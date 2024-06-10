@@ -21,25 +21,25 @@ export const tg = await typegraph("wasm-reflected-ts", (g: any) => {
 
   const wasm = WasmRuntime.reflected("rust.wasm");
   g.expose({
-    add: wasm.fromExport(
+    add: wasm.export(
       t.struct({ "a": t.float(), "b": t.float() }),
       t.integer(),
-      { func: "add" },
+      { name: "add" },
     ),
-    range: wasm.fromExport(
+    range: wasm.export(
       t.struct({ "a": t.integer().optional(), "b": t.integer() }),
       t.list(t.integer()),
-      { func: "range" },
+      { name: "range" },
     ),
-    record: wasm.fromExport(
+    record: wasm.export(
       t.struct({}),
       t.list(entity),
-      { func: "record-creation" },
+      { name: "record-creation" },
     ),
-    identity: wasm.fromExport(
+    identity: wasm.export(
       t.struct({ "arg0": entity }),
       entity,
-      { func: "identity" },
+      { name: "identity" },
     ),
   }, Policy.public());
 });

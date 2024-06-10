@@ -3,8 +3,8 @@
 
 use crate::interlude::*;
 use crate::{
-    runtimes::{deno_rt, prisma, temporal, wasm, wit_wire},
-    typegraph, typescript,
+    runtimes::{prisma, temporal, wasm, wit_wire},
+    typegraph,
 };
 
 use crate::OpDepInjector;
@@ -18,7 +18,6 @@ deno_core::extension!(
     tg_metatype_ext,
     ops = [
         crate::op_get_version,
-        typescript::op_typescript_format_code,
         typegraph::op_typegraph_validate,
         typegraph::op_validate_prisma_runtime_data,
         wasm::op_wasmtime_wit,
@@ -38,7 +37,6 @@ deno_core::extension!(
         prisma::op_prisma_reset,
         prisma::op_unpack,
         prisma::op_archive,
-        deno_rt::op_deno_transform_typescript,
         wit_wire::op_wit_wire_init,
         wit_wire::op_wit_wire_handle,
         wit_wire::op_wit_wire_destroy,

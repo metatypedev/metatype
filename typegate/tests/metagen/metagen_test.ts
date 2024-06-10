@@ -1,22 +1,22 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Meta } from "test-utils/mod.ts";
-import { newTempDir } from "test-utils/dir.ts";
+import { Meta } from "../utils/mod.ts";
 import { join } from "std/path/join.ts";
 import { assertEquals } from "std/assert/mod.ts";
+import { GraphQLQuery } from "../utils/query/graphql_query.ts";
+import { JSONValue } from "../../src/utils.ts";
 
 Meta.test("metagen rust builds", async (t) => {
-  const tmpDir = await newTempDir();
-  t.addCleanup(() => Deno.remove(tmpDir, { recursive: true }));
+  const tmpDir = t.tempDir;
 
   const typegraphPath = join(
     import.meta.dirname!,
-    "../../../examples/typegraphs/basic.ts",
+    "./typegraphs/metagen.mjs",
   );
   const genCratePath = join(tmpDir, "mdk");
 
-  Deno.writeTextFile(
+  await Deno.writeTextFile(
     join(tmpDir, "metatype.yml"),
     `
 typegates:
@@ -28,15 +28,16 @@ typegates:
 metagen:
   targets:
     main:
-      mdk_rust:
+      - generator: mdk_rust
         path: ${genCratePath}
         typegraph_path: ${typegraphPath}
+        stubbed_runtimes: ["python"]
 `,
   );
 
   // enclose the generated create in a lone workspace
   // to avoid Cargo from noticing the `metatype/Cargo.toml` worksapce
-  Deno.writeTextFile(
+  await Deno.writeTextFile(
     join(tmpDir, "Cargo.toml"),
     `
 [workspace]
@@ -48,8 +49,9 @@ members = ["mdk/"]
     (await Meta.cli({
       env: {
         MCLI_LOADER_CMD: "deno run -A --config ../deno.jsonc",
+        RUST_BACKTRACE: "1",
       },
-    }, ...`-C ${tmpDir} gen mdk`.split(" "))).code,
+    }, ...`-C ${tmpDir} gen`.split(" "))).code,
     0,
   );
   assertEquals(
@@ -61,17 +63,14 @@ members = ["mdk/"]
 });
 
 Meta.test("metagen python runs on cyclic types", async (t) => {
-  const tmpDir = await newTempDir();
-  t.addCleanup(() => Deno.remove(tmpDir, { recursive: true }));
-
   const typegraphPath = join(
     import.meta.dirname!,
     "typegraphs/python.py",
   );
-  const basePath = join(tmpDir, "mdk");
+  const basePath = join(t.tempDir, "mdk");
 
   Deno.writeTextFile(
-    join(tmpDir, "metatype.yml"),
+    join(t.tempDir, "metatype.yml"),
     `
 typegates:
   dev:
@@ -82,14 +81,15 @@ typegates:
 metagen:
   targets:
     my_target:
-      mdk_python:
+      - generator: mdk_python
         path: ${basePath}
         typegraph_path: ${typegraphPath}
 `,
   );
 
   assertEquals(
-    (await Meta.cli({}, ...`-C ${tmpDir} gen mdk my_target`.split(" "))).code,
+    (await Meta.cli({}, ...`-C ${t.tempDir} gen my_target`.split(" ")))
+      .code,
     0,
   );
 });
@@ -99,16 +99,25 @@ Meta.test("Metagen within sdk", async (t) => {
   const targetName = "my_target";
   const genConfig = {
     targets: {
-      my_target: {
-        mdk_rust: {
+      my_target: [
+        {
+          generator: "mdk_rust",
           typegraph: "example-metagen",
           path: "some/base/path/rust",
+          stubbed_runtimes: ["python"],
         },
-        mdk_python: {
+        {
+          generator: "mdk_python",
           typegraph: "example-metagen",
           path: "some/base/path/python",
         },
-      },
+        {
+          generator: "mdk_typescript",
+          typegraph: "example-metagen",
+          path: "some/base/path/ts",
+          stubbed_runtimes: ["python"],
+        },
+      ],
     },
   };
 
@@ -157,6 +166,261 @@ Meta.test("Metagen within sdk", async (t) => {
     await t.should("SDKs should produce same metagen output", () => {
       const [fromTs, fromPy] = sdkResults;
       assertEquals(fromTs, fromPy);
+    });
+  }
+});
+
+Meta.test("metagen table suite", async (metaTest) => {
+  const scriptsPath = join(
+    import.meta.dirname!,
+    "typegraphs/identities",
+  );
+  const genCratePath = join(scriptsPath, "rs");
+  // const genPyPath = join(scriptsPath, "py");
+  // const genTsPath = join(scriptsPath, "ts");
+
+  assertEquals(
+    (await Meta.cli({
+      env: {
+        // RUST_BACKTRACE: "1",
+      },
+    }, ...`-C ${scriptsPath} gen`.split(" "))).code,
+    0,
+  );
+  const compositesQuery = `query ($data: composites) {
+        data: prefix_composites(
+          data: $data
+        ) {
+          opt
+          either  {
+            ... on branch2 {
+              branch2
+            }
+            ... on primitives{ 
+              str
+              enum
+              uuid
+              email
+              ean
+              json
+              uri
+              date
+              datetime
+              int
+              float
+              boolean
+            }
+          }
+          union
+          list
+        }
+      }`;
+  const cases = [
+    {
+      skip: true,
+      name: "cycles",
+      query: `query ($data: cycles1) {
+        data: prefix_cycles(
+          data: $data
+        ) { # cycles1
+          to2 { # cycles2
+            ... on branch33B { # cycles3
+              to2 { # cycles2
+                ...on cycles1 { # cycles1
+                  phantom1
+                }
+                ...on branch33A { #cycles3
+                  phantom3a
+                }
+                ...on branch33B { #cycles3
+                  phantom3b
+                }
+              }
+            }
+            ... on branch33A { #cycles3
+              to1 { # cycles1
+                list3 { #cycles3
+                  ... on branch33A {
+                    phantom3a
+                  }
+                  ... on branch33B {
+                    to2 { #cycles2
+                      ... on cycles1 { #cycles 1
+                        phantom1
+                      }
+                      ... on branch33A { #cycles3
+                        phantom3a
+                      }
+                      ... on branch33B { #cycles3
+                        phantom3b
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            ... on cycles1 { #cycles1
+              phantom1
+            }
+          }
+        }
+      }`,
+      vars: {
+        data: { // cycles 1
+          to2: { //cycles 2
+            phantom3a: "phantom",
+            to1: { // cycles2/variant cycle3
+              // cycles1
+              list3: [{ //cycles3
+                to2: { // cycles2
+                  // cycles2/variant cycles1
+                  to2: null,
+                  phantom1: "phantom",
+                },
+              }],
+            },
+          },
+        } as Record<string, JSONValue>,
+      },
+    },
+    {
+      name: "simple_cyles",
+      query: `query ($data: primitives) {
+        data: prefix_simple_cycles(
+          data: $data
+        ) {
+          to2 {
+            to3 {
+              to1 {
+                phantom1
+              }
+            }
+          }
+        }
+      }`,
+      vars: {
+        data: {
+          to2: {
+            to3: {
+              to1: {
+                phantom1: null,
+              },
+            },
+          },
+        },
+      } as Record<string, JSONValue>,
+    },
+    {
+      name: "primtives",
+      query: `query ($data: primitives) {
+        data: prefix_primitives(
+          data: $data
+        ) {
+          str
+          enum
+          uuid
+          email
+          ean
+          json
+          uri
+          date
+          datetime
+          int
+          float
+          boolean
+        }
+      }`,
+      vars: {
+        data: {
+          str: "bytes",
+          enum: "tree",
+          uuid: "a963f88a-52f2-46b0-9279-ed2910ac2ca5",
+          email: "contact@example.com",
+          ean: "0799439112766",
+          json: JSON.stringify({ foo: "bar" }),
+          uri: "https://metatype.dev",
+          date: "2024-12-24",
+          datetime: new Date().toISOString(),
+          int: 1,
+          float: 1.0,
+          boolean: true,
+        },
+      } as Record<string, JSONValue>,
+    },
+    {
+      name: "composites 1",
+      query: compositesQuery,
+      vars: {
+        data: {
+          opt: "optional",
+          either: {
+            str: "bytes",
+            enum: "tree",
+            uuid: "a963f88a-52f2-46b0-9279-ed2910ac2ca5",
+            email: "contact@example.com",
+            ean: "0799439112766",
+            json: JSON.stringify({ foo: "bar" }),
+            uri: "https://metatype.dev",
+            date: "2024-12-24",
+            datetime: new Date().toISOString(),
+            int: 1,
+            float: 1.0,
+            boolean: true,
+          },
+          union: ["grey", "beige"],
+          list: ["open", "ware"],
+        },
+      },
+    },
+    {
+      name: "composites 2",
+      query: compositesQuery,
+      vars: {
+        data: {
+          either: {
+            branch2: "openware",
+          },
+          union: "open@wa.re",
+          list: ["open", "ware"],
+          opt: null,
+        } as Record<string, JSONValue>,
+      },
+    },
+  ];
+
+  await metaTest.should("rust tests", async () => {
+    assertEquals(
+      (await metaTest.shell("bash build.sh".split(" "), {
+        currentDir: genCratePath,
+      })).code,
+      0,
+    );
+  });
+  await using engine = await metaTest.engine(
+    "metagen/typegraphs/identities.py",
+  );
+  for (
+    const prefix of ["rs", "ts", "py"]
+  ) {
+    await metaTest.should(`mdk data go round ${prefix}`, async (t) => {
+      for (const { name, vars, query, skip } of cases) {
+        if (skip) {
+          continue;
+        }
+        await t.step(name, async () => {
+          await new GraphQLQuery(
+            query.replaceAll("prefix", prefix),
+            {},
+            {},
+            {},
+            [],
+          )
+            .withVars(vars)
+            .expectData(
+              vars,
+            ).on(engine);
+        });
+      }
     });
   }
 });

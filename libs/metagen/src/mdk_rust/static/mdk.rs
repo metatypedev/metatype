@@ -83,7 +83,7 @@ impl Router {
 pub type InitCallback = fn() -> anyhow::Result<MatBuilder>;
 
 thread_local! {
-    pub static MAT_STATE: RefCell<Router> = panic!("MDK_STATE has not been initialized");
+    pub static MAT_STATE: RefCell<Router> = panic!("MAT_STATE has not been initialized");
 }
 
 pub struct Ctx {}

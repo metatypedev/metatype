@@ -209,3 +209,19 @@ ghjk.task("install-wasi-adapter", {
     });
   },
 });
+
+ghjk.task("check-udeps", {
+  desc: "Check for unused cargo depenencies by running cargo-udeps tool through a **nightly** compiler",
+  installs: [
+    // udeps needs nightly support
+    ports.rust({ version: "nightly-2024-05-26" }),
+    ports.cargobi({
+      crateName: "cargo-udeps",
+      version: "0.1.47",
+      locked: true,
+    }),
+  ],
+  async fn({ $, argv }) {
+    await $`cargo udeps --all-targets --all-features ${argv}`;
+  },
+});

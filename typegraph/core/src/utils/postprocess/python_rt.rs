@@ -44,15 +44,15 @@ impl PostProcessor for PythonProcessor {
                 for dep_rel_path in resolved_deps {
                     let dep_abs_path = fs_host::make_absolute(&dep_rel_path)?;
 
+                    let (dep_hash, dep_size) = fs_host::hash_file(&dep_abs_path)?;
+                    let dep_artifact = Artifact {
+                        path: dep_rel_path.clone(),
+                        hash: dep_hash,
+                        size: dep_size,
+                    };
+                    dep_artifacts.push(dep_artifact.clone());
                     if let Entry::Vacant(entry) = tg.meta.artifacts.entry(dep_rel_path.clone()) {
-                        let (dep_hash, dep_size) = fs_host::hash_file(&dep_abs_path)?;
-                        let dep_artifact = Artifact {
-                            path: dep_rel_path,
-                            hash: dep_hash,
-                            size: dep_size,
-                        };
-                        entry.insert(dep_artifact.clone());
-                        dep_artifacts.push(dep_artifact);
+                        entry.insert(dep_artifact);
                         tg.deps.push(dep_abs_path);
                     }
                 }

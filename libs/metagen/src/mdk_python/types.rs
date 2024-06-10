@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use anyhow::bail;
 use garde::external::compact_str::CompactStringExt;
 use heck::ToPascalCase;
 
@@ -29,7 +28,7 @@ pub fn visit_type(
                 true => class_hint,
                 false => visit_object(tera, memo, tpe, tg)?.hint,
             };
-            format!("'{hint}'")
+            format!("\"{hint}\"")
         }
         TypeNode::Optional { data, .. } => {
             let item = &tg.types[data.item as usize];
@@ -45,7 +44,9 @@ pub fn visit_type(
         TypeNode::Union { .. } | TypeNode::Either { .. } => {
             visit_union_or_either(tera, memo, tpe, tg)?.hint
         }
-        _ => bail!("Unsupported type {:?}", tpe.type_name()),
+        // TODO: base64
+        TypeNode::File { .. } => "str".to_string(),
+        TypeNode::Any { .. } => "Any".to_string(),
     };
 
     memo.decr_weight();

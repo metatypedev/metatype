@@ -56,6 +56,7 @@ typegraph:
     - "typegraph/core/src/**/*.rs"
     - "typegraph/core/wit/*.wit"
     - "typegraph/node/sdk/src/**/*.ts"
+    - "libs/metagen/**/*"
   env:
     WASM_FILE: target/wasm/release/typegraph_core.wasm
   command: |
@@ -113,4 +114,4 @@ setup:
     echo "cd ./. to refresh env vars"
     [ -d .venv ] || python3 -m venv .venv && echo "virtual env created"
     poetry install --sync --no-root
-    yes | pnpm install --recursive --filter ./website/... --filter ./typegraph/node/...
+    yes | pnpm install --recursive --filter ./website/... --filter ./typegraph/node/... --filter ./libs/metagen/tests/...

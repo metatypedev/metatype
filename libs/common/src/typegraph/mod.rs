@@ -173,13 +173,3 @@ impl Typegraph {
         Ok(format!("{}#{}", path, self.name()?))
     }
 }
-
-impl TypeNode {
-    pub fn get_struct_fields(&self) -> Result<IndexMap<String, u32>> {
-        if let TypeNode::Object { data, .. } = &self {
-            Ok(data.properties.clone())
-        } else {
-            bail!("node is not an object variant, found: {self:#?}")
-        }
-    }
-}
