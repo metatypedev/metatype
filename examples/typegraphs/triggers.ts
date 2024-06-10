@@ -6,6 +6,7 @@ import { HttpRuntime } from "@typegraph/sdk/runtimes/http.js";
 
 typegraph({
   name: "triggers",
+  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
 }, (g) => {
   // skip:start
   const pub = Policy.public();

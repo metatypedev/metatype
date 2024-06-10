@@ -87,27 +87,27 @@ mf.mock("POST@/api/graphql", async (req) => {
 Meta.test("GraphQL parser", async (t) => {
   const e = await t.engine("query_parsers/graphql_namespaces.py");
 
-  await t.should("split typgraph into queries and mutations", () => {
+  await t.should("split typgraph into queries and mutations", async () => {
     /**
      * Types from the parsed TypeGraph
      */
     const types = e.tg.tg.types;
-    t.assertSnapshot(types);
+    await t.assertSnapshot(types);
   });
 
   const id = globalThis.crypto.randomUUID();
 
   await t.should("allow queries in namespaces", async () => {
     await gql`
-			query FindUser($id: ID!) {
-				user {
-					find(id: $id) {
-						id
-						name
-					}
-				}
-			}
-		`
+      query FindUser($id: ID!) {
+        user {
+          find(id: $id) {
+            id
+            name
+          }
+        }
+      }
+    `
       .withVars({ id })
       .expectData({
         user: {
@@ -124,15 +124,15 @@ Meta.test("GraphQL parser", async (t) => {
 
   await t.should("allow mutations in namespaces", async () => {
     await gql`
-			mutation UpdateUser($id: ID!, $name: String!) {
-				user {
-					update(id: $id, name: $name) {
-						id
-						name
-					}
-				}
-			}
-		`
+      mutation UpdateUser($id: ID!, $name: String!) {
+        user {
+          update(id: $id, name: $name) {
+            id
+            name
+          }
+        }
+      }
+    `
       .withVars({ id: id2, name: "User 2" })
       .expectData({
         user: {
@@ -147,17 +147,17 @@ Meta.test("GraphQL parser", async (t) => {
 
   await t.should("allow queries in nested namespaces", async () => {
     await gql`
-			query GetUserProfilePic($id: ID!) {
-				user {
-					profile {
-						picture(id: $id) {
-							id
-							url
-						}
-					}
-				}
-			}
-		`
+      query GetUserProfilePic($id: ID!) {
+        user {
+          profile {
+            picture(id: $id) {
+              id
+              url
+            }
+          }
+        }
+      }
+    `
       .withVars({ id })
       .expectData({
         user: {
@@ -174,17 +174,17 @@ Meta.test("GraphQL parser", async (t) => {
 
   await t.should("allow mutations in nested namespaces", async () => {
     await gql`
-			mutation SetProfilePic($id: ID!, $url: String!) {
-				user {
-					profile {
-						setPicture(id: $id, url: $url) {
-							id
-							url
-						}
-					}
-				}
-			}
-		`
+      mutation SetProfilePic($id: ID!, $url: String!) {
+        user {
+          profile {
+            setPicture(id: $id, url: $url) {
+              id
+              url
+            }
+          }
+        }
+      }
+    `
       .withVars({ id, url: getPictureUrl("2") })
       .expectData({
         user: {

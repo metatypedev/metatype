@@ -209,7 +209,7 @@ export class Typegate implements AsyncDisposable {
 
   async handle(
     request: Request,
-    connInfo: Deno.ServeHandlerInfo,
+    connInfo: Deno.NetAddr,
   ): Promise<Response> {
     try {
       const url = new URL(request.url);
