@@ -85,7 +85,7 @@ pub trait TaskAction: std::fmt::Debug + Clone + Send + Unpin {
     type Generator: TaskActionGenerator<Action = Self> + Unpin;
     type RpcCall: serde::de::DeserializeOwned + std::fmt::Debug + Unpin + Send;
 
-    async fn get_command(&self) -> Result<Command>;
+    fn get_command(&self) -> impl Future<Output = Result<Command>>;
     fn get_task_ref(&self) -> &TaskRef;
 
     fn get_options(&self) -> &Self::Options;
@@ -94,16 +94,19 @@ pub trait TaskAction: std::fmt::Debug + Clone + Send + Unpin {
     fn get_error_message(&self, err: &str) -> String;
 
     /// returns followup task options
-    async fn finalize(
+    fn finalize(
         &self,
         res: &Result<Self::SuccessData, Self::FailureData>,
         ctx: ActionFinalizeContext<Self>,
-    ) -> Result<Option<Box<dyn FollowupOption<Self>>>>;
+    ) -> impl Future<Output = Result<Option<Box<dyn FollowupOption<Self>>>>>;
 
-    async fn get_rpc_response(&self, call: &Self::RpcCall) -> Result<serde_json::Value>;
+    fn get_rpc_response(
+        &self,
+        call: &Self::RpcCall,
+    ) -> impl Future<Output = Result<serde_json::Value>>;
 }
 
-pub type ActionResult<A: TaskAction> = Result<A::SuccessData, A::FailureData>;
+pub type ActionResult<A> = Result<<A as TaskAction>::SuccessData, <A as TaskAction>::FailureData>;
 
 pub fn get_typegraph_name<A: TaskAction>(res: &ActionResult<A>) -> String {
     match res {

@@ -145,8 +145,7 @@ Meta.test(
     const port = t.port!;
     const { connStr, schema } = randomPGConnStr();
     const secrets = {
-      POSTGRES:
-        connStr,
+      POSTGRES: connStr,
     };
     await t.should("load first version of the typegraph", async () => {
       await reset(tgName, schema);
@@ -203,8 +202,7 @@ Meta.test(
     const { connStr, schema } = randomPGConnStr();
     const e = await t.engine("prisma.py", {
       secrets: {
-        POSTGRES:
-          connStr,
+        POSTGRES: connStr,
       },
     });
 
@@ -253,22 +251,22 @@ Meta.test(
       "--create-migration",
     ]);
 
-     await t.should(
-       "have replaced and terminated the previous engine",
-       async () => {
-         await gql`
+    await t.should(
+      "have replaced and terminated the previous engine",
+      async () => {
+        await gql`
            query {
              findManyRecords {
                id
              }
            }
          `
-           .expectData({
+          .expectData({
             findManyRecords: [],
           })
-           .on(e);
-       },
-     );
+          .on(e);
+      },
+    );
 
     const e2 = t.getTypegraphEngine("prisma")!;
 
@@ -304,8 +302,7 @@ Meta.test(
     const { connStr, schema } = randomPGConnStr();
     const e = await t.engine("prisma.py", {
       secrets: {
-        POSTGRES:
-          connStr,
+        POSTGRES: connStr,
       },
       prefix: "pref-",
     });
@@ -344,22 +341,22 @@ Meta.test(
       "--allow-dirty",
     ]);
 
-     await t.should(
-       "succeed have replaced and terminated the previous engine",
-       async () => {
-         await gql`
+    await t.should(
+      "succeed have replaced and terminated the previous engine",
+      async () => {
+        await gql`
            query {
              findManyRecords {
                id
              }
            }
          `
-           .expectData({
+          .expectData({
             findManyRecords: [],
           })
-           .on(e);
-       },
-     );
+          .on(e);
+      },
+    );
 
     const e2 = t.getTypegraphEngine("pref-prisma")!;
 

@@ -13,13 +13,15 @@ from typegraph.gen.exports.core import MigrationAction, PrismaMigrationConfig
 from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_artifact_upload import ArtifactUploader
 from typegraph.graph.typegraph import TypegraphOutput
-from typegraph.wit import FinalizeParams, store, wit_utils
+from typegraph.wit import SerializeParams, store, wit_utils
 from typegraph import version as sdk_version
+
 
 @dataclass
 class TypegateConnectionOptions:
     url: str
     auth: Optional[BasicAuth]
+
 
 @dataclass
 class TypegraphDeployParams:
@@ -61,30 +63,32 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     sep = "/" if not typegate.url.endswith("/") else ""
     url = typegate.url + sep + "typegate"
 
-    headers = {"Content-Type": "application/json", "User-Agent": f"TypegraphSdk/{sdk_version} Python/{python_version()}"}
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": f"TypegraphSdk/{sdk_version} Python/{python_version()}",
+    }
     if typegate.auth is not None:
         headers["Authorization"] = typegate.auth.as_header_value()
 
-    finalize_params = FinalizeParams(
+    serialize_params = SerializeParams(
         typegraph_path=params.typegraph_path,
         prefix=params.prefix,
         artifact_resolution=True,
         codegen=False,
         prisma_migration=PrismaMigrationConfig(
             migrations_dir=params.migrations_dir or "prisma-migrations",
-            migration_actions=[(k,v) for k, v in (params.migration_actions or {}).items()],
-            default_migration_action=params.default_migration_action or MigrationAction(
-                apply=True,
-                create=False,
-                reset=False
-            ),
-        )
+            migration_actions=[
+                (k, v) for k, v in (params.migration_actions or {}).items()
+            ],
+            default_migration_action=params.default_migration_action
+            or MigrationAction(apply=True, create=False, reset=False),
+        ),
+        pretty=False,
     )
 
-    serialized = tg.serialize(finalize_params)
+    serialized = tg.serialize(serialize_params)
     tg_json = serialized.tgJson
     ref_artifacts = serialized.ref_artifacts
-
 
     if len(ref_artifacts) > 0:
         # upload the referred artifacts

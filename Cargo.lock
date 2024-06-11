@@ -1709,6 +1709,7 @@ dependencies = [
  "serde_with 3.8.1",
  "tar",
  "thiserror",
+ "url",
 ]
 
 [[package]]

@@ -47,6 +47,7 @@ enum JsonRpcVersion {
 
 #[derive(Deserialize, Debug)]
 struct RpcRequest {
+    #[allow(dead_code)]
     jsonrpc: JsonRpcVersion,
     id: u32,
     #[serde(flatten)]
@@ -272,8 +273,8 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
             }
             Err(err) => {
                 self.console.error(format!(
-                    "{scope} invalid jsonrpc request {req:?}: {err}",
-                    scope = format!("[{path}]", path = self.get_console_scope())
+                    "[{path}] invalid jsonrpc request {req:?}: {err}",
+                    path = self.get_console_scope(),
                 ));
             }
         }

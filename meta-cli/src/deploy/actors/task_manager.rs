@@ -57,11 +57,6 @@ pub enum StopSchedule {
     Automatic,
 }
 
-enum Status {
-    Default,
-    Stopping, // waiting for active tasks to finish; cancel pending tasks
-}
-
 #[derive(Clone, Debug)]
 pub enum StopReason {
     Natural,
@@ -182,7 +177,8 @@ impl<A: TaskAction + 'static> TaskManagerInit<A> {
             let watcher_addr = self.start_source(addr, task_generator.clone());
 
             let console = self.console.clone();
-            let task_manager = TaskManager::<A> {
+
+            TaskManager::<A> {
                 init_params: self,
                 task_generator,
                 active_tasks: Default::default(),
@@ -193,9 +189,7 @@ impl<A: TaskAction + 'static> TaskManagerInit<A> {
                 reports: IndexMap::new(),
                 watcher_addr,
                 console,
-            };
-
-            task_manager
+            }
         });
 
         report_rx.await.expect("task manager has been dropped")
@@ -394,7 +388,7 @@ impl<A: TaskAction + 'static> Handler<TaskFinished<A>> for TaskManager<A> {
             }
             TaskFinishStatus::Finished(results) => {
                 // TODO partial retry - if multiple typegraphs in a single file
-                if results.iter().any(|r| matches!(r.1, Err(_))) {
+                if results.iter().any(|r| r.1.is_err()) {
                     next_retry_no = Some(message.task_ref.retry_no + 1);
                 }
             }
@@ -415,13 +409,8 @@ impl<A: TaskAction + 'static> Handler<TaskFinished<A>> for TaskManager<A> {
                 self.console.debug("all tasks finished".to_string());
                 self.stop_reason = Some(StopReason::Natural);
                 ctx.stop();
-            } else {
-                match self.stop_reason {
-                    Some(StopReason::Manual) => {
-                        ctx.stop();
-                    }
-                    _ => {}
-                }
+            } else if let Some(StopReason::Manual) = self.stop_reason {
+                ctx.stop();
             }
         }
     }

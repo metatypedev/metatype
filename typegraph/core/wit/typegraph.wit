@@ -42,17 +42,6 @@ interface core {
 
     init-typegraph: func(params: typegraph-init-params) -> result<_, error>;
 
-    // record migration-action {
-    //     create: bool,
-    //     reset: bool
-    // }
-
-    // record migration-config {
-    //     migration-dir: string,
-    //     global-action: migration-action, // global config (all runtimes)
-    //     runtime-actions: option<list<tuple<string, migration-action>>> // config per runtime name (override global-action)
-    // }
-
     record migration-action {
         apply: bool,
         create: bool,
@@ -65,15 +54,16 @@ interface core {
         default-migration-action: migration-action,
     }
 
-    record finalize-params {
+    record serialize-params {
         typegraph-path: string,
         prefix: option<string>,
         artifact-resolution: bool,
         codegen: bool,
         prisma-migration: prisma-migration-config,
+        pretty: bool,
     }
 
-    finalize-typegraph: func(params: finalize-params) -> result<tuple<string, list<artifact>>, error>;
+    serialize-typegraph: func(params: serialize-params) -> result<tuple<string, list<artifact>>, error>;
 
     type type-id = u32;
     record type-base {
@@ -236,7 +226,7 @@ interface core {
     expose: func(fns: list<tuple<string, type-id>>, default-policy: option<list<policy-spec>>) -> result<_, error>;
 
     set-seed: func(seed: option<u32>) -> result<_, error>;
-    
+
     type runtime-id = u32;
     type materializer-id = u32;
 
@@ -249,7 +239,7 @@ interface core {
 
 interface runtimes {
     use core.{error, type-id, func-params, runtime-id, materializer-id, artifact};
-    
+
     get-deno-runtime: func() -> runtime-id;
 
     type idempotency = bool;
@@ -534,10 +524,10 @@ interface utils {
     // Example:
     // reduce({a: 1, { b: {c: g.inherit(), d: [1, 2, 3]}})
     // produces a list of reduce-path
-    // [ 
-    //  { path: [a], value: { inherit: false, payload: 1 } } 
-    //  { path: [a, b, c], value: { inherit: true } } 
-    //  { path: [a, b, d], value: { inherit: false, payload: [1, 2, 3] } } 
+    // [
+    //  { path: [a], value: { inherit: false, payload: 1 } }
+    //  { path: [a, b, c], value: { inherit: true } }
+    //  { path: [a, b, d], value: { inherit: false, payload: [1, 2, 3] } }
     // ]
     record reduce-value {
         inherit: bool,
@@ -595,7 +585,7 @@ interface utils {
     record mdk-config {
         workspace-path: string,
         target-name: string,
-        config-json: string, 
+        config-json: string,
         tg-json: string,
     }
 

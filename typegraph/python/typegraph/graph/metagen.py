@@ -5,7 +5,7 @@ import json
 from typing import List, Union
 from typegraph.gen.exports.core import (
     MigrationAction,
-    FinalizeParams,
+    SerializeParams,
     PrismaMigrationConfig,
 )
 from typegraph.gen.exports.utils import MdkConfig, MdkOutput
@@ -19,7 +19,7 @@ _tg_path = env.get("MCLI_TG_PATH")
 if _tg_path is None:
     raise Exception("MCLI_TG_PATH not set")
 
-finalize_params = FinalizeParams(
+serialize_params = SerializeParams(
     typegraph_path=_tg_path,
     prefix=None,
     artifact_resolution=False,
@@ -27,8 +27,11 @@ finalize_params = FinalizeParams(
     prisma_migration=PrismaMigrationConfig(
         migrations_dir="prisma-migrations",
         migration_actions=[],
-        default_migration_action=MigrationAction(apply=False, create=False, reset=False),
-    )
+        default_migration_action=MigrationAction(
+            apply=False, create=False, reset=False
+        ),
+    ),
+    pretty=False,
 )
 
 
@@ -45,9 +48,9 @@ class Metagen:
         tg_output: TypegraphOutput,
         target_name: str,
     ) -> MdkConfig:
-        frozen_out = freeze_tg_output(finalize_params, tg_output)
+        frozen_out = freeze_tg_output(serialize_params, tg_output)
         return MdkConfig(
-            tg_json=frozen_out.serialize(finalize_params).tgJson,
+            tg_json=frozen_out.serialize(serialize_params).tgJson,
             config_json=json.dumps(self.gen_config),
             workspace_path=self.workspace_path,
             target_name=target_name,

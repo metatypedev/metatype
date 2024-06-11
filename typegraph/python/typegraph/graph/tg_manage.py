@@ -5,7 +5,7 @@ import traceback
 from pathlib import Path
 
 from typegraph.gen.exports.core import (
-    FinalizeParams,
+    SerializeParams,
     MigrationAction,
     PrismaMigrationConfig,
 )
@@ -41,7 +41,7 @@ class Manager:
 
     def serialize(self):
         env = self.env
-        params = FinalizeParams(
+        params = SerializeParams(
             typegraph_path=env.typegraph_path,
             prefix=env.prefix,
             artifact_resolution=True,
@@ -55,6 +55,7 @@ class Manager:
                     reset=False,
                 ),
             ),
+            pretty=False,
         )
 
         try:
@@ -68,7 +69,7 @@ class Manager:
         env = self.env
         deploy_data = Rpc.get_deploy_data(self.typegraph.name)
 
-        params = FinalizeParams(
+        params = SerializeParams(
             typegraph_path=env.typegraph_path,
             prefix=env.prefix,
             artifact_resolution=True,
@@ -78,6 +79,7 @@ class Manager:
                 migration_actions=list(deploy_data.migration_actions.items()),
                 default_migration_action=deploy_data.default_migration_action,
             ),
+            pretty=False,
         )
 
         # hack for allowing tg.serialize(config) to be called more than once
@@ -88,7 +90,6 @@ class Manager:
             Log.debug(traceback.format_exc())
             Log.failure({"typegraph": self.typegraph.name, "error": str(err)})
             return
-
 
         try:
             deploy_target = Rpc.get_deploy_target()

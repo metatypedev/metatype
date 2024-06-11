@@ -124,8 +124,6 @@ pub struct DeploySuccess {
 pub struct DeployError {
     typegraph: String,
     error: String,
-    #[serde(default)]
-    follow_up: Option<String>, // todo migration
 }
 
 impl OutputData for DeploySuccess {
@@ -300,7 +298,7 @@ impl TaskAction for DeployAction {
         match call {
             RpcCall::GetDeployTarget => {
                 let deploy_target: &Node = &self.deploy_target;
-                Ok(serde_json::to_value(&deploy_target)?)
+                Ok(serde_json::to_value(deploy_target)?)
             }
 
             RpcCall::GetDeployData { typegraph } => Ok(self.get_deploy_data(typegraph)),

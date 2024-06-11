@@ -14,6 +14,7 @@ serde_with = "3.4.0"
 tar.workspace = true
 ignore = "0.4.20"
 reqwest = { workspace = true, features = ["json"] }
+url = { version = "2.4", features = ["serde"] }
 async-trait.workspace = true
 itertools.workspace = true
 colored = "2.0"

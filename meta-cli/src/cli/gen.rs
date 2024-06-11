@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use super::serialize::SerializeReportExt;
 use crate::cli::{Action, ConfigArgs, NodeArgs};
 use crate::config::PathOption;
 use crate::deploy::actors::task::serialize::{SerializeAction, SerializeActionGenerator};
@@ -8,11 +9,9 @@ use crate::deploy::actors::task_manager::{TaskManagerInit, TaskSource};
 use crate::interlude::*;
 use crate::{com::store::ServerStore, config::Config, deploy::actors::console::ConsoleActor};
 use actix::Actor;
-use clap::{Parser, ValueEnum};
+use clap::Parser;
 use common::typegraph::Typegraph;
 use metagen::*;
-use serde_json::json;
-use super::serialize::SerializeReportExt;
 
 #[derive(Parser, Debug, Clone)]
 pub struct Gen {

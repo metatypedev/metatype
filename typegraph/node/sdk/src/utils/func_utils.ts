@@ -8,7 +8,7 @@ import {
 } from "../typegraph.js";
 import { ReducePath } from "../gen/interfaces/metatype-typegraph-utils.js";
 import { serializeStaticInjection } from "./injection_utils.js";
-import { FinalizeParams } from "../gen/interfaces/metatype-typegraph-core.js";
+import { SerializeParams } from "../gen/interfaces/metatype-typegraph-core.js";
 import { log } from "../io.js";
 
 export function stringifySymbol(symbol: symbol) {
@@ -86,7 +86,7 @@ const frozenMemo: Record<string, TgFinalizationResult> = {};
 
 /** Create a reusable version of a `TypegraphOutput` */
 export function freezeTgOutput(
-  config: FinalizeParams,
+  config: SerializeParams,
   tgOutput: TypegraphOutput,
 ): TypegraphOutput {
   frozenMemo[tgOutput.name] = frozenMemo[tgOutput.name] ??

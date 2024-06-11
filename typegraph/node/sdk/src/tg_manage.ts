@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { FinalizeParams } from "./gen/interfaces/metatype-typegraph-core.js";
+import { SerializeParams } from "./gen/interfaces/metatype-typegraph-core.js";
 import { BasicAuth, tgDeploy } from "./tg_deploy.js";
 import { TgFinalizationResult, TypegraphOutput } from "./typegraph.js";
 import { freezeTgOutput } from "./utils/func_utils.js";
@@ -50,6 +50,7 @@ export class Manager {
             reset: false,
           },
         },
+        pretty: false,
       });
       log.success(finalizationResult.tgJson, true);
     } catch (err: any) {
@@ -64,7 +65,7 @@ export class Manager {
     const deployData = await rpc.getDeployData(this.#typegraph.name);
 
     const env = this.#env;
-    const params: FinalizeParams = {
+    const params: SerializeParams = {
       typegraphPath: env.typegraph_path,
       prefix: env.prefix,
       artifactResolution: true,
@@ -74,6 +75,7 @@ export class Manager {
         migrationActions: Object.entries(deployData.migrationActions),
         defaultMigrationAction: deployData.defaultMigrationAction,
       },
+      pretty: false,
     };
 
     // hack for allowing tg.serialize(config) to be called more than once

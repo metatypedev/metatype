@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{global_store::Store, utils::fs_host, wit::core::FinalizeParams};
+use crate::{global_store::Store, utils::fs_host, wit::core::SerializeParams};
 use common::typegraph::Typegraph;
 use std::path::{Path, PathBuf};
 
@@ -24,11 +24,11 @@ pub trait PostProcessor {
 
 /// Compose all postprocessors
 pub struct TypegraphPostProcessor {
-    config: FinalizeParams,
+    config: SerializeParams,
 }
 
 impl TypegraphPostProcessor {
-    pub fn new(config: FinalizeParams) -> Self {
+    pub fn new(config: SerializeParams) -> Self {
         Self { config }
     }
 }

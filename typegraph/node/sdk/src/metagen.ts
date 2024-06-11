@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { FinalizeParams } from "./gen/interfaces/metatype-typegraph-core.js";
+import { SerializeParams } from "./gen/interfaces/metatype-typegraph-core.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
 import { freezeTgOutput, getEnvVariable } from "./utils/func_utils.js";
@@ -10,7 +10,7 @@ import {
   MdkOutput,
 } from "./gen/interfaces/metatype-typegraph-utils.js";
 
-const finalizeParams = {
+const serializeParams = {
   // TODO env variable key constants.js
   typegraphPath: getEnvVariable("MCLI_TG_PATH")!,
   prefix: undefined,
@@ -25,7 +25,8 @@ const finalizeParams = {
       reset: false,
     },
   },
-} satisfies FinalizeParams;
+  pretty: false,
+} satisfies SerializeParams;
 
 export class Metagen {
   constructor(
@@ -34,10 +35,10 @@ export class Metagen {
   ) {}
 
   private getMdkConfig(tgOutput: TypegraphOutput, targetName: string) {
-    const frozenOut = freezeTgOutput(finalizeParams, tgOutput);
+    const frozenOut = freezeTgOutput(serializeParams, tgOutput);
     return {
       configJson: JSON.stringify(this.genConfig),
-      tgJson: frozenOut.serialize(finalizeParams).tgJson,
+      tgJson: frozenOut.serialize(serializeParams).tgJson,
       targetName,
       workspacePath: this.workspacePath,
     } as MdkConfig;

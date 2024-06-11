@@ -125,6 +125,7 @@ impl Action for Serialize {
 }
 
 pub trait SerializeReportExt {
+    #[allow(clippy::vec_box)]
     fn into_typegraphs(self) -> Vec<Box<Typegraph>>;
 }
 
@@ -132,7 +133,7 @@ impl SerializeReportExt for Report<SerializeAction> {
     fn into_typegraphs(self) -> Vec<Box<Typegraph>> {
         self.entries
             .into_iter()
-            .map(|entry| match entry.status {
+            .flat_map(|entry| match entry.status {
                 TaskFinishStatus::Finished(results) => results
                     .into_iter()
                     .map(|(_, v)| v)
@@ -155,7 +156,6 @@ impl SerializeReportExt for Report<SerializeAction> {
                     vec![]
                 }
             })
-            .flatten()
             .collect()
     }
 }

@@ -29,12 +29,3 @@ pub struct SDKResponse {
     pub data: Option<serde_json::Value>,
     pub error: Option<serde_json::Value>,
 }
-
-#[derive(Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct SDKError {
-    code: String,
-    msg: String,
-    #[allow(unused)]
-    value: serde_json::Value,
-}

@@ -14,7 +14,7 @@ import { Auth, Cors as CorsWit, Rate, wit_utils } from "./wit.js";
 import { getPolicyChain } from "./types.js";
 import {
   Artifact,
-  FinalizeParams,
+  SerializeParams,
 } from "./gen/interfaces/metatype-typegraph-core.js";
 import { Manager } from "./tg_manage.js";
 import { log } from "./io.js";
@@ -125,7 +125,7 @@ export class RawAuth {
 }
 
 export interface TypegraphOutput {
-  serialize: (config: FinalizeParams) => TgFinalizationResult;
+  serialize: (config: SerializeParams) => TgFinalizationResult;
   name: string;
 }
 
@@ -220,9 +220,9 @@ export async function typegraph(
   builder(g);
 
   const ret = {
-    serialize(config: FinalizeParams) {
+    serialize(config: SerializeParams) {
       try {
-        const [tgJson, ref_artifacts] = core.finalizeTypegraph(config);
+        const [tgJson, ref_artifacts] = core.serializeTypegraph(config);
         const result: TgFinalizationResult = {
           tgJson: tgJson,
           ref_artifacts: ref_artifacts,

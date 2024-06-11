@@ -62,7 +62,7 @@ impl<A: TaskAction + 'static> Actor for DiscoveryActor<A> {
             match Discovery::new(config, dir.to_path_buf())
                 .start(|path| match path {
                     Ok(path) => {
-                        let rel_path = diff_paths(&path, &dir).unwrap();
+                        let rel_path = diff_paths(path, &dir).unwrap();
                         task_manager.do_send(task_manager::message::AddTask {
                             task_ref: task_generator.generate(rel_path.into(), 0),
                             reason: TaskReason::Discovery,

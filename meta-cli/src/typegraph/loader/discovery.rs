@@ -94,10 +94,6 @@ pub struct GlobFilter {
     exclude_set: GlobSet,
 }
 
-struct SpecificFilters {
-    globs: GlobFilter,
-}
-
 pub struct FileFilter {
     base_dir: PathBuf,
     gitignore: Option<Gitignore>,

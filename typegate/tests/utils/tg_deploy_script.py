@@ -4,12 +4,14 @@ import os
 import sys
 
 from typegraph.gen.exports.core import (
-    ArtifactResolutionConfig,
     MigrationAction,
-    MigrationConfig,
 )
 from typegraph.graph.shared_types import BasicAuth
-from typegraph.graph.tg_deploy import TypegraphDeployParams, tg_deploy
+from typegraph.graph.tg_deploy import (
+    TypegraphDeployParams,
+    tg_deploy,
+    TypegateConnectionOptions,
+)
 
 # get command args
 cwd = sys.argv[1]
@@ -39,7 +41,7 @@ if not hasattr(module, tg_name):
     )
 
 
-tg_func = getattr(module, tg_name)
+tg = getattr(module, tg_name)
 
 secrets = json.loads(secrets_str)
 
@@ -56,26 +58,16 @@ if global_action_reset is not True:
     global_action_create = global_action_create == "true"
 
 
-tg = tg_func()
 deploy_result = tg_deploy(
     tg,
     TypegraphDeployParams(
-        base_url=gate,
-        auth=auth,
+        typegate=TypegateConnectionOptions(url=gate, auth=auth),
         typegraph_path=os.path.join(cwd, module_name),
         secrets=secrets,
-        artifacts_config=ArtifactResolutionConfig(
-            dir=cwd,
-            prefix=None,
-            disable_artifact_resolution=disable_art_resol,
-            codegen=codegen,
-            prisma_migration=MigrationConfig(
-                migration_dir=migration_dir,
-                global_action=MigrationAction(
-                    reset=global_action_reset, create=global_action_create
-                ),
-                runtime_actions=None,
-            ),
+        migrations_dir=migration_dir,
+        migration_actions=None,
+        default_migration_action=MigrationAction(
+            apply=True, reset=global_action_reset, create=global_action_create
         ),
     ),
 )

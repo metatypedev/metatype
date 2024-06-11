@@ -65,12 +65,6 @@ struct ResolveNullConstraintViolation {
     failure: NullConstraintViolation,
 }
 
-#[derive(Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct GenericPushFailure {
-    message: String,
-}
-
 lazy_static! {
     static ref RETRY_COUNTERS: Mutex<HashMap<PathBuf, Arc<u8>>> = Mutex::new(HashMap::new());
 }

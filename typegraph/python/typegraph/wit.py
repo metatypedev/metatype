@@ -12,7 +12,7 @@ from typegraph.host.host import HostImpl
 
 # Make sure the imports are similar to the node implementation
 from typegraph.gen.exports.core import (
-    FinalizeParams,  # noqa
+    SerializeParams,  # noqa
     PrismaMigrationConfig,  # noqa
     MigrationAction,  # noqa
 )

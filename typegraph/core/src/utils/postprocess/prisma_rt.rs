@@ -10,7 +10,7 @@ use crate::utils::fs_host;
 use crate::utils::postprocess::PostProcessor;
 use crate::wit::core::MigrationAction;
 use crate::wit::core::PrismaMigrationConfig;
-use crate::wit::metatype::typegraph::host::{eprint, path_exists};
+use crate::wit::metatype::typegraph::host::path_exists;
 
 pub struct PrismaProcessor {
     config: PrismaMigrationConfig,
@@ -41,13 +41,17 @@ impl PrismaProcessor {
 
                 rt_data.migration_options = Some(MigrationOptions {
                     migration_files: {
-                        let path = fs_host::make_absolute(&path)?;
-                        match path_exists(&path.display().to_string())? {
-                            true => {
-                                let base64 = fs_host::compress_and_encode_base64(path)?;
-                                Some(base64)
+                        if action.apply {
+                            let path = fs_host::make_absolute(&path)?;
+                            match path_exists(&path.display().to_string())? {
+                                true => {
+                                    let base64 = fs_host::compress_and_encode_base64(path)?;
+                                    Some(base64)
+                                }
+                                false => None,
                             }
-                            false => None,
+                        } else {
+                            None
                         }
                     },
                     create: action.create,
@@ -64,14 +68,8 @@ impl PrismaProcessor {
         self.config
             .migration_actions
             .iter()
-            .filter_map(|(rt, action)| {
-                if rt == name {
-                    Some(action.clone())
-                } else {
-                    None
-                }
-            })
+            .filter_map(|(rt, action)| if rt == name { Some(*action) } else { None })
             .last()
-            .unwrap_or(self.config.default_migration_action.clone())
+            .unwrap_or(self.config.default_migration_action)
     }
 }

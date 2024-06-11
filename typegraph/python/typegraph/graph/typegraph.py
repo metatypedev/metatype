@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Union, Any
 
 from typegraph.gen.exports.core import (
-    FinalizeParams,
+    SerializeParams,
     Rate,
     TypegraphInitParams,
 )
@@ -193,7 +193,7 @@ def typegraph(
             if filter is not None and actual_name not in filter:
                 Log.debug("typegraph '{actual_name}' skipped")
 
-                def serialize(params: FinalizeParams):
+                def serialize(params: SerializeParams):
                     raise Exception("typegraph was filtered out")
 
                 return TypegraphOutput(name=actual_name, serialize=serialize)
@@ -236,9 +236,9 @@ def typegraph(
 
         # config is only known at deploy time
         def serialize_with_artifacts(
-            config: FinalizeParams,
+            config: SerializeParams,
         ):
-            finalization_result = core.finalize_typegraph(store, config)
+            finalization_result = core.serialize_typegraph(store, config)
             if isinstance(finalization_result, Err):
                 raise Exception(finalization_result.value)
 

@@ -11,7 +11,6 @@ use crate::interlude::*;
 use crate::secrets::{RawSecrets, Secrets};
 use clap::Parser;
 use common::node::Node;
-use owo_colors::OwoColorize;
 
 #[derive(Parser, Debug)]
 pub struct DeploySubcommand {
@@ -160,9 +159,8 @@ impl Action for DeploySubcommand {
         } else {
             trace!("running in default mode");
             // deploy a single file
-            let status = default_mode::run(deploy).await?;
 
-            status
+            default_mode::run(deploy).await?
         };
 
         match status {
@@ -262,7 +260,7 @@ mod watch_mode {
 
     #[tracing::instrument]
     pub async fn enter_watch_mode(deploy: Deploy) -> Result<()> {
-        if let Some(_) = &deploy.file {
+        if deploy.file.is_some() {
             bail!("Cannot use --file in watch mode");
         }
 

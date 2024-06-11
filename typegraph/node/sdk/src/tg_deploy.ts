@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import {
-  FinalizeParams,
   MigrationAction,
+  SerializeParams,
 } from "./gen/interfaces/metatype-typegraph-core.js";
 import { ArtifactUploader } from "./tg_artifact_upload.js";
 import { TypegraphOutput } from "./typegraph.js";
@@ -73,7 +73,8 @@ export async function tgDeploy(
         reset: false,
       },
     },
-  } satisfies FinalizeParams;
+    pretty: false,
+  } satisfies SerializeParams;
   const serialized = typegraph.serialize(serializeParams);
   const tgJson = serialized.tgJson;
   const refArtifacts = serialized.ref_artifacts;

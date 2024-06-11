@@ -126,9 +126,9 @@ where
                         s.parse::<u64>()
                             .map_err(|_| ())
                             .and_then(|n| if n >= 1 { Ok(n) } else { Err(()) })
-                            .expect(&format!(
-                                "{TIMEOUT_ENV_NAME} env value must be a positive integer"
-                            ))
+                            .unwrap_or_else(|_| {
+                                panic!("{TIMEOUT_ENV_NAME} env value must be a positive integer")
+                            })
                     })
                     .unwrap_or(DEFAULT_TIMEOUT),
             ),
@@ -213,7 +213,7 @@ impl<A: TaskAction + 'static> Handler<StartProcess> for TaskActor<A> {
                 self.process = Some(child);
 
                 let addr = ctx.address();
-                let timeout_duration = self.timeout_duration.clone();
+                let timeout_duration = self.timeout_duration;
                 let path = self.get_path_owned();
                 let console = self.console.clone();
                 let fut = async move {
@@ -260,7 +260,7 @@ impl<A: TaskAction + 'static> Handler<WaitForProcess<A>> for TaskActor<A> {
             self.console
                 .error(format!("task process not found for {:?}", self.get_path()));
             ctx.address().do_send(Exit(TaskFinishStatus::<A>::Error));
-            return ();
+            return;
         };
 
         let addr = ctx.address();
@@ -321,12 +321,10 @@ impl<A: TaskAction + 'static> Handler<Results<A>> for TaskActor<A> {
         let fut = async move {
             let mut followup: Option<A::Options> = None;
             for result in &results.0 {
-                match action.finalize(result, finalize_ctx.clone()).await {
-                    Ok(Some(followup_opt)) => {
-                        let followup = followup.get_or_insert_with(Default::default);
-                        followup_opt.add_to_options(followup);
-                    }
-                    _ => (),
+                if let Ok(Some(followup_opt)) = action.finalize(result, finalize_ctx.clone()).await
+                {
+                    let followup = followup.get_or_insert_with(Default::default);
+                    followup_opt.add_to_options(followup);
                 }
             }
             self_addr.do_send(message::UpdateResults(results.0));

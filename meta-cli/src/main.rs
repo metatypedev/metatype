@@ -111,9 +111,7 @@ fn main() -> Result<()> {
                 cli::Commands::Serialize(_)
                 | cli::Commands::Dev(_)
                 | cli::Commands::Deploy(_)
-                | cli::Commands::Gen(_) => {
-                    command.run(args.config).await
-                }
+                | cli::Commands::Gen(_) => command.run(args.config).await,
                 _ => command.run(args.config).await.map(|_| ()),
             }
         })?,
