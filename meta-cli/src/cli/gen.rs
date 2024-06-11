@@ -8,7 +8,6 @@ use crate::deploy::actors::task_manager::{TaskManagerInit, TaskSource};
 use crate::interlude::*;
 use crate::{com::store::ServerStore, config::Config, deploy::actors::console::ConsoleActor};
 use actix::Actor;
-use actix_web::dev::ServerHandle;
 use clap::{Parser, ValueEnum};
 use common::typegraph::Typegraph;
 use metagen::*;
@@ -58,7 +57,7 @@ pub struct Gen {
 #[async_trait]
 impl Action for Gen {
     #[tracing::instrument]
-    async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = args.dir();
         let mut config = Config::load_or_find(args.config, &dir)?;
 
@@ -99,11 +98,11 @@ impl Action for Gen {
                     })
                     .await?;
 
-                let responses = ServerStore::get_responses(file)
-                    .context("invalid state, no response received")?;
-                for (_, res) in responses.iter() {
-                    res.codegen()?
-                }
+                // let responses = ServerStore::get_responses(file)
+                //     .context("invalid state, no response received")?;
+                // for (_, res) in responses.iter() {
+                //     res.codegen()?
+                // }
             }
             GeneratorOp::Mdk => {
                 let files = metagen::generate_target(
@@ -128,8 +127,6 @@ impl Action for Gen {
                 }
             }
         };
-
-        server_handle.unwrap().stop(true).await;
 
         Ok(())
     }

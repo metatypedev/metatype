@@ -4,7 +4,6 @@
 use crate::interlude::*;
 
 use crate::utils::clap::UrlValueParser;
-use actix_web::dev::ServerHandle;
 use clap::Parser;
 use clap::Subcommand;
 use clap_verbosity_flag::Verbosity;
@@ -86,7 +85,7 @@ pub(crate) enum Commands {
 #[async_trait]
 #[enum_dispatch(Commands)]
 pub trait Action {
-    async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()>;
+    async fn run(&self, args: ConfigArgs) -> Result<()>;
 }
 
 #[derive(Parser, Debug, Clone)]

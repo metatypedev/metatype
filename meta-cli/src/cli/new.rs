@@ -4,7 +4,6 @@
 use crate::interlude::*;
 
 use super::{Action, ConfigArgs};
-use actix_web::dev::ServerHandle;
 use async_trait::async_trait;
 use clap::{Parser, ValueEnum};
 use include_dir::{include_dir, Dir};
@@ -44,7 +43,7 @@ pub struct New {
 #[async_trait]
 impl Action for New {
     #[tracing::instrument]
-    async fn run(&self, args: ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = PathBuf::from(&self.dir);
         let target_dir = if dir.is_absolute() {
             dir

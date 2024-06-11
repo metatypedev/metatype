@@ -3,14 +3,10 @@
 
 pub mod input;
 
-use crate::interlude::*;
-
-use std::io::BufRead;
-
-use actix::prelude::*;
-use tokio::sync::oneshot;
-
 use crate::config::Config;
+use crate::interlude::*;
+use std::io::BufRead;
+use tokio::sync::oneshot;
 
 enum Mode {
     Input {

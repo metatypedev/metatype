@@ -339,7 +339,7 @@ impl<A: TaskAction + 'static> Handler<Results<A>> for TaskActor<A> {
 impl<A: TaskAction + 'static> Handler<UpdateResults<A>> for TaskActor<A> {
     type Result = ();
 
-    fn handle(&mut self, UpdateResults(results): UpdateResults<A>, ctx: &mut Context<Self>) {
+    fn handle(&mut self, UpdateResults(results): UpdateResults<A>, _ctx: &mut Context<Self>) {
         for result in results.into_iter() {
             let tg_name = get_typegraph_name::<A>(&result);
             self.results.insert(tg_name, result);
@@ -366,7 +366,7 @@ impl<A: TaskAction + 'static> Handler<Exit<A>> for TaskActor<A> {
 impl<A: TaskAction + 'static> Handler<Stop> for TaskActor<A> {
     type Result = ();
 
-    fn handle(&mut self, _msg: Stop, ctx: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, _msg: Stop, _ctx: &mut Context<Self>) -> Self::Result {
         let path = self.get_path_owned();
         if let Some(process) = &mut self.process {
             self.console.warning(format!("killing task for {:?}", path));

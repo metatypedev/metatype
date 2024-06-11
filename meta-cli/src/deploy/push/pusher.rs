@@ -7,9 +7,6 @@ use std::time::Duration;
 
 use serde::Deserialize;
 
-use crate::com::responses::SDKResponse;
-use crate::deploy::actors::console::ConsoleActor;
-
 use lazy_static::lazy_static;
 
 #[derive(Deserialize, Debug)]
@@ -32,14 +29,6 @@ pub enum MessageEntry {
 pub struct Migrations {
     pub runtime: String,
     pub migrations: String,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-#[serde(tag = "reason")]
-enum PushFailure {
-    Unknown(GenericPushFailure),
-    DatabaseResetRequired(DatabaseResetRequired),
-    NullConstraintViolation(NullConstraintViolation),
 }
 
 #[derive(Deserialize)]

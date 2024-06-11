@@ -4,17 +4,12 @@
 use crate::{interlude::*, typegraph::loader::discovery::Discovery};
 
 use super::{Action, ConfigArgs};
-use crate::{
-    cli::ui,
-    config::{Config, PIPFILE_FILES, PYPROJECT_FILES, REQUIREMENTS_FILES, VENV_FOLDERS},
-    fs::{clean_path, find_in_parents},
-    global_config::GlobalConfig,
-};
-
-use actix_web::dev::ServerHandle;
+use crate::cli::ui;
+use crate::config::{Config, PIPFILE_FILES, PYPROJECT_FILES, REQUIREMENTS_FILES, VENV_FOLDERS};
+use crate::fs::{clean_path, find_in_parents};
+use crate::global_config::GlobalConfig;
 use clap::Parser;
 use owo_colors::OwoColorize;
-
 use std::process::Command;
 
 #[derive(Parser, Debug)]
@@ -37,7 +32,7 @@ fn shell(cmds: Vec<&str>) -> Result<String> {
 #[async_trait]
 impl Action for Doctor {
     #[tracing::instrument]
-    async fn run(&self, args: ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = &args.dir();
 
         let w = 60;

@@ -256,7 +256,6 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
                 let scope = self.get_console_scope();
 
                 let fut = async move {
-                    let id = req.id;
                     match action.get_rpc_response(&rpc_call).await {
                         Ok(response) => {
                             self_addr.do_send(message::SendRpcResponse(req.response(response)));

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+
 use super::{Action, ConfigArgs};
-use crate::com::store::{Command, ServerStore};
 use crate::config::{Config, PathOption};
 use crate::deploy::actors::console::ConsoleActor;
 use crate::deploy::actors::task::serialize::{
@@ -10,7 +10,6 @@ use crate::deploy::actors::task::serialize::{
 use crate::deploy::actors::task::TaskFinishStatus;
 use crate::deploy::actors::task_manager::{Report, StopReason, TaskManagerInit, TaskSource};
 use crate::interlude::*;
-use actix_web::dev::ServerHandle;
 use clap::Parser;
 use common::typegraph::Typegraph;
 use core::fmt::Debug;
@@ -53,15 +52,11 @@ pub struct Serialize {
 #[async_trait]
 impl Action for Serialize {
     #[tracing::instrument]
-    async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = args.dir();
         let config_path = args.config.clone();
 
         let config = Config::load_or_find(config_path, &dir)?;
-
-        // Minimum setup
-        ServerStore::with(Some(Command::Serialize), Some(config.to_owned()));
-        ServerStore::set_prefix(self.prefix.to_owned());
 
         let config = Arc::new(config);
 
@@ -124,8 +119,6 @@ impl Action for Serialize {
         } else {
             self.write(&self.to_string(&tgs)?).await?;
         }
-
-        server_handle.unwrap().stop(true).await;
 
         Ok(())
     }

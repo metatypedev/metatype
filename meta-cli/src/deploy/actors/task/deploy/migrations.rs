@@ -3,13 +3,10 @@
 
 use color_eyre::owo_colors::OwoColorize;
 
-use super::{
-    DeployAction, DeployActionInner, DeployOptions, Migration, MigrationActionOverride,
-    PrismaRuntimeId,
-};
-use crate::deploy::actors::console::input::{Confirm, Select, SelectOption};
+use super::{DeployAction, DeployActionInner, Migration, MigrationActionOverride};
+use crate::deploy::actors::console::input::{Confirm, Select};
 use crate::deploy::actors::console::Console;
-use crate::deploy::actors::task::action::{ActionFinalizeContext, TaskFilter};
+use crate::deploy::actors::task::action::ActionFinalizeContext;
 use crate::deploy::actors::task::TaskActor;
 use crate::interlude::*;
 
@@ -203,55 +200,6 @@ impl DeployActionInner {
         }
     }
 }
-
-pub mod message {
-    use super::*;
-
-    #[derive(Message)]
-    #[rtype(result = "()")]
-    pub(super) struct ConfirmDatabaseReset {
-        pub typegraph: String,
-        pub runtime: String,
-        pub message: String,
-    }
-
-    #[derive(Message)]
-    #[rtype(result = "()")]
-    pub(super) struct ResetDatabase {
-        pub typegraph: String,
-        pub runtime: String,
-    }
-
-    #[derive(Message)]
-    #[rtype(result = "()")]
-    pub(super) struct ResolveConstraintViolation {
-        pub typegraph: String,
-        pub runtime: String,
-        pub column: String,
-        pub migration: String,
-        pub is_new_column: bool,
-        pub table: String,
-        pub message: String,
-    }
-
-    #[derive(Message)]
-    #[rtype(result = "()")]
-    pub(super) struct RemoveLatestMigration {
-        pub typegraph: String,
-        pub runtime: String,
-        pub migration: String,
-    }
-
-    #[derive(Message)]
-    #[rtype(result = "()")]
-    pub(super) struct WaitForManualResolution {
-        pub typegraph: String,
-        pub runtime: String,
-        pub migration: String,
-    }
-}
-
-use message::*;
 
 #[derive(Debug)]
 pub struct ConfirmDatabaseResetRequired {

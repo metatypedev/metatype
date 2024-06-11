@@ -4,7 +4,6 @@
 use crate::interlude::*;
 
 use crate::config::Config;
-use actix_web::dev::ServerHandle;
 use clap::Parser;
 
 use super::{Action, NodeArgs};
@@ -25,7 +24,7 @@ pub struct Undeploy {
 #[async_trait]
 impl Action for Undeploy {
     #[tracing::instrument]
-    async fn run(&self, args: super::ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, args: super::ConfigArgs) -> Result<()> {
         let dir = args.dir();
         let config_path = args.config.clone();
         let config = Config::load_or_find(config_path, &dir)?;

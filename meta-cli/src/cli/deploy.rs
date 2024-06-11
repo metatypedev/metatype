@@ -4,15 +4,11 @@
 use self::actors::task::deploy::{DeployAction, DeployActionGenerator};
 use self::actors::task_manager::{self, StopReason};
 use super::{Action, ConfigArgs, NodeArgs};
-use crate::com::store::{Command, Endpoint, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors;
 use crate::deploy::actors::console::ConsoleActor;
-use crate::deploy::actors::task_manager::TaskManager;
-use crate::deploy::actors::watcher::{self, WatcherActor};
 use crate::interlude::*;
 use crate::secrets::{RawSecrets, Secrets};
-use actix_web::dev::ServerHandle;
 use clap::Parser;
 use common::node::Node;
 use owo_colors::OwoColorize;
@@ -119,25 +115,7 @@ impl Deploy {
             .await
             .context("error while building node from config")?;
 
-        ServerStore::with(Some(Command::Deploy), Some(config.as_ref().to_owned()));
-        // ServerStore::set_migration_action_glob(MigrationAction {
-        //     create: deploy.options.create_migration,
-        //     reset: deploy.options.allow_destructive, // reset on drift
-        // });
-        ServerStore::set_endpoint(Endpoint {
-            typegate: node.base_url.clone().into(),
-            auth: node.auth.clone(),
-        });
-        ServerStore::set_prefix(node_config.prefix);
-        ServerStore::set_codegen_flag(deploy.options.codegen);
-
         let file = deploy.file.clone();
-        // let file = deploy
-        //     .file
-        //     .as_ref()
-        //     .map(|f| f.normalize())
-        //     .transpose()?
-        //     .map(|f| f.into_path_buf());
         if let Some(file) = &file {
             if let Err(err) = crate::config::ModuleType::try_from(file.as_path()) {
                 bail!("file is not a valid module type: {err:#}")
@@ -155,15 +133,10 @@ impl Deploy {
     }
 }
 
-struct CtrlCHandlerData {
-    watcher: Addr<WatcherActor<DeployAction>>,
-    task_manager: Addr<TaskManager<DeployAction>>,
-}
-
 #[async_trait]
 impl Action for DeploySubcommand {
     #[tracing::instrument(level = "debug")]
-    async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, args: ConfigArgs) -> Result<()> {
         let deploy = Deploy::new(self, &args).await?;
 
         if !self.options.allow_dirty {
@@ -196,7 +169,6 @@ impl Action for DeploySubcommand {
             trace!("running in default mode");
             // deploy a single file
             let status = default_mode::run(deploy).await?;
-            server_handle.unwrap().stop(true).await;
 
             status
         };
@@ -320,10 +292,6 @@ mod watch_mode {
             deploy.options.create_migration,
             deploy.options.allow_destructive,
         );
-
-        // ServerStore::set_secrets(secrets.hydrate(deploy.base_dir.clone()).await?);
-
-        // let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
 
         let mut init = TaskManagerInit::<DeployAction>::new(
             deploy.config.clone(),

@@ -1,26 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{
-    collections::{HashSet, VecDeque},
-    sync::atomic::{AtomicUsize, Ordering},
-};
-
+use super::console::{Console, ConsoleActor};
+use super::discovery::DiscoveryActor;
+use super::task::action::{TaskAction, TaskActionGenerator};
+use super::task::{self, TaskActor, TaskFinishStatus};
+use super::watcher::WatcherActor;
+use crate::{config::Config, interlude::*};
 use futures::channel::oneshot;
 use indexmap::IndexMap;
-
-use crate::{config::Config, interlude::*};
-
-use super::{
-    console::{Console, ConsoleActor},
-    discovery::DiscoveryActor,
-    task::{
-        self,
-        action::{TaskAction, TaskActionGenerator},
-        TaskActor, TaskFinishStatus,
-    },
-    watcher::WatcherActor,
-};
+use std::collections::VecDeque;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub mod report;
 pub use report::Report;
@@ -97,7 +87,7 @@ impl TaskGenerator {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct TaskId(usize);
+pub struct TaskId(usize);
 
 #[derive(Clone, Debug)]
 pub struct TaskRef {
@@ -106,10 +96,10 @@ pub struct TaskRef {
     pub retry_no: usize,
 }
 
-enum RetryStatus {
-    Pending,
-    Cancelled,
-}
+// enum RetryStatus {
+//     Pending,
+//     Cancelled,
+// }
 
 pub enum TaskSource {
     Static(Vec<PathBuf>),
@@ -414,6 +404,10 @@ impl<A: TaskAction + 'static> Handler<TaskFinished<A>> for TaskManager<A> {
         self.reports
             .insert(message.task_ref.path.clone(), message.status);
 
+        if let Some(_next_retry_no) = next_retry_no {
+            todo!("not implemented");
+        }
+
         // TODO check queue??
         if self.active_tasks.is_empty() {
             if self.watcher_addr.is_none() && self.pending_retries.is_empty() {
@@ -466,7 +460,7 @@ impl<A: TaskAction + 'static> Handler<Stop> for TaskManager<A> {
 impl<A: TaskAction + 'static> Handler<ForceStop> for TaskManager<A> {
     type Result = ();
 
-    fn handle(&mut self, _msg: ForceStop, ctx: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, _msg: ForceStop, _ctx: &mut Context<Self>) -> Self::Result {
         self.console
             .warning("force stopping active tasks".to_string());
         for (_, addr) in self.active_tasks.iter() {

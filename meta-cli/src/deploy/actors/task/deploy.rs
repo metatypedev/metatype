@@ -306,7 +306,7 @@ impl TaskAction for DeployAction {
 }
 
 impl MigrationAction {
-    fn apply_override(mut self, action_override: &MigrationActionOverride) -> Self {
+    fn apply_override(self, action_override: &MigrationActionOverride) -> Self {
         match action_override {
             MigrationActionOverride::ResetDatabase => MigrationAction {
                 reset: true,

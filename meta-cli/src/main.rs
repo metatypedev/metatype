@@ -53,9 +53,6 @@ use clap::Parser;
 use cli::upgrade::upgrade_check;
 use cli::Action;
 use cli::Args;
-use com::server::init_server;
-use futures::try_join;
-use futures::FutureExt;
 use shadow_rs::shadow;
 
 shadow!(build);
@@ -114,25 +111,14 @@ fn main() -> Result<()> {
             tokio::runtime::Builder::new_multi_thread()
                 .enable_all()
                 .build()?
-                .block_on(
-                    async {
-                        let server = init_server().unwrap();
-                        let command = gen_args.run(args.config, Some(server.handle()));
-
-                        try_join!(command, server.map(|_| Ok(())))
-                    }
-                    .in_current_span(),
-                )?;
+                .block_on(async { gen_args.run(args.config).await }.in_current_span())?;
         }
         Some(command) => runner.block_on(async move {
             match command {
                 cli::Commands::Serialize(_) | cli::Commands::Dev(_) | cli::Commands::Deploy(_) => {
-                    let server = init_server().unwrap();
-                    let command = command.run(args.config, Some(server.handle()));
-
-                    try_join!(command, server.map(|_| Ok(()))).map(|_| ())
+                    command.run(args.config).await
                 }
-                _ => command.run(args.config, None).await.map(|_| ()),
+                _ => command.run(args.config).await.map(|_| ()),
             }
         })?,
         None => Args::command().print_help()?,

@@ -153,20 +153,18 @@ impl FileFilter {
         }
 
         match ModuleType::try_from(path) {
-            Ok(ModuleType::Python) => {
-                self.is_excluded_by_filter(path, &rel_path, &self.python_filter)
-            }
+            Ok(ModuleType::Python) => self.is_excluded_by_filter(&rel_path, &self.python_filter),
             Ok(ModuleType::TypeScript) => {
-                self.is_excluded_by_filter(path, &rel_path, &self.typescript_filter)
+                self.is_excluded_by_filter(&rel_path, &self.typescript_filter)
             }
             Ok(ModuleType::JavaScript) => {
-                self.is_excluded_by_filter(path, &rel_path, &self.javascript_filter)
+                self.is_excluded_by_filter(&rel_path, &self.javascript_filter)
             }
             Err(_) => true,
         }
     }
 
-    fn is_excluded_by_filter(&self, path: &Path, rel_path: &Path, filter: &GlobFilter) -> bool {
+    fn is_excluded_by_filter(&self, rel_path: &Path, filter: &GlobFilter) -> bool {
         if !filter.include_set.is_empty() && !filter.include_set.is_match(rel_path) {
             return true;
         }
