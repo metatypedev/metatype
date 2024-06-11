@@ -103,5 +103,13 @@ async function testSerializeAllPairs(t: MetaTest, dirPath: string) {
 }
 
 Meta.test("typegraphs comparison", async (t) => {
+  await t.should("build wasm artifacts", async () => {
+    assertEquals(
+      (await t.shell("bash build.sh".split(" "), {
+        currentDir: "examples/typegraphs/metagen/rs",
+      })).code,
+      0,
+    );
+  });
   await testSerializeAllPairs(t, "examples/typegraphs");
 });

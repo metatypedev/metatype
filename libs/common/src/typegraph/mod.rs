@@ -10,7 +10,7 @@ pub mod visitor;
 
 pub use types::*;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::hash::Hash;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -92,7 +92,7 @@ pub struct TypeMeta {
     pub rate: Option<Rate>,
     pub version: String,
     pub random_seed: Option<u32>,
-    pub artifacts: HashMap<PathBuf, Artifact>,
+    pub artifacts: BTreeMap<PathBuf, Artifact>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]

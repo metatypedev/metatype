@@ -7,7 +7,7 @@ use common::typegraph::{
     utils::{map_from_object, object_from_map},
     Typegraph,
 };
-use std::{collections::hash_map::Entry, path::PathBuf};
+use std::{collections::btree_map::Entry, path::PathBuf};
 
 use crate::utils::postprocess::PostProcessor;
 
