@@ -327,14 +327,19 @@ export class ResultValidationCompiler {
     variants: number[],
     entry: QueueEntry,
   ): QueueEntry[] {
+    const isVariantScalar = (idx: number) => {
+      const ty = this.tg.type(idx);
+      if (ty.type == "list") {
+        return isScalar(this.tg.type(ty.items));
+      }
+      return isScalar(ty);
+    };
     const multilevelVariants = flattenUnionVariants(this.tg, variants);
     if (entry.selectionSet == null) {
       if (
-        multilevelVariants.some((variantIdx) =>
-          !isScalar(this.tg.type(variantIdx))
-        )
+        multilevelVariants.some((variantIdx) => !isVariantScalar(variantIdx))
       ) {
-        const hasScalar = variants.some((idx) => isScalar(this.tg.type(idx)));
+        const hasScalar = variants.some(isVariantScalar);
         if (hasScalar) {
           // TODO: AOT validation for the typegraph
           throw new Error(

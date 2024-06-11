@@ -212,6 +212,12 @@ pub fn finalize(
                 dynamic: ctx.meta.queries.dynamic,
                 endpoints: Store::get_graphql_endpoints(),
             },
+            // artifacts: {
+            //     let arts = ctx.meta.artifacts;
+            //     let mut arts = arts.into_iter().collect::<Vec<_>>();
+            //     arts.sort_by_cached_key(|pair| pair.0.clone());
+            //     arts.into_iter().collect()
+            // },
             artifacts: ctx.meta.artifacts,
             random_seed: Store::get_random_seed(),
             auths,

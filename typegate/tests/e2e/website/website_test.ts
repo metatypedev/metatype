@@ -3,36 +3,44 @@
 
 import { expandGlob } from "std/fs/expand_glob.ts";
 import { dirname, fromFileUrl, join, resolve } from "std/path/mod.ts";
-import { existsSync } from "std/fs/exists.ts";
-import { copySync } from "std/fs/copy.ts";
+import { exists } from "std/fs/exists.ts";
+import { copy } from "std/fs/copy.ts";
 import { Meta } from "../../utils/mod.ts";
 import { MetaTest } from "../../utils/test.ts";
 import { assertEquals } from "std/assert/assert_equals.ts";
 import config from "../../../src/config.ts";
-import { applyPostProcessors } from "../../../src/postprocess.ts";
 import { TypeGraphDS } from "../../../src/typegraph/mod.ts";
 
 export const thisDir = dirname(fromFileUrl(import.meta.url));
 
-function stripIncomparable(json: string) {
+function stripIncomparable(t: MetaTest, json: string) {
   return [
     // FIXME: python and deno does not produce the same tarball
-    (source: string) => source.replace(/"file:scripts(.)+?"/g, '""'),
-    (source: string) => {
+    (source: string) =>
+      Promise.resolve(source.replace(/"file:scripts(.)+?"/g, '""')),
+    async (source: string) => {
       const tg: TypeGraphDS = JSON.parse(source)?.[0];
-      // Required since the typescript format/js convesion Postprocessors are now removed from the cli and sdk
-      applyPostProcessors([tg]);
+      await Promise.all(
+        tg.materializers.map(async (mat) => {
+          if (mat.name == "function") {
+            const shellOut = await t.shell("deno fmt -".split(" "), {
+              stdin: mat.data.script as string,
+            });
+            mat.data.script = shellOut.stdout;
+          }
+        }),
+      );
       return JSON.stringify(tg, null, 2);
     },
-  ].reduce((prev, op) => op(prev), json);
+  ].reduce((prev, op) => prev.then(op), Promise.resolve(json));
 }
 
 async function testSerializeAllPairs(t: MetaTest, dirPath: string) {
-  const tempDir = Deno.makeTempDirSync({
+  const tempDir = await Deno.makeTempDir({
     dir: config.tmp_dir,
   });
 
-  copySync(resolve(dirPath), tempDir, { overwrite: true });
+  await copy(resolve(dirPath), tempDir, { overwrite: true });
 
   for await (
     const file of expandGlob(join(tempDir, "*.py"), {
@@ -46,7 +54,7 @@ async function testSerializeAllPairs(t: MetaTest, dirPath: string) {
     const pyPath = file.path;
     const tsPath = pyPath.replace(/\.py$/, ".ts");
 
-    if (existsSync(tsPath)) {
+    if (await exists(tsPath)) {
       // for now, run the typegraph assuming it is deno
       // FIXME: type hint issue with deno
       const data = (await Deno.readTextFile(tsPath)).replace(
@@ -62,29 +70,32 @@ async function testSerializeAllPairs(t: MetaTest, dirPath: string) {
         continue;
       }
 
-      const { stdout: pyVersion } = await Meta.cli(
-        "serialize",
-        "--pretty",
-        "-f",
-        pyPath,
-      );
-
       const tsTempPath = join(tempDir, `${name}.ts`);
-      Deno.writeTextFileSync(tsTempPath, data);
-      const { stdout: tsVersion } = await Meta.cli(
-        "serialize",
-        "--pretty",
-        "-f",
-        tsTempPath,
-      );
+      await Deno.writeTextFile(tsTempPath, data);
+
+      const [{ stdout: pyVersion }, { stdout: tsVersion }] = await Promise.all([
+        Meta.cli(
+          "serialize",
+          "--pretty",
+          "-f",
+          pyPath,
+        ),
+        Meta.cli(
+          "serialize",
+          "--pretty",
+          "-f",
+          tsTempPath,
+        ),
+      ]);
 
       await t.should(
         `serialize and compare python and typescript version of ${name}`,
-        () => {
-          assertEquals(
-            stripIncomparable(pyVersion),
-            stripIncomparable(tsVersion),
-          );
+        async () => {
+          const [py, ts] = await Promise.all([
+            stripIncomparable(t, pyVersion),
+            stripIncomparable(t, tsVersion),
+          ]);
+          assertEquals(py, ts);
         },
       );
     }
@@ -92,5 +103,13 @@ async function testSerializeAllPairs(t: MetaTest, dirPath: string) {
 }
 
 Meta.test("typegraphs comparison", async (t) => {
+  await t.should("build wasm artifacts", async () => {
+    assertEquals(
+      (await t.shell("bash build.sh".split(" "), {
+        currentDir: "examples/typegraphs/metagen/rs",
+      })).code,
+      0,
+    );
+  });
   await testSerializeAllPairs(t, "examples/typegraphs");
 });

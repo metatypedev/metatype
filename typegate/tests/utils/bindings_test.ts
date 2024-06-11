@@ -4,7 +4,6 @@
 import {
   get_version,
   typegraph_validate,
-  typescript_format_code,
   validate_prisma_runtime_data,
 } from "native";
 
@@ -25,18 +24,6 @@ Deno.test("version", () => {
   assert(
     typeof get_version() === "string",
   );
-});
-
-Deno.test("typescriptFormatCode", () => {
-  const source = "console.log( {hello: 'world'})";
-
-  assert(
-    Meta.typescriptFormatCode(source) ===
-      `console.log({ hello: "world" });\n`,
-  );
-
-  const out = typescript_format_code({ source });
-  assert(out!.Ok!.formatted_code === `console.log({ hello: "world" });\n`);
 });
 
 Deno.test("validatePrismaRuntimeData", () => {

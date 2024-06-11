@@ -10,7 +10,7 @@ pub mod visitor;
 
 pub use types::*;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::hash::Hash;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -92,7 +92,7 @@ pub struct TypeMeta {
     pub rate: Option<Rate>,
     pub version: String,
     pub random_seed: Option<u32>,
-    pub artifacts: HashMap<PathBuf, Artifact>,
+    pub artifacts: BTreeMap<PathBuf, Artifact>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -171,15 +171,5 @@ impl Typegraph {
             .to_str()
             .ok_or_else(|| anyhow::anyhow!("typegraph path is not valid unicode"))?;
         Ok(format!("{}#{}", path, self.name()?))
-    }
-}
-
-impl TypeNode {
-    pub fn get_struct_fields(&self) -> Result<IndexMap<String, u32>> {
-        if let TypeNode::Object { data, .. } = &self {
-            Ok(data.properties.clone())
-        } else {
-            bail!("node is not an object variant, found: {self:#?}")
-        }
     }
 }

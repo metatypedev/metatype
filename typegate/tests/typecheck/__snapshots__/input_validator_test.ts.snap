@@ -2,81 +2,96 @@ export const snapshot = {};
 
 snapshot[`input validator compiler 1`] = `
 "function validate_33(value, path, errors, context) {
-  if (typeof value !== \\"object\\") {
-    errors.push([path, \`expected an object, got \${typeof value}\`]);
-  } else if (value == null) {
-    errors.push([path, \\"exptected a non-null object, got null\\"]);
-  } else {
-    const keys = new Set(Object.keys(value));
-    keys.delete(\\"title\\");
-    validate_34(value[\\"title\\"], path + \\".title\\", errors, context);
-    keys.delete(\\"content\\");
-    validate_35(value[\\"content\\"], path + \\".content\\", errors, context);
-    keys.delete(\\"authorId\\");
-    validate_15(value[\\"authorId\\"], path + \\".authorId\\", errors, context);
-    keys.delete(\\"tags\\");
-    validate_36(value[\\"tags\\"], path + \\".tags\\", errors, context);
-    if (keys.size > 0) {
-      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
-    }
-  }
+if (typeof value !== \\"object\\") {
+errors.push([path, \`expected an object, got \${typeof value}\`]);
+}
+else
+if (value == null) {
+errors.push([path, \\"exptected a non-null object, got null\\"]);
+}
+else {
+const keys = new Set(Object.keys(value))
+keys.delete(\\"title\\")
+validate_34(value[\\"title\\"], path + \\".title\\", errors, context)
+keys.delete(\\"content\\")
+validate_35(value[\\"content\\"], path + \\".content\\", errors, context)
+keys.delete(\\"authorId\\")
+validate_15(value[\\"authorId\\"], path + \\".authorId\\", errors, context)
+keys.delete(\\"tags\\")
+validate_36(value[\\"tags\\"], path + \\".tags\\", errors, context)
+if (keys.size > 0) {
+errors.push([path, \`unexpected fields: \${[...keys].join(', ')}\`]);
+}
+}
 }
 function validate_34(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else if (value.length < 10) {
-    errors.push([path, \`expected minimum length: 10, got \${value.length}\`]);
-  } else if (value.length > 200) {
-    errors.push([path, \`expected maximum length: 200, got \${value.length}\`]);
-  }
+if (typeof value !== \\"string\\") {
+errors.push([path, \`expected a string, got \${typeof value}\`]);
+}
+else
+if (value.length < 10) {
+errors.push([path, \`expected minimum length: 10, got \${value.length}\`]);
+}
+else
+if (value.length > 200) {
+errors.push([path, \`expected maximum length: 200, got \${value.length}\`]);
+}
 }
 function validate_35(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else if (value.length < 100) {
-    errors.push([path, \`expected minimum length: 100, got \${value.length}\`]);
-  }
+if (typeof value !== \\"string\\") {
+errors.push([path, \`expected a string, got \${typeof value}\`]);
+}
+else
+if (value.length < 100) {
+errors.push([path, \`expected minimum length: 100, got \${value.length}\`]);
+}
 }
 function validate_15(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else {
-    const formatValidator = context.formatValidators[\\"uuid\\"];
-    if (formatValidator == null) {
-      errors.push([path, \\"unknown format 'uuid'\\"]);
-    } else if (!formatValidator(value)) {
-      errors.push([path,
-        \\"string does not statisfy the required format 'uuid'\\"]);
-    }
-  }
+if (typeof value !== \\"string\\") {
+errors.push([path, \`expected a string, got \${typeof value}\`]);
+}
+else {
+const formatValidator = context.formatValidators[\\"uuid\\"]
+if (formatValidator == null) {
+errors.push([path, \\"unknown format 'uuid'\\"]);
+}
+else
+if (!formatValidator(value)) {
+errors.push([path, \\"string does not statisfy the required format 'uuid'\\"]);
+}
+}
 }
 function validate_36(value, path, errors, context) {
-  if (value != null) {
-    validate_37(value, path, errors, context);
-  }
+if (value != null) {
+validate_37(value, path, errors, context)
+}
 }
 function validate_37(value, path, errors, context) {
-  if (!Array.isArray(value)) {
-    errors.push([path, \`expected an array, got \${typeof value}\`]);
-  } else if (value.length < 2) {
-    errors.push([path, \`expected minimum items: 2, got \${value.length}\`]);
-  } else {
-    for (let i = 0; i < value.length; ++i) {
-      const item = value[i];
-      validate_12(value[i], path + \`[\${i}]\`, errors, context);
-    }
-  }
+if (!Array.isArray(value)) {
+errors.push([path, \`expected an array, got \${typeof value}\`]);
+}
+else
+if (value.length < 2) {
+errors.push([path, \`expected minimum items: 2, got \${value.length}\`]);
+}
+else {
+for (let i = 0; i < value.length; ++i) {
+const item = value[i]
+validate_12(value[i], path + \`[\${i}]\`, errors, context)
+}
+}
 }
 function validate_12(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else if (value.length > 10) {
-    errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
-  }
+if (typeof value !== \\"string\\") {
+errors.push([path, \`expected a string, got \${typeof value}\`]);
+}
+else
+if (value.length > 10) {
+errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
+}
 }
 
-return validate_33;
-"
+return validate_33"
 `;
 
 snapshot[`input validator compiler 2`] = `
@@ -99,54 +114,53 @@ snapshot[`input validator compiler 3`] = `
 `;
 
 snapshot[`input validator compiler 4`] = `
-'function validate_39(value, path, errors, context) {
-  if (typeof value !== "object") {
-    errors.push([path, \`expected an object, got \${typeof value}\`]);
-  } else if (value == null) {
-    errors.push([path, "exptected a non-null object, got null"]);
-  } else {
-    const keys = new Set(Object.keys(value));
-    keys.delete("userRole");
-    validate_40(value["userRole"], path + ".userRole", errors, context);
-    keys.delete("availableItems");
-    validate_42(value["availableItems"], path + ".availableItems", errors,
-      context);
-    if (keys.size > 0) {
-      errors.push([path, \`unexpected fields: \${[...keys].join(", ")}\`]);
-    }
-  }
+"function validate_39(value, path, errors, context) {
+if (typeof value !== \\"object\\") {
+errors.push([path, \`expected an object, got \${typeof value}\`]);
+}
+else
+if (value == null) {
+errors.push([path, \\"exptected a non-null object, got null\\"]);
+}
+else {
+const keys = new Set(Object.keys(value))
+keys.delete(\\"userRole\\")
+validate_40(value[\\"userRole\\"], path + \\".userRole\\", errors, context)
+keys.delete(\\"availableItems\\")
+validate_42(value[\\"availableItems\\"], path + \\".availableItems\\", errors, context)
+if (keys.size > 0) {
+errors.push([path, \`unexpected fields: \${[...keys].join(', ')}\`]);
+}
+}
 }
 function validate_40(value, path, errors, context) {
-  if (value != null) {
-    validate_41(value, path, errors, context);
-  }
+if (value != null) {
+validate_41(value, path, errors, context)
+}
 }
 function validate_42(value, path, errors, context) {
-  if (!Array.isArray(value)) {
-    errors.push([path, \`expected an array, got \${typeof value}\`]);
-  } else {
-    for (let i = 0; i < value.length; ++i) {
-      const item = value[i];
-      validate_43(value[i], path + \`[\${i}]\`, errors, context);
-    }
-  }
+if (!Array.isArray(value)) {
+errors.push([path, \`expected an array, got \${typeof value}\`]);
+}
+else {
+for (let i = 0; i < value.length; ++i) {
+const item = value[i]
+validate_43(value[i], path + \`[\${i}]\`, errors, context)
+}
+}
 }
 function validate_41(value, path, errors, context) {
-  if (value !== "admin" && value !== "moderator") {
-    errors.push([path, "value did not match to any of the enum values"]);
-  }
+if (value !== \\"admin\\" && value !== \\"moderator\\") {
+errors.push([path, \\"value did not match to any of the enum values\\"]);
+}
 }
 function validate_43(value, path, errors, context) {
-  if (!context.deepEqual(value, { "name": "banana", "unitPrice": 200 })
-    && !context.deepEqual(value, { "name": "orange", "unitPrice": 300 })
-    && !context.deepEqual(value, { "name": "apple", "unitPrice": 400 }))
-  {
-    errors.push([path, "value did not match to any of the enum values"]);
-  }
+if (!context.deepEqual(value, {\\"name\\": \\"banana\\", \\"unitPrice\\": 200}) && !context.deepEqual(value, {\\"name\\": \\"orange\\", \\"unitPrice\\": 300}) && !context.deepEqual(value, {\\"name\\": \\"apple\\", \\"unitPrice\\": 400})) {
+errors.push([path, \\"value did not match to any of the enum values\\"]);
+}
 }
 
-return validate_39;
-'
+return validate_39"
 `;
 
 snapshot[`input validator compiler 5`] = `
@@ -168,185 +182,213 @@ snapshot[`input validator compiler 6`] = `
 
 snapshot[`input validator compiler 7`] = `
 "function validate_9(value, path, errors, context) {
-  if (typeof value !== \\"object\\") {
-    errors.push([path, \`expected an object, got \${typeof value}\`]);
-  } else if (value == null) {
-    errors.push([path, \\"exptected a non-null object, got null\\"]);
-  } else {
-    const keys = new Set(Object.keys(value));
-    keys.delete(\\"tag\\");
-    validate_10(value[\\"tag\\"], path + \\".tag\\", errors, context);
-    keys.delete(\\"authorId\\");
-    validate_14(value[\\"authorId\\"], path + \\".authorId\\", errors, context);
-    keys.delete(\\"search\\");
-    validate_16(value[\\"search\\"], path + \\".search\\", errors, context);
-    if (keys.size > 0) {
-      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
-    }
-  }
+if (typeof value !== \\"object\\") {
+errors.push([path, \`expected an object, got \${typeof value}\`]);
+}
+else
+if (value == null) {
+errors.push([path, \\"exptected a non-null object, got null\\"]);
+}
+else {
+const keys = new Set(Object.keys(value))
+keys.delete(\\"tag\\")
+validate_10(value[\\"tag\\"], path + \\".tag\\", errors, context)
+keys.delete(\\"authorId\\")
+validate_14(value[\\"authorId\\"], path + \\".authorId\\", errors, context)
+keys.delete(\\"search\\")
+validate_16(value[\\"search\\"], path + \\".search\\", errors, context)
+if (keys.size > 0) {
+errors.push([path, \`unexpected fields: \${[...keys].join(', ')}\`]);
+}
+}
 }
 function validate_10(value, path, errors, context) {
-  if (value != null) {
-    validate_11(value, path, errors, context);
-  }
+if (value != null) {
+validate_11(value, path, errors, context)
+}
 }
 function validate_14(value, path, errors, context) {
-  if (value != null) {
-    validate_15(value, path, errors, context);
-  }
+if (value != null) {
+validate_15(value, path, errors, context)
+}
 }
 function validate_16(value, path, errors, context) {
-  if (value != null) {
-    validate_17(value, path, errors, context);
-  }
+if (value != null) {
+validate_17(value, path, errors, context)
+}
 }
 function validate_11(value, path, errors, context) {
-  const failed = [];
-  let errs;
-  errs = [];
-  validate_12(value, path, errs, context);
-  if (errs.length === 0) return;
-  failed.push(errs);
-  errs = [];
-  validate_13(value, path, errs, context);
-  if (errs.length === 0) return;
-  failed.push(errs);
-  const failedErrors = failed.map((errs, i) => \`\\\\n  #\${i} \${errs.join(\\", \\")}\`)
-    .join(\\"\\");
-  errors.push([path,
-    \`Value does not match to any variant of the union type \${failedErrors}\`]);
+const failed = [];
+let errs;
+errs = []
+validate_12(value, path, errs, context)
+if (errs.length === 0) { return }
+failed.push(errs)
+errs = []
+validate_13(value, path, errs, context)
+if (errs.length === 0) { return }
+failed.push(errs)
+const failedErrors = failed.map((errs, i) => \`\\\\n  #\${i} \${errs.join(', ')}\`).join('')
+errors.push([path, \`Value does not match to any variant of the union type \${failedErrors}\`])
 }
 function validate_15(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else {
-    const formatValidator = context.formatValidators[\\"uuid\\"];
-    if (formatValidator == null) {
-      errors.push([path, \\"unknown format 'uuid'\\"]);
-    } else if (!formatValidator(value)) {
-      errors.push([path,
-        \\"string does not statisfy the required format 'uuid'\\"]);
-    }
-  }
+if (typeof value !== \\"string\\") {
+errors.push([path, \`expected a string, got \${typeof value}\`]);
+}
+else {
+const formatValidator = context.formatValidators[\\"uuid\\"]
+if (formatValidator == null) {
+errors.push([path, \\"unknown format 'uuid'\\"]);
+}
+else
+if (!formatValidator(value)) {
+errors.push([path, \\"string does not statisfy the required format 'uuid'\\"]);
+}
+}
 }
 function validate_17(value, path, errors, context) {
-  let matchCount = 0;
-  let errs;
-  errs = [];
-  validate_18(value, path, errs, context);
-  if (errs.length === 0) matchCount += 1;
-  errs = [];
-  validate_21(value, path, errs, context);
-  if (errs.length === 0) matchCount += 1;
-  if (matchCount === 0) {
-    errors.push([path,
-      \\"Value does not match to any variant of the either type\\"]);
-  } else if (matchCount > 1) {
-    errors.push([path,
-      \\"Value match to more than one variant of the either type\\"]);
-  }
+let matchCount = 0;
+const failed = [];
+let errs;
+errs = []
+validate_18(value, path, errs, context);
+if (errs.length === 0) { matchCount += 1 }
+else { failed.push(errs) }
+errs = []
+validate_21(value, path, errs, context);
+if (errs.length === 0) { matchCount += 1 }
+else { failed.push(errs) }
+if (matchCount === 0) {
+const failedErrors = failed.map((errs, i) => \`\\\\n  #\${i} \${errs.join(', ')}\`).join('');
+errors.push([path, \`Value does not match to any variant of the either type \${failedErrors}\`])
+}
+else if (matchCount > 1) {
+const failedErrors = failed.map((errs, i) => \`\\\\n  #\${i} \${errs.join(', ')}\`).join('');
+errors.push([path, \`Value match to more than one variant of the either type \${failedErrors}\`])
+}
 }
 function validate_12(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else if (value.length > 10) {
-    errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
-  }
+if (typeof value !== \\"string\\") {
+errors.push([path, \`expected a string, got \${typeof value}\`]);
+}
+else
+if (value.length > 10) {
+errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
+}
 }
 function validate_13(value, path, errors, context) {
-  if (!Array.isArray(value)) {
-    errors.push([path, \`expected an array, got \${typeof value}\`]);
-  } else {
-    for (let i = 0; i < value.length; ++i) {
-      const item = value[i];
-      validate_12(value[i], path + \`[\${i}]\`, errors, context);
-    }
-  }
+if (!Array.isArray(value)) {
+errors.push([path, \`expected an array, got \${typeof value}\`]);
+}
+else {
+for (let i = 0; i < value.length; ++i) {
+const item = value[i]
+validate_12(value[i], path + \`[\${i}]\`, errors, context)
+}
+}
 }
 function validate_18(value, path, errors, context) {
-  if (typeof value !== \\"object\\") {
-    errors.push([path, \`expected an object, got \${typeof value}\`]);
-  } else if (value == null) {
-    errors.push([path, \\"exptected a non-null object, got null\\"]);
-  } else {
-    const keys = new Set(Object.keys(value));
-    keys.delete(\\"title\\");
-    validate_19(value[\\"title\\"], path + \\".title\\", errors, context);
-    if (keys.size > 0) {
-      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
-    }
-  }
+if (typeof value !== \\"object\\") {
+errors.push([path, \`expected an object, got \${typeof value}\`]);
+}
+else
+if (value == null) {
+errors.push([path, \\"exptected a non-null object, got null\\"]);
+}
+else {
+const keys = new Set(Object.keys(value))
+keys.delete(\\"title\\")
+validate_19(value[\\"title\\"], path + \\".title\\", errors, context)
+if (keys.size > 0) {
+errors.push([path, \`unexpected fields: \${[...keys].join(', ')}\`]);
+}
+}
 }
 function validate_21(value, path, errors, context) {
-  if (typeof value !== \\"object\\") {
-    errors.push([path, \`expected an object, got \${typeof value}\`]);
-  } else if (value == null) {
-    errors.push([path, \\"exptected a non-null object, got null\\"]);
-  } else {
-    const keys = new Set(Object.keys(value));
-    keys.delete(\\"content\\");
-    validate_22(value[\\"content\\"], path + \\".content\\", errors, context);
-    if (keys.size > 0) {
-      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
-    }
-  }
+if (typeof value !== \\"object\\") {
+errors.push([path, \`expected an object, got \${typeof value}\`]);
+}
+else
+if (value == null) {
+errors.push([path, \\"exptected a non-null object, got null\\"]);
+}
+else {
+const keys = new Set(Object.keys(value))
+keys.delete(\\"content\\")
+validate_22(value[\\"content\\"], path + \\".content\\", errors, context)
+if (keys.size > 0) {
+errors.push([path, \`unexpected fields: \${[...keys].join(', ')}\`]);
+}
+}
 }
 function validate_19(value, path, errors, context) {
-  let matchCount = 0;
-  let errs;
-  errs = [];
-  validate_20(value, path, errs, context);
-  if (errs.length === 0) matchCount += 1;
-  errs = [];
-  validate_12(value, path, errs, context);
-  if (errs.length === 0) matchCount += 1;
-  if (matchCount === 0) {
-    errors.push([path,
-      \\"Value does not match to any variant of the either type\\"]);
-  } else if (matchCount > 1) {
-    errors.push([path,
-      \\"Value match to more than one variant of the either type\\"]);
-  }
+let matchCount = 0;
+const failed = [];
+let errs;
+errs = []
+validate_20(value, path, errs, context);
+if (errs.length === 0) { matchCount += 1 }
+else { failed.push(errs) }
+errs = []
+validate_12(value, path, errs, context);
+if (errs.length === 0) { matchCount += 1 }
+else { failed.push(errs) }
+if (matchCount === 0) {
+const failedErrors = failed.map((errs, i) => \`\\\\n  #\${i} \${errs.join(', ')}\`).join('');
+errors.push([path, \`Value does not match to any variant of the either type \${failedErrors}\`])
+}
+else if (matchCount > 1) {
+const failedErrors = failed.map((errs, i) => \`\\\\n  #\${i} \${errs.join(', ')}\`).join('');
+errors.push([path, \`Value match to more than one variant of the either type \${failedErrors}\`])
+}
 }
 function validate_22(value, path, errors, context) {
-  let matchCount = 0;
-  let errs;
-  errs = [];
-  validate_20(value, path, errs, context);
-  if (errs.length === 0) matchCount += 1;
-  errs = [];
-  validate_23(value, path, errs, context);
-  if (errs.length === 0) matchCount += 1;
-  if (matchCount === 0) {
-    errors.push([path,
-      \\"Value does not match to any variant of the either type\\"]);
-  } else if (matchCount > 1) {
-    errors.push([path,
-      \\"Value match to more than one variant of the either type\\"]);
-  }
+let matchCount = 0;
+const failed = [];
+let errs;
+errs = []
+validate_20(value, path, errs, context);
+if (errs.length === 0) { matchCount += 1 }
+else { failed.push(errs) }
+errs = []
+validate_23(value, path, errs, context);
+if (errs.length === 0) { matchCount += 1 }
+else { failed.push(errs) }
+if (matchCount === 0) {
+const failedErrors = failed.map((errs, i) => \`\\\\n  #\${i} \${errs.join(', ')}\`).join('');
+errors.push([path, \`Value does not match to any variant of the either type \${failedErrors}\`])
+}
+else if (matchCount > 1) {
+const failedErrors = failed.map((errs, i) => \`\\\\n  #\${i} \${errs.join(', ')}\`).join('');
+errors.push([path, \`Value match to more than one variant of the either type \${failedErrors}\`])
+}
 }
 function validate_20(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else if (value.length < 3) {
-    errors.push([path, \`expected minimum length: 3, got \${value.length}\`]);
-  }
+if (typeof value !== \\"string\\") {
+errors.push([path, \`expected a string, got \${typeof value}\`]);
+}
+else
+if (value.length < 3) {
+errors.push([path, \`expected minimum length: 3, got \${value.length}\`]);
+}
 }
 function validate_23(value, path, errors, context) {
-  if (!Array.isArray(value)) {
-    errors.push([path, \`expected an array, got \${typeof value}\`]);
-  } else if (value.length > 3) {
-    errors.push([path, \`expected maximum items: 3, got \${value.length}\`]);
-  } else {
-    for (let i = 0; i < value.length; ++i) {
-      const item = value[i];
-      validate_20(value[i], path + \`[\${i}]\`, errors, context);
-    }
-  }
+if (!Array.isArray(value)) {
+errors.push([path, \`expected an array, got \${typeof value}\`]);
+}
+else
+if (value.length > 3) {
+errors.push([path, \`expected maximum items: 3, got \${value.length}\`]);
+}
+else {
+for (let i = 0; i < value.length; ++i) {
+const item = value[i]
+validate_20(value[i], path + \`[\${i}]\`, errors, context)
+}
+}
 }
 
-return validate_9;
-"
+return validate_9"
 `;
 
 snapshot[`input validator compiler 8`] = `
@@ -369,12 +411,22 @@ snapshot[`input validator compiler 9`] = `
 
 snapshot[`input validator compiler 10`] = `
 "Validation errors:
-  - at <value>.search: Value does not match to any variant of the either type
+  - at <value>.search: Value does not match to any variant of the either type 
+  #0 <value>.search.title,Value match to more than one variant of the either type 
+  #1 <value>.search.content,Value does not match to any variant of the either type 
+  #0 <value>.search.content,expected a string, got undefined
+  #1 <value>.search.content,expected an array, got undefined, <value>.search,unexpected fields: title
 "
 `;
 
 snapshot[`input validator compiler 11`] = `
 "Validation errors:
-  - at <value>.search: Value does not match to any variant of the either type
+  - at <value>.search: Value does not match to any variant of the either type 
+  #0 <value>.search.title,Value does not match to any variant of the either type 
+  #0 <value>.search.title,expected a string, got undefined
+  #1 <value>.search.title,expected a string, got undefined, <value>.search,unexpected fields: content
+  #1 <value>.search.content,Value does not match to any variant of the either type 
+  #0 <value>.search.content,expected a string, got object
+  #1 <value>.search.content,expected maximum items: 3, got 4
 "
 `;

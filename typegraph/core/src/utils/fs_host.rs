@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use std::{
-    collections::HashSet,
+    collections::BTreeSet,
     path::{Path, PathBuf},
 };
 
@@ -185,7 +185,7 @@ pub fn load_tg_ignore_file() -> Result<Vec<String>, String> {
 pub fn cwd() -> Result<PathBuf, String> {
     match Store::get_deploy_cwd() {
         Some(path) => Ok(path),
-        None => Ok(PathBuf::from(get_cwd()?.to_owned())),
+        None => Ok(PathBuf::from(get_cwd()?)),
     }
 }
 
@@ -261,7 +261,7 @@ pub fn expand_glob(path: &str) -> Result<Vec<PathBuf>, String> {
 }
 
 pub fn resolve_globs_dirs(deps: Vec<String>) -> Result<Vec<PathBuf>, String> {
-    let mut resolved_deps = HashSet::new();
+    let mut resolved_deps = BTreeSet::new();
     for dep in deps {
         if is_glob(&dep) {
             let abs_path = make_absolute(&PathBuf::from(dep))?

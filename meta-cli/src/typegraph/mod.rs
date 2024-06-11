@@ -3,5 +3,3 @@
 
 pub mod dependency_graph;
 pub mod loader;
-#[allow(unused)]
-pub mod postprocess;

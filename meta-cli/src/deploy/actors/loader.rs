@@ -10,34 +10,8 @@ use tokio::sync::{mpsc, oneshot};
 
 use crate::config::Config;
 use crate::typegraph::loader::{LoaderPool, TypegraphInfos};
-use crate::typegraph::postprocess::DenoModules;
 
 use super::console::{Console, ConsoleActor};
-
-#[derive(Debug, Clone)]
-pub struct PostProcessOptions {
-    pub deno: Option<DenoModules>,
-}
-
-impl Default for PostProcessOptions {
-    fn default() -> Self {
-        Self {
-            deno: Some(DenoModules::default()),
-        }
-    }
-}
-
-impl PostProcessOptions {
-    pub fn no_deno(mut self) -> Self {
-        self.deno = None;
-        self
-    }
-
-    pub fn deno_codegen(mut self, codegen: bool) -> Self {
-        self.deno = Some(DenoModules::default().codegen(codegen));
-        self
-    }
-}
 
 #[derive(Clone, Debug)]
 pub enum StopBehavior {

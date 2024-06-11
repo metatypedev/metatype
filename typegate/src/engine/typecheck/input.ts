@@ -17,13 +17,6 @@ export function generateValidator(tg: TypeGraph, typeIdx: number): Validator {
   const validatorCode = new InputValidationCompiler(tg, validatorName)
     .generate(typeIdx);
 
-  // console.log("validatorCode ----- START");
-  // const formattedCode = typescript_format_code({
-  //   source: validatorCode,
-  // });
-  // console.log(formattedCode.Ok?.formatted_code);
-  // console.log("validatorCode ----- END");
-
   const validator = new Function(validatorCode)() as ValidatorFn;
   return (value: unknown) => {
     const errors: ErrorEntry[] = [];

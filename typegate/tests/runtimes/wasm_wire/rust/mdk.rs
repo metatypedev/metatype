@@ -135,7 +135,7 @@ impl Router {
 pub type InitCallback = fn() -> anyhow::Result<MatBuilder>;
 
 thread_local! {
-    pub static MAT_STATE: RefCell<Router> = panic!("MDK_STATE has not been initialized");
+    pub static MAT_STATE: RefCell<Router> = panic!("MAT_STATE has not been initialized");
 }
 
 pub struct Ctx {}
@@ -233,9 +233,12 @@ pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Object35 {
     }
+    pub type String3 = String;
+    pub type String4 = String;
+    pub type String6 = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Object9 {
-        pub tag: String,
+        pub tag: String6,
         pub value: Option<String>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -246,8 +249,8 @@ pub mod types {
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Profile {
-        pub level: String,
-        pub attributes: Vec<String>,
+        pub level: String3,
+        pub attributes: Vec<String4>,
         pub category: Object9,
         pub metadatas: Vec<Vec<Either12>>,
     }

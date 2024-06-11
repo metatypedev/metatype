@@ -26,30 +26,30 @@ export const tg = await typegraph("wasm-wire-ts", (g: any) => {
     add: wasm.handler(
       t.struct({ "a": t.float(), "b": t.float() }).rename("add_args"),
       t.integer(),
-      { func: "add" },
+      { name: "add" },
     ).rename("add"),
     range: wasm.handler(
       t.struct({ "a": t.integer().optional(), "b": t.integer() }).rename(
         "range_args",
       ),
       t.list(t.integer()),
-      { func: "range" },
+      { name: "range" },
     ).rename("range"),
     record: wasm.handler(
       t.struct({}),
       t.list(entity),
-      { func: "record-creation" },
+      { name: "record-creation" },
     ).rename("record-creation"),
     identity: wasm.handler(
       entity,
       entity,
-      { func: "identity" },
+      { name: "identity" },
     ).rename("identity"),
     random: random.gen(entity).withPolicy(Policy.internal()),
     hundred: wasm.handler(
       t.struct({}),
       t.list(entity),
-      { func: "hundred-random" },
+      { name: "hundred-random" },
     ).rename("hundred-random"),
   }, Policy.public());
 });

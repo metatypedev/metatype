@@ -507,12 +507,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eab1c04a571841102f5345a8fc0f6bb3d31c315dec879b5c6e42e40ce7ffa34e"
 
 [[package]]
-name = "ascii"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d92bec98840b8f03a5ff5413de5293bfcd8bf96467cf5452609f939ec6f5de16"
-
-[[package]]
 name = "ash"
 version = "0.37.3+1.3.251"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -699,17 +693,6 @@ dependencies = [
  "futures-lite 1.13.0",
  "rustix 0.38.34",
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "async-recursion"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b43422f69d8ff38f95f1b2bb76517c91589a924d1559a0e935d7c8ce0274c11"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.66",
 ]
 
 [[package]]
@@ -1471,12 +1454,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "chunked_transfer"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e4de3bc4ea267985becf712dc6d9eed8b04c953b3fcfb339ebc87acd9804901"
-
-[[package]]
 name = "cipher"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1676,7 +1653,7 @@ version = "3.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da3da6baa321ec19e1cc41d31bf599f00c783d0517095cdaf0332e3fe8d20680"
 dependencies = [
- "ascii 0.9.3",
+ "ascii",
  "byteorder",
  "either",
  "memchr",
@@ -1689,13 +1666,13 @@ version = "0.4.3-0"
 dependencies = [
  "anyhow",
  "async-trait",
- "base64 0.21.7",
+ "base64 0.22.1",
  "colored",
  "flate2",
  "ignore",
  "indexmap 2.2.6",
  "indoc",
- "itertools 0.11.0",
+ "itertools 0.13.0",
  "reqwest",
  "serde 1.0.203",
  "serde_json",
@@ -4631,6 +4608,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures-concurrency"
+version = "7.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "51ee14e256b9143bfafbf2fddeede6f396650bacf95d06fc1b3f2b503df129a0"
+dependencies = [
+ "bitvec",
+ "futures-core",
+ "futures-lite 1.13.0",
+ "pin-project",
+ "slab",
+ "smallvec",
+]
+
+[[package]]
 name = "futures-core"
 version = "0.3.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4674,7 +4665,10 @@ version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52527eb5074e35e9339c6b4e8d12600c7128b68fb25dcb9fa9dec18f7c25f3a5"
 dependencies = [
+ "fastrand 2.1.0",
  "futures-core",
+ "futures-io",
+ "parking",
  "pin-project-lite",
 ]
 
@@ -5856,6 +5850,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6573,9 +6576,8 @@ dependencies = [
  "actix",
  "actix-web",
  "assert_cmd",
- "async-recursion",
  "async-trait",
- "base64 0.21.7",
+ "base64 0.22.1",
  "chrono",
  "clap",
  "clap-verbosity-flag",
@@ -6591,6 +6593,7 @@ dependencies = [
  "filetime",
  "flate2",
  "futures",
+ "futures-concurrency",
  "git2",
  "globset",
  "grep",
@@ -6598,8 +6601,7 @@ dependencies = [
  "include_dir",
  "indexmap 2.2.6",
  "indoc",
- "insta",
- "itertools 0.11.0",
+ "itertools 0.13.0",
  "lade-sdk",
  "lazy_static 1.4.0",
  "metagen",
@@ -6612,7 +6614,6 @@ dependencies = [
  "prisma-models",
  "process-wrap",
  "project-root",
- "question",
  "reqwest",
  "self_update",
  "semver 1.0.23",
@@ -6623,15 +6624,12 @@ dependencies = [
  "tar",
  "tempfile",
  "textwrap",
- "tiny_http",
  "tokio",
  "tracing",
- "tracing-appender",
  "tracing-error",
  "tracing-subscriber",
  "tracing-unwrap",
  "typegate_engine",
- "typescript",
 ]
 
 [[package]]
@@ -6640,6 +6638,8 @@ version = "0.4.3-0"
 dependencies = [
  "color-eyre",
  "common",
+ "futures-concurrency",
+ "futures-lite 2.3.0",
  "garde",
  "heck 0.5.0",
  "indexmap 2.2.6",
@@ -6647,7 +6647,6 @@ dependencies = [
  "once_cell",
  "pretty_assertions",
  "regex",
- "reqwest",
  "serde 1.0.203",
  "serde_json",
  "tempfile",
@@ -7331,17 +7330,6 @@ name = "num-conv"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51d515d32fb182ee37cda2ccdcb92950d6a3c2893aa280e540671c2cd0f3b1d9"
-
-[[package]]
-name = "num-derive"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed3955f1a9c7c0c15e092f9c887db08b1fc683305fdf6eb6684f22555355e202"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.66",
-]
 
 [[package]]
 name = "num-integer"
@@ -8790,12 +8778,6 @@ dependencies = [
  "tracing-futures",
  "tracing-subscriber",
 ]
-
-[[package]]
-name = "question"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "acbb3ede7a8f9a8ab89e714637f2cf40001b58f21340d4242b2f11533e65fa8d"
 
 [[package]]
 name = "quick-error"
@@ -10763,7 +10745,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2f9706038906e66f3919028f9f7a37f3ed552f1b85578e93f4468742e2da438"
 dependencies = [
  "ast_node",
- "atty",
  "better_scoped_tls",
  "cfg-if",
  "either",
@@ -10778,7 +10759,6 @@ dependencies = [
  "swc_atoms",
  "swc_eq_ignore_macros",
  "swc_visit",
- "termcolor",
  "tracing",
  "unicode-width",
  "url",
@@ -11488,18 +11468,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tiny_http"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "389915df6413a2e74fb181895f933386023c71110878cd0825588928e64cdc82"
-dependencies = [
- "ascii 1.1.0",
- "chunked_transfer",
- "httpdate",
- "log",
-]
-
-[[package]]
 name = "tinyvec"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11853,18 +11821,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tracing-appender"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3566e8ce28cc0a3fe42519fc80e6b4c943cc4c8cef275620eb8dac2d3d4e06cf"
-dependencies = [
- "crossbeam-channel",
- "thiserror",
- "time",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "tracing-attributes"
 version = "0.1.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12123,7 +12079,7 @@ name = "typegate_engine"
 version = "0.4.3-0"
 dependencies = [
  "anyhow",
- "base64 0.21.7",
+ "base64 0.22.1",
  "common",
  "connection-string",
  "convert_case 0.6.0",
@@ -12134,8 +12090,6 @@ dependencies = [
  "futures",
  "log",
  "mt_deno",
- "num-derive",
- "num-traits 0.2.19",
  "once_cell",
  "prisma-models",
  "psl",
@@ -12154,7 +12108,6 @@ dependencies = [
  "temporal-sdk-core-protos",
  "thiserror",
  "tokio",
- "typescript",
  "user-facing-errors",
  "wasmtime",
  "wasmtime-wasi",
@@ -12178,7 +12131,6 @@ dependencies = [
  "once_cell",
  "ordered-float 4.2.0",
  "paste",
- "pathdiff",
  "ptree",
  "regex",
  "seahash",
@@ -12199,22 +12151,6 @@ name = "typenum"
 version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
-
-[[package]]
-name = "typescript"
-version = "0.4.3-0"
-dependencies = [
- "anyhow",
- "dprint-plugin-typescript",
- "lazy_static 1.4.0",
- "swc_atoms",
- "swc_common",
- "swc_ecma_ast",
- "swc_ecma_codegen",
- "swc_ecma_parser",
- "swc_ecma_transforms_typescript",
- "swc_ecma_visit",
-]
 
 [[package]]
 name = "typetag"

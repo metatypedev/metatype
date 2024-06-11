@@ -26,7 +26,6 @@ SELF_PATH = (
 class Command(Enum):
     SERIALIZE = "serialize"
     DEPLOY = "deploy"
-    CODEGEN = "codegen"
 
 
 # Types for CLI => SDK
@@ -110,14 +109,10 @@ class Manager:
         # hack for allowing tg.serialize(config) to be called more than once
         frozen_out = freeze_tg_output(artifacts_config, self.typegraph)
         try:
-            frozen_serialized = frozen_out.serialize(artifacts_config)
+            frozen_out.serialize(artifacts_config)
         except Exception as err:
             return self.relay_error_to_cli(
                 Command.DEPLOY, code="serialization_err", msg=str(err), value={}
-            )
-        if artifacts_config.codegen:
-            self.relay_data_to_cli(
-                initiator=Command.CODEGEN, data=json.loads(frozen_serialized.tgJson)
             )
 
         try:
