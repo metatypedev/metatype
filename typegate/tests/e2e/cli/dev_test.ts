@@ -39,9 +39,6 @@ Meta.test(
         "metatype.yml": "metatype.yml",
       },
     },
-    // // TODO remove this
-    // sanitizeResources: false,
-    // sanitizeOps: false,
   },
   async (t) => {
     const schema = randomSchema();

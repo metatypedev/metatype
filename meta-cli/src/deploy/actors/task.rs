@@ -12,8 +12,6 @@
 //! deployment) for each typegraph with for JSON-serialized data.
 //! - stderr is used for fatal errors that causes the program to exit; mainly
 //! unhandled exception in JavaScript or Python
-//!
-//! TODO: manage the communication between the CLI and the task process in the `TaskActor`.
 
 pub mod action;
 mod command;
