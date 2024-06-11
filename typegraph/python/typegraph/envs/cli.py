@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Optional, List
 from os import environ
 from enum import Enum
+from typegraph.io import Log
 
 _required_cli_envs = (
     "version",
@@ -68,9 +69,11 @@ class CliEnv:
         if raw_filter == "all":
             filter = None
         else:
-            if not raw_filter.startswith("typegraph="):
+            prefix = "typegraphs="
+            if not raw_filter.startswith(prefix):
                 raise Exception(f"invalid MCLI_FILTER env value: {raw_filter}")
-            filter = raw_filter.removeprefix("typegraph=").split(",")
+            Log.debug("raw_filter", raw_filter)
+            filter = raw_filter[len(prefix) :].split(",")
         d["filter"] = filter
 
         return cls(**d)

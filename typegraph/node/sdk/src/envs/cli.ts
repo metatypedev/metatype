@@ -52,7 +52,7 @@ export function loadCliEnv(): CliEnv | null {
           if (envValue === "all") {
             record[key] = null;
           } else {
-            const prefix = "typegraph=";
+            const prefix = "typegraphs=";
             if (!envValue.startsWith(prefix)) {
               throw new Error(`invalid ${name} env value: ${envValue}`);
             } else {

@@ -16,7 +16,10 @@ import type { ParsedDiff } from "../../../../engine/runtime.js";
 
 export class MigrationFailure extends Error {
   errors: PushFailure[] = [];
-  private constructor(message: string, public runtimeName?: string) {
+  private constructor(
+    message: string,
+    public runtimeName?: string,
+  ) {
     super(message);
   }
 
@@ -45,7 +48,8 @@ export class MigrationFailure extends Error {
 
     const prefix = "ERROR: ";
     const prefixLen = prefix.length;
-    err.errors = message.split("\n")
+    err.errors = message
+      .split("\n")
       .filter((line) => line.startsWith(prefix))
       .map((line) => line.slice(prefixLen))
       .map((err) => {
@@ -53,9 +57,9 @@ export class MigrationFailure extends Error {
         if (match != null) {
           const { table, col } = match.groups!;
 
-          const isNewColumn = diff?.find((d) =>
-            d.table === table
-          )?.diff.find((d) => d.column === col)?.diff.action !== "Altered";
+          const isNewColumn = diff
+            ?.find((d) => d.table === table)
+            ?.diff.find((d) => d.column === col)?.diff.action !== "Altered";
           return {
             reason: "NullConstraintViolation",
             message: [
@@ -91,8 +95,8 @@ export const runMigrations: PushHandler = async (
   response,
 ) => {
   // TODO simpler: Use only one type for prisma runtime data, with some optional fields that would be set by hooks
-  const runtimes = typegraph.runtimes.filter((rt) =>
-    rt.name === "prisma"
+  const runtimes = typegraph.runtimes.filter(
+    (rt) => rt.name === "prisma",
   ) as PrismaRT.DS<PrismaRT.DataWithDatamodel>[];
 
   for (const rt of runtimes) {
@@ -100,13 +104,14 @@ export const runMigrations: PushHandler = async (
       response.warn(`Migrations disabled for runtime ${rt.data.name}`);
       continue;
     }
+    console.debug("migration options", rt.data.migration_options);
 
     const migration = new Migration(rt.data, secretManager, response);
 
     try {
       await migration.run();
     } catch (err) {
-      const error = (err instanceof MigrationFailure)
+      const error = err instanceof MigrationFailure
         ? err
         : MigrationFailure.fromErrorMessage(err.message, rt.data.name);
       response.setFailure(error.errors[0]);
@@ -144,7 +149,8 @@ class Migration {
   async run() {
     const migrations = this.#options.migration_files;
 
-    if (this.#options.create) { // like `prisma dev`
+    if (this.#options.create) {
+      // like `prisma dev`
       // apply pending migrations
       if (migrations != null) {
         await this.#opApply(migrations);
@@ -155,7 +161,8 @@ class Migration {
         // create new migration
         await this.#opCreate(diff);
       }
-    } else { // like `prisma deploy`
+    } else {
+      // like `prisma deploy`
       if (migrations == null) {
         this.#warn(
           [

@@ -31,15 +31,17 @@ async function writeTypegraph(version: number | null, target = "migration.py") {
   }
 }
 
-Meta.test.only(
+Meta.test(
   {
     name: "meta dev: choose to reset the database",
-
     gitRepo: {
       content: {
         "metatype.yml": "metatype.yml",
       },
     },
+    // // TODO remove this
+    // sanitizeResources: false,
+    // sanitizeOps: false,
   },
   async (t) => {
     const schema = randomSchema();
@@ -62,7 +64,7 @@ Meta.test.only(
     });
 
     await metadev.fetchStderrLines((line) => {
-      console.log("line:", line);
+      // console.log("line:", line);
       return !$.stripAnsi(line).includes(
         "successfully deployed typegraph migration-failure-test from migration.py",
       );
@@ -91,38 +93,38 @@ Meta.test.only(
     await t.should("load second version of the typegraph", async () => {
       await writeTypegraph(1, tgDefPath);
       await metadev.fetchStderrLines((line) => {
-        console.log("line:", line);
+        // console.log("line:", line);
         return !line.includes("[select]");
       });
 
       await metadev.writeLine("3");
     });
 
-    // await metadev.fetchStderrLines((line) => {
-    //   console.log("line:", line);
-    //   return !$.stripAnsi(line).includes(
-    //     "Successfully pushed typegraph migration-failure-test",
-    //   );
-    // });
+    await metadev.fetchStderrLines((line) => {
+      console.log("line:", line);
+      return !$.stripAnsi(line).includes(
+        "successfully deployed typegraph migration-failure-test",
+      );
+    });
 
-    // await t.should("database be empty", async () => {
-    //   const e = t.getTypegraphEngine(tgName);
-    //   if (!e) {
-    //     throw new Error("typegraph not found");
-    //   }
-    //   await gql`
-    //     query {
-    //       findRecords {
-    //         id
-    //         age
-    //       }
-    //     }
-    //   `
-    //     .expectData({
-    //       findRecords: [],
-    //     })
-    //     .on(e);
-    // });
+    await t.should("database be empty", async () => {
+      const e = t.getTypegraphEngine(tgName);
+      if (!e) {
+        throw new Error("typegraph not found");
+      }
+      await gql`
+        query {
+          findRecords {
+            id
+            age
+          }
+        }
+      `
+        .expectData({
+          findRecords: [],
+        })
+        .on(e);
+    });
 
     await metadev.close();
   },
@@ -141,7 +143,6 @@ async function listSubdirs(path: string): Promise<string[]> {
 Meta.test(
   {
     name: "meta dev: remove latest migration",
-
     gitRepo: {
       content: {
         "metatype.yml": "metatype.yml",
@@ -174,9 +175,9 @@ Meta.test(
     });
 
     await metadev.fetchStderrLines((line) => {
-      console.log("line:", line);
+      // console.log("line:", line);
       return !$.stripAnsi(line).includes(
-        "Successfully pushed typegraph migration-failure-test",
+        "successfully deployed typegraph migration-failure-test",
       );
     });
 
@@ -214,7 +215,7 @@ Meta.test(
     await t.should("load second version of the typegraph", async () => {
       await writeTypegraph(1, tgDefFile);
       await metadev.fetchStderrLines((line) => {
-        console.log("line:", line);
+        // console.log("line:", line);
         return !line.includes("[select]");
       });
 
@@ -224,7 +225,7 @@ Meta.test(
     });
 
     await metadev.fetchStderrLines((line) => {
-      console.log("line:", line);
+      // console.log("line:", line);
       return !line.includes("Removed migration directory");
     });
 

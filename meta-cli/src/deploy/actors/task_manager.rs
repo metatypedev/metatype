@@ -312,7 +312,6 @@ impl<A: TaskAction + 'static> Actor for TaskManager<A> {
                 .collect(),
         };
 
-        debug!("sending report: {:?}", report);
         self.report_tx.take().unwrap().send(report).unwrap_or_log();
     }
 }

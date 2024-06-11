@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import traceback
+from pathlib import Path
 
 from typegraph.gen.exports.core import (
     FinalizeParams,
@@ -35,6 +36,9 @@ class Manager:
         else:
             raise Exception("unreachable")
 
+    def get_migration_dir(self):
+        return str(Path(self.env.migrations_dir) / self.typegraph.name)
+
     def serialize(self):
         env = self.env
         params = FinalizeParams(
@@ -43,7 +47,7 @@ class Manager:
             artifact_resolution=True,
             codegen=False,
             prisma_migration=PrismaMigrationConfig(
-                migrations_dir=env.migrations_dir,
+                migrations_dir=self.get_migration_dir(),
                 migration_actions=[],
                 default_migration_action=MigrationAction(
                     apply=True,
@@ -70,7 +74,7 @@ class Manager:
             artifact_resolution=True,
             codegen=False,
             prisma_migration=PrismaMigrationConfig(
-                migrations_dir=env.migrations_dir,
+                migrations_dir=self.get_migration_dir(),
                 migration_actions=list(deploy_data.migration_actions.items()),
                 default_migration_action=deploy_data.default_migration_action,
             ),
@@ -98,7 +102,7 @@ class Manager:
                 typegraph_path=env.typegraph_path,
                 prefix=env.prefix,
                 secrets=deploy_data.secrets,
-                migrations_dir=env.migrations_dir,
+                migrations_dir=self.get_migration_dir(),
                 migration_actions=deploy_data.migration_actions,
                 default_migration_action=deploy_data.default_migration_action,
             )
