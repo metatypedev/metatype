@@ -40,26 +40,6 @@ export type FormatCodeOut =
     };
   };
 
-export function typescript_format_code(input: FormatCodeInp) {
-  try {
-    const out = Meta.typescriptFormatCode(input.source);
-    return {
-      Ok: {
-        formatted_code: out,
-      },
-    };
-  } catch (err) {
-    if (typeof err == "string") {
-      return {
-        Err: {
-          message: err,
-        },
-      };
-    }
-    throw err;
-  }
-}
-
 export type ValidateInput = {
   // deno-lint-ignore no-explicit-any
   obj: any;
@@ -472,8 +452,4 @@ export function archive(a0: ArchiveInp): ArchiveResult {
   } catch (err) {
     return { Err: { message: err.toString() } };
   }
-}
-
-export function transformTypescript(a0: string): string {
-  return Meta.deno.transformTypescript(a0);
 }

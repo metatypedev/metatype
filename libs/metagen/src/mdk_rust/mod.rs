@@ -26,7 +26,7 @@ pub struct MdkRustGenConfig {
     #[serde(flatten)]
     #[garde(dive)]
     pub base: crate::config::MdkGeneratorConfigBase,
-    /// Runtimes to generate stubbed materializer implenetations for.
+    /// Runtimes to generate stubbed materializer implementations for.
     #[garde(skip)]
     pub stubbed_runtimes: Option<Vec<String>>,
     /// Name of the crate to be put in the generated `Cargo.toml`
@@ -146,40 +146,34 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
     )?;
     writeln!(&mut mod_rs.buf, "#![cfg_attr(rustfmt, rustfmt_skip)]")?;
     writeln!(&mut mod_rs.buf)?;
-    _ = gen_static(&mut mod_rs);
-    let mut ty_memo = Default::default();
-    let gen_opts = types::GenTypesOptions {
-        derive_debug: true,
-        derive_serde: true,
-    };
+    gen_static(&mut mod_rs)?;
     writeln!(&mut mod_rs.buf, "use types::*;")?;
     writeln!(&mut mod_rs.buf, "pub mod types {{")?;
     writeln!(&mut mod_rs.buf, "    use super::*;")?;
-    {
-        let mut types_rs = GenDestBuf {
-            buf: Default::default(),
-        };
+    let ty_name_memo = {
+        let mut renderer = mdk::types::TypeRenderer::new(
+            &tg.types,
+            Rc::new(types::RustTypeRenderer {
+                derive_serde: true,
+                derive_debug: true,
+            }),
+        );
         // remove the root type which we don't want to generate types for
         // TODO: gql types || function wrappers for exposed functions
         // skip object 0, the root object where the `exposed` items are locted
         for id in 1..tg.types.len() {
-            _ = types::gen_type(
-                id as u32,
-                &tg.types,
-                &mut types_rs,
-                &mut ty_memo,
-                &gen_opts,
-                &[],
-            )?;
+            _ = renderer.render(id as u32)?;
         }
-        for line in types_rs.buf.lines() {
+        let (types_rs, name_memo) = renderer.finalize();
+        for line in types_rs.lines() {
             if !line.is_empty() {
                 writeln!(&mut mod_rs.buf, "    {line}")?;
             } else {
                 writeln!(&mut mod_rs.buf)?;
             }
         }
-    }
+        name_memo
+    };
     writeln!(&mut mod_rs.buf, "}}")?;
     writeln!(&mut mod_rs.buf, "use stubs::*;")?;
     writeln!(&mut mod_rs.buf, "pub mod stubs {{")?;
@@ -189,16 +183,20 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
             buf: Default::default(),
         };
         let gen_stub_opts = stubs::GenStubOptions {};
-        let stubbed_rts = config.stubbed_runtimes.clone().unwrap_or_default();
-        let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts)?;
+        let stubbed_rts = config
+            .stubbed_runtimes
+            .clone()
+            .unwrap_or_else(|| vec!["wasm_wire".to_string()]);
+        let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts).wrap_err_with(|| {
+            format!("error collecting materializers for runtimes {stubbed_rts:?}")
+        })?;
         let mut op_to_mat_map = HashMap::new();
         for fun in &stubbed_funs {
-            let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &ty_memo, &gen_stub_opts)?;
+            let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &ty_name_memo, &gen_stub_opts)?;
             if let Some(Some(op_name)) = fun.mat.data.get("op_name").map(|val| val.as_str()) {
                 op_to_mat_map.insert(op_name.to_string(), trait_name);
             }
         }
-        // TODO: op_to_mat_map
         stubs::gen_op_to_mat_map(&op_to_mat_map, &mut stubs_rs, &gen_stub_opts)?;
 
         for line in stubs_rs.buf.lines() {
@@ -213,12 +211,12 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
     Ok(mod_rs.buf)
 }
 
-pub fn gen_static(dest: &mut GenDestBuf) -> anyhow::Result<Arc<str>> {
+pub fn gen_static(dest: &mut GenDestBuf) -> core::fmt::Result {
     let mod_rs = include_str!("static/mdk.rs").to_string();
     let mod_rs = mod_rs.replace("__METATYPE_VERSION__", std::env!("CARGO_PKG_VERSION"));
 
     let mdk_wit = include_str!("../../../../wit/wit-wire.wit");
-    writeln!(&mut dest.buf, "// gen-static-start")?;
+    writeln!(dest, "// gen-static-start")?;
 
     let gen_start = "// gen-start\n";
     let wit_start = "// wit-start\n";
@@ -243,17 +241,25 @@ pub fn gen_static(dest: &mut GenDestBuf) -> anyhow::Result<Arc<str>> {
     )?;
 
     writeln!(&mut dest.buf, "// gen-static-end")?;
-    Ok("Ctx".into())
+    Ok(())
 }
 
 pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
     let cargo_toml = include_str!("static/Cargo.toml");
-    if let Some(crate_name) = crate_name {
+    let mut cargo_toml = if let Some(crate_name) = crate_name {
         const DEF_CRATE_NAME: &str = "metagen_mdk_rust_static";
         cargo_toml.replace(DEF_CRATE_NAME, crate_name)
     } else {
         cargo_toml.to_string()
-    }
+    };
+    cargo_toml.push_str(
+        r#"
+
+[profile.release]
+strip = "symbols"
+opt-level = "z""#,
+    );
+    cargo_toml
 }
 
 pub fn gen_lib_rs() -> String {
@@ -284,7 +290,6 @@ impl stubs::MyFunc for MyMat {
     .into()
 }
 
-#[cfg(feature = "multithreaded")]
 #[test]
 fn mdk_rs_e2e() -> anyhow::Result<()> {
     use crate::tests::*;
@@ -294,9 +299,9 @@ fn mdk_rs_e2e() -> anyhow::Result<()> {
         targets: [(
             "default".to_string(),
             config::Target(
-                [(
-                    "mdk_rust".to_string(),
-                    serde_json::to_value(mdk_rust::MdkRustGenConfig {
+                [GeneratorConfig {
+                    generator_name: "mdk_rust".to_string(),
+                    other: serde_json::to_value(mdk_rust::MdkRustGenConfig {
                         skip_cargo_toml: None,
                         skip_lib_rs: Some(true),
                         stubbed_runtimes: Some(vec!["wasm_wire".into()]),
@@ -308,7 +313,7 @@ fn mdk_rs_e2e() -> anyhow::Result<()> {
                             path: "./".into(),
                         },
                     })?,
-                )]
+                }]
                 .into_iter()
                 .collect(),
             ),

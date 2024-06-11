@@ -53,10 +53,6 @@ impl DeploySubcommand {
 
 #[derive(Parser, Default, Debug, Clone)]
 pub struct DeployOptions {
-    /// Generate type/function definitions for external modules (Deno)
-    #[clap(long, default_value_t = false)]
-    pub codegen: bool,
-
     // TODO incompatible with create_migration, allow_dirty and allow_destructive
     /// Do not apply prisma migrations
     #[clap(long, default_value_t = false)]
@@ -95,7 +91,7 @@ pub struct Deploy {
 }
 
 impl Deploy {
-    #[tracing::instrument(level = "debug")]
+    #[tracing::instrument]
     pub async fn new(deploy: &DeploySubcommand, args: &ConfigArgs) -> Result<Self> {
         let dir: Arc<Path> = args.dir().into();
 
@@ -106,10 +102,6 @@ impl Deploy {
 
         let node_config = config.node(&deploy.node, &deploy.target);
         let secrets = Secrets::load_from_node_config(&node_config);
-        debug!(
-            "validating configuration for target {:?}",
-            deploy.target.yellow()
-        );
         let node = node_config
             .build(&dir)
             .await
@@ -135,7 +127,7 @@ impl Deploy {
 
 #[async_trait]
 impl Action for DeploySubcommand {
-    #[tracing::instrument(level = "debug")]
+    #[tracing::instrument]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         let deploy = Deploy::new(self, &args).await?;
 

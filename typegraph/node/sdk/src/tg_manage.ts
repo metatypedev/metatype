@@ -95,11 +95,6 @@ export class Manager {
       serialize: () => frozenSerialized,
     } as TypegraphOutput;
 
-    if (params.codegen) {
-      // TODO
-      throw new Error("not implemented");
-    }
-
     try {
       const deployTarget = await rpc.getDeployTarget();
       const { response } = await tgDeploy(reusableTgOutput, {

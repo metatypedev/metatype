@@ -4,11 +4,8 @@
 import {
   get_version,
   typegraph_validate,
-  typescript_format_code,
   validate_prisma_runtime_data,
-  wasmtime_wit,
 } from "native";
-import type { WasmInput } from "../../engine/runtime.js";
 
 function assert<T>(val: T) {
   if (!val) throw Error("assertion failed");
@@ -27,18 +24,6 @@ Deno.test("version", () => {
   assert(
     typeof get_version() === "string",
   );
-});
-
-Deno.test("typescriptFormatCode", () => {
-  const source = "console.log( {hello: 'world'})";
-
-  assert(
-    Meta.typescriptFormatCode(source) ===
-      `console.log({ hello: "world" });\n`,
-  );
-
-  const out = typescript_format_code({ source });
-  assert(out!.Ok!.formatted_code === `console.log({ hello: "world" });\n`);
 });
 
 Deno.test("validatePrismaRuntimeData", () => {
@@ -146,16 +131,4 @@ Deno.test("typegraphValidate", () => {
 
   const out = typegraph_validate({ json: str });
   assert("Valid" in out && JSON.stringify(JSON.parse(out.Valid.json)) == str);
-});
-
-Deno.test("Wasm Wit", async () => {
-  const input: WasmInput = {
-    wasm: "typegate/tests/runtimes/wasm_reflected/rust.wasm",
-    func: "add",
-    args: [JSON.stringify(1), JSON.stringify(2)],
-  };
-  assert(Meta.wasmtimeWit(input) == "3.0");
-
-  const out = await wasmtime_wit(input);
-  assert("Ok" in out && out.Ok.res == "3.0");
 });

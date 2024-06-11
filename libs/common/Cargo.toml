@@ -1,21 +1,21 @@
 [package]
 name = "common"
-version = "0.4.2"
+version = "0.4.3-0"
 edition = "2021"
 
 [dependencies]
 anyhow.workspace = true
-base64 = "0.21.5"
-flate2 = "1.0.28"
+base64.workspace = true
+flate2.workspace = true
 indexmap.workspace = true
 serde.workspace = true
 serde_json = { workspace = true, features = ["preserve_order"] }
 serde_with = "3.4.0"
-tar = "0.4.40"
+tar.workspace = true
 ignore = "0.4.20"
 reqwest = { workspace = true, features = ["json"] }
-async-trait = "0.1.74"
-itertools = "0.11.0"
-colored = "2.0.4"
+async-trait.workspace = true
+itertools.workspace = true
+colored = "2.0"
 indoc.workspace = true
 thiserror.workspace = true

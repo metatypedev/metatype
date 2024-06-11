@@ -79,7 +79,7 @@ impl TryFrom<&Path> for ModuleType {
 
     fn try_from(path: &Path) -> std::result::Result<Self, Self::Error> {
         match path.extension() {
-            Some(ext) if ext == "ts" => Ok(ModuleType::TypeScript),
+            Some(ext) if ext == "ts" || ext == "mts" => Ok(ModuleType::TypeScript),
             Some(ext) if ext == "js" || ext == "mjs" || ext == "cjs" => Ok(ModuleType::JavaScript),
             Some(ext) if ext == "py" => Ok(ModuleType::Python),
             _ => Err(ferr!(

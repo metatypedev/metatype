@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -e
+set -eux
 
 cargo build --target wasm32-unknown-unknown # --release
 # wasm-opt -Oz ./target/wasm32-unknown-unknown/release/rust.wasm -o ./target/rust-component.wasm.opt

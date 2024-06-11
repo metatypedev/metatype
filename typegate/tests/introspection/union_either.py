@@ -3,7 +3,7 @@ from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph()
-def introspect_union_either(g: Graph):
+def union_either(g: Graph):
     rubix_cube = t.struct({"name": t.string(), "size": t.integer()}, name="Rubix")
     toygun = t.struct({"color": t.string()}, name="Toygun")
     gunpla = t.struct(

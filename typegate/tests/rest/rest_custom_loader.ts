@@ -22,7 +22,7 @@ const complexType = t.struct({
   f: t.float({ enumeration: [1.0, 2.5] }),
 }, { name: "ComplexType" });
 
-typegraph("rest", (g: any) => {
+export const tg = await typegraph("rest", (g: any) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
 

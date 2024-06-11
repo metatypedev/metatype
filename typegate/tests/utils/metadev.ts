@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { testDir } from "test-utils/dir.ts";
-import { getMetaCliExe } from "test-utils/meta.ts";
 import { TextLineStream } from "../../../dev/deps.ts";
 import { deadline } from "std/async/mod.ts";
 
@@ -48,9 +47,8 @@ export class MetaDev {
     this.#stderr = this.#stderrStream.getReader();
   }
 
-  static async start(options: MetaDevOptions = {}): Promise<MetaDev> {
-    const metaBin = await getMetaCliExe();
-    return new MetaDev(metaBin, options);
+  static start(options: MetaDevOptions = {}): MetaDev {
+    return new MetaDev("meta", options);
   }
 
   async #fetchOutputLines(

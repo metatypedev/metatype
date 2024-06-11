@@ -26,7 +26,7 @@ const tpe = t.struct({
   "date": t.datetime().inject("now"),
 });
 
-typegraph("injection", (g: any) => {
+export const tg = await typegraph("injection", (g: any) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
 

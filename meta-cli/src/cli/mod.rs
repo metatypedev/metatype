@@ -52,8 +52,14 @@ pub struct ConfigArgs {
 }
 
 impl ConfigArgs {
-    pub fn dir(&self) -> PathBuf {
-        self.dir.normalize().unwrap_or_log().into_path_buf()
+    pub fn dir(&self) -> Result<PathBuf> {
+        Ok(self
+            .dir
+            .normalize()
+            .wrap_err(
+                "error normalizing working directory, make sure any override working dir exists.",
+            )?
+            .into_path_buf())
     }
 }
 

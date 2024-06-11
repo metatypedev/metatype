@@ -24,7 +24,7 @@ typegraph(
         title: t.string(),
         body: t.string(),
       },
-      { name: "message" }, // the name of our type
+      { name: "message" } // the name of our type
     );
 
     g.expose({
@@ -32,7 +32,7 @@ typegraph(
         .fromLambda(
           t.struct({ first: t.float(), second: t.float() }),
           t.float(),
-          { code: "lambda x: x['first'] + x['second']" },
+          { code: "lambda x: x['first'] + x['second']" }
         )
         .withPolicy(pub),
       multiply: deno
@@ -43,5 +43,5 @@ typegraph(
       create_message: db.create(message).withPolicy(pub),
       list_messages: db.findMany(message).withPolicy(pub),
     });
-  },
+  }
 );

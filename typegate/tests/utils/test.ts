@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { SystemTypegraph } from "../../src/system_typegraphs.ts";
+import { crypto } from "std/crypto/mod.ts";
 import { dirname, extname, join } from "std/path/mod.ts";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
+import { type SnapshotOptions } from "std/testing/snapshot.ts";
 import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
@@ -16,14 +18,9 @@ import { SyncConfig } from "../../src/sync/config.ts";
 import { AsyncDisposableStack } from "dispose";
 import config from "../../src/config.ts";
 
-type AssertSnapshotParams = typeof assertSnapshot extends (
-  ctx: Deno.TestContext,
-  ...rest: infer R
-) => Promise<void> ? R
-  : never;
-
 export interface ParseOptions {
   deploy?: boolean;
+  cwd?: string;
   typegraph?: string;
   secrets?: Record<string, string>;
   autoSecretName?: boolean;
@@ -75,8 +72,10 @@ function serve(typegates: TypegateManager): Promise<ServeResult> {
       },
     }, (req) => {
       return typegates.next().handle(req, {
-        remoteAddr: { hostname: "localhost" },
-      } as Deno.ServeHandlerInfo);
+        hostname: "localhost",
+        port: 0,
+        transport: "tcp",
+      });
     });
   });
 }
@@ -96,7 +95,6 @@ export class MetaTest {
     t: Deno.TestContext,
     typegates: TypegateManager,
     introspection: boolean,
-    tempDir: string,
   ): Promise<MetaTest> {
     await using stack = new AsyncDisposableStack();
     stack.use(typegates);
@@ -110,7 +108,6 @@ export class MetaTest {
       typegates,
       introspection,
       portNumber,
-      tempDir,
       stack.move(),
     );
 
@@ -122,7 +119,6 @@ export class MetaTest {
     public typegates: TypegateManager,
     private introspection: boolean,
     public port: number,
-    public tempDir: string,
     public disposables: AsyncDisposableStack,
   ) {
   }
@@ -139,6 +135,10 @@ export class MetaTest {
 
   get typegate() {
     return this.typegates.next();
+  }
+
+  get tempDir() {
+    return this.typegate.tmpDir;
   }
 
   getTypegraphEngine(name: string): QueryEngine | undefined {
@@ -184,118 +184,96 @@ export class MetaTest {
     await this.typegates.next().removeTypegraph(tgName);
   }
 
-  async engine(path: string, opts: ParseOptions = {}): Promise<QueryEngine> {
-    const oldTypegraphList = await this.typegates.next().register.list();
-
-    const cmd = ["deploy", "-f", path, "--target", "dev", "--allow-dirty"];
-
-    cmd.push("--gate", `http://localhost:${this.port}`);
-
-    if (opts.prefix != null) {
-      cmd.push("--prefix", opts.prefix);
-    }
-
-    // if (opts.typegraph != null) {
-    //   cmd.push("--typegraph", opts.typegraph);
-    // }
-
-    for (const [key, value] of Object.entries(opts.secrets ?? {})) {
-      cmd.push("--secret", `${key}=${value}`);
-    }
-
-    const { stdout, stderr } = await this.meta(cmd);
-
-    console.log("STDOUT>");
-    console.log(stdout);
-    console.log("STDERR>");
-    console.log(stderr);
-
-    const newTypegraphList = await this.typegates.next().register.list();
-
-    const newTypegraph = newTypegraphList.find((e) =>
-      !oldTypegraphList.includes(e)
-    );
-    // what for redeploy?
-    if (newTypegraph == null) {
-      throw new Error("No new typegraph");
-    }
-
-    if (opts.typegraph != null && opts.typegraph != newTypegraph.name) {
-      throw new Error(
-        `Expected typegraph ${opts.typegraph}, got ${newTypegraph.name}`,
-      );
-    }
-
-    return newTypegraph;
-
-    // TODO: MET-500
-    // const tgString = await this.serialize(path, opts);
-    // const tgJson = await TypeGraph.parseJson(tgString);
-    //
-    // // for convience, automatically prefix secrets
-    // const secrets = opts.secrets ?? {};
-    // const { engine, response } = await this.typegates.next().pushTypegraph(
-    //   tgJson,
-    //   secrets,
-    //   this.introspection,
-    // );
-    //
-    // if (engine == null) {
-    //   throw response.failure!;
-    // }
-    //
-    // return engine;
-  }
-
-  async engineFromDeployed(tgString: string): Promise<QueryEngine> {
+  async #engineFromDeployed(
+    tgString: string,
+    secrets: Record<string, string>,
+  ): Promise<QueryEngine> {
     const tg = await TypeGraph.parseJson(tgString);
-    const { engine, response } = await this.typegates
-      .next()
-      .pushTypegraph(tg, {}, this.introspection);
+    const { engine, response } = await this.typegate
+      .pushTypegraph(tg, secrets, this.introspection);
 
     if (engine == null) {
       throw response.failure!;
     }
 
+    this.addCleanup(() => engine[Symbol.asyncDispose]());
     return engine;
   }
 
-  async engineFromTgDeployPython(path: string, cwd: string) {
+  async engine(path: string, opts: ParseOptions = {}) {
     const extension = extname(path);
     let sdkLang: SDKLangugage;
     switch (extension) {
       case ".py":
         sdkLang = SDKLangugage.Python;
         break;
+      case ".ts":
+      case ".js":
+      case ".mjs":
+        sdkLang = SDKLangugage.TypeScript;
+        break;
       default:
         throw new Error(`Unsupported file type ${extension}`);
     }
 
-    const serialized = await this.#serializeTypegraphFromShell(
+    // FIXME: this breaks if an absolute path is passed
+    const testDirName = dirname(path);
+    const cwd = join(testDir, testDirName);
+
+    const serialized = await this.#deployTypegraphFromShell(
       path,
       sdkLang,
       cwd,
+      opts,
     );
 
-    return await this.engineFromDeployed(serialized);
+    return await this.#engineFromDeployed(serialized, opts.secrets ?? {});
   }
 
-  async #serializeTypegraphFromShell(
+  async #deployTypegraphFromShell(
     path: string,
     lang: SDKLangugage,
     cwd: string,
+    opts: ParseOptions,
   ): Promise<string> {
-    // run self deployed typegraph
+    let output;
+    const secrets = opts.secrets ?? {};
+    const secretsStr = JSON.stringify(secrets);
 
-    const { stderr, stdout } = await this.shell([
-      lang.toString(),
-      path,
-      cwd,
-      this.port.toString(),
-    ]);
+    if (lang === SDKLangugage.TypeScript) {
+      const cmd = [
+        lang.toString(),
+        "run",
+        "--allow-all",
+        "utils/tg_deploy_script.ts",
+        cwd,
+        this.port.toString(),
+        path,
+        secretsStr,
+      ];
+      if (opts.typegraph) {
+        cmd.push(opts.typegraph);
+      }
+      output = await this.shell(cmd);
+    } else {
+      const cmd = [
+        lang.toString(),
+        "utils/tg_deploy_script.py",
+        cwd,
+        this.port.toString(),
+        path,
+        secretsStr,
+      ];
+      if (opts.typegraph) {
+        cmd.push(opts.typegraph);
+      }
+      output = await this.shell(cmd);
+    }
 
-    if (stderr.length > 0) {
-      throw new Error(`Error serializing typegraph: ${stderr}`);
+    const { stderr, stdout, code } = output;
+
+    if (code !== 0) {
+      throw new Error(`Failed with exit code ${code}: ${stderr}`);
     }
 
     if (stdout.length === 0) {
@@ -345,22 +323,23 @@ export class MetaTest {
     return true;
   }
 
-  async assertSnapshot(...params: AssertSnapshotParams): Promise<void> {
-    await assertSnapshot(this.t, ...params);
+  async assertSnapshot(
+    value: unknown,
+    options: SnapshotOptions = {},
+  ): Promise<void> {
+    await assertSnapshot(this.t, value, options);
   }
 
-  async assertThrowsSnapshot(fn: () => void): Promise<void> {
-    let err: Error | null = null;
+  async assertThrowsSnapshot(
+    fn: () => void,
+    options: SnapshotOptions = {},
+  ): Promise<void> {
     try {
       fn();
     } catch (e) {
-      err = e;
+      return await this.assertSnapshot(e.message, options);
     }
-
-    if (err == null) {
-      throw new Error("Assertion failure: function did not throw");
-    }
-    await this.assertSnapshot(err.message);
+    throw new Error("Assertion failure: function did not throw");
   }
 
   async assertSameTypegraphs(...paths: string[]) {
@@ -448,15 +427,22 @@ export const test = ((o, fn): void => {
         );
       }
 
-      const tempDir = await Deno.makeTempDir({
-        prefix: "typegate-test-",
-        dir: config.tmp_dir,
-      });
+      const tempDirs = await Promise.all(
+        Array.from({ length: replicas }).map(
+          async (_) => {
+            const uuid = crypto.randomUUID();
+            return await Deno.makeTempDir({
+              prefix: `typegate-test-${uuid}`,
+              dir: config.tmp_dir,
+            });
+          },
+        ),
+      );
 
       // TODO different tempDir for each typegate instance
       const result = await Promise.allSettled(
-        Array.from({ length: replicas }).map((_) =>
-          Typegate.init(opts.syncConfig ?? null, null, tempDir)
+        Array.from({ length: replicas }).map(async (_, index) =>
+          await Typegate.init(opts.syncConfig ?? null, null, tempDirs[index])
         ),
       );
       const typegates = result.map((r) => {
@@ -479,11 +465,14 @@ export const test = ((o, fn): void => {
         t,
         new TypegateManager(typegates),
         introspection,
-        tempDir,
       );
 
       mt.disposables.defer(async () => {
-        await Deno.remove(tempDir, { recursive: true });
+        await Promise.all(tempDirs.map(
+          async (tempDir, _) => {
+            await Deno.remove(tempDir, { recursive: true });
+          },
+        ));
       });
 
       if (opts.teardown != null) {

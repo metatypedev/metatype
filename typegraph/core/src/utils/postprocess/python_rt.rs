@@ -1,13 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::utils::fs_host;
+use crate::utils::fs_host::{self, resolve_globs_dirs};
 use common::typegraph::{
     runtimes::{python::ModuleMatData, Artifact},
     utils::{map_from_object, object_from_map},
     Typegraph,
 };
-use std::{collections::hash_map::Entry, path::PathBuf};
+use std::{collections::btree_map::Entry, path::PathBuf};
 
 use crate::utils::postprocess::PostProcessor;
 
@@ -39,19 +39,20 @@ impl PostProcessor for PythonProcessor {
 
                 let deps = mat_data.deps.clone();
                 let mut dep_artifacts = vec![];
-                for dep in deps {
-                    let dep_rel_path = PathBuf::from(dep);
+                let resolved_deps = resolve_globs_dirs(deps)?;
+
+                for dep_rel_path in resolved_deps {
                     let dep_abs_path = fs_host::make_absolute(&dep_rel_path)?;
 
+                    let (dep_hash, dep_size) = fs_host::hash_file(&dep_abs_path)?;
+                    let dep_artifact = Artifact {
+                        path: dep_rel_path.clone(),
+                        hash: dep_hash,
+                        size: dep_size,
+                    };
+                    dep_artifacts.push(dep_artifact.clone());
                     if let Entry::Vacant(entry) = tg.meta.artifacts.entry(dep_rel_path.clone()) {
-                        let (dep_hash, dep_size) = fs_host::hash_file(&dep_abs_path)?;
-                        let dep_artifact = Artifact {
-                            path: dep_rel_path,
-                            hash: dep_hash,
-                            size: dep_size,
-                        };
-                        entry.insert(dep_artifact.clone());
-                        dep_artifacts.push(dep_artifact);
+                        entry.insert(dep_artifact);
                         tg.deps.push(dep_abs_path);
                     }
                 }

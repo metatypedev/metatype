@@ -4,8 +4,9 @@ from typegraph.runtimes import RandomRuntime
 
 
 @typegraph(
-    # skip:next-line
+    # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
 )
 def first_typegraph(g: Graph):
     # declare runtimes and policies
@@ -24,6 +25,6 @@ def first_typegraph(g: Graph):
     # expose them with policies
     g.expose(
         public,
-        # input → output via materializer
+        # input → output via runtime function
         get_message=random.gen(message),
     )

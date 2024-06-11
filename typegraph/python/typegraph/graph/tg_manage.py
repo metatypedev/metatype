@@ -83,14 +83,12 @@ class Manager:
         # hack for allowing tg.serialize(config) to be called more than once
         frozen_out = freeze_tg_output(params, self.typegraph)
         try:
-            frozen_serialized = frozen_out.serialize(params)  # noqa
+            frozen_out.serialize(params)
         except Exception as err:
             Log.debug(traceback.format_exc())
             Log.failure({"typegraph": self.typegraph.name, "error": str(err)})
             return
 
-        if params.codegen:
-            raise Exception("not implemented")
 
         try:
             deploy_target = Rpc.get_deploy_target()

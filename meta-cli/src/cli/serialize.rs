@@ -53,7 +53,7 @@ pub struct Serialize {
 impl Action for Serialize {
     #[tracing::instrument]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
-        let dir = args.dir();
+        let dir = args.dir()?;
         let config_path = args.config.clone();
 
         let config = Config::load_or_find(config_path, &dir)?;

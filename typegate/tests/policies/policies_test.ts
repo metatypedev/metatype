@@ -213,7 +213,7 @@ Meta.test("Namespace policies", async (t) => {
 });
 
 Meta.test("Policies for effects", async (t) => {
-  const e = await t.engine("policies/effects.py", {
+  const e = await t.engine("policies/effects_py.py", {
     secrets: await genSecretKey(),
   });
 

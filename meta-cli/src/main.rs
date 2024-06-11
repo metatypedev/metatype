@@ -25,13 +25,14 @@ mod interlude {
         pub use tracing::{debug, error, info, trace, warn};
     }
     pub use async_trait::async_trait;
+    pub use futures::prelude::*;
+    pub use futures_concurrency::prelude::*;
 
     pub use crate::{anyhow_to_eyre, map_ferr};
     pub use actix::prelude::*;
 }
 
 mod cli;
-mod codegen;
 mod com;
 mod config;
 pub mod deploy;
@@ -105,17 +106,12 @@ fn main() -> Result<()> {
     match args.command {
         // the deno task requires use of a single thread runtime which it'll spawn itself
         Some(cli::Commands::Typegate(cmd_args)) => cli::typegate::command(cmd_args, args.config)?,
-        Some(cli::Commands::Gen(gen_args)) => {
-            // metagen relies on on some tokio infra
-            // that doesn't mesh well with actix
-            tokio::runtime::Builder::new_multi_thread()
-                .enable_all()
-                .build()?
-                .block_on(async { gen_args.run(args.config).await }.in_current_span())?;
-        }
         Some(command) => runner.block_on(async move {
             match command {
-                cli::Commands::Serialize(_) | cli::Commands::Dev(_) | cli::Commands::Deploy(_) => {
+                cli::Commands::Serialize(_)
+                | cli::Commands::Dev(_)
+                | cli::Commands::Deploy(_)
+                | cli::Commands::Gen(_) => {
                     command.run(args.config).await
                 }
                 _ => command.run(args.config).await.map(|_| ()),

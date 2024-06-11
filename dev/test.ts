@@ -88,13 +88,13 @@ const filtered = filter ? fuse.search(filter) : null;
 const filteredTestFiles = filtered?.map((res) => testFiles[res.refIndex]) ??
   testFiles;
 
-const cwd = resolve(projectDir, "typegate");
 const tmpDir = join(projectDir, "tmp");
 const env: Record<string, string> = {
+  "CLICOLOR_FORCE": "1",
   "RUST_LOG": "off,xtask=debug,meta=debug",
-  "RUST_BACKTRACE": "0",
   "RUST_SPANTRACE": "1",
-  "RUST_LIB_BACKTRACE": "1",
+  // "RUST_BACKTRACE": "short",
+  "RUST_MIN_STACK": "8388608",
   "LOG_LEVEL": "DEBUG",
   // "NO_COLOR": "1",
   "DEBUG": "true",
@@ -106,6 +106,9 @@ const env: Record<string, string> = {
   "TMP_DIR": tmpDir,
   "TIMER_MAX_TIMEOUT_MS": "30000",
   "NPM_CONFIG_REGISTRY": "http://localhost:4873",
+  // NOTE: ordering of the variables is important as we want the
+  // `meta` build to be resolved before any system meta builds
+  "PATH": `${join(projectDir, "target/debug")}:${Deno.env.get("PATH")}`,
 };
 
 await Deno.mkdir(tmpDir, { recursive: true });
@@ -145,16 +148,20 @@ interface Run {
   streamed: boolean;
 }
 
+const xtask = join(projectDir, "target/debug/xtask");
+const denoConfig = join(projectDir, "typegate/deno.jsonc");
+
 function createRun(testFile: string): Run {
   const start = Date.now();
-  const child = new Deno.Command("deno", {
+  const child = new Deno.Command(xtask, {
     args: [
-      "task",
+      "deno",
       "test",
+      `--config=${denoConfig}`,
       testFile,
       ...flags["--"],
     ],
-    cwd,
+    cwd: projectDir,
     stdout: "piped",
     stderr: "piped",
     env: { ...Deno.env.toObject(), ...env },
@@ -180,9 +187,40 @@ function createRun(testFile: string): Run {
   };
 }
 
+async function buildXtask() {
+  console.log(`${prefix} Building xtask...`);
+  const child = new Deno.Command("cargo", {
+    args: ["build", "--package", "xtask"],
+    cwd: projectDir,
+    stdout: "inherit",
+    stderr: "inherit",
+  }).spawn();
+  const status = await child.status;
+  if (!status.success) {
+    throw new Error("Failed to build xtask");
+  }
+}
+
+async function buildMetaCli() {
+  console.log(`${prefix} Building meta-cli...`);
+  const child = new Deno.Command("cargo", {
+    args: ["build", "--package", "meta-cli"],
+    cwd: projectDir,
+    stdout: "inherit",
+    stderr: "inherit",
+  }).spawn();
+  const status = await child.status;
+  if (!status.success) {
+    throw new Error("Failed to build meta-cli");
+  }
+}
+
 const queues = [...filteredTestFiles];
 const runs: Record<string, Run> = {};
 const globalStart = Date.now();
+
+await buildXtask();
+await buildMetaCli();
 
 void (async () => {
   while (queues.length > 0) {

@@ -24,7 +24,7 @@ await typegraph(
     // the policy implementation is based on functions itself
     const restrict_referer = deno.policy(
       "restrict_referer_policy",
-      '(_, context) => context.headers.referer && ["localhost", "metatype.dev"].includes(new URL(context.headers.referer).hostname)',
+      '(_, context) => context.headers.referer && ["localhost", "metatype.dev"].includes(new URL(context.headers.referer).hostname)'
     );
 
     // or we can point to a local file that's accessible to the meta-cli
@@ -32,7 +32,7 @@ await typegraph(
 
     g.expose(
       {
-        // all materializers have inputs and outputs
+        // all functions have inputs and outputs
         fib: deno
           .import(t.struct({ size: t.integer() }), t.list(t.float()), {
             module: fib_module,
@@ -42,15 +42,15 @@ await typegraph(
         randomItem: deno.func(
           t.struct({ items: t.list(t.string()) }),
           t.string(),
-          { code: random_item_fn },
+          { code: random_item_fn }
         ),
         random: deno.func(
           t.struct({}),
           t.float(),
-          { code: "() => Math.random()" }, // more inline code
+          { code: "() => Math.random()" } // more inline code
         ),
       },
-      pub,
+      pub
     );
-  },
+  }
 );

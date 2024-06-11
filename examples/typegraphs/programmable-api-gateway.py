@@ -9,8 +9,9 @@ from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph(
-    # skip:next-line
+    # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
 )
 def programmable_api_gateway(g: Graph):
     deno = DenoRuntime()

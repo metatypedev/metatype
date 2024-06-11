@@ -3,7 +3,7 @@ from typegraph.runtimes.http import HttpRuntime
 
 
 @typegraph()
-def content_type(g: Graph):
+def http_content_type(g: Graph):
     remote = HttpRuntime("https://content-type.example.com/api")
     public = Policy.public()
 

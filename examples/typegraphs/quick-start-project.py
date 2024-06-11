@@ -1,11 +1,15 @@
+from typegraph import Graph, Policy, t, typegraph
+from typegraph.graph.params import Cors
 from typegraph.providers.prisma import PrismaRuntime
 from typegraph.runtimes import PythonRuntime
 
-from typegraph import Graph, Policy, t, typegraph
 
-
-@typegraph()
-def quick_start_project(g: Graph):
+@typegraph(
+    # skip:start
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
+)
+def example(g: Graph):
     # access control
     public = Policy.public()
 

@@ -11,6 +11,7 @@ import * as ast from "graphql/ast";
 import { WitWireMessenger } from "./wit_wire/mod.ts";
 import { WitWireMatInfo } from "../../engine/runtime.js";
 import { sha256 } from "../crypto.ts";
+import { InternalAuth } from "../services/auth/protocols/internal.ts";
 
 const logger = getLogger(import.meta);
 
@@ -130,10 +131,16 @@ export class PythonRuntime extends Runtime {
     logger.info(
       `initializing WitWireMessenger for PythonRuntime ${uuid} on typegraph ${typegraphName}`,
     );
+    const token = await InternalAuth.emit();
     const wire = await WitWireMessenger.init(
       "inline://pyrt_wit_wire.cwasm",
       uuid,
       wireMatInfos,
+      {
+        authToken: token,
+        typegate,
+        typegraphUrl: new URL(`internal+witwire://typegate/${typegraphName}`),
+      },
     );
     logger.info("WitWireMessenger initialized");
 
@@ -141,6 +148,9 @@ export class PythonRuntime extends Runtime {
   }
 
   async deinit(): Promise<void> {
+    // if (Deno.env.get("KILL_PY")) {
+    //   throw new Error("wtf");
+    // }
     this.logger.info("deinitializing PythonRuntime");
     await using _drop = this.wire;
   }

@@ -22,7 +22,7 @@ dev:
       (const\s+TEMPORAL_VERSION\s*=\s*").*(";): TEMPORAL_VERSION
       (const\s+WASMTIME_VERSION\s*=\s*").*(";): WASMTIME_VERSION
       (const\s+METATYPE_VERSION\s*=\s*").*(";): METATYPE_VERSION
-    .github/*/*.yml:
+    .github/**/*.yml:
       '(  GHJK_VERSION: ").+(")': GHJK_VERSION
       '(  DENO_VERSION: ").+(")': DENO_VERSION
       '([\s-]+uses:\s+metatypedev/setup-ghjk@).+()': GHJK_ACTION_VERSION
@@ -32,6 +32,8 @@ dev:
       '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
     meta-lsp/vscode-metatype-support/package.json:
       '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
+    typegate/tests/**/*.snap:
+      '(\s*static\s*MT_VERSION:\s*&str\s*=\s*").+(";)': METATYPE_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
     typegraph/node/sdk/package.json:
@@ -58,7 +60,7 @@ dev:
       (ARG RUST_VERSION=).*(): RUST_VERSION
       (ARG GHJK_VERSION=).*(): GHJK_VERSION
     typegate/src/runtimes/wit_wire/mod.ts:
-      (const METATYPE_VERSION = ").*(";): METATYPE_VERSION
+      (const\s+METATYPE_VERSION = ").*(";): METATYPE_VERSION
     typegate/src/typegraph/versions.ts:
       (const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
     typegraph/core/src/typegraph.rs:
@@ -89,7 +91,7 @@ dev:
     POETRY_VERSION: 1.7.0
     PROTOC_VERSION: v24.1
     RUST_VERSION: 1.77.1
-    DENO_VERSION: 1.41.0
+    DENO_VERSION: 1.43.6
     NODE_VERSION: 20.8.0
     PNPM_VERSION: v9.0.5
     CARGO_INSTA_VERSION: 1.33.0
@@ -99,7 +101,7 @@ dev:
     WASMTIME_PY_VERSION: 21.0.0
     TYPEGRAPH_VERSION: 0.0.3
     PRISMA_VERSION: 5.5.2
-    METATYPE_VERSION: 0.4.2
+    METATYPE_VERSION: 0.4.3-0
     PUBLISHED_VERSION: 0.4.2
     WASM_OPT_VERSION: 0.116.1
     MOLD_VERSION: v2.4.0

@@ -38,6 +38,9 @@ class MatWire(wit_wire.exports.MatWire):
         for op in args.expected_ops:
             try:
                 handlers[op.op_name] = op_to_handler(op)
+            except Err as err:
+                traceback.print_exc()
+                raise err
             except Exception as err:
                 traceback.print_exc()
                 raise Err(InitError_Other(str(err)))
@@ -86,11 +89,15 @@ def op_to_handler(op: MatInfo) -> ErasedHandler:
         )
         sys.meta_path.append(finder)
 
-        module = importlib.import_module(
-            ThePathFinder.path_to_module(
-                os.path.join(prefix, data_parsed["root_src_path"])
+        try:
+            module = importlib.import_module(
+                ThePathFinder.path_to_module(
+                    os.path.join(prefix, data_parsed["root_src_path"])
+                )
             )
-        )
+        except Exception as err:
+            finder.debug()
+            raise Err(InitError_Other(f"{err}"))
         return ErasedHandler(handler_fn=getattr(module, data_parsed["func_name"]))
     elif data_parsed["ty"] == "lambda":
         fn = eval(data_parsed["source"])
@@ -103,6 +110,12 @@ class ThePathFinder(importlib.abc.MetaPathFinder):
     @staticmethod
     def path_to_module(path: str):
         return os.path.splitext((os.path.normpath(path)))[0].replace("/", ".")
+
+    def debug(self):
+        print("= Loaded modules summary == == == ==")
+        print(f" modules: {self._mod_names}")
+        print(f" packages: {self._pkg_names}")
+        print("== == == == == == == == == == == ==")
 
     def __init__(self, modules: Dict[str, str]):
         self._mods_raw = modules

@@ -9,7 +9,7 @@ const tpe = t.struct({
   "b": t.list(t.either([t.integer(), t.string()])),
 });
 
-export const tgDuplicateArtifact = await typegraph(
+export const tg = await typegraph(
   "python_duplicate_artifacts",
   (g: any) => {
     const python = new PythonRuntime();

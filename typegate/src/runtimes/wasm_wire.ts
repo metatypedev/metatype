@@ -9,6 +9,7 @@ import * as ast from "graphql/ast";
 import { Materializer, WasmRuntimeData } from "../typegraph/types.ts";
 import { getLogger, Logger } from "../log.ts";
 import { WitWireMessenger } from "./wit_wire/mod.ts";
+import { InternalAuth } from "../services/auth/protocols/internal.ts";
 
 const logger = getLogger(import.meta);
 
@@ -53,6 +54,7 @@ export class WasmRuntimeWire extends Runtime {
     });
 
     logger.info("initializing wit wire messenger");
+    const token = await InternalAuth.emit();
     const wire = await WitWireMessenger.init(
       await typegate.artifactStore.getLocalPath(artifactMeta),
       uuid,
@@ -63,6 +65,11 @@ export class WasmRuntimeWire extends Runtime {
         mat_title: mat.data.op_name as string,
         mat_data_json: JSON.stringify({}),
       })),
+      {
+        authToken: token,
+        typegate,
+        typegraphUrl: new URL(`internal+witwire://typegate/${typegraphName}`),
+      },
     );
     logger.info("wit wire messenger initialized");
 

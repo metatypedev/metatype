@@ -3,7 +3,7 @@ from typegraph.providers.prisma import PrismaRuntime
 
 
 @typegraph()
-def prisma(g: Graph):
+def prisma_edgecases(g: Graph):
     # schema ref:
     # https://www.prisma.io/docs/reference/api-reference/prisma-client-reference
 

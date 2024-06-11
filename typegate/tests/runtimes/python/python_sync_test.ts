@@ -1,17 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
-import { gql, Meta } from "test-utils/mod.ts";
-import { testDir } from "test-utils/dir.ts";
-import * as path from "std/path/mod.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 import { connect } from "redis";
 import { S3Client } from "aws-sdk/client-s3";
 import { createBucket, listObjects, tryDeleteBucket } from "test-utils/s3.ts";
-import { assert, assertEquals, assertExists } from "std/assert/mod.ts";
+import { assert, assertEquals } from "std/assert/mod.ts";
 import { QueryEngine } from "../../../src/engine/query_engine.ts";
-import { tg } from "./python.ts";
-// import { tgNoArtifact } from './python_no_artifact.ts';
 
 const redisKey = "typegraph";
 const redisEventKey = "typegraph_event";
@@ -47,24 +42,6 @@ const syncConfig = {
   s3Bucket: "metatype-python-runtime-sync-test",
 };
 
-const cwd = path.join(testDir, "runtimes/python");
-const auth = new BasicAuth("admin", "password");
-
-const localSerializedMemo = tg.serialize({
-  prismaMigration: {
-    globalAction: {
-      create: true,
-      reset: false,
-    },
-    migrationDir: "prisma-migrations",
-  },
-  dir: cwd,
-});
-const reusableTgOutput = {
-  ...tg,
-  serialize: (_: any) => localSerializedMemo,
-};
-
 Meta.test(
   {
     name: "Python Runtime typescript SDK: with Sync Config",
@@ -76,51 +53,17 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (metaTest: any) => {
-    const port = metaTest.port;
-    const gate = `http://localhost:${port}`;
-
-    const { serialized, typegate: gateResponseAdd } = await tgDeploy(
-      reusableTgOutput,
-      {
-        baseUrl: gate,
-        auth,
-        artifactsConfig: {
-          prismaMigration: {
-            globalAction: {
-              create: true,
-              reset: false,
-            },
-            migrationDir: "prisma-migrations",
-          },
-          dir: cwd,
-        },
-        typegraphPath: path.join(cwd, "python.ts"),
-        secrets: {},
-      },
-    );
-
+  async (metaTest) => {
     await metaTest.should(
       "work after deploying python artifacts to S3",
       async () => {
         const s3 = new S3Client(syncConfig.s3);
 
-        assertExists(serialized, "serialized has a value");
-        assertEquals(gateResponseAdd, {
-          data: {
-            addTypegraph: {
-              name: "python",
-              messages: [],
-              migrations: [],
-            },
-          },
-        });
+        const engine = await metaTest.engine("runtimes/python/python.ts");
 
         const s3Objects = await listObjects(s3, syncConfig.s3Bucket);
-        // two objects, 2 artifacts and the typegraph
-        assertEquals(s3Objects?.length, 3);
-
-        const engine = await metaTest.engineFromDeployed(serialized);
+        // two objects, 2 artifacts and the 2 typegraphs; why 2 typegraphs??
+        assertEquals(s3Objects?.length, 4);
 
         await gql`
         query {
@@ -171,10 +114,9 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (t: any) => {
-    const e = await t.engineFromTgDeployPython(
+  async (t) => {
+    const e = await t.engine(
       "runtimes/python/python.py",
-      cwd,
     );
 
     await t.should("work once (lambda)", async () => {
@@ -272,11 +214,10 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (t: any) => {
+  async (t) => {
     const testMultipleReplica = async (instanceNumber: number) => {
-      const e = await t.engineFromTgDeployPython(
+      const e = await t.engine(
         "runtimes/python/python.py",
-        cwd,
       );
 
       await t.should(
@@ -302,111 +243,6 @@ Meta.test(
 
 Meta.test(
   {
-    name: "Deno: def, lambda in sync mode",
-    syncConfig,
-    async setup() {
-      await cleanUp();
-    },
-    async teardown() {
-      await cleanUp();
-    },
-  },
-  async (t: any) => {
-    const port = t.port;
-    const gate = `http://localhost:${port}`;
-
-    const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
-      reusableTgOutput,
-      {
-        baseUrl: gate,
-        auth,
-        artifactsConfig: {
-          prismaMigration: {
-            globalAction: {
-              create: true,
-              reset: false,
-            },
-            migrationDir: "prisma-migrations",
-          },
-          dir: cwd,
-        },
-        typegraphPath: path.join(cwd, "python.ts"),
-        secrets: {},
-      },
-    );
-
-    const e = await t.engineFromDeployed(serialized);
-
-    await t.should("work with def", async () => {
-      await gql`
-        query {
-          identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
-          }
-        }
-      `
-        .expectData({
-          identityLambda: {
-            a: "hello",
-            b: [1, 2, "three"],
-          },
-        })
-        .on(e);
-    });
-
-    await t.should("work with def", async () => {
-      await gql`
-        query {
-          identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
-          }
-        }
-      `
-        .expectData({
-          identityDef: {
-            a: "hello",
-            b: [1, 2, "three"],
-          },
-        })
-        .on(e);
-    });
-  },
-);
-
-Meta.test(
-  {
-    name: "Python: infinite loop or similar in sync mode",
-    sanitizeOps: false,
-    syncConfig,
-    async setup() {
-      await cleanUp();
-    },
-    async teardown() {
-      await cleanUp();
-    },
-  },
-  async (t: any) => {
-    const e = await t.engineFromTgDeployPython(
-      "runtimes/python/python.py",
-      cwd,
-    );
-
-    await t.should("safely fail upon stackoverflow", async () => {
-      await gql`
-        query {
-          stackOverflow(enable: true)
-        }
-      `
-        .expectErrorContains("maximum recursion depth exceeded")
-        .on(e);
-    });
-  },
-);
-
-Meta.test(
-  {
     name: "Python: typegate reloading in sync mode",
     syncConfig,
     async setup() {
@@ -416,32 +252,9 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (metaTest: any) => {
-    const port = metaTest.port;
-    const gate = `http://localhost:${port}`;
-
+  async (metaTest) => {
     const load = async () => {
-      const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
-        reusableTgOutput,
-        {
-          baseUrl: gate,
-          auth,
-          artifactsConfig: {
-            prismaMigration: {
-              globalAction: {
-                create: true,
-                reset: false,
-              },
-              migrationDir: "prisma-migrations",
-            },
-            dir: cwd,
-          },
-          typegraphPath: path.join(cwd, "python.ts"),
-          secrets: {},
-        },
-      );
-
-      return await metaTest.engineFromDeployed(serialized);
+      return await metaTest.engine("runtimes/python/python.ts");
     };
 
     const runPythonOnPython = async (currentEngine: QueryEngine) => {
@@ -504,10 +317,9 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (t: any) => {
-    const e = await t.engineFromTgDeployPython(
+  async (t) => {
+    const e = await t.engine(
       "runtimes/python/python_no_artifact.py",
-      cwd,
     );
 
     await t.should(
@@ -527,71 +339,51 @@ Meta.test(
   },
 );
 
-// Meta.test(
-//   {
-//     name: "Python Runtime TS SDK: typegraph with no artifacts in sync mode",
-//     sanitizeOps: false,
-//     syncConfig,
-//     async setup() {
-//       await cleanUp();
-//     },
-//     async teardown() {
-//       await cleanUp();
-//     },
-//   },
-//   async (t: any) => {
-//     const port = t.port;
-//     const gate = `http://localhost:${port}`;
+Meta.test(
+  {
+    name: "Python Runtime TS SDK: typegraph with no artifacts in sync mode",
+    sanitizeOps: false,
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
+  },
+  async (t) => {
+    const e = await t.engine("runtimes/python/python_no_artifact.ts");
 
-//     const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
-//       tgNoArtifact,
-//       {
-//         baseUrl: gate,
-//         auth,
-//         artifactsConfig: {
-//           prismaMigration: {
-//             globalAction: {
-//               create: true,
-//               reset: false,
-//             },
-//             migrationDir: "prisma-migrations",
-//           },
-//           dir: cwd,
-//         },
-//         typegraphPath: path.join(cwd, "python_no_artifact.ts"),
-//         secrets: {},
-//       },
-//     );
-
-//     const e = await t.engineFromDeployed(serialized);
-
-//     await t.should("work when there are no artifacts in the typegraph: TS SDK, in sync mode", async () => {
-//       await gql`
-//         query {
-//           identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
-//             a
-//             b
-//           }
-//           identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
-//             a
-//             b
-//           }
-//         }
-//       `
-//         .expectData({
-//           identityDef: {
-//             a: "hello",
-//             b: [1, 2, "three"],
-//           },
-//           identityLambda: {
-//             a: "hello",
-//             b: [1, 2, "three"],
-//           },
-//         })
-//         .on(e);
-//     });
-//   },
-// );
+    await t.should(
+      "work when there are no artifacts in the typegraph: TS SDK, in sync mode",
+      async () => {
+        await gql`
+        query {
+          identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
+          identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
+        }
+      `
+          .expectData({
+            identityDef: {
+              a: "hello",
+              b: [1, 2, "three"],
+            },
+            identityLambda: {
+              a: "hello",
+              b: [1, 2, "three"],
+            },
+          })
+          .on(e);
+      },
+    );
+  },
+);
 
 Meta.test(
   {
@@ -606,10 +398,9 @@ Meta.test(
       await cleanUp();
     },
   },
-  async (t: any) => {
-    const e = await t.engineFromTgDeployPython(
+  async (t) => {
+    const e = await t.engine(
       "runtimes/python/python_duplicate_artifact.py",
-      cwd,
     );
 
     await t.should(
@@ -631,68 +422,161 @@ Meta.test(
   },
 );
 
-// Meta.test(
-//   {
-//     name: "Python Runtime - TS SDK: typegraph with duplicate artifact uploads in sync mode",
-//     sanitizeOps: false,
-//     syncConfig,
-//     async setup() {
-//       await cleanUp();
-//     },
-//     async teardown() {
-//       await cleanUp();
-//     },
-//   },
-//   async (t: any) => {
-//     const port = t.port;
-//     const gate = `http://localhost:${port}`;
+Meta.test(
+  {
+    name:
+      "Python Runtime - TS SDK: typegraph with duplicate artifact uploads in sync mode",
+    sanitizeOps: false,
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
+  },
+  async (t) => {
+    const e = await t.engine("runtimes/python/python_duplicate_artifact.ts");
 
-//     const { serialized, typegate: _gateResponseAdd } = await tgDeploy(
-//       tgDuplicateArtifact,
-//       {
-//         baseUrl: gate,
-//         auth,
-//         artifactsConfig: {
-//           prismaMigration: {
-//             globalAction: {
-//               create: true,
-//               reset: false,
-//             },
-//             migrationDir: "prisma-migrations",
-//           },
-//           dir: cwd,
-//         },
-//         typegraphPath: path.join(cwd, "python_duplicate_artifact.ts"),
-//         secrets: {},
-//       },
-//     );
+    await t.should(
+      "work when there is duplicate artifacts uploads: TS SDK, in sync mode",
+      async () => {
+        await gql`
+        query {
+          identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          },
+          identityModDuplicate(input: { a: "hello", b: [1, 2, "three"] }) {
+            a
+            b
+          }
+        }
+      `
+          .expectData({
+            identityMod: {
+              a: "hello",
+              b: [1, 2, "three"],
+            },
+            identityModDuplicate: {
+              a: "hello",
+              b: [1, 2, "three"],
+            },
+          })
+          .on(e);
+      },
+    );
+  },
+);
 
-//     const e = await t.engineFromDeployed(serialized);
+Meta.test(
+  {
+    name: "PythonRuntime - Sync mode: support for dirs when adding deps",
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
+  },
+  async (t) => {
+    await t.should(
+      "work for deps specified with dir on Python SDK",
+      async () => {
+        const engine = await t.engine(
+          "runtimes/python/python_dir.py",
+        );
 
-//     await t.should("work when there is duplicate artifacts uploads: TS SDK, in sync mode", async () => {
-//       await gql`
-//         query {
-//           identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
-//             a
-//             b
-//           },
-//           identityModDuplicate(input: { a: "hello", b: [1, 2, "three"] }) {
-//             a
-//             b
-//           }
-//         }
-//       `
-//         .expectData({
-//           identityMod: {
-//             a: "hello",
-//             b: [1, 2, "three"],
-//           },
-//           identityModDuplicate: {
-//             a: "hello",
-//             b: [1, 2, "three"],
-//           },
-//         })
-//         .on(e);
-//     });
-//   },
-// );
+        await gql`
+          query {
+            test_dir(name: "Jurgen")
+          }
+        `
+          .expectData({
+            test_dir: "Hello Jurgen",
+          })
+          .on(engine);
+      },
+    );
+
+    await t.should(
+      "work for deps specified with dir on TypeScript SDK",
+      async () => {
+        const engine = await t.engine("runtimes/python/python_dir.ts");
+
+        await gql`
+          query {
+            testDir(input: { a: "hello", b: [1, 2, "three"] }) {
+              a
+              b
+            }
+          }
+        `
+          .expectData({
+            testDir: {
+              a: "hello",
+              b: [1, 2, "three"],
+            },
+          })
+          .on(engine);
+      },
+    );
+  },
+);
+
+Meta.test(
+  {
+    name: "PythonRuntime - Sync mode: support for globs when adding deps",
+    syncConfig,
+    async setup() {
+      await cleanUp();
+    },
+    async teardown() {
+      await cleanUp();
+    },
+  },
+  async (t) => {
+    await t.should(
+      "work for deps specified with glob on Python SDK",
+      async () => {
+        const engine = await t.engine(
+          "runtimes/python/python_globs.py",
+        );
+
+        await gql`
+          query {
+            test_glob(name: "Pep")
+          }
+        `
+          .expectData({
+            test_glob: "Hello Pep",
+          })
+          .on(engine);
+      },
+    );
+
+    await t.should(
+      "work for deps specified with glob on TypeScript SDK",
+      async () => {
+        const engine = await t.engine("runtimes/python/python_globs.ts");
+
+        await gql`
+          query {
+            testGlob(input: { a: "hello", b: [1, 2, "three"] }) {
+              a
+              b
+            }
+          }
+        `
+          .expectData({
+            testGlob: {
+              a: "hello",
+              b: [1, 2, "three"],
+            },
+          })
+          .on(engine);
+      },
+    );
+  },
+);

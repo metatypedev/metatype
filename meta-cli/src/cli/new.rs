@@ -48,7 +48,7 @@ impl Action for New {
         let target_dir = if dir.is_absolute() {
             dir
         } else {
-            args.dir().join(&dir)
+            args.dir()?.join(&dir)
         };
         println!("target directory {}", target_dir.display());
 

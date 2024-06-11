@@ -32,7 +32,7 @@ typegraph({
     user_only: random.gen(t.string()).withPolicy(user_only),
     // if both attached policies return null, access is denied
     both: random.gen(t.string()).withPolicy([user_only, admin_only]),
-    // set default policy for materializers
+    // set default policy for the exposed functions
   }, pub);
   // skip:start
 });

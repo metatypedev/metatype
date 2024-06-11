@@ -8,7 +8,7 @@ import { HttpRuntime } from "@typegraph/sdk/runtimes/http.js";
 
 await typegraph(
   {
-    name: "http-runtime",
+    name: "http-example",
     // skip:next-line
     cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
   },
@@ -33,7 +33,7 @@ await typegraph(
           }),
           {
             path: "/random",
-          },
+          }
         ),
         facts_as_text: facts.get(
           t.struct({
@@ -41,10 +41,10 @@ await typegraph(
             language: t.enum_(["en", "de"]),
           }),
           t.string(),
-          { path: "/random", headerPrefix: "header_" },
+          { path: "/random", headerPrefix: "header_" }
         ),
       },
-      pub,
+      pub
     );
-  },
+  }
 );

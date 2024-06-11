@@ -3,6 +3,9 @@
 
 //! This module contains common logic for mdk generation
 //! imlementations
+
+pub mod types;
+
 use common::typegraph::{runtimes::TGRuntime, Materializer};
 
 use crate::interlude::*;
@@ -11,7 +14,7 @@ pub struct StubbedFunction {
     pub id: u32,
     pub node: TypeNode,
     pub mat: Materializer,
-    pub runtime: Arc<TGRuntime>,
+    pub runtime: Rc<TGRuntime>,
 }
 
 pub fn filter_stubbed_funcs(
@@ -24,8 +27,8 @@ pub fn filter_stubbed_funcs(
             tg.runtimes
                 .iter()
                 .position(|rt| rt_name == rt.name())
-                .map(|idx| (idx as u32, Arc::new(tg.runtimes[idx].clone())))
-                .with_context(|| format!("runtime {rt_name} not found"))
+                .map(|idx| (idx as u32, Rc::new(tg.runtimes[idx].clone())))
+                .with_context(|| format!("runtime {rt_name} not found in typegraph"))
         })
         .collect::<Result<HashMap<_, _>, _>>()?;
     let stubbed_materializers = tg

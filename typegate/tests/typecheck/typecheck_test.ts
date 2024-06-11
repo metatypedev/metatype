@@ -10,8 +10,6 @@ import {
   generateValidator,
   ResultValidationCompiler,
 } from "../../src/engine/typecheck/result.ts";
-import * as native from "native";
-import { nativeResult } from "../../src/utils.ts";
 
 Meta.test("typecheck", async (t) => {
   const e = await t.engine("typecheck/typecheck.py");
@@ -83,14 +81,10 @@ Meta.test("typecheck", async (t) => {
     }
   `;
 
-  await t.should("generate validation code for valid queries", () => {
+  await t.should("generate validation code for valid queries", async () => {
     const code = getValidationCode(queryGetPosts);
 
-    const formattedCode = nativeResult(native.typescript_format_code({
-      source: code,
-    }))!.formatted_code;
-
-    t.assertSnapshot(formattedCode);
+    await t.assertSnapshot(code);
   });
 
   const post1 = {
@@ -109,15 +103,11 @@ Meta.test("typecheck", async (t) => {
     const validate = getValidator(queryGetPosts);
     t.assertThrowsSnapshot(() => validate({ posts: [post1] }));
 
-    t.assertThrowsSnapshot(
-      () => validate({ posts: [post2] }),
-    );
+    t.assertThrowsSnapshot(() => validate({ posts: [post2] }));
 
     validate({ posts: [post3] });
 
-    t.assertThrowsSnapshot(
-      () => validate({ posts: [post3, post2] }),
-    );
+    t.assertThrowsSnapshot(() => validate({ posts: [post3, post2] }));
 
     const validate2 = getValidator(graphql`
       query GetPosts {
@@ -140,32 +130,32 @@ Meta.test("typecheck", async (t) => {
       email: "my email",
     };
 
-    t.assertThrowsSnapshot(
-      () =>
-        validate2({
-          posts: [
-            {
-              ...post1,
-              author: user,
-            },
-          ],
-        }),
+    t.assertThrowsSnapshot(() =>
+      validate2({
+        posts: [
+          {
+            ...post1,
+            author: user,
+          },
+        ],
+      })
     );
 
-    t.assertThrowsSnapshot(
-      () =>
-        validate2({
-          posts: [{
+    t.assertThrowsSnapshot(() =>
+      validate2({
+        posts: [
+          {
             ...post1,
             author: { ...user, id: crypto.randomUUID() },
-          }],
-        }),
+          },
+        ],
+      })
     );
 
-    t.assertThrowsSnapshot(
-      () =>
-        validate2({
-          posts: [{
+    t.assertThrowsSnapshot(() =>
+      validate2({
+        posts: [
+          {
             ...post1,
             author: {
               id: crypto.randomUUID(),
@@ -173,31 +163,36 @@ Meta.test("typecheck", async (t) => {
               email: "user@example.com",
               website: "example.com",
             },
-          }],
-        }),
+          },
+        ],
+      })
     );
 
     validate2({
-      posts: [{
-        ...post1,
-        author: {
-          id: crypto.randomUUID(),
-          username: "john",
-          email: "user@example.com",
+      posts: [
+        {
+          ...post1,
+          author: {
+            id: crypto.randomUUID(),
+            username: "john",
+            email: "user@example.com",
+          },
         },
-      }],
+      ],
     });
 
     validate2({
-      posts: [{
-        ...post1,
-        author: {
-          id: crypto.randomUUID(),
-          username: "john",
-          email: "user@example.com",
-          website: "https://example.com",
+      posts: [
+        {
+          ...post1,
+          author: {
+            id: crypto.randomUUID(),
+            username: "john",
+            email: "user@example.com",
+            website: "https://example.com",
+          },
         },
-      }],
+      ],
     });
   });
 
@@ -205,18 +200,20 @@ Meta.test("typecheck", async (t) => {
     await gql`
       query {
         findProduct(
-            name: "A"
-            equivalent: [
-              { name: "B", equivalent: null },
-              { name: "C", score: null },
-              { name: "D", score: 10 },
-            ],
-            score: null
+          name: "A"
+          equivalent: [
+            { name: "B", equivalent: null }
+            { name: "C", score: null }
+            { name: "D", score: 10 }
+          ]
+          score: null
         ) {
           name
           equivalent {
             name
-            equivalent { name }
+            equivalent {
+              name
+            }
             score
           }
           score
@@ -226,11 +223,7 @@ Meta.test("typecheck", async (t) => {
       .expectData({
         findProduct: {
           name: "A",
-          equivalent: [
-            { name: "B" },
-            { name: "C" },
-            { name: "D", score: 10 },
-          ],
+          equivalent: [{ name: "B" }, { name: "C" }, { name: "D", score: 10 }],
           score: null,
         },
       })

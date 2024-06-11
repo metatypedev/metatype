@@ -5,7 +5,7 @@ import { gql, Meta } from "../../utils/mod.ts";
 import { TestModule } from "../../utils/test_module.ts";
 import { dropSchemas, removeMigrations } from "test-utils/migrations.ts";
 import { assertRejects, assertStringIncludes } from "std/assert/mod.ts";
-import { randomSchema, reset } from "test-utils/database.ts";
+import { randomPGConnStr, reset } from "test-utils/database.ts";
 
 const m = new TestModule(import.meta);
 
@@ -82,10 +82,9 @@ Meta.test(
     name: "meta deploy: fails migration for new columns without default value",
   },
   async (t) => {
-    const schema = randomSchema();
+    const { connStr, schema } = randomPGConnStr();
     const secrets = {
-      POSTGRES:
-        `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+      POSTGRES: connStr,
     };
     await t.should("load first version of the typegraph", async () => {
       await reset(tgName, schema);
@@ -144,10 +143,10 @@ Meta.test(
   },
   async (t) => {
     const port = t.port!;
-    const schema = randomSchema();
+    const { connStr, schema } = randomPGConnStr();
     const secrets = {
       POSTGRES:
-        `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+        connStr,
     };
     await t.should("load first version of the typegraph", async () => {
       await reset(tgName, schema);
@@ -191,21 +190,21 @@ Meta.test(
 Meta.test(
   {
     name: "cli:deploy - automatic migrations",
-
     gitRepo: {
       content: {
         "prisma.py": "runtimes/prisma/prisma.py",
         "metatype.yml": "metatype.yml",
+        "utils/tg_deploy_script.py": "utils/tg_deploy_script.py",
       },
     },
   },
   async (t) => {
     const port = t.port!;
-    const schema = randomSchema();
+    const { connStr, schema } = randomPGConnStr();
     const e = await t.engine("prisma.py", {
       secrets: {
         POSTGRES:
-          `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+          connStr,
       },
     });
 
@@ -254,22 +253,22 @@ Meta.test(
       "--create-migration",
     ]);
 
-    // TODO: MET-500
-    // Does not work with the new version of t.e engine
-    // await t.should(
-    //   "have replaced and terminated the previous engine",
-    //   async () => {
-    //     await gql`
-    //       query {
-    //         findManyRecords {
-    //           id
-    //         }
-    //       }
-    //     `
-    //       .expectErrorContains("Could not find engine")
-    //       .on(e);
-    //   },
-    // );
+     await t.should(
+       "have replaced and terminated the previous engine",
+       async () => {
+         await gql`
+           query {
+             findManyRecords {
+               id
+             }
+           }
+         `
+           .expectData({
+            findManyRecords: [],
+          })
+           .on(e);
+       },
+     );
 
     const e2 = t.getTypegraphEngine("prisma")!;
 
@@ -293,20 +292,20 @@ Meta.test(
 Meta.test(
   {
     name: "cli:deploy - with prefix",
-
     gitRepo: {
       content: {
         "prisma.py": "runtimes/prisma/prisma.py",
         "metatype.yml": "metatype.yml",
+        "utils/tg_deploy_script.py": "utils/tg_deploy_script.py",
       },
     },
   },
   async (t) => {
-    const schema = randomSchema();
+    const { connStr, schema } = randomPGConnStr();
     const e = await t.engine("prisma.py", {
       secrets: {
         POSTGRES:
-          `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+          connStr,
       },
       prefix: "pref-",
     });
@@ -342,40 +341,41 @@ Meta.test(
       "-f",
       "prisma.py",
       "--create-migration",
+      "--allow-dirty",
     ]);
 
-    // TODO: MET-500
-    // Does not work with the new version of t.e engine
-    // await t.should(
-    //   "succeed have replaced and terminated the previous engine",
-    //   async () => {
-    //     await gql`
-    //       query {
-    //         findManyRecords {
-    //           id
-    //         }
-    //       }
-    //     `
-    //       .expectErrorContains("Could not find engine")
-    //       .on(e);
-    //   },
-    // );
+     await t.should(
+       "succeed have replaced and terminated the previous engine",
+       async () => {
+         await gql`
+           query {
+             findManyRecords {
+               id
+             }
+           }
+         `
+           .expectData({
+            findManyRecords: [],
+          })
+           .on(e);
+       },
+     );
 
-    // const e2 = t.getTypegraphEngine("pref-prisma")!;
+    const e2 = t.getTypegraphEngine("pref-prisma")!;
 
-    // await t.should("succeed to query database", async () => {
-    //   await gql`
-    //     query {
-    //       findManyRecords {
-    //         id
-    //         name
-    //       }
-    //     }
-    //   `
-    //     .expectData({
-    //       findManyRecords: [],
-    //     })
-    //     .on(e2);
-    // });
+    await t.should("succeed to query database", async () => {
+      await gql`
+        query {
+          findManyRecords {
+            id
+            name
+          }
+        }
+      `
+        .expectData({
+          findManyRecords: [],
+        })
+        .on(e2);
+    });
   },
 );

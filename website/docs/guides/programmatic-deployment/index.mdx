@@ -1,0 +1,192 @@
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
+
+# Programmatic deployment
+
+The SDKs are complete enough to enable deploying typegraphs without using [meta cli](/docs/reference/meta-cli), the later being built as a convenience tool for everyday use.
+
+Common use cases:
+- Testing
+- Manage everything programmatically
+
+
+## Deploy typegraphs
+This can be done using the `tgRemove`/`tg_remove` function.\
+You are required to provide the configurations and also handle migrations by yourself (if any).
+
+<SDKTabs>
+    <TabItem value="python">
+```python
+from os import path
+from typegraph import Graph, Policy, t, typegraph
+from typegraph.runtimes.deno import DenoRuntime
+
+from typegraph.wit import ArtifactResolutionConfig, MigrationAction, MigrationConfig
+from typegraph.utils import unpack_tarb64
+from typegraph.graph.tg_deploy import BasicAuth, TypegraphDeployParams, tg_deploy
+
+# Your typegraph
+@typegraph()
+def example(g: Graph):
+    deno = DenoRuntime()
+    pub = Policy.public()
+
+    g.expose(
+        pub,
+        sayHello=deno.import_(
+            t.struct({"name": t.string()}),
+            t.string(),
+            module="path/to/say_hello.ts",
+            name="sayHello",
+        ),
+    )
+
+# Configure your deployment
+tg = example()
+
+config_params = MigrationConfig(
+    migration_dir=path.join("prisma-migrations", tg.name),
+    global_action=MigrationAction(
+        create=True,
+        reset=True  # allow destructive migrations
+    ),
+    runtime_actions=None,
+)
+artifacts_config = ArtifactResolutionConfig(
+    prisma_migration=config_params,
+    prefix=None,
+    dir=None,  # artifacts are resolved relative to this path
+    disable_artifact_resolution=None,
+)
+config = TypegraphDeployParams(
+    base_url="<TYPEGATE_URL>",
+    auth=BasicAuth(username="<USERNAME>", password="<PASSWORD>"),
+    artifacts_config=artifacts_config,
+    secrets={"POSTGRES": "<DB_URL>"},
+)
+
+# Deploy to typegate
+res = tg_deploy(tg, config)
+
+migrations = res.typegate["data"]["addTypegraph"]["migrations"] or []
+for item in migrations:
+    base_dir = artifacts_config.prisma_migration.migration_dir
+    # Convention, however if migration_dir is absolute then you might want to use that instead
+    # cwd + tg_name + runtime_name
+    full_path = path.join(base_dir, item["runtime"])
+    unpack_tarb64(item["migrations"], full_path)
+    print(f"Unpacked migrations at {full_path}")
+
+```
+    </TabItem>
+    <TabItem value="typescript">
+```typescript
+import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
+import * as path from "path";
+
+import { wit_utils } from "@typegraph/sdk/wit.js";
+import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
+
+// Your typegraph
+const tg = await typegraph("example", (g) => {
+  const deno = new DenoRuntime();
+  const pub = Policy.public();
+
+  g.expose({
+    sayHello: deno.import(
+      t.struct({ name: t.string() }),
+      t.string(),
+      { module: "path/to/say_hello.ts", name: "sayHello" },
+    ),
+  }, pub);
+});
+
+// Configure your deployment
+const artifactsConfig = {
+  prismaMigration: {
+    globalAction: {
+      create: true,
+      reset: true, // allow destructive migrations
+    },
+    migrationDir: path.join("prisma-migrations", tg.name),
+  },
+ // dir: "." // artifacts are resolved relative to this path
+};
+
+const config = {
+  baseUrl: "<TYPEGATE_URL>",
+  auth: new BasicAuth("<USERNAME>", "<PASSWORD>");,
+  secrets: { POSTGRES: "<DB_URL>" },
+  artifactsConfig,
+};
+
+// Deploy to typegate
+tgDeploy(tg, config).then(({ typegate }) => {
+  const selection = typegate?.data?.addTypegraph;
+  if (selection) {
+    const { migrations, messages } = selection;
+    migrations.map(({ runtime, migrations }) => {
+      // Convention, however if migrationDir is absolute then you might want to use that instead
+      // cwd + tg_name
+      const baseDir = artifactsConfig.prismaMigration.migrationDir;
+      // cwd + tg_name + runtime_name
+      const fullPath = path.join(baseDir, runtime);
+      wit_utils.unpackTarb64(migrations, fullPath);
+      console.log(`Unpacked migrations at ${fullPath}`);
+    });
+  } else {
+    throw new Error(JSON.stringify(typegate));
+  }
+})
+  .catch(console.error);
+
+```
+    </TabItem>
+</SDKTabs>
+
+
+## Undeploy typegraphs
+Similarly to the above, you can undeploy typegraphs using the `tgRemove`/`tg_remove` function.
+
+<SDKTabs>
+    <TabItem value="python">
+```python
+# ..
+from typegraph.graph.tg_deploy import BasicAuth, TypegraphRemoveParams, tg_remove
+
+# Your typegraph
+@typegraph()
+def example(g: Graph):
+    # ..
+
+tg = example()
+res = tg_remove(tg, TypegraphRemoveParams(
+    base_url="<TYPEGATE_URL>",
+    auth=BasicAuth(username="<USERNAME>", password="<PASSWORD>"),
+))
+
+# Response from typegate
+print(res.typegate)
+```
+    </TabItem>
+    <TabItem value="typescript">
+```typescript
+// ..
+import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
+
+// Your typegraph
+const tg = await typegraph("example", (g) => {
+ // ..
+});
+
+const { typegate } = await tgRemove(tg, {
+  baseUrl: "<TYPEGATE_URL>",
+  auth: new BasicAuth("<USERNAME>", "<PASSWORD>"),
+});
+
+// Response from typegate
+console.log(typegate);
+```
+    </TabItem>
+</SDKTabs>

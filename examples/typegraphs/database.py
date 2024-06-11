@@ -9,10 +9,11 @@ from typegraph.providers.prisma import PrismaRuntime
 
 
 @typegraph(
-    # skip:next-line
+    # skip:start
     cors=Cors(
         allow_origin=["https://metatype.dev", "http://localhost:3000"],
     ),
+    # skip:end
 )
 def database(g: Graph):
     db = PrismaRuntime("database", "POSTGRES_CONN")

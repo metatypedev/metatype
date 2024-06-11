@@ -1,4 +1,8 @@
 query {
-    bonus1: get_bonus(performance: 200)
-    bonus2: get_bonus(performance: 27)
+  bonus1: get_bonus(
+    performance: 200
+    )
+  bonus2: get_bonus(
+    performance: 27
+    )
 }
