@@ -662,7 +662,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d034b430882f8381900d3fe6f0aaa3ad94f2cb4ac519b429692a1bc2dda4ae7b"
 dependencies = [
  "event-listener 4.0.3",
- "event-listener-strategy",
+ "event-listener-strategy 0.4.0",
  "pin-project-lite",
 ]
 
@@ -1332,7 +1332,7 @@ dependencies = [
  "darling 0.20.9",
  "proc-macro2",
  "quote",
- "syn 2.0.65",
+ "syn 2.0.66",
 ]
 
 [[package]]
@@ -4195,6 +4195,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "event-listener"
+version = "5.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6032be9bd27023a771701cc49f9f053c751055f71efb2e0ae5c15809093675ba"
+dependencies = [
+ "concurrent-queue",
+ "parking",
+ "pin-project-lite",
+]
+
+[[package]]
 name = "event-listener-strategy"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4210,7 +4221,7 @@ version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0f214dc438f977e6d4e3500aaa277f5ad94ca83fbbd9b1a15713ce2344ccc5a1"
 dependencies = [
- "event-listener 5.3.0",
+ "event-listener 5.3.1",
  "pin-project-lite",
 ]
 
@@ -4981,85 +4992,6 @@ checksum = "d2ebc8013b4426d5b81a4364c419a95ed0b404af2b82e2457de52d9348f0e474"
 dependencies = [
  "combine",
  "thiserror",
-]
-
-[[package]]
-name = "grep"
-version = "0.2.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd79f01019ef2fe3978232135f5a7237baca9a6c6ed4dbbe9e5a51234e2306c5"
-dependencies = [
- "grep-cli",
- "grep-matcher",
- "grep-printer",
- "grep-regex",
- "grep-searcher",
-]
-
-[[package]]
-name = "grep-cli"
-version = "0.1.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea40788c059ab8b622c4d074732750bfb3bd2912e2dd58eabc11798a4d5ad725"
-dependencies = [
- "bstr",
- "globset",
- "libc",
- "log",
- "termcolor",
- "winapi-util",
-]
-
-[[package]]
-name = "grep-matcher"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47a3141a10a43acfedc7c98a60a834d7ba00dfe7bec9071cbfc19b55b292ac02"
-dependencies = [
- "memchr",
-]
-
-[[package]]
-name = "grep-printer"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e14551578f49da1f774b70da5bd1b8c20bbbead01620c426cb0a217536d95a6a"
-dependencies = [
- "base64 0.20.0",
- "bstr",
- "grep-matcher",
- "grep-searcher",
- "serde 1.0.203",
- "serde_json",
- "termcolor",
-]
-
-[[package]]
-name = "grep-regex"
-version = "0.1.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f748bb135ca835da5cbc67ca0e6955f968db9c5df74ca4f56b18e1ddbc68230d"
-dependencies = [
- "bstr",
- "grep-matcher",
- "log",
- "regex-automata 0.4.6",
- "regex-syntax 0.8.3",
-]
-
-[[package]]
-name = "grep-searcher"
-version = "0.1.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba536ae4f69bec62d8839584dd3153d3028ef31bb229f04e09fb5a9e5a193c54"
-dependencies = [
- "bstr",
- "encoding_rs",
- "encoding_rs_io",
- "grep-matcher",
- "log",
- "memchr",
- "memmap2 0.9.4",
 ]
 
 [[package]]
@@ -6579,6 +6511,7 @@ dependencies = [
  "assert_cmd",
  "async-trait",
  "base64 0.22.1",
+ "cached",
  "chrono",
  "clap",
  "clap-verbosity-flag",
@@ -7674,7 +7607,7 @@ checksum = "006e42d5b888366f1880eda20371fedde764ed2213dc8496f49622fa0c99cd5e"
 dependencies = [
  "log",
  "serde 1.0.203",
- "windows-sys 0.52.0",
+ "winapi",
 ]
 
 [[package]]

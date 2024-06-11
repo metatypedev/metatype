@@ -93,7 +93,7 @@ pub struct Deploy {
 impl Deploy {
     #[tracing::instrument]
     pub async fn new(deploy: &DeploySubcommand, args: &ConfigArgs) -> Result<Self> {
-        let dir: Arc<Path> = args.dir().into();
+        let dir: Arc<Path> = args.dir()?.into();
 
         let config_path = args.config.clone();
         let config = Arc::new(Config::load_or_find(config_path, &dir)?);
