@@ -6,8 +6,6 @@ from typing import Optional, List
 from os import environ
 from enum import Enum
 
-from typegraph.io import Log
-
 _required_cli_envs = (
     "version",
     "command",
@@ -75,8 +73,6 @@ class CliEnv:
             filter = raw_filter.removeprefix("typegraph=").split(",")
         d["filter"] = filter
 
-        Log.debug(d)
-
         return cls(**d)
 
 
@@ -85,5 +81,5 @@ CLI_ENV = CliEnv.load()
 
 def get_cli_env():
     if CLI_ENV is None:
-        raise Exception("cannot be called on this context")
+        raise Exception("cannot be called in this context")
     return CLI_ENV

@@ -30,6 +30,7 @@ pub trait TaskActionGenerator: Clone {
     fn get_shared_config(&self) -> Arc<SharedActionConfig>;
 }
 
+#[derive(Clone)]
 pub struct ActionFinalizeContext<A: TaskAction + 'static> {
     pub config: Arc<Config>,
     pub task_manager: Addr<TaskManager<A>>,
@@ -39,6 +40,7 @@ pub struct ActionFinalizeContext<A: TaskAction + 'static> {
 
 pub trait OutputData: serde::de::DeserializeOwned + std::fmt::Debug + Unpin + Send {
     fn get_typegraph_name(&self) -> String;
+    fn is_success(&self) -> bool;
 }
 
 #[derive(Default, Debug, Clone)]
@@ -48,6 +50,21 @@ pub enum TaskFilter {
     Typegraphs(Vec<String>),
 }
 
+impl TaskFilter {
+    pub fn add_typegraph(&mut self, name: String) {
+        match self {
+            TaskFilter::All => {
+                *self = TaskFilter::Typegraphs(vec![name]);
+            }
+            TaskFilter::Typegraphs(typegraphs) => {
+                if !typegraphs.contains(&name) {
+                    typegraphs.push(name);
+                }
+            }
+        }
+    }
+}
+
 impl ToString for TaskFilter {
     fn to_string(&self) -> String {
         match self {
@@ -55,6 +72,10 @@ impl ToString for TaskFilter {
             TaskFilter::Typegraphs(typegraphs) => format!("typegraphs={}", typegraphs.join(",")),
         }
     }
+}
+
+pub trait FollowupOption<A: TaskAction> {
+    fn add_to_options(&self, options: &mut A::Options);
 }
 
 pub trait TaskAction: std::fmt::Debug + Clone + Send + Unpin {
@@ -72,7 +93,12 @@ pub trait TaskAction: std::fmt::Debug + Clone + Send + Unpin {
     fn get_start_message(&self) -> String;
     fn get_error_message(&self, err: &str) -> String;
 
-    fn finalize(&self, res: &ActionResult<Self>, ctx: ActionFinalizeContext<Self>);
+    /// returns followup task options
+    async fn finalize(
+        &self,
+        res: &Result<Self::SuccessData, Self::FailureData>,
+        ctx: ActionFinalizeContext<Self>,
+    ) -> Result<Option<Box<dyn FollowupOption<Self>>>>;
 
     async fn get_rpc_response(&self, call: &Self::RpcCall) -> Result<serde_json::Value>;
 }

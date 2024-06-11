@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::action::{
-    ActionFinalizeContext, ActionResult, OutputData, SharedActionConfig, TaskAction,
-    TaskActionGenerator, TaskFilter,
+    ActionFinalizeContext, ActionResult, FollowupOption, OutputData, SharedActionConfig,
+    TaskAction, TaskActionGenerator, TaskFilter,
 };
 use super::command::build_task_command;
 use super::deploy::MigrationAction;
@@ -76,6 +76,9 @@ impl OutputData for Box<Typegraph> {
     fn get_typegraph_name(&self) -> String {
         self.name().unwrap()
     }
+    fn is_success(&self) -> bool {
+        true
+    }
 }
 
 #[derive(Debug, Default)]
@@ -86,6 +89,9 @@ pub struct SerializeOptions {
 impl OutputData for SerializeError {
     fn get_typegraph_name(&self) -> String {
         self.typegraph.clone()
+    }
+    fn is_success(&self) -> bool {
+        false
     }
 }
 
@@ -125,7 +131,11 @@ impl TaskAction for SerializeAction {
         )
     }
 
-    fn finalize(&self, res: &ActionResult<Self>, ctx: ActionFinalizeContext<Self>) {
+    async fn finalize(
+        &self,
+        res: &ActionResult<Self>,
+        ctx: ActionFinalizeContext<Self>,
+    ) -> Result<Option<Box<dyn FollowupOption<SerializeAction>>>> {
         match res {
             Ok(data) => {
                 ctx.console.info(format!(
@@ -145,6 +155,8 @@ impl TaskAction for SerializeAction {
                 ));
             }
         }
+
+        Ok(None)
     }
 
     fn get_task_ref(&self) -> &crate::deploy::actors::task_manager::TaskRef {

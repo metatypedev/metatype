@@ -9,11 +9,6 @@ use owo_colors::OwoColorize;
 
 use crate::deploy::actors::console::{Console, ConsoleActor};
 
-pub trait ConfirmHandler: std::fmt::Debug {
-    fn on_confirm(&self);
-    fn on_deny(&self) {}
-}
-
 pub struct OptionLabel<'a> {
     primary: Cow<'a, str>,
     secondary: Option<Cow<'a, str>>,
@@ -33,8 +28,8 @@ impl<'a> OptionLabel<'a> {
     }
 }
 
-pub trait SelectOption: std::fmt::Debug {
-    fn on_select(&self);
+pub trait SelectOption<Value>: std::fmt::Debug {
+    fn get_value(&self) -> Value;
     fn label(&self) -> OptionLabel<'_>;
 }
 
@@ -52,16 +47,15 @@ impl Select {
             max_retry_count: 0,
         }
     }
-
     pub fn max_retry_count(mut self, max_retry_count: usize) -> Self {
         self.max_retry_count = max_retry_count;
         self
     }
 
-    pub async fn interact(
+    pub async fn interact<V>(
         self,
-        options: &[Box<dyn SelectOption + Sync + Send + 'static>],
-    ) -> Result<usize> {
+        options: &[Box<dyn SelectOption<V> + Sync + Send + 'static>],
+    ) -> Result<(usize, V)> {
         let mut retry_left = self.max_retry_count;
 
         self.console
@@ -82,8 +76,8 @@ impl Select {
 
             match input.trim().parse::<usize>() {
                 Ok(i) if i > 0 && i <= options.len() => {
-                    options[i - 1].on_select();
-                    return Ok(i - 1);
+                    let value = options[i - 1].get_value();
+                    return Ok((i - 1, value));
                 }
                 _ => {
                     log::error!("invalid option, please try again");
@@ -118,10 +112,7 @@ impl Confirm {
         self
     }
 
-    pub async fn interact(
-        self,
-        handler: Box<dyn ConfirmHandler + Sync + Send + 'static>,
-    ) -> Result<bool> {
+    pub async fn interact(self) -> Result<bool> {
         let mut retry_left = self.max_retry_count as isize;
 
         loop {
@@ -132,11 +123,9 @@ impl Confirm {
 
             match input.trim().to_lowercase().as_str() {
                 "y" | "yes" => {
-                    handler.on_confirm();
                     return Ok(true);
                 }
                 "n" | "no" => {
-                    handler.on_deny();
                     return Ok(false);
                 }
                 _ => {

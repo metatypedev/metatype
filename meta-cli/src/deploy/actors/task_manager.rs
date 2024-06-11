@@ -377,6 +377,7 @@ impl<A: TaskAction + 'static> Handler<NextTask> for TaskManager<A> {
         );
         let task_addr = TaskActor::new(
             self.init_params.config.clone(),
+            self.init_params.action_generator.clone(),
             action,
             ctx.address(),
             self.console.clone(),
@@ -404,7 +405,7 @@ impl<A: TaskAction + 'static> Handler<TaskFinished<A>> for TaskManager<A> {
             }
             TaskFinishStatus::Finished(results) => {
                 // TODO partial retry - if multiple typegraphs in a single file
-                if results.iter().any(|r| matches!(r, Err(_))) {
+                if results.iter().any(|r| matches!(r.1, Err(_))) {
                     next_retry_no = Some(message.task_ref.retry_no + 1);
                 }
             }

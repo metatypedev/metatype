@@ -18,6 +18,7 @@ import {
 } from "./gen/interfaces/metatype-typegraph-core.js";
 import { Manager } from "./tg_manage.js";
 import { log } from "./io.js";
+import { hasCliEnv } from "./envs/cli.js";
 
 type Exports = Record<string, t.Func>;
 
@@ -239,8 +240,8 @@ export async function typegraph(
     name,
   } as TypegraphOutput;
 
-  if (Manager.isRunFromCLI()) {
-    const manager = await Manager.init(ret);
+  if (hasCliEnv()) {
+    const manager = new Manager(ret);
     await manager.run();
 
     // TODO solve hanging process (stdin??)
@@ -251,6 +252,7 @@ export async function typegraph(
       }
     }, 10);
   }
+
   --counter;
 
   return ret;

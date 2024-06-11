@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 import { inspect } from "node:util";
-import { createInterface, Interface } from "node:readline";
+// import { createInterface, Interface } from "node:readline";
 
 /**
  * see: module level documentation `meta-cli/src/deploy/actors/task.rs`
@@ -89,14 +89,16 @@ class RpcResponseReader {
   }
 }
 
-let rpcCall = (() => {
+const JSONRPC_VERSION = "2.0";
+
+const rpcCall = (() => {
   const responseReader = new RpcResponseReader();
   let latestRpcId = 0;
 
   return (method: string, params: any = null) => {
     const rpcId = latestRpcId++;
     const rpcMessage = JSON.stringify({
-      jsonrpc: "2.0",
+      jsonrpc: JSONRPC_VERSION,
       id: rpcId,
       method,
       params,
@@ -107,19 +109,12 @@ let rpcCall = (() => {
   };
 })();
 
-export interface TypegateConfig {
-  endpoint: string;
+export interface DeployTarget {
+  base_url: string;
   auth: {
     username: string;
     password: string;
   };
-}
-
-export interface GlobalConfig {
-  typegate: TypegateConfig | null; // null for serialize
-  prefix: string | null;
-  // TODO codegen
-  // TODO base migration directory
 }
 
 export interface MigrationAction {
@@ -128,16 +123,14 @@ export interface MigrationAction {
   reset: boolean;
 }
 
-export interface TypegraphConfig {
+export interface DeployData {
   secrets: Record<string, string>;
-  artifactResolution: boolean;
-  migrationActions: Record<string, MigrationAction>;
   defaultMigrationAction: MigrationAction;
-  migrationsDir: string;
+  migrationActions: Record<string, MigrationAction>;
 }
 
 export const rpc = {
-  getGlobalConfig: () => rpcCall("queryGlobalConfig") as Promise<GlobalConfig>,
-  getTypegraphConfig: (typegraph: string) =>
-    rpcCall("queryTypegraphConfig", { typegraph }) as Promise<TypegraphConfig>,
+  getDeployTarget: () => rpcCall("GetDeployTarget") as Promise<DeployTarget>,
+  getDeployData: (typegraph: string) =>
+    rpcCall("GetDeployData", { typegraph }) as Promise<DeployData>,
 };

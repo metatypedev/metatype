@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::StopReason;
-use crate::deploy::actors::task::{action::TaskAction, TaskFinishStatus};
+use crate::deploy::actors::task::{
+    action::{OutputData, TaskAction},
+    TaskFinishStatus,
+};
 use color_eyre::owo_colors::OwoColorize;
 use std::{path::Path, sync::Arc};
 
@@ -34,7 +37,12 @@ impl<A: TaskAction> Report<A> {
             |mut summary, entry| {
                 let (text, success) = match &entry.status {
                     TaskFinishStatus::<A>::Finished(results) => {
-                        let success_count = results.iter().filter(|res| res.is_ok()).count();
+                        let success_count = results
+                            .iter()
+                            .filter(|(_, res)| {
+                                res.as_ref().ok().map(|r| r.is_success()).unwrap_or(false)
+                            })
+                            .count();
                         (
                             format!("{}/{} success", success_count, results.len()),
                             success_count == results.len(),

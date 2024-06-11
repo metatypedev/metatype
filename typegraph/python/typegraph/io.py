@@ -9,7 +9,7 @@ from typegraph.gen.exports.core import MigrationAction
 import json
 
 
-_JSON_RPC_VERSION = "2.0"
+_JSONRPC_VERSION = "2.0"
 
 
 class Log:
@@ -60,7 +60,7 @@ class _RpcResponseReader:
                 Log.error("rpc response: failed to parse input as json")
                 continue
 
-            if parsed.get("jsonrpc") != _JSON_RPC_VERSION:
+            if parsed.get("jsonrpc") != _JSONRPC_VERSION:
                 Log.error("rpc response: invalid jsonrpc version")
                 continue
 
@@ -83,7 +83,7 @@ class _RpcCall:
         rpc_id = cls.latest_rpc_id
         rpc_message = json.dumps(
             {
-                "jsonrpc": _JSON_RPC_VERSION,
+                "jsonrpc": _JSONRPC_VERSION,
                 "id": rpc_id,
                 "method": method,
                 "params": params,
@@ -113,15 +113,6 @@ def migration_action_from_dict(raw: Dict[str, bool]) -> MigrationAction:
         create=raw.get("create", False),
         reset=raw.get("reset", False),
     )
-
-
-@dataclass
-class TypegraphConfig:
-    secrets: Dict[str, str]
-    artifact_resolution: bool
-    migration_actions: Dict[str, MigrationAction]
-    default_migration_action: MigrationAction
-    migrations_dir: str
 
 
 class Rpc:

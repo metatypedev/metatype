@@ -4,8 +4,8 @@
 mod migrations;
 
 use super::action::{
-    ActionFinalizeContext, ActionResult, OutputData, SharedActionConfig, TaskAction,
-    TaskActionGenerator, TaskFilter,
+    ActionFinalizeContext, ActionResult, FollowupOption, OutputData, SharedActionConfig,
+    TaskAction, TaskActionGenerator, TaskFilter,
 };
 use super::command::build_task_command;
 use crate::deploy::actors::console::Console;
@@ -27,7 +27,7 @@ pub struct MigrationAction {
     pub reset: bool,  // reset database if necessary
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct PrismaRuntimeId {
     pub typegraph: String,
     pub name: String,
@@ -132,11 +132,18 @@ impl OutputData for DeploySuccess {
     fn get_typegraph_name(&self) -> String {
         self.typegraph.clone()
     }
+
+    fn is_success(&self) -> bool {
+        self.failure.is_none()
+    }
 }
 
 impl OutputData for DeployError {
     fn get_typegraph_name(&self) -> String {
         self.typegraph.clone()
+    }
+    fn is_success(&self) -> bool {
+        false
     }
 }
 
@@ -156,6 +163,17 @@ pub enum MigrationActionOverride {
 pub enum RpcCall {
     GetDeployTarget,
     GetDeployData { typegraph: String },
+}
+
+struct ResetDatabase(PrismaRuntimeId);
+
+impl FollowupOption<DeployAction> for ResetDatabase {
+    fn add_to_options(&self, options: &mut DeployOptions) {
+        options.filter.add_typegraph(self.0.typegraph.clone());
+        options
+            .migration_options
+            .push((self.0.clone(), MigrationActionOverride::ResetDatabase));
+    }
 }
 
 impl TaskAction for DeployAction {
@@ -194,7 +212,11 @@ impl TaskAction for DeployAction {
         )
     }
 
-    fn finalize(&self, res: &ActionResult<Self>, ctx: ActionFinalizeContext<Self>) {
+    async fn finalize(
+        &self,
+        res: &ActionResult<Self>,
+        ctx: ActionFinalizeContext<Self>,
+    ) -> Result<Option<Box<dyn FollowupOption<DeployAction>>>> {
         match res {
             Ok(data) => {
                 let scope = format!("({path})", path = self.task_ref.path.display());
@@ -212,6 +234,7 @@ impl TaskAction for DeployAction {
 
                 let tg_name = data.get_typegraph_name();
 
+                // TODO async
                 self.unpack_migrations(&tg_name, &data.migrations, &ctx, &scope);
 
                 match &data.failure {
@@ -223,7 +246,26 @@ impl TaskAction for DeployAction {
                             path = self.task_ref.path.display().yellow(),
                         ));
 
-                        self.handle_push_failure(&tg_name, failure, &ctx, &scope);
+                        let followup_option = self
+                            .handle_push_failure(
+                                &tg_name,
+                                &self.task_ref.path,
+                                failure,
+                                &ctx,
+                                &scope,
+                            )
+                            .await?;
+
+                        Ok(followup_option.map(|opt| match opt.1 {
+                            MigrationActionOverride::ResetDatabase => {
+                                let res: Box<dyn FollowupOption<DeployAction>> =
+                                    Box::new(ResetDatabase(PrismaRuntimeId {
+                                        typegraph: tg_name,
+                                        name: opt.0,
+                                    }));
+                                res
+                            }
+                        }))
                     }
                     None => {
                         ctx.console.info(format!(
@@ -232,6 +274,7 @@ impl TaskAction for DeployAction {
                             name = tg_name.cyan(),
                             path = self.task_ref.path.display().yellow(),
                         ));
+                        Ok(None)
                     }
                 }
             }
@@ -244,6 +287,7 @@ impl TaskAction for DeployAction {
                     path = self.task_ref.path.display().yellow(),
                     err = data.error,
                 ));
+                Ok(None)
             }
         }
     }

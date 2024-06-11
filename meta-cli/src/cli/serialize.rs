@@ -8,7 +8,7 @@ use crate::deploy::actors::task::serialize::{
     SerializeAction, SerializeActionGenerator, SerializeError,
 };
 use crate::deploy::actors::task::TaskFinishStatus;
-use crate::deploy::actors::task_manager::{Report, TaskManagerInit, TaskSource};
+use crate::deploy::actors::task_manager::{Report, StopReason, TaskManagerInit, TaskSource};
 use crate::interlude::*;
 use actix_web::dev::ServerHandle;
 use clap::Parser;
@@ -92,6 +92,15 @@ impl Action for Serialize {
 
         let report = init.run().await;
 
+        match report.stop_reason {
+            StopReason::Error => bail!("failed"),
+            StopReason::Manual | StopReason::ManualForced => {
+                bail!("cancelled")
+            }
+            StopReason::Natural => {}
+            StopReason::Restart => panic!("restart not supported for serialize"),
+        }
+
         // TODO no need to report errors
         let tgs = report.into_typegraphs();
 
@@ -133,6 +142,7 @@ impl SerializeReportExt for Report<SerializeAction> {
             .map(|entry| match entry.status {
                 TaskFinishStatus::Finished(results) => results
                     .into_iter()
+                    .map(|(_, v)| v)
                     .collect::<Result<Vec<_>, SerializeError>>()
                     .unwrap_or_else(|e| {
                         tracing::error!(

@@ -24,15 +24,15 @@ use self::action::{ActionFinalizeContext, ActionResult, TaskAction};
 use super::console::{Console, ConsoleActor};
 use super::task_manager::{self, TaskManager};
 use crate::config::Config;
+use crate::deploy::actors::task_io::TaskIoActor;
 use crate::interlude::*;
-use color_eyre::owo_colors::OwoColorize;
+use action::{get_typegraph_name, TaskActionGenerator};
 use common::typegraph::Typegraph;
-use futures::lock::Mutex;
+use indexmap::IndexMap;
 use process_wrap::tokio::TokioChildWrapper;
 use serde::Deserialize;
 use std::time::Duration;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Lines};
-use tokio::process::{ChildStdin, ChildStdout, Command};
+use tokio::process::Command;
 
 pub mod message {
     use super::*;
@@ -43,18 +43,12 @@ pub mod message {
 
     #[derive(Message)]
     #[rtype(result = "()")]
-    pub(super) struct ProcessOutput {
-        pub stdout: ChildStdout,
-    }
+    pub(super) struct RestartProcessWithOptions<A: TaskAction>(pub A::Options);
 
     /// wait for process termination
     #[derive(Message)]
     #[rtype(result = "()")]
-    pub(super) struct CheckProcessStatus;
-
-    #[derive(Message)]
-    #[rtype(result = "()")]
-    pub(super) struct CollectOutput<A: TaskAction>(pub ActionResult<A>);
+    pub(super) struct WaitForProcess<A: TaskAction>(pub Option<A::Options>);
 
     #[derive(Message)]
     #[rtype(result = "()")]
@@ -66,11 +60,11 @@ pub mod message {
 
     #[derive(Message)]
     #[rtype(result = "()")]
-    pub(super) struct Rpc(pub RpcRequest);
+    pub struct Results<A: TaskAction>(pub Vec<ActionResult<A>>);
 
     #[derive(Message)]
     #[rtype(result = "()")]
-    pub(super) struct SendRpcResponse(pub RpcResponse);
+    pub struct UpdateResults<A: TaskAction>(pub Vec<ActionResult<A>>);
 }
 
 use message::*;
@@ -90,20 +84,19 @@ const DEFAULT_TIMEOUT: u64 = 120;
 pub enum TaskFinishStatus<A: TaskAction> {
     Cancelled,
     Error,
-    Finished(Vec<ActionResult<A>>),
+    Finished(IndexMap<String, ActionResult<A>>),
 }
 
 pub struct TaskActor<A: TaskAction + 'static> {
     config: Arc<Config>,
+    action_generator: A::Generator,
     action: A,
     process: Option<Box<dyn TokioChildWrapper>>,
-    // TODO separate i/o actor, and write queue instead of mutex
-    process_stdin: Option<Arc<Mutex<ChildStdin>>>,
+    io: Option<Addr<TaskIoActor<A>>>,
     task_manager: Addr<TaskManager<A>>,
     console: Addr<ConsoleActor>,
-    collected_output: Vec<Result<A::SuccessData, A::FailureData>>,
+    results: IndexMap<String, ActionResult<A>>, // for the report
     timeout_duration: Duration,
-    followup_task_options: Option<A::Options>,
 }
 
 impl<A> TaskActor<A>
@@ -112,18 +105,20 @@ where
 {
     pub fn new(
         config: Arc<Config>,
-        action: A,
+        action_generator: A::Generator,
+        initial_action: A,
         task_manager: Addr<TaskManager<A>>,
         console: Addr<ConsoleActor>,
     ) -> Self {
         Self {
             config,
             process: None,
-            process_stdin: None,
+            io: None,
             task_manager,
             console,
-            action,
-            collected_output: Default::default(),
+            action_generator,
+            action: initial_action,
+            results: Default::default(),
             // TODO doc?
             timeout_duration: Duration::from_secs(
                 std::env::var(TIMEOUT_ENV_NAME)
@@ -137,7 +132,6 @@ where
                     })
                     .unwrap_or(DEFAULT_TIMEOUT),
             ),
-            followup_task_options: None,
         }
     }
 
@@ -148,12 +142,8 @@ where
     fn get_path_owned(&self) -> Arc<Path> {
         self.action.get_task_ref().path.clone()
     }
-}
 
-impl<A: TaskAction + 'static> Actor for TaskActor<A> {
-    type Context = Context<Self>;
-
-    fn started(&mut self, ctx: &mut Self::Context) {
+    fn start_process(&mut self, ctx: &mut <Self as Actor>::Context) {
         let addr = ctx.address();
         let console = self.console.clone();
         let action = self.action.clone();
@@ -174,6 +164,14 @@ impl<A: TaskAction + 'static> Actor for TaskActor<A> {
         };
 
         ctx.spawn(fut.in_current_span().into_actor(self));
+    }
+}
+
+impl<A: TaskAction + 'static> Actor for TaskActor<A> {
+    type Context = Context<Self>;
+
+    fn started(&mut self, ctx: &mut Self::Context) {
+        self.start_process(ctx);
     }
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
@@ -196,19 +194,22 @@ impl<A: TaskAction + 'static> Handler<StartProcess> for TaskActor<A> {
 
         match spawn_res {
             Ok(mut child) => {
-                let stdout = child.stdout().take();
-                let Some(stdout) = stdout else {
-                    self.console.error(
-                        self.action
-                            .get_error_message("could not read output from process"),
-                    );
-                    ctx.address().do_send(Exit(TaskFinishStatus::<A>::Error));
-                    return;
+                let io_actor = TaskIoActor::init(
+                    ctx.address(),
+                    self.action.clone(),
+                    &mut child,
+                    self.console.clone(),
+                );
+
+                self.io = match io_actor {
+                    Ok(io_actor) => Some(io_actor),
+                    Err(e) => {
+                        self.console.error(e.to_string());
+                        ctx.address().do_send(Exit(TaskFinishStatus::<A>::Error));
+                        return;
+                    }
                 };
 
-                ctx.address().do_send(ProcessOutput { stdout });
-
-                self.process_stdin = Some(Arc::new(Mutex::new(child.stdin().take().unwrap())));
                 self.process = Some(child);
 
                 let addr = ctx.address();
@@ -233,41 +234,28 @@ impl<A: TaskAction + 'static> Handler<StartProcess> for TaskActor<A> {
     }
 }
 
-impl<A: TaskAction + 'static> Handler<ProcessOutput> for TaskActor<A> {
+impl<A: TaskAction + 'static> Handler<RestartProcessWithOptions<A>> for TaskActor<A> {
     type Result = ();
 
     fn handle(
         &mut self,
-        ProcessOutput { stdout }: ProcessOutput,
-        ctx: &mut Context<Self>,
+        RestartProcessWithOptions(options): RestartProcessWithOptions<A>,
+        ctx: &mut Self::Context,
     ) -> Self::Result {
-        let addr = ctx.address();
-        let console = self.console.clone();
-        let path = self.get_path_owned();
-
-        let fut = async move {
-            let reader = BufReader::new(stdout).lines();
-            if let Err(e) =
-                Self::loop_output_lines(reader, addr.clone(), console.clone(), path.clone()).await
-            {
-                console.error(format!(
-                    "failed to read process output on {:?}: {e:#}",
-                    path
-                ));
-                addr.do_send(Exit(TaskFinishStatus::<A>::Error))
-            } else {
-                // end of stdout
-                addr.do_send(CheckProcessStatus);
-            }
-        };
-        ctx.spawn(fut.in_current_span().into_actor(self));
+        let task_ref = self.action.get_task_ref().clone();
+        self.action = self.action_generator.generate(task_ref, options);
+        self.start_process(ctx);
     }
 }
 
-impl<A: TaskAction + 'static> Handler<CheckProcessStatus> for TaskActor<A> {
+impl<A: TaskAction + 'static> Handler<WaitForProcess<A>> for TaskActor<A> {
     type Result = ();
 
-    fn handle(&mut self, _msg: CheckProcessStatus, ctx: &mut Context<Self>) -> Self::Result {
+    fn handle(
+        &mut self,
+        WaitForProcess(followup_options): WaitForProcess<A>,
+        ctx: &mut Context<Self>,
+    ) -> Self::Result {
         let Some(process) = self.process.take() else {
             self.console
                 .error(format!("task process not found for {:?}", self.get_path()));
@@ -280,11 +268,16 @@ impl<A: TaskAction + 'static> Handler<CheckProcessStatus> for TaskActor<A> {
         let action = self.action.clone();
 
         let fut = async move {
+            // TODO timeout?
             match Box::into_pin(process.wait_with_output()).await {
                 Ok(output) => {
                     if output.status.success() {
-                        // logging in Exit handler
-                        addr.do_send(Exit(TaskFinishStatus::<A>::Finished(Default::default())));
+                        if let Some(followup_options) = followup_options {
+                            addr.do_send(RestartProcessWithOptions(followup_options))
+                        } else {
+                            // logging in Exit handler
+                            addr.do_send(Exit(TaskFinishStatus::<A>::Finished(Default::default())));
+                        }
                     } else {
                         console.error(action.get_error_message(&format!(
                             "process failed with code {:?}",
@@ -312,133 +305,45 @@ impl<A: TaskAction + 'static> Handler<CheckProcessStatus> for TaskActor<A> {
     }
 }
 
-#[derive(Clone, Copy)]
-enum OutputLevel {
-    Debug,
-    Info,
-    Warning,
-    Error,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-enum JsonRpcVersion {
-    #[serde(rename = "2.0")]
-    V2,
-}
-
-#[derive(Deserialize, Debug)]
-struct RpcRequest {
-    jsonrpc: JsonRpcVersion,
-    id: u32,
-    #[serde(flatten)]
-    call: serde_json::Value,
-}
-
-impl RpcRequest {
-    fn response(&self, result: serde_json::Value) -> RpcResponse {
-        RpcResponse {
-            jsonrpc: JsonRpcVersion::V2,
-            id: self.id,
-            result,
-        }
-    }
-}
-
-#[derive(Serialize, Debug)]
-struct RpcResponse {
-    jsonrpc: JsonRpcVersion,
-    id: u32,
-    result: serde_json::Value,
-}
-
-impl<A: TaskAction + 'static> TaskActor<A> {
-    async fn loop_output_lines(
-        mut reader: Lines<BufReader<ChildStdout>>,
-        addr: Addr<TaskActor<A>>,
-        console: Addr<ConsoleActor>,
-        path: Arc<Path>,
-    ) -> tokio::io::Result<()> {
-        let mut latest_level = OutputLevel::Info;
-
-        let scope = format!("[{path}]", path = path.display());
-        let scope = scope.yellow();
-
-        while let Some(line) = reader.next_line().await? {
-            if let Some(debug) = line.strip_prefix("debug: ") {
-                console.debug(format!("{scope} {debug}"));
-                latest_level = OutputLevel::Debug;
-                continue;
-            }
-
-            if let Some(info) = line.strip_prefix("info: ") {
-                console.info(format!("{scope} {info}"));
-                latest_level = OutputLevel::Info;
-                continue;
-            }
-
-            if let Some(warn) = line.strip_prefix("warning: ") {
-                console.warning(format!("{scope} {warn}"));
-                latest_level = OutputLevel::Warning;
-                continue;
-            }
-
-            if let Some(error) = line.strip_prefix("error: ") {
-                console.error(format!("{scope} {error}"));
-                latest_level = OutputLevel::Error;
-                continue;
-            }
-
-            if let Some(data_json) = line.strip_prefix("success: ") {
-                let data: A::SuccessData = serde_json::from_str(data_json)?;
-                addr.do_send(CollectOutput(Ok(data)));
-                continue;
-            }
-
-            if let Some(data_json) = line.strip_prefix("failure: ") {
-                let data: A::FailureData = serde_json::from_str(data_json)?;
-                addr.do_send(CollectOutput(Err(data)));
-                continue;
-            }
-
-            if let Some(req) = line.strip_prefix("jsonrpc: ") {
-                let req: RpcRequest = serde_json::from_str(req)?;
-                addr.do_send(message::Rpc(req));
-                continue;
-            }
-
-            match latest_level {
-                OutputLevel::Debug => {
-                    console.debug(format!("{scope}>{line}"));
-                }
-                OutputLevel::Info => {
-                    console.info(format!("{scope}>{line}"));
-                }
-                OutputLevel::Warning => {
-                    console.warning(format!("{scope}>{line}"));
-                }
-                OutputLevel::Error => {
-                    console.error(format!("{scope}>{line}"));
-                }
-            }
-        }
-        Ok(())
-    }
-}
-
-impl<A: TaskAction + 'static> Handler<CollectOutput<A>> for TaskActor<A> {
+impl<A: TaskAction + 'static> Handler<Results<A>> for TaskActor<A> {
     type Result = ();
 
-    fn handle(&mut self, message: CollectOutput<A>, ctx: &mut Context<Self>) -> Self::Result {
-        self.action.finalize(
-            &message.0,
-            ActionFinalizeContext {
-                config: self.config.clone(),
-                task_manager: self.task_manager.clone(),
-                task: ctx.address(),
-                console: self.console.clone(),
-            },
-        );
-        self.collected_output.push(message.0);
+    fn handle(&mut self, results: Results<A>, ctx: &mut Context<Self>) -> Self::Result {
+        let self_addr = ctx.address();
+        let action = self.action.clone();
+        let finalize_ctx = ActionFinalizeContext {
+            config: self.config.clone(),
+            task_manager: self.task_manager.clone(),
+            task: ctx.address(),
+            console: self.console.clone(),
+        };
+
+        let fut = async move {
+            let mut followup: Option<A::Options> = None;
+            for result in &results.0 {
+                match action.finalize(result, finalize_ctx.clone()).await {
+                    Ok(Some(followup_opt)) => {
+                        let followup = followup.get_or_insert_with(Default::default);
+                        followup_opt.add_to_options(followup);
+                    }
+                    _ => (),
+                }
+            }
+            self_addr.do_send(message::UpdateResults(results.0));
+            self_addr.do_send(WaitForProcess(followup));
+        };
+        ctx.spawn(fut.in_current_span().into_actor(self));
+    }
+}
+
+impl<A: TaskAction + 'static> Handler<UpdateResults<A>> for TaskActor<A> {
+    type Result = ();
+
+    fn handle(&mut self, UpdateResults(results): UpdateResults<A>, ctx: &mut Context<Self>) {
+        for result in results.into_iter() {
+            let tg_name = get_typegraph_name::<A>(&result);
+            self.results.insert(tg_name, result);
+        }
     }
 }
 
@@ -447,7 +352,7 @@ impl<A: TaskAction + 'static> Handler<Exit<A>> for TaskActor<A> {
 
     fn handle(&mut self, mut message: Exit<A>, ctx: &mut Context<Self>) -> Self::Result {
         if let TaskFinishStatus::<A>::Finished(res) = &mut message.0 {
-            std::mem::swap(res, &mut self.collected_output);
+            std::mem::swap(res, &mut self.results);
         }
         self.task_manager
             .do_send(task_manager::message::TaskFinished {
@@ -467,76 +372,5 @@ impl<A: TaskAction + 'static> Handler<Stop> for TaskActor<A> {
             self.console.warning(format!("killing task for {:?}", path));
             process.start_kill().unwrap();
         }
-    }
-}
-
-impl<A: TaskAction + 'static> Handler<Rpc> for TaskActor<A> {
-    type Result = ();
-
-    fn handle(&mut self, Rpc(req): Rpc, ctx: &mut Context<Self>) -> Self::Result {
-        let action = self.action.clone();
-        let addr = ctx.address();
-
-        let rpc_call: A::RpcCall = match serde_json::from_value(req.call.clone()) {
-            Ok(rpc_call) => rpc_call,
-            Err(err) => {
-                self.console
-                    .error(format!("invalid jsonrpc request {req:?}: {err:?}"));
-                addr.do_send(Exit(TaskFinishStatus::<A>::Error));
-                return;
-            }
-        };
-
-        let console = self.console.clone();
-
-        let fut = async move {
-            let id = req.id;
-            match action.get_rpc_response(&rpc_call).await {
-                Ok(response) => {
-                    addr.do_send(message::SendRpcResponse(req.response(response)));
-                }
-                Err(err) => {
-                    console.error(format!("failed to handle jsonrpc call {req:?}: {err:?}"));
-                    addr.do_send(Exit(TaskFinishStatus::<A>::Error));
-                }
-            }
-        };
-
-        ctx.spawn(fut.in_current_span().into_actor(self));
-    }
-}
-
-impl<A: TaskAction + 'static> Handler<message::SendRpcResponse> for TaskActor<A> {
-    type Result = ();
-
-    fn handle(
-        &mut self,
-        SendRpcResponse(response): SendRpcResponse,
-        ctx: &mut Context<Self>,
-    ) -> Self::Result {
-        {
-            let response_id = response.id;
-            match serde_json::to_string(&response) {
-                Ok(response) => {
-                    let stdin = self.process_stdin.clone().unwrap();
-                    let fut = async move {
-                        let mut stdin = stdin.lock().await;
-                        stdin
-                            .write_all(response.as_bytes())
-                            .await
-                            .expect("could not write rpc response to process stdin");
-                        stdin
-                            .write_all(b"\n")
-                            .await
-                            .expect("could not write newline to process stdin");
-                    };
-                    ctx.spawn(fut.in_current_span().into_actor(self));
-                }
-                Err(e) => {
-                    self.console
-                        .error(format!("could not serialize rpc response {e}"));
-                }
-            }
-        };
     }
 }
