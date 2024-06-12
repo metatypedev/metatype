@@ -108,7 +108,7 @@ tracing-appender.workspace = true
 color-eyre.workspace = true
 
 # misc
-prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
+prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
 nix = { version = "0.29.0", features = ["signal"] }
 lade-sdk = "0.9.1"
 git2 = { version = "0.18.3", features = [
