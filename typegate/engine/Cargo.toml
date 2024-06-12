@@ -32,7 +32,7 @@ request-handlers = { git = "https://github.com/prisma/prisma-engines", tag = "5.
 prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
 datamodel-renderer = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
 user-facing-errors = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
-query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
+query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.15.0" }
 schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
 psl = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
 schema-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
