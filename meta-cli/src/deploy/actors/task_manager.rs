@@ -1,6 +1,5 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
-
 use super::console::{Console, ConsoleActor};
 use super::discovery::DiscoveryActor;
 use super::task::action::{TaskAction, TaskActionGenerator};
@@ -11,6 +10,7 @@ use futures::channel::oneshot;
 use indexmap::IndexMap;
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::time::Duration;
 
 pub mod report;
 pub use report::Report;
@@ -115,11 +115,14 @@ pub struct TaskManager<A: TaskAction + 'static> {
     console: Addr<ConsoleActor>,
 }
 
+const DEFAULT_INITIAL_RETRY_INTERVAL: Duration = Duration::from_secs(3);
+
 pub struct TaskManagerInit<A: TaskAction> {
     config: Arc<Config>,
     action_generator: A::Generator,
     max_parallel_tasks: usize,
     max_retry_count: usize,
+    initial_retry_interval: Duration,
     console: Addr<ConsoleActor>,
     task_source: TaskSource,
 }
@@ -136,6 +139,7 @@ impl<A: TaskAction + 'static> TaskManagerInit<A> {
             action_generator,
             max_parallel_tasks: num_cpus::get(),
             max_retry_count: 0,
+            initial_retry_interval: DEFAULT_INITIAL_RETRY_INTERVAL,
             console,
             task_source,
         }
@@ -146,8 +150,9 @@ impl<A: TaskAction + 'static> TaskManagerInit<A> {
         self
     }
 
-    pub fn max_retry_count(mut self, max_retry_count: usize) -> Self {
+    pub fn retry(mut self, max_retry_count: usize, initial_interval: Option<Duration>) -> Self {
         self.max_retry_count = max_retry_count;
+        self.initial_retry_interval = initial_interval.unwrap_or(DEFAULT_INITIAL_RETRY_INTERVAL);
         self
     }
 
@@ -400,11 +405,22 @@ impl<A: TaskAction + 'static> Handler<TaskFinished<A>> for TaskManager<A> {
         self.reports
             .insert(message.task_ref.path.clone(), message.status);
 
-        if let Some(next_retry_no) = next_retry_no {
-            todo!(
-                "not implemented: retry no {next_retry_no}/{}",
-                self.init_params.max_retry_count
-            );
+        if let Some(retry_no) = next_retry_no {
+            let path = message.task_ref.path;
+            let task_ref = self.task_generator.generate(path.clone(), retry_no);
+            let task_manager = ctx.address();
+            self.pending_retries.insert(path.clone(), task_ref.id);
+
+            let retry_interval = self.init_params.initial_retry_interval * (retry_no as u32);
+
+            let fut = async move {
+                tokio::time::sleep(retry_interval).await;
+                task_manager.do_send(AddTask {
+                    task_ref,
+                    reason: TaskReason::Retry(retry_no),
+                });
+            };
+            ctx.spawn(fut.in_current_span().into_actor(self));
         }
 
         // TODO check queue??

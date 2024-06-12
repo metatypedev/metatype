@@ -154,6 +154,8 @@ typegraphs:
   typescript:
     exclude:
       - "typegraphs/temporal.ts"
+    include:
+      - "typegraphs/*.ts"
 
 metagen:
   targets:

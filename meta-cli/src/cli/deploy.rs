@@ -214,7 +214,7 @@ mod default_mode {
                 TaskSource::Discovery(deploy.base_dir)
             },
         )
-        .max_retry_count(3);
+        .retry(3, None);
 
         if let Some(max_parallel_loads) = deploy.max_parallel_loads {
             init = init.max_parallel_tasks(max_parallel_loads);
@@ -289,7 +289,7 @@ mod watch_mode {
             console.clone(),
             TaskSource::DiscoveryAndWatch(deploy.base_dir),
         )
-        .max_retry_count(3);
+        .retry(3, None);
 
         if let Some(max_parallel_loads) = deploy.max_parallel_loads {
             init = init.max_parallel_tasks(max_parallel_loads);
