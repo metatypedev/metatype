@@ -123,7 +123,7 @@ pub struct DeploySuccess {
 #[derive(Deserialize, Debug)]
 pub struct DeployError {
     typegraph: String,
-    error: String,
+    errors: Vec<String>,
 }
 
 impl OutputData for DeploySuccess {
@@ -279,12 +279,14 @@ impl TaskAction for DeployAction {
 
             Err(data) => {
                 ctx.console.error(format!(
-                    "{icon} failed to deploy typegraph {name} from {path}: {err}",
+                    "{icon} failed to deploy typegraph {name} from {path}",
                     icon = "✗".red(),
                     name = data.get_typegraph_name().cyan(),
                     path = self.task_ref.path.display().yellow(),
-                    err = data.error,
                 ));
+                for error in &data.errors {
+                    ctx.console.error(format!("- {error}", error = error));
+                }
                 Ok(None)
             }
         }

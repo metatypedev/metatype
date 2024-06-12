@@ -57,12 +57,15 @@ global_action_create = os.environ.get("GLOBAL_ACTION_CREATE") or True
 if global_action_reset is not True:
     global_action_create = global_action_create == "true"
 
+prefix = os.environ.get("PREFIX")
+
 
 deploy_result = tg_deploy(
     tg,
     TypegraphDeployParams(
         typegate=TypegateConnectionOptions(url=gate, auth=auth),
         typegraph_path=os.path.join(cwd, module_name),
+        prefix=prefix,
         secrets=secrets,
         migrations_dir=migration_dir,
         migration_actions=None,

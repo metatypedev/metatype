@@ -98,18 +98,8 @@ export class ArtifactUploader {
       `failed to upload artifact ${meta.relativePath}`,
     );
 
-    if (!res.ok) {
-      const err = await res.json();
-      // To be read by the CLI?
-      log.error("Failed to upload artifact", meta.relativePath, err);
-      console.log(err);
-      throw new Error(
-        `Failed to upload artifact '${path}' (${res.status}): ${err.error}`,
-      );
-    }
-    const ret = res.json();
     log.info("✓ artifact uploaded:", meta.relativePath);
-    return ret;
+    return res;
   }
 
   private getMetas(artifacts: Artifact[]): UploadArtifactMeta[] {

@@ -9,39 +9,36 @@ import { join } from "std/path/join.ts";
 import { assertEquals, assertExists } from "std/assert/mod.ts";
 import * as path from "std/path/mod.ts";
 
-Meta.test({
-  name: "deploy and undeploy typegraph without meta-cli",
-}, async (t) => {
-  const gate = `http://localhost:${t.port}`;
-  const auth = new BasicAuth("admin", "password");
-  const cwdDir = join(testDir, "e2e", "self_deploy");
+Meta.test(
+  {
+    name: "deploy and undeploy typegraph without meta-cli",
+  },
+  async (t) => {
+    const gate = `http://localhost:${t.port}`;
+    const auth = new BasicAuth("admin", "password");
+    const cwdDir = join(testDir, "e2e", "self_deploy");
 
-  const { serialized, typegate: gateResponseAdd } = await tgDeploy(tg, {
-    baseUrl: gate,
-    auth,
-    secrets: {},
-    typegraphPath: path.join(cwdDir, "self_deploy.mjs"),
-    artifactsConfig: {
-      prismaMigration: {
-        globalAction: {
-          create: true,
-          reset: false,
-        },
-        migrationDir: "prisma-migrations",
+    const { serialized, response: gateResponseAdd } = await tgDeploy(tg, {
+      typegate: { url: gate, auth },
+      secrets: {},
+      typegraphPath: path.join(cwdDir, "self_deploy.mjs"),
+      migrationsDir: `${cwdDir}/prisma-migrations`,
+      defaultMigrationAction: {
+        apply: true,
+        create: true,
+        reset: false,
       },
-      dir: cwdDir,
-    },
-  });
-  assertExists(serialized, "serialized has a value");
-  assertEquals(gateResponseAdd, {
-    data: {
-      addTypegraph: { name: "self-deploy", messages: [], migrations: [] },
-    },
-  });
+    });
+    assertExists(serialized, "serialized has a value");
+    assertEquals(gateResponseAdd, {
+      name: "self-deploy",
+      messages: [],
+      migrations: [],
+    });
 
-  const { typegate: gateResponseRem } = await tgRemove(tg, {
-    baseUrl: gate,
-    auth,
-  });
-  assertEquals(gateResponseRem, { data: { removeTypegraphs: true } });
-});
+    const { typegate: gateResponseRem } = await tgRemove(tg, {
+      typegate: { url: gate, auth },
+    });
+    assertEquals(gateResponseRem, { data: { removeTypegraphs: true } });
+  },
+);

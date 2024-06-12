@@ -379,27 +379,32 @@ impl<A: TaskAction + 'static> Handler<TaskFinished<A>> for TaskManager<A> {
         self.active_tasks.remove(&message.task_ref.path);
         ctx.address().do_send(NextTask);
 
-        let mut next_retry_no = None;
-        match &message.status {
-            TaskFinishStatus::Error => {
-                if message.task_ref.retry_no < self.init_params.max_retry_count {
-                    next_retry_no = Some(message.task_ref.retry_no + 1);
+        let next_retry_no: Option<usize> =
+            if message.task_ref.retry_no < self.init_params.max_retry_count {
+                match &message.status {
+                    TaskFinishStatus::Error => Some(message.task_ref.retry_no + 1),
+                    TaskFinishStatus::Finished(results) => {
+                        // TODO partial retry - if multiple typegraphs in a single file
+                        if results.iter().any(|r| r.1.is_err()) {
+                            Some(message.task_ref.retry_no + 1)
+                        } else {
+                            None
+                        }
+                    }
+                    TaskFinishStatus::Cancelled => None,
                 }
-            }
-            TaskFinishStatus::Finished(results) => {
-                // TODO partial retry - if multiple typegraphs in a single file
-                if results.iter().any(|r| r.1.is_err()) {
-                    next_retry_no = Some(message.task_ref.retry_no + 1);
-                }
-            }
-            _ => {}
-        };
+            } else {
+                None
+            };
 
         self.reports
             .insert(message.task_ref.path.clone(), message.status);
 
-        if let Some(_next_retry_no) = next_retry_no {
-            todo!("not implemented");
+        if let Some(next_retry_no) = next_retry_no {
+            todo!(
+                "not implemented: retry no {next_retry_no}/{}",
+                self.init_params.max_retry_count
+            );
         }
 
         // TODO check queue??

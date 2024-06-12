@@ -20,7 +20,7 @@ from typegraph.graph.params import Cors, RawAuth
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph.envs.cli import CLI_ENV
-from typegraph.wit import core, store, wit_utils
+from typegraph.wit import ErrorStack, core, store, wit_utils
 from typegraph.io import Log
 
 if TYPE_CHECKING:
@@ -87,7 +87,7 @@ class Typegraph:
         )
 
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
 
 
 @dataclass
@@ -134,7 +134,7 @@ class Graph:
     def rest(self, graphql: str) -> int:
         res = wit_utils.add_graphql_endpoint(store, graphql)
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         return res.value
 
     def auth(self, value: Union[Auth, RawAuth]):
@@ -144,7 +144,7 @@ class Graph:
             else wit_utils.add_auth(store, value)
         )
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         return res.value
 
     def ref(self, name: str) -> "t.typedef":
@@ -153,7 +153,7 @@ class Graph:
     def configure_random_injection(self, seed: int):
         res = core.set_seed(store, seed)
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
 
     def as_arg(self, name: Optional[str] = None):
         return ApplyFromArg(name)
@@ -240,7 +240,7 @@ def typegraph(
         ):
             finalization_result = core.serialize_typegraph(store, config)
             if isinstance(finalization_result, Err):
-                raise Exception(finalization_result.value)
+                raise ErrorStack(finalization_result.value)
 
             tg_json, ref_artifacts = finalization_result.value
             return FinalizationResult(tg_json, ref_artifacts)
@@ -262,7 +262,7 @@ def typegraph(
 def gen_ref(name: str) -> "t.typedef":
     res = core.refb(store, name, [])
     if isinstance(res, Err):
-        raise Exception(res.value)
+        raise ErrorStack(res.value)
     from typegraph.t import typedef
 
     return typedef(res.value)

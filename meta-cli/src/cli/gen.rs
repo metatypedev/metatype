@@ -162,7 +162,7 @@ async fn load_tg_at(
     .max_parallel_tasks(1);
 
     let report = init.run().await;
-    let mut tgs = report.into_typegraphs();
+    let mut tgs = report.into_typegraphs()?;
 
     if tgs.is_empty() {
         bail!("not typegraphs loaded from path at {path:?}")

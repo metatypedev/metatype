@@ -255,12 +255,12 @@ Meta.test(
       "have replaced and terminated the previous engine",
       async () => {
         await gql`
-           query {
-             findManyRecords {
-               id
-             }
-           }
-         `
+          query {
+            findManyRecords {
+              id
+            }
+          }
+        `
           .expectData({
             findManyRecords: [],
           })
@@ -345,12 +345,12 @@ Meta.test(
       "succeed have replaced and terminated the previous engine",
       async () => {
         await gql`
-           query {
-             findManyRecords {
-               id
-             }
-           }
-         `
+          query {
+            findManyRecords {
+              id
+            }
+          }
+        `
           .expectData({
             findManyRecords: [],
           })

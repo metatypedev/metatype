@@ -15,6 +15,7 @@ from typegraph.graph.tg_deploy import (
     TypegraphDeployParams,
     tg_deploy,
 )
+from typegraph.wit import ErrorStack
 from typegraph.utils import freeze_tg_output
 from typegraph.io import Log, Rpc
 from typegraph.envs.cli import CliEnv, Command, get_cli_env
@@ -63,7 +64,10 @@ class Manager:
             Log.success(res.tgJson, noencode=True)
         except Exception as err:
             Log.debug(traceback.format_exc())
-            Log.failure({"typegraph": self.typegraph.name, "error": str(err)})
+            if isinstance(err, ErrorStack):
+                Log.failure({"typegraph": self.typegraph.name, "errors": err.stack})
+            else:
+                Log.failure({"typegraph": self.typegraph.name, "errors": [str(err)]})
 
     def deploy(self):
         env = self.env
@@ -88,7 +92,10 @@ class Manager:
             frozen_out.serialize(params)
         except Exception as err:
             Log.debug(traceback.format_exc())
-            Log.failure({"typegraph": self.typegraph.name, "error": str(err)})
+            if isinstance(err, ErrorStack):
+                Log.failure({"typegraph": self.typegraph.name, "errors": err.stack})
+            else:
+                Log.failure({"typegraph": self.typegraph.name, "errors": [str(err)]})
             return
 
         try:
@@ -115,5 +122,8 @@ class Manager:
             Log.success({"typegraph": self.typegraph.name, **response})
         except Exception as err:
             Log.debug(traceback.format_exc())
-            Log.failure({"typegraph": self.typegraph.name, "error": str(err)})
+            if isinstance(err, ErrorStack):
+                Log.failure({"typegraph": self.typegraph.name, "errors": err.stack})
+            else:
+                Log.failure({"typegraph": self.typegraph.name, "errors": [str(err)]})
             return

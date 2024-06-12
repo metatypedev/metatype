@@ -4,9 +4,7 @@
 use super::{Action, ConfigArgs};
 use crate::config::{Config, PathOption};
 use crate::deploy::actors::console::ConsoleActor;
-use crate::deploy::actors::task::serialize::{
-    SerializeAction, SerializeActionGenerator, SerializeError,
-};
+use crate::deploy::actors::task::serialize::{SerializeAction, SerializeActionGenerator};
 use crate::deploy::actors::task::TaskFinishStatus;
 use crate::deploy::actors::task_manager::{Report, StopReason, TaskManagerInit, TaskSource};
 use crate::interlude::*;
@@ -97,7 +95,7 @@ impl Action for Serialize {
         }
 
         // TODO no need to report errors
-        let tgs = report.into_typegraphs();
+        let tgs = report.into_typegraphs()?;
 
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.iter().find(|tg| &tg.name().unwrap() == tg_name) {
@@ -126,37 +124,42 @@ impl Action for Serialize {
 
 pub trait SerializeReportExt {
     #[allow(clippy::vec_box)]
-    fn into_typegraphs(self) -> Vec<Box<Typegraph>>;
+    fn into_typegraphs(self) -> Result<Vec<Box<Typegraph>>>;
 }
 
 impl SerializeReportExt for Report<SerializeAction> {
-    fn into_typegraphs(self) -> Vec<Box<Typegraph>> {
-        self.entries
-            .into_iter()
-            .flat_map(|entry| match entry.status {
-                TaskFinishStatus::Finished(results) => results
-                    .into_iter()
-                    .map(|(_, v)| v)
-                    .collect::<Result<Vec<_>, SerializeError>>()
-                    .unwrap_or_else(|e| {
-                        tracing::error!(
-                            "serialization failed for typegraph '{}' at {:?}: {}",
-                            e.typegraph,
-                            entry.path,
-                            e.error
-                        );
-                        vec![]
-                    }),
+    fn into_typegraphs(self) -> Result<Vec<Box<Typegraph>>> {
+        let mut res = vec![];
+        for entry in self.entries.into_iter() {
+            match entry.status {
+                TaskFinishStatus::Finished(results) => {
+                    for (_, tg) in results.into_iter() {
+                        let tg = tg.map_err(|_e| {
+                            // tracing::error!(
+                            //     "serialization failed for typegraph '{}' at {:?}",
+                            //     e.typegraph,
+                            //     entry.path,
+                            // );
+                            // for err in e.errors.into_iter() {
+                            //     tracing::error!("- {err}");
+                            // }
+                            ferr!("failed")
+                        })?;
+                        res.push(tg);
+                    }
+                }
                 TaskFinishStatus::Cancelled => {
                     tracing::error!("serialization cancelled for {:?}", entry.path);
-                    vec![]
+                    return Err(ferr!("cancelled"));
                 }
                 TaskFinishStatus::Error => {
                     tracing::error!("serialization failed for {:?}", entry.path);
-                    vec![]
+                    return Err(ferr!("failed"));
                 }
-            })
-            .collect()
+            }
+        }
+
+        Ok(res)
     }
 }
 

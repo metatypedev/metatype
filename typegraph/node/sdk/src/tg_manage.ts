@@ -56,7 +56,7 @@ export class Manager {
     } catch (err: any) {
       log.failure({
         typegraph: this.#typegraph.name,
-        error: err?.message ?? "failed to serialize typegraph",
+        errors: err?.stack ?? [err?.message ?? "failed to serialize typegraph"],
       });
     }
   }
@@ -88,7 +88,7 @@ export class Manager {
     } catch (err: any) {
       log.failure({
         typegraph: this.#typegraph.name,
-        error: err?.message ?? "failed to serialize typegraph",
+        errors: err?.stack ?? [err?.message ?? "failed to serialize typegraph"],
       });
       return;
     }
@@ -119,7 +119,7 @@ export class Manager {
     } catch (err: any) {
       log.failure({
         typegraph: this.#typegraph.name,
-        error: err?.message ?? "failed to deploy typegraph",
+        errors: err?.stack ?? [err?.message ?? "failed to deploy typegraph"],
       });
       return;
     }

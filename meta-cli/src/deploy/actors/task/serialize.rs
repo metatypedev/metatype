@@ -69,7 +69,7 @@ impl TaskActionGenerator for SerializeActionGenerator {
 #[derive(Deserialize, Debug)]
 pub struct SerializeError {
     pub typegraph: String,
-    pub error: String,
+    pub errors: Vec<String>,
 }
 
 impl OutputData for Box<Typegraph> {
@@ -147,12 +147,14 @@ impl TaskAction for SerializeAction {
             }
             Err(output) => {
                 ctx.console.error(format!(
-                    "{icon} failed to serialize typegraph {name} from {path}: {err}",
+                    "{icon} failed to serialize typegraph {name} from {path}",
                     icon = "✗".red(),
                     name = output.get_typegraph_name().cyan(),
                     path = self.task_ref.path.display().yellow(),
-                    err = output.error,
                 ));
+                for err in output.errors.iter() {
+                    ctx.console.error(format!("- {err}"));
+                }
             }
         }
 
