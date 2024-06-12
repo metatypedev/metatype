@@ -35,16 +35,16 @@ common.workspace = true
 metagen.workspace = true
 
 # data structures
-chrono = { version = "0.4.31", features = ["serde"] }
-semver = "1.0.20"
+chrono = { version = "0.4.38", features = ["serde"] }
+semver = "1.0.23"
 indexmap.workspace = true
 
 # patterns
 once_cell.workspace = true
 lazy_static = "1.4.0"
-crossbeam-channel = "0.5.8"
+crossbeam-channel = "0.5.13"
 itertools.workspace = true
-enum_dispatch = "0.3.12"
+enum_dispatch = "0.3.13"
 derive_more = "0.99.17"
 indoc.workspace = true
 
@@ -59,10 +59,10 @@ num_cpus = "1.16.0"
 shadow-rs.workspace = true
 clap = { workspace = true, features = ["derive", "env"] }
 clap_complete.workspace = true
-clap-verbosity-flag = "2.1.0"
-ctrlc = "3.4.1"
+clap-verbosity-flag = "2.2.0"
+ctrlc = "3.4.4"
 dialoguer = "0.11.0"
-self_update = { version = "0.38.0", features = [
+self_update = { version = "0.39.0", features = [
   "archive-tar",
   "archive-zip",
   "compression-flate2",
@@ -77,24 +77,24 @@ flate2.workspace = true
 tar.workspace = true
 base64.workspace = true
 # FIXME: deprecated, be on the lookout for alternatives
-serde_yaml = "0.9.27"
+serde_yaml = "0.9.33"
 
 # fs
-normpath = "1.1.1"
+normpath = "1.2.0"
 directories = "5.0.1"
 include_dir = "0.7.3"
-grep = "0.2.12"
-filetime = "0.2"
+grep = "0.3.1"
+filetime = "0.2.23"
 notify-debouncer-mini = { version = "0.4.1", default-features = false }
 ignore = "0.4.20"
-globset = "0.4.13"
+globset = "0.4.14"
 pathdiff = "0.2.1"
-textwrap = "0.16.0"
+textwrap = "0.16.1"
 
 # http
 reqwest = { workspace = true, features = ["json"] }
-actix = "0.13"
-actix-web = "4.6"
+actix = "0.13.3"
+actix-web = "4.6.0"
 
 # logging
 tracing.workspace = true
@@ -105,17 +105,18 @@ tracing-unwrap.workspace = true
 color-eyre.workspace = true
 
 # misc
-prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-nix = { version = "0.28", features = ["signal"] }
+prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
+nix = { version = "0.29.0", features = ["signal"] }
 lade-sdk = "0.9.1"
-git2 = { version = "0.18.1", features = [
+git2 = { version = "0.18.3", features = [
   "vendored-libgit2",
 ], default-features = false }
-process-wrap = { version = "8.0", features = ["tokio1"] }
+process-wrap = { version = "8.0.2", features = ["tokio1"] }
 
 [dev-dependencies]
 # testing
-assert_cmd = "2.0.12"
+assert_cmd = "2.0.14"
+
 # fs
 project-root = "0.2.2"
 tempfile.workspace = true

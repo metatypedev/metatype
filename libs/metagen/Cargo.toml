@@ -17,7 +17,7 @@ regex.workspace = true
 once_cell.workspace = true
 pretty_assertions = "1.4.0"
 color-eyre.workspace = true
-tera = { version = "1", default-features = false }
+tera = { version = "1.20", default-features = false }
 futures-concurrency.workspace = true
 futures-lite.workspace = true
 
