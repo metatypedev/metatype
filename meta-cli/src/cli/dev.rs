@@ -36,7 +36,6 @@ impl Action for Dev {
     async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
         log::info!("'meta dev' subcommand is an alias to 'meta deploy --codegen --allow-dirty --watch --create-migration'");
         let options = DeployOptions {
-            codegen: true,
             allow_dirty: true,
             allow_destructive: self.run_destructive_migrations,
             watch: true,

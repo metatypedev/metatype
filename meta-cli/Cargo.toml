@@ -32,8 +32,7 @@ typegate = ["dep:typegate_engine"]
 # internal
 typegate_engine = { workspace = true, optional = true }
 common.workspace = true
-typescript.workspace = true
-metagen = { workspace = true, features = ["multithreaded"] }
+metagen.workspace = true
 
 # data structures
 chrono = { version = "0.4.38", features = ["serde"] }
@@ -44,16 +43,16 @@ indexmap.workspace = true
 once_cell.workspace = true
 lazy_static = "1.4.0"
 crossbeam-channel = "0.5.13"
-itertools = "0.13.0"
+itertools.workspace = true
 enum_dispatch = "0.3.13"
 derive_more = "0.99.17"
 indoc.workspace = true
 
 # concurrency
 tokio = { workspace = true, features = ["full"] }
-futures = "0.3.30"
-async-trait = "0.1.80"
-async-recursion = "1.1.1"
+futures.workspace = true
+futures-concurrency.workspace = true
+async-trait.workspace = true
 num_cpus = "1.16.0"
 
 # cli
@@ -62,7 +61,6 @@ clap = { workspace = true, features = ["derive", "env"] }
 clap_complete.workspace = true
 clap-verbosity-flag = "2.2.0"
 ctrlc = "3.4.4"
-question = "0.2.2"
 dialoguer = "0.11.0"
 self_update = { version = "0.39.0", features = [
   "archive-tar",
@@ -75,9 +73,9 @@ self_update = { version = "0.39.0", features = [
 # codecs
 serde.workspace = true
 serde_json = { workspace = true, features = ["preserve_order"] }
-flate2 = "1.0.30"
-tar = "0.4.40"
-base64 = "0.22.1"
+flate2.workspace = true
+tar.workspace = true
+base64.workspace = true
 # FIXME: deprecated, be on the lookout for alternatives
 serde_yaml = "0.9.33"
 
@@ -97,14 +95,13 @@ textwrap = "0.16.1"
 reqwest = { workspace = true, features = ["json"] }
 actix = "0.13.3"
 actix-web = "4.6.0"
-tiny_http = "0.12.0"
 
 # logging
 tracing.workspace = true
 tracing-subscriber.workspace = true
 tracing-error.workspace = true
 tracing-unwrap.workspace = true
-tracing-appender.workspace = true
+# tracing-appender.workspace = true
 color-eyre.workspace = true
 
 # misc
@@ -119,7 +116,7 @@ process-wrap = { version = "8.0.2", features = ["tokio1"] }
 [dev-dependencies]
 # testing
 assert_cmd = "2.0.14"
-insta = "1.39.0"
+
 # fs
 project-root = "0.2.2"
 tempfile.workspace = true

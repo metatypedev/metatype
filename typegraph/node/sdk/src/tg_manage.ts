@@ -10,7 +10,7 @@ import { freezeTgOutput } from "./utils/func_utils.js";
 const PORT = "META_CLI_SERVER_PORT"; // meta-cli instance that executes the current file
 const SELF_PATH = "META_CLI_TG_PATH"; // path to the current file to uniquely identify the run results
 
-type Command = "serialize" | "deploy" | "codegen";
+type Command = "serialize" | "deploy";
 
 // Types for CLI => SDK
 type CLIServerResponse = {
@@ -163,13 +163,6 @@ export class Manager {
       ...this.#typegraph,
       serialize: () => frozenSerialized,
     } as TypegraphOutput;
-
-    if (artifactsConfig.codegen) {
-      await this.#relayResultToCLI(
-        "codegen",
-        JSON.parse(frozenSerialized.tgJson),
-      );
-    }
 
     let deployRes: any;
     try {

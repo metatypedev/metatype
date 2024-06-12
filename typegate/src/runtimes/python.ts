@@ -148,6 +148,9 @@ export class PythonRuntime extends Runtime {
   }
 
   async deinit(): Promise<void> {
+    // if (Deno.env.get("KILL_PY")) {
+    //   throw new Error("wtf");
+    // }
     this.logger.info("deinitializing PythonRuntime");
     await using _drop = this.wire;
   }

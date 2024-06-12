@@ -18,7 +18,7 @@ import GraphiQLInterface, { Panel } from "./graphiql";
 import * as ast from "graphql/language/ast";
 import { MemoryStorage } from "./memory_store";
 import { ChoicePicker } from "../ChoicePicker";
-import { useSDK } from "../../states/sdk";
+import { SDK, useSDK } from "../../states/sdk";
 import TabItem from "@theme/TabItem";
 
 export interface MiniQLProps {
@@ -91,11 +91,20 @@ function MiniQLBrowser({
           ? (
             <div className=" bg-slate-100 rounded-lg flex flex-col mb-2 md:mb-0 relative">
               <ChoicePicker
-                choices={{
-                  typescript: "Typescript",
-                  python: "Python",
-                }}
-                choice={sdk}
+                // if only a single code file is given, we show it
+                // despite the set sdk value
+                choices={Object.fromEntries(code?.map(lang => [
+                  lang.codeLanguage ?? "default",
+                  {
+                    typescript: "Typescript",
+                    python: "Python",
+                  }[lang.codeLanguage!] ?? "Default",
+                ]) ?? [
+                    ["typescript", "Typescript"],
+                    ["python", "Python"]
+                  ])
+                }
+                choice={code && code.length < 2 ? (code[0].codeLanguage ?? "default") as SDK : sdk}
                 onChange={setSDK}
                 className="ml-2"
               >

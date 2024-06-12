@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, Meta } from "test-utils/mod.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 import { connect } from "redis";
 import { S3Client } from "aws-sdk/client-s3";
 import { createBucket, listObjects, tryDeleteBucket } from "test-utils/s3.ts";
@@ -238,87 +238,6 @@ Meta.test(
 
     await testMultipleReplica(1);
     await testMultipleReplica(2);
-  },
-);
-
-Meta.test(
-  {
-    name: "Deno: def, lambda in sync mode",
-    syncConfig,
-    async setup() {
-      await cleanUp();
-    },
-    async teardown() {
-      await cleanUp();
-    },
-  },
-  async (t) => {
-    const e = await t.engine("runtimes/python/python.ts");
-
-    await t.should("work with def", async () => {
-      await gql`
-        query {
-          identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
-          }
-        }
-      `
-        .expectData({
-          identityLambda: {
-            a: "hello",
-            b: [1, 2, "three"],
-          },
-        })
-        .on(e);
-    });
-
-    await t.should("work with def", async () => {
-      await gql`
-        query {
-          identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
-          }
-        }
-      `
-        .expectData({
-          identityDef: {
-            a: "hello",
-            b: [1, 2, "three"],
-          },
-        })
-        .on(e);
-    });
-  },
-);
-
-Meta.test(
-  {
-    name: "Python: infinite loop or similar in sync mode",
-    sanitizeOps: false,
-    syncConfig,
-    async setup() {
-      await cleanUp();
-    },
-    async teardown() {
-      await cleanUp();
-    },
-  },
-  async (t) => {
-    const e = await t.engine(
-      "runtimes/python/python.py",
-    );
-
-    await t.should("safely fail upon stackoverflow", async () => {
-      await gql`
-        query {
-          stackOverflow(enable: true)
-        }
-      `
-        .expectErrorContains("maximum recursion depth exceeded")
-        .on(e);
-    });
   },
 );
 

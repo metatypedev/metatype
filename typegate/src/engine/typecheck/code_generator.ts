@@ -279,6 +279,7 @@ export class CodeGenerator {
     variantValidatorNames: string[],
   ) {
     this.line("let matchCount = 0;");
+    this.line("const failed = [];");
     this.line("let errs;");
 
     const variantCount = typeNode.oneOf.length;
@@ -292,16 +293,22 @@ export class CodeGenerator {
       const validator = variantValidatorNames[i];
       this.line(`${validator}(value, path, errs, context);`);
       this.line("if (errs.length === 0) { matchCount += 1 }");
+      this.line("else { failed.push(errs) }");
     }
-
     this.line("if (matchCount === 0) {");
     this.line(
-      'errors.push([path, "Value does not match to any variant of the either type"])',
+      "const failedErrors = failed.map((errs, i) => `\\n  #${i} ${errs.join(', ')}`).join('');",
+    );
+    this.line(
+      "errors.push([path, `Value does not match to any variant of the either type ${failedErrors}`])",
     );
     this.line("}");
     this.line("else if (matchCount > 1) {");
     this.line(
-      'errors.push([path, "Value match to more than one variant of the either type"])',
+      "const failedErrors = failed.map((errs, i) => `\\n  #${i} ${errs.join(', ')}`).join('');",
+    );
+    this.line(
+      "errors.push([path, `Value match to more than one variant of the either type ${failedErrors}`])",
     );
     this.line("}");
   }

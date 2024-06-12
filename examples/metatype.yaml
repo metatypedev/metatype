@@ -144,4 +144,15 @@ typegraphs:
 
 metagen:
   targets:
-    main:
+    metagen_deno:
+      - generator: mdk_typescript
+        path: ./typegraphs/metagen/ts/
+        typegraph_path: ./typegraphs/metagen-deno.ts
+    metagen_py:
+      - generator: mdk_python
+        path: ./typegraphs/metagen/py/
+        typegraph_path: ./typegraphs/metagen-py.ts
+    metagen_rs:
+      - generator: mdk_rust
+        path: ./typegraphs/metagen/rs/
+        typegraph_path: ./typegraphs/metagen-rs.ts
