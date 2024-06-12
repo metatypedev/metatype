@@ -25,6 +25,7 @@ typegraph(
           t.struct({ b: t.string() }),
         ]),
         list: t.list(t.string()),
+        type: t.string(),
       }).rename("MyObj");
 
       const wasm = WasmRuntime.wire("placeholder");
@@ -33,7 +34,7 @@ typegraph(
           my_faas: wasm.handler(
             obj,
             obj,
-            { func: "my_faas" },
+            { name: "my_faas" },
           ).rename("my_faas"),
         },
         Policy.public(),

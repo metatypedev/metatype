@@ -33,8 +33,7 @@ def random_field(g: Graph):
         get_bonus=deno.func(
             daily_bonus,
             t.string(),
-            code="""
-            ({ performance, bonus }) => `Daily bonus: ${
+            code="""({ performance, bonus }) => `Daily bonus: ${
                 (performance > 100 ? bonus : ['none']).join(', ')
             }`;
             """,

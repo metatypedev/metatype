@@ -48,7 +48,7 @@ Args: {args:?}
         if std::env::var("RUST_LOG").is_err() {
             std::env::set_var("RUST_LOG", "info,actix_server=warn");
         }
-        #[cfg(not(debug_assertions))]
+        // #[cfg(not(debug_assertions))]
         if std::env::var("RUST_SPANTRACE").is_err() {
             std::env::set_var("RUST_SPANTRACE", "0");
         }

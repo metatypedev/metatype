@@ -3,7 +3,10 @@ export const snapshot = {};
 snapshot[`Either type 1`] = `
 [
   "Validation errors:
-  - at <value>.user: Value does not match to any variant of the either type
+  - at <value>.user: Value does not match to any variant of the either type 
+  #0 <value>.user.school,expected a string, got undefined, <value>.user,unexpected fields: company
+  #1 <value>.user.age,expected minimum value: 17, got 5, <value>.user.college,expected a string, got undefined, <value>.user,unexpected fields: company
+  #2 <value>.user.age,expected minimum value: 25, got 5
 ",
 ]
 `;

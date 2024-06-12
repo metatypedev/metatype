@@ -35,10 +35,10 @@ def example(g: Graph):
     wasm = WasmRuntime.reflected("path/to/your-compiled-component.wasm");
 
     g.expose(
-        add=wasm.from_export(
+        add=wasm.export(
             t.struct({"a": t.integer(), "b": t.integer()}),
             t.integer(),
-            func="add",  # exported function
+            name="add",  # exported function
         )
     )
 
@@ -54,11 +54,11 @@ typegraph("example", (g) => {
   const wasm = WasmRuntime.reflected("path/to/your-compiled-component.wasm");
 
   g.expose({
-    add: wasm.fromExport(
+    add: wasm.export(
         t.struct({ a: t.integer(), b: t.integer() }),
         t.integer(),
         { 
-          func: "add", // exported function
+          name: "add", // exported function
         },
       ).withPolicy(pub),
   });
