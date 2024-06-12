@@ -37,11 +37,11 @@ Meta.test("Injected values", async (t) => {
 
   await t.should("fail for missing context", async () => {
     await gql`
-    query {
-      test(a: 1) {
-        raw_int
+      query {
+        test(a: 1) {
+          raw_int
+        }
       }
-    }
     `
       .expectErrorContains("'userId' not found at `<context>`")
       .on(e);
@@ -102,7 +102,9 @@ Meta.test("Injected values", async (t) => {
   await t.should("inject the right value matching the effect", async () => {
     await gql`
       query {
-        effect_none { operation }
+        effect_none {
+          operation
+        }
       }
     `
       .expectData({
@@ -111,9 +113,15 @@ Meta.test("Injected values", async (t) => {
       .on(e);
     await gql`
       mutation {
-        effect_create { operation }
-        effect_delete { operation }
-        effect_update { operation }
+        effect_create {
+          operation
+        }
+        effect_delete {
+          operation
+        }
+        effect_update {
+          operation
+        }
       }
     `
       .expectData({
@@ -211,7 +219,10 @@ Meta.test("Injection from/into graphql", async (t) => {
           name
           email
           messagesSent {
-            id text senderId recipientId
+            id
+            text
+            senderId
+            recipientId
           }
         }
       }
@@ -239,7 +250,8 @@ Meta.test("dynamic value injection", async (t) => {
         test(a: 12) {
           date
         }
-      }`
+      }
+    `
       .withContext({
         userId: "123",
       })
@@ -262,13 +274,15 @@ Meta.test("Deno: value injection", async (t) => {
   await t.should("work", async () => {
     await gql`
       query {
-        test(input: {a: 12}) {
+        test(input: { a: 12 }) {
           input {
             a
             context
             optional_context
             raw_int
-            raw_obj { in }
+            raw_obj {
+              in
+            }
             alt_raw
             alt_secret
             alt_context_opt
@@ -276,7 +290,8 @@ Meta.test("Deno: value injection", async (t) => {
             date
           }
         }
-      }`
+      }
+    `
       .withContext({
         userId: "123",
       })
@@ -324,12 +339,12 @@ Meta.test("Injection from nested context", async (t) => {
     "access injected nested context with array index",
     async () => {
       await gql`
-      query {
-        secondProfileData {
-          second
+        query {
+          secondProfileData {
+            second
+          }
         }
-      }
-    `
+      `
         .withContext({
           profile: {
             data: [1234, 5678],
@@ -344,71 +359,62 @@ Meta.test("Injection from nested context", async (t) => {
     },
   );
 
-  await t.should(
-    "access injected nested context with custom key",
-    async () => {
-      await gql`
-        query {
-          customKey {
-            custom
-          }
+  await t.should("access injected nested context with custom key", async () => {
+    await gql`
+      query {
+        customKey {
+          custom
         }
-      `
-        .withContext({
-          profile: {
-            "custom key": 123,
-          },
-        })
-        .expectData({
-          customKey: {
-            custom: 123,
-          },
-        })
-        .on(e);
-    },
-  );
+      }
+    `
+      .withContext({
+        profile: {
+          "custom key": 123,
+        },
+      })
+      .expectData({
+        customKey: {
+          custom: 123,
+        },
+      })
+      .on(e);
+  });
 
-  await t.should(
-    "fail for invalid context",
-    async () => {
-      await gql`
-        query {
-          secondProfileData {
-            second
-          }
+  await t.should("fail for invalid context", async () => {
+    await gql`
+      query {
+        secondProfileData {
+          second
         }
-      `
-        .withContext({
-          profile: {
-            "invalid key": 123,
-          },
-        })
-        .expectErrorContains("Property 'data' not found at `<context>.profile`")
-        .on(e);
-    },
-  );
+      }
+    `
+      .withContext({
+        profile: {
+          "invalid key": 123,
+        },
+      })
+      .expectErrorContains("Property 'data' not found at `<context>.profile`")
+      .on(e);
+  });
 
-  await t.should(
-    "work with missing context on optional type",
-    async () => {
-      await gql`
-        query {
-          optional {
-            optional
-          }
+  await t.should("work with missing context on optional type", async () => {
+    await gql`
+      query {
+        optional {
+          optional
         }
-      `
-        .withContext({
-          profile: {
-            id: 1234,
-          },
-        })
-        .expectData({
-          optional: {
-            optional: null,
-          },
-        })
-        .on(e);
-    },
-  );
+      }
+    `
+      .withContext({
+        profile: {
+          id: 1234,
+        },
+      })
+      .expectData({
+        optional: {
+          optional: null,
+        },
+      })
+      .on(e);
+  });
 });
