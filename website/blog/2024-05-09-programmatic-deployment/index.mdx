@@ -1,5 +1,7 @@
 import SDKTabs from "@site/src/components/SDKTabs";
 import TabItem from "@theme/TabItem";
+import UpgradePythonSDK from "../../shared/upgrade/python-sdk.mdx";
+import UpgradeTsSDK from "../../shared/upgrade/typescript-sdk.mdx";
 
 # Programmatic deployment (v0.4.x)
 
@@ -27,24 +29,12 @@ Just like any other dependency in your favorite programming language, each SDKs 
 
 You can use one of the commands below to get started with the latest available version.
 
-
 <SDKTabs>
-    <TabItem value="python">
-```bash
-pip install typegraph
-```
-    </TabItem>
     <TabItem value="typescript">
-```bash
-npm install @typegraph/sdk
-```
-```bash
-yarn add @typegraph/sdk
-```
-```typescript
-// Deno
-import { ... } from "npm:@typegraph/sdk" 
-```
+        <UpgradeTsSDK />
+    </TabItem>
+    <TabItem value="python">
+        <UpgradePythonSDK />
     </TabItem>
 </SDKTabs>
 
