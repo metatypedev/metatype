@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{global_store::Store, utils::fs_host, wit::core::SerializeParams};
+use crate::wit::core::SerializeParams;
 use common::typegraph::Typegraph;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub mod deno_rt;
 pub mod prisma_rt;
@@ -40,35 +40,17 @@ impl PostProcessor for TypegraphPostProcessor {
             .parent()
             .unwrap()
             .to_owned();
-        Store::set_deploy_cwd(typegraph_dir); // fs_host::cwd() will now use this value
-        Store::set_codegen_flag(Some(config.codegen));
 
-        PrismaProcessor::new(config.prisma_migration).postprocess(tg)?;
+        PrismaProcessor::new(config.prisma_migration.clone()).postprocess(tg)?;
 
-        // Artifact resolution depends on the default cwd() (parent process)
-        // unless overwritten by `dir` through Store::set_deploy_cwd(..) (cli or custom dir with tgDeploy)
         let allow_fs_read_artifacts = config.artifact_resolution;
         if allow_fs_read_artifacts {
-            DenoProcessor.postprocess(tg)?;
-            PythonProcessor.postprocess(tg)?;
-            WasmProcessor.postprocess(tg)?;
+            DenoProcessor::new(typegraph_dir.clone()).postprocess(tg)?;
+            PythonProcessor::new(typegraph_dir.clone()).postprocess(tg)?;
+            WasmProcessor::new(typegraph_dir.clone()).postprocess(tg)?;
         }
 
         ValidationProcessor.postprocess(tg)?;
         Ok(())
     }
-}
-
-#[allow(dead_code)]
-pub fn compress_and_encode(main_path: &Path) -> Result<String, String> {
-    if let Err(e) = fs_host::read_text_file(main_path) {
-        return Err(format!("Unable to read {:?}: {}", main_path.display(), e));
-    }
-
-    let enc_content = fs_host::compress_and_encode_base64(fs_host::cwd()?)?;
-    Ok(format!(
-        "file:{};base64:{}",
-        fs_host::make_relative(main_path)?.display(),
-        enc_content
-    ))
 }

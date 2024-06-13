@@ -66,6 +66,7 @@ impl Action for Serialize {
             config
                 .prisma_migrations_base_dir(PathOption::Absolute)
                 .into(),
+            true,
         );
 
         if self.files.is_empty() {

@@ -31,7 +31,12 @@ pub struct SerializeActionGenerator {
 }
 
 impl SerializeActionGenerator {
-    pub fn new(config_dir: Arc<Path>, working_dir: Arc<Path>, migrations_dir: Arc<Path>) -> Self {
+    pub fn new(
+        config_dir: Arc<Path>,
+        working_dir: Arc<Path>,
+        migrations_dir: Arc<Path>,
+        artifact_resolution: bool,
+    ) -> Self {
         Self {
             shared_config: SharedActionConfig {
                 command: "serialize",
@@ -43,6 +48,7 @@ impl SerializeActionGenerator {
                     create: false,
                     reset: false,
                 },
+                artifact_resolution,
             }
             .into(),
         }

@@ -39,7 +39,7 @@ export class Manager {
       finalizationResult = this.#typegraph.serialize({
         typegraphPath: env.typegraph_path,
         prefix: env.prefix,
-        artifactResolution: true,
+        artifactResolution: this.#env.artifact_resolution,
         codegen: false,
         prismaMigration: {
           migrationsDir: env.migrations_dir,
@@ -65,6 +65,14 @@ export class Manager {
     const deployData = await rpc.getDeployData(this.#typegraph.name);
 
     const env = this.#env;
+    if (!env.artifact_resolution) {
+      log.failure({
+        typegraph: this.#typegraph.name,
+        errors: ["artifact resolution must be enabled for deployment"],
+      });
+      return;
+    }
+
     const params: SerializeParams = {
       typegraphPath: env.typegraph_path,
       prefix: env.prefix,

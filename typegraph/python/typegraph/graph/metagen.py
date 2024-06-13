@@ -15,9 +15,9 @@ from typegraph.utils import freeze_tg_output
 from typegraph.wit import store, wit_utils
 from os import environ as env
 
-_tg_path = env.get("MCLI_TG_PATH")
+_tg_path = env.get("MCLI_TYPEGRAPH_PATH")
 if _tg_path is None:
-    raise Exception("MCLI_TG_PATH not set")
+    raise Exception("MCLI_TYPEGRAPH_PATH not set")
 
 serialize_params = SerializeParams(
     typegraph_path=_tg_path,
@@ -78,6 +78,6 @@ class Metagen:
         overwrite: Union[bool, None] = None,
     ):
         items = self.dry_run(tg_output, target_name, overwrite)
-        res = wit_utils.metagen_write_files(store, items)
+        res = wit_utils.metagen_write_files(store, items, self.workspace_path)
         if isinstance(res, Err):
             raise Exception(res.value)

@@ -23,7 +23,6 @@ use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::hash::Hasher as _;
-
 use std::rc::Rc;
 
 use crate::wit::core::{
@@ -248,7 +247,9 @@ pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> 
 
     let result = match result.map_err(|e| e.to_string().into()) {
         Ok(res) => res,
-        Err(e) => return Err(e),
+        Err(e) => {
+            return Err(e);
+        }
     };
 
     Ok((result, artifacts))

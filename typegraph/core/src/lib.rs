@@ -4,6 +4,7 @@
 mod conversion;
 mod errors;
 mod global_store;
+mod logger;
 mod params;
 mod runtimes;
 mod t;

@@ -72,6 +72,7 @@ impl DeployActionGenerator {
                     create: create_migrations,
                     reset: destructive_migrations,
                 },
+                artifact_resolution: true,
             }
             .into(),
         }

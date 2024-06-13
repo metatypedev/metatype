@@ -6,11 +6,11 @@ use common::typegraph::runtimes::prisma::MigrationOptions;
 use common::typegraph::runtimes::{KnownRuntime::Prisma, TGRuntime};
 use common::typegraph::Typegraph;
 
-use crate::utils::fs_host;
+use crate::utils::archive::ArchiveExt;
+use crate::utils::fs::FsContext;
 use crate::utils::postprocess::PostProcessor;
 use crate::wit::core::MigrationAction;
 use crate::wit::core::PrismaMigrationConfig;
-use crate::wit::metatype::typegraph::host::path_exists;
 
 pub struct PrismaProcessor {
     config: PrismaMigrationConfig,
@@ -31,7 +31,8 @@ impl PostProcessor for PrismaProcessor {
 
 impl PrismaProcessor {
     pub fn embed_prisma_migrations(&self, tg: &mut Typegraph) -> Result<(), String> {
-        let base_migration_path = PathBuf::from(&self.config.migrations_dir);
+        let base_migration_path: PathBuf = self.config.migrations_dir.clone().into();
+        let fs_ctx = FsContext::new(base_migration_path.clone());
 
         for rt in tg.runtimes.iter_mut() {
             if let TGRuntime::Known(Prisma(rt_data)) = rt {
@@ -42,12 +43,8 @@ impl PrismaProcessor {
                 rt_data.migration_options = Some(MigrationOptions {
                     migration_files: {
                         if action.apply {
-                            let path = fs_host::make_absolute(&path)?;
-                            match path_exists(&path.display().to_string())? {
-                                true => {
-                                    let base64 = fs_host::compress_and_encode_base64(path)?;
-                                    Some(base64)
-                                }
+                            match fs_ctx.exists(&path)? {
+                                true => Some(fs_ctx.compress_and_encode(&path)?),
                                 false => None,
                             }
                         } else {

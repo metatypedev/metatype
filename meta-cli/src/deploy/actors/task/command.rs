@@ -101,6 +101,10 @@ impl CommandContext {
                 "MCLI_MIGRATIONS_DIR",
                 shared_config.migrations_dir.display().to_string(),
             )
+            .env(
+                "MCLI_ARTIFACT_RESOLUTION",
+                shared_config.artifact_resolution.to_string(),
+            )
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());

@@ -7,7 +7,7 @@ use crate::config::PathOption;
 use crate::deploy::actors::task::serialize::{SerializeAction, SerializeActionGenerator};
 use crate::deploy::actors::task_manager::{TaskManagerInit, TaskSource};
 use crate::interlude::*;
-use crate::{com::store::ServerStore, config::Config, deploy::actors::console::ConsoleActor};
+use crate::{config::Config, deploy::actors::console::ConsoleActor};
 use actix::Actor;
 use clap::Parser;
 use common::typegraph::Typegraph;
@@ -137,13 +137,6 @@ async fn load_tg_at(
     path: PathBuf,
     name: Option<&str>,
 ) -> anyhow::Result<Box<Typegraph>> {
-    ServerStore::with(
-        Some(crate::com::store::Command::Serialize),
-        Some(config.as_ref().clone()),
-    );
-    ServerStore::set_artifact_resolution_flag(false);
-    // ServerStore::set_prefix(self.prefix.to_owned());
-
     let console = ConsoleActor::new(Arc::clone(&config)).start();
 
     let config_dir: Arc<Path> = config.dir().unwrap_or_log().into();
@@ -155,6 +148,7 @@ async fn load_tg_at(
             config
                 .prisma_migrations_base_dir(PathOption::Absolute)
                 .into(),
+            false,
         ),
         console,
         TaskSource::Static(vec![path.clone()]),

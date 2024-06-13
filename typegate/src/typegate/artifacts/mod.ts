@@ -120,12 +120,7 @@ export class ArtifactStore implements AsyncDisposable {
     stack.use(uploadEndpoints);
     stack.use(refCounter);
     return await Promise.resolve(
-      new ArtifactStore(
-        persistence,
-        uploadEndpoints,
-        refCounter,
-        stack.move(),
-      ),
+      new ArtifactStore(persistence, uploadEndpoints, refCounter, stack.move()),
     );
   }
 
@@ -134,8 +129,7 @@ export class ArtifactStore implements AsyncDisposable {
     private uploadEndpoints: UploadEndpointManager,
     private refCounter: RefCounter,
     private disposables: AsyncDisposableStack,
-  ) {
-  }
+  ) {}
 
   async [Symbol.asyncDispose]() {
     if (this.#disposed) return;

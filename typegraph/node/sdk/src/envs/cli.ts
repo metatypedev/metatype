@@ -9,6 +9,7 @@ const requiredCliEnvs = [
   "config_dir",
   "working_dir",
   "migrations_dir",
+  "artifact_resolution",
 ] as const;
 
 const optionalCliEnvs = ["prefix"] as const;
@@ -24,6 +25,7 @@ export interface CliEnv {
   config_dir: string;
   working_dir: string;
   migrations_dir: string;
+  artifact_resolution: boolean;
   prefix?: string;
 }
 
@@ -59,6 +61,10 @@ export function loadCliEnv(): CliEnv | null {
               record[key] = envValue.slice(prefix.length).split(",");
             }
           }
+          break;
+
+        case "artifact_resolution":
+          record[key] = envValue === "true";
           break;
 
         default:

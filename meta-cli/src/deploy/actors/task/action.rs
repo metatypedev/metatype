@@ -16,6 +16,7 @@ pub struct SharedActionConfig {
     pub working_dir: Arc<Path>,
     pub migrations_dir: Arc<Path>,
     pub default_migration_action: MigrationAction,
+    pub artifact_resolution: bool,
 }
 
 pub trait TaskActionGenerator: Clone {

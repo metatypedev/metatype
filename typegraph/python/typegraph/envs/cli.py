@@ -15,6 +15,7 @@ _required_cli_envs = (
     "config_dir",
     "working_dir",
     "migrations_dir",
+    "artifact_resolution",
 )
 
 _optional_cli_envs = ("prefix",)
@@ -35,6 +36,7 @@ class CliEnv:
     config_dir: str
     working_dir: str
     migrations_dir: str
+    artifact_resolution: bool
 
     @classmethod
     def load(cls) -> Optional["CliEnv"]:
@@ -75,6 +77,8 @@ class CliEnv:
             Log.debug("raw_filter", raw_filter)
             filter = raw_filter[len(prefix) :].split(",")
         d["filter"] = filter
+
+        d["artifact_resolution"] = d["artifact_resolution"] == "true"
 
         return cls(**d)
 
