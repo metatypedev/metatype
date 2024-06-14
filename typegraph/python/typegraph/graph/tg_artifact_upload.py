@@ -26,7 +26,6 @@ class UploadArtifactMeta:
 class ArtifactUploader:
     base_url: str
     artifacts: List[Artifact]
-    get_upload_url: str
     tg_name: str
     auth: Union[BasicAuth, None]
     headers: Dict[str, str]
@@ -44,20 +43,21 @@ class ArtifactUploader:
         self.base_url = base_url
         self.artifacts = artifacts
         self.tg_name = tg_name
-        sep = "/" if not base_url.endswith("/") else ""
-        self.get_upload_url = base_url + sep + tg_name + "/artifacts/upload-urls"
         self.auth = auth
         self.headers = headers
         self.tg_path = tg_path
 
-    def __fetch_upload_urls(
+    def __get_upload_tokens(
         self,
         artifact_metas: List[UploadArtifactMeta],
     ) -> List[str]:
         artifacts_objs = [vars(meta) for meta in artifact_metas]
         artifacts_json = json.dumps(artifacts_objs, indent=4).encode()
+
+        sep = "/" if not self.base_url.endswith("/") else ""
+        url = self.base_url + sep + self.tg_name + "/artifacts/prepare-upload"
         req = request.Request(
-            url=self.get_upload_url,
+            url=url,
             method="POST",
             headers=self.headers,
             data=artifacts_json,
@@ -77,7 +77,7 @@ class ArtifactUploader:
 
     def __upload(
         self,
-        url: str,
+        token: str,
         meta: UploadArtifactMeta,
     ) -> Result[Any, Err]:
         upload_headers = {"Content-Type": "application/octet-stream"}
@@ -86,7 +86,7 @@ class ArtifactUploader:
             upload_headers["Authorization"] = self.auth.as_header_value()
         Log.debug("upload headers", upload_headers)
 
-        if url is None:
+        if token is None:
             Log.info("skipping artifact upload:", meta.relativePath)
             return Ok(None)
 
@@ -98,24 +98,22 @@ class ArtifactUploader:
         with open(path, "rb") as file:
             content = file.read()
 
-        # TODO temporary
-        parsed_upload_url = Url.urlparse(url)
-        parsed_url = Url.urlparse(self.base_url)
-        parsed_url = parsed_url._replace(
-            path=parsed_upload_url.path, query=parsed_upload_url.query
+        base_url = Url.urlparse(self.base_url)
+        sep = "/" if not base_url.path.endswith("/") else ""
+        upload_url = base_url._replace(
+            path=base_url.path + sep + self.tg_name + "/artifacts",
+            query=Url.urlencode({"token": token}),
         )
+        upload_url = Url.urlunparse(upload_url)
 
-        rebased_url = Url.urlunparse(parsed_url)
-
-        Log.debug("uploading artifact", meta.relativePath, rebased_url)
+        Log.debug("uploading artifact", meta.relativePath, upload_url)
         upload_req = request.Request(
-            url=rebased_url,
+            url=upload_url,
             method="POST",
             data=content,
             headers=upload_headers,
         )
         try:
-            Log.debug("uploading artifact", meta.relativePath, str(rebased_url))
             response = request.urlopen(upload_req)
         except HTTPError as e:
             Log.error("failed to upload artifact", meta.relativePath, e)
@@ -165,7 +163,7 @@ class ArtifactUploader:
     ) -> Result[None, Err]:
         artifact_metas = self.get_metas(self.artifacts)
 
-        upload_urls = self.__fetch_upload_urls(artifact_metas)
+        upload_urls = self.__get_upload_tokens(artifact_metas)
         Log.debug("upload urls", upload_urls)
 
         results = []

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import {
+  ArtifactMeta,
   artifactMetaSchema,
   ArtifactStore,
 } from "../typegate/artifacts/mod.ts";
@@ -11,7 +12,7 @@ import { BaseError, UnknownError } from "../errors.ts";
 
 const logger = getLogger(import.meta);
 
-const getUploadUrlBodySchema = z.array(artifactMetaSchema);
+const prepareUploadBodySchema = z.array(artifactMetaSchema);
 
 export class ArtifactService {
   constructor(private store: ArtifactStore) {}
@@ -21,7 +22,7 @@ export class ArtifactService {
     // [1] is the typegraph name; [2] is the service name
     const operation = url.pathname.split("/")[3];
 
-    if (operation === "upload-urls") {
+    if (operation === "prepare-upload") {
       if (request.method !== "POST") {
         logger.warn("Method not allowed: {}", request.method);
         return new Response(JSON.stringify({ error: "method not allowed" }), {
@@ -30,9 +31,9 @@ export class ArtifactService {
         });
       }
 
-      let metaList;
+      let metaList: Array<ArtifactMeta>;
       try {
-        metaList = getUploadUrlBodySchema.parse(await request.json());
+        metaList = prepareUploadBodySchema.parse(await request.json());
       } catch (error) {
         logger.error("Failed to parse data: {}", error);
         return new Response(
@@ -45,11 +46,7 @@ export class ArtifactService {
       }
 
       try {
-        const data = await this.#createUploadUrls(
-          metaList,
-          tgName,
-          new URL(request.url).origin,
-        );
+        const data = await this.#createUploadTokens(metaList, tgName);
         return new Response(JSON.stringify(data), {
           headers: { "Content-Type": "application/json" },
         });
@@ -77,30 +74,38 @@ export class ArtifactService {
       });
     }
 
-    return await this.#handleUpload(url, request.body!, tgName);
+    const token = url.searchParams.get("token");
+
+    if (!token) {
+      logger.warn("Missing upload token");
+      return new Response(JSON.stringify({ error: "missing token" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    return await this.#handleUpload(token, request.body!, tgName);
   }
 
-  #createUploadUrls(
-    items: Array<z.infer<typeof artifactMetaSchema>>,
-    tgName: string,
-    origin: string,
-  ) {
-    return Promise.all(items.map(async (meta) => {
-      if (meta.typegraphName !== tgName) {
-        throw new Error("Typegraph name mismatch");
-      }
-      return await this.store.prepareUpload(meta, new URL(origin));
-    }));
+  #createUploadTokens(items: Array<ArtifactMeta>, tgName: string) {
+    return Promise.all(
+      items.map(async (meta) => {
+        if (meta.typegraphName !== tgName) {
+          throw new Error("Typegraph name mismatch");
+        }
+        return await this.store.prepareUpload(meta);
+      }),
+    );
   }
 
   async #handleUpload(
-    url: URL,
+    token: string,
     stream: ReadableStream<Uint8Array>,
     tgName: string,
   ) {
-    let meta;
+    let meta: ArtifactMeta;
     try {
-      meta = await this.store.takeUploadUrl(url);
+      meta = await this.store.takeArtifactMeta(token);
     } catch (e) {
       if (e instanceof BaseError) {
         return e.toResponse();

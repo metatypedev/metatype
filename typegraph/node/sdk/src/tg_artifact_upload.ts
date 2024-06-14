@@ -16,26 +16,21 @@ interface UploadArtifactMeta {
 }
 
 export class ArtifactUploader {
-  private getUploadUrl: URL;
-
   constructor(
-    baseUrl: string,
+    private baseUrl: string,
     private refArtifacts: Artifact[],
     private tgName: string,
     private auth: BasicAuth | undefined,
     private headers: Headers,
     private tgPath: string,
-  ) {
-    const suffix = `${tgName}/artifacts/upload-urls`;
-    this.getUploadUrl = new URL(suffix, baseUrl);
-  }
+  ) {}
 
-  private async fetchUploadUrls(
+  private async getUploadTokens(
     artifactMetas: UploadArtifactMeta[],
   ): Promise<Array<string | null>> {
     const artifactsJson = JSON.stringify(artifactMetas);
     const uploadUrls: Array<string | null> = await execRequest(
-      this.getUploadUrl,
+      new URL(`${this.tgName}/artifacts/prepare-upload`, this.baseUrl),
       {
         method: "POST",
         headers: this.headers,
@@ -63,7 +58,7 @@ export class ArtifactUploader {
   }
 
   private async upload(
-    url: string | null,
+    token: string | null,
     meta: UploadArtifactMeta,
   ): Promise<any> {
     const uploadHeaders = new Headers({
@@ -74,22 +69,20 @@ export class ArtifactUploader {
       uploadHeaders.append("Authorization", this.auth.asHeaderValue());
     }
 
-    if (url == null) {
+    if (token == null) {
       log.info("skipping artifact upload:", meta.relativePath);
       return;
     }
 
-    const urlObj = new URL(this.getUploadUrl);
-    const altUrlObj = new URL(url);
-    urlObj.pathname = altUrlObj.pathname;
-    urlObj.search = altUrlObj.search;
+    const uploadUrl = new URL(`${this.tgName}/artifacts`, this.baseUrl);
+    uploadUrl.searchParams.set("token", token);
 
     const path = join(dirname(this.tgPath), meta.relativePath);
     // TODO: stream
     const content = await fsp.readFile(path);
-    log.debug("uploading artifact", meta.relativePath, urlObj.href);
+    log.debug("uploading artifact", meta.relativePath, uploadUrl.href);
     const res = await execRequest(
-      urlObj,
+      uploadUrl,
       {
         method: "POST",
         headers: uploadHeaders,
@@ -140,11 +133,11 @@ export class ArtifactUploader {
   async uploadArtifacts(): Promise<void> {
     const artifactMetas = this.getMetas(this.refArtifacts);
 
-    const uploadUrls = await this.fetchUploadUrls(artifactMetas);
-    log.debug("upload urls", uploadUrls);
+    const tokens = await this.getUploadTokens(artifactMetas);
+    log.debug("upload urls", tokens);
     const results = await Promise.allSettled(
-      uploadUrls.map(async (url, i) => {
-        return await this.upload(url, artifactMetas[i]);
+      tokens.map(async (token, i) => {
+        return await this.upload(token, artifactMetas[i]);
       }),
     );
 
