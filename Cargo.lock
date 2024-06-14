@@ -12071,6 +12071,7 @@ dependencies = [
  "serde 1.0.203",
  "serde_json",
  "sha2 0.10.8",
+ "unindent",
  "wit-bindgen 0.24.0",
 ]
 
@@ -12303,6 +12304,12 @@ name = "unicode_categories"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39ec24b3121d976906ece63c9daad25b85969647682eee313cb5779fdd69e14e"
+
+[[package]]
+name = "unindent"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7de7d73e1754487cb58364ee906a499937a0dfabd86bcb980fa99ec8c8fa2ce"
 
 [[package]]
 name = "universal-hash"

@@ -7,6 +7,7 @@ import { TgFinalizationResult, TypegraphOutput } from "./typegraph.js";
 import { freezeTgOutput } from "./utils/func_utils.js";
 import { log, rpc } from "./io.js";
 import { CliEnv, getCliEnv } from "./envs/cli.js";
+import * as path from "node:path";
 
 export class Manager {
   #typegraph: TypegraphOutput;
@@ -32,6 +33,10 @@ export class Manager {
     }
   }
 
+  #getMigrationsDir(): string {
+    return path.join(this.#env.migrations_dir, this.#typegraph.name);
+  }
+
   async #serialize(): Promise<void> {
     let finalizationResult: TgFinalizationResult;
     try {
@@ -42,7 +47,7 @@ export class Manager {
         artifactResolution: this.#env.artifact_resolution,
         codegen: false,
         prismaMigration: {
-          migrationsDir: env.migrations_dir,
+          migrationsDir: this.#getMigrationsDir(),
           migrationActions: [],
           defaultMigrationAction: {
             apply: true,
@@ -79,7 +84,7 @@ export class Manager {
       artifactResolution: true,
       codegen: false,
       prismaMigration: {
-        migrationsDir: env.migrations_dir,
+        migrationsDir: this.#getMigrationsDir(),
         migrationActions: Object.entries(deployData.migrationActions),
         defaultMigrationAction: deployData.defaultMigrationAction,
       },
@@ -118,7 +123,7 @@ export class Manager {
         typegraphPath: env.typegraph_path,
         prefix: env.prefix,
         secrets: deployData.secrets,
-        migrationsDir: env.migrations_dir,
+        migrationsDir: this.#getMigrationsDir(),
         migrationActions: deployData.migrationActions,
         defaultMigrationAction: deployData.defaultMigrationAction,
       });

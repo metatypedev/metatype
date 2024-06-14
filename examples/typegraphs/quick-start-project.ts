@@ -17,31 +17,36 @@ typegraph(
     const python = new PythonRuntime();
     const db = new PrismaRuntime("database", "POSTGRES");
 
-    // database tables
+    // types, database tables
     const message = t.struct(
       {
         id: t.integer({}, { asId: true, config: { auto: true } }), // configuring our primary key
         title: t.string(),
         body: t.string(),
       },
-      { name: "message" } // the name of our type
+      { name: "message" }, // the name of our type
     );
 
-    g.expose({
-      add: python
-        .fromLambda(
-          t.struct({ first: t.float(), second: t.float() }),
-          t.float(),
-          { code: "lambda x: x['first'] + x['second']" }
-        )
-        .withPolicy(pub),
-      multiply: deno
-        .func(t.struct({ first: t.float(), second: t.float() }), t.float(), {
-          code: "({first, second}) => first * second",
-        })
-        .withPolicy(pub),
-      create_message: db.create(message).withPolicy(pub),
-      list_messages: db.findMany(message).withPolicy(pub),
-    });
-  }
+    // custom functions
+    const add = deno.func(
+      t.struct({ first: t.float(), second: t.float() }),
+      t.float(),
+      { code: "({first, second}) => first + second" },
+    );
+    const hello = python.fromLambda(
+      t.struct({ world: t.string() }),
+      t.string(),
+      { code: `lambda x: f"Hello {x['world']}!"` },
+    );
+
+    g.expose(
+      {
+        add,
+        hello,
+        create_message: db.create(message),
+        list_messages: db.findMany(message),
+      },
+      pub,
+    );
+  },
 );

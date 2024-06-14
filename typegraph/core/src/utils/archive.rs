@@ -1,13 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use super::fs::FsContext;
 use common::archive::{
     archive_entries_from_bytes, encode_bytes_to_base_64, tarb64_unpack_entries_as_map,
 };
-use indexmap::IndexMap;
-
-use super::fs::FsContext;
-use std::path::Path;
+use std::{collections::BTreeMap, path::Path};
 
 pub trait ArchiveExt {
     fn compress_and_encode(&self, path: &Path) -> Result<String, String>;
@@ -53,8 +51,9 @@ impl ArchiveExt for FsContext {
                 self.read_file(p)
                     .map(|content| (p.to_string_lossy().into(), content))
             })
-            .collect::<Result<IndexMap<_, _>, _>>()?;
+            .collect::<Result<BTreeMap<_, _>, _>>()?;
 
+        crate::logger::debug!("archive entries: {entries:?}");
         let bytes = archive_entries_from_bytes(entries).map_err(|e| e.to_string())?;
         encode_bytes_to_base_64(bytes).map_err(|e| e.to_string())
     }
