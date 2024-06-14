@@ -13,26 +13,6 @@ from typegraph.gen.types import Err
 from typegraph.graph.shared_types import TypegraphOutput
 from typegraph.utils import freeze_tg_output
 from typegraph.wit import store, wit_utils
-from os import environ as env
-
-_tg_path = env.get("MCLI_TYPEGRAPH_PATH")
-if _tg_path is None:
-    raise Exception("MCLI_TYPEGRAPH_PATH not set")
-
-serialize_params = SerializeParams(
-    typegraph_path=_tg_path,
-    prefix=None,
-    artifact_resolution=False,
-    codegen=True,
-    prisma_migration=PrismaMigrationConfig(
-        migrations_dir="prisma-migrations",
-        migration_actions=[],
-        default_migration_action=MigrationAction(
-            apply=False, create=False, reset=False
-        ),
-    ),
-    pretty=False,
-)
 
 
 class Metagen:
@@ -48,6 +28,21 @@ class Metagen:
         tg_output: TypegraphOutput,
         target_name: str,
     ) -> MdkConfig:
+        serialize_params = SerializeParams(
+            typegraph_path=self.workspace_path + "/tg.py",
+            prefix=None,
+            artifact_resolution=False,
+            codegen=True,
+            prisma_migration=PrismaMigrationConfig(
+                migrations_dir="prisma-migrations",
+                migration_actions=[],
+                default_migration_action=MigrationAction(
+                    apply=False, create=False, reset=False
+                ),
+            ),
+            pretty=False,
+        )
+
         frozen_out = freeze_tg_output(serialize_params, tg_output)
         return MdkConfig(
             tg_json=frozen_out.serialize(serialize_params).tgJson,

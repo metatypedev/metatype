@@ -45,7 +45,7 @@ class Manager:
         params = SerializeParams(
             typegraph_path=env.typegraph_path,
             prefix=env.prefix,
-            artifact_resolution=True,
+            artifact_resolution=env.artifact_resolution,
             codegen=False,
             prisma_migration=PrismaMigrationConfig(
                 migrations_dir=self.get_migrations_dir(),

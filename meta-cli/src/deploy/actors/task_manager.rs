@@ -8,12 +8,14 @@ use super::watcher::WatcherActor;
 use crate::{config::Config, interlude::*};
 use futures::channel::oneshot;
 use indexmap::IndexMap;
+use signal_handler::set_stop_recipient;
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
 pub mod report;
 pub use report::Report;
+mod signal_handler;
 
 pub mod message {
     use super::*;
@@ -162,18 +164,7 @@ impl<A: TaskAction + 'static> TaskManagerInit<A> {
         TaskManager::<A>::create(move |ctx| {
             let addr = ctx.address();
 
-            {
-                let addr = addr.downgrade();
-                ctrlc::set_handler(move || {
-                    debug!("CTRL-C handler");
-                    if let Some(addr) = addr.upgrade() {
-                        addr.do_send(Stop);
-                    } else {
-                        std::process::exit(1);
-                    }
-                })
-                .unwrap_or_log();
-            }
+            set_stop_recipient(addr.clone().recipient().downgrade());
 
             let task_generator = TaskGenerator {
                 next_task_id: Arc::new(AtomicUsize::new(1)),

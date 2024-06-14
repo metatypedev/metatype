@@ -3,17 +3,18 @@
 
 import { Meta } from "../utils/mod.ts";
 import { join } from "std/path/join.ts";
+import { resolve } from "std/path/resolve.ts";
 import { assertEquals } from "std/assert/mod.ts";
 import { GraphQLQuery } from "../utils/query/graphql_query.ts";
 import { JSONValue } from "../../src/utils.ts";
+import { testDir } from "../utils/dir.ts";
+
+const denoJson = resolve(testDir, "../deno.jsonc");
 
 Meta.test("metagen rust builds", async (t) => {
   const tmpDir = t.tempDir;
 
-  const typegraphPath = join(
-    import.meta.dirname!,
-    "./typegraphs/metagen.mjs",
-  );
+  const typegraphPath = join(import.meta.dirname!, "./typegraphs/metagen.mjs");
   const genCratePath = join(tmpDir, "mdk");
 
   await Deno.writeTextFile(
@@ -46,27 +47,31 @@ members = ["mdk/"]
 `,
   );
   assertEquals(
-    (await Meta.cli({
-      env: {
-        MCLI_LOADER_CMD: "deno run -A --config ../deno.jsonc",
-        RUST_BACKTRACE: "1",
-      },
-    }, ...`-C ${tmpDir} gen`.split(" "))).code,
+    (
+      await Meta.cli(
+        {
+          env: {
+            MCLI_LOADER_CMD: `deno run -A --config ${denoJson}`,
+            RUST_BACKTRACE: "1",
+          },
+        },
+        ...`-C ${tmpDir} gen`.split(" "),
+      )
+    ).code,
     0,
   );
   assertEquals(
-    (await t.shell("cargo build --target wasm32-wasi".split(" "), {
-      currentDir: genCratePath,
-    })).code,
+    (
+      await t.shell("cargo build --target wasm32-wasi".split(" "), {
+        currentDir: genCratePath,
+      })
+    ).code,
     0,
   );
 });
 
 Meta.test("metagen python runs on cyclic types", async (t) => {
-  const typegraphPath = join(
-    import.meta.dirname!,
-    "typegraphs/python.py",
-  );
+  const typegraphPath = join(import.meta.dirname!, "typegraphs/python.py");
   const basePath = join(t.tempDir, "mdk");
 
   Deno.writeTextFile(
@@ -88,8 +93,7 @@ metagen:
   );
 
   assertEquals(
-    (await Meta.cli({}, ...`-C ${t.tempDir} gen my_target`.split(" ")))
-      .code,
+    (await Meta.cli({}, ...`-C ${t.tempDir} gen my_target`.split(" "))).code,
     0,
   );
 });
@@ -138,10 +142,7 @@ Meta.test("Metagen within sdk", async (t) => {
   });
 
   await t.should("Run metagen within python", async () => {
-    const typegraphPath = join(
-      import.meta.dirname!,
-      "./typegraphs/metagen.py",
-    );
+    const typegraphPath = join(import.meta.dirname!, "./typegraphs/metagen.py");
     const command = new Deno.Command("python3", {
       args: [typegraphPath],
       env: {
@@ -156,7 +157,8 @@ Meta.test("Metagen within sdk", async (t) => {
     const child = command.spawn();
     const output = await child.output();
     if (output.success) {
-      const generated = JSON.parse(new TextDecoder().decode(output.stdout));
+      const stdout = new TextDecoder().decode(output.stdout);
+      const generated = JSON.parse(stdout);
       await t.assertSnapshot(
         Object.entries(generated).sort(([keyA], [keyB]) =>
           keyA.localeCompare(keyB)
@@ -179,20 +181,22 @@ Meta.test("Metagen within sdk", async (t) => {
 });
 
 Meta.test("metagen table suite", async (metaTest) => {
-  const scriptsPath = join(
-    import.meta.dirname!,
-    "typegraphs/identities",
-  );
+  const scriptsPath = join(import.meta.dirname!, "typegraphs/identities");
   const genCratePath = join(scriptsPath, "rs");
   // const genPyPath = join(scriptsPath, "py");
   // const genTsPath = join(scriptsPath, "ts");
 
   assertEquals(
-    (await Meta.cli({
-      env: {
-        // RUST_BACKTRACE: "1",
-      },
-    }, ...`-C ${scriptsPath} gen`.split(" "))).code,
+    (
+      await Meta.cli(
+        {
+          env: {
+            // RUST_BACKTRACE: "1",
+          },
+        },
+        ...`-C ${scriptsPath} gen`.split(" "),
+      )
+    ).code,
     0,
   );
   const compositesQuery = `query ($data: composites) {
@@ -204,7 +208,7 @@ Meta.test("metagen table suite", async (metaTest) => {
             ... on branch2 {
               branch2
             }
-            ... on primitives{ 
+            ... on primitives{
               str
               enum
               uuid
@@ -274,18 +278,25 @@ Meta.test("metagen table suite", async (metaTest) => {
         }
       }`,
       vars: {
-        data: { // cycles 1
-          to2: { //cycles 2
+        data: {
+          // cycles 1
+          to2: {
+            //cycles 2
             phantom3a: "phantom",
-            to1: { // cycles2/variant cycle3
+            to1: {
+              // cycles2/variant cycle3
               // cycles1
-              list3: [{ //cycles3
-                to2: { // cycles2
-                  // cycles2/variant cycles1
-                  to2: null,
-                  phantom1: "phantom",
+              list3: [
+                {
+                  //cycles3
+                  to2: {
+                    // cycles2
+                    // cycles2/variant cycles1
+                    to2: null,
+                    phantom1: "phantom",
+                  },
                 },
-              }],
+              ],
             },
           },
         } as Record<string, JSONValue>,
@@ -398,18 +409,18 @@ Meta.test("metagen table suite", async (metaTest) => {
 
   await metaTest.should("build rust crate", async () => {
     assertEquals(
-      (await metaTest.shell("bash build.sh".split(" "), {
-        currentDir: genCratePath,
-      })).code,
+      (
+        await metaTest.shell("bash build.sh".split(" "), {
+          currentDir: genCratePath,
+        })
+      ).code,
       0,
     );
   });
   await using engine = await metaTest.engine(
     "metagen/typegraphs/identities.py",
   );
-  for (
-    const prefix of ["rs", "ts", "py"]
-  ) {
+  for (const prefix of ["rs", "ts", "py"]) {
     await metaTest.should(`mdk data go round ${prefix}`, async (t) => {
       for (const { name, vars, query, skip } of cases) {
         if (skip) {
@@ -424,9 +435,8 @@ Meta.test("metagen table suite", async (metaTest) => {
             [],
           )
             .withVars(vars)
-            .expectData(
-              vars,
-            ).on(engine);
+            .expectData(vars)
+            .on(engine);
         });
       }
     });

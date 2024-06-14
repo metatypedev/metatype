@@ -4,29 +4,11 @@
 import { SerializeParams } from "./gen/interfaces/metatype-typegraph-core.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
-import { freezeTgOutput, getEnvVariable } from "./utils/func_utils.js";
+import { freezeTgOutput } from "./utils/func_utils.js";
 import {
   MdkConfig,
   MdkOutput,
 } from "./gen/interfaces/metatype-typegraph-utils.js";
-
-const serializeParams = {
-  // TODO env variable key constants.js
-  typegraphPath: getEnvVariable("MCLI_TG_PATH")!,
-  prefix: undefined,
-  artifactResolution: false,
-  codegen: true,
-  prismaMigration: {
-    migrationsDir: "prisma-migrations",
-    migrationActions: [],
-    defaultMigrationAction: {
-      apply: false,
-      create: false,
-      reset: false,
-    },
-  },
-  pretty: false,
-} satisfies SerializeParams;
 
 export class Metagen {
   constructor(
@@ -35,6 +17,22 @@ export class Metagen {
   ) {}
 
   private getMdkConfig(tgOutput: TypegraphOutput, targetName: string) {
+    const serializeParams = {
+      typegraphPath: `${this.workspacePath}/tg.ts`,
+      prefix: undefined,
+      artifactResolution: false,
+      codegen: true,
+      prismaMigration: {
+        migrationsDir: "prisma-migrations",
+        migrationActions: [],
+        defaultMigrationAction: {
+          apply: false,
+          create: false,
+          reset: false,
+        },
+      },
+      pretty: false,
+    } satisfies SerializeParams;
     const frozenOut = freezeTgOutput(serializeParams, tgOutput);
     return {
       configJson: JSON.stringify(this.genConfig),
