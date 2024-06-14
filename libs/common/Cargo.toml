@@ -10,13 +10,13 @@ flate2.workspace = true
 indexmap.workspace = true
 serde.workspace = true
 serde_json = { workspace = true, features = ["preserve_order"] }
-serde_with = "3.4.0"
+serde_with = "3.8.1"
 tar.workspace = true
 ignore = "0.4.20"
 reqwest = { workspace = true, features = ["json"] }
 url = { version = "2.4", features = ["serde"] }
-async-trait.workspace = true
-itertools.workspace = true
-colored = "2.0"
+async-trait = "0.1.74"
+itertools = "0.11.0"
+colored = "2.0.4"
 indoc.workspace = true
 thiserror.workspace = true

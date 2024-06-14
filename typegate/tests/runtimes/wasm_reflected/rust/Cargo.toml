@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-wit-bindgen = "0.24.0"
+wit-bindgen = "0.26.0"
 
 [profile.release]
 strip = "symbols"
