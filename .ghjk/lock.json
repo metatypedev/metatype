@@ -840,6 +840,19 @@
                 "bciqe5ie7ingfjlzoa32dgw4njtsduadhcrid3mtelwq4tkf33r4ra3i"
               ],
               "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet___oci": {
+              "installs": [
+                "bciqne4ksxjzim3kikw7jrs7wncjkodt77irwke45pqafmrmmdgd2l4i",
+                "bciqepu4kontmywryiekosbttzgp2okk4zlxxjds7mdvfou7ucwaguay",
+                "bciqp6bjm3wb3ejbyc2vwk6jfgoqny7xgcvahlzq5ks737w7ognmv7ra",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a",
+                "bciqhfdexub3q5astgufkodx45x2axmzjv7jubqvvqm4o6vp5nxsbujy",
+                "bciqi3mqwfuszhj55niuzj64oib2n7ilyczzadq3oarmmxinizoyrzvi",
+                "bciqkxxx3aqfe3j6k5ielehtuhal7vhmmxakvm47atqn7nnt3ixaqxgi",
+                "bciqgxoiqmcx6fasmxgt4z7jp3dk3inkhddp6axw5dte4e2arngvczui"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
             }
           }
         }
@@ -983,7 +996,7 @@
             "build-tgraph-core": {
               "ty": "denoFile@v1",
               "key": "build-tgraph-core",
-              "envKey": "bciqda4nabbv5y6scipdjgxwv66iakifhjh6fdvvr7jxyv23bscy4pdy"
+              "envKey": "bciqj37crfwlp5qibirdsy5a2tvsfyn2n3f6mc3iyysrwfy642j35hca"
             },
             "build-tgraph-py": {
               "ty": "denoFile@v1",
@@ -991,7 +1004,7 @@
               "dependsOn": [
                 "build-tgraph-core"
               ],
-              "envKey": "bciqduktylastml2xh4c62kf2ylrunnrezzvfngenkp4bwowm7mmpc3y"
+              "envKey": "bciqijofmxxfh75w2ioqqfrwim4kmqzenaux2w7bqw4exd3swscho4ya"
             },
             "build-tgraph-ts": {
               "ty": "denoFile@v1",
@@ -999,7 +1012,7 @@
               "dependsOn": [
                 "build-tgraph-core"
               ],
-              "envKey": "bciqott6pm4lavi6f5ecsyi6lrfauw5ha2ayvdrlf3fxfj36ir422zoa"
+              "envKey": "bciqcvpik22ob75a3p4dqhfh5htzw47jleav4hpmkhruqkbmh2nomepy"
             },
             "build-tgraph-ts-pub": {
               "ty": "denoFile@v1",
@@ -1541,7 +1554,7 @@
                 }
               ]
             },
-            "bciqda4nabbv5y6scipdjgxwv66iakifhjh6fdvvr7jxyv23bscy4pdy": {
+            "bciqj37crfwlp5qibirdsy5a2tvsfyn2n3f6mc3iyysrwfy642j35hca": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1567,11 +1580,6 @@
                   "ty": "posix.envVar",
                   "key": "WASM_FILE",
                   "val": "target/wasm/release/typegraph_core.wasm"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "NPM_CONFIG_REGISTRY",
-                  "val": "http://localhost:4873"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1579,7 +1587,7 @@
                 }
               ]
             },
-            "bciqduktylastml2xh4c62kf2ylrunnrezzvfngenkp4bwowm7mmpc3y": {
+            "bciqijofmxxfh75w2ioqqfrwim4kmqzenaux2w7bqw4exd3swscho4ya": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1607,13 +1615,41 @@
                   "val": "target/wasm/release/typegraph_core.wasm"
                 },
                 {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet_______task_env_build-tgraph-py"
+                }
+              ]
+            },
+            "bciqcvpik22ob75a3p4dqhfh5htzw47jleav4hpmkhruqkbmh2nomepy": {
+              "provides": [
+                {
                   "ty": "posix.envVar",
-                  "key": "NPM_CONFIG_REGISTRY",
-                  "val": "http://localhost:4873"
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASM_FILE",
+                  "val": "target/wasm/release/typegraph_core.wasm"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
-                  "setId": "ghjkEnvProvInstSet_______task_env_build-tgraph-py"
+                  "setId": "ghjkEnvProvInstSet_______task_env_build-tgraph-ts"
                 }
               ]
             },
@@ -1738,6 +1774,34 @@
                   "setId": "ghjkEnvProvInstSet___dev"
                 }
               ]
+            },
+            "bciqmpcnagbplq65h2syq4xuzjyniev7bd7rg7ulhk2tjd4njhpgkqgi": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet___oci"
+                }
+              ]
             }
           },
           "defaultEnv": "dev",
@@ -1748,7 +1812,8 @@
             "_ecma": "bciqidoprdtfunaez4jas6q4r3asud4hddgtufoz3qr7xhbuv74zs4ca",
             "_rust": "bciqelffi4rqx4kzyfqsegiaigvxw2ua55h7cpy7h6imfxmifzvs3b4y",
             "ci": "bciqo4mpaxjo2zmrmzxk3mwykv5pvenxlrs3cgyo3u7hnjfnwstacyiq",
-            "dev": "bciqoyjhh6cck6hgj7cwumrg3hhczncykp6llygnjgnjdpa57xvcxadi"
+            "dev": "bciqoyjhh6cck6hgj7cwumrg3hhczncykp6llygnjgnjdpa57xvcxadi",
+            "oci": "bciqmpcnagbplq65h2syq4xuzjyniev7bd7rg7ulhk2tjd4njhpgkqgi"
           }
         }
       }

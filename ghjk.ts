@@ -94,6 +94,9 @@ env("_wasm")
     })[0],
   );
 
+env("oci")
+  .inherit(["_rust", "_wasm"])
+
 env("ci")
   .inherit(["_rust", "_python", "_ecma", "_wasm"])
   .install(

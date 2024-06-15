@@ -27,7 +27,6 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     inherit: ["_rust", "_wasm"],
     vars: {
       WASM_FILE: "target/wasm/release/typegraph_core.wasm",
-      NPM_CONFIG_REGISTRY: "http://localhost:4873",
     },
     async fn($) {
       const target = "wasm32-unknown-unknown";
@@ -65,6 +64,9 @@ const tasks: Record<string, DenoTaskDefArgs> = {
   "build-tgraph-ts-pub": {
     dependsOn: "build-tgraph-ts",
     inherit: ["build-tgraph-ts"],
+    vars: {
+      NPM_CONFIG_REGISTRY: "http://localhost:4873",
+    },
     async fn($) {
       const distPath = $.workingDir.join("typegraph/node/sdk/dist");
       await $.raw`npm config set "${

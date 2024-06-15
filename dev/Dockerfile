@@ -57,7 +57,8 @@ RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash \
     deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
 COPY ghjk.ts .
-ENV GHJK_ENV=ci
+COPY dev/*.ts dev/
+ENV GHJK_ENV=oci
 ENV GHJK_ACTIVATE=.ghjk/envs/$GHJK_ENV/activate.sh
 RUN ghjk envs cook
 
