@@ -1,793 +1,631 @@
 {
   "version": "0",
-  "platform": "aarch64-darwin",
+  "platform": "x86_64-linux",
   "moduleEntries": {
     "ports": {
       "version": "0",
       "configResolutions": {
-        "5155b24a1a756a5b91108ba34188d8bc4f5d6744f5ac29454450d6275663df86": {
-          "version": "v24.1",
-          "depConfigs": {},
-          "portRef": "protoc_ghrel@0.1.0"
+        "bciqos5q4e7g5ykw7yzckpb5uiflkked5rxsjsniknwlsbldm4q3nvcy": {
+          "version": "v1.43.6",
+          "buildDepConfigs": {},
+          "portRef": "deno_ghrel@0.1.0",
+          "specifiedVersion": true
         },
-        "a686ca4668445f0e4ba9b8c1b2342ded13e44e78cf86211a8e43c7fd3a2de97c": {
-          "version": "3.28.0-rc6",
-          "depConfigs": {
-            "curl_aa": {
-              "version": "8.2.1",
-              "depConfigs": {},
-              "portRef": "curl_aa@0.1.0"
-            },
-            "git_aa": {
-              "version": "2.40.1",
-              "depConfigs": {},
-              "portRef": "git_aa@0.1.0"
-            },
-            "asdf_plugin_git": {
-              "version": "d631481e96",
-              "depConfigs": {
-                "git_aa": {
-                  "version": "2.40.1",
-                  "depConfigs": {},
-                  "portRef": "git_aa@0.1.0"
+        "bciqfcvnsjinhk2s3seiixi2brdmlyt25m5cpllbjivcfbvrhkzr57bq": {
+          "version": "v24.1",
+          "buildDepConfigs": {},
+          "portRef": "protoc_ghrel@0.1.0",
+          "specifiedVersion": true
+        },
+        "bciqe6tpdv6hffdbc7hql52w3ivpdls47lgpuhsa3hzsryrwx7ty5dgy": {
+          "version": "3.29.5.1",
+          "buildDepConfigs": {
+            "cpy_bs_ghrel": {
+              "version": "3.12.2",
+              "buildDepConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "buildDepConfigs": {},
+                  "portRef": "tar_aa@0.1.0",
+                  "specifiedVersion": false
+                },
+                "zstd_aa": {
+                  "version": "v1.4.8,",
+                  "buildDepConfigs": {},
+                  "portRef": "zstd_aa@0.1.0",
+                  "specifiedVersion": false
                 }
               },
-              "portRef": "asdf_plugin_git@0.1.0",
-              "pluginRepo": "https://github.com/asdf-community/asdf-cmake"
+              "portRef": "cpy_bs_ghrel@0.1.0",
+              "releaseTag": "20240224",
+              "specifiedVersion": true
             }
           },
-          "resolutionDepConfigs": {
-            "asdf_plugin_git": {
-              "pluginRepo": "https://github.com/asdf-community/asdf-cmake",
-              "portRef": "asdf_plugin_git@0.1.0"
+          "portRef": "pipi_pypi@0.1.0",
+          "packageName": "cmake",
+          "specifiedVersion": false
+        },
+        "bciqfoek3nbk2jfcgfx5323wcco2bmml75tgrsjgxbdhxe5dn3isgjgi": {
+          "version": "3.12.2",
+          "buildDepConfigs": {
+            "tar_aa": {
+              "version": "1.34",
+              "buildDepConfigs": {},
+              "portRef": "tar_aa@0.1.0",
+              "specifiedVersion": false
+            },
+            "zstd_aa": {
+              "version": "v1.4.8,",
+              "buildDepConfigs": {},
+              "portRef": "zstd_aa@0.1.0",
+              "specifiedVersion": false
             }
           },
-          "portRef": "asdf@0.1.0",
-          "pluginRepo": "https://github.com/asdf-community/asdf-cmake",
-          "installType": "version"
+          "portRef": "cpy_bs_ghrel@0.1.0",
+          "releaseTag": "20240224",
+          "specifiedVersion": true
         },
-        "c7d12a562ecc8f3f95df5469ec0272561bc6715ebc41bcd82ba94f17a69a6fcb": {
-          "version": "8.2.1",
-          "depConfigs": {},
-          "portRef": "curl_aa@0.1.0"
+        "bciqj4p5hoqweghbuvz52rupja7sqze34z63dd62nz632c5zxikv6ezy": {
+          "version": "1.34",
+          "buildDepConfigs": {},
+          "portRef": "tar_aa@0.1.0",
+          "specifiedVersion": false
         },
-        "0c719c533251d13d9e84b3113733c9dcd9e48f978c02f3fc4e14816080f7a69e": {
-          "version": "2.40.1",
-          "depConfigs": {},
-          "portRef": "git_aa@0.1.0"
+        "bciqe6fwheayositrdk7rkr2ngdr4wizldakex23tgivss7w6z7g3q3y": {
+          "version": "v1.4.8,",
+          "buildDepConfigs": {},
+          "portRef": "zstd_aa@0.1.0",
+          "specifiedVersion": false
         },
-        "9ffe0540cc740abe4bae8b926d9f53b78deee279a25c863e64e99263ee0ec7d1": {
-          "version": "d631481e96",
-          "depConfigs": {
-            "git_aa": {
-              "version": "2.40.1",
-              "depConfigs": {},
-              "portRef": "git_aa@0.1.0"
+        "bciqg2262vpxoeaootmz7trjr4pilujcdokl7jekx4iwhk7kfzcfyn2i": {
+          "version": "v2.4.0",
+          "buildDepConfigs": {
+            "tar_aa": {
+              "version": "1.34",
+              "buildDepConfigs": {},
+              "portRef": "tar_aa@0.1.0",
+              "specifiedVersion": false
             }
           },
-          "portRef": "asdf_plugin_git@0.1.0",
-          "pluginRepo": "https://github.com/asdf-community/asdf-cmake"
+          "portRef": "mold_ghrel@0.1.0",
+          "replaceLd": false,
+          "specifiedVersion": true
         },
-        "402fae54fb94ffdba9cd2617602c7b33c55002275f3c3bb588615b01ff0c3c26": {
-          "version": "v1.6.5",
-          "depConfigs": {},
-          "portRef": "cargo_binstall_ghrel@0.1.0"
+        "bciqigrb324p62juzwmsfnb5oz3ffwa4dj4i3cjqn2vegarnxv427i4i": {
+          "version": "v20.8.0",
+          "buildDepConfigs": {
+            "tar_aa": {
+              "version": "1.34",
+              "buildDepConfigs": {},
+              "portRef": "tar_aa@0.1.0",
+              "specifiedVersion": false
+            }
+          },
+          "portRef": "node_org@0.1.0",
+          "specifiedVersion": true
         },
-        "1c1870c8d78ff6ec1621711218174deb5ddb2b4133b30d390dda5fa223978dba": {
-          "version": "v0.10.7",
-          "depConfigs": {},
-          "portRef": "temporal_cli_ghrel@0.1.0"
+        "bciqgmijow6p3zm3zmfcq2xp77wxnyc4utyhhzesxypddbe6qbgs7y5i": {
+          "version": "v9.0.5",
+          "buildDepConfigs": {},
+          "portRef": "pnpm_ghrel@0.1.0",
+          "specifiedVersion": true
         },
-        "80635b3a3967246789cc5f09137a8334fcfae9e96d507b6f8143d385093f024f": {
-          "version": "0.116.0",
-          "depConfigs": {
+        "bciqchyssdrikfkpksvaf332htzx3ztqnu2a7nolskedqc6ggzw6lg6a": {
+          "version": "10.0.1",
+          "buildDepConfigs": {
+            "node_org": {
+              "version": "v20.8.0",
+              "buildDepConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "buildDepConfigs": {},
+                  "portRef": "tar_aa@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "node_org@0.1.0",
+              "specifiedVersion": true
+            }
+          },
+          "portRef": "npmi_npm@0.1.0",
+          "packageName": "node-gyp",
+          "specifiedVersion": true
+        },
+        "bciqen7oo7yiny6lbip32ieyt5e2z6gum6ytzdx5krgkoe3zbvwyvdsq": {
+          "version": "3.8.18",
+          "buildDepConfigs": {
+            "tar_aa": {
+              "version": "1.34",
+              "buildDepConfigs": {},
+              "portRef": "tar_aa@0.1.0",
+              "specifiedVersion": false
+            },
+            "zstd_aa": {
+              "version": "v1.4.8,",
+              "buildDepConfigs": {},
+              "portRef": "zstd_aa@0.1.0",
+              "specifiedVersion": false
+            }
+          },
+          "portRef": "cpy_bs_ghrel@0.1.0",
+          "releaseTag": "20240224",
+          "specifiedVersion": true
+        },
+        "bciqftkwrm7ms3vsx7nw3euw3wotzed3dlhvycqnk7mhg7gsbhz26khi": {
+          "version": "0.4.7",
+          "buildDepConfigs": {
+            "cpy_bs_ghrel": {
+              "version": "3.12.2",
+              "buildDepConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "buildDepConfigs": {},
+                  "portRef": "tar_aa@0.1.0",
+                  "specifiedVersion": false
+                },
+                "zstd_aa": {
+                  "version": "v1.4.8,",
+                  "buildDepConfigs": {},
+                  "portRef": "zstd_aa@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "cpy_bs_ghrel@0.1.0",
+              "releaseTag": "20240224",
+              "specifiedVersion": true
+            }
+          },
+          "portRef": "pipi_pypi@0.1.0",
+          "packageName": "ruff",
+          "specifiedVersion": true
+        },
+        "bciqotghtiwpobhzxxovjztcffrnlwxrfkluqe57tdwk2qyit67ayyni": {
+          "version": "1.7.0",
+          "buildDepConfigs": {
+            "cpy_bs_ghrel": {
+              "version": "3.12.2",
+              "buildDepConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "buildDepConfigs": {},
+                  "portRef": "tar_aa@0.1.0",
+                  "specifiedVersion": false
+                },
+                "zstd_aa": {
+                  "version": "v1.4.8,",
+                  "buildDepConfigs": {},
+                  "portRef": "zstd_aa@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "cpy_bs_ghrel@0.1.0",
+              "releaseTag": "20240224",
+              "specifiedVersion": true
+            }
+          },
+          "portRef": "pipi_pypi@0.1.0",
+          "packageName": "poetry",
+          "specifiedVersion": true
+        },
+        "bciqfmcxigz46qj767rnf5xnmhnmomqs55owt2unvwujke37suy6onsy": {
+          "version": "0.116.1",
+          "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.6.5",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
+              "version": "v1.7.1",
+              "buildDepConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0",
+              "specifiedVersion": false
             },
             "rust_rustup": {
               "version": "1.78.0",
-              "depConfigs": {
+              "buildDepConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.1",
-                  "depConfigs": {
+                  "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
+                      "version": "2.34.1",
+                      "buildDepConfigs": {},
+                      "portRef": "git_aa@0.1.0",
+                      "specifiedVersion": false
                     }
                   },
-                  "portRef": "rustup_rustlang@0.1.0"
+                  "portRef": "rustup_rustlang@0.1.0",
+                  "specifiedVersion": false
                 }
               },
               "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
+              "profile": "minimal",
+              "specifiedVersion": false
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "wasm-opt",
-          "locked": true
+          "locked": true,
+          "specifiedVersion": true
         },
-        "4a077ef5a23a541cc6e372186951d640da541f7c4eba2613c2a1c427a5d95a5c": {
+        "bciqeal5okt5zj763vhgsmf3afr5thrkqaitv6pb3wwegcwyb74gdyjq": {
+          "version": "v1.7.1",
+          "buildDepConfigs": {},
+          "portRef": "cargo_binstall_ghrel@0.1.0",
+          "specifiedVersion": false
+        },
+        "bciqeub366wrduva4y3rxegdjkhlebwsud56e5orgcpbkdrbhuxmvuxa": {
           "version": "1.78.0",
-          "depConfigs": {
+          "buildDepConfigs": {
             "rustup_rustlang": {
               "version": "1.27.1",
-              "depConfigs": {
+              "buildDepConfigs": {
                 "git_aa": {
-                  "version": "2.40.1",
-                  "depConfigs": {},
-                  "portRef": "git_aa@0.1.0"
+                  "version": "2.34.1",
+                  "buildDepConfigs": {},
+                  "portRef": "git_aa@0.1.0",
+                  "specifiedVersion": false
                 }
               },
-              "portRef": "rustup_rustlang@0.1.0"
+              "portRef": "rustup_rustlang@0.1.0",
+              "specifiedVersion": false
             }
           },
           "portRef": "rust_rustup@0.1.0",
-          "profile": "minimal"
+          "profile": "minimal",
+          "specifiedVersion": false
         },
-        "4b3f09c15ad572211f821a76c776adea93e3c4f686817fd64dad8a5c8356ddea": {
+        "bciqay4m4kmzfduj5t2clgejxgpe5zwper6lyyaxt7rhbjalaqd32nhq": {
+          "version": "2.34.1",
+          "buildDepConfigs": {},
+          "portRef": "git_aa@0.1.0",
+          "specifiedVersion": false
+        },
+        "bciqewpyjyfnnk4rbd6bbu5who2w6ve7dyt3inal72zg23cs4qnln32q": {
           "version": "1.27.1",
-          "depConfigs": {
+          "buildDepConfigs": {
             "git_aa": {
-              "version": "2.40.1",
-              "depConfigs": {},
-              "portRef": "git_aa@0.1.0"
+              "version": "2.34.1",
+              "buildDepConfigs": {},
+              "portRef": "git_aa@0.1.0",
+              "specifiedVersion": false
             }
           },
-          "portRef": "rustup_rustlang@0.1.0"
+          "portRef": "rustup_rustlang@0.1.0",
+          "specifiedVersion": false
         },
-        "b0b40c14303632f7116dbf59b759f16cbe1b3da2b1e364b12beb90518f2994ef": {
-          "version": "1.0.53",
-          "depConfigs": {
+        "bciqbjgwmu5dkd4yxzfadkplzelrsikhguzi6taa57hishlvjfgbzl6y": {
+          "version": "1.208.1",
+          "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.6.5",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
+              "version": "v1.7.1",
+              "buildDepConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0",
+              "specifiedVersion": false
             },
             "rust_rustup": {
               "version": "1.78.0",
-              "depConfigs": {
+              "buildDepConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.1",
-                  "depConfigs": {
+                  "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
+                      "version": "2.34.1",
+                      "buildDepConfigs": {},
+                      "portRef": "git_aa@0.1.0",
+                      "specifiedVersion": false
                     }
                   },
-                  "portRef": "rustup_rustlang@0.1.0"
+                  "portRef": "rustup_rustlang@0.1.0",
+                  "specifiedVersion": false
                 }
               },
               "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
+              "profile": "minimal",
+              "specifiedVersion": false
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "wasm-tools",
-          "locked": true
+          "locked": true,
+          "specifiedVersion": true
         },
-        "341e0ef3c576b133b7dfeed1b425256fa5a6bf7143a3964e7376ec34de47f2bd": {
+        "bciqghgb2rje3epckvbdexyfqud7yw6wbu32vt3h6iglfsytgvyqiosy": {
+          "version": "0.13.4",
+          "buildDepConfigs": {
+            "cpy_bs_ghrel": {
+              "version": "3.12.2",
+              "buildDepConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "buildDepConfigs": {},
+                  "portRef": "tar_aa@0.1.0",
+                  "specifiedVersion": false
+                },
+                "zstd_aa": {
+                  "version": "v1.4.8,",
+                  "buildDepConfigs": {},
+                  "portRef": "zstd_aa@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "cpy_bs_ghrel@0.1.0",
+              "releaseTag": "20240224",
+              "specifiedVersion": true
+            }
+          },
+          "portRef": "pipi_pypi@0.1.0",
+          "packageName": "componentize-py",
+          "specifiedVersion": true
+        },
+        "bciqieldnan63xfopdah2lkhge6dmk6xzjcgubor5n3che62zb7ko5wq": {
+          "version": "1.2.4",
+          "buildDepConfigs": {
+            "node_org": {
+              "version": "v20.8.0",
+              "buildDepConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "buildDepConfigs": {},
+                  "portRef": "tar_aa@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "node_org@0.1.0",
+              "specifiedVersion": true
+            }
+          },
+          "portRef": "npmi_npm@0.1.0",
+          "packageName": "@bytecodealliance/jco",
+          "specifiedVersion": true
+        },
+        "bciqaptuytx6h5lrjrb4xyeg2b5wjh5d3kawubwf6mssdgpntoqtxeha": {
+          "version": "3.7.1",
+          "buildDepConfigs": {
+            "cpy_bs_ghrel": {
+              "version": "3.12.2",
+              "buildDepConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "buildDepConfigs": {},
+                  "portRef": "tar_aa@0.1.0",
+                  "specifiedVersion": false
+                },
+                "zstd_aa": {
+                  "version": "v1.4.8,",
+                  "buildDepConfigs": {},
+                  "portRef": "zstd_aa@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "cpy_bs_ghrel@0.1.0",
+              "releaseTag": "20240224",
+              "specifiedVersion": true
+            }
+          },
+          "portRef": "pipi_pypi@0.1.0",
+          "packageName": "pre-commit",
+          "specifiedVersion": true
+        },
+        "bciqdnzpdjsvygqddw5cpqqngcjrhbtrf4wxjqluf6vcrxosq32amdwa": {
+          "version": "v0.10.7",
+          "buildDepConfigs": {},
+          "portRef": "temporal_cli_ghrel@0.1.0",
+          "specifiedVersion": true
+        },
+        "bciqkr4tyf7wvelz3rcifm47okxidbe76rb7r6nikj3aulqoxtgothlq": {
           "version": "1.33.0",
-          "depConfigs": {
+          "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.6.5",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
+              "version": "v1.7.1",
+              "buildDepConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0",
+              "specifiedVersion": false
             },
             "rust_rustup": {
               "version": "1.78.0",
-              "depConfigs": {
+              "buildDepConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.1",
-                  "depConfigs": {
+                  "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
+                      "version": "2.34.1",
+                      "buildDepConfigs": {},
+                      "portRef": "git_aa@0.1.0",
+                      "specifiedVersion": false
                     }
                   },
-                  "portRef": "rustup_rustlang@0.1.0"
+                  "portRef": "rustup_rustlang@0.1.0",
+                  "specifiedVersion": false
                 }
               },
               "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
+              "profile": "minimal",
+              "specifiedVersion": false
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "cargo-insta",
-          "locked": true
+          "locked": true,
+          "specifiedVersion": true
         },
-        "83443bd71fed2699b3245687aececa5b03834f11b1260dd5486045b7af35f471": {
-          "version": "v20.8.0",
-          "depConfigs": {
-            "tar_aa": {
-              "version": "1.34",
-              "depConfigs": {},
-              "portRef": "tar_aa@0.1.0"
-            }
-          },
-          "portRef": "node_org@0.1.0"
-        },
-        "9e3fa7742c431c34ae7ba8d1e907e50c937ccfb631fb4dcfb7a1773742abe267": {
-          "version": "1.34",
-          "depConfigs": {},
-          "portRef": "tar_aa@0.1.0"
-        },
-        "66212eb79fbcb37961450d5dfffdaedc0b949e0e7c9257c3c63093d009a5fc75": {
-          "version": "v9.0.5",
-          "depConfigs": {},
-          "portRef": "pnpm_ghrel@0.1.0"
-        },
-        "ccbb2ac8f781def74efa6c813c6fdde39ccbcf2ff9f5fde36afa37107f4f58c4": {
-          "version": "1.0.0",
-          "depConfigs": {
-            "node_org": {
-              "version": "v20.8.0",
-              "depConfigs": {
-                "tar_aa": {
-                  "version": "1.34",
-                  "depConfigs": {},
-                  "portRef": "tar_aa@0.1.0"
-                }
-              },
-              "portRef": "node_org@0.1.0"
-            }
-          },
-          "portRef": "npmi_npm@0.1.0",
-          "packageName": "@bytecodealliance/jco"
-        },
-        "23e2521c50a2a9ea95405def479e6fbcce0da681f6b97251070178c6cdbcb378": {
-          "version": "10.0.1",
-          "depConfigs": {
-            "node_org": {
-              "version": "v20.8.0",
-              "depConfigs": {
-                "tar_aa": {
-                  "version": "1.34",
-                  "depConfigs": {},
-                  "portRef": "tar_aa@0.1.0"
-                }
-              },
-              "portRef": "node_org@0.1.0"
-            }
-          },
-          "portRef": "npmi_npm@0.1.0",
-          "packageName": "node-gyp"
-        },
-        "6d6bdaabeee201ce9b33f9c531e3d0ba24437297f49157e22c757d45c88b86e9": {
-          "version": "v2.4.0",
-          "depConfigs": {
-            "tar_aa": {
-              "version": "1.34",
-              "depConfigs": {},
-              "portRef": "tar_aa@0.1.0"
-            }
-          },
-          "portRef": "mold_ghrel@0.1.0",
-          "replaceLd": false
-        },
-        "46fdcefe10dc796143f7a41313e9359f1a8cf62791dfaa8994e26f21adb151ca": {
-          "version": "3.8.18",
-          "depConfigs": {
-            "tar_aa": {
-              "version": "1.34",
-              "depConfigs": {},
-              "portRef": "tar_aa@0.1.0"
-            },
-            "zstd_aa": {
-              "version": "v1.5.5,",
-              "depConfigs": {},
-              "portRef": "zstd_aa@0.1.0"
-            }
-          },
-          "portRef": "cpy_bs_ghrel@0.1.0",
-          "releaseTag": "20240224"
-        },
-        "4f16c72030e922711abf15474d30e3cb232b18144beb73322b297edecfcdb86f": {
-          "version": "v1.5.5,",
-          "depConfigs": {},
-          "portRef": "zstd_aa@0.1.0"
-        },
-        "e998f3459ee09f37bbaa9ccc452c5abb5e2552e90277f31d95a86113f7c18c35": {
-          "version": "1.7.0",
-          "depConfigs": {
-            "cpy_bs_ghrel": {
-              "version": "3.12.2",
-              "depConfigs": {
-                "tar_aa": {
-                  "version": "1.34",
-                  "depConfigs": {},
-                  "portRef": "tar_aa@0.1.0"
-                },
-                "zstd_aa": {
-                  "version": "v1.5.5,",
-                  "depConfigs": {},
-                  "portRef": "zstd_aa@0.1.0"
-                }
-              },
-              "portRef": "cpy_bs_ghrel@0.1.0",
-              "releaseTag": "20240224"
-            }
-          },
-          "portRef": "pipi_pypi@0.1.0",
-          "packageName": "poetry"
-        },
-        "89e00ff07918653b9c495b0fa4d554960ce8e30ac79e85eddf3e283baa5cc6b3": {
-          "version": "3.12.2",
-          "depConfigs": {
-            "tar_aa": {
-              "version": "1.34",
-              "depConfigs": {},
-              "portRef": "tar_aa@0.1.0"
-            },
-            "zstd_aa": {
-              "version": "v1.5.5,",
-              "depConfigs": {},
-              "portRef": "zstd_aa@0.1.0"
-            }
-          },
-          "portRef": "cpy_bs_ghrel@0.1.0",
-          "releaseTag": "20240224"
-        },
-        "076a5b8ee3bdc68ebf20a696378458465042bb7dc1e49ac2dc98e5fa0dab3e25": {
-          "version": "3.7.0",
-          "depConfigs": {
-            "cpy_bs_ghrel": {
-              "version": "3.12.2",
-              "depConfigs": {
-                "tar_aa": {
-                  "version": "1.34",
-                  "depConfigs": {},
-                  "portRef": "tar_aa@0.1.0"
-                },
-                "zstd_aa": {
-                  "version": "v1.5.5,",
-                  "depConfigs": {},
-                  "portRef": "zstd_aa@0.1.0"
-                }
-              },
-              "portRef": "cpy_bs_ghrel@0.1.0",
-              "releaseTag": "20240224"
-            }
-          },
-          "portRef": "pipi_pypi@0.1.0",
-          "packageName": "pre-commit"
-        },
-        "95dbc2b8c604a5996b88c5b1b4fb0c10b3e0d9cac68f57eb915b012c44288e93": {
-          "version": "v0.2.62",
-          "depConfigs": {},
-          "portRef": "act_ghrel@0.1.0"
-        },
-        "d6f8a6022488bb710cf0d94ebd37c56e7953f7f31a4d1d0689881f936a45445b": {
-          "version": "0.5.0",
-          "depConfigs": {
+        "bciqijtlsvsgtcsuchl5tk6hxi4kcyuvdfq3lvm6lzn5o4xtiz6gzeiy": {
+          "version": "0.2.5",
+          "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.6.5",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
+              "version": "v1.7.1",
+              "buildDepConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0",
+              "specifiedVersion": false
             },
             "rust_rustup": {
               "version": "1.78.0",
-              "depConfigs": {
+              "buildDepConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.1",
-                  "depConfigs": {
+                  "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
+                      "version": "2.34.1",
+                      "buildDepConfigs": {},
+                      "portRef": "git_aa@0.1.0",
+                      "specifiedVersion": false
                     }
                   },
-                  "portRef": "rustup_rustlang@0.1.0"
+                  "portRef": "rustup_rustlang@0.1.0",
+                  "specifiedVersion": false
                 }
               },
               "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "whiz",
-          "locked": true
-        },
-        "3552829e559260faef01394d084d1c64d8da0b0fde33000127ae676322402254": {
-          "version": "0.13.3",
-          "depConfigs": {
-            "cpy_bs_ghrel": {
-              "version": "3.12.2",
-              "depConfigs": {
-                "tar_aa": {
-                  "version": "1.34",
-                  "depConfigs": {},
-                  "portRef": "tar_aa@0.1.0"
-                },
-                "zstd_aa": {
-                  "version": "v1.5.5,",
-                  "depConfigs": {},
-                  "portRef": "zstd_aa@0.1.0"
-                }
-              },
-              "portRef": "cpy_bs_ghrel@0.1.0",
-              "releaseTag": "20240224"
-            }
-          },
-          "portRef": "pipi_pypi@0.1.0",
-          "packageName": "componentize-py"
-        },
-        "84ecde630296f01e7cb8443c58d1596d668c357a0d9837c0a678b8a541ed0a39": {
-          "version": "3.12.3",
-          "depConfigs": {
-            "tar_aa": {
-              "version": "1.34",
-              "depConfigs": {},
-              "portRef": "tar_aa@0.1.0"
-            },
-            "zstd_aa": {
-              "version": "v1.5.5,",
-              "depConfigs": {},
-              "portRef": "zstd_aa@0.1.0"
-            }
-          },
-          "portRef": "cpy_bs_ghrel@0.1.0"
-        },
-        "1a32ccb180571a9900a107e159612ebceee73dde599642b53e5ad5d0a7754a4a": {
-          "version": "0.2.5",
-          "depConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
-            },
-            "rust_rustup": {
-              "version": "1.77.2",
-              "depConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.0",
-                  "depConfigs": {
-                    "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0"
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
+              "profile": "minimal",
+              "specifiedVersion": false
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "cross",
-          "locked": true
+          "locked": true,
+          "specifiedVersion": true
         },
-        "822c6d037dbb95cf180fa5a8e62786c57af9488d40ba3d6ec4727b590fd4eeda": {
-          "version": "1.2.4",
-          "depConfigs": {
-            "node_org": {
-              "version": "v20.8.0",
-              "depConfigs": {
-                "tar_aa": {
-                  "version": "1.34",
-                  "depConfigs": {},
-                  "portRef": "tar_aa@0.1.0"
-                }
-              },
-              "portRef": "node_org@0.1.0"
-            }
-          },
-          "portRef": "npmi_npm@0.1.0",
-          "packageName": "@bytecodealliance/jco"
+        "bciqjlw6cxddajjmznoemlmnu7mgbbm7a3hfmnd2x5oivwajmiqui5ey": {
+          "version": "v0.2.63",
+          "buildDepConfigs": {},
+          "portRef": "act_ghrel@0.1.0",
+          "specifiedVersion": false
         },
-        "919cc86bfec50bb6aadfb65d530e8625037f15b4041d28a840d54149be239889": {
-          "version": "0.116.1",
-          "depConfigs": {
+        "bciqprohqqm7hfj3qoio2y4slu2i4vgypv6c32g3djvj4pjduo5ns4mi": {
+          "version": "0.5.0",
+          "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
-            },
-            "rust_rustup": {
-              "version": "1.77.2",
-              "depConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.0",
-                  "depConfigs": {
-                    "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0"
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "wasm-opt",
-          "locked": true
-        },
-        "a78b841fa383b2dcf4e40f8e969106fbb3c09c6d02c92f77b9f8e1b0d1f7fd72": {
-          "version": "1.208.1",
-          "depConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.6.4",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
-            },
-            "rust_rustup": {
-              "version": "1.77.2",
-              "depConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.0",
-                  "depConfigs": {
-                    "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0"
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "wasm-tools",
-          "locked": true
-        },
-        "d79e5cb672349e9999f6bdef952ac7b2bf763e3f03762a6c81c40916d769abb1": {
-          "version": "0.3.4",
-          "depConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.6.5",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
+              "version": "v1.7.1",
+              "buildDepConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0",
+              "specifiedVersion": false
             },
             "rust_rustup": {
               "version": "1.78.0",
-              "depConfigs": {
+              "buildDepConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.1",
-                  "depConfigs": {
+                  "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
+                      "version": "2.34.1",
+                      "buildDepConfigs": {},
+                      "portRef": "git_aa@0.1.0",
+                      "specifiedVersion": false
                     }
                   },
-                  "portRef": "rustup_rustlang@0.1.0"
+                  "portRef": "rustup_rustlang@0.1.0",
+                  "specifiedVersion": false
                 }
               },
               "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
+              "profile": "minimal",
+              "specifiedVersion": false
+            }
+          },
+          "portRef": "cargobi_cratesio@0.1.0",
+          "crateName": "whiz",
+          "locked": true,
+          "specifiedVersion": false
+        },
+        "bciqk4pjtubgng2jbkpkky2mvqejegqpaqhqfreryyyy4ataduwhcfsq": {
+          "version": "0.3.4",
+          "buildDepConfigs": {
+            "cargo_binstall_ghrel": {
+              "version": "v1.7.1",
+              "buildDepConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0",
+              "specifiedVersion": false
+            },
+            "rust_rustup": {
+              "version": "1.78.0",
+              "buildDepConfigs": {
+                "rustup_rustlang": {
+                  "version": "1.27.1",
+                  "buildDepConfigs": {
+                    "git_aa": {
+                      "version": "2.34.1",
+                      "buildDepConfigs": {},
+                      "portRef": "git_aa@0.1.0",
+                      "specifiedVersion": false
+                    }
+                  },
+                  "portRef": "rustup_rustlang@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "rust_rustup@0.1.0",
+              "profile": "minimal",
+              "specifiedVersion": false
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "wit-deps-cli",
-          "locked": true
+          "locked": true,
+          "specifiedVersion": false
         },
-        "724089bbf503479bcd7f119847c8f2dd0979ef942f9fa6e8fcb25aa120175220": {
-          "version": "0.1.47",
-          "depConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.6.5",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
-            },
-            "rust_rustup": {
-              "version": "1.78.0",
-              "depConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.1",
-                  "depConfigs": {
-                    "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0"
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "cargo-udeps",
-          "locked": true
-        },
-        "807a7474ed3be64aefd4e5b807a677c42fc1dd4a20225d45c76ac75ad9e38de7": {
-          "version": "0.1.47",
-          "depConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.6.5",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
-            },
-            "rust_rustup": {
-              "version": "nightly-2024-05-26",
-              "depConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.1",
-                  "depConfigs": {
-                    "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0"
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "cargo-udeps",
-          "locked": true
-        },
-        "4f480768e8aea9c5038ec20808d21ff43d2051bf16ef44cca6b5e63d6a2ec3e1": {
+        "bciqeju54u3m3aipax7w7snnfxwpqzx2h5c77jdl7hvgiendnydqivwa": {
           "version": "nightly-2024-05-26",
-          "depConfigs": {
+          "buildDepConfigs": {
             "rustup_rustlang": {
               "version": "1.27.1",
-              "depConfigs": {
+              "buildDepConfigs": {
                 "git_aa": {
-                  "version": "2.40.1",
-                  "depConfigs": {},
-                  "portRef": "git_aa@0.1.0"
+                  "version": "2.34.1",
+                  "buildDepConfigs": {},
+                  "portRef": "git_aa@0.1.0",
+                  "specifiedVersion": false
                 }
               },
-              "portRef": "rustup_rustlang@0.1.0"
+              "portRef": "rustup_rustlang@0.1.0",
+              "specifiedVersion": false
             }
           },
           "portRef": "rust_rustup@0.1.0",
-          "profile": "minimal"
+          "specifiedVersion": true
         },
-        "3ec8cc84a2da40a48b3de795f37766738cad68e83805e33e894907588b91d369": {
+        "bciqk7gvbbprzpfqzvok7kucwsorxrvloqf2v2j6oy2rrsg4v7ucnmaq": {
           "version": "0.1.47",
-          "depConfigs": {
+          "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.6.5",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
-            },
-            "rust_rustup": {
-              "version": "nightly-2024-05-26",
-              "depConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.1",
-                  "depConfigs": {
-                    "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0"
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "cargo-udeps",
-          "profile": "dev",
-          "locked": true
-        },
-        "36f34264311a714eda5b00ff69f5a760bd8c8423009cba4da183264774540617": {
-          "version": "0.1.47",
-          "depConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.6.5",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
-            },
-            "rust_rustup": {
-              "version": "nightly-2024-04-01",
-              "depConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.1",
-                  "depConfigs": {
-                    "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0"
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "cargo-udeps",
-          "profile": "dev",
-          "locked": true
-        },
-        "85f4b8c134781282db1493350868753b457a2ef1eb8b910aef705a2a613535f2": {
-          "version": "nightly-2024-04-01",
-          "depConfigs": {
-            "rustup_rustlang": {
-              "version": "1.27.1",
-              "depConfigs": {
-                "git_aa": {
-                  "version": "2.40.1",
-                  "depConfigs": {},
-                  "portRef": "git_aa@0.1.0"
-                }
-              },
-              "portRef": "rustup_rustlang@0.1.0"
-            }
-          },
-          "portRef": "rust_rustup@0.1.0",
-          "profile": "minimal"
-        },
-        "44d3bca6d9b021e0bfedf935a5bd9f0cdf47e8bff48d7f3d4c82346dc0e08ad8": {
-          "version": "nightly-2024-05-26",
-          "depConfigs": {
-            "rustup_rustlang": {
-              "version": "1.27.1",
-              "depConfigs": {
-                "git_aa": {
-                  "version": "2.40.1",
-                  "depConfigs": {},
-                  "portRef": "git_aa@0.1.0"
-                }
-              },
-              "portRef": "rustup_rustlang@0.1.0"
-            }
-          },
-          "portRef": "rust_rustup@0.1.0"
-        },
-        "f8e473365397109973d266a5eb989bd3fc0f6992185feb7e702f30b2c1ec738b": {
-          "version": "0.1.47",
-          "depConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.6.5",
-              "depConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0"
+              "version": "v1.7.1",
+              "buildDepConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0",
+              "specifiedVersion": false
             },
             "rust_rustup": {
               "version": "1.78.0",
-              "depConfigs": {
+              "buildDepConfigs": {
                 "rustup_rustlang": {
                   "version": "1.27.1",
-                  "depConfigs": {
+                  "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.40.1",
-                      "depConfigs": {},
-                      "portRef": "git_aa@0.1.0"
+                      "version": "2.34.1",
+                      "buildDepConfigs": {},
+                      "portRef": "git_aa@0.1.0",
+                      "specifiedVersion": false
                     }
                   },
-                  "portRef": "rustup_rustlang@0.1.0"
+                  "portRef": "rustup_rustlang@0.1.0",
+                  "specifiedVersion": false
                 }
               },
               "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
+              "profile": "minimal",
+              "specifiedVersion": false
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "cargo-udeps",
-          "profile": "dev",
-          "locked": true
+          "locked": true,
+          "specifiedVersion": true
+        },
+        "bciqckxkjcj6tfjygwqdspewd3tm47qit7shx2mhcnpspfs6fjkt2pny": {
+          "version": "jq-1.7.1",
+          "buildDepConfigs": {},
+          "portRef": "jq_ghrel@0.1.0",
+          "specifiedVersion": false
         }
       }
     },
     "tasks": {
+      "version": "0"
+    },
+    "envs": {
       "version": "0"
     }
   },
@@ -796,40 +634,213 @@
       {
         "id": "ports",
         "config": {
-          "installs": [
-            "439fc98060b33a81493ea6c9d54d834f5d548c0a",
-            "6c4eb5db74544926094ea3be684f453ac448da0a",
-            "0dac7df77bad6ba3f8a46710f1199cf36b260c82",
-            "fefe1d7a6a79be5dedaf34f4c7e5c00bd6f41554",
-            "2c6e03fd977170941f6f43c75652fea6e50f5189",
-            "d286ef85d0b65f1a144ac4bb57827c1094d50870",
-            "2aedace78ffe026f5c0918231de4f7f9050aab1c",
-            "c13712d0a06c2329378872201d5cb51e0575bed9",
-            "9e72a9f857bd9b14b47702b5b8ee660833828d4b",
-            "69cc04434a8b51a9d34210383f1a931646772e3b",
-            "8e5e02544073c4733d8f2156c404a0dd524cdaaf",
-            "54eba38cb79f88fca14cd3185e5bec0c3dd02682",
-            "38285a3b335e394ccce5ac5d59e15f660bfa4cc9",
-            "7bbf00da8e265c56c2bff5bb7d89ba806e2590d2",
-            "14fd3752a984c5d82e1451f7388c73a21fcce705",
-            "f25385325ad568d22d9538724df856df62a7b06b",
-            "3ed4089145ee327a97198237a8a2eb8a48212b6c",
-            "74216721eea8ccf7ba703176b4891ff6e5074e4c",
-            "ea543033c55cfcaa9f7e253529d0efe3a9827c6d"
-          ],
-          "allowedDeps": {
-            "tar_aa": "e0d1f160d2d7755765f6f01a27a0c33a02ff98d2",
-            "git_aa": "9d26d0d90f6ecdd69d0705a042b01a344aa626ee",
-            "curl_aa": "3c447f912abf18883bd05314f946740975ee0dd3",
-            "unzip_aa": "dfb0f5e74666817e6ab8cbceca0c9da271142bca",
-            "zstd_aa": "d9122eff1fe3ef56872e53dae725ff3ccb37472e",
-            "rustup_rustlang": "4cd389bd9c1a017e3af681e4515df06afc8ae94b",
-            "rust_rustup": "78a3ffea7ebe9b9f09acee4f5912ce24df923dc3",
-            "cargo_binstall_ghrel": "ba089892903fc9374065ebf6466fa43baf308251",
-            "pnpm_ghrel": "5d09c2a1d5a6611daf46efcc36eca64f53cb279c",
-            "asdf_plugin_git": "9c0f4895f4f2512781cf21f405fdf1a3b6b276d2",
-            "cpy_bs_ghrel": "14d99c79513af7d220c32bef7a266958781e021b",
-            "node_org": "adf17609822d9b8edd5253323d2edab7a1152ec2"
+          "sets": {
+            "ghjkEnvProvInstSet___main": {
+              "installs": [
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet____rust": {
+              "installs": [
+                "bciqne4ksxjzim3kikw7jrs7wncjkodt77irwke45pqafmrmmdgd2l4i",
+                "bciqepu4kontmywryiekosbttzgp2okk4zlxxjds7mdvfou7ucwaguay",
+                "bciqp6bjm3wb3ejbyc2vwk6jfgoqny7xgcvahlzq5ks737w7ognmv7ra",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet____ecma": {
+              "installs": [
+                "bciqpxsl33fvppq3goun7vxbco6cdca6oylr4pxrafgaellxor2lnoka",
+                "bciqbnpfjayfw52alvmnkxnkckuts5gd5ow3mvcat254kpijn5lz3eoi",
+                "bciqm2hbkxbeosci5zpcunyi7ll37dwcranfv72ac3xd2nmidcckns3q",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet____python": {
+              "installs": [
+                "bciqgl3oxiyt6c6k37gejxqdwyxbjqaus2wvvavjholaeqgyvhjgz2xq",
+                "bciqlxysvacf6qep4ru7fktnpbe73utrtfeyezzvehypkdk35gza7xga",
+                "bciqe5ie7ingfjlzoa32dgw4njtsduadhcrid3mtelwq4tkf33r4ra3i",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet____wasm": {
+              "installs": [
+                "bciqhfdexub3q5astgufkodx45x2axmzjv7jubqvvqm4o6vp5nxsbujy",
+                "bciqi3mqwfuszhj55niuzj64oib2n7ilyczzadq3oarmmxinizoyrzvi",
+                "bciqkxxx3aqfe3j6k5ielehtuhal7vhmmxakvm47atqn7nnt3ixaqxgi",
+                "bciqgxoiqmcx6fasmxgt4z7jp3dk3inkhddp6axw5dte4e2arngvczui",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet___ci": {
+              "installs": [
+                "bciqo4m7z6mdnqtfduew6ctnkhijomlmltjti3olc4bvulexbgcyno6a",
+                "bciqodwwaqerxveqlqvwkbjofu6qa5o5xhbpemsxxi3w3hvj3wnfaodq",
+                "bciqlmndy3xbfta7qvhackz7dab22ra7h5hxqukruevnuvcftgmkjwrq",
+                "bciqml7y4jc3dkygu7qo4peyfrhqh4tf4elc37k2a6cxvnnacwbu3zmy",
+                "bciqne4ksxjzim3kikw7jrs7wncjkodt77irwke45pqafmrmmdgd2l4i",
+                "bciqepu4kontmywryiekosbttzgp2okk4zlxxjds7mdvfou7ucwaguay",
+                "bciqp6bjm3wb3ejbyc2vwk6jfgoqny7xgcvahlzq5ks737w7ognmv7ra",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a",
+                "bciqgl3oxiyt6c6k37gejxqdwyxbjqaus2wvvavjholaeqgyvhjgz2xq",
+                "bciqlxysvacf6qep4ru7fktnpbe73utrtfeyezzvehypkdk35gza7xga",
+                "bciqe5ie7ingfjlzoa32dgw4njtsduadhcrid3mtelwq4tkf33r4ra3i",
+                "bciqpxsl33fvppq3goun7vxbco6cdca6oylr4pxrafgaellxor2lnoka",
+                "bciqbnpfjayfw52alvmnkxnkckuts5gd5ow3mvcat254kpijn5lz3eoi",
+                "bciqm2hbkxbeosci5zpcunyi7ll37dwcranfv72ac3xd2nmidcckns3q",
+                "bciqhfdexub3q5astgufkodx45x2axmzjv7jubqvvqm4o6vp5nxsbujy",
+                "bciqi3mqwfuszhj55niuzj64oib2n7ilyczzadq3oarmmxinizoyrzvi",
+                "bciqkxxx3aqfe3j6k5ielehtuhal7vhmmxakvm47atqn7nnt3ixaqxgi",
+                "bciqgxoiqmcx6fasmxgt4z7jp3dk3inkhddp6axw5dte4e2arngvczui"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet___dev": {
+              "installs": [
+                "bciqlmlesgfe7ehcu5dycztdadseh3k5axjozyd4av4brsroycnpbrki",
+                "bciqpx7zcc5w64hmfwiw4r53hcqujuqj2nw7lj7nbf2xw2zigl5oavvq",
+                "bciqlugilhibppnm7m6nvkxcf7e737dsx6id5rpbuhnftgtyfuqpn6xa",
+                "bciqo4m7z6mdnqtfduew6ctnkhijomlmltjti3olc4bvulexbgcyno6a",
+                "bciqodwwaqerxveqlqvwkbjofu6qa5o5xhbpemsxxi3w3hvj3wnfaodq",
+                "bciqlmndy3xbfta7qvhackz7dab22ra7h5hxqukruevnuvcftgmkjwrq",
+                "bciqml7y4jc3dkygu7qo4peyfrhqh4tf4elc37k2a6cxvnnacwbu3zmy",
+                "bciqne4ksxjzim3kikw7jrs7wncjkodt77irwke45pqafmrmmdgd2l4i",
+                "bciqepu4kontmywryiekosbttzgp2okk4zlxxjds7mdvfou7ucwaguay",
+                "bciqp6bjm3wb3ejbyc2vwk6jfgoqny7xgcvahlzq5ks737w7ognmv7ra",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a",
+                "bciqgl3oxiyt6c6k37gejxqdwyxbjqaus2wvvavjholaeqgyvhjgz2xq",
+                "bciqlxysvacf6qep4ru7fktnpbe73utrtfeyezzvehypkdk35gza7xga",
+                "bciqe5ie7ingfjlzoa32dgw4njtsduadhcrid3mtelwq4tkf33r4ra3i",
+                "bciqpxsl33fvppq3goun7vxbco6cdca6oylr4pxrafgaellxor2lnoka",
+                "bciqbnpfjayfw52alvmnkxnkckuts5gd5ow3mvcat254kpijn5lz3eoi",
+                "bciqm2hbkxbeosci5zpcunyi7ll37dwcranfv72ac3xd2nmidcckns3q",
+                "bciqhfdexub3q5astgufkodx45x2axmzjv7jubqvvqm4o6vp5nxsbujy",
+                "bciqi3mqwfuszhj55niuzj64oib2n7ilyczzadq3oarmmxinizoyrzvi",
+                "bciqkxxx3aqfe3j6k5ielehtuhal7vhmmxakvm47atqn7nnt3ixaqxgi",
+                "bciqgxoiqmcx6fasmxgt4z7jp3dk3inkhddp6axw5dte4e2arngvczui"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet_______task_env_lint-udeps": {
+              "installs": [
+                "bciqij7ysyi5wvufdzwpikf2stcbqk3ubzfgp7oqsevwfohwzpgvzkqa",
+                "bciqd3i46xywohlt2ffycp4adypiiyrrsw5p7yt46lj6hxwkmiy77c3i",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet_______task_env_clean-deno-lock": {
+              "installs": [
+                "bciqc2ponnvvpg3l4gl5ab3g4srejqolrbqpulee3fldq7z54rtqqhuy",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet_______task_env_dev-website": {
+              "installs": [
+                "bciqpxsl33fvppq3goun7vxbco6cdca6oylr4pxrafgaellxor2lnoka",
+                "bciqbnpfjayfw52alvmnkxnkckuts5gd5ow3mvcat254kpijn5lz3eoi",
+                "bciqm2hbkxbeosci5zpcunyi7ll37dwcranfv72ac3xd2nmidcckns3q",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a",
+                "bciqgl3oxiyt6c6k37gejxqdwyxbjqaus2wvvavjholaeqgyvhjgz2xq",
+                "bciqlxysvacf6qep4ru7fktnpbe73utrtfeyezzvehypkdk35gza7xga",
+                "bciqe5ie7ingfjlzoa32dgw4njtsduadhcrid3mtelwq4tkf33r4ra3i"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet_______task_env_test-rust": {
+              "installs": [
+                "bciqne4ksxjzim3kikw7jrs7wncjkodt77irwke45pqafmrmmdgd2l4i",
+                "bciqepu4kontmywryiekosbttzgp2okk4zlxxjds7mdvfou7ucwaguay",
+                "bciqp6bjm3wb3ejbyc2vwk6jfgoqny7xgcvahlzq5ks737w7ognmv7ra",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a",
+                "bciqpxsl33fvppq3goun7vxbco6cdca6oylr4pxrafgaellxor2lnoka",
+                "bciqbnpfjayfw52alvmnkxnkckuts5gd5ow3mvcat254kpijn5lz3eoi",
+                "bciqm2hbkxbeosci5zpcunyi7ll37dwcranfv72ac3xd2nmidcckns3q",
+                "bciqgl3oxiyt6c6k37gejxqdwyxbjqaus2wvvavjholaeqgyvhjgz2xq",
+                "bciqlxysvacf6qep4ru7fktnpbe73utrtfeyezzvehypkdk35gza7xga",
+                "bciqe5ie7ingfjlzoa32dgw4njtsduadhcrid3mtelwq4tkf33r4ra3i"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet_______task_env_dev-eg-tgraphs": {
+              "installs": [
+                "bciqne4ksxjzim3kikw7jrs7wncjkodt77irwke45pqafmrmmdgd2l4i",
+                "bciqepu4kontmywryiekosbttzgp2okk4zlxxjds7mdvfou7ucwaguay",
+                "bciqp6bjm3wb3ejbyc2vwk6jfgoqny7xgcvahlzq5ks737w7ognmv7ra",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a",
+                "bciqpxsl33fvppq3goun7vxbco6cdca6oylr4pxrafgaellxor2lnoka",
+                "bciqbnpfjayfw52alvmnkxnkckuts5gd5ow3mvcat254kpijn5lz3eoi",
+                "bciqm2hbkxbeosci5zpcunyi7ll37dwcranfv72ac3xd2nmidcckns3q",
+                "bciqgl3oxiyt6c6k37gejxqdwyxbjqaus2wvvavjholaeqgyvhjgz2xq",
+                "bciqlxysvacf6qep4ru7fktnpbe73utrtfeyezzvehypkdk35gza7xga",
+                "bciqe5ie7ingfjlzoa32dgw4njtsduadhcrid3mtelwq4tkf33r4ra3i"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet_______task_env_build-tgraph-core": {
+              "installs": [
+                "bciqne4ksxjzim3kikw7jrs7wncjkodt77irwke45pqafmrmmdgd2l4i",
+                "bciqepu4kontmywryiekosbttzgp2okk4zlxxjds7mdvfou7ucwaguay",
+                "bciqp6bjm3wb3ejbyc2vwk6jfgoqny7xgcvahlzq5ks737w7ognmv7ra",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a",
+                "bciqhfdexub3q5astgufkodx45x2axmzjv7jubqvvqm4o6vp5nxsbujy",
+                "bciqi3mqwfuszhj55niuzj64oib2n7ilyczzadq3oarmmxinizoyrzvi",
+                "bciqkxxx3aqfe3j6k5ielehtuhal7vhmmxakvm47atqn7nnt3ixaqxgi",
+                "bciqgxoiqmcx6fasmxgt4z7jp3dk3inkhddp6axw5dte4e2arngvczui"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet_______task_env_build-tgraph-py": {
+              "installs": [
+                "bciqne4ksxjzim3kikw7jrs7wncjkodt77irwke45pqafmrmmdgd2l4i",
+                "bciqepu4kontmywryiekosbttzgp2okk4zlxxjds7mdvfou7ucwaguay",
+                "bciqp6bjm3wb3ejbyc2vwk6jfgoqny7xgcvahlzq5ks737w7ognmv7ra",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a",
+                "bciqhfdexub3q5astgufkodx45x2axmzjv7jubqvvqm4o6vp5nxsbujy",
+                "bciqi3mqwfuszhj55niuzj64oib2n7ilyczzadq3oarmmxinizoyrzvi",
+                "bciqkxxx3aqfe3j6k5ielehtuhal7vhmmxakvm47atqn7nnt3ixaqxgi",
+                "bciqgxoiqmcx6fasmxgt4z7jp3dk3inkhddp6axw5dte4e2arngvczui",
+                "bciqgl3oxiyt6c6k37gejxqdwyxbjqaus2wvvavjholaeqgyvhjgz2xq",
+                "bciqlxysvacf6qep4ru7fktnpbe73utrtfeyezzvehypkdk35gza7xga",
+                "bciqe5ie7ingfjlzoa32dgw4njtsduadhcrid3mtelwq4tkf33r4ra3i"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet_______task_env_build-tgraph-ts": {
+              "installs": [
+                "bciqne4ksxjzim3kikw7jrs7wncjkodt77irwke45pqafmrmmdgd2l4i",
+                "bciqepu4kontmywryiekosbttzgp2okk4zlxxjds7mdvfou7ucwaguay",
+                "bciqp6bjm3wb3ejbyc2vwk6jfgoqny7xgcvahlzq5ks737w7ognmv7ra",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a",
+                "bciqhfdexub3q5astgufkodx45x2axmzjv7jubqvvqm4o6vp5nxsbujy",
+                "bciqi3mqwfuszhj55niuzj64oib2n7ilyczzadq3oarmmxinizoyrzvi",
+                "bciqkxxx3aqfe3j6k5ielehtuhal7vhmmxakvm47atqn7nnt3ixaqxgi",
+                "bciqgxoiqmcx6fasmxgt4z7jp3dk3inkhddp6axw5dte4e2arngvczui",
+                "bciqpxsl33fvppq3goun7vxbco6cdca6oylr4pxrafgaellxor2lnoka",
+                "bciqbnpfjayfw52alvmnkxnkckuts5gd5ow3mvcat254kpijn5lz3eoi",
+                "bciqm2hbkxbeosci5zpcunyi7ll37dwcranfv72ac3xd2nmidcckns3q"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            },
+            "ghjkEnvProvInstSet_______task_env_build-sys-tgraphs": {
+              "installs": [
+                "bciqne4ksxjzim3kikw7jrs7wncjkodt77irwke45pqafmrmmdgd2l4i",
+                "bciqepu4kontmywryiekosbttzgp2okk4zlxxjds7mdvfou7ucwaguay",
+                "bciqp6bjm3wb3ejbyc2vwk6jfgoqny7xgcvahlzq5ks737w7ognmv7ra",
+                "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a",
+                "bciqgl3oxiyt6c6k37gejxqdwyxbjqaus2wvvavjholaeqgyvhjgz2xq",
+                "bciqlxysvacf6qep4ru7fktnpbe73utrtfeyezzvehypkdk35gza7xga",
+                "bciqe5ie7ingfjlzoa32dgw4njtsduadhcrid3mtelwq4tkf33r4ra3i"
+              ],
+              "allowedBuildDeps": "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei"
+            }
           }
         }
       },
@@ -837,1201 +848,1995 @@
         "id": "tasks",
         "config": {
           "tasks": {
+            "print-version": {
+              "ty": "denoFile@v1",
+              "key": "print-version",
+              "desc": "Print $METATYPE_VERSION",
+              "envKey": "bciqlmxsndrnjywho3bv7e7tblriykbyswfjrwgqyjkgr4fsobye7rhq"
+            },
+            "lock-grep": {
+              "ty": "denoFile@v1",
+              "key": "lock-grep",
+              "desc": "Update versions according to dev/lock.yml",
+              "envKey": "bciqlmxsndrnjywho3bv7e7tblriykbyswfjrwgqyjkgr4fsobye7rhq"
+            },
             "clean-deno-lock": {
-              "name": "clean-deno-lock",
-              "dependsOn": [],
-              "env": {
-                "installs": [],
-                "env": {},
-                "allowedPortDeps": [
-                  "e0d1f160d2d7755765f6f01a27a0c33a02ff98d2",
-                  "9d26d0d90f6ecdd69d0705a042b01a344aa626ee",
-                  "3c447f912abf18883bd05314f946740975ee0dd3",
-                  "dfb0f5e74666817e6ab8cbceca0c9da271142bca",
-                  "d9122eff1fe3ef56872e53dae725ff3ccb37472e",
-                  "4cd389bd9c1a017e3af681e4515df06afc8ae94b",
-                  "78a3ffea7ebe9b9f09acee4f5912ce24df923dc3",
-                  "ba089892903fc9374065ebf6466fa43baf308251",
-                  "5d09c2a1d5a6611daf46efcc36eca64f53cb279c",
-                  "9c0f4895f4f2512781cf21f405fdf1a3b6b276d2"
-                ]
-              }
+              "ty": "denoFile@v1",
+              "key": "clean-deno-lock",
+              "envKey": "bciqgb5eknvugunxjscen54cchiwnmjmohvo5cohd5t7462xeaa4xuca"
+            },
+            "test-lsp": {
+              "ty": "denoFile@v1",
+              "key": "test-lsp",
+              "envKey": "bciqidoprdtfunaez4jas6q4r3asud4hddgtufoz3qr7xhbuv74zs4ca"
+            },
+            "test-rust": {
+              "ty": "denoFile@v1",
+              "key": "test-rust",
+              "envKey": "bciqcieyurqbnxze3torjlowb3grplaql66pld4f4ltunchzr3zvp5ra"
+            },
+            "test-website": {
+              "ty": "denoFile@v1",
+              "key": "test-website",
+              "workingDir": "./website",
+              "envKey": "bciqidoprdtfunaez4jas6q4r3asud4hddgtufoz3qr7xhbuv74zs4ca"
+            },
+            "test-e2e": {
+              "ty": "denoFile@v1",
+              "key": "test-e2e",
+              "desc": "Shorthand for `dev/test.ts`",
+              "envKey": "bciqo4mpaxjo2zmrmzxk3mwykv5pvenxlrs3cgyo3u7hnjfnwstacyiq"
+            },
+            "lint-udeps": {
+              "ty": "denoFile@v1",
+              "key": "lint-udeps",
+              "desc": "Check for unused cargo depenencies",
+              "envKey": "bciqaiymjtspzxo3kfkuu7ndtgpcxfgv76pj7sktw65a5aj2gg5csk2y"
+            },
+            "install-wasi-adapter": {
+              "ty": "denoFile@v1",
+              "key": "install-wasi-adapter",
+              "envKey": "bciqlmxsndrnjywho3bv7e7tblriykbyswfjrwgqyjkgr4fsobye7rhq"
+            },
+            "install-lsp": {
+              "ty": "denoFile@v1",
+              "key": "install-lsp",
+              "envKey": "bciqidoprdtfunaez4jas6q4r3asud4hddgtufoz3qr7xhbuv74zs4ca"
+            },
+            "install-website": {
+              "ty": "denoFile@v1",
+              "key": "install-website",
+              "envKey": "bciqidoprdtfunaez4jas6q4r3asud4hddgtufoz3qr7xhbuv74zs4ca"
+            },
+            "install-ts": {
+              "ty": "denoFile@v1",
+              "key": "install-ts",
+              "envKey": "bciqidoprdtfunaez4jas6q4r3asud4hddgtufoz3qr7xhbuv74zs4ca"
+            },
+            "install-py": {
+              "ty": "denoFile@v1",
+              "key": "install-py",
+              "envKey": "bciqnc6ia3pxad4wqzeb3dfhvsnyxj6t4lqkgqbydf7ehph2fos2tyti"
+            },
+            "install-sys": {
+              "ty": "denoFile@v1",
+              "key": "install-sys",
+              "desc": "Print a command you can use to install system items",
+              "envKey": "bciqlmxsndrnjywho3bv7e7tblriykbyswfjrwgqyjkgr4fsobye7rhq"
+            },
+            "fetch-deno": {
+              "ty": "denoFile@v1",
+              "key": "fetch-deno",
+              "desc": "Cache remote deno modules.",
+              "envKey": "bciqidoprdtfunaez4jas6q4r3asud4hddgtufoz3qr7xhbuv74zs4ca"
+            },
+            "dev-website": {
+              "ty": "denoFile@v1",
+              "key": "dev-website",
+              "workingDir": "./website",
+              "desc": "Launch the website",
+              "envKey": "bciqdyy4ljstatb6abnuye7kcf6j6jgj3nn3uoki53ynwdb5r5rk25ga"
+            },
+            "dev-gate2": {
+              "ty": "denoFile@v1",
+              "key": "dev-gate2",
+              "desc": "Launch the typegate in sync mode.",
+              "envKey": "bciqbqmfoupm4lnitfchqsya23zmpssxuaayzcdzepq6sdi265y7umfa"
+            },
+            "dev-gate1": {
+              "ty": "denoFile@v1",
+              "key": "dev-gate1",
+              "desc": "Launch the typegate in single-instance mode.",
+              "envKey": "bciqagwywf5p2fsnbgnyywsh725bvn4jnovinbz3tgl6b3kcbvxsw2aa"
+            },
+            "dev-eg-tgraphs": {
+              "ty": "denoFile@v1",
+              "key": "dev-eg-tgraphs",
+              "desc": "meta dev example/typegraphs",
+              "envKey": "bciqjaw7eebspg33fufvim4mjdxgcjroajywmb4hkwrlf5sdsn2dqskq"
+            },
+            "dev-compose": {
+              "ty": "denoFile@v1",
+              "key": "dev-compose",
+              "desc": "Wrapper around docker compose to manage runtime dependencies",
+              "envKey": "bciqlmxsndrnjywho3bv7e7tblriykbyswfjrwgqyjkgr4fsobye7rhq"
+            },
+            "dev": {
+              "ty": "denoFile@v1",
+              "key": "dev",
+              "desc": "Execute dev/*.ts scripts.",
+              "envKey": "bciqlmxsndrnjywho3bv7e7tblriykbyswfjrwgqyjkgr4fsobye7rhq"
             },
             "gen-pyrt-bind": {
-              "name": "gen-pyrt-bind",
-              "dependsOn": [],
-              "env": {
-                "installs": [
-                  "ea543033c55cfcaa9f7e253529d0efe3a9827c6d",
-                  "3044097f18de955d9402bcac8b0006554638849d"
-                ],
-                "env": {},
-                "allowedPortDeps": [
-                  "e0d1f160d2d7755765f6f01a27a0c33a02ff98d2",
-                  "9d26d0d90f6ecdd69d0705a042b01a344aa626ee",
-                  "3c447f912abf18883bd05314f946740975ee0dd3",
-                  "dfb0f5e74666817e6ab8cbceca0c9da271142bca",
-                  "d9122eff1fe3ef56872e53dae725ff3ccb37472e",
-                  "4cd389bd9c1a017e3af681e4515df06afc8ae94b",
-                  "78a3ffea7ebe9b9f09acee4f5912ce24df923dc3",
-                  "ba089892903fc9374065ebf6466fa43baf308251",
-                  "5d09c2a1d5a6611daf46efcc36eca64f53cb279c",
-                  "9c0f4895f4f2512781cf21f405fdf1a3b6b276d2",
-                  "39c0cfd108ba0ce29a11769416cadb7ed988b831",
-                  "adf17609822d9b8edd5253323d2edab7a1152ec2"
-                ]
-              }
+              "ty": "denoFile@v1",
+              "key": "gen-pyrt-bind",
+              "envKey": "bciqayxhdhfrbispp6pzfzz4tt5mfodfhtwxkm2blandkdmv3liswa5y"
             },
             "build-pyrt": {
-              "name": "build-pyrt",
+              "ty": "denoFile@v1",
+              "key": "build-pyrt",
               "dependsOn": [
                 "gen-pyrt-bind"
               ],
-              "env": {
-                "installs": [
-                  "ea543033c55cfcaa9f7e253529d0efe3a9827c6d",
-                  "3044097f18de955d9402bcac8b0006554638849d"
-                ],
-                "env": {},
-                "allowedPortDeps": [
-                  "e0d1f160d2d7755765f6f01a27a0c33a02ff98d2",
-                  "9d26d0d90f6ecdd69d0705a042b01a344aa626ee",
-                  "3c447f912abf18883bd05314f946740975ee0dd3",
-                  "dfb0f5e74666817e6ab8cbceca0c9da271142bca",
-                  "d9122eff1fe3ef56872e53dae725ff3ccb37472e",
-                  "4cd389bd9c1a017e3af681e4515df06afc8ae94b",
-                  "78a3ffea7ebe9b9f09acee4f5912ce24df923dc3",
-                  "ba089892903fc9374065ebf6466fa43baf308251",
-                  "5d09c2a1d5a6611daf46efcc36eca64f53cb279c",
-                  "9c0f4895f4f2512781cf21f405fdf1a3b6b276d2",
-                  "39c0cfd108ba0ce29a11769416cadb7ed988b831",
-                  "adf17609822d9b8edd5253323d2edab7a1152ec2"
-                ]
-              }
+              "envKey": "bciqayxhdhfrbispp6pzfzz4tt5mfodfhtwxkm2blandkdmv3liswa5y"
             },
-            "dev": {
-              "name": "dev",
-              "dependsOn": [],
-              "env": {
-                "installs": [],
-                "env": {},
-                "allowedPortDeps": []
-              }
+            "build-tgraph-core": {
+              "ty": "denoFile@v1",
+              "key": "build-tgraph-core",
+              "envKey": "bciqda4nabbv5y6scipdjgxwv66iakifhjh6fdvvr7jxyv23bscy4pdy"
             },
-            "test": {
-              "name": "test",
-              "dependsOn": [],
-              "env": {
-                "installs": [],
-                "env": {},
-                "allowedPortDeps": []
-              }
+            "build-tgraph-py": {
+              "ty": "denoFile@v1",
+              "key": "build-tgraph-py",
+              "dependsOn": [
+                "build-tgraph-core"
+              ],
+              "envKey": "bciqduktylastml2xh4c62kf2ylrunnrezzvfngenkp4bwowm7mmpc3y"
             },
-            "install-wasi-adapter": {
-              "name": "install-wasi-adapter",
-              "dependsOn": [],
-              "env": {
-                "installs": [],
-                "env": {},
-                "allowedPortDeps": []
-              }
+            "build-tgraph-ts": {
+              "ty": "denoFile@v1",
+              "key": "build-tgraph-ts",
+              "dependsOn": [
+                "build-tgraph-core"
+              ],
+              "envKey": "bciqott6pm4lavi6f5ecsyi6lrfauw5ha2ayvdrlf3fxfj36ir422zoa"
             },
-            "check-udeps": {
-              "name": "check-udeps",
-              "desc": "Check for unused cargo depenencies by running cargo-udeps tool through a **nightly** compiler",
-              "dependsOn": [],
-              "env": {
-                "installs": [
-                  "22ff5a641235357b2866ca324aa8537cda753f46",
-                  "95711e90e778981897c727030f22d3623225568b"
-                ],
-                "env": {},
-                "allowedPortDeps": [
-                  "e0d1f160d2d7755765f6f01a27a0c33a02ff98d2",
-                  "9d26d0d90f6ecdd69d0705a042b01a344aa626ee",
-                  "3c447f912abf18883bd05314f946740975ee0dd3",
-                  "dfb0f5e74666817e6ab8cbceca0c9da271142bca",
-                  "d9122eff1fe3ef56872e53dae725ff3ccb37472e",
-                  "4cd389bd9c1a017e3af681e4515df06afc8ae94b",
-                  "78a3ffea7ebe9b9f09acee4f5912ce24df923dc3",
-                  "ba089892903fc9374065ebf6466fa43baf308251",
-                  "5d09c2a1d5a6611daf46efcc36eca64f53cb279c",
-                  "9c0f4895f4f2512781cf21f405fdf1a3b6b276d2"
-                ]
-              }
+            "build-tgraph-ts-pub": {
+              "ty": "denoFile@v1",
+              "key": "build-tgraph-ts-pub",
+              "dependsOn": [
+                "build-tgraph-ts"
+              ],
+              "envKey": "bciqott6pm4lavi6f5ecsyi6lrfauw5ha2ayvdrlf3fxfj36ir422zoa"
+            },
+            "build-tgraph": {
+              "ty": "denoFile@v1",
+              "key": "build-tgraph",
+              "dependsOn": [
+                "build-tgraph-py",
+                "build-tgraph-ts-pub"
+              ],
+              "envKey": "bciqlmxsndrnjywho3bv7e7tblriykbyswfjrwgqyjkgr4fsobye7rhq"
+            },
+            "build-sys-tgraphs": {
+              "ty": "denoFile@v1",
+              "key": "build-sys-tgraphs",
+              "envKey": "bciqc6tgvzwncwpk4qkczpvvfqn7as6k2l44ldqklgkrwimbhjv2sg7y"
             }
+          },
+          "tasksNamed": [
+            "print-version",
+            "lock-grep",
+            "clean-deno-lock",
+            "test-lsp",
+            "test-rust",
+            "test-website",
+            "test-e2e",
+            "lint-udeps",
+            "install-wasi-adapter",
+            "install-lsp",
+            "install-website",
+            "install-ts",
+            "install-py",
+            "install-sys",
+            "fetch-deno",
+            "dev-website",
+            "dev-gate2",
+            "dev-gate1",
+            "dev-eg-tgraphs",
+            "dev-compose",
+            "dev",
+            "gen-pyrt-bind",
+            "build-pyrt",
+            "build-tgraph-core",
+            "build-tgraph-py",
+            "build-tgraph-ts",
+            "build-tgraph-ts-pub",
+            "build-tgraph",
+            "build-sys-tgraphs"
+          ]
+        }
+      },
+      {
+        "id": "envs",
+        "config": {
+          "envs": {
+            "bciqak7ugzsatncjp5irodalqiajlvwcjphxax354jcixd2qyj57ogxi": {
+              "desc": "the default default environment.",
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet___main"
+                }
+              ]
+            },
+            "bciqlmxsndrnjywho3bv7e7tblriykbyswfjrwgqyjkgr4fsobye7rhq": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet___main"
+                }
+              ]
+            },
+            "bciqgb5eknvugunxjscen54cchiwnmjmohvo5cohd5t7462xeaa4xuca": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet_______task_env_clean-deno-lock"
+                }
+              ]
+            },
+            "bciqaiymjtspzxo3kfkuu7ndtgpcxfgv76pj7sktw65a5aj2gg5csk2y": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet_______task_env_lint-udeps"
+                }
+              ]
+            },
+            "bciqayxhdhfrbispp6pzfzz4tt5mfodfhtwxkm2blandkdmv3liswa5y": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet____wasm"
+                }
+              ]
+            },
+            "bciqnc6ia3pxad4wqzeb3dfhvsnyxj6t4lqkgqbydf7ehph2fos2tyti": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet____python"
+                }
+              ]
+            },
+            "bciqidoprdtfunaez4jas6q4r3asud4hddgtufoz3qr7xhbuv74zs4ca": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet____ecma"
+                }
+              ]
+            },
+            "bciqdyy4ljstatb6abnuye7kcf6j6jgj3nn3uoki53ynwdb5r5rk25ga": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TG_URL",
+                  "val": "http://localhost:7890"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet_______task_env_dev-website"
+                }
+              ]
+            },
+            "bciqelffi4rqx4kzyfqsegiaigvxw2ua55h7cpy7h6imfxmifzvs3b4y": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet____rust"
+                }
+              ]
+            },
+            "bciqcieyurqbnxze3torjlowb3grplaql66pld4f4ltunchzr3zvp5ra": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet_______task_env_test-rust"
+                }
+              ]
+            },
+            "bciqagwywf5p2fsnbgnyywsh725bvn4jnovinbz3tgl6b3kcbvxsw2aa": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "PACKAGED",
+                  "val": "false"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "LOG_LEVEL",
+                  "val": "DEBUG"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "DEBUG",
+                  "val": "true"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "REDIS_URL",
+                  "val": "redis://:password@localhost:6379/0"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TG_SECRET",
+                  "val": "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TG_ADMIN_PASSWORD",
+                  "val": "password"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TG_PORT",
+                  "val": "7891"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet____rust"
+                }
+              ]
+            },
+            "bciqbqmfoupm4lnitfchqsya23zmpssxuaayzcdzepq6sdi265y7umfa": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "PACKAGED",
+                  "val": "false"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "LOG_LEVEL",
+                  "val": "DEBUG"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "DEBUG",
+                  "val": "true"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "REDIS_URL",
+                  "val": "redis://:password@localhost:6379/0"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TG_SECRET",
+                  "val": "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TG_ADMIN_PASSWORD",
+                  "val": "password"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TG_PORT",
+                  "val": "7892"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "SYNC_ENABLED",
+                  "val": "true"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "SYNC_REDIS_URL",
+                  "val": "redis://localhost:6379/0"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "SYNC_REDIS_PASSWORD",
+                  "val": "password"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "SYNC_S3_HOST",
+                  "val": "http://localhost:9000"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "SYNC_S3_REGION",
+                  "val": "local"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "SYNC_S3_ACCESS_KEY",
+                  "val": "minio"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "SYNC_S3_SECRET_KEY",
+                  "val": "password"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "SYNC_S3_BUCKET",
+                  "val": "gate2"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet____rust"
+                }
+              ]
+            },
+            "bciqjaw7eebspg33fufvim4mjdxgcjroajywmb4hkwrlf5sdsn2dqskq": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet_______task_env_dev-eg-tgraphs"
+                }
+              ]
+            },
+            "bciqda4nabbv5y6scipdjgxwv66iakifhjh6fdvvr7jxyv23bscy4pdy": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASM_FILE",
+                  "val": "target/wasm/release/typegraph_core.wasm"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "NPM_CONFIG_REGISTRY",
+                  "val": "http://localhost:4873"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet_______task_env_build-tgraph-core"
+                }
+              ]
+            },
+            "bciqduktylastml2xh4c62kf2ylrunnrezzvfngenkp4bwowm7mmpc3y": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASM_FILE",
+                  "val": "target/wasm/release/typegraph_core.wasm"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "NPM_CONFIG_REGISTRY",
+                  "val": "http://localhost:4873"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet_______task_env_build-tgraph-py"
+                }
+              ]
+            },
+            "bciqott6pm4lavi6f5ecsyi6lrfauw5ha2ayvdrlf3fxfj36ir422zoa": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASM_FILE",
+                  "val": "target/wasm/release/typegraph_core.wasm"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "NPM_CONFIG_REGISTRY",
+                  "val": "http://localhost:4873"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet_______task_env_build-tgraph-ts"
+                }
+              ]
+            },
+            "bciqc6tgvzwncwpk4qkczpvvfqn7as6k2l44ldqklgkrwimbhjv2sg7y": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet_______task_env_build-sys-tgraphs"
+                }
+              ]
+            },
+            "bciqo4mpaxjo2zmrmzxk3mwykv5pvenxlrs3cgyo3u7hnjfnwstacyiq": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet___ci"
+                }
+              ]
+            },
+            "bciqoyjhh6cck6hgj7cwumrg3hhczncykp6llygnjgnjdpa57xvcxadi": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet___dev"
+                }
+              ]
+            }
+          },
+          "defaultEnv": "dev",
+          "envsNamed": {
+            "main": "bciqak7ugzsatncjp5irodalqiajlvwcjphxax354jcixd2qyj57ogxi",
+            "_wasm": "bciqayxhdhfrbispp6pzfzz4tt5mfodfhtwxkm2blandkdmv3liswa5y",
+            "_python": "bciqnc6ia3pxad4wqzeb3dfhvsnyxj6t4lqkgqbydf7ehph2fos2tyti",
+            "_ecma": "bciqidoprdtfunaez4jas6q4r3asud4hddgtufoz3qr7xhbuv74zs4ca",
+            "_rust": "bciqelffi4rqx4kzyfqsegiaigvxw2ua55h7cpy7h6imfxmifzvs3b4y",
+            "ci": "bciqo4mpaxjo2zmrmzxk3mwykv5pvenxlrs3cgyo3u7hnjfnwstacyiq",
+            "dev": "bciqoyjhh6cck6hgj7cwumrg3hhczncykp6llygnjgnjdpa57xvcxadi"
           }
         }
       }
     ],
-    "globalEnv": {
-      "installs": {
-        "439fc98060b33a81493ea6c9d54d834f5d548c0a": {
-          "version": "v24.1",
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "protoc_ghrel",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin"
-            ],
-            "version": "0.1.0",
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/protoc.ts"
-          }
-        },
-        "6c4eb5db74544926094ea3be684f453ac448da0a": {
-          "version": "3.28.0-rc6",
-          "depConfigs": {
-            "asdf_plugin_git": {
-              "pluginRepo": "https://github.com/asdf-community/asdf-cmake",
-              "portRef": "asdf_plugin_git@0.1.0"
-            }
-          },
-          "resolutionDepConfigs": {
-            "asdf_plugin_git": {
-              "pluginRepo": "https://github.com/asdf-community/asdf-cmake",
-              "portRef": "asdf_plugin_git@0.1.0"
-            }
-          },
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "asdf",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "curl_aa"
-              },
-              {
-                "name": "git_aa"
-              },
-              {
-                "name": "asdf_plugin_git"
-              }
-            ],
-            "resolutionDeps": [
-              {
-                "name": "curl_aa"
-              },
-              {
-                "name": "git_aa"
-              },
-              {
-                "name": "asdf_plugin_git"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/asdf.ts"
-          },
-          "pluginRepo": "https://github.com/asdf-community/asdf-cmake",
-          "installType": "version"
-        },
-        "0dac7df77bad6ba3f8a46710f1199cf36b260c82": {
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "cargo_binstall_ghrel",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin"
-            ],
-            "version": "0.1.0",
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cargo-binstall.ts"
-          }
-        },
-        "fefe1d7a6a79be5dedaf34f4c7e5c00bd6f41554": {
-          "version": "0.10.7",
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "temporal_cli_ghrel",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin",
-              "aarch64-windows",
-              "x86_64-windows"
-            ],
-            "version": "0.1.0",
-            "deps": [],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/temporal_cli.ts"
-          }
-        },
-        "2c6e03fd977170941f6f43c75652fea6e50f5189": {
-          "version": "0.116.1",
-          "depConfigs": {
-            "rust_rustup": {
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "cargobi_cratesio",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "cargo_binstall_ghrel"
-              },
-              {
-                "name": "rust_rustup"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cargobi.ts"
-          },
-          "crateName": "wasm-opt",
-          "locked": true
-        },
-        "d286ef85d0b65f1a144ac4bb57827c1094d50870": {
-          "version": "1.208.1",
-          "depConfigs": {
-            "rust_rustup": {
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "cargobi_cratesio",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "cargo_binstall_ghrel"
-              },
-              {
-                "name": "rust_rustup"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cargobi.ts"
-          },
-          "crateName": "wasm-tools",
-          "locked": true
-        },
-        "2aedace78ffe026f5c0918231de4f7f9050aab1c": {
-          "version": "1.33.0",
-          "depConfigs": {
-            "rust_rustup": {
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "cargobi_cratesio",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "cargo_binstall_ghrel"
-              },
-              {
-                "name": "rust_rustup"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cargobi.ts"
-          },
-          "crateName": "cargo-insta",
-          "locked": true
-        },
-        "c13712d0a06c2329378872201d5cb51e0575bed9": {
-          "version": "20.8.0",
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "node_org",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin",
-              "aarch64-windows",
-              "x86_64-windows"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "tar_aa"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/node.ts"
-          }
-        },
-        "9e72a9f857bd9b14b47702b5b8ee660833828d4b": {
-          "version": "v9.0.5",
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "pnpm_ghrel",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin",
-              "aarch64-windows",
-              "x86_64-windows"
-            ],
-            "version": "0.1.0",
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/pnpm.ts"
-          }
-        },
-        "69cc04434a8b51a9d34210383f1a931646772e3b": {
-          "version": "1.2.4",
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "npmi_npm",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "node_org"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/npmi.ts"
-          },
-          "packageName": "@bytecodealliance/jco"
-        },
-        "8e5e02544073c4733d8f2156c404a0dd524cdaaf": {
-          "version": "10.0.1",
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "npmi_npm",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "node_org"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/npmi.ts"
-          },
-          "packageName": "node-gyp"
-        },
-        "54eba38cb79f88fca14cd3185e5bec0c3dd02682": {
-          "depConfigs": {
-            "rust_rustup": {
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "cargobi_cratesio",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "cargo_binstall_ghrel"
-              },
-              {
-                "name": "rust_rustup"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cargobi.ts"
-          },
-          "crateName": "cross",
-          "locked": true
-        },
-        "38285a3b335e394ccce5ac5d59e15f660bfa4cc9": {
-          "version": "3.8.18",
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "cpy_bs_ghrel",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "tar_aa"
-              },
-              {
-                "name": "zstd_aa"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cpy_bs.ts"
-          },
-          "releaseTag": "20240224"
-        },
-        "7bbf00da8e265c56c2bff5bb7d89ba806e2590d2": {
-          "version": "1.7.0",
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "pipi_pypi",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "cpy_bs_ghrel"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/pipi.ts"
-          },
-          "packageName": "poetry"
-        },
-        "14fd3752a984c5d82e1451f7388c73a21fcce705": {
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "pipi_pypi",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "cpy_bs_ghrel"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/pipi.ts"
-          },
-          "packageName": "pre-commit"
-        },
-        "f25385325ad568d22d9538724df856df62a7b06b": {
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "act_ghrel",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin",
-              "aarch64-windows",
-              "x86_64-windows"
-            ],
-            "version": "0.1.0",
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/act.ts"
-          }
-        },
-        "3ed4089145ee327a97198237a8a2eb8a48212b6c": {
-          "depConfigs": {
-            "rust_rustup": {
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "cargobi_cratesio",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "cargo_binstall_ghrel"
-              },
-              {
-                "name": "rust_rustup"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cargobi.ts"
-          },
-          "crateName": "whiz",
-          "locked": true
-        },
-        "74216721eea8ccf7ba703176b4891ff6e5074e4c": {
-          "depConfigs": {
-            "rust_rustup": {
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "cargobi_cratesio",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "cargo_binstall_ghrel"
-              },
-              {
-                "name": "rust_rustup"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cargobi.ts"
-          },
-          "crateName": "wit-deps-cli",
-          "locked": true
-        },
-        "ea543033c55cfcaa9f7e253529d0efe3a9827c6d": {
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "pipi_pypi",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "cpy_bs_ghrel"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/pipi.ts"
-          },
-          "packageName": "componentize-py"
-        },
-        "3044097f18de955d9402bcac8b0006554638849d": {
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "cpy_bs_ghrel",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "tar_aa"
-              },
-              {
-                "name": "zstd_aa"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cpy_bs.ts"
-          }
-        },
-        "22ff5a641235357b2866ca324aa8537cda753f46": {
-          "version": "nightly-2024-05-26",
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "rust_rustup",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "rustup_rustlang"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/rust.ts"
-          }
-        },
-        "95711e90e778981897c727030f22d3623225568b": {
-          "version": "0.1.47",
-          "depConfigs": {
-            "rust_rustup": {
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal"
-            }
-          },
-          "port": {
-            "ty": "denoWorker@v1",
-            "name": "cargobi_cratesio",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "cargo_binstall_ghrel"
-              },
-              {
-                "name": "rust_rustup"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cargobi.ts"
-          },
-          "crateName": "cargo-udeps",
-          "locked": true
+    "blackboard": {
+      "bciqfendc4gnos543eabeydytrd7b7yz5kxc67zhmf5hqi7e4y7f6l7a": {
+        "version": "1.43.6",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "deno_ghrel",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux",
+            "aarch64-darwin",
+            "x86_64-darwin",
+            "aarch64-windows",
+            "x86_64-windows"
+          ],
+          "version": "0.1.0",
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/deno_ghrel.ts"
         }
       },
-      "allowedPortDeps": {
-        "e0d1f160d2d7755765f6f01a27a0c33a02ff98d2": {
-          "manifest": {
-            "ty": "ambientAccess@v1",
-            "name": "tar_aa",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin"
-            ],
-            "version": "0.1.0",
-            "execName": "tar",
-            "versionExtractFlag": "--version",
-            "versionExtractRegex": "(\\d+\\.\\d+)",
-            "versionExtractRegexFlags": ""
-          },
-          "defaultInst": {
-            "portRef": "tar_aa@0.1.0"
+      "bciqfhyiykghgszv4y5p76spsenjgnbrdduqwvrr5rwj7efp6rh5maiy": {
+        "manifest": {
+          "ty": "denoWorker@v1",
+          "name": "cpy_bs_ghrel",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "tar_aa"
+            },
+            {
+              "name": "zstd_aa"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/cpy_bs.ts"
+        },
+        "defaultInst": {
+          "version": "3.12.2",
+          "portRef": "cpy_bs_ghrel@0.1.0",
+          "releaseTag": "20240224"
+        }
+      },
+      "bciqjqu6ho54e3hsu4xlmnff2sg5emu24x6wboybruuuqw3trtpw3sgq": {
+        "manifest": {
+          "ty": "denoWorker@v1",
+          "name": "node_org",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux",
+            "aarch64-darwin",
+            "x86_64-darwin",
+            "aarch64-windows",
+            "x86_64-windows"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "tar_aa"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/node.ts"
+        },
+        "defaultInst": {
+          "version": "20.8.0",
+          "portRef": "node_org@0.1.0"
+        }
+      },
+      "bciqb6ua63xodzwxngnbjq35hfikiwzb3dclbqkc7e6xgjdt5jin4pia": {
+        "manifest": {
+          "ty": "ambientAccess@v1",
+          "name": "tar_aa",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux",
+            "aarch64-darwin",
+            "x86_64-darwin"
+          ],
+          "version": "0.1.0",
+          "execName": "tar",
+          "versionExtractFlag": "--version",
+          "versionExtractRegex": "(\\d+\\.\\d+)",
+          "versionExtractRegexFlags": ""
+        },
+        "defaultInst": {
+          "portRef": "tar_aa@0.1.0"
+        }
+      },
+      "bciqfl5s36w335ducrb6f6gwb3vuwup7vzqwwg67pq42xtkngsnxqobi": {
+        "manifest": {
+          "ty": "ambientAccess@v1",
+          "name": "git_aa",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "execName": "git",
+          "versionExtractFlag": "--version",
+          "versionExtractRegex": "(\\d+\\.\\d+\\.\\d+)",
+          "versionExtractRegexFlags": ""
+        },
+        "defaultInst": {
+          "portRef": "git_aa@0.1.0"
+        }
+      },
+      "bciqcfe7qyxmokpn6pgtaj35r5qg74jkehuu6cvyrtcsnegvwlm64oqy": {
+        "manifest": {
+          "ty": "ambientAccess@v1",
+          "name": "curl_aa",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "execName": "curl",
+          "versionExtractFlag": "--version",
+          "versionExtractRegex": "(\\d+\\.\\d+\\.\\d+)",
+          "versionExtractRegexFlags": ""
+        },
+        "defaultInst": {
+          "portRef": "curl_aa@0.1.0"
+        }
+      },
+      "bciqgkpwxjmo5phw5se4ugyiz4xua3xrd54quzmk7wdwpq3vghglogjy": {
+        "manifest": {
+          "ty": "ambientAccess@v1",
+          "name": "unzip_aa",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux",
+            "aarch64-darwin",
+            "x86_64-darwin",
+            "aarch64-windows",
+            "x86_64-windows"
+          ],
+          "version": "0.1.0",
+          "execName": "unzip",
+          "versionExtractFlag": "-v",
+          "versionExtractRegex": "(\\d+\\.\\d+)",
+          "versionExtractRegexFlags": ""
+        },
+        "defaultInst": {
+          "portRef": "unzip_aa@0.1.0"
+        }
+      },
+      "bciqmcvyepuficjj3mwshsbfecwdmzch5gwxqo557icnq4zujtdllh4a": {
+        "manifest": {
+          "ty": "ambientAccess@v1",
+          "name": "zstd_aa",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux",
+            "aarch64-darwin",
+            "x86_64-darwin"
+          ],
+          "version": "0.1.0",
+          "execName": "zstd",
+          "versionExtractFlag": "--version",
+          "versionExtractRegex": "v(\\d+\\.\\d+\\.\\d+),",
+          "versionExtractRegexFlags": ""
+        },
+        "defaultInst": {
+          "portRef": "zstd_aa@0.1.0"
+        }
+      },
+      "bciqj76noszln5bzptssrxd5xrpglfhsqhlpgocazszlnagunsavktta": {
+        "manifest": {
+          "ty": "denoWorker@v1",
+          "name": "rustup_rustlang",
+          "platforms": [
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-windows",
+            "x86_64-illumos",
+            "x86_64-freebsd",
+            "x86_64-netbsd"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "git_aa"
+            }
+          ],
+          "resolutionDeps": [
+            {
+              "name": "git_aa"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/rustup.ts"
+        },
+        "defaultInst": {
+          "portRef": "rustup_rustlang@0.1.0"
+        }
+      },
+      "bciqddbth4uj64vvvkhz4pdbk5ha77cdhpyyfmcin2lulxk5mhilx5jy": {
+        "manifest": {
+          "ty": "denoWorker@v1",
+          "name": "rust_rustup",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "rustup_rustlang"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/rust.ts"
+        },
+        "defaultInst": {
+          "portRef": "rust_rustup@0.1.0"
+        }
+      },
+      "bciqpgcisuoe6t7sfukt7lb37w7ro2enh4rq663snkpq2ngtclfy77xq": {
+        "manifest": {
+          "ty": "denoWorker@v1",
+          "name": "cargo_binstall_ghrel",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux",
+            "aarch64-darwin",
+            "x86_64-darwin"
+          ],
+          "version": "0.1.0",
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/cargo-binstall.ts"
+        },
+        "defaultInst": {
+          "portRef": "cargo_binstall_ghrel@0.1.0"
+        }
+      },
+      "bciqkdmp4w6u672th4smln272a265nuvorhvusgdoqgmvz3pi47rawlq": {
+        "manifest": {
+          "ty": "denoWorker@v1",
+          "name": "pnpm_ghrel",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux",
+            "aarch64-darwin",
+            "x86_64-darwin",
+            "aarch64-windows",
+            "x86_64-windows"
+          ],
+          "version": "0.1.0",
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/pnpm.ts"
+        },
+        "defaultInst": {
+          "portRef": "pnpm_ghrel@0.1.0"
+        }
+      },
+      "bciqi2rcczifzgjnnygpwq5dugf3f6vh6yzoewlzdo5pbybyapxko3ua": {
+        "manifest": {
+          "ty": "denoWorker@v1",
+          "name": "asdf_plugin_git",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux",
+            "aarch64-darwin",
+            "x86_64-darwin",
+            "aarch64-windows",
+            "x86_64-windows"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "git_aa"
+            }
+          ],
+          "resolutionDeps": [
+            {
+              "name": "git_aa"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/asdf_plugin_git.ts"
+        },
+        "defaultInst": {
+          "portRef": "asdf_plugin_git@0.1.0"
+        }
+      },
+      "bciqe6y4zcedneqa7jsrrz7y4iauv3tbxt3trclne4qoqm3wbxxb67ei": {
+        "cpy_bs_ghrel": "bciqfhyiykghgszv4y5p76spsenjgnbrdduqwvrr5rwj7efp6rh5maiy",
+        "node_org": "bciqjqu6ho54e3hsu4xlmnff2sg5emu24x6wboybruuuqw3trtpw3sgq",
+        "tar_aa": "bciqb6ua63xodzwxngnbjq35hfikiwzb3dclbqkc7e6xgjdt5jin4pia",
+        "git_aa": "bciqfl5s36w335ducrb6f6gwb3vuwup7vzqwwg67pq42xtkngsnxqobi",
+        "curl_aa": "bciqcfe7qyxmokpn6pgtaj35r5qg74jkehuu6cvyrtcsnegvwlm64oqy",
+        "unzip_aa": "bciqgkpwxjmo5phw5se4ugyiz4xua3xrd54quzmk7wdwpq3vghglogjy",
+        "zstd_aa": "bciqmcvyepuficjj3mwshsbfecwdmzch5gwxqo557icnq4zujtdllh4a",
+        "rustup_rustlang": "bciqj76noszln5bzptssrxd5xrpglfhsqhlpgocazszlnagunsavktta",
+        "rust_rustup": "bciqddbth4uj64vvvkhz4pdbk5ha77cdhpyyfmcin2lulxk5mhilx5jy",
+        "cargo_binstall_ghrel": "bciqpgcisuoe6t7sfukt7lb37w7ro2enh4rq663snkpq2ngtclfy77xq",
+        "pnpm_ghrel": "bciqkdmp4w6u672th4smln272a265nuvorhvusgdoqgmvz3pi47rawlq",
+        "asdf_plugin_git": "bciqi2rcczifzgjnnygpwq5dugf3f6vh6yzoewlzdo5pbybyapxko3ua"
+      },
+      "bciqne4ksxjzim3kikw7jrs7wncjkodt77irwke45pqafmrmmdgd2l4i": {
+        "version": "v24.1",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "protoc_ghrel",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux",
+            "aarch64-darwin",
+            "x86_64-darwin"
+          ],
+          "version": "0.1.0",
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/protoc.ts"
+        }
+      },
+      "bciqepu4kontmywryiekosbttzgp2okk4zlxxjds7mdvfou7ucwaguay": {
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "pipi_pypi",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "cpy_bs_ghrel"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/pipi.ts"
+        },
+        "packageName": "cmake"
+      },
+      "bciqp6bjm3wb3ejbyc2vwk6jfgoqny7xgcvahlzq5ks737w7ognmv7ra": {
+        "version": "v2.4.0",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "mold_ghrel",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "tar_aa"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/mold.ts"
+        },
+        "replaceLd": false
+      },
+      "bciqpxsl33fvppq3goun7vxbco6cdca6oylr4pxrafgaellxor2lnoka": {
+        "version": "20.8.0",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "node_org",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux",
+            "aarch64-darwin",
+            "x86_64-darwin",
+            "aarch64-windows",
+            "x86_64-windows"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "tar_aa"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/node.ts"
+        }
+      },
+      "bciqbnpfjayfw52alvmnkxnkckuts5gd5ow3mvcat254kpijn5lz3eoi": {
+        "version": "v9.0.5",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "pnpm_ghrel",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux",
+            "aarch64-darwin",
+            "x86_64-darwin",
+            "aarch64-windows",
+            "x86_64-windows"
+          ],
+          "version": "0.1.0",
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/pnpm.ts"
+        }
+      },
+      "bciqm2hbkxbeosci5zpcunyi7ll37dwcranfv72ac3xd2nmidcckns3q": {
+        "version": "10.0.1",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "npmi_npm",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "node_org"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/npmi.ts"
+        },
+        "packageName": "node-gyp"
+      },
+      "bciqgl3oxiyt6c6k37gejxqdwyxbjqaus2wvvavjholaeqgyvhjgz2xq": {
+        "version": "3.8.18",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "cpy_bs_ghrel",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "tar_aa"
+            },
+            {
+              "name": "zstd_aa"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/cpy_bs.ts"
+        },
+        "releaseTag": "20240224"
+      },
+      "bciqlxysvacf6qep4ru7fktnpbe73utrtfeyezzvehypkdk35gza7xga": {
+        "version": "0.4.7",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "pipi_pypi",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "cpy_bs_ghrel"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/pipi.ts"
+        },
+        "packageName": "ruff"
+      },
+      "bciqe5ie7ingfjlzoa32dgw4njtsduadhcrid3mtelwq4tkf33r4ra3i": {
+        "version": "1.7.0",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "pipi_pypi",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "cpy_bs_ghrel"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/pipi.ts"
+        },
+        "packageName": "poetry"
+      },
+      "bciqhfdexub3q5astgufkodx45x2axmzjv7jubqvvqm4o6vp5nxsbujy": {
+        "version": "0.116.1",
+        "buildDepConfigs": {
+          "rust_rustup": {
+            "portRef": "rust_rustup@0.1.0",
+            "profile": "minimal"
           }
         },
-        "9d26d0d90f6ecdd69d0705a042b01a344aa626ee": {
-          "manifest": {
-            "ty": "ambientAccess@v1",
-            "name": "git_aa",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "execName": "git",
-            "versionExtractFlag": "--version",
-            "versionExtractRegex": "(\\d+\\.\\d+\\.\\d+)",
-            "versionExtractRegexFlags": ""
-          },
-          "defaultInst": {
-            "portRef": "git_aa@0.1.0"
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "cargobi_cratesio",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "cargo_binstall_ghrel"
+            },
+            {
+              "name": "rust_rustup"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/cargobi.ts"
+        },
+        "crateName": "wasm-opt",
+        "locked": true
+      },
+      "bciqi3mqwfuszhj55niuzj64oib2n7ilyczzadq3oarmmxinizoyrzvi": {
+        "version": "1.208.1",
+        "buildDepConfigs": {
+          "rust_rustup": {
+            "portRef": "rust_rustup@0.1.0",
+            "profile": "minimal"
           }
         },
-        "3c447f912abf18883bd05314f946740975ee0dd3": {
-          "manifest": {
-            "ty": "ambientAccess@v1",
-            "name": "curl_aa",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "execName": "curl",
-            "versionExtractFlag": "--version",
-            "versionExtractRegex": "(\\d+\\.\\d+\\.\\d+)",
-            "versionExtractRegexFlags": ""
-          },
-          "defaultInst": {
-            "portRef": "curl_aa@0.1.0"
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "cargobi_cratesio",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "cargo_binstall_ghrel"
+            },
+            {
+              "name": "rust_rustup"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/cargobi.ts"
+        },
+        "crateName": "wasm-tools",
+        "locked": true
+      },
+      "bciqkxxx3aqfe3j6k5ielehtuhal7vhmmxakvm47atqn7nnt3ixaqxgi": {
+        "version": "0.13.4",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "pipi_pypi",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "cpy_bs_ghrel"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/pipi.ts"
+        },
+        "packageName": "componentize-py"
+      },
+      "bciqgxoiqmcx6fasmxgt4z7jp3dk3inkhddp6axw5dte4e2arngvczui": {
+        "version": "1.2.4",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "npmi_npm",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "node_org"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/npmi.ts"
+        },
+        "packageName": "@bytecodealliance/jco"
+      },
+      "bciqo4m7z6mdnqtfduew6ctnkhijomlmltjti3olc4bvulexbgcyno6a": {
+        "version": "3.7.1",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "pipi_pypi",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "cpy_bs_ghrel"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/pipi.ts"
+        },
+        "packageName": "pre-commit"
+      },
+      "bciqodwwaqerxveqlqvwkbjofu6qa5o5xhbpemsxxi3w3hvj3wnfaodq": {
+        "version": "v0.10.7",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "temporal_cli_ghrel",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux",
+            "aarch64-darwin",
+            "x86_64-darwin",
+            "aarch64-windows",
+            "x86_64-windows"
+          ],
+          "version": "0.1.0",
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/temporal_cli.ts"
+        }
+      },
+      "bciqlmndy3xbfta7qvhackz7dab22ra7h5hxqukruevnuvcftgmkjwrq": {
+        "version": "1.33.0",
+        "buildDepConfigs": {
+          "rust_rustup": {
+            "portRef": "rust_rustup@0.1.0",
+            "profile": "minimal"
           }
         },
-        "dfb0f5e74666817e6ab8cbceca0c9da271142bca": {
-          "manifest": {
-            "ty": "ambientAccess@v1",
-            "name": "unzip_aa",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin",
-              "aarch64-windows",
-              "x86_64-windows"
-            ],
-            "version": "0.1.0",
-            "execName": "unzip",
-            "versionExtractFlag": "-v",
-            "versionExtractRegex": "(\\d+\\.\\d+)",
-            "versionExtractRegexFlags": ""
-          },
-          "defaultInst": {
-            "portRef": "unzip_aa@0.1.0"
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "cargobi_cratesio",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "cargo_binstall_ghrel"
+            },
+            {
+              "name": "rust_rustup"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/cargobi.ts"
+        },
+        "crateName": "cargo-insta",
+        "locked": true
+      },
+      "bciqml7y4jc3dkygu7qo4peyfrhqh4tf4elc37k2a6cxvnnacwbu3zmy": {
+        "version": "0.2.5",
+        "buildDepConfigs": {
+          "rust_rustup": {
+            "portRef": "rust_rustup@0.1.0",
+            "profile": "minimal"
           }
         },
-        "d9122eff1fe3ef56872e53dae725ff3ccb37472e": {
-          "manifest": {
-            "ty": "ambientAccess@v1",
-            "name": "zstd_aa",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin"
-            ],
-            "version": "0.1.0",
-            "execName": "zstd",
-            "versionExtractFlag": "--version",
-            "versionExtractRegex": "v(\\d+\\.\\d+\\.\\d+),",
-            "versionExtractRegexFlags": ""
-          },
-          "defaultInst": {
-            "portRef": "zstd_aa@0.1.0"
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "cargobi_cratesio",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "cargo_binstall_ghrel"
+            },
+            {
+              "name": "rust_rustup"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/cargobi.ts"
+        },
+        "crateName": "cross",
+        "locked": true
+      },
+      "bciqlmlesgfe7ehcu5dycztdadseh3k5axjozyd4av4brsroycnpbrki": {
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "act_ghrel",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux",
+            "aarch64-darwin",
+            "x86_64-darwin",
+            "aarch64-windows",
+            "x86_64-windows"
+          ],
+          "version": "0.1.0",
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/act.ts"
+        }
+      },
+      "bciqpx7zcc5w64hmfwiw4r53hcqujuqj2nw7lj7nbf2xw2zigl5oavvq": {
+        "buildDepConfigs": {
+          "rust_rustup": {
+            "portRef": "rust_rustup@0.1.0",
+            "profile": "minimal"
           }
         },
-        "4cd389bd9c1a017e3af681e4515df06afc8ae94b": {
-          "manifest": {
-            "ty": "denoWorker@v1",
-            "name": "rustup_rustlang",
-            "platforms": [
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-windows",
-              "x86_64-illumos",
-              "x86_64-freebsd",
-              "x86_64-netbsd"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "git_aa"
-              }
-            ],
-            "resolutionDeps": [
-              {
-                "name": "git_aa"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/rustup.ts"
-          },
-          "defaultInst": {
-            "portRef": "rustup_rustlang@0.1.0"
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "cargobi_cratesio",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "cargo_binstall_ghrel"
+            },
+            {
+              "name": "rust_rustup"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/cargobi.ts"
+        },
+        "crateName": "whiz",
+        "locked": true
+      },
+      "bciqlugilhibppnm7m6nvkxcf7e737dsx6id5rpbuhnftgtyfuqpn6xa": {
+        "buildDepConfigs": {
+          "rust_rustup": {
+            "portRef": "rust_rustup@0.1.0",
+            "profile": "minimal"
           }
         },
-        "78a3ffea7ebe9b9f09acee4f5912ce24df923dc3": {
-          "manifest": {
-            "ty": "denoWorker@v1",
-            "name": "rust_rustup",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows",
-              "x86_64-freebsd",
-              "aarch64-freebsd",
-              "x86_64-netbsd",
-              "aarch64-netbsd",
-              "x86_64-aix",
-              "aarch64-aix",
-              "x86_64-solaris",
-              "aarch64-solaris",
-              "x86_64-illumos",
-              "aarch64-illumos",
-              "x86_64-android",
-              "aarch64-android"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "rustup_rustlang"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/rust.ts"
-          },
-          "defaultInst": {
-            "portRef": "rust_rustup@0.1.0"
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "cargobi_cratesio",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "cargo_binstall_ghrel"
+            },
+            {
+              "name": "rust_rustup"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/cargobi.ts"
+        },
+        "crateName": "wit-deps-cli",
+        "locked": true
+      },
+      "bciqij7ysyi5wvufdzwpikf2stcbqk3ubzfgp7oqsevwfohwzpgvzkqa": {
+        "version": "nightly-2024-05-26",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "rust_rustup",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "rustup_rustlang"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/rust.ts"
+        }
+      },
+      "bciqd3i46xywohlt2ffycp4adypiiyrrsw5p7yt46lj6hxwkmiy77c3i": {
+        "version": "0.1.47",
+        "buildDepConfigs": {
+          "rust_rustup": {
+            "portRef": "rust_rustup@0.1.0",
+            "profile": "minimal"
           }
         },
-        "ba089892903fc9374065ebf6466fa43baf308251": {
-          "manifest": {
-            "ty": "denoWorker@v1",
-            "name": "cargo_binstall_ghrel",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin"
-            ],
-            "version": "0.1.0",
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cargo-binstall.ts"
-          },
-          "defaultInst": {
-            "portRef": "cargo_binstall_ghrel@0.1.0"
-          }
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "cargobi_cratesio",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "cargo_binstall_ghrel"
+            },
+            {
+              "name": "rust_rustup"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/cargobi.ts"
         },
-        "5d09c2a1d5a6611daf46efcc36eca64f53cb279c": {
-          "manifest": {
-            "ty": "denoWorker@v1",
-            "name": "pnpm_ghrel",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin",
-              "aarch64-windows",
-              "x86_64-windows"
-            ],
-            "version": "0.1.0",
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/pnpm.ts"
-          },
-          "defaultInst": {
-            "portRef": "pnpm_ghrel@0.1.0"
-          }
-        },
-        "9c0f4895f4f2512781cf21f405fdf1a3b6b276d2": {
-          "manifest": {
-            "ty": "denoWorker@v1",
-            "name": "asdf_plugin_git",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin",
-              "aarch64-windows",
-              "x86_64-windows"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "git_aa"
-              }
-            ],
-            "resolutionDeps": [
-              {
-                "name": "git_aa"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/asdf_plugin_git.ts"
-          },
-          "defaultInst": {
-            "portRef": "asdf_plugin_git@0.1.0"
-          }
-        },
-        "39c0cfd108ba0ce29a11769416cadb7ed988b831": {
-          "manifest": {
-            "ty": "denoWorker@v1",
-            "name": "cpy_bs_ghrel",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "tar_aa"
-              },
-              {
-                "name": "zstd_aa"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cpy_bs.ts"
-          },
-          "defaultInst": {
-            "portRef": "cpy_bs_ghrel@0.1.0",
-            "releaseTag": "20240224"
-          }
-        },
-        "adf17609822d9b8edd5253323d2edab7a1152ec2": {
-          "manifest": {
-            "ty": "denoWorker@v1",
-            "name": "node_org",
-            "platforms": [
-              "aarch64-linux",
-              "x86_64-linux",
-              "aarch64-darwin",
-              "x86_64-darwin",
-              "aarch64-windows",
-              "x86_64-windows"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "tar_aa"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/node.ts"
-          },
-          "defaultInst": {
-            "version": "20.8.0",
-            "portRef": "node_org@0.1.0"
-          }
-        },
-        "14d99c79513af7d220c32bef7a266958781e021b": {
-          "manifest": {
-            "ty": "denoWorker@v1",
-            "name": "cpy_bs_ghrel",
-            "platforms": [
-              "x86_64-linux",
-              "aarch64-linux",
-              "x86_64-darwin",
-              "aarch64-darwin",
-              "x86_64-windows",
-              "aarch64-windows"
-            ],
-            "version": "0.1.0",
-            "deps": [
-              {
-                "name": "tar_aa"
-              },
-              {
-                "name": "zstd_aa"
-              }
-            ],
-            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/cpy_bs.ts"
-          },
-          "defaultInst": {
-            "portRef": "cpy_bs_ghrel@0.1.0",
-            "releaseTag": "20240224"
-          }
+        "crateName": "cargo-udeps",
+        "locked": true
+      },
+      "bciqc2ponnvvpg3l4gl5ab3g4srejqolrbqpulee3fldq7z54rtqqhuy": {
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "jq_ghrel",
+          "platforms": [
+            "aarch64-linux",
+            "x86_64-linux",
+            "aarch64-darwin",
+            "x86_64-darwin",
+            "x86_64-windows"
+          ],
+          "version": "0.1.0",
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/jq_ghrel.ts"
         }
       }
     }

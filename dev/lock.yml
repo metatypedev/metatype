@@ -7,21 +7,11 @@ dev:
   lines:
     rust-toolchain.toml:
       (channel = ").+("): RUST_VERSION
-    ghjk.ts:
+    dev/deps.ts:
       '(.*/metatypedev/ghjk/)[^/]*(/.*)': GHJK_VERSION
-      (const\s+PROTOC_VERSION\s*=\s*").*(";): PROTOC_VERSION
-      (const\s+PYTHON_VERSION\s*=\s*").*(";): PYTHON_VERSION
-      (const\s+POETRY_VERSION\s*=\s*").*(";): POETRY_VERSION
-      (const\s+PNPM_VERSION\s*=\s*").*(";): PNPM_VERSION
-      (const\s+WASM_TOOLS_VERSION = ").*(";): WASM_TOOLS_VERSION
-      (const\s+JCO_VERSION =\s*").*(";): JCO_VERSION
-      (const\s+WASM_OPT_VERSION\s*=\s*").*(";): WASM_OPT_VERSION
-      (const\s+MOLD_VERSION\s*=\s*").*(";): MOLD_VERSION
-      (const\s+CMAKE_VERSION\s*=\s*").*(";): CMAKE_VERSION
-      (const\s+CARGO_INSTA_VERSION\s*=\s*").*(";): CARGO_INSTA_VERSION
-      (const\s+TEMPORAL_VERSION\s*=\s*").*(";): TEMPORAL_VERSION
-      (const\s+WASMTIME_VERSION\s*=\s*").*(";): WASMTIME_VERSION
-      (const\s+METATYPE_VERSION\s*=\s*").*(";): METATYPE_VERSION
+      (export const\s+METATYPE_VERSION\s*=\s*").*(";): METATYPE_VERSION
+      (export const\s+WASMTIME_VERSION\s*=\s*").*(";): WASMTIME_VERSION
+      (export const\s+DENO_VERSION\s*=\s*").*(";): DENO_VERSION
     .github/**/*.yml:
       '(  GHJK_VERSION: ").+(")': GHJK_VERSION
       '(  DENO_VERSION: ").+(")': DENO_VERSION
@@ -85,28 +75,16 @@ dev:
       '(\s*"@typegraph\/sdk"\s*:\s*"npm:@typegraph\/sdk@).+(",?)': METATYPE_VERSION
       '(\s*"@typegraph\/sdk\/"\s*:\s*"npm:/@typegraph\/sdk@).+(\/",?)': METATYPE_VERSION
   lock:
-    GHJK_VERSION: 2725af8
-    GHJK_ACTION_VERSION: 2e8bbf084060a18828338a7cdd43fde6feb2a3cc
-    PYTHON_VERSION: 3.8.18
-    POETRY_VERSION: 1.7.0
-    PROTOC_VERSION: v24.1
+    GHJK_VERSION: 5bb0d24
+    GHJK_ACTION_VERSION: 318209a9d215f70716a4ac89dbeb9653a2deb8bc
     RUST_VERSION: 1.77.1
     DENO_VERSION: 1.43.6
-    NODE_VERSION: 20.8.0
-    PNPM_VERSION: v9.0.5
-    CARGO_INSTA_VERSION: 1.33.0
-    WASM_TOOLS_VERSION: 1.208.1
-    JCO_VERSION: 1.2.4
     WASMTIME_VERSION: 21.0.0
     WASMTIME_PY_VERSION: 21.0.0
     TYPEGRAPH_VERSION: 0.0.3
     PRISMA_VERSION: 5.6.0
     METATYPE_VERSION: 0.4.3-0
     PUBLISHED_VERSION: 0.4.2
-    WASM_OPT_VERSION: 0.116.1
-    MOLD_VERSION: v2.4.0
-    CMAKE_VERSION: 3.28.0-rc6
-    TEMPORAL_VERSION: 0.10.7
     TAGLINE: >-
       Declarative API development platform. Build backend components with WASM,
       Typescript and Python, no matter where and how your (legacy) systems are.

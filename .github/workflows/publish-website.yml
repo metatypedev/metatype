@@ -4,7 +4,7 @@ on:
       - main
 
 env:
-  GHJK_VERSION: "2725af8"
+  GHJK_VERSION: "5bb0d24"
 
 jobs:
   changes:
@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - uses: actions/cache@v4
         with:
           path: .venv

@@ -1,148 +1,202 @@
+#!/bin/env -S ghjk deno run -A
+
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { expandGlobSync, parseFlags, resolve, semver, yaml } from "./deps.ts";
-import {
-  getLockfile,
-  lockfileUrl,
-  projectDir,
-  relPath,
-  runOrExit,
-} from "./utils.ts";
+import { $, expandGlob, parseArgs, semver, yaml, zod } from "./deps.ts";
+import { projectDir, relPath } from "./utils.ts";
 
-const args = parseFlags(Deno.args, {
-  boolean: ["version", "check"],
-  string: ["bump"],
-  default: { version: false, check: false },
-});
-
-const ignores = Deno.readTextFileSync(resolve(projectDir, ".gitignore"))
-  .split("\n")
-  .map((l) => l.trim())
-  .filter((line) => line.length > 0)
-  .map((l) => `${l}${l.endsWith("*") ? "" : "*"}`);
-
-const lockfile = await getLockfile();
-
-const version = lockfile.dev.lock.METATYPE_VERSION;
-if (args.version) {
-  console.log(version);
-  Deno.exit();
+const lockfileValidator = zod.record(
+  zod.string(),
+  zod.object({
+    files: zod.record(zod.string(), zod.string().array()),
+    lines: zod.record(zod.string(), zod.record(zod.string(), zod.string())),
+    lock: zod.record(zod.string(), zod.string()),
+  }),
+);
+const lockfilePath = $.path(import.meta.dirname!);
+let lockfileCell: Promise<zod.infer<typeof lockfileValidator>> | undefined;
+export function getLockfile() {
+  if (!lockfileCell) {
+    lockfileCell = lockfilePath.join("lock.yml").readText()
+      .then(yaml.parse)
+      .then(lockfileValidator.parse);
+  }
+  return lockfileCell;
 }
 
-const bumps = [
-  "major",
-  "premajor",
-  "minor",
-  "preminor",
-  "patch",
-  "prepatch",
-  "prerelease",
-];
-if (args.bump) {
-  if (!bumps.includes(args.bump)) {
-    console.log(`Invalid bump "${args.bump}", valid are: ${bumps.join(", ")}`);
-    Deno.exit(1);
+/**
+ * This will call {@link grepLock}
+ */
+export async function bumpVersion(bump: string) {
+  const bumps = [
+    "major",
+    "premajor",
+    "minor",
+    "preminor",
+    "patch",
+    "prepatch",
+    "prerelease",
+  ];
+  const lockfile = await getLockfile();
+
+  if (!bumps.includes(bump)) {
+    throw new Error(
+      `invalid version bump "${bump}", valid are: ${bumps.join(", ")}`,
+    );
   }
 
+  const version = lockfile.dev.lock.METATYPE_VERSION;
   const newVersion = semver.format(
-    semver.increment(semver.parse(version), args.bump as semver.ReleaseType),
+    semver.increment(semver.parse(version), bump as semver.ReleaseType),
   );
   lockfile.dev.lock.METATYPE_VERSION = newVersion;
-  console.log(`Bumping ${version} → ${newVersion}`);
+  $.logStep(`Bumping ${version} → ${newVersion}`);
+
+  await lockfilePath.writeText(yaml.stringify(lockfile));
 }
-Deno.writeTextFileSync(lockfileUrl, yaml.stringify(lockfile));
 
-let dirty = false;
+export async function grepLock() {
+  const wd = $.path(projectDir);
 
-for (const [channel, { files, lines, lock }] of Object.entries(lockfile)) {
-  console.log(`Updating channel ${channel}:`);
+  const ignores = (await wd.resolve(".gitignore").readText())
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((line) => line.length > 0)
+    .map((l) => `${l}${l.endsWith("*") ? "" : "*"}`);
 
-  for (const [glob, lookups] of Object.entries(lines)) {
-    const url = resolve(projectDir, glob);
-    const paths = Array.from(
-      expandGlobSync(url, {
-        includeDirs: false,
-        globstar: true,
-        exclude: ignores,
-      }),
-    ) as { path: string }[];
-    // FIXME: terrible hack
-    // replace globs with regexps
-    if (glob.match(/Cargo/)) {
-      const idx = paths.findIndex((ent) => ent.path.match(/node_modules/));
-      if (idx != -1) {
-        console.error("special excluded path", paths[idx].path);
-        paths[idx] = paths.pop()!;
-      }
-    }
+  const lockfile = await getLockfile();
 
-    if (paths.length == 0) {
-      console.error(`No files found for ${glob}, please check and retry.`);
-      Deno.exit(1);
-    }
+  let dirty = false;
 
-    const matches = Object.fromEntries(Object.keys(lookups).map((k) => [k, 0]));
+  for (const [channel, { files, lines, lock }] of Object.entries(lockfile)) {
+    $.logStep(`Updating channel ${channel}:`);
 
-    for (const { path } of paths) {
-      const text = Deno.readTextFileSync(path);
-      const rewrite = [...text.split("\n")];
+    await $.co(
+      Object
+        .entries(lines)
+        .map(async ([glob, lookups]) => {
+          const paths = await Array.fromAsync(
+            expandGlob(glob, {
+              root: wd.toString(),
+              includeDirs: false,
+              globstar: true,
+              exclude: ignores,
+            }),
+          );
 
-      for (const [pattern, replacement] of Object.entries(lookups)) {
-        const regex = new RegExp(`^${pattern}$`);
-
-        for (let i = 0; i < rewrite.length; i += 1) {
-          if (regex.test(rewrite[i])) {
-            matches[pattern] += 1;
+          // FIXME: terrible hack
+          // replace globs with regexps
+          if (glob.match(/Cargo/)) {
+            const idx = paths.findIndex((ent) =>
+              ent.path.match(/node_modules/)
+            );
+            if (idx != -1) {
+              $.logWarn("special excluded path", paths[idx].path);
+              paths[idx] = paths.pop()!;
+            }
           }
 
-          rewrite[i] = rewrite[i].replace(regex, `$1${lock[replacement]}$2`);
-        }
-      }
+          if (paths.length == 0) {
+            throw new Error(
+              `No files found for ${glob}, please check and retry.`,
+            );
+          }
 
-      const newText = rewrite.join("\n");
-      if (text != newText) {
-        console.log(`- Updated ${relPath(path)}`);
-        Deno.writeTextFileSync(path, newText);
-        dirty = true;
-      } else {
-        console.log(`- No change ${relPath(path)}`);
-      }
-    }
+          const matches = Object.fromEntries(
+            Object.keys(lookups).map((k) => [k, 0]),
+          );
 
-    for (const [pattern, count] of Object.entries(matches)) {
-      if (count == 0) {
-        console.error(
-          `No matches found for ${pattern} in ${glob}, please check and retry.`,
-        );
-        Deno.exit(1);
-      }
-    }
+          await $.co(
+            paths.map(async ({ path: pathStr }) => {
+              const path = $.path(pathStr);
+              const text = await path.readText();
+              const rewrite = [...text.split("\n")];
+
+              for (const [pattern, replacement] of Object.entries(lookups)) {
+                const regex = new RegExp(`^${pattern}$`);
+
+                for (let i = 0; i < rewrite.length; i += 1) {
+                  if (regex.test(rewrite[i])) {
+                    matches[pattern] += 1;
+                  }
+
+                  rewrite[i] = rewrite[i].replace(
+                    regex,
+                    `$1${lock[replacement]}$2`,
+                  );
+                }
+              }
+
+              const newText = rewrite.join("\n");
+              if (text != newText) {
+                await path.writeText(newText);
+                $.logStep(`Updated ${relPath(pathStr)}`);
+                dirty = true;
+              } else {
+                $.logLight(`No change ${relPath(pathStr)}`);
+              }
+            }),
+          );
+
+          for (const [pattern, count] of Object.entries(matches)) {
+            if (count == 0) {
+              throw new Error(
+                `No matches found for ${pattern} in ${glob}, please check and retry.`,
+              );
+            }
+          }
+        }),
+    );
+
+    await $.co(
+      Object.entries(files)
+        .map(async ([file, copies]) => {
+          const url = wd.resolve(file);
+          const text = await url.readText();
+
+          for (const copy of copies) {
+            const copyUrl = wd.resolve(copy);
+            const copyText = await copyUrl.readText();
+
+            if (copyText != text) {
+              copyUrl.writeText(text);
+              $.logStep(`Updated ${relPath(copyUrl.toString())}`);
+              dirty = true;
+            } else {
+              $.logLight(`No change ${relPath(copyUrl.toString())}`);
+            }
+          }
+        }),
+    );
   }
 
-  for (const [file, copies] of Object.entries(files)) {
-    const url = resolve(projectDir, file);
-    const text = Deno.readTextFileSync(url);
-
-    for (const copy of copies) {
-      const copyUrl = resolve(projectDir, copy);
-      const copyText = Deno.readTextFileSync(copyUrl);
-
-      if (copyText != text) {
-        console.log(`- Updated ${relPath(copyUrl)}`);
-        Deno.writeTextFileSync(copyUrl, text);
-        dirty = true;
-      } else {
-        console.log(`- No change ${relPath(copyUrl)}`);
-      }
-    }
+  if (dirty) {
+    await $`cargo generate-lockfile --offline`.cwd(wd).printCommand();
   }
+
+  return dirty;
 }
 
-if (dirty) {
-  await runOrExit(["cargo", "generate-lockfile", "--offline"]);
-}
+if (import.meta.main) {
+  const args = parseArgs(Deno.args, {
+    boolean: ["version", "check"],
+    string: ["bump"],
+    default: { version: false, check: false },
+  });
 
-if (args.check) {
-  Deno.exit(dirty ? 1 : 0);
+  const lockfile = await getLockfile();
+
+  const version = lockfile.dev.lock.METATYPE_VERSION;
+
+  if (args.version) {
+    console.log(version);
+    Deno.exit();
+  }
+
+  const dirty = await grepLock();
+
+  if (args.check) {
+    Deno.exit(dirty ? 1 : 0);
+  }
 }

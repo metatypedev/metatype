@@ -1,6 +1,22 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+export { file } from "https://raw.github.com/metatypedev/ghjk/5bb0d24/mod.ts";
+export * from "https://raw.github.com/metatypedev/ghjk/5bb0d24/mod.ts";
+export * as ports from "https://raw.github.com/metatypedev/ghjk/5bb0d24/ports/mod.ts";
+export {
+  std_url,
+  zod,
+} from "https://raw.github.com/metatypedev/ghjk/5bb0d24/deps/common.ts";
+// export * from "../../ghjk/mod.ts";
+// export * as ports from "../../ghjk/ports/mod.ts";
+// export * as utils from "../../ghjk/utils/mod.ts";
+// export { std_url, zod } from "../../ghjk/deps/common.ts";
+
+export const METATYPE_VERSION = "0.4.3-0";
+export const WASMTIME_VERSION = "21.0.0";
+export const DENO_VERSION = "1.43.6";
+
 export {
   basename,
   dirname,
@@ -8,8 +24,11 @@ export {
   join,
   resolve,
 } from "https://deno.land/std@0.219.0/path/mod.ts";
-export { parse as parseFlags } from "https://deno.land/std@0.219.0/flags/mod.ts";
-export { expandGlobSync } from "https://deno.land/std@0.219.0/fs/mod.ts";
+export { parseArgs } from "https://deno.land/std@0.219.0/cli/mod.ts";
+export {
+  expandGlob,
+  expandGlobSync,
+} from "https://deno.land/std@0.219.0/fs/mod.ts";
 export { cyan, green } from "https://deno.land/std@0.219.0/fmt/colors.ts";
 export { format as formatDuration } from "https://deno.land/std@0.219.0/fmt/duration.ts";
 export {

@@ -8,6 +8,8 @@
     "typegate",
     "dev",
     "examples/templates/deno",
+    "ghjk.ts",
+    ".ghjk"
   ],
   "deno.unstable": true,
   "typescript.suggest.completeFunctionCalls": true,

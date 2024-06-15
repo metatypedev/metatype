@@ -1,0 +1,87 @@
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
+
+import { DenoTaskDefArgs, std_url, WASMTIME_VERSION } from "./deps.ts";
+
+const tasks: Record<string, DenoTaskDefArgs> = {
+  "install-sys": {
+    desc: "Print a command you can use to install system items",
+    fn: async ($) => {
+      $.logger.info("pipe me to a shell");
+      const uname = await $`uname -a`.text();
+      if (/(Ubuntu|Debian)/.test(uname)) {
+        console.log(
+          `sudo apt update && ` +
+            `sudo apt install -y --no-install-recommends ` +
+            `gcc-multilib pkg-config libssl-dev libclang-dev perl make`,
+        );
+      } else {
+        $.logger.error("unable to determine platform");
+        $.logGroup("install the following manually");
+        $.log("- openssl development libs");
+        $.logGroupEnd();
+        throw new Error("err");
+      }
+    },
+  },
+
+  "install-py": {
+    inherit: ["_python"],
+    async fn($) {
+      if (!await $.workingDir.join(".venv").exists()) {
+        await $`python3 -m venv .venv`;
+        $.logger.info("virtual env created");
+      }
+      await $`poetry install --sync --no-root`;
+      await $`poetry install --sync --no-root`.cwd("./typegraph/python");
+    },
+  },
+
+  "install-ts": {
+    inherit: ["_ecma"],
+    fn: ($) =>
+      $`pnpm install --recursive 
+          --filter ./examples/typegraphs/... 
+          --filter ./website/... 
+          --filter ./typegraph/node/... 
+          --filter ./libs/metagen/tests/...`
+        .stdinText(Array(1000).map(() => "y").join("\n")),
+  },
+
+  "install-website": {
+    inherit: ["_ecma"],
+    fn: ($) => $`pnpm install -C ./website/`,
+  },
+
+  "install-lsp": {
+    inherit: ["_ecma"],
+    fn: ($) => $`pnpm install -C ./meta-lsp/ --frozen-lockfile --recursive`,
+  },
+
+  // this is used somewhere in a test build.sh file
+  "install-wasi-adapter": {
+    fn: async ($) => {
+      await $.withRetries({
+        count: 10,
+        delay: $.exponentialBackoff(500),
+        action: async () =>
+          await $.co([
+            "command",
+            "reactor",
+            "proxy",
+          ].map((kind) => {
+            const url = `https://github.com/bytecodealliance/wasmtime` +
+              `/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.${kind}.wasm`;
+            return $.request(url).showProgress()
+              .pipeToPath(
+                $.workingDir.join("tmp").join(std_url.basename(url)),
+                {
+                  create: true,
+                },
+              );
+          })),
+      });
+    },
+  },
+};
+export default tasks;

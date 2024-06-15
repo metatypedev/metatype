@@ -25,6 +25,7 @@ services:
       - "4873:4873"
     volumes:
       - ../verdaccio/:/verdaccio/conf/:ro
+      - /tmp/verdaccio/:/verdaccio/storage
 
   minio:
     image: bitnami/minio:2022
