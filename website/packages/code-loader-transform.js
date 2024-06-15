@@ -2,7 +2,6 @@
 const deindent = require("de-indent");
 const path = require("path");
 const { spawn } = require("child_process");
-const { stderr } = require("process");
 
 const projectDir = path.resolve(__dirname, "../..");
 
