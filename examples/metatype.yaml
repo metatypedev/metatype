@@ -54,7 +54,7 @@ typegates:
         BASIC_andim: hunter2
       roadmap-reduce:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_reduce"
-        BASIC_andim: hunter2
+        BASIC_andim: "password"
       roadmap-execute:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_execute"
         BASIC_andim: hunter2
