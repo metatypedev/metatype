@@ -33,7 +33,6 @@ mod interlude {
 }
 
 mod cli;
-mod com;
 mod config;
 pub mod deploy;
 mod fs;
