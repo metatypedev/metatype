@@ -46,10 +46,11 @@ export async function testE2e(
     await $.co(
       args.files.map(
         async (inPath) => {
-          const path = wd.resolve("typegate/tests", inPath);
+          let path = wd.resolve(inPath);
           let stat = await path.stat();
           if (!stat) {
-            stat = await wd.resolve(inPath).stat();
+            path = wd.resolve("typegate/tests", inPath)
+            stat = await path.stat();
             if (!stat) {
               throw new Error(`unable to resolve test files under "${inPath}"`);
             }
@@ -92,6 +93,10 @@ export async function testE2e(
   const filtered = filter ? fuse.search(filter) : null;
   const filteredTestFiles = filtered?.map((res) => testFiles[res.refIndex]) ??
     testFiles;
+
+  if (filteredTestFiles.length == 0) {
+    throw new Error("No tests found to run");
+  }
 
   const tmpDir = wd.join("tmp");
   const env: Record<string, string> = {
@@ -181,7 +186,7 @@ export async function testE2e(
   $.logStep(`${prefix} Building xtask and meta-cli...`);
   await $`cargo build -p xtask -p meta-cli`.cwd(wd);
 
-  // launch a task
+  // launch a promise that doesnt get awaited
   (async () => {
     while (queues.length > 0) {
       const current = Object
@@ -227,15 +232,13 @@ export async function testE2e(
 
   $.log();
   $.log(
-    `Tests completed in ${Math.floor(globalDuration / 60_000)}m${
-      Math.floor(globalDuration / 1_000) % 60
+    `Tests completed in ${Math.floor(globalDuration / 60_000)}m${Math.floor(globalDuration / 1_000) % 60
     }s:`,
   );
 
   for (const run of finished.sort((a, b) => a.duration - b.duration)) {
     $.log(
-      ` - ${Math.floor(run.duration / 60_000)}m${
-        Math.floor(run.duration / 1_000) % 60
+      ` - ${Math.floor(run.duration / 60_000)}m${Math.floor(run.duration / 1_000) % 60
       }s -- ${run.success ? "" : "FAILED -"}${relPath(run.testFile)}`,
     );
   }

@@ -75,12 +75,14 @@ async function testSerializeAllPairs(t: MetaTest, dirPath: string) {
 
       const [{ stdout: pyVersion }, { stdout: tsVersion }] = await Promise.all([
         Meta.cli(
+          { env: { RUST_LOG: "trace" } },
           "serialize",
           "--pretty",
           "-f",
           pyPath,
         ),
         Meta.cli(
+          { env: { RUST_LOG: "trace" } },
           "serialize",
           "--pretty",
           "-f",

@@ -12,8 +12,8 @@ const tasks: Record<string, DenoTaskDefArgs> = {
       if (/(Ubuntu|Debian)/.test(uname)) {
         console.log(
           `sudo apt update && ` +
-            `sudo apt install -y --no-install-recommends ` +
-            `gcc-multilib pkg-config libssl-dev libclang-dev perl make`,
+          `sudo apt install -y --no-install-recommends ` +
+          `gcc-multilib pkg-config libssl-dev libclang-dev perl make`,
         );
       } else {
         $.logger.error("unable to determine platform");
@@ -26,19 +26,26 @@ const tasks: Record<string, DenoTaskDefArgs> = {
   },
 
   "install-py": {
-    inherit: ["_python"],
+    inherit: "_python",
     async fn($) {
       if (!await $.workingDir.join(".venv").exists()) {
-        await $`python3 -m venv .venv`;
+        await $.raw`${$.env.REAL_PYTHON_EXEC_PATH} -m venv .venv`;
         $.logger.info("virtual env created");
       }
-      await $`poetry install --sync --no-root`;
-      await $`poetry install --sync --no-root`.cwd("./typegraph/python");
+      console.log($.env);
+      await $`bash -s`.stdinText(
+        [
+          `. .venv/bin/activate`,
+          `poetry install --no-root`,
+          `cd typegraph/python`,
+          `poetry install --no-root`,
+        ].join("\n")
+      )
     },
   },
 
   "install-ts": {
-    inherit: ["_ecma"],
+    inherit: "_ecma",
     fn: ($) =>
       $`pnpm install --recursive 
           --filter ./examples/typegraphs/... 
@@ -49,12 +56,12 @@ const tasks: Record<string, DenoTaskDefArgs> = {
   },
 
   "install-website": {
-    inherit: ["_ecma"],
+    inherit: "_ecma",
     fn: ($) => $`pnpm install -C ./website/`,
   },
 
   "install-lsp": {
-    inherit: ["_ecma"],
+    inherit: "_ecma",
     fn: ($) => $`pnpm install -C ./meta-lsp/ --frozen-lockfile --recursive`,
   },
 

@@ -15,6 +15,7 @@
       "jsr:@std/streams@0.221.0": "jsr:@std/streams@0.221.0",
       "npm:@noble/hashes@1.4.0": "npm:@noble/hashes@1.4.0",
       "npm:@sentry/node@7.70.0": "npm:@sentry/node@7.70.0",
+      "npm:@typegraph/sdk@0.4.3-0": "npm:@typegraph/sdk@0.4.3-0",
       "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:chance@1.1.11": "npm:chance@1.1.11",
       "npm:graphql@16.8.1": "npm:graphql@16.8.1",
@@ -144,6 +145,10 @@
           "@sentry/types": "@sentry/types@7.70.0",
           "tslib": "tslib@2.6.2"
         }
+      },
+      "@typegraph/sdk@0.4.3-0": {
+        "integrity": "sha512-8sBjMlaahhGJYul0m+yFOSOD2p+vd/M82kTVw5E7qdtRK5+6Yw1r/k0+iqZkcoHnihs8nWBtuZ4pY894febuLg==",
+        "dependencies": {}
       },
       "@types/node@18.16.19": {
         "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
@@ -592,6 +597,7 @@
     "https://raw.github.com/metatypedev/ghjk/0c5f78/deps/common.ts": "https://raw.githubusercontent.com/metatypedev/ghjk/0c5f78/deps/common.ts",
     "https://raw.github.com/metatypedev/ghjk/0c5f78/mod.ts": "https://raw.githubusercontent.com/metatypedev/ghjk/0c5f78/mod.ts",
     "https://raw.github.com/metatypedev/ghjk/0c5f78/ports/mod.ts": "https://raw.githubusercontent.com/metatypedev/ghjk/0c5f78/ports/mod.ts",
+    "https://raw.github.com/metatypedev/ghjk/5bb0d24/deps/common.ts": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/deps/common.ts",
     "https://raw.github.com/metatypedev/ghjk/5bb0d24/mod.ts": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/mod.ts",
     "https://raw.github.com/metatypedev/ghjk/5bb0d24/ports/mod.ts": "https://raw.githubusercontent.com/metatypedev/ghjk/5bb0d24/ports/mod.ts"
   },
@@ -2197,6 +2203,7 @@
     "https://deno.land/x/fuse@v6.4.1/dist/fuse.esm.min.js": "02034c3e0a1d7f4d207ecd104c9cde1bab116d474dc60c2a019e9d4353455ff4",
     "https://deno.land/x/json_hash@0.2.0/canon.ts": "ce7c07abd871cd7f0eb1280ad9f58f6382f02f84a217898ce977cf35ad315877",
     "https://deno.land/x/jszip@0.11.0/mod.ts": "5661ddc18e9ac9c07e3c5d2483bc912a7022b6af0d784bb7b05035973e640ba1",
+    "https://deno.land/x/jszip@0.11.0/types.ts": "1528d1279fbb64dd118c371331c641a3a5eff2b594336fb38a7659cf4c53b2d1",
     "https://deno.land/x/levenshtein@v1.0.1/mod.ts": "6b632d4a9bb11ba6d5d02a770c7fc9b0a4125f30bd9c668632ff85e7f05ff4f6",
     "https://deno.land/x/math@v1.1.0/abs.ts": "d64fe603ae4bb57037f06a1a5004285b99ed016dab6bfcded07c8155efce24b7",
     "https://deno.land/x/math@v1.1.0/big/mod.ts": "ba561f56a24ecc9f03542693ed0c81166ed0c921f8017d220ec70c963e935509",

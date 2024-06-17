@@ -49,7 +49,8 @@ if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
     .install(
       ports.mold({
         version: "v2.4.0",
-        replaceLd: Deno.env.has("CI") || Deno.env.has("OCI"),
+        // NOTE: mold replaces ld on linux
+        replaceLd: true,
       }),
     );
 }

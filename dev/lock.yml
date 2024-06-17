@@ -75,7 +75,7 @@ dev:
       '(\s*"@typegraph\/sdk"\s*:\s*"npm:@typegraph\/sdk@).+(",?)': METATYPE_VERSION
       '(\s*"@typegraph\/sdk\/"\s*:\s*"npm:/@typegraph\/sdk@).+(\/",?)': METATYPE_VERSION
   lock:
-    GHJK_VERSION: 5bb0d24
+    GHJK_VERSION: fbd977d
     GHJK_ACTION_VERSION: 318209a9d215f70716a4ac89dbeb9653a2deb8bc
     RUST_VERSION: 1.77.1
     DENO_VERSION: 1.43.6

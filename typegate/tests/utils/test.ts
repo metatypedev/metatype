@@ -257,7 +257,10 @@ export class MetaTest {
       output = await this.shell(cmd);
     } else {
       const cmd = [
-        lang.toString(),
+        ...(
+          Deno.env.get("MCLI_LOADER_PY")?.split(" ") ??
+            [lang.toString()]
+        ),
         "utils/tg_deploy_script.py",
         cwd,
         this.port.toString(),

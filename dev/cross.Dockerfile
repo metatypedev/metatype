@@ -35,7 +35,7 @@ RUN set -eux \
    xz-utils \
    unzip
 
-ARG GHJK_VERSION=5bb0d24
+ARG GHJK_VERSION=fbd977d
 ENV GHJK_SHARE_DIR=/ghjk
 RUN curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh \
    | GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash sh 

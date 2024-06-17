@@ -134,7 +134,7 @@ export async function grepLock() {
                 $.logStep(`Updated ${relPath(pathStr)}`);
                 dirty = true;
               } else {
-                $.logLight(`No change ${relPath(pathStr)}`);
+                // $.logLight(`No change ${relPath(pathStr)}`);
               }
             }),
           );

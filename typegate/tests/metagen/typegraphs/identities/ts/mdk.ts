@@ -127,6 +127,7 @@ export type SimpleCycles1Args = {
   data: SimpleCycles1;
 };
 
+
 export type TsPrimitivesHandler = Handler<PrimitivesArgs, Primitives>;
 export type TsCompositesHandler = Handler<CompositesArgs, Composites>;
 export type TsCyclesHandler = Handler<Cycles1Args, Cycles1>;

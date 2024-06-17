@@ -86,9 +86,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     dependsOn: "build-tgraph-core",
     inherit: ["build-tgraph-core", "_python"],
     async fn($) {
-      await $.workingDir.join("typegraph/python/typegraph/gen").remove({
-        recursive: true,
-      });
+      await $.removeIfExists($.workingDir.join("typegraph/python/typegraph/gen"));
       await $`poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen`;
       await $`poetry run ruff check typegraph/python/typegraph`;
     },

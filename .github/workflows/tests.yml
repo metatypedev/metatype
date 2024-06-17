@@ -9,7 +9,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "5bb0d24"
+  GHJK_VERSION: "fbd977d"
   GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"
   DENO_DIR: deno-dir
@@ -239,8 +239,6 @@ jobs:
 
           # start the docker containers
           ghjk x dev-compose base prisma
-
-          export NPM_CONFIG_REGISTRY=http://localhost:4873
 
           WASM_OPT=1 ghjk x build-tgraph
 

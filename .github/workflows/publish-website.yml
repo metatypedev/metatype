@@ -4,7 +4,7 @@ on:
       - main
 
 env:
-  GHJK_VERSION: "5bb0d24"
+  GHJK_VERSION: "fbd977d"
 
 jobs:
   changes:
