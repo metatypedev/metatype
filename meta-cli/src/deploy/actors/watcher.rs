@@ -20,6 +20,7 @@ use std::{sync::Arc, time::Duration};
 pub mod message {
     use super::*;
 
+    // TODO remove
     #[derive(Message)]
     #[rtype(result = "()")]
     pub struct Stop;

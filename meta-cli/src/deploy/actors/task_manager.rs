@@ -266,7 +266,8 @@ impl<A: TaskAction + 'static> Actor for TaskManager<A> {
         match &self.stop_reason {
             Some(reason) => {
                 if matches!(reason, StopReason::Restart) {
-                    self.init_params
+                    self.watcher_addr = self
+                        .init_params
                         .start_source(ctx.address(), self.task_generator.clone());
                     Running::Continue
                 } else {
@@ -433,6 +434,7 @@ impl<A: TaskAction + 'static> Handler<Stop> for TaskManager<A> {
 
     fn handle(&mut self, _msg: Stop, ctx: &mut Context<Self>) -> Self::Result {
         if let Some(watcher) = &self.watcher_addr {
+            // This might be unnecessary, it will be stopped when the address is dropped.
             watcher.do_send(super::watcher::message::Stop);
         }
         match self.stop_reason.clone() {
