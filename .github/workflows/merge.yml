@@ -4,7 +4,7 @@ on:
       - checks_requested
 
 env:
-  GHJK_VERSION: "fbd977d"
+  GHJK_VERSION: "6a9ecda"
   DENO_VERSION: "1.43.6"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"

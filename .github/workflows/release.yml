@@ -16,7 +16,7 @@ on:
       - v*
 
 env:
-  GHJK_VERSION: "fbd977d"
+  GHJK_VERSION: "6a9ecda"
   GHJK_ENV: "ci"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
 

@@ -71,104 +71,105 @@ export async function grepLock() {
 
   for (const [channel, { files, lines, lock }] of Object.entries(lockfile)) {
     $.logStep(`Updating channel ${channel}:`);
-
-    await $.co(
-      Object
-        .entries(lines)
-        .map(async ([glob, lookups]) => {
-          const paths = await Array.fromAsync(
-            expandGlob(glob, {
-              root: wd.toString(),
-              includeDirs: false,
-              globstar: true,
-              exclude: ignores,
-            }),
-          );
-
-          // FIXME: terrible hack
-          // replace globs with regexps
-          if (glob.match(/Cargo/)) {
-            const idx = paths.findIndex((ent) =>
-              ent.path.match(/node_modules/)
+    await $.logGroup(async () => {
+      await $.co(
+        Object
+          .entries(lines)
+          .map(async ([glob, lookups]) => {
+            const paths = await Array.fromAsync(
+              expandGlob(glob, {
+                root: wd.toString(),
+                includeDirs: false,
+                globstar: true,
+                exclude: ignores,
+              }),
             );
-            if (idx != -1) {
-              $.logWarn("special excluded path", paths[idx].path);
-              paths[idx] = paths.pop()!;
+
+            // FIXME: terrible hack
+            // replace globs with regexps
+            if (glob.match(/Cargo/)) {
+              const idx = paths.findIndex((ent) =>
+                ent.path.match(/node_modules/)
+              );
+              if (idx != -1) {
+                $.logWarn("special excluded path", paths[idx].path);
+                paths[idx] = paths.pop()!;
+              }
             }
-          }
 
-          if (paths.length == 0) {
-            throw new Error(
-              `No files found for ${glob}, please check and retry.`,
-            );
-          }
-
-          const matches = Object.fromEntries(
-            Object.keys(lookups).map((k) => [k, 0]),
-          );
-
-          await $.co(
-            paths.map(async ({ path: pathStr }) => {
-              const path = $.path(pathStr);
-              const text = await path.readText();
-              const rewrite = [...text.split("\n")];
-
-              for (const [pattern, replacement] of Object.entries(lookups)) {
-                const regex = new RegExp(`^${pattern}$`);
-
-                for (let i = 0; i < rewrite.length; i += 1) {
-                  if (regex.test(rewrite[i])) {
-                    matches[pattern] += 1;
-                  }
-
-                  rewrite[i] = rewrite[i].replace(
-                    regex,
-                    `$1${lock[replacement]}$2`,
-                  );
-                }
-              }
-
-              const newText = rewrite.join("\n");
-              if (text != newText) {
-                await path.writeText(newText);
-                $.logStep(`Updated ${relPath(pathStr)}`);
-                dirty = true;
-              } else {
-                // $.logLight(`No change ${relPath(pathStr)}`);
-              }
-            }),
-          );
-
-          for (const [pattern, count] of Object.entries(matches)) {
-            if (count == 0) {
+            if (paths.length == 0) {
               throw new Error(
-                `No matches found for ${pattern} in ${glob}, please check and retry.`,
+                `No files found for ${glob}, please check and retry.`,
               );
             }
-          }
-        }),
-    );
 
-    await $.co(
-      Object.entries(files)
-        .map(async ([file, copies]) => {
-          const url = wd.resolve(file);
-          const text = await url.readText();
+            const matches = Object.fromEntries(
+              Object.keys(lookups).map((k) => [k, 0]),
+            );
 
-          for (const copy of copies) {
-            const copyUrl = wd.resolve(copy);
-            const copyText = await copyUrl.readText();
+            await $.co(
+              paths.map(async ({ path: pathStr }) => {
+                const path = $.path(pathStr);
+                const text = await path.readText();
+                const rewrite = [...text.split("\n")];
 
-            if (copyText != text) {
-              copyUrl.writeText(text);
-              $.logStep(`Updated ${relPath(copyUrl.toString())}`);
-              dirty = true;
-            } else {
-              $.logLight(`No change ${relPath(copyUrl.toString())}`);
+                for (const [pattern, replacement] of Object.entries(lookups)) {
+                  const regex = new RegExp(`^${pattern}$`);
+
+                  for (let i = 0; i < rewrite.length; i += 1) {
+                    if (regex.test(rewrite[i])) {
+                      matches[pattern] += 1;
+                    }
+
+                    rewrite[i] = rewrite[i].replace(
+                      regex,
+                      `$1${lock[replacement]}$2`,
+                    );
+                  }
+                }
+
+                const newText = rewrite.join("\n");
+                if (text != newText) {
+                  await path.writeText(newText);
+                  $.logStep(`Updated ${relPath(pathStr)}`);
+                  dirty = true;
+                } else {
+                  // $.logLight(`No change ${relPath(pathStr)}`);
+                }
+              }),
+            );
+
+            for (const [pattern, count] of Object.entries(matches)) {
+              if (count == 0) {
+                throw new Error(
+                  `No matches found for ${pattern} in ${glob}, please check and retry.`,
+                );
+              }
             }
-          }
-        }),
-    );
+          }),
+      );
+
+      await $.co(
+        Object.entries(files)
+          .map(async ([file, copies]) => {
+            const url = wd.resolve(file);
+            const text = await url.readText();
+
+            for (const copy of copies) {
+              const copyUrl = wd.resolve(copy);
+              const copyText = await copyUrl.readText();
+
+              if (copyText != text) {
+                copyUrl.writeText(text);
+                $.logStep(`Updated ${relPath(copyUrl.toString())}`);
+                dirty = true;
+              } else {
+                $.logLight(`No change ${relPath(copyUrl.toString())}`);
+              }
+            }
+          }),
+      );
+    })
   }
 
   if (dirty) {
