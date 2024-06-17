@@ -181,7 +181,7 @@ impl<A: TaskAction + 'static> Handler<File> for WatcherActor<A> {
 
                     RetryManager::clear_counter(&path);
                     self.task_manager.do_send(task_manager::message::AddTask {
-                        task_ref: self.task_generator.generate(path.into(), 0),
+                        task_ref: self.task_generator.generate(rel_path.into(), 0),
                         reason: TaskReason::FileChanged,
                     });
                 }

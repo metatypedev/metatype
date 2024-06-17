@@ -8,7 +8,7 @@ use common::archive::{
 use std::{collections::BTreeMap, path::Path};
 
 pub trait ArchiveExt {
-    fn compress_and_encode(&self, path: &Path) -> Result<String, String>;
+    fn compress_and_encode(&self, path: impl AsRef<Path>) -> Result<String, String>;
     fn unpack_base64(&self, tarb64: &str, dest: &Path) -> Result<(), String>;
 }
 
@@ -35,7 +35,9 @@ impl FsContext {
 }
 
 impl ArchiveExt for FsContext {
-    fn compress_and_encode(&self, path: &Path) -> Result<String, String> {
+    fn compress_and_encode(&self, path: impl AsRef<Path>) -> Result<String, String> {
+        let path = path.as_ref();
+        crate::logger::debug!("compress_and_encode: {path:?}");
         let ignore = {
             let tg_ignore_path = Path::new(".tgignore");
             let mut ignore = self.load_tg_ignore(tg_ignore_path)?;
@@ -48,8 +50,8 @@ impl ArchiveExt for FsContext {
         let entries = paths
             .iter()
             .map(|p| {
-                self.read_file(p)
-                    .map(|content| (p.to_string_lossy().into(), content))
+                let key = p.strip_prefix(path).unwrap().to_string_lossy().into();
+                self.read_file(p).map(|content| (key, content))
             })
             .collect::<Result<BTreeMap<_, _>, _>>()?;
 

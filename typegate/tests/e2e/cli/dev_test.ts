@@ -98,7 +98,7 @@ Meta.test(
     });
 
     await metadev.fetchStderrLines((line) => {
-      console.log("line:", line);
+      // console.log("line:", line);
       return !$.stripAnsi(line).includes(
         "successfully deployed typegraph migration-failure-test",
       );

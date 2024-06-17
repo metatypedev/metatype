@@ -44,7 +44,7 @@ impl PrismaProcessor {
                     migration_files: {
                         if action.apply {
                             match fs_ctx.exists(&path)? {
-                                true => Some(fs_ctx.compress_and_encode(&path)?),
+                                true => Some(fs_ctx.compress_and_encode(rt_name)?),
                                 false => None,
                             }
                         } else {
