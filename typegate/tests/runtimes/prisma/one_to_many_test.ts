@@ -1,15 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { randomPGConnStr } from "../../utils/database.ts";
 import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 
 function runTest(tgPath: string, name: string) {
   Meta.test(name, async (t) => {
+    const { connStr, schema: _ } = randomPGConnStr();
     const e = await t.engine(tgPath, {
       secrets: {
-        POSTGRES:
-          "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-many",
+        POSTGRES: connStr,
       },
     });
 

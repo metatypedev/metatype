@@ -85,6 +85,10 @@ impl TryFrom<&Path> for ModuleType {
     fn try_from(path: &Path) -> std::result::Result<Self, Self::Error> {
         match path.extension() {
             Some(ext) if ext == "ts" => Ok(ModuleType::Deno),
+            Some(ext) if ext == "mts" => Ok(ModuleType::Deno),
+            Some(ext) if ext == "js" => Ok(ModuleType::Deno),
+            Some(ext) if ext == "mjs" => Ok(ModuleType::Deno),
+            Some(ext) if ext == "cjs" => Ok(ModuleType::Deno),
             Some(ext) if ext == "py" => Ok(ModuleType::Python),
             _ => Err(ferr!(
                 "unable to determine module type from path extension: {path:?}"

@@ -22,7 +22,7 @@ export function resolveIdentifier(
   request: Request,
   engine: QueryEngine,
   context: Record<string, unknown>,
-  connInfo: Deno.ServeHandlerInfo,
+  connInfo: Deno.NetAddr,
 ): string {
   if (engine.tg.tg.meta.rate?.context_identifier) {
     const contextId = context[engine.tg.tg.meta.rate?.context_identifier] as
@@ -45,7 +45,7 @@ export function resolveIdentifier(
     }
   }
 
-  return (connInfo.remoteAddr as Deno.NetAddr).hostname;
+  return connInfo.hostname;
 }
 
 export function addHeaders(

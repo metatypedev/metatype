@@ -137,21 +137,7 @@ async fn command() -> impl Responder {
 async fn response(req_body: String) -> impl Responder {
     let sdk_response: SDKResponse = serde_json::from_str(&req_body).unwrap();
 
-    match &sdk_response.command {
-        super::store::Command::Codegen => {
-            if let Err(e) = sdk_response.codegen() {
-                return HttpResponse::Ok()
-                    .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .json(CLIResponseError {
-                        error: e.to_string(),
-                    });
-            }
-        }
-        _ => {
-            // to be used later
-            ServerStore::add_response(sdk_response.clone());
-        }
-    };
+    ServerStore::add_response(sdk_response.clone());
 
     HttpResponse::Ok()
         .status(StatusCode::OK)

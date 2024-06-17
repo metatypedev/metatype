@@ -11,36 +11,14 @@ use crate::{
 };
 use actix::Actor;
 use actix_web::dev::ServerHandle;
-use clap::{Parser, ValueEnum};
+use clap::Parser;
 use common::typegraph::Typegraph;
 use metagen::*;
-use serde_json::json;
-
-#[derive(ValueEnum, Debug, Clone)]
-enum GeneratorOp {
-    /// missing module dependencies
-    Mod,
-    /// mdk materializer
-    Mdk,
-}
-
-impl From<GeneratorOp> for String {
-    fn from(op: GeneratorOp) -> String {
-        match op {
-            GeneratorOp::Mod => "codegen",
-            GeneratorOp::Mdk => "mdk_rust",
-        }
-        .to_string()
-    }
-}
 
 #[derive(Parser, Debug, Clone)]
 pub struct Gen {
     #[command(flatten)]
     node: NodeArgs,
-
-    #[clap(value_enum, default_value_t=GeneratorOp::Mod)]
-    generator: GeneratorOp,
 
     /// Target typegate (cf config)
     #[clap(short, long)]
@@ -57,16 +35,12 @@ pub struct Gen {
 
 #[async_trait]
 impl Action for Gen {
-    #[tracing::instrument]
+    #[tracing::instrument(skip(server_handle))]
     async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
-        let dir = args.dir();
-        let mut config = Config::load_or_find(args.config, &dir)?;
-
-        if let Some(file) = &self.file {
-            config.metagen = Some(dummy_gen_cfg(&self.generator, file));
-        }
-
+        let dir = args.dir()?;
+        let config = Config::load_or_find(args.config, &dir)?;
         let config = Arc::new(config);
+
         let Some(mgen_conf) = &config.metagen else {
             bail!(
                 "no metagen section defined in config found at {:?}",
@@ -86,48 +60,40 @@ impl Action for Gen {
             typegate: Arc::new(node),
         };
 
-        match &self.generator {
-            GeneratorOp::Mod => {
-                let Some(file) = &self.file else {
-                    anyhow::bail!("no file provided");
-                };
+        if !mgen_conf.targets.contains_key(&self.gen_target) {
+            error!("no metagen target found under key {:?}", self.gen_target);
+            info!(
+                "availaible keys are:\n - {:?}",
+                mgen_conf
+                    .targets
+                    .keys()
+                    .map(|str| &str[..])
+                    .collect::<Vec<_>>()
+                    .join("\n - ")
+            );
+            bail!("no metagen target found under key {:?}", self.gen_target);
+        }
 
-                resolver
-                    .resolve(GeneratorInputOrder::TypegraphFromPath {
-                        path: file.to_owned(),
-                        name: None,
-                    })
-                    .await?;
-
-                let responses = ServerStore::get_responses(file)
-                    .context("invalid state, no response received")?;
-                for (_, res) in responses.iter() {
-                    res.codegen()?
+        let files = metagen::generate_target(
+            mgen_conf,
+            &self.gen_target,
+            config.path.as_ref().unwrap().parent().unwrap().into(),
+            resolver,
+        )
+        .await?;
+        files
+            .0
+            .into_iter()
+            .map(|(path, file)| async move {
+                tokio::fs::create_dir_all(path.parent().unwrap()).await?;
+                if file.overwrite || !tokio::fs::try_exists(&path).await? {
+                    tokio::fs::write(path, file.contents).await?;
                 }
-            }
-            GeneratorOp::Mdk => {
-                let files = metagen::generate_target(
-                    mgen_conf,
-                    &self.gen_target,
-                    config.path.as_ref().unwrap().parent().unwrap().into(),
-                    resolver,
-                )
-                .await?;
-                let mut set = tokio::task::JoinSet::new();
-                for (path, file) in files.0 {
-                    set.spawn(async move {
-                        tokio::fs::create_dir_all(path.parent().unwrap()).await?;
-                        if file.overwrite || !tokio::fs::try_exists(&path).await? {
-                            tokio::fs::write(path, file.contents).await?;
-                        }
-                        Ok::<_, tokio::io::Error>(())
-                    });
-                }
-                while let Some(res) = set.join_next().await {
-                    res??;
-                }
-            }
-        };
+                Ok::<_, tokio::io::Error>(())
+            })
+            .collect::<Vec<_>>()
+            .try_join()
+            .await?;
 
         server_handle.unwrap().stop(true).await;
 
@@ -156,17 +122,13 @@ impl InputResolver for MetagenCtx {
                 }
             }
             GeneratorInputOrder::TypegraphFromPath { path, name } => {
-                let (tx, rx) = tokio::sync::oneshot::channel();
                 let config = self.config.clone();
-                let dir = self.dir.join(path);
-                tokio::task::spawn_blocking(move || {
-                    actix::run(async move {
-                        let res = load_tg_at(config, dir, name.as_deref()).await;
-                        tx.send(res).unwrap();
-                    })
-                })
-                .await??;
-                let raw = rx.await??;
+                let path = self
+                    .dir
+                    .join(path)
+                    .canonicalize()
+                    .wrap_err("unable to canonicalize typegraph path, make sure it exists")?;
+                let raw = load_tg_at(config, path, name.as_deref()).await?;
                 GeneratorInputResolved::TypegraphFromTypegate { raw }
             }
         })
@@ -233,22 +195,4 @@ async fn load_tg_at(
     };
 
     Ok(tg)
-}
-
-fn dummy_gen_cfg(generator: &GeneratorOp, file: &PathBuf) -> metagen::Config {
-    let mut targets = HashMap::new();
-    targets.insert(
-        generator.clone().into(),
-        json!({
-            "typegraph_path": file,
-            "path": "./mats/gen",
-            "annotate_debug": false,
-        }),
-    );
-
-    let target = metagen::Target(targets);
-    let mut targets = HashMap::new();
-    targets.insert("main".to_string(), target);
-
-    metagen::Config { targets }
 }

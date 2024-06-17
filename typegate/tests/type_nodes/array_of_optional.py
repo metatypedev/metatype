@@ -3,7 +3,7 @@ from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph()
-def array_optional(g: Graph):
+def array_of_optional(g: Graph):
     nested = t.struct(
         {
             "a": t.string(),

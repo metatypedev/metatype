@@ -4,7 +4,7 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.js";
 
-typegraph("temporal", (g: any) => {
+export const tg = await typegraph("temporal", (g: any) => {
   const pub = Policy.public();
   const temporal = new TemporalRuntime({
     name: "test",

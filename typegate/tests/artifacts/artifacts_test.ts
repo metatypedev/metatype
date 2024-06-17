@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Meta } from "test-utils/mod.ts";
-import { MetaTest } from "test-utils/test.ts";
-import { testDir } from "test-utils/dir.ts";
 import { join } from "std/path/join.ts";
 import { exists } from "std/fs/exists.ts";
 import { assert, assertFalse } from "std/assert/mod.ts";
@@ -14,6 +12,7 @@ import {
   REDIS_REF_COUNTER,
   resolveS3Key,
 } from "@typegate/typegate/artifacts/shared.ts";
+import { MetaTest } from "../utils/test.ts";
 
 const syncConfig = {
   redis: {
@@ -85,7 +84,8 @@ for (const { nameSuffix, ...options } of variants) {
 
     await t.should("have uploaded artifacts on deploy", async () => {
       for (const [_, meta] of Object.entries(artifacts)) {
-        assert(await hasArtifact(t, meta.hash, "syncConfig" in options));
+        const typedMeta = meta as { hash: string };
+        assert(await hasArtifact(t, typedMeta.hash, "syncConfig" in options));
       }
     });
 
@@ -93,7 +93,10 @@ for (const { nameSuffix, ...options } of variants) {
 
     await t.should("have removed artifacts on undeploy", async () => {
       for (const [_, meta] of Object.entries(artifacts)) {
-        assertFalse(await hasArtifact(t, meta.hash, "syncConfig" in options));
+        const typedMeta = meta as { hash: string };
+        assertFalse(
+          await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
+        );
       }
     });
   });
@@ -109,15 +112,15 @@ for (const { nameSuffix, ...options } of variants) {
     name: "Upload protocol: tg_deploy (Python SDK)" + nameSuffix,
     ...options,
   }, async (t) => {
-    const e = await t.engineFromTgDeployPython(
-      "runtimes/deno/deploy_deno.py",
-      join(testDir, "runtimes/deno"),
+    const e = await t.engine(
+      "runtimes/deno/deno.py",
     );
     const artifacts = e.tg.tg.meta.artifacts;
 
     await t.should("have uploaded artifacts on deploy", async () => {
       for (const [_, meta] of Object.entries(artifacts)) {
-        assert(await hasArtifact(t, meta.hash, "syncConfig" in options));
+        const typedMeta = meta as { hash: string };
+        assert(await hasArtifact(t, typedMeta.hash, "syncConfig" in options));
       }
     });
 
@@ -125,7 +128,10 @@ for (const { nameSuffix, ...options } of variants) {
 
     await t.should("have removed artifacts on undeploy", async () => {
       for (const [_, meta] of Object.entries(artifacts)) {
-        assertFalse(await hasArtifact(t, meta.hash, "syncConfig" in options));
+        const typedMeta = meta as { hash: string };
+        assertFalse(
+          await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
+        );
       }
     });
   });
@@ -145,10 +151,13 @@ for (const { nameSuffix, ...options } of variants) {
 
     await t.should("have removed shared artifacts", async () => {
       for (const [art, meta] of Object.entries(artifacts)) {
+        const typedMeta = meta as { hash: string };
         if (sharedArtifacts.includes(art)) {
-          assert(await hasArtifact(t, meta.hash, "syncConfig" in options));
+          assert(await hasArtifact(t, typedMeta.hash, "syncConfig" in options));
         } else {
-          assertFalse(await hasArtifact(t, meta.hash, "syncConfig" in options));
+          assertFalse(
+            await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
+          );
         }
       }
     });
@@ -157,8 +166,9 @@ for (const { nameSuffix, ...options } of variants) {
 
     await t.should("have removed all artifacts", async () => {
       for (const [_, meta] of Object.entries(artifacts)) {
+        const typedMeta = meta as { hash: string };
         assertFalse(
-          await hasArtifact(t, meta.hash, "syncConfig" in options),
+          await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
         );
       }
     });

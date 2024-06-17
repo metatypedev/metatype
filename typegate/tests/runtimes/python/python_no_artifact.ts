@@ -10,7 +10,7 @@ const tpe = t.struct({
   "b": t.list(t.either([t.integer(), t.string()])),
 });
 
-export const tgNoArtifact = await typegraph("python_no_artifact", (g: any) => {
+export const tg = await typegraph("python_no_artifact", (g: any) => {
   const python = new PythonRuntime();
   const pub = Policy.public();
 

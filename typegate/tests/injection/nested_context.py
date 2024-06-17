@@ -3,7 +3,7 @@ from typegraph.runtimes import DenoRuntime
 
 
 @typegraph()
-def test_nested_context(g: Graph):
+def nested_context(g: Graph):
     deno = DenoRuntime()
     has_profile = Policy.context("profile")
 

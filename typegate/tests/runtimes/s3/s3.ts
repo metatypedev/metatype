@@ -4,7 +4,7 @@
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { S3Runtime } from "@typegraph/sdk/providers/aws.js";
 
-typegraph("s3-test", (g: any) => {
+typegraph("s3", (g: any) => {
   const pub = Policy.public();
 
   const s3 = new S3Runtime({

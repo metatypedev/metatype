@@ -10,10 +10,11 @@ from typegraph.runtimes.graphql import GraphQLRuntime
 
 
 @typegraph(
-    # skip:next-line
+    # skip:start
     cors=Cors(
         allow_origin=["https://metatype.dev", "http://localhost:3000"],
     ),
+    # skip:end
 )
 def graphql(g: Graph):
     db = PrismaRuntime("database", "POSTGRES_CONN")

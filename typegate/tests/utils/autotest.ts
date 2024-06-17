@@ -72,33 +72,35 @@ export async function autoTest(rootDir: string, target = "dev") {
     const config = yaml.parse(await Deno.readTextFile(configFile)) as any;
     const secrets = config.typegates[target]?.env ?? {};
 
-    test({ name: `Auto-tests for ${name}`, introspection: true }, async (t) => {
-      const e = await t.engine(pythonFile.path, {
-        secrets,
-        autoSecretName: false,
-      });
-      await dropSchemas(e);
-      await recreateMigrations(e);
+    test(
+      { name: `Auto-tests for ${name}`, introspection: true },
+      async (t) => {
+        const e = await t.engine(pythonFile.path, {
+          secrets,
+          autoSecretName: false,
+        });
+        await dropSchemas(e);
+        await recreateMigrations(e);
 
-      for (const [name, graphqlFile] of Object.entries(graphqlFiles)) {
+        for (const [name, graphqlFile] of Object.entries(graphqlFiles)) {
+          await t.should(
+            `run case ${name}`,
+            async () => {
+              const doc = graphql.parse(graphqlFile);
+              for (const operation of doc.definitions) {
+                const query = graphql.print(operation);
+                await gql([query])
+                  .matchSnapshot(t)
+                  .on(e);
+              }
+            },
+          );
+        }
+
         await t.should(
-          `run case ${name}`,
+          `introspect field types schema for ${pythonFile.path}`,
           async () => {
-            const doc = graphql.parse(graphqlFile);
-            for (const operation of doc.definitions) {
-              const query = graphql.print(operation);
-              await gql([query])
-                .matchSnapshot(t)
-                .on(e);
-            }
-          },
-        );
-      }
-
-      await t.should(
-        `introspect field types schema for ${pythonFile.path}`,
-        async () => {
-          await gql`
+            await gql`
           query IntrospectionQuery {
             __schema {
               types {
@@ -110,9 +112,10 @@ export async function autoTest(rootDir: string, target = "dev") {
             }
           }
         `.matchSnapshot(t)
-            .on(e);
-        },
-      );
-    });
+              .on(e);
+          },
+        );
+      },
+    );
   }
 }

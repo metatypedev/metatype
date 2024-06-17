@@ -9,7 +9,7 @@ import CodeBlock from "@theme/CodeBlock";
 
 ## Google importers
 
-The typegraph module comes with some handy importers to avoid having to rewrite manually all types and materializers. Currently, it supports importers for OpenAPI, GraphQL API and Google APIs.
+The typegraph module comes with some handy importers to avoid having to rewrite manually all types and functions. Currently, it supports importers for OpenAPI, GraphQL API and Google APIs.
 
 :::caution Beta/unstable feature
 Importers are quite recent and likely to evolve as feedback is received. Your voice and use cases matter a lot, let Metatype community know what suits you the best in this [discussion](https://github.com/metatypedev/metatype/discussions/104).
@@ -39,7 +39,7 @@ And can be imported/customized in your main typegraph file:
 
 ## Effects
 
-Effects are a property of materializers and help categorization what happens to data when it gets transformed. Although they are similar to REST verbs and SQL statements, there is no direct one-to-one mapping.
+Effects are a property of functions and help categorization what happens to data when it gets transformed. Although they are similar to REST verbs and SQL statements, there is no direct one-to-one mapping.
 
 | Effects  | REST verbs | SQL statements       |
 | -------- | ---------- | -------------------- |

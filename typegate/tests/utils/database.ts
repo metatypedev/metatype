@@ -24,3 +24,12 @@ export async function reset(tgName: string, schema: string) {
 export function randomSchema() {
   return "z" + Math.random().toString(36).substring(2);
 }
+
+export function randomPGConnStr() {
+  const schema = randomSchema();
+  return {
+    connStr:
+      `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+    schema,
+  };
+}

@@ -32,7 +32,7 @@ const grades = t.struct({
 
 const tpe = t.struct({ student, grades: grades.optional() });
 
-typegraph("test-reduce-deno", (g: any) => {
+export const tg = await typegraph("test-reduce-deno", (g: any) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
   const identityStudent = deno.func(

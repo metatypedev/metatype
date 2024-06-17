@@ -62,10 +62,10 @@ const tg = await typegraph({
       },
     ),
     // Wasm
-    testWasmAdd: wasm.fromExport(
+    testWasmAdd: wasm.export(
       t.struct({ a: t.float(), b: t.float() }),
       t.integer(),
-      { wasm: "wasm/rust.wasm", func: "add" },
+      { name: "add" },
     ),
     // Prisma
     createStudent: prisma.create(student),

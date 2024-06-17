@@ -15,9 +15,9 @@ from typegraph.providers.prisma import PrismaRuntime
         allow_methods=[],
         expose_headers=[],
         max_age_sec=None,
+        allow_origin=["https://metatype.dev", "http://localhost:3000"],
         # skip:end
         # ..
-        allow_origin=["https://metatype.dev", "http://localhost:3000"],
     ),
 )
 def prisma_runtime(g: Graph):

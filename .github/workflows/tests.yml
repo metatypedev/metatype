@@ -10,7 +10,7 @@ on:
 
 env:
   GHJK_VERSION: "2725af8"
-  DENO_VERSION: "1.41.0"
+  DENO_VERSION: "1.43.6"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
   DENO_DIR: deno-dir
@@ -216,9 +216,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+      # - uses: Swatinem/rust-cache@v2
+      #  with:
+      #    shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
@@ -284,7 +284,7 @@ jobs:
 
           # install packages inside metatype examples
           pnpm install -C examples/typegraphs
-
+          pnpm install -C libs/metagen/tests
 
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
 

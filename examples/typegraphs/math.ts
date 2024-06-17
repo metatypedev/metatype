@@ -29,7 +29,7 @@ typegraph({
   const fib_module = "scripts/fib.ts";
 
   g.expose({
-    // all materializers have inputs and outputs
+    // all functions have inputs and outputs
     fib: deno.import(
       t.struct({ "size": t.integer() }),
       t.list(t.float()),

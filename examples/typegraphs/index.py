@@ -47,7 +47,6 @@ def homepage(g: Graph):
         }
     )
 
-    # skip:next-line
     # out of the box authenfication support
     g.auth(Auth.oauth2_github("openid email"))
 

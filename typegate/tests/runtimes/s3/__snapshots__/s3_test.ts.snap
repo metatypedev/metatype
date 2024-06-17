@@ -5,7 +5,7 @@ snapshot[`s3 typegraphs 1`] = `
   "types": [
     {
       "type": "object",
-      "title": "s3-test",
+      "title": "s3",
       "runtime": 0,
       "policies": [],
       "config": {},

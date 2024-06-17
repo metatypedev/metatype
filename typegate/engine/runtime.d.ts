@@ -46,15 +46,12 @@ type MetaNS = {
     ) => Promise<TemporalWorkflowDescribeOutput>;
   };
 
-  deno: {
-    transformTypescript: (inp: string) => string;
-  };
-
   wit_wire: {
     init: (
       componentPath: string,
       instanceId: string,
       args: WitWireInitArgs,
+      cb: (op_name: string, json: string) => Promise<string>,
     ) => Promise<WitWireInitResponse>;
     destroy: (
       instanceId: string,

@@ -31,7 +31,7 @@ def policies(g: Graph):
     g.auth(Auth.basic(["admin", "user"]))
 
     g.expose(
-        # set default policy for below materializers
+        # set default policy for the exposed functions
         Policy.public(),
         public=random.gen(t.string()).with_policy(public),
         admin_only=random.gen(t.string()).with_policy(admin_only),

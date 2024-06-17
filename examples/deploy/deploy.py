@@ -59,10 +59,10 @@ def deploy_example_python(g: Graph):
             name="sayHello",
         ),
         # Wasm
-        testWasmAdd=wasm.from_export(
+        testWasmAdd=wasm.export(
             t.struct({"a": t.float(), "b": t.float()}),
             t.integer(),
-            func="add",
+            name="add",
         ),
         # Prisma
         createStudent=prisma.create(student),
@@ -85,7 +85,6 @@ artifacts_config = ArtifactResolutionConfig(
     dir=None,
     prisma_migration=config_params,
     disable_artifact_resolution=None,
-    codegen=None,
 )
 
 res = tg_deploy(

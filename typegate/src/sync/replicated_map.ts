@@ -158,10 +158,10 @@ export class RedisReplicatedMap<T> implements AsyncDisposable {
         if (!payload) {
           throw new ReplicatedMapError(`added message without payload ${name}`);
         }
-        logger.info(`received addition: ${name}`);
+        logger.info(`received addition {}`, { name });
         await this.memorySet(name, await deserializer(payload, false));
       } else if (event === RM) {
-        logger.info(`received removal: ${name}`);
+        logger.info(`received removal {}`, { name });
         await this.memorySet(name, null);
       } else {
         throw new ReplicatedMapError(
@@ -217,7 +217,7 @@ export class RedisReplicatedMap<T> implements AsyncDisposable {
     const { key, ekey, serializer, redis } = this;
 
     await this.memorySet(name, elem);
-    logger.info(`sent addition: ${name}`);
+    logger.info(`sent addition {}`, { name, key, ekey, elem: !!elem });
 
     await redis.eval(
       addCmd,
@@ -238,7 +238,7 @@ export class RedisReplicatedMap<T> implements AsyncDisposable {
     const { key, ekey, redis } = this;
 
     await this.memorySet(name, null);
-    logger.info(`sent removal: ${name}`);
+    logger.info(`sent removal {}`, { name, key });
 
     await redis.eval(
       rmCmd,

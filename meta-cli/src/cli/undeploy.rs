@@ -26,7 +26,7 @@ pub struct Undeploy {
 impl Action for Undeploy {
     #[tracing::instrument]
     async fn run(&self, args: super::ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
-        let dir = args.dir();
+        let dir = args.dir()?;
         let config_path = args.config.clone();
         let config = Config::load_or_find(config_path, &dir)?;
         let node_config = config.node(&self.node, &self.target);

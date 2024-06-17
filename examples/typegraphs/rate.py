@@ -20,8 +20,9 @@ from typegraph.runtimes.random import RandomRuntime
         local_excess=0,
         # highlight-next-line
     ),
-    # skip:next-line
+    # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
 )
 def rate(g: Graph):
     random = RandomRuntime(seed=0, reset=None)

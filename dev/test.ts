@@ -79,41 +79,45 @@ if (flags._.length === 0) {
 
 const filter: string | undefined = flags.filter || flags.f;
 const prefixLength = `${projectDir}/typegate/tests/`.length;
-const fuse = new Fuse(testFiles.map((f) => f.slice(prefixLength)), {
-  includeScore: true,
-  useExtendedSearch: true,
-  threshold: 0.4,
-});
+const fuse = new Fuse(
+  testFiles.map((f) => f.slice(prefixLength)),
+  {
+    includeScore: true,
+    useExtendedSearch: true,
+    threshold: 0.4,
+  },
+);
 const filtered = filter ? fuse.search(filter) : null;
 const filteredTestFiles = filtered?.map((res) => testFiles[res.refIndex]) ??
   testFiles;
 
 const tmpDir = join(projectDir, "tmp");
 const env: Record<string, string> = {
-  "RUST_LOG": "off,xtask=debug,meta=debug",
-  "RUST_BACKTRACE": "0",
-  "RUST_SPANTRACE": "1",
-  "RUST_LIB_BACKTRACE": "1",
-  "LOG_LEVEL": "DEBUG",
+  CLICOLOR_FORCE: "1",
+  RUST_LOG: "off,xtask=debug,meta=debug",
+  RUST_SPANTRACE: "1",
+  // "RUST_BACKTRACE": "short",
+  RUST_MIN_STACK: "8388608",
+  LOG_LEVEL: "DEBUG",
   // "NO_COLOR": "1",
-  "DEBUG": "true",
-  "PACKAGED": "false",
-  "TG_SECRET":
+  DEBUG: "true",
+  PACKAGED: "false",
+  TG_SECRET:
     "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw==",
-  "TG_ADMIN_PASSWORD": "password",
-  "DENO_TESTING": "true",
-  "TMP_DIR": tmpDir,
-  "TIMER_MAX_TIMEOUT_MS": "30000",
-  "NPM_CONFIG_REGISTRY": "http://localhost:4873",
-  "PATH": `${Deno.env.get("PATH")}:${join(projectDir, "target/debug")}`,
+  TG_ADMIN_PASSWORD: "password",
+  DENO_TESTING: "true",
+  TMP_DIR: tmpDir,
+  TIMER_MAX_TIMEOUT_MS: "30000",
+  NPM_CONFIG_REGISTRY: "http://localhost:4873",
+  // NOTE: ordering of the variables is important as we want the
+  // `meta` build to be resolved before any system meta builds
+  PATH: `${join(projectDir, "target/debug")}:${Deno.env.get("PATH")}`,
 };
 
 await Deno.mkdir(tmpDir, { recursive: true });
 // remove non-vendored caches
 for await (const cache of Deno.readDir(tmpDir)) {
-  if (
-    cache.name.endsWith(".wasm") || cache.name == "libpython"
-  ) {
+  if (cache.name.endsWith(".wasm") || cache.name == "libpython") {
     continue;
   }
   await Deno.remove(join(tmpDir, cache.name), { recursive: true });
@@ -151,30 +155,26 @@ const denoConfig = join(projectDir, "typegate/deno.jsonc");
 function createRun(testFile: string): Run {
   const start = Date.now();
   const child = new Deno.Command(xtask, {
-    args: [
-      "deno",
-      "test",
-      `--config=${denoConfig}`,
-      testFile,
-      ...flags["--"],
-    ],
+    args: ["deno", "test", `--config=${denoConfig}`, testFile, ...flags["--"]],
     cwd: projectDir,
     stdout: "piped",
     stderr: "piped",
     env: { ...Deno.env.toObject(), ...env },
   }).spawn();
 
-  const output = mergeReadableStreams(child.stdout, child.stderr).pipeThrough(
-    new TextDecoderStream(),
-  ).pipeThrough(new TextLineStream());
+  const output = mergeReadableStreams(child.stdout, child.stderr)
+    .pipeThrough(new TextDecoderStream())
+    .pipeThrough(new TextLineStream());
 
-  const promise = child.status.then(({ success }) => {
-    const end = Date.now();
-    return { success, testFile, duration: end - start };
-  }).catch(({ success }) => {
-    const end = Date.now();
-    return { success, testFile, duration: end - start };
-  });
+  const promise = child.status
+    .then(({ success }) => {
+      const end = Date.now();
+      return { success, testFile, duration: end - start };
+    })
+    .catch(({ success }) => {
+      const end = Date.now();
+      return { success, testFile, duration: end - start };
+    });
 
   return {
     promise,
@@ -221,9 +221,9 @@ await buildMetaCli();
 
 void (async () => {
   while (queues.length > 0) {
-    const current = Object.values(runs).filter((r) => !r.done).map((r) =>
-      r.promise
-    );
+    const current = Object.values(runs)
+      .filter((r) => !r.done)
+      .map((r) => r.promise);
     if (current.length <= threads) {
       const next = queues.shift()!;
       runs[next] = createRun(next);
@@ -236,8 +236,7 @@ void (async () => {
 
 let nexts = Object.keys(runs);
 do {
-  const file = nexts.find((f) => !runs[f].done) ??
-    nexts[0];
+  const file = nexts.find((f) => !runs[f].done) ?? nexts[0];
   const run = runs[file];
   run.streamed = true;
 
@@ -251,9 +250,7 @@ do {
   }
 
   const { duration } = await run.promise;
-  console.log(
-    `${prefix} Completed ${relPath(file)} in ${duration / 1_000}s`,
-  );
+  console.log(`${prefix} Completed ${relPath(file)} in ${duration / 1_000}s`);
 
   nexts = Object.keys(runs).filter((f) => !runs[f].streamed);
 } while (nexts.length > 0);
@@ -278,17 +275,11 @@ for (const run of finished.sort((a, b) => a.duration - b.duration)) {
   );
 }
 
-console.log(
-  `  successes: ${successes.length}/${filteredTestFiles.length}`,
-);
-console.log(
-  `  failures: ${failures.length}/${filteredTestFiles.length}`,
-);
+console.log(`  successes: ${successes.length}/${filteredTestFiles.length}`);
+console.log(`  failures: ${failures.length}/${filteredTestFiles.length}`);
 const filteredOutCount = testFiles.length - filteredTestFiles.length;
 if (filteredOutCount > 0) {
-  console.log(
-    `  ${filteredOutCount} test files were filtered out`,
-  );
+  console.log(`  ${filteredOutCount} test files were filtered out`);
 }
 
 console.log("");
