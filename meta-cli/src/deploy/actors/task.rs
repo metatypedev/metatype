@@ -74,7 +74,6 @@ enum TaskOutput {
     Deployed { deployed: String },
 }
 
-// TODO cli param
 const TIMEOUT_ENV_NAME: &str = "LOADER_TIMEOUT_SECS";
 const DEFAULT_TIMEOUT: u64 = 120;
 
@@ -117,7 +116,6 @@ where
             action_generator,
             action: initial_action,
             results: Default::default(),
-            // TODO doc?
             timeout_duration: Duration::from_secs(
                 std::env::var(TIMEOUT_ENV_NAME)
                     .map(|s| {
@@ -266,9 +264,13 @@ impl<A: TaskAction + 'static> Handler<WaitForProcess<A>> for TaskActor<A> {
         let action = self.action.clone();
 
         let fut = async move {
-            // TODO timeout?
-            match Box::into_pin(process.wait_with_output()).await {
-                Ok(output) => {
+            match tokio::time::timeout(
+                Duration::from_secs(5),
+                Box::into_pin(process.wait_with_output()),
+            )
+            .await
+            {
+                Ok(Ok(output)) => {
                     if output.status.success() {
                         if let Some(followup_options) = followup_options {
                             addr.do_send(RestartProcessWithOptions(followup_options))
@@ -290,9 +292,18 @@ impl<A: TaskAction + 'static> Handler<WaitForProcess<A>> for TaskActor<A> {
                         addr.do_send(Exit(TaskFinishStatus::<A>::Error));
                     }
                 }
-                Err(e) => {
+                Ok(Err(e)) => {
                     console.error(
                         action.get_error_message(&format!("could not read process status: {e:#}")),
+                    );
+                    addr.do_send(Exit(TaskFinishStatus::<A>::Error));
+                }
+                Err(e) => {
+                    // timeout
+                    console.error(
+                        action.get_error_message(&format!(
+                            "timeout waiting the process to exit: {e:#}"
+                        )),
                     );
                     addr.do_send(Exit(TaskFinishStatus::<A>::Error));
                 }
