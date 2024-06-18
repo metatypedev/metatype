@@ -319,14 +319,14 @@ impl<A: TaskAction + 'static> Handler<AddTask> for TaskManager<A> {
                     .warning("invalid state: unregistered retry; cancelling".to_string());
                 return;
             }
-        } else {
+        } else if pending_retry_id.is_some() {
             // ok: this task is not a retry; pending retry cancelled
             self.console.warning(format!(
-                "pending retry {retry_no}/{max_retry_count} for {path} cancelled",
-                retry_no = msg.task_ref.retry_no,
-                max_retry_count = self.init_params.max_retry_count,
+                "pending retry task for {path} cancelled",
                 path = msg.task_ref.path.display().to_string().yellow(),
             ));
+        } else {
+            // ok: new task
         }
 
         self.task_queue.push_back(msg.task_ref);
@@ -369,6 +369,7 @@ impl<A: TaskAction + 'static> Handler<NextTask> for TaskManager<A> {
             action,
             ctx.address(),
             self.console.clone(),
+            self.init_params.max_retry_count,
         )
         .start();
 
