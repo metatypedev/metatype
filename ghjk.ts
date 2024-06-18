@@ -28,8 +28,7 @@ const { env, task } = ghjk;
 env("main")
   .install(installs.deno)
   .vars({
-    RUST_LOG:
-      "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off",
+    RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off",
     WASMTIME_BACKTRACE_DETAILS: "1",
     TYPEGRAPH_VERSION: "0.0.3",
     CLICOLOR_FORCE: "1",
