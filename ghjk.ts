@@ -46,11 +46,10 @@ env("_rust")
   );
 
 if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
-  env("_rust")
+  env("dev")
     .install(
       ports.mold({
         version: "v2.4.0",
-        // NOTE: mold replaces ld on linux
         replaceLd: true,
       }),
     );

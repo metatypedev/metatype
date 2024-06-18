@@ -230,6 +230,11 @@ jobs:
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - shell: bash
         run: |
+          # we don't want bash sub shells to do ghjk_reload
+          # TODO: consider disabling ghjk_reload on non-interactive shells
+          # by default
+          unset BASH_ENV
+
           echo pwd in $(pwd)
 
           ghjk x install-sys | bash
