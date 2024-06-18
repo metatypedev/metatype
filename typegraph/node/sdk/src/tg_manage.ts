@@ -114,7 +114,7 @@ export class Manager {
       const deployTarget = await rpc.getDeployTarget();
       const { response } = await tgDeploy(reusableTgOutput, {
         typegate: {
-          url: deployTarget.base_url,
+          url: deployTarget.baseUrl,
           auth: new BasicAuth(
             deployTarget.auth.username,
             deployTarget.auth.password,
