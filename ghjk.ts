@@ -125,22 +125,6 @@ if (inDev()) {
   );
 }
 
-ghjk.task("clean-deno-lock", {
-  installs: [
-    // jq
-  ],
-  async fn({ $ }) {
-    const jqOp1 =
-      `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
-    const jqOp2 = `del(.packages.npm["@typegraph/sdk@${METATYPE_VERSION}"])`;
-    const jqOp = `${jqOp1} | ${jqOp2}`;
-    await Deno.writeTextFile(
-      "typegate/deno.lock",
-      await $`jq ${jqOp} typegate/deno.lock`.text(),
-    );
-  },
-});
-
 ghjk.task("gen-pyrt-bind", {
   installs: installs.comp_py,
   allowedPortDeps,

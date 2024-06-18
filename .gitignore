@@ -42,7 +42,7 @@ recipe.json
 tmp/
 coverage*
 
-typegraph/node/sdk/src/gen
+typegraph/deno/sdk/src/gen
 typegraph/python/typegraph/gen
 
 *.egg-info/
