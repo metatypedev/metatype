@@ -1707,7 +1707,7 @@ dependencies = [
  "ignore",
  "indexmap 2.2.6",
  "indoc",
- "itertools 0.11.0",
+ "itertools 0.13.0",
  "reqwest",
  "serde 1.0.203",
  "serde_json",
@@ -3459,15 +3459,15 @@ dependencies = [
 
 [[package]]
 name = "derive_more"
-version = "0.99.17"
+version = "0.99.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fb810d30a7c1953f91334de7244731fc3f3c10d7fe163338a35b9f640960321"
+checksum = "5f33878137e4dafd7fa914ad4e259e18a4e8e532b9617a2d0150262bf53abfce"
 dependencies = [
  "convert_case 0.4.0",
  "proc-macro2",
  "quote",
  "rustc_version 0.4.0",
- "syn 1.0.109",
+ "syn 2.0.66",
 ]
 
 [[package]]
@@ -4658,6 +4658,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures-buffered"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02dcae03ee5afa5ea17b1aebc793806b8ddfc6dc500e0b8e8e1eb30b9dad22c0"
+dependencies = [
+ "futures-core",
+ "futures-util",
+ "pin-project-lite",
+]
+
+[[package]]
 name = "futures-channel"
 version = "0.3.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4669,11 +4680,12 @@ dependencies = [
 
 [[package]]
 name = "futures-concurrency"
-version = "7.6.0"
+version = "7.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51ee14e256b9143bfafbf2fddeede6f396650bacf95d06fc1b3f2b503df129a0"
+checksum = "4b14ac911e85d57c5ea6eef76d7b4d4a3177ecd15f4bea2e61927e9e3823e19f"
 dependencies = [
  "bitvec",
+ "futures-buffered",
  "futures-core",
  "futures-lite 1.13.0",
  "pin-project",
@@ -4814,9 +4826,9 @@ dependencies = [
 
 [[package]]
 name = "garde"
-version = "0.18.0"
+version = "0.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5fa8fb3ffe035745c6194540b2064b2fe275f32367fbb4eb026024b7921e2e5"
+checksum = "aafefff9569ce4dc9baaba416f5907205ae35baa65e9ecb56c00bec88a7e4672"
 dependencies = [
  "compact_str",
  "garde_derive",
@@ -4825,9 +4837,9 @@ dependencies = [
 
 [[package]]
 name = "garde_derive"
-version = "0.18.0"
+version = "0.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9cf62650515830c41553b72bd49ec20fb120226f9277c7f2847f071cf998325b"
+checksum = "ff01e6b31ac759513232cc729d97cc1459cbcc98d2919904704e3a8fd5075b66"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5668,18 +5680,18 @@ dependencies = [
 
 [[package]]
 name = "include_dir"
-version = "0.7.3"
+version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18762faeff7122e89e0857b02f7ce6fcc0d101d5e9ad2ad7846cc01d61b7f19e"
+checksum = "923d117408f1e49d914f1a379a309cffe4f18c05cf4e3d12e613a15fc81bd0dd"
 dependencies = [
  "include_dir_macros",
 ]
 
 [[package]]
 name = "include_dir_macros"
-version = "0.7.3"
+version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b139284b5cf57ecfa712bcc66950bb635b31aff41c188e8a4cfc758eca374a3f"
+checksum = "7cab85a7ed0bd5f0e76d93846e0147172bed2e2d3f859bcc33a8d9699cad1a75"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6982,7 +6994,7 @@ dependencies = [
  "prisma-value",
  "psl",
  "query-connector",
- "query-engine-metrics",
+ "query-engine-metrics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.6.0)",
  "rand 0.7.3",
  "regex",
  "serde 1.0.203",
@@ -8829,7 +8841,7 @@ dependencies = [
  "prisma-models",
  "psl",
  "query-connector",
- "query-engine-metrics",
+ "query-engine-metrics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.6.0)",
  "schema",
  "serde 1.0.203",
  "serde_json",
@@ -8841,6 +8853,23 @@ dependencies = [
  "tracing-subscriber",
  "user-facing-errors",
  "uuid",
+]
+
+[[package]]
+name = "query-engine-metrics"
+version = "0.1.0"
+source = "git+https://github.com/prisma/prisma-engines?tag=5.15.0#12e25d8d06f6ea5a0252864dd9a03b1bb51f3022"
+dependencies = [
+ "metrics 0.18.1",
+ "metrics-exporter-prometheus",
+ "metrics-util 0.12.1",
+ "once_cell",
+ "parking_lot 0.12.3",
+ "serde 1.0.203",
+ "serde_json",
+ "tracing",
+ "tracing-futures",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -12176,7 +12205,7 @@ dependencies = [
  "psl",
  "query-connector",
  "query-core",
- "query-engine-metrics",
+ "query-engine-metrics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.15.0)",
  "regex",
  "request-handlers",
  "schema-connector",
