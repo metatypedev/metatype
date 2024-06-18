@@ -142,6 +142,8 @@ class LocalUploadEndpointManager implements UploadEndpointManager {
       this.expireSec,
       this.cryptoKeys,
     );
+    this.#mapToMeta.set(token, meta);
+    this.#expirationQueue.push([token, jwt.getNumericDate(this.expireSec)]);
     return token;
   }
 
