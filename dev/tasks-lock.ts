@@ -44,7 +44,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         ],
       }) || dirty;
 
-      if (args.check) {
+      if (args.check && dirty) {
         throw new Error("dirty on check");
       }
 

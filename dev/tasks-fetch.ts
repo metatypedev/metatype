@@ -14,12 +14,16 @@ const tasks: Record<string, DenoTaskDefArgs> = {
             [
               "typegate/src/main.ts",
               "typegate/tests/utils/mod.ts",
-              // "typegate/tests/utils/*.ts",
-              // "typegate/tests/runtimes/wasm_wire/*.ts",
-              // "typegate/tests/runtimes/wasm_reflected/*.ts",
-              // "typegate/tests/runtimes/python/*.ts",
-              // "dev/deps.ts",
-              // "dev/utils.ts",
+              ...($.argv[0] == "full"
+                ? [
+                  "typegate/tests/utils/*.ts",
+                  "typegate/tests/runtimes/wasm_wire/*.ts",
+                  "typegate/tests/runtimes/wasm_reflected/*.ts",
+                  "typegate/tests/runtimes/python/*.ts",
+                  "dev/deps.ts",
+                  "dev/utils.ts",
+                ]
+                : []),
             ].join(" "),
         ),
   },

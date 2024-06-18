@@ -35,7 +35,7 @@ jobs:
           deno-version: v${{ env.DENO_VERSION }}
       - uses: kenji-miyake/setup-git-cliff@v2
       - run: |
-          VERSION=$(ghjk x print-version)
+          VERSION=$(ghjk x version-print)
           if [[ "${{ steps.latest-tag.outputs.tag }}" != "v$VERSION" ]]; then
             echo "Tag ${{ steps.latest-tag.outputs.tag }} does not match code version v$VERSION, stopping."
             exit -1
@@ -338,8 +338,8 @@ jobs:
       - uses: kenji-miyake/setup-git-cliff@v2
       - id: bump
         run: |
-          deno run -A dev/lock.ts --bump prerelease
-          echo "version=$(deno run -A dev/lock.ts --version)" >> $GITHUB_OUTPUT
+          ghjk x verison-bump prerelease
+          echo "version=$(ghjk x version-print)" >> $GITHUB_OUTPUT
           git cliff --output CHANGELOG.md
       - uses: peter-evans/create-pull-request@v6
         with:

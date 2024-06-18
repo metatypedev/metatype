@@ -168,4 +168,7 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
       METATYPE_VERSION,
     ],
   ],
+  "CONTRIBUTING.md": [
+    [/(GHJK_VERSION=").*(")/, GHJK_VERSION],
+  ],
 };

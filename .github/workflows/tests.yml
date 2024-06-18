@@ -246,7 +246,7 @@ jobs:
 
           ghjk x install-ts
 
-          ghjk x feftch-deno
+          ghjk x fetch-deno
           ghjk x dev update --cache-only
 
           ghjk x test-rust
@@ -256,14 +256,7 @@ jobs:
           ghjk x test-e2e --threads 1 -- --coverage=coverage
 
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
-          deno cache --import-map typegate/import_map.json \
-            typegate/src/main.ts \
-            typegate/tests/utils/*.ts \
-            typegate/tests/runtimes/wasm_wire/*.ts \
-            typegate/tests/runtimes/wasm_reflected/*.ts \
-            typegate/tests/runtimes/python/*.ts \
-            dev/deps.ts \
-            dev/utils.ts
+          ghjk x fetch-deno full
 
           deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
 

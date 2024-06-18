@@ -66,13 +66,13 @@ COPY --from=plan /app/recipe.json recipe.json
 
 ARG CARGO_PROFILE=release
 
-RUN . $GHJK_ACTIVATE \
+RUN . "$GHJK_ACTIVATE" \
     && cargo chef cook --recipe-path recipe.json --profile $CARGO_PROFILE --package typegate \
     && rm recipe.json
 
 COPY . .
 
-RUN . $GHJK_ACTIVATE \
+RUN . "$GHJK_ACTIVATE" \
     && cargo build --profile $CARGO_PROFILE --package typegate \
     && ( \
         [ $CARGO_PROFILE = 'release' ]  \
@@ -80,14 +80,14 @@ RUN . $GHJK_ACTIVATE \
             || cp target/debug/typegate typegate-bin \
     )
 
-RUN . $GHJK_ACTIVATE \
+RUN . "$GHJK_ACTIVATE" \
     && deno run -A dev/update.ts --cache-only --src-only \
     && mkdir -p typegate/tmp
 
 #
 FROM builder as dev
 
-RUN . $GHJK_ACTIVATE \
+RUN . "$GHJK_ACTIVATE" \
     && mv target /tmp/target \
     && rm -rf * \
     && mv /tmp/target .
@@ -100,7 +100,7 @@ ARG TARGETARCH
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TARGETARCH} /tini
 
-RUN . $GHJK_ACTIVATE \
+RUN . "$GHJK_ACTIVATE" \
     && chmod +x /tini \
     && mkdir -p /lib/sym \
     && ln -s /lib/aarch64-linux-gnu /lib/sym/arm64 \

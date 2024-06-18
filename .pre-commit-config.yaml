@@ -17,13 +17,19 @@ repos:
         name: "Lock versions"
         always_run: true
         language: system
-        entry: bash -c 'deno run -A dev/lock.ts --check'
+        entry: bash -c 'ghjk x lock-sed --check'
+        pass_filenames: false
+      - id: version
+        name: "Resolve ghjk installs"
+        always_run: true
+        language: system
+        entry: bash -c 'ghjk p resolve'
         pass_filenames: false
       - id: clean-deno-lock
         name: "Clean deno.lock"
         always_run: true
         language: system
-        entry: ghjk x clean-deno-lock
+        entry: ghjk x lock-clean-deno
         pass_filenames: false
       - id: deno-fmt
         name: Deno format

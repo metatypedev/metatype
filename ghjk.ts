@@ -11,7 +11,7 @@ import tasksLock from "./dev/tasks-lock.ts";
 import tasksTest from "./dev/tasks-test.ts";
 
 const ghjk = file({
-  defaultEnv: "dev",
+  defaultEnv: Deno.env.get("CI") ? "ci" : Deno.env.get("OCI") ? "oci" : "dev",
   tasks: {
     ...tasksBuild,
     ...tasksDev,
@@ -162,7 +162,7 @@ task(
     await sedLock($.workingDir, {
       lines: {
         "./dev/consts.ts": [
-          [/^(const METATYPE_VERSION = ").*(";)$/, newVersion],
+          [/^(export const METATYPE_VERSION = ").*(";)$/, newVersion],
         ],
       },
     });
