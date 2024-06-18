@@ -59,7 +59,7 @@ if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
 env("_ecma")
   .install(
     installs.node,
-    ports.pnpm({ version: "v9.0.5" }),
+    ports.pnpm({ version: "v9.4.0" }),
     ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0],
   );
 
