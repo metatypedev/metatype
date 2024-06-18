@@ -241,6 +241,8 @@ jobs:
 
           # start the docker containers
           ghjk x dev-compose base prisma
+          # wait for verdaccio to get started
+          sleep 10s
 
           export NPM_CONFIG_REGISTRY=http://localhost:4873
 
