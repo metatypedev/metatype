@@ -14,9 +14,11 @@ import { Auth, Cors as CorsWit, Rate, wit_utils } from "./wit.js";
 import { getPolicyChain } from "./types.js";
 import {
   Artifact,
-  ArtifactResolutionConfig,
+  SerializeParams,
 } from "./gen/interfaces/metatype-typegraph-core.js";
 import { Manager } from "./tg_manage.js";
+import { log } from "./io.js";
+import { hasCliEnv } from "./envs/cli.js";
 
 type Exports = Record<string, t.Func>;
 
@@ -34,7 +36,10 @@ interface TypegraphArgs {
 }
 
 export class ApplyFromArg {
-  constructor(public name: string | null, public type: number | null) {}
+  constructor(
+    public name: string | null,
+    public type: number | null,
+  ) {}
 }
 
 export class ApplyFromStatic {
@@ -46,7 +51,10 @@ export class ApplyFromSecret {
 }
 
 export class ApplyFromContext {
-  constructor(public key: string | null, public type: number | null) {}
+  constructor(
+    public key: string | null,
+    public type: number | null,
+  ) {}
 }
 
 export class ApplyFromParent {
@@ -117,7 +125,7 @@ export class RawAuth {
 }
 
 export interface TypegraphOutput {
-  serialize: (config: ArtifactResolutionConfig) => TgFinalizationResult;
+  serialize: (config: SerializeParams) => TgFinalizationResult;
   name: string;
 }
 
@@ -126,13 +134,13 @@ export interface TgFinalizationResult {
   ref_artifacts: Artifact[];
 }
 
+let counter = 0;
+
 export async function typegraph(
   name: string,
   builder: TypegraphBuilder,
 ): Promise<TypegraphOutput>;
-export async function typegraph(
-  args: TypegraphArgs,
-): Promise<TypegraphOutput>;
+export async function typegraph(args: TypegraphArgs): Promise<TypegraphOutput>;
 export async function typegraph(
   args: Omit<TypegraphArgs, "builder">,
   builder: TypegraphBuilder,
@@ -141,20 +149,14 @@ export async function typegraph(
   nameOrArgs: string | TypegraphArgs | Omit<TypegraphArgs, "builder">,
   maybeBuilder?: TypegraphBuilder,
 ): Promise<TypegraphOutput> {
+  ++counter;
   const args = typeof nameOrArgs === "string"
     ? { name: nameOrArgs }
     : nameOrArgs;
 
-  const {
-    name,
-    dynamic,
-    cors,
-    prefix,
-    rate,
-    secrets,
-  } = args;
+  const { name, dynamic, cors, prefix, rate, secrets } = args;
   const builder = "builder" in args
-    ? args.builder as TypegraphBuilder
+    ? (args.builder as TypegraphBuilder)
     : maybeBuilder!;
 
   const file = caller();
@@ -163,11 +165,7 @@ export async function typegraph(
   }
   // node/deno compat tick until MET-236 is landed
   const simpleFile = file.replace(/:[0-9]+$/, "").replace(/^file:\/\//, "");
-  const path = dirname(
-    fromFileUrl(
-      `file://${simpleFile}`,
-    ),
-  );
+  const path = dirname(fromFileUrl(`file://${simpleFile}`));
 
   const defaultCorsFields = {
     allowCredentials: true,
@@ -222,9 +220,9 @@ export async function typegraph(
   builder(g);
 
   const ret = {
-    serialize(config: ArtifactResolutionConfig) {
+    serialize(config: SerializeParams) {
       try {
-        const [tgJson, ref_artifacts] = core.finalizeTypegraph(config);
+        const [tgJson, ref_artifacts] = core.serializeTypegraph(config);
         const result: TgFinalizationResult = {
           tgJson: tgJson,
           ref_artifacts: ref_artifacts,
@@ -242,10 +240,20 @@ export async function typegraph(
     name,
   } as TypegraphOutput;
 
-  if (Manager.isRunFromCLI()) {
+  if (hasCliEnv()) {
     const manager = new Manager(ret);
     await manager.run();
+
+    // TODO solve hanging process (stdin??)
+    setTimeout(() => {
+      if (counter === 0) {
+        log.debug("exiting");
+        process.exit(0);
+      }
+    }, 10);
   }
+
+  --counter;
 
   return ret;
 }

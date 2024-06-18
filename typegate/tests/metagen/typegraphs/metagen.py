@@ -41,7 +41,7 @@ def example_metagen(g: Graph):
     )
 
 
-tg = example_metagen()
+tg = example_metagen
 workspace_path = getenv("workspace_path")
 target_name = getenv("target_name")
 gen_config = json.loads(getenv("gen_config"))

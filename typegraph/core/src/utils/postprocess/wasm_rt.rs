@@ -1,20 +1,31 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::utils::fs_host;
+use std::path::PathBuf;
+
+use crate::utils::{artifacts::ArtifactsExt, fs::FsContext};
 use common::typegraph::{
-    runtimes::{Artifact, KnownRuntime, TGRuntime},
+    runtimes::{KnownRuntime, TGRuntime},
     Typegraph,
 };
-use std::path::PathBuf;
 
 use crate::utils::postprocess::PostProcessor;
 
-pub struct WasmProcessor;
+pub struct WasmProcessor {
+    typegraph_dir: PathBuf,
+}
+
+impl WasmProcessor {
+    pub fn new(typegraph_dir: PathBuf) -> Self {
+        Self { typegraph_dir }
+    }
+}
 
 impl PostProcessor for WasmProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
-        for rt in &tg.runtimes {
+        let fs_ctx = FsContext::new(self.typegraph_dir);
+        let runtimes = std::mem::take(&mut tg.runtimes);
+        for rt in runtimes.iter() {
             let data = match rt {
                 TGRuntime::Known(KnownRuntime::WasmReflected(data))
                 | TGRuntime::Known(KnownRuntime::WasmWire(data)) => data,
@@ -22,20 +33,11 @@ impl PostProcessor for WasmProcessor {
                     continue;
                 }
             };
-            let path = PathBuf::from(&data.wasm_artifact);
-            if tg.meta.artifacts.contains_key(&path) {
-                continue;
-            }
 
-            let wasi_path = fs_host::make_absolute(&path)?;
-
-            let (hash, size) = fs_host::hash_file(&wasi_path)?;
-
-            tg.deps.push(wasi_path.clone());
-            tg.meta
-                .artifacts
-                .insert(path.clone(), Artifact { hash, size, path });
+            fs_ctx.register_artifact(data.wasm_artifact.clone(), tg)?;
         }
+
+        tg.runtimes = runtimes;
         Ok(())
     }
 }

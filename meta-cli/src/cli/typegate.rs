@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 use crate::interlude::*;
 
-use actix_web::dev::ServerHandle;
 use clap::Parser;
 
 use crate::cli::{Action, ConfigArgs};
@@ -19,7 +18,7 @@ pub struct Typegate {
 
 #[async_trait]
 impl Action for Typegate {
-    async fn run(&self, _gen_args: ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, _gen_args: ConfigArgs) -> Result<()> {
         unreachable!()
     }
 }

@@ -5,7 +5,7 @@ import { ComputeStage } from "../../engine/query_engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../../typegraph/mod.ts";
 import { Runtime } from "../Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
-import { Artifact, DenoRuntimeData } from "../../typegraph/types.ts";
+import { DenoRuntimeData } from "../../typegraph/types.ts";
 import * as ast from "graphql/ast";
 import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
@@ -43,6 +43,7 @@ export class DenoRuntime extends Runtime {
       secretManager,
       typegate,
     } = params as RuntimeInitParams<DenoRuntimeData>;
+    const artifacts = tg.meta.artifacts;
 
     const { worker: name } = args as unknown as DenoRuntimeData;
     if (name == null) {
@@ -63,10 +64,7 @@ export class DenoRuntime extends Runtime {
     const ops = new Map<number, Task>();
 
     const uuid = crypto.randomUUID();
-    const basePath = path.join(
-      typegate.tmpDir,
-      "artifacts",
-    );
+    const basePath = path.join(typegate.tmpDir, "artifacts");
 
     let registryCount = 0;
     for (const mat of materializers) {
@@ -82,17 +80,17 @@ export class DenoRuntime extends Runtime {
         registryCount += 1;
       } else if (mat.name === "module") {
         const matData = mat.data;
-        const denoArtifact = matData.denoArtifact as Artifact;
-        const depArtifacts = matData.depsMeta as Artifact[];
+        const entryPoint = artifacts[matData.entryPoint as string];
+        const deps = (matData.deps as string[]).map((dep) => artifacts[dep]);
 
         const moduleMeta = {
           typegraphName: typegraphName,
-          relativePath: denoArtifact.path,
-          hash: denoArtifact.hash,
-          sizeInBytes: denoArtifact.size,
+          relativePath: entryPoint.path,
+          hash: entryPoint.hash,
+          sizeInBytes: entryPoint.size,
         };
 
-        const depMetas = depArtifacts.map((dep) => {
+        const depMetas = deps.map((dep) => {
           return {
             typegraphName: typegraphName,
             relativePath: dep.path,
@@ -122,7 +120,7 @@ export class DenoRuntime extends Runtime {
         });
 
         // TODO: can a single aritfact be used by multiple materializers?
-        registry.set(denoArtifact.hash, registryCount);
+        registry.set(entryPoint.hash, registryCount);
         registryCount += 1;
       }
     }
@@ -222,8 +220,9 @@ export class DenoRuntime extends Runtime {
 
     if (mat.name === "import_function") {
       const modMat = this.tg.materializers[mat.data.mod as number];
-      const denoAritfact = modMat.data.denoArtifact as Artifact;
-      const op = this.registry.get(denoAritfact.hash)!;
+      const entryPoint =
+        this.tg.meta.artifacts[modMat.data.entryPoint as string];
+      const op = this.registry.get(entryPoint.hash)!;
 
       return async ({
         _: {

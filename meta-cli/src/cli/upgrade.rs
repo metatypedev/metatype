@@ -7,7 +7,6 @@ use crate::global_config::GlobalConfig;
 
 use super::{Action, ConfigArgs};
 use crate::build;
-use actix_web::dev::ServerHandle;
 use chrono::{Duration, Utc};
 use clap::Parser;
 use self_update::{backends::github::Update, update::UpdateStatus};
@@ -27,7 +26,7 @@ pub struct Upgrade {
 #[async_trait]
 impl Action for Upgrade {
     #[tracing::instrument]
-    async fn run(&self, _args: ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, _args: ConfigArgs) -> Result<()> {
         // https://github.com/jaemk/self_update/issues/44
         let opts = self.clone();
         tokio::task::spawn_blocking(move || {
