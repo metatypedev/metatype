@@ -9,6 +9,7 @@ import { assertEquals, assertExists } from "std/assert/mod.ts";
 mf.install();
 
 Meta.test("request parser: multipart/form-data", async (t) => {
+  const crypto = t.typegate.cryptoKeys;
   let request: Request | null = null;
   mf.mock("POST@/api/graphql", (req) => {
     request = req;
@@ -18,23 +19,21 @@ Meta.test("request parser: multipart/form-data", async (t) => {
   await t.should("successfully query with file", async () => {
     const fileContent = "Hello, World!";
     const q = gql`
-        mutation($file: File!) {
-          singleUpload(file: $file) { url }
+      mutation ($file: File!) {
+        singleUpload(file: $file) {
+          url
         }
-      `
-      .withVars({
-        file: new File(
-          [fileContent],
-          "hello.txt",
-        ),
-      });
-    const req = await q.getRequest("http://localhost/api/graphql");
+      }
+    `.withVars({
+      file: new File([fileContent], "hello.txt"),
+    });
+    const req = await q.getRequest("http://localhost/api/graphql", crypto);
 
     const res = await fetch(req);
     await res.text();
 
     assertExists(request, "request");
-    const data = await request.formData();
+    const data = await request!.formData();
     const operations = new FormDataParser(data).parse();
     assertEquals(operations.query, q.query);
     assertExists(operations.variables.file);

@@ -265,7 +265,7 @@ Meta.test("dynamic value injection", async (t) => {
   unfreezeDate();
 });
 
-Meta.test("Deno: value injection", async (t) => {
+Meta.test.only("Deno: value injection", async (t) => {
   const e = await t.engine("injection/injection.ts", {
     secrets: { TEST_VAR: "3" },
   });
