@@ -6,6 +6,7 @@ use super::task::action::{TaskAction, TaskActionGenerator};
 use super::task::{self, TaskActor, TaskFinishStatus};
 use super::watcher::WatcherActor;
 use crate::{config::Config, interlude::*};
+use colored::OwoColorize;
 use futures::channel::oneshot;
 use indexmap::IndexMap;
 use signal_handler::set_stop_recipient;
@@ -306,19 +307,26 @@ impl<A: TaskAction + 'static> Handler<AddTask> for TaskManager<A> {
         if msg.task_ref.retry_no > 0 {
             if let Some(retry_task_id) = pending_retry_id {
                 if retry_task_id != msg.task_ref.id {
+                    // unreachable
                     self.console.warning(
                         "invalid state: different task id for retry; cancelling".to_string(),
                     );
                     return;
                 }
-                // ok
+                // ok: this task is a retry
             } else {
                 self.console
                     .warning("invalid state: unregistered retry; cancelling".to_string());
                 return;
             }
         } else {
-            // retry cancelled
+            // ok: this task is not a retry; pending retry cancelled
+            self.console.warning(format!(
+                "pending retry {retry_no}/{max_retry_count} for {path} cancelled",
+                retry_no = msg.task_ref.retry_no,
+                max_retry_count = self.init_params.max_retry_count,
+                path = msg.task_ref.path.display().to_string().yellow(),
+            ));
         }
 
         self.task_queue.push_back(msg.task_ref);
