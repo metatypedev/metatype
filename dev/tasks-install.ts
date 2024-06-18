@@ -30,7 +30,10 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     inherit: "_python",
     async fn($) {
       if (!await $.workingDir.join(".venv").exists()) {
-        await $.raw`${$.env.REAL_PYTHON_EXEC_PATH!} -m venv .venv`;
+        const pyExec = $.env.REAL_PYTHON_EXEC_PATH!
+          .split(":")
+          .filter((str) => str.length > 0)[0];
+        await $.raw`${pyExec} -m venv .venv`;
         $.logger.info("virtual env created");
       }
       console.log($.env);

@@ -156,7 +156,7 @@ You can install it using the following instructions.
 
 ```bash
 # install ghjk
-GHJK_VERSION="44d9a41"
+GHJK_VERSION="ad7c8ba"
 GHJK_INSTALL_HOOK_SHELLS=bash # add more shells if needed
 curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh | sh
 bash # re-open your shells to have the hooks register

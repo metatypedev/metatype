@@ -1,5 +1,5 @@
 import { METATYPE_VERSION } from "./dev/consts.ts";
-import { file, ports, semver, stdDeps } from "./dev/deps.ts";
+import { file, ports, sedLock, semver, stdDeps } from "./dev/deps.ts";
 import installs from "./dev/installs.ts";
 import tasksBuild from "./dev/tasks-build.ts";
 import tasksDev from "./dev/tasks-dev.ts";
