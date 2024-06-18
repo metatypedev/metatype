@@ -3,7 +3,6 @@
 
 use crate::interlude::*;
 
-use actix_web::dev::ServerHandle;
 use clap::CommandFactory;
 use clap::Parser;
 use clap::ValueEnum;
@@ -24,7 +23,7 @@ pub struct Completion {
 #[async_trait]
 impl Action for Completion {
     #[tracing::instrument]
-    async fn run(&self, _args: ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, _args: ConfigArgs) -> Result<()> {
         let mut cmd = Args::command();
         let name = cmd.get_name().to_string();
         match self.shell.or_else(Shell::from_env) {

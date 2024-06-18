@@ -47,6 +47,7 @@ itertools.workspace = true
 enum_dispatch = "0.3.13"
 derive_more = "0.99.17"
 indoc.workspace = true
+cached = { version = "0.51.3", features = ["proc_macro", "async"] }
 
 # concurrency
 tokio = { workspace = true, features = ["full"] }

@@ -6,7 +6,7 @@ import { getLogger, Logger } from "../log.ts";
 import { Runtime } from "./Runtime.ts";
 import type { Resolver, RuntimeInitParams } from "../types.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
-import { Artifact, Materializer } from "../typegraph/types.ts";
+import { Materializer } from "../typegraph/types.ts";
 import * as ast from "graphql/ast";
 import { WitWireMessenger } from "./wit_wire/mod.ts";
 import { WitWireMatInfo } from "../../engine/runtime.js";
@@ -32,6 +32,7 @@ export class PythonRuntime extends Runtime {
     logger.info("initializing PythonRuntime");
     logger.debug("init params: " + JSON.stringify(params));
     const { materializers, typegraphName, typegraph, typegate } = params;
+    const artifacts = typegraph.meta.artifacts;
 
     const wireMatInfos = await Promise.all(
       materializers
@@ -58,19 +59,19 @@ export class PythonRuntime extends Runtime {
               const pyModMat = typegraph.materializers[mat.data.mod as number];
 
               // resolve the python module artifacts/files
-              const { pythonArtifact, depsMeta: depArtifacts } = pyModMat.data;
-
-              const deps = depArtifacts as Artifact[];
-              const artifact = pythonArtifact as Artifact;
+              const entryPoint = artifacts[pyModMat.data.entryPoint as string];
+              const deps = (pyModMat.data.deps as string[]).map(
+                (dep) => artifacts[dep],
+              );
 
               const sources = Object.fromEntries(
                 await Promise.all(
                   [
                     {
                       typegraphName: typegraphName,
-                      relativePath: artifact.path,
-                      hash: artifact.hash,
-                      sizeInBytes: artifact.size,
+                      relativePath: entryPoint.path,
+                      hash: entryPoint.hash,
+                      sizeInBytes: entryPoint.size,
                     },
                     ...deps.map((dep) => {
                       return {
@@ -95,7 +96,7 @@ export class PythonRuntime extends Runtime {
               matInfoData = {
                 ty: "import_function",
                 effect: mat.effect,
-                root_src_path: artifact.path,
+                root_src_path: entryPoint.path,
                 func_name: mat.data.name as string,
                 sources,
               };

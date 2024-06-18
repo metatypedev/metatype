@@ -39,6 +39,8 @@ class PythonRuntime(Runtime):
         lambdas, _defs = DefinitionCollector.collect(function)
         assert len(lambdas) == 1
         fn = str(lambdas[0])
+        if fn.startswith("(") and fn.endswith(")"):
+            fn = fn[1:-1]
         mat_id = runtimes.from_python_lambda(
             store,
             BaseMaterializer(runtime=self.id.value, effect=effect),

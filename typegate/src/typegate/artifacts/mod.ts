@@ -12,14 +12,9 @@ import { exists } from "std/fs/exists.ts";
 import { AsyncDisposableStack } from "dispose";
 import { BaseError, ErrorKind, NotImplemented } from "@typegate/errors.ts";
 
-class InvalidUploadUrl extends BaseError {
-  constructor(url: URL, kind: "unknown" | "expired" = "unknown") {
-    super(
-      import.meta,
-      ErrorKind.User,
-      `${kind} upload URL: ${url.toString()}`,
-      403,
-    );
+class InvalidUploadToken extends BaseError {
+  constructor(token: string, kind: "unknown" | "expired" = "unknown") {
+    super(import.meta, ErrorKind.User, `${kind} upload token: ${token}`, 403);
   }
 }
 
@@ -35,10 +30,6 @@ export interface Dirs {
   cache: string;
   temp: string;
   artifacts: string;
-}
-
-function getUploadPath(tgName: string) {
-  return `/${tgName}/artifacts`;
 }
 
 async function getLocalParentDir(
@@ -100,10 +91,9 @@ export interface ArtifactPersistence extends AsyncDisposable {
 export interface UploadEndpointManager extends AsyncDisposable {
   prepareUpload(
     meta: ArtifactMeta,
-    origin: URL,
     persistence: ArtifactPersistence,
   ): Promise<string | null>;
-  takeUploadUrl(url: URL): Promise<ArtifactMeta>;
+  takeArtifactMeta(token: string): Promise<ArtifactMeta>;
 }
 
 export class ArtifactStore implements AsyncDisposable {
@@ -120,12 +110,7 @@ export class ArtifactStore implements AsyncDisposable {
     stack.use(uploadEndpoints);
     stack.use(refCounter);
     return await Promise.resolve(
-      new ArtifactStore(
-        persistence,
-        uploadEndpoints,
-        refCounter,
-        stack.move(),
-      ),
+      new ArtifactStore(persistence, uploadEndpoints, refCounter, stack.move()),
     );
   }
 
@@ -134,8 +119,7 @@ export class ArtifactStore implements AsyncDisposable {
     private uploadEndpoints: UploadEndpointManager,
     private refCounter: RefCounter,
     private disposables: AsyncDisposableStack,
-  ) {
-  }
+  ) {}
 
   async [Symbol.asyncDispose]() {
     if (this.#disposed) return;
@@ -207,17 +191,17 @@ export class ArtifactStore implements AsyncDisposable {
     return this.#resolveLocalPath(meta, parentDirName);
   }
 
-  prepareUpload(meta: ArtifactMeta, origin: URL) {
-    return this.uploadEndpoints.prepareUpload(meta, origin, this.persistence);
+  prepareUpload(meta: ArtifactMeta) {
+    return this.uploadEndpoints.prepareUpload(meta, this.persistence);
   }
 
-  takeUploadUrl(url: URL) {
-    return this.uploadEndpoints.takeUploadUrl(url);
+  takeArtifactMeta(token: string) {
+    return this.uploadEndpoints.takeArtifactMeta(token);
   }
 
   /** unique identifier for an artifact (file content) */
   static getArtifactKey(meta: ArtifactMeta) {
-    // TODO what happens on cache collision?
+    // TODO what happens on hash collision?
     return meta.hash;
   }
 
@@ -226,34 +210,23 @@ export class ArtifactStore implements AsyncDisposable {
    * @param origin The origin of the request.
    * @returns The URL to upload the artifact to and the expiration time.
    */
-  static async createUploadUrl(
-    origin: URL,
-    tgName: string,
+  static async createUploadToken(
     expireSec: number,
-    cryptoKeys: TypegateCryptoKeys,
-  ): Promise<URL> {
-    const uuid = crypto.randomUUID();
-    const token = await cryptoKeys.signJWT(
+    crypto: TypegateCryptoKeys,
+  ): Promise<string> {
+    const uuid = globalThis.crypto.randomUUID();
+    const token = await crypto.signJWT(
       { uuid, expiresIn: expireSec },
       expireSec,
     );
-    const url = new URL(getUploadPath(tgName), origin);
-    url.searchParams.set("token", token);
-    return url;
+    return token;
   }
 
-  static async validateUploadUrl(url: URL, cryptoKeys: TypegateCryptoKeys) {
-    const token = url.searchParams.get("token");
-    if (/^\/([^\/])\/artifacts/.test(url.pathname) || !token) {
-      throw new InvalidUploadUrl(url);
-    }
-
-    const context = await cryptoKeys.verifyJWT(token);
+  static async validateUploadToken(token: string, crypto: TypegateCryptoKeys) {
+    const context = await crypto.verifyJWT(token);
     if ((context.exp as number) < jwt.getNumericDate(new Date())) {
-      throw new InvalidUploadUrl(url, "expired");
+      throw new InvalidUploadToken(token, "expired");
     }
-
-    return token;
   }
 }
 

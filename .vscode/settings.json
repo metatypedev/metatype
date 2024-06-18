@@ -4,11 +4,7 @@
     "website/.docusaurus": true,
     "website/node_modules": true
   },
-  "deno.enablePaths": [
-    "typegate",
-    "dev",
-    "examples/templates/deno",
-  ],
+  "deno.enablePaths": ["typegate", "dev", "examples/templates/deno"],
   "deno.unstable": true,
   "typescript.suggest.completeFunctionCalls": true,
   "typescript.inlayHints.variableTypes.enabled": true,
@@ -56,8 +52,6 @@
     "wasmedge"
   ],
   "python.languageServer": "Pylance",
-  "python.analysis.extraPaths": [
-    "typegraph/python"
-  ],
-  "prettier.proseWrap": "never",
+  "python.analysis.extraPaths": ["typegraph/python"],
+  "prettier.proseWrap": "never"
 }

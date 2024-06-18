@@ -169,7 +169,12 @@ export class MetaTest {
   }
 
   getTypegraphEngine(name: string): QueryEngine | undefined {
-    return this.typegates.next().register.get(name);
+    const register = this.typegates.next().register;
+    // console.log(
+    //   "available typegraphs",
+    //   register.list().map((e) => e.name),
+    // );
+    return register.get(name);
   }
 
   async serialize(path: string, opts: ParseOptions = {}): Promise<string> {
@@ -266,13 +271,13 @@ export class MetaTest {
     cwd: string,
     opts: ParseOptions,
   ): Promise<string> {
-    let output;
     const secrets = opts.secrets ?? {};
     const secretsStr = JSON.stringify(secrets);
 
+    const cmd = [lang.toString()];
+
     if (lang === SDKLangugage.TypeScript) {
-      const cmd = [
-        lang.toString(),
+      cmd.push(
         "run",
         "--allow-all",
         "utils/tg_deploy_script.ts",
@@ -280,25 +285,27 @@ export class MetaTest {
         this.port.toString(),
         path,
         secretsStr,
-      ];
-      if (opts.typegraph) {
-        cmd.push(opts.typegraph);
-      }
-      output = await this.shell(cmd);
+      );
     } else {
-      const cmd = [
-        lang.toString(),
+      cmd.push(
         "utils/tg_deploy_script.py",
         cwd,
         this.port.toString(),
         path,
         secretsStr,
-      ];
-      if (opts.typegraph) {
-        cmd.push(opts.typegraph);
-      }
-      output = await this.shell(cmd);
+      );
     }
+
+    if (opts.typegraph) {
+      cmd.push(opts.typegraph);
+    }
+
+    const env: Record<string, string> = {};
+    if (opts.prefix) {
+      env["PREFIX"] = opts.prefix;
+    }
+
+    const output = await this.shell(cmd, { env });
 
     const { stderr, stdout, code } = output;
 
@@ -457,16 +464,55 @@ export const test = ((o, fn): void => {
         );
       }
 
-      const typegateManager = await TypegateManager.init(replicas);
+      const tempDirs = await Promise.all(
+        Array.from({ length: replicas }).map(async (_) => {
+          const uuid = crypto.randomUUID();
+          return await Deno.makeTempDir({
+            prefix: `typegate-test-${uuid}`,
+            dir: Deno.env.get("TMP_DIR"),
+          });
+        }),
+      );
+
+      // TODO different tempDir for each typegate instance
+      const result = await Promise.allSettled(
+        Array.from({ length: replicas }).map(async (_, index) => {
+          const config = getTypegateConfig({
+            base: {
+              tmp_dir: tempDirs[index],
+              ...defaultTypegateConfigBase,
+            },
+          });
+          config.sync = opts.syncConfig ?? null;
+          return await Typegate.init(config);
+        }),
+      );
+      const typegates = result.map((r) => {
+        if (r.status === "fulfilled") {
+          return r.value;
+        } else {
+          throw r.reason;
+        }
+      });
 
       const { gitRepo = null, introspection = false } = opts;
       await Promise.all(
-        typegateManager.typegates.map((typegate) =>
-          SystemTypegraph.loadAll(typegate)
-        ),
+        typegates.map((typegate) => SystemTypegraph.loadAll(typegate)),
       );
 
-      await using mt = await MetaTest.init(t, typegateManager, introspection);
+      await using mt = await MetaTest.init(
+        t,
+        new TypegateManager(typegates),
+        introspection,
+      );
+
+      mt.disposables.defer(async () => {
+        await Promise.all(
+          tempDirs.map(async (tempDir, _) => {
+            await Deno.remove(tempDir, { recursive: true });
+          }),
+        );
+      });
 
       if (opts.teardown != null) {
         mt.disposables.defer(opts.teardown);

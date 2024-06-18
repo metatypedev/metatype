@@ -6,6 +6,7 @@ use std::path::PathBuf;
 
 use crate::utils::metagen_utils::RawTgResolver;
 use common::typegraph::{Auth, AuthProtocol};
+use fs::FsContext;
 use indexmap::IndexMap;
 use serde_json::json;
 
@@ -19,9 +20,12 @@ use crate::wit::utils::{Auth as WitAuth, MdkConfig, MdkOutput, QueryDeployParams
 use crate::Lib;
 use std::path::Path;
 
-pub mod fs_host;
+mod archive;
+mod artifacts;
+mod fs;
 pub mod metagen_utils;
 mod oauth2;
+mod pathlib;
 pub mod postprocess;
 pub mod reduce;
 
@@ -256,19 +260,8 @@ impl crate::wit::utils::Guest for crate::Lib {
         Ok(req_body.to_string())
     }
 
-    fn unpack_tarb64(tar_b64: String, dest: String) -> Result<()> {
-        fs_host::unpack_base64(&tar_b64, dest).map_err(|e| e.into())
-    }
-
     fn remove_injections(id: CoreTypeId) -> Result<CoreTypeId> {
         remove_injections_recursive(id.into()).map(|id| id.into())
-    }
-
-    fn get_cwd() -> Result<String, String> {
-        match fs_host::cwd() {
-            Ok(path) => Ok(path.display().to_string()),
-            Err(e) => Err(e),
-        }
     }
 
     fn metagen_exec(config: MdkConfig) -> Result<Vec<MdkOutput>, String> {
@@ -297,13 +290,13 @@ impl crate::wit::utils::Guest for crate::Lib {
         .map_err(|e| format!("Generate target: {}", e))
     }
 
-    fn metagen_write_files(items: Vec<MdkOutput>) -> Result<(), String> {
+    fn metagen_write_files(items: Vec<MdkOutput>, typegraph_dir: String) -> Result<(), String> {
+        let fs_ctx = FsContext::new(typegraph_dir.into());
         for item in items {
-            let path = fs_host::make_absolute(Path::new(&item.path))?;
-            if fs_host::path_exists(&path)? && !item.overwrite {
+            if fs_ctx.exists(Path::new(&item.path))? && !item.overwrite {
                 continue;
             }
-            fs_host::write_text_file(&path, item.content)?;
+            fs_ctx.write_text_file(Path::new(&item.path), item.content)?;
         }
         Ok(())
     }

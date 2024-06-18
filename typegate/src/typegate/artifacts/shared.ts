@@ -26,14 +26,14 @@ export interface RemoteUploadUrlStore {
   redisClient: Redis;
 }
 
-function getRedisUploadUrlKey(token: string) {
+// TODO change to 'typegate:artifacts:metadata:<token>'
+function getRedisArtifactMetaKey(token: string) {
   return `typegate:artifacts:upload-urls:${token}`;
 }
 
 function serializeToRedisValue<T>(value: T): string {
   return JSON.stringify(value);
 }
-
 function deserializeToCustom<T>(value: string): T {
   return JSON.parse(value) as T;
 }
@@ -101,9 +101,9 @@ class SharedArtifactPersistence implements ArtifactPersistence {
 
     const tmpFile = await Deno.makeTempFile({ dir: this.dirs.temp });
     const file = await Deno.open(tmpFile, { write: true, truncate: true });
-    await stream.pipeThrough(new HashTransformStream(hasher)).pipeTo(
-      file.writable,
-    );
+    await stream
+      .pipeThrough(new HashTransformStream(hasher))
+      .pipeTo(file.writable);
 
     const hash = hasher.digest("hex");
     const body = await Deno.readFile(tmpFile);
@@ -193,7 +193,6 @@ class SharedUploadEndpointManager implements UploadEndpointManager {
 
   async prepareUpload(
     meta: ArtifactMeta,
-    origin: URL,
     persistence: ArtifactPersistence,
   ): Promise<string | null> {
     // should not be uploaded again
@@ -201,35 +200,31 @@ class SharedUploadEndpointManager implements UploadEndpointManager {
       return null;
     }
 
-    const url = await ArtifactStore.createUploadUrl(
-      origin,
-      meta.typegraphName,
+    const token = await ArtifactStore.createUploadToken(
       this.expireSec,
       this.cryptoKeys,
     );
-    const token = url.searchParams.get("token")!;
     const _ = await this.redis.eval(
       /* lua */ `
         redis.call('SET', KEYS[1], ARGV[1])
         redis.call('EXPIRE', KEYS[1], ARGV[2])
       `,
-      [getRedisUploadUrlKey(token)],
+      [getRedisArtifactMetaKey(token)],
       [serializeToRedisValue(meta), this.expireSec],
     );
 
-    return url.toString();
+    return token;
   }
 
-  async takeUploadUrl(url: URL): Promise<ArtifactMeta> {
-    const token = await ArtifactStore.validateUploadUrl(url, this.cryptoKeys);
-
+  async takeArtifactMeta(token: string): Promise<ArtifactMeta> {
+    await ArtifactStore.validateUploadToken(token, this.cryptoKeys);
     const meta = await this.redis.eval(
       /* lua */ `
         local meta = redis.call('GET', KEYS[1])
         redis.call('DEL', KEYS[1])
         return meta
       `,
-      [getRedisUploadUrlKey(token)],
+      [getRedisArtifactMetaKey(token)],
       [],
     );
     return Promise.resolve(deserializeToCustom<ArtifactMeta>(meta as string));

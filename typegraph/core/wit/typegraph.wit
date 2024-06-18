@@ -43,25 +43,27 @@ interface core {
     init-typegraph: func(params: typegraph-init-params) -> result<_, error>;
 
     record migration-action {
+        apply: bool,
         create: bool,
-        reset: bool
+        reset: bool,
     }
 
-    record migration-config {
-        migration-dir: string,
-        global-action: migration-action, // global config (all runtimes)
-        runtime-actions: option<list<tuple<string, migration-action>>> // config per runtime name (override global-action)
+    record prisma-migration-config {
+        migrations-dir: string,
+        migration-actions: list<tuple<string, migration-action>>,
+        default-migration-action: migration-action,
     }
 
-    record artifact-resolution-config {
-        dir: option<string>, // cwd() if none
-        prefix: option<string>, // overrides tg.meta.prefix field if defined
-        disable-artifact-resolution: option<bool>, // any postprocess using fs ops should be disabled when set to true
-        prisma-migration: migration-config,
-        codegen: option<bool> // if set, sdk should not throw errors when the script does not exist
+    record serialize-params {
+        typegraph-path: string,
+        prefix: option<string>,
+        artifact-resolution: bool,
+        codegen: bool,
+        prisma-migration: prisma-migration-config,
+        pretty: bool,
     }
 
-    finalize-typegraph: func(config: option<artifact-resolution-config>) -> result<tuple<string, list<artifact>>, error>;
+    serialize-typegraph: func(params: serialize-params) -> result<tuple<string, list<artifact>>, error>;
 
     type type-id = u32;
     record type-base {
@@ -224,7 +226,7 @@ interface core {
     expose: func(fns: list<tuple<string, type-id>>, default-policy: option<list<policy-spec>>) -> result<_, error>;
 
     set-seed: func(seed: option<u32>) -> result<_, error>;
-    
+
     type runtime-id = u32;
     type materializer-id = u32;
 
@@ -237,7 +239,7 @@ interface core {
 
 interface runtimes {
     use core.{error, type-id, func-params, runtime-id, materializer-id, artifact};
-    
+
     get-deno-runtime: func() -> runtime-id;
 
     type idempotency = bool;
@@ -522,10 +524,10 @@ interface utils {
     // Example:
     // reduce({a: 1, { b: {c: g.inherit(), d: [1, 2, 3]}})
     // produces a list of reduce-path
-    // [ 
-    //  { path: [a], value: { inherit: false, payload: 1 } } 
-    //  { path: [a, b, c], value: { inherit: true } } 
-    //  { path: [a, b, d], value: { inherit: false, payload: [1, 2, 3] } } 
+    // [
+    //  { path: [a], value: { inherit: false, payload: 1 } }
+    //  { path: [a, b, c], value: { inherit: true } }
+    //  { path: [a, b, d], value: { inherit: false, payload: [1, 2, 3] } }
     // ]
     record reduce-value {
         inherit: bool,
@@ -574,16 +576,12 @@ interface utils {
     gql-deploy-query: func(params: query-deploy-params) -> result<string, error>;
     gql-remove-query: func(tg-name: list<string>) -> result<string, error>;
 
-    unpack-tarb64: func(tar-b64: string, dest: string) -> result<_, error>;
-
     remove-injections: func(type-id: type-id) -> result<type-id, error>;
-
-    get-cwd: func() -> result<string, string>;
 
     record mdk-config {
         workspace-path: string,
         target-name: string,
-        config-json: string, 
+        config-json: string,
         tg-json: string,
     }
 
@@ -594,7 +592,7 @@ interface utils {
     }
 
     metagen-exec: func(config: mdk-config) -> result<list<mdk-output>, string>;
-    metagen-write-files: func(items: list<mdk-output>) -> result<_, string>;
+    metagen-write-files: func(items: list<mdk-output>, typegraph-dir: string) -> result<_, string>;
 }
 
 interface host {
