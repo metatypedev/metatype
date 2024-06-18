@@ -73,6 +73,8 @@ jobs:
           sudo apt update && sudo apt install -y --no-install-recommends libclang-dev clang
 
           ghjk x install-ts
+          ls -osha typegraph/node/sdk
+          ls -osha typegraph/node/sdk/node_modules/.bin
           ghjk x install-website
           ghjk x install-lsp
           ghjk x fetch-deno
@@ -239,6 +241,8 @@ jobs:
 
           # start the docker containers
           ghjk x dev-compose base prisma
+
+          export NPM_CONFIG_REGISTRY=http://localhost:4873
 
           WASM_OPT=1 ghjk x build-tgraph
 
