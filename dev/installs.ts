@@ -1,7 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { DENO_VERSION, ports } from "./deps.ts";
+import { DENO_VERSION } from "./consts.ts";
+import { ports } from "./deps.ts";
 
 export default {
   python: ports.cpy_bs({ version: "3.8.18", releaseTag: "20240224" }),

@@ -1,7 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { DenoTaskDefArgs, std_url, WASMTIME_VERSION } from "./deps.ts";
+import { DenoTaskDefArgs, std_url } from "./deps.ts";
+import { WASMTIME_VERSION } from "./consts.ts";
 
 const tasks: Record<string, DenoTaskDefArgs> = {
   "install-sys": {
@@ -12,8 +13,8 @@ const tasks: Record<string, DenoTaskDefArgs> = {
       if (/(Ubuntu|Debian)/.test(uname)) {
         console.log(
           `sudo apt update && ` +
-          `sudo apt install -y --no-install-recommends ` +
-          `gcc-multilib pkg-config libssl-dev libclang-dev perl make`,
+            `sudo apt install -y --no-install-recommends ` +
+            `gcc-multilib pkg-config libssl-dev libclang-dev perl make`,
         );
       } else {
         $.logger.error("unable to determine platform");
@@ -29,7 +30,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     inherit: "_python",
     async fn($) {
       if (!await $.workingDir.join(".venv").exists()) {
-        await $.raw`${$.env.REAL_PYTHON_EXEC_PATH} -m venv .venv`;
+        await $.raw`${$.env.REAL_PYTHON_EXEC_PATH!} -m venv .venv`;
         $.logger.info("virtual env created");
       }
       console.log($.env);
@@ -39,8 +40,8 @@ const tasks: Record<string, DenoTaskDefArgs> = {
           `poetry install --no-root`,
           `cd typegraph/python`,
           `poetry install --no-root`,
-        ].join("\n")
-      )
+        ].join("\n"),
+      );
     },
   },
 

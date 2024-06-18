@@ -29,7 +29,7 @@ import {
   parseArgs,
   TextLineStream,
 } from "./deps.ts";
-import { projectDir, relPath } from "./utils.ts";
+import { projectDir } from "./utils.ts";
 
 export async function testE2e(
   args: {
@@ -49,7 +49,7 @@ export async function testE2e(
           let path = wd.resolve(inPath);
           let stat = await path.stat();
           if (!stat) {
-            path = wd.resolve("typegate/tests", inPath)
+            path = wd.resolve("typegate/tests", inPath);
             stat = await path.stat();
             if (!stat) {
               throw new Error(`unable to resolve test files under "${inPath}"`);
@@ -210,7 +210,7 @@ export async function testE2e(
     const run = runs[file];
     run.streamed = true;
 
-    $.logStep(`${prefix} Launched ${relPath(file)}`);
+    $.logStep(`${prefix} Launched ${wd.relative(file)}`);
     for await (const line of run.output) {
       if (line.startsWith("warning: skipping duplicate package")) {
         // https://github.com/rust-lang/cargo/issues/10752
@@ -220,7 +220,9 @@ export async function testE2e(
     }
 
     const { duration } = await run.promise;
-    $.logStep(`${prefix} Completed ${relPath(file)} in ${duration / 1_000}s`);
+    $.logStep(
+      `${prefix} Completed ${wd.relative(file)} in ${duration / 1_000}s`,
+    );
 
     nexts = Object.keys(runs).filter((f) => !runs[f].streamed);
   } while (nexts.length > 0);
@@ -232,14 +234,16 @@ export async function testE2e(
 
   $.log();
   $.log(
-    `Tests completed in ${Math.floor(globalDuration / 60_000)}m${Math.floor(globalDuration / 1_000) % 60
+    `Tests completed in ${Math.floor(globalDuration / 60_000)}m${
+      Math.floor(globalDuration / 1_000) % 60
     }s:`,
   );
 
   for (const run of finished.sort((a, b) => a.duration - b.duration)) {
     $.log(
-      ` - ${Math.floor(run.duration / 60_000)}m${Math.floor(run.duration / 1_000) % 60
-      }s -- ${run.success ? "" : "FAILED -"}${relPath(run.testFile)}`,
+      ` - ${Math.floor(run.duration / 60_000)}m${
+        Math.floor(run.duration / 1_000) % 60
+      }s -- ${run.success ? "" : "FAILED -"}${wd.relative(run.testFile)}`,
     );
   }
 
@@ -262,7 +266,7 @@ export async function testE2e(
     $.logError("Errors were detected:");
     $.logGroup(() => {
       for (const failure of failures) {
-        $.log(`- ${relPath(failure.testFile)}`);
+        $.log(`- ${wd.relative(failure.testFile)}`);
       }
     });
     throw new Error("test errors detected");

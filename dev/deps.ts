@@ -1,21 +1,22 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-export { file } from "https://raw.github.com/metatypedev/ghjk/6a9ecda/mod.ts";
-export * from "https://raw.github.com/metatypedev/ghjk/6a9ecda/mod.ts";
-export * as ports from "https://raw.github.com/metatypedev/ghjk/6a9ecda/ports/mod.ts";
+export { file } from "https://raw.github.com/metatypedev/ghjk/44d9a41/mod.ts";
+export * from "https://raw.github.com/metatypedev/ghjk/44d9a41/mod.ts";
+export * as ports from "https://raw.github.com/metatypedev/ghjk/44d9a41/ports/mod.ts";
 export {
   std_url,
   zod,
-} from "https://raw.github.com/metatypedev/ghjk/6a9ecda/deps/common.ts";
+} from "https://raw.github.com/metatypedev/ghjk/44d9a41/deps/common.ts";
+export {
+  copyLock,
+  sedLock,
+} from "https://raw.github.com/metatypedev/ghjk/44d9a41/std.ts";
 // export * from "../../ghjk/mod.ts";
 // export * as ports from "../../ghjk/ports/mod.ts";
 // export * as utils from "../../ghjk/utils/mod.ts";
 // export { std_url, zod } from "../../ghjk/deps/common.ts";
-
-export const METATYPE_VERSION = "0.4.3-0";
-export const WASMTIME_VERSION = "21.0.0";
-export const DENO_VERSION = "1.43.6";
+// export { copyLock, sedLock } from "../../ghjk/std.ts";
 
 export {
   basename,

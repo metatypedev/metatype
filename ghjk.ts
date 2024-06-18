@@ -1,12 +1,14 @@
-import { file, METATYPE_VERSION, ports, stdDeps } from "./dev/deps.ts";
+import { sedLock } from "../ghjk/std.ts";
+import { METATYPE_VERSION } from "./dev/consts.ts";
+import { file, ports, semver, stdDeps } from "./dev/deps.ts";
 import installs from "./dev/installs.ts";
 import tasksBuild from "./dev/tasks-build.ts";
 import tasksDev from "./dev/tasks-dev.ts";
 import tasksFetch from "./dev/tasks-fetch.ts";
 import tasksInstall from "./dev/tasks-install.ts";
 import tasksLint from "./dev/tasks-lint.ts";
+import tasksLock from "./dev/tasks-lock.ts";
 import tasksTest from "./dev/tasks-test.ts";
-import { grepLock } from "./dev/lock.ts";
 
 const ghjk = file({
   defaultEnv: "dev",
@@ -16,6 +18,7 @@ const ghjk = file({
     ...tasksFetch,
     ...tasksInstall,
     ...tasksLint,
+    ...tasksLock,
     ...tasksTest,
   },
 });
@@ -96,7 +99,7 @@ env("_wasm")
   );
 
 env("oci")
-  .inherit(["_rust", "_wasm"])
+  .inherit(["_rust", "_wasm"]);
 
 env("ci")
   .inherit(["_rust", "_python", "_ecma", "_wasm"])
@@ -123,29 +126,46 @@ env("dev")
     ports.cargobi({ crateName: "wit-deps-cli", locked: true }),
   );
 
-task("clean-deno-lock", {
-  installs: ports.jq_ghrel(),
-  async fn($) {
-    const jqOp1 =
-      `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
-    const jqOp2 = `del(.packages.npm["@typegraph/sdk@${METATYPE_VERSION}"])`;
-    const jqOp = `${jqOp1} | ${jqOp2}`;
-    $.path(
-      "typegate/deno.lock",
-    ).writeText(
-      await $`jq ${jqOp} typegate/deno.lock`.text(),
-    );
-  },
-});
-
 task(
-  "lock-grep",
-  () => grepLock(),
-  { desc: "Update versions according to dev/lock.yml" },
+  "version-print",
+  () => console.log(METATYPE_VERSION),
+  { desc: "Print $METATYPE_VERSION" },
 );
 
 task(
-  "print-version",
-  () => console.log(METATYPE_VERSION),
-  { desc: "Print $METATYPE_VERSION" },
+  "version-bump",
+  async ($) => {
+    const bumps = [
+      "major",
+      "premajor",
+      "minor",
+      "preminor",
+      "patch",
+      "prepatch",
+      "prerelease",
+    ];
+    const bump = $.argv[0];
+
+    if (!bumps.includes(bump)) {
+      throw new Error(
+        `invalid argument "${bump}", valid are: ${bumps.join(", ")}`,
+      );
+    }
+
+    const newVersion = semver.format(
+      semver.increment(
+        semver.parse(METATYPE_VERSION),
+        bump as semver.ReleaseType,
+      ),
+    );
+    $.logStep(`Bumping ${METATYPE_VERSION} → ${newVersion}`);
+    await sedLock($.workingDir, {
+      lines: {
+        "./dev/consts.ts": [
+          [/^(const METATYPE_VERSION = ").*(";)$/, newVersion],
+        ],
+      },
+    });
+    await $`ghjk x lock-sed`;
+  },
 );
