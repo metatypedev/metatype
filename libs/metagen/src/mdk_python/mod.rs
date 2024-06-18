@@ -177,9 +177,8 @@ fn get_module_infos(fun: &StubbedFunction, tg: &Typegraph) -> anyhow::Result<(St
             .unwrap()
             .clone(),
     )?;
-    let script_path = serde_json::from_value::<String>(
-        tg.materializers[idx].data["pythonArtifact"]["path"].clone(),
-    )?;
+    let script_path =
+        serde_json::from_value::<String>(tg.materializers[idx].data["entryPoint"].clone())?;
     let script_path = PathBuf::from(script_path.clone());
 
     Ok((mod_name, script_path))

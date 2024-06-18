@@ -8,7 +8,7 @@ pub use fixtures::*;
 
 #[derive(Clone)]
 struct TestCtx {
-    typegraphs: Arc<HashMap<String, Typegraph>>,
+    typegraphs: Arc<HashMap<String, Box<Typegraph>>>,
 }
 
 impl InputResolver for TestCtx {
@@ -34,7 +34,7 @@ pub struct E2eTestCase {
     pub target: String,
     pub config: config::Config,
     pub target_dir: PathBuf,
-    pub typegraphs: HashMap<String, Typegraph>,
+    pub typegraphs: HashMap<String, Box<Typegraph>>,
     pub build_fn: fn(BuildArgs) -> BoxFuture<anyhow::Result<()>>,
 }
 

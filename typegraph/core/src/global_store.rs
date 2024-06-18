@@ -11,11 +11,9 @@ use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
 
 #[allow(unused)]
-use crate::wit::core::ArtifactResolutionConfig;
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
-use std::path::PathBuf;
 use std::rc::Rc;
 use std::{cell::RefCell, collections::HashMap};
 
@@ -60,11 +58,9 @@ pub struct Store {
     graphql_endpoints: Vec<String>,
     auths: Vec<common::typegraph::Auth>,
 
-    deploy_cwd_dir: Option<PathBuf>,
     random_seed: Option<u32>,
 
     latest_alias_no: u32,
-    codegen_flag: Option<bool>,
 }
 
 impl Store {
@@ -128,7 +124,7 @@ pub struct NameRegistration(pub bool);
 #[cfg(test)]
 impl Store {
     pub fn reset() {
-        let _ = crate::typegraph::finalize(None);
+        let _ = crate::typegraph::serialize(Default::default());
         with_store_mut(|s| *s = Store::new());
     }
 }
@@ -218,16 +214,6 @@ impl Store {
             s.type_by_names.insert(name, id);
             Ok(())
         })
-    }
-
-    pub fn set_deploy_cwd(value: Option<String>) {
-        with_store_mut(|s| {
-            s.deploy_cwd_dir = value.map(PathBuf::from);
-        })
-    }
-
-    pub fn get_deploy_cwd() -> Option<PathBuf> {
-        with_store(|s| s.deploy_cwd_dir.clone())
     }
 
     pub fn get_random_seed() -> Option<u32> {
@@ -509,16 +495,6 @@ impl Store {
 
     pub fn get_auths() -> Vec<common::typegraph::Auth> {
         with_store(|s| s.auths.clone())
-    }
-
-    pub fn set_codegen_flag(status: Option<bool>) {
-        with_store_mut(|s| {
-            s.codegen_flag = status;
-        })
-    }
-
-    pub fn get_codegen_flag() -> bool {
-        with_store(|s| s.codegen_flag.unwrap_or(false))
     }
 }
 

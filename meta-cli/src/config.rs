@@ -3,6 +3,10 @@
 
 use crate::interlude::*;
 
+use crate::cli::NodeArgs;
+use crate::fs::find_in_parents;
+use crate::utils::BasicAuth;
+use common::node::Node;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use lazy_static::lazy_static;
 use reqwest::Url;
@@ -10,11 +14,6 @@ use std::fs::{self, File};
 use std::io;
 use std::slice;
 use std::str::FromStr;
-
-use crate::cli::NodeArgs;
-use crate::fs::find_in_parents;
-use crate::utils::BasicAuth;
-use common::node::Node;
 
 pub const METATYPE_FILES: &[&str] = &["metatype.yml", "metatype.yaml"];
 pub const VENV_FOLDERS: &[&str] = &[".venv"];
@@ -25,6 +24,13 @@ pub const REQUIREMENTS_FILES: &[&str] = &["requirements.txt"];
 lazy_static! {
     static ref DEFAULT_NODE_CONFIG: NodeConfig = Default::default();
     static ref DEFAULT_LOADER_CONFIG: TypegraphLoaderConfig = Default::default();
+}
+
+const DEFAULT_PRISMA_MIGRATIONS_PATH: &str = "prisma-migrations";
+
+pub enum PathOption {
+    Absolute,
+    Relative,
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
@@ -151,10 +157,11 @@ pub struct Materializers {
 }
 
 #[derive(Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "lowercase")]
 pub enum ModuleType {
     Python,
-    Deno,
+    TypeScript,
+    JavaScript,
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]
@@ -208,7 +215,7 @@ impl Config {
         let mut config: serde_yaml::Value = serde_yaml::from_reader(file)?;
         config.apply_merge()?;
         let mut config: Self = serde_yaml::from_value(config)
-            .wrap_err_with(|| format!("error serializing metatype config found at {path:?}"))?;
+            .wrap_err_with(|| format!("error parsing metatype config found at {path:?}"))?;
         config.path = Some(path.clone());
         config.base_dir = {
             let mut path = path;
@@ -255,7 +262,22 @@ impl Config {
             .unwrap_or(&DEFAULT_LOADER_CONFIG)
     }
 
-    /// `config migration dir` + `runtime` + `tg_name`   
+    pub fn prisma_migrations_base_dir(&self, opt: PathOption) -> PathBuf {
+        let path = self
+            .typegraphs
+            .materializers
+            .prisma
+            .migrations_path
+            .as_deref()
+            .unwrap_or_else(|| Path::new(DEFAULT_PRISMA_MIGRATIONS_PATH));
+
+        match opt {
+            PathOption::Absolute => self.base_dir.join(path),
+            PathOption::Relative => path.to_path_buf(),
+        }
+    }
+
+    /// `config migration dir` + `runtime` + `tg_name`
     pub fn prisma_migrations_dir_rel(&self, tg_name: &str) -> PathBuf {
         let mut path = self
             .typegraphs
@@ -270,13 +292,18 @@ impl Config {
     }
 
     /// canonical path to the migration given the typegraph path
-    pub fn prisma_migration_dir_abs(&self, tg_path: &Path, tg_name: &str) -> Result<PathBuf> {
-        if tg_path.is_dir() {
-            bail!("Given typegraph path {} is not a file", tg_path.display());
-        }
-        let mut base = tg_path.to_path_buf().clone();
-        base.pop(); // remove file
-        Ok(base.join(self.prisma_migrations_dir_rel(tg_name)))
+    pub fn prisma_migration_dir_abs(&self, tg_name: &str) -> PathBuf {
+        let mut path = self.base_dir.clone();
+        path.push(self.prisma_migrations_dir_rel(tg_name));
+        path
+    }
+
+    pub fn dir(&self) -> Result<&Path> {
+        self.path
+            .as_deref()
+            .ok_or_else(|| ferr!("config path required"))?
+            .parent()
+            .ok_or_else(|| ferr!("config path has no parent"))
     }
 }
 

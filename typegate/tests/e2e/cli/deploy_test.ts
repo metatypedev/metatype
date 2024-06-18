@@ -189,7 +189,6 @@ Meta.test(
 Meta.test(
   {
     name: "cli:deploy - automatic migrations",
-
     gitRepo: {
       content: {
         "prisma.py": "runtimes/prisma/prisma.py",
@@ -291,7 +290,6 @@ Meta.test(
 Meta.test(
   {
     name: "cli:deploy - with prefix",
-
     gitRepo: {
       content: {
         "prisma.py": "runtimes/prisma/prisma.py",

@@ -87,7 +87,7 @@ mod test {
     #[test]
     fn stub_test() -> anyhow::Result<()> {
         let tg_name = "my_tg".to_string();
-        let tg = Typegraph {
+        let tg = Box::new(Typegraph {
             path: None,
             policies: vec![],
             deps: vec![],
@@ -147,7 +147,7 @@ mod test {
                     },
                 },
             ],
-        };
+        });
         let generator = Generator::new(MdkRustGenConfig {
             base: crate::config::MdkGeneratorConfigBase {
                 path: "/".into(),

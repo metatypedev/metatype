@@ -5,7 +5,7 @@ import json
 from functools import reduce
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from typegraph.gen.exports.core import ArtifactResolutionConfig
+from typegraph.gen.exports.core import SerializeParams
 from typegraph.gen.exports.utils import ReducePath, ReduceValue
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.injection import InheritDef, serialize_static_injection
@@ -84,7 +84,7 @@ frozen_memo: Dict[str, FinalizationResult] = {}
 
 
 def freeze_tg_output(
-    config: ArtifactResolutionConfig, tg_output: TypegraphOutput
+    config: SerializeParams, tg_output: TypegraphOutput
 ) -> TypegraphOutput:
     if tg_output.name not in frozen_memo:
         frozen_memo[tg_output.name] = tg_output.serialize(config)

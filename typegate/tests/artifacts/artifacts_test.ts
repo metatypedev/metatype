@@ -45,7 +45,7 @@ async function cleanUp() {
 }
 
 const variants = [
-  { nameSuffix: "" },
+  { mode: "default" },
   {
     syncConfig,
     async setup() {
@@ -54,7 +54,7 @@ const variants = [
     async teardown() {
       await cleanUp();
     },
-    nameSuffix: " (sync)",
+    mode: "sync",
   },
 ] as const;
 
@@ -73,103 +73,116 @@ async function hasArtifact(t: MetaTest, hash: string, sync: boolean) {
   }
 }
 
-for (const { nameSuffix, ...options } of variants) {
-  Meta.test({
-    name: "Upload protocol" + nameSuffix,
-    ...options,
-  }, async (t) => {
-    const e = await t.engine("runtimes/deno/deno.py");
-    const artifacts = e.tg.tg.meta.artifacts;
+for (const { mode, ...options } of variants) {
+  Meta.test(
+    {
+      name: `Upload protocol (${mode} mode)`,
+      ...options,
+    },
+    async (t) => {
+      const e = await t.engine("runtimes/deno/deno.py");
+      const artifacts = e.tg.tg.meta.artifacts;
 
-    await t.should("have uploaded artifacts on deploy", async () => {
-      for (const [_, meta] of Object.entries(artifacts)) {
-        const typedMeta = meta as { hash: string };
-        assert(await hasArtifact(t, typedMeta.hash, "syncConfig" in options));
-      }
-    });
-
-    await t.undeploy(e.name);
-
-    await t.should("have removed artifacts on undeploy", async () => {
-      for (const [_, meta] of Object.entries(artifacts)) {
-        const typedMeta = meta as { hash: string };
-        assertFalse(
-          await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
-        );
-      }
-    });
-  });
-
-  Meta.test({
-    name: "Upload protocol: tg_deploy (NodeJs SDK)" + nameSuffix,
-    ...options,
-  }, async (_t) => {
-    // TODO
-  });
-
-  Meta.test({
-    name: "Upload protocol: tg_deploy (Python SDK)" + nameSuffix,
-    ...options,
-  }, async (t) => {
-    const e = await t.engine(
-      "runtimes/deno/deno.py",
-    );
-    const artifacts = e.tg.tg.meta.artifacts;
-
-    await t.should("have uploaded artifacts on deploy", async () => {
-      for (const [_, meta] of Object.entries(artifacts)) {
-        const typedMeta = meta as { hash: string };
-        assert(await hasArtifact(t, typedMeta.hash, "syncConfig" in options));
-      }
-    });
-
-    await t.undeploy(e.name);
-
-    await t.should("have removed artifacts on undeploy", async () => {
-      for (const [_, meta] of Object.entries(artifacts)) {
-        const typedMeta = meta as { hash: string };
-        assertFalse(
-          await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
-        );
-      }
-    });
-  });
-
-  Meta.test({
-    name: "Artifact GC: shared artifacts" + nameSuffix,
-    ...options,
-  }, async (t) => {
-    const engine = await t.engine("runtimes/deno/deno.py");
-    const artifacts = engine.tg.tg.meta.artifacts;
-
-    const enginePartial = await t.engine("runtimes/deno/deno_partial.py");
-    const sharedArtifacts = Object.keys(enginePartial.tg.tg.meta.artifacts)
-      .filter((art) => art in artifacts);
-
-    await t.undeploy(engine.name);
-
-    await t.should("have removed shared artifacts", async () => {
-      for (const [art, meta] of Object.entries(artifacts)) {
-        const typedMeta = meta as { hash: string };
-        if (sharedArtifacts.includes(art)) {
+      await t.should("have uploaded artifacts on deploy", async () => {
+        for (const [_, meta] of Object.entries(artifacts)) {
+          const typedMeta = meta as { hash: string };
           assert(await hasArtifact(t, typedMeta.hash, "syncConfig" in options));
-        } else {
+        }
+      });
+
+      await t.undeploy(e.name);
+
+      await t.should("have removed artifacts on undeploy", async () => {
+        for (const [_, meta] of Object.entries(artifacts)) {
+          const typedMeta = meta as { hash: string };
           assertFalse(
             await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
           );
         }
-      }
-    });
+      });
+    },
+  );
 
-    await t.undeploy(enginePartial.name);
+  Meta.test(
+    {
+      name: `Upload protocol: tg_deploy (NodeJs SDK) (${mode} mode)`,
+      ...options,
+    },
+    async (_t) => {
+      // TODO
+    },
+  );
 
-    await t.should("have removed all artifacts", async () => {
-      for (const [_, meta] of Object.entries(artifacts)) {
-        const typedMeta = meta as { hash: string };
-        assertFalse(
-          await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
-        );
-      }
-    });
-  });
+  Meta.test(
+    {
+      name: `Upload protocol: tg_deploy (Python SDK) (${mode} mode)`,
+      ...options,
+    },
+    async (t) => {
+      const e = await t.engine("runtimes/deno/deno.py");
+      const artifacts = e.tg.tg.meta.artifacts;
+
+      await t.should("have uploaded artifacts on deploy", async () => {
+        for (const [_, meta] of Object.entries(artifacts)) {
+          const typedMeta = meta as { hash: string };
+          assert(await hasArtifact(t, typedMeta.hash, "syncConfig" in options));
+        }
+      });
+
+      await t.undeploy(e.name);
+
+      await t.should("have removed artifacts on undeploy", async () => {
+        for (const [_, meta] of Object.entries(artifacts)) {
+          const typedMeta = meta as { hash: string };
+          assertFalse(
+            await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
+          );
+        }
+      });
+    },
+  );
+
+  Meta.test(
+    {
+      name: `Artifact GC: shared artifacts (${mode} mode)`,
+      ...options,
+    },
+    async (t) => {
+      const engine = await t.engine("runtimes/deno/deno.py");
+      const artifacts = engine.tg.tg.meta.artifacts;
+
+      const enginePartial = await t.engine("runtimes/deno/deno_partial.py");
+      const sharedArtifacts = Object.keys(
+        enginePartial.tg.tg.meta.artifacts,
+      ).filter((art) => art in artifacts);
+
+      await t.undeploy(engine.name);
+
+      await t.should("have removed shared artifacts", async () => {
+        for (const [art, meta] of Object.entries(artifacts)) {
+          const typedMeta = meta as { hash: string };
+          if (sharedArtifacts.includes(art)) {
+            assert(
+              await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
+            );
+          } else {
+            assertFalse(
+              await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
+            );
+          }
+        }
+      });
+
+      await t.undeploy(enginePartial.name);
+
+      await t.should("have removed all artifacts", async () => {
+        for (const [_, meta] of Object.entries(artifacts)) {
+          const typedMeta = meta as { hash: string };
+          assertFalse(
+            await hasArtifact(t, typedMeta.hash, "syncConfig" in options),
+          );
+        }
+      });
+    },
+  );
 }
