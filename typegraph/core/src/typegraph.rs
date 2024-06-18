@@ -23,12 +23,11 @@ use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::hash::Hasher as _;
-
 use std::rc::Rc;
 
 use crate::wit::core::{
-    Artifact as WitArtifact, ArtifactResolutionConfig, Error as TgError, Guest, MaterializerId,
-    PolicyId, PolicySpec, RuntimeId, TypegraphInitParams,
+    Artifact as WitArtifact, Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec,
+    RuntimeId, SerializeParams, TypegraphInitParams,
 };
 
 #[derive(Default)]
@@ -181,11 +180,9 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
         .collect::<Result<Vec<_>>>()
 }
 
-pub fn finalize(
-    res_config: Option<ArtifactResolutionConfig>,
-) -> Result<(String, Vec<WitArtifact>)> {
+pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> {
     #[cfg(test)]
-    eprintln!("Finalizing typegraph...");
+    eprintln!("Serializing typegraph typegraph...");
 
     let mut ctx = TG.with(|tg| {
         tg.borrow_mut()
@@ -227,11 +224,10 @@ pub fn finalize(
         deps: Default::default(),
     };
 
-    let config = res_config.map(|config| {
-        tg.meta.prefix.clone_from(&config.prefix);
-        config
-    });
-    TypegraphPostProcessor::new(config).postprocess(&mut tg)?;
+    tg.meta.prefix = params.prefix.clone();
+
+    let pretty = params.pretty;
+    TypegraphPostProcessor::new(params).postprocess(&mut tg)?;
 
     let artifacts = tg
         .meta
@@ -243,9 +239,17 @@ pub fn finalize(
 
     Store::restore(ctx.saved_store_state.unwrap());
 
-    let result = match serde_json::to_string_pretty(&tg).map_err(|e| e.to_string().into()) {
+    let result = if pretty {
+        serde_json::to_string_pretty(&tg)
+    } else {
+        serde_json::to_string(&tg)
+    };
+
+    let result = match result.map_err(|e| e.to_string().into()) {
         Ok(res) => res,
-        Err(e) => return Err(e),
+        Err(e) => {
+            return Err(e);
+        }
     };
 
     Ok((result, artifacts))

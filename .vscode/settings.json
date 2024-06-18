@@ -58,8 +58,6 @@
     "wasmedge"
   ],
   "python.languageServer": "Pylance",
-  "python.analysis.extraPaths": [
-    "typegraph/python"
-  ],
-  "prettier.proseWrap": "never",
+  "python.analysis.extraPaths": ["typegraph/python"],
+  "prettier.proseWrap": "never"
 }

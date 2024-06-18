@@ -14,7 +14,7 @@ serde_json.workspace = true
 wit-bindgen = "0.26.0"
 regex.workspace = true
 indexmap.workspace = true
-common.workspace = true 
+common.workspace = true
 metagen.workspace = true
 indoc.workspace = true
 color-eyre.workspace = true
@@ -25,6 +25,7 @@ paste = "1.0.15"
 seahash = "4.1.0"
 ordered-float = "4.2.0"
 glob = "0.3.1"
+unindent = "0.2.3"
 
 [dev-dependencies]
 insta = { version = "1.39.0", features = ["glob"] }

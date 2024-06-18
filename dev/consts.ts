@@ -149,13 +149,13 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   "examples/**/package.json": [
     [
       /(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)/,
-      PUBLISHED_VERSION,
+      METATYPE_VERSION,
     ],
   ],
   "examples/**/*.ts": [
     [
       /(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)/,
-      PUBLISHED_VERSION,
+      METATYPE_VERSION,
     ],
   ],
   "typegate/import_map.json": [

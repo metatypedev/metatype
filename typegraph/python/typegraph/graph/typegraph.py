@@ -7,19 +7,21 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Union, Any
 
 from typegraph.gen.exports.core import (
-    ArtifactResolutionConfig,
+    SerializeParams,
     Rate,
     TypegraphInitParams,
 )
 from typegraph.gen.exports.core import (
     Cors as CoreCors,
 )
-
+from typegraph.gen.exports.utils import Auth
 from typegraph.gen.types import Err
-from typegraph.graph.params import Auth, Cors, RawAuth
+from typegraph.graph.params import Cors, RawAuth
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
-from typegraph.wit import core, store, wit_utils
+from typegraph.envs.cli import CLI_ENV
+from typegraph.wit import ErrorStack, core, store, wit_utils
+from typegraph.io import Log
 
 if TYPE_CHECKING:
     from typegraph import t
@@ -85,7 +87,7 @@ class Typegraph:
         )
 
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
 
 
 @dataclass
@@ -132,7 +134,7 @@ class Graph:
     def rest(self, graphql: str) -> int:
         res = wit_utils.add_graphql_endpoint(store, graphql)
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         return res.value
 
     def auth(self, value: Union[Auth, RawAuth]):
@@ -142,7 +144,7 @@ class Graph:
             else wit_utils.add_auth(store, value)
         )
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         return res.value
 
     def ref(self, name: str) -> "t.typedef":
@@ -151,7 +153,7 @@ class Graph:
     def configure_random_injection(self, seed: int):
         res = core.set_seed(store, seed)
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
 
     def as_arg(self, name: Optional[str] = None):
         return ApplyFromArg(name)
@@ -176,14 +178,25 @@ def typegraph(
     rate: Optional[Rate] = None,
     cors: Optional[Cors] = None,
     prefix: Optional[str] = None,
-) -> Callable[[Callable[[Graph], None]], Callable[[], TypegraphOutput]]:
+) -> Callable[[Callable[[Graph], None]], TypegraphOutput]:
     def decorator(builder: Callable[[Graph], None]) -> TypegraphOutput:
-        actual_name = name
         if name is None:
             import re
 
             # To kebab case
             actual_name = re.sub("_", "-", builder.__name__)
+        else:
+            actual_name = name
+
+        if CLI_ENV is not None:
+            filter = CLI_ENV.filter
+            if filter is not None and actual_name not in filter:
+                Log.debug("typegraph '{actual_name}' skipped")
+
+                def serialize(params: SerializeParams):
+                    raise Exception("typegraph was filtered out")
+
+                return TypegraphOutput(name=actual_name, serialize=serialize)
 
         tg = Typegraph(
             name=actual_name,
@@ -195,6 +208,15 @@ def typegraph(
 
         Typegraph._context.append(tg)
 
+        default_cors = CoreCors(
+            allow_credentials=True,
+            allow_headers=[],
+            allow_methods=[],
+            allow_origin=[],
+            expose_headers=[],
+            max_age_sec=None,
+        )
+
         core.init_typegraph(
             store,
             TypegraphInitParams(
@@ -202,7 +224,7 @@ def typegraph(
                 dynamic=tg.dynamic,
                 path=tg.path,
                 rate=tg.rate,
-                cors=tg.cors,
+                cors=tg.cors or default_cors,
                 prefix=tg.prefix,
             ),
         )
@@ -214,11 +236,11 @@ def typegraph(
 
         # config is only known at deploy time
         def serialize_with_artifacts(
-            config: ArtifactResolutionConfig,
+            config: SerializeParams,
         ):
-            finalization_result = core.finalize_typegraph(store, config)
+            finalization_result = core.serialize_typegraph(store, config)
             if isinstance(finalization_result, Err):
-                raise Exception(finalization_result.value)
+                raise ErrorStack(finalization_result.value)
 
             tg_json, ref_artifacts = finalization_result.value
             return FinalizationResult(tg_json, ref_artifacts)
@@ -227,11 +249,12 @@ def typegraph(
 
         from typegraph.graph.tg_manage import Manager
 
-        if Manager.is_run_from_cli():
+        # run from meta/cli
+        if CLI_ENV is not None:
             manager = Manager(tg_output)
             manager.run()
 
-        return lambda: tg_output
+        return tg_output
 
     return decorator
 
@@ -239,7 +262,7 @@ def typegraph(
 def gen_ref(name: str) -> "t.typedef":
     res = core.refb(store, name, [])
     if isinstance(res, Err):
-        raise Exception(res.value)
+        raise ErrorStack(res.value)
     from typegraph.t import typedef
 
     return typedef(res.value)

@@ -7,6 +7,7 @@ use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use ignore::{Walk, WalkBuilder};
 use indexmap::IndexMap;
 use std::{
+    collections::BTreeMap,
     fs,
     io::Read,
     path::{Path, PathBuf},
@@ -110,14 +111,12 @@ pub fn archive_entries(dir_walker: Walk, prefix: Option<&Path>) -> Result<Option
     Ok(None)
 }
 
-pub fn archive_entries_from_bytes(entries: IndexMap<String, Vec<u8>>) -> Result<Vec<u8>> {
+// we use BTreeMap to ensure deterministic order
+pub fn archive_entries_from_bytes(entries: BTreeMap<String, Vec<u8>>) -> Result<Vec<u8>> {
     let encoder = GzEncoder::new(Vec::new(), Compression::default());
     let mut tar = tar::Builder::new(encoder);
 
     tar.mode(tar::HeaderMode::Deterministic);
-
-    let mut entries = entries.clone();
-    entries.sort_keys();
 
     for (path, bytes) in entries.iter() {
         // https://www.gnu.org/software/tar/manual/html_section/Formats.html

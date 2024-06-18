@@ -5,34 +5,44 @@ import json
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Union
 from urllib import request
+from platform import python_version
 
 from typegraph.gen.exports.utils import QueryDeployParams
 from typegraph.gen.types import Err
+from typegraph.gen.exports.core import MigrationAction, PrismaMigrationConfig
 from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_artifact_upload import ArtifactUploader
 from typegraph.graph.typegraph import TypegraphOutput
-from typegraph.wit import ArtifactResolutionConfig, store, wit_utils
+from typegraph.wit import SerializeParams, store, wit_utils
+from typegraph import version as sdk_version
+
+
+@dataclass
+class TypegateConnectionOptions:
+    url: str
+    auth: Optional[BasicAuth]
 
 
 @dataclass
 class TypegraphDeployParams:
-    base_url: str
-    artifacts_config: ArtifactResolutionConfig
-    typegraph_path: Optional[str]
-    auth: Optional[BasicAuth] = None
+    typegate: TypegateConnectionOptions
+    typegraph_path: str
+    prefix: Optional[str] = None
     secrets: Optional[Dict[str, str]] = None
+    migrations_dir: Optional[str] = None
+    migration_actions: Optional[Dict[str, MigrationAction]] = None
+    default_migration_action: Optional[MigrationAction] = None
 
 
 @dataclass
 class TypegraphRemoveParams:
-    base_url: str
-    auth: Optional[BasicAuth] = None
+    typegate: TypegateConnectionOptions
 
 
 @dataclass
 class DeployResult:
     serialized: str
-    typegate: Union[Dict[str, Any], str]
+    response: Union[Dict[str, Any], str]
 
 
 @dataclass
@@ -48,23 +58,45 @@ class UploadArtifactMeta:
 
 
 def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResult:
-    sep = "/" if not params.base_url.endswith("/") else ""
-    url = params.base_url + sep + "typegate"
+    typegate = params.typegate
 
-    headers = {"Content-Type": "application/json"}
-    if params.auth is not None:
-        headers["Authorization"] = params.auth.as_header_value()
-    serialized = tg.serialize(params.artifacts_config)
+    sep = "/" if not typegate.url.endswith("/") else ""
+    url = typegate.url + sep + "typegate"
+
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": f"TypegraphSdk/{sdk_version} Python/{python_version()}",
+    }
+    if typegate.auth is not None:
+        headers["Authorization"] = typegate.auth.as_header_value()
+
+    serialize_params = SerializeParams(
+        typegraph_path=params.typegraph_path,
+        prefix=params.prefix,
+        artifact_resolution=True,
+        codegen=False,
+        prisma_migration=PrismaMigrationConfig(
+            migrations_dir=params.migrations_dir or "prisma-migrations",
+            migration_actions=[
+                (k, v) for k, v in (params.migration_actions or {}).items()
+            ],
+            default_migration_action=params.default_migration_action
+            or MigrationAction(apply=True, create=False, reset=False),
+        ),
+        pretty=False,
+    )
+
+    serialized = tg.serialize(serialize_params)
     tg_json = serialized.tgJson
     ref_artifacts = serialized.ref_artifacts
 
     if len(ref_artifacts) > 0:
         # upload the referred artifacts
         artifact_uploader = ArtifactUploader(
-            params.base_url,
+            typegate.url,
             ref_artifacts,
             tg.name,
-            params.auth,
+            typegate.auth,
             headers,
             params.typegraph_path,
         )
@@ -93,17 +125,19 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     response = response.read().decode()
     return DeployResult(
         serialized=tg_json,
-        typegate=handle_response(response),
+        response=handle_response(response).get("data").get("addTypegraph"),
     )
 
 
 def tg_remove(tg: TypegraphOutput, params: TypegraphRemoveParams):
-    sep = "/" if not params.base_url.endswith("/") else ""
-    url = params.base_url + sep + "typegate"
+    typegate = params.typegate
+
+    sep = "/" if not typegate.url.endswith("/") else ""
+    url = typegate.url + sep + "typegate"
 
     headers = {"Content-Type": "application/json"}
-    if params.auth is not None:
-        headers["Authorization"] = params.auth.as_header_value()
+    if typegate.auth is not None:
+        headers["Authorization"] = typegate.auth.as_header_value()
 
     res = wit_utils.gql_remove_query(store, [tg.name])
 
@@ -123,7 +157,7 @@ def tg_remove(tg: TypegraphOutput, params: TypegraphRemoveParams):
 
 
 # simple wrapper for a more descriptive error
-def exec_request(req: any):
+def exec_request(req: Any):
     try:
         return request.urlopen(req)
     except request.HTTPError as res:
@@ -134,7 +168,7 @@ def exec_request(req: any):
         raise Exception(f"{e}: {req.full_url}")
 
 
-def handle_response(res: any, url=""):
+def handle_response(res: Any, url=""):
     try:
         return json.loads(res)
     except Exception as _:

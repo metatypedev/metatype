@@ -24,9 +24,9 @@ def files_upload(g: Graph):
     g.expose(
         Policy.public(),
         # we can then generate helpers for interacting with our runtime
-        listObjects=s3.list("bucket"),
-        getDownloadUrl=s3.presign_get("bucket"),
-        signUploadUrl=s3.presign_put("bucket"),
-        upload=s3.upload("bucket", t.file(allow=["image/png", "image/jpeg"])),
-        uploadMany=s3.upload_all("bucket"),
+        listObjects=s3.list("examples"),
+        getDownloadUrl=s3.presign_get("examples"),
+        signUploadUrl=s3.presign_put("examples"),
+        upload=s3.upload("examples", t.file(allow=["image/png", "image/jpeg"])),
+        uploadMany=s3.upload_all("examples"),
     )
