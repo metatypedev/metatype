@@ -20,10 +20,9 @@ export type { SyncConfigX as SyncConfig, TypegateConfig, TypegateConfigBase };
 
 async function getHostname() {
   try {
-    const { stdout } = await new Deno.Command(
-      "hostname",
-      { stdout: "piped" },
-    ).output();
+    const { stdout } = await new Deno.Command("hostname", {
+      stdout: "piped",
+    }).output();
     return new TextDecoder().decode(stdout).trim();
   } catch (_e) {
     console.debug(
@@ -31,6 +30,12 @@ async function getHostname() {
     );
     return Deno.env.get("HOSTNAME") ?? "UNKNOWN_HOSTNAME";
   }
+}
+
+if (!Deno.env.has("VERSION")) {
+  // set version for config and workers, only running in main engine
+  const { get_version } = await import("native");
+  Deno.env.set("VERSION", get_version());
 }
 
 export const globalConfig = await configOrExit(
@@ -89,7 +94,7 @@ function transformSyncConfig(raw: SyncConfig): SyncConfigX {
   const redis = {
     hostname,
     port,
-    ...password.length > 0 ? { password } : {},
+    ...(password.length > 0 ? { password } : {}),
     db: redisDb,
   };
 
@@ -110,20 +115,15 @@ function transformSyncConfig(raw: SyncConfig): SyncConfigX {
   };
 }
 
-export function getTypegateConfig(
-  defaults: {
-    base?: Partial<z.input<typeof typegateConfigBaseSchema>>;
-    sync?: Partial<z.input<typeof syncConfigSchema>>;
-  },
-): TypegateConfig {
+export function getTypegateConfig(defaults: {
+  base?: Partial<z.input<typeof typegateConfigBaseSchema>>;
+  sync?: Partial<z.input<typeof syncConfigSchema>>;
+}): TypegateConfig {
   const base = configOrExit(typegateConfigBaseSchema, defaults.base ?? {}, [
     envsAsConfig(),
     argsAsConfig(),
   ]);
-  const syncSources = [
-    envsAsConfig(),
-    argsAsConfig(),
-  ].map(filterMapSyncKeys);
+  const syncSources = [envsAsConfig(), argsAsConfig()].map(filterMapSyncKeys);
   const syncDisabled = defaults.sync == null ||
     Object.keys(defaults.sync).length === 0 ||
     syncSources.every((s) => Object.keys(s).length === 0);
@@ -131,10 +131,7 @@ export function getTypegateConfig(
   const sync = syncDisabled ? null : configOrExit(
     syncConfigSchema,
     defaults.sync ?? {},
-    [
-      envsAsConfig(),
-      argsAsConfig(),
-    ].map(filterMapSyncKeys),
+    [envsAsConfig(), argsAsConfig()].map(filterMapSyncKeys),
   );
   return { base, sync: sync && transformSyncConfig(sync) };
 }

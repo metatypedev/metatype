@@ -165,7 +165,7 @@ export class MetaTest {
   }
 
   get tempDir() {
-    return this.typegate.tmpDir;
+    return this.typegate.config.base.tmp_dir;
   }
 
   getTypegraphEngine(name: string): QueryEngine | undefined {

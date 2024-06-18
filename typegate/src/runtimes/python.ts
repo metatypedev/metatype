@@ -36,94 +36,88 @@ export class PythonRuntime extends Runtime {
     const wireMatInfos = await Promise.all(
       materializers
         .filter((mat) => mat.name != "pymodule")
-        .map(
-          async (mat) => {
-            let matInfoData: object;
-            switch (mat.name) {
-              case "lambda":
-                matInfoData = {
-                  ty: "lambda",
-                  effect: mat.effect,
-                  source: mat.data.fn as string,
-                };
-                break;
-              case "def":
-                matInfoData = {
-                  ty: "def",
-                  func_name: mat.data.name as string,
-                  effect: mat.effect,
-                  source: mat.data.fn as string,
-                };
-                break;
-              case "import_function": {
-                const pyModMat =
-                  typegraph.materializers[mat.data.mod as number];
+        .map(async (mat) => {
+          let matInfoData: object;
+          switch (mat.name) {
+            case "lambda":
+              matInfoData = {
+                ty: "lambda",
+                effect: mat.effect,
+                source: mat.data.fn as string,
+              };
+              break;
+            case "def":
+              matInfoData = {
+                ty: "def",
+                func_name: mat.data.name as string,
+                effect: mat.effect,
+                source: mat.data.fn as string,
+              };
+              break;
+            case "import_function": {
+              const pyModMat = typegraph.materializers[mat.data.mod as number];
 
-                // resolve the python module artifacts/files
-                const { pythonArtifact, depsMeta: depArtifacts } =
-                  pyModMat.data;
+              // resolve the python module artifacts/files
+              const { pythonArtifact, depsMeta: depArtifacts } = pyModMat.data;
 
-                const deps = depArtifacts as Artifact[];
-                const artifact = pythonArtifact as Artifact;
+              const deps = depArtifacts as Artifact[];
+              const artifact = pythonArtifact as Artifact;
 
-                const sources = Object.fromEntries(
-                  await Promise.all(
-                    [
-                      {
+              const sources = Object.fromEntries(
+                await Promise.all(
+                  [
+                    {
+                      typegraphName: typegraphName,
+                      relativePath: artifact.path,
+                      hash: artifact.hash,
+                      sizeInBytes: artifact.size,
+                    },
+                    ...deps.map((dep) => {
+                      return {
                         typegraphName: typegraphName,
-                        relativePath: artifact.path,
-                        hash: artifact.hash,
-                        sizeInBytes: artifact.size,
-                      },
-                      ...deps.map((dep) => {
-                        return {
-                          typegraphName: typegraphName,
-                          relativePath: dep.path,
-                          hash: dep.hash,
-                          sizeInBytes: dep.size,
-                        };
-                      }),
-                    ].map(
-                      async (meta) =>
-                        [
-                          meta.relativePath,
-                          await Deno.readTextFile(
-                            await typegate.artifactStore.getLocalPath(meta),
-                          ),
-                        ] as const,
-                    ),
+                        relativePath: dep.path,
+                        hash: dep.hash,
+                        sizeInBytes: dep.size,
+                      };
+                    }),
+                  ].map(
+                    async (meta) =>
+                      [
+                        meta.relativePath,
+                        await Deno.readTextFile(
+                          await typegate.artifactStore.getLocalPath(meta),
+                        ),
+                      ] as const,
                   ),
-                );
+                ),
+              );
 
-                matInfoData = {
-                  ty: "import_function",
-                  effect: mat.effect,
-                  root_src_path: artifact.path,
-                  func_name: mat.data.name as string,
-                  sources,
-                };
-                break;
-              }
-              default:
-                throw new Error(`unsupported materializer type: ${mat.name}`);
+              matInfoData = {
+                ty: "import_function",
+                effect: mat.effect,
+                root_src_path: artifact.path,
+                func_name: mat.data.name as string,
+                sources,
+              };
+              break;
             }
+            default:
+              throw new Error(`unsupported materializer type: ${mat.name}`);
+          }
 
-            // TODO: use materializer type node hash instead
-            const dataHash = await sha256(JSON.stringify(mat.data));
-            const op_name = `${mat.data.name as string}_${
-              dataHash.slice(0, 12)
-            }`;
+          // TODO: use materializer type node hash instead
+          const dataHash = await sha256(JSON.stringify(mat.data));
+          const op_name = `${mat.data.name as string}_${dataHash.slice(0, 12)}`;
 
-            const out: WitWireMatInfo = {
-              op_name,
-              mat_hash: dataHash,
-              // TODO: source title of materializer type?
-              mat_title: mat.data.name as string,
-              mat_data_json: JSON.stringify(matInfoData),
-            };
-            return out;
-          },
-        ),
+          const out: WitWireMatInfo = {
+            op_name,
+            mat_hash: dataHash,
+            // TODO: source title of materializer type?
+            mat_title: mat.data.name as string,
+            mat_data_json: JSON.stringify(matInfoData),
+          };
+          return out;
+        }),
     );
 
     // add default vm for lambda/def
@@ -131,7 +125,7 @@ export class PythonRuntime extends Runtime {
     logger.info(
       `initializing WitWireMessenger for PythonRuntime ${uuid} on typegraph ${typegraphName}`,
     );
-    const token = await InternalAuth.emit();
+    const token = await InternalAuth.emit(typegate.cryptoKeys);
     const wire = await WitWireMessenger.init(
       "inline://pyrt_wit_wire.cwasm",
       uuid,
@@ -161,43 +155,46 @@ export class PythonRuntime extends Runtime {
     _verbose: boolean,
   ): Promise<ComputeStage[]> {
     if (stage.props.node === "__typename") {
-      return [stage.withResolver(() => {
-        const { parent: parentStage } = stage.props;
-        if (parentStage != null) {
-          return parentStage.props.outType.title;
-        }
-        switch (stage.props.operationType) {
-          case ast.OperationTypeNode.QUERY:
-            return "Query";
-          case ast.OperationTypeNode.MUTATION:
-            return "Mutation";
-          default:
-            throw new Error(
-              `Unsupported operation type '${stage.props.operationType}'`,
-            );
-        }
-      })];
+      return [
+        stage.withResolver(() => {
+          const { parent: parentStage } = stage.props;
+          if (parentStage != null) {
+            return parentStage.props.outType.title;
+          }
+          switch (stage.props.operationType) {
+            case ast.OperationTypeNode.QUERY:
+              return "Query";
+            case ast.OperationTypeNode.MUTATION:
+              return "Mutation";
+            default:
+              throw new Error(
+                `Unsupported operation type '${stage.props.operationType}'`,
+              );
+          }
+        }),
+      ];
     }
 
     if (stage.props.materializer != null) {
       const mat = stage.props.materializer;
 
-      return [
-        stage.withResolver(await this.delegate(mat)),
-      ];
+      return [stage.withResolver(await this.delegate(mat))];
     }
 
     if (stage.props.outType.config?.__namespace) {
       return [stage.withResolver(() => ({}))];
     }
 
-    return [stage.withResolver(({ _: { parent } }) => {
-      if (stage.props.parent == null) { // namespace
-        return {};
-      }
-      const resolver = parent[stage.props.node];
-      return typeof resolver === "function" ? resolver() : resolver;
-    })];
+    return [
+      stage.withResolver(({ _: { parent } }) => {
+        if (stage.props.parent == null) {
+          // namespace
+          return {};
+        }
+        const resolver = parent[stage.props.node];
+        return typeof resolver === "function" ? resolver() : resolver;
+      }),
+    ];
   }
 
   async delegate(mat: Materializer): Promise<Resolver> {
