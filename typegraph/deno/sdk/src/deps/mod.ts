@@ -1,14 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
-export { caller } from "./_import.js";
+export { caller } from "./_import.ts";
 
 export function mapValues(
   object: object,
-  fn: (value: any, key: string, object: object) => any,
+  fn: (value: any, key: string, object: object) => any
 ) {
-  const newEntries = Object
-    .entries(object)
-    .map(([k, v]) => [k, fn(v, k, object)]);
+  const newEntries = Object.entries(object).map(([k, v]) => [
+    k,
+    fn(v, k, object),
+  ]);
   return Object.fromEntries(newEntries);
 }
 
@@ -18,7 +19,7 @@ export function dirname(path: string) {
   return path.substring((winIdx > 0 ? winIdx : unixIdx) + 1);
 }
 
-import { fromFileUrlPosix, fromFileUrlWin32 } from "./_import.js";
+import { fromFileUrlPosix, fromFileUrlWin32 } from "./_import.ts";
 
 export function fromFileUrl(path: string) {
   // Note: Do not refactor with runtime dependent OS check

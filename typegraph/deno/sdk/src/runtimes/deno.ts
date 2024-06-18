@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import * as t from "../types.js";
-import { runtimes } from "../wit.js";
-import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
-import Policy from "../policy.js";
-import { Materializer, Runtime } from "./mod.js";
-import { fx } from "../index.js";
+import * as t from "../types.ts";
+import { runtimes } from "../wit.ts";
+import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
+import Policy from "../policy.ts";
+import { Materializer, Runtime } from "./mod.ts";
+import { fx } from "../index.ts";
 
 interface FunMat extends Materializer {
   code: string;
@@ -50,7 +50,7 @@ function stringifyFn(code: string | ((...any: []) => any)) {
       }
       if (/function\s[a-zA-Z0-9_]+\(\) { \[native code\] }/.test(source)) {
         throw new Error(
-          `"${name}" is not supported as it is a native function`,
+          `"${name}" is not supported as it is a native function`
         );
       }
     }
@@ -64,13 +64,10 @@ export class DenoRuntime extends Runtime {
     super(runtimes.getDenoRuntime());
   }
 
-  func<
-    I extends t.Typedef = t.Typedef,
-    O extends t.Typedef = t.Typedef,
-  >(
+  func<I extends t.Typedef = t.Typedef, O extends t.Typedef = t.Typedef>(
     inp: I,
     out: O,
-    { code, secrets = [], effect = fx.read() }: DenoFunc,
+    { code, secrets = [], effect = fx.read() }: DenoFunc
   ): t.Func<I, O, FunMat> {
     const source = stringifyFn(code);
     const matId = runtimes.registerDenoFunc({ code: source, secrets }, effect);
@@ -83,20 +80,20 @@ export class DenoRuntime extends Runtime {
     return t.func(inp, out, mat);
   }
 
-  import<
-    I extends t.Typedef = t.Typedef,
-    O extends t.Typedef = t.Typedef,
-  >(
+  import<I extends t.Typedef = t.Typedef, O extends t.Typedef = t.Typedef>(
     inp: I,
     out: O,
-    { name, module, deps = [], effect = fx.read(), secrets = [] }: DenoImport,
+    { name, module, deps = [], effect = fx.read(), secrets = [] }: DenoImport
   ): t.Func<I, O, ImportMat> {
-    const matId = runtimes.importDenoFunction({
-      funcName: name,
-      module,
-      deps,
-      secrets,
-    }, effect);
+    const matId = runtimes.importDenoFunction(
+      {
+        funcName: name,
+        module,
+        deps,
+        secrets,
+      },
+      effect
+    );
     const mat: ImportMat = {
       _id: matId,
       name,
@@ -107,65 +104,61 @@ export class DenoRuntime extends Runtime {
     return t.func(inp, out, mat);
   }
 
-  identity<
-    I extends t.Typedef = t.Typedef,
-  >(inp: I): t.Func<I, t.Typedef, PredefinedFuncMat> {
+  identity<I extends t.Typedef = t.Typedef>(
+    inp: I
+  ): t.Func<I, t.Typedef, PredefinedFuncMat> {
     const mat: PredefinedFuncMat = {
       _id: runtimes.getPredefinedDenoFunc({ name: "identity" }),
       name: "identity",
     };
     // const out = wit_utils.removeInjections(inp._id);
-    return t.func(
-      inp,
-      inp,
-      mat,
-    );
+    return t.func(inp, inp, mat);
   }
 
-  static<
-    P extends t.Typedef,
-  >(out: P, value: any) {
+  static<P extends t.Typedef>(out: P, value: any) {
     const mat = {
-      _id: runtimes.registerDenoStatic({
-        value: JSON.stringify(value),
-      }, out._id),
+      _id: runtimes.registerDenoStatic(
+        {
+          value: JSON.stringify(value),
+        },
+        out._id
+      ),
     };
-    return t.func(
-      t.struct({}),
-      out,
-      mat,
-    );
+    return t.func(t.struct({}), out, mat);
   }
 
   policy(name: string, _code: string): Policy;
   policy(name: string, data: Omit<DenoFunc, "effect">): Policy;
   policy(name: string, data: string | Omit<DenoFunc, "effect">): Policy {
-    const params = typeof data === "string"
-      ? { code: data, secrets: [] }
-      : { secrets: [], ...data };
+    const params =
+      typeof data === "string"
+        ? { code: data, secrets: [] }
+        : { secrets: [], ...data };
 
     return Policy.create(
       name,
       runtimes.registerDenoFunc(
         { ...params, code: stringifyFn(params.code) },
-        fx.read(),
-      ),
+        fx.read()
+      )
     );
   }
 
   importPolicy(data: Omit<DenoImport, "effect">, name?: string): Policy {
-    const policyName = name ?? `__imp_${data.module}_${data.name}`.replace(
-      /[^a-zA-Z0-9_]/g,
-      "_",
-    );
+    const policyName =
+      name ??
+      `__imp_${data.module}_${data.name}`.replace(/[^a-zA-Z0-9_]/g, "_");
     return Policy.create(
       policyName,
-      runtimes.importDenoFunction({
-        funcName: data.name,
-        module: data.module,
-        secrets: data.secrets ?? [],
-        deps: data.deps ?? [],
-      }, fx.read()),
+      runtimes.importDenoFunction(
+        {
+          funcName: data.name,
+          module: data.module,
+          secrets: data.secrets ?? [],
+          deps: data.deps ?? [],
+        },
+        fx.read()
+      )
     );
   }
 }

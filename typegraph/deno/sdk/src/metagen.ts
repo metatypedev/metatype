@@ -1,20 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { SerializeParams } from "./gen/interfaces/metatype-typegraph-core.js";
-import { TypegraphOutput } from "./typegraph.js";
-import { wit_utils } from "./wit.js";
-import { freezeTgOutput } from "./utils/func_utils.js";
+import { SerializeParams } from "./gen/interfaces/metatype-typegraph-core.d.ts";
+import { TypegraphOutput } from "./typegraph.ts";
+import { wit_utils } from "./wit.ts";
+import { freezeTgOutput } from "./utils/func_utils.ts";
 import {
   MdkConfig,
   MdkOutput,
-} from "./gen/interfaces/metatype-typegraph-utils.js";
+} from "./gen/interfaces/metatype-typegraph-utils.d.ts";
 
 export class Metagen {
-  constructor(
-    private workspacePath: string,
-    private genConfig: unknown,
-  ) {}
+  constructor(private workspacePath: string, private genConfig: unknown) {}
 
   private getMdkConfig(tgOutput: TypegraphOutput, targetName: string) {
     const serializeParams = {

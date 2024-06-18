@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { SerializeParams } from "./gen/interfaces/metatype-typegraph-core.js";
-import { BasicAuth, tgDeploy } from "./tg_deploy.js";
-import { TgFinalizationResult, TypegraphOutput } from "./typegraph.js";
-import { freezeTgOutput } from "./utils/func_utils.js";
-import { log, rpc } from "./io.js";
-import { CliEnv, getCliEnv } from "./envs/cli.js";
+import { SerializeParams } from "./gen/interfaces/metatype-typegraph-core.d.ts";
+import { BasicAuth, tgDeploy } from "./tg_deploy.ts";
+import { TgFinalizationResult, TypegraphOutput } from "./typegraph.ts";
+import { freezeTgOutput } from "./utils/func_utils.ts";
+import { log, rpc } from "./io.ts";
+import { CliEnv, getCliEnv } from "./envs/cli.ts";
 import * as path from "node:path";
 
 export class Manager {
@@ -28,7 +28,7 @@ export class Manager {
         break;
       default:
         throw new Error(
-          `command ${this.#env.command} from meta-cli not supported`,
+          `command ${this.#env.command} from meta-cli not supported`
         );
     }
   }
@@ -117,7 +117,7 @@ export class Manager {
           url: deployTarget.base_url,
           auth: new BasicAuth(
             deployTarget.auth.username,
-            deployTarget.auth.password,
+            deployTarget.auth.password
           ),
         },
         typegraphPath: env.typegraph_path,

@@ -1,24 +1,25 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import * as t from "./types.js";
+import * as t from "./types.ts";
 import { core } from "./gen/typegraph_core.js";
-import { caller, dirname, fromFileUrl } from "./deps/mod.js";
-import { InjectionValue } from "./utils/type_utils.js";
+import { caller, dirname, fromFileUrl } from "./deps/mod.ts";
+import { InjectionValue } from "./utils/type_utils.ts";
 import {
   serializeFromParentInjection,
   serializeGenericInjection,
   serializeStaticInjection,
-} from "./utils/injection_utils.js";
-import { Auth, Cors as CorsWit, Rate, wit_utils } from "./wit.js";
-import { getPolicyChain } from "./types.js";
+} from "./utils/injection_utils.ts";
+import { Auth, Cors as CorsWit, Rate, wit_utils } from "./wit.ts";
+import { getPolicyChain } from "./types.ts";
 import {
   Artifact,
   SerializeParams,
-} from "./gen/interfaces/metatype-typegraph-core.js";
-import { Manager } from "./tg_manage.js";
-import { log } from "./io.js";
-import { hasCliEnv } from "./envs/cli.js";
+} from "./gen/interfaces/metatype-typegraph-core.d.ts";
+import { Manager } from "./tg_manage.ts";
+import { log } from "./io.ts";
+import { hasCliEnv } from "./envs/cli.ts";
+import process from "node:process";
 
 type Exports = Record<string, t.Func>;
 
@@ -36,10 +37,7 @@ interface TypegraphArgs {
 }
 
 export class ApplyFromArg {
-  constructor(
-    public name: string | null,
-    public type: number | null,
-  ) {}
+  constructor(public name: string | null, public type: number | null) {}
 }
 
 export class ApplyFromStatic {
@@ -51,10 +49,7 @@ export class ApplyFromSecret {
 }
 
 export class ApplyFromContext {
-  constructor(
-    public key: string | null,
-    public type: number | null,
-  ) {}
+  constructor(public key: string | null, public type: number | null) {}
 }
 
 export class ApplyFromParent {
@@ -76,7 +71,7 @@ type InjectionSourceType = typeof InjectionSource;
 export interface TypegraphBuilderArgs extends InjectionSourceType {
   expose: (
     exports: Exports,
-    defaultPolicy?: t.PolicySpec | Array<t.PolicySpec>,
+    defaultPolicy?: t.PolicySpec | Array<t.PolicySpec>
   ) => void;
   inherit: () => InheritDef;
   rest: (graphql: string) => number;
@@ -138,26 +133,24 @@ let counter = 0;
 
 export async function typegraph(
   name: string,
-  builder: TypegraphBuilder,
+  builder: TypegraphBuilder
 ): Promise<TypegraphOutput>;
 export async function typegraph(args: TypegraphArgs): Promise<TypegraphOutput>;
 export async function typegraph(
   args: Omit<TypegraphArgs, "builder">,
-  builder: TypegraphBuilder,
+  builder: TypegraphBuilder
 ): Promise<TypegraphOutput>;
 export async function typegraph(
   nameOrArgs: string | TypegraphArgs | Omit<TypegraphArgs, "builder">,
-  maybeBuilder?: TypegraphBuilder,
+  maybeBuilder?: TypegraphBuilder
 ): Promise<TypegraphOutput> {
   ++counter;
-  const args = typeof nameOrArgs === "string"
-    ? { name: nameOrArgs }
-    : nameOrArgs;
+  const args =
+    typeof nameOrArgs === "string" ? { name: nameOrArgs } : nameOrArgs;
 
   const { name, dynamic, cors, prefix, rate, secrets } = args;
-  const builder = "builder" in args
-    ? (args.builder as TypegraphBuilder)
-    : maybeBuilder!;
+  const builder =
+    "builder" in args ? (args.builder as TypegraphBuilder) : maybeBuilder!;
 
   const file = caller();
   if (!file) {
@@ -193,7 +186,7 @@ export async function typegraph(
     expose: (exports, defaultPolicy) => {
       core.expose(
         Object.entries(exports).map(([name, fn]) => [name, fn._id]),
-        defaultPolicy ? getPolicyChain(defaultPolicy) : [],
+        defaultPolicy ? getPolicyChain(defaultPolicy) : []
       );
     },
     inherit: () => {

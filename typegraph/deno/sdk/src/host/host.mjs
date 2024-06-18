@@ -5,10 +5,10 @@ import * as path from "node:path";
 import * as process from "node:process";
 
 function listAllFilesHelper(
-  root: string,
-  list: Array<string>,
-  exclude?: Array<string>,
-): void {
+  root,
+  list,
+  exclude,
+) {
   const currStat = fs.statSync(root);
   if (!currStat.isDirectory()) {
     list.push(root);
@@ -27,11 +27,11 @@ function listAllFilesHelper(
 }
 
 export function expandPath(
-  root: string,
-  exclude: Array<string>,
-): Array<string> {
+  root,
+  exclude,
+) {
   try {
-    const ret = [] as Array<string>;
+    const ret = [];
     listAllFilesHelper(root, ret, exclude);
     return ret;
   } catch (err) {
@@ -39,15 +39,15 @@ export function expandPath(
   }
 }
 
-export function print(msg: string) {
+export function print(msg) {
   console.log(msg);
 }
 
-export function eprint(msg: string) {
+export function eprint(msg) {
   console.error(msg);
 }
 
-export function getCwd(): string {
+export function getCwd() {
   try {
     return process.cwd();
   } catch (err) {
@@ -55,7 +55,7 @@ export function getCwd(): string {
   }
 }
 
-export function pathExists(filePath: string): boolean {
+export function pathExists(filePath) {
   try {
     return fs.existsSync(filePath);
   } catch (err) {
@@ -63,7 +63,7 @@ export function pathExists(filePath: string): boolean {
   }
 }
 
-export function readFile(filePath: string): Uint8Array {
+export function readFile(filePath) {
   try {
     const buffer = fs.readFileSync(filePath, null);
     return new Uint8Array(buffer);
@@ -72,7 +72,7 @@ export function readFile(filePath: string): Uint8Array {
   }
 }
 
-export function writeFile(filePath: string, data: Uint8Array): void {
+export function writeFile(filePath, data) {
   try {
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {

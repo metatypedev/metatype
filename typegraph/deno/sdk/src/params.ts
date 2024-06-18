@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { RawAuth } from "./typegraph.js";
-import { Auth as Auth_, wit_utils } from "./wit.js";
-import * as t from "./types.js";
+import { RawAuth } from "./typegraph.ts";
+import { Auth as Auth_, wit_utils } from "./wit.ts";
+import * as t from "./types.ts";
 
 export type StdOauth2Profiler =
   | { profiler: "default" }
@@ -52,9 +52,7 @@ export class Auth {
   }
 
   static basic(users: string[]): Auth_ {
-    const authData = [
-      ["users", JSON.stringify(users)],
-    ] as [string, string][];
+    const authData = [["users", JSON.stringify(users)]] as [string, string][];
     return {
       name: "basic",
       protocol: { tag: "basic" },
@@ -65,7 +63,7 @@ export class Auth {
   private static stdOauth2(
     provider: string,
     scopes: string,
-    profiler: StdOauth2Profiler,
+    profiler: StdOauth2Profiler
   ): RawAuth {
     switch (profiler.profiler) {
       case "none":
@@ -75,12 +73,12 @@ export class Auth {
           wit_utils.oauth2WithExtendedProfiler(
             provider,
             scopes,
-            JSON.stringify(profiler.extension),
-          ),
+            JSON.stringify(profiler.extension)
+          )
         );
       case "custom":
         return new RawAuth(
-          wit_utils.oauth2WithCustomProfiler(provider, scopes, profiler.id),
+          wit_utils.oauth2WithCustomProfiler(provider, scopes, profiler.id)
         );
       default:
         return new RawAuth(wit_utils.oauth2(provider, scopes));
@@ -89,12 +87,12 @@ export class Auth {
 
   static oauth2Digitalocean(
     scopes: string,
-    profiler?: StdOauth2Profiler,
+    profiler?: StdOauth2Profiler
   ): RawAuth {
     return Auth.stdOauth2(
       "digitalocean",
       scopes,
-      profiler ?? defaultProfiler(),
+      profiler ?? defaultProfiler()
     );
   }
 
@@ -124,7 +122,7 @@ export class Auth {
 
   static oauth2Instagram(
     scopes: string,
-    profiler?: StdOauth2Profiler,
+    profiler?: StdOauth2Profiler
   ): RawAuth {
     return Auth.stdOauth2("instagram", scopes, profiler ?? defaultProfiler());
   }
@@ -135,7 +133,7 @@ export class Auth {
 
   static oauth2Microsoft(
     scopes: string,
-    profiler?: StdOauth2Profiler,
+    profiler?: StdOauth2Profiler
   ): RawAuth {
     return Auth.stdOauth2("microsoft", scopes, profiler ?? defaultProfiler());
   }
@@ -150,12 +148,12 @@ export class Auth {
 
   static oauth2Stackexchange(
     scopes: string,
-    profiler?: StdOauth2Profiler,
+    profiler?: StdOauth2Profiler
   ): RawAuth {
     return Auth.stdOauth2(
       "stackexchange",
       scopes,
-      profiler ?? defaultProfiler(),
+      profiler ?? defaultProfiler()
     );
   }
 

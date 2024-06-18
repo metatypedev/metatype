@@ -1,29 +1,35 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
-import * as t from "../types.js";
-import { runtimes } from "../wit.js";
-import { Materializer, Runtime } from "./mod.js";
-import { fx } from "../index.js";
+import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
+import * as t from "../types.ts";
+import { runtimes } from "../wit.ts";
+import { Materializer, Runtime } from "./mod.ts";
+import { fx } from "../index.ts";
 
 export class GraphQLRuntime extends Runtime {
   constructor(private endpoint: string) {
-    super(runtimes.registerGraphqlRuntime({
-      endpoint,
-    }));
+    super(
+      runtimes.registerGraphqlRuntime({
+        endpoint,
+      })
+    );
   }
 
-  query<
-    I extends t.Typedef = t.Typedef,
-    O extends t.Typedef = t.Typedef,
-  >(inp: I, out: O, path?: string[]): t.Func<I, O, QueryMat> {
-    const matId = runtimes.graphqlQuery({
-      runtime: this._id,
-      effect: fx.read(),
-    }, {
-      path,
-    });
+  query<I extends t.Typedef = t.Typedef, O extends t.Typedef = t.Typedef>(
+    inp: I,
+    out: O,
+    path?: string[]
+  ): t.Func<I, O, QueryMat> {
+    const matId = runtimes.graphqlQuery(
+      {
+        runtime: this._id,
+        effect: fx.read(),
+      },
+      {
+        path,
+      }
+    );
     const mat: QueryMat = {
       _id: matId,
       path,
@@ -31,21 +37,21 @@ export class GraphQLRuntime extends Runtime {
     return t.func(inp, out, mat);
   }
 
-  mutation<
-    I extends t.Typedef = t.Typedef,
-    O extends t.Typedef = t.Typedef,
-  >(
+  mutation<I extends t.Typedef = t.Typedef, O extends t.Typedef = t.Typedef>(
     inp: I,
     out: O,
     effect: Effect,
-    path?: string[],
+    path?: string[]
   ): t.Func<I, O, MutationMat> {
-    const matId = runtimes.graphqlMutation({
-      runtime: this._id,
-      effect,
-    }, {
-      path,
-    });
+    const matId = runtimes.graphqlMutation(
+      {
+        runtime: this._id,
+        effect,
+      },
+      {
+        path,
+      }
+    );
     const mat: MutationMat = {
       _id: matId,
       path,
@@ -58,5 +64,4 @@ interface QueryMat extends Materializer {
   path?: string[];
 }
 
-interface MutationMat extends QueryMat {
-}
+interface MutationMat extends QueryMat {}

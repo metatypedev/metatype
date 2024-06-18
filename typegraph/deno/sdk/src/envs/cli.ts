@@ -1,5 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+import process from "node:process";
 
 const requiredCliEnvs = [
   "version",
@@ -44,7 +45,7 @@ export function loadCliEnv(): CliEnv | null {
         case "command":
           if (!COMMANDS.includes(envValue as any)) {
             throw new Error(
-              `${name} env value should be one of: serialize, deploy`,
+              `${name} env value should be one of: serialize, deploy`
             );
           }
           record[key] = envValue as Command;

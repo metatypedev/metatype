@@ -4,8 +4,8 @@
 import {
   ContextCheck,
   MaterializerId,
-} from "./gen/interfaces/metatype-typegraph-core.js";
-import { core } from "./wit.js";
+} from "./gen/interfaces/metatype-typegraph-core.d.ts";
+import { core } from "./wit.ts";
 
 interface PolicyPerEffectAlt {
   update?: Policy;
@@ -15,9 +15,7 @@ interface PolicyPerEffectAlt {
 }
 
 export class PolicyPerEffectObject {
-  constructor(
-    public readonly value: PolicyPerEffectAlt,
-  ) {}
+  constructor(public readonly value: PolicyPerEffectAlt) {}
 }
 
 export default class Policy {
@@ -37,7 +35,7 @@ export default class Policy {
     }
     if (!(check instanceof RegExp)) {
       throw new Error(
-        "Invalid context check: expected null, string, or RegExp",
+        "Invalid context check: expected null, string, or RegExp"
       );
     }
     return { tag: "pattern", val: check.source };
@@ -46,7 +44,7 @@ export default class Policy {
   static context(key: string, check?: string | RegExp | null): Policy {
     const [id, name] = core.registerContextPolicy(
       key,
-      Policy.#serializeContext(check ?? null),
+      Policy.#serializeContext(check ?? null)
     );
     return new Policy(id, name);
   }
@@ -59,7 +57,7 @@ export default class Policy {
   static create(name: string, materializerId: MaterializerId): Policy {
     return new Policy(
       core.registerPolicy({ name, materializer: materializerId }),
-      name,
+      name
     );
   }
 

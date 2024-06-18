@@ -1,14 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Materializer, Runtime } from "../runtimes/mod.js";
-import { aws } from "../wit.js";
+import { Materializer, Runtime } from "../runtimes/mod.ts";
+import { aws } from "../wit.ts";
 import {
   S3PresignGetParams,
   S3PresignPutParams,
   S3RuntimeData,
-} from "../gen/interfaces/metatype-typegraph-aws.js";
-import { t } from "../index.js";
+} from "../gen/interfaces/metatype-typegraph-aws.d.ts";
+import { t } from "../index.ts";
 
 type S3PresignGetMat = Materializer & S3PresignGetParams;
 type S3PresignPutMat = Materializer & S3PresignPutParams;
@@ -40,16 +40,10 @@ export class S3Runtime extends Runtime {
       bucket,
       expirySecs,
     };
-    return t.func(
-      t.struct({ path: t.string() }),
-      t.uri(),
-      mat,
-    );
+    return t.func(t.struct({ path: t.string() }), t.uri(), mat);
   }
 
-  public presignPut(
-    params: S3PresignPutParams,
-  ) {
+  public presignPut(params: S3PresignPutParams) {
     const { bucket, expirySecs, contentType } = params;
     const mat: S3PresignPutMat = {
       _id: aws.s3PresignPut(this._id, params),
@@ -60,7 +54,7 @@ export class S3Runtime extends Runtime {
     return t.func(
       t.struct({ length: t.integer(), path: t.string() }),
       t.uri(),
-      mat,
+      mat
     );
   }
 
@@ -78,7 +72,7 @@ export class S3Runtime extends Runtime {
         keys: t.list(t.struct({ key: t.string(), size: t.integer() })),
         prefix: t.list(t.string()),
       }),
-      mat,
+      mat
     );
   }
 
@@ -91,7 +85,7 @@ export class S3Runtime extends Runtime {
     return t.func(
       t.struct({ file: fileType, path: t.string().optional() }),
       t.boolean(),
-      mat,
+      mat
     );
   }
 
@@ -107,7 +101,7 @@ export class S3Runtime extends Runtime {
         files: t.list(fileType),
       }),
       t.boolean(),
-      mat,
+      mat
     );
   }
 }

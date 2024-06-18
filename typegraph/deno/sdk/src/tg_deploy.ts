@@ -4,17 +4,14 @@
 import {
   MigrationAction,
   SerializeParams,
-} from "./gen/interfaces/metatype-typegraph-core.js";
-import { ArtifactUploader } from "./tg_artifact_upload.js";
-import { TypegraphOutput } from "./typegraph.js";
-import { wit_utils } from "./wit.js";
-import { execRequest } from "./utils/func_utils.js";
+} from "./gen/interfaces/metatype-typegraph-core.d.ts";
+import { ArtifactUploader } from "./tg_artifact_upload.ts";
+import { TypegraphOutput } from "./typegraph.ts";
+import { wit_utils } from "./wit.ts";
+import { execRequest } from "./utils/func_utils.ts";
 
 export class BasicAuth {
-  constructor(
-    public username: string,
-    public password: string,
-  ) {}
+  constructor(public username: string, public password: string) {}
   asHeaderValue(): string {
     return `Basic ${btoa(this.username + ":" + this.password)}`;
   }
@@ -57,7 +54,7 @@ export interface ArtifactMeta {
 
 export async function tgDeploy(
   typegraph: TypegraphOutput,
-  params: TypegraphDeployParams,
+  params: TypegraphDeployParams
 ): Promise<DeployResult> {
   const serializeParams = {
     typegraphPath: params.typegraphPath,
@@ -94,7 +91,7 @@ export async function tgDeploy(
       typegraph.name,
       typegate.auth,
       headers,
-      params.typegraphPath,
+      params.typegraphPath
     );
     await artifactUploader.uploadArtifacts();
   }
@@ -110,7 +107,7 @@ export async function tgDeploy(
         secrets: Object.entries(params.secrets ?? {}),
       }),
     },
-    `tgDeploy failed to deploy typegraph ${typegraph.name}`,
+    `tgDeploy failed to deploy typegraph ${typegraph.name}`
   );
 
   if (response.errors) {
@@ -128,7 +125,7 @@ export async function tgDeploy(
 
 export async function tgRemove(
   typegraph: TypegraphOutput,
-  params: TypegraphRemoveParams,
+  params: TypegraphRemoveParams
 ): Promise<RemoveResult> {
   const { url, auth } = params.typegate;
 
@@ -145,7 +142,7 @@ export async function tgRemove(
       headers,
       body: wit_utils.gqlRemoveQuery([typegraph.name]),
     },
-    `tgRemove failed to remove typegraph ${typegraph.name}`,
+    `tgRemove failed to remove typegraph ${typegraph.name}`
   );
 
   return { typegate: response };

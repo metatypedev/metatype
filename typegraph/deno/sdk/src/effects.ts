@@ -6,7 +6,7 @@ import {
   EffectDelete,
   EffectRead,
   EffectUpdate,
-} from "./gen/interfaces/metatype-typegraph-runtimes.js";
+} from "./gen/interfaces/metatype-typegraph-runtimes.d.ts";
 
 export function read(): EffectRead {
   return { tag: "read" };

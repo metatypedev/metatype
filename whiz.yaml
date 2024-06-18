@@ -67,7 +67,7 @@ typegraph:
     wasm-tools component new target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE
 
     rm -rf typegraph/deno/sdk/src/gen
-    jco transpile $WASM_FILE -o typegraph/deno/sdk/src/gen --map metatype:typegraph/host=../host/host.js
+    jco transpile $WASM_FILE -o typegraph/deno/sdk/src/gen --map metatype:typegraph/host=../host/host.mjs
     deno run -A typegraph/deno/dev/fix-declarations.ts
 
     rm -rf typegraph/python/typegraph/gen

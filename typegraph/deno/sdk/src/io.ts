@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 import { inspect } from "node:util";
 // import { createInterface, Interface } from "node:readline";
-
+import process from "node:process";
 /**
  * see: module level documentation `meta-cli/src/deploy/actors/task.rs`
  */

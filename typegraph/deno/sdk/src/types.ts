@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { core, wit_utils } from "./wit.js";
+import { core, wit_utils } from "./wit.ts";
 import {
   ParameterTransform,
   PolicyPerEffect,
@@ -15,19 +15,19 @@ import {
   TypeOptional,
   TypeString,
   TypeUnion,
-} from "./gen/interfaces/metatype-typegraph-core.js";
-import { Reduce } from "./gen/interfaces/metatype-typegraph-utils.js";
-import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.js";
-import { Materializer } from "./runtimes/mod.js";
-import { mapValues } from "./deps/mod.js";
-import Policy, { PolicyPerEffectObject } from "./policy.js";
-import { buildReduceData, serializeRecordValues } from "./utils/func_utils.js";
+} from "./gen/interfaces/metatype-typegraph-core.d.ts";
+import { Reduce } from "./gen/interfaces/metatype-typegraph-utils.d.ts";
+import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.d.ts";
+import { Materializer } from "./runtimes/mod.ts";
+import { mapValues } from "./deps/mod.ts";
+import Policy, { PolicyPerEffectObject } from "./policy.ts";
+import { buildReduceData, serializeRecordValues } from "./utils/func_utils.ts";
 import {
   serializeFromParentInjection,
   serializeGenericInjection,
   serializeStaticInjection,
-} from "./utils/injection_utils.js";
-import { InjectionValue } from "./utils/type_utils.js";
+} from "./utils/injection_utils.ts";
+import { InjectionValue } from "./utils/type_utils.ts";
 import {
   ApplyFromArg,
   ApplyFromContext,
@@ -35,31 +35,36 @@ import {
   ApplyFromSecret,
   ApplyFromStatic,
   InheritDef,
-} from "./typegraph.js";
+} from "./typegraph.ts";
 
-export type PolicySpec = Policy | PolicyPerEffectObject | {
-  none: Policy;
-  create: Policy;
-  update: Policy;
-  delete: Policy;
-};
+export type PolicySpec =
+  | Policy
+  | PolicyPerEffectObject
+  | {
+      none: Policy;
+      create: Policy;
+      update: Policy;
+      delete: Policy;
+    };
 
 export type Simplified<T> = Omit<T, "of">;
 
-export type SimplifiedBase<T> =
-  & { config?: Record<string, unknown> }
-  & Omit<T, "runtimeConfig" | "asId">;
+export type SimplifiedBase<T> = { config?: Record<string, unknown> } & Omit<
+  T,
+  "runtimeConfig" | "asId"
+>;
 
 export type AsId = {
   asId?: true;
 };
 
-export type SimplifiedNumericData<T> =
-  & { enumeration?: number[] }
-  & Omit<T, "enumeration">;
+export type SimplifiedNumericData<T> = { enumeration?: number[] } & Omit<
+  T,
+  "enumeration"
+>;
 
 export function getPolicyChain(
-  policy: PolicySpec[] | PolicySpec,
+  policy: PolicySpec[] | PolicySpec
 ): WitPolicySpec[] {
   const chain = Array.isArray(policy) ? policy : [policy];
   return chain.map((p) => {
@@ -71,7 +76,7 @@ export function getPolicyChain(
       tag: "per-effect",
       val: mapValues(
         p instanceof PolicyPerEffectObject ? p.value : p,
-        (v: any) => v._id,
+        (v: any) => v._id
       ) as unknown as PolicyPerEffect,
     } as const;
   });
@@ -152,39 +157,27 @@ export class Typedef {
   }
 
   set(value: InjectionValue<unknown>) {
-    return this.withInjection(
-      serializeStaticInjection(value),
-    );
+    return this.withInjection(serializeStaticInjection(value));
   }
 
   inject(value: InjectionValue<string>) {
-    return this.withInjection(
-      serializeGenericInjection("dynamic", value),
-    );
+    return this.withInjection(serializeGenericInjection("dynamic", value));
   }
 
   fromContext(value: InjectionValue<string>) {
-    return this.withInjection(
-      serializeGenericInjection("context", value),
-    );
+    return this.withInjection(serializeGenericInjection("context", value));
   }
 
   fromSecret(value: InjectionValue<string>) {
-    return this.withInjection(
-      serializeGenericInjection("secret", value),
-    );
+    return this.withInjection(serializeGenericInjection("secret", value));
   }
 
   fromParent(value: InjectionValue<string>) {
-    return this.withInjection(
-      serializeFromParentInjection(value),
-    );
+    return this.withInjection(serializeFromParentInjection(value));
   }
 
   fromRandom() {
-    return this.withInjection(
-      serializeGenericInjection("random", null),
-    );
+    return this.withInjection(serializeGenericInjection("random", null));
   }
 }
 
@@ -224,7 +217,7 @@ class Integer extends Typedef implements Readonly<TypeInteger> {
 
 export function integer(
   data: SimplifiedNumericData<TypeInteger> = {},
-  base: SimplifiedBase<TypeBase> & AsId = {},
+  base: SimplifiedBase<TypeBase> & AsId = {}
 ) {
   const completeData = {
     ...data,
@@ -240,7 +233,7 @@ export function integer(
   return new Integer(
     core.integerb(completeData, completeBase),
     completeData,
-    completeBase,
+    completeBase
   );
 }
 
@@ -265,7 +258,7 @@ class Float extends Typedef implements Readonly<TypeFloat> {
 
 export function float(
   data: SimplifiedNumericData<TypeFloat> = {},
-  base: SimplifiedBase<TypeBase> = {},
+  base: SimplifiedBase<TypeBase> = {}
 ) {
   const completeData = {
     ...data,
@@ -281,7 +274,7 @@ export function float(
   return new Float(
     core.floatb(completeData, completeBase),
     completeData,
-    completeBase,
+    completeBase
   );
 }
 
@@ -304,7 +297,7 @@ class StringT extends Typedef implements Readonly<TypeString> {
 
 export function string(
   data: TypeString = {},
-  base: SimplifiedBase<TypeBase> & AsId = {},
+  base: SimplifiedBase<TypeBase> & AsId = {}
 ) {
   const completeBase = {
     ...base,
@@ -352,9 +345,12 @@ export function phone() {
 
 // Note: enum is a reserved word
 export function enum_(variants: string[], base: SimplifiedBase<TypeBase> = {}) {
-  return string({
-    enumeration: variants.map((variant) => JSON.stringify(variant)),
-  }, base);
+  return string(
+    {
+      enumeration: variants.map((variant) => JSON.stringify(variant)),
+    },
+    base
+  );
 }
 
 class File extends Typedef {
@@ -372,7 +368,7 @@ class File extends Typedef {
 
 export function file(
   data: Simplified<TypeFile> = {},
-  base: SimplifiedBase<TypeBase> = {},
+  base: SimplifiedBase<TypeBase> = {}
 ) {
   const completeBase = {
     ...base,
@@ -400,7 +396,7 @@ class List extends Typedef {
 export function list(
   variant: Typedef,
   data: Simplified<TypeList> = {},
-  base: SimplifiedBase<TypeBase> = {},
+  base: SimplifiedBase<TypeBase> = {}
 ) {
   const completeData = {
     of: variant._id,
@@ -414,7 +410,7 @@ export function list(
   return new List(
     core.listb(completeData, completeBase),
     completeData,
-    completeBase,
+    completeBase
   );
 }
 
@@ -432,7 +428,7 @@ class Optional extends Typedef {
 export function optional(
   variant: Typedef,
   data: Simplified<TypeOptional> = {},
-  base: SimplifiedBase<TypeBase> = {},
+  base: SimplifiedBase<TypeBase> = {}
 ) {
   const completeData = {
     of: variant._id,
@@ -447,7 +443,7 @@ export function optional(
   return new Optional(
     core.optionalb(completeData, completeBase),
     completeData,
-    completeBase,
+    completeBase
   );
 }
 
@@ -462,7 +458,7 @@ class Union extends Typedef {
 
 export function union(
   variants: Array<Typedef>,
-  base: SimplifiedBase<TypeBase> = {},
+  base: SimplifiedBase<TypeBase> = {}
 ) {
   const data = {
     variants: new Uint32Array(variants.map((variant) => variant._id)),
@@ -472,11 +468,7 @@ export function union(
     asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
-  return new Union(
-    core.unionb(data, completeBase),
-    data,
-    completeBase,
-  );
+  return new Union(core.unionb(data, completeBase), data, completeBase);
 }
 
 class Either extends Typedef {
@@ -490,7 +482,7 @@ class Either extends Typedef {
 
 export function either(
   variants: Array<Typedef>,
-  base: SimplifiedBase<TypeBase> = {},
+  base: SimplifiedBase<TypeBase> = {}
 ) {
   const data = {
     variants: new Uint32Array(variants.map((variant) => variant._id)),
@@ -500,11 +492,7 @@ export function either(
     asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
-  return new Either(
-    core.eitherb(data, completeBase),
-    data,
-    completeBase,
-  );
+  return new Either(core.eitherb(data, completeBase), data, completeBase);
 }
 
 export class Struct<P extends { [key: string]: Typedef }> extends Typedef {
@@ -517,7 +505,7 @@ export class Struct<P extends { [key: string]: Typedef }> extends Typedef {
 
 export function struct<P extends { [key: string]: Typedef }>(
   props: P,
-  base: SimplifiedBase<TypeBase> & { additionalProps?: boolean } = {},
+  base: SimplifiedBase<TypeBase> & { additionalProps?: boolean } = {}
 ): Struct<P> {
   const completeBase = {
     ...base,
@@ -525,14 +513,17 @@ export function struct<P extends { [key: string]: Typedef }>(
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Struct(
-    core.structb({
-      props: Object.entries(props).map(([name, typ]) => [name, typ._id]),
-      additionalProps: completeBase.additionalProps ?? false,
-    }, completeBase),
+    core.structb(
+      {
+        props: Object.entries(props).map(([name, typ]) => [name, typ._id]),
+        additionalProps: completeBase.additionalProps ?? false,
+      },
+      completeBase
+    ),
     {
       props,
     },
-    completeBase,
+    completeBase
   );
 }
 
@@ -553,7 +544,7 @@ type ApplyParamNode =
   | ApplyParamLeafNode;
 
 function serializeApplyParamNode(
-  node: ApplyParamNode,
+  node: ApplyParamNode
 ): Record<string, unknown> {
   if (node instanceof ApplyFromArg) {
     return { source: "arg", name: node.name, typeId: node.type };
@@ -582,7 +573,7 @@ function serializeApplyParamNode(
 export class Func<
   I extends Typedef = Typedef,
   O extends Typedef = Typedef,
-  M extends Materializer = Materializer,
+  M extends Materializer = Materializer
 > extends Typedef {
   inp: I;
   out: O;
@@ -596,7 +587,7 @@ export class Func<
     out: O,
     mat: M,
     parameterTransform: ParameterTransform | null = null,
-    config: FuncConfig | null = null,
+    config: FuncConfig | null = null
   ) {
     super(_id, {});
     this.inp = inp;
@@ -609,9 +600,9 @@ export class Func<
   extend(fields: Record<string, Typedef>): Func<I, Typedef, M> {
     const output = core.extendStruct(
       this.out._id,
-      Object.entries(fields).map(([name, typ]) =>
-        [name, typ._id] as [string, number]
-      ),
+      Object.entries(fields).map(
+        ([name, typ]) => [name, typ._id] as [string, number]
+      )
     );
 
     return func(
@@ -619,7 +610,7 @@ export class Func<
       new Typedef(output, {}),
       this.mat,
       this.parameterTransform,
-      this.config,
+      this.config
     );
   }
 
@@ -628,22 +619,16 @@ export class Func<
       paths: buildReduceData(value),
     };
 
-    const reducedId = wit_utils.genReduceb(
-      this.inp._id,
-      data,
-    );
+    const reducedId = wit_utils.genReduceb(this.inp._id, data);
 
-    return func(
-      new Typedef(reducedId, {}),
-      this.out,
-      this.mat,
-    );
+    return func(new Typedef(reducedId, {}), this.out, this.mat);
   }
 
   apply(value: ApplyParamObjectNode): Func<Typedef, O, M> {
     const serialized = serializeApplyParamNode(value);
     if (
-      typeof serialized !== "object" || serialized == null ||
+      typeof serialized !== "object" ||
+      serialized == null ||
       serialized.type !== "object"
     ) {
       throw new Error("Invalid apply value: root must be an object");
@@ -656,27 +641,22 @@ export class Func<
       this.out,
       this.mat,
       transformData.parameterTransform,
-      this.config,
+      this.config
     );
   }
 
-  rate(
-    inp: { calls: boolean; weight?: number },
-  ): Func<I, O, M> {
-    return func(
-      this.inp,
-      this.out,
-      this.mat,
-      this.parameterTransform,
-      { rateCalls: inp.calls ?? false, rateWeight: inp.weight },
-    );
+  rate(inp: { calls: boolean; weight?: number }): Func<I, O, M> {
+    return func(this.inp, this.out, this.mat, this.parameterTransform, {
+      rateCalls: inp.calls ?? false,
+      rateWeight: inp.weight,
+    });
   }
 
   static fromTypeFunc(data: FuncParams) {
     return func(
       new Typedef(data.inp, {}) as Struct<{ [key: string]: Typedef }>,
       new Typedef(data.out, {}),
-      { _id: data.mat },
+      { _id: data.mat }
     );
   }
 }
@@ -689,13 +669,13 @@ type FuncConfig = {
 export function func<
   I extends Typedef = Typedef,
   O extends Typedef = Typedef,
-  M extends Materializer = Materializer,
+  M extends Materializer = Materializer
 >(
   inp: I,
   out: O,
   mat: M,
   transformData: ParameterTransform | null = null,
-  config: FuncConfig | null = null,
+  config: FuncConfig | null = null
 ) {
   const rateCalls = config?.rateCalls ?? false;
   const rateWeight = config?.rateWeight ?? undefined;
@@ -712,6 +692,6 @@ export function func<
     out,
     mat,
     transformData,
-    config,
+    config
   );
 }

@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import * as t from "../types.js";
-import { runtimes } from "../wit.js";
-import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.js";
-import { Materializer, Runtime } from "./mod.js";
-import { fx } from "../index.js";
+import * as t from "../types.ts";
+import { runtimes } from "../wit.ts";
+import { Effect } from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
+import { Materializer, Runtime } from "./mod.ts";
+import { fx } from "../index.ts";
 
 export class WasmRuntime extends Runtime {
   static reflected(modulePath: string) {
@@ -31,20 +31,20 @@ class WasmRuntimeWire extends WasmRuntime {
     super(
       runtimes.registerWasmWireRuntime({
         wasmArtifact: artifactPath,
-      }),
+      })
     );
   }
 
-  handler<
-    I extends t.Typedef = t.Typedef,
-    O extends t.Typedef = t.Typedef,
-  >(
+  handler<I extends t.Typedef = t.Typedef, O extends t.Typedef = t.Typedef>(
     inp: I,
     out: O,
-    { name, effect = fx.read() }: {
+    {
+      name,
+      effect = fx.read(),
+    }: {
       name: string;
       effect?: Effect;
-    },
+    }
   ): t.Func<I, O, WireHandlerWasmMat> {
     const matId = runtimes.fromWasmWireHandler(
       {
@@ -53,7 +53,7 @@ class WasmRuntimeWire extends WasmRuntime {
       },
       {
         funcName: name,
-      },
+      }
     );
 
     return t.func(inp, out, {
@@ -69,20 +69,20 @@ class WasmRuntimeReflected extends WasmRuntime {
     super(
       runtimes.registerWasmReflectedRuntime({
         wasmArtifact: artifactPath,
-      }),
+      })
     );
   }
 
-  export<
-    I extends t.Typedef = t.Typedef,
-    O extends t.Typedef = t.Typedef,
-  >(
+  export<I extends t.Typedef = t.Typedef, O extends t.Typedef = t.Typedef>(
     inp: I,
     out: O,
-    { name, effect = fx.read() }: {
+    {
+      name,
+      effect = fx.read(),
+    }: {
       name: string;
       effect?: Effect;
-    },
+    }
   ): t.Func<I, O, ReflectedFuncWasmMat> {
     const matId = runtimes.fromWasmReflectedFunc(
       {
@@ -91,7 +91,7 @@ class WasmRuntimeReflected extends WasmRuntime {
       },
       {
         funcName: name,
-      },
+      }
     );
 
     return t.func(inp, out, {
