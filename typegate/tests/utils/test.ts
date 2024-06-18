@@ -41,24 +41,6 @@ class TypegateManager implements AsyncDisposable {
 
   constructor(public typegates: Typegate[]) {}
 
-  static async init(replicas: number) {
-    const typegates = await Promise.all(
-      Array.from({ length: replicas }).map(async () =>
-        Typegate.init(
-          getTypegateConfig({
-            base: {
-              ...defaultTypegateConfigBase,
-              tmp_dir: await newTempDir({ prefix: "typegate-test-" }),
-            },
-          }),
-          null,
-        )
-      ),
-    );
-
-    return new TypegateManager(typegates);
-  }
-
   get replicas() {
     return this.typegates.length;
   }
@@ -72,7 +54,6 @@ class TypegateManager implements AsyncDisposable {
   async [Symbol.asyncDispose]() {
     await Promise.all(
       this.typegates.map(async (tg) => {
-        await Deno.remove(tg.config.base.tmp_dir, { recursive: true });
         await tg[Symbol.asyncDispose]();
       }),
     );
@@ -467,9 +448,8 @@ export const test = ((o, fn): void => {
       const tempDirs = await Promise.all(
         Array.from({ length: replicas }).map(async (_) => {
           const uuid = crypto.randomUUID();
-          return await Deno.makeTempDir({
+          return await newTempDir({
             prefix: `typegate-test-${uuid}`,
-            dir: Deno.env.get("TMP_DIR"),
           });
         }),
       );
@@ -479,11 +459,11 @@ export const test = ((o, fn): void => {
         Array.from({ length: replicas }).map(async (_, index) => {
           const config = getTypegateConfig({
             base: {
-              tmp_dir: tempDirs[index],
               ...defaultTypegateConfigBase,
             },
           });
           config.sync = opts.syncConfig ?? null;
+          config.base.tmp_dir = tempDirs[index];
           return await Typegate.init(config);
         }),
       );

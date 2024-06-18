@@ -10,7 +10,7 @@ export function newTempDir(
   options: Deno.MakeTempOptions = {},
 ): Promise<string> {
   return Deno.makeTempDir({
-    dir: join(workspaceDir, "typegate/tmp"),
+    dir: join(workspaceDir, "tmp"),
     ...options,
   });
 }

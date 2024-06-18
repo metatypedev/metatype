@@ -94,10 +94,7 @@ export class Typegate implements AsyncDisposable {
       await using stack = new AsyncDisposableStack();
 
       const register = customRegister ?? new MemoryRegister();
-      const artifactStore = await createLocalArtifactStore(
-        tmpDir,
-        cryptoKeys,
-      );
+      const artifactStore = await createLocalArtifactStore(tmpDir, cryptoKeys);
 
       stack.use(register);
       stack.use(artifactStore);
@@ -212,10 +209,7 @@ export class Typegate implements AsyncDisposable {
     return res;
   }
 
-  async handle(
-    request: Request,
-    connInfo: Deno.NetAddr,
-  ): Promise<Response> {
+  async handle(request: Request, connInfo: Deno.NetAddr): Promise<Response> {
     try {
       const url = new URL(request.url);
 
