@@ -194,7 +194,7 @@ jobs:
           cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
           # check target runs extra validation steps in the Dockerfile
           target: check
-          build-args: 'CARGO_PROFILE=dev'
+          build-args: "CARGO_PROFILE=dev"
       - name: Build without cache (external)
         uses: docker/build-push-action@v5
         if: "! steps.check.outputs.has-permission"
@@ -203,7 +203,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: false
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
-          build-args: 'CARGO_PROFILE=dev'
+          build-args: "CARGO_PROFILE=dev"
           target: check
 
   test-full:
@@ -262,29 +262,14 @@ jobs:
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
           # build node typegrap/sdk package
-          jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen --map metatype:typegraph/host=../host/host.js
-          cd typegraph/node
-          pnpm install
-          pnpm run sdk-build
-          cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
-          cd -
+          jco transpile $WASM_FILE -o typegraph/deno/sdk/src/gen --map metatype:typegraph/host=../host/host.mjs
+          deno run -A typegraph/deno/dev/fix-declarations.ts
 
           # start the docker containers
           ghjk x dev env base prisma
 
           export NPM_CONFIG_REGISTRY=http://localhost:4873
 
-          # publish the sdk to the local registry
-          cd typegraph/node/sdk/dist
-          npm config set "//localhost:4873/:_authToken" fooBar
-          npm publish --registry $NPM_CONFIG_REGISTRY
-          cd -
-
-          ghjk x clean-deno-lock
-
-          # install packages inside metatype examples
-          pnpm install -C examples/typegraphs
-          pnpm install -C libs/metagen/tests
 
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
 
