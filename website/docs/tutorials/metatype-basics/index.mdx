@@ -805,7 +805,7 @@ If you try to `create` new bucket through `create_idea`, the typgate will return
 }
 ```
 
-As you will be linking existing buckets when creating ideas, you need to create at least one bucket in your database. To do that you can execute the following graphql query with admin privileges. You should add `Authorization: "Basic YW5kaW06cGFzc3dvcmQ="` in your headers when sending the request.
+As you will be linking existing buckets when creating ideas, you need to create at least one bucket in your database. To do that you need to execute the following graphql query with admin privileges. You should add `Authorization: "Basic YW5kaW06cGFzc3dvcmQ="` in your headers when sending the request.
 ```graphql
 mutation CBucket {
   create_bucket(data: {name:"Backlog"}){
