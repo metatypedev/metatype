@@ -264,6 +264,8 @@ jobs:
 
           ghjk x lock-clean-deno
 
+          # WIP hack
+          export MCLI_LOADER_PY='poetry run python'
           ghjk x test-e2e --threads 1 -- --coverage=coverage
 
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
