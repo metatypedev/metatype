@@ -75,14 +75,11 @@ const prepare = {
             currentDir: "examples/typegraphs/metagen/rs",
           })
         ).code,
-        0,
+        0
       );
     });
   },
-} as Record<
-  (typeof list)[number],
-  ((t: MetaTest) => Promise<void>) | undefined
->;
+} as Record<string, ((t: MetaTest) => Promise<void>) | undefined>;
 
 Meta.test("website typegraph files", async (t) => {
   await t.should("list all python files", async () => {
@@ -121,7 +118,7 @@ for (const name of list) {
           { currentDir: "examples" },
           "serialize",
           "-f",
-          `typegraphs/${name}.py`,
+          `typegraphs/${name}.py`
         );
         pyVersion = stdout;
       });
@@ -129,10 +126,13 @@ for (const name of list) {
       let tsVersion: string;
       await t.should("serialize typescript typegraph", async () => {
         const { stdout } = await Meta.cli(
-          { currentDir: "examples" },
+          {
+            currentDir: "examples",
+            env: { MCLI_DENO_IMPORT_MAP: "../typegate/import_map.json" },
+          },
           "serialize",
           "-f",
-          `typegraphs/${name}.ts`,
+          `typegraphs/${name}.ts`
         );
         tsVersion = stdout;
       });
@@ -143,7 +143,7 @@ for (const name of list) {
         await Promise.all([...py, ...ts].map((tg) => toComparable(t, tg)));
         assertEquals(py, ts);
       });
-    },
+    }
   );
 }
 
@@ -156,6 +156,6 @@ async function toComparable(t: MetaTest, tg: TypeGraphDS) {
         });
         mat.data.script = res.stdout;
       }
-    }),
+    })
   );
 }

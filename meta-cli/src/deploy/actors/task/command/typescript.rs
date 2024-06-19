@@ -17,12 +17,17 @@ pub(super) async fn get_raw_command(path: impl AsRef<Path>) -> Result<Command> {
         TsRuntime::Deno => {
             log::debug!("loading typegraph using deno");
             let mut command = Command::new("deno");
+
+            command.arg("run");
+            if let Ok(import_map) = std::env::var("MCLI_DENO_IMPORT_MAP") {
+                command.arg(&format!("--import-map={import_map}"));
+            }
             command
-                .arg("run")
-                // .arg("--unstable")
+                // .arg("--unstable");
                 .arg("--allow-all")
                 .arg("--check")
                 .arg(path.to_str().unwrap());
+
             Ok(command)
         }
         TsRuntime::Node => {

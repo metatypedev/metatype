@@ -215,7 +215,9 @@ export async function typegraph(
   const ret = {
     serialize(config: SerializeParams) {
       try {
-        const [tgJson, ref_artifacts] = core.serializeTypegraph(config);
+        const [tgJson, ref_artifacts] = core.serializeTypegraph(
+          config
+        ) as Array<any>; // FIXME: bad typing?
         const result: TgFinalizationResult = {
           tgJson: tgJson,
           ref_artifacts: ref_artifacts,
