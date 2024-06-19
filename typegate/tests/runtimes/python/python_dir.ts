@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
+import { PythonRuntime } from "@typegraph/sdk/runtimes/python.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
 
 const tpe = t.struct({
   a: t.string(),

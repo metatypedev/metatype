@@ -1,21 +1,11 @@
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
-import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
-import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.js";
-import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
-import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
-import { wit_utils } from "@typegraph/sdk/wit.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+import { PythonRuntime } from "@typegraph/sdk/runtimes/python.ts";
+import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.ts";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.ts";
+import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.ts";
+import { wit_utils } from "@typegraph/sdk/wit.ts";
 import * as path from "path";
-
-// deno
-// import { Policy, t, typegraph } from "../../typegraph/node/sdk/dist/index.js";
-// import { DenoRuntime } from "../../typegraph/node/sdk/dist/runtimes/deno.js";
-// import { PythonRuntime } from "../../typegraph/node/sdk/dist/runtimes/python.js";
-// import { WasmRuntime } from "../../typegraph/node/sdk/dist/runtimes/wasm.js";
-// import { tgDeploy } from "../../typegraph/node/sdk/dist/tg_deploy.js";
-// import { PrismaRuntime } from "../../typegraph/node/sdk/dist/providers/prisma.js";
-// import { BasicAuth } from "../../typegraph/node/sdk/dist/tg_deploy.js";
-// import { wit_utils } from "../../typegraph/node/sdk/dist/wit.js";
 
 const tg = await typegraph({
   name: "deploy-example-node",

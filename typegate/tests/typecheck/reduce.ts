@@ -1,24 +1,33 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { fx, Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
+import { fx, Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
 
-const student = t.struct({
-  id: t.integer(),
-  name: t.string(),
-  infos: t.struct({
-    age: t.integer({ min: 10 }),
-    school: t.string().optional(),
-  }),
-  distinctions: t.struct({
-    awards: t.list(t.struct({
-      name: t.string(),
-      points: t.integer(),
-    })).optional(),
-    medals: t.integer().optional(),
-  }).optional(),
-}, { name: "Student" });
+const student = t.struct(
+  {
+    id: t.integer(),
+    name: t.string(),
+    infos: t.struct({
+      age: t.integer({ min: 10 }),
+      school: t.string().optional(),
+    }),
+    distinctions: t
+      .struct({
+        awards: t
+          .list(
+            t.struct({
+              name: t.string(),
+              points: t.integer(),
+            })
+          )
+          .optional(),
+        medals: t.integer().optional(),
+      })
+      .optional(),
+  },
+  { name: "Student" }
+);
 
 const grades = t.struct({
   year: t.integer({ min: 2000 }),
@@ -26,7 +35,7 @@ const grades = t.struct({
     t.struct({
       name: t.string(),
       score: t.integer(),
-    }),
+    })
   ),
 });
 
@@ -35,24 +44,24 @@ const tpe = t.struct({ student, grades: grades.optional() });
 export const tg = await typegraph("test-reduce-deno", (g: any) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
-  const identityStudent = deno.func(
-    tpe,
-    tpe,
-    { code: "({ student, grades }) => { return { student, grades } }" },
-  );
+  const identityStudent = deno.func(tpe, tpe, {
+    code: "({ student, grades }) => { return { student, grades } }",
+  });
 
   g.expose({
-    testInvariant: identityStudent.reduce({
-      student: {
-        id: g.inherit(),
-        name: g.inherit(),
-        infos: {
-          age: g.inherit(),
-          school: g.inherit(),
+    testInvariant: identityStudent
+      .reduce({
+        student: {
+          id: g.inherit(),
+          name: g.inherit(),
+          infos: {
+            age: g.inherit(),
+            school: g.inherit(),
+          },
         },
-      },
-      // grades: g.inherit(), // implicit
-    }).withPolicy(pub),
+        // grades: g.inherit(), // implicit
+      })
+      .withPolicy(pub),
     reduceComposition: identityStudent
       .reduce({
         student: {
@@ -73,7 +82,8 @@ export const tg = await typegraph("test-reduce-deno", (g: any) => {
         // student: g.inherit(), // implicit
         grades: {
           year: g.inherit(),
-          subjects: g.inherit().set([ // sugar
+          subjects: g.inherit().set([
+            // sugar
             { name: "Math", score: 60 },
           ]),
         },

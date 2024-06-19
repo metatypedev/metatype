@@ -1,6 +1,6 @@
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
 
 await typegraph(
   {
@@ -49,11 +49,11 @@ await typegraph(
               headers: Object.entries(ctx.headers),
               secrets: Object.entries(ctx.secrets),
             }),
-          },
+          }
         ),
       },
-      Policy.public(),
+      Policy.public()
     );
     // skip:start
-  },
+  }
 );

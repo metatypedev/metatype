@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
-import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
+import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.ts";
 
 import { Meta } from "test-utils/mod.ts";
-import { tg } from "./self_deploy.mjs"; // FIXME: deno coverage issues with transpiled version of this file
+import { tg } from "./self_deploy.ts"; // FIXME: deno coverage issues with transpiled version of this file
 import { testDir } from "test-utils/dir.ts";
 import { join } from "std/path/join.ts";
 import { assertEquals, assertExists } from "std/assert/mod.ts";
@@ -40,5 +40,5 @@ Meta.test(
       typegate: { url: gate, auth },
     });
     assertEquals(gateResponseRem, { data: { removeTypegraphs: true } });
-  },
+  }
 );

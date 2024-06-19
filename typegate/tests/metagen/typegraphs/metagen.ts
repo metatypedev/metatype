@@ -1,5 +1,5 @@
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { PythonRuntime } from "@typegraph/sdk/runtimes/python.ts";
 
 export const tg = await typegraph({
   name: "example-metagen",

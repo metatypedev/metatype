@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
 
 const a = t.integer();
 
@@ -15,27 +15,35 @@ typegraph("test-types", (g: any) => {
   const pub = Policy.public();
   const internal = Policy.internal();
 
-  const user = t.struct({
-    id: t.integer(),
-    post: g.ref("Post"),
-  }, { name: "User" });
+  const user = t.struct(
+    {
+      id: t.integer(),
+      post: g.ref("Post"),
+    },
+    { name: "User" }
+  );
 
-  const post = t.struct({
-    id: t.integer(),
-    author: user,
-  }, { name: "Post" });
+  const post = t.struct(
+    {
+      id: t.integer(),
+      author: user,
+    },
+    { name: "Post" }
+  );
 
   g.expose({
-    one: deno.func(s1, b, {
-      code: "() => 12",
-    }).withPolicy(internal),
-    two: deno.func(user, post, {
-      code: "(user) => ({ id: 12, user })",
-    }).withPolicy(deno.policy("deny", "() => false")),
-    three: deno.import(
-      s1,
-      s1,
-      { name: "three", module: "scripts/three.ts" },
-    ).withPolicy(pub),
+    one: deno
+      .func(s1, b, {
+        code: "() => 12",
+      })
+      .withPolicy(internal),
+    two: deno
+      .func(user, post, {
+        code: "(user) => ({ id: 12, user })",
+      })
+      .withPolicy(deno.policy("deny", "() => false")),
+    three: deno
+      .import(s1, s1, { name: "three", module: "scripts/three.ts" })
+      .withPolicy(pub),
   });
 });

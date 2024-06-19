@@ -9,7 +9,7 @@
     "dev",
     "examples/templates/deno",
     "typegraph/deno/dev",
-    "typegraph/deno/src",
+    "typegraph/deno/sdk",
     "ghjk.ts",
   ],
   "deno.unstable": true,
