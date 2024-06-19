@@ -1,6 +1,6 @@
 typegates:
   dev:
-    url: "http://localhost:7890"
+    url: "http://localhost:7891"
     username: admin
     password: password
     secrets:
@@ -156,6 +156,9 @@ typegraphs:
       - "typegraphs/temporal.ts"
     include:
       - "typegraphs/*.ts"
+  javascript:
+    exclude:
+      - "**/*"
 
 metagen:
   targets:
