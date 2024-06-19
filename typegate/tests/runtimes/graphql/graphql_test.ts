@@ -14,6 +14,10 @@ const TS_TG_PATH = "runtimes/graphql/typegraphs/deno/graphql.ts";
 //     TS_TG_PATH,
 //     PYTHON_TG_PATH,
 //   );
+//   let ser = await t.serialize(PYTHON_TG_PATH, {
+//     pretty: true,
+//   });
+//   console.log(ser);
 // });
 
 async function testEngine(engine: QueryEngine) {
@@ -22,72 +26,76 @@ async function testEngine(engine: QueryEngine) {
     {
       users {
         data {
-          id,
+          id
           name
         }
       }
     }
-  `.expectData({
-    "users": {
-      "data": [
-        {
-          "id": "1",
-          "name": "Leanne Graham",
-        },
-        {
-          "id": "2",
-          "name": "Ervin Howell",
-        },
-        {
-          "id": "3",
-          "name": "Clementine Bauch",
-        },
-        {
-          "id": "4",
-          "name": "Patricia Lebsack",
-        },
-        {
-          "id": "5",
-          "name": "Chelsey Dietrich",
-        },
-        {
-          "id": "6",
-          "name": "Mrs. Dennis Schulist",
-        },
-        {
-          "id": "7",
-          "name": "Kurtis Weissnat",
-        },
-        {
-          "id": "8",
-          "name": "Nicholas Runolfsdottir V",
-        },
-        {
-          "id": "9",
-          "name": "Glenna Reichert",
-        },
-        {
-          "id": "10",
-          "name": "Clementina DuBuque",
-        },
-      ],
-    },
-  }).on(engine);
+  `
+    .expectData({
+      users: {
+        data: [
+          {
+            id: "1",
+            name: "Leanne Graham",
+          },
+          {
+            id: "2",
+            name: "Ervin Howell",
+          },
+          {
+            id: "3",
+            name: "Clementine Bauch",
+          },
+          {
+            id: "4",
+            name: "Patricia Lebsack",
+          },
+          {
+            id: "5",
+            name: "Chelsey Dietrich",
+          },
+          {
+            id: "6",
+            name: "Mrs. Dennis Schulist",
+          },
+          {
+            id: "7",
+            name: "Kurtis Weissnat",
+          },
+          {
+            id: "8",
+            name: "Nicholas Runolfsdottir V",
+          },
+          {
+            id: "9",
+            name: "Glenna Reichert",
+          },
+          {
+            id: "10",
+            name: "Clementina DuBuque",
+          },
+        ],
+      },
+    })
+    .on(engine);
 
   // get user
   await gql`
     {
-      user (id: "1") {
-        id,
+      user(id: "1") {
+        id
         name
       }
     }
-  `.expectData({
-    user: {
-      id: "1",
-      name: "Leanne Graham",
-    },
-  }).on(engine);
+  `
+    .expectData({
+      user: {
+        id: "1",
+        name: "Leanne Graham",
+      },
+    })
+    .on(engine);
 
   // Mutation
   await gql`
@@ -98,13 +106,15 @@ async function testEngine(engine: QueryEngine) {
         user_id
       }
     }
-  `.expectData({
-    create_message: {
-      id: 1,
-      title: "Hey",
-      user_id: "1",
-    },
-  }).on(engine);
+  `
+    .expectData({
+      create_message: {
+        id: 1,
+        title: "Hey",
+        user_id: "1",
+      },
+    })
+    .on(engine);
 
   // TODO: Fails because metatype type system is not recognized by outside APIs
   // await gql`
@@ -131,7 +141,7 @@ async function testEngine(engine: QueryEngine) {
 
   await gql`
     {
-      messages (take: 4) {
+      messages(take: 4) {
         id
         title
         user_id
@@ -141,19 +151,21 @@ async function testEngine(engine: QueryEngine) {
         }
       }
     }
-  `.expectData({
-    messages: [
-      {
-        id: 1,
-        title: "Hey",
-        user_id: "1",
-        user: {
-          id: "1",
-          name: "Leanne Graham",
+  `
+    .expectData({
+      messages: [
+        {
+          id: 1,
+          title: "Hey",
+          user_id: "1",
+          user: {
+            id: "1",
+            name: "Leanne Graham",
+          },
         },
-      },
-    ],
-  }).on(engine);
+      ],
+    })
+    .on(engine);
 }
 
 Meta.test(
@@ -179,22 +191,25 @@ Meta.test(
   },
 );
 
-Meta.test({
-  name: "GraphQL Runtime: TS SDK",
-}, async (t) => {
-  const { connStr, schema: _ } = randomPGConnStr();
-  const engine = await t.engine(TS_TG_PATH, {
-    secrets: {
-      POSTGRES: connStr,
-    },
-  });
-  await dropSchemas(engine);
-  await recreateMigrations(engine);
+Meta.test(
+  {
+    name: "GraphQL Runtime: TS SDK",
+  },
+  async (t) => {
+    const { connStr, schema: _ } = randomPGConnStr();
+    const engine = await t.engine(TS_TG_PATH, {
+      secrets: {
+        POSTGRES: connStr,
+      },
+    });
+    await dropSchemas(engine);
+    await recreateMigrations(engine);
 
-  await t.should(
-    "work when fetching data through graphql request",
-    async () => {
-      await testEngine(engine);
-    },
-  );
-});
+    await t.should(
+      "work when fetching data through graphql request",
+      async () => {
+        await testEngine(engine);
+      },
+    );
+  },
+);

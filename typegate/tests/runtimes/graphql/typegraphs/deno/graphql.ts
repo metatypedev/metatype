@@ -18,7 +18,7 @@ const createUserInput = t.struct({
   email: t.string(),
 });
 
-typegraph("graphql", (g: any) => {
+export const tg = await typegraph("graphql", (g: any) => {
   const graphql = new GraphQLRuntime("https://graphqlzero.almansi.me/api");
   const pub = Policy.public();
   const db = new PrismaRuntime("graphql", "POSTGRES");
@@ -64,6 +64,6 @@ typegraph("graphql", (g: any) => {
       effects.create(false),
     ).withPolicy(pub),
     create_message: db.create(message).withPolicy(pub),
-    messages: db.findMany(message),
+    messages: db.findMany(message).withPolicy(pub),
   });
 });
