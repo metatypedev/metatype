@@ -21,7 +21,7 @@ interface DefMat extends Materializer {
 interface PythonImport {
   name: string;
   module: string;
-  deps: Array<string>;
+  deps?: Array<string>;
   secrets?: Array<string>;
   effect?: Effect;
 }

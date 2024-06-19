@@ -18,6 +18,7 @@ type Replacer = {
 const basePath = "../sdk/src/gen";
 
 const replacements = [
+  // Imports should refer to the actual file
   ...Array.from(
     expandGlobSync(basePath + "/**/*.d.ts", {
       root: thisDir,
@@ -28,9 +29,15 @@ const replacements = [
     path,
     op: (s: string) => s.replace(/^(import .*)(\.js)\';$/, "$1.d.ts';"),
   })),
+  // Remove exports aliases
   {
     path: resolve(thisDir, basePath + "/typegraph_core.js"),
     op: (s: string) => s.replaceAll(/,\s*\w+ as '[\w:\/]+'/g, ""),
+  },
+  // Normalize native node imports
+  {
+    path: resolve(thisDir, basePath + "/typegraph_core.js"),
+    op: (s: string) => s.replaceAll("fs/promises", "node:fs/promises"),
   },
 ] as Array<Replacer>;
 
