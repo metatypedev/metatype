@@ -25,6 +25,7 @@ use crate::config::Config;
 use crate::deploy::actors::task_io::TaskIoActor;
 use crate::interlude::*;
 use action::{get_typegraph_name, TaskActionGenerator};
+use colored::OwoColorize;
 use common::typegraph::Typegraph;
 use indexmap::IndexMap;
 use process_wrap::tokio::TokioChildWrapper;
@@ -94,6 +95,7 @@ pub struct TaskActor<A: TaskAction + 'static> {
     console: Addr<ConsoleActor>,
     results: IndexMap<String, ActionResult<A>>, // for the report
     timeout_duration: Duration,
+    max_retry_count: usize, // for the progress display
 }
 
 impl<A> TaskActor<A>
@@ -106,6 +108,7 @@ where
         initial_action: A,
         task_manager: Addr<TaskManager<A>>,
         console: Addr<ConsoleActor>,
+        max_retry_count: usize,
     ) -> Self {
         Self {
             config,
@@ -128,6 +131,7 @@ where
                     })
                     .unwrap_or(DEFAULT_TIMEOUT),
             ),
+            max_retry_count,
         }
     }
 
@@ -180,7 +184,18 @@ impl<A: TaskAction + 'static> Handler<StartProcess> for TaskActor<A> {
 
     fn handle(&mut self, StartProcess(cmd): StartProcess, ctx: &mut Context<Self>) -> Self::Result {
         use process_wrap::tokio::*;
-        self.console.info(self.action.get_start_message());
+        let retry_no = self.action.get_task_ref().retry_no;
+        let retry_progress = if retry_no > 0 {
+            let max_retry = self.max_retry_count;
+            format!(" (retry {retry_no}/{max_retry})")
+        } else {
+            "".to_string()
+        };
+        self.console.info(format!(
+            "{}{}",
+            self.action.get_start_message(),
+            retry_progress.dimmed()
+        ));
         let spawn_res = TokioCommandWrap::from(cmd)
             .wrap(KillOnDrop)
             // we use sessions so that kill on drop
