@@ -6,11 +6,14 @@ import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql.js";
 import * as effects from "@typegraph/sdk/effects.js";
 import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 
-const user = t.struct({
-  id: t.string(),
-  name: t.string(),
-  // TODO more fields with more types
-}, { name: "User" });
+const user = t.struct(
+  {
+    id: t.string(),
+    name: t.string(),
+    // TODO more fields with more types
+  },
+  { name: "User" },
+);
 
 const createUserInput = t.struct({
   name: t.string(),
@@ -18,25 +21,20 @@ const createUserInput = t.struct({
   email: t.string(),
 });
 
-export const tg = await typegraph("graphql", (g: any) => {
+export const tg = await typegraph("graphql", (g) => {
   const graphql = new GraphQLRuntime("https://graphqlzero.almansi.me/api");
   const pub = Policy.public();
   const db = new PrismaRuntime("graphql", "POSTGRES");
 
   const message = t.struct(
     {
-      "id": t.integer({}, { asId: true, config: { auto: true } }),
-      "title": t.string(),
-      // highlight-next-line
-      "user_id": t.string({}, { name: "uid" }),
-      // highlight-next-line
-      "user": graphql.query(
-        t.struct(
-          {
-            // highlight-next-line
-            "id": t.string({}, { asId: true }).fromParent("uid"),
-          },
-        ),
+      id: t.integer({}, { asId: true, config: { auto: true } }),
+      title: t.string(),
+      user_id: t.string({}, { name: "uid" }),
+      user: graphql.query(
+        t.struct({
+          id: t.string({}, { asId: true }).fromParent("uid"),
+        }),
         t.optional(user),
       ),
     },
@@ -44,25 +42,26 @@ export const tg = await typegraph("graphql", (g: any) => {
   );
 
   g.expose({
-    user: graphql.query(t.struct({ id: t.string({}, { asId: true }) }), user)
+    user: graphql
+      .query(t.struct({ id: t.string({}, { asId: true }) }), user)
       .withPolicy(pub),
-    createUser: graphql.mutation(
-      t.struct({ id: t.integer() }),
-      user,
-      effects.create(false),
-    )
+    users: graphql
+      .query(
+        t.struct({}),
+        t.struct({
+          data: t.list(user),
+        }),
+      )
       .withPolicy(pub),
-    users: graphql.query(
-      t.struct({}),
-      t.struct({
-        "data": t.list(user),
-      }),
-    ).withPolicy(pub),
-    create_user: graphql.mutation(
-      createUserInput,
-      user,
-      effects.create(false),
-    ).withPolicy(pub),
+    create_user: graphql
+      .mutation(
+        t.struct({
+          input: createUserInput,
+        }),
+        user,
+        effects.create(false),
+      )
+      .withPolicy(pub),
     create_message: db.create(message).withPolicy(pub),
     messages: db.findMany(message).withPolicy(pub),
   });

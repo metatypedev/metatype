@@ -8,15 +8,18 @@ _user = t.struct(
     name="User",
 )
 
-create_user_inp = t.struct(
-    {"name": t.string(), "username": t.string(), "email": t.email()}
+create_user_input = t.struct(
+    {
+        "name": t.string(),
+        "username": t.string(),
+        "email": t.string(),
+    }
 )
 
 
 @typegraph()
 def graphql(g: Graph):
-    # graphql = GraphQLRuntime("https://example.com/api/graphql")
-    gql = GraphQLRuntime("https://graphqlzero.almansi.me/api")
+    graphql = GraphQLRuntime("https://graphqlzero.almansi.me/api")
     public = Policy.public()
     db = PrismaRuntime("graphql", "POSTGRES")
 
@@ -24,16 +27,9 @@ def graphql(g: Graph):
         {
             "id": t.integer(as_id=True, config=["auto"]),
             "title": t.string(),
-            # highlight-next-line
             "user_id": t.string(name="uid"),
-            # highlight-next-line
-            "user": gql.query(
-                t.struct(
-                    {
-                        # highlight-next-line
-                        "id": t.string(as_id=True).from_parent("uid")
-                    }
-                ),
+            "user": graphql.query(
+                t.struct({"id": t.string(as_id=True).from_parent("uid")}),
                 t.optional(_user),
             ),
         },
@@ -41,25 +37,25 @@ def graphql(g: Graph):
     )
 
     g.expose(
-        users=gql.query(
-            t.struct(),
+        user=graphql.query(
+            t.struct({"id": t.string(as_id=True)}),
+            _user,
+        ).with_policy(public),
+        users=graphql.query(
+            t.struct({}),
             t.struct(
                 {"data": t.list(_user)},
             ),
         ).with_policy(public),
-        user=gql.query(
-            t.struct({"id": t.string(as_id=True)}),
-            _user,
-        ).with_policy(public),
-        create_message=db.create(message).with_policy(public),
-        create_user=gql.mutation(
+        create_user=graphql.mutation(
             t.struct(
                 {
-                    "input": create_user_inp,
+                    "input": create_user_input,
                 }
             ),
             _user,
             effects.create(False),
         ).with_policy(public),
+        create_message=db.create(message).with_policy(public),
         messages=db.find_many(message).with_policy(public),
     )

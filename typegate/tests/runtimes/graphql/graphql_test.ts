@@ -9,16 +9,19 @@ import { gql, Meta } from "../../utils/mod.ts";
 const PYTHON_TG_PATH = "runtimes/graphql/typegraphs/python/graphql.py";
 const TS_TG_PATH = "runtimes/graphql/typegraphs/deno/graphql.ts";
 
-// Meta.test("Typegraph generation with GraphQL runtime", async (t) => {
-//   await t.assertSameTypegraphs(
-//     TS_TG_PATH,
-//     PYTHON_TG_PATH,
-//   );
-//   let ser = await t.serialize(PYTHON_TG_PATH, {
-//     pretty: true,
-//   });
-//   console.log(ser);
-// });
+Meta.test("Typegraph generation with GraphQL runtime", async (t) => {
+  await t.assertSameTypegraphs(
+    TS_TG_PATH,
+    PYTHON_TG_PATH,
+  );
+  // const ser = await t.serialize(PYTHON_TG_PATH, {
+  //   pretty: false,
+  // });
+  // console.log(ser);
+  // console.log("------------------");
+  // const seri = await t.serialize(TS_TG_PATH);
+  // console.log(seri);
+});
 
 async function testEngine(engine: QueryEngine) {
   // get users
