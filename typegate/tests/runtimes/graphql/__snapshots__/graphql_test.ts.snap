@@ -12,10 +12,10 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "as_id": false,
       "properties": {
         "user": 1,
-        "users": 6,
-        "create_user": 10,
-        "create_message": 14,
-        "messages": 27
+        "users": 7,
+        "create_user": 11,
+        "create_message": 15,
+        "messages": 28
       },
       "required": [
         "user",
@@ -69,13 +69,21 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "as_id": false,
       "properties": {
         "id": 5,
-        "name": 5
+        "name": 6
       },
       "required": []
     },
     {
       "type": "string",
       "title": "string_0",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": true
+    },
+    {
+      "type": "string",
+      "title": "string_1",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -90,8 +98,8 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       ],
       "config": {},
       "as_id": false,
-      "input": 7,
-      "output": 8,
+      "input": 8,
+      "output": 9,
       "materializer": 2,
       "rate_weight": null,
       "rate_calls": false
@@ -114,7 +122,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "data": 9
+        "data": 10
       },
       "required": []
     },
@@ -136,7 +144,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       ],
       "config": {},
       "as_id": false,
-      "input": 11,
+      "input": 12,
       "output": 4,
       "materializer": 3,
       "rate_weight": null,
@@ -150,7 +158,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "input": 12
+        "input": 13
       },
       "required": []
     },
@@ -162,9 +170,9 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "name": 13,
-        "username": 13,
-        "email": 13
+        "name": 14,
+        "username": 14,
+        "email": 14
       },
       "required": []
     },
@@ -185,8 +193,8 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       ],
       "config": {},
       "as_id": false,
-      "input": 23,
-      "output": 26,
+      "input": 24,
+      "output": 27,
       "materializer": 4,
       "rate_weight": null,
       "rate_calls": false
@@ -199,10 +207,10 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 16,
-        "title": 17,
-        "user_id": 18,
-        "user": 19
+        "id": 17,
+        "title": 18,
+        "user_id": 19,
+        "user": 20
       },
       "required": []
     },
@@ -239,8 +247,8 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "input": 20,
-      "output": 22,
+      "input": 21,
+      "output": 23,
       "materializer": 5,
       "rate_weight": null,
       "rate_calls": false
@@ -253,7 +261,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 21
+        "id": 22
       },
       "required": []
     },
@@ -265,7 +273,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "injection": {
         "source": "parent",
         "data": {
-          "value": 18
+          "value": 19
         }
       },
       "config": {},
@@ -289,7 +297,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "data": 24
+        "data": 25
       },
       "required": []
     },
@@ -301,9 +309,9 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 25,
-        "title": 17,
-        "user_id": 18
+        "id": 26,
+        "title": 18,
+        "user_id": 19
       },
       "required": []
     },
@@ -314,7 +322,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 16,
+      "item": 17,
       "default_value": null
     },
     {
@@ -325,10 +333,10 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 16,
-        "title": 17,
-        "user_id": 18,
-        "user": 19
+        "id": 17,
+        "title": 18,
+        "user_id": 19,
+        "user": 20
       },
       "required": []
     },
@@ -341,8 +349,8 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       ],
       "config": {},
       "as_id": false,
-      "input": 28,
-      "output": 83,
+      "input": 29,
+      "output": 84,
       "materializer": 6,
       "rate_weight": null,
       "rate_calls": false
@@ -355,12 +363,12 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "where": 29,
-        "orderBy": 64,
-        "take": 71,
-        "skip": 73,
-        "cursor": 75,
-        "distinct": 80
+        "where": 30,
+        "orderBy": 65,
+        "take": 72,
+        "skip": 74,
+        "cursor": 76,
+        "distinct": 81
       },
       "required": []
     },
@@ -371,7 +379,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 30,
+      "item": 31,
       "default_value": null
     },
     {
@@ -382,12 +390,12 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 31,
-        "title": 44,
-        "user_id": 60,
-        "AND": 61,
-        "OR": 61,
-        "NOT": 63
+        "id": 32,
+        "title": 45,
+        "user_id": 61,
+        "AND": 62,
+        "OR": 62,
+        "NOT": 64
       },
       "required": []
     },
@@ -398,7 +406,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 32,
+      "item": 33,
       "default_value": null
     },
     {
@@ -408,7 +416,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 33,
+      "item": 34,
       "default_value": null
     },
     {
@@ -419,8 +427,8 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "anyOf": [
-        34,
-        43
+        35,
+        44
       ]
     },
     {
@@ -431,12 +439,12 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "oneOf": [
-        35,
         36,
         37,
         38,
-        40,
-        42
+        39,
+        41,
+        43
       ]
     },
     {
@@ -455,7 +463,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "equals": 35
+        "equals": 36
       },
       "required": []
     },
@@ -467,7 +475,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "not": 35
+        "not": 36
       },
       "required": []
     },
@@ -479,10 +487,10 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "lt": 39,
-        "gt": 39,
-        "lte": 39,
-        "gte": 39
+        "lt": 40,
+        "gt": 40,
+        "lte": 40,
+        "gte": 40
       },
       "required": []
     },
@@ -493,7 +501,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 35,
+      "item": 36,
       "default_value": null
     },
     {
@@ -504,7 +512,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "in": 41
+        "in": 42
       },
       "required": []
     },
@@ -515,7 +523,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 35
+      "items": 36
     },
     {
       "type": "object",
@@ -525,7 +533,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "notIn": 41
+        "notIn": 42
       },
       "required": []
     },
@@ -537,7 +545,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "not": 34
+        "not": 35
       },
       "required": []
     },
@@ -548,7 +556,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 45,
+      "item": 46,
       "default_value": null
     },
     {
@@ -558,7 +566,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 46,
+      "item": 47,
       "default_value": null
     },
     {
@@ -569,8 +577,8 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "anyOf": [
-        47,
-        59
+        48,
+        60
       ]
     },
     {
@@ -581,14 +589,14 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "anyOf": [
-        17,
-        48,
+        18,
         49,
         50,
-        52,
+        51,
         53,
-        56,
-        57
+        54,
+        57,
+        58
       ]
     },
     {
@@ -599,7 +607,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "equals": 17
+        "equals": 18
       },
       "required": []
     },
@@ -611,7 +619,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "not": 17
+        "not": 18
       },
       "required": []
     },
@@ -623,7 +631,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "in": 51
+        "in": 52
       },
       "required": []
     },
@@ -634,7 +642,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 17
+      "items": 18
     },
     {
       "type": "object",
@@ -644,7 +652,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "notIn": 51
+        "notIn": 52
       },
       "required": []
     },
@@ -656,8 +664,8 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "contains": 17,
-        "mode": 54
+        "contains": 18,
+        "mode": 55
       },
       "required": []
     },
@@ -668,7 +676,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 55,
+      "item": 56,
       "default_value": null
     },
     {
@@ -690,7 +698,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "search": 17
+        "search": 18
       },
       "required": []
     },
@@ -702,8 +710,8 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "startsWith": 58,
-        "endsWith": 58
+        "startsWith": 59,
+        "endsWith": 59
       },
       "required": []
     },
@@ -714,7 +722,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 17,
+      "item": 18,
       "default_value": null
     },
     {
@@ -725,7 +733,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "not": 47
+        "not": 48
       },
       "required": []
     },
@@ -736,7 +744,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 45,
+      "item": 46,
       "default_value": null
     },
     {
@@ -746,7 +754,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 62,
+      "item": 63,
       "default_value": null
     },
     {
@@ -756,7 +764,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 30
+      "items": 31
     },
     {
       "type": "optional",
@@ -765,7 +773,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 30,
+      "item": 31,
       "default_value": null
     },
     {
@@ -775,7 +783,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 65,
+      "item": 66,
       "default_value": null
     },
     {
@@ -785,7 +793,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 66
+      "items": 67
     },
     {
       "type": "object",
@@ -795,9 +803,9 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 67,
-        "title": 67,
-        "user_id": 67
+        "id": 68,
+        "title": 68,
+        "user_id": 68
       },
       "required": []
     },
@@ -808,7 +816,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 68,
+      "item": 69,
       "default_value": null
     },
     {
@@ -819,8 +827,8 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "anyOf": [
-        69,
-        70
+        70,
+        71
       ]
     },
     {
@@ -831,7 +839,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "sort": 70
+        "sort": 71
       },
       "required": []
     },
@@ -854,7 +862,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 72,
+      "item": 73,
       "default_value": null
     },
     {
@@ -873,7 +881,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 74,
+      "item": 75,
       "default_value": null
     },
     {
@@ -892,7 +900,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 76,
+      "item": 77,
       "default_value": null
     },
     {
@@ -903,9 +911,9 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "anyOf": [
-        77,
         78,
-        79
+        79,
+        80
       ]
     },
     {
@@ -916,7 +924,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 16
+        "id": 17
       },
       "required": []
     },
@@ -928,7 +936,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "title": 17
+        "title": 18
       },
       "required": []
     },
@@ -940,7 +948,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "user_id": 18
+        "user_id": 19
       },
       "required": []
     },
@@ -951,7 +959,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 81,
+      "item": 82,
       "default_value": null
     },
     {
@@ -961,7 +969,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 82
+      "items": 83
     },
     {
       "type": "string",
@@ -983,7 +991,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 84
+      "items": 85
     },
     {
       "type": "object",
@@ -993,10 +1001,10 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 16,
-        "title": 17,
-        "user_id": 18,
-        "user": 19
+        "id": 17,
+        "title": 18,
+        "user_id": 19,
+        "user": 20
       },
       "required": []
     }
@@ -1103,7 +1111,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
         "connection_string_secret": "POSTGRES",
         "models": [
           {
-            "typeIdx": 15,
+            "typeIdx": 16,
             "typeName": "message",
             "props": [
               {
@@ -1113,7 +1121,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
                   "type": "Int"
                 },
                 "cardinality": "one",
-                "typeIdx": 16,
+                "typeIdx": 17,
                 "injection": null,
                 "unique": false,
                 "auto": true,
@@ -1127,7 +1135,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
                   "format": "Plain"
                 },
                 "cardinality": "one",
-                "typeIdx": 17,
+                "typeIdx": 18,
                 "injection": null,
                 "unique": false,
                 "auto": false,
@@ -1141,7 +1149,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
                   "format": "Plain"
                 },
                 "cardinality": "one",
-                "typeIdx": 18,
+                "typeIdx": 19,
                 "injection": null,
                 "unique": false,
                 "auto": false,
@@ -1156,7 +1164,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
         ],
         "relationships": [],
         "migration_options": {
-          "migration_files": "H4sIAAAAAAAA/+3cTYvaQBzHcc++ij/ZywrV5mmiUnqwEorUuoubQvck2c3UHTYmNhkXfPeNfdC4FHroMjvw/31PIVFy8UMmmTG+64du5I18V0RhtFKF0m83al2lWpXFoP6ed/4/tymKor/uP+SL4XG7qdn2vMht9nUMtKt1WhF1mNbv07SSqZZJepfL7nQZT5KYksmHeUzORtZ1upYOXXapyVGZQzfxcjaZ0+IqocWX+fzNryNa6bz5XBJ/TZ4f2tWyWh2++ezgz6PTq8VNspzMFsnxbKvto9w7dL2cfZ4sb+lTfEuXhzP3ur133Q562fyT/1Hg2+Q/hH8DwT/vWv7HvsD1n1vwz7ujf69xOLbHvxhG8G8g+Oddy38gPJv8Y/xvIvjnXct/GLo2+Q/g30Dwz7uWfyEsev4nhrj/NxH8867lf2ST/8j14d9A8M+7k39PBFaN/3H/byL4513L/9C1av2PB/8Ggn/enfz7rje06fov4N9A8M+7lv8GHcb/3IJ/3rX8h2GI8T+34J93J/9hKCxa/xd58G8i+Oddy7+wa/0/1v+YCP55d/Tve2Nh0fO/yMP8v4ngn3e//Y9d4Y+CwKbrP/7/YyL4513bf2iVf6z/NRH88+7kP2jY2TT/h/G/ieCfd23/dr3/C8//TAT/vGv7F1aN/zH/ZyL4590f/80MgHCt8o/1fyaCf96d+R9h/Q+34J93R+urvLx/HOhy8xLiz/uXf+/wrr9z/24gcP9vogu6zmVaS8pKKkpNMlOa9IOq6ZvKJW3SYpfm+b57QTNN9UO5yzO6k5RmmcxIFbQvdxU9yapufkL9+7LQVZlTva+13NClGsgBfVS6191W5ZPKZEXvydmWtV5Xsrm2OB2EEEKv1A/kBBAlAGQAAA==",
+          "migration_files": "H4sIAAAAAAAA/+3dQW/aMBjGcc58ilfppZVW5jhxAE07sApNaIxWNJPWE0obr40aCEtMJb79wraCqSbtsMqz9D7/EyKtuPCTjW2CFDIWSTiQQiVxsihWhXm7LO7rzBTVqtd8Lzv/nmhLkuSPz++Sqr9/3NY+DsNEtM91HLRpTFYTdZh2fk4Xtc6MTrPbUncv5uNROqZ09GE6pmCpmya71wGddqktKPKArsfzyWhKs8uUZl+m0ze/rpjClO3fpeOv6ctLm0bXi91/vrj48+rF5ew6nY8ms3T/aov1o94GdDWffB7Nb+jT+IZOd6981j171+2g100e/A8i6ZP/GP4dBP+8s/wPpcL4zy34593ef9g6HPrjX/UT+HcQ/PPO8h+p0Cf/mP+7CP55Z/mPY+GT/wj+HQT/vLP8K+XR+p/q4/O/i+Cfd5b/gU/+EyHh30Hwz7uD/1BFXs3/8fnfRfDPO8t/X3h1/ieEfwfBP+8O/qUI+z6N/wr+HQT/vLP8t+gw/+cW/PPO8h/HMeb/3IJ/3h38x7Hy6PxfEsK/i+Cfd5Z/5df5f5z/cRH8827vX4ZD5dH6XxJi/99F8M+73/6HQslBFPk0/uP7Py6Cf97Z/mOv/OP8r4vgn3cH/1HLzqf9P8z/XQT/vLP9+3X/L6z/uQj+eWf7V17N/7H/5yL4592z/3YHQAmv/OP8n4vgn3dH/gc4/8Mt+Ofds38poqH0av9fwL+D4J93tv/Io/V/rP+5Cf55t/cfChl5tP6P+3+5Cf55Z/v36/6f2P93EfzzzvI/iHxa/8P5PyfBP+9s/z6N/4nA+p+L4J93e+uLsrp77Jlq+Rrij/ub/3D3Wz/H/kWksP7nohO6KnXWaMorWlWGdF4YMg9FQ9+KUtMyW22ystx2T2hiqHmoNmVOt5qyPNc5FSvaVpuannTdtG+h87tqZeqqpGbbGL2k06Kne/SxMGfddV09Fbmu6T0F66ox97Vux5aggxBC6D/1A4meqAwAfAAA",
           "create": false,
           "reset": false
         }

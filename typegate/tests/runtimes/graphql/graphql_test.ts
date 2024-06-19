@@ -14,13 +14,6 @@ Meta.test("Typegraph generation with GraphQL runtime", async (t) => {
     TS_TG_PATH,
     PYTHON_TG_PATH,
   );
-  // const ser = await t.serialize(PYTHON_TG_PATH, {
-  //   pretty: false,
-  // });
-  // console.log(ser);
-  // console.log("------------------");
-  // const seri = await t.serialize(TS_TG_PATH);
-  // console.log(seri);
 });
 
 async function testEngine(engine: QueryEngine) {

@@ -8,7 +8,7 @@ import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
 
 const user = t.struct(
   {
-    id: t.string(),
+    id: t.string({}, { asId: true }),
     name: t.string(),
     // TODO more fields with more types
   },
