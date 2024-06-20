@@ -9,6 +9,7 @@ import { ArtifactUploader } from "./tg_artifact_upload.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
 import { execRequest } from "./utils/func_utils.js";
+import { log } from "./io.js";
 
 export class BasicAuth {
   constructor(
@@ -97,6 +98,8 @@ export async function tgDeploy(
       params.typegraphPath,
     );
     await artifactUploader.uploadArtifacts();
+  } else {
+    log.debug("no artifacts to upload");
   }
 
   // deploy the typegraph

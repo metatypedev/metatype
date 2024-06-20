@@ -61,7 +61,7 @@ export class Manager {
     } catch (err: any) {
       log.failure({
         typegraph: this.#typegraph.name,
-        errors: err?.stack ?? [err?.message ?? "failed to serialize typegraph"],
+        errors: getErrorStack(err, "failed to serialize typegraph"),
       });
     }
   }
@@ -101,7 +101,7 @@ export class Manager {
     } catch (err: any) {
       log.failure({
         typegraph: this.#typegraph.name,
-        errors: err?.stack ?? [err?.message ?? "failed to serialize typegraph"],
+        errors: getErrorStack(err, "failed to serialize typegraph"),
       });
       return;
     }
@@ -114,7 +114,7 @@ export class Manager {
       const deployTarget = await rpc.getDeployTarget();
       const { response } = await tgDeploy(reusableTgOutput, {
         typegate: {
-          url: deployTarget.base_url,
+          url: deployTarget.baseUrl,
           auth: new BasicAuth(
             deployTarget.auth.username,
             deployTarget.auth.password,
@@ -132,9 +132,17 @@ export class Manager {
     } catch (err: any) {
       log.failure({
         typegraph: this.#typegraph.name,
-        errors: err?.stack ?? [err?.message ?? "failed to deploy typegraph"],
+        errors: getErrorStack(err, "failed to deploy typegraph"),
       });
       return;
     }
   }
+}
+
+function getErrorStack(err: any, defaultErr: string): string[] {
+  if (err instanceof Error) {
+    log.debug(err);
+    return [err.message];
+  }
+  return err?.stack ?? [err?.toString() ?? defaultErr];
 }
