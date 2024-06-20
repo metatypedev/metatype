@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { QueryEngine } from "../../../src/engine/query_engine.ts";
-import { randomPGConnStr } from "../../utils/database.ts";
+import { removeMigrations } from "../../utils/migrations.ts";
 import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 
@@ -165,7 +165,10 @@ Meta.test(
     name: "GraphQL Runtime: Python SDK",
   },
   async (t) => {
-    const { schema: _schema, connStr } = randomPGConnStr();
+    const schema = "graphql-python";
+    const connStr =
+      `postgresql://postgres:password@localhost:5432/db?schema=${schema}`;
+
     const engine = await t.engine(PYTHON_TG_PATH, {
       secrets: {
         POSTGRES: connStr,
@@ -180,6 +183,7 @@ Meta.test(
         await testEngine(engine);
       },
     );
+    await removeMigrations(engine);
   },
 );
 
@@ -188,7 +192,9 @@ Meta.test(
     name: "GraphQL Runtime: TS SDK",
   },
   async (t) => {
-    const { connStr, schema: _ } = randomPGConnStr();
+    const schema = "graphql-ts";
+    const connStr =
+      `postgresql://postgres:password@localhost:5432/db?schema=${schema}`;
     const engine = await t.engine(TS_TG_PATH, {
       secrets: {
         POSTGRES: connStr,
@@ -203,5 +209,6 @@ Meta.test(
         await testEngine(engine);
       },
     );
+    await removeMigrations(engine);
   },
 );
