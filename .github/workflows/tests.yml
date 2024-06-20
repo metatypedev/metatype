@@ -78,7 +78,6 @@ jobs:
           sudo apt install -y --no-install-recommends libclang-dev clang
           pnpm -C website install --frozen-lockfile
           pnpm -C meta-lsp install --frozen-lockfile --recursive
-          pnpm -C typegraph/node install --frozen-lockfile --recursive
           deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
           pre-commit run --show-diff-on-failure --color=always --all-files
 
@@ -289,7 +288,6 @@ jobs:
           # without --tests, the --doc is causing a link error "syntax error in VERSION script"
           cargo test --locked --package typegraph_core --tests
 
-          ghjk x clean-deno-lock
           deno run -A dev/test.ts --threads 1 -- --coverage=coverage
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
           deno cache --import-map typegate/import_map.json \
