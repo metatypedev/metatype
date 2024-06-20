@@ -23,7 +23,7 @@ def graphql(g: Graph):
     public = Policy.public()
 
     # highlight-next-line
-    user = t.struct({"id": t.string(), "name": t.string()})
+    user = t.struct({"id": t.string(), "name": t.string()}, name="User")
 
     message = t.struct(
         {
