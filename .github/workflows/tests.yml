@@ -263,6 +263,7 @@ jobs:
           # build node typegrap/sdk package
           jco transpile $WASM_FILE -o typegraph/deno/sdk/src/gen --map metatype:typegraph/host=../host/host.mjs
           deno run -A typegraph/deno/dev/fix-declarations.ts
+          deno run -A typegraph/deno/dev/deno2node.ts
 
           # start the docker containers
           ghjk x dev env base prisma

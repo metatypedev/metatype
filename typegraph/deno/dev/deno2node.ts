@@ -1,8 +1,8 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
-import { dnt, expandGlobSync, join, resolve } from "./deps.ts";
-import { getLockfile, projectDir } from "./utils.ts";
+import { dnt, expandGlobSync, join, resolve } from "../../../dev/deps.ts";
+import { getLockfile, projectDir } from "../../../dev/utils.ts";
 
 // Direct node users need to use module
 // module = Node16 or moduleResolution = Node16 inside tsconfig.json seems to be enough
@@ -15,23 +15,21 @@ const outDir = resolve(projectDir, "./typegraph/node");
 await dnt.emptyDir(outDir);
 
 const entryPoints: dnt.BuildOptions["entryPoints"] = [join(srcDir, "index.ts")];
-for (
-  const { name, path } of expandGlobSync("./**/*.ts", {
-    root: srcDir,
-    includeDirs: false,
-    globstar: true,
-  })
-) {
+for (const { name, path } of expandGlobSync("./**/*.ts", {
+  root: srcDir,
+  includeDirs: false,
+  globstar: true,
+})) {
   const relPath = path.replace(srcDir, ".");
   if (name !== "index.ts") {
     const entryPoint = {
       name: relPath.substring(0, relPath.lastIndexOf(".")), // strip extension
       path,
     };
-    console.log(entryPoint.path, "=>", entryPoint.name);
+    // console.log(" ", entryPoint.path, "=>", entryPoint.name);
     entryPoints.push(entryPoint);
   } else {
-    console.log("Skipped", path);
+    console.log("  Skipped", path);
   }
 }
 

@@ -12,6 +12,7 @@
     "typegraph/deno/sdk",
     "ghjk.ts",
   ],
+  "deno.importMap": "typegate/import_map.json",
   "deno.unstable": true,
   "typescript.suggest.completeFunctionCalls": true,
   "typescript.inlayHints.variableTypes.enabled": true,

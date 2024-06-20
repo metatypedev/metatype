@@ -69,6 +69,7 @@ typegraph:
     rm -rf typegraph/deno/sdk/src/gen
     jco transpile $WASM_FILE -o typegraph/deno/sdk/src/gen --map metatype:typegraph/host=../host/host.mjs
     deno run -A typegraph/deno/dev/fix-declarations.ts
+    deno run -A typegraph/deno/dev/deno2node.ts
 
     rm -rf typegraph/python/typegraph/gen
     poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
