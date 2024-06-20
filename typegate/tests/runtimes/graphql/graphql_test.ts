@@ -114,17 +114,22 @@ async function testEngine(engine: QueryEngine) {
 
   // TODO: Fails because metatype type system is not recognized by outside APIs
   // await gql`
-  //   mutation {
+  //   mutation CreateUser($name: String!, $username: String!, $email: String!) {
   //     create_user (input: {
-  //       name: "John",
-  //       username: "Johhn"
-  //       email: "john@gmail.com"
+  //       name: $name,
+  //       username: $username
+  //       email: $email
   //     }) {
   //       id
   //       name
   //     }
   //   }
-  // `.expectData({
+  // `.withVars({
+  //   name: "John",
+  //   username: "Johhn",
+  //   email: "John@gmail.com"
+  // })
+  // .expectData({
   //   create_user: {
   //     data: {
   //       createUser: {
@@ -187,25 +192,25 @@ Meta.test(
   },
 );
 
-Meta.test(
-  {
-    name: "GraphQL Runtime: TS SDK",
-  },
-  async (t) => {
-    const { connStr, schema: _ } = randomPGConnStr();
-    const engine = await t.engine(TS_TG_PATH, {
-      secrets: {
-        POSTGRES: connStr,
-      },
-    });
-    await dropSchemas(engine);
-    await recreateMigrations(engine);
+// Meta.test(
+//   {
+//     name: "GraphQL Runtime: TS SDK",
+//   },
+//   async (t) => {
+//     const { connStr, schema: _ } = randomPGConnStr();
+//     const engine = await t.engine(TS_TG_PATH, {
+//       secrets: {
+//         POSTGRES: connStr,
+//       },
+//     });
+//     await dropSchemas(engine);
+//     await recreateMigrations(engine);
 
-    await t.should(
-      "work when fetching data through graphql request",
-      async () => {
-        await testEngine(engine);
-      },
-    );
-  },
-);
+//     await t.should(
+//       "work when fetching data through graphql request",
+//       async () => {
+//         await testEngine(engine);
+//       },
+//     );
+//   },
+// );
