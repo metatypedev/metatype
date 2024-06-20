@@ -13,7 +13,8 @@ create_user_input = t.struct(
         "name": t.string(),
         "username": t.string(),
         "email": t.string(),
-    }
+    },
+    name="CreateUserInput",
 )
 
 
@@ -47,7 +48,7 @@ def graphql(g: Graph):
                 {"data": t.list(_user)},
             ),
         ).with_policy(public),
-        create_user=graphql.mutation(
+        createUser=graphql.mutation(
             t.struct(
                 {
                     "input": create_user_input,

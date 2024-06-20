@@ -1,4 +1,6 @@
 import TGExample from "@site/src/components/TGExample";
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
 
 # GraphQL
 
@@ -25,5 +27,22 @@ Other type enforcement rules also exist:
 - `from_secret(key)` to fill the input type with the secret in the `TG_[typegraph name]_[key]` format
 - `from_context(·)` to fill the input type with content from the request context, such as JSON Web Token (JWT), etc.
 - `set(x)` to fill the input type with content `x`
+- The Entity which you fetch from the external API should have a matching _name_ to that specified in the external API. Taking the above example, you need to specify the name(_User_) of the type the external API uses in your entity definition. As you can see, the name `User` is included in the user type declared in the typegraph. This is crucial as the query engine uses this information when making the external GraphQL call.
+
+  <SDKTabs>
+    <TabItem value="python">
+      ```python
+      user = t.struct(
+          {"id": t.string(), "name": t.string()}, name="User"
+        )
+      ```
+    </TabItem>
+    <TabItem  value="typescript">
+      ```typescript 
+      const user = t.struct({ "id": t.string(), "name": t.string() }, {name: "User"});
+      ```
+    </TabItem>
+  </SDKTabs>
+
 
 You should now start to see the power provided by Metatype and might wonder how to integrate it step by step with your existing systems. Writing all those types by hand is tedious and error-prone. The next section will show you how to generate types from existing sources.

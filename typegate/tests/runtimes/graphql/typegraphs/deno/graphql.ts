@@ -19,7 +19,7 @@ const createUserInput = t.struct({
   name: t.string(),
   username: t.string(),
   email: t.string(),
-});
+}, { name: "CreateUserInput" });
 
 export const tg = await typegraph("graphql", (g) => {
   const graphql = new GraphQLRuntime("https://graphqlzero.almansi.me/api");
@@ -53,7 +53,7 @@ export const tg = await typegraph("graphql", (g) => {
         }),
       )
       .withPolicy(pub),
-    create_user: graphql
+    createUser: graphql
       .mutation(
         t.struct({
           input: createUserInput,

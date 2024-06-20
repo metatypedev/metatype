@@ -10,10 +10,7 @@ const PYTHON_TG_PATH = "runtimes/graphql/typegraphs/python/graphql.py";
 const TS_TG_PATH = "runtimes/graphql/typegraphs/deno/graphql.ts";
 
 Meta.test("Typegraph generation with GraphQL runtime", async (t) => {
-  await t.assertSameTypegraphs(
-    TS_TG_PATH,
-    PYTHON_TG_PATH,
-  );
+  await t.assertSameTypegraphs(TS_TG_PATH, PYTHON_TG_PATH);
 });
 
 async function testEngine(engine: QueryEngine) {
@@ -113,32 +110,26 @@ async function testEngine(engine: QueryEngine) {
     .on(engine);
 
   // TODO: Fails because metatype type system is not recognized by outside APIs
-  // await gql`
-  //   mutation CreateUser($name: String!, $username: String!, $email: String!) {
-  //     create_user (input: {
-  //       name: $name,
-  //       username: $username
-  //       email: $email
-  //     }) {
-  //       id
-  //       name
-  //     }
-  //   }
-  // `.withVars({
-  //   name: "John",
-  //   username: "Johhn",
-  //   email: "John@gmail.com"
-  // })
-  // .expectData({
-  //   create_user: {
-  //     data: {
-  //       createUser: {
-  //         id: "11",
-  //         name: "John",
-  //       },
-  //     },
-  //   },
-  // }).on(engine);
+  await gql`
+    mutation CreateUser($name: String!, $username: String!, $email: String!) {
+      createUser(input: { name: $name, username: $username, email: $email }) {
+        id
+        name
+      }
+    }
+  `
+    .withVars({
+      name: "John",
+      username: "Johhn",
+      email: "John@gmail.com",
+    })
+    .expectData({
+      createUser: {
+        id: "11",
+        name: "John",
+      },
+    })
+    .on(engine);
 
   await gql`
     {
@@ -174,7 +165,7 @@ Meta.test(
     name: "GraphQL Runtime: Python SDK",
   },
   async (t) => {
-    const { connStr, schema: _ } = randomPGConnStr();
+    const { schema: _schema, connStr } = randomPGConnStr();
     const engine = await t.engine(PYTHON_TG_PATH, {
       secrets: {
         POSTGRES: connStr,
@@ -192,25 +183,25 @@ Meta.test(
   },
 );
 
-// Meta.test(
-//   {
-//     name: "GraphQL Runtime: TS SDK",
-//   },
-//   async (t) => {
-//     const { connStr, schema: _ } = randomPGConnStr();
-//     const engine = await t.engine(TS_TG_PATH, {
-//       secrets: {
-//         POSTGRES: connStr,
-//       },
-//     });
-//     await dropSchemas(engine);
-//     await recreateMigrations(engine);
+Meta.test(
+  {
+    name: "GraphQL Runtime: TS SDK",
+  },
+  async (t) => {
+    const { connStr, schema: _ } = randomPGConnStr();
+    const engine = await t.engine(TS_TG_PATH, {
+      secrets: {
+        POSTGRES: connStr,
+      },
+    });
+    await dropSchemas(engine);
+    await recreateMigrations(engine);
 
-//     await t.should(
-//       "work when fetching data through graphql request",
-//       async () => {
-//         await testEngine(engine);
-//       },
-//     );
-//   },
-// );
+    await t.should(
+      "work when fetching data through graphql request",
+      async () => {
+        await testEngine(engine);
+      },
+    );
+  },
+);
