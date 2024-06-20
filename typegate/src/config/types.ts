@@ -25,6 +25,7 @@ export const globalConfigSchema = z.object({
   sentry_dsn: z.string().optional(),
   sentry_sample_rate: z.coerce.number().positive().min(0).max(1),
   sentry_traces_sample_rate: z.coerce.number().positive().min(0).max(1),
+  deno_v8_flags: z.string().optional(),
 });
 export type GlobalConfig = z.infer<typeof globalConfigSchema>;
 
