@@ -202,11 +202,16 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.full == 'true' }}
     runs-on:
+      # - ubuntu-latest
       - self-hosted # https://check-jsonschema.readthedocs.io/en/latest/faq.html#using-self-hosted-runners
       - custom-ubuntu-large
     timeout-minutes: 80
     steps:
       - uses: actions/checkout@v4
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
       - uses: dsherret/rust-toolchain-file@v1
       # - uses: Swatinem/rust-cache@v2
       #  with:
@@ -234,8 +239,6 @@ jobs:
           # TODO: consider disabling ghjk_reload on non-interactive shells
           # by default
           unset BASH_ENV
-
-          echo pwd in $(pwd)
 
           ghjk x install-sys | bash
           ghjk x install-py
