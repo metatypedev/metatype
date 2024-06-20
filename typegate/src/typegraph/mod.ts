@@ -584,12 +584,6 @@ export class TypeGraph implements AsyncDisposable {
       } else if (unwrapped.type === Type.LIST) {
         unwrapped = this.type(unwrapped.items);
       } else {
-        console.log(
-          "is scalar or list of scalars",
-          typeNode.title,
-          `unwrapped: ${unwrapped.type}`,
-          `results: ${!NON_SCALAR_TYPES.includes(unwrapped.type)}`,
-        );
         return !NON_SCALAR_TYPES.includes(unwrapped.type);
       }
     }

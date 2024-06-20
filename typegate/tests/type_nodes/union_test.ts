@@ -4,7 +4,7 @@
 import { JSONValue } from "../../src/utils.ts";
 import { gql, Meta } from "../utils/mod.ts";
 
-Meta.test.only(
+Meta.test(
   {
     name: "Union type",
     introspection: true,

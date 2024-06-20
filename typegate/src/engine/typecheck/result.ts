@@ -9,7 +9,13 @@ import {
   SelectionSetNode,
 } from "graphql/ast";
 import { FieldNode, Kind } from "graphql";
-import { isScalar, ObjectNode, Type } from "../../typegraph/type_node.ts";
+import {
+  EitherNode,
+  isScalar,
+  ObjectNode,
+  Type,
+  UnionNode,
+} from "../../typegraph/type_node.ts";
 import { TypeGraph } from "../../typegraph/mod.ts";
 import { CodeGenerator } from "./code_generator.ts";
 import { getChildTypes } from "../../typegraph/visitor.ts";
@@ -320,7 +326,6 @@ export class ResultValidationCompiler {
     variants: number[],
     entry: QueueEntry,
   ): QueueEntry[] {
-    // TODO why do we need multi-level variants?
     const multilevelVariants = this.tg.flattenUnionVariants(variants);
     const selectableVariants = multilevelVariants.filter(
       (variant) => !this.tg.isScalarOrListOfScalars(this.tg.type(variant)),
@@ -331,7 +336,9 @@ export class ResultValidationCompiler {
         const names = selectableVariants.map((idx) => this.tg.type(idx).title);
         throw new Error(
           `at '${entry.path}': selection set required for type${s} ${
-            names.join(", ")
+            names.join(
+              ", ",
+            )
           }`,
         );
       }
@@ -358,27 +365,56 @@ export class ResultValidationCompiler {
     const entries: QueueEntry[] = variants.map((variantIdx) => {
       const typeNode = this.tg.type(variantIdx);
       const typeName = typeNode.title;
-      if (selectableVariants.includes(variantIdx)) {
-        const selectionSet = variantSelections.get(typeName)?.selectionSet;
-        if (selectionSet == null) {
-          throw new Error(
-            `at '${entry.path}': variant type '${typeName}' must be selected with type condition inline fragment`,
-          );
+      const unquantified = this.tg.unwrapQuantifier(typeNode);
+      switch (unquantified.type) {
+        case Type.OBJECT: {
+          const selectionSet = variantSelections.get(typeName)?.selectionSet;
+          if (selectionSet == null) {
+            // TODO link to matching documentation page
+            throw new Error(
+              `at '${entry.path}': variant type '${typeName}' must have a selection set on an inline fragment with type condition`,
+            );
+          }
+          variantSelections.delete(typeName);
+          return {
+            name: this.validatorName(variantIdx, true),
+            path: entry.path,
+            typeIdx: variantIdx,
+            selectionSet,
+          };
         }
-        variantSelections.delete(typeName);
-        return {
-          name: this.validatorName(variantIdx, true),
-          path: entry.path,
-          typeIdx: variantIdx,
-          selectionSet,
-        };
-      } else {
-        // FIXME non selectable: what validation??
-        return {
-          name: this.validatorName(variantIdx, true),
-          path: entry.path,
-          typeIdx: variantIdx,
-        };
+        case Type.UNION:
+        case Type.EITHER: {
+          const nestedVariants = this.tg.getFlatUnionVariants(
+            typeNode as UnionNode | EitherNode,
+          );
+          return {
+            name: this.validatorName(variantIdx, true),
+            path: entry.path,
+            typeIdx: variantIdx,
+            selectionSet: {
+              kind: Kind.SELECTION_SET,
+              selections: nestedVariants.flatMap((idx) => {
+                const typeNode = this.tg.type(idx);
+                const typeName = typeNode.title;
+                const node = variantSelections.get(typeName);
+                // TODO not necessary
+                if (node == null) {
+                  return [];
+                }
+                variantSelections.delete(typeName);
+                return [node];
+              }),
+            },
+          };
+        }
+        default: {
+          return {
+            name: this.validatorName(variantIdx, true),
+            path: entry.path,
+            typeIdx: variantIdx,
+          };
+        }
       }
     });
 
