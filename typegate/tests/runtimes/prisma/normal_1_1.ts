@@ -13,7 +13,7 @@ export const tg = await typegraph("prisma_normal", (g: any) => {
       id: t.integer({}, { asId: true }),
       profile: db.link(g.ref("Profile").optional(), "userProfile"),
     },
-    { name: "User" }
+    { name: "User" },
   );
 
   const profile = t.struct(
@@ -21,7 +21,7 @@ export const tg = await typegraph("prisma_normal", (g: any) => {
       id: t.integer({}, { asId: true }),
       user: db.link("User", "userProfile"),
     },
-    { name: "Profile" }
+    { name: "Profile" },
   );
 
   g.expose({

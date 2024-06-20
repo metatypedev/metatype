@@ -55,7 +55,7 @@ export interface ArtifactMeta {
 
 export async function tgDeploy(
   typegraph: TypegraphOutput,
-  params: TypegraphDeployParams
+  params: TypegraphDeployParams,
 ): Promise<DeployResult> {
   const serializeParams = {
     typegraphPath: params.typegraphPath,
@@ -92,7 +92,7 @@ export async function tgDeploy(
       typegraph.name,
       typegate.auth,
       headers,
-      params.typegraphPath
+      params.typegraphPath,
     );
     await artifactUploader.uploadArtifacts();
   } else {
@@ -110,7 +110,7 @@ export async function tgDeploy(
         secrets: Object.entries(params.secrets ?? {}),
       }),
     },
-    `tgDeploy failed to deploy typegraph ${typegraph.name}`
+    `tgDeploy failed to deploy typegraph ${typegraph.name}`,
   );
 
   if (response.errors) {
@@ -128,7 +128,7 @@ export async function tgDeploy(
 
 export async function tgRemove(
   typegraph: TypegraphOutput,
-  params: TypegraphRemoveParams
+  params: TypegraphRemoveParams,
 ): Promise<RemoveResult> {
   const { url, auth } = params.typegate;
 
@@ -145,7 +145,7 @@ export async function tgRemove(
       headers,
       body: wit_utils.gqlRemoveQuery([typegraph.name]),
     },
-    `tgRemove failed to remove typegraph ${typegraph.name}`
+    `tgRemove failed to remove typegraph ${typegraph.name}`,
   );
 
   return { typegate: response };

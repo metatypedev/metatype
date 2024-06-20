@@ -33,7 +33,7 @@ export const temporal = async () =>
       signal: temporal
         .signalWorkflow(
           "setValue",
-          t.struct({ key: t.string(), value: t.string() })
+          t.struct({ key: t.string(), value: t.string() }),
         )
         .withPolicy(pub),
 
@@ -80,20 +80,20 @@ export const randomTg = async () =>
         G: t.float(),
         B: t.float(),
       },
-      { name: "Rgb" }
+      { name: "Rgb" },
     );
     const vec = t.struct(
       { x: t.float(), y: t.float(), z: t.float() },
       {
         name: "Vec",
-      }
+      },
     );
 
     const rubix_cube = t.struct(
       { name: t.string(), size: t.integer() },
       {
         name: "Rubix",
-      }
+      },
     );
     const toygun = t.struct({ color: t.string() }, { name: "Toygun" });
 
@@ -110,7 +110,7 @@ export const randomTg = async () =>
           t.struct({
             email: t.email(),
             country: t.string({}, { config: { gen: "country", full: true } }),
-          })
+          }),
         )
         .withPolicy(pub),
       test2: random.gen(testStruct).withPolicy(pub),

@@ -38,7 +38,7 @@ export class TemporalRuntime extends Runtime {
     operation: TemporalOperationType,
     matArg?: string,
     funcArg?: Typedef,
-    funcOut?: Typedef
+    funcOut?: Typedef,
   ) {
     const data = {
       matArg,
@@ -56,7 +56,7 @@ export class TemporalRuntime extends Runtime {
         tag: "start-workflow",
       },
       workflowType,
-      arg
+      arg,
     );
   }
 
@@ -66,7 +66,7 @@ export class TemporalRuntime extends Runtime {
         tag: "signal-workflow",
       },
       signalName,
-      arg
+      arg,
     );
   }
 
@@ -77,7 +77,7 @@ export class TemporalRuntime extends Runtime {
       },
       queryType,
       arg,
-      out
+      out,
     );
   }
 

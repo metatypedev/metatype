@@ -26,6 +26,6 @@ typegraph("s3", (g: any) => {
       upload: s3.upload("bucket", t.file({ allow: ["text/plain"] })),
       uploadMany: s3.uploadAll("bucket"),
     },
-    pub
+    pub,
   );
 });

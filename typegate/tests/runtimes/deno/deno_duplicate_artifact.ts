@@ -28,5 +28,5 @@ export const tg = await typegraph(
         })
         .withPolicy(pub),
     });
-  }
+  },
 );

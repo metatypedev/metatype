@@ -22,11 +22,11 @@ export class ArtifactUploader {
     private tgName: string,
     private auth: BasicAuth | undefined,
     private headers: Headers,
-    private tgPath: string
+    private tgPath: string,
   ) {}
 
   private async getUploadTokens(
-    artifactMetas: UploadArtifactMeta[]
+    artifactMetas: UploadArtifactMeta[],
   ): Promise<Array<string | null>> {
     const artifactsJson = JSON.stringify(artifactMetas);
     const uploadUrls: Array<string | null> = await execRequest(
@@ -36,7 +36,7 @@ export class ArtifactUploader {
         headers: this.headers,
         body: artifactsJson,
       },
-      `tgDeploy failed to get upload urls`
+      `tgDeploy failed to get upload urls`,
     );
 
     // if (!response.ok) {
@@ -49,7 +49,8 @@ export class ArtifactUploader {
 
     // const uploadUrls: Array<string | null> = await response.json();
     if (uploadUrls.length !== artifactMetas.length) {
-      const diff = `array length mismatch: ${uploadUrls.length} !== ${artifactMetas.length}`;
+      const diff =
+        `array length mismatch: ${uploadUrls.length} !== ${artifactMetas.length}`;
       throw new Error(`Failed to get upload URLs for all artifacts: ${diff}`);
     }
 
@@ -58,7 +59,7 @@ export class ArtifactUploader {
 
   private async upload(
     token: string | null,
-    meta: UploadArtifactMeta
+    meta: UploadArtifactMeta,
   ): Promise<any> {
     const uploadHeaders = new Headers({
       "Content-Type": "application/octet-stream",
@@ -87,7 +88,7 @@ export class ArtifactUploader {
         headers: uploadHeaders,
         body: new Uint8Array(content),
       } as RequestInit,
-      `failed to upload artifact ${meta.relativePath}`
+      `failed to upload artifact ${meta.relativePath}`,
     );
 
     log.info("✓ artifact uploaded:", meta.relativePath);
@@ -107,7 +108,7 @@ export class ArtifactUploader {
 
   private handleUploadErrors(
     results: PromiseSettledResult<any>[],
-    artifactMetas: UploadArtifactMeta[]
+    artifactMetas: UploadArtifactMeta[],
   ) {
     let errors = 0;
 
@@ -116,7 +117,7 @@ export class ArtifactUploader {
       const meta = artifactMetas[i];
       if (result.status === "rejected") {
         console.error(
-          `Failed to upload artifact '${meta.relativePath}': ${result.reason}`
+          `Failed to upload artifact '${meta.relativePath}': ${result.reason}`,
         );
         errors++;
       } else {
@@ -137,7 +138,7 @@ export class ArtifactUploader {
     const results = await Promise.allSettled(
       tokens.map(async (token, i) => {
         return await this.upload(token, artifactMetas[i]);
-      })
+      }),
     );
 
     this.handleUploadErrors(results, artifactMetas);

@@ -26,7 +26,7 @@ export class RandomRuntime extends Runtime {
       },
       {
         runtime: this._id,
-      }
+      },
     );
 
     return t.func(t.struct({}), out, {

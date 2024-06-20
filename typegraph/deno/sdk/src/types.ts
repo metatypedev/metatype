@@ -41,30 +41,34 @@ export type PolicySpec =
   | Policy
   | PolicyPerEffectObject
   | {
-      none: Policy;
-      create: Policy;
-      update: Policy;
-      delete: Policy;
-    };
+    none: Policy;
+    create: Policy;
+    update: Policy;
+    delete: Policy;
+  };
 
 export type Simplified<T> = Omit<T, "of">;
 
-export type SimplifiedBase<T> = { config?: Record<string, unknown> } & Omit<
-  T,
-  "runtimeConfig" | "asId"
->;
+export type SimplifiedBase<T> =
+  & { config?: Record<string, unknown> }
+  & Omit<
+    T,
+    "runtimeConfig" | "asId"
+  >;
 
 export type AsId = {
   asId?: true;
 };
 
-export type SimplifiedNumericData<T> = { enumeration?: number[] } & Omit<
-  T,
-  "enumeration"
->;
+export type SimplifiedNumericData<T> =
+  & { enumeration?: number[] }
+  & Omit<
+    T,
+    "enumeration"
+  >;
 
 export function getPolicyChain(
-  policy: PolicySpec[] | PolicySpec
+  policy: PolicySpec[] | PolicySpec,
 ): WitPolicySpec[] {
   const chain = Array.isArray(policy) ? policy : [policy];
   return chain.map((p) => {
@@ -76,7 +80,7 @@ export function getPolicyChain(
       tag: "per-effect",
       val: mapValues(
         p instanceof PolicyPerEffectObject ? p.value : p,
-        (v: any) => v._id
+        (v: any) => v._id,
       ) as unknown as PolicyPerEffect,
     } as const;
   });
@@ -217,7 +221,7 @@ class Integer extends Typedef implements Readonly<TypeInteger> {
 
 export function integer(
   data: SimplifiedNumericData<TypeInteger> = {},
-  base: SimplifiedBase<TypeBase> & AsId = {}
+  base: SimplifiedBase<TypeBase> & AsId = {},
 ) {
   const completeData = {
     ...data,
@@ -233,7 +237,7 @@ export function integer(
   return new Integer(
     core.integerb(completeData, completeBase),
     completeData,
-    completeBase
+    completeBase,
   );
 }
 
@@ -258,7 +262,7 @@ class Float extends Typedef implements Readonly<TypeFloat> {
 
 export function float(
   data: SimplifiedNumericData<TypeFloat> = {},
-  base: SimplifiedBase<TypeBase> = {}
+  base: SimplifiedBase<TypeBase> = {},
 ) {
   const completeData = {
     ...data,
@@ -274,7 +278,7 @@ export function float(
   return new Float(
     core.floatb(completeData, completeBase),
     completeData,
-    completeBase
+    completeBase,
   );
 }
 
@@ -297,7 +301,7 @@ class StringT extends Typedef implements Readonly<TypeString> {
 
 export function string(
   data: TypeString = {},
-  base: SimplifiedBase<TypeBase> & AsId = {}
+  base: SimplifiedBase<TypeBase> & AsId = {},
 ) {
   const completeBase = {
     ...base,
@@ -349,7 +353,7 @@ export function enum_(variants: string[], base: SimplifiedBase<TypeBase> = {}) {
     {
       enumeration: variants.map((variant) => JSON.stringify(variant)),
     },
-    base
+    base,
   );
 }
 
@@ -368,7 +372,7 @@ class File extends Typedef {
 
 export function file(
   data: Simplified<TypeFile> = {},
-  base: SimplifiedBase<TypeBase> = {}
+  base: SimplifiedBase<TypeBase> = {},
 ) {
   const completeBase = {
     ...base,
@@ -396,7 +400,7 @@ class List extends Typedef {
 export function list(
   variant: Typedef,
   data: Simplified<TypeList> = {},
-  base: SimplifiedBase<TypeBase> = {}
+  base: SimplifiedBase<TypeBase> = {},
 ) {
   const completeData = {
     of: variant._id,
@@ -410,7 +414,7 @@ export function list(
   return new List(
     core.listb(completeData, completeBase),
     completeData,
-    completeBase
+    completeBase,
   );
 }
 
@@ -428,7 +432,7 @@ class Optional extends Typedef {
 export function optional(
   variant: Typedef,
   data: Simplified<TypeOptional> = {},
-  base: SimplifiedBase<TypeBase> = {}
+  base: SimplifiedBase<TypeBase> = {},
 ) {
   const completeData = {
     of: variant._id,
@@ -443,7 +447,7 @@ export function optional(
   return new Optional(
     core.optionalb(completeData, completeBase),
     completeData,
-    completeBase
+    completeBase,
   );
 }
 
@@ -458,7 +462,7 @@ class Union extends Typedef {
 
 export function union(
   variants: Array<Typedef>,
-  base: SimplifiedBase<TypeBase> = {}
+  base: SimplifiedBase<TypeBase> = {},
 ) {
   const data = {
     variants: new Uint32Array(variants.map((variant) => variant._id)),
@@ -482,7 +486,7 @@ class Either extends Typedef {
 
 export function either(
   variants: Array<Typedef>,
-  base: SimplifiedBase<TypeBase> = {}
+  base: SimplifiedBase<TypeBase> = {},
 ) {
   const data = {
     variants: new Uint32Array(variants.map((variant) => variant._id)),
@@ -505,7 +509,7 @@ export class Struct<P extends { [key: string]: Typedef }> extends Typedef {
 
 export function struct<P extends { [key: string]: Typedef }>(
   props: P,
-  base: SimplifiedBase<TypeBase> & { additionalProps?: boolean } = {}
+  base: SimplifiedBase<TypeBase> & { additionalProps?: boolean } = {},
 ): Struct<P> {
   const completeBase = {
     ...base,
@@ -518,12 +522,12 @@ export function struct<P extends { [key: string]: Typedef }>(
         props: Object.entries(props).map(([name, typ]) => [name, typ._id]),
         additionalProps: completeBase.additionalProps ?? false,
       },
-      completeBase
+      completeBase,
     ),
     {
       props,
     },
-    completeBase
+    completeBase,
   );
 }
 
@@ -544,7 +548,7 @@ type ApplyParamNode =
   | ApplyParamLeafNode;
 
 function serializeApplyParamNode(
-  node: ApplyParamNode
+  node: ApplyParamNode,
 ): Record<string, unknown> {
   if (node instanceof ApplyFromArg) {
     return { source: "arg", name: node.name, typeId: node.type };
@@ -573,7 +577,7 @@ function serializeApplyParamNode(
 export class Func<
   I extends Typedef = Typedef,
   O extends Typedef = Typedef,
-  M extends Materializer = Materializer
+  M extends Materializer = Materializer,
 > extends Typedef {
   inp: I;
   out: O;
@@ -587,7 +591,7 @@ export class Func<
     out: O,
     mat: M,
     parameterTransform: ParameterTransform | null = null,
-    config: FuncConfig | null = null
+    config: FuncConfig | null = null,
   ) {
     super(_id, {});
     this.inp = inp;
@@ -601,8 +605,8 @@ export class Func<
     const output = core.extendStruct(
       this.out._id,
       Object.entries(fields).map(
-        ([name, typ]) => [name, typ._id] as [string, number]
-      )
+        ([name, typ]) => [name, typ._id] as [string, number],
+      ),
     );
 
     return func(
@@ -610,7 +614,7 @@ export class Func<
       new Typedef(output, {}),
       this.mat,
       this.parameterTransform,
-      this.config
+      this.config,
     );
   }
 
@@ -641,7 +645,7 @@ export class Func<
       this.out,
       this.mat,
       transformData.parameterTransform,
-      this.config
+      this.config,
     );
   }
 
@@ -656,7 +660,7 @@ export class Func<
     return func(
       new Typedef(data.inp, {}) as Struct<{ [key: string]: Typedef }>,
       new Typedef(data.out, {}),
-      { _id: data.mat }
+      { _id: data.mat },
     );
   }
 }
@@ -669,13 +673,13 @@ type FuncConfig = {
 export function func<
   I extends Typedef = Typedef,
   O extends Typedef = Typedef,
-  M extends Materializer = Materializer
+  M extends Materializer = Materializer,
 >(
   inp: I,
   out: O,
   mat: M,
   transformData: ParameterTransform | null = null,
-  config: FuncConfig | null = null
+  config: FuncConfig | null = null,
 ) {
   const rateCalls = config?.rateCalls ?? false;
   const rateWeight = config?.rateWeight ?? undefined;
@@ -692,6 +696,6 @@ export function func<
     out,
     mat,
     transformData,
-    config
+    config,
   );
 }

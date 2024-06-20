@@ -40,5 +40,5 @@ Meta.test(
       typegate: { url: gate, auth },
     });
     assertEquals(gateResponseRem, { data: { removeTypegraphs: true } });
-  }
+  },
 );

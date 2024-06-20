@@ -12,14 +12,14 @@ export class GraphQLRuntime extends Runtime {
     super(
       runtimes.registerGraphqlRuntime({
         endpoint,
-      })
+      }),
     );
   }
 
   query<I extends t.Typedef = t.Typedef, O extends t.Typedef = t.Typedef>(
     inp: I,
     out: O,
-    path?: string[]
+    path?: string[],
   ): t.Func<I, O, QueryMat> {
     const matId = runtimes.graphqlQuery(
       {
@@ -28,7 +28,7 @@ export class GraphQLRuntime extends Runtime {
       },
       {
         path,
-      }
+      },
     );
     const mat: QueryMat = {
       _id: matId,
@@ -41,7 +41,7 @@ export class GraphQLRuntime extends Runtime {
     inp: I,
     out: O,
     effect: Effect,
-    path?: string[]
+    path?: string[],
   ): t.Func<I, O, MutationMat> {
     const matId = runtimes.graphqlMutation(
       {
@@ -50,7 +50,7 @@ export class GraphQLRuntime extends Runtime {
       },
       {
         path,
-      }
+      },
     );
     const mat: MutationMat = {
       _id: matId,

@@ -19,14 +19,14 @@ const student = t.struct(
             t.struct({
               name: t.string(),
               points: t.integer(),
-            })
+            }),
           )
           .optional(),
         medals: t.integer().optional(),
       })
       .optional(),
   },
-  { name: "Student" }
+  { name: "Student" },
 );
 
 const grades = t.struct({
@@ -35,7 +35,7 @@ const grades = t.struct({
     t.struct({
       name: t.string(),
       score: t.integer(),
-    })
+    }),
   ),
 });
 

@@ -20,7 +20,7 @@ typegraph("test-types", (g: any) => {
       id: t.integer(),
       post: g.ref("Post"),
     },
-    { name: "User" }
+    { name: "User" },
   );
 
   const post = t.struct(
@@ -28,7 +28,7 @@ typegraph("test-types", (g: any) => {
       id: t.integer(),
       author: user,
     },
-    { name: "Post" }
+    { name: "Post" },
   );
 
   g.expose({

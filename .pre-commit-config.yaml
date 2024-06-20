@@ -22,7 +22,7 @@ repos:
       - id: deno-fmt
         name: Deno format
         language: system
-        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs && cd ../dev && deno fmt && cd ../typegraph/node && deno fmt --ignore=node_modules,dist'
+        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs && cd ../dev && deno fmt && cd ../typegraph/deno && deno fmt --ignore=node_modules,dist'
         pass_filenames: false
         types:
           - ts

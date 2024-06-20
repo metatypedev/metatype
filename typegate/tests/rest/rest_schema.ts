@@ -14,7 +14,7 @@ export const tg = await typegraph("rest_schema", (g: any) => {
       b: t.struct({ c: t.integer(), d: g.ref("ComplexType") }),
       e: g.ref("ComplexType"),
     },
-    { name: "ComplexType" }
+    { name: "ComplexType" },
   );
 
   const identity = deno
@@ -26,7 +26,7 @@ export const tg = await typegraph("rest_schema", (g: any) => {
       {
         code: "(x) => x['input']",
         effect: fx.read(),
-      }
+      },
     )
     .withPolicy(pub);
 

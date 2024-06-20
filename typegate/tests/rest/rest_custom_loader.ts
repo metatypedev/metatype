@@ -9,7 +9,7 @@ const user = t.struct(
   {
     id: t.integer(),
   },
-  { name: "User" }
+  { name: "User" },
 );
 
 const post = t.struct(
@@ -17,7 +17,7 @@ const post = t.struct(
     id: t.integer(),
     author: user,
   },
-  { name: "Post" }
+  { name: "Post" },
 );
 
 const complexType = t.struct(
@@ -28,7 +28,7 @@ const complexType = t.struct(
     e: t.list(t.either([t.string(), t.integer()])).optional(),
     f: t.float({ enumeration: [1.0, 2.5] }),
   },
-  { name: "ComplexType" }
+  { name: "ComplexType" },
 );
 
 export const tg = await typegraph("rest", (g: any) => {
@@ -57,7 +57,7 @@ export const tg = await typegraph("rest", (g: any) => {
       {
         code: "(x) => x['input']",
         effect: fx.read(),
-      }
+      },
     )
     .withPolicy(pub);
 

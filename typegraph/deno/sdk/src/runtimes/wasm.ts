@@ -31,7 +31,7 @@ class WasmRuntimeWire extends WasmRuntime {
     super(
       runtimes.registerWasmWireRuntime({
         wasmArtifact: artifactPath,
-      })
+      }),
     );
   }
 
@@ -44,7 +44,7 @@ class WasmRuntimeWire extends WasmRuntime {
     }: {
       name: string;
       effect?: Effect;
-    }
+    },
   ): t.Func<I, O, WireHandlerWasmMat> {
     const matId = runtimes.fromWasmWireHandler(
       {
@@ -53,7 +53,7 @@ class WasmRuntimeWire extends WasmRuntime {
       },
       {
         funcName: name,
-      }
+      },
     );
 
     return t.func(inp, out, {
@@ -69,7 +69,7 @@ class WasmRuntimeReflected extends WasmRuntime {
     super(
       runtimes.registerWasmReflectedRuntime({
         wasmArtifact: artifactPath,
-      })
+      }),
     );
   }
 
@@ -82,7 +82,7 @@ class WasmRuntimeReflected extends WasmRuntime {
     }: {
       name: string;
       effect?: Effect;
-    }
+    },
   ): t.Func<I, O, ReflectedFuncWasmMat> {
     const matId = runtimes.fromWasmReflectedFunc(
       {
@@ -91,7 +91,7 @@ class WasmRuntimeReflected extends WasmRuntime {
       },
       {
         funcName: name,
-      }
+      },
     );
 
     return t.func(inp, out, {

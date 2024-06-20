@@ -71,7 +71,7 @@ type InjectionSourceType = typeof InjectionSource;
 export interface TypegraphBuilderArgs extends InjectionSourceType {
   expose: (
     exports: Exports,
-    defaultPolicy?: t.PolicySpec | Array<t.PolicySpec>
+    defaultPolicy?: t.PolicySpec | Array<t.PolicySpec>,
   ) => void;
   inherit: () => InheritDef;
   rest: (graphql: string) => number;
@@ -133,24 +133,26 @@ let counter = 0;
 
 export async function typegraph(
   name: string,
-  builder: TypegraphBuilder
+  builder: TypegraphBuilder,
 ): Promise<TypegraphOutput>;
 export async function typegraph(args: TypegraphArgs): Promise<TypegraphOutput>;
 export async function typegraph(
   args: Omit<TypegraphArgs, "builder">,
-  builder: TypegraphBuilder
+  builder: TypegraphBuilder,
 ): Promise<TypegraphOutput>;
 export async function typegraph(
   nameOrArgs: string | TypegraphArgs | Omit<TypegraphArgs, "builder">,
-  maybeBuilder?: TypegraphBuilder
+  maybeBuilder?: TypegraphBuilder,
 ): Promise<TypegraphOutput> {
   ++counter;
-  const args =
-    typeof nameOrArgs === "string" ? { name: nameOrArgs } : nameOrArgs;
+  const args = typeof nameOrArgs === "string"
+    ? { name: nameOrArgs }
+    : nameOrArgs;
 
   const { name, dynamic, cors, prefix, rate, secrets } = args;
-  const builder =
-    "builder" in args ? (args.builder as TypegraphBuilder) : maybeBuilder!;
+  const builder = "builder" in args
+    ? (args.builder as TypegraphBuilder)
+    : maybeBuilder!;
 
   const file = caller();
   if (!file) {
@@ -186,7 +188,7 @@ export async function typegraph(
     expose: (exports, defaultPolicy) => {
       core.expose(
         Object.entries(exports).map(([name, fn]) => [name, fn._id]),
-        defaultPolicy ? getPolicyChain(defaultPolicy) : []
+        defaultPolicy ? getPolicyChain(defaultPolicy) : [],
       );
     },
     inherit: () => {
@@ -216,7 +218,7 @@ export async function typegraph(
     serialize(config: SerializeParams) {
       try {
         const [tgJson, ref_artifacts] = core.serializeTypegraph(
-          config
+          config,
         ) as Array<any>; // FIXME: bad typing?
         const result: TgFinalizationResult = {
           tgJson: tgJson,

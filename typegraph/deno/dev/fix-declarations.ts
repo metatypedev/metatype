@@ -24,7 +24,7 @@ const replacements = [
       root: thisDir,
       includeDirs: false,
       globstar: true,
-    })
+    }),
   ).map(({ path }) => ({
     path,
     op: (s: string) => s.replace(/^(import .*)(\.js)\';$/, "$1.d.ts';"),

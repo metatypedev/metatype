@@ -34,7 +34,7 @@ typegraph(
         one: t.list(t.integer(), { min: 3 }, { name: "Two" }),
         two: t.optional(g.ref("SomeType")),
       },
-      { name: "SomeType" }
+      { name: "SomeType" },
     );
 
     const complexType = t.struct(
@@ -46,7 +46,7 @@ typegraph(
           { enumeration: [1, 2] },
           {
             config: { key: "value" },
-          }
+          },
         ),
         a_float_enum: t.float({ enumeration: [1.5, 2.5] }),
         a_struct: t.struct({ value: t.float() }),
@@ -54,7 +54,7 @@ typegraph(
         nested_with_ref: someType,
         an_email: t.email(),
       },
-      { name: "ComplexType" }
+      { name: "ComplexType" },
     );
 
     g.auth(Auth.basic(["testBasicAuth"]));
@@ -68,5 +68,5 @@ typegraph(
         })
         .withPolicy(pub),
     });
-  }
+  },
 );

@@ -75,7 +75,7 @@ const prepare = {
             currentDir: "examples/typegraphs/metagen/rs",
           })
         ).code,
-        0
+        0,
       );
     });
   },
@@ -118,7 +118,7 @@ for (const name of list) {
           { currentDir: "examples" },
           "serialize",
           "-f",
-          `typegraphs/${name}.py`
+          `typegraphs/${name}.py`,
         );
         pyVersion = stdout;
       });
@@ -132,7 +132,7 @@ for (const name of list) {
           },
           "serialize",
           "-f",
-          `typegraphs/${name}.ts`
+          `typegraphs/${name}.ts`,
         );
         tsVersion = stdout;
       });
@@ -143,7 +143,7 @@ for (const name of list) {
         await Promise.all([...py, ...ts].map((tg) => toComparable(t, tg)));
         assertEquals(py, ts);
       });
-    }
+    },
   );
 }
 
@@ -156,6 +156,6 @@ async function toComparable(t: MetaTest, tg: TypeGraphDS) {
         });
         mat.data.script = res.stdout;
       }
-    })
+    }),
   );
 }

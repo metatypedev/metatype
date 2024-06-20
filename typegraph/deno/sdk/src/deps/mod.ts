@@ -4,7 +4,7 @@ export { caller } from "./_import.ts";
 
 export function mapValues(
   object: object,
-  fn: (value: any, key: string, object: object) => any
+  fn: (value: any, key: string, object: object) => any,
 ) {
   const newEntries = Object.entries(object).map(([k, v]) => [
     k,

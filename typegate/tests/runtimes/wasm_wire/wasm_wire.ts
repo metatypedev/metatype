@@ -33,7 +33,7 @@ export const tg = await typegraph("wasm-wire-ts", (g: any) => {
         .handler(
           t.struct({ a: t.float(), b: t.float() }).rename("add_args"),
           t.integer(),
-          { name: "add" }
+          { name: "add" },
         )
         .rename("add"),
       range: wasm
@@ -42,7 +42,7 @@ export const tg = await typegraph("wasm-wire-ts", (g: any) => {
             .struct({ a: t.integer().optional(), b: t.integer() })
             .rename("range_args"),
           t.list(t.integer()),
-          { name: "range" }
+          { name: "range" },
         )
         .rename("range"),
       record: wasm
@@ -56,6 +56,6 @@ export const tg = await typegraph("wasm-wire-ts", (g: any) => {
         .handler(t.struct({}), t.list(entity), { name: "hundred-random" })
         .rename("hundred-random"),
     },
-    Policy.public()
+    Policy.public(),
   );
 });

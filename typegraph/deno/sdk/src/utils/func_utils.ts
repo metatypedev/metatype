@@ -20,7 +20,7 @@ export function stringifySymbol(symbol: symbol) {
 }
 
 export function serializeRecordValues<T>(
-  obj: Record<string, T>
+  obj: Record<string, T>,
 ): Array<[string, string]> {
   return Object.entries(obj).map(([k, v]) => [k, JSON.stringify(v)]);
 }
@@ -28,7 +28,7 @@ export function serializeRecordValues<T>(
 export function buildReduceData(
   node: InheritDef | unknown,
   paths: ReducePath[] = [],
-  currPath: string[] = []
+  currPath: string[] = [],
 ): ReducePath[] {
   if (node === null || node === undefined) {
     throw new Error(`unsupported value "${node}" at ${currPath.join(".")}`);
@@ -68,7 +68,7 @@ export function buildReduceData(
 
 export function getEnvVariable(
   key: string,
-  defaultValue?: string
+  defaultValue?: string,
 ): string | undefined {
   const glob = globalThis as any;
   const value = glob?.process
@@ -87,10 +87,10 @@ const frozenMemo: Record<string, TgFinalizationResult> = {};
 /** Create a reusable version of a `TypegraphOutput` */
 export function freezeTgOutput(
   config: SerializeParams,
-  tgOutput: TypegraphOutput
+  tgOutput: TypegraphOutput,
 ): TypegraphOutput {
-  frozenMemo[tgOutput.name] =
-    frozenMemo[tgOutput.name] ?? tgOutput.serialize(config);
+  frozenMemo[tgOutput.name] = frozenMemo[tgOutput.name] ??
+    tgOutput.serialize(config);
   return {
     ...tgOutput,
     serialize: () => frozenMemo[tgOutput.name],
@@ -103,14 +103,14 @@ export function freezeTgOutput(
 export async function execRequest(
   url: URL,
   reqInit: RequestInit,
-  errMsg: string
+  errMsg: string,
 ) {
   try {
     const response = await fetch(url, reqInit);
     if (!response.ok) {
       log.debug("error", response.json());
       throw Error(
-        `${errMsg}: request failed with status ${response.status} (${response.statusText})`
+        `${errMsg}: request failed with status ${response.status} (${response.statusText})`,
       );
     }
 
@@ -119,7 +119,7 @@ export async function execRequest(
     }
     log.debug("response", response);
     throw Error(
-      `${errMsg}: expected json object, got "${await response.text()}"`
+      `${errMsg}: expected json object, got "${await response.text()}"`,
     );
   } catch (err) {
     log.debug("fetch error", { url, requestInit: reqInit, error: err });

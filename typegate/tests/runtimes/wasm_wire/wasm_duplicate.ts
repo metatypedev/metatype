@@ -14,17 +14,17 @@ export const tg = await typegraph("wasm-duplicate-ts", (g: any) => {
         .handler(
           t.struct({ a: t.float(), b: t.float() }).rename("add_args"),
           t.integer(),
-          { name: "add" }
+          { name: "add" },
         )
         .rename("add"),
       add2: wasm2
         .handler(
           t.struct({ a: t.float(), b: t.float() }).rename("add_args2"),
           t.integer(),
-          { name: "add" }
+          { name: "add" },
         )
         .rename("add2"),
     },
-    Policy.public()
+    Policy.public(),
   );
 });

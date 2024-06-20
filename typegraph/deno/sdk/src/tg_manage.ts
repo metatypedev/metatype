@@ -28,7 +28,7 @@ export class Manager {
         break;
       default:
         throw new Error(
-          `command ${this.#env.command} from meta-cli not supported`
+          `command ${this.#env.command} from meta-cli not supported`,
         );
     }
   }
@@ -117,7 +117,7 @@ export class Manager {
           url: deployTarget.baseUrl,
           auth: new BasicAuth(
             deployTarget.auth.username,
-            deployTarget.auth.password
+            deployTarget.auth.password,
           ),
         },
         typegraphPath: env.typegraph_path,

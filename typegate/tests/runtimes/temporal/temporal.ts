@@ -23,7 +23,7 @@ export const tg = await typegraph("temporal", (g: any) => {
     signal: temporal
       .signalWorkflow(
         "setValue",
-        t.struct({ key: t.string(), value: t.string() })
+        t.struct({ key: t.string(), value: t.string() }),
       )
       .withPolicy(pub),
 

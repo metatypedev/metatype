@@ -29,7 +29,7 @@ export const tg = await typegraph("wasm-reflected-ts", (g: any) => {
       range: wasm.export(
         t.struct({ a: t.integer().optional(), b: t.integer() }),
         t.list(t.integer()),
-        { name: "range" }
+        { name: "range" },
       ),
       record: wasm.export(t.struct({}), t.list(entity), {
         name: "record-creation",
@@ -38,6 +38,6 @@ export const tg = await typegraph("wasm-reflected-ts", (g: any) => {
         name: "identity",
       }),
     },
-    Policy.public()
+    Policy.public(),
   );
 });

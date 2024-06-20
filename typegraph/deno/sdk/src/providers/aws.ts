@@ -54,7 +54,7 @@ export class S3Runtime extends Runtime {
     return t.func(
       t.struct({ length: t.integer(), path: t.string() }),
       t.uri(),
-      mat
+      mat,
     );
   }
 
@@ -72,7 +72,7 @@ export class S3Runtime extends Runtime {
         keys: t.list(t.struct({ key: t.string(), size: t.integer() })),
         prefix: t.list(t.string()),
       }),
-      mat
+      mat,
     );
   }
 
@@ -85,7 +85,7 @@ export class S3Runtime extends Runtime {
     return t.func(
       t.struct({ file: fileType, path: t.string().optional() }),
       t.boolean(),
-      mat
+      mat,
     );
   }
 
@@ -101,7 +101,7 @@ export class S3Runtime extends Runtime {
         files: t.list(fileType),
       }),
       t.boolean(),
-      mat
+      mat,
     );
   }
 }

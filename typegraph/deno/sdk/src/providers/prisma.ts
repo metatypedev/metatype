@@ -136,7 +136,7 @@ export class PrismaRuntime extends Runtime {
       this._id,
       query,
       parameters._id,
-      effect
+      effect,
     );
     return t.Func.fromTypeFunc(type);
   }
@@ -146,7 +146,7 @@ export class PrismaRuntime extends Runtime {
       this._id,
       query,
       parameters ? parameters._id : undefined,
-      output._id
+      output._id,
     );
     return t.Func.fromTypeFunc(type);
   }
@@ -159,7 +159,7 @@ export class PrismaRuntime extends Runtime {
 function prismaLink(
   targetType: string | Typedef,
   name?: string,
-  arg?: PrismaLinkArg
+  arg?: PrismaLinkArg,
 ) {
   if (typeof targetType == "string") {
     targetType = genRef(targetType);

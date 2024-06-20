@@ -35,7 +35,7 @@ export default class Policy {
     }
     if (!(check instanceof RegExp)) {
       throw new Error(
-        "Invalid context check: expected null, string, or RegExp"
+        "Invalid context check: expected null, string, or RegExp",
       );
     }
     return { tag: "pattern", val: check.source };
@@ -44,7 +44,7 @@ export default class Policy {
   static context(key: string, check?: string | RegExp | null): Policy {
     const [id, name] = core.registerContextPolicy(
       key,
-      Policy.#serializeContext(check ?? null)
+      Policy.#serializeContext(check ?? null),
     );
     return new Policy(id, name);
   }
@@ -57,7 +57,7 @@ export default class Policy {
   static create(name: string, materializerId: MaterializerId): Policy {
     return new Policy(
       core.registerPolicy({ name, materializer: materializerId }),
-      name
+      name,
     );
   }
 

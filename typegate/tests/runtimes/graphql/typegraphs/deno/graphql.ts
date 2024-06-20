@@ -10,7 +10,7 @@ const user = t.struct(
     id: t.integer(),
     // TODO more fields with more types
   },
-  { name: "User" }
+  { name: "User" },
 );
 
 typegraph("graphql", (g: any) => {

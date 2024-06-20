@@ -11,8 +11,10 @@ import { runtimes } from "../wit.ts";
 import { Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
 
-type HttpRequestMat<M extends string> = Materializer &
-  Omit<MaterializerHttpRequest, "method"> & {
+type HttpRequestMat<M extends string> =
+  & Materializer
+  & Omit<MaterializerHttpRequest, "method">
+  & {
     method: M;
   };
 
@@ -20,34 +22,34 @@ export class HttpRuntime extends Runtime {
   constructor(
     public endpoint: string,
     public certSecret?: string,
-    public basicAuthSecret?: string
+    public basicAuthSecret?: string,
   ) {
     super(
       runtimes.registerHttpRuntime({
         endpoint,
         certSecret,
         basicAuthSecret,
-      })
+      }),
     );
   }
 
   #request<
     M extends HttpMethod,
     I extends t.Typedef = t.Typedef,
-    O extends t.Typedef = t.Typedef
+    O extends t.Typedef = t.Typedef,
   >(
     method: M,
     inp: I,
     out: O,
     options: Omit<MaterializerHttpRequest, "method">,
-    effect: Effect
+    effect: Effect,
   ): t.Func<I, O> {
     const matId = runtimes.httpRequest(
       {
         runtime: this._id,
         effect,
       },
-      { method, ...options }
+      { method, ...options },
     );
 
     const mat: HttpRequestMat<M> = {
@@ -61,7 +63,7 @@ export class HttpRuntime extends Runtime {
   get<I extends t.Typedef = t.Typedef, O extends t.Typedef = t.Typedef>(
     inp: I,
     out: O,
-    options: Omit<MaterializerHttpRequest, "method">
+    options: Omit<MaterializerHttpRequest, "method">,
   ): t.Func<I, O> {
     return this.#request("get", inp, out, options, fx.read());
   }
@@ -70,7 +72,7 @@ export class HttpRuntime extends Runtime {
     inp: I,
     out: O,
     options: Omit<MaterializerHttpRequest, "method">,
-    effect?: Effect
+    effect?: Effect,
   ): t.Func<I, O> {
     return this.#request("post", inp, out, options, effect ?? fx.create());
   }
@@ -79,7 +81,7 @@ export class HttpRuntime extends Runtime {
     inp: I,
     out: O,
     options: Omit<MaterializerHttpRequest, "method">,
-    effect?: Effect
+    effect?: Effect,
   ): t.Func<I, O> {
     return this.#request("put", inp, out, options, effect ?? fx.update());
   }
@@ -88,7 +90,7 @@ export class HttpRuntime extends Runtime {
     inp: I,
     out: O,
     options: Omit<MaterializerHttpRequest, "method">,
-    effect?: Effect
+    effect?: Effect,
   ): t.Func<I, O> {
     return this.#request("patch", inp, out, options, effect ?? fx.update());
   }
@@ -97,7 +99,7 @@ export class HttpRuntime extends Runtime {
     inp: I,
     out: O,
     options: Omit<MaterializerHttpRequest, "method">,
-    effect?: Effect
+    effect?: Effect,
   ): t.Func<I, O> {
     return this.#request("delete", inp, out, options, effect ?? fx.delete_());
   }
