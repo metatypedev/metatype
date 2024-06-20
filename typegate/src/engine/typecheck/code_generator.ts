@@ -23,18 +23,18 @@ export class CodeGenerator {
     const comparisons = [];
 
     if (
-      ([
-        Type.BOOLEAN,
-        Type.FLOAT,
-        Type.INTEGER,
-        Type.STRING,
-      ] as TypeNode["type"][])
-        .includes(typeNode.type)
+      (
+        [
+          Type.INTEGER,
+          Type.STRING,
+          Type.FLOAT,
+          Type.BOOLEAN,
+          Type.FILE,
+        ] as TypeNode["type"][]
+      ).includes(typeNode.type)
     ) {
       // shallow comparison
-      comparisons.push(
-        ...typeNode.enum!.map((val) => `value !== ${val}`),
-      );
+      comparisons.push(...typeNode.enum!.map((val) => `value !== ${val}`));
     } else {
       // deep comparison
       comparisons.push(
@@ -169,16 +169,11 @@ export class CodeGenerator {
     itemValidatorName: string,
   ) {
     this.line(`if (value != null) {`);
-    this.line(
-      `${itemValidatorName}(value, path, errors, context)`,
-    );
+    this.line(`${itemValidatorName}(value, path, errors, context)`);
     this.line("}");
   }
 
-  generateArrayValidator(
-    typeNode: ListNode,
-    itemValidatorName: string,
-  ) {
+  generateArrayValidator(typeNode: ListNode, itemValidatorName: string) {
     this.validation(
       `!Array.isArray(value)`,
       "`expected an array, got ${typeof value}`",
@@ -222,10 +217,7 @@ export class CodeGenerator {
       "`expected an object, got ${typeof value}`",
     );
     this.line("else");
-    this.validation(
-      `value == null`,
-      '"exptected a non-null object, got null"',
-    );
+    this.validation(`value == null`, '"exptected a non-null object, got null"');
 
     this.line("else {");
     this.line("const keys = new Set(Object.keys(value))");
@@ -245,15 +237,13 @@ export class CodeGenerator {
     return Object.values(typeNode.properties);
   }
 
-  generateUnionValidator(
-    typeNode: UnionNode,
-    variantValidatorNames: string[],
-  ) {
+  generateUnionValidator(typeNode: UnionNode, variantValidatorNames: string[]) {
     this.line("const failed = [];");
     this.line("let errs;");
 
     const variantCount = typeNode.anyOf.length;
     if (variantValidatorNames.length !== variantCount) {
+      console.log("variant validator names", variantValidatorNames);
       throw new Error(
         "The length of variantValidatorNames does not match to the variant count",
       );

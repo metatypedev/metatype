@@ -35,6 +35,7 @@ import type {
 export type {
   AnyNode,
   BooleanNode,
+  EitherNode,
   FileNode,
   FloatNode,
   FunctionNode,
@@ -95,8 +96,9 @@ export function isList(t: TypeNode): t is ListNode {
 }
 
 export function isScalar(t: TypeNode): t is ScalarNode {
-  return isBoolean(t) || isInteger(t) || isNumber(t) || isString(t) ||
-    isFile(t);
+  return (
+    isBoolean(t) || isInteger(t) || isNumber(t) || isString(t) || isFile(t)
+  );
 }
 
 export function isQuantifier(t: TypeNode): t is QuantifierNode {

@@ -29,15 +29,17 @@ import {
   Type,
   TypeNode,
 } from "./type_node.ts";
-import { Batcher } from "../types.ts";
+import { Batcher, TypeIdx } from "../types.ts";
 
 import type {
   Cors,
+  EitherNode,
   Materializer as TypeMaterializer,
   Policy as TypePolicy,
   Rate,
   TGRuntime as TypeRuntime,
   Typegraph as TypeGraphDS,
+  UnionNode,
 } from "./types.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { Protocol } from "../services/auth/protocols/protocol.ts";
@@ -59,9 +61,7 @@ export class SecretManager {
     this.typegraphName = TypeGraph.formatName(typegraph, false);
   }
 
-  secretOrFail(
-    name: string,
-  ): string {
+  secretOrFail(name: string): string {
     const value = this.secretOrNull(name);
     ensure(
       value != null,
@@ -70,9 +70,7 @@ export class SecretManager {
     return value as string;
   }
 
-  secretOrNull(
-    name: string,
-  ): string | null {
+  secretOrNull(name: string): string | null {
     return this.secrets[name] ?? null;
   }
 }
@@ -273,10 +271,7 @@ export class TypeGraph implements AsyncDisposable {
     idx: number,
     asType: T,
   ): TypeNode & { type: T };
-  type<T extends TypeNode["type"]>(
-    idx: number,
-    asType?: T,
-  ): TypeNode {
+  type<T extends TypeNode["type"]>(idx: number, asType?: T): TypeNode {
     ensure(
       typeof idx === "number" && idx < this.tg.types.length,
       `cannot find type with index '${idx}'`,
@@ -308,10 +303,7 @@ export class TypeGraph implements AsyncDisposable {
     return this.tg.policies[idx];
   }
 
-  parseSecret(
-    schema: TypeNode,
-    name: string,
-  ) {
+  parseSecret(schema: TypeNode, name: string) {
     const value = this.secretManager.secretOrNull(name);
     if (value == undefined) {
       if (isOptional(schema)) {
@@ -326,14 +318,10 @@ export class TypeGraph implements AsyncDisposable {
 
     if (isString(schema)) return value;
 
-    throw new Error(
-      `invalid type for secret injection: ${schema.type}`,
-    );
+    throw new Error(`invalid type for secret injection: ${schema.type}`);
   }
 
-  getRandom(
-    schema: TypeNode,
-  ): number | string | null {
+  getRandom(schema: TypeNode): number | string | null {
     const tgTypes: TypeNode[] = this.tg.types;
     let seed = 12; // default seed
     if (
@@ -349,15 +337,11 @@ export class TypeGraph implements AsyncDisposable {
 
       return result;
     } catch (_) {
-      throw new Error(
-        `invalid type for random injection: ${schema.type}`,
-      );
+      throw new Error(`invalid type for random injection: ${schema.type}`);
     }
   }
 
-  nextBatcher = (
-    type: TypeNode,
-  ): Batcher => {
+  nextBatcher = (type: TypeNode): Batcher => {
     // convenience check to be removed
     const ensureArray = (x: []) => {
       ensure(Array.isArray(x), `${JSON.stringify(x)} not an array`);
@@ -387,8 +371,14 @@ export class TypeGraph implements AsyncDisposable {
       };
     }
     ensure(
-      isObject(type) || isInteger(type) || isNumber(type) || isBoolean(type) ||
-        isFunction(type) || isString(type) || isUnion(type) || isEither(type),
+      isObject(type) ||
+        isInteger(type) ||
+        isNumber(type) ||
+        isBoolean(type) ||
+        isFunction(type) ||
+        isString(type) ||
+        isUnion(type) ||
+        isEither(type),
       `object expected but got ${type.type}`,
     );
     return (x: any) => {
@@ -460,9 +450,7 @@ export class TypeGraph implements AsyncDisposable {
   //  - an array of strings (for an object)
   //  - a Map<string, string[]> (for an union type)
   //  - `null` for scalar types (no selection set expected)
-  getPossibleSelectionFields(
-    typeIdx: number,
-  ): PossibleSelectionFields {
+  getPossibleSelectionFields(typeIdx: number): PossibleSelectionFields {
     const typeNode = this.type(typeIdx);
     if (typeNode.type === Type.OPTIONAL) {
       return this.getPossibleSelectionFields(typeNode.item);
@@ -477,9 +465,10 @@ export class TypeGraph implements AsyncDisposable {
 
     if (typeNode.type === Type.OBJECT) {
       return new Map(
-        Object.entries(typeNode.properties).map((
-          [key, idx],
-        ) => [key, this.getPossibleSelectionFields(idx)]),
+        Object.entries(typeNode.properties).map(([key, idx]) => [
+          key,
+          this.getPossibleSelectionFields(idx),
+        ]),
       );
     }
 
@@ -492,9 +481,10 @@ export class TypeGraph implements AsyncDisposable {
       return null;
     }
 
-    const entries = variants.map((
-      idx,
-    ) => [this.type(idx).title, this.getPossibleSelectionFields(idx)] as const);
+    const entries = variants.map(
+      (idx) =>
+        [this.type(idx).title, this.getPossibleSelectionFields(idx)] as const,
+    );
 
     if (entries[0][1] === null) {
       if (entries.some((e) => e[1] !== null)) {
@@ -540,7 +530,106 @@ export class TypeGraph implements AsyncDisposable {
     }
     return typeNode;
   }
+
+  // TODO TypeUtils class?
+  flattenUnionVariants(variants: TypeIdx[]): TypeIdx[] {
+    return variants.flatMap((idx) => {
+      const typeNode = this.type(idx);
+      switch (typeNode.type) {
+        case Type.UNION:
+          return this.flattenUnionVariants(typeNode.anyOf);
+        case Type.EITHER:
+          return this.flattenUnionVariants(typeNode.oneOf);
+        default:
+          return [idx];
+      }
+    });
+  }
+
+  getFlatUnionVariants(typeNode: UnionNode | EitherNode): TypeIdx[] {
+    switch (typeNode.type) {
+      case Type.UNION:
+        return this.flattenUnionVariants(typeNode.anyOf);
+      case Type.EITHER:
+        return this.flattenUnionVariants(typeNode.oneOf);
+      default:
+        throw new Error("unreachable");
+    }
+  }
+
+  // /**
+  //  * Get the variants of the union or either that does require a selection set
+  //  * at multiple levels (for union of unions...), in a record by name.
+  //  */
+  // getTypeSelectionsForVariants(
+  //   typeNode: UnionNode | EitherNode,
+  // ): Record<string, TypeIdx> {
+  //   const variants = this.getFlatUnionVariants(typeNode);
+  //   return Object.fromEntries(
+  //     variants.flatMap((idx) => {
+  //       if (this.isScalarOrListOfScalars(this.type(idx))) {
+  //         return [];
+  //       } else {
+  //         return [[this.type(idx).title, idx]];
+  //       }
+  //     }),
+  //   );
+  // }
+
+  isScalarOrListOfScalars(typeNode: TypeNode): boolean {
+    let unwrapped = typeNode;
+    while (true) {
+      if (unwrapped.type === Type.OPTIONAL) {
+        unwrapped = this.type(unwrapped.item);
+      } else if (unwrapped.type === Type.LIST) {
+        unwrapped = this.type(unwrapped.items);
+      } else {
+        console.log(
+          "is scalar or list of scalars",
+          typeNode.title,
+          `unwrapped: ${unwrapped.type}`,
+          `results: ${!NON_SCALAR_TYPES.includes(unwrapped.type)}`,
+        );
+        return !NON_SCALAR_TYPES.includes(unwrapped.type);
+      }
+    }
+  }
+
+  traverseVirtualPath(
+    root: TypeNode,
+    getNext: (node: TypeNode) => TypeIdx | null,
+  ): TypeNode {
+    let current = root;
+    while (true) {
+      const next = getNext(current);
+      if (next == null) {
+        return current;
+      }
+      current = this.type(next);
+    }
+  }
+
+  unwrapQuantifier(typeNode: TypeNode): TypeNode {
+    return this.traverseVirtualPath(typeNode, (node) => {
+      switch (node.type) {
+        case Type.OPTIONAL:
+          return node.item;
+        case Type.LIST:
+          return node.items;
+        default:
+          return null;
+      }
+    });
+  }
 }
+
+const NON_SCALAR_TYPES: Array<TypeNode["type"]> = [
+  Type.OBJECT,
+  Type.LIST,
+  Type.UNION,
+  Type.EITHER,
+  Type.FUNCTION,
+];
 
 export type PossibleSelectionFields =
   | null
