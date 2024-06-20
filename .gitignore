@@ -43,6 +43,7 @@ tmp/
 coverage*
 
 typegraph/deno/sdk/src/gen
+typegraph/node
 typegraph/python/typegraph/gen
 
 *.egg-info/

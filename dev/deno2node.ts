@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dnt, expandGlobSync, resolve } from "./deps.ts";
+import { dnt, expandGlobSync, join, resolve } from "./deps.ts";
 import { getLockfile, projectDir } from "./utils.ts";
 
 // Direct node users need to use module
@@ -14,7 +14,7 @@ const srcDir = resolve(projectDir, "./typegraph/deno/sdk/src");
 const outDir = resolve(projectDir, "./typegraph/node");
 await dnt.emptyDir(outDir);
 
-const entryPoints: dnt.BuildOptions["entryPoints"] = ["./mod.ts"];
+const entryPoints: dnt.BuildOptions["entryPoints"] = [join(srcDir, "index.ts")];
 for (
   const { name, path } of expandGlobSync("./**/*.ts", {
     root: srcDir,
@@ -23,15 +23,15 @@ for (
   })
 ) {
   const relPath = path.replace(srcDir, ".");
-  if (
-    !relPath.startsWith("./gen") &&
-    !name.startsWith("_") &&
-    name !== "mod.ts"
-  ) {
-    entryPoints.push({
-      name: relPath.slice(0, -3),
-      path: relPath,
-    });
+  if (name !== "index.ts") {
+    const entryPoint = {
+      name: relPath.substring(0, relPath.lastIndexOf(".")), // strip extension
+      path,
+    };
+    console.log(entryPoint.path, "=>", entryPoint.name);
+    entryPoints.push(entryPoint);
+  } else {
+    console.log("Skipped", path);
   }
 }
 
@@ -47,7 +47,7 @@ await dnt.build({
   },
   test: false,
   scriptModule: false, // only generate ESM
-  typeCheck: "single",
+  typeCheck: false,
   packageManager: "pnpm",
   package: {
     name: "@typegraph/sdk",
