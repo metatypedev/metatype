@@ -110,7 +110,7 @@ const rpcCall = (() => {
 })();
 
 export interface DeployTarget {
-  base_url: string;
+  baseUrl: string;
   auth: {
     username: string;
     password: string;

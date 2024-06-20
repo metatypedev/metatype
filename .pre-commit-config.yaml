@@ -19,12 +19,6 @@ repos:
         language: system
         entry: bash -c 'deno run -A dev/lock.ts --check'
         pass_filenames: false
-      - id: clean-deno-lock
-        name: "Clean deno.lock"
-        always_run: true
-        language: system
-        entry: ghjk x clean-deno-lock
-        pass_filenames: false
       - id: deno-fmt
         name: Deno format
         language: system
@@ -92,12 +86,7 @@ repos:
       - id: check-merge-conflict
       - id: end-of-file-fixer
         # exclude all generated files
-        exclude: (?x)(
-          .ghjk/.*
-          |.*deno.lock
-          |.*\.snap$|typegate/src/typegraphs/.*\.json
-          |website/docs/reference/
-          |libs/pyrt_wit_wire/pyrt)
+        exclude: (?x)( .ghjk/.* |.*deno.lock |.*\.snap$|typegate/src/typegraphs/.*\.json |website/docs/reference/ |libs/pyrt_wit_wire/pyrt)
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.5.4
     hooks:

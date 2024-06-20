@@ -2,8 +2,7 @@ dev:
   files:
     dev/LICENSE-MPL-2.0.md:
       - typegraph/python/LICENSE.md
-      - typegraph/node/LICENSE.md
-      - typegraph/node/sdk/LICENSE.md
+      - typegraph/deno/LICENSE.md
   lines:
     rust-toolchain.toml:
       (channel = ").+("): RUST_VERSION
@@ -36,14 +35,8 @@ dev:
       '(\s*static\s*MT_VERSION:\s*&str\s*=\s*").+(";)': METATYPE_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
-    typegraph/node/sdk/package.json:
-      '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
-      '(\s*"description"\s*:\s*").*(",?)': TAGLINE
     typegraph/core/src/global_store.rs:
       '(\s{4}pub static SDK_VERSION.+=\s?").*(".+;)': METATYPE_VERSION
-    typegraph/node/package.json:
-      '(\s*"version"\s*:\s*").+(",?)': METATYPE_VERSION
-      '(\s*"description"\s*:\s*").*(",?)': TAGLINE
     typegraph/python/pyproject.toml:
       (description = ").+("): TAGLINE
     '**/Cargo.toml':
@@ -81,9 +74,6 @@ dev:
       '(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)': METATYPE_VERSION
     examples/**/*.ts:
       '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': METATYPE_VERSION
-    typegate/import_map.json:
-      '(\s*"@typegraph\/sdk"\s*:\s*"npm:@typegraph\/sdk@).+(",?)': METATYPE_VERSION
-      '(\s*"@typegraph\/sdk\/"\s*:\s*"npm:/@typegraph\/sdk@).+(\/",?)': METATYPE_VERSION
   lock:
     GHJK_VERSION: 2725af8
     GHJK_ACTION_VERSION: 2e8bbf084060a18828338a7cdd43fde6feb2a3cc

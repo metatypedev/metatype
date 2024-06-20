@@ -838,26 +838,6 @@
         "id": "tasks",
         "config": {
           "tasks": {
-            "clean-deno-lock": {
-              "name": "clean-deno-lock",
-              "dependsOn": [],
-              "env": {
-                "installs": [],
-                "env": {},
-                "allowedPortDeps": [
-                  "e0d1f160d2d7755765f6f01a27a0c33a02ff98d2",
-                  "9d26d0d90f6ecdd69d0705a042b01a344aa626ee",
-                  "3c447f912abf18883bd05314f946740975ee0dd3",
-                  "dfb0f5e74666817e6ab8cbceca0c9da271142bca",
-                  "d9122eff1fe3ef56872e53dae725ff3ccb37472e",
-                  "4cd389bd9c1a017e3af681e4515df06afc8ae94b",
-                  "78a3ffea7ebe9b9f09acee4f5912ce24df923dc3",
-                  "ba089892903fc9374065ebf6466fa43baf308251",
-                  "5d09c2a1d5a6611daf46efcc36eca64f53cb279c",
-                  "9c0f4895f4f2512781cf21f405fdf1a3b6b276d2"
-                ]
-              }
-            },
             "gen-pyrt-bind": {
               "name": "gen-pyrt-bind",
               "dependsOn": [],
