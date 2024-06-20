@@ -52,8 +52,9 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     inherit: "_ecma",
     fn: ($) =>
       $`pnpm install --recursive 
-          --filter ./examples/typegraphs/*... 
-          --filter ./typegraph/node/*... 
+          --filter ./examples/typegraphs/ 
+          --filter ./typegraph/node/
+          --filter ./typegraph/node/sdk
           --filter ./libs/metagen/tests/*...`
         .stdinText(Array(1000).map(() => "y").join("\n")),
   },
