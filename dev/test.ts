@@ -118,8 +118,12 @@ export async function testE2e(
     "NPM_CONFIG_REGISTRY": "http://localhost:4873",
     // NOTE: ordering of the variables is important as we want the
     // `meta` build to be resolved before any system meta builds
-    "PATH": `${wd.join("target/debug")}:${Deno.env.get("PATH")}`,
+    "PATH": `${wd.join("target/debug").toString()}:${Deno.env.get("PATH")}`,
   };
+
+  if (await wd.join(".venv").exists()) {
+    env["PATH"] = `${wd.join(".venv/bin").toString()}:${env["PATH"]}`;
+  }
 
   await tmpDir.ensureDir();
   // remove non-vendored caches
