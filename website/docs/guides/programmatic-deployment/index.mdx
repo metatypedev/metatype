@@ -17,13 +17,19 @@ You are required to provide the configurations and also handle migrations by you
 <SDKTabs>
     <TabItem value="python">
 ```python
+import os
 from os import path
-from typegraph import Graph, Policy, t, typegraph
+
+from typegraph.gen.exports.core import MigrationAction
+from typegraph.graph.shared_types import BasicAuth
+from typegraph.graph.tg_deploy import (
+    TypegraphDeployParams,
+    tg_deploy,
+    TypegateConnectionOptions,
+)
 from typegraph.runtimes.deno import DenoRuntime
 
-from typegraph.wit import ArtifactResolutionConfig, MigrationAction, MigrationConfig
-from typegraph.utils import unpack_tarb64
-from typegraph.graph.tg_deploy import BasicAuth, TypegraphDeployParams, tg_deploy
+from typegraph import Graph, Policy, t, typegraph
 
 # Your typegraph
 @typegraph()
@@ -42,40 +48,28 @@ def example(g: Graph):
     )
 
 # Configure your deployment
-tg = example()
 
-config_params = MigrationConfig(
-    migration_dir=path.join("prisma-migrations", tg.name),
-    global_action=MigrationAction(
-        create=True,
-        reset=True  # allow destructive migrations
+cwd = os.getcwd()
+
+config: TypegraphDeployParams = TypegraphDeployParams(
+        typegate=TypegateConnectionOptions(
+            url="<TYPEGATE_URL>", 
+            auth=BasicAuth("<USERNAME>", "<PASSWORD>")
+        ),
+        typegraph_path=os.path.join(cwd, "path/to/typegraph"),
+        prefix="<prefix>",
+        secrets={},
+        migrations_dir=path.join("prisma-migrations", example.name),
+        migration_actions=None,
+        default_migration_action=MigrationAction(
+            apply=True, 
+            reset=True, # allow destructive migrations
+            create=True
+        ),
     ),
-    runtime_actions=None,
-)
-artifacts_config = ArtifactResolutionConfig(
-    prisma_migration=config_params,
-    prefix=None,
-    dir=None,  # artifacts are resolved relative to this path
-    disable_artifact_resolution=None,
-)
-config = TypegraphDeployParams(
-    base_url="<TYPEGATE_URL>",
-    auth=BasicAuth(username="<USERNAME>", password="<PASSWORD>"),
-    artifacts_config=artifacts_config,
-    secrets={"POSTGRES": "<DB_URL>"},
-)
 
 # Deploy to typegate
-res = tg_deploy(tg, config)
-
-migrations = res.typegate["data"]["addTypegraph"]["migrations"] or []
-for item in migrations:
-    base_dir = artifacts_config.prisma_migration.migration_dir
-    # Convention, however if migration_dir is absolute then you might want to use that instead
-    # cwd + tg_name + runtime_name
-    full_path = path.join(base_dir, item["runtime"])
-    unpack_tarb64(item["migrations"], full_path)
-    print(f"Unpacked migrations at {full_path}")
+res = tg_deploy(example, config[0]) # pass your typegraph function name
 
 ```
     </TabItem>
@@ -103,44 +97,21 @@ const tg = await typegraph("example", (g) => {
 });
 
 // Configure your deployment
-const artifactsConfig = {
-  prismaMigration: {
-    globalAction: {
-      create: true,
-      reset: true, // allow destructive migrations
-    },
-    migrationDir: path.join("prisma-migrations", tg.name),
-  },
- // dir: "." // artifacts are resolved relative to this path
-};
 
 const config = {
-  baseUrl: "<TYPEGATE_URL>",
-  auth: new BasicAuth("<USERNAME>", "<PASSWORD>");,
-  secrets: { POSTGRES: "<DB_URL>" },
-  artifactsConfig,
-};
+  typegate: { url: "<TYPEGATE_URL>", auth: new BasicAuth("<USERNAME>", "<PASSWORD>"), },
+  typegraphPath: "<absolute/path/to/typegraph>",
+  prefix: "<prefx>",
+  secrets: {},
+  migrationsDir: path.join("prisma-migrations", tg.name),
+  defaultMigrationAction: {
+    create: true,
+    reset: true, // allow destructive migrations
+  },
+}
 
 // Deploy to typegate
-tgDeploy(tg, config).then(({ typegate }) => {
-  const selection = typegate?.data?.addTypegraph;
-  if (selection) {
-    const { migrations, messages } = selection;
-    migrations.map(({ runtime, migrations }) => {
-      // Convention, however if migrationDir is absolute then you might want to use that instead
-      // cwd + tg_name
-      const baseDir = artifactsConfig.prismaMigration.migrationDir;
-      // cwd + tg_name + runtime_name
-      const fullPath = path.join(baseDir, runtime);
-      wit_utils.unpackTarb64(migrations, fullPath);
-      console.log(`Unpacked migrations at ${fullPath}`);
-    });
-  } else {
-    throw new Error(JSON.stringify(typegate));
-  }
-})
-  .catch(console.error);
-
+const deployResult = await tgDeploy(tg, config);
 ```
     </TabItem>
 </SDKTabs>
