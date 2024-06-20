@@ -18,7 +18,7 @@ await typegraph({
   const pub = Policy.public();
 
   // highlight-next-line
-  const user = t.struct({ "id": t.string(), "name": t.string() });
+  const user = t.struct({ "id": t.string(), "name": t.string() }, {name: "User"});
 
   const message = t.struct(
     {

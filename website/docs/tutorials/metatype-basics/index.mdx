@@ -805,7 +805,17 @@ If you try to `create` new bucket through `create_idea`, the typgate will return
 }
 ```
 
-Instead, If you try using this mutation, it will work as expected. You can only specify buckets that are already created.
+As you will be linking existing buckets when creating ideas, you need to create at least one bucket in your database. To do that you need to execute the following graphql query with admin privileges. You should add `Authorization: "Basic YW5kaW06cGFzc3dvcmQ="` in your headers when sending the request.
+```graphql
+mutation CBucket {
+  create_bucket(data: {name:"Backlog"}){
+    id
+    name
+  }
+}
+```
+
+Now, If you try using this mutation, it will work as expected. You can only specify buckets that are already created.
 ```graphql
 mutation {
   create_idea(
@@ -833,6 +843,10 @@ mutation {
       python={require("!!code-loader!../../../../examples/typegraphs/reduce.py")}
       typescript={require("!!code-loader!../../../../examples/typegraphs/reduce.ts")}
       query={require("./reduce.graphql")}
+      headers={{
+        Authorization: "Basic YW5kaW06cGFzc3dvcmQ=",
+      }}
+  tab="headers"
     />
 
 ### Restrict Update Operation on Selected Fields
