@@ -6,7 +6,7 @@ import { z } from "zod";
 import { parse } from "std/flags/mod.ts";
 import { mapKeys } from "std/collections/map_keys.ts";
 import { filterKeys } from "std/collections/filter_keys.ts";
-import { configOrExit } from "./config/loader.ts";
+import { configOrExit, configOrThrow } from "./config/loader.ts";
 import {
   globalConfigSchema,
   SyncConfig,
@@ -38,7 +38,7 @@ if (!Deno.env.has("VERSION")) {
   Deno.env.set("VERSION", get_version());
 }
 
-export const globalConfig = await configOrExit(
+export const globalConfig = configOrExit(
   globalConfigSchema,
   {
     debug: "false",
@@ -119,41 +119,17 @@ export function getTypegateConfig(defaults: {
   base?: Partial<z.input<typeof typegateConfigBaseSchema>>;
   sync?: Partial<z.input<typeof syncConfigSchema>>;
 }): TypegateConfig {
-  const base = configOrExit(typegateConfigBaseSchema, defaults.base ?? {}, [
+  const base = configOrThrow(typegateConfigBaseSchema, defaults.base ?? {}, [
     envsAsConfig(),
     argsAsConfig(),
   ]);
   const syncSources = [envsAsConfig(), argsAsConfig()].map(filterMapSyncKeys);
-  const syncDisabled = defaults.sync == null ||
-    Object.keys(defaults.sync).length === 0 ||
+  const syncDisabled =
+    (defaults.sync == null || Object.keys(defaults.sync).length === 0) &&
     syncSources.every((s) => Object.keys(s).length === 0);
 
-  const sync = syncDisabled ? null : configOrExit(
-    syncConfigSchema,
-    defaults.sync ?? {},
-    [envsAsConfig(), argsAsConfig()].map(filterMapSyncKeys),
-  );
+  const sync = syncDisabled
+    ? null
+    : configOrThrow(syncConfigSchema, defaults.sync ?? {}, syncSources);
   return { base, sync: sync && transformSyncConfig(sync) };
 }
-
-// const config = await configOrExit([
-//   {
-//     debug: "false",
-//     packaged: "true",
-//     hostname: await getHostname(),
-//     tmp_dir: join(Deno.cwd(), "tmp"),
-//     jwt_max_duration_sec: 3600 * 24 * 30,
-//     jwt_refresh_duration_sec: 60 * 5,
-//     sentry_sample_rate: 1,
-//     sentry_traces_sample_rate: 1,
-//     trust_proxy: false,
-//     trust_header_ip: "X-Forwarded-For",
-//     tg_port: "7890",
-//     timer_max_timeout_ms: 3000,
-//     timer_destroy_resources: true,
-//     timer_policy_eval_retries: 1,
-//     redis_url_queue_expire_sec: 60 * 5, // 5 minutes
-//   },
-//   mapKeys(Deno.env.toObject(), (k: string) => k.toLowerCase()),
-//   parse(Deno.args) as Record<string, unknown>,
-// ], schema);

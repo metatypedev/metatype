@@ -4,6 +4,12 @@
 import { z } from "zod";
 import { deepMerge } from "std/collections/deep_merge.ts";
 
+export class ConfigError extends Error {
+  constructor(public issues: any) {
+    super(`config error: ${JSON.stringify(issues)}`);
+  }
+}
+
 export function parseConfig<T extends z.ZodRawShape>(
   schema: z.ZodObject<T>,
   defaults: Partial<z.input<typeof schema>>,
@@ -17,15 +23,30 @@ export function parseConfig<T extends z.ZodRawShape>(
   return schema.safeParse(raw);
 }
 
-export function configOrExit<T extends z.ZodRawShape>(
+export function configOrThrow<T extends z.ZodRawShape>(
   schema: z.ZodObject<T>,
   defaults: Partial<z.input<typeof schema>>,
   sources: Array<Record<string, unknown>>,
 ) {
   const result = parseConfig(schema, defaults, sources);
   if (!result.success) {
-    console.error("Configuration error: {}", result.error);
-    Deno.exit(1);
+    throw new ConfigError(result.error.issues);
   }
   return result.data;
+}
+
+export function configOrExit<T extends z.ZodRawShape>(
+  schema: z.ZodObject<T>,
+  defaults: Partial<z.input<typeof schema>>,
+  sources: Array<Record<string, unknown>>,
+) {
+  try {
+    return configOrThrow(schema, defaults, sources);
+  } catch (e) {
+    console.error("failed to parse config");
+    if (e instanceof ConfigError) {
+      console.error(e.issues);
+      Deno.exit(1);
+    }
+  }
 }

@@ -65,7 +65,7 @@ export const syncConfigSchema = z.object({
   s3_bucket: z.string(),
   s3_access_key: z.string(),
   s3_secret_key: z.string(),
-  s3_path_style: zBooleanString.default(true),
+  s3_path_style: zBooleanString.default(false),
 });
 export type SyncConfig = z.infer<typeof syncConfigSchema>;
 export type SyncConfigX = {
