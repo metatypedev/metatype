@@ -46,7 +46,9 @@ export function configOrExit<T extends z.ZodRawShape>(
     console.error("failed to parse config");
     if (e instanceof ConfigError) {
       console.error(e.issues);
-      Deno.exit(1);
+    } else {
+      console.log(e);
     }
+    Deno.exit(1);
   }
 }
